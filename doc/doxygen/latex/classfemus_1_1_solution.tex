@@ -1,0 +1,322 @@
+\hypertarget{classfemus_1_1_solution}{}\section{femus\+:\+:Solution Class Reference}
+\label{classfemus_1_1_solution}\index{femus\+::\+Solution@{femus\+::\+Solution}}
+
+
+{\ttfamily \#include $<$Solution.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Solution\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=193pt]{classfemus_1_1_solution__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Solution\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_solution__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_solution_ab033eff2b168b36efd3fac8c7c2ad1b6}{Solution}} (\mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} $\ast$other\+\_\+msh)
+\item 
+\mbox{\hyperlink{classfemus_1_1_solution_a477fa3a0d8d67790a0b790077c13fb1f}{$\sim$\+Solution}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solution_a977c6a8479d58cdbff7142d687a5cedb}{Add\+Solution}} (const char name\mbox{[}$\,$\mbox{]}, const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a7c9a70b7c6b5baf5d7942938d770a664}{F\+E\+Family}} fefamily, const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a00ea9562f0dbb25e22bb3297d596e3ba}{F\+E\+Order}} order, const unsigned \&tmorder=0, const bool \&Pde\+\_\+type=1)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solution_a47520e9d8471447516b37d40f7039b77}{Resize\+Solution\+Vector}} (const char name\mbox{[}$\,$\mbox{]})
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solution_a09bffe6359567301fe6715df0c93ff7c}{Free\+Solution\+Vectors}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_solution_af76dbb0089f696728146383d073b5205}{Get\+Solution\+Time\+Order}} (unsigned i)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solution_aeb71bfc7bd5c675bf8f9b7c749498fa8}{Update\+Sol}} (const vector$<$ unsigned $>$ \&\+\_\+\+Sol\+Pde\+Index, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$E\+PS, const vector$<$ vector$<$ unsigned $>$ $>$ \&K\+Koffset)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solution_aefe78476074fda27aaacc9ad7ba30582}{Update\+Res}} (const vector$<$ unsigned $>$ \&\+\_\+\+Sol\+Pde\+Index, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$\+\_\+\+R\+ES, const vector$<$ vector$<$ unsigned $>$ $>$ \&K\+Koffset)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solution_a5f68dd8145f5ad4ac80c4eaedfea9309}{Copy\+Solution\+To\+Old\+Solution}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solution_a2fdbb7aceee8d7986fb2954dc9e456f2}{Reset\+Solution\+To\+Old\+Solution}} ()
+\item 
+const \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} \& \mbox{\hyperlink{classfemus_1_1_solution_a38d0ba7d713f9fc726a7605e3eb50f9f}{Get\+Solution\+Name}} (const char $\ast$var) const
+\item 
+\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} \& \mbox{\hyperlink{classfemus_1_1_solution_ab74a23ebbeb722654d823ea301be51e2}{Get\+Solution\+Name}} (const char $\ast$var)
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_solution_a875fb4f174e5e08e6501682a62da7c18}{Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm}} (const vector$<$ unsigned $>$ \&sol\+Index, std\+::vector$<$ double $>$ \&A\+M\+Rthreshold, const unsigned \&norm\+Type)
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_solution_a1cdfede6ad6f2c5955cee4fb79509a2d}{Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm\+Adaptive}} (const vector$<$ unsigned $>$ \&sol\+Index, std\+::vector$<$ double $>$ \&A\+M\+Rthreshold, const unsigned \&norm\+Type, const double \&neighbor\+Threshold\+Value)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solution_a0e203fd6ffe75140d435c2e6e047f878}{Build\+Grad\+Matrix\+Structure}} (unsigned Sol\+Type)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solution_ae8cd66a86129f27acdc86d89d92849b5}{Init\+A\+M\+R\+Eps}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solution_a499cdee4a7d4f16b211f39bcc7848702}{Remove\+Null\+Space}} (const unsigned \&index)
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_solution_a5c2c8fde70469ca61fa524bc7e591823}{Get\+If\+Remove\+Null\+Space}} (const unsigned \&index)
+\item 
+\mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} $\ast$ \mbox{\hyperlink{classfemus_1_1_solution_aa2f09b8eebcbc5f00d4aa7e202474821}{Get\+Mesh}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_solution_ab7027e7a2d3e29aafbc770d4a908a3ec}{Get\+Index}} (const char name\mbox{[}$\,$\mbox{]}) const
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_solution_a419e9dba724a5e6e460c357c59119c02}{Get\+Solution\+Type}} (const unsigned \&index)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solution_a482fdf54bd77e30b70c896c991e44d2f}{Set\+If\+F\+SI}} (const bool \&F\+SI=true)
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_solution_a426c80579e836e29def3e98b14fcfaf1}{Get\+If\+F\+SI}} ()
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+vector$<$ \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_solution_a9cabd7d3bf1b3dcb73d57a4e06e856a7}{\+\_\+\+Sol}}
+\item 
+vector$<$ \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_solution_a7ed557f571341f4ef1092310a40588ee}{\+\_\+\+Sol\+Old}}
+\item 
+vector$<$ \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_solution_aaaae28b34a0a3f70258767e30e5059f8}{\+\_\+\+Res}}
+\item 
+vector$<$ \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_solution_a64cdae4027573e1c070731027c9d3c95}{\+\_\+\+Eps}}
+\item 
+vector$<$ \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_solution_aa471aebee151033f022c807554d25409}{\+\_\+\+A\+M\+R\+Eps}}
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_solution_a816938e425db8a87dfa897bbae63fcae}{\+\_\+\+A\+M\+R\+\_\+flag}}
+\item 
+vector$<$ \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_solution_a09d44e7763e08f1a95cb38454ae903c8}{\+\_\+\+Bdc}}
+\item 
+vector$<$ bool $>$ \mbox{\hyperlink{classfemus_1_1_solution_aefb8528c702c13931c863711ee189b7e}{\+\_\+\+Res\+Eps\+Bdc\+Flag}}
+\item 
+vector$<$ vector$<$ \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ $>$ $>$ \mbox{\hyperlink{classfemus_1_1_solution_a27fa400ad65ad9f6632f38c168842bb5}{\+\_\+\+Grad\+Vec}}
+\item 
+vector$<$ \mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_solution_a14cdad148f6f5eeb19126201760df71a}{\+\_\+\+Grad\+Mat}} \mbox{[}5\mbox{]}
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_solution_ab033eff2b168b36efd3fac8c7c2ad1b6}\label{classfemus_1_1_solution_ab033eff2b168b36efd3fac8c7c2ad1b6}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Solution@{Solution}}
+\index{Solution@{Solution}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Solution()}{Solution()}}
+{\footnotesize\ttfamily femus\+::\+Solution\+::\+Solution (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} $\ast$}]{other\+\_\+msh }\end{DoxyParamCaption})}
+
+Constructor
+
+Contructor \mbox{\Hypertarget{classfemus_1_1_solution_a477fa3a0d8d67790a0b790077c13fb1f}\label{classfemus_1_1_solution_a477fa3a0d8d67790a0b790077c13fb1f}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!````~Solution@{$\sim$\+Solution}}
+\index{````~Solution@{$\sim$\+Solution}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{$\sim$\+Solution()}{~Solution()}}
+{\footnotesize\ttfamily femus\+::\+Solution\+::$\sim$\+Solution (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Destructor 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_solution_a977c6a8479d58cdbff7142d687a5cedb}\label{classfemus_1_1_solution_a977c6a8479d58cdbff7142d687a5cedb}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Add\+Solution@{Add\+Solution}}
+\index{Add\+Solution@{Add\+Solution}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Add\+Solution()}{AddSolution()}}
+{\footnotesize\ttfamily void femus\+::\+Solution\+::\+Add\+Solution (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]},  }\item[{const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a7c9a70b7c6b5baf5d7942938d770a664}{F\+E\+Family}}}]{fefamily,  }\item[{const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a00ea9562f0dbb25e22bb3297d596e3ba}{F\+E\+Order}}}]{order,  }\item[{const unsigned \&}]{tmorder = {\ttfamily 0},  }\item[{const bool \&}]{Pde\+\_\+type = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+Add a new variable called \textquotesingle{}name\textquotesingle{} \mbox{\Hypertarget{classfemus_1_1_solution_a0e203fd6ffe75140d435c2e6e047f878}\label{classfemus_1_1_solution_a0e203fd6ffe75140d435c2e6e047f878}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Build\+Grad\+Matrix\+Structure@{Build\+Grad\+Matrix\+Structure}}
+\index{Build\+Grad\+Matrix\+Structure@{Build\+Grad\+Matrix\+Structure}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Build\+Grad\+Matrix\+Structure()}{BuildGradMatrixStructure()}}
+{\footnotesize\ttfamily void femus\+::\+Solution\+::\+Build\+Grad\+Matrix\+Structure (\begin{DoxyParamCaption}\item[{unsigned}]{Sol\+Type }\end{DoxyParamCaption})}
+
+Build Grad Matrix structure for Sol\+Type 0,1,2 \mbox{\Hypertarget{classfemus_1_1_solution_a5f68dd8145f5ad4ac80c4eaedfea9309}\label{classfemus_1_1_solution_a5f68dd8145f5ad4ac80c4eaedfea9309}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Copy\+Solution\+To\+Old\+Solution@{Copy\+Solution\+To\+Old\+Solution}}
+\index{Copy\+Solution\+To\+Old\+Solution@{Copy\+Solution\+To\+Old\+Solution}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Copy\+Solution\+To\+Old\+Solution()}{CopySolutionToOldSolution()}}
+{\footnotesize\ttfamily void femus\+::\+Solution\+::\+Copy\+Solution\+To\+Old\+Solution (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Update the solution \mbox{\Hypertarget{classfemus_1_1_solution_a875fb4f174e5e08e6501682a62da7c18}\label{classfemus_1_1_solution_a875fb4f174e5e08e6501682a62da7c18}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm@{Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm}}
+\index{Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm@{Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm()}{FlagAMRRegionBasedOnErroNorm()}}
+{\footnotesize\ttfamily bool femus\+::\+Solution\+::\+Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm (\begin{DoxyParamCaption}\item[{const vector$<$ unsigned $>$ \&}]{sol\+Index,  }\item[{std\+::vector$<$ double $>$ \&}]{A\+M\+Rthreshold,  }\item[{const unsigned \&}]{norm\+Type }\end{DoxyParamCaption})}
+
+Flag the elemets to be refined in the A\+MR alghorithm based on the epsilon Flag the elemets to be refined in the A\+MR alghorithm based on the solution gradient Flag the elemets to be refined in the A\+MR alghorithm based on the solution gradient \mbox{\Hypertarget{classfemus_1_1_solution_a1cdfede6ad6f2c5955cee4fb79509a2d}\label{classfemus_1_1_solution_a1cdfede6ad6f2c5955cee4fb79509a2d}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm\+Adaptive@{Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm\+Adaptive}}
+\index{Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm\+Adaptive@{Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm\+Adaptive}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm\+Adaptive()}{FlagAMRRegionBasedOnErroNormAdaptive()}}
+{\footnotesize\ttfamily bool femus\+::\+Solution\+::\+Flag\+A\+M\+R\+Region\+Based\+On\+Erro\+Norm\+Adaptive (\begin{DoxyParamCaption}\item[{const vector$<$ unsigned $>$ \&}]{sol\+Index,  }\item[{std\+::vector$<$ double $>$ \&}]{A\+M\+Rthreshold,  }\item[{const unsigned \&}]{norm\+Type,  }\item[{const double \&}]{neighbor\+Threshold\+Value }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_a09bffe6359567301fe6715df0c93ff7c}\label{classfemus_1_1_solution_a09bffe6359567301fe6715df0c93ff7c}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Free\+Solution\+Vectors@{Free\+Solution\+Vectors}}
+\index{Free\+Solution\+Vectors@{Free\+Solution\+Vectors}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Free\+Solution\+Vectors()}{FreeSolutionVectors()}}
+{\footnotesize\ttfamily void femus\+::\+Solution\+::\+Free\+Solution\+Vectors (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Free the solution vectors
+
+Deallocate memory for all variables \mbox{\Hypertarget{classfemus_1_1_solution_a426c80579e836e29def3e98b14fcfaf1}\label{classfemus_1_1_solution_a426c80579e836e29def3e98b14fcfaf1}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Get\+If\+F\+SI@{Get\+If\+F\+SI}}
+\index{Get\+If\+F\+SI@{Get\+If\+F\+SI}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Get\+If\+F\+S\+I()}{GetIfFSI()}}
+{\footnotesize\ttfamily bool femus\+::\+Solution\+::\+Get\+If\+F\+SI (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_a5c2c8fde70469ca61fa524bc7e591823}\label{classfemus_1_1_solution_a5c2c8fde70469ca61fa524bc7e591823}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Get\+If\+Remove\+Null\+Space@{Get\+If\+Remove\+Null\+Space}}
+\index{Get\+If\+Remove\+Null\+Space@{Get\+If\+Remove\+Null\+Space}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Get\+If\+Remove\+Null\+Space()}{GetIfRemoveNullSpace()}}
+{\footnotesize\ttfamily bool femus\+::\+Solution\+::\+Get\+If\+Remove\+Null\+Space (\begin{DoxyParamCaption}\item[{const unsigned \&}]{index }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_ab7027e7a2d3e29aafbc770d4a908a3ec}\label{classfemus_1_1_solution_ab7027e7a2d3e29aafbc770d4a908a3ec}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Get\+Index@{Get\+Index}}
+\index{Get\+Index@{Get\+Index}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Index()}{GetIndex()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Solution\+::\+Get\+Index (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption}) const}
+
+Get the index of the variable -\/name-\/
+
+Get the solution index for the variable called name \mbox{\Hypertarget{classfemus_1_1_solution_aa2f09b8eebcbc5f00d4aa7e202474821}\label{classfemus_1_1_solution_aa2f09b8eebcbc5f00d4aa7e202474821}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Get\+Mesh@{Get\+Mesh}}
+\index{Get\+Mesh@{Get\+Mesh}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Mesh()}{GetMesh()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}}$\ast$ femus\+::\+Solution\+::\+Get\+Mesh (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_a38d0ba7d713f9fc726a7605e3eb50f9f}\label{classfemus_1_1_solution_a38d0ba7d713f9fc726a7605e3eb50f9f}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Get\+Solution\+Name@{Get\+Solution\+Name}}
+\index{Get\+Solution\+Name@{Get\+Solution\+Name}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Name()}{GetSolutionName()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}}\& femus\+::\+Solution\+::\+Get\+Solution\+Name (\begin{DoxyParamCaption}\item[{const char $\ast$}]{var }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get a const solution (Numeric Vector) by name \mbox{\Hypertarget{classfemus_1_1_solution_ab74a23ebbeb722654d823ea301be51e2}\label{classfemus_1_1_solution_ab74a23ebbeb722654d823ea301be51e2}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Get\+Solution\+Name@{Get\+Solution\+Name}}
+\index{Get\+Solution\+Name@{Get\+Solution\+Name}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Name()}{GetSolutionName()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}}\& femus\+::\+Solution\+::\+Get\+Solution\+Name (\begin{DoxyParamCaption}\item[{const char $\ast$}]{var }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get a solution (Numeric Vector) by name \mbox{\Hypertarget{classfemus_1_1_solution_af76dbb0089f696728146383d073b5205}\label{classfemus_1_1_solution_af76dbb0089f696728146383d073b5205}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Get\+Solution\+Time\+Order@{Get\+Solution\+Time\+Order}}
+\index{Get\+Solution\+Time\+Order@{Get\+Solution\+Time\+Order}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Time\+Order()}{GetSolutionTimeOrder()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Solution\+::\+Get\+Solution\+Time\+Order (\begin{DoxyParamCaption}\item[{unsigned}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_a419e9dba724a5e6e460c357c59119c02}\label{classfemus_1_1_solution_a419e9dba724a5e6e460c357c59119c02}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Get\+Solution\+Type@{Get\+Solution\+Type}}
+\index{Get\+Solution\+Type@{Get\+Solution\+Type}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Type()}{GetSolutionType()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Solution\+::\+Get\+Solution\+Type (\begin{DoxyParamCaption}\item[{const unsigned \&}]{index }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_ae8cd66a86129f27acdc86d89d92849b5}\label{classfemus_1_1_solution_ae8cd66a86129f27acdc86d89d92849b5}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Init\+A\+M\+R\+Eps@{Init\+A\+M\+R\+Eps}}
+\index{Init\+A\+M\+R\+Eps@{Init\+A\+M\+R\+Eps}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Init\+A\+M\+R\+Eps()}{InitAMREps()}}
+{\footnotesize\ttfamily void femus\+::\+Solution\+::\+Init\+A\+M\+R\+Eps (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Init and set to zero The A\+MR Eps vector \mbox{\Hypertarget{classfemus_1_1_solution_a499cdee4a7d4f16b211f39bcc7848702}\label{classfemus_1_1_solution_a499cdee4a7d4f16b211f39bcc7848702}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Remove\+Null\+Space@{Remove\+Null\+Space}}
+\index{Remove\+Null\+Space@{Remove\+Null\+Space}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Remove\+Null\+Space()}{RemoveNullSpace()}}
+{\footnotesize\ttfamily void femus\+::\+Solution\+::\+Remove\+Null\+Space (\begin{DoxyParamCaption}\item[{const unsigned \&}]{index }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_a2fdbb7aceee8d7986fb2954dc9e456f2}\label{classfemus_1_1_solution_a2fdbb7aceee8d7986fb2954dc9e456f2}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Reset\+Solution\+To\+Old\+Solution@{Reset\+Solution\+To\+Old\+Solution}}
+\index{Reset\+Solution\+To\+Old\+Solution@{Reset\+Solution\+To\+Old\+Solution}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Reset\+Solution\+To\+Old\+Solution()}{ResetSolutionToOldSolution()}}
+{\footnotesize\ttfamily void femus\+::\+Solution\+::\+Reset\+Solution\+To\+Old\+Solution (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_a47520e9d8471447516b37d40f7039b77}\label{classfemus_1_1_solution_a47520e9d8471447516b37d40f7039b77}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Resize\+Solution\+Vector@{Resize\+Solution\+Vector}}
+\index{Resize\+Solution\+Vector@{Resize\+Solution\+Vector}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Resize\+Solution\+Vector()}{ResizeSolutionVector()}}
+{\footnotesize\ttfamily void femus\+::\+Solution\+::\+Resize\+Solution\+Vector (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+Resize the solution vector
+
+Allocate memory for the variable called name \mbox{\Hypertarget{classfemus_1_1_solution_a482fdf54bd77e30b70c896c991e44d2f}\label{classfemus_1_1_solution_a482fdf54bd77e30b70c896c991e44d2f}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Set\+If\+F\+SI@{Set\+If\+F\+SI}}
+\index{Set\+If\+F\+SI@{Set\+If\+F\+SI}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Set\+If\+F\+S\+I()}{SetIfFSI()}}
+{\footnotesize\ttfamily void femus\+::\+Solution\+::\+Set\+If\+F\+SI (\begin{DoxyParamCaption}\item[{const bool \&}]{F\+SI = {\ttfamily true} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_aefe78476074fda27aaacc9ad7ba30582}\label{classfemus_1_1_solution_aefe78476074fda27aaacc9ad7ba30582}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Update\+Res@{Update\+Res}}
+\index{Update\+Res@{Update\+Res}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Update\+Res()}{UpdateRes()}}
+{\footnotesize\ttfamily void femus\+::\+Solution\+::\+Update\+Res (\begin{DoxyParamCaption}\item[{const vector$<$ unsigned $>$ \&}]{\+\_\+\+Sol\+Pde\+Index,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{\+\_\+\+R\+ES,  }\item[{const vector$<$ vector$<$ unsigned $>$ $>$ \&}]{K\+Koffset }\end{DoxyParamCaption})}
+
+Update \+\_\+\+Res \mbox{\Hypertarget{classfemus_1_1_solution_aeb71bfc7bd5c675bf8f9b7c749498fa8}\label{classfemus_1_1_solution_aeb71bfc7bd5c675bf8f9b7c749498fa8}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!Update\+Sol@{Update\+Sol}}
+\index{Update\+Sol@{Update\+Sol}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{Update\+Sol()}{UpdateSol()}}
+{\footnotesize\ttfamily void femus\+::\+Solution\+::\+Update\+Sol (\begin{DoxyParamCaption}\item[{const vector$<$ unsigned $>$ \&}]{\+\_\+\+Sol\+Pde\+Index,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{\+\_\+\+E\+PS,  }\item[{const vector$<$ vector$<$ unsigned $>$ $>$ \&}]{K\+Koffset }\end{DoxyParamCaption})}
+
+Sum to \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} vector the Epsilon vector. It is used inside the multigrid cycle
+
+Update \+\_\+\+Sol, \+\_\+\+Res and \+\_\+\+Eps based on E\+PS and R\+ES Update \+\_\+\+Sol 
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_solution_a816938e425db8a87dfa897bbae63fcae}\label{classfemus_1_1_solution_a816938e425db8a87dfa897bbae63fcae}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!\+\_\+\+A\+M\+R\+\_\+flag@{\+\_\+\+A\+M\+R\+\_\+flag}}
+\index{\+\_\+\+A\+M\+R\+\_\+flag@{\+\_\+\+A\+M\+R\+\_\+flag}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+\+A\+M\+R\+\_\+flag}{\_AMR\_flag}}
+{\footnotesize\ttfamily bool femus\+::\+Solution\+::\+\_\+\+A\+M\+R\+\_\+flag}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_aa471aebee151033f022c807554d25409}\label{classfemus_1_1_solution_aa471aebee151033f022c807554d25409}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!\+\_\+\+A\+M\+R\+Eps@{\+\_\+\+A\+M\+R\+Eps}}
+\index{\+\_\+\+A\+M\+R\+Eps@{\+\_\+\+A\+M\+R\+Eps}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+\+A\+M\+R\+Eps}{\_AMREps}}
+{\footnotesize\ttfamily vector$<$\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}}$\ast$$>$ femus\+::\+Solution\+::\+\_\+\+A\+M\+R\+Eps}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_a09d44e7763e08f1a95cb38454ae903c8}\label{classfemus_1_1_solution_a09d44e7763e08f1a95cb38454ae903c8}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!\+\_\+\+Bdc@{\+\_\+\+Bdc}}
+\index{\+\_\+\+Bdc@{\+\_\+\+Bdc}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+\+Bdc}{\_Bdc}}
+{\footnotesize\ttfamily vector$<$\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}}$\ast$$>$ femus\+::\+Solution\+::\+\_\+\+Bdc}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_a64cdae4027573e1c070731027c9d3c95}\label{classfemus_1_1_solution_a64cdae4027573e1c070731027c9d3c95}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!\+\_\+\+Eps@{\+\_\+\+Eps}}
+\index{\+\_\+\+Eps@{\+\_\+\+Eps}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+\+Eps}{\_Eps}}
+{\footnotesize\ttfamily vector$<$\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}}$\ast$$>$ femus\+::\+Solution\+::\+\_\+\+Eps}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_a14cdad148f6f5eeb19126201760df71a}\label{classfemus_1_1_solution_a14cdad148f6f5eeb19126201760df71a}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!\+\_\+\+Grad\+Mat@{\+\_\+\+Grad\+Mat}}
+\index{\+\_\+\+Grad\+Mat@{\+\_\+\+Grad\+Mat}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+\+Grad\+Mat}{\_GradMat}}
+{\footnotesize\ttfamily vector$<$\mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}}$\ast$$>$ femus\+::\+Solution\+::\+\_\+\+Grad\+Mat\mbox{[}5\mbox{]}}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_a27fa400ad65ad9f6632f38c168842bb5}\label{classfemus_1_1_solution_a27fa400ad65ad9f6632f38c168842bb5}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!\+\_\+\+Grad\+Vec@{\+\_\+\+Grad\+Vec}}
+\index{\+\_\+\+Grad\+Vec@{\+\_\+\+Grad\+Vec}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+\+Grad\+Vec}{\_GradVec}}
+{\footnotesize\ttfamily vector$<$ vector $<$\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}}$\ast$$>$ $>$ femus\+::\+Solution\+::\+\_\+\+Grad\+Vec}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_aaaae28b34a0a3f70258767e30e5059f8}\label{classfemus_1_1_solution_aaaae28b34a0a3f70258767e30e5059f8}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!\+\_\+\+Res@{\+\_\+\+Res}}
+\index{\+\_\+\+Res@{\+\_\+\+Res}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+\+Res}{\_Res}}
+{\footnotesize\ttfamily vector$<$\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}}$\ast$$>$ femus\+::\+Solution\+::\+\_\+\+Res}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_aefb8528c702c13931c863711ee189b7e}\label{classfemus_1_1_solution_aefb8528c702c13931c863711ee189b7e}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!\+\_\+\+Res\+Eps\+Bdc\+Flag@{\+\_\+\+Res\+Eps\+Bdc\+Flag}}
+\index{\+\_\+\+Res\+Eps\+Bdc\+Flag@{\+\_\+\+Res\+Eps\+Bdc\+Flag}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+\+Res\+Eps\+Bdc\+Flag}{\_ResEpsBdcFlag}}
+{\footnotesize\ttfamily vector$<$bool$>$ femus\+::\+Solution\+::\+\_\+\+Res\+Eps\+Bdc\+Flag}
+
+\mbox{\Hypertarget{classfemus_1_1_solution_a9cabd7d3bf1b3dcb73d57a4e06e856a7}\label{classfemus_1_1_solution_a9cabd7d3bf1b3dcb73d57a4e06e856a7}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!\+\_\+\+Sol@{\+\_\+\+Sol}}
+\index{\+\_\+\+Sol@{\+\_\+\+Sol}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+\+Sol}{\_Sol}}
+{\footnotesize\ttfamily vector$<$\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}}$\ast$$>$ femus\+::\+Solution\+::\+\_\+\+Sol}
+
+member data -\/ one for each variable -\/ \mbox{\Hypertarget{classfemus_1_1_solution_a7ed557f571341f4ef1092310a40588ee}\label{classfemus_1_1_solution_a7ed557f571341f4ef1092310a40588ee}} 
+\index{femus\+::\+Solution@{femus\+::\+Solution}!\+\_\+\+Sol\+Old@{\+\_\+\+Sol\+Old}}
+\index{\+\_\+\+Sol\+Old@{\+\_\+\+Sol\+Old}!femus\+::\+Solution@{femus\+::\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+\+Sol\+Old}{\_SolOld}}
+{\footnotesize\ttfamily vector$<$\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}}$\ast$$>$ femus\+::\+Solution\+::\+\_\+\+Sol\+Old}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+solution/\mbox{\hyperlink{_solution_8hpp}{Solution.\+hpp}}\item 
+solution/\mbox{\hyperlink{_solution_8cpp}{Solution.\+cpp}}\end{DoxyCompactItemize}

@@ -1,0 +1,237 @@
+\hypertarget{classfemus_1_1_writer}{}\section{femus\+:\+:Writer Class Reference}
+\label{classfemus_1_1_writer}\index{femus\+::\+Writer@{femus\+::\+Writer}}
+
+
+{\ttfamily \#include $<$Writer.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Writer\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_writer__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Writer\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_writer__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_writer_aab7c838f3993d52a347bdf35a76c2085}{Writer}} (\mbox{\hyperlink{classfemus_1_1_multi_level_solution}{Multi\+Level\+Solution}} $\ast$ml\+\_\+sol)
+\item 
+\mbox{\hyperlink{classfemus_1_1_writer_ad6429c1b9ee2ecc9b684596fce5e05ca}{Writer}} (\mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}} $\ast$ml\+\_\+mesh)
+\item 
+virtual \mbox{\hyperlink{classfemus_1_1_writer_a16d2662b9dcdd7a9553578e03ab2a26f}{$\sim$\+Writer}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_writer_aa0f7400e0546946f317cc361397d97bd}{Write}} (const std\+::string output\+\_\+path, const char order\mbox{[}$\,$\mbox{]}, const std\+::vector$<$ std\+::string $>$ \&vars=std\+::vector$<$ std\+::string $>$(), const unsigned time\+\_\+step=0)=0
+\item 
+void \mbox{\hyperlink{classfemus_1_1_writer_ac484a2d3a8969473e4c8569da644e111}{Set\+Moving\+Mesh}} (std\+::vector$<$ std\+::string $>$ \&movvars\+\_\+in)
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_writer_a17a6789b58e05989d74698904346f699}{Set\+Debug\+Output}} (bool value)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_writer_adc8bd9b254a8766a5073624c75b0f649}{Set\+Graph\+Variable}} (const std\+::string \&Graph\+Varaible)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_writer_a066d61d2539069edbb156f42b5b69222}{Unset\+Graph\+Variable}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_writer_a4af0281b254bd3da0e5ea79008bfd9b4}{Set\+Surface\+Variables}} (std\+::vector$<$ std\+::string $>$ \&surface\+Variable)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_writer_aee6d76214fc7c1766e0394a638563869}{Unset\+Surface\+Variables}} ()
+\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classfemus_1_1_writer}{Writer}} $>$ \mbox{\hyperlink{classfemus_1_1_writer_a97628f939955d426bf70b0d3d016705b}{build}} (const \mbox{\hyperlink{_writer_enum_8hpp_a18b827c3c1f62b8a57febdcad0c871a8}{Writer\+Enum}} format, \mbox{\hyperlink{classfemus_1_1_multi_level_solution}{Multi\+Level\+Solution}} $\ast$ml\+\_\+sol)
+\item 
+static std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classfemus_1_1_writer}{Writer}} $>$ \mbox{\hyperlink{classfemus_1_1_writer_a0728978c3531becf7e0cedac9a8b9d9a}{build}} (const \mbox{\hyperlink{_writer_enum_8hpp_a18b827c3c1f62b8a57febdcad0c871a8}{Writer\+Enum}} format, \mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}} $\ast$ml\+\_\+mesh)
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{classfemus_1_1_writer_a9b978d0a462fc50e1ffb024bd17c63fc}{\+\_\+moving\+\_\+mesh}}
+\item 
+std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classfemus_1_1_writer_ae0ba1963fd2a1e3ffcbd71a09942f11a}{\+\_\+moving\+\_\+vars}}
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_writer_a51798fe762bd3fe7f03de89fcd689c9f}{\+\_\+graph}}
+\item 
+std\+::string \mbox{\hyperlink{classfemus_1_1_writer_abc4c8bb583c18bd90d006d01fcb448a1}{\+\_\+graph\+Variable}}
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_writer_a3e1fd7a51767d72170fe212e1bff987b}{\+\_\+surface}}
+\item 
+std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{classfemus_1_1_writer_af5ef992bc65e74345dded38b976b144c}{\+\_\+surface\+Variables}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_multi_level_solution}{Multi\+Level\+Solution}} $\ast$ \mbox{\hyperlink{classfemus_1_1_writer_a980ede81568e7ff655ee380e92d3a57a}{\+\_\+ml\+\_\+sol}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}} $\ast$ \mbox{\hyperlink{classfemus_1_1_writer_afbf272e5db3b204bb2c4679d19096688}{\+\_\+ml\+\_\+mesh}}
+\item 
+int \mbox{\hyperlink{classfemus_1_1_writer_ad9e4841295416233d0943775111fc1d3}{\+\_\+gridn}}
+\end{DoxyCompactItemize}
+\subsection*{Static Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static const unsigned \mbox{\hyperlink{classfemus_1_1_writer_af18cf51782e282ca67f508117a06c5e4}{Femus\+To\+V\+T\+Kor\+To\+X\+D\+M\+F\+Conn}} \mbox{[}27\mbox{]} = \{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,23,21,20,22,24,25,26\}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_writer_aab7c838f3993d52a347bdf35a76c2085}\label{classfemus_1_1_writer_aab7c838f3993d52a347bdf35a76c2085}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!Writer@{Writer}}
+\index{Writer@{Writer}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{Writer()}{Writer()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily femus\+::\+Writer\+::\+Writer (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_multi_level_solution}{Multi\+Level\+Solution}} $\ast$}]{ml\+\_\+sol }\end{DoxyParamCaption})}
+
+Constructor. \mbox{\Hypertarget{classfemus_1_1_writer_ad6429c1b9ee2ecc9b684596fce5e05ca}\label{classfemus_1_1_writer_ad6429c1b9ee2ecc9b684596fce5e05ca}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!Writer@{Writer}}
+\index{Writer@{Writer}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{Writer()}{Writer()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily femus\+::\+Writer\+::\+Writer (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}} $\ast$}]{ml\+\_\+mesh }\end{DoxyParamCaption})}
+
+Constructor. \mbox{\Hypertarget{classfemus_1_1_writer_a16d2662b9dcdd7a9553578e03ab2a26f}\label{classfemus_1_1_writer_a16d2662b9dcdd7a9553578e03ab2a26f}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!````~Writer@{$\sim$\+Writer}}
+\index{````~Writer@{$\sim$\+Writer}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{$\sim$\+Writer()}{~Writer()}}
+{\footnotesize\ttfamily femus\+::\+Writer\+::$\sim$\+Writer (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Destructor 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_writer_a97628f939955d426bf70b0d3d016705b}\label{classfemus_1_1_writer_a97628f939955d426bf70b0d3d016705b}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!build@{build}}
+\index{build@{build}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{build()}{build()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classfemus_1_1_writer}{Writer}} $>$ femus\+::\+Writer\+::build (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_writer_enum_8hpp_a18b827c3c1f62b8a57febdcad0c871a8}{Writer\+Enum}}}]{format,  }\item[{\mbox{\hyperlink{classfemus_1_1_multi_level_solution}{Multi\+Level\+Solution}} $\ast$}]{ml\+\_\+sol }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+runtime selection of writer for M\+Lsol \mbox{\Hypertarget{classfemus_1_1_writer_a0728978c3531becf7e0cedac9a8b9d9a}\label{classfemus_1_1_writer_a0728978c3531becf7e0cedac9a8b9d9a}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!build@{build}}
+\index{build@{build}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{build()}{build()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classfemus_1_1_writer}{Writer}} $>$ femus\+::\+Writer\+::build (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_writer_enum_8hpp_a18b827c3c1f62b8a57febdcad0c871a8}{Writer\+Enum}}}]{format,  }\item[{\mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}} $\ast$}]{ml\+\_\+mesh }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+runtime selection of writer for M\+Lmesh \mbox{\Hypertarget{classfemus_1_1_writer_a17a6789b58e05989d74698904346f699}\label{classfemus_1_1_writer_a17a6789b58e05989d74698904346f699}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!Set\+Debug\+Output@{Set\+Debug\+Output}}
+\index{Set\+Debug\+Output@{Set\+Debug\+Output}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{Set\+Debug\+Output()}{SetDebugOutput()}}
+{\footnotesize\ttfamily virtual void femus\+::\+Writer\+::\+Set\+Debug\+Output (\begin{DoxyParamCaption}\item[{bool}]{value }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1_x_d_m_f_writer_a4c69012d7952e8ac011b876a516d073b}{femus\+::\+X\+D\+M\+F\+Writer}}, \mbox{\hyperlink{classfemus_1_1_g_m_v_writer_a80134094abcb8d2766414841d86038a9}{femus\+::\+G\+M\+V\+Writer}}, and \mbox{\hyperlink{classfemus_1_1_v_t_k_writer_af6eea80a3b7348bf2066c1150ead1bc8}{femus\+::\+V\+T\+K\+Writer}}.
+
+\mbox{\Hypertarget{classfemus_1_1_writer_adc8bd9b254a8766a5073624c75b0f649}\label{classfemus_1_1_writer_adc8bd9b254a8766a5073624c75b0f649}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!Set\+Graph\+Variable@{Set\+Graph\+Variable}}
+\index{Set\+Graph\+Variable@{Set\+Graph\+Variable}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{Set\+Graph\+Variable()}{SetGraphVariable()}}
+{\footnotesize\ttfamily void femus\+::\+Writer\+::\+Set\+Graph\+Variable (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{Graph\+Varaible }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_writer_ac484a2d3a8969473e4c8569da644e111}\label{classfemus_1_1_writer_ac484a2d3a8969473e4c8569da644e111}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!Set\+Moving\+Mesh@{Set\+Moving\+Mesh}}
+\index{Set\+Moving\+Mesh@{Set\+Moving\+Mesh}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{Set\+Moving\+Mesh()}{SetMovingMesh()}}
+{\footnotesize\ttfamily void femus\+::\+Writer\+::\+Set\+Moving\+Mesh (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::string $>$ \&}]{movvars\+\_\+in }\end{DoxyParamCaption})}
+
+set moving mesh \mbox{\Hypertarget{classfemus_1_1_writer_a4af0281b254bd3da0e5ea79008bfd9b4}\label{classfemus_1_1_writer_a4af0281b254bd3da0e5ea79008bfd9b4}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!Set\+Surface\+Variables@{Set\+Surface\+Variables}}
+\index{Set\+Surface\+Variables@{Set\+Surface\+Variables}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{Set\+Surface\+Variables()}{SetSurfaceVariables()}}
+{\footnotesize\ttfamily void femus\+::\+Writer\+::\+Set\+Surface\+Variables (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::string $>$ \&}]{surface\+Variable }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_writer_a066d61d2539069edbb156f42b5b69222}\label{classfemus_1_1_writer_a066d61d2539069edbb156f42b5b69222}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!Unset\+Graph\+Variable@{Unset\+Graph\+Variable}}
+\index{Unset\+Graph\+Variable@{Unset\+Graph\+Variable}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{Unset\+Graph\+Variable()}{UnsetGraphVariable()}}
+{\footnotesize\ttfamily void femus\+::\+Writer\+::\+Unset\+Graph\+Variable (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_writer_aee6d76214fc7c1766e0394a638563869}\label{classfemus_1_1_writer_aee6d76214fc7c1766e0394a638563869}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!Unset\+Surface\+Variables@{Unset\+Surface\+Variables}}
+\index{Unset\+Surface\+Variables@{Unset\+Surface\+Variables}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{Unset\+Surface\+Variables()}{UnsetSurfaceVariables()}}
+{\footnotesize\ttfamily void femus\+::\+Writer\+::\+Unset\+Surface\+Variables (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_writer_aa0f7400e0546946f317cc361397d97bd}\label{classfemus_1_1_writer_aa0f7400e0546946f317cc361397d97bd}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!Write@{Write}}
+\index{Write@{Write}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{Write()}{Write()}}
+{\footnotesize\ttfamily virtual void femus\+::\+Writer\+::\+Write (\begin{DoxyParamCaption}\item[{const std\+::string}]{output\+\_\+path,  }\item[{const char}]{order\mbox{[}$\,$\mbox{]},  }\item[{const std\+::vector$<$ std\+::string $>$ \&}]{vars = {\ttfamily std\+:\+:vector$<$~std\+:\+:string~$>$()},  }\item[{const unsigned}]{time\+\_\+step = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+write output function 
+
+Implemented in \mbox{\hyperlink{classfemus_1_1_g_m_v_writer_a9f485fb5f1985f07615aed89c18fd254}{femus\+::\+G\+M\+V\+Writer}}, \mbox{\hyperlink{classfemus_1_1_v_t_k_writer_a91486b781799b8721f4a3a4099392be5}{femus\+::\+V\+T\+K\+Writer}}, and \mbox{\hyperlink{classfemus_1_1_x_d_m_f_writer_a01b6d71015768b64cff7adbc98a1ec8f}{femus\+::\+X\+D\+M\+F\+Writer}}.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_writer_a51798fe762bd3fe7f03de89fcd689c9f}\label{classfemus_1_1_writer_a51798fe762bd3fe7f03de89fcd689c9f}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!\+\_\+graph@{\+\_\+graph}}
+\index{\+\_\+graph@{\+\_\+graph}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{\+\_\+graph}{\_graph}}
+{\footnotesize\ttfamily bool femus\+::\+Writer\+::\+\_\+graph\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_writer_abc4c8bb583c18bd90d006d01fcb448a1}\label{classfemus_1_1_writer_abc4c8bb583c18bd90d006d01fcb448a1}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!\+\_\+graph\+Variable@{\+\_\+graph\+Variable}}
+\index{\+\_\+graph\+Variable@{\+\_\+graph\+Variable}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{\+\_\+graph\+Variable}{\_graphVariable}}
+{\footnotesize\ttfamily std\+::string femus\+::\+Writer\+::\+\_\+graph\+Variable\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_writer_ad9e4841295416233d0943775111fc1d3}\label{classfemus_1_1_writer_ad9e4841295416233d0943775111fc1d3}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!\+\_\+gridn@{\+\_\+gridn}}
+\index{\+\_\+gridn@{\+\_\+gridn}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{\+\_\+gridn}{\_gridn}}
+{\footnotesize\ttfamily int femus\+::\+Writer\+::\+\_\+gridn\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_writer_afbf272e5db3b204bb2c4679d19096688}\label{classfemus_1_1_writer_afbf272e5db3b204bb2c4679d19096688}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!\+\_\+ml\+\_\+mesh@{\+\_\+ml\+\_\+mesh}}
+\index{\+\_\+ml\+\_\+mesh@{\+\_\+ml\+\_\+mesh}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{\+\_\+ml\+\_\+mesh}{\_ml\_mesh}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}}$\ast$ femus\+::\+Writer\+::\+\_\+ml\+\_\+mesh\hspace{0.3cm}{\ttfamily [protected]}}
+
+the multilevel mesh \mbox{\Hypertarget{classfemus_1_1_writer_a980ede81568e7ff655ee380e92d3a57a}\label{classfemus_1_1_writer_a980ede81568e7ff655ee380e92d3a57a}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!\+\_\+ml\+\_\+sol@{\+\_\+ml\+\_\+sol}}
+\index{\+\_\+ml\+\_\+sol@{\+\_\+ml\+\_\+sol}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{\+\_\+ml\+\_\+sol}{\_ml\_sol}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_multi_level_solution}{Multi\+Level\+Solution}}$\ast$ femus\+::\+Writer\+::\+\_\+ml\+\_\+sol\hspace{0.3cm}{\ttfamily [protected]}}
+
+the multilevelsolution pointer \mbox{\Hypertarget{classfemus_1_1_writer_a9b978d0a462fc50e1ffb024bd17c63fc}\label{classfemus_1_1_writer_a9b978d0a462fc50e1ffb024bd17c63fc}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!\+\_\+moving\+\_\+mesh@{\+\_\+moving\+\_\+mesh}}
+\index{\+\_\+moving\+\_\+mesh@{\+\_\+moving\+\_\+mesh}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{\+\_\+moving\+\_\+mesh}{\_moving\_mesh}}
+{\footnotesize\ttfamily int femus\+::\+Writer\+::\+\_\+moving\+\_\+mesh\hspace{0.3cm}{\ttfamily [protected]}}
+
+a flag to move the output mesh \mbox{\Hypertarget{classfemus_1_1_writer_ae0ba1963fd2a1e3ffcbd71a09942f11a}\label{classfemus_1_1_writer_ae0ba1963fd2a1e3ffcbd71a09942f11a}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!\+\_\+moving\+\_\+vars@{\+\_\+moving\+\_\+vars}}
+\index{\+\_\+moving\+\_\+vars@{\+\_\+moving\+\_\+vars}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{\+\_\+moving\+\_\+vars}{\_moving\_vars}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::string$>$ femus\+::\+Writer\+::\+\_\+moving\+\_\+vars\hspace{0.3cm}{\ttfamily [protected]}}
+
+the displacement variables for mesh moving \mbox{\Hypertarget{classfemus_1_1_writer_a3e1fd7a51767d72170fe212e1bff987b}\label{classfemus_1_1_writer_a3e1fd7a51767d72170fe212e1bff987b}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!\+\_\+surface@{\+\_\+surface}}
+\index{\+\_\+surface@{\+\_\+surface}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{\+\_\+surface}{\_surface}}
+{\footnotesize\ttfamily bool femus\+::\+Writer\+::\+\_\+surface\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_writer_af5ef992bc65e74345dded38b976b144c}\label{classfemus_1_1_writer_af5ef992bc65e74345dded38b976b144c}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!\+\_\+surface\+Variables@{\+\_\+surface\+Variables}}
+\index{\+\_\+surface\+Variables@{\+\_\+surface\+Variables}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{\+\_\+surface\+Variables}{\_surfaceVariables}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::string $>$ femus\+::\+Writer\+::\+\_\+surface\+Variables\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_writer_af18cf51782e282ca67f508117a06c5e4}\label{classfemus_1_1_writer_af18cf51782e282ca67f508117a06c5e4}} 
+\index{femus\+::\+Writer@{femus\+::\+Writer}!Femus\+To\+V\+T\+Kor\+To\+X\+D\+M\+F\+Conn@{Femus\+To\+V\+T\+Kor\+To\+X\+D\+M\+F\+Conn}}
+\index{Femus\+To\+V\+T\+Kor\+To\+X\+D\+M\+F\+Conn@{Femus\+To\+V\+T\+Kor\+To\+X\+D\+M\+F\+Conn}!femus\+::\+Writer@{femus\+::\+Writer}}
+\subsubsection{\texorpdfstring{Femus\+To\+V\+T\+Kor\+To\+X\+D\+M\+F\+Conn}{FemusToVTKorToXDMFConn}}
+{\footnotesize\ttfamily const unsigned femus\+::\+Writer\+::\+Femus\+To\+V\+T\+Kor\+To\+X\+D\+M\+F\+Conn = \{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,23,21,20,22,24,25,26\}\hspace{0.3cm}{\ttfamily [static]}, {\ttfamily [protected]}}
+
+map from femus connectivity to vtk-\/connectivity for paraview visualization 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+solution/\mbox{\hyperlink{_writer_8hpp}{Writer.\+hpp}}\item 
+solution/\mbox{\hyperlink{_writer_8cpp}{Writer.\+cpp}}\end{DoxyCompactItemize}

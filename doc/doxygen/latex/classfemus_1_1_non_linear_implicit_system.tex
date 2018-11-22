@@ -1,0 +1,227 @@
+\hypertarget{classfemus_1_1_non_linear_implicit_system}{}\section{femus\+:\+:Non\+Linear\+Implicit\+System Class Reference}
+\label{classfemus_1_1_non_linear_implicit_system}\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+
+
+{\ttfamily \#include $<$Non\+Linear\+Implicit\+System.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Non\+Linear\+Implicit\+System\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_non_linear_implicit_system__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Non\+Linear\+Implicit\+System\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_non_linear_implicit_system__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+typedef \mbox{\hyperlink{classfemus_1_1_linear_implicit_system}{Linear\+Implicit\+System}} \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a29034444f2d242aa73d041673ec5bc88}{Parent}}
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a1c15ae18c343b00558d1edd018bbffd3}{Non\+Linear\+Implicit\+System}} (\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&ml\+\_\+probl, const std\+::string \&\mbox{\hyperlink{classfemus_1_1_system_a1a007c176529dae649887bbd1cb46103}{name}}, const unsigned int \mbox{\hyperlink{classfemus_1_1_system_a28f5c7f6286dd597ae28a8923c8dca11}{number}}, const \mbox{\hyperlink{_mg_smoother_enum_8hpp_a4d11c2ff93e2f0f440c879a9c40cda71}{Mg\+Smoother}} \&smoother\+\_\+type)
+\item 
+virtual \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_ac12060f51db75a9bd7866982ec5dd284}{$\sim$\+Non\+Linear\+Implicit\+System}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_afc52f569e5be8c3bf593a00c883d7192}{clear}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_ad2d20975e0c919a9d99bdd9368a0212a}{init}} ()
+\item 
+virtual std\+::string \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a8f4727b8b763bdac9f58b4c9dbb097be}{system\+\_\+type}} () const
+\item 
+double \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_aaaf3f8e71dcc85553312c1a326d69225}{final\+\_\+nonlinear\+\_\+residual}} () const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a660090dc6ccd56ed4f04758168099669}{Set\+Max\+Number\+Of\+Non\+Linear\+Iterations}} (unsigned int max\+\_\+nonlin\+\_\+it)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_aa9f91520a1b8e47092045a3ed052c89d}{Set\+Non\+Linear\+Convergence\+Tolerance}} (double nonlin\+\_\+convergence\+\_\+tolerance)
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a1bd16b7e0fafb9b06ea7d529fd0b0f7b}{Is\+Non\+Linear\+Converged}} (const unsigned gridn, double \&non\+Linear\+Eps)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_ac1129633fc64e3ebfa575ab823a764f4}{Set\+Max\+Number\+Of\+Residual\+Updates\+For\+Nonlinear\+Iteration}} (const unsigned \&max\+Number\+Of\+Iterations)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_aa5745cfd7f2f0c9013e1aec7324c6ec7}{Set\+Residual\+Update\+Convergence\+Tolerance}} (const double \&tolerance)
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a4abfe53698e95f1075194cf3a7ce790a}{solve}} (const \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8}{Mg\+Smoother\+Type}} \&mg\+Smoother\+Type=\mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8a2618be531dddb3647be5874ddcae5164}{M\+U\+L\+T\+I\+P\+L\+I\+C\+A\+T\+I\+VE}})
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+double \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_ab5c78ff5fc515d2ebe4cd3fb0c931cb0}{\+\_\+final\+\_\+nonlinear\+\_\+residual}}
+\item 
+unsigned int \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a42606b5212631b7d44f4fa82377a6a95}{\+\_\+n\+\_\+max\+\_\+nonlinear\+\_\+iterations}}
+\item 
+double \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a744388ccf68ac105d66450c3e7b80d7f}{\+\_\+max\+\_\+nonlinear\+\_\+convergence\+\_\+tolerance}}
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a35c379d70c79b0f79735d6c5b0b04e2a}{\+\_\+max\+Number\+Of\+Residual\+Update\+Iterations}}
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The non linear implicit system abstract class 
+
+\subsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_a29034444f2d242aa73d041673ec5bc88}\label{classfemus_1_1_non_linear_implicit_system_a29034444f2d242aa73d041673ec5bc88}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!Parent@{Parent}}
+\index{Parent@{Parent}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{Parent}{Parent}}
+{\footnotesize\ttfamily typedef \mbox{\hyperlink{classfemus_1_1_linear_implicit_system}{Linear\+Implicit\+System}} \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a29034444f2d242aa73d041673ec5bc88}{femus\+::\+Non\+Linear\+Implicit\+System\+::\+Parent}}}
+
+The type of the parent. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_a1c15ae18c343b00558d1edd018bbffd3}\label{classfemus_1_1_non_linear_implicit_system_a1c15ae18c343b00558d1edd018bbffd3}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!Non\+Linear\+Implicit\+System@{Non\+Linear\+Implicit\+System}}
+\index{Non\+Linear\+Implicit\+System@{Non\+Linear\+Implicit\+System}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{Non\+Linear\+Implicit\+System()}{NonLinearImplicitSystem()}}
+{\footnotesize\ttfamily femus\+::\+Non\+Linear\+Implicit\+System\+::\+Non\+Linear\+Implicit\+System (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&}]{ml\+\_\+probl,  }\item[{const std\+::string \&}]{name,  }\item[{const unsigned int}]{number,  }\item[{const \mbox{\hyperlink{_mg_smoother_enum_8hpp_a4d11c2ff93e2f0f440c879a9c40cda71}{Mg\+Smoother}} \&}]{smoother\+\_\+type }\end{DoxyParamCaption})}
+
+Constructor. Optionally initializes required data structures. \mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_ac12060f51db75a9bd7866982ec5dd284}\label{classfemus_1_1_non_linear_implicit_system_ac12060f51db75a9bd7866982ec5dd284}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!````~Non\+Linear\+Implicit\+System@{$\sim$\+Non\+Linear\+Implicit\+System}}
+\index{````~Non\+Linear\+Implicit\+System@{$\sim$\+Non\+Linear\+Implicit\+System}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{$\sim$\+Non\+Linear\+Implicit\+System()}{~NonLinearImplicitSystem()}}
+{\footnotesize\ttfamily femus\+::\+Non\+Linear\+Implicit\+System\+::$\sim$\+Non\+Linear\+Implicit\+System (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+destructor 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_afc52f569e5be8c3bf593a00c883d7192}\label{classfemus_1_1_non_linear_implicit_system_afc52f569e5be8c3bf593a00c883d7192}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!clear@{clear}}
+\index{clear@{clear}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{clear()}{clear()}}
+{\footnotesize\ttfamily void femus\+::\+Non\+Linear\+Implicit\+System\+::clear (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Clear all the data structures associated with the system. 
+
+Reimplemented from \mbox{\hyperlink{classfemus_1_1_linear_implicit_system_ace039665432e53db0c25b0efede44a76}{femus\+::\+Linear\+Implicit\+System}}.
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1_monolithic_f_s_i_non_linear_implicit_system_ac7f2bedf4d1c6b00f5443cb5128a3069}{femus\+::\+Monolithic\+F\+S\+I\+Non\+Linear\+Implicit\+System}}.
+
+\mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_aaaf3f8e71dcc85553312c1a326d69225}\label{classfemus_1_1_non_linear_implicit_system_aaaf3f8e71dcc85553312c1a326d69225}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!final\+\_\+nonlinear\+\_\+residual@{final\+\_\+nonlinear\+\_\+residual}}
+\index{final\+\_\+nonlinear\+\_\+residual@{final\+\_\+nonlinear\+\_\+residual}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{final\+\_\+nonlinear\+\_\+residual()}{final\_nonlinear\_residual()}}
+{\footnotesize\ttfamily double femus\+::\+Non\+Linear\+Implicit\+System\+::final\+\_\+nonlinear\+\_\+residual (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Returns the final residual for the nonlinear system solve. \mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_ad2d20975e0c919a9d99bdd9368a0212a}\label{classfemus_1_1_non_linear_implicit_system_ad2d20975e0c919a9d99bdd9368a0212a}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!init@{init}}
+\index{init@{init}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily void femus\+::\+Non\+Linear\+Implicit\+System\+::init (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Init the system P\+DE structures 
+
+Reimplemented from \mbox{\hyperlink{classfemus_1_1_linear_implicit_system_a4605bac9ea670bb7dbd4454358155670}{femus\+::\+Linear\+Implicit\+System}}.
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1_monolithic_f_s_i_non_linear_implicit_system_a07e04a8cce138cae9edcdd05fd1c7829}{femus\+::\+Monolithic\+F\+S\+I\+Non\+Linear\+Implicit\+System}}.
+
+\mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_a1bd16b7e0fafb9b06ea7d529fd0b0f7b}\label{classfemus_1_1_non_linear_implicit_system_a1bd16b7e0fafb9b06ea7d529fd0b0f7b}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!Is\+Non\+Linear\+Converged@{Is\+Non\+Linear\+Converged}}
+\index{Is\+Non\+Linear\+Converged@{Is\+Non\+Linear\+Converged}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{Is\+Non\+Linear\+Converged()}{IsNonLinearConverged()}}
+{\footnotesize\ttfamily bool femus\+::\+Non\+Linear\+Implicit\+System\+::\+Is\+Non\+Linear\+Converged (\begin{DoxyParamCaption}\item[{const unsigned}]{gridn,  }\item[{double \&}]{non\+Linear\+Eps }\end{DoxyParamCaption})}
+
+Checks for the non the linear convergence \mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_a660090dc6ccd56ed4f04758168099669}\label{classfemus_1_1_non_linear_implicit_system_a660090dc6ccd56ed4f04758168099669}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!Set\+Max\+Number\+Of\+Non\+Linear\+Iterations@{Set\+Max\+Number\+Of\+Non\+Linear\+Iterations}}
+\index{Set\+Max\+Number\+Of\+Non\+Linear\+Iterations@{Set\+Max\+Number\+Of\+Non\+Linear\+Iterations}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{Set\+Max\+Number\+Of\+Non\+Linear\+Iterations()}{SetMaxNumberOfNonLinearIterations()}}
+{\footnotesize\ttfamily void femus\+::\+Non\+Linear\+Implicit\+System\+::\+Set\+Max\+Number\+Of\+Non\+Linear\+Iterations (\begin{DoxyParamCaption}\item[{unsigned int}]{max\+\_\+nonlin\+\_\+it }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Set the max number of non-\/linear iterations for the nonlinear system solve. \mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_ac1129633fc64e3ebfa575ab823a764f4}\label{classfemus_1_1_non_linear_implicit_system_ac1129633fc64e3ebfa575ab823a764f4}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!Set\+Max\+Number\+Of\+Residual\+Updates\+For\+Nonlinear\+Iteration@{Set\+Max\+Number\+Of\+Residual\+Updates\+For\+Nonlinear\+Iteration}}
+\index{Set\+Max\+Number\+Of\+Residual\+Updates\+For\+Nonlinear\+Iteration@{Set\+Max\+Number\+Of\+Residual\+Updates\+For\+Nonlinear\+Iteration}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{Set\+Max\+Number\+Of\+Residual\+Updates\+For\+Nonlinear\+Iteration()}{SetMaxNumberOfResidualUpdatesForNonlinearIteration()}}
+{\footnotesize\ttfamily void femus\+::\+Non\+Linear\+Implicit\+System\+::\+Set\+Max\+Number\+Of\+Residual\+Updates\+For\+Nonlinear\+Iteration (\begin{DoxyParamCaption}\item[{const unsigned \&}]{max\+Number\+Of\+Iterations }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_aa9f91520a1b8e47092045a3ed052c89d}\label{classfemus_1_1_non_linear_implicit_system_aa9f91520a1b8e47092045a3ed052c89d}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!Set\+Non\+Linear\+Convergence\+Tolerance@{Set\+Non\+Linear\+Convergence\+Tolerance}}
+\index{Set\+Non\+Linear\+Convergence\+Tolerance@{Set\+Non\+Linear\+Convergence\+Tolerance}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{Set\+Non\+Linear\+Convergence\+Tolerance()}{SetNonLinearConvergenceTolerance()}}
+{\footnotesize\ttfamily void femus\+::\+Non\+Linear\+Implicit\+System\+::\+Set\+Non\+Linear\+Convergence\+Tolerance (\begin{DoxyParamCaption}\item[{double}]{nonlin\+\_\+convergence\+\_\+tolerance }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Set the max nonlinear convergence tolerance \mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_aa5745cfd7f2f0c9013e1aec7324c6ec7}\label{classfemus_1_1_non_linear_implicit_system_aa5745cfd7f2f0c9013e1aec7324c6ec7}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!Set\+Residual\+Update\+Convergence\+Tolerance@{Set\+Residual\+Update\+Convergence\+Tolerance}}
+\index{Set\+Residual\+Update\+Convergence\+Tolerance@{Set\+Residual\+Update\+Convergence\+Tolerance}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{Set\+Residual\+Update\+Convergence\+Tolerance()}{SetResidualUpdateConvergenceTolerance()}}
+{\footnotesize\ttfamily void femus\+::\+Non\+Linear\+Implicit\+System\+::\+Set\+Residual\+Update\+Convergence\+Tolerance (\begin{DoxyParamCaption}\item[{const double \&}]{tolerance }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_a4abfe53698e95f1075194cf3a7ce790a}\label{classfemus_1_1_non_linear_implicit_system_a4abfe53698e95f1075194cf3a7ce790a}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!solve@{solve}}
+\index{solve@{solve}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{solve()}{solve()}}
+{\footnotesize\ttfamily void femus\+::\+Non\+Linear\+Implicit\+System\+::solve (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8}{Mg\+Smoother\+Type}} \&}]{mg\+Smoother\+Type = {\ttfamily \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8a2618be531dddb3647be5874ddcae5164}{M\+U\+L\+T\+I\+P\+L\+I\+C\+A\+T\+I\+VE}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+Solves the system. 
+
+Reimplemented from \mbox{\hyperlink{classfemus_1_1_linear_implicit_system_ab37c3204960b888a594fb38e0803d2e5}{femus\+::\+Linear\+Implicit\+System}}.
+
+\mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_a8f4727b8b763bdac9f58b4c9dbb097be}\label{classfemus_1_1_non_linear_implicit_system_a8f4727b8b763bdac9f58b4c9dbb097be}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!system\+\_\+type@{system\+\_\+type}}
+\index{system\+\_\+type@{system\+\_\+type}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{system\+\_\+type()}{system\_type()}}
+{\footnotesize\ttfamily virtual std\+::string femus\+::\+Non\+Linear\+Implicit\+System\+::system\+\_\+type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+\begin{DoxyReturn}{Returns}
+{\ttfamily \char`\"{}\+Nonlinear\+Implicit\char`\"{}}. Helps in identifying the system type in an equation system file. 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classfemus_1_1_linear_implicit_system_a45df3966aab87bd06da49c78897a6648}{femus\+::\+Linear\+Implicit\+System}}.
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1_monolithic_f_s_i_non_linear_implicit_system_a29bb0bdaf1eec888af05e8e57469faf4}{femus\+::\+Monolithic\+F\+S\+I\+Non\+Linear\+Implicit\+System}}.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_ab5c78ff5fc515d2ebe4cd3fb0c931cb0}\label{classfemus_1_1_non_linear_implicit_system_ab5c78ff5fc515d2ebe4cd3fb0c931cb0}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!\+\_\+final\+\_\+nonlinear\+\_\+residual@{\+\_\+final\+\_\+nonlinear\+\_\+residual}}
+\index{\+\_\+final\+\_\+nonlinear\+\_\+residual@{\+\_\+final\+\_\+nonlinear\+\_\+residual}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{\+\_\+final\+\_\+nonlinear\+\_\+residual}{\_final\_nonlinear\_residual}}
+{\footnotesize\ttfamily double femus\+::\+Non\+Linear\+Implicit\+System\+::\+\_\+final\+\_\+nonlinear\+\_\+residual\hspace{0.3cm}{\ttfamily [protected]}}
+
+The final residual for the nonlinear system R(x) \mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_a744388ccf68ac105d66450c3e7b80d7f}\label{classfemus_1_1_non_linear_implicit_system_a744388ccf68ac105d66450c3e7b80d7f}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!\+\_\+max\+\_\+nonlinear\+\_\+convergence\+\_\+tolerance@{\+\_\+max\+\_\+nonlinear\+\_\+convergence\+\_\+tolerance}}
+\index{\+\_\+max\+\_\+nonlinear\+\_\+convergence\+\_\+tolerance@{\+\_\+max\+\_\+nonlinear\+\_\+convergence\+\_\+tolerance}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{\+\_\+max\+\_\+nonlinear\+\_\+convergence\+\_\+tolerance}{\_max\_nonlinear\_convergence\_tolerance}}
+{\footnotesize\ttfamily double femus\+::\+Non\+Linear\+Implicit\+System\+::\+\_\+max\+\_\+nonlinear\+\_\+convergence\+\_\+tolerance\hspace{0.3cm}{\ttfamily [protected]}}
+
+The max non linear tolerance \mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_a35c379d70c79b0f79735d6c5b0b04e2a}\label{classfemus_1_1_non_linear_implicit_system_a35c379d70c79b0f79735d6c5b0b04e2a}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!\+\_\+max\+Number\+Of\+Residual\+Update\+Iterations@{\+\_\+max\+Number\+Of\+Residual\+Update\+Iterations}}
+\index{\+\_\+max\+Number\+Of\+Residual\+Update\+Iterations@{\+\_\+max\+Number\+Of\+Residual\+Update\+Iterations}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{\+\_\+max\+Number\+Of\+Residual\+Update\+Iterations}{\_maxNumberOfResidualUpdateIterations}}
+{\footnotesize\ttfamily unsigned femus\+::\+Non\+Linear\+Implicit\+System\+::\+\_\+max\+Number\+Of\+Residual\+Update\+Iterations\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_non_linear_implicit_system_a42606b5212631b7d44f4fa82377a6a95}\label{classfemus_1_1_non_linear_implicit_system_a42606b5212631b7d44f4fa82377a6a95}} 
+\index{femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}!\+\_\+n\+\_\+max\+\_\+nonlinear\+\_\+iterations@{\+\_\+n\+\_\+max\+\_\+nonlinear\+\_\+iterations}}
+\index{\+\_\+n\+\_\+max\+\_\+nonlinear\+\_\+iterations@{\+\_\+n\+\_\+max\+\_\+nonlinear\+\_\+iterations}!femus\+::\+Non\+Linear\+Implicit\+System@{femus\+::\+Non\+Linear\+Implicit\+System}}
+\subsubsection{\texorpdfstring{\+\_\+n\+\_\+max\+\_\+nonlinear\+\_\+iterations}{\_n\_max\_nonlinear\_iterations}}
+{\footnotesize\ttfamily unsigned int femus\+::\+Non\+Linear\+Implicit\+System\+::\+\_\+n\+\_\+max\+\_\+nonlinear\+\_\+iterations\hspace{0.3cm}{\ttfamily [protected]}}
+
+The max number of non-\/linear iterations 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+equations/\mbox{\hyperlink{_non_linear_implicit_system_8hpp}{Non\+Linear\+Implicit\+System.\+hpp}}\item 
+equations/\mbox{\hyperlink{_non_linear_implicit_system_8cpp}{Non\+Linear\+Implicit\+System.\+cpp}}\end{DoxyCompactItemize}

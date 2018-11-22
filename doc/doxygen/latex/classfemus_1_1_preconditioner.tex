@@ -1,0 +1,154 @@
+\hypertarget{classfemus_1_1_preconditioner}{}\section{femus\+:\+:Preconditioner Class Reference}
+\label{classfemus_1_1_preconditioner}\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+
+
+{\ttfamily \#include $<$Preconditioner.\+hpp$>$}
+
+
+
+Collaboration diagram for femus\+:\+:Preconditioner\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=195pt]{classfemus_1_1_preconditioner__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_preconditioner_ab9aaed9f1302ee33c01ad345f1c3283e}{Preconditioner}} ()
+\item 
+virtual \mbox{\hyperlink{classfemus_1_1_preconditioner_a7e3ce94fa42f0ca6a5c010caaef29e70}{$\sim$\+Preconditioner}} ()
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_preconditioner_aa1fcb677c98cfa1bca573299e06e062d}{initialized}} () const
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_preconditioner_adc1601a3f6350d3a8e906fc5616578c1}{apply}} (const \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} \&x, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} \&y)=0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_preconditioner_aa7827ea23c7d5c95f9fab95fb5ba3177}{clear}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_preconditioner_a895100acdacfca3dde7e374c3b5c69f0}{init}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_preconditioner_a1bc0544da19e5de757d83ae2e4fb90de}{set\+\_\+matrix}} (\mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} \&mat)
+\item 
+\mbox{\hyperlink{_precondtype_enum_8hpp_a8b341faac6531c4543c9dc6e5e4592cf}{Preconditioner\+Type}} \mbox{\hyperlink{classfemus_1_1_preconditioner_a362032c26bed3a570fe8f55e17b99f61}{type}} () const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_preconditioner_a36dfaa704ced285ca06790eecc539739}{set\+\_\+type}} (const \mbox{\hyperlink{_precondtype_enum_8hpp_a8b341faac6531c4543c9dc6e5e4592cf}{Preconditioner\+Type}} pct)
+\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{classfemus_1_1_preconditioner}{Preconditioner}} $\ast$ \mbox{\hyperlink{classfemus_1_1_preconditioner_ae51b60e4708a8935a8f506abb7da266e}{build}} (const \mbox{\hyperlink{_solver_package_enum_8hpp_a32541e934c944770722653e69abe38fe}{Solver\+Package}} solver\+\_\+package=\mbox{\hyperlink{_solver_package_enum_8hpp_a32541e934c944770722653e69abe38fea0c85f2467c937723b91a9219b0b55399}{P\+E\+T\+S\+C\+\_\+\+S\+O\+L\+V\+E\+RS}})
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$ \mbox{\hyperlink{classfemus_1_1_preconditioner_a392c385b19a76c936fe03d6e7583f704}{\+\_\+matrix}}
+\item 
+\mbox{\hyperlink{_precondtype_enum_8hpp_a8b341faac6531c4543c9dc6e5e4592cf}{Preconditioner\+Type}} \mbox{\hyperlink{classfemus_1_1_preconditioner_afaadf077507ab5f48d186032f8913791}{\+\_\+preconditioner\+\_\+type}}
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_preconditioner_afdceb4cdb6af1ec7a6da92987d98305d}{\+\_\+is\+\_\+initialized}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This class provides a uniform interface for preconditioners. This base class is overloaded to provide linear solvers from different packages like P\+E\+T\+SC or Trilinos.
+
+In the below comments P is the matrix to be preconditioned with Apply() performing the equivalent of the matrix vector product P$^\wedge$-\/1 x. This can also be thought of as (usually approximately) solving for Py=x. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_preconditioner_ab9aaed9f1302ee33c01ad345f1c3283e}\label{classfemus_1_1_preconditioner_ab9aaed9f1302ee33c01ad345f1c3283e}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!Preconditioner@{Preconditioner}}
+\index{Preconditioner@{Preconditioner}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{Preconditioner()}{Preconditioner()}}
+{\footnotesize\ttfamily femus\+::\+Preconditioner\+::\+Preconditioner (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Constructor. Initializes \mbox{\hyperlink{classfemus_1_1_preconditioner}{Preconditioner}} data structures
+
+-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/--- inline functions -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/--- \mbox{\Hypertarget{classfemus_1_1_preconditioner_a7e3ce94fa42f0ca6a5c010caaef29e70}\label{classfemus_1_1_preconditioner_a7e3ce94fa42f0ca6a5c010caaef29e70}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!````~Preconditioner@{$\sim$\+Preconditioner}}
+\index{````~Preconditioner@{$\sim$\+Preconditioner}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{$\sim$\+Preconditioner()}{~Preconditioner()}}
+{\footnotesize\ttfamily femus\+::\+Preconditioner\+::$\sim$\+Preconditioner (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+Destructor. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_preconditioner_adc1601a3f6350d3a8e906fc5616578c1}\label{classfemus_1_1_preconditioner_adc1601a3f6350d3a8e906fc5616578c1}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!apply@{apply}}
+\index{apply@{apply}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{apply()}{apply()}}
+{\footnotesize\ttfamily virtual void femus\+::\+Preconditioner\+::apply (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} \&}]{x,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} \&}]{y }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+Computes the preconditioned vector \char`\"{}y\char`\"{} based on input \char`\"{}x\char`\"{}. Usually by solving Py=x to get the action of P$^\wedge$-\/1 x. \mbox{\Hypertarget{classfemus_1_1_preconditioner_ae51b60e4708a8935a8f506abb7da266e}\label{classfemus_1_1_preconditioner_ae51b60e4708a8935a8f506abb7da266e}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!build@{build}}
+\index{build@{build}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{build()}{build()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_preconditioner}{Preconditioner}} $\ast$ femus\+::\+Preconditioner\+::build (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_solver_package_enum_8hpp_a32541e934c944770722653e69abe38fe}{Solver\+Package}}}]{solver\+\_\+package = {\ttfamily \mbox{\hyperlink{_solver_package_enum_8hpp_a32541e934c944770722653e69abe38fea0c85f2467c937723b91a9219b0b55399}{P\+E\+T\+S\+C\+\_\+\+S\+O\+L\+V\+E\+RS}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+Builds a {\ttfamily \mbox{\hyperlink{classfemus_1_1_preconditioner}{Preconditioner}}} using the linear solver package specified by {\ttfamily solver\+\_\+package} \mbox{\Hypertarget{classfemus_1_1_preconditioner_aa7827ea23c7d5c95f9fab95fb5ba3177}\label{classfemus_1_1_preconditioner_aa7827ea23c7d5c95f9fab95fb5ba3177}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!clear@{clear}}
+\index{clear@{clear}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{clear()}{clear()}}
+{\footnotesize\ttfamily virtual void femus\+::\+Preconditioner\+::clear (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+Release all memory and clear data structures. \mbox{\Hypertarget{classfemus_1_1_preconditioner_a895100acdacfca3dde7e374c3b5c69f0}\label{classfemus_1_1_preconditioner_a895100acdacfca3dde7e374c3b5c69f0}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!init@{init}}
+\index{init@{init}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily virtual void femus\+::\+Preconditioner\+::init (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+Initialize data structures if not done so already. \mbox{\Hypertarget{classfemus_1_1_preconditioner_aa1fcb677c98cfa1bca573299e06e062d}\label{classfemus_1_1_preconditioner_aa1fcb677c98cfa1bca573299e06e062d}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!initialized@{initialized}}
+\index{initialized@{initialized}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{initialized()}{initialized()}}
+{\footnotesize\ttfamily bool femus\+::\+Preconditioner\+::initialized (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+true if the data structures 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classfemus_1_1_preconditioner_a1bc0544da19e5de757d83ae2e4fb90de}\label{classfemus_1_1_preconditioner_a1bc0544da19e5de757d83ae2e4fb90de}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!set\+\_\+matrix@{set\+\_\+matrix}}
+\index{set\+\_\+matrix@{set\+\_\+matrix}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{set\+\_\+matrix()}{set\_matrix()}}
+{\footnotesize\ttfamily void femus\+::\+Preconditioner\+::set\+\_\+matrix (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} \&}]{mat }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Sets the matrix P to be preconditioned. \mbox{\Hypertarget{classfemus_1_1_preconditioner_a36dfaa704ced285ca06790eecc539739}\label{classfemus_1_1_preconditioner_a36dfaa704ced285ca06790eecc539739}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!set\+\_\+type@{set\+\_\+type}}
+\index{set\+\_\+type@{set\+\_\+type}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{set\+\_\+type()}{set\_type()}}
+{\footnotesize\ttfamily void femus\+::\+Preconditioner\+::set\+\_\+type (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_precondtype_enum_8hpp_a8b341faac6531c4543c9dc6e5e4592cf}{Preconditioner\+Type}}}]{pct }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Sets the type of preconditioner to use. \mbox{\Hypertarget{classfemus_1_1_preconditioner_a362032c26bed3a570fe8f55e17b99f61}\label{classfemus_1_1_preconditioner_a362032c26bed3a570fe8f55e17b99f61}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!type@{type}}
+\index{type@{type}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{type()}{type()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{_precondtype_enum_8hpp_a8b341faac6531c4543c9dc6e5e4592cf}{Preconditioner\+Type}} femus\+::\+Preconditioner\+::type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Returns the type of preconditioner to use. 
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_preconditioner_afdceb4cdb6af1ec7a6da92987d98305d}\label{classfemus_1_1_preconditioner_afdceb4cdb6af1ec7a6da92987d98305d}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!\+\_\+is\+\_\+initialized@{\+\_\+is\+\_\+initialized}}
+\index{\+\_\+is\+\_\+initialized@{\+\_\+is\+\_\+initialized}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{\+\_\+is\+\_\+initialized}{\_is\_initialized}}
+{\footnotesize\ttfamily bool femus\+::\+Preconditioner\+::\+\_\+is\+\_\+initialized\hspace{0.3cm}{\ttfamily [protected]}}
+
+Flag indicating if the data structures have been initialized. \mbox{\Hypertarget{classfemus_1_1_preconditioner_a392c385b19a76c936fe03d6e7583f704}\label{classfemus_1_1_preconditioner_a392c385b19a76c936fe03d6e7583f704}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!\+\_\+matrix@{\+\_\+matrix}}
+\index{\+\_\+matrix@{\+\_\+matrix}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{\+\_\+matrix}{\_matrix}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}}$\ast$ femus\+::\+Preconditioner\+::\+\_\+matrix\hspace{0.3cm}{\ttfamily [protected]}}
+
+The matrix P... ie the matrix to be preconditioned. This is often the actual system matrix of a linear sytem. \mbox{\Hypertarget{classfemus_1_1_preconditioner_afaadf077507ab5f48d186032f8913791}\label{classfemus_1_1_preconditioner_afaadf077507ab5f48d186032f8913791}} 
+\index{femus\+::\+Preconditioner@{femus\+::\+Preconditioner}!\+\_\+preconditioner\+\_\+type@{\+\_\+preconditioner\+\_\+type}}
+\index{\+\_\+preconditioner\+\_\+type@{\+\_\+preconditioner\+\_\+type}!femus\+::\+Preconditioner@{femus\+::\+Preconditioner}}
+\subsubsection{\texorpdfstring{\+\_\+preconditioner\+\_\+type}{\_preconditioner\_type}}
+{\footnotesize\ttfamily \mbox{\hyperlink{_precondtype_enum_8hpp_a8b341faac6531c4543c9dc6e5e4592cf}{Preconditioner\+Type}} femus\+::\+Preconditioner\+::\+\_\+preconditioner\+\_\+type\hspace{0.3cm}{\ttfamily [protected]}}
+
+Enum statitng with type of preconditioner to use. 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+algebra/\mbox{\hyperlink{_preconditioner_8hpp}{Preconditioner.\+hpp}}\item 
+algebra/\mbox{\hyperlink{_preconditioner_8cpp}{Preconditioner.\+cpp}}\end{DoxyCompactItemize}

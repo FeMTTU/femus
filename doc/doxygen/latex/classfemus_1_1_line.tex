@@ -1,0 +1,187 @@
+\hypertarget{classfemus_1_1_line}{}\section{femus\+:\+:Line Class Reference}
+\label{classfemus_1_1_line}\index{femus\+::\+Line@{femus\+::\+Line}}
+
+
+{\ttfamily \#include $<$Line.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Line\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=193pt]{classfemus_1_1_line__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Line\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=193pt]{classfemus_1_1_line__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+typedef void($\ast$ \mbox{\hyperlink{classfemus_1_1_line_a34a5fe4198ea2eb339bffeef484ae77e}{Force\+Function}}) (const std\+::vector$<$ double $>$ \&x\+Marker, std\+::vector$<$ double $>$ \&Fm, const unsigned \&material)
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_line_aad99c588f3951a674fe69d50f5978d8f}{Line}} (const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ x, const std\+::vector$<$ \mbox{\hyperlink{_marker_type_enum_8hpp_ade22213fff69cfb37d8238e8fd3073df}{Marker\+Type}} $>$ \&marker\+Type, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$\mbox{\hyperlink{classfemus_1_1_line_a6f026b817f6622d68af15ba6b9f72b58}{sol}}, const unsigned \&sol\+Type)
+\item 
+\mbox{\hyperlink{classfemus_1_1_line_a21085c1a5d813f311cd7bc984306dc03}{Line}} (const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ x, const std\+::vector$<$ double $>$ \&mass, const std\+::vector$<$ \mbox{\hyperlink{_marker_type_enum_8hpp_ade22213fff69cfb37d8238e8fd3073df}{Marker\+Type}} $>$ \&marker\+Type, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$\mbox{\hyperlink{classfemus_1_1_line_a6f026b817f6622d68af15ba6b9f72b58}{sol}}, const unsigned \&sol\+Type)
+\item 
+\mbox{\hyperlink{classfemus_1_1_line_a2ee2052aae5a265496dd4a28e3eac459}{$\sim$\+Line}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_line_a0623915f9f27153ef5e477b3a566256d}{Get\+Line}} (std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&line)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_line_a4e7742ddfcf4f4e27cff81c51dbd5afd}{Get\+Stream\+Line}} (std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&line, const unsigned \&step)
+\item 
+std\+::vector$<$ unsigned $>$ \mbox{\hyperlink{classfemus_1_1_line_ac2e1543fbce24c1cee46ed57b3346274}{Get\+Marker\+Offset}} ()
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classfemus_1_1_marker}{Marker}} $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_line_a2e4c6573a390a51a6d5ae4f98d274c8c}{Get\+Particles}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_line_a4ee4b75bb07d8849015130c57dfde0d7}{Advection\+Parallel}} (const unsigned \&n, const double \&T, const unsigned \&order, \mbox{\hyperlink{classfemus_1_1_line_a34a5fe4198ea2eb339bffeef484ae77e}{Force\+Function}} Force=N\+U\+LL)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_line_a9350d9ca920977a8771356e2f7cd04c1}{Update\+Line}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_line_a2b8a19a410213e8a7cd8fb2118cc4305}{Number\+Of\+Particles\+Outside\+The\+Domain}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_line_a6133aaf46e19085a1e7c231112fef552}{Get\+Particles\+To\+Grid\+Material}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_line_a925825ecec878fca65291705b9b8c499}{Update\+Line\+M\+PM}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_line_af55b5ea90edb20e5accc0c41aaeddddd}{Set\+Particles\+Mass}} (const double \&volume, const double \&density)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_line_a9c671365287a5f89ee2682bcee9dbcc2}{Scale\+Particle\+Mass}} (double scale(const std\+::vector$<$ double $>$ \&x))
+\item 
+void \mbox{\hyperlink{classfemus_1_1_line_aa08f01ce094ab356465008c38a1c0171}{Get\+Extrema}} (std\+::vector$<$ double $>$ \&x\+Min, std\+::vector$<$ double $>$ \&x\+Max)
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ unsigned int $>$\+::reference \mbox{\hyperlink{classfemus_1_1_line_a6f026b817f6622d68af15ba6b9f72b58}{sol}} (const char $\ast$arg1)
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classfemus_1_1_line_a34a5fe4198ea2eb339bffeef484ae77e}\label{classfemus_1_1_line_a34a5fe4198ea2eb339bffeef484ae77e}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Force\+Function@{Force\+Function}}
+\index{Force\+Function@{Force\+Function}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Force\+Function}{ForceFunction}}
+{\footnotesize\ttfamily typedef void($\ast$ femus\+::\+Line\+::\+Force\+Function) (const std\+::vector$<$ double $>$ \&x\+Marker, std\+::vector$<$ double $>$ \&Fm, const unsigned \&material)}
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_line_aad99c588f3951a674fe69d50f5978d8f}\label{classfemus_1_1_line_aad99c588f3951a674fe69d50f5978d8f}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Line@{Line}}
+\index{Line@{Line}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Line()}{Line()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily femus\+::\+Line\+::\+Line (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::vector$<$ double $>$ $>$}]{x,  }\item[{const std\+::vector$<$ \mbox{\hyperlink{_marker_type_enum_8hpp_ade22213fff69cfb37d8238e8fd3073df}{Marker\+Type}} $>$ \&}]{marker\+Type,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol,  }\item[{const unsigned \&}]{sol\+Type }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_line_a21085c1a5d813f311cd7bc984306dc03}\label{classfemus_1_1_line_a21085c1a5d813f311cd7bc984306dc03}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Line@{Line}}
+\index{Line@{Line}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Line()}{Line()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily femus\+::\+Line\+::\+Line (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::vector$<$ double $>$ $>$}]{x,  }\item[{const std\+::vector$<$ double $>$ \&}]{mass,  }\item[{const std\+::vector$<$ \mbox{\hyperlink{_marker_type_enum_8hpp_ade22213fff69cfb37d8238e8fd3073df}{Marker\+Type}} $>$ \&}]{marker\+Type,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol,  }\item[{const unsigned \&}]{sol\+Type }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_line_a2ee2052aae5a265496dd4a28e3eac459}\label{classfemus_1_1_line_a2ee2052aae5a265496dd4a28e3eac459}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!````~Line@{$\sim$\+Line}}
+\index{````~Line@{$\sim$\+Line}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{$\sim$\+Line()}{~Line()}}
+{\footnotesize\ttfamily femus\+::\+Line\+::$\sim$\+Line (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_line_a4ee4b75bb07d8849015130c57dfde0d7}\label{classfemus_1_1_line_a4ee4b75bb07d8849015130c57dfde0d7}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Advection\+Parallel@{Advection\+Parallel}}
+\index{Advection\+Parallel@{Advection\+Parallel}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Advection\+Parallel()}{AdvectionParallel()}}
+{\footnotesize\ttfamily void femus\+::\+Line\+::\+Advection\+Parallel (\begin{DoxyParamCaption}\item[{const unsigned \&}]{n,  }\item[{const double \&}]{T,  }\item[{const unsigned \&}]{order,  }\item[{\mbox{\hyperlink{classfemus_1_1_line_a34a5fe4198ea2eb339bffeef484ae77e}{Force\+Function}}}]{Force = {\ttfamily NULL} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_line_aa08f01ce094ab356465008c38a1c0171}\label{classfemus_1_1_line_aa08f01ce094ab356465008c38a1c0171}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Get\+Extrema@{Get\+Extrema}}
+\index{Get\+Extrema@{Get\+Extrema}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Get\+Extrema()}{GetExtrema()}}
+{\footnotesize\ttfamily void femus\+::\+Line\+::\+Get\+Extrema (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{x\+Min,  }\item[{std\+::vector$<$ double $>$ \&}]{x\+Max }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_line_a0623915f9f27153ef5e477b3a566256d}\label{classfemus_1_1_line_a0623915f9f27153ef5e477b3a566256d}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Get\+Line@{Get\+Line}}
+\index{Get\+Line@{Get\+Line}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Get\+Line()}{GetLine()}}
+{\footnotesize\ttfamily void femus\+::\+Line\+::\+Get\+Line (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&}]{line }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_line_ac2e1543fbce24c1cee46ed57b3346274}\label{classfemus_1_1_line_ac2e1543fbce24c1cee46ed57b3346274}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Get\+Marker\+Offset@{Get\+Marker\+Offset}}
+\index{Get\+Marker\+Offset@{Get\+Marker\+Offset}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Offset()}{GetMarkerOffset()}}
+{\footnotesize\ttfamily std\+::vector$<$unsigned$>$ femus\+::\+Line\+::\+Get\+Marker\+Offset (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_line_a2e4c6573a390a51a6d5ae4f98d274c8c}\label{classfemus_1_1_line_a2e4c6573a390a51a6d5ae4f98d274c8c}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Get\+Particles@{Get\+Particles}}
+\index{Get\+Particles@{Get\+Particles}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Get\+Particles()}{GetParticles()}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classfemus_1_1_marker}{Marker}}$\ast$$>$ femus\+::\+Line\+::\+Get\+Particles (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_line_a6133aaf46e19085a1e7c231112fef552}\label{classfemus_1_1_line_a6133aaf46e19085a1e7c231112fef552}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Get\+Particles\+To\+Grid\+Material@{Get\+Particles\+To\+Grid\+Material}}
+\index{Get\+Particles\+To\+Grid\+Material@{Get\+Particles\+To\+Grid\+Material}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Get\+Particles\+To\+Grid\+Material()}{GetParticlesToGridMaterial()}}
+{\footnotesize\ttfamily void femus\+::\+Line\+::\+Get\+Particles\+To\+Grid\+Material (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_line_a4e7742ddfcf4f4e27cff81c51dbd5afd}\label{classfemus_1_1_line_a4e7742ddfcf4f4e27cff81c51dbd5afd}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Get\+Stream\+Line@{Get\+Stream\+Line}}
+\index{Get\+Stream\+Line@{Get\+Stream\+Line}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Get\+Stream\+Line()}{GetStreamLine()}}
+{\footnotesize\ttfamily void femus\+::\+Line\+::\+Get\+Stream\+Line (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&}]{line,  }\item[{const unsigned \&}]{step }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_line_a2b8a19a410213e8a7cd8fb2118cc4305}\label{classfemus_1_1_line_a2b8a19a410213e8a7cd8fb2118cc4305}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Number\+Of\+Particles\+Outside\+The\+Domain@{Number\+Of\+Particles\+Outside\+The\+Domain}}
+\index{Number\+Of\+Particles\+Outside\+The\+Domain@{Number\+Of\+Particles\+Outside\+The\+Domain}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Number\+Of\+Particles\+Outside\+The\+Domain()}{NumberOfParticlesOutsideTheDomain()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Line\+::\+Number\+Of\+Particles\+Outside\+The\+Domain (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_line_a9c671365287a5f89ee2682bcee9dbcc2}\label{classfemus_1_1_line_a9c671365287a5f89ee2682bcee9dbcc2}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Scale\+Particle\+Mass@{Scale\+Particle\+Mass}}
+\index{Scale\+Particle\+Mass@{Scale\+Particle\+Mass}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Scale\+Particle\+Mass()}{ScaleParticleMass()}}
+{\footnotesize\ttfamily void femus\+::\+Line\+::\+Scale\+Particle\+Mass (\begin{DoxyParamCaption}\item[{double }]{scaleconst std\+::vector$<$ double $>$ \&x }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_line_af55b5ea90edb20e5accc0c41aaeddddd}\label{classfemus_1_1_line_af55b5ea90edb20e5accc0c41aaeddddd}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Set\+Particles\+Mass@{Set\+Particles\+Mass}}
+\index{Set\+Particles\+Mass@{Set\+Particles\+Mass}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Set\+Particles\+Mass()}{SetParticlesMass()}}
+{\footnotesize\ttfamily void femus\+::\+Line\+::\+Set\+Particles\+Mass (\begin{DoxyParamCaption}\item[{const double \&}]{volume,  }\item[{const double \&}]{density }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_line_a6f026b817f6622d68af15ba6b9f72b58}\label{classfemus_1_1_line_a6f026b817f6622d68af15ba6b9f72b58}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!sol@{sol}}
+\index{sol@{sol}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{sol()}{sol()}}
+{\footnotesize\ttfamily std\+::vector$<$ unsigned int $>$\+::reference femus\+::\+Line\+::sol (\begin{DoxyParamCaption}\item[{const char $\ast$}]{arg1 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_line_a9350d9ca920977a8771356e2f7cd04c1}\label{classfemus_1_1_line_a9350d9ca920977a8771356e2f7cd04c1}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Update\+Line@{Update\+Line}}
+\index{Update\+Line@{Update\+Line}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Update\+Line()}{UpdateLine()}}
+{\footnotesize\ttfamily void femus\+::\+Line\+::\+Update\+Line (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_line_a925825ecec878fca65291705b9b8c499}\label{classfemus_1_1_line_a925825ecec878fca65291705b9b8c499}} 
+\index{femus\+::\+Line@{femus\+::\+Line}!Update\+Line\+M\+PM@{Update\+Line\+M\+PM}}
+\index{Update\+Line\+M\+PM@{Update\+Line\+M\+PM}!femus\+::\+Line@{femus\+::\+Line}}
+\subsubsection{\texorpdfstring{Update\+Line\+M\+P\+M()}{UpdateLineMPM()}}
+{\footnotesize\ttfamily void femus\+::\+Line\+::\+Update\+Line\+M\+PM (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+ism/\mbox{\hyperlink{_line_8hpp}{Line.\+hpp}}\item 
+ism/\mbox{\hyperlink{ism_2_line_8cpp}{Line.\+cpp}}\end{DoxyCompactItemize}

@@ -1,0 +1,6 @@
+<map id="femus::tri_lag" name="femus::tri_lag">
+<area shape="rect" id="node3" href="$classfemus_1_1_tri_biquadratic.html" title="femus::TriBiquadratic" alt="" coords="5,155,156,181"/>
+<area shape="rect" id="node4" href="$classfemus_1_1_tri_linear.html" title="femus::TriLinear" alt="" coords="181,155,301,181"/>
+<area shape="rect" id="node5" href="$classfemus_1_1_tri_quadratic.html" title="femus::TriQuadratic" alt="" coords="325,155,466,181"/>
+<area shape="rect" id="node2" href="$classfemus_1_1basis.html" title="femus::basis" alt="" coords="191,5,290,32"/>
+</map>

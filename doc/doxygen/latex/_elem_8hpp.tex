@@ -1,0 +1,83 @@
+\hypertarget{_elem_8hpp}{}\section{mesh/\+Elem.hpp File Reference}
+\label{_elem_8hpp}\index{mesh/\+Elem.\+hpp@{mesh/\+Elem.\+hpp}}
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include $<$map$>$}\newline
+{\ttfamily \#include \char`\"{}Mesh.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Numeric\+Vector.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}My\+Vector.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}My\+Matrix.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Basis.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Polynomial\+Bases.\+hpp\char`\"{}}\newline
+Include dependency graph for Elem.\+hpp\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{_elem_8hpp__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{_elem_8hpp__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classfemus_1_1elem}{femus\+::elem}}
+\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespacefemus}{femus}}
+\begin{DoxyCompactList}\small\item\em Class \mbox{\hyperlink{classfemus_1_1_femus_init}{Femus\+Init}}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+const unsigned \mbox{\hyperlink{namespacefemus_a3d53e4927b8f0f363df71826cc9d8b9c}{femus\+::\+N\+VE}} \mbox{[}6\mbox{]}\mbox{[}5\mbox{]}
+\item 
+const unsigned \mbox{\hyperlink{namespacefemus_a04f7c8d5db5b1c3150b108f3dcb5f022}{femus\+::\+N\+RE}} \mbox{[}6\mbox{]} = \{8, 8, 8, 4, 4, 2\}
+\item 
+const unsigned \mbox{\hyperlink{namespacefemus_a6c2ecc75dab06265197007d969b9f100}{femus\+::\+N\+FC}} \mbox{[}6\mbox{]}\mbox{[}2\mbox{]}
+\item 
+const unsigned \mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{femus\+::ig}} \mbox{[}6\mbox{]}\mbox{[}6\mbox{]}\mbox{[}9\mbox{]}
+\item 
+const unsigned \mbox{\hyperlink{namespacefemus_aa64bce2ca72ce98136cf440d9ab68df8}{femus\+::\+N\+F\+A\+C\+E\+N\+O\+D\+ES}} \mbox{[}6\mbox{]}\mbox{[}6\mbox{]}\mbox{[}3\mbox{]}
+\item 
+const unsigned \mbox{\hyperlink{_elem_8hpp_a8bae0eb1aecf3a9b8c298023967cb719}{reference\+Element\+Direction}} \mbox{[}6\mbox{]}\mbox{[}3\mbox{]}\mbox{[}2\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\subsection{Variable Documentation}
+\mbox{\Hypertarget{_elem_8hpp_a8bae0eb1aecf3a9b8c298023967cb719}\label{_elem_8hpp_a8bae0eb1aecf3a9b8c298023967cb719}} 
+\index{Elem.\+hpp@{Elem.\+hpp}!reference\+Element\+Direction@{reference\+Element\+Direction}}
+\index{reference\+Element\+Direction@{reference\+Element\+Direction}!Elem.\+hpp@{Elem.\+hpp}}
+\subsubsection{\texorpdfstring{reference\+Element\+Direction}{referenceElementDirection}}
+{\footnotesize\ttfamily const unsigned reference\+Element\+Direction\mbox{[}6\mbox{]}\mbox{[}3\mbox{]}\mbox{[}2\mbox{]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}
+= \{ 
+  \{
+    \{23, 21\}, \{20, 22\}, \{24, 25\}
+  \},
+  \{
+    \{0, 1\}, \{0, 2\}, \{0, 3\}
+  \},
+  \{
+    \{12, 13\}, \{12, 14\}, \{0, 3\}
+  \},
+  \{
+    \{7, 5\}, \{4, 6\}
+  \},
+  \{
+    \{0, 1\}, \{0, 2\}
+  \},
+  \{
+    \{0, 1\}
+  \}
+\}
+\end{DoxyCode}

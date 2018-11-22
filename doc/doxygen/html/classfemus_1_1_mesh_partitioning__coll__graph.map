@@ -1,0 +1,9 @@
+<map id="femus::MeshPartitioning" name="femus::MeshPartitioning">
+<area shape="rect" id="node2" href="$classfemus_1_1_parallel_object.html" title="femus::ParallelObject" alt="" coords="40,12,191,39"/>
+<area shape="rect" id="node3" href="$classfemus_1_1_mesh.html" title="femus::Mesh" alt="" coords="681,141,780,168"/>
+<area shape="rect" id="node8" href="$classfemus_1_1_solution.html" title="femus::Solution" alt="" coords="404,92,519,119"/>
+<area shape="rect" id="node5" href="$classfemus_1_1elem__type.html" title="femus::elem_type" alt="" coords="397,355,525,381"/>
+<area shape="rect" id="node6" href="$classfemus_1_1_gauss.html" title="femus::Gauss" alt="" coords="62,405,169,432"/>
+<area shape="rect" id="node7" href="$classfemus_1_1basis.html" title="femus::basis" alt="" coords="66,355,165,381"/>
+<area shape="rect" id="node14" href="$classfemus_1_1elem.html" title="femus::elem" alt="" coords="413,267,509,293"/>
+</map>

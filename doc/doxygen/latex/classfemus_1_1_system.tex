@@ -1,0 +1,388 @@
+\hypertarget{classfemus_1_1_system}{}\section{femus\+:\+:System Class Reference}
+\label{classfemus_1_1_system}\index{femus\+::\+System@{femus\+::\+System}}
+
+
+{\ttfamily \#include $<$System.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:System\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_system__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:System\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_system__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_system_ae4a9d3c1f17c10f42aa0935499a080cf}{System}} (\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&ml\+\_\+prob, const std\+::string \&\mbox{\hyperlink{classfemus_1_1_system_a1a007c176529dae649887bbd1cb46103}{name}}, const unsigned int \mbox{\hyperlink{classfemus_1_1_system_a28f5c7f6286dd597ae28a8923c8dca11}{number}}, const \mbox{\hyperlink{_mg_smoother_enum_8hpp_a4d11c2ff93e2f0f440c879a9c40cda71}{Mg\+Smoother}} \&smoother\+\_\+type)
+\item 
+virtual \mbox{\hyperlink{classfemus_1_1_system_a9daeda058e7ad95e42816969019e4aac}{$\sim$\+System}} ()
+\item 
+unsigned int \mbox{\hyperlink{classfemus_1_1_system_a28f5c7f6286dd597ae28a8923c8dca11}{number}} () const
+\item 
+const std\+::string \& \mbox{\hyperlink{classfemus_1_1_system_a1a007c176529dae649887bbd1cb46103}{name}} () const
+\item 
+virtual std\+::string \mbox{\hyperlink{classfemus_1_1_system_a8cdcdcaf37dc4985be99dbb0a5ad8efa}{system\+\_\+type}} () const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_system_a54c8e2e5af5b8b63ecdf7720bd93452d}{Add\+Solution\+To\+System\+P\+D\+E\+Vector}} (const unsigned n\+\_\+components, const std\+::string \mbox{\hyperlink{classfemus_1_1_system_a1a007c176529dae649887bbd1cb46103}{name}})
+\item 
+void \mbox{\hyperlink{classfemus_1_1_system_a606e07526d7a0d31eed638404ee2ed24}{Add\+Solution\+To\+System\+P\+DE}} (const char solname\mbox{[}$\,$\mbox{]})
+\item 
+void \mbox{\hyperlink{classfemus_1_1_system_a42a5b5b5d2c7673b1d4c896762d8db9e}{Set\+Assemble\+Function}} (\mbox{\hyperlink{classfemus_1_1_system_ae71fa78abbc4b3efe8ef1dc057275b9b}{Assemble\+Function\+Type}})
+\item 
+\mbox{\hyperlink{classfemus_1_1_system_ae71fa78abbc4b3efe8ef1dc057275b9b}{Assemble\+Function\+Type}} \mbox{\hyperlink{classfemus_1_1_system_a6ea05a107d1946ab9685aae7d228afb6}{Get\+Assemble\+Function}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_system_a83f9e595297c01ddbdf19b6aadc983a7}{M\+Gsolve}} (const \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8}{Mg\+Smoother\+Type}} \&mg\+Smoother\+Type=\mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8a2618be531dddb3647be5874ddcae5164}{M\+U\+L\+T\+I\+P\+L\+I\+C\+A\+T\+I\+VE}})
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_system_afb6e3e4b80b68e8cdcf5b0188313d010}{M\+Lsolve}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_system_ad1a19dbff3cea3d496cdb530ea2bca19}{clear}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_system_a1defaa9e59d3aa2ac62aa7fa111b6e32}{init}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_system_ae238425d65a58eb22b3925309d9d0bef}{init\+\_\+two}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_system_a4ebc859deb32b54c9936fa28f1485a93}{Get\+Sol\+Pde\+Index}} (const char solname\mbox{[}$\,$\mbox{]})
+\item 
+vector$<$ unsigned $>$ \& \mbox{\hyperlink{classfemus_1_1_system_a5006f00150911f0c1b6cb6d3fa9b2a6e}{Get\+Sol\+Pde\+Index}} ()
+\item 
+const \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \& \mbox{\hyperlink{classfemus_1_1_system_a57025b8e170e8c36141b701a8353a35b}{Get\+M\+L\+Prob}} () const
+\item 
+\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \& \mbox{\hyperlink{classfemus_1_1_system_ae73a571afd1799365f6a807dfde74641}{Get\+M\+L\+Prob}} ()
+\item 
+const unsigned \mbox{\hyperlink{classfemus_1_1_system_a7d62291adc624e55f78ca2d1c32c6971}{Get\+Gridn}} () const
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_system_a0f1050943e8187087773955c920e3f23}{Get\+Level\+To\+Assemble}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_system_a04558397f2ff92fc658579c7f8fdf882}{Set\+Level\+To\+Assemble}} (const unsigned \&level)
+\end{DoxyCompactItemize}
+\subsection*{Protected Types}
+\begin{DoxyCompactItemize}
+\item 
+typedef void($\ast$ \mbox{\hyperlink{classfemus_1_1_system_ae71fa78abbc4b3efe8ef1dc057275b9b}{Assemble\+Function\+Type}}) (\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&ml\+\_\+prob)
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_system_a223d0ee32326556800eeb423bd9abbfb}{solve}} (const \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8}{Mg\+Smoother\+Type}} \&mg\+Smoother\+Type=\mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8a2618be531dddb3647be5874ddcae5164}{M\+U\+L\+T\+I\+P\+L\+I\+C\+A\+T\+I\+VE}})
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \& \mbox{\hyperlink{classfemus_1_1_system_a7d1765e86f703f5a4ae3944d945215b6}{\+\_\+equation\+\_\+systems}}
+\item 
+vector$<$ \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_system_ab45d7c55f2f903a2839104131d2eb572}{\+\_\+msh}}
+\item 
+vector$<$ \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_system_af2fc403002e82633ab3b100ca3fefa47}{\+\_\+solution}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_multi_level_solution}{Multi\+Level\+Solution}} $\ast$ \mbox{\hyperlink{classfemus_1_1_system_a6e000f17ac05a0938a4a8e7b72c957de}{\+\_\+ml\+\_\+sol}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}} $\ast$ \mbox{\hyperlink{classfemus_1_1_system_a3be539b0e20b909f55520c58e4e16843}{\+\_\+ml\+\_\+msh}}
+\item 
+vector$<$ unsigned $>$ \mbox{\hyperlink{classfemus_1_1_system_a8d0dc8efe0a0144c7da0b2d848986e78}{\+\_\+\+Sol\+System\+Pde\+Index}}
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_system_ae1ee15b9d70bb8e118366c37ebc75f8a}{\+\_\+gridn}}
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_system_a4fcefeeec2a9777f362e1b25c04d40e9}{\+\_\+level\+To\+Assemble}}
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_system_aa4702804d2490808f6e0525a081c2bf5}{\+\_\+\+M\+Gsolver}}
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_system_a2a519fbc814e32e10dd2d01c7695c092}{\+\_\+\+M\+Lsolver}}
+\item 
+std\+::string \mbox{\hyperlink{classfemus_1_1_system_af26639b99612eb2307723359124e32cd}{\+\_\+solver\+Type}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_system_ae71fa78abbc4b3efe8ef1dc057275b9b}{Assemble\+Function\+Type}} \mbox{\hyperlink{classfemus_1_1_system_a712ef55df0fc3bacbf358036be3e10eb}{\+\_\+assemble\+\_\+system\+\_\+function}}
+\item 
+const unsigned int \mbox{\hyperlink{classfemus_1_1_system_ae24afc2eadae2253268bc9442f2a02e3}{\+\_\+sys\+\_\+number}}
+\item 
+const std\+::string \mbox{\hyperlink{classfemus_1_1_system_a1179f082cb14d4f3c82c699bbbb0f870}{\+\_\+sys\+\_\+name}}
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_system_ac137ab0e8e2e10f20633509bf03bbde6}{\+\_\+build\+Solver}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The system abstract class 
+
+\subsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classfemus_1_1_system_ae71fa78abbc4b3efe8ef1dc057275b9b}\label{classfemus_1_1_system_ae71fa78abbc4b3efe8ef1dc057275b9b}} 
+\index{femus\+::\+System@{femus\+::\+System}!Assemble\+Function\+Type@{Assemble\+Function\+Type}}
+\index{Assemble\+Function\+Type@{Assemble\+Function\+Type}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Assemble\+Function\+Type}{AssembleFunctionType}}
+{\footnotesize\ttfamily typedef void($\ast$  femus\+::\+System\+::\+Assemble\+Function\+Type) (\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&ml\+\_\+prob)\hspace{0.3cm}{\ttfamily [protected]}}
+
+Function pointer type, easiest way to declare function pointer instantiations 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_system_ae4a9d3c1f17c10f42aa0935499a080cf}\label{classfemus_1_1_system_ae4a9d3c1f17c10f42aa0935499a080cf}} 
+\index{femus\+::\+System@{femus\+::\+System}!System@{System}}
+\index{System@{System}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{System()}{System()}}
+{\footnotesize\ttfamily femus\+::\+System\+::\+System (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&}]{ml\+\_\+probl,  }\item[{const std\+::string \&}]{name\+\_\+in,  }\item[{const unsigned int}]{number\+\_\+in,  }\item[{const \mbox{\hyperlink{_mg_smoother_enum_8hpp_a4d11c2ff93e2f0f440c879a9c40cda71}{Mg\+Smoother}} \&}]{smoother\+\_\+type }\end{DoxyParamCaption})}
+
+Constructor. Optionally initializes required data structures. \mbox{\Hypertarget{classfemus_1_1_system_a9daeda058e7ad95e42816969019e4aac}\label{classfemus_1_1_system_a9daeda058e7ad95e42816969019e4aac}} 
+\index{femus\+::\+System@{femus\+::\+System}!````~System@{$\sim$\+System}}
+\index{````~System@{$\sim$\+System}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{$\sim$\+System()}{~System()}}
+{\footnotesize\ttfamily femus\+::\+System\+::$\sim$\+System (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+destructor 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_system_a606e07526d7a0d31eed638404ee2ed24}\label{classfemus_1_1_system_a606e07526d7a0d31eed638404ee2ed24}} 
+\index{femus\+::\+System@{femus\+::\+System}!Add\+Solution\+To\+System\+P\+DE@{Add\+Solution\+To\+System\+P\+DE}}
+\index{Add\+Solution\+To\+System\+P\+DE@{Add\+Solution\+To\+System\+P\+DE}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Add\+Solution\+To\+System\+P\+D\+E()}{AddSolutionToSystemPDE()}}
+{\footnotesize\ttfamily void femus\+::\+System\+::\+Add\+Solution\+To\+System\+P\+DE (\begin{DoxyParamCaption}\item[{const char}]{solname\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+Associate the solution variables to the system P\+DE \mbox{\Hypertarget{classfemus_1_1_system_a54c8e2e5af5b8b63ecdf7720bd93452d}\label{classfemus_1_1_system_a54c8e2e5af5b8b63ecdf7720bd93452d}} 
+\index{femus\+::\+System@{femus\+::\+System}!Add\+Solution\+To\+System\+P\+D\+E\+Vector@{Add\+Solution\+To\+System\+P\+D\+E\+Vector}}
+\index{Add\+Solution\+To\+System\+P\+D\+E\+Vector@{Add\+Solution\+To\+System\+P\+D\+E\+Vector}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Add\+Solution\+To\+System\+P\+D\+E\+Vector()}{AddSolutionToSystemPDEVector()}}
+{\footnotesize\ttfamily void femus\+::\+System\+::\+Add\+Solution\+To\+System\+P\+D\+E\+Vector (\begin{DoxyParamCaption}\item[{const unsigned}]{n\+\_\+components,  }\item[{const std\+::string}]{name }\end{DoxyParamCaption})}
+
+Add a vector of solution variables to the system P\+DE \mbox{\Hypertarget{classfemus_1_1_system_ad1a19dbff3cea3d496cdb530ea2bca19}\label{classfemus_1_1_system_ad1a19dbff3cea3d496cdb530ea2bca19}} 
+\index{femus\+::\+System@{femus\+::\+System}!clear@{clear}}
+\index{clear@{clear}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{clear()}{clear()}}
+{\footnotesize\ttfamily void femus\+::\+System\+::clear (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Clear all the data structures associated with the system. 
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1_linear_implicit_system_ace039665432e53db0c25b0efede44a76}{femus\+::\+Linear\+Implicit\+System}}, \mbox{\hyperlink{classfemus_1_1_explicit_system_ac078fbc3f758429e8a60dac487aab5ce}{femus\+::\+Explicit\+System}}, \mbox{\hyperlink{classfemus_1_1_implicit_system_a0d5395e6a8de6625f9059384b990f83f}{femus\+::\+Implicit\+System}}, \mbox{\hyperlink{classfemus_1_1_monolithic_f_s_i_non_linear_implicit_system_ac7f2bedf4d1c6b00f5443cb5128a3069}{femus\+::\+Monolithic\+F\+S\+I\+Non\+Linear\+Implicit\+System}}, and \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_afc52f569e5be8c3bf593a00c883d7192}{femus\+::\+Non\+Linear\+Implicit\+System}}.
+
+\mbox{\Hypertarget{classfemus_1_1_system_a6ea05a107d1946ab9685aae7d228afb6}\label{classfemus_1_1_system_a6ea05a107d1946ab9685aae7d228afb6}} 
+\index{femus\+::\+System@{femus\+::\+System}!Get\+Assemble\+Function@{Get\+Assemble\+Function}}
+\index{Get\+Assemble\+Function@{Get\+Assemble\+Function}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Get\+Assemble\+Function()}{GetAssembleFunction()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_system_ae71fa78abbc4b3efe8ef1dc057275b9b}{System\+::\+Assemble\+Function\+Type}} femus\+::\+System\+::\+Get\+Assemble\+Function (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_system_a7d62291adc624e55f78ca2d1c32c6971}\label{classfemus_1_1_system_a7d62291adc624e55f78ca2d1c32c6971}} 
+\index{femus\+::\+System@{femus\+::\+System}!Get\+Gridn@{Get\+Gridn}}
+\index{Get\+Gridn@{Get\+Gridn}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Get\+Gridn()}{GetGridn()}}
+{\footnotesize\ttfamily const unsigned femus\+::\+System\+::\+Get\+Gridn (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get Number of Levels \mbox{\Hypertarget{classfemus_1_1_system_a0f1050943e8187087773955c920e3f23}\label{classfemus_1_1_system_a0f1050943e8187087773955c920e3f23}} 
+\index{femus\+::\+System@{femus\+::\+System}!Get\+Level\+To\+Assemble@{Get\+Level\+To\+Assemble}}
+\index{Get\+Level\+To\+Assemble@{Get\+Level\+To\+Assemble}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Get\+Level\+To\+Assemble()}{GetLevelToAssemble()}}
+{\footnotesize\ttfamily unsigned femus\+::\+System\+::\+Get\+Level\+To\+Assemble (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_system_a57025b8e170e8c36141b701a8353a35b}\label{classfemus_1_1_system_a57025b8e170e8c36141b701a8353a35b}} 
+\index{femus\+::\+System@{femus\+::\+System}!Get\+M\+L\+Prob@{Get\+M\+L\+Prob}}
+\index{Get\+M\+L\+Prob@{Get\+M\+L\+Prob}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Get\+M\+L\+Prob()}{GetMLProb()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}}\& femus\+::\+System\+::\+Get\+M\+L\+Prob (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \mbox{\Hypertarget{classfemus_1_1_system_ae73a571afd1799365f6a807dfde74641}\label{classfemus_1_1_system_ae73a571afd1799365f6a807dfde74641}} 
+\index{femus\+::\+System@{femus\+::\+System}!Get\+M\+L\+Prob@{Get\+M\+L\+Prob}}
+\index{Get\+M\+L\+Prob@{Get\+M\+L\+Prob}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Get\+M\+L\+Prob()}{GetMLProb()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}}\& femus\+::\+System\+::\+Get\+M\+L\+Prob (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \mbox{\Hypertarget{classfemus_1_1_system_a4ebc859deb32b54c9936fa28f1485a93}\label{classfemus_1_1_system_a4ebc859deb32b54c9936fa28f1485a93}} 
+\index{femus\+::\+System@{femus\+::\+System}!Get\+Sol\+Pde\+Index@{Get\+Sol\+Pde\+Index}}
+\index{Get\+Sol\+Pde\+Index@{Get\+Sol\+Pde\+Index}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Get\+Sol\+Pde\+Index()}{GetSolPdeIndex()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily unsigned femus\+::\+System\+::\+Get\+Sol\+Pde\+Index (\begin{DoxyParamCaption}\item[{const char}]{solname\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+Get the index of the \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} \char`\"{}solname\char`\"{} for this system \mbox{\Hypertarget{classfemus_1_1_system_a5006f00150911f0c1b6cb6d3fa9b2a6e}\label{classfemus_1_1_system_a5006f00150911f0c1b6cb6d3fa9b2a6e}} 
+\index{femus\+::\+System@{femus\+::\+System}!Get\+Sol\+Pde\+Index@{Get\+Sol\+Pde\+Index}}
+\index{Get\+Sol\+Pde\+Index@{Get\+Sol\+Pde\+Index}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Get\+Sol\+Pde\+Index()}{GetSolPdeIndex()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily vector$<$unsigned$>$\& femus\+::\+System\+::\+Get\+Sol\+Pde\+Index (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_system_a1defaa9e59d3aa2ac62aa7fa111b6e32}\label{classfemus_1_1_system_a1defaa9e59d3aa2ac62aa7fa111b6e32}} 
+\index{femus\+::\+System@{femus\+::\+System}!init@{init}}
+\index{init@{init}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily void femus\+::\+System\+::init (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Init the system P\+DE structures 
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1_linear_implicit_system_a4605bac9ea670bb7dbd4454358155670}{femus\+::\+Linear\+Implicit\+System}}, \mbox{\hyperlink{classfemus_1_1_explicit_system_a6736fef684fe763b26e016ff3f8b37b7}{femus\+::\+Explicit\+System}}, \mbox{\hyperlink{classfemus_1_1_implicit_system_a098b8d66e167a03759ca089bf0f0dc11}{femus\+::\+Implicit\+System}}, \mbox{\hyperlink{classfemus_1_1_monolithic_f_s_i_non_linear_implicit_system_a07e04a8cce138cae9edcdd05fd1c7829}{femus\+::\+Monolithic\+F\+S\+I\+Non\+Linear\+Implicit\+System}}, and \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_ad2d20975e0c919a9d99bdd9368a0212a}{femus\+::\+Non\+Linear\+Implicit\+System}}.
+
+\mbox{\Hypertarget{classfemus_1_1_system_ae238425d65a58eb22b3925309d9d0bef}\label{classfemus_1_1_system_ae238425d65a58eb22b3925309d9d0bef}} 
+\index{femus\+::\+System@{femus\+::\+System}!init\+\_\+two@{init\+\_\+two}}
+\index{init\+\_\+two@{init\+\_\+two}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{init\+\_\+two()}{init\_two()}}
+{\footnotesize\ttfamily virtual void femus\+::\+System\+::init\+\_\+two (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+\begin{DoxyRefDesc}{Deprecated}
+\item[\mbox{\hyperlink{deprecated__deprecated000014}{Deprecated}}]Init the system P\+DE structures \end{DoxyRefDesc}
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1_linear_implicit_system_a821e5e01d07a2124ff6f0130f67b5ba6}{femus\+::\+Linear\+Implicit\+System}}, \mbox{\hyperlink{classfemus_1_1_explicit_system_a149e74ccad300a58b25f72a6b0439f2b}{femus\+::\+Explicit\+System}}, and \mbox{\hyperlink{classfemus_1_1_implicit_system_a544e5b2b89fd2f8497b3ca6befce74d1}{femus\+::\+Implicit\+System}}.
+
+\mbox{\Hypertarget{classfemus_1_1_system_a83f9e595297c01ddbdf19b6aadc983a7}\label{classfemus_1_1_system_a83f9e595297c01ddbdf19b6aadc983a7}} 
+\index{femus\+::\+System@{femus\+::\+System}!M\+Gsolve@{M\+Gsolve}}
+\index{M\+Gsolve@{M\+Gsolve}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{M\+Gsolve()}{MGsolve()}}
+{\footnotesize\ttfamily virtual void femus\+::\+System\+::\+M\+Gsolve (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8}{Mg\+Smoother\+Type}} \&}]{mg\+Smoother\+Type = {\ttfamily \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8a2618be531dddb3647be5874ddcae5164}{M\+U\+L\+T\+I\+P\+L\+I\+C\+A\+T\+I\+VE}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+\mbox{\Hypertarget{classfemus_1_1_system_afb6e3e4b80b68e8cdcf5b0188313d010}\label{classfemus_1_1_system_afb6e3e4b80b68e8cdcf5b0188313d010}} 
+\index{femus\+::\+System@{femus\+::\+System}!M\+Lsolve@{M\+Lsolve}}
+\index{M\+Lsolve@{M\+Lsolve}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{M\+Lsolve()}{MLsolve()}}
+{\footnotesize\ttfamily virtual void femus\+::\+System\+::\+M\+Lsolve (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+\mbox{\Hypertarget{classfemus_1_1_system_a1a007c176529dae649887bbd1cb46103}\label{classfemus_1_1_system_a1a007c176529dae649887bbd1cb46103}} 
+\index{femus\+::\+System@{femus\+::\+System}!name@{name}}
+\index{name@{name}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{name()}{name()}}
+{\footnotesize\ttfamily const std\+::string \& femus\+::\+System\+::name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_system_a28f5c7f6286dd597ae28a8923c8dca11}\label{classfemus_1_1_system_a28f5c7f6286dd597ae28a8923c8dca11}} 
+\index{femus\+::\+System@{femus\+::\+System}!number@{number}}
+\index{number@{number}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{number()}{number()}}
+{\footnotesize\ttfamily unsigned int femus\+::\+System\+::number (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_system_a42a5b5b5d2c7673b1d4c896762d8db9e}\label{classfemus_1_1_system_a42a5b5b5d2c7673b1d4c896762d8db9e}} 
+\index{femus\+::\+System@{femus\+::\+System}!Set\+Assemble\+Function@{Set\+Assemble\+Function}}
+\index{Set\+Assemble\+Function@{Set\+Assemble\+Function}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Set\+Assemble\+Function()}{SetAssembleFunction()}}
+{\footnotesize\ttfamily void femus\+::\+System\+::\+Set\+Assemble\+Function (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_system_ae71fa78abbc4b3efe8ef1dc057275b9b}{Assemble\+Function\+Type}}  }]{ }\end{DoxyParamCaption})}
+
+Register a user function to use in assembling the system matrix and R\+HS. \mbox{\Hypertarget{classfemus_1_1_system_a04558397f2ff92fc658579c7f8fdf882}\label{classfemus_1_1_system_a04558397f2ff92fc658579c7f8fdf882}} 
+\index{femus\+::\+System@{femus\+::\+System}!Set\+Level\+To\+Assemble@{Set\+Level\+To\+Assemble}}
+\index{Set\+Level\+To\+Assemble@{Set\+Level\+To\+Assemble}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{Set\+Level\+To\+Assemble()}{SetLevelToAssemble()}}
+{\footnotesize\ttfamily unsigned femus\+::\+System\+::\+Set\+Level\+To\+Assemble (\begin{DoxyParamCaption}\item[{const unsigned \&}]{level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_system_a223d0ee32326556800eeb423bd9abbfb}\label{classfemus_1_1_system_a223d0ee32326556800eeb423bd9abbfb}} 
+\index{femus\+::\+System@{femus\+::\+System}!solve@{solve}}
+\index{solve@{solve}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{solve()}{solve()}}
+{\footnotesize\ttfamily virtual void femus\+::\+System\+::solve (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8}{Mg\+Smoother\+Type}} \&}]{mg\+Smoother\+Type = {\ttfamily \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8a2618be531dddb3647be5874ddcae5164}{M\+U\+L\+T\+I\+P\+L\+I\+C\+A\+T\+I\+VE}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1_linear_implicit_system_ab37c3204960b888a594fb38e0803d2e5}{femus\+::\+Linear\+Implicit\+System}}, and \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a4abfe53698e95f1075194cf3a7ce790a}{femus\+::\+Non\+Linear\+Implicit\+System}}.
+
+\mbox{\Hypertarget{classfemus_1_1_system_a8cdcdcaf37dc4985be99dbb0a5ad8efa}\label{classfemus_1_1_system_a8cdcdcaf37dc4985be99dbb0a5ad8efa}} 
+\index{femus\+::\+System@{femus\+::\+System}!system\+\_\+type@{system\+\_\+type}}
+\index{system\+\_\+type@{system\+\_\+type}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{system\+\_\+type()}{system\_type()}}
+{\footnotesize\ttfamily virtual std\+::string femus\+::\+System\+::system\+\_\+type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+\begin{DoxyReturn}{Returns}
+the type of system, helpful in identifying which system type to use when reading equation system data from file. Should be overloaded in derived classes. 
+\end{DoxyReturn}
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1_linear_implicit_system_a45df3966aab87bd06da49c78897a6648}{femus\+::\+Linear\+Implicit\+System}}, \mbox{\hyperlink{classfemus_1_1_explicit_system_a91f61bd0aa02102fe9af817da96be72b}{femus\+::\+Explicit\+System}}, \mbox{\hyperlink{classfemus_1_1_implicit_system_aee5e08a09a2d289aa777914018931592}{femus\+::\+Implicit\+System}}, \mbox{\hyperlink{classfemus_1_1_monolithic_f_s_i_non_linear_implicit_system_a29bb0bdaf1eec888af05e8e57469faf4}{femus\+::\+Monolithic\+F\+S\+I\+Non\+Linear\+Implicit\+System}}, and \mbox{\hyperlink{classfemus_1_1_non_linear_implicit_system_a8f4727b8b763bdac9f58b4c9dbb097be}{femus\+::\+Non\+Linear\+Implicit\+System}}.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_system_a712ef55df0fc3bacbf358036be3e10eb}\label{classfemus_1_1_system_a712ef55df0fc3bacbf358036be3e10eb}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+assemble\+\_\+system\+\_\+function@{\+\_\+assemble\+\_\+system\+\_\+function}}
+\index{\+\_\+assemble\+\_\+system\+\_\+function@{\+\_\+assemble\+\_\+system\+\_\+function}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+assemble\+\_\+system\+\_\+function}{\_assemble\_system\_function}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_system_ae71fa78abbc4b3efe8ef1dc057275b9b}{Assemble\+Function\+Type}} femus\+::\+System\+::\+\_\+assemble\+\_\+system\+\_\+function\hspace{0.3cm}{\ttfamily [protected]}}
+
+Function that assembles the system. \mbox{\Hypertarget{classfemus_1_1_system_ac137ab0e8e2e10f20633509bf03bbde6}\label{classfemus_1_1_system_ac137ab0e8e2e10f20633509bf03bbde6}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+build\+Solver@{\+\_\+build\+Solver}}
+\index{\+\_\+build\+Solver@{\+\_\+build\+Solver}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+build\+Solver}{\_buildSolver}}
+{\footnotesize\ttfamily bool femus\+::\+System\+::\+\_\+build\+Solver\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_system_a7d1765e86f703f5a4ae3944d945215b6}\label{classfemus_1_1_system_a7d1765e86f703f5a4ae3944d945215b6}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+equation\+\_\+systems@{\+\_\+equation\+\_\+systems}}
+\index{\+\_\+equation\+\_\+systems@{\+\_\+equation\+\_\+systems}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+equation\+\_\+systems}{\_equation\_systems}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}}\& femus\+::\+System\+::\+\_\+equation\+\_\+systems\hspace{0.3cm}{\ttfamily [protected]}}
+
+Constant reference to the {\ttfamily Equation\+Systems} object used for the simulation. \mbox{\Hypertarget{classfemus_1_1_system_ae1ee15b9d70bb8e118366c37ebc75f8a}\label{classfemus_1_1_system_ae1ee15b9d70bb8e118366c37ebc75f8a}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+gridn@{\+\_\+gridn}}
+\index{\+\_\+gridn@{\+\_\+gridn}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+gridn}{\_gridn}}
+{\footnotesize\ttfamily unsigned femus\+::\+System\+::\+\_\+gridn\hspace{0.3cm}{\ttfamily [protected]}}
+
+Number of Levels \mbox{\Hypertarget{classfemus_1_1_system_a4fcefeeec2a9777f362e1b25c04d40e9}\label{classfemus_1_1_system_a4fcefeeec2a9777f362e1b25c04d40e9}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+level\+To\+Assemble@{\+\_\+level\+To\+Assemble}}
+\index{\+\_\+level\+To\+Assemble@{\+\_\+level\+To\+Assemble}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+level\+To\+Assemble}{\_levelToAssemble}}
+{\footnotesize\ttfamily unsigned femus\+::\+System\+::\+\_\+level\+To\+Assemble\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_system_aa4702804d2490808f6e0525a081c2bf5}\label{classfemus_1_1_system_aa4702804d2490808f6e0525a081c2bf5}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+\+M\+Gsolver@{\+\_\+\+M\+Gsolver}}
+\index{\+\_\+\+M\+Gsolver@{\+\_\+\+M\+Gsolver}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+\+M\+Gsolver}{\_MGsolver}}
+{\footnotesize\ttfamily bool femus\+::\+System\+::\+\_\+\+M\+Gsolver\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_system_a3be539b0e20b909f55520c58e4e16843}\label{classfemus_1_1_system_a3be539b0e20b909f55520c58e4e16843}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+ml\+\_\+msh@{\+\_\+ml\+\_\+msh}}
+\index{\+\_\+ml\+\_\+msh@{\+\_\+ml\+\_\+msh}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+ml\+\_\+msh}{\_ml\_msh}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}}$\ast$ femus\+::\+System\+::\+\_\+ml\+\_\+msh\hspace{0.3cm}{\ttfamily [protected]}}
+
+pointer \mbox{\Hypertarget{classfemus_1_1_system_a6e000f17ac05a0938a4a8e7b72c957de}\label{classfemus_1_1_system_a6e000f17ac05a0938a4a8e7b72c957de}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+ml\+\_\+sol@{\+\_\+ml\+\_\+sol}}
+\index{\+\_\+ml\+\_\+sol@{\+\_\+ml\+\_\+sol}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+ml\+\_\+sol}{\_ml\_sol}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_multi_level_solution}{Multi\+Level\+Solution}}$\ast$ femus\+::\+System\+::\+\_\+ml\+\_\+sol\hspace{0.3cm}{\ttfamily [protected]}}
+
+pointer \mbox{\Hypertarget{classfemus_1_1_system_a2a519fbc814e32e10dd2d01c7695c092}\label{classfemus_1_1_system_a2a519fbc814e32e10dd2d01c7695c092}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+\+M\+Lsolver@{\+\_\+\+M\+Lsolver}}
+\index{\+\_\+\+M\+Lsolver@{\+\_\+\+M\+Lsolver}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+\+M\+Lsolver}{\_MLsolver}}
+{\footnotesize\ttfamily bool femus\+::\+System\+::\+\_\+\+M\+Lsolver\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_system_ab45d7c55f2f903a2839104131d2eb572}\label{classfemus_1_1_system_ab45d7c55f2f903a2839104131d2eb572}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+msh@{\+\_\+msh}}
+\index{\+\_\+msh@{\+\_\+msh}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+msh}{\_msh}}
+{\footnotesize\ttfamily vector$<$\mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}}$\ast$$>$ femus\+::\+System\+::\+\_\+msh\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} vector, dimension \+\_\+gridn \mbox{\Hypertarget{classfemus_1_1_system_a8d0dc8efe0a0144c7da0b2d848986e78}\label{classfemus_1_1_system_a8d0dc8efe0a0144c7da0b2d848986e78}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+\+Sol\+System\+Pde\+Index@{\+\_\+\+Sol\+System\+Pde\+Index}}
+\index{\+\_\+\+Sol\+System\+Pde\+Index@{\+\_\+\+Sol\+System\+Pde\+Index}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+\+Sol\+System\+Pde\+Index}{\_SolSystemPdeIndex}}
+{\footnotesize\ttfamily vector$<$unsigned$>$ femus\+::\+System\+::\+\_\+\+Sol\+System\+Pde\+Index\hspace{0.3cm}{\ttfamily [protected]}}
+
+indices of the solutions, dynamical dimension \mbox{\Hypertarget{classfemus_1_1_system_af2fc403002e82633ab3b100ca3fefa47}\label{classfemus_1_1_system_af2fc403002e82633ab3b100ca3fefa47}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+solution@{\+\_\+solution}}
+\index{\+\_\+solution@{\+\_\+solution}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+solution}{\_solution}}
+{\footnotesize\ttfamily vector$<$\mbox{\hyperlink{classfemus_1_1_solution}{Solution}}$\ast$$>$ femus\+::\+System\+::\+\_\+solution\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} vector, dimension \+\_\+gridn \mbox{\Hypertarget{classfemus_1_1_system_af26639b99612eb2307723359124e32cd}\label{classfemus_1_1_system_af26639b99612eb2307723359124e32cd}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+solver\+Type@{\+\_\+solver\+Type}}
+\index{\+\_\+solver\+Type@{\+\_\+solver\+Type}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+solver\+Type}{\_solverType}}
+{\footnotesize\ttfamily std\+::string femus\+::\+System\+::\+\_\+solver\+Type\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_system_a1179f082cb14d4f3c82c699bbbb0f870}\label{classfemus_1_1_system_a1179f082cb14d4f3c82c699bbbb0f870}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+sys\+\_\+name@{\+\_\+sys\+\_\+name}}
+\index{\+\_\+sys\+\_\+name@{\+\_\+sys\+\_\+name}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+sys\+\_\+name}{\_sys\_name}}
+{\footnotesize\ttfamily const std\+::string femus\+::\+System\+::\+\_\+sys\+\_\+name\hspace{0.3cm}{\ttfamily [protected]}}
+
+A name associated with this system. \mbox{\Hypertarget{classfemus_1_1_system_ae24afc2eadae2253268bc9442f2a02e3}\label{classfemus_1_1_system_ae24afc2eadae2253268bc9442f2a02e3}} 
+\index{femus\+::\+System@{femus\+::\+System}!\+\_\+sys\+\_\+number@{\+\_\+sys\+\_\+number}}
+\index{\+\_\+sys\+\_\+number@{\+\_\+sys\+\_\+number}!femus\+::\+System@{femus\+::\+System}}
+\subsubsection{\texorpdfstring{\+\_\+sys\+\_\+number}{\_sys\_number}}
+{\footnotesize\ttfamily const unsigned int femus\+::\+System\+::\+\_\+sys\+\_\+number\hspace{0.3cm}{\ttfamily [protected]}}
+
+The number associated with this system 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+equations/\mbox{\hyperlink{_system_8hpp}{System.\+hpp}}\item 
+equations/\mbox{\hyperlink{_system_8cpp}{System.\+cpp}}\end{DoxyCompactItemize}

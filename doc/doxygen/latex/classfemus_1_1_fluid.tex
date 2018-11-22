@@ -1,0 +1,152 @@
+\hypertarget{classfemus_1_1_fluid}{}\section{femus\+:\+:Fluid Class Reference}
+\label{classfemus_1_1_fluid}\index{femus\+::\+Fluid@{femus\+::\+Fluid}}
+
+
+{\ttfamily \#include $<$Fluid.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Fluid\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=166pt]{classfemus_1_1_fluid__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Fluid\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=184pt]{classfemus_1_1_fluid__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_fluid_a8d1831919f5338cfd229ae987f999907}{Fluid}} (\mbox{\hyperlink{classfemus_1_1_parameter}{Parameter}} \&par, const double viscosity, const double density, const char model\mbox{[}$\,$\mbox{]}=\char`\"{}Newtonian\char`\"{}, const double k=1., const double cp=1., const double alpha=1.e-\/06)
+\item 
+\mbox{\hyperlink{classfemus_1_1_fluid_a052d4f2d1abfd8a570e61c1447329f7c}{Fluid}} (\mbox{\hyperlink{classfemus_1_1_parameter}{Parameter}} \&par)
+\item 
+\mbox{\hyperlink{classfemus_1_1_fluid_af657120fb7459fb69fc49101818ea55c}{Fluid}} ()
+\item 
+\mbox{\hyperlink{classfemus_1_1_fluid_ad8a43d785da801087c8609cd14f609da}{$\sim$\+Fluid}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_fluid_ac53b9fafcb7e64adb950186182205ba9}{set\+\_\+viscosity}} (const double viscosity)
+\item 
+const double \mbox{\hyperlink{classfemus_1_1_fluid_a936acf71f4e2000195c889fe01a3619f}{get\+\_\+viscosity}} () const
+\item 
+const double \mbox{\hyperlink{classfemus_1_1_fluid_a7d9bc0a4418dd5fd799d5b053555bb81}{get\+\_\+\+I\+Reynolds\+\_\+number}} () const
+\item 
+const double \mbox{\hyperlink{classfemus_1_1_fluid_a74d6c2e5e08b7615a03f9b12be768b09}{get\+\_\+\+Prandtl\+\_\+number}} () const
+\item 
+const double \mbox{\hyperlink{classfemus_1_1_fluid_a64c60efe82b31eefa750265e063e7710}{get\+\_\+\+Rayleigh\+\_\+number}} () const
+\item 
+const unsigned \mbox{\hyperlink{classfemus_1_1_fluid_aebe2cca45e84639ff700d30b1aa67f25}{get\+\_\+physical\+\_\+model}} () const
+\item 
+const double \mbox{\hyperlink{classfemus_1_1_fluid_a598daf21fed5e9075249c001773d5b40}{get\+\_\+\+Peclet\+\_\+number}} () const
+\item 
+\mbox{\hyperlink{classfemus_1_1_fluid}{Fluid}} \& \mbox{\hyperlink{classfemus_1_1_fluid_ad8ceb155d9713388b23b58aef5b46a8b}{operator=}} (const \mbox{\hyperlink{classfemus_1_1_fluid}{Fluid}} \&fluid)
+\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+std\+::ostream \& \mbox{\hyperlink{classfemus_1_1_fluid_a29fca4de20408057a55a836385cb66ed}{operator$<$$<$}} (std\+::ostream \&os, const \mbox{\hyperlink{classfemus_1_1_fluid}{Fluid}} \&fluid)
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_fluid_a8d1831919f5338cfd229ae987f999907}\label{classfemus_1_1_fluid_a8d1831919f5338cfd229ae987f999907}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!Fluid@{Fluid}}
+\index{Fluid@{Fluid}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{Fluid()}{Fluid()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily femus\+::\+Fluid\+::\+Fluid (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_parameter}{Parameter}} \&}]{par,  }\item[{const double}]{viscosity,  }\item[{const double}]{density,  }\item[{const char}]{model\mbox{[}$\,$\mbox{]} = {\ttfamily \char`\"{}Newtonian\char`\"{}},  }\item[{const double}]{k = {\ttfamily 1.},  }\item[{const double}]{cp = {\ttfamily 1.},  }\item[{const double}]{alpha = {\ttfamily 1.e-\/06} }\end{DoxyParamCaption})}
+
+constructors \mbox{\Hypertarget{classfemus_1_1_fluid_a052d4f2d1abfd8a570e61c1447329f7c}\label{classfemus_1_1_fluid_a052d4f2d1abfd8a570e61c1447329f7c}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!Fluid@{Fluid}}
+\index{Fluid@{Fluid}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{Fluid()}{Fluid()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily femus\+::\+Fluid\+::\+Fluid (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_parameter}{Parameter}} \&}]{par }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_fluid_af657120fb7459fb69fc49101818ea55c}\label{classfemus_1_1_fluid_af657120fb7459fb69fc49101818ea55c}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!Fluid@{Fluid}}
+\index{Fluid@{Fluid}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{Fluid()}{Fluid()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily femus\+::\+Fluid\+::\+Fluid (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_fluid_ad8a43d785da801087c8609cd14f609da}\label{classfemus_1_1_fluid_ad8a43d785da801087c8609cd14f609da}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!````~Fluid@{$\sim$\+Fluid}}
+\index{````~Fluid@{$\sim$\+Fluid}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{$\sim$\+Fluid()}{~Fluid()}}
+{\footnotesize\ttfamily femus\+::\+Fluid\+::$\sim$\+Fluid (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+destructor 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_fluid_a7d9bc0a4418dd5fd799d5b053555bb81}\label{classfemus_1_1_fluid_a7d9bc0a4418dd5fd799d5b053555bb81}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!get\+\_\+\+I\+Reynolds\+\_\+number@{get\+\_\+\+I\+Reynolds\+\_\+number}}
+\index{get\+\_\+\+I\+Reynolds\+\_\+number@{get\+\_\+\+I\+Reynolds\+\_\+number}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{get\+\_\+\+I\+Reynolds\+\_\+number()}{get\_IReynolds\_number()}}
+{\footnotesize\ttfamily const double femus\+::\+Fluid\+::get\+\_\+\+I\+Reynolds\+\_\+number (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_fluid_a598daf21fed5e9075249c001773d5b40}\label{classfemus_1_1_fluid_a598daf21fed5e9075249c001773d5b40}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!get\+\_\+\+Peclet\+\_\+number@{get\+\_\+\+Peclet\+\_\+number}}
+\index{get\+\_\+\+Peclet\+\_\+number@{get\+\_\+\+Peclet\+\_\+number}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{get\+\_\+\+Peclet\+\_\+number()}{get\_Peclet\_number()}}
+{\footnotesize\ttfamily const double femus\+::\+Fluid\+::get\+\_\+\+Peclet\+\_\+number (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_fluid_aebe2cca45e84639ff700d30b1aa67f25}\label{classfemus_1_1_fluid_aebe2cca45e84639ff700d30b1aa67f25}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!get\+\_\+physical\+\_\+model@{get\+\_\+physical\+\_\+model}}
+\index{get\+\_\+physical\+\_\+model@{get\+\_\+physical\+\_\+model}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{get\+\_\+physical\+\_\+model()}{get\_physical\_model()}}
+{\footnotesize\ttfamily const unsigned femus\+::\+Fluid\+::get\+\_\+physical\+\_\+model (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_fluid_a74d6c2e5e08b7615a03f9b12be768b09}\label{classfemus_1_1_fluid_a74d6c2e5e08b7615a03f9b12be768b09}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!get\+\_\+\+Prandtl\+\_\+number@{get\+\_\+\+Prandtl\+\_\+number}}
+\index{get\+\_\+\+Prandtl\+\_\+number@{get\+\_\+\+Prandtl\+\_\+number}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{get\+\_\+\+Prandtl\+\_\+number()}{get\_Prandtl\_number()}}
+{\footnotesize\ttfamily const double femus\+::\+Fluid\+::get\+\_\+\+Prandtl\+\_\+number (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_fluid_a64c60efe82b31eefa750265e063e7710}\label{classfemus_1_1_fluid_a64c60efe82b31eefa750265e063e7710}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!get\+\_\+\+Rayleigh\+\_\+number@{get\+\_\+\+Rayleigh\+\_\+number}}
+\index{get\+\_\+\+Rayleigh\+\_\+number@{get\+\_\+\+Rayleigh\+\_\+number}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{get\+\_\+\+Rayleigh\+\_\+number()}{get\_Rayleigh\_number()}}
+{\footnotesize\ttfamily const double femus\+::\+Fluid\+::get\+\_\+\+Rayleigh\+\_\+number (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_fluid_a936acf71f4e2000195c889fe01a3619f}\label{classfemus_1_1_fluid_a936acf71f4e2000195c889fe01a3619f}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!get\+\_\+viscosity@{get\+\_\+viscosity}}
+\index{get\+\_\+viscosity@{get\+\_\+viscosity}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{get\+\_\+viscosity()}{get\_viscosity()}}
+{\footnotesize\ttfamily const double femus\+::\+Fluid\+::get\+\_\+viscosity (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_fluid_ad8ceb155d9713388b23b58aef5b46a8b}\label{classfemus_1_1_fluid_ad8ceb155d9713388b23b58aef5b46a8b}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!operator=@{operator=}}
+\index{operator=@{operator=}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_fluid}{Fluid}} \& femus\+::\+Fluid\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_fluid}{Fluid}} \&}]{fluid }\end{DoxyParamCaption})}
+
+overloading of the = operator \mbox{\Hypertarget{classfemus_1_1_fluid_ac53b9fafcb7e64adb950186182205ba9}\label{classfemus_1_1_fluid_ac53b9fafcb7e64adb950186182205ba9}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!set\+\_\+viscosity@{set\+\_\+viscosity}}
+\index{set\+\_\+viscosity@{set\+\_\+viscosity}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{set\+\_\+viscosity()}{set\_viscosity()}}
+{\footnotesize\ttfamily void femus\+::\+Fluid\+::set\+\_\+viscosity (\begin{DoxyParamCaption}\item[{const double}]{viscosity }\end{DoxyParamCaption})}
+
+To be Added 
+
+\subsection{Friends And Related Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_fluid_a29fca4de20408057a55a836385cb66ed}\label{classfemus_1_1_fluid_a29fca4de20408057a55a836385cb66ed}} 
+\index{femus\+::\+Fluid@{femus\+::\+Fluid}!operator$<$$<$@{operator$<$$<$}}
+\index{operator$<$$<$@{operator$<$$<$}!femus\+::\+Fluid@{femus\+::\+Fluid}}
+\subsubsection{\texorpdfstring{operator$<$$<$}{operator<<}}
+{\footnotesize\ttfamily std\+::ostream\& operator$<$$<$ (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{os,  }\item[{const \mbox{\hyperlink{classfemus_1_1_fluid}{Fluid}} \&}]{fluid }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [friend]}}
+
+printing operator 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+physics/\mbox{\hyperlink{_fluid_8hpp}{Fluid.\+hpp}}\item 
+physics/\mbox{\hyperlink{_fluid_8cpp}{Fluid.\+cpp}}\end{DoxyCompactItemize}

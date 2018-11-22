@@ -1,0 +1,103 @@
+\hypertarget{classfemus_1_1_parallel_1_1_request}{}\section{femus\+:\+:Parallel\+:\+:Request Class Reference}
+\label{classfemus_1_1_parallel_1_1_request}\index{femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}}
+
+
+{\ttfamily \#include $<$Parallel.\+hpp$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_parallel_1_1_request_a7afaf981b0f0e3be69a4e9de5c985cfd}{Request}} ()
+\item 
+\mbox{\hyperlink{classfemus_1_1_parallel_1_1_request_a5e9c158e05c3f2fd19c1f3f63b15717e}{Request}} (const \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&r)
+\item 
+\mbox{\hyperlink{classfemus_1_1_parallel_1_1_request}{Request}} \& \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request_a87d6cc243a5fd162d9fbcb3e94f54099}{operator=}} (const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request}{Request}} \&other)
+\item 
+\mbox{\hyperlink{classfemus_1_1_parallel_1_1_request}{Request}} \& \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request_a054625cad97b6e946461832a2cdfa9a0}{operator=}} (const \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&r)
+\item 
+\mbox{\hyperlink{classfemus_1_1_parallel_1_1_request_ab8125f4e48b801cd6d01798b683098d8}{$\sim$\+Request}} ()
+\item 
+\mbox{\hyperlink{classfemus_1_1_parallel_1_1_request_afb63d51b8a02ca0d3620d91daa50e07a}{operator const request \&}} () const
+\item 
+\mbox{\hyperlink{classfemus_1_1_parallel_1_1_request_acfeca7685161f89c4ecf9211220ba542}{operator request \&}} ()
+\item 
+\mbox{\hyperlink{structfemus_1_1_parallel_1_1status}{status}} \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request_a6aa01007e11e607cc48a117a39cc04da}{wait}} ()
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request_ab16aedfa9207bcf1a8f16052300788a3}{test}} ()
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request_a15f1f5dfd71723f38a4d387cbd4dc24a}{test}} (\mbox{\hyperlink{structfemus_1_1_parallel_1_1status}{status}} \&)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Encapsulates the M\+P\+I\+\_\+\+Request 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_parallel_1_1_request_a7afaf981b0f0e3be69a4e9de5c985cfd}\label{classfemus_1_1_parallel_1_1_request_a7afaf981b0f0e3be69a4e9de5c985cfd}} 
+\index{femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}!Request@{Request}}
+\index{Request@{Request}!femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}}
+\subsubsection{\texorpdfstring{Request()}{Request()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily femus\+::\+Parallel\+::\+Request\+::\+Request (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_parallel_1_1_request_a5e9c158e05c3f2fd19c1f3f63b15717e}\label{classfemus_1_1_parallel_1_1_request_a5e9c158e05c3f2fd19c1f3f63b15717e}} 
+\index{femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}!Request@{Request}}
+\index{Request@{Request}!femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}}
+\subsubsection{\texorpdfstring{Request()}{Request()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily femus\+::\+Parallel\+::\+Request\+::\+Request (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_parallel_1_1_request_ab8125f4e48b801cd6d01798b683098d8}\label{classfemus_1_1_parallel_1_1_request_ab8125f4e48b801cd6d01798b683098d8}} 
+\index{femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}!````~Request@{$\sim$\+Request}}
+\index{````~Request@{$\sim$\+Request}!femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}}
+\subsubsection{\texorpdfstring{$\sim$\+Request()}{~Request()}}
+{\footnotesize\ttfamily femus\+::\+Parallel\+::\+Request\+::$\sim$\+Request (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_parallel_1_1_request_afb63d51b8a02ca0d3620d91daa50e07a}\label{classfemus_1_1_parallel_1_1_request_afb63d51b8a02ca0d3620d91daa50e07a}} 
+\index{femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}!operator const request \&@{operator const request \&}}
+\index{operator const request \&@{operator const request \&}!femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}}
+\subsubsection{\texorpdfstring{operator const request \&()}{operator const request \&()}}
+{\footnotesize\ttfamily femus\+::\+Parallel\+::\+Request\+::operator const \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \& (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_parallel_1_1_request_acfeca7685161f89c4ecf9211220ba542}\label{classfemus_1_1_parallel_1_1_request_acfeca7685161f89c4ecf9211220ba542}} 
+\index{femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}!operator request \&@{operator request \&}}
+\index{operator request \&@{operator request \&}!femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}}
+\subsubsection{\texorpdfstring{operator request \&()}{operator request \&()}}
+{\footnotesize\ttfamily femus\+::\+Parallel\+::\+Request\+::operator \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \& (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_parallel_1_1_request_a87d6cc243a5fd162d9fbcb3e94f54099}\label{classfemus_1_1_parallel_1_1_request_a87d6cc243a5fd162d9fbcb3e94f54099}} 
+\index{femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}!operator=@{operator=}}
+\index{operator=@{operator=}!femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}}
+\subsubsection{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request}{Request}}\& femus\+::\+Parallel\+::\+Request\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request}{Request}} \&}]{other }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_parallel_1_1_request_a054625cad97b6e946461832a2cdfa9a0}\label{classfemus_1_1_parallel_1_1_request_a054625cad97b6e946461832a2cdfa9a0}} 
+\index{femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}!operator=@{operator=}}
+\index{operator=@{operator=}!femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}}
+\subsubsection{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request}{Request}}\& femus\+::\+Parallel\+::\+Request\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_parallel_1_1_request_ab16aedfa9207bcf1a8f16052300788a3}\label{classfemus_1_1_parallel_1_1_request_ab16aedfa9207bcf1a8f16052300788a3}} 
+\index{femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}!test@{test}}
+\index{test@{test}!femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}}
+\subsubsection{\texorpdfstring{test()}{test()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily bool femus\+::\+Parallel\+::\+Request\+::test (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_parallel_1_1_request_a15f1f5dfd71723f38a4d387cbd4dc24a}\label{classfemus_1_1_parallel_1_1_request_a15f1f5dfd71723f38a4d387cbd4dc24a}} 
+\index{femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}!test@{test}}
+\index{test@{test}!femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}}
+\subsubsection{\texorpdfstring{test()}{test()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily bool femus\+::\+Parallel\+::\+Request\+::test (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structfemus_1_1_parallel_1_1status}{status}} \&}]{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_parallel_1_1_request_a6aa01007e11e607cc48a117a39cc04da}\label{classfemus_1_1_parallel_1_1_request_a6aa01007e11e607cc48a117a39cc04da}} 
+\index{femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}!wait@{wait}}
+\index{wait@{wait}!femus\+::\+Parallel\+::\+Request@{femus\+::\+Parallel\+::\+Request}}
+\subsubsection{\texorpdfstring{wait()}{wait()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structfemus_1_1_parallel_1_1status}{status}} femus\+::\+Parallel\+::\+Request\+::wait (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+parallel/\mbox{\hyperlink{_parallel_8hpp}{Parallel.\+hpp}}\end{DoxyCompactItemize}

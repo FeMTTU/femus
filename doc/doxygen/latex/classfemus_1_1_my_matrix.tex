@@ -1,0 +1,279 @@
+\hypertarget{classfemus_1_1_my_matrix}{}\section{femus\+:\+:My\+Matrix$<$ Type $>$ Class Template Reference}
+\label{classfemus_1_1_my_matrix}\index{femus\+::\+My\+Matrix$<$ Type $>$@{femus\+::\+My\+Matrix$<$ Type $>$}}
+
+
+{\ttfamily \#include $<$My\+Matrix.\+hpp$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_my_matrix_a1233f8df540f69758f079b3b932ff851}{My\+Matrix}} ()
+\item 
+\mbox{\hyperlink{classfemus_1_1_my_matrix_a2ab151f14eac4d3c61504169435d2e52}{My\+Matrix}} (const unsigned \&rsize, const unsigned \&csize, const Type value=0)
+\item 
+\mbox{\hyperlink{classfemus_1_1_my_matrix_ad0294488e8e1fa7a5fd78a08ac23f677}{My\+Matrix}} (const std\+::vector$<$ unsigned $>$ \&offset, const unsigned \&csize, const Type value=0)
+\item 
+\mbox{\hyperlink{classfemus_1_1_my_matrix_a44785815b941b7f42b029668c1641abe}{My\+Matrix}} (const \mbox{\hyperlink{classfemus_1_1_my_vector}{My\+Vector}}$<$ unsigned $>$ \&row\+Size, const Type value=0)
+\item 
+\mbox{\hyperlink{classfemus_1_1_my_matrix_af6027611ab36fc1826b9efa278cd6a23}{$\sim$\+My\+Matrix}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_my_matrix_abf86f6c2ce5cfb335048ed948acd6d71}{init}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_my_matrix_af6eccdb4db1869148cc7fe22590c2625}{resize}} (const unsigned \&rsize, const unsigned \&csize, const Type value=0)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_my_matrix_a1851b191f98045063f45f8e371fba98a}{resize}} (const std\+::vector$<$ unsigned $>$ \&offset, const unsigned \&csize, const Type value=0)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_my_matrix_a1d1fc475d6e17481e0d6451d1dab3574}{shrink\+To\+Fit}} (Type remove)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_my_matrix_a8e80e482668fee278634417a6df69367}{shrink\+To\+Fit}} (\mbox{\hyperlink{classfemus_1_1_my_vector}{My\+Vector}}$<$ unsigned $>$ \&r)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_my_matrix_ab1808ad9a2032616e6c33361bc14d522}{clear}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix_ab99498a426f2016872b4a55765fc7c04}{size}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix_a990f5949f99920cfd9f02a032982db93}{size}} (const unsigned \&i)
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix_aeb34d19dc9a44a8cc4839b31cff5d63e}{begin}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix_ab204ed386a67619364bb53449116019d}{begin}} (const unsigned \&i)
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix_adc8f45533d3acaab710e0569a152459e}{end}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix_a6da3c82decd250ee84e7692c40880ec9}{end}} (const unsigned \&i)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_my_matrix_a5c236953941f1b007220dd91b9721ae0}{scatter}} (const std\+::vector$<$ unsigned $>$ \&offset)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_my_matrix_a9c7ae8e6060a465333136319cabcd856}{scatter}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_my_matrix_ae65c1c929b4ab08648dde94bb8141bd3}{build\+Offset}} ()
+\item 
+std\+::vector$<$ unsigned $>$ \mbox{\hyperlink{classfemus_1_1_my_matrix_a11b7703db1e6021af689380608f38faa}{get\+Offset}} ()
+\item 
+\mbox{\hyperlink{classfemus_1_1_my_vector}{My\+Vector}}$<$ unsigned $>$ \mbox{\hyperlink{classfemus_1_1_my_matrix_a8b9f22c56f93c4906febf8b4fd626ce3}{get\+Row\+Size}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_my_matrix_a09443391549adb392acb33399287cc4d}{broadcast}} (const unsigned \&lproc)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_my_matrix_ab466c235f5d88ec88c493119f77be25c}{clear\+Broadcast}} ()
+\item 
+const std\+::string \& \mbox{\hyperlink{classfemus_1_1_my_matrix_a37386775b4c35f4fb7be31497014fa4f}{status}} ()
+\item 
+Type $\ast$ \mbox{\hyperlink{classfemus_1_1_my_matrix_a014bbebfebe4b35d96766b69778f0e82}{operator\mbox{[}$\,$\mbox{]}}} (const unsigned \&i)
+\item 
+Type \& \mbox{\hyperlink{classfemus_1_1_my_matrix_a84957a60650870f940878415c93ade3c}{operator()}} (const unsigned \&i, const unsigned \&j)
+\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+std\+::ostream \& \mbox{\hyperlink{classfemus_1_1_my_matrix_acdcbc06737c710ce4f4e823774acd345}{operator$<$$<$}} (std\+::ostream \&os, \mbox{\hyperlink{classfemus_1_1_my_matrix}{My\+Matrix}}$<$ Type $>$ \&mat)
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a1233f8df540f69758f079b3b932ff851}\label{classfemus_1_1_my_matrix_a1233f8df540f69758f079b3b932ff851}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!My\+Matrix@{My\+Matrix}}
+\index{My\+Matrix@{My\+Matrix}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{My\+Matrix()}{MyMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+\mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::\mbox{\hyperlink{classfemus_1_1_my_matrix}{My\+Matrix}} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a2ab151f14eac4d3c61504169435d2e52}\label{classfemus_1_1_my_matrix_a2ab151f14eac4d3c61504169435d2e52}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!My\+Matrix@{My\+Matrix}}
+\index{My\+Matrix@{My\+Matrix}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{My\+Matrix()}{MyMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily template$<$class Type$>$ \\
+\mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::\mbox{\hyperlink{classfemus_1_1_my_matrix}{My\+Matrix}} (\begin{DoxyParamCaption}\item[{const unsigned \&}]{rsize,  }\item[{const unsigned \&}]{csize,  }\item[{const Type}]{value = {\ttfamily 0} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_ad0294488e8e1fa7a5fd78a08ac23f677}\label{classfemus_1_1_my_matrix_ad0294488e8e1fa7a5fd78a08ac23f677}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!My\+Matrix@{My\+Matrix}}
+\index{My\+Matrix@{My\+Matrix}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{My\+Matrix()}{MyMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily template$<$class Type$>$ \\
+\mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::\mbox{\hyperlink{classfemus_1_1_my_matrix}{My\+Matrix}} (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ unsigned $>$ \&}]{offset,  }\item[{const unsigned \&}]{csize,  }\item[{const Type}]{value = {\ttfamily 0} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a44785815b941b7f42b029668c1641abe}\label{classfemus_1_1_my_matrix_a44785815b941b7f42b029668c1641abe}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!My\+Matrix@{My\+Matrix}}
+\index{My\+Matrix@{My\+Matrix}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{My\+Matrix()}{MyMatrix()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily template$<$class Type$>$ \\
+\mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::\mbox{\hyperlink{classfemus_1_1_my_matrix}{My\+Matrix}} (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_my_vector}{My\+Vector}}$<$ unsigned $>$ \&}]{row\+Size,  }\item[{const Type}]{value = {\ttfamily 0} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_af6027611ab36fc1826b9efa278cd6a23}\label{classfemus_1_1_my_matrix_af6027611ab36fc1826b9efa278cd6a23}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!````~My\+Matrix@{$\sim$\+My\+Matrix}}
+\index{````~My\+Matrix@{$\sim$\+My\+Matrix}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{$\sim$\+My\+Matrix()}{~MyMatrix()}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+\mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::$\sim$\mbox{\hyperlink{classfemus_1_1_my_matrix}{My\+Matrix}} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_aeb34d19dc9a44a8cc4839b31cff5d63e}\label{classfemus_1_1_my_matrix_aeb34d19dc9a44a8cc4839b31cff5d63e}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!begin@{begin}}
+\index{begin@{begin}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{begin()}{begin()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::begin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_ab204ed386a67619364bb53449116019d}\label{classfemus_1_1_my_matrix_ab204ed386a67619364bb53449116019d}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!begin@{begin}}
+\index{begin@{begin}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{begin()}{begin()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::begin (\begin{DoxyParamCaption}\item[{const unsigned \&}]{i }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a09443391549adb392acb33399287cc4d}\label{classfemus_1_1_my_matrix_a09443391549adb392acb33399287cc4d}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!broadcast@{broadcast}}
+\index{broadcast@{broadcast}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{broadcast()}{broadcast()}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::broadcast (\begin{DoxyParamCaption}\item[{const unsigned \&}]{lproc }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_ae65c1c929b4ab08648dde94bb8141bd3}\label{classfemus_1_1_my_matrix_ae65c1c929b4ab08648dde94bb8141bd3}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!build\+Offset@{build\+Offset}}
+\index{build\+Offset@{build\+Offset}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{build\+Offset()}{buildOffset()}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::build\+Offset (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_ab1808ad9a2032616e6c33361bc14d522}\label{classfemus_1_1_my_matrix_ab1808ad9a2032616e6c33361bc14d522}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!clear@{clear}}
+\index{clear@{clear}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{clear()}{clear()}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::clear (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_ab466c235f5d88ec88c493119f77be25c}\label{classfemus_1_1_my_matrix_ab466c235f5d88ec88c493119f77be25c}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!clear\+Broadcast@{clear\+Broadcast}}
+\index{clear\+Broadcast@{clear\+Broadcast}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{clear\+Broadcast()}{clearBroadcast()}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::clear\+Broadcast (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_adc8f45533d3acaab710e0569a152459e}\label{classfemus_1_1_my_matrix_adc8f45533d3acaab710e0569a152459e}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!end@{end}}
+\index{end@{end}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{end()}{end()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::end (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a6da3c82decd250ee84e7692c40880ec9}\label{classfemus_1_1_my_matrix_a6da3c82decd250ee84e7692c40880ec9}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!end@{end}}
+\index{end@{end}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{end()}{end()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::end (\begin{DoxyParamCaption}\item[{const unsigned \&}]{i }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a11b7703db1e6021af689380608f38faa}\label{classfemus_1_1_my_matrix_a11b7703db1e6021af689380608f38faa}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!get\+Offset@{get\+Offset}}
+\index{get\+Offset@{get\+Offset}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{get\+Offset()}{getOffset()}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+std\+::vector$<$ unsigned $>$ \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::get\+Offset (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a8b9f22c56f93c4906febf8b4fd626ce3}\label{classfemus_1_1_my_matrix_a8b9f22c56f93c4906febf8b4fd626ce3}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!get\+Row\+Size@{get\+Row\+Size}}
+\index{get\+Row\+Size@{get\+Row\+Size}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{get\+Row\+Size()}{getRowSize()}}
+{\footnotesize\ttfamily template$<$class Type$>$ \\
+\mbox{\hyperlink{classfemus_1_1_my_vector}{My\+Vector}}$<$ unsigned $>$ \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::get\+Row\+Size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_abf86f6c2ce5cfb335048ed948acd6d71}\label{classfemus_1_1_my_matrix_abf86f6c2ce5cfb335048ed948acd6d71}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!init@{init}}
+\index{init@{init}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{init()}{init()}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::init (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a84957a60650870f940878415c93ade3c}\label{classfemus_1_1_my_matrix_a84957a60650870f940878415c93ade3c}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!operator()@{operator()}}
+\index{operator()@{operator()}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{operator()()}{operator()()}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+Type \& \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::operator() (\begin{DoxyParamCaption}\item[{const unsigned \&}]{i,  }\item[{const unsigned \&}]{j }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a014bbebfebe4b35d96766b69778f0e82}\label{classfemus_1_1_my_matrix_a014bbebfebe4b35d96766b69778f0e82}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!operator\mbox{[}\mbox{]}@{operator[]}}
+\index{operator\mbox{[}\mbox{]}@{operator[]}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{operator[]()}{operator[]()}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+Type $\ast$ \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::operator\mbox{[}$\,$\mbox{]} (\begin{DoxyParamCaption}\item[{const unsigned \&}]{i }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_af6eccdb4db1869148cc7fe22590c2625}\label{classfemus_1_1_my_matrix_af6eccdb4db1869148cc7fe22590c2625}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!resize@{resize}}
+\index{resize@{resize}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{resize()}{resize()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class Type$>$ \\
+void \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::resize (\begin{DoxyParamCaption}\item[{const unsigned \&}]{rsize,  }\item[{const unsigned \&}]{csize,  }\item[{const Type}]{value = {\ttfamily 0} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a1851b191f98045063f45f8e371fba98a}\label{classfemus_1_1_my_matrix_a1851b191f98045063f45f8e371fba98a}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!resize@{resize}}
+\index{resize@{resize}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{resize()}{resize()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class Type$>$ \\
+void \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::resize (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ unsigned $>$ \&}]{offset,  }\item[{const unsigned \&}]{csize,  }\item[{const Type}]{value = {\ttfamily 0} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a5c236953941f1b007220dd91b9721ae0}\label{classfemus_1_1_my_matrix_a5c236953941f1b007220dd91b9721ae0}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!scatter@{scatter}}
+\index{scatter@{scatter}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{scatter()}{scatter()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::scatter (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ unsigned $>$ \&}]{offset }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a9c7ae8e6060a465333136319cabcd856}\label{classfemus_1_1_my_matrix_a9c7ae8e6060a465333136319cabcd856}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!scatter@{scatter}}
+\index{scatter@{scatter}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{scatter()}{scatter()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::scatter (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a1d1fc475d6e17481e0d6451d1dab3574}\label{classfemus_1_1_my_matrix_a1d1fc475d6e17481e0d6451d1dab3574}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!shrink\+To\+Fit@{shrink\+To\+Fit}}
+\index{shrink\+To\+Fit@{shrink\+To\+Fit}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{shrink\+To\+Fit()}{shrinkToFit()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class Type$>$ \\
+void \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::shrink\+To\+Fit (\begin{DoxyParamCaption}\item[{Type}]{remove }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a8e80e482668fee278634417a6df69367}\label{classfemus_1_1_my_matrix_a8e80e482668fee278634417a6df69367}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!shrink\+To\+Fit@{shrink\+To\+Fit}}
+\index{shrink\+To\+Fit@{shrink\+To\+Fit}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{shrink\+To\+Fit()}{shrinkToFit()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class Type$>$ \\
+void \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::shrink\+To\+Fit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_my_vector}{My\+Vector}}$<$ unsigned $>$ \&}]{r }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_ab99498a426f2016872b4a55765fc7c04}\label{classfemus_1_1_my_matrix_ab99498a426f2016872b4a55765fc7c04}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!size@{size}}
+\index{size@{size}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{size()}{size()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a990f5949f99920cfd9f02a032982db93}\label{classfemus_1_1_my_matrix_a990f5949f99920cfd9f02a032982db93}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!size@{size}}
+\index{size@{size}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{size()}{size()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+unsigned \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::size (\begin{DoxyParamCaption}\item[{const unsigned \&}]{i }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_a37386775b4c35f4fb7be31497014fa4f}\label{classfemus_1_1_my_matrix_a37386775b4c35f4fb7be31497014fa4f}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!status@{status}}
+\index{status@{status}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{status()}{status()}}
+{\footnotesize\ttfamily template$<$class Type $>$ \\
+const std\+::string \& \mbox{\hyperlink{classfemus_1_1_my_matrix}{femus\+::\+My\+Matrix}}$<$ Type $>$\+::status (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Friends And Related Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_my_matrix_acdcbc06737c710ce4f4e823774acd345}\label{classfemus_1_1_my_matrix_acdcbc06737c710ce4f4e823774acd345}} 
+\index{femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}!operator$<$$<$@{operator$<$$<$}}
+\index{operator$<$$<$@{operator$<$$<$}!femus\+::\+My\+Matrix@{femus\+::\+My\+Matrix}}
+\subsubsection{\texorpdfstring{operator$<$$<$}{operator<<}}
+{\footnotesize\ttfamily template$<$class Type$>$ \\
+std\+::ostream\& operator$<$$<$ (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{os,  }\item[{\mbox{\hyperlink{classfemus_1_1_my_matrix}{My\+Matrix}}$<$ Type $>$ \&}]{mat }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [friend]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+parallel/\mbox{\hyperlink{_my_matrix_8hpp}{My\+Matrix.\+hpp}}\item 
+parallel/\mbox{\hyperlink{_my_matrix_8cpp}{My\+Matrix.\+cpp}}\end{DoxyCompactItemize}

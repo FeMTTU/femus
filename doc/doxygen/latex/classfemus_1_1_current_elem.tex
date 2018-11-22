@@ -1,0 +1,232 @@
+\hypertarget{classfemus_1_1_current_elem}{}\section{femus\+:\+:Current\+Elem Class Reference}
+\label{classfemus_1_1_current_elem}\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+
+
+{\ttfamily \#include $<$Current\+Elem.\+hpp$>$}
+
+
+
+Collaboration diagram for femus\+:\+:Current\+Elem\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_current_elem__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_current_elem_ae833a5c35d89b95fdfafb44050bdb5d7}{Current\+Elem}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} iel\+\_\+in, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} iproc\+\_\+in, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} level, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} vb, const \mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}} $\ast$, const \mbox{\hyperlink{classfemus_1_1_multi_level_mesh_two}{Multi\+Level\+Mesh\+Two}} \&mesh, const std\+::vector$<$ std\+::vector$<$ const \mbox{\hyperlink{classfemus_1_1elem__type}{elem\+\_\+type}} $\ast$$>$ $>$ \&\mbox{\hyperlink{classfemus_1_1elem__type}{elem\+\_\+type}}, const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} $\ast$mesh\+\_\+new)
+\item 
+const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} \mbox{\hyperlink{classfemus_1_1_current_elem_ab41f6f8c70c2c128e80a709142d4d7cb}{Get\+Vb}} () const
+\item 
+const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} \mbox{\hyperlink{classfemus_1_1_current_elem_ac6bc91c21dfa57288d52e107421bc013}{Get\+Dim}} () const
+\item 
+const double $\ast$ \mbox{\hyperlink{classfemus_1_1_current_elem_aa4b96cd952c803dad64644067d528372}{Get\+Midpoint}} () const
+\item 
+const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} $\ast$ \mbox{\hyperlink{classfemus_1_1_current_elem_a214686cf1fc812970e6841907da0487b}{Get\+Conn}} () const
+\item 
+\mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} \mbox{\hyperlink{classfemus_1_1_current_elem_ae6de3a26fe4c3139e814bb40d62929e2}{Get\+Vol\+Iel}} () const
+\item 
+const double $\ast$ \mbox{\hyperlink{classfemus_1_1_current_elem_a7d67d0254c2bfcd1405bef6dfbc76fe6}{Get\+Node\+Coords}} () const
+\item 
+std\+::vector$<$ \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} $>$ \mbox{\hyperlink{classfemus_1_1_current_elem_a0a056fc0356898983b18a52464e77567}{Get\+Dof\+Indices}} () const
+\item 
+\mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} $\ast$ \mbox{\hyperlink{classfemus_1_1_current_elem_a144d2b0317f92a69bf61cb5b67f709c9}{Get\+B\+C\+Dof\+Flag}} ()
+\item 
+\mbox{\hyperlink{classfemus_1_1_dense_vector}{Dense\+Vector}} \& \mbox{\hyperlink{classfemus_1_1_current_elem_a8dded1c45dc6cf9d5f6d089fd0b91eda}{Rhs}} ()
+\item 
+\mbox{\hyperlink{classfemus_1_1_dense_matrix}{Dense\+Matrix}} \& \mbox{\hyperlink{classfemus_1_1_current_elem_a6b0def20406de522d58d175b3645d2e8}{Mat}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_current_elem_a2f91b846308c3c8ab32aba4ac5f650b1}{Set\+Dofobj\+Conn\+Coords}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_current_elem_a5fe589a6224b2b1f618d67fb0bce7e38}{Set\+Midpoint}} ()
+\begin{DoxyCompactList}\small\item\em this routine does not yield the connectivity \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classfemus_1_1_current_elem_a7733d1aa0d817b3288f96b7ad2fdce0b}{Print\+Orientation}} () const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_current_elem_a6de5a8d1e1da9f2befa896088cdf676d}{Convert\+Elem\+Coords\+To\+Mapping\+Ord}} (\mbox{\hyperlink{classfemus_1_1_current_quantity}{Current\+Quantity}} \&myvect) const
+\begin{DoxyCompactList}\small\item\em here, the original element order of the nodes is respected in xyz.\+\_\+val\+\_\+dofs \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classfemus_1_1_current_elem_a2fc8e65fa40bdcda9cfcb7c5447439ad}{Set\+El\+Dofs\+Bc}} ()
+\item 
+const \mbox{\hyperlink{classfemus_1_1elem__type}{elem\+\_\+type}} $\ast$ \mbox{\hyperlink{classfemus_1_1_current_elem_aad89677687498cb766cf47db822764af}{Get\+Elem\+Type}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} fe) const
+\item 
+const std\+::vector$<$ const \mbox{\hyperlink{classfemus_1_1elem__type}{elem\+\_\+type}} $\ast$ $>$ \& \mbox{\hyperlink{classfemus_1_1_current_elem_ad686bf1b06d7ff8ee4b4d53acbf39470}{Get\+Elem\+Type\+Vector\+FE}} () const
+\item 
+int \mbox{\hyperlink{classfemus_1_1_current_elem_a3cff8a3824dda80a7f9d81426f4c37be}{Bc\+\_\+\+Compute\+Element\+Boundary\+Flags\+From\+Nodal\+Flags\+For\+Pressure}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} ndof\+\_\+in, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} space\+\_\+dim, const \mbox{\hyperlink{classfemus_1_1_current_quantity}{Current\+Quantity}} \&press\+\_\+in) const
+\item 
+const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} \mbox{\hyperlink{classfemus_1_1_current_elem_add1528c07ff61e8d3f25afdf3736ba2a}{Get\+Level}} () const
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const \mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}} $\ast$ \mbox{\hyperlink{classfemus_1_1_current_elem_af1164c456d9c52edc77d1c0c005bbe9c}{\+\_\+eqn}}
+\item 
+const \mbox{\hyperlink{classfemus_1_1_multi_level_mesh_two}{Multi\+Level\+Mesh\+Two}} \& \mbox{\hyperlink{classfemus_1_1_current_elem_a8321beae2ca94fa4ea8d17e484d978ee}{\+\_\+mesh}}
+\item 
+const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} $\ast$ \mbox{\hyperlink{classfemus_1_1_current_elem_a35f92400742999016814725c65cf2aae}{\+\_\+mesh\+\_\+new}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_current_elem_ae833a5c35d89b95fdfafb44050bdb5d7}\label{classfemus_1_1_current_elem_ae833a5c35d89b95fdfafb44050bdb5d7}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Current\+Elem@{Current\+Elem}}
+\index{Current\+Elem@{Current\+Elem}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Current\+Elem()}{CurrentElem()}}
+{\footnotesize\ttfamily femus\+::\+Current\+Elem\+::\+Current\+Elem (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{iel\+\_\+in,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{iproc\+\_\+in,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{level,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{vb,  }\item[{const \mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}} $\ast$}]{eqn\+\_\+in,  }\item[{const \mbox{\hyperlink{classfemus_1_1_multi_level_mesh_two}{Multi\+Level\+Mesh\+Two}} \&}]{mesh,  }\item[{const std\+::vector$<$ std\+::vector$<$ const \mbox{\hyperlink{classfemus_1_1elem__type}{elem\+\_\+type}} $\ast$$>$ $>$ \&}]{elem\+\_\+type,  }\item[{const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} $\ast$}]{mesh\+\_\+new }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_current_elem_a3cff8a3824dda80a7f9d81426f4c37be}\label{classfemus_1_1_current_elem_a3cff8a3824dda80a7f9d81426f4c37be}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Bc\+\_\+\+Compute\+Element\+Boundary\+Flags\+From\+Nodal\+Flags\+For\+Pressure@{Bc\+\_\+\+Compute\+Element\+Boundary\+Flags\+From\+Nodal\+Flags\+For\+Pressure}}
+\index{Bc\+\_\+\+Compute\+Element\+Boundary\+Flags\+From\+Nodal\+Flags\+For\+Pressure@{Bc\+\_\+\+Compute\+Element\+Boundary\+Flags\+From\+Nodal\+Flags\+For\+Pressure}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Bc\+\_\+\+Compute\+Element\+Boundary\+Flags\+From\+Nodal\+Flags\+For\+Pressure()}{Bc\_ComputeElementBoundaryFlagsFromNodalFlagsForPressure()}}
+{\footnotesize\ttfamily int femus\+::\+Current\+Elem\+::\+Bc\+\_\+\+Compute\+Element\+Boundary\+Flags\+From\+Nodal\+Flags\+For\+Pressure (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{ndof\+\_\+in,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{space\+\_\+dim,  }\item[{const \mbox{\hyperlink{classfemus_1_1_current_quantity}{Current\+Quantity}} \&}]{press\+\_\+in }\end{DoxyParamCaption}) const}
+
+\begin{DoxyRefDesc}{Deprecated}
+\item[\mbox{\hyperlink{deprecated__deprecated000007}{Deprecated}}]\end{DoxyRefDesc}
+\mbox{\Hypertarget{classfemus_1_1_current_elem_a6de5a8d1e1da9f2befa896088cdf676d}\label{classfemus_1_1_current_elem_a6de5a8d1e1da9f2befa896088cdf676d}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Convert\+Elem\+Coords\+To\+Mapping\+Ord@{Convert\+Elem\+Coords\+To\+Mapping\+Ord}}
+\index{Convert\+Elem\+Coords\+To\+Mapping\+Ord@{Convert\+Elem\+Coords\+To\+Mapping\+Ord}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Convert\+Elem\+Coords\+To\+Mapping\+Ord()}{ConvertElemCoordsToMappingOrd()}}
+{\footnotesize\ttfamily void femus\+::\+Current\+Elem\+::\+Convert\+Elem\+Coords\+To\+Mapping\+Ord (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_current_quantity}{Current\+Quantity}} \&}]{myvect }\end{DoxyParamCaption}) const}
+
+
+
+here, the original element order of the nodes is respected in xyz.\+\_\+val\+\_\+dofs 
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_a144d2b0317f92a69bf61cb5b67f709c9}\label{classfemus_1_1_current_elem_a144d2b0317f92a69bf61cb5b67f709c9}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Get\+B\+C\+Dof\+Flag@{Get\+B\+C\+Dof\+Flag}}
+\index{Get\+B\+C\+Dof\+Flag@{Get\+B\+C\+Dof\+Flag}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Get\+B\+C\+Dof\+Flag()}{GetBCDofFlag()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}$\ast$ femus\+::\+Current\+Elem\+::\+Get\+B\+C\+Dof\+Flag (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_a214686cf1fc812970e6841907da0487b}\label{classfemus_1_1_current_elem_a214686cf1fc812970e6841907da0487b}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Get\+Conn@{Get\+Conn}}
+\index{Get\+Conn@{Get\+Conn}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Get\+Conn()}{GetConn()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}$\ast$ femus\+::\+Current\+Elem\+::\+Get\+Conn (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_ac6bc91c21dfa57288d52e107421bc013}\label{classfemus_1_1_current_elem_ac6bc91c21dfa57288d52e107421bc013}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Get\+Dim@{Get\+Dim}}
+\index{Get\+Dim@{Get\+Dim}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Get\+Dim()}{GetDim()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} femus\+::\+Current\+Elem\+::\+Get\+Dim (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_a0a056fc0356898983b18a52464e77567}\label{classfemus_1_1_current_elem_a0a056fc0356898983b18a52464e77567}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Get\+Dof\+Indices@{Get\+Dof\+Indices}}
+\index{Get\+Dof\+Indices@{Get\+Dof\+Indices}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Get\+Dof\+Indices()}{GetDofIndices()}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}$>$ femus\+::\+Current\+Elem\+::\+Get\+Dof\+Indices (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_aad89677687498cb766cf47db822764af}\label{classfemus_1_1_current_elem_aad89677687498cb766cf47db822764af}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Get\+Elem\+Type@{Get\+Elem\+Type}}
+\index{Get\+Elem\+Type@{Get\+Elem\+Type}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Get\+Elem\+Type()}{GetElemType()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1elem__type}{elem\+\_\+type}}$\ast$ femus\+::\+Current\+Elem\+::\+Get\+Elem\+Type (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{fe }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_ad686bf1b06d7ff8ee4b4d53acbf39470}\label{classfemus_1_1_current_elem_ad686bf1b06d7ff8ee4b4d53acbf39470}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Get\+Elem\+Type\+Vector\+FE@{Get\+Elem\+Type\+Vector\+FE}}
+\index{Get\+Elem\+Type\+Vector\+FE@{Get\+Elem\+Type\+Vector\+FE}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Get\+Elem\+Type\+Vector\+F\+E()}{GetElemTypeVectorFE()}}
+{\footnotesize\ttfamily const std\+::vector$<$const \mbox{\hyperlink{classfemus_1_1elem__type}{elem\+\_\+type}}$\ast$$>$\& femus\+::\+Current\+Elem\+::\+Get\+Elem\+Type\+Vector\+FE (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_add1528c07ff61e8d3f25afdf3736ba2a}\label{classfemus_1_1_current_elem_add1528c07ff61e8d3f25afdf3736ba2a}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Get\+Level@{Get\+Level}}
+\index{Get\+Level@{Get\+Level}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Get\+Level()}{GetLevel()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} femus\+::\+Current\+Elem\+::\+Get\+Level (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_aa4b96cd952c803dad64644067d528372}\label{classfemus_1_1_current_elem_aa4b96cd952c803dad64644067d528372}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Get\+Midpoint@{Get\+Midpoint}}
+\index{Get\+Midpoint@{Get\+Midpoint}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Get\+Midpoint()}{GetMidpoint()}}
+{\footnotesize\ttfamily const double$\ast$ femus\+::\+Current\+Elem\+::\+Get\+Midpoint (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_a7d67d0254c2bfcd1405bef6dfbc76fe6}\label{classfemus_1_1_current_elem_a7d67d0254c2bfcd1405bef6dfbc76fe6}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Get\+Node\+Coords@{Get\+Node\+Coords}}
+\index{Get\+Node\+Coords@{Get\+Node\+Coords}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Get\+Node\+Coords()}{GetNodeCoords()}}
+{\footnotesize\ttfamily const double$\ast$ femus\+::\+Current\+Elem\+::\+Get\+Node\+Coords (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_ab41f6f8c70c2c128e80a709142d4d7cb}\label{classfemus_1_1_current_elem_ab41f6f8c70c2c128e80a709142d4d7cb}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Get\+Vb@{Get\+Vb}}
+\index{Get\+Vb@{Get\+Vb}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Get\+Vb()}{GetVb()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} femus\+::\+Current\+Elem\+::\+Get\+Vb (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_ae6de3a26fe4c3139e814bb40d62929e2}\label{classfemus_1_1_current_elem_ae6de3a26fe4c3139e814bb40d62929e2}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Get\+Vol\+Iel@{Get\+Vol\+Iel}}
+\index{Get\+Vol\+Iel@{Get\+Vol\+Iel}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Get\+Vol\+Iel()}{GetVolIel()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} femus\+::\+Current\+Elem\+::\+Get\+Vol\+Iel (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_a6b0def20406de522d58d175b3645d2e8}\label{classfemus_1_1_current_elem_a6b0def20406de522d58d175b3645d2e8}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Mat@{Mat}}
+\index{Mat@{Mat}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Mat()}{Mat()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_dense_matrix}{Dense\+Matrix}}\& femus\+::\+Current\+Elem\+::\+Mat (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Returns a reference to the element matrix \mbox{\Hypertarget{classfemus_1_1_current_elem_a7733d1aa0d817b3288f96b7ad2fdce0b}\label{classfemus_1_1_current_elem_a7733d1aa0d817b3288f96b7ad2fdce0b}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Print\+Orientation@{Print\+Orientation}}
+\index{Print\+Orientation@{Print\+Orientation}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Print\+Orientation()}{PrintOrientation()}}
+{\footnotesize\ttfamily void femus\+::\+Current\+Elem\+::\+Print\+Orientation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+This function prints the element orientation A Q\+U\+A\+D\+R\+A\+T\+IC M\+E\+SH V\+E\+C\+T\+OR is passed H\+E\+RE ~\newline
+It is for debugging purposes \mbox{\Hypertarget{classfemus_1_1_current_elem_a8dded1c45dc6cf9d5f6d089fd0b91eda}\label{classfemus_1_1_current_elem_a8dded1c45dc6cf9d5f6d089fd0b91eda}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Rhs@{Rhs}}
+\index{Rhs@{Rhs}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Rhs()}{Rhs()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_dense_vector}{Dense\+Vector}}\& femus\+::\+Current\+Elem\+::\+Rhs (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Returns a reference to the element rhs \mbox{\Hypertarget{classfemus_1_1_current_elem_a2f91b846308c3c8ab32aba4ac5f650b1}\label{classfemus_1_1_current_elem_a2f91b846308c3c8ab32aba4ac5f650b1}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Set\+Dofobj\+Conn\+Coords@{Set\+Dofobj\+Conn\+Coords}}
+\index{Set\+Dofobj\+Conn\+Coords@{Set\+Dofobj\+Conn\+Coords}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Set\+Dofobj\+Conn\+Coords()}{SetDofobjConnCoords()}}
+{\footnotesize\ttfamily void femus\+::\+Current\+Elem\+::\+Set\+Dofobj\+Conn\+Coords (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_a2fc8e65fa40bdcda9cfcb7c5447439ad}\label{classfemus_1_1_current_elem_a2fc8e65fa40bdcda9cfcb7c5447439ad}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Set\+El\+Dofs\+Bc@{Set\+El\+Dofs\+Bc}}
+\index{Set\+El\+Dofs\+Bc@{Set\+El\+Dofs\+Bc}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Set\+El\+Dofs\+Bc()}{SetElDofsBc()}}
+{\footnotesize\ttfamily void femus\+::\+Current\+Elem\+::\+Set\+El\+Dofs\+Bc (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+needs the E\+Q\+U\+A\+T\+I\+ON basically \mbox{\Hypertarget{classfemus_1_1_current_elem_a5fe589a6224b2b1f618d67fb0bce7e38}\label{classfemus_1_1_current_elem_a5fe589a6224b2b1f618d67fb0bce7e38}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!Set\+Midpoint@{Set\+Midpoint}}
+\index{Set\+Midpoint@{Set\+Midpoint}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{Set\+Midpoint()}{SetMidpoint()}}
+{\footnotesize\ttfamily void femus\+::\+Current\+Elem\+::\+Set\+Midpoint (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+this routine does not yield the connectivity 
+
+this routine is \char`\"{}\+P\+A\+R\+A\+L\+L\+E\+L\char`\"{}, in the sense that it works only for the \+\_\+iproc in which you are! pay attention to every routine that has \+\_\+iproc!!! if you want to do a loop over A\+LL P\+R\+O\+C\+E\+S\+S\+ES you do not have to use iproc but you have to P\+A\+SS the S\+U\+B\+D\+O\+M\+A\+IN E\+X\+P\+L\+I\+C\+I\+T\+L\+Y!!! Compute the element center 
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_current_elem_af1164c456d9c52edc77d1c0c005bbe9c}\label{classfemus_1_1_current_elem_af1164c456d9c52edc77d1c0c005bbe9c}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!\+\_\+eqn@{\+\_\+eqn}}
+\index{\+\_\+eqn@{\+\_\+eqn}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{\+\_\+eqn}{\_eqn}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}}$\ast$ femus\+::\+Current\+Elem\+::\+\_\+eqn}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_a8321beae2ca94fa4ea8d17e484d978ee}\label{classfemus_1_1_current_elem_a8321beae2ca94fa4ea8d17e484d978ee}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!\+\_\+mesh@{\+\_\+mesh}}
+\index{\+\_\+mesh@{\+\_\+mesh}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{\+\_\+mesh}{\_mesh}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_multi_level_mesh_two}{Multi\+Level\+Mesh\+Two}}\& femus\+::\+Current\+Elem\+::\+\_\+mesh}
+
+\mbox{\Hypertarget{classfemus_1_1_current_elem_a35f92400742999016814725c65cf2aae}\label{classfemus_1_1_current_elem_a35f92400742999016814725c65cf2aae}} 
+\index{femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}!\+\_\+mesh\+\_\+new@{\+\_\+mesh\+\_\+new}}
+\index{\+\_\+mesh\+\_\+new@{\+\_\+mesh\+\_\+new}!femus\+::\+Current\+Elem@{femus\+::\+Current\+Elem}}
+\subsubsection{\texorpdfstring{\+\_\+mesh\+\_\+new}{\_mesh\_new}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}}$\ast$ femus\+::\+Current\+Elem\+::\+\_\+mesh\+\_\+new}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+equations/\mbox{\hyperlink{_current_elem_8hpp}{Current\+Elem.\+hpp}}\item 
+equations/\mbox{\hyperlink{_current_elem_8cpp}{Current\+Elem.\+cpp}}\end{DoxyCompactItemize}

@@ -1,0 +1,103 @@
+\hypertarget{classfemus_1_1_salome_i_o}{}\section{femus\+:\+:Salome\+IO Class Reference}
+\label{classfemus_1_1_salome_i_o}\index{femus\+::\+Salome\+IO@{femus\+::\+Salome\+IO}}
+
+
+{\ttfamily \#include $<$Salome\+I\+O.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Salome\+IO\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=217pt]{classfemus_1_1_salome_i_o__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Salome\+IO\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=217pt]{classfemus_1_1_salome_i_o__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_salome_i_o_a6ccc4b0e60f801d79a60484e894bc056}{Salome\+IO}} (\mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&mesh)
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_salome_i_o_a2cd7f5327fe664747acc0131bf6a657e}{read}} (const std\+::string \&name, vector$<$ vector$<$ double $>$ $>$ \&coords, const double Lref, std\+::vector$<$ bool $>$ \&type\+\_\+elem\+\_\+flag)
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+This class implements writing meshes in the Gmsh format. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_salome_i_o_a6ccc4b0e60f801d79a60484e894bc056}\label{classfemus_1_1_salome_i_o_a6ccc4b0e60f801d79a60484e894bc056}} 
+\index{femus\+::\+Salome\+IO@{femus\+::\+Salome\+IO}!Salome\+IO@{Salome\+IO}}
+\index{Salome\+IO@{Salome\+IO}!femus\+::\+Salome\+IO@{femus\+::\+Salome\+IO}}
+\subsubsection{\texorpdfstring{Salome\+I\+O()}{SalomeIO()}}
+{\footnotesize\ttfamily femus\+::\+Salome\+I\+O\+::\+Salome\+IO (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&}]{mesh }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [explicit]}}
+
+Constructor. Takes a non-\/const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} reference which it will fill up with elements via the \mbox{\hyperlink{classfemus_1_1_salome_i_o_a2cd7f5327fe664747acc0131bf6a657e}{read()}} command. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_salome_i_o_a2cd7f5327fe664747acc0131bf6a657e}\label{classfemus_1_1_salome_i_o_a2cd7f5327fe664747acc0131bf6a657e}} 
+\index{femus\+::\+Salome\+IO@{femus\+::\+Salome\+IO}!read@{read}}
+\index{read@{read}!femus\+::\+Salome\+IO@{femus\+::\+Salome\+IO}}
+\subsubsection{\texorpdfstring{read()}{read()}}
+{\footnotesize\ttfamily void femus\+::\+Salome\+I\+O\+::read (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{vector$<$ vector$<$ double $>$ $>$ \&}]{coords,  }\item[{const double}]{Lref,  }\item[{std\+::vector$<$ bool $>$ \&}]{type\+\_\+elem\+\_\+flag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Reads in a mesh in the neutral gambit $\ast$.neu format from the A\+S\+C\+II file given by name.
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000004}{Todo}}]extend to Wegdes (aka Prisms) \end{DoxyRefDesc}
+\begin{DoxyRefDesc}{Deprecated}
+\item[\mbox{\hyperlink{deprecated__deprecated000020}{Deprecated}}]see the H\+DF doc to replace this \end{DoxyRefDesc}
+
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000005}{Todo}}]this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D \end{DoxyRefDesc}
+
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000006}{Todo}}]here we have to loop \end{DoxyRefDesc}
+
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000007}{Todo}}]here we have to loop \end{DoxyRefDesc}
+
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000008}{Todo}}]check where this is going to be deleted \end{DoxyRefDesc}
+
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000009}{Todo}}]this is only one element type \end{DoxyRefDesc}
+
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000010}{Todo}}]here we have to loop \end{DoxyRefDesc}
+
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000011}{Todo}}]check the underscores according to our naming standard \end{DoxyRefDesc}
+
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000012}{Todo}}]here we have to loop \end{DoxyRefDesc}
+
+
+Implements \mbox{\hyperlink{classfemus_1_1_mesh_input_abf3b91c5ef2cdcf99561ab7429101601}{femus\+::\+Mesh\+Input$<$ Mesh $>$}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+mesh/\mbox{\hyperlink{_salome_i_o_8hpp}{Salome\+I\+O.\+hpp}}\item 
+mesh/\mbox{\hyperlink{_salome_i_o_8cpp}{Salome\+I\+O.\+cpp}}\end{DoxyCompactItemize}

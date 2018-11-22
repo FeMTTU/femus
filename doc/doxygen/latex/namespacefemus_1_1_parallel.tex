@@ -1,0 +1,379 @@
+\hypertarget{namespacefemus_1_1_parallel}{}\section{femus\+:\+:Parallel Namespace Reference}
+\label{namespacefemus_1_1_parallel}\index{femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structfemus_1_1_parallel_1_1data__type}{data\+\_\+type}}
+\item 
+class \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}}
+\item 
+struct \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}}
+\item 
+class \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request}{Request}}
+\item 
+struct \mbox{\hyperlink{structfemus_1_1_parallel_1_1status}{status}}
+\item 
+class \mbox{\hyperlink{classfemus_1_1_parallel_1_1_status}{Status}}
+\begin{DoxyCompactList}\small\item\em Encapsulates the M\+P\+I\+\_\+\+Status struct. Allows the source and size of the message to be determined. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$typename T $>$ }\\\mbox{\hyperlink{structfemus_1_1_parallel_1_1data__type}{data\+\_\+type}} \mbox{\hyperlink{namespacefemus_1_1_parallel_a02155e648a68195486e46feabd0f2ec0}{datatype}} ()
+\item 
+void \mbox{\hyperlink{namespacefemus_1_1_parallel_a92f3377fb5ef4195c1db50a79b051c02}{barrier}} ()
+\item 
+{\footnotesize template$<$typename T $>$ }\\bool \mbox{\hyperlink{namespacefemus_1_1_parallel_a228cad24a8dc0968b965c0986428ad4a}{verify}} (const T \&r)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a63e5f0fd22309cacacb73e7dfd3256df}{min}} (T \&r)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_adb06087f16bb1136a2c2c1465f07fbcd}{min}} (std\+::vector$<$ T $>$ \&r)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_af18000527efd43ab82a8734b3c6d91f1}{max}} (T \&r)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_ae4d2a186c227f0dfd057767cbd158a7f}{max}} (std\+::vector$<$ T $>$ \&r)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a17c680b5adf174b6185a5aeea86e5188}{sum}} (T \&r)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a5e5e9ec906f929468e0cf17dcc7e3f4c}{sum}} (std\+::vector$<$ T $>$ \&r)
+\item 
+\mbox{\hyperlink{structfemus_1_1_parallel_1_1status}{status}} \mbox{\hyperlink{namespacefemus_1_1_parallel_a3799e1e93384e926d91a6cba47d61bb2}{probe}} (const int src\+\_\+processor\+\_\+id, const int tag=\mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}})
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a3126d0149eca349995ce4f5a314e3a89}{send}} (const unsigned int dest\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&type, const int tag=0)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a9e7ecc622b087c99acc5c1b37b6e6c90}{send}} (const unsigned int dest\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&type, \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&req, const int tag=0)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a5f272a5537ade03af5151accf483464c}{send}} (const unsigned int dest\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, const int tag=0)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_ad9fff04a83c0fb27ed2f48ba4bd75245}{send}} (const unsigned int dest\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&req, const int tag=0)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a828c554bd96aecbb61a9da71e2f2f73b}{nonblocking\+\_\+send}} (const unsigned int dest\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&type, \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&r, const int tag=0)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a017efec3821f7b00b3a6839648a751d8}{nonblocking\+\_\+send}} (const unsigned int dest\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&r, const int tag=0)
+\item 
+{\footnotesize template$<$typename T $>$ }\\\mbox{\hyperlink{classfemus_1_1_parallel_1_1_status}{Status}} \mbox{\hyperlink{namespacefemus_1_1_parallel_a308546b3fc2d590d954da95d8f9e089c}{receive}} (const int src\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&type, const int tag=\mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}})
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a6c79d178dc5c5f64ac623f0f5a2a0ea2}{receive}} (const int src\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&type, \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&req, const int tag=\mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}})
+\item 
+{\footnotesize template$<$typename T $>$ }\\\mbox{\hyperlink{classfemus_1_1_parallel_1_1_status}{Status}} \mbox{\hyperlink{namespacefemus_1_1_parallel_a49e65f1574362935e9c7e1d048e9aa3a}{receive}} (const int src\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, const int tag=\mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}})
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_ac38ae778cd7241660643837071894115}{receive}} (const int src\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&req, const int tag=\mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}})
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_ab43a0be42a037601024dba3d07f43721}{nonblocking\+\_\+receive}} (const int src\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&type, \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&r, const int tag=\mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}})
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a6fc899af0b0588c9f0827e1a5e1fe8f1}{nonblocking\+\_\+receive}} (const int src\+\_\+processor\+\_\+id, std\+::vector$<$ T $>$ \&buf, \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&r, const int tag=\mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}})
+\item 
+\mbox{\hyperlink{structfemus_1_1_parallel_1_1status}{status}} \mbox{\hyperlink{namespacefemus_1_1_parallel_a893385de2800726af28b56b1c5630d2f}{wait}} (\mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&r)
+\item 
+void \mbox{\hyperlink{namespacefemus_1_1_parallel_a135cd955845e4e6ce003a4455ec54b17}{wait}} (std\+::vector$<$ \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} $>$ \&r)
+\item 
+void \mbox{\hyperlink{namespacefemus_1_1_parallel_afa71a836a79155d206fc4900be688460}{wait}} (std\+::vector$<$ \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request}{Request}} $>$ \&r)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_aa92d91cc52cf504bcd046ed47b6e390b}{send\+\_\+receive}} (const unsigned int dest\+\_\+processor\+\_\+id, T \&\mbox{\hyperlink{namespacefemus_1_1_parallel_a3126d0149eca349995ce4f5a314e3a89}{send}}, const unsigned int source\+\_\+processor\+\_\+id, T \&recv)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a9a1e9e24951897be2b28dbc25e7e578c}{send\+\_\+receive}} (const unsigned int dest\+\_\+processor\+\_\+id, T \&\mbox{\hyperlink{namespacefemus_1_1_parallel_a3126d0149eca349995ce4f5a314e3a89}{send}}, const unsigned int source\+\_\+processor\+\_\+id, T \&recv, const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&type)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a1b8489def6f9d403cde145eab7e56b3b}{gather}} (const unsigned int root\+\_\+id, T \mbox{\hyperlink{namespacefemus_1_1_parallel_a3126d0149eca349995ce4f5a314e3a89}{send}}, std\+::vector$<$ T $>$ \&recv)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a8c6205b6971503ed97d8c013f226c1db}{gather}} (const unsigned int root\+\_\+id, std\+::vector$<$ T $>$ \&r)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a5a47bc948850daf707b44045877a5de9}{allgather}} (T \mbox{\hyperlink{namespacefemus_1_1_parallel_a3126d0149eca349995ce4f5a314e3a89}{send}}, std\+::vector$<$ T $>$ \&recv)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_ae02d87f55017470f374c953e38eaea75}{allgather}} (std\+::vector$<$ T $>$ \&r, const bool identical\+\_\+buffer\+\_\+sizes=false)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a879e4a9c2caf698f29d8da1403fece9f}{alltoall}} (std\+::vector$<$ T $>$ \&r)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a82b297173b4771c824770ec9acac9689}{broadcast}} (T \&data, const unsigned int root\+\_\+id=0)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_affafe8ca45b17134d6ee8bbb632aba6b}{broadcast}} (std\+::vector$<$ T $>$ \&data, const unsigned int root\+\_\+id=0)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_aeda20f4be32ce099559f7e48615b212a}{pack\+\_\+vector\+\_\+bool}} (const std\+::vector$<$ bool $>$ \&in, std\+::vector$<$ T $>$ \&out)
+\item 
+{\footnotesize template$<$typename T $>$ }\\void \mbox{\hyperlink{namespacefemus_1_1_parallel_a1d9e76823574ef8a7f16c7c6ef63f8be}{unpack\+\_\+vector\+\_\+bool}} (const std\+::vector$<$ T $>$ \&in, std\+::vector$<$ bool $>$ \&out)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+const int \mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}} =-\/1
+\item 
+const int \mbox{\hyperlink{namespacefemus_1_1_parallel_a7a5a07efca1e4a2f4ef731d4a79703c5}{any\+\_\+source}} =0
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \mbox{\hyperlink{namespacefemus_1_1_parallel}{Parallel}} namespace is for wrapper functions for common general parallel synchronization tasks.
+
+For M\+PI 1.\+1 compatibility, temporary buffers are used instead of M\+PI 2\textquotesingle{}s M\+P\+I\+\_\+\+I\+N\+\_\+\+P\+L\+A\+CE 
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_a5a47bc948850daf707b44045877a5de9}\label{namespacefemus_1_1_parallel_a5a47bc948850daf707b44045877a5de9}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!allgather@{allgather}}
+\index{allgather@{allgather}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{allgather()}{allgather()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::allgather (\begin{DoxyParamCaption}\item[{T}]{send,  }\item[{std\+::vector$<$ T $>$ \&}]{recv }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Take a vector of length n\+\_\+processors, and fill in {\ttfamily recv}\mbox{[}processor\+\_\+id\mbox{]} = the value of {\ttfamily send} on that processor \mbox{\Hypertarget{namespacefemus_1_1_parallel_ae02d87f55017470f374c953e38eaea75}\label{namespacefemus_1_1_parallel_ae02d87f55017470f374c953e38eaea75}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!allgather@{allgather}}
+\index{allgather@{allgather}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{allgather()}{allgather()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::allgather (\begin{DoxyParamCaption}\item[{std\+::vector$<$ T $>$ \&}]{r,  }\item[{const bool}]{identical\+\_\+buffer\+\_\+sizes = {\ttfamily false} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Take a vector of local variables and expand it to include values from all processors. By default, each processor is allowed to have its own unique input buffer length. If it is known that all processors have the same input sizes additional communication can be avoided. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a879e4a9c2caf698f29d8da1403fece9f}\label{namespacefemus_1_1_parallel_a879e4a9c2caf698f29d8da1403fece9f}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!alltoall@{alltoall}}
+\index{alltoall@{alltoall}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{alltoall()}{alltoall()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::alltoall (\begin{DoxyParamCaption}\item[{std\+::vector$<$ T $>$ \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Effectively transposes the input vector across all processors. The jth entry on processor i is replaced with the ith entry from processor j. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a92f3377fb5ef4195c1db50a79b051c02}\label{namespacefemus_1_1_parallel_a92f3377fb5ef4195c1db50a79b051c02}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!barrier@{barrier}}
+\index{barrier@{barrier}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{barrier()}{barrier()}}
+{\footnotesize\ttfamily void femus\+::\+Parallel\+::barrier (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_a82b297173b4771c824770ec9acac9689}\label{namespacefemus_1_1_parallel_a82b297173b4771c824770ec9acac9689}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!broadcast@{broadcast}}
+\index{broadcast@{broadcast}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{broadcast()}{broadcast()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::broadcast (\begin{DoxyParamCaption}\item[{T \&}]{data,  }\item[{const unsigned int}]{root\+\_\+id = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Take a local value and broadcast it to all processors. Optionally takes the {\ttfamily root\+\_\+id} processor, which specifies the processor intiating the broadcast. \mbox{\Hypertarget{namespacefemus_1_1_parallel_affafe8ca45b17134d6ee8bbb632aba6b}\label{namespacefemus_1_1_parallel_affafe8ca45b17134d6ee8bbb632aba6b}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!broadcast@{broadcast}}
+\index{broadcast@{broadcast}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{broadcast()}{broadcast()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::broadcast (\begin{DoxyParamCaption}\item[{std\+::vector$<$ T $>$ \&}]{data,  }\item[{const unsigned int}]{root\+\_\+id = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Take a local vector and broadcast it to all processors. Optionally takes the {\ttfamily root\+\_\+id} processor, which specifies the processor intiating the broadcast. The user is responsible for appropriately sizing the input buffer on all processors. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a02155e648a68195486e46feabd0f2ec0}\label{namespacefemus_1_1_parallel_a02155e648a68195486e46feabd0f2ec0}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!datatype@{datatype}}
+\index{datatype@{datatype}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{datatype()}{datatype()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{structfemus_1_1_parallel_1_1data__type}{data\+\_\+type}} femus\+::\+Parallel\+::datatype (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_a1b8489def6f9d403cde145eab7e56b3b}\label{namespacefemus_1_1_parallel_a1b8489def6f9d403cde145eab7e56b3b}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!gather@{gather}}
+\index{gather@{gather}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{gather()}{gather()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::gather (\begin{DoxyParamCaption}\item[{const unsigned int}]{root\+\_\+id,  }\item[{T}]{send,  }\item[{std\+::vector$<$ T $>$ \&}]{recv }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Take a vector of length n\+\_\+processors, and on processor root\+\_\+id fill in recv\mbox{[}processor\+\_\+id\mbox{]} = the value of send on processor processor\+\_\+id \mbox{\Hypertarget{namespacefemus_1_1_parallel_a8c6205b6971503ed97d8c013f226c1db}\label{namespacefemus_1_1_parallel_a8c6205b6971503ed97d8c013f226c1db}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!gather@{gather}}
+\index{gather@{gather}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{gather()}{gather()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::gather (\begin{DoxyParamCaption}\item[{const unsigned int}]{root\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Take a vector of local variables and expand it on processor root\+\_\+id to include values from all processors \mbox{\Hypertarget{namespacefemus_1_1_parallel_af18000527efd43ab82a8734b3c6d91f1}\label{namespacefemus_1_1_parallel_af18000527efd43ab82a8734b3c6d91f1}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!max@{max}}
+\index{max@{max}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{max()}{max()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::max (\begin{DoxyParamCaption}\item[{T \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_ae4d2a186c227f0dfd057767cbd158a7f}\label{namespacefemus_1_1_parallel_ae4d2a186c227f0dfd057767cbd158a7f}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!max@{max}}
+\index{max@{max}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{max()}{max()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::max (\begin{DoxyParamCaption}\item[{std\+::vector$<$ T $>$ \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_a63e5f0fd22309cacacb73e7dfd3256df}\label{namespacefemus_1_1_parallel_a63e5f0fd22309cacacb73e7dfd3256df}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!min@{min}}
+\index{min@{min}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{min()}{min()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::min (\begin{DoxyParamCaption}\item[{T \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+-\/-\/-\/-\/-\/-\/-\/-\/-\/---// -\/-\/-\/-\/-\/-\/-\/-\/-\/---// -\/-\/-\/-\/-\/-\/-\/-\/-\/---// -\/-\/-\/-\/-\/-\/-\/-\/-\/---// -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/--- Take a local variable and replace it with the minimum of it\textquotesingle{}s values on all processors \mbox{\Hypertarget{namespacefemus_1_1_parallel_adb06087f16bb1136a2c2c1465f07fbcd}\label{namespacefemus_1_1_parallel_adb06087f16bb1136a2c2c1465f07fbcd}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!min@{min}}
+\index{min@{min}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{min()}{min()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::min (\begin{DoxyParamCaption}\item[{std\+::vector$<$ T $>$ \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+-\/-\/-\/-\/-\/-\/-\/-\/-\/---// -\/-\/-\/-\/-\/-\/-\/-\/-\/---// -\/-\/-\/-\/-\/-\/-\/-\/-\/---// -\/-\/-\/-\/-\/-\/-\/-\/-\/---// -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/--- Take a vector of local variables and replace each entry with the minimum on all processors \mbox{\Hypertarget{namespacefemus_1_1_parallel_ab43a0be42a037601024dba3d07f43721}\label{namespacefemus_1_1_parallel_ab43a0be42a037601024dba3d07f43721}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!nonblocking\+\_\+receive@{nonblocking\+\_\+receive}}
+\index{nonblocking\+\_\+receive@{nonblocking\+\_\+receive}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{nonblocking\+\_\+receive()}{nonblocking\_receive()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::nonblocking\+\_\+receive (\begin{DoxyParamCaption}\item[{const int}]{src\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&}]{type,  }\item[{\mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&}]{r,  }\item[{const int}]{tag = {\ttfamily \mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Nonblocking-\/receive vector from one processor with user-\/defined type \mbox{\Hypertarget{namespacefemus_1_1_parallel_a6fc899af0b0588c9f0827e1a5e1fe8f1}\label{namespacefemus_1_1_parallel_a6fc899af0b0588c9f0827e1a5e1fe8f1}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!nonblocking\+\_\+receive@{nonblocking\+\_\+receive}}
+\index{nonblocking\+\_\+receive@{nonblocking\+\_\+receive}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{nonblocking\+\_\+receive()}{nonblocking\_receive()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::nonblocking\+\_\+receive (\begin{DoxyParamCaption}\item[{const int}]{src\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{\mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&}]{r,  }\item[{const int}]{tag = {\ttfamily \mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Nonblocking-\/receive vector from one processor. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a828c554bd96aecbb61a9da71e2f2f73b}\label{namespacefemus_1_1_parallel_a828c554bd96aecbb61a9da71e2f2f73b}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!nonblocking\+\_\+send@{nonblocking\+\_\+send}}
+\index{nonblocking\+\_\+send@{nonblocking\+\_\+send}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{nonblocking\+\_\+send()}{nonblocking\_send()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::nonblocking\+\_\+send (\begin{DoxyParamCaption}\item[{const unsigned int}]{dest\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&}]{type,  }\item[{\mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&}]{r,  }\item[{const int}]{tag = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Nonblocking-\/send vector to one processor with user-\/defined type. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a017efec3821f7b00b3a6839648a751d8}\label{namespacefemus_1_1_parallel_a017efec3821f7b00b3a6839648a751d8}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!nonblocking\+\_\+send@{nonblocking\+\_\+send}}
+\index{nonblocking\+\_\+send@{nonblocking\+\_\+send}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{nonblocking\+\_\+send()}{nonblocking\_send()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::nonblocking\+\_\+send (\begin{DoxyParamCaption}\item[{const unsigned int}]{dest\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{\mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&}]{r,  }\item[{const int}]{tag = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Nonblocking-\/send vector to one processor. \mbox{\Hypertarget{namespacefemus_1_1_parallel_aeda20f4be32ce099559f7e48615b212a}\label{namespacefemus_1_1_parallel_aeda20f4be32ce099559f7e48615b212a}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!pack\+\_\+vector\+\_\+bool@{pack\+\_\+vector\+\_\+bool}}
+\index{pack\+\_\+vector\+\_\+bool@{pack\+\_\+vector\+\_\+bool}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{pack\+\_\+vector\+\_\+bool()}{pack\_vector\_bool()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::pack\+\_\+vector\+\_\+bool (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ bool $>$ \&}]{in,  }\item[{std\+::vector$<$ T $>$ \&}]{out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_a3799e1e93384e926d91a6cba47d61bb2}\label{namespacefemus_1_1_parallel_a3799e1e93384e926d91a6cba47d61bb2}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!probe@{probe}}
+\index{probe@{probe}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{probe()}{probe()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structfemus_1_1_parallel_1_1status}{status}} femus\+::\+Parallel\+::probe (\begin{DoxyParamCaption}\item[{const int}]{src\+\_\+processor\+\_\+id,  }\item[{const int}]{tag = {\ttfamily \mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Blocking message probe. Allows information about a message to be examined before the message is actually received.
+
+Blocking message probe. Allows information about a message to be examined before the message is actually received. we do not currently support this operation on one processor without M\+PI. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a308546b3fc2d590d954da95d8f9e089c}\label{namespacefemus_1_1_parallel_a308546b3fc2d590d954da95d8f9e089c}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!receive@{receive}}
+\index{receive@{receive}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{receive()}{receive()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classfemus_1_1_parallel_1_1_status}{Status}} femus\+::\+Parallel\+::receive (\begin{DoxyParamCaption}\item[{const int}]{src\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&}]{type,  }\item[{const int}]{tag = {\ttfamily \mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Blocking-\/receive vector from one processor with user-\/defined type.
+
+Blocking-\/receive vector from one processor with user-\/defined type. we do not currently support this operation on one processor without M\+PI. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a6c79d178dc5c5f64ac623f0f5a2a0ea2}\label{namespacefemus_1_1_parallel_a6c79d178dc5c5f64ac623f0f5a2a0ea2}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!receive@{receive}}
+\index{receive@{receive}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{receive()}{receive()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::receive (\begin{DoxyParamCaption}\item[{const int}]{src\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&}]{type,  }\item[{\mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&}]{req,  }\item[{const int}]{tag = {\ttfamily \mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Nonblocking-\/receive vector from one processor with user-\/defined type.
+
+Nonblocking-\/receive vector from one processor with user-\/defined type. we do not currently support this operation on one processor without M\+PI. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a49e65f1574362935e9c7e1d048e9aa3a}\label{namespacefemus_1_1_parallel_a49e65f1574362935e9c7e1d048e9aa3a}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!receive@{receive}}
+\index{receive@{receive}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{receive()}{receive()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classfemus_1_1_parallel_1_1_status}{Status}} femus\+::\+Parallel\+::receive (\begin{DoxyParamCaption}\item[{const int}]{src\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{const int}]{tag = {\ttfamily \mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Blocking-\/receive vector from one processor where the communication type is inferred from the template argument. \mbox{\Hypertarget{namespacefemus_1_1_parallel_ac38ae778cd7241660643837071894115}\label{namespacefemus_1_1_parallel_ac38ae778cd7241660643837071894115}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!receive@{receive}}
+\index{receive@{receive}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{receive()}{receive()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::receive (\begin{DoxyParamCaption}\item[{const int}]{src\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{\mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&}]{req,  }\item[{const int}]{tag = {\ttfamily \mbox{\hyperlink{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}{any\+\_\+tag}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Nonblocking-\/receive vector from one processor where the communication type is inferred from the template argument. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a3126d0149eca349995ce4f5a314e3a89}\label{namespacefemus_1_1_parallel_a3126d0149eca349995ce4f5a314e3a89}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!send@{send}}
+\index{send@{send}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{send()}{send()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::send (\begin{DoxyParamCaption}\item[{const unsigned int}]{dest\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&}]{type,  }\item[{const int}]{tag = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Blocking-\/send vector to one processor with user-\/defined type.
+
+Blocking-\/send vector to one processor with user-\/defined type. we do not currently support this operation on one processor without M\+PI. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a9e7ecc622b087c99acc5c1b37b6e6c90}\label{namespacefemus_1_1_parallel_a9e7ecc622b087c99acc5c1b37b6e6c90}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!send@{send}}
+\index{send@{send}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{send()}{send()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::send (\begin{DoxyParamCaption}\item[{const unsigned int}]{dest\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&}]{type,  }\item[{\mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&}]{req,  }\item[{const int}]{tag = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Nonblocking-\/send vector to one processor with user-\/defined type.
+
+Nonblocking-\/send vector to one processor with user-\/defined type. we do not currently support this operation on one processor without M\+PI. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a5f272a5537ade03af5151accf483464c}\label{namespacefemus_1_1_parallel_a5f272a5537ade03af5151accf483464c}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!send@{send}}
+\index{send@{send}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{send()}{send()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::send (\begin{DoxyParamCaption}\item[{const unsigned int}]{dest\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{const int}]{tag = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Blocking-\/send vector to one processor where the communication type is inferred from the template argument. \mbox{\Hypertarget{namespacefemus_1_1_parallel_ad9fff04a83c0fb27ed2f48ba4bd75245}\label{namespacefemus_1_1_parallel_ad9fff04a83c0fb27ed2f48ba4bd75245}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!send@{send}}
+\index{send@{send}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{send()}{send()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::send (\begin{DoxyParamCaption}\item[{const unsigned int}]{dest\+\_\+processor\+\_\+id,  }\item[{std\+::vector$<$ T $>$ \&}]{buf,  }\item[{\mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&}]{req,  }\item[{const int}]{tag = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Nonblocking-\/send vector to one processor where the communication type is inferred from the template argument. \mbox{\Hypertarget{namespacefemus_1_1_parallel_aa92d91cc52cf504bcd046ed47b6e390b}\label{namespacefemus_1_1_parallel_aa92d91cc52cf504bcd046ed47b6e390b}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!send\+\_\+receive@{send\+\_\+receive}}
+\index{send\+\_\+receive@{send\+\_\+receive}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{send\+\_\+receive()}{send\_receive()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::send\+\_\+receive (\begin{DoxyParamCaption}\item[{const unsigned int}]{dest\+\_\+processor\+\_\+id,  }\item[{T \&}]{send,  }\item[{const unsigned int}]{source\+\_\+processor\+\_\+id,  }\item[{T \&}]{recv }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Send vector {\ttfamily send} to one processor while simultaneously receiving another vector {\ttfamily recv} from a (potentially different) processor. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a9a1e9e24951897be2b28dbc25e7e578c}\label{namespacefemus_1_1_parallel_a9a1e9e24951897be2b28dbc25e7e578c}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!send\+\_\+receive@{send\+\_\+receive}}
+\index{send\+\_\+receive@{send\+\_\+receive}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{send\+\_\+receive()}{send\_receive()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::send\+\_\+receive (\begin{DoxyParamCaption}\item[{const unsigned int}]{dest\+\_\+processor\+\_\+id,  }\item[{T \&}]{send,  }\item[{const unsigned int}]{source\+\_\+processor\+\_\+id,  }\item[{T \&}]{recv,  }\item[{const \mbox{\hyperlink{classfemus_1_1_parallel_1_1_data_type}{Data\+Type}} \&}]{type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Send vector {\ttfamily send} to one processor while simultaneously receiving another vector {\ttfamily recv} from a (potentially different) processor using a user-\/specified M\+PI Dataype. \mbox{\Hypertarget{namespacefemus_1_1_parallel_a17c680b5adf174b6185a5aeea86e5188}\label{namespacefemus_1_1_parallel_a17c680b5adf174b6185a5aeea86e5188}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!sum@{sum}}
+\index{sum@{sum}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{sum()}{sum()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::sum (\begin{DoxyParamCaption}\item[{T \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_a5e5e9ec906f929468e0cf17dcc7e3f4c}\label{namespacefemus_1_1_parallel_a5e5e9ec906f929468e0cf17dcc7e3f4c}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!sum@{sum}}
+\index{sum@{sum}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{sum()}{sum()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::sum (\begin{DoxyParamCaption}\item[{std\+::vector$<$ T $>$ \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_a1d9e76823574ef8a7f16c7c6ef63f8be}\label{namespacefemus_1_1_parallel_a1d9e76823574ef8a7f16c7c6ef63f8be}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!unpack\+\_\+vector\+\_\+bool@{unpack\+\_\+vector\+\_\+bool}}
+\index{unpack\+\_\+vector\+\_\+bool@{unpack\+\_\+vector\+\_\+bool}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{unpack\+\_\+vector\+\_\+bool()}{unpack\_vector\_bool()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void femus\+::\+Parallel\+::unpack\+\_\+vector\+\_\+bool (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ T $>$ \&}]{in,  }\item[{std\+::vector$<$ bool $>$ \&}]{out }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_a228cad24a8dc0968b965c0986428ad4a}\label{namespacefemus_1_1_parallel_a228cad24a8dc0968b965c0986428ad4a}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!verify@{verify}}
+\index{verify@{verify}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{verify()}{verify()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool femus\+::\+Parallel\+::verify (\begin{DoxyParamCaption}\item[{const T \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_a893385de2800726af28b56b1c5630d2f}\label{namespacefemus_1_1_parallel_a893385de2800726af28b56b1c5630d2f}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!wait@{wait}}
+\index{wait@{wait}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{wait()}{wait()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structfemus_1_1_parallel_1_1status}{status}} femus\+::\+Parallel\+::wait (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Wait for a non-\/blocking send or receive to finish \mbox{\Hypertarget{namespacefemus_1_1_parallel_a135cd955845e4e6ce003a4455ec54b17}\label{namespacefemus_1_1_parallel_a135cd955845e4e6ce003a4455ec54b17}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!wait@{wait}}
+\index{wait@{wait}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{wait()}{wait()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void femus\+::\+Parallel\+::wait (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{structfemus_1_1_parallel_1_1request}{request}} $>$ \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Wait for a non-\/blocking send or receive to finish \mbox{\Hypertarget{namespacefemus_1_1_parallel_afa71a836a79155d206fc4900be688460}\label{namespacefemus_1_1_parallel_afa71a836a79155d206fc4900be688460}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!wait@{wait}}
+\index{wait@{wait}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{wait()}{wait()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily void femus\+::\+Parallel\+::wait (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classfemus_1_1_parallel_1_1_request}{Request}} $>$ \&}]{r }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Wait for a non-\/blocking send or receive to finish 
+
+\subsection{Variable Documentation}
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_a7a5a07efca1e4a2f4ef731d4a79703c5}\label{namespacefemus_1_1_parallel_a7a5a07efca1e4a2f4ef731d4a79703c5}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!any\+\_\+source@{any\+\_\+source}}
+\index{any\+\_\+source@{any\+\_\+source}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{any\+\_\+source}{any\_source}}
+{\footnotesize\ttfamily const int femus\+::\+Parallel\+::any\+\_\+source =0}
+
+\mbox{\Hypertarget{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}\label{namespacefemus_1_1_parallel_a928996065f46cb52e89e132cdcb30328}} 
+\index{femus\+::\+Parallel@{femus\+::\+Parallel}!any\+\_\+tag@{any\+\_\+tag}}
+\index{any\+\_\+tag@{any\+\_\+tag}!femus\+::\+Parallel@{femus\+::\+Parallel}}
+\subsubsection{\texorpdfstring{any\+\_\+tag}{any\_tag}}
+{\footnotesize\ttfamily const int femus\+::\+Parallel\+::any\+\_\+tag =-\/1}
+

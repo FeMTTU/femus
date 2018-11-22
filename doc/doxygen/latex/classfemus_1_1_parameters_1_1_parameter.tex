@@ -1,0 +1,85 @@
+\hypertarget{classfemus_1_1_parameters_1_1_parameter}{}\section{femus\+:\+:Parameters\+:\+:Parameter$<$ T $>$ Class Template Reference}
+\label{classfemus_1_1_parameters_1_1_parameter}\index{femus\+::\+Parameters\+::\+Parameter$<$ T $>$@{femus\+::\+Parameters\+::\+Parameter$<$ T $>$}}
+
+
+{\ttfamily \#include $<$Parameters.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Parameters\+:\+:Parameter$<$ T $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=188pt]{classfemus_1_1_parameters_1_1_parameter__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Parameters\+:\+:Parameter$<$ T $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=188pt]{classfemus_1_1_parameters_1_1_parameter__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+const T \& \mbox{\hyperlink{classfemus_1_1_parameters_1_1_parameter_ae8604847b5ed45edc3289a64e2639c8a}{get}} () const
+\item 
+T \& \mbox{\hyperlink{classfemus_1_1_parameters_1_1_parameter_a8fe5abea9c4f01d039cf18a96f710bb5}{set}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_parameters_1_1_parameter_aecc1e861889ad36033fd905c30e5b70c}{print}} (std\+::ostream \&) const
+\item 
+virtual Value $\ast$ \mbox{\hyperlink{classfemus_1_1_parameters_1_1_parameter_a72962a0db46b03d8c3f071d59e1c0f40}{clone}} () const
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$typename T$>$\newline
+class femus\+::\+Parameters\+::\+Parameter$<$ T $>$}
+
+Concrete definition of a parameter value for a specified type. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_parameters_1_1_parameter_a72962a0db46b03d8c3f071d59e1c0f40}\label{classfemus_1_1_parameters_1_1_parameter_a72962a0db46b03d8c3f071d59e1c0f40}} 
+\index{femus\+::\+Parameters\+::\+Parameter@{femus\+::\+Parameters\+::\+Parameter}!clone@{clone}}
+\index{clone@{clone}!femus\+::\+Parameters\+::\+Parameter@{femus\+::\+Parameters\+::\+Parameter}}
+\subsubsection{\texorpdfstring{clone()}{clone()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+Parameters\+::\+Value $\ast$ \mbox{\hyperlink{classfemus_1_1_parameters_1_1_parameter}{femus\+::\+Parameters\+::\+Parameter}}$<$ T $>$\+::clone (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+Clone this value. Useful in copy-\/construction. \mbox{\Hypertarget{classfemus_1_1_parameters_1_1_parameter_ae8604847b5ed45edc3289a64e2639c8a}\label{classfemus_1_1_parameters_1_1_parameter_ae8604847b5ed45edc3289a64e2639c8a}} 
+\index{femus\+::\+Parameters\+::\+Parameter@{femus\+::\+Parameters\+::\+Parameter}!get@{get}}
+\index{get@{get}!femus\+::\+Parameters\+::\+Parameter@{femus\+::\+Parameters\+::\+Parameter}}
+\subsubsection{\texorpdfstring{get()}{get()}}
+{\footnotesize\ttfamily template$<$typename T$>$ \\
+const T\& \mbox{\hyperlink{classfemus_1_1_parameters_1_1_parameter}{femus\+::\+Parameters\+::\+Parameter}}$<$ T $>$\+::get (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+a read-\/only reference to the parameter value. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classfemus_1_1_parameters_1_1_parameter_aecc1e861889ad36033fd905c30e5b70c}\label{classfemus_1_1_parameters_1_1_parameter_aecc1e861889ad36033fd905c30e5b70c}} 
+\index{femus\+::\+Parameters\+::\+Parameter@{femus\+::\+Parameters\+::\+Parameter}!print@{print}}
+\index{print@{print}!femus\+::\+Parameters\+::\+Parameter@{femus\+::\+Parameters\+::\+Parameter}}
+\subsubsection{\texorpdfstring{print()}{print()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_parameters_1_1_parameter}{femus\+::\+Parameters\+::\+Parameter}}$<$ T $>$\+::print (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{os }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+Prints the parameter value to the specified stream. \mbox{\Hypertarget{classfemus_1_1_parameters_1_1_parameter_a8fe5abea9c4f01d039cf18a96f710bb5}\label{classfemus_1_1_parameters_1_1_parameter_a8fe5abea9c4f01d039cf18a96f710bb5}} 
+\index{femus\+::\+Parameters\+::\+Parameter@{femus\+::\+Parameters\+::\+Parameter}!set@{set}}
+\index{set@{set}!femus\+::\+Parameters\+::\+Parameter@{femus\+::\+Parameters\+::\+Parameter}}
+\subsubsection{\texorpdfstring{set()}{set()}}
+{\footnotesize\ttfamily template$<$typename T$>$ \\
+T\& \mbox{\hyperlink{classfemus_1_1_parameters_1_1_parameter}{femus\+::\+Parameters\+::\+Parameter}}$<$ T $>$\+::set (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+a writeable reference to the parameter value. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+utils/\mbox{\hyperlink{_parameters_8hpp}{Parameters.\+hpp}}\end{DoxyCompactItemize}

@@ -1,0 +1,100 @@
+\hypertarget{namespacefemus_1_1_math}{}\section{femus\+:\+:Math Namespace Reference}
+\label{namespacefemus_1_1_math}\index{femus\+::\+Math@{femus\+::\+Math}}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{namespacefemus_1_1_math_a1ac507af12e3ceaf078b640984b82059}{zeroN}} (double $\ast$x, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} N)
+\begin{DoxyCompactList}\small\item\em set to zero -\/ n components \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{namespacefemus_1_1_math_af3228f411dbbd6dd3a4ece9f5641b462}{dotN}} (const double $\ast$x, const double $\ast$y, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} N)
+\begin{DoxyCompactList}\small\item\em dot product -\/ n components \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{namespacefemus_1_1_math_a804b6e7af3d40fe1c09928089b7dfccb}{dot}} (const double $\ast$x, const double $\ast$y, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} spacedim)
+\begin{DoxyCompactList}\small\item\em dot product \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespacefemus_1_1_math_a06daa97a94cd109a7d0229d4e23a40d6}{cross}} (const double $\ast$a, const double $\ast$b, double $\ast$res)
+\begin{DoxyCompactList}\small\item\em Cross product. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespacefemus_1_1_math_a7c61609663b61259ec67232f7eba0d3c}{extend}} (const double $\ast$a, double $\ast$a3D, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} spacedim)
+\begin{DoxyCompactList}\small\item\em extend to a 3D vector a vector with dimension \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespacefemus_1_1_math_a2328868c7aa18860c4a4f14cd9573c8e}{extend\+\_\+nds}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} el\+\_\+ndofs, const double $\ast$a\+\_\+nds, double $\ast$a\+\_\+nds3D, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} spacedim)
+\begin{DoxyCompactList}\small\item\em extend to 3D an element dof vector \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{namespacefemus_1_1_math_a3c615988fe381fae399525c16a2941c5}{normalize}} (double $\ast$x, const double fac, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} spacedim)
+\begin{DoxyCompactList}\small\item\em dot product \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{namespacefemus_1_1_math_a02f12dcb565caafc80da2ebb652541fb}{Function\+Integral}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} vb, \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&ml\+\_\+prob, double($\ast$pt2func)(double, const std\+::vector$<$ double $>$))
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{namespacefemus_1_1_math_a06daa97a94cd109a7d0229d4e23a40d6}\label{namespacefemus_1_1_math_a06daa97a94cd109a7d0229d4e23a40d6}} 
+\index{femus\+::\+Math@{femus\+::\+Math}!cross@{cross}}
+\index{cross@{cross}!femus\+::\+Math@{femus\+::\+Math}}
+\subsubsection{\texorpdfstring{cross()}{cross()}}
+{\footnotesize\ttfamily void femus\+::\+Math\+::cross (\begin{DoxyParamCaption}\item[{const double $\ast$}]{a,  }\item[{const double $\ast$}]{b,  }\item[{double $\ast$}]{res }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Cross product. 
+
+\mbox{\Hypertarget{namespacefemus_1_1_math_a804b6e7af3d40fe1c09928089b7dfccb}\label{namespacefemus_1_1_math_a804b6e7af3d40fe1c09928089b7dfccb}} 
+\index{femus\+::\+Math@{femus\+::\+Math}!dot@{dot}}
+\index{dot@{dot}!femus\+::\+Math@{femus\+::\+Math}}
+\subsubsection{\texorpdfstring{dot()}{dot()}}
+{\footnotesize\ttfamily double femus\+::\+Math\+::dot (\begin{DoxyParamCaption}\item[{const double $\ast$}]{x,  }\item[{const double $\ast$}]{y,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{spacedim }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+dot product 
+
+\mbox{\Hypertarget{namespacefemus_1_1_math_af3228f411dbbd6dd3a4ece9f5641b462}\label{namespacefemus_1_1_math_af3228f411dbbd6dd3a4ece9f5641b462}} 
+\index{femus\+::\+Math@{femus\+::\+Math}!dotN@{dotN}}
+\index{dotN@{dotN}!femus\+::\+Math@{femus\+::\+Math}}
+\subsubsection{\texorpdfstring{dot\+N()}{dotN()}}
+{\footnotesize\ttfamily double femus\+::\+Math\+::dotN (\begin{DoxyParamCaption}\item[{const double $\ast$}]{x,  }\item[{const double $\ast$}]{y,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{N }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+dot product -\/ n components 
+
+\mbox{\Hypertarget{namespacefemus_1_1_math_a7c61609663b61259ec67232f7eba0d3c}\label{namespacefemus_1_1_math_a7c61609663b61259ec67232f7eba0d3c}} 
+\index{femus\+::\+Math@{femus\+::\+Math}!extend@{extend}}
+\index{extend@{extend}!femus\+::\+Math@{femus\+::\+Math}}
+\subsubsection{\texorpdfstring{extend()}{extend()}}
+{\footnotesize\ttfamily void femus\+::\+Math\+::extend (\begin{DoxyParamCaption}\item[{const double $\ast$}]{a,  }\item[{double $\ast$}]{a3D,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{spacedim }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+extend to a 3D vector a vector with dimension 
+
+\mbox{\Hypertarget{namespacefemus_1_1_math_a2328868c7aa18860c4a4f14cd9573c8e}\label{namespacefemus_1_1_math_a2328868c7aa18860c4a4f14cd9573c8e}} 
+\index{femus\+::\+Math@{femus\+::\+Math}!extend\+\_\+nds@{extend\+\_\+nds}}
+\index{extend\+\_\+nds@{extend\+\_\+nds}!femus\+::\+Math@{femus\+::\+Math}}
+\subsubsection{\texorpdfstring{extend\+\_\+nds()}{extend\_nds()}}
+{\footnotesize\ttfamily void femus\+::\+Math\+::extend\+\_\+nds (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{el\+\_\+ndofs,  }\item[{const double $\ast$}]{a\+\_\+nds,  }\item[{double $\ast$}]{a\+\_\+nds3D,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{spacedim }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+extend to 3D an element dof vector 
+
+\mbox{\Hypertarget{namespacefemus_1_1_math_a02f12dcb565caafc80da2ebb652541fb}\label{namespacefemus_1_1_math_a02f12dcb565caafc80da2ebb652541fb}} 
+\index{femus\+::\+Math@{femus\+::\+Math}!Function\+Integral@{Function\+Integral}}
+\index{Function\+Integral@{Function\+Integral}!femus\+::\+Math@{femus\+::\+Math}}
+\subsubsection{\texorpdfstring{Function\+Integral()}{FunctionIntegral()}}
+{\footnotesize\ttfamily double femus\+::\+Math\+::\+Function\+Integral (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{vb,  }\item[{\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&}]{ml\+\_\+prob,  }\item[{double($\ast$)(double, const std\+::vector$<$ double $>$)}]{pt2func }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{namespacefemus_1_1_math_a3c615988fe381fae399525c16a2941c5}\label{namespacefemus_1_1_math_a3c615988fe381fae399525c16a2941c5}} 
+\index{femus\+::\+Math@{femus\+::\+Math}!normalize@{normalize}}
+\index{normalize@{normalize}!femus\+::\+Math@{femus\+::\+Math}}
+\subsubsection{\texorpdfstring{normalize()}{normalize()}}
+{\footnotesize\ttfamily void femus\+::\+Math\+::normalize (\begin{DoxyParamCaption}\item[{double $\ast$}]{x,  }\item[{const double}]{fac,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{spacedim }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+dot product 
+
+\mbox{\Hypertarget{namespacefemus_1_1_math_a1ac507af12e3ceaf078b640984b82059}\label{namespacefemus_1_1_math_a1ac507af12e3ceaf078b640984b82059}} 
+\index{femus\+::\+Math@{femus\+::\+Math}!zeroN@{zeroN}}
+\index{zeroN@{zeroN}!femus\+::\+Math@{femus\+::\+Math}}
+\subsubsection{\texorpdfstring{zero\+N()}{zeroN()}}
+{\footnotesize\ttfamily void femus\+::\+Math\+::zeroN (\begin{DoxyParamCaption}\item[{double $\ast$}]{x,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{N }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+set to zero -\/ n components 
+

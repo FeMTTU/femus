@@ -1,0 +1,6 @@
+<map id="femus::quad_lag" name="femus::quad_lag">
+<area shape="rect" id="node3" href="$classfemus_1_1_quad_biquadratic.html" title="femus::QuadBiquadratic" alt="" coords="5,155,172,181"/>
+<area shape="rect" id="node4" href="$classfemus_1_1_quad_linear.html" title="femus::QuadLinear" alt="" coords="197,155,333,181"/>
+<area shape="rect" id="node5" href="$classfemus_1_1_quad_quadratic.html" title="femus::QuadQuadratic" alt="" coords="357,155,514,181"/>
+<area shape="rect" id="node2" href="$classfemus_1_1basis.html" title="femus::basis" alt="" coords="215,5,314,32"/>
+</map>

@@ -1,0 +1,181 @@
+\hypertarget{classfemus_1_1_json_input_parser}{}\section{femus\+:\+:Json\+Input\+Parser Class Reference}
+\label{classfemus_1_1_json_input_parser}\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+
+
+{\ttfamily \#include $<$Json\+Input\+Parser.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Json\+Input\+Parser\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=202pt]{classfemus_1_1_json_input_parser__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Json\+Input\+Parser\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=202pt]{classfemus_1_1_json_input_parser__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_json_input_parser_a007eb525534f5f3c28c63d99f02c53ce}{Json\+Input\+Parser}} (const std\+::string \&infile)
+\item 
+\mbox{\hyperlink{classfemus_1_1_json_input_parser_afd478d2df10222adde53861eeb693177}{$\sim$\+Json\+Input\+Parser}} ()
+\item 
+const bool \mbox{\hyperlink{classfemus_1_1_json_input_parser_af6e86057aa2b4bc01fad78ff7340fbc6}{is\+True}} (const std\+::string \&base, const std\+::string \&type)
+\item 
+const unsigned int \mbox{\hyperlink{classfemus_1_1_json_input_parser_a535b2e19baf4fff32dc5fa54816b0496}{get\+Size}} (const std\+::string \&base)
+\item 
+const int \mbox{\hyperlink{classfemus_1_1_json_input_parser_a7446c6ec4674101f6e0ad48778122076}{get\+Value}} (const std\+::string \&fullpath, const int defaultvalue)
+\item 
+const double \mbox{\hyperlink{classfemus_1_1_json_input_parser_a38b41ae56ab7b1b3780c4692d06cbd33}{get\+Value}} (const std\+::string \&fullpath, const double defaultvalue)
+\item 
+const \mbox{\hyperlink{_elem_type_enum_8hpp_a1b014294b9757a001707c979e2bab627}{Elem\+Type}} \mbox{\hyperlink{classfemus_1_1_json_input_parser_a00598393bac7b29e552167fb6d1c51f6}{get\+Value}} (const std\+::string \&fullpath, const \mbox{\hyperlink{_elem_type_enum_8hpp_a1b014294b9757a001707c979e2bab627}{Elem\+Type}} defaultvalue)
+\item 
+const std\+::string \mbox{\hyperlink{classfemus_1_1_json_input_parser_af9cad72e2f40793edb81d8136342cf40}{get\+Value}} (const std\+::string \&fullpath, const std\+::string defaultvalue)
+\item 
+const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a00ea9562f0dbb25e22bb3297d596e3ba}{F\+E\+Order}} \mbox{\hyperlink{classfemus_1_1_json_input_parser_a29fe53a616bd9326081bfa485fc7b455}{get\+Value}} (const std\+::string \&fullpath, const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a00ea9562f0dbb25e22bb3297d596e3ba}{F\+E\+Order}} defaultvalue)
+\item 
+const \mbox{\hyperlink{_mg_type_enum_8hpp_a35aafc39068a269f658aac64338aa781}{Mg\+Type}} \mbox{\hyperlink{classfemus_1_1_json_input_parser_a6851a934e4f6fa21195bbaef6f3999d9}{get\+Value}} (const std\+::string \&fullpath, const \mbox{\hyperlink{_mg_type_enum_8hpp_a35aafc39068a269f658aac64338aa781}{Mg\+Type}} defaultvalue)
+\item 
+const std\+::string \mbox{\hyperlink{classfemus_1_1_json_input_parser_a857a85ac2a5e12c433a143762b01d1e8}{get\+Value\+From\+Array}} (const std\+::string \&basepath, const unsigned int index, const std\+::string entry, const std\+::string defaultvalue)
+\item 
+const \mbox{\hyperlink{_b_d_c_type_enum_8hpp_ac1efcf28f6f152fe5354b888f616668d}{B\+D\+C\+Type}} \mbox{\hyperlink{classfemus_1_1_json_input_parser_a02383042c4eaebfd7e0743abcb91d771}{get\+Value\+From\+Array}} (const std\+::string \&basepath, const unsigned int index, const std\+::string entry, const \mbox{\hyperlink{_b_d_c_type_enum_8hpp_ac1efcf28f6f152fe5354b888f616668d}{B\+D\+C\+Type}} defaultvalue)
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+This class is the concrete class for Json format input parsing. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_json_input_parser_a007eb525534f5f3c28c63d99f02c53ce}\label{classfemus_1_1_json_input_parser_a007eb525534f5f3c28c63d99f02c53ce}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!Json\+Input\+Parser@{Json\+Input\+Parser}}
+\index{Json\+Input\+Parser@{Json\+Input\+Parser}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{Json\+Input\+Parser()}{JsonInputParser()}}
+{\footnotesize\ttfamily femus\+::\+Json\+Input\+Parser\+::\+Json\+Input\+Parser (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{infile }\end{DoxyParamCaption})}
+
+Constructor \mbox{\Hypertarget{classfemus_1_1_json_input_parser_afd478d2df10222adde53861eeb693177}\label{classfemus_1_1_json_input_parser_afd478d2df10222adde53861eeb693177}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!````~Json\+Input\+Parser@{$\sim$\+Json\+Input\+Parser}}
+\index{````~Json\+Input\+Parser@{$\sim$\+Json\+Input\+Parser}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{$\sim$\+Json\+Input\+Parser()}{~JsonInputParser()}}
+{\footnotesize\ttfamily femus\+::\+Json\+Input\+Parser\+::$\sim$\+Json\+Input\+Parser (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Destructor. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_json_input_parser_a535b2e19baf4fff32dc5fa54816b0496}\label{classfemus_1_1_json_input_parser_a535b2e19baf4fff32dc5fa54816b0496}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!get\+Size@{get\+Size}}
+\index{get\+Size@{get\+Size}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{get\+Size()}{getSize()}}
+{\footnotesize\ttfamily const unsigned int femus\+::\+Json\+Input\+Parser\+::get\+Size (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{base }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+See father class 
+
+Implements \mbox{\hyperlink{classfemus_1_1_input_parser_a7249522721ec07de009ffd04286847c5}{femus\+::\+Input\+Parser}}.
+
+\mbox{\Hypertarget{classfemus_1_1_json_input_parser_a7446c6ec4674101f6e0ad48778122076}\label{classfemus_1_1_json_input_parser_a7446c6ec4674101f6e0ad48778122076}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!get\+Value@{get\+Value}}
+\index{get\+Value@{get\+Value}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{get\+Value()}{getValue()}\hspace{0.1cm}{\footnotesize\ttfamily [1/6]}}
+{\footnotesize\ttfamily const int femus\+::\+Json\+Input\+Parser\+::get\+Value (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{fullpath,  }\item[{const int}]{defaultvalue }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+See father class 
+
+Implements \mbox{\hyperlink{classfemus_1_1_input_parser_ae178b5210e0a7df40b7eb78133cac13c}{femus\+::\+Input\+Parser}}.
+
+\mbox{\Hypertarget{classfemus_1_1_json_input_parser_a38b41ae56ab7b1b3780c4692d06cbd33}\label{classfemus_1_1_json_input_parser_a38b41ae56ab7b1b3780c4692d06cbd33}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!get\+Value@{get\+Value}}
+\index{get\+Value@{get\+Value}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{get\+Value()}{getValue()}\hspace{0.1cm}{\footnotesize\ttfamily [2/6]}}
+{\footnotesize\ttfamily const double femus\+::\+Json\+Input\+Parser\+::get\+Value (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{fullpath,  }\item[{const double}]{defaultvalue }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+See father class 
+
+Implements \mbox{\hyperlink{classfemus_1_1_input_parser_ab7ff8e8528d6f9e7cc6f928f7020687e}{femus\+::\+Input\+Parser}}.
+
+\mbox{\Hypertarget{classfemus_1_1_json_input_parser_a00598393bac7b29e552167fb6d1c51f6}\label{classfemus_1_1_json_input_parser_a00598393bac7b29e552167fb6d1c51f6}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!get\+Value@{get\+Value}}
+\index{get\+Value@{get\+Value}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{get\+Value()}{getValue()}\hspace{0.1cm}{\footnotesize\ttfamily [3/6]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{_elem_type_enum_8hpp_a1b014294b9757a001707c979e2bab627}{Elem\+Type}} femus\+::\+Json\+Input\+Parser\+::get\+Value (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{fullpath,  }\item[{const \mbox{\hyperlink{_elem_type_enum_8hpp_a1b014294b9757a001707c979e2bab627}{Elem\+Type}}}]{defaultvalue }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+See father class 
+
+Implements \mbox{\hyperlink{classfemus_1_1_input_parser_a8feee424de84c28d6689361e22769ed1}{femus\+::\+Input\+Parser}}.
+
+\mbox{\Hypertarget{classfemus_1_1_json_input_parser_af9cad72e2f40793edb81d8136342cf40}\label{classfemus_1_1_json_input_parser_af9cad72e2f40793edb81d8136342cf40}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!get\+Value@{get\+Value}}
+\index{get\+Value@{get\+Value}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{get\+Value()}{getValue()}\hspace{0.1cm}{\footnotesize\ttfamily [4/6]}}
+{\footnotesize\ttfamily const std\+::string femus\+::\+Json\+Input\+Parser\+::get\+Value (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{fullpath,  }\item[{const std\+::string}]{defaultvalue }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+See father class 
+
+Implements \mbox{\hyperlink{classfemus_1_1_input_parser_afc1cace4dae0ea2878d1ddd586dc6a2e}{femus\+::\+Input\+Parser}}.
+
+\mbox{\Hypertarget{classfemus_1_1_json_input_parser_a29fe53a616bd9326081bfa485fc7b455}\label{classfemus_1_1_json_input_parser_a29fe53a616bd9326081bfa485fc7b455}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!get\+Value@{get\+Value}}
+\index{get\+Value@{get\+Value}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{get\+Value()}{getValue()}\hspace{0.1cm}{\footnotesize\ttfamily [5/6]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a00ea9562f0dbb25e22bb3297d596e3ba}{F\+E\+Order}} femus\+::\+Json\+Input\+Parser\+::get\+Value (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{fullpath,  }\item[{const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a00ea9562f0dbb25e22bb3297d596e3ba}{F\+E\+Order}}}]{defaultvalue }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+See father class 
+
+Implements \mbox{\hyperlink{classfemus_1_1_input_parser_afed8cdbe224355e291485f85dcf3a051}{femus\+::\+Input\+Parser}}.
+
+\mbox{\Hypertarget{classfemus_1_1_json_input_parser_a6851a934e4f6fa21195bbaef6f3999d9}\label{classfemus_1_1_json_input_parser_a6851a934e4f6fa21195bbaef6f3999d9}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!get\+Value@{get\+Value}}
+\index{get\+Value@{get\+Value}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{get\+Value()}{getValue()}\hspace{0.1cm}{\footnotesize\ttfamily [6/6]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{_mg_type_enum_8hpp_a35aafc39068a269f658aac64338aa781}{Mg\+Type}} femus\+::\+Json\+Input\+Parser\+::get\+Value (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{fullpath,  }\item[{const \mbox{\hyperlink{_mg_type_enum_8hpp_a35aafc39068a269f658aac64338aa781}{Mg\+Type}}}]{defaultvalue }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+See father class 
+
+Implements \mbox{\hyperlink{classfemus_1_1_input_parser_a8ce06a6bc1112d4581b6fad9e7aad858}{femus\+::\+Input\+Parser}}.
+
+\mbox{\Hypertarget{classfemus_1_1_json_input_parser_a857a85ac2a5e12c433a143762b01d1e8}\label{classfemus_1_1_json_input_parser_a857a85ac2a5e12c433a143762b01d1e8}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!get\+Value\+From\+Array@{get\+Value\+From\+Array}}
+\index{get\+Value\+From\+Array@{get\+Value\+From\+Array}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{get\+Value\+From\+Array()}{getValueFromArray()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily const std\+::string femus\+::\+Json\+Input\+Parser\+::get\+Value\+From\+Array (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{basepath,  }\item[{const unsigned int}]{index,  }\item[{const std\+::string}]{entry,  }\item[{const std\+::string}]{defaultvalue }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+See father class 
+
+Implements \mbox{\hyperlink{classfemus_1_1_input_parser_a08f0f52e28b4e9dfc5dcf7c1ba267938}{femus\+::\+Input\+Parser}}.
+
+\mbox{\Hypertarget{classfemus_1_1_json_input_parser_a02383042c4eaebfd7e0743abcb91d771}\label{classfemus_1_1_json_input_parser_a02383042c4eaebfd7e0743abcb91d771}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!get\+Value\+From\+Array@{get\+Value\+From\+Array}}
+\index{get\+Value\+From\+Array@{get\+Value\+From\+Array}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{get\+Value\+From\+Array()}{getValueFromArray()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{_b_d_c_type_enum_8hpp_ac1efcf28f6f152fe5354b888f616668d}{B\+D\+C\+Type}} femus\+::\+Json\+Input\+Parser\+::get\+Value\+From\+Array (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{basepath,  }\item[{const unsigned int}]{index,  }\item[{const std\+::string}]{entry,  }\item[{const \mbox{\hyperlink{_b_d_c_type_enum_8hpp_ac1efcf28f6f152fe5354b888f616668d}{B\+D\+C\+Type}}}]{defaultvalue }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+See father class 
+
+Implements \mbox{\hyperlink{classfemus_1_1_input_parser_a30b8407afe22e7ff56b67766cef51929}{femus\+::\+Input\+Parser}}.
+
+\mbox{\Hypertarget{classfemus_1_1_json_input_parser_af6e86057aa2b4bc01fad78ff7340fbc6}\label{classfemus_1_1_json_input_parser_af6e86057aa2b4bc01fad78ff7340fbc6}} 
+\index{femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}!is\+True@{is\+True}}
+\index{is\+True@{is\+True}!femus\+::\+Json\+Input\+Parser@{femus\+::\+Json\+Input\+Parser}}
+\subsubsection{\texorpdfstring{is\+True()}{isTrue()}}
+{\footnotesize\ttfamily const bool femus\+::\+Json\+Input\+Parser\+::is\+True (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{base,  }\item[{const std\+::string \&}]{type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+See father class 
+
+Implements \mbox{\hyperlink{classfemus_1_1_input_parser_aa9a108efd3c78de43435a43c229a21e5}{femus\+::\+Input\+Parser}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+utils/\mbox{\hyperlink{_json_input_parser_8hpp}{Json\+Input\+Parser.\+hpp}}\item 
+utils/\mbox{\hyperlink{_json_input_parser_8cpp}{Json\+Input\+Parser.\+cpp}}\end{DoxyCompactItemize}

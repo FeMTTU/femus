@@ -1,0 +1,525 @@
+\hypertarget{classfemus_1_1elem__type}{}\section{femus\+:\+:elem\+\_\+type Class Reference}
+\label{classfemus_1_1elem__type}\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+
+
+{\ttfamily \#include $<$Elem\+Type.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:elem\+\_\+type\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1elem__type__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:elem\+\_\+type\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=252pt]{classfemus_1_1elem__type__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+typedef double $\ast$(elem\+\_\+type\+::$\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_ac6d3f8df5299550225a2f77c2aa15dde}{\+\_\+\+Function\+Pointer}}) (const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}) const
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1elem__type_aa2d116602d97b226a4a01578dd45bb20}{elem\+\_\+type}} (const char $\ast$geom\+\_\+elem, const char $\ast$order\+\_\+gauss)
+\item 
+virtual \mbox{\hyperlink{classfemus_1_1elem__type_a3e13560174d1ea0282665fbbf4eb605d}{$\sim$elem\+\_\+type}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type_aaa5317cf0e1944adeaca3b5f1d0c3610}{Build\+Prolongation}} (const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&lspdef, const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&lspdec, const int \&ielc, \mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$Projmat, const unsigned \&index\+\_\+sol, const unsigned \&kkindex\+\_\+sol) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type_a204517efabff34e2692a77f4b8bd44e9}{Build\+Restriction\+Transpose}} (const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&lspdef, const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&lspdec, const int \&ielc, \mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$Projmat, const unsigned \&index\+\_\+sol, const unsigned \&kkindex\+\_\+sol, const unsigned \&index\+\_\+pair\+\_\+sol, const unsigned \&kkindex\+\_\+pair\+\_\+sol) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type_ab877a3438c82ef2b4f096f38c3811b7f}{Build\+Prolongation}} (const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&meshf, const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&meshc, const int \&ielc, \mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$Projmat) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type_acb499269b353c8b3e0ebb5e21254b108}{Build\+Prolongation}} (const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&mymesh, const int \&iel, \mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$Projmat, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$N\+N\+Z\+\_\+d, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$N\+N\+Z\+\_\+o, const unsigned \&itype) const
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1elem__type_aa8e617c54dd774ffca5d305605552af7}{Get\+Jacobian}} (const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, adept\+::adouble \&Weight, vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&jacobian\+Matrix) const =0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1elem__type_a6c883b7946e55db8783fd0177546610a}{Get\+Jacobian}} (const vector$<$ vector$<$ double $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, double \&Weight, vector$<$ vector$<$ double $>$ $>$ \&jacobian\+Matrix) const =0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1elem__type_a937b1d5ecbeed3b17db831264a3492fa}{Jacobian}} (const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, adept\+::adouble \&Weight, vector$<$ double $>$ \&phi, vector$<$ adept\+::adouble $>$ \&gradphi, boost\+::optional$<$ vector$<$ adept\+::adouble $>$ \& $>$ nablaphi=boost\+::none) const =0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1elem__type_ac3828ecd8ddd057d726a60cb19c60f0b}{Jacobian}} (const vector$<$ vector$<$ double $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, double \&Weight, vector$<$ double $>$ \&other\+\_\+phi, vector$<$ double $>$ \&gradphi, boost\+::optional$<$ vector$<$ double $>$ \& $>$ nablaphi=boost\+::none) const =0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1elem__type_a2d76133387cebf896c0e51459055fdea}{Jacobian}} (const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&vt, const vector$<$ double $>$ \&xi, adept\+::adouble \&Weight, vector$<$ double $>$ \&phi, vector$<$ adept\+::adouble $>$ \&gradphi, boost\+::optional$<$ vector$<$ adept\+::adouble $>$ \& $>$ nablaphi=boost\+::none) const =0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1elem__type_aab6db5851a9810adfe0ff98df2c30810}{Jacobian}} (const vector$<$ vector$<$ double $>$ $>$ \&vt, const vector$<$ double $>$ \&xi, double \&Weight, vector$<$ double $>$ \&other\+\_\+phi, vector$<$ double $>$ \&gradphi, boost\+::optional$<$ vector$<$ double $>$ \& $>$ nablaphi=boost\+::none) const =0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1elem__type_a293052fac0f51472150b1bf7365c6b18}{Jacobian\+Sur}} (const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, adept\+::adouble \&Weight, vector$<$ double $>$ \&other\+\_\+phi, vector$<$ adept\+::adouble $>$ \&gradphi, vector$<$ adept\+::adouble $>$ \&normal) const =0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1elem__type_aee56bc66a4d90ae7f7669bf7fa9ed8d7}{Jacobian\+Sur}} (const vector$<$ vector$<$ double $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, double \&Weight, vector$<$ double $>$ \&other\+\_\+phi, vector$<$ double $>$ \&gradphi, vector$<$ double $>$ \&normal) const =0
+\item 
+virtual double $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_a2aa2a37b15debbee27918f5e3f2df6b3}{Get\+Phi}} (const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}) const =0
+\item 
+virtual double $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_a6efb6026b9fe89912ec367b235bfccc7}{Get\+D\+Phi\+D\+Xi}} (const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}) const =0
+\item 
+virtual double $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_a510e44439de5cdd6ab5d04e3f8a5bdfe}{Get\+D\+Phi\+D\+Eta}} (const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}) const
+\item 
+virtual double $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_aa507628a4383a9687c8fdefe30d0214a}{Get\+D\+Phi\+D\+Zeta}} (const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}) const
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1elem__type_ab5244df8f1bc5c57a81158787bb1a588}{Evaluate\+Shape\+At\+QP}} (const std\+::string geomel\+\_\+id\+\_\+in, const std\+::string fe\+\_\+in)
+\item 
+const double \mbox{\hyperlink{classfemus_1_1elem__type_a0112208bbdff765b47effbe352734fbe}{Get\+Phi}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} qp, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} dof) const
+\item 
+const double \mbox{\hyperlink{classfemus_1_1elem__type_a8de9e4d4d56ef38431a5050269390e1a}{Get\+D\+Phi\+Dxez}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} qp, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} dof) const
+\item 
+const \mbox{\hyperlink{classfemus_1_1_gauss}{Gauss}} \mbox{\hyperlink{classfemus_1_1elem__type_a830387ca17a267d99a8ec97fa0548fc3}{Get\+Gauss\+Rule}} () const
+\item 
+double \mbox{\hyperlink{classfemus_1_1elem__type_a86dfc5d292bb86bb02ac13f5acbb6c98}{Get\+Gauss\+Weight}} (const unsigned \mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}) const
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1elem__type_a3fa8f889f9ae97586b3db574acb4448e}{Get\+Gauss\+Point\+Number}} () const
+\item 
+int \mbox{\hyperlink{classfemus_1_1elem__type_a7597b01400759749a8b76e01722cd89b}{Get\+N\+Dofs}} () const
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1elem__type_aa94378d258af64d24a9970d30f229589}{Get\+Dim}} () const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type_a6e40b6760ceb52bc3a6d5959ab1588ba}{Get\+Sparsity\+Pattern\+Size}} (const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&lspdef, const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&lspdec, const int \&ielc, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$N\+N\+Z\+\_\+d, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$N\+N\+Z\+\_\+o, const unsigned \&index\+\_\+sol, const unsigned \&kkindex\+\_\+sol) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type_a2e66f8115d7da31bc740db29e1524d60}{Get\+Sparsity\+Pattern\+Size}} (const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&meshf, const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&meshc, const int \&ielc, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$N\+N\+Z\+\_\+d, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$N\+N\+Z\+\_\+o) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type_a9e3cfe2ed283c16125594e5c3a02c8cd}{Get\+Sparsity\+Pattern\+Size}} (const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&\mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}}, const int \&iel, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$N\+N\+Z\+\_\+d, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$N\+N\+Z\+\_\+o, const unsigned \&itype) const
+\item 
+\mbox{\hyperlink{classfemus_1_1basis}{basis}} $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_a8d0ba58ed22eccd39304ba1d84a7b891}{Get\+Basis}} () const
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classfemus_1_1elem__type_ac6d3f8df5299550225a2f77c2aa15dde}{\+\_\+\+Function\+Pointer}} $>$ \mbox{\hyperlink{classfemus_1_1elem__type_acb75b2a53188353c30e56bf3899243e2}{\+\_\+\+D\+Phi\+Xi\+Eta\+Zeta\+Ptr}}
+\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static unsigned \mbox{\hyperlink{classfemus_1_1elem__type_ac090b500b9fe133dec615fae6545b3a8}{\+\_\+refindex}} = 1
+\item 
+static const unsigned \mbox{\hyperlink{classfemus_1_1elem__type_a6cba788f2fbdef1b91a1492908794f8d}{\+\_\+fe\+\_\+old\+\_\+to\+\_\+new}} \mbox{[}\mbox{\hyperlink{_f_e_type_enum_8hpp_aca285339f9cf24489fdc0af5b51a5fde}{QL}}\mbox{]} = \{2, 0, 3\}
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1elem__type_a71ea0da630a7830c3278d58243da0ead}{\+\_\+dim}}
+\item 
+int \mbox{\hyperlink{classfemus_1_1elem__type_aeaf5fcedea91ceb9894f5a385eebddab}{\+\_\+nc}}
+\item 
+int \mbox{\hyperlink{classfemus_1_1elem__type_aaa24556879d31c619c0258062c77276b}{\+\_\+nf}}
+\item 
+int \mbox{\hyperlink{classfemus_1_1elem__type_a7ffed37a1c710167fc1aed224cce45f4}{\+\_\+nlag}} \mbox{[}4\mbox{]}
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1elem__type_a3278ebbdc41e6e7c03aea23995220dab}{\+\_\+\+Sol\+Type}}
+\item 
+const double $\ast$$\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_aa69848a2a5365dc3647b8b0f756a6ec0}{\+\_\+X}}
+\item 
+const int $\ast$$\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_ab6163fc83bbd668366744f1d1cc405ca}{\+\_\+\+I\+ND}}
+\item 
+const int $\ast$$\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_a22d10410085b36b93db138252d6860b9}{\+\_\+\+K\+V\+E\+R\+T\+\_\+\+I\+ND}}
+\item 
+double $\ast$$\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_aca81317b1dfdf99cb82d6c47c7906534}{\+\_\+prol\+\_\+val}}
+\item 
+int $\ast$$\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_a51686b913b9626125f58feea7c7ca5da}{\+\_\+prol\+\_\+ind}}
+\item 
+double $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_ab99cb41fdebab468d2ae484fe8a65edd}{\+\_\+mem\+\_\+prol\+\_\+val}}
+\item 
+int $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_a7c4de3964da26762c3c500d7311fc23b}{\+\_\+mem\+\_\+prol\+\_\+ind}}
+\item 
+\mbox{\hyperlink{classfemus_1_1basis}{basis}} $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_a74ff85a1f6d5439f08c25d4d0321c609}{\+\_\+pt\+\_\+basis}}
+\item 
+const \mbox{\hyperlink{classfemus_1_1_gauss}{Gauss}} \mbox{\hyperlink{classfemus_1_1elem__type_a4c14f3f54d9317b57f2effd2519e45b9}{\+\_\+gauss}}
+\item 
+bool \mbox{\hyperlink{classfemus_1_1elem__type_a57a7738e4179b9ca205db7e3c18898af}{is\+Mp\+G\+D\+Allocated}}
+\item 
+double $\ast$$\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_a54e9c728b24b46b7cfe7163caf8f44ba}{\+\_\+phi\+\_\+map\+GD}}
+\item 
+double $\ast$$\ast$ \mbox{\hyperlink{classfemus_1_1elem__type_a631bc33eb5635fe19fa879246cfde2a2}{\+\_\+dphidxez\+\_\+map\+GD}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classfemus_1_1elem__type_ac6d3f8df5299550225a2f77c2aa15dde}\label{classfemus_1_1elem__type_ac6d3f8df5299550225a2f77c2aa15dde}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+\+Function\+Pointer@{\+\_\+\+Function\+Pointer}}
+\index{\+\_\+\+Function\+Pointer@{\+\_\+\+Function\+Pointer}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+\+Function\+Pointer}{\_FunctionPointer}}
+{\footnotesize\ttfamily typedef double$\ast$(elem\+\_\+type\+::$\ast$ femus\+::elem\+\_\+type\+::\+\_\+\+Function\+Pointer) (const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}) const}
+
+To be Added \begin{DoxyRefDesc}{Deprecated}
+\item[\mbox{\hyperlink{deprecated__deprecated000015}{Deprecated}}]Function pointer for D\+Phi\+D\+X\+EZ \end{DoxyRefDesc}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1elem__type_aa2d116602d97b226a4a01578dd45bb20}\label{classfemus_1_1elem__type_aa2d116602d97b226a4a01578dd45bb20}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!elem\+\_\+type@{elem\+\_\+type}}
+\index{elem\+\_\+type@{elem\+\_\+type}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{elem\+\_\+type()}{elem\_type()}}
+{\footnotesize\ttfamily femus\+::elem\+\_\+type\+::elem\+\_\+type (\begin{DoxyParamCaption}\item[{const char $\ast$}]{geom\+\_\+elem,  }\item[{const char $\ast$}]{order\+\_\+gauss }\end{DoxyParamCaption})}
+
+constructor that receives Geometric Element and \mbox{\hyperlink{classfemus_1_1_gauss}{Gauss}} info \mbox{\Hypertarget{classfemus_1_1elem__type_a3e13560174d1ea0282665fbbf4eb605d}\label{classfemus_1_1elem__type_a3e13560174d1ea0282665fbbf4eb605d}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!````~elem\+\_\+type@{$\sim$elem\+\_\+type}}
+\index{````~elem\+\_\+type@{$\sim$elem\+\_\+type}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{$\sim$elem\+\_\+type()}{~elem\_type()}}
+{\footnotesize\ttfamily femus\+::elem\+\_\+type\+::$\sim$elem\+\_\+type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+destructor 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1elem__type_aaa5317cf0e1944adeaca3b5f1d0c3610}\label{classfemus_1_1elem__type_aaa5317cf0e1944adeaca3b5f1d0c3610}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Build\+Prolongation@{Build\+Prolongation}}
+\index{Build\+Prolongation@{Build\+Prolongation}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Build\+Prolongation()}{BuildProlongation()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+::\+Build\+Prolongation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&}]{lspdef,  }\item[{const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&}]{lspdec,  }\item[{const int \&}]{ielc,  }\item[{\mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$}]{Projmat,  }\item[{const unsigned \&}]{index\+\_\+sol,  }\item[{const unsigned \&}]{kkindex\+\_\+sol }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1elem__type_ab877a3438c82ef2b4f096f38c3811b7f}\label{classfemus_1_1elem__type_ab877a3438c82ef2b4f096f38c3811b7f}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Build\+Prolongation@{Build\+Prolongation}}
+\index{Build\+Prolongation@{Build\+Prolongation}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Build\+Prolongation()}{BuildProlongation()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+::\+Build\+Prolongation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&}]{meshf,  }\item[{const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&}]{meshc,  }\item[{const int \&}]{ielc,  }\item[{\mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$}]{Projmat }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1elem__type_acb499269b353c8b3e0ebb5e21254b108}\label{classfemus_1_1elem__type_acb499269b353c8b3e0ebb5e21254b108}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Build\+Prolongation@{Build\+Prolongation}}
+\index{Build\+Prolongation@{Build\+Prolongation}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Build\+Prolongation()}{BuildProlongation()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+::\+Build\+Prolongation (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&}]{mymesh,  }\item[{const int \&}]{iel,  }\item[{\mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$}]{Projmat,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{N\+N\+Z\+\_\+d,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{N\+N\+Z\+\_\+o,  }\item[{const unsigned \&}]{itype }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1elem__type_a204517efabff34e2692a77f4b8bd44e9}\label{classfemus_1_1elem__type_a204517efabff34e2692a77f4b8bd44e9}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Build\+Restriction\+Transpose@{Build\+Restriction\+Transpose}}
+\index{Build\+Restriction\+Transpose@{Build\+Restriction\+Transpose}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Build\+Restriction\+Transpose()}{BuildRestrictionTranspose()}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+::\+Build\+Restriction\+Transpose (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&}]{lspdef,  }\item[{const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&}]{lspdec,  }\item[{const int \&}]{ielc,  }\item[{\mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$}]{Projmat,  }\item[{const unsigned \&}]{index\+\_\+sol,  }\item[{const unsigned \&}]{kkindex\+\_\+sol,  }\item[{const unsigned \&}]{index\+\_\+pair\+\_\+sol,  }\item[{const unsigned \&}]{kkindex\+\_\+pair\+\_\+sol }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1elem__type_ab5244df8f1bc5c57a81158787bb1a588}\label{classfemus_1_1elem__type_ab5244df8f1bc5c57a81158787bb1a588}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Evaluate\+Shape\+At\+QP@{Evaluate\+Shape\+At\+QP}}
+\index{Evaluate\+Shape\+At\+QP@{Evaluate\+Shape\+At\+QP}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Evaluate\+Shape\+At\+Q\+P()}{EvaluateShapeAtQP()}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+::\+Evaluate\+Shape\+At\+QP (\begin{DoxyParamCaption}\item[{const std\+::string}]{geomel\+\_\+id\+\_\+in,  }\item[{const std\+::string}]{fe\+\_\+in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+\begin{DoxyRefDesc}{Deprecated}
+\item[\mbox{\hyperlink{deprecated__deprecated000016}{Deprecated}}]Evaluate shape functions at all quadrature points \end{DoxyRefDesc}
+\mbox{\Hypertarget{classfemus_1_1elem__type_a8d0ba58ed22eccd39304ba1d84a7b891}\label{classfemus_1_1elem__type_a8d0ba58ed22eccd39304ba1d84a7b891}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Basis@{Get\+Basis}}
+\index{Get\+Basis@{Get\+Basis}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Basis()}{GetBasis()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1basis}{basis}}$\ast$ femus\+::elem\+\_\+type\+::\+Get\+Basis (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_aa94378d258af64d24a9970d30f229589}\label{classfemus_1_1elem__type_aa94378d258af64d24a9970d30f229589}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Dim@{Get\+Dim}}
+\index{Get\+Dim@{Get\+Dim}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Dim()}{GetDim()}}
+{\footnotesize\ttfamily unsigned femus\+::elem\+\_\+type\+::\+Get\+Dim (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Retrieve the dimension of the underlying geometric element \mbox{\Hypertarget{classfemus_1_1elem__type_a510e44439de5cdd6ab5d04e3f8a5bdfe}\label{classfemus_1_1elem__type_a510e44439de5cdd6ab5d04e3f8a5bdfe}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+D\+Phi\+D\+Eta@{Get\+D\+Phi\+D\+Eta}}
+\index{Get\+D\+Phi\+D\+Eta@{Get\+D\+Phi\+D\+Eta}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+D\+Phi\+D\+Eta()}{GetDPhiDEta()}}
+{\footnotesize\ttfamily virtual double$\ast$ femus\+::elem\+\_\+type\+::\+Get\+D\+Phi\+D\+Eta (\begin{DoxyParamCaption}\item[{const unsigned \&}]{ig }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+To be Added 
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_aa08787fdf3934c52c41a14a59884eb7b}{femus\+::elem\+\_\+type\+\_\+3D}}, and \mbox{\hyperlink{classfemus_1_1elem__type__2_d_a3a77bc47f11a128210ed5c22a1179cc4}{femus\+::elem\+\_\+type\+\_\+2D}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a8de9e4d4d56ef38431a5050269390e1a}\label{classfemus_1_1elem__type_a8de9e4d4d56ef38431a5050269390e1a}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+D\+Phi\+Dxez@{Get\+D\+Phi\+Dxez}}
+\index{Get\+D\+Phi\+Dxez@{Get\+D\+Phi\+Dxez}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+D\+Phi\+Dxez()}{GetDPhiDxez()}}
+{\footnotesize\ttfamily const double femus\+::elem\+\_\+type\+::\+Get\+D\+Phi\+Dxez (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{qp,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{dof }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyRefDesc}{Deprecated}
+\item[\mbox{\hyperlink{deprecated__deprecated000018}{Deprecated}}]Get shape function first derivatives \end{DoxyRefDesc}
+\mbox{\Hypertarget{classfemus_1_1elem__type_a6efb6026b9fe89912ec367b235bfccc7}\label{classfemus_1_1elem__type_a6efb6026b9fe89912ec367b235bfccc7}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+D\+Phi\+D\+Xi@{Get\+D\+Phi\+D\+Xi}}
+\index{Get\+D\+Phi\+D\+Xi@{Get\+D\+Phi\+D\+Xi}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+D\+Phi\+D\+Xi()}{GetDPhiDXi()}}
+{\footnotesize\ttfamily virtual double$\ast$ femus\+::elem\+\_\+type\+::\+Get\+D\+Phi\+D\+Xi (\begin{DoxyParamCaption}\item[{const unsigned \&}]{ig }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+To be Added 
+
+Implemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_aff869fa323fd20f83fed73f4a28de006}{femus\+::elem\+\_\+type\+\_\+3D}}, \mbox{\hyperlink{classfemus_1_1elem__type__2_d_a11838ba0522b27348770989555114c94}{femus\+::elem\+\_\+type\+\_\+2D}}, and \mbox{\hyperlink{classfemus_1_1elem__type__1_d_a27ff9f2a7f26c961b9b9d96aa87723d2}{femus\+::elem\+\_\+type\+\_\+1D}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_aa507628a4383a9687c8fdefe30d0214a}\label{classfemus_1_1elem__type_aa507628a4383a9687c8fdefe30d0214a}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+D\+Phi\+D\+Zeta@{Get\+D\+Phi\+D\+Zeta}}
+\index{Get\+D\+Phi\+D\+Zeta@{Get\+D\+Phi\+D\+Zeta}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+D\+Phi\+D\+Zeta()}{GetDPhiDZeta()}}
+{\footnotesize\ttfamily virtual double$\ast$ femus\+::elem\+\_\+type\+::\+Get\+D\+Phi\+D\+Zeta (\begin{DoxyParamCaption}\item[{const unsigned \&}]{ig }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+To be Added 
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a8bf7020e0c07cf44c9532f9b6bab4bbc}{femus\+::elem\+\_\+type\+\_\+3D}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a3fa8f889f9ae97586b3db574acb4448e}\label{classfemus_1_1elem__type_a3fa8f889f9ae97586b3db574acb4448e}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Gauss\+Point\+Number@{Get\+Gauss\+Point\+Number}}
+\index{Get\+Gauss\+Point\+Number@{Get\+Gauss\+Point\+Number}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Gauss\+Point\+Number()}{GetGaussPointNumber()}}
+{\footnotesize\ttfamily unsigned femus\+::elem\+\_\+type\+::\+Get\+Gauss\+Point\+Number (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1elem__type_a830387ca17a267d99a8ec97fa0548fc3}\label{classfemus_1_1elem__type_a830387ca17a267d99a8ec97fa0548fc3}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Gauss\+Rule@{Get\+Gauss\+Rule}}
+\index{Get\+Gauss\+Rule@{Get\+Gauss\+Rule}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Gauss\+Rule()}{GetGaussRule()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_gauss}{Gauss}} femus\+::elem\+\_\+type\+::\+Get\+Gauss\+Rule (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1elem__type_a86dfc5d292bb86bb02ac13f5acbb6c98}\label{classfemus_1_1elem__type_a86dfc5d292bb86bb02ac13f5acbb6c98}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Gauss\+Weight@{Get\+Gauss\+Weight}}
+\index{Get\+Gauss\+Weight@{Get\+Gauss\+Weight}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Gauss\+Weight()}{GetGaussWeight()}}
+{\footnotesize\ttfamily double femus\+::elem\+\_\+type\+::\+Get\+Gauss\+Weight (\begin{DoxyParamCaption}\item[{const unsigned}]{ig }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1elem__type_aa8e617c54dd774ffca5d305605552af7}\label{classfemus_1_1elem__type_aa8e617c54dd774ffca5d305605552af7}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Jacobian@{Get\+Jacobian}}
+\index{Get\+Jacobian@{Get\+Jacobian}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Jacobian()}{GetJacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily virtual void femus\+::elem\+\_\+type\+::\+Get\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{adept\+::adouble \&}]{Weight,  }\item[{vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&}]{jacobian\+Matrix }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_ada0cc038990bffab6a4bc3d1d23f057f}{femus\+::elem\+\_\+type\+\_\+3D}}, \mbox{\hyperlink{classfemus_1_1elem__type__2_d_a0cd4c80b3b6323d3ab4a57a29ad41034}{femus\+::elem\+\_\+type\+\_\+2D}}, and \mbox{\hyperlink{classfemus_1_1elem__type__1_d_af21e2d104c0f4ca0d18e5e51c8f5c91f}{femus\+::elem\+\_\+type\+\_\+1D}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a6c883b7946e55db8783fd0177546610a}\label{classfemus_1_1elem__type_a6c883b7946e55db8783fd0177546610a}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Jacobian@{Get\+Jacobian}}
+\index{Get\+Jacobian@{Get\+Jacobian}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Jacobian()}{GetJacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual void femus\+::elem\+\_\+type\+::\+Get\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ double $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{double \&}]{Weight,  }\item[{vector$<$ vector$<$ double $>$ $>$ \&}]{jacobian\+Matrix }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_aacb6b130a8421fe901505f6d61ad8ddd}{femus\+::elem\+\_\+type\+\_\+3D}}, \mbox{\hyperlink{classfemus_1_1elem__type__2_d_ac1fe4b778f06a58de8ad7057fb982a4b}{femus\+::elem\+\_\+type\+\_\+2D}}, and \mbox{\hyperlink{classfemus_1_1elem__type__1_d_ad39cd6dbe648f384fa1be74d5ceec783}{femus\+::elem\+\_\+type\+\_\+1D}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a7597b01400759749a8b76e01722cd89b}\label{classfemus_1_1elem__type_a7597b01400759749a8b76e01722cd89b}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+N\+Dofs@{Get\+N\+Dofs}}
+\index{Get\+N\+Dofs@{Get\+N\+Dofs}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+N\+Dofs()}{GetNDofs()}}
+{\footnotesize\ttfamily int femus\+::elem\+\_\+type\+::\+Get\+N\+Dofs (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Retrieve the number of dofs for this element \mbox{\Hypertarget{classfemus_1_1elem__type_a2aa2a37b15debbee27918f5e3f2df6b3}\label{classfemus_1_1elem__type_a2aa2a37b15debbee27918f5e3f2df6b3}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Phi@{Get\+Phi}}
+\index{Get\+Phi@{Get\+Phi}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Phi()}{GetPhi()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily virtual double$\ast$ femus\+::elem\+\_\+type\+::\+Get\+Phi (\begin{DoxyParamCaption}\item[{const unsigned \&}]{ig }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+To be Added 
+
+Implemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_ac25f62fb2b22b534172ce6ef94b89068}{femus\+::elem\+\_\+type\+\_\+3D}}, \mbox{\hyperlink{classfemus_1_1elem__type__2_d_a9e2ed95e14dbbf28d6399c50ba83ebe9}{femus\+::elem\+\_\+type\+\_\+2D}}, and \mbox{\hyperlink{classfemus_1_1elem__type__1_d_ac3bf43aa0c1c02c1113228011462a893}{femus\+::elem\+\_\+type\+\_\+1D}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a0112208bbdff765b47effbe352734fbe}\label{classfemus_1_1elem__type_a0112208bbdff765b47effbe352734fbe}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Phi@{Get\+Phi}}
+\index{Get\+Phi@{Get\+Phi}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Phi()}{GetPhi()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily const double femus\+::elem\+\_\+type\+::\+Get\+Phi (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{qp,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{dof }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyRefDesc}{Deprecated}
+\item[\mbox{\hyperlink{deprecated__deprecated000017}{Deprecated}}]Get shape functions \end{DoxyRefDesc}
+\mbox{\Hypertarget{classfemus_1_1elem__type_a6e40b6760ceb52bc3a6d5959ab1588ba}\label{classfemus_1_1elem__type_a6e40b6760ceb52bc3a6d5959ab1588ba}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Sparsity\+Pattern\+Size@{Get\+Sparsity\+Pattern\+Size}}
+\index{Get\+Sparsity\+Pattern\+Size@{Get\+Sparsity\+Pattern\+Size}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Sparsity\+Pattern\+Size()}{GetSparsityPatternSize()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+::\+Get\+Sparsity\+Pattern\+Size (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&}]{lspdef,  }\item[{const \mbox{\hyperlink{classfemus_1_1_linear_equation}{Linear\+Equation}} \&}]{lspdec,  }\item[{const int \&}]{ielc,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{N\+N\+Z\+\_\+d,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{N\+N\+Z\+\_\+o,  }\item[{const unsigned \&}]{index\+\_\+sol,  }\item[{const unsigned \&}]{kkindex\+\_\+sol }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a2e66f8115d7da31bc740db29e1524d60}\label{classfemus_1_1elem__type_a2e66f8115d7da31bc740db29e1524d60}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Sparsity\+Pattern\+Size@{Get\+Sparsity\+Pattern\+Size}}
+\index{Get\+Sparsity\+Pattern\+Size@{Get\+Sparsity\+Pattern\+Size}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Sparsity\+Pattern\+Size()}{GetSparsityPatternSize()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+::\+Get\+Sparsity\+Pattern\+Size (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&}]{meshf,  }\item[{const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&}]{meshc,  }\item[{const int \&}]{ielc,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{N\+N\+Z\+\_\+d,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{N\+N\+Z\+\_\+o }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a9e3cfe2ed283c16125594e5c3a02c8cd}\label{classfemus_1_1elem__type_a9e3cfe2ed283c16125594e5c3a02c8cd}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Get\+Sparsity\+Pattern\+Size@{Get\+Sparsity\+Pattern\+Size}}
+\index{Get\+Sparsity\+Pattern\+Size@{Get\+Sparsity\+Pattern\+Size}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Get\+Sparsity\+Pattern\+Size()}{GetSparsityPatternSize()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+::\+Get\+Sparsity\+Pattern\+Size (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} \&}]{Mesh,  }\item[{const int \&}]{iel,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{N\+N\+Z\+\_\+d,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{N\+N\+Z\+\_\+o,  }\item[{const unsigned \&}]{itype }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a937b1d5ecbeed3b17db831264a3492fa}\label{classfemus_1_1elem__type_a937b1d5ecbeed3b17db831264a3492fa}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Jacobian@{Jacobian}}
+\index{Jacobian@{Jacobian}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Jacobian()}{Jacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily virtual void femus\+::elem\+\_\+type\+::\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{adept\+::adouble \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{phi,  }\item[{vector$<$ adept\+::adouble $>$ \&}]{gradphi,  }\item[{boost\+::optional$<$ vector$<$ adept\+::adouble $>$ \& $>$}]{nablaphi = {\ttfamily boost\+:\+:none} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a6ba1c6d58757d317c455e9041bdb1970}{femus\+::elem\+\_\+type\+\_\+3D}}, \mbox{\hyperlink{classfemus_1_1elem__type__2_d_af8ad48cebf3ed72aa7d718129bbc381f}{femus\+::elem\+\_\+type\+\_\+2D}}, and \mbox{\hyperlink{classfemus_1_1elem__type__1_d_a4c063f6c2d18fbc305e3bde505c49279}{femus\+::elem\+\_\+type\+\_\+1D}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_ac3828ecd8ddd057d726a60cb19c60f0b}\label{classfemus_1_1elem__type_ac3828ecd8ddd057d726a60cb19c60f0b}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Jacobian@{Jacobian}}
+\index{Jacobian@{Jacobian}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Jacobian()}{Jacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily virtual void femus\+::elem\+\_\+type\+::\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ double $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{double \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{other\+\_\+phi,  }\item[{vector$<$ double $>$ \&}]{gradphi,  }\item[{boost\+::optional$<$ vector$<$ double $>$ \& $>$}]{nablaphi = {\ttfamily boost\+:\+:none} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a83c519de8adf50f547627123db1a82ee}{femus\+::elem\+\_\+type\+\_\+3D}}, \mbox{\hyperlink{classfemus_1_1elem__type__2_d_afa07b600dc9f53257ca5fde905dc6732}{femus\+::elem\+\_\+type\+\_\+2D}}, and \mbox{\hyperlink{classfemus_1_1elem__type__1_d_aec9766e008c3f7536a4a68d87302b254}{femus\+::elem\+\_\+type\+\_\+1D}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a2d76133387cebf896c0e51459055fdea}\label{classfemus_1_1elem__type_a2d76133387cebf896c0e51459055fdea}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Jacobian@{Jacobian}}
+\index{Jacobian@{Jacobian}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Jacobian()}{Jacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily virtual void femus\+::elem\+\_\+type\+::\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&}]{vt,  }\item[{const vector$<$ double $>$ \&}]{xi,  }\item[{adept\+::adouble \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{phi,  }\item[{vector$<$ adept\+::adouble $>$ \&}]{gradphi,  }\item[{boost\+::optional$<$ vector$<$ adept\+::adouble $>$ \& $>$}]{nablaphi = {\ttfamily boost\+:\+:none} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a277615099e6e69b4aed9e1cd9e84817d}{femus\+::elem\+\_\+type\+\_\+3D}}, \mbox{\hyperlink{classfemus_1_1elem__type__2_d_ab63098a94dbccfc4808881b61fc9ab81}{femus\+::elem\+\_\+type\+\_\+2D}}, and \mbox{\hyperlink{classfemus_1_1elem__type__1_d_a6209ff2d3d1b74ac6f1ee1eb9140908e}{femus\+::elem\+\_\+type\+\_\+1D}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_aab6db5851a9810adfe0ff98df2c30810}\label{classfemus_1_1elem__type_aab6db5851a9810adfe0ff98df2c30810}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Jacobian@{Jacobian}}
+\index{Jacobian@{Jacobian}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Jacobian()}{Jacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily virtual void femus\+::elem\+\_\+type\+::\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ double $>$ $>$ \&}]{vt,  }\item[{const vector$<$ double $>$ \&}]{xi,  }\item[{double \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{other\+\_\+phi,  }\item[{vector$<$ double $>$ \&}]{gradphi,  }\item[{boost\+::optional$<$ vector$<$ double $>$ \& $>$}]{nablaphi = {\ttfamily boost\+:\+:none} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a53f0fe22a3df82bab547a2578d66d7c6}{femus\+::elem\+\_\+type\+\_\+3D}}, \mbox{\hyperlink{classfemus_1_1elem__type__2_d_a0194ae2956bdb2aaf843e05477ac3684}{femus\+::elem\+\_\+type\+\_\+2D}}, and \mbox{\hyperlink{classfemus_1_1elem__type__1_d_ac6814828a90c49fd5b29df4b5d161653}{femus\+::elem\+\_\+type\+\_\+1D}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a293052fac0f51472150b1bf7365c6b18}\label{classfemus_1_1elem__type_a293052fac0f51472150b1bf7365c6b18}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Jacobian\+Sur@{Jacobian\+Sur}}
+\index{Jacobian\+Sur@{Jacobian\+Sur}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Jacobian\+Sur()}{JacobianSur()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily virtual void femus\+::elem\+\_\+type\+::\+Jacobian\+Sur (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{adept\+::adouble \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{other\+\_\+phi,  }\item[{vector$<$ adept\+::adouble $>$ \&}]{gradphi,  }\item[{vector$<$ adept\+::adouble $>$ \&}]{normal }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a8eea4f745f548cc10bb55848c4cd2ba3}{femus\+::elem\+\_\+type\+\_\+3D}}, \mbox{\hyperlink{classfemus_1_1elem__type__2_d_af19f0963ef176d7a3b4180730ef028c9}{femus\+::elem\+\_\+type\+\_\+2D}}, and \mbox{\hyperlink{classfemus_1_1elem__type__1_d_a30e236ab3052558a85af26d862715540}{femus\+::elem\+\_\+type\+\_\+1D}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_aee56bc66a4d90ae7f7669bf7fa9ed8d7}\label{classfemus_1_1elem__type_aee56bc66a4d90ae7f7669bf7fa9ed8d7}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!Jacobian\+Sur@{Jacobian\+Sur}}
+\index{Jacobian\+Sur@{Jacobian\+Sur}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{Jacobian\+Sur()}{JacobianSur()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual void femus\+::elem\+\_\+type\+::\+Jacobian\+Sur (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ double $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{double \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{other\+\_\+phi,  }\item[{vector$<$ double $>$ \&}]{gradphi,  }\item[{vector$<$ double $>$ \&}]{normal }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a35ed7904fbe1fdc2998819384d709bdb}{femus\+::elem\+\_\+type\+\_\+3D}}, \mbox{\hyperlink{classfemus_1_1elem__type__2_d_a6da2427389820a069cc62fa014262c44}{femus\+::elem\+\_\+type\+\_\+2D}}, and \mbox{\hyperlink{classfemus_1_1elem__type__1_d_a66b28ca6be3e79fe3bf08b2c856974dd}{femus\+::elem\+\_\+type\+\_\+1D}}.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1elem__type_a71ea0da630a7830c3278d58243da0ead}\label{classfemus_1_1elem__type_a71ea0da630a7830c3278d58243da0ead}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+dim@{\+\_\+dim}}
+\index{\+\_\+dim@{\+\_\+dim}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+dim}{\_dim}}
+{\footnotesize\ttfamily unsigned femus\+::elem\+\_\+type\+::\+\_\+dim\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a631bc33eb5635fe19fa879246cfde2a2}\label{classfemus_1_1elem__type_a631bc33eb5635fe19fa879246cfde2a2}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+dphidxez\+\_\+map\+GD@{\+\_\+dphidxez\+\_\+map\+GD}}
+\index{\+\_\+dphidxez\+\_\+map\+GD@{\+\_\+dphidxez\+\_\+map\+GD}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+dphidxez\+\_\+map\+GD}{\_dphidxez\_mapGD}}
+{\footnotesize\ttfamily double$\ast$$\ast$ femus\+::elem\+\_\+type\+::\+\_\+dphidxez\+\_\+map\+GD\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_acb75b2a53188353c30e56bf3899243e2}\label{classfemus_1_1elem__type_acb75b2a53188353c30e56bf3899243e2}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+\+D\+Phi\+Xi\+Eta\+Zeta\+Ptr@{\+\_\+\+D\+Phi\+Xi\+Eta\+Zeta\+Ptr}}
+\index{\+\_\+\+D\+Phi\+Xi\+Eta\+Zeta\+Ptr@{\+\_\+\+D\+Phi\+Xi\+Eta\+Zeta\+Ptr}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+\+D\+Phi\+Xi\+Eta\+Zeta\+Ptr}{\_DPhiXiEtaZetaPtr}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classfemus_1_1elem__type_ac6d3f8df5299550225a2f77c2aa15dde}{\+\_\+\+Function\+Pointer}}$>$ femus\+::elem\+\_\+type\+::\+\_\+\+D\+Phi\+Xi\+Eta\+Zeta\+Ptr}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a6cba788f2fbdef1b91a1492908794f8d}\label{classfemus_1_1elem__type_a6cba788f2fbdef1b91a1492908794f8d}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+fe\+\_\+old\+\_\+to\+\_\+new@{\+\_\+fe\+\_\+old\+\_\+to\+\_\+new}}
+\index{\+\_\+fe\+\_\+old\+\_\+to\+\_\+new@{\+\_\+fe\+\_\+old\+\_\+to\+\_\+new}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+fe\+\_\+old\+\_\+to\+\_\+new}{\_fe\_old\_to\_new}}
+{\footnotesize\ttfamily const unsigned femus\+::elem\+\_\+type\+::\+\_\+fe\+\_\+old\+\_\+to\+\_\+new = \{2, 0, 3\}\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a4c14f3f54d9317b57f2effd2519e45b9}\label{classfemus_1_1elem__type_a4c14f3f54d9317b57f2effd2519e45b9}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+gauss@{\+\_\+gauss}}
+\index{\+\_\+gauss@{\+\_\+gauss}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+gauss}{\_gauss}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_gauss}{Gauss}} femus\+::elem\+\_\+type\+::\+\_\+gauss\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_ab6163fc83bbd668366744f1d1cc405ca}\label{classfemus_1_1elem__type_ab6163fc83bbd668366744f1d1cc405ca}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+\+I\+ND@{\+\_\+\+I\+ND}}
+\index{\+\_\+\+I\+ND@{\+\_\+\+I\+ND}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+\+I\+ND}{\_IND}}
+{\footnotesize\ttfamily const int$\ast$$\ast$ femus\+::elem\+\_\+type\+::\+\_\+\+I\+ND\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a22d10410085b36b93db138252d6860b9}\label{classfemus_1_1elem__type_a22d10410085b36b93db138252d6860b9}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+\+K\+V\+E\+R\+T\+\_\+\+I\+ND@{\+\_\+\+K\+V\+E\+R\+T\+\_\+\+I\+ND}}
+\index{\+\_\+\+K\+V\+E\+R\+T\+\_\+\+I\+ND@{\+\_\+\+K\+V\+E\+R\+T\+\_\+\+I\+ND}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+\+K\+V\+E\+R\+T\+\_\+\+I\+ND}{\_KVERT\_IND}}
+{\footnotesize\ttfamily const int$\ast$$\ast$ femus\+::elem\+\_\+type\+::\+\_\+\+K\+V\+E\+R\+T\+\_\+\+I\+ND\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a7c4de3964da26762c3c500d7311fc23b}\label{classfemus_1_1elem__type_a7c4de3964da26762c3c500d7311fc23b}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+mem\+\_\+prol\+\_\+ind@{\+\_\+mem\+\_\+prol\+\_\+ind}}
+\index{\+\_\+mem\+\_\+prol\+\_\+ind@{\+\_\+mem\+\_\+prol\+\_\+ind}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+mem\+\_\+prol\+\_\+ind}{\_mem\_prol\_ind}}
+{\footnotesize\ttfamily int$\ast$ femus\+::elem\+\_\+type\+::\+\_\+mem\+\_\+prol\+\_\+ind\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_ab99cb41fdebab468d2ae484fe8a65edd}\label{classfemus_1_1elem__type_ab99cb41fdebab468d2ae484fe8a65edd}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+mem\+\_\+prol\+\_\+val@{\+\_\+mem\+\_\+prol\+\_\+val}}
+\index{\+\_\+mem\+\_\+prol\+\_\+val@{\+\_\+mem\+\_\+prol\+\_\+val}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+mem\+\_\+prol\+\_\+val}{\_mem\_prol\_val}}
+{\footnotesize\ttfamily double$\ast$ femus\+::elem\+\_\+type\+::\+\_\+mem\+\_\+prol\+\_\+val\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_aeaf5fcedea91ceb9894f5a385eebddab}\label{classfemus_1_1elem__type_aeaf5fcedea91ceb9894f5a385eebddab}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+nc@{\+\_\+nc}}
+\index{\+\_\+nc@{\+\_\+nc}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+nc}{\_nc}}
+{\footnotesize\ttfamily int femus\+::elem\+\_\+type\+::\+\_\+nc\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_aaa24556879d31c619c0258062c77276b}\label{classfemus_1_1elem__type_aaa24556879d31c619c0258062c77276b}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+nf@{\+\_\+nf}}
+\index{\+\_\+nf@{\+\_\+nf}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+nf}{\_nf}}
+{\footnotesize\ttfamily int femus\+::elem\+\_\+type\+::\+\_\+nf\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a7ffed37a1c710167fc1aed224cce45f4}\label{classfemus_1_1elem__type_a7ffed37a1c710167fc1aed224cce45f4}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+nlag@{\+\_\+nlag}}
+\index{\+\_\+nlag@{\+\_\+nlag}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+nlag}{\_nlag}}
+{\footnotesize\ttfamily int femus\+::elem\+\_\+type\+::\+\_\+nlag\mbox{[}4\mbox{]}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a54e9c728b24b46b7cfe7163caf8f44ba}\label{classfemus_1_1elem__type_a54e9c728b24b46b7cfe7163caf8f44ba}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+phi\+\_\+map\+GD@{\+\_\+phi\+\_\+map\+GD}}
+\index{\+\_\+phi\+\_\+map\+GD@{\+\_\+phi\+\_\+map\+GD}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+phi\+\_\+map\+GD}{\_phi\_mapGD}}
+{\footnotesize\ttfamily double$\ast$$\ast$ femus\+::elem\+\_\+type\+::\+\_\+phi\+\_\+map\+GD\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a51686b913b9626125f58feea7c7ca5da}\label{classfemus_1_1elem__type_a51686b913b9626125f58feea7c7ca5da}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+prol\+\_\+ind@{\+\_\+prol\+\_\+ind}}
+\index{\+\_\+prol\+\_\+ind@{\+\_\+prol\+\_\+ind}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+prol\+\_\+ind}{\_prol\_ind}}
+{\footnotesize\ttfamily int$\ast$$\ast$ femus\+::elem\+\_\+type\+::\+\_\+prol\+\_\+ind\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_aca81317b1dfdf99cb82d6c47c7906534}\label{classfemus_1_1elem__type_aca81317b1dfdf99cb82d6c47c7906534}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+prol\+\_\+val@{\+\_\+prol\+\_\+val}}
+\index{\+\_\+prol\+\_\+val@{\+\_\+prol\+\_\+val}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+prol\+\_\+val}{\_prol\_val}}
+{\footnotesize\ttfamily double$\ast$$\ast$ femus\+::elem\+\_\+type\+::\+\_\+prol\+\_\+val\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a74ff85a1f6d5439f08c25d4d0321c609}\label{classfemus_1_1elem__type_a74ff85a1f6d5439f08c25d4d0321c609}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+pt\+\_\+basis@{\+\_\+pt\+\_\+basis}}
+\index{\+\_\+pt\+\_\+basis@{\+\_\+pt\+\_\+basis}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+pt\+\_\+basis}{\_pt\_basis}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1basis}{basis}}$\ast$ femus\+::elem\+\_\+type\+::\+\_\+pt\+\_\+basis\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_ac090b500b9fe133dec615fae6545b3a8}\label{classfemus_1_1elem__type_ac090b500b9fe133dec615fae6545b3a8}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+refindex@{\+\_\+refindex}}
+\index{\+\_\+refindex@{\+\_\+refindex}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+refindex}{\_refindex}}
+{\footnotesize\ttfamily unsigned femus\+::elem\+\_\+type\+::\+\_\+refindex = 1\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a3278ebbdc41e6e7c03aea23995220dab}\label{classfemus_1_1elem__type_a3278ebbdc41e6e7c03aea23995220dab}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+\+Sol\+Type@{\+\_\+\+Sol\+Type}}
+\index{\+\_\+\+Sol\+Type@{\+\_\+\+Sol\+Type}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+\+Sol\+Type}{\_SolType}}
+{\footnotesize\ttfamily unsigned femus\+::elem\+\_\+type\+::\+\_\+\+Sol\+Type\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_aa69848a2a5365dc3647b8b0f756a6ec0}\label{classfemus_1_1elem__type_aa69848a2a5365dc3647b8b0f756a6ec0}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!\+\_\+X@{\+\_\+X}}
+\index{\+\_\+X@{\+\_\+X}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{\+\_\+X}{\_X}}
+{\footnotesize\ttfamily const double$\ast$$\ast$ femus\+::elem\+\_\+type\+::\+\_\+X\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type_a57a7738e4179b9ca205db7e3c18898af}\label{classfemus_1_1elem__type_a57a7738e4179b9ca205db7e3c18898af}} 
+\index{femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}!is\+Mp\+G\+D\+Allocated@{is\+Mp\+G\+D\+Allocated}}
+\index{is\+Mp\+G\+D\+Allocated@{is\+Mp\+G\+D\+Allocated}!femus\+::elem\+\_\+type@{femus\+::elem\+\_\+type}}
+\subsubsection{\texorpdfstring{is\+Mp\+G\+D\+Allocated}{isMpGDAllocated}}
+{\footnotesize\ttfamily bool femus\+::elem\+\_\+type\+::is\+Mp\+G\+D\+Allocated\hspace{0.3cm}{\ttfamily [protected]}}
+
+\begin{DoxyRefDesc}{Deprecated}
+\item[\mbox{\hyperlink{deprecated__deprecated000019}{Deprecated}}]\end{DoxyRefDesc}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+fe/\mbox{\hyperlink{_elem_type_8hpp}{Elem\+Type.\+hpp}}\item 
+fe/\mbox{\hyperlink{_elem_type_8cpp}{Elem\+Type.\+cpp}}\end{DoxyCompactItemize}

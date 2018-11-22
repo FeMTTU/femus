@@ -1,0 +1,84 @@
+\hypertarget{classfemus_1_1_newmark_transient_system}{}\section{femus\+:\+:Newmark\+Transient\+System$<$ Base $>$ Class Template Reference}
+\label{classfemus_1_1_newmark_transient_system}\index{femus\+::\+Newmark\+Transient\+System$<$ Base $>$@{femus\+::\+Newmark\+Transient\+System$<$ Base $>$}}
+
+
+{\ttfamily \#include $<$Newmark\+Transient\+System.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Newmark\+Transient\+System$<$ Base $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{classfemus_1_1_newmark_transient_system__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Newmark\+Transient\+System$<$ Base $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{classfemus_1_1_newmark_transient_system__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_newmark_transient_system_a1f5c4d4d233d8dc50719cd8d1384d97c}{Newmark\+Transient\+System}} (\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&ml\+\_\+probl, const std\+::string \&name, const unsigned int number)
+\item 
+virtual \mbox{\hyperlink{classfemus_1_1_newmark_transient_system_aeed35f6e2cfb43ef24a79a39ab7a789c}{$\sim$\+Newmark\+Transient\+System}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_newmark_transient_system_a48a662cb269c1d3cedfe1840b467eee6}{Update\+Acceleration}} (const std\+::vector$<$ std\+::string $>$ \&vel\+\_\+vars, const std\+::vector$<$ std\+::string $>$ \&acc\+\_\+vars)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_newmark_transient_system_a5fc2d316ab3e7e7b42222b1e2c1bff34}{Set\+Newmark\+Parameters}} (const double gamma, const double delta)
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$class Base$>$\newline
+class femus\+::\+Newmark\+Transient\+System$<$ Base $>$}
+
+This class provides a specific system class for the time integration of system P\+DE using the Newmark algorithm. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_newmark_transient_system_a1f5c4d4d233d8dc50719cd8d1384d97c}\label{classfemus_1_1_newmark_transient_system_a1f5c4d4d233d8dc50719cd8d1384d97c}} 
+\index{femus\+::\+Newmark\+Transient\+System@{femus\+::\+Newmark\+Transient\+System}!Newmark\+Transient\+System@{Newmark\+Transient\+System}}
+\index{Newmark\+Transient\+System@{Newmark\+Transient\+System}!femus\+::\+Newmark\+Transient\+System@{femus\+::\+Newmark\+Transient\+System}}
+\subsubsection{\texorpdfstring{Newmark\+Transient\+System()}{NewmarkTransientSystem()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+\mbox{\hyperlink{classfemus_1_1_newmark_transient_system}{femus\+::\+Newmark\+Transient\+System}}$<$ Base $>$\+::\mbox{\hyperlink{classfemus_1_1_newmark_transient_system}{Newmark\+Transient\+System}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&}]{ml\+\_\+probl,  }\item[{const std\+::string \&}]{name,  }\item[{const unsigned int}]{number }\end{DoxyParamCaption})}
+
+Constructor. Initializes required data structures. \mbox{\Hypertarget{classfemus_1_1_newmark_transient_system_aeed35f6e2cfb43ef24a79a39ab7a789c}\label{classfemus_1_1_newmark_transient_system_aeed35f6e2cfb43ef24a79a39ab7a789c}} 
+\index{femus\+::\+Newmark\+Transient\+System@{femus\+::\+Newmark\+Transient\+System}!````~Newmark\+Transient\+System@{$\sim$\+Newmark\+Transient\+System}}
+\index{````~Newmark\+Transient\+System@{$\sim$\+Newmark\+Transient\+System}!femus\+::\+Newmark\+Transient\+System@{femus\+::\+Newmark\+Transient\+System}}
+\subsubsection{\texorpdfstring{$\sim$\+Newmark\+Transient\+System()}{~NewmarkTransientSystem()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+\mbox{\hyperlink{classfemus_1_1_newmark_transient_system}{femus\+::\+Newmark\+Transient\+System}}$<$ Base $>$\+::$\sim$\mbox{\hyperlink{classfemus_1_1_newmark_transient_system}{Newmark\+Transient\+System}} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Destructor. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_newmark_transient_system_a5fc2d316ab3e7e7b42222b1e2c1bff34}\label{classfemus_1_1_newmark_transient_system_a5fc2d316ab3e7e7b42222b1e2c1bff34}} 
+\index{femus\+::\+Newmark\+Transient\+System@{femus\+::\+Newmark\+Transient\+System}!Set\+Newmark\+Parameters@{Set\+Newmark\+Parameters}}
+\index{Set\+Newmark\+Parameters@{Set\+Newmark\+Parameters}!femus\+::\+Newmark\+Transient\+System@{femus\+::\+Newmark\+Transient\+System}}
+\subsubsection{\texorpdfstring{Set\+Newmark\+Parameters()}{SetNewmarkParameters()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_newmark_transient_system}{femus\+::\+Newmark\+Transient\+System}}$<$ Base $>$\+::Set\+Newmark\+Parameters (\begin{DoxyParamCaption}\item[{const double}]{gamma,  }\item[{const double}]{delta }\end{DoxyParamCaption})}
+
+Set the Newmark parameters \mbox{\Hypertarget{classfemus_1_1_newmark_transient_system_a48a662cb269c1d3cedfe1840b467eee6}\label{classfemus_1_1_newmark_transient_system_a48a662cb269c1d3cedfe1840b467eee6}} 
+\index{femus\+::\+Newmark\+Transient\+System@{femus\+::\+Newmark\+Transient\+System}!Update\+Acceleration@{Update\+Acceleration}}
+\index{Update\+Acceleration@{Update\+Acceleration}!femus\+::\+Newmark\+Transient\+System@{femus\+::\+Newmark\+Transient\+System}}
+\subsubsection{\texorpdfstring{Update\+Acceleration()}{UpdateAcceleration()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_newmark_transient_system}{femus\+::\+Newmark\+Transient\+System}}$<$ Base $>$\+::Update\+Acceleration (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::string $>$ \&}]{vel\+\_\+vars,  }\item[{const std\+::vector$<$ std\+::string $>$ \&}]{acc\+\_\+vars }\end{DoxyParamCaption})}
+
+Update the acceleration using the Newmark algorithm 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+equations/\mbox{\hyperlink{_newmark_transient_system_8hpp}{Newmark\+Transient\+System.\+hpp}}\item 
+equations/\mbox{\hyperlink{_newmark_transient_system_8cpp}{Newmark\+Transient\+System.\+cpp}}\end{DoxyCompactItemize}

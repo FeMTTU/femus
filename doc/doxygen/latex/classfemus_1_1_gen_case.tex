@@ -1,0 +1,245 @@
+\hypertarget{classfemus_1_1_gen_case}{}\section{femus\+:\+:Gen\+Case Class Reference}
+\label{classfemus_1_1_gen_case}\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+
+
+{\ttfamily \#include $<$Gen\+Case.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Gen\+Case\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=220pt]{classfemus_1_1_gen_case__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Gen\+Case\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_gen_case__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_gen_case_aac5da7e30562ce9e894192215c2db96c}{Gen\+Case}} (const unsigned nolevels, const unsigned dim, const \mbox{\hyperlink{_geom_el_type_enum_8hpp_a5f4d1ffd8f6d0e4930c05074e733031d}{Geom\+El\+Type}} geomel\+\_\+type, const std\+::string mesh\+\_\+file)
+\item 
+\mbox{\hyperlink{classfemus_1_1_gen_case_ae154b7b406541bda5fc562ac7350574f}{$\sim$\+Gen\+Case}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_a1f32c3d80b3a5f9e60f6f2ef64d7957e}{Elem\+Child\+To\+Father}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_ac8a4b195137869e5aea20553baa8b37d}{Reorder\+Element\+By\+Subd\+Lev\+\_\+\+VV}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_a7dd80e2b843180f82f9c8a11b9114ec5}{Reorder\+Element\+By\+Subd\+Lev\+\_\+\+BB}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_a2c8dce7f34c3d4331c677c224d601fe2}{Reorder\+Nodes\+By\+Subd\+Lev}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_a3f84519134fe7bdfc5040450fe49400e}{Compute\+Max\+El\+X\+Node}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_a7638dda7e28540362e134cd783ac2826}{Compute\+And\+Print\+M\+G\+Operators}} (const std\+::string output\+\_\+path)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_af03fdb695fdbdd9328ab53c28e57b796}{Compute\+And\+Print\+Matrix}} (const std\+::string output\+\_\+path)
+\begin{DoxyCompactList}\small\item\em This function computes the sparse matrix pattern. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_acf6276fa8c123a0911b1cde3975b01e1}{Compute\+And\+Print\+Prol}} (const std\+::string output\+\_\+path)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_a35cd2513d9f9a0ca6d8ce50e71f34e7c}{Compute\+And\+Print\+Rest}} (const std\+::string output\+\_\+path)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_ab3241cafafa6233649d61074e34b1358}{Create\+Mesh\+Structures\+Lev\+Subd}} (const std\+::string output\+\_\+path)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_a418c8756c74bb200de5e17afd7336620}{Delete}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_aac3e88c39000c590d4e804298e2724c6}{Generate\+Case}} (const std\+::string output\+\_\+path)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_a8a58afe0ec434646bc59dafb2925b0ff}{Generate\+Coarse\+Mesh}} () const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_adac39ccc5e6781cba188e4b4f1e682fd}{Refine\+Mesh}} () const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_a82dd421b7ab2256a8fa6c763dcc4787a}{Generate\+Boundary\+Mesh}} () const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_gen_case_a16d995f5a08faf6e7cd89e9f750734e9}{Grab\+Meshinfo\+From\+Libmesh}} ()
+\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void \mbox{\hyperlink{classfemus_1_1_gen_case_a8ff0e1ca8e4b16e005e8a37799c43194}{Read\+M\+G\+Ops}} (const std\+::string output\+\_\+path, \mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}} $\ast$mysys)
+\item 
+static void \mbox{\hyperlink{classfemus_1_1_gen_case_a2b47da5519d3b8d3d3d4778bc07deef3}{Read\+Matrix}} (const std\+::string \&name, \mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}} $\ast$mysys)
+\item 
+static void \mbox{\hyperlink{classfemus_1_1_gen_case_a537015fb25eb05e896a2ab4da02d4c9f}{Read\+Prol}} (const std\+::string \&name, \mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}} $\ast$mysys)
+\item 
+static void \mbox{\hyperlink{classfemus_1_1_gen_case_a37997ccf132703dfabf7bead831f6f38}{Read\+Rest}} (const std\+::string \&name, \mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}} $\ast$mysys)
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classfemus_1_1_f_e_elem_base}{F\+E\+Elem\+Base}} $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_gen_case_a55901caa3145de289eb90be709f54045}{\+\_\+feelems}}
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_gen_case_aac5da7e30562ce9e894192215c2db96c}\label{classfemus_1_1_gen_case_aac5da7e30562ce9e894192215c2db96c}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Gen\+Case@{Gen\+Case}}
+\index{Gen\+Case@{Gen\+Case}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Gen\+Case()}{GenCase()}}
+{\footnotesize\ttfamily femus\+::\+Gen\+Case\+::\+Gen\+Case (\begin{DoxyParamCaption}\item[{const unsigned}]{nolevels,  }\item[{const unsigned}]{dim,  }\item[{const \mbox{\hyperlink{_geom_el_type_enum_8hpp_a5f4d1ffd8f6d0e4930c05074e733031d}{Geom\+El\+Type}}}]{geomel\+\_\+type,  }\item[{const std\+::string}]{mesh\+\_\+file }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_ae154b7b406541bda5fc562ac7350574f}\label{classfemus_1_1_gen_case_ae154b7b406541bda5fc562ac7350574f}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!````~Gen\+Case@{$\sim$\+Gen\+Case}}
+\index{````~Gen\+Case@{$\sim$\+Gen\+Case}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{$\sim$\+Gen\+Case()}{~GenCase()}}
+{\footnotesize\ttfamily femus\+::\+Gen\+Case\+::$\sim$\+Gen\+Case (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_gen_case_af03fdb695fdbdd9328ab53c28e57b796}\label{classfemus_1_1_gen_case_af03fdb695fdbdd9328ab53c28e57b796}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Compute\+And\+Print\+Matrix@{Compute\+And\+Print\+Matrix}}
+\index{Compute\+And\+Print\+Matrix@{Compute\+And\+Print\+Matrix}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Compute\+And\+Print\+Matrix()}{ComputeAndPrintMatrix()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Compute\+And\+Print\+Matrix (\begin{DoxyParamCaption}\item[{const std\+::string}]{output\+\_\+path }\end{DoxyParamCaption})}
+
+
+
+This function computes the sparse matrix pattern. 
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a7638dda7e28540362e134cd783ac2826}\label{classfemus_1_1_gen_case_a7638dda7e28540362e134cd783ac2826}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Compute\+And\+Print\+M\+G\+Operators@{Compute\+And\+Print\+M\+G\+Operators}}
+\index{Compute\+And\+Print\+M\+G\+Operators@{Compute\+And\+Print\+M\+G\+Operators}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Compute\+And\+Print\+M\+G\+Operators()}{ComputeAndPrintMGOperators()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Compute\+And\+Print\+M\+G\+Operators (\begin{DoxyParamCaption}\item[{const std\+::string}]{output\+\_\+path }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_acf6276fa8c123a0911b1cde3975b01e1}\label{classfemus_1_1_gen_case_acf6276fa8c123a0911b1cde3975b01e1}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Compute\+And\+Print\+Prol@{Compute\+And\+Print\+Prol}}
+\index{Compute\+And\+Print\+Prol@{Compute\+And\+Print\+Prol}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Compute\+And\+Print\+Prol()}{ComputeAndPrintProl()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Compute\+And\+Print\+Prol (\begin{DoxyParamCaption}\item[{const std\+::string}]{output\+\_\+path }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a35cd2513d9f9a0ca6d8ce50e71f34e7c}\label{classfemus_1_1_gen_case_a35cd2513d9f9a0ca6d8ce50e71f34e7c}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Compute\+And\+Print\+Rest@{Compute\+And\+Print\+Rest}}
+\index{Compute\+And\+Print\+Rest@{Compute\+And\+Print\+Rest}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Compute\+And\+Print\+Rest()}{ComputeAndPrintRest()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Compute\+And\+Print\+Rest (\begin{DoxyParamCaption}\item[{const std\+::string}]{output\+\_\+path }\end{DoxyParamCaption})}
+
+\+\_\+elnodes\mbox{[}VV\mbox{]}\mbox{[}fe\mbox{]}
+
+\+\_\+elnodes\mbox{[}VV\mbox{]}\mbox{[}fe\mbox{]}
+
+\+\_\+elnodes\mbox{[}VV\mbox{]}\mbox{[}fe\mbox{]} \mbox{\Hypertarget{classfemus_1_1_gen_case_a3f84519134fe7bdfc5040450fe49400e}\label{classfemus_1_1_gen_case_a3f84519134fe7bdfc5040450fe49400e}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Compute\+Max\+El\+X\+Node@{Compute\+Max\+El\+X\+Node}}
+\index{Compute\+Max\+El\+X\+Node@{Compute\+Max\+El\+X\+Node}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Compute\+Max\+El\+X\+Node()}{ComputeMaxElXNode()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Compute\+Max\+El\+X\+Node (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_ab3241cafafa6233649d61074e34b1358}\label{classfemus_1_1_gen_case_ab3241cafafa6233649d61074e34b1358}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Create\+Mesh\+Structures\+Lev\+Subd@{Create\+Mesh\+Structures\+Lev\+Subd}}
+\index{Create\+Mesh\+Structures\+Lev\+Subd@{Create\+Mesh\+Structures\+Lev\+Subd}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Create\+Mesh\+Structures\+Lev\+Subd()}{CreateMeshStructuresLevSubd()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Create\+Mesh\+Structures\+Lev\+Subd (\begin{DoxyParamCaption}\item[{const std\+::string}]{output\+\_\+path }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a418c8756c74bb200de5e17afd7336620}\label{classfemus_1_1_gen_case_a418c8756c74bb200de5e17afd7336620}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Delete@{Delete}}
+\index{Delete@{Delete}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Delete()}{Delete()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Delete (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a1f32c3d80b3a5f9e60f6f2ef64d7957e}\label{classfemus_1_1_gen_case_a1f32c3d80b3a5f9e60f6f2ef64d7957e}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Elem\+Child\+To\+Father@{Elem\+Child\+To\+Father}}
+\index{Elem\+Child\+To\+Father@{Elem\+Child\+To\+Father}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Elem\+Child\+To\+Father()}{ElemChildToFather()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Elem\+Child\+To\+Father (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a82dd421b7ab2256a8fa6c763dcc4787a}\label{classfemus_1_1_gen_case_a82dd421b7ab2256a8fa6c763dcc4787a}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Generate\+Boundary\+Mesh@{Generate\+Boundary\+Mesh}}
+\index{Generate\+Boundary\+Mesh@{Generate\+Boundary\+Mesh}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Generate\+Boundary\+Mesh()}{GenerateBoundaryMesh()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Generate\+Boundary\+Mesh (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_aac3e88c39000c590d4e804298e2724c6}\label{classfemus_1_1_gen_case_aac3e88c39000c590d4e804298e2724c6}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Generate\+Case@{Generate\+Case}}
+\index{Generate\+Case@{Generate\+Case}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Generate\+Case()}{GenerateCase()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Generate\+Case (\begin{DoxyParamCaption}\item[{const std\+::string}]{output\+\_\+path }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a8a58afe0ec434646bc59dafb2925b0ff}\label{classfemus_1_1_gen_case_a8a58afe0ec434646bc59dafb2925b0ff}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Generate\+Coarse\+Mesh@{Generate\+Coarse\+Mesh}}
+\index{Generate\+Coarse\+Mesh@{Generate\+Coarse\+Mesh}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Generate\+Coarse\+Mesh()}{GenerateCoarseMesh()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Generate\+Coarse\+Mesh (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a16d995f5a08faf6e7cd89e9f750734e9}\label{classfemus_1_1_gen_case_a16d995f5a08faf6e7cd89e9f750734e9}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Grab\+Meshinfo\+From\+Libmesh@{Grab\+Meshinfo\+From\+Libmesh}}
+\index{Grab\+Meshinfo\+From\+Libmesh@{Grab\+Meshinfo\+From\+Libmesh}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Grab\+Meshinfo\+From\+Libmesh()}{GrabMeshinfoFromLibmesh()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Grab\+Meshinfo\+From\+Libmesh (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+This function print the mesh, or better does all the stuff... we must isolate where we call libmesh functions from where we use O\+UR arrays Basically, grabbing information from libmesh means filling the \+\_\+el\+\_\+sto\mbox{[}\mbox{]} and \+\_\+el\+\_\+sto\+\_\+b\mbox{[}\mbox{]} arrays, together with the \+\_\+nod\+\_\+coords\mbox{[}\mbox{]} array once you have this interface with libmesh, you do the rest only in F\+E\+MuS. \mbox{\Hypertarget{classfemus_1_1_gen_case_a2b47da5519d3b8d3d3d4778bc07deef3}\label{classfemus_1_1_gen_case_a2b47da5519d3b8d3d3d4778bc07deef3}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Read\+Matrix@{Read\+Matrix}}
+\index{Read\+Matrix@{Read\+Matrix}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Read\+Matrix()}{ReadMatrix()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Read\+Matrix (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{namefile,  }\item[{\mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}} $\ast$}]{mysys }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\begin{DoxyRefDesc}{Todo}
+\item[\mbox{\hyperlink{todo__todo000013}{Todo}}]the std\+::cerr is not redirected to file, think of redirecting it also to file. \end{DoxyRefDesc}
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a8ff0e1ca8e4b16e005e8a37799c43194}\label{classfemus_1_1_gen_case_a8ff0e1ca8e4b16e005e8a37799c43194}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Read\+M\+G\+Ops@{Read\+M\+G\+Ops}}
+\index{Read\+M\+G\+Ops@{Read\+M\+G\+Ops}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Read\+M\+G\+Ops()}{ReadMGOps()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Read\+M\+G\+Ops (\begin{DoxyParamCaption}\item[{const std\+::string}]{output\+\_\+path,  }\item[{\mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}} $\ast$}]{mysys }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a537015fb25eb05e896a2ab4da02d4c9f}\label{classfemus_1_1_gen_case_a537015fb25eb05e896a2ab4da02d4c9f}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Read\+Prol@{Read\+Prol}}
+\index{Read\+Prol@{Read\+Prol}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Read\+Prol()}{ReadProl()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Read\+Prol (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{\mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}} $\ast$}]{mysys }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a37997ccf132703dfabf7bead831f6f38}\label{classfemus_1_1_gen_case_a37997ccf132703dfabf7bead831f6f38}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Read\+Rest@{Read\+Rest}}
+\index{Read\+Rest@{Read\+Rest}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Read\+Rest()}{ReadRest()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Read\+Rest (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{\mbox{\hyperlink{classfemus_1_1_system_two}{System\+Two}} $\ast$}]{mysys }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_adac39ccc5e6781cba188e4b4f1e682fd}\label{classfemus_1_1_gen_case_adac39ccc5e6781cba188e4b4f1e682fd}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Refine\+Mesh@{Refine\+Mesh}}
+\index{Refine\+Mesh@{Refine\+Mesh}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Refine\+Mesh()}{RefineMesh()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Refine\+Mesh (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a7dd80e2b843180f82f9c8a11b9114ec5}\label{classfemus_1_1_gen_case_a7dd80e2b843180f82f9c8a11b9114ec5}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Reorder\+Element\+By\+Subd\+Lev\+\_\+\+BB@{Reorder\+Element\+By\+Subd\+Lev\+\_\+\+BB}}
+\index{Reorder\+Element\+By\+Subd\+Lev\+\_\+\+BB@{Reorder\+Element\+By\+Subd\+Lev\+\_\+\+BB}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Reorder\+Element\+By\+Subd\+Lev\+\_\+\+B\+B()}{ReorderElementBySubdLev\_BB()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Reorder\+Element\+By\+Subd\+Lev\+\_\+\+BB (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_ac8a4b195137869e5aea20553baa8b37d}\label{classfemus_1_1_gen_case_ac8a4b195137869e5aea20553baa8b37d}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Reorder\+Element\+By\+Subd\+Lev\+\_\+\+VV@{Reorder\+Element\+By\+Subd\+Lev\+\_\+\+VV}}
+\index{Reorder\+Element\+By\+Subd\+Lev\+\_\+\+VV@{Reorder\+Element\+By\+Subd\+Lev\+\_\+\+VV}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Reorder\+Element\+By\+Subd\+Lev\+\_\+\+V\+V()}{ReorderElementBySubdLev\_VV()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Reorder\+Element\+By\+Subd\+Lev\+\_\+\+VV (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a2c8dce7f34c3d4331c677c224d601fe2}\label{classfemus_1_1_gen_case_a2c8dce7f34c3d4331c677c224d601fe2}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!Reorder\+Nodes\+By\+Subd\+Lev@{Reorder\+Nodes\+By\+Subd\+Lev}}
+\index{Reorder\+Nodes\+By\+Subd\+Lev@{Reorder\+Nodes\+By\+Subd\+Lev}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{Reorder\+Nodes\+By\+Subd\+Lev()}{ReorderNodesBySubdLev()}}
+{\footnotesize\ttfamily void femus\+::\+Gen\+Case\+::\+Reorder\+Nodes\+By\+Subd\+Lev (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_gen_case_a55901caa3145de289eb90be709f54045}\label{classfemus_1_1_gen_case_a55901caa3145de289eb90be709f54045}} 
+\index{femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}!\+\_\+feelems@{\+\_\+feelems}}
+\index{\+\_\+feelems@{\+\_\+feelems}!femus\+::\+Gen\+Case@{femus\+::\+Gen\+Case}}
+\subsubsection{\texorpdfstring{\+\_\+feelems}{\_feelems}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classfemus_1_1_f_e_elem_base}{F\+E\+Elem\+Base}}$\ast$$>$ femus\+::\+Gen\+Case\+::\+\_\+feelems}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+mesh\+Gencase/\mbox{\hyperlink{_gen_case_8hpp}{Gen\+Case.\+hpp}}\item 
+mesh\+Gencase/\mbox{\hyperlink{_gen_case_8cpp}{Gen\+Case.\+cpp}}\end{DoxyCompactItemize}

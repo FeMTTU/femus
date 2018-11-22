@@ -1,0 +1,83 @@
+\hypertarget{classfemus_1_1_boundary_conditions}{}\section{femus\+:\+:Boundary\+Conditions Class Reference}
+\label{classfemus_1_1_boundary_conditions}\index{femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}}
+
+
+{\ttfamily \#include $<$Boundary\+Conditions.\+hpp$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_boundary_conditions_a3815a499a7c1dd6193e27507b20148e6}{Boundary\+Conditions}} (const \mbox{\hyperlink{classfemus_1_1_dof_map}{Dof\+Map}} $\ast$dofmap\+\_\+in)
+\item 
+\mbox{\hyperlink{classfemus_1_1_boundary_conditions_ae2202e496079efde43075f7401635734}{$\sim$\+Boundary\+Conditions}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_boundary_conditions_a8dd3678ce76bb1723e03deca11e273ae}{Generate\+Bdc}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_boundary_conditions_a72672b4fab37f53c790f3d6e4414dc9a}{Bc\+\_\+\+Scale\+Dof\+Vec}} (\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$myvec, double Scale\+Fac)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_boundary_conditions_ab14ae456da17603f71f0d1d3960cb18d}{Bc\+\_\+\+Add\+Dof\+Vec}} (\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$myvec, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$myvec2)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_boundary_conditions_a214920d556d9716237f392bb1d1ab316}{Bc\+\_\+\+Add\+Scale\+Dof\+Vec}} (\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$vec\+\_\+in, \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$vec\+\_\+out, const double Scale\+Fac)
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int $\ast$ \mbox{\hyperlink{classfemus_1_1_boundary_conditions_ad269ae59ac9ff09c60e1d6a6958f1811}{\+\_\+bc}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_boundary_conditions_a3815a499a7c1dd6193e27507b20148e6}\label{classfemus_1_1_boundary_conditions_a3815a499a7c1dd6193e27507b20148e6}} 
+\index{femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}!Boundary\+Conditions@{Boundary\+Conditions}}
+\index{Boundary\+Conditions@{Boundary\+Conditions}!femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}}
+\subsubsection{\texorpdfstring{Boundary\+Conditions()}{BoundaryConditions()}}
+{\footnotesize\ttfamily femus\+::\+Boundary\+Conditions\+::\+Boundary\+Conditions (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_dof_map}{Dof\+Map}} $\ast$}]{dofmap\+\_\+in }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_boundary_conditions_ae2202e496079efde43075f7401635734}\label{classfemus_1_1_boundary_conditions_ae2202e496079efde43075f7401635734}} 
+\index{femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}!````~Boundary\+Conditions@{$\sim$\+Boundary\+Conditions}}
+\index{````~Boundary\+Conditions@{$\sim$\+Boundary\+Conditions}!femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}}
+\subsubsection{\texorpdfstring{$\sim$\+Boundary\+Conditions()}{~BoundaryConditions()}}
+{\footnotesize\ttfamily femus\+::\+Boundary\+Conditions\+::$\sim$\+Boundary\+Conditions (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_boundary_conditions_ab14ae456da17603f71f0d1d3960cb18d}\label{classfemus_1_1_boundary_conditions_ab14ae456da17603f71f0d1d3960cb18d}} 
+\index{femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}!Bc\+\_\+\+Add\+Dof\+Vec@{Bc\+\_\+\+Add\+Dof\+Vec}}
+\index{Bc\+\_\+\+Add\+Dof\+Vec@{Bc\+\_\+\+Add\+Dof\+Vec}!femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}}
+\subsubsection{\texorpdfstring{Bc\+\_\+\+Add\+Dof\+Vec()}{Bc\_AddDofVec()}}
+{\footnotesize\ttfamily void femus\+::\+Boundary\+Conditions\+::\+Bc\+\_\+\+Add\+Dof\+Vec (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{myvec,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{myvec2 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_boundary_conditions_a214920d556d9716237f392bb1d1ab316}\label{classfemus_1_1_boundary_conditions_a214920d556d9716237f392bb1d1ab316}} 
+\index{femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}!Bc\+\_\+\+Add\+Scale\+Dof\+Vec@{Bc\+\_\+\+Add\+Scale\+Dof\+Vec}}
+\index{Bc\+\_\+\+Add\+Scale\+Dof\+Vec@{Bc\+\_\+\+Add\+Scale\+Dof\+Vec}!femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}}
+\subsubsection{\texorpdfstring{Bc\+\_\+\+Add\+Scale\+Dof\+Vec()}{Bc\_AddScaleDofVec()}}
+{\footnotesize\ttfamily void femus\+::\+Boundary\+Conditions\+::\+Bc\+\_\+\+Add\+Scale\+Dof\+Vec (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{vec\+\_\+in,  }\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{vec\+\_\+out,  }\item[{const double}]{Scale\+Fac }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_boundary_conditions_a72672b4fab37f53c790f3d6e4414dc9a}\label{classfemus_1_1_boundary_conditions_a72672b4fab37f53c790f3d6e4414dc9a}} 
+\index{femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}!Bc\+\_\+\+Scale\+Dof\+Vec@{Bc\+\_\+\+Scale\+Dof\+Vec}}
+\index{Bc\+\_\+\+Scale\+Dof\+Vec@{Bc\+\_\+\+Scale\+Dof\+Vec}!femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}}
+\subsubsection{\texorpdfstring{Bc\+\_\+\+Scale\+Dof\+Vec()}{Bc\_ScaleDofVec()}}
+{\footnotesize\ttfamily void femus\+::\+Boundary\+Conditions\+::\+Bc\+\_\+\+Scale\+Dof\+Vec (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$}]{myvec,  }\item[{double}]{Scale\+Fac }\end{DoxyParamCaption})}
+
+this function scales the passed dof vector and takes into account the boundary conditions as well a function like that can be useful also for multiplying/dividing by reference values or the like \mbox{\Hypertarget{classfemus_1_1_boundary_conditions_a8dd3678ce76bb1723e03deca11e273ae}\label{classfemus_1_1_boundary_conditions_a8dd3678ce76bb1723e03deca11e273ae}} 
+\index{femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}!Generate\+Bdc@{Generate\+Bdc}}
+\index{Generate\+Bdc@{Generate\+Bdc}!femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}}
+\subsubsection{\texorpdfstring{Generate\+Bdc()}{GenerateBdc()}}
+{\footnotesize\ttfamily void femus\+::\+Boundary\+Conditions\+::\+Generate\+Bdc (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_boundary_conditions_ad269ae59ac9ff09c60e1d6a6958f1811}\label{classfemus_1_1_boundary_conditions_ad269ae59ac9ff09c60e1d6a6958f1811}} 
+\index{femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}!\+\_\+bc@{\+\_\+bc}}
+\index{\+\_\+bc@{\+\_\+bc}!femus\+::\+Boundary\+Conditions@{femus\+::\+Boundary\+Conditions}}
+\subsubsection{\texorpdfstring{\+\_\+bc}{\_bc}}
+{\footnotesize\ttfamily int$\ast$ femus\+::\+Boundary\+Conditions\+::\+\_\+bc}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+equations/\mbox{\hyperlink{_boundary_conditions_8hpp}{Boundary\+Conditions.\+hpp}}\item 
+equations/\mbox{\hyperlink{_boundary_conditions_8cpp}{Boundary\+Conditions.\+cpp}}\end{DoxyCompactItemize}

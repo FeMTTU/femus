@@ -1,0 +1,336 @@
+\hypertarget{classfemus_1_1_linear_equation}{}\section{femus\+:\+:Linear\+Equation Class Reference}
+\label{classfemus_1_1_linear_equation}\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+
+
+{\ttfamily \#include $<$Linear\+Equation.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Linear\+Equation\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=226pt]{classfemus_1_1_linear_equation__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Linear\+Equation\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_linear_equation__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_linear_equation_ac82d0ae000e0921cb2ba01ff93dcef45}{Linear\+Equation}} (\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$other\+\_\+solution)
+\item 
+\mbox{\hyperlink{classfemus_1_1_linear_equation_ade8ffc26092dc955956e95eaad9443e6}{$\sim$\+Linear\+Equation}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_linear_equation_a2081cb3a1ffa45087e78fa1019010987}{Init\+Pde}} (const vector$<$ unsigned $>$ \&\mbox{\hyperlink{classfemus_1_1_linear_equation_a8b868f08fce043a674a7dd36019142df}{\+\_\+\+Sol\+Pde\+Index}}, const vector$<$ int $>$ \&Sol\+Type, const vector$<$ char $\ast$$>$ \&Sol\+Name, vector$<$ \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$$>$ $\ast$Bdc\+\_\+other, const unsigned \&other\+\_\+gridn, vector$<$ bool $>$ \&Sparsity\+Pattern\+\_\+other)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_linear_equation_ad3053db3500d06e996703acf43efbcd7}{Get\+Sparsity\+Pattern\+Size}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_linear_equation_a860b182e81b87527451d0dce8d80a50e}{Delete\+Pde}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_linear_equation_a4e339f53ed51e108cd33e1577dae9c18}{Get\+System\+Dof}} (const unsigned \&index\+\_\+sol, const unsigned \&kkindex\+\_\+sol, const unsigned \&i, const unsigned \&iel) const
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_linear_equation_a97d5328122e7841e3edd0713947b2031}{Get\+System\+Dof}} (const unsigned \&index\+\_\+sol, const unsigned \&kkindex\+\_\+sol, const unsigned \&ielc, const unsigned \&i0, const unsigned \&i1, const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} $\ast$mshc) const
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_linear_equation_a6215eca33ce5d030718985a8cb05eaab}{Get\+System\+Dof}} (const unsigned \&soltype, const unsigned \&kkindex\+\_\+sol, const unsigned \&i, const unsigned \&iel, const vector$<$ vector$<$ unsigned $>$ $>$ \&other\+K\+Koffset) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_linear_equation_a81de0961933510a8e2e035be1cfb4730}{Set\+Res\+Zero}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_linear_equation_a1beb93193b619ce9d6adae4977c2e993}{Set\+Eps\+Zero}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_linear_equation_ab6c32f709a8f531e108109faaf440fef}{Sum\+Eps\+C\+To\+Eps}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_linear_equation_adeac6aca70228a86f274b8589d464207}{Update\+Residual}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_linear_equation_a371874e189850ea153741747a5257343}{Add\+Level}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_linear_equation_a3aa325f74068742d2c4b235ee6578e69}{Swap\+Matrices}} ()
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} $\ast$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a92a4b956844e64301eb0171393e14db4}{\+\_\+msh}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a453ddac90679e3447fa774a52e3d2214}{\+\_\+solution}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a7f79930715e7e6c8b0ec81ee506a4ef0}{\+\_\+\+E\+PS}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a5248622081d9f5559ae84074d6fb4f30}{\+\_\+\+E\+P\+SC}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a20ac8999e714492516cd8a2be53fb54f}{\+\_\+\+R\+ES}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a22675b9d542dc58b67f4d2cba10a4c0d}{\+\_\+\+R\+E\+SC}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$ \mbox{\hyperlink{classfemus_1_1_linear_equation_aa10eb0eb318cf0d449f5ecdcec2823bc}{\+\_\+\+KK}}
+\item 
+\mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}} $\ast$ \mbox{\hyperlink{classfemus_1_1_linear_equation_ab824eb4b9859c3dff871f537d702d987}{\+\_\+\+K\+Kamr}}
+\item 
+vector$<$ vector$<$ unsigned $>$ $>$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a9cc33138c3b62897f2e249c4e4277382}{K\+Koffset}}
+\item 
+vector$<$ unsigned $>$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a6db7e3f4d0a8d394f024de6df33f3428}{K\+Kghostsize}}
+\item 
+vector$<$ vector$<$ int $>$ $>$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a32e8e83ff15133ae41c1b0cc8865f4a1}{K\+Kghost\+\_\+nd}}
+\item 
+vector$<$ int $>$ \mbox{\hyperlink{classfemus_1_1_linear_equation_ad68dfdc247d0e64ea7b86e11755fcb3f}{K\+K\+Index}}
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_linear_equation_a9e44f8c783de0cfd5dae745305882f21}{\+\_\+gridn}}
+\item 
+vector$<$ int $>$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a54bb8d41b717a85752342c81c05fa7d0}{d\+\_\+nnz}}
+\item 
+vector$<$ int $>$ \mbox{\hyperlink{classfemus_1_1_linear_equation_af89df9c8bd0aa927ea92227044d790ea}{o\+\_\+nnz}}
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_linear_equation_ae6f9872dad722bd16c70bc054c3dc618}{Get\+Index}} (const char name\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+vector$<$ unsigned $>$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a8b868f08fce043a674a7dd36019142df}{\+\_\+\+Sol\+Pde\+Index}}
+\item 
+vector$<$ int $>$ \mbox{\hyperlink{classfemus_1_1_linear_equation_af827ced9cbb5f41c6c47635fcc4618d8}{\+\_\+\+Sol\+Type}}
+\item 
+vector$<$ char $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_linear_equation_afde1b3ccff18a62d064fc364a8965ac5}{\+\_\+\+Sol\+Name}}
+\item 
+const vector$<$ \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ $>$ $\ast$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a058468723c36718e5ff8ba6d5a9181d9}{\+\_\+\+Bdc}}
+\item 
+vector$<$ bool $>$ \mbox{\hyperlink{classfemus_1_1_linear_equation_a07c1c85eb73b070ac59a85bda3388fca}{\+\_\+\+Sparsity\+Pattern}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This class is a container that holds linear operators and other structure for solving a linear equation system 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_ac82d0ae000e0921cb2ba01ff93dcef45}\label{classfemus_1_1_linear_equation_ac82d0ae000e0921cb2ba01ff93dcef45}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Linear\+Equation@{Linear\+Equation}}
+\index{Linear\+Equation@{Linear\+Equation}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Linear\+Equation()}{LinearEquation()}}
+{\footnotesize\ttfamily femus\+::\+Linear\+Equation\+::\+Linear\+Equation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{other\+\_\+solution }\end{DoxyParamCaption})}
+
+costructor \mbox{\Hypertarget{classfemus_1_1_linear_equation_ade8ffc26092dc955956e95eaad9443e6}\label{classfemus_1_1_linear_equation_ade8ffc26092dc955956e95eaad9443e6}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!````~Linear\+Equation@{$\sim$\+Linear\+Equation}}
+\index{````~Linear\+Equation@{$\sim$\+Linear\+Equation}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{$\sim$\+Linear\+Equation()}{~LinearEquation()}}
+{\footnotesize\ttfamily femus\+::\+Linear\+Equation\+::$\sim$\+Linear\+Equation (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+destructor 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a371874e189850ea153741747a5257343}\label{classfemus_1_1_linear_equation_a371874e189850ea153741747a5257343}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Add\+Level@{Add\+Level}}
+\index{Add\+Level@{Add\+Level}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Add\+Level()}{AddLevel()}}
+{\footnotesize\ttfamily void femus\+::\+Linear\+Equation\+::\+Add\+Level (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Add\+Level \mbox{\Hypertarget{classfemus_1_1_linear_equation_a860b182e81b87527451d0dce8d80a50e}\label{classfemus_1_1_linear_equation_a860b182e81b87527451d0dce8d80a50e}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Delete\+Pde@{Delete\+Pde}}
+\index{Delete\+Pde@{Delete\+Pde}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Delete\+Pde()}{DeletePde()}}
+{\footnotesize\ttfamily void femus\+::\+Linear\+Equation\+::\+Delete\+Pde (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_linear_equation_ae6f9872dad722bd16c70bc054c3dc618}\label{classfemus_1_1_linear_equation_ae6f9872dad722bd16c70bc054c3dc618}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Get\+Index@{Get\+Index}}
+\index{Get\+Index@{Get\+Index}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Get\+Index()}{GetIndex()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Linear\+Equation\+::\+Get\+Index (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_linear_equation_ad3053db3500d06e996703acf43efbcd7}\label{classfemus_1_1_linear_equation_ad3053db3500d06e996703acf43efbcd7}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Get\+Sparsity\+Pattern\+Size@{Get\+Sparsity\+Pattern\+Size}}
+\index{Get\+Sparsity\+Pattern\+Size@{Get\+Sparsity\+Pattern\+Size}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Get\+Sparsity\+Pattern\+Size()}{GetSparsityPatternSize()}}
+{\footnotesize\ttfamily void femus\+::\+Linear\+Equation\+::\+Get\+Sparsity\+Pattern\+Size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a4e339f53ed51e108cd33e1577dae9c18}\label{classfemus_1_1_linear_equation_a4e339f53ed51e108cd33e1577dae9c18}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Get\+System\+Dof@{Get\+System\+Dof}}
+\index{Get\+System\+Dof@{Get\+System\+Dof}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Get\+System\+Dof()}{GetSystemDof()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily unsigned femus\+::\+Linear\+Equation\+::\+Get\+System\+Dof (\begin{DoxyParamCaption}\item[{const unsigned \&}]{index\+\_\+sol,  }\item[{const unsigned \&}]{kkindex\+\_\+sol,  }\item[{const unsigned \&}]{i,  }\item[{const unsigned \&}]{iel }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_linear_equation_a97d5328122e7841e3edd0713947b2031}\label{classfemus_1_1_linear_equation_a97d5328122e7841e3edd0713947b2031}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Get\+System\+Dof@{Get\+System\+Dof}}
+\index{Get\+System\+Dof@{Get\+System\+Dof}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Get\+System\+Dof()}{GetSystemDof()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily unsigned femus\+::\+Linear\+Equation\+::\+Get\+System\+Dof (\begin{DoxyParamCaption}\item[{const unsigned \&}]{index\+\_\+sol,  }\item[{const unsigned \&}]{kkindex\+\_\+sol,  }\item[{const unsigned \&}]{ielc,  }\item[{const unsigned \&}]{i0,  }\item[{const unsigned \&}]{i1,  }\item[{const \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}} $\ast$}]{mshc }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a6215eca33ce5d030718985a8cb05eaab}\label{classfemus_1_1_linear_equation_a6215eca33ce5d030718985a8cb05eaab}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Get\+System\+Dof@{Get\+System\+Dof}}
+\index{Get\+System\+Dof@{Get\+System\+Dof}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Get\+System\+Dof()}{GetSystemDof()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily unsigned femus\+::\+Linear\+Equation\+::\+Get\+System\+Dof (\begin{DoxyParamCaption}\item[{const unsigned \&}]{soltype,  }\item[{const unsigned \&}]{kkindex\+\_\+sol,  }\item[{const unsigned \&}]{i,  }\item[{const unsigned \&}]{iel,  }\item[{const vector$<$ vector$<$ unsigned $>$ $>$ \&}]{other\+K\+Koffset }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a2081cb3a1ffa45087e78fa1019010987}\label{classfemus_1_1_linear_equation_a2081cb3a1ffa45087e78fa1019010987}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Init\+Pde@{Init\+Pde}}
+\index{Init\+Pde@{Init\+Pde}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Init\+Pde()}{InitPde()}}
+{\footnotesize\ttfamily void femus\+::\+Linear\+Equation\+::\+Init\+Pde (\begin{DoxyParamCaption}\item[{const vector$<$ unsigned $>$ \&}]{\+\_\+\+Sol\+Pde\+Index,  }\item[{const vector$<$ int $>$ \&}]{Sol\+Type,  }\item[{const vector$<$ char $\ast$$>$ \&}]{Sol\+Name,  }\item[{vector$<$ \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$$>$ $\ast$}]{Bdc\+\_\+other,  }\item[{const unsigned \&}]{other\+\_\+gridn,  }\item[{vector$<$ bool $>$ \&}]{Sparsity\+Pattern\+\_\+other }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_linear_equation_a1beb93193b619ce9d6adae4977c2e993}\label{classfemus_1_1_linear_equation_a1beb93193b619ce9d6adae4977c2e993}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Set\+Eps\+Zero@{Set\+Eps\+Zero}}
+\index{Set\+Eps\+Zero@{Set\+Eps\+Zero}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Set\+Eps\+Zero()}{SetEpsZero()}}
+{\footnotesize\ttfamily void femus\+::\+Linear\+Equation\+::\+Set\+Eps\+Zero (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_linear_equation_a81de0961933510a8e2e035be1cfb4730}\label{classfemus_1_1_linear_equation_a81de0961933510a8e2e035be1cfb4730}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Set\+Res\+Zero@{Set\+Res\+Zero}}
+\index{Set\+Res\+Zero@{Set\+Res\+Zero}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Set\+Res\+Zero()}{SetResZero()}}
+{\footnotesize\ttfamily void femus\+::\+Linear\+Equation\+::\+Set\+Res\+Zero (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_linear_equation_ab6c32f709a8f531e108109faaf440fef}\label{classfemus_1_1_linear_equation_ab6c32f709a8f531e108109faaf440fef}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Sum\+Eps\+C\+To\+Eps@{Sum\+Eps\+C\+To\+Eps}}
+\index{Sum\+Eps\+C\+To\+Eps@{Sum\+Eps\+C\+To\+Eps}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Sum\+Eps\+C\+To\+Eps()}{SumEpsCToEps()}}
+{\footnotesize\ttfamily void femus\+::\+Linear\+Equation\+::\+Sum\+Eps\+C\+To\+Eps (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_linear_equation_a3aa325f74068742d2c4b235ee6578e69}\label{classfemus_1_1_linear_equation_a3aa325f74068742d2c4b235ee6578e69}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Swap\+Matrices@{Swap\+Matrices}}
+\index{Swap\+Matrices@{Swap\+Matrices}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Swap\+Matrices()}{SwapMatrices()}}
+{\footnotesize\ttfamily void femus\+::\+Linear\+Equation\+::\+Swap\+Matrices (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_adeac6aca70228a86f274b8589d464207}\label{classfemus_1_1_linear_equation_adeac6aca70228a86f274b8589d464207}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!Update\+Residual@{Update\+Residual}}
+\index{Update\+Residual@{Update\+Residual}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{Update\+Residual()}{UpdateResidual()}}
+{\footnotesize\ttfamily void femus\+::\+Linear\+Equation\+::\+Update\+Residual (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+To be Added 
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a058468723c36718e5ff8ba6d5a9181d9}\label{classfemus_1_1_linear_equation_a058468723c36718e5ff8ba6d5a9181d9}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+\+Bdc@{\+\_\+\+Bdc}}
+\index{\+\_\+\+Bdc@{\+\_\+\+Bdc}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+\+Bdc}{\_Bdc}}
+{\footnotesize\ttfamily const vector$<$\mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}}$\ast$$>$$\ast$ femus\+::\+Linear\+Equation\+::\+\_\+\+Bdc\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a7f79930715e7e6c8b0ec81ee506a4ef0}\label{classfemus_1_1_linear_equation_a7f79930715e7e6c8b0ec81ee506a4ef0}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+\+E\+PS@{\+\_\+\+E\+PS}}
+\index{\+\_\+\+E\+PS@{\+\_\+\+E\+PS}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+\+E\+PS}{\_EPS}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}}$\ast$ femus\+::\+Linear\+Equation\+::\+\_\+\+E\+PS}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a5248622081d9f5559ae84074d6fb4f30}\label{classfemus_1_1_linear_equation_a5248622081d9f5559ae84074d6fb4f30}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+\+E\+P\+SC@{\+\_\+\+E\+P\+SC}}
+\index{\+\_\+\+E\+P\+SC@{\+\_\+\+E\+P\+SC}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+\+E\+P\+SC}{\_EPSC}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ femus\+::\+Linear\+Equation\+::\+\_\+\+E\+P\+SC}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a9e44f8c783de0cfd5dae745305882f21}\label{classfemus_1_1_linear_equation_a9e44f8c783de0cfd5dae745305882f21}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+gridn@{\+\_\+gridn}}
+\index{\+\_\+gridn@{\+\_\+gridn}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+gridn}{\_gridn}}
+{\footnotesize\ttfamily unsigned femus\+::\+Linear\+Equation\+::\+\_\+gridn}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_aa10eb0eb318cf0d449f5ecdcec2823bc}\label{classfemus_1_1_linear_equation_aa10eb0eb318cf0d449f5ecdcec2823bc}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+\+KK@{\+\_\+\+KK}}
+\index{\+\_\+\+KK@{\+\_\+\+KK}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+\+KK}{\_KK}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}}$\ast$ femus\+::\+Linear\+Equation\+::\+\_\+\+KK}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_ab824eb4b9859c3dff871f537d702d987}\label{classfemus_1_1_linear_equation_ab824eb4b9859c3dff871f537d702d987}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+\+K\+Kamr@{\+\_\+\+K\+Kamr}}
+\index{\+\_\+\+K\+Kamr@{\+\_\+\+K\+Kamr}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+\+K\+Kamr}{\_KKamr}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_sparse_matrix}{Sparse\+Matrix}}$\ast$ femus\+::\+Linear\+Equation\+::\+\_\+\+K\+Kamr}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a92a4b956844e64301eb0171393e14db4}\label{classfemus_1_1_linear_equation_a92a4b956844e64301eb0171393e14db4}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+msh@{\+\_\+msh}}
+\index{\+\_\+msh@{\+\_\+msh}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+msh}{\_msh}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_mesh}{Mesh}}$\ast$ femus\+::\+Linear\+Equation\+::\+\_\+msh}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a20ac8999e714492516cd8a2be53fb54f}\label{classfemus_1_1_linear_equation_a20ac8999e714492516cd8a2be53fb54f}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+\+R\+ES@{\+\_\+\+R\+ES}}
+\index{\+\_\+\+R\+ES@{\+\_\+\+R\+ES}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+\+R\+ES}{\_RES}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ femus\+::\+Linear\+Equation\+::\+\_\+\+R\+ES}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a22675b9d542dc58b67f4d2cba10a4c0d}\label{classfemus_1_1_linear_equation_a22675b9d542dc58b67f4d2cba10a4c0d}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+\+R\+E\+SC@{\+\_\+\+R\+E\+SC}}
+\index{\+\_\+\+R\+E\+SC@{\+\_\+\+R\+E\+SC}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+\+R\+E\+SC}{\_RESC}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_numeric_vector}{Numeric\+Vector}} $\ast$ femus\+::\+Linear\+Equation\+::\+\_\+\+R\+E\+SC}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_afde1b3ccff18a62d064fc364a8965ac5}\label{classfemus_1_1_linear_equation_afde1b3ccff18a62d064fc364a8965ac5}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+\+Sol\+Name@{\+\_\+\+Sol\+Name}}
+\index{\+\_\+\+Sol\+Name@{\+\_\+\+Sol\+Name}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+\+Sol\+Name}{\_SolName}}
+{\footnotesize\ttfamily vector$<$char$\ast$$>$ femus\+::\+Linear\+Equation\+::\+\_\+\+Sol\+Name\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a8b868f08fce043a674a7dd36019142df}\label{classfemus_1_1_linear_equation_a8b868f08fce043a674a7dd36019142df}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+\+Sol\+Pde\+Index@{\+\_\+\+Sol\+Pde\+Index}}
+\index{\+\_\+\+Sol\+Pde\+Index@{\+\_\+\+Sol\+Pde\+Index}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+\+Sol\+Pde\+Index}{\_SolPdeIndex}}
+{\footnotesize\ttfamily vector$<$unsigned$>$ femus\+::\+Linear\+Equation\+::\+\_\+\+Sol\+Pde\+Index\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_af827ced9cbb5f41c6c47635fcc4618d8}\label{classfemus_1_1_linear_equation_af827ced9cbb5f41c6c47635fcc4618d8}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+\+Sol\+Type@{\+\_\+\+Sol\+Type}}
+\index{\+\_\+\+Sol\+Type@{\+\_\+\+Sol\+Type}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+\+Sol\+Type}{\_SolType}}
+{\footnotesize\ttfamily vector$<$int$>$ femus\+::\+Linear\+Equation\+::\+\_\+\+Sol\+Type\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a453ddac90679e3447fa774a52e3d2214}\label{classfemus_1_1_linear_equation_a453ddac90679e3447fa774a52e3d2214}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+solution@{\+\_\+solution}}
+\index{\+\_\+solution@{\+\_\+solution}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+solution}{\_solution}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_solution}{Solution}}$\ast$ femus\+::\+Linear\+Equation\+::\+\_\+solution}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a07c1c85eb73b070ac59a85bda3388fca}\label{classfemus_1_1_linear_equation_a07c1c85eb73b070ac59a85bda3388fca}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!\+\_\+\+Sparsity\+Pattern@{\+\_\+\+Sparsity\+Pattern}}
+\index{\+\_\+\+Sparsity\+Pattern@{\+\_\+\+Sparsity\+Pattern}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{\+\_\+\+Sparsity\+Pattern}{\_SparsityPattern}}
+{\footnotesize\ttfamily vector$<$bool$>$ femus\+::\+Linear\+Equation\+::\+\_\+\+Sparsity\+Pattern\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a54bb8d41b717a85752342c81c05fa7d0}\label{classfemus_1_1_linear_equation_a54bb8d41b717a85752342c81c05fa7d0}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!d\+\_\+nnz@{d\+\_\+nnz}}
+\index{d\+\_\+nnz@{d\+\_\+nnz}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{d\+\_\+nnz}{d\_nnz}}
+{\footnotesize\ttfamily vector$<$ int $>$ femus\+::\+Linear\+Equation\+::d\+\_\+nnz}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a32e8e83ff15133ae41c1b0cc8865f4a1}\label{classfemus_1_1_linear_equation_a32e8e83ff15133ae41c1b0cc8865f4a1}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!K\+Kghost\+\_\+nd@{K\+Kghost\+\_\+nd}}
+\index{K\+Kghost\+\_\+nd@{K\+Kghost\+\_\+nd}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{K\+Kghost\+\_\+nd}{KKghost\_nd}}
+{\footnotesize\ttfamily vector$<$ vector $<$ int$>$ $>$ femus\+::\+Linear\+Equation\+::\+K\+Kghost\+\_\+nd}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a6db7e3f4d0a8d394f024de6df33f3428}\label{classfemus_1_1_linear_equation_a6db7e3f4d0a8d394f024de6df33f3428}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!K\+Kghostsize@{K\+Kghostsize}}
+\index{K\+Kghostsize@{K\+Kghostsize}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{K\+Kghostsize}{KKghostsize}}
+{\footnotesize\ttfamily vector$<$ unsigned $>$ femus\+::\+Linear\+Equation\+::\+K\+Kghostsize}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_ad68dfdc247d0e64ea7b86e11755fcb3f}\label{classfemus_1_1_linear_equation_ad68dfdc247d0e64ea7b86e11755fcb3f}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!K\+K\+Index@{K\+K\+Index}}
+\index{K\+K\+Index@{K\+K\+Index}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{K\+K\+Index}{KKIndex}}
+{\footnotesize\ttfamily vector$<$int$>$ femus\+::\+Linear\+Equation\+::\+K\+K\+Index}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_a9cc33138c3b62897f2e249c4e4277382}\label{classfemus_1_1_linear_equation_a9cc33138c3b62897f2e249c4e4277382}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!K\+Koffset@{K\+Koffset}}
+\index{K\+Koffset@{K\+Koffset}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{K\+Koffset}{KKoffset}}
+{\footnotesize\ttfamily vector$<$ vector $<$unsigned$>$ $>$ femus\+::\+Linear\+Equation\+::\+K\+Koffset}
+
+\mbox{\Hypertarget{classfemus_1_1_linear_equation_af89df9c8bd0aa927ea92227044d790ea}\label{classfemus_1_1_linear_equation_af89df9c8bd0aa927ea92227044d790ea}} 
+\index{femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}!o\+\_\+nnz@{o\+\_\+nnz}}
+\index{o\+\_\+nnz@{o\+\_\+nnz}!femus\+::\+Linear\+Equation@{femus\+::\+Linear\+Equation}}
+\subsubsection{\texorpdfstring{o\+\_\+nnz}{o\_nnz}}
+{\footnotesize\ttfamily vector$<$ int $>$ femus\+::\+Linear\+Equation\+::o\+\_\+nnz}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+algebra/\mbox{\hyperlink{_linear_equation_8hpp}{Linear\+Equation.\+hpp}}\item 
+algebra/\mbox{\hyperlink{_linear_equation_8cpp}{Linear\+Equation.\+cpp}}\end{DoxyCompactItemize}

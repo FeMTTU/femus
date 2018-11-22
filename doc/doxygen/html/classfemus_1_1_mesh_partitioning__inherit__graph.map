@@ -1,0 +1,5 @@
+<map id="femus::MeshPartitioning" name="femus::MeshPartitioning">
+<area shape="rect" id="node3" href="$classfemus_1_1_mesh_a_s_m_partitioning.html" title="femus::MeshASMPartitioning" alt="" coords="5,155,200,181"/>
+<area shape="rect" id="node4" href="$classfemus_1_1_mesh_metis_partitioning.html" title="femus::MeshMetisPartitioning" alt="" coords="224,155,421,181"/>
+<area shape="rect" id="node2" href="$classfemus_1_1_parallel_object.html" title="femus::ParallelObject" alt="" coords="137,5,287,32"/>
+</map>

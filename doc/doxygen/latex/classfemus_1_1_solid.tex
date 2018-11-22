@@ -1,0 +1,168 @@
+\hypertarget{classfemus_1_1_solid}{}\section{femus\+:\+:Solid Class Reference}
+\label{classfemus_1_1_solid}\index{femus\+::\+Solid@{femus\+::\+Solid}}
+
+
+{\ttfamily \#include $<$Solid.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Solid\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=166pt]{classfemus_1_1_solid__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Solid\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=184pt]{classfemus_1_1_solid__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_solid_a07969055ed742f25e4056549bb068cb4}{Solid}} (\mbox{\hyperlink{classfemus_1_1_parameter}{Parameter}} \&par)
+\item 
+\mbox{\hyperlink{classfemus_1_1_solid_a0d8044c8b1ef2b972975dfb5d7378b9a}{Solid}} (\mbox{\hyperlink{classfemus_1_1_parameter}{Parameter}} \&par, const double young\+\_\+module, const double poisson\+\_\+coeff, const double density, const char model\mbox{[}$\,$\mbox{]}=\char`\"{}Linear\+\_\+elastic\char`\"{}, const double k=1., const double cp=1., const double alpha=1.e-\/06)
+\item 
+\mbox{\hyperlink{classfemus_1_1_solid_a2d78d871f3e7af6d85508b08d32d82b0}{Solid}} ()
+\item 
+\mbox{\hyperlink{classfemus_1_1_solid_a6df9755d69a4b107891c8eea67425270}{$\sim$\+Solid}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solid_afdf6ba9c09e68bfc8e3d995eb039b311}{set\+\_\+young\+\_\+module}} (const double young\+\_\+module)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_solid_a1e30ce159ef4011c26fdfe3dfe0f05a0}{set\+\_\+poisson\+\_\+coeff}} (const double poisson\+\_\+coeff)
+\item 
+const double \mbox{\hyperlink{classfemus_1_1_solid_a1a27599fb327424255b0823dcddd863a}{get\+\_\+young\+\_\+module}} () const
+\item 
+const double \mbox{\hyperlink{classfemus_1_1_solid_a3d971cfb0d2a1810e6b31830f1f4b900}{get\+\_\+poisson\+\_\+coeff}} () const
+\item 
+const double \mbox{\hyperlink{classfemus_1_1_solid_a25307ed3e65fea474b2d74b130348e4b}{get\+\_\+lame\+\_\+lambda}} () const
+\item 
+const double \mbox{\hyperlink{classfemus_1_1_solid_a5f3228eab52c343a13167eaf73f568bc}{get\+\_\+lame\+\_\+shear\+\_\+modulus}} () const
+\item 
+const unsigned \mbox{\hyperlink{classfemus_1_1_solid_a19ca2da625aede63d5277cb034584718}{get\+\_\+physical\+\_\+model}} () const
+\item 
+const bool \mbox{\hyperlink{classfemus_1_1_solid_a032c01f0f6e345f2818a7ffe24bad883}{get\+\_\+if\+\_\+penalty}} () const
+\item 
+const bool \mbox{\hyperlink{classfemus_1_1_solid_a5215514d8c35970cc90a4ac190dcebe9}{get\+\_\+if\+\_\+mass\+\_\+penalty}} () const
+\item 
+\mbox{\hyperlink{classfemus_1_1_solid}{Solid}} \& \mbox{\hyperlink{classfemus_1_1_solid_a6fa24eaf6a7378872f2cd9b440f72a9f}{operator=}} (const \mbox{\hyperlink{classfemus_1_1_solid}{Solid}} \&solid)
+\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+std\+::ostream \& \mbox{\hyperlink{classfemus_1_1_solid_a22707c24a86d849cae294b1d0dea3571}{operator$<$$<$}} (std\+::ostream \&os, const \mbox{\hyperlink{classfemus_1_1_solid}{Solid}} \&solid)
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_solid_a07969055ed742f25e4056549bb068cb4}\label{classfemus_1_1_solid_a07969055ed742f25e4056549bb068cb4}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!Solid@{Solid}}
+\index{Solid@{Solid}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{Solid()}{Solid()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily femus\+::\+Solid\+::\+Solid (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_parameter}{Parameter}} \&}]{par }\end{DoxyParamCaption})}
+
+constructors \mbox{\Hypertarget{classfemus_1_1_solid_a0d8044c8b1ef2b972975dfb5d7378b9a}\label{classfemus_1_1_solid_a0d8044c8b1ef2b972975dfb5d7378b9a}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!Solid@{Solid}}
+\index{Solid@{Solid}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{Solid()}{Solid()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily femus\+::\+Solid\+::\+Solid (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_parameter}{Parameter}} \&}]{par,  }\item[{const double}]{young\+\_\+module,  }\item[{const double}]{poisson\+\_\+coeff,  }\item[{const double}]{density,  }\item[{const char}]{model\mbox{[}$\,$\mbox{]} = {\ttfamily \char`\"{}Linear\+\_\+elastic\char`\"{}},  }\item[{const double}]{k = {\ttfamily 1.},  }\item[{const double}]{cp = {\ttfamily 1.},  }\item[{const double}]{alpha = {\ttfamily 1.e-\/06} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_solid_a2d78d871f3e7af6d85508b08d32d82b0}\label{classfemus_1_1_solid_a2d78d871f3e7af6d85508b08d32d82b0}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!Solid@{Solid}}
+\index{Solid@{Solid}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{Solid()}{Solid()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily femus\+::\+Solid\+::\+Solid (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_solid_a6df9755d69a4b107891c8eea67425270}\label{classfemus_1_1_solid_a6df9755d69a4b107891c8eea67425270}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!````~Solid@{$\sim$\+Solid}}
+\index{````~Solid@{$\sim$\+Solid}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{$\sim$\+Solid()}{~Solid()}}
+{\footnotesize\ttfamily femus\+::\+Solid\+::$\sim$\+Solid (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+destructor 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_solid_a5215514d8c35970cc90a4ac190dcebe9}\label{classfemus_1_1_solid_a5215514d8c35970cc90a4ac190dcebe9}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!get\+\_\+if\+\_\+mass\+\_\+penalty@{get\+\_\+if\+\_\+mass\+\_\+penalty}}
+\index{get\+\_\+if\+\_\+mass\+\_\+penalty@{get\+\_\+if\+\_\+mass\+\_\+penalty}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{get\+\_\+if\+\_\+mass\+\_\+penalty()}{get\_if\_mass\_penalty()}}
+{\footnotesize\ttfamily const bool femus\+::\+Solid\+::get\+\_\+if\+\_\+mass\+\_\+penalty (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_solid_a032c01f0f6e345f2818a7ffe24bad883}\label{classfemus_1_1_solid_a032c01f0f6e345f2818a7ffe24bad883}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!get\+\_\+if\+\_\+penalty@{get\+\_\+if\+\_\+penalty}}
+\index{get\+\_\+if\+\_\+penalty@{get\+\_\+if\+\_\+penalty}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{get\+\_\+if\+\_\+penalty()}{get\_if\_penalty()}}
+{\footnotesize\ttfamily const bool femus\+::\+Solid\+::get\+\_\+if\+\_\+penalty (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_solid_a25307ed3e65fea474b2d74b130348e4b}\label{classfemus_1_1_solid_a25307ed3e65fea474b2d74b130348e4b}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!get\+\_\+lame\+\_\+lambda@{get\+\_\+lame\+\_\+lambda}}
+\index{get\+\_\+lame\+\_\+lambda@{get\+\_\+lame\+\_\+lambda}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{get\+\_\+lame\+\_\+lambda()}{get\_lame\_lambda()}}
+{\footnotesize\ttfamily const double femus\+::\+Solid\+::get\+\_\+lame\+\_\+lambda (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_solid_a5f3228eab52c343a13167eaf73f568bc}\label{classfemus_1_1_solid_a5f3228eab52c343a13167eaf73f568bc}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!get\+\_\+lame\+\_\+shear\+\_\+modulus@{get\+\_\+lame\+\_\+shear\+\_\+modulus}}
+\index{get\+\_\+lame\+\_\+shear\+\_\+modulus@{get\+\_\+lame\+\_\+shear\+\_\+modulus}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{get\+\_\+lame\+\_\+shear\+\_\+modulus()}{get\_lame\_shear\_modulus()}}
+{\footnotesize\ttfamily const double femus\+::\+Solid\+::get\+\_\+lame\+\_\+shear\+\_\+modulus (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_solid_a19ca2da625aede63d5277cb034584718}\label{classfemus_1_1_solid_a19ca2da625aede63d5277cb034584718}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!get\+\_\+physical\+\_\+model@{get\+\_\+physical\+\_\+model}}
+\index{get\+\_\+physical\+\_\+model@{get\+\_\+physical\+\_\+model}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{get\+\_\+physical\+\_\+model()}{get\_physical\_model()}}
+{\footnotesize\ttfamily const unsigned femus\+::\+Solid\+::get\+\_\+physical\+\_\+model (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_solid_a3d971cfb0d2a1810e6b31830f1f4b900}\label{classfemus_1_1_solid_a3d971cfb0d2a1810e6b31830f1f4b900}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!get\+\_\+poisson\+\_\+coeff@{get\+\_\+poisson\+\_\+coeff}}
+\index{get\+\_\+poisson\+\_\+coeff@{get\+\_\+poisson\+\_\+coeff}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{get\+\_\+poisson\+\_\+coeff()}{get\_poisson\_coeff()}}
+{\footnotesize\ttfamily const double femus\+::\+Solid\+::get\+\_\+poisson\+\_\+coeff (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_solid_a1a27599fb327424255b0823dcddd863a}\label{classfemus_1_1_solid_a1a27599fb327424255b0823dcddd863a}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!get\+\_\+young\+\_\+module@{get\+\_\+young\+\_\+module}}
+\index{get\+\_\+young\+\_\+module@{get\+\_\+young\+\_\+module}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{get\+\_\+young\+\_\+module()}{get\_young\_module()}}
+{\footnotesize\ttfamily const double femus\+::\+Solid\+::get\+\_\+young\+\_\+module (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_solid_a6fa24eaf6a7378872f2cd9b440f72a9f}\label{classfemus_1_1_solid_a6fa24eaf6a7378872f2cd9b440f72a9f}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!operator=@{operator=}}
+\index{operator=@{operator=}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{operator=()}{operator=()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_solid}{Solid}} \& femus\+::\+Solid\+::operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_solid}{Solid}} \&}]{solid }\end{DoxyParamCaption})}
+
+overloading of the = operator \mbox{\Hypertarget{classfemus_1_1_solid_a1e30ce159ef4011c26fdfe3dfe0f05a0}\label{classfemus_1_1_solid_a1e30ce159ef4011c26fdfe3dfe0f05a0}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!set\+\_\+poisson\+\_\+coeff@{set\+\_\+poisson\+\_\+coeff}}
+\index{set\+\_\+poisson\+\_\+coeff@{set\+\_\+poisson\+\_\+coeff}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{set\+\_\+poisson\+\_\+coeff()}{set\_poisson\_coeff()}}
+{\footnotesize\ttfamily void femus\+::\+Solid\+::set\+\_\+poisson\+\_\+coeff (\begin{DoxyParamCaption}\item[{const double}]{poisson\+\_\+coeff }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_solid_afdf6ba9c09e68bfc8e3d995eb039b311}\label{classfemus_1_1_solid_afdf6ba9c09e68bfc8e3d995eb039b311}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!set\+\_\+young\+\_\+module@{set\+\_\+young\+\_\+module}}
+\index{set\+\_\+young\+\_\+module@{set\+\_\+young\+\_\+module}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{set\+\_\+young\+\_\+module()}{set\_young\_module()}}
+{\footnotesize\ttfamily void femus\+::\+Solid\+::set\+\_\+young\+\_\+module (\begin{DoxyParamCaption}\item[{const double}]{young\+\_\+module }\end{DoxyParamCaption})}
+
+To be Added 
+
+\subsection{Friends And Related Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_solid_a22707c24a86d849cae294b1d0dea3571}\label{classfemus_1_1_solid_a22707c24a86d849cae294b1d0dea3571}} 
+\index{femus\+::\+Solid@{femus\+::\+Solid}!operator$<$$<$@{operator$<$$<$}}
+\index{operator$<$$<$@{operator$<$$<$}!femus\+::\+Solid@{femus\+::\+Solid}}
+\subsubsection{\texorpdfstring{operator$<$$<$}{operator<<}}
+{\footnotesize\ttfamily std\+::ostream\& operator$<$$<$ (\begin{DoxyParamCaption}\item[{std\+::ostream \&}]{os,  }\item[{const \mbox{\hyperlink{classfemus_1_1_solid}{Solid}} \&}]{solid }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [friend]}}
+
+printing operator 
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+physics/\mbox{\hyperlink{_solid_8hpp}{Solid.\+hpp}}\item 
+physics/\mbox{\hyperlink{_solid_8cpp}{Solid.\+cpp}}\end{DoxyCompactItemize}

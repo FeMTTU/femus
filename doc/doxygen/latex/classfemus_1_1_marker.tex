@@ -1,0 +1,458 @@
+\hypertarget{classfemus_1_1_marker}{}\section{femus\+:\+:Marker Class Reference}
+\label{classfemus_1_1_marker}\index{femus\+::\+Marker@{femus\+::\+Marker}}
+
+
+{\ttfamily \#include $<$Marker.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Marker\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=193pt]{classfemus_1_1_marker__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Marker\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=193pt]{classfemus_1_1_marker__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_marker_a103dd94b8a6b3f67c76c9b437f51af79}{Marker}} (std\+::vector$<$ double $>$ x, const double \&mass, const \mbox{\hyperlink{_marker_type_enum_8hpp_ade22213fff69cfb37d8238e8fd3073df}{Marker\+Type}} \&marker\+Type, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol, const unsigned \&sol\+Type, const bool \&debug=false)
+\item 
+double \mbox{\hyperlink{classfemus_1_1_marker_a1070ae16bddb9848292c9f1bbb13fa07}{Get\+Coordinates}} (\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol, const unsigned \&k, const unsigned \&i, const double \&s)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a1d02fb5c2c0fe7dbc343cfb6205beae9}{Set\+Iproc\+Marker\+Old\+Coordinates}} (const std\+::vector$<$ double $>$ \&x0)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_affbfba68fa9f8feecf59b48a0bcea8d7}{Set\+Iproc\+Marker\+Coordinates}} (const std\+::vector$<$ double $>$ \&x)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_ad09bfae9f0fa2299502e8959d8fe0fc3}{Set\+Iproc\+MarkerK}} (const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&K)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a76f9588d5ee4a8f1ec195f4bff072f33}{Set\+Iproc\+Marker\+Step}} (const unsigned \&step)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_ae8862ce87571f05abe2cc43f2dbf1b6a}{Set\+Marker\+Element}} (const unsigned \&\mbox{\hyperlink{classfemus_1_1elem}{elem}})
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_ad429d69406b213669c37ae30312d2fd6}{Set\+Marker\+Proc}} (const unsigned \&mproc)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_afdd4fec140304e2c44dbad719a7ffd6e}{Set\+Iproc\+Marker\+Previous\+Element}} (const unsigned \&previous\+Elem)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a56821a36723f7a61405c6ffaff3ddd9c}{Get\+Number\+Of\+Mesh\+Elements}} (unsigned \&elements, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol)
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_marker_a7b9cecab939da8a3bb0b7f325f8d4c82}{Get\+Marker\+Proc}} (\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a1c9ef5e8f53d5df14ed8877000015b22}{Get\+Marker\+Local\+Coordinates}} (std\+::vector$<$ double $>$ \&xi)
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_marker_ade55a22365fdb7900488c2c6b4214a74}{Get\+Marker\+Element}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_ae9e99af31667e4a355f90218c62870e7}{Get\+Marker\+Element\+Line}} (unsigned \&\mbox{\hyperlink{classfemus_1_1elem}{elem}})
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_adcfbc791b5513bdcf0b6ef5463fda602}{Set\+Marker\+Mass}} (const double \&mass)
+\item 
+double \mbox{\hyperlink{classfemus_1_1_marker_afe519b2f7a2456df2d5055362db7c721}{Get\+Marker\+Mass}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a6e11f4c2da57d3d7b4da68515dc84edf}{Set\+Marker\+Velocity}} (const std\+::vector$<$ double $>$ \&velocity)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a065c2d7a8aa6955769ef167e9a9bd115}{Get\+Marker\+Velocity}} (std\+::vector$<$ double $>$ \&velocity)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a04c3ca5ff37c95221da70814b2d28675}{Update\+Particle\+Velocities}} (const std\+::vector$<$ double $>$ new\+Particle\+Acceleration, const double dt)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a78ab2a9aeaf87a66d99758c0388ed63f}{Set\+Marker\+Acceleration}} (const std\+::vector$<$ double $>$ \&acceleration)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_af945ede868cb715f5a2c9af198bc7945}{Get\+Marker\+Acceleration}} (std\+::vector$<$ double $>$ \&acceleration)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a6c5abe2e36749e4c032c152f9dfa5756}{Set\+Marker\+Displacement}} (const std\+::vector$<$ double $>$ \&displacement)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_ad971dd9e927960ba761b7f30824ee2a3}{Get\+Marker\+Displacement}} (std\+::vector$<$ double $>$ \&displacement)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a66a336ffa0b9ebf859506c8c74745134}{Update\+Particle\+Coordinates}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_adfed0efcca0438c2e9df0c310630856f}{Set\+M\+P\+M\+Quantities}} (const std\+::vector$<$ double $>$ \&M\+P\+M\+Quantities)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a7c6d2c8d4ae7d219c7d065bcb4b27668}{Set\+Deformation\+Gradient}} (const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ Fp)
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classfemus_1_1_marker_af499049373061d6d6ef69fdb644ee5ae}{Get\+M\+P\+M\+Quantities}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_marker_ae051128fd53dafb08b15a64c936d76fe}{Get\+M\+P\+M\+Size}} ()
+\item 
+std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \mbox{\hyperlink{classfemus_1_1_marker_a769d6839c6c0989e6c5aaf14a41bd805}{Get\+Deformation\+Gradient}} ()
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classfemus_1_1_marker_a87e31492a23f98ad9ac0e140a97050c1}{Get\+Marker\+Local\+Coordinates}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a01c3f9f19b8a31d70a99afded246f501}{Get\+Marker\+Local\+Coordinates\+Line}} (std\+::vector$<$ double $>$ \&xi)
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classfemus_1_1_marker_a35c7e087d935de1e4088317bc7a8470c}{Get\+Iproc\+Marker\+Coordinates}} ()
+\item 
+std\+::vector$<$ double $>$ \mbox{\hyperlink{classfemus_1_1_marker_a035b830f94d28088b9052eee48d39602}{Get\+Iproc\+Marker\+Old\+Coordinates}} ()
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_marker_a43c011c82d9c6f22e76b1ab9c7b99cb4}{Get\+Iproc\+Marker\+Step}} ()
+\item 
+std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \mbox{\hyperlink{classfemus_1_1_marker_a2480e8c69f57128c315e92f5fee37fd2}{Get\+Iproc\+MarkerK}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_ad22d3d2cf3e739c1292568c5607df777}{Get\+Marker\+Coordinates}} (std\+::vector$<$ double $>$ \&xn)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_ab2fb6a9e890f4112bf03165a3bdf81c0}{Get\+Marker\+Coordinates}} (std\+::vector$<$ \mbox{\hyperlink{classfemus_1_1_my_vector}{My\+Vector}}$<$ double $>$ $>$ \&xn)
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_marker_a937322e444d7617baba7c25c70f06d76}{Get\+Iproc\+Marker\+Previous\+Element}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_aa6e8a4686a99871432dc148aacba994e}{Initialize\+Marker\+For\+Advection}} (const unsigned \&order)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a81a9d7437fc6b0107e60dca65b748d08}{Initialize\+Variables}} (const unsigned \&order)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_ad2c82ba7bfd5465b6c90bd089b817311}{InitializeX}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a91622587feb95d2370c17b3c863edbe2}{Free\+Variables}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a6bdbbae6d9f6ad313b94b505e92d1e15}{Get\+Element}} (const bool \&use\+Initial\+Search, const unsigned \&initial\+Elem, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol, const double \&s)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a1ac39140dc5ae49f5c09f4637e31e2bb}{Get\+Element\+Serial}} (unsigned \&initial\+Elem, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol, const double \&s)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_ab3666724a2f8b99d7a4fe2212fd4b385}{Get\+Element}} (unsigned \&previous\+Elem, const unsigned \&previous\+Mproc, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol, const double \&s)
+\item 
+\mbox{\hyperlink{_marker_type_enum_8hpp_ade22213fff69cfb37d8238e8fd3073df}{Marker\+Type}} \mbox{\hyperlink{classfemus_1_1_marker_a7c56dc40e741357dfa59c0fc374a4199}{Get\+Marker\+Type}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_add09f327a09bf24a1f2a9950ee1bdfab}{Inverse\+Mapping\+T\+E\+ST}} (std\+::vector$<$ double $>$ \&x, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol, const double \&s)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a3149518c1d6ee9b53189f5ee658772b7}{Advection}} (const unsigned \&n, const double \&T, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a67ad7172973fd2e038e9d96cb34d2e3b}{update\+Velocity}} (std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&V, const vector$<$ unsigned $>$ \&sol\+V\+Index, const unsigned \&sol\+V\+Type, std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&a, std\+::vector$<$ double $>$ \&phi, const bool \&pc\+Elem\+Update, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_acde02b9dad1b07381a012257218a8800}{Find\+Local\+Coordinates}} (const unsigned \&sol\+V\+Type, std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ $>$ \&aX, const bool \&pc\+Elem\+Update, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol, const double \&s)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_a9d2df4b0b061b7bd34cc45e507ae7722}{Project\+Velocity\+Coefficients}} (const std\+::vector$<$ unsigned $>$ \&sol\+V\+Index, const unsigned \&sol\+V\+Type, const unsigned \&n\+DofsV, const unsigned \&iel\+Type, std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&a, \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$sol)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_marker_aa3d02aa1a6e0ebe24b261efa90846363}{Get\+MarkerS}} (const unsigned \&n, const unsigned \&order, double \&s)
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_marker_a103dd94b8a6b3f67c76c9b437f51af79}\label{classfemus_1_1_marker_a103dd94b8a6b3f67c76c9b437f51af79}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Marker@{Marker}}
+\index{Marker@{Marker}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Marker()}{Marker()}}
+{\footnotesize\ttfamily femus\+::\+Marker\+::\+Marker (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$}]{x,  }\item[{const double \&}]{mass,  }\item[{const \mbox{\hyperlink{_marker_type_enum_8hpp_ade22213fff69cfb37d8238e8fd3073df}{Marker\+Type}} \&}]{marker\+Type,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol,  }\item[{const unsigned \&}]{sol\+Type,  }\item[{const bool \&}]{debug = {\ttfamily false} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_marker_a3149518c1d6ee9b53189f5ee658772b7}\label{classfemus_1_1_marker_a3149518c1d6ee9b53189f5ee658772b7}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Advection@{Advection}}
+\index{Advection@{Advection}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Advection()}{Advection()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Advection (\begin{DoxyParamCaption}\item[{const unsigned \&}]{n,  }\item[{const double \&}]{T,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_acde02b9dad1b07381a012257218a8800}\label{classfemus_1_1_marker_acde02b9dad1b07381a012257218a8800}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Find\+Local\+Coordinates@{Find\+Local\+Coordinates}}
+\index{Find\+Local\+Coordinates@{Find\+Local\+Coordinates}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Find\+Local\+Coordinates()}{FindLocalCoordinates()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Find\+Local\+Coordinates (\begin{DoxyParamCaption}\item[{const unsigned \&}]{sol\+V\+Type,  }\item[{std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ $>$ \&}]{aX,  }\item[{const bool \&}]{pc\+Elem\+Update,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol,  }\item[{const double \&}]{s }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a91622587feb95d2370c17b3c863edbe2}\label{classfemus_1_1_marker_a91622587feb95d2370c17b3c863edbe2}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Free\+Variables@{Free\+Variables}}
+\index{Free\+Variables@{Free\+Variables}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Free\+Variables()}{FreeVariables()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Free\+Variables (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a1070ae16bddb9848292c9f1bbb13fa07}\label{classfemus_1_1_marker_a1070ae16bddb9848292c9f1bbb13fa07}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Coordinates@{Get\+Coordinates}}
+\index{Get\+Coordinates@{Get\+Coordinates}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Coordinates()}{GetCoordinates()}}
+{\footnotesize\ttfamily double femus\+::\+Marker\+::\+Get\+Coordinates (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol,  }\item[{const unsigned \&}]{k,  }\item[{const unsigned \&}]{i,  }\item[{const double \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a769d6839c6c0989e6c5aaf14a41bd805}\label{classfemus_1_1_marker_a769d6839c6c0989e6c5aaf14a41bd805}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Deformation\+Gradient@{Get\+Deformation\+Gradient}}
+\index{Get\+Deformation\+Gradient@{Get\+Deformation\+Gradient}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Deformation\+Gradient()}{GetDeformationGradient()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::vector $<$ double $>$ $>$ femus\+::\+Marker\+::\+Get\+Deformation\+Gradient (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a6bdbbae6d9f6ad313b94b505e92d1e15}\label{classfemus_1_1_marker_a6bdbbae6d9f6ad313b94b505e92d1e15}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Element@{Get\+Element}}
+\index{Get\+Element@{Get\+Element}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Element()}{GetElement()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Element (\begin{DoxyParamCaption}\item[{const bool \&}]{use\+Initial\+Search,  }\item[{const unsigned \&}]{initial\+Elem,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol,  }\item[{const double \&}]{s }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_ab3666724a2f8b99d7a4fe2212fd4b385}\label{classfemus_1_1_marker_ab3666724a2f8b99d7a4fe2212fd4b385}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Element@{Get\+Element}}
+\index{Get\+Element@{Get\+Element}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Element()}{GetElement()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Element (\begin{DoxyParamCaption}\item[{unsigned \&}]{previous\+Elem,  }\item[{const unsigned \&}]{previous\+Mproc,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol,  }\item[{const double \&}]{s }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a1ac39140dc5ae49f5c09f4637e31e2bb}\label{classfemus_1_1_marker_a1ac39140dc5ae49f5c09f4637e31e2bb}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Element\+Serial@{Get\+Element\+Serial}}
+\index{Get\+Element\+Serial@{Get\+Element\+Serial}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Element\+Serial()}{GetElementSerial()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Element\+Serial (\begin{DoxyParamCaption}\item[{unsigned \&}]{initial\+Elem,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol,  }\item[{const double \&}]{s }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a35c7e087d935de1e4088317bc7a8470c}\label{classfemus_1_1_marker_a35c7e087d935de1e4088317bc7a8470c}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Iproc\+Marker\+Coordinates@{Get\+Iproc\+Marker\+Coordinates}}
+\index{Get\+Iproc\+Marker\+Coordinates@{Get\+Iproc\+Marker\+Coordinates}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Iproc\+Marker\+Coordinates()}{GetIprocMarkerCoordinates()}}
+{\footnotesize\ttfamily std\+::vector$<$ double $>$ femus\+::\+Marker\+::\+Get\+Iproc\+Marker\+Coordinates (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a2480e8c69f57128c315e92f5fee37fd2}\label{classfemus_1_1_marker_a2480e8c69f57128c315e92f5fee37fd2}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Iproc\+MarkerK@{Get\+Iproc\+MarkerK}}
+\index{Get\+Iproc\+MarkerK@{Get\+Iproc\+MarkerK}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Iproc\+Marker\+K()}{GetIprocMarkerK()}}
+{\footnotesize\ttfamily std\+::vector$<$ std\+::vector $<$ double$>$ $>$ femus\+::\+Marker\+::\+Get\+Iproc\+MarkerK (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a035b830f94d28088b9052eee48d39602}\label{classfemus_1_1_marker_a035b830f94d28088b9052eee48d39602}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Iproc\+Marker\+Old\+Coordinates@{Get\+Iproc\+Marker\+Old\+Coordinates}}
+\index{Get\+Iproc\+Marker\+Old\+Coordinates@{Get\+Iproc\+Marker\+Old\+Coordinates}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Iproc\+Marker\+Old\+Coordinates()}{GetIprocMarkerOldCoordinates()}}
+{\footnotesize\ttfamily std\+::vector$<$ double $>$ femus\+::\+Marker\+::\+Get\+Iproc\+Marker\+Old\+Coordinates (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a937322e444d7617baba7c25c70f06d76}\label{classfemus_1_1_marker_a937322e444d7617baba7c25c70f06d76}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Iproc\+Marker\+Previous\+Element@{Get\+Iproc\+Marker\+Previous\+Element}}
+\index{Get\+Iproc\+Marker\+Previous\+Element@{Get\+Iproc\+Marker\+Previous\+Element}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Iproc\+Marker\+Previous\+Element()}{GetIprocMarkerPreviousElement()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Marker\+::\+Get\+Iproc\+Marker\+Previous\+Element (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a43c011c82d9c6f22e76b1ab9c7b99cb4}\label{classfemus_1_1_marker_a43c011c82d9c6f22e76b1ab9c7b99cb4}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Iproc\+Marker\+Step@{Get\+Iproc\+Marker\+Step}}
+\index{Get\+Iproc\+Marker\+Step@{Get\+Iproc\+Marker\+Step}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Iproc\+Marker\+Step()}{GetIprocMarkerStep()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Marker\+::\+Get\+Iproc\+Marker\+Step (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_af945ede868cb715f5a2c9af198bc7945}\label{classfemus_1_1_marker_af945ede868cb715f5a2c9af198bc7945}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Acceleration@{Get\+Marker\+Acceleration}}
+\index{Get\+Marker\+Acceleration@{Get\+Marker\+Acceleration}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Acceleration()}{GetMarkerAcceleration()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Marker\+Acceleration (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{acceleration }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_ad22d3d2cf3e739c1292568c5607df777}\label{classfemus_1_1_marker_ad22d3d2cf3e739c1292568c5607df777}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Coordinates@{Get\+Marker\+Coordinates}}
+\index{Get\+Marker\+Coordinates@{Get\+Marker\+Coordinates}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Coordinates()}{GetMarkerCoordinates()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Marker\+Coordinates (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{xn }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_ab2fb6a9e890f4112bf03165a3bdf81c0}\label{classfemus_1_1_marker_ab2fb6a9e890f4112bf03165a3bdf81c0}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Coordinates@{Get\+Marker\+Coordinates}}
+\index{Get\+Marker\+Coordinates@{Get\+Marker\+Coordinates}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Coordinates()}{GetMarkerCoordinates()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Marker\+Coordinates (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{classfemus_1_1_my_vector}{My\+Vector}}$<$ double $>$ $>$ \&}]{xn }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_ad971dd9e927960ba761b7f30824ee2a3}\label{classfemus_1_1_marker_ad971dd9e927960ba761b7f30824ee2a3}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Displacement@{Get\+Marker\+Displacement}}
+\index{Get\+Marker\+Displacement@{Get\+Marker\+Displacement}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Displacement()}{GetMarkerDisplacement()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Marker\+Displacement (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{displacement }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_ade55a22365fdb7900488c2c6b4214a74}\label{classfemus_1_1_marker_ade55a22365fdb7900488c2c6b4214a74}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Element@{Get\+Marker\+Element}}
+\index{Get\+Marker\+Element@{Get\+Marker\+Element}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Element()}{GetMarkerElement()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Marker\+::\+Get\+Marker\+Element (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_ae9e99af31667e4a355f90218c62870e7}\label{classfemus_1_1_marker_ae9e99af31667e4a355f90218c62870e7}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Element\+Line@{Get\+Marker\+Element\+Line}}
+\index{Get\+Marker\+Element\+Line@{Get\+Marker\+Element\+Line}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Element\+Line()}{GetMarkerElementLine()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Marker\+Element\+Line (\begin{DoxyParamCaption}\item[{unsigned \&}]{elem }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a1c9ef5e8f53d5df14ed8877000015b22}\label{classfemus_1_1_marker_a1c9ef5e8f53d5df14ed8877000015b22}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Local\+Coordinates@{Get\+Marker\+Local\+Coordinates}}
+\index{Get\+Marker\+Local\+Coordinates@{Get\+Marker\+Local\+Coordinates}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Local\+Coordinates()}{GetMarkerLocalCoordinates()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Marker\+Local\+Coordinates (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{xi }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a87e31492a23f98ad9ac0e140a97050c1}\label{classfemus_1_1_marker_a87e31492a23f98ad9ac0e140a97050c1}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Local\+Coordinates@{Get\+Marker\+Local\+Coordinates}}
+\index{Get\+Marker\+Local\+Coordinates@{Get\+Marker\+Local\+Coordinates}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Local\+Coordinates()}{GetMarkerLocalCoordinates()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ femus\+::\+Marker\+::\+Get\+Marker\+Local\+Coordinates (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a01c3f9f19b8a31d70a99afded246f501}\label{classfemus_1_1_marker_a01c3f9f19b8a31d70a99afded246f501}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Local\+Coordinates\+Line@{Get\+Marker\+Local\+Coordinates\+Line}}
+\index{Get\+Marker\+Local\+Coordinates\+Line@{Get\+Marker\+Local\+Coordinates\+Line}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Local\+Coordinates\+Line()}{GetMarkerLocalCoordinatesLine()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Marker\+Local\+Coordinates\+Line (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{xi }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_afe519b2f7a2456df2d5055362db7c721}\label{classfemus_1_1_marker_afe519b2f7a2456df2d5055362db7c721}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Mass@{Get\+Marker\+Mass}}
+\index{Get\+Marker\+Mass@{Get\+Marker\+Mass}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Mass()}{GetMarkerMass()}}
+{\footnotesize\ttfamily double femus\+::\+Marker\+::\+Get\+Marker\+Mass (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a7b9cecab939da8a3bb0b7f325f8d4c82}\label{classfemus_1_1_marker_a7b9cecab939da8a3bb0b7f325f8d4c82}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Proc@{Get\+Marker\+Proc}}
+\index{Get\+Marker\+Proc@{Get\+Marker\+Proc}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Proc()}{GetMarkerProc()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Marker\+::\+Get\+Marker\+Proc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_aa3d02aa1a6e0ebe24b261efa90846363}\label{classfemus_1_1_marker_aa3d02aa1a6e0ebe24b261efa90846363}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+MarkerS@{Get\+MarkerS}}
+\index{Get\+MarkerS@{Get\+MarkerS}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+S()}{GetMarkerS()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+MarkerS (\begin{DoxyParamCaption}\item[{const unsigned \&}]{n,  }\item[{const unsigned \&}]{order,  }\item[{double \&}]{s }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a7c56dc40e741357dfa59c0fc374a4199}\label{classfemus_1_1_marker_a7c56dc40e741357dfa59c0fc374a4199}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Type@{Get\+Marker\+Type}}
+\index{Get\+Marker\+Type@{Get\+Marker\+Type}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Type()}{GetMarkerType()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{_marker_type_enum_8hpp_ade22213fff69cfb37d8238e8fd3073df}{Marker\+Type}} femus\+::\+Marker\+::\+Get\+Marker\+Type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a065c2d7a8aa6955769ef167e9a9bd115}\label{classfemus_1_1_marker_a065c2d7a8aa6955769ef167e9a9bd115}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Marker\+Velocity@{Get\+Marker\+Velocity}}
+\index{Get\+Marker\+Velocity@{Get\+Marker\+Velocity}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Marker\+Velocity()}{GetMarkerVelocity()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Marker\+Velocity (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{velocity }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_af499049373061d6d6ef69fdb644ee5ae}\label{classfemus_1_1_marker_af499049373061d6d6ef69fdb644ee5ae}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+M\+P\+M\+Quantities@{Get\+M\+P\+M\+Quantities}}
+\index{Get\+M\+P\+M\+Quantities@{Get\+M\+P\+M\+Quantities}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+M\+P\+M\+Quantities()}{GetMPMQuantities()}}
+{\footnotesize\ttfamily std\+::vector$<$double$>$ femus\+::\+Marker\+::\+Get\+M\+P\+M\+Quantities (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_ae051128fd53dafb08b15a64c936d76fe}\label{classfemus_1_1_marker_ae051128fd53dafb08b15a64c936d76fe}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+M\+P\+M\+Size@{Get\+M\+P\+M\+Size}}
+\index{Get\+M\+P\+M\+Size@{Get\+M\+P\+M\+Size}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+M\+P\+M\+Size()}{GetMPMSize()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Marker\+::\+Get\+M\+P\+M\+Size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a56821a36723f7a61405c6ffaff3ddd9c}\label{classfemus_1_1_marker_a56821a36723f7a61405c6ffaff3ddd9c}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Get\+Number\+Of\+Mesh\+Elements@{Get\+Number\+Of\+Mesh\+Elements}}
+\index{Get\+Number\+Of\+Mesh\+Elements@{Get\+Number\+Of\+Mesh\+Elements}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Get\+Number\+Of\+Mesh\+Elements()}{GetNumberOfMeshElements()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Get\+Number\+Of\+Mesh\+Elements (\begin{DoxyParamCaption}\item[{unsigned \&}]{elements,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_aa6e8a4686a99871432dc148aacba994e}\label{classfemus_1_1_marker_aa6e8a4686a99871432dc148aacba994e}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Initialize\+Marker\+For\+Advection@{Initialize\+Marker\+For\+Advection}}
+\index{Initialize\+Marker\+For\+Advection@{Initialize\+Marker\+For\+Advection}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Initialize\+Marker\+For\+Advection()}{InitializeMarkerForAdvection()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Initialize\+Marker\+For\+Advection (\begin{DoxyParamCaption}\item[{const unsigned \&}]{order }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a81a9d7437fc6b0107e60dca65b748d08}\label{classfemus_1_1_marker_a81a9d7437fc6b0107e60dca65b748d08}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Initialize\+Variables@{Initialize\+Variables}}
+\index{Initialize\+Variables@{Initialize\+Variables}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Initialize\+Variables()}{InitializeVariables()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Initialize\+Variables (\begin{DoxyParamCaption}\item[{const unsigned \&}]{order }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_ad2c82ba7bfd5465b6c90bd089b817311}\label{classfemus_1_1_marker_ad2c82ba7bfd5465b6c90bd089b817311}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!InitializeX@{InitializeX}}
+\index{InitializeX@{InitializeX}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Initialize\+X()}{InitializeX()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+InitializeX (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_add09f327a09bf24a1f2a9950ee1bdfab}\label{classfemus_1_1_marker_add09f327a09bf24a1f2a9950ee1bdfab}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Inverse\+Mapping\+T\+E\+ST@{Inverse\+Mapping\+T\+E\+ST}}
+\index{Inverse\+Mapping\+T\+E\+ST@{Inverse\+Mapping\+T\+E\+ST}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Inverse\+Mapping\+T\+E\+S\+T()}{InverseMappingTEST()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Inverse\+Mapping\+T\+E\+ST (\begin{DoxyParamCaption}\item[{std\+::vector$<$ double $>$ \&}]{x,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol,  }\item[{const double \&}]{s }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a9d2df4b0b061b7bd34cc45e507ae7722}\label{classfemus_1_1_marker_a9d2df4b0b061b7bd34cc45e507ae7722}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Project\+Velocity\+Coefficients@{Project\+Velocity\+Coefficients}}
+\index{Project\+Velocity\+Coefficients@{Project\+Velocity\+Coefficients}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Project\+Velocity\+Coefficients()}{ProjectVelocityCoefficients()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Project\+Velocity\+Coefficients (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ unsigned $>$ \&}]{sol\+V\+Index,  }\item[{const unsigned \&}]{sol\+V\+Type,  }\item[{const unsigned \&}]{n\+DofsV,  }\item[{const unsigned \&}]{iel\+Type,  }\item[{std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&}]{a,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a7c6d2c8d4ae7d219c7d065bcb4b27668}\label{classfemus_1_1_marker_a7c6d2c8d4ae7d219c7d065bcb4b27668}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Deformation\+Gradient@{Set\+Deformation\+Gradient}}
+\index{Set\+Deformation\+Gradient@{Set\+Deformation\+Gradient}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Deformation\+Gradient()}{SetDeformationGradient()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Deformation\+Gradient (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::vector$<$ double $>$ $>$}]{Fp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_affbfba68fa9f8feecf59b48a0bcea8d7}\label{classfemus_1_1_marker_affbfba68fa9f8feecf59b48a0bcea8d7}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Iproc\+Marker\+Coordinates@{Set\+Iproc\+Marker\+Coordinates}}
+\index{Set\+Iproc\+Marker\+Coordinates@{Set\+Iproc\+Marker\+Coordinates}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Iproc\+Marker\+Coordinates()}{SetIprocMarkerCoordinates()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Iproc\+Marker\+Coordinates (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{x }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_ad09bfae9f0fa2299502e8959d8fe0fc3}\label{classfemus_1_1_marker_ad09bfae9f0fa2299502e8959d8fe0fc3}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Iproc\+MarkerK@{Set\+Iproc\+MarkerK}}
+\index{Set\+Iproc\+MarkerK@{Set\+Iproc\+MarkerK}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Iproc\+Marker\+K()}{SetIprocMarkerK()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Iproc\+MarkerK (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&}]{K }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a1d02fb5c2c0fe7dbc343cfb6205beae9}\label{classfemus_1_1_marker_a1d02fb5c2c0fe7dbc343cfb6205beae9}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Iproc\+Marker\+Old\+Coordinates@{Set\+Iproc\+Marker\+Old\+Coordinates}}
+\index{Set\+Iproc\+Marker\+Old\+Coordinates@{Set\+Iproc\+Marker\+Old\+Coordinates}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Iproc\+Marker\+Old\+Coordinates()}{SetIprocMarkerOldCoordinates()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Iproc\+Marker\+Old\+Coordinates (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{x0 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_afdd4fec140304e2c44dbad719a7ffd6e}\label{classfemus_1_1_marker_afdd4fec140304e2c44dbad719a7ffd6e}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Iproc\+Marker\+Previous\+Element@{Set\+Iproc\+Marker\+Previous\+Element}}
+\index{Set\+Iproc\+Marker\+Previous\+Element@{Set\+Iproc\+Marker\+Previous\+Element}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Iproc\+Marker\+Previous\+Element()}{SetIprocMarkerPreviousElement()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Iproc\+Marker\+Previous\+Element (\begin{DoxyParamCaption}\item[{const unsigned \&}]{previous\+Elem }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a76f9588d5ee4a8f1ec195f4bff072f33}\label{classfemus_1_1_marker_a76f9588d5ee4a8f1ec195f4bff072f33}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Iproc\+Marker\+Step@{Set\+Iproc\+Marker\+Step}}
+\index{Set\+Iproc\+Marker\+Step@{Set\+Iproc\+Marker\+Step}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Iproc\+Marker\+Step()}{SetIprocMarkerStep()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Iproc\+Marker\+Step (\begin{DoxyParamCaption}\item[{const unsigned \&}]{step }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a78ab2a9aeaf87a66d99758c0388ed63f}\label{classfemus_1_1_marker_a78ab2a9aeaf87a66d99758c0388ed63f}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Marker\+Acceleration@{Set\+Marker\+Acceleration}}
+\index{Set\+Marker\+Acceleration@{Set\+Marker\+Acceleration}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Marker\+Acceleration()}{SetMarkerAcceleration()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Marker\+Acceleration (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{acceleration }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a6c5abe2e36749e4c032c152f9dfa5756}\label{classfemus_1_1_marker_a6c5abe2e36749e4c032c152f9dfa5756}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Marker\+Displacement@{Set\+Marker\+Displacement}}
+\index{Set\+Marker\+Displacement@{Set\+Marker\+Displacement}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Marker\+Displacement()}{SetMarkerDisplacement()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Marker\+Displacement (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{displacement }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_ae8862ce87571f05abe2cc43f2dbf1b6a}\label{classfemus_1_1_marker_ae8862ce87571f05abe2cc43f2dbf1b6a}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Marker\+Element@{Set\+Marker\+Element}}
+\index{Set\+Marker\+Element@{Set\+Marker\+Element}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Marker\+Element()}{SetMarkerElement()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Marker\+Element (\begin{DoxyParamCaption}\item[{const unsigned \&}]{elem }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_adcfbc791b5513bdcf0b6ef5463fda602}\label{classfemus_1_1_marker_adcfbc791b5513bdcf0b6ef5463fda602}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Marker\+Mass@{Set\+Marker\+Mass}}
+\index{Set\+Marker\+Mass@{Set\+Marker\+Mass}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Marker\+Mass()}{SetMarkerMass()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Marker\+Mass (\begin{DoxyParamCaption}\item[{const double \&}]{mass }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_ad429d69406b213669c37ae30312d2fd6}\label{classfemus_1_1_marker_ad429d69406b213669c37ae30312d2fd6}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Marker\+Proc@{Set\+Marker\+Proc}}
+\index{Set\+Marker\+Proc@{Set\+Marker\+Proc}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Marker\+Proc()}{SetMarkerProc()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Marker\+Proc (\begin{DoxyParamCaption}\item[{const unsigned \&}]{mproc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a6e11f4c2da57d3d7b4da68515dc84edf}\label{classfemus_1_1_marker_a6e11f4c2da57d3d7b4da68515dc84edf}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+Marker\+Velocity@{Set\+Marker\+Velocity}}
+\index{Set\+Marker\+Velocity@{Set\+Marker\+Velocity}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+Marker\+Velocity()}{SetMarkerVelocity()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+Marker\+Velocity (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{velocity }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_adfed0efcca0438c2e9df0c310630856f}\label{classfemus_1_1_marker_adfed0efcca0438c2e9df0c310630856f}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Set\+M\+P\+M\+Quantities@{Set\+M\+P\+M\+Quantities}}
+\index{Set\+M\+P\+M\+Quantities@{Set\+M\+P\+M\+Quantities}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Set\+M\+P\+M\+Quantities()}{SetMPMQuantities()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Set\+M\+P\+M\+Quantities (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$ \&}]{M\+P\+M\+Quantities }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a66a336ffa0b9ebf859506c8c74745134}\label{classfemus_1_1_marker_a66a336ffa0b9ebf859506c8c74745134}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Update\+Particle\+Coordinates@{Update\+Particle\+Coordinates}}
+\index{Update\+Particle\+Coordinates@{Update\+Particle\+Coordinates}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Update\+Particle\+Coordinates()}{UpdateParticleCoordinates()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Update\+Particle\+Coordinates (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a04c3ca5ff37c95221da70814b2d28675}\label{classfemus_1_1_marker_a04c3ca5ff37c95221da70814b2d28675}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!Update\+Particle\+Velocities@{Update\+Particle\+Velocities}}
+\index{Update\+Particle\+Velocities@{Update\+Particle\+Velocities}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{Update\+Particle\+Velocities()}{UpdateParticleVelocities()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::\+Update\+Particle\+Velocities (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ double $>$}]{new\+Particle\+Acceleration,  }\item[{const double}]{dt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_marker_a67ad7172973fd2e038e9d96cb34d2e3b}\label{classfemus_1_1_marker_a67ad7172973fd2e038e9d96cb34d2e3b}} 
+\index{femus\+::\+Marker@{femus\+::\+Marker}!update\+Velocity@{update\+Velocity}}
+\index{update\+Velocity@{update\+Velocity}!femus\+::\+Marker@{femus\+::\+Marker}}
+\subsubsection{\texorpdfstring{update\+Velocity()}{updateVelocity()}}
+{\footnotesize\ttfamily void femus\+::\+Marker\+::update\+Velocity (\begin{DoxyParamCaption}\item[{std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&}]{V,  }\item[{const vector$<$ unsigned $>$ \&}]{sol\+V\+Index,  }\item[{const unsigned \&}]{sol\+V\+Type,  }\item[{std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&}]{a,  }\item[{std\+::vector$<$ double $>$ \&}]{phi,  }\item[{const bool \&}]{pc\+Elem\+Update,  }\item[{\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$}]{sol }\end{DoxyParamCaption})}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+ism/\mbox{\hyperlink{_marker_8hpp}{Marker.\+hpp}}\item 
+ism/\mbox{\hyperlink{_marker_8cpp}{Marker.\+cpp}}\end{DoxyCompactItemize}

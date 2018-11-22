@@ -1,0 +1,6 @@
+<map id="femus::wedge_lag" name="femus::wedge_lag">
+<area shape="rect" id="node3" href="$classfemus_1_1_wedge_biquadratic.html" title="femus::WedgeBiquadratic" alt="" coords="5,155,184,181"/>
+<area shape="rect" id="node4" href="$classfemus_1_1_wedge_linear.html" title="femus::WedgeLinear" alt="" coords="209,155,357,181"/>
+<area shape="rect" id="node5" href="$classfemus_1_1_wedge_quadratic.html" title="femus::WedgeQuadratic" alt="" coords="381,155,550,181"/>
+<area shape="rect" id="node2" href="$classfemus_1_1basis.html" title="femus::basis" alt="" coords="233,5,332,32"/>
+</map>

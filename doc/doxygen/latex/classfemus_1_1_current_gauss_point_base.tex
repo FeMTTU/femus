@@ -1,0 +1,269 @@
+\hypertarget{classfemus_1_1_current_gauss_point_base}{}\section{femus\+:\+:Current\+Gauss\+Point\+Base Class Reference}
+\label{classfemus_1_1_current_gauss_point_base}\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+
+
+{\ttfamily \#include $<$Current\+Gauss\+Point\+Base.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Current\+Gauss\+Point\+Base\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=238pt]{classfemus_1_1_current_gauss_point_base__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Current\+Gauss\+Point\+Base\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_current_gauss_point_base__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_aee804d2e69ceec8dbca20be1485a5c14}{Current\+Gauss\+Point\+Base}} (const \mbox{\hyperlink{classfemus_1_1_current_elem}{Current\+Elem}} \&curr\+\_\+el\+\_\+in, const \mbox{\hyperlink{classfemus_1_1_gauss}{Gauss}} \&qrule\+\_\+in)
+\item 
+\mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a8e1ed382c638f02ac176557e4b741a8e}{$\sim$\+Current\+Gauss\+Point\+Base}} ()
+\item 
+const \mbox{\hyperlink{classfemus_1_1_current_elem}{Current\+Elem}} \& \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a09cbbd25b4bae6a6d0dee35b8b39c0cc}{Get\+Current\+Elem}} () const
+\item 
+double $\ast$$\ast$ \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a4a2538a97ec12693a6f1e1d6692c9b66}{get\+\_\+tangent\+\_\+ptr}} ()
+\item 
+double $\ast$ \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a22026e832b00dcd6ac5dc3915c5c064d}{get\+\_\+normal\+\_\+ptr}} ()
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_ac8f11d39a5d6b88c69849f2820a97482}{Jac\+Vect\+V\+V\+\_\+g}} (\mbox{\hyperlink{classfemus_1_1_current_quantity}{Current\+Quantity}} \&xyz)=0
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_adad673ff1adf7b5f6967f7701825e95e}{Jac\+Vect\+B\+B\+\_\+g}} (\mbox{\hyperlink{classfemus_1_1_current_quantity}{Current\+Quantity}} \&xyz)=0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_aec970c4eef875b43169cb74674276e29}{Set\+Phi\+El\+Dofs\+F\+E\+V\+B\+\_\+g}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} qlflag, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} qp)=0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_af1e7dd520b7b288fc1ff02674745fbcd}{Set\+D\+Phi\+Dxezeta\+El\+Dofs\+F\+E\+V\+B\+\_\+g}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} qlflag, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} qp)=0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a119838d470a6e444ef0b54220b5dc3bc}{Set\+D\+Phi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} qlflag, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} qp)=0
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a4aaaad9d57bead01f701396ad61acc21}{Extend\+Dphi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} qlflag)=0
+\item 
+double \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_ae82c1cf31e3f5fdf7eea0e79c963ecba}{Phi}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} ql, const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} dof) const
+\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base}{Current\+Gauss\+Point\+Base}} \& \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_acc707006f412446178805a78247867bc}{build}} (const \mbox{\hyperlink{classfemus_1_1_current_elem}{Current\+Elem}} \&elem\+\_\+in, const \mbox{\hyperlink{classfemus_1_1_gauss}{Gauss}} \&qrule\+\_\+in)
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+double $\ast$ \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a908fe5d463eb11d7ad9841775f456460}{\+\_\+dphidxezeta\+\_\+nds\+Q\+L\+V\+B\+\_\+g}} \mbox{[}\mbox{\hyperlink{_f_e_type_enum_8hpp_aca285339f9cf24489fdc0af5b51a5fde}{QL}}\mbox{]}
+\item 
+double $\ast$ \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a87ab3d43bdceedcfe2983935497e165d}{\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g}} \mbox{[}\mbox{\hyperlink{_f_e_type_enum_8hpp_aca285339f9cf24489fdc0af5b51a5fde}{QL}}\mbox{]}
+\item 
+double $\ast$ \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a9b1b6bb9910801d0087318c87003d624}{\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g3D}} \mbox{[}\mbox{\hyperlink{_f_e_type_enum_8hpp_aca285339f9cf24489fdc0af5b51a5fde}{QL}}\mbox{]}
+\item 
+double $\ast$ \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a85ec9531f605c59850123ebdad867bba}{\+\_\+phi\+\_\+nds\+Q\+L\+V\+B\+\_\+g}} \mbox{[}\mbox{\hyperlink{_f_e_type_enum_8hpp_aca285339f9cf24489fdc0af5b51a5fde}{QL}}\mbox{]}
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_af3453fd371041d38eecf683ed31780b8}{\+\_\+\+Int\+Dim}} \mbox{[}\mbox{\hyperlink{_v_b_type_enum_8hpp_a02ebcbc55b174d8bb6a65cddbe7f90b6}{VB}}\mbox{]}
+\item 
+const \mbox{\hyperlink{classfemus_1_1_current_elem}{Current\+Elem}} \& \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a8e74a49e2a79f39e0e38b22c2c17f893}{\+\_\+current\+\_\+elem}}
+\item 
+const std\+::vector$<$ const \mbox{\hyperlink{classfemus_1_1elem__type}{elem\+\_\+type}} $\ast$ $>$ \& \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_ac04dc6fcc6b32db55273e01fa4d4a6f4}{\+\_\+elem\+\_\+type}}
+\item 
+const \mbox{\hyperlink{classfemus_1_1_gauss}{Gauss}} \& \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a2d4d7be4478a1aea5bfa924c412bf29f}{\+\_\+qrule}}
+\item 
+double $\ast$$\ast$ \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a38c6b21bd7028fa2e75189c9619ca081}{\+\_\+\+Inv\+Jac\+\_\+g}}
+\item 
+double $\ast$ \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a53720924e866af56f3dd74519fdc42a0}{\+\_\+normal\+\_\+g}}
+\item 
+double $\ast$$\ast$ \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base_a0272bf13da6d3f348229bf6ae498034f}{\+\_\+tangent\+\_\+g}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_aee804d2e69ceec8dbca20be1485a5c14}\label{classfemus_1_1_current_gauss_point_base_aee804d2e69ceec8dbca20be1485a5c14}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!Current\+Gauss\+Point\+Base@{Current\+Gauss\+Point\+Base}}
+\index{Current\+Gauss\+Point\+Base@{Current\+Gauss\+Point\+Base}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{Current\+Gauss\+Point\+Base()}{CurrentGaussPointBase()}}
+{\footnotesize\ttfamily femus\+::\+Current\+Gauss\+Point\+Base\+::\+Current\+Gauss\+Point\+Base (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_current_elem}{Current\+Elem}} \&}]{curr\+\_\+el\+\_\+in,  }\item[{const \mbox{\hyperlink{classfemus_1_1_gauss}{Gauss}} \&}]{qrule\+\_\+in }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a8e1ed382c638f02ac176557e4b741a8e}\label{classfemus_1_1_current_gauss_point_base_a8e1ed382c638f02ac176557e4b741a8e}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!````~Current\+Gauss\+Point\+Base@{$\sim$\+Current\+Gauss\+Point\+Base}}
+\index{````~Current\+Gauss\+Point\+Base@{$\sim$\+Current\+Gauss\+Point\+Base}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{$\sim$\+Current\+Gauss\+Point\+Base()}{~CurrentGaussPointBase()}}
+{\footnotesize\ttfamily femus\+::\+Current\+Gauss\+Point\+Base\+::$\sim$\+Current\+Gauss\+Point\+Base (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_acc707006f412446178805a78247867bc}\label{classfemus_1_1_current_gauss_point_base_acc707006f412446178805a78247867bc}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!build@{build}}
+\index{build@{build}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{build()}{build()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_current_gauss_point_base}{Current\+Gauss\+Point\+Base}} \& femus\+::\+Current\+Gauss\+Point\+Base\+::build (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_current_elem}{Current\+Elem}} \&}]{elem\+\_\+in,  }\item[{const \mbox{\hyperlink{classfemus_1_1_gauss}{Gauss}} \&}]{qrule\+\_\+in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a4aaaad9d57bead01f701396ad61acc21}\label{classfemus_1_1_current_gauss_point_base_a4aaaad9d57bead01f701396ad61acc21}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!Extend\+Dphi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g@{Extend\+Dphi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g}}
+\index{Extend\+Dphi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g@{Extend\+Dphi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{Extend\+Dphi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g()}{ExtendDphiDxyzElDofsFEVB\_g()}}
+{\footnotesize\ttfamily virtual void femus\+::\+Current\+Gauss\+Point\+Base\+::\+Extend\+Dphi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{qlflag }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1_current_gauss_point_aff8e672a0e763e7ff73a1e06a7bc5143}{femus\+::\+Current\+Gauss\+Point$<$ F\+M\+\_\+\+D\+I\+M $>$}}.
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a22026e832b00dcd6ac5dc3915c5c064d}\label{classfemus_1_1_current_gauss_point_base_a22026e832b00dcd6ac5dc3915c5c064d}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!get\+\_\+normal\+\_\+ptr@{get\+\_\+normal\+\_\+ptr}}
+\index{get\+\_\+normal\+\_\+ptr@{get\+\_\+normal\+\_\+ptr}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{get\+\_\+normal\+\_\+ptr()}{get\_normal\_ptr()}}
+{\footnotesize\ttfamily double $\ast$ femus\+::\+Current\+Gauss\+Point\+Base\+::get\+\_\+normal\+\_\+ptr (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a4a2538a97ec12693a6f1e1d6692c9b66}\label{classfemus_1_1_current_gauss_point_base_a4a2538a97ec12693a6f1e1d6692c9b66}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!get\+\_\+tangent\+\_\+ptr@{get\+\_\+tangent\+\_\+ptr}}
+\index{get\+\_\+tangent\+\_\+ptr@{get\+\_\+tangent\+\_\+ptr}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{get\+\_\+tangent\+\_\+ptr()}{get\_tangent\_ptr()}}
+{\footnotesize\ttfamily double $\ast$$\ast$ femus\+::\+Current\+Gauss\+Point\+Base\+::get\+\_\+tangent\+\_\+ptr (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a09cbbd25b4bae6a6d0dee35b8b39c0cc}\label{classfemus_1_1_current_gauss_point_base_a09cbbd25b4bae6a6d0dee35b8b39c0cc}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!Get\+Current\+Elem@{Get\+Current\+Elem}}
+\index{Get\+Current\+Elem@{Get\+Current\+Elem}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{Get\+Current\+Elem()}{GetCurrentElem()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_current_elem}{Current\+Elem}}\& femus\+::\+Current\+Gauss\+Point\+Base\+::\+Get\+Current\+Elem (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_adad673ff1adf7b5f6967f7701825e95e}\label{classfemus_1_1_current_gauss_point_base_adad673ff1adf7b5f6967f7701825e95e}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!Jac\+Vect\+B\+B\+\_\+g@{Jac\+Vect\+B\+B\+\_\+g}}
+\index{Jac\+Vect\+B\+B\+\_\+g@{Jac\+Vect\+B\+B\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{Jac\+Vect\+B\+B\+\_\+g()}{JacVectBB\_g()}}
+{\footnotesize\ttfamily virtual double femus\+::\+Current\+Gauss\+Point\+Base\+::\+Jac\+Vect\+B\+B\+\_\+g (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_current_quantity}{Current\+Quantity}} \&}]{xyz }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1_current_gauss_point_afa303733709a133cb86ba65fe70d4a31}{femus\+::\+Current\+Gauss\+Point$<$ F\+M\+\_\+\+D\+I\+M $>$}}.
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_ac8f11d39a5d6b88c69849f2820a97482}\label{classfemus_1_1_current_gauss_point_base_ac8f11d39a5d6b88c69849f2820a97482}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!Jac\+Vect\+V\+V\+\_\+g@{Jac\+Vect\+V\+V\+\_\+g}}
+\index{Jac\+Vect\+V\+V\+\_\+g@{Jac\+Vect\+V\+V\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{Jac\+Vect\+V\+V\+\_\+g()}{JacVectVV\_g()}}
+{\footnotesize\ttfamily virtual double femus\+::\+Current\+Gauss\+Point\+Base\+::\+Jac\+Vect\+V\+V\+\_\+g (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_current_quantity}{Current\+Quantity}} \&}]{xyz }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1_current_gauss_point_a96a47ebb8abd928f0db6e472db2811f1}{femus\+::\+Current\+Gauss\+Point$<$ F\+M\+\_\+\+D\+I\+M $>$}}.
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_ae82c1cf31e3f5fdf7eea0e79c963ecba}\label{classfemus_1_1_current_gauss_point_base_ae82c1cf31e3f5fdf7eea0e79c963ecba}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!Phi@{Phi}}
+\index{Phi@{Phi}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{Phi()}{Phi()}}
+{\footnotesize\ttfamily double femus\+::\+Current\+Gauss\+Point\+Base\+::\+Phi (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{ql,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{dof }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_af1e7dd520b7b288fc1ff02674745fbcd}\label{classfemus_1_1_current_gauss_point_base_af1e7dd520b7b288fc1ff02674745fbcd}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!Set\+D\+Phi\+Dxezeta\+El\+Dofs\+F\+E\+V\+B\+\_\+g@{Set\+D\+Phi\+Dxezeta\+El\+Dofs\+F\+E\+V\+B\+\_\+g}}
+\index{Set\+D\+Phi\+Dxezeta\+El\+Dofs\+F\+E\+V\+B\+\_\+g@{Set\+D\+Phi\+Dxezeta\+El\+Dofs\+F\+E\+V\+B\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{Set\+D\+Phi\+Dxezeta\+El\+Dofs\+F\+E\+V\+B\+\_\+g()}{SetDPhiDxezetaElDofsFEVB\_g()}}
+{\footnotesize\ttfamily virtual void femus\+::\+Current\+Gauss\+Point\+Base\+::\+Set\+D\+Phi\+Dxezeta\+El\+Dofs\+F\+E\+V\+B\+\_\+g (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{qlflag,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{qp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1_current_gauss_point_a5b7c118fc9376db8783714992e341891}{femus\+::\+Current\+Gauss\+Point$<$ F\+M\+\_\+\+D\+I\+M $>$}}.
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a119838d470a6e444ef0b54220b5dc3bc}\label{classfemus_1_1_current_gauss_point_base_a119838d470a6e444ef0b54220b5dc3bc}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!Set\+D\+Phi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g@{Set\+D\+Phi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g}}
+\index{Set\+D\+Phi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g@{Set\+D\+Phi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{Set\+D\+Phi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g()}{SetDPhiDxyzElDofsFEVB\_g()}}
+{\footnotesize\ttfamily virtual void femus\+::\+Current\+Gauss\+Point\+Base\+::\+Set\+D\+Phi\+Dxyz\+El\+Dofs\+F\+E\+V\+B\+\_\+g (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{qlflag,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{qp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1_current_gauss_point_af33ae0e6b36353be0bb671573c6362bc}{femus\+::\+Current\+Gauss\+Point$<$ F\+M\+\_\+\+D\+I\+M $>$}}.
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_aec970c4eef875b43169cb74674276e29}\label{classfemus_1_1_current_gauss_point_base_aec970c4eef875b43169cb74674276e29}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!Set\+Phi\+El\+Dofs\+F\+E\+V\+B\+\_\+g@{Set\+Phi\+El\+Dofs\+F\+E\+V\+B\+\_\+g}}
+\index{Set\+Phi\+El\+Dofs\+F\+E\+V\+B\+\_\+g@{Set\+Phi\+El\+Dofs\+F\+E\+V\+B\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{Set\+Phi\+El\+Dofs\+F\+E\+V\+B\+\_\+g()}{SetPhiElDofsFEVB\_g()}}
+{\footnotesize\ttfamily virtual void femus\+::\+Current\+Gauss\+Point\+Base\+::\+Set\+Phi\+El\+Dofs\+F\+E\+V\+B\+\_\+g (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{qlflag,  }\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{qp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1_current_gauss_point_a7a11e1164802fdc683726eea6123d99f}{femus\+::\+Current\+Gauss\+Point$<$ F\+M\+\_\+\+D\+I\+M $>$}}.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a8e74a49e2a79f39e0e38b22c2c17f893}\label{classfemus_1_1_current_gauss_point_base_a8e74a49e2a79f39e0e38b22c2c17f893}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!\+\_\+current\+\_\+elem@{\+\_\+current\+\_\+elem}}
+\index{\+\_\+current\+\_\+elem@{\+\_\+current\+\_\+elem}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{\+\_\+current\+\_\+elem}{\_current\_elem}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_current_elem}{Current\+Elem}}\& femus\+::\+Current\+Gauss\+Point\+Base\+::\+\_\+current\+\_\+elem\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a908fe5d463eb11d7ad9841775f456460}\label{classfemus_1_1_current_gauss_point_base_a908fe5d463eb11d7ad9841775f456460}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!\+\_\+dphidxezeta\+\_\+nds\+Q\+L\+V\+B\+\_\+g@{\+\_\+dphidxezeta\+\_\+nds\+Q\+L\+V\+B\+\_\+g}}
+\index{\+\_\+dphidxezeta\+\_\+nds\+Q\+L\+V\+B\+\_\+g@{\+\_\+dphidxezeta\+\_\+nds\+Q\+L\+V\+B\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{\+\_\+dphidxezeta\+\_\+nds\+Q\+L\+V\+B\+\_\+g}{\_dphidxezeta\_ndsQLVB\_g}}
+{\footnotesize\ttfamily double$\ast$ femus\+::\+Current\+Gauss\+Point\+Base\+::\+\_\+dphidxezeta\+\_\+nds\+Q\+L\+V\+B\+\_\+g\mbox{[}\mbox{\hyperlink{_f_e_type_enum_8hpp_aca285339f9cf24489fdc0af5b51a5fde}{QL}}\mbox{]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a87ab3d43bdceedcfe2983935497e165d}\label{classfemus_1_1_current_gauss_point_base_a87ab3d43bdceedcfe2983935497e165d}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g@{\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g}}
+\index{\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g@{\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g}{\_dphidxyz\_ndsQLVB\_g}}
+{\footnotesize\ttfamily double$\ast$ femus\+::\+Current\+Gauss\+Point\+Base\+::\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g\mbox{[}\mbox{\hyperlink{_f_e_type_enum_8hpp_aca285339f9cf24489fdc0af5b51a5fde}{QL}}\mbox{]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a9b1b6bb9910801d0087318c87003d624}\label{classfemus_1_1_current_gauss_point_base_a9b1b6bb9910801d0087318c87003d624}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g3D@{\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g3D}}
+\index{\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g3D@{\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g3D}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g3D}{\_dphidxyz\_ndsQLVB\_g3D}}
+{\footnotesize\ttfamily double$\ast$ femus\+::\+Current\+Gauss\+Point\+Base\+::\+\_\+dphidxyz\+\_\+nds\+Q\+L\+V\+B\+\_\+g3D\mbox{[}\mbox{\hyperlink{_f_e_type_enum_8hpp_aca285339f9cf24489fdc0af5b51a5fde}{QL}}\mbox{]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_ac04dc6fcc6b32db55273e01fa4d4a6f4}\label{classfemus_1_1_current_gauss_point_base_ac04dc6fcc6b32db55273e01fa4d4a6f4}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!\+\_\+elem\+\_\+type@{\+\_\+elem\+\_\+type}}
+\index{\+\_\+elem\+\_\+type@{\+\_\+elem\+\_\+type}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{\+\_\+elem\+\_\+type}{\_elem\_type}}
+{\footnotesize\ttfamily const std\+::vector$<$const \mbox{\hyperlink{classfemus_1_1elem__type}{elem\+\_\+type}}$\ast$$>$\& femus\+::\+Current\+Gauss\+Point\+Base\+::\+\_\+elem\+\_\+type\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_af3453fd371041d38eecf683ed31780b8}\label{classfemus_1_1_current_gauss_point_base_af3453fd371041d38eecf683ed31780b8}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!\+\_\+\+Int\+Dim@{\+\_\+\+Int\+Dim}}
+\index{\+\_\+\+Int\+Dim@{\+\_\+\+Int\+Dim}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{\+\_\+\+Int\+Dim}{\_IntDim}}
+{\footnotesize\ttfamily \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} femus\+::\+Current\+Gauss\+Point\+Base\+::\+\_\+\+Int\+Dim\mbox{[}\mbox{\hyperlink{_v_b_type_enum_8hpp_a02ebcbc55b174d8bb6a65cddbe7f90b6}{VB}}\mbox{]}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a38c6b21bd7028fa2e75189c9619ca081}\label{classfemus_1_1_current_gauss_point_base_a38c6b21bd7028fa2e75189c9619ca081}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!\+\_\+\+Inv\+Jac\+\_\+g@{\+\_\+\+Inv\+Jac\+\_\+g}}
+\index{\+\_\+\+Inv\+Jac\+\_\+g@{\+\_\+\+Inv\+Jac\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{\+\_\+\+Inv\+Jac\+\_\+g}{\_InvJac\_g}}
+{\footnotesize\ttfamily double$\ast$$\ast$ femus\+::\+Current\+Gauss\+Point\+Base\+::\+\_\+\+Inv\+Jac\+\_\+g\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a53720924e866af56f3dd74519fdc42a0}\label{classfemus_1_1_current_gauss_point_base_a53720924e866af56f3dd74519fdc42a0}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!\+\_\+normal\+\_\+g@{\+\_\+normal\+\_\+g}}
+\index{\+\_\+normal\+\_\+g@{\+\_\+normal\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{\+\_\+normal\+\_\+g}{\_normal\_g}}
+{\footnotesize\ttfamily double$\ast$ femus\+::\+Current\+Gauss\+Point\+Base\+::\+\_\+normal\+\_\+g\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a85ec9531f605c59850123ebdad867bba}\label{classfemus_1_1_current_gauss_point_base_a85ec9531f605c59850123ebdad867bba}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!\+\_\+phi\+\_\+nds\+Q\+L\+V\+B\+\_\+g@{\+\_\+phi\+\_\+nds\+Q\+L\+V\+B\+\_\+g}}
+\index{\+\_\+phi\+\_\+nds\+Q\+L\+V\+B\+\_\+g@{\+\_\+phi\+\_\+nds\+Q\+L\+V\+B\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{\+\_\+phi\+\_\+nds\+Q\+L\+V\+B\+\_\+g}{\_phi\_ndsQLVB\_g}}
+{\footnotesize\ttfamily double$\ast$ femus\+::\+Current\+Gauss\+Point\+Base\+::\+\_\+phi\+\_\+nds\+Q\+L\+V\+B\+\_\+g\mbox{[}\mbox{\hyperlink{_f_e_type_enum_8hpp_aca285339f9cf24489fdc0af5b51a5fde}{QL}}\mbox{]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a2d4d7be4478a1aea5bfa924c412bf29f}\label{classfemus_1_1_current_gauss_point_base_a2d4d7be4478a1aea5bfa924c412bf29f}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!\+\_\+qrule@{\+\_\+qrule}}
+\index{\+\_\+qrule@{\+\_\+qrule}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{\+\_\+qrule}{\_qrule}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_gauss}{Gauss}}\& femus\+::\+Current\+Gauss\+Point\+Base\+::\+\_\+qrule\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_current_gauss_point_base_a0272bf13da6d3f348229bf6ae498034f}\label{classfemus_1_1_current_gauss_point_base_a0272bf13da6d3f348229bf6ae498034f}} 
+\index{femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}!\+\_\+tangent\+\_\+g@{\+\_\+tangent\+\_\+g}}
+\index{\+\_\+tangent\+\_\+g@{\+\_\+tangent\+\_\+g}!femus\+::\+Current\+Gauss\+Point\+Base@{femus\+::\+Current\+Gauss\+Point\+Base}}
+\subsubsection{\texorpdfstring{\+\_\+tangent\+\_\+g}{\_tangent\_g}}
+{\footnotesize\ttfamily double$\ast$$\ast$ femus\+::\+Current\+Gauss\+Point\+Base\+::\+\_\+tangent\+\_\+g\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+equations/\mbox{\hyperlink{_current_gauss_point_base_8hpp}{Current\+Gauss\+Point\+Base.\+hpp}}\item 
+equations/\mbox{\hyperlink{_current_gauss_point_base_8cpp}{Current\+Gauss\+Point\+Base.\+cpp}}\end{DoxyCompactItemize}

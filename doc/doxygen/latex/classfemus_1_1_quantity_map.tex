@@ -1,0 +1,87 @@
+\hypertarget{classfemus_1_1_quantity_map}{}\section{femus\+:\+:Quantity\+Map Class Reference}
+\label{classfemus_1_1_quantity_map}\index{femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}}
+
+
+{\ttfamily \#include $<$Quantity.\+hpp$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_quantity_map_aa342e3de043474f9e70768e8b163493d}{Quantity\+Map}} ()
+\item 
+\mbox{\hyperlink{classfemus_1_1_quantity_map_a2cd0a6d4114e5be3e35aa6a0703853d8}{$\sim$\+Quantity\+Map}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_quantity_map_ad491f645bc7537f47462cc352f0add25}{Add\+Quantity}} (\mbox{\hyperlink{classfemus_1_1_quantity}{Quantity}} $\ast$value)
+\item 
+\mbox{\hyperlink{classfemus_1_1_quantity}{Quantity}} $\ast$ \mbox{\hyperlink{classfemus_1_1_quantity_map_a2510c3eff021fa6704888731f77b1a79}{Get\+Quantity}} (const std\+::string \&name) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_quantity_map_a5e91f9c899e60ee5249e57e0f746dc2c}{Set\+Mesh\+Two}} (const \mbox{\hyperlink{classfemus_1_1_multi_level_mesh_two}{Multi\+Level\+Mesh\+Two}} $\ast$mesh\+\_\+in)
+\item 
+const \mbox{\hyperlink{classfemus_1_1_multi_level_mesh_two}{Multi\+Level\+Mesh\+Two}} $\ast$ \mbox{\hyperlink{classfemus_1_1_quantity_map_a1fd0c792179b5eeb087874311cff6635}{Get\+Mesh\+Two}} () const
+\item 
+const \mbox{\hyperlink{classfemus_1_1_femus_input_parser}{Femus\+Input\+Parser}}$<$ double $>$ $\ast$ \mbox{\hyperlink{classfemus_1_1_quantity_map_ae45ce1f62fbaf4c7253231bfdfc2a699}{Get\+Input\+Parser}} () const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_quantity_map_a607c4c523156d00c75864679d301aa05}{Set\+Input\+Parser}} (const \mbox{\hyperlink{classfemus_1_1_femus_input_parser}{Femus\+Input\+Parser}}$<$ double $>$ $\ast$parser\+\_\+in)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This class is the G\+L\+O\+B\+AL \mbox{\hyperlink{classfemus_1_1_quantity_map}{Quantity\+Map}} of my simulation, i.\+e. it holds the list of all the involved physical quantities 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_quantity_map_aa342e3de043474f9e70768e8b163493d}\label{classfemus_1_1_quantity_map_aa342e3de043474f9e70768e8b163493d}} 
+\index{femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}!Quantity\+Map@{Quantity\+Map}}
+\index{Quantity\+Map@{Quantity\+Map}!femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}}
+\subsubsection{\texorpdfstring{Quantity\+Map()}{QuantityMap()}}
+{\footnotesize\ttfamily femus\+::\+Quantity\+Map\+::\+Quantity\+Map (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_quantity_map_a2cd0a6d4114e5be3e35aa6a0703853d8}\label{classfemus_1_1_quantity_map_a2cd0a6d4114e5be3e35aa6a0703853d8}} 
+\index{femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}!````~Quantity\+Map@{$\sim$\+Quantity\+Map}}
+\index{````~Quantity\+Map@{$\sim$\+Quantity\+Map}!femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}}
+\subsubsection{\texorpdfstring{$\sim$\+Quantity\+Map()}{~QuantityMap()}}
+{\footnotesize\ttfamily femus\+::\+Quantity\+Map\+::$\sim$\+Quantity\+Map (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_quantity_map_ad491f645bc7537f47462cc352f0add25}\label{classfemus_1_1_quantity_map_ad491f645bc7537f47462cc352f0add25}} 
+\index{femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}!Add\+Quantity@{Add\+Quantity}}
+\index{Add\+Quantity@{Add\+Quantity}!femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}}
+\subsubsection{\texorpdfstring{Add\+Quantity()}{AddQuantity()}}
+{\footnotesize\ttfamily void femus\+::\+Quantity\+Map\+::\+Add\+Quantity (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_quantity}{Quantity}} $\ast$}]{value }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_quantity_map_ae45ce1f62fbaf4c7253231bfdfc2a699}\label{classfemus_1_1_quantity_map_ae45ce1f62fbaf4c7253231bfdfc2a699}} 
+\index{femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}!Get\+Input\+Parser@{Get\+Input\+Parser}}
+\index{Get\+Input\+Parser@{Get\+Input\+Parser}!femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}}
+\subsubsection{\texorpdfstring{Get\+Input\+Parser()}{GetInputParser()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_femus_input_parser}{Femus\+Input\+Parser}}$<$double$>$$\ast$ femus\+::\+Quantity\+Map\+::\+Get\+Input\+Parser (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_quantity_map_a1fd0c792179b5eeb087874311cff6635}\label{classfemus_1_1_quantity_map_a1fd0c792179b5eeb087874311cff6635}} 
+\index{femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}!Get\+Mesh\+Two@{Get\+Mesh\+Two}}
+\index{Get\+Mesh\+Two@{Get\+Mesh\+Two}!femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}}
+\subsubsection{\texorpdfstring{Get\+Mesh\+Two()}{GetMeshTwo()}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_multi_level_mesh_two}{Multi\+Level\+Mesh\+Two}}$\ast$ femus\+::\+Quantity\+Map\+::\+Get\+Mesh\+Two (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_quantity_map_a2510c3eff021fa6704888731f77b1a79}\label{classfemus_1_1_quantity_map_a2510c3eff021fa6704888731f77b1a79}} 
+\index{femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}!Get\+Quantity@{Get\+Quantity}}
+\index{Get\+Quantity@{Get\+Quantity}!femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}}
+\subsubsection{\texorpdfstring{Get\+Quantity()}{GetQuantity()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_quantity}{Quantity}}$\ast$ femus\+::\+Quantity\+Map\+::\+Get\+Quantity (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_quantity_map_a607c4c523156d00c75864679d301aa05}\label{classfemus_1_1_quantity_map_a607c4c523156d00c75864679d301aa05}} 
+\index{femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}!Set\+Input\+Parser@{Set\+Input\+Parser}}
+\index{Set\+Input\+Parser@{Set\+Input\+Parser}!femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}}
+\subsubsection{\texorpdfstring{Set\+Input\+Parser()}{SetInputParser()}}
+{\footnotesize\ttfamily void femus\+::\+Quantity\+Map\+::\+Set\+Input\+Parser (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_femus_input_parser}{Femus\+Input\+Parser}}$<$ double $>$ $\ast$}]{parser\+\_\+in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_quantity_map_a5e91f9c899e60ee5249e57e0f746dc2c}\label{classfemus_1_1_quantity_map_a5e91f9c899e60ee5249e57e0f746dc2c}} 
+\index{femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}!Set\+Mesh\+Two@{Set\+Mesh\+Two}}
+\index{Set\+Mesh\+Two@{Set\+Mesh\+Two}!femus\+::\+Quantity\+Map@{femus\+::\+Quantity\+Map}}
+\subsubsection{\texorpdfstring{Set\+Mesh\+Two()}{SetMeshTwo()}}
+{\footnotesize\ttfamily void femus\+::\+Quantity\+Map\+::\+Set\+Mesh\+Two (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classfemus_1_1_multi_level_mesh_two}{Multi\+Level\+Mesh\+Two}} $\ast$}]{mesh\+\_\+in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+get/set 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+solution/\mbox{\hyperlink{_quantity_8hpp}{Quantity.\+hpp}}\end{DoxyCompactItemize}

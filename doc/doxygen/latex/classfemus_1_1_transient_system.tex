@@ -1,0 +1,209 @@
+\hypertarget{classfemus_1_1_transient_system}{}\section{femus\+:\+:Transient\+System$<$ Base $>$ Class Template Reference}
+\label{classfemus_1_1_transient_system}\index{femus\+::\+Transient\+System$<$ Base $>$@{femus\+::\+Transient\+System$<$ Base $>$}}
+
+
+{\ttfamily \#include $<$Transient\+System.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Transient\+System$<$ Base $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{classfemus_1_1_transient_system__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Transient\+System$<$ Base $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=206pt]{classfemus_1_1_transient_system__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+typedef \mbox{\hyperlink{classfemus_1_1_transient_system}{Transient\+System}}$<$ Base $>$ \mbox{\hyperlink{classfemus_1_1_transient_system_ab305e3c2b57ea9f93730f7fc712b6403}{sys\+\_\+type}}
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_transient_system_ab3db35bb6c3a8c97a88d4e8ad9461537}{Transient\+System}} (\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&ml\+\_\+probl, const std\+::string \&name, const unsigned int number, const \mbox{\hyperlink{_mg_smoother_enum_8hpp_a4d11c2ff93e2f0f440c879a9c40cda71}{Mg\+Smoother}} \&smoother\+\_\+type)
+\item 
+virtual \mbox{\hyperlink{classfemus_1_1_transient_system_adb4b62a13b1445d7c0a59a73786969c3}{$\sim$\+Transient\+System}} ()
+\item 
+\mbox{\hyperlink{classfemus_1_1_transient_system_ab305e3c2b57ea9f93730f7fc712b6403}{sys\+\_\+type}} \& \mbox{\hyperlink{classfemus_1_1_transient_system_a2a1e90e75464f42cb981f0dad3038020}{system}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_transient_system_a2be721088a3cb75315505b89e7469fdf}{clear}} ()
+\item 
+virtual std\+::string \mbox{\hyperlink{classfemus_1_1_transient_system_a1801793c1013f4be5761dd4a40a69bf1}{system\+\_\+type}} () const
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_transient_system_a6bbd657b80c05844fca4b683c90d879e}{Copy\+Solution\+To\+Old\+Solution}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_transient_system_a1dbea5bca6437d072d742f94e28e8c24}{M\+Lsolve}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_transient_system_adea269a19e84a9f6db792b96d159318b}{M\+Gsolve}} (const \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8}{Mg\+Smoother\+Type}} \&mg\+Smoother\+Type=\mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8a2618be531dddb3647be5874ddcae5164}{M\+U\+L\+T\+I\+P\+L\+I\+C\+A\+T\+I\+VE}})
+\item 
+void \mbox{\hyperlink{classfemus_1_1_transient_system_ae34a0bdb4bc4cadfb9f4c45124c2cbd9}{Newmark\+Acc\+Update}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_transient_system_a460cb5896e2ca0023ea98ac242cae61e}{Attach\+Get\+Time\+Interval\+Function}} (double($\ast$get\+\_\+time\+\_\+interval\+\_\+function)(const double time))
+\item 
+void \mbox{\hyperlink{classfemus_1_1_transient_system_ac4c3f2853cb04407fbe2975d18c9bf2a}{Set\+Interval\+Time}} (const double dt)
+\item 
+double \mbox{\hyperlink{classfemus_1_1_transient_system_ac993f126734ae1c669e8470479d5c959}{Get\+Interval\+Time}} () const
+\item 
+double \mbox{\hyperlink{classfemus_1_1_transient_system_abf4bd555684003afeaa899f68ea37bd7}{Get\+Time}} () const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_transient_system_aebe52e42794030d47770098430d4533d}{Set\+Time}} (const double time)
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+double \mbox{\hyperlink{classfemus_1_1_transient_system_aefd0fbc7c28cbcf0a8cf72707841c661}{\+\_\+dt}}
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$class Base$>$\newline
+class femus\+::\+Transient\+System$<$ Base $>$}
+
+This class provides a specific system class. It aims at transient systems, offering nothing more than just the essentials needed to solve a system. 
+
+\subsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classfemus_1_1_transient_system_ab305e3c2b57ea9f93730f7fc712b6403}\label{classfemus_1_1_transient_system_ab305e3c2b57ea9f93730f7fc712b6403}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!sys\+\_\+type@{sys\+\_\+type}}
+\index{sys\+\_\+type@{sys\+\_\+type}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{sys\+\_\+type}{sys\_type}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+typedef \mbox{\hyperlink{classfemus_1_1_transient_system}{Transient\+System}}$<$Base$>$ \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::\mbox{\hyperlink{classfemus_1_1_transient_system_ab305e3c2b57ea9f93730f7fc712b6403}{sys\+\_\+type}}}
+
+The type of system. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_transient_system_ab3db35bb6c3a8c97a88d4e8ad9461537}\label{classfemus_1_1_transient_system_ab3db35bb6c3a8c97a88d4e8ad9461537}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!Transient\+System@{Transient\+System}}
+\index{Transient\+System@{Transient\+System}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{Transient\+System()}{TransientSystem()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+\mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::\mbox{\hyperlink{classfemus_1_1_transient_system}{Transient\+System}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} \&}]{ml\+\_\+probl,  }\item[{const std\+::string \&}]{name,  }\item[{const unsigned int}]{number,  }\item[{const \mbox{\hyperlink{_mg_smoother_enum_8hpp_a4d11c2ff93e2f0f440c879a9c40cda71}{Mg\+Smoother}} \&}]{smoother\+\_\+type }\end{DoxyParamCaption})}
+
+Constructor. Initializes required data structures. \mbox{\Hypertarget{classfemus_1_1_transient_system_adb4b62a13b1445d7c0a59a73786969c3}\label{classfemus_1_1_transient_system_adb4b62a13b1445d7c0a59a73786969c3}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!````~Transient\+System@{$\sim$\+Transient\+System}}
+\index{````~Transient\+System@{$\sim$\+Transient\+System}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{$\sim$\+Transient\+System()}{~TransientSystem()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+\mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::$\sim$\mbox{\hyperlink{classfemus_1_1_transient_system}{Transient\+System}} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Destructor. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_transient_system_a460cb5896e2ca0023ea98ac242cae61e}\label{classfemus_1_1_transient_system_a460cb5896e2ca0023ea98ac242cae61e}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!Attach\+Get\+Time\+Interval\+Function@{Attach\+Get\+Time\+Interval\+Function}}
+\index{Attach\+Get\+Time\+Interval\+Function@{Attach\+Get\+Time\+Interval\+Function}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{Attach\+Get\+Time\+Interval\+Function()}{AttachGetTimeIntervalFunction()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::Attach\+Get\+Time\+Interval\+Function (\begin{DoxyParamCaption}\item[{double($\ast$)(const double time)}]{get\+\_\+time\+\_\+interval\+\_\+function }\end{DoxyParamCaption})}
+
+attach the Get\+Time\+Interval Function for selective interval time \mbox{\Hypertarget{classfemus_1_1_transient_system_a2be721088a3cb75315505b89e7469fdf}\label{classfemus_1_1_transient_system_a2be721088a3cb75315505b89e7469fdf}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!clear@{clear}}
+\index{clear@{clear}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{clear()}{clear()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::clear (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Clear all the data structures associated with the system. \mbox{\Hypertarget{classfemus_1_1_transient_system_a6bbd657b80c05844fca4b683c90d879e}\label{classfemus_1_1_transient_system_a6bbd657b80c05844fca4b683c90d879e}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!Copy\+Solution\+To\+Old\+Solution@{Copy\+Solution\+To\+Old\+Solution}}
+\index{Copy\+Solution\+To\+Old\+Solution@{Copy\+Solution\+To\+Old\+Solution}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{Copy\+Solution\+To\+Old\+Solution()}{CopySolutionToOldSolution()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::Copy\+Solution\+To\+Old\+Solution (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+Update the old solution with new ones. It calls the update solution function of the \mbox{\hyperlink{classfemus_1_1_solution}{Solution}} class \mbox{\Hypertarget{classfemus_1_1_transient_system_ac993f126734ae1c669e8470479d5c959}\label{classfemus_1_1_transient_system_ac993f126734ae1c669e8470479d5c959}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!Get\+Interval\+Time@{Get\+Interval\+Time}}
+\index{Get\+Interval\+Time@{Get\+Interval\+Time}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{Get\+Interval\+Time()}{GetIntervalTime()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+double \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::Get\+Interval\+Time (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the interval time \mbox{\Hypertarget{classfemus_1_1_transient_system_abf4bd555684003afeaa899f68ea37bd7}\label{classfemus_1_1_transient_system_abf4bd555684003afeaa899f68ea37bd7}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!Get\+Time@{Get\+Time}}
+\index{Get\+Time@{Get\+Time}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{Get\+Time()}{GetTime()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+double \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::Get\+Time (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the time \mbox{\Hypertarget{classfemus_1_1_transient_system_adea269a19e84a9f6db792b96d159318b}\label{classfemus_1_1_transient_system_adea269a19e84a9f6db792b96d159318b}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!M\+Gsolve@{M\+Gsolve}}
+\index{M\+Gsolve@{M\+Gsolve}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{M\+Gsolve()}{MGsolve()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::M\+Gsolve (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8}{Mg\+Smoother\+Type}} \&}]{mg\+Smoother\+Type = {\ttfamily \mbox{\hyperlink{_mg_type_enum_8hpp_aec11e12c1f11a6ad959d3280ae0ee9a8a2618be531dddb3647be5874ddcae5164}{M\+U\+L\+T\+I\+P\+L\+I\+C\+A\+T\+I\+VE}}} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+calling the parent solve \mbox{\Hypertarget{classfemus_1_1_transient_system_a1dbea5bca6437d072d742f94e28e8c24}\label{classfemus_1_1_transient_system_a1dbea5bca6437d072d742f94e28e8c24}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!M\+Lsolve@{M\+Lsolve}}
+\index{M\+Lsolve@{M\+Lsolve}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{M\+Lsolve()}{MLsolve()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::M\+Lsolve (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+calling the parent solve \mbox{\Hypertarget{classfemus_1_1_transient_system_ae34a0bdb4bc4cadfb9f4c45124c2cbd9}\label{classfemus_1_1_transient_system_ae34a0bdb4bc4cadfb9f4c45124c2cbd9}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!Newmark\+Acc\+Update@{Newmark\+Acc\+Update}}
+\index{Newmark\+Acc\+Update@{Newmark\+Acc\+Update}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{Newmark\+Acc\+Update()}{NewmarkAccUpdate()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::Newmark\+Acc\+Update (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+update the Newmark variables \mbox{\Hypertarget{classfemus_1_1_transient_system_ac4c3f2853cb04407fbe2975d18c9bf2a}\label{classfemus_1_1_transient_system_ac4c3f2853cb04407fbe2975d18c9bf2a}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!Set\+Interval\+Time@{Set\+Interval\+Time}}
+\index{Set\+Interval\+Time@{Set\+Interval\+Time}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{Set\+Interval\+Time()}{SetIntervalTime()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::Set\+Interval\+Time (\begin{DoxyParamCaption}\item[{const double}]{dt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Set the interval time \mbox{\Hypertarget{classfemus_1_1_transient_system_aebe52e42794030d47770098430d4533d}\label{classfemus_1_1_transient_system_aebe52e42794030d47770098430d4533d}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!Set\+Time@{Set\+Time}}
+\index{Set\+Time@{Set\+Time}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{Set\+Time()}{SetTime()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+void \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::Set\+Time (\begin{DoxyParamCaption}\item[{const double}]{time }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Get the time \mbox{\Hypertarget{classfemus_1_1_transient_system_a2a1e90e75464f42cb981f0dad3038020}\label{classfemus_1_1_transient_system_a2a1e90e75464f42cb981f0dad3038020}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!system@{system}}
+\index{system@{system}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{system()}{system()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+\mbox{\hyperlink{classfemus_1_1_transient_system_ab305e3c2b57ea9f93730f7fc712b6403}{sys\+\_\+type}}\& \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::system (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+a clever pointer to the system. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classfemus_1_1_transient_system_a1801793c1013f4be5761dd4a40a69bf1}\label{classfemus_1_1_transient_system_a1801793c1013f4be5761dd4a40a69bf1}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!system\+\_\+type@{system\+\_\+type}}
+\index{system\+\_\+type@{system\+\_\+type}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{system\+\_\+type()}{system\_type()}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+std\+::string \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::system\+\_\+type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+\begin{DoxyReturn}{Returns}
+{\ttfamily \char`\"{}\+Transient\char`\"{}} prepended to T\+::system\+\_\+type(). Helps in identifying the system type in an equation system file. 
+\end{DoxyReturn}
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_transient_system_aefd0fbc7c28cbcf0a8cf72707841c661}\label{classfemus_1_1_transient_system_aefd0fbc7c28cbcf0a8cf72707841c661}} 
+\index{femus\+::\+Transient\+System@{femus\+::\+Transient\+System}!\+\_\+dt@{\+\_\+dt}}
+\index{\+\_\+dt@{\+\_\+dt}!femus\+::\+Transient\+System@{femus\+::\+Transient\+System}}
+\subsubsection{\texorpdfstring{\+\_\+dt}{\_dt}}
+{\footnotesize\ttfamily template$<$class Base $>$ \\
+double \mbox{\hyperlink{classfemus_1_1_transient_system}{femus\+::\+Transient\+System}}$<$ Base $>$\+::\+\_\+dt\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+equations/\mbox{\hyperlink{_transient_system_8hpp}{Transient\+System.\+hpp}}\item 
+equations/\mbox{\hyperlink{_transient_system_8cpp}{Transient\+System.\+cpp}}\end{DoxyCompactItemize}

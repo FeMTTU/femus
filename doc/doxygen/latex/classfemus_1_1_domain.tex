@@ -1,0 +1,126 @@
+\hypertarget{classfemus_1_1_domain}{}\section{femus\+:\+:Domain Class Reference}
+\label{classfemus_1_1_domain}\index{femus\+::\+Domain@{femus\+::\+Domain}}
+
+
+{\ttfamily \#include $<$Domain.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Domain\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=165pt]{classfemus_1_1_domain__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Domain\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=219pt]{classfemus_1_1_domain__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_domain_ad1b0f07867cc3aee73de7fba251abc50}{$\sim$\+Domain}} ()
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1_domain_afde27aa114c601801cc727ef9edf31de}{Transform\+Point\+To\+Ref}} (const double $\ast$x\+\_\+in, double $\ast$x\+\_\+out) const =0
+\begin{DoxyCompactList}\small\item\em transformation to reference \mbox{\hyperlink{classfemus_1_1_domain}{Domain}} frame \end{DoxyCompactList}\item 
+virtual const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} \mbox{\hyperlink{classfemus_1_1_domain_ad75eacc25142ba41cbceab06de675fc8}{Get\+Domain\+Flag}} () const =0
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const \mbox{\hyperlink{classfemus_1_1_femus_input_parser}{Femus\+Input\+Parser}}$<$ double $>$ \& \mbox{\hyperlink{classfemus_1_1_domain_a0cde7463658ab6de6a74ed6afedca6a0}{\+\_\+domain\+\_\+rtmap}}
+\item 
+std\+::string \mbox{\hyperlink{classfemus_1_1_domain_a7ed9fa5a4642690ceb7c849954b89c1f}{\+\_\+name}}
+\item 
+double \mbox{\hyperlink{classfemus_1_1_domain_a62bbfa8103bf9cc181d09099cb3ad839}{\+\_\+\+Lref}}
+\item 
+\mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} \mbox{\hyperlink{classfemus_1_1_domain_a940e6bd8a80fba5be0da7871703f6166}{\+\_\+spacedim}}
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_domain_a96de5a99af1bea80aeb1d21cea9ca362}{Domain}} (const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} spacedim\+\_\+in, const \mbox{\hyperlink{classfemus_1_1_femus_input_parser}{Femus\+Input\+Parser}}$<$ double $>$ \&map\+\_\+in)
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_domain_a96de5a99af1bea80aeb1d21cea9ca362}\label{classfemus_1_1_domain_a96de5a99af1bea80aeb1d21cea9ca362}} 
+\index{femus\+::\+Domain@{femus\+::\+Domain}!Domain@{Domain}}
+\index{Domain@{Domain}!femus\+::\+Domain@{femus\+::\+Domain}}
+\subsubsection{\texorpdfstring{Domain()}{Domain()}}
+{\footnotesize\ttfamily femus\+::\+Domain\+::\+Domain (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}}}]{spacedim\+\_\+in,  }\item[{const \mbox{\hyperlink{classfemus_1_1_femus_input_parser}{Femus\+Input\+Parser}}$<$ double $>$ \&}]{map\+\_\+in }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1_domain_ad1b0f07867cc3aee73de7fba251abc50}\label{classfemus_1_1_domain_ad1b0f07867cc3aee73de7fba251abc50}} 
+\index{femus\+::\+Domain@{femus\+::\+Domain}!````~Domain@{$\sim$\+Domain}}
+\index{````~Domain@{$\sim$\+Domain}!femus\+::\+Domain@{femus\+::\+Domain}}
+\subsubsection{\texorpdfstring{$\sim$\+Domain()}{~Domain()}}
+{\footnotesize\ttfamily femus\+::\+Domain\+::$\sim$\+Domain (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_domain_ad75eacc25142ba41cbceab06de675fc8}\label{classfemus_1_1_domain_ad75eacc25142ba41cbceab06de675fc8}} 
+\index{femus\+::\+Domain@{femus\+::\+Domain}!Get\+Domain\+Flag@{Get\+Domain\+Flag}}
+\index{Get\+Domain\+Flag@{Get\+Domain\+Flag}!femus\+::\+Domain@{femus\+::\+Domain}}
+\subsubsection{\texorpdfstring{Get\+Domain\+Flag()}{GetDomainFlag()}}
+{\footnotesize\ttfamily virtual const \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} femus\+::\+Domain\+::\+Get\+Domain\+Flag (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1_box_ae1e35410fff5545cd0c203cd9ad3001d}{femus\+::\+Box}}.
+
+\mbox{\Hypertarget{classfemus_1_1_domain_afde27aa114c601801cc727ef9edf31de}\label{classfemus_1_1_domain_afde27aa114c601801cc727ef9edf31de}} 
+\index{femus\+::\+Domain@{femus\+::\+Domain}!Transform\+Point\+To\+Ref@{Transform\+Point\+To\+Ref}}
+\index{Transform\+Point\+To\+Ref@{Transform\+Point\+To\+Ref}!femus\+::\+Domain@{femus\+::\+Domain}}
+\subsubsection{\texorpdfstring{Transform\+Point\+To\+Ref()}{TransformPointToRef()}}
+{\footnotesize\ttfamily virtual void femus\+::\+Domain\+::\+Transform\+Point\+To\+Ref (\begin{DoxyParamCaption}\item[{const double $\ast$}]{x\+\_\+in,  }\item[{double $\ast$}]{x\+\_\+out }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+transformation to reference \mbox{\hyperlink{classfemus_1_1_domain}{Domain}} frame 
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1_box_a64a23d5bb0cac88b4e545b121988b3cf}{femus\+::\+Box}}.
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_domain_a0cde7463658ab6de6a74ed6afedca6a0}\label{classfemus_1_1_domain_a0cde7463658ab6de6a74ed6afedca6a0}} 
+\index{femus\+::\+Domain@{femus\+::\+Domain}!\+\_\+domain\+\_\+rtmap@{\+\_\+domain\+\_\+rtmap}}
+\index{\+\_\+domain\+\_\+rtmap@{\+\_\+domain\+\_\+rtmap}!femus\+::\+Domain@{femus\+::\+Domain}}
+\subsubsection{\texorpdfstring{\+\_\+domain\+\_\+rtmap}{\_domain\_rtmap}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_femus_input_parser}{Femus\+Input\+Parser}}$<$double$>$\& femus\+::\+Domain\+::\+\_\+domain\+\_\+rtmap}
+
+\mbox{\Hypertarget{classfemus_1_1_domain_a62bbfa8103bf9cc181d09099cb3ad839}\label{classfemus_1_1_domain_a62bbfa8103bf9cc181d09099cb3ad839}} 
+\index{femus\+::\+Domain@{femus\+::\+Domain}!\+\_\+\+Lref@{\+\_\+\+Lref}}
+\index{\+\_\+\+Lref@{\+\_\+\+Lref}!femus\+::\+Domain@{femus\+::\+Domain}}
+\subsubsection{\texorpdfstring{\+\_\+\+Lref}{\_Lref}}
+{\footnotesize\ttfamily double femus\+::\+Domain\+::\+\_\+\+Lref}
+
+\mbox{\Hypertarget{classfemus_1_1_domain_a7ed9fa5a4642690ceb7c849954b89c1f}\label{classfemus_1_1_domain_a7ed9fa5a4642690ceb7c849954b89c1f}} 
+\index{femus\+::\+Domain@{femus\+::\+Domain}!\+\_\+name@{\+\_\+name}}
+\index{\+\_\+name@{\+\_\+name}!femus\+::\+Domain@{femus\+::\+Domain}}
+\subsubsection{\texorpdfstring{\+\_\+name}{\_name}}
+{\footnotesize\ttfamily std\+::string femus\+::\+Domain\+::\+\_\+name}
+
+\mbox{\Hypertarget{classfemus_1_1_domain_a940e6bd8a80fba5be0da7871703f6166}\label{classfemus_1_1_domain_a940e6bd8a80fba5be0da7871703f6166}} 
+\index{femus\+::\+Domain@{femus\+::\+Domain}!\+\_\+spacedim@{\+\_\+spacedim}}
+\index{\+\_\+spacedim@{\+\_\+spacedim}!femus\+::\+Domain@{femus\+::\+Domain}}
+\subsubsection{\texorpdfstring{\+\_\+spacedim}{\_spacedim}}
+{\footnotesize\ttfamily \mbox{\hyperlink{_typedefs_8hpp_a91ad9478d81a7aaf2593e8d9c3d06a14}{uint}} femus\+::\+Domain\+::\+\_\+spacedim}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+mesh\+Gencase/\mbox{\hyperlink{_domain_8hpp}{Domain.\+hpp}}\item 
+mesh\+Gencase/\mbox{\hyperlink{_domain_8cpp}{Domain.\+cpp}}\end{DoxyCompactItemize}

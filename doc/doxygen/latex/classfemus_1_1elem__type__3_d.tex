@@ -1,0 +1,229 @@
+\hypertarget{classfemus_1_1elem__type__3_d}{}\section{femus\+:\+:elem\+\_\+type\+\_\+3D Class Reference}
+\label{classfemus_1_1elem__type__3_d}\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+
+
+{\ttfamily \#include $<$Elem\+Type.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:elem\+\_\+type\+\_\+3D\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=194pt]{classfemus_1_1elem__type__3_d__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:elem\+\_\+type\+\_\+3D\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=252pt]{classfemus_1_1elem__type__3_d__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1elem__type__3_d_a218cb9c26e839084933a2e6af9f30443}{elem\+\_\+type\+\_\+3D}} (const char $\ast$solid, const char $\ast$order, const char $\ast$gauss\+\_\+order)
+\item 
+\mbox{\hyperlink{classfemus_1_1elem__type__3_d_acf28faffa2f92f63636478526f08a387}{$\sim$elem\+\_\+type\+\_\+3D}} ()
+\item 
+{\footnotesize template$<$class type $>$ }\\void \mbox{\hyperlink{classfemus_1_1elem__type__3_d_adcb67b007b859b8efef1e35f52ef99c8}{Get\+Jacobian\+\_\+type}} (const vector$<$ vector$<$ type $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, type \&Weight, vector$<$ vector$<$ type $>$ $>$ \&jacobian\+Matrix) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type__3_d_ada0cc038990bffab6a4bc3d1d23f057f}{Get\+Jacobian}} (const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, adept\+::adouble \&Weight, vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&jacobian\+Matrix) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type__3_d_aacb6b130a8421fe901505f6d61ad8ddd}{Get\+Jacobian}} (const vector$<$ vector$<$ double $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, double \&Weight, vector$<$ vector$<$ double $>$ $>$ \&jacobian\+Matrix) const
+\item 
+{\footnotesize template$<$class type $>$ }\\void \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a8188e7f5aea4cbc3c6ad70d5b14aab4c}{Jacobian\+\_\+type}} (const vector$<$ vector$<$ type $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, type \&Weight, vector$<$ double $>$ \&phi, vector$<$ type $>$ \&gradphi, boost\+::optional$<$ vector$<$ type $>$ \& $>$ nablaphi) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a6ba1c6d58757d317c455e9041bdb1970}{Jacobian}} (const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, adept\+::adouble \&Weight, vector$<$ double $>$ \&phi, vector$<$ adept\+::adouble $>$ \&gradphi, boost\+::optional$<$ vector$<$ adept\+::adouble $>$ \& $>$ nablaphi=boost\+::none) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a83c519de8adf50f547627123db1a82ee}{Jacobian}} (const vector$<$ vector$<$ double $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, double \&Weight, vector$<$ double $>$ \&phi, vector$<$ double $>$ \&gradphi, boost\+::optional$<$ vector$<$ double $>$ \& $>$ nablaphi=boost\+::none) const
+\item 
+{\footnotesize template$<$class type $>$ }\\void \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a8e2dffc8f5d0e5fa316b93218d331280}{Jacobian\+\_\+type}} (const vector$<$ vector$<$ type $>$ $>$ \&vt, const vector$<$ double $>$ \&xi, type \&Weight, vector$<$ double $>$ \&phi, vector$<$ type $>$ \&gradphi, boost\+::optional$<$ vector$<$ type $>$ \& $>$ nablaphi) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a277615099e6e69b4aed9e1cd9e84817d}{Jacobian}} (const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&vt, const vector$<$ double $>$ \&xi, adept\+::adouble \&Weight, vector$<$ double $>$ \&phi, vector$<$ adept\+::adouble $>$ \&gradphi, boost\+::optional$<$ vector$<$ adept\+::adouble $>$ \& $>$ nablaphi=boost\+::none) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a53f0fe22a3df82bab547a2578d66d7c6}{Jacobian}} (const vector$<$ vector$<$ double $>$ $>$ \&vt, const vector$<$ double $>$ \&xi, double \&Weight, vector$<$ double $>$ \&phi, vector$<$ double $>$ \&gradphi, boost\+::optional$<$ vector$<$ double $>$ \& $>$ nablaphi=boost\+::none) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a8eea4f745f548cc10bb55848c4cd2ba3}{Jacobian\+Sur}} (const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, adept\+::adouble \&Weight, vector$<$ double $>$ \&other\+\_\+phi, vector$<$ adept\+::adouble $>$ \&gradphi, vector$<$ adept\+::adouble $>$ \&normal) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a35ed7904fbe1fdc2998819384d709bdb}{Jacobian\+Sur}} (const vector$<$ vector$<$ double $>$ $>$ \&vt, const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}, double \&Weight, vector$<$ double $>$ \&other\+\_\+phi, vector$<$ double $>$ \&gradphi, vector$<$ double $>$ \&normal) const
+\item 
+double $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type__3_d_ac25f62fb2b22b534172ce6ef94b89068}{Get\+Phi}} (const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}) const
+\item 
+double $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type__3_d_aff869fa323fd20f83fed73f4a28de006}{Get\+D\+Phi\+D\+Xi}} (const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}) const
+\item 
+double $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type__3_d_aa08787fdf3934c52c41a14a59884eb7b}{Get\+D\+Phi\+D\+Eta}} (const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}) const
+\item 
+double $\ast$ \mbox{\hyperlink{classfemus_1_1elem__type__3_d_a8bf7020e0c07cf44c9532f9b6bab4bbc}{Get\+D\+Phi\+D\+Zeta}} (const unsigned \&\mbox{\hyperlink{namespacefemus_a6df31099f676311de214a312d7043941}{ig}}) const
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_a218cb9c26e839084933a2e6af9f30443}\label{classfemus_1_1elem__type__3_d_a218cb9c26e839084933a2e6af9f30443}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!elem\+\_\+type\+\_\+3D@{elem\+\_\+type\+\_\+3D}}
+\index{elem\+\_\+type\+\_\+3D@{elem\+\_\+type\+\_\+3D}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{elem\+\_\+type\+\_\+3\+D()}{elem\_type\_3D()}}
+{\footnotesize\ttfamily femus\+::elem\+\_\+type\+\_\+3\+D\+::elem\+\_\+type\+\_\+3D (\begin{DoxyParamCaption}\item[{const char $\ast$}]{solid,  }\item[{const char $\ast$}]{order,  }\item[{const char $\ast$}]{gauss\+\_\+order }\end{DoxyParamCaption})}
+
+constructor \mbox{\Hypertarget{classfemus_1_1elem__type__3_d_acf28faffa2f92f63636478526f08a387}\label{classfemus_1_1elem__type__3_d_acf28faffa2f92f63636478526f08a387}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!````~elem\+\_\+type\+\_\+3D@{$\sim$elem\+\_\+type\+\_\+3D}}
+\index{````~elem\+\_\+type\+\_\+3D@{$\sim$elem\+\_\+type\+\_\+3D}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{$\sim$elem\+\_\+type\+\_\+3\+D()}{~elem\_type\_3D()}}
+{\footnotesize\ttfamily femus\+::elem\+\_\+type\+\_\+3\+D\+::$\sim$elem\+\_\+type\+\_\+3D (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+destructor 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_aa08787fdf3934c52c41a14a59884eb7b}\label{classfemus_1_1elem__type__3_d_aa08787fdf3934c52c41a14a59884eb7b}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Get\+D\+Phi\+D\+Eta@{Get\+D\+Phi\+D\+Eta}}
+\index{Get\+D\+Phi\+D\+Eta@{Get\+D\+Phi\+D\+Eta}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Get\+D\+Phi\+D\+Eta()}{GetDPhiDEta()}}
+{\footnotesize\ttfamily double$\ast$ femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Get\+D\+Phi\+D\+Eta (\begin{DoxyParamCaption}\item[{const unsigned \&}]{ig }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+To be Added 
+
+Reimplemented from \mbox{\hyperlink{classfemus_1_1elem__type_a510e44439de5cdd6ab5d04e3f8a5bdfe}{femus\+::elem\+\_\+type}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_aff869fa323fd20f83fed73f4a28de006}\label{classfemus_1_1elem__type__3_d_aff869fa323fd20f83fed73f4a28de006}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Get\+D\+Phi\+D\+Xi@{Get\+D\+Phi\+D\+Xi}}
+\index{Get\+D\+Phi\+D\+Xi@{Get\+D\+Phi\+D\+Xi}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Get\+D\+Phi\+D\+Xi()}{GetDPhiDXi()}}
+{\footnotesize\ttfamily double$\ast$ femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Get\+D\+Phi\+D\+Xi (\begin{DoxyParamCaption}\item[{const unsigned \&}]{ig }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+To be Added 
+
+Implements \mbox{\hyperlink{classfemus_1_1elem__type_a6efb6026b9fe89912ec367b235bfccc7}{femus\+::elem\+\_\+type}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_a8bf7020e0c07cf44c9532f9b6bab4bbc}\label{classfemus_1_1elem__type__3_d_a8bf7020e0c07cf44c9532f9b6bab4bbc}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Get\+D\+Phi\+D\+Zeta@{Get\+D\+Phi\+D\+Zeta}}
+\index{Get\+D\+Phi\+D\+Zeta@{Get\+D\+Phi\+D\+Zeta}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Get\+D\+Phi\+D\+Zeta()}{GetDPhiDZeta()}}
+{\footnotesize\ttfamily double$\ast$ femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Get\+D\+Phi\+D\+Zeta (\begin{DoxyParamCaption}\item[{const unsigned \&}]{ig }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+To be Added 
+
+Reimplemented from \mbox{\hyperlink{classfemus_1_1elem__type_aa507628a4383a9687c8fdefe30d0214a}{femus\+::elem\+\_\+type}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_ada0cc038990bffab6a4bc3d1d23f057f}\label{classfemus_1_1elem__type__3_d_ada0cc038990bffab6a4bc3d1d23f057f}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Get\+Jacobian@{Get\+Jacobian}}
+\index{Get\+Jacobian@{Get\+Jacobian}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Get\+Jacobian()}{GetJacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Get\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{adept\+::adouble \&}]{Weight,  }\item[{vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&}]{jacobian\+Matrix }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classfemus_1_1elem__type_aa8e617c54dd774ffca5d305605552af7}{femus\+::elem\+\_\+type}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_aacb6b130a8421fe901505f6d61ad8ddd}\label{classfemus_1_1elem__type__3_d_aacb6b130a8421fe901505f6d61ad8ddd}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Get\+Jacobian@{Get\+Jacobian}}
+\index{Get\+Jacobian@{Get\+Jacobian}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Get\+Jacobian()}{GetJacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Get\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ double $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{double \&}]{Weight,  }\item[{vector$<$ vector$<$ double $>$ $>$ \&}]{jacobian\+Matrix }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classfemus_1_1elem__type_a6c883b7946e55db8783fd0177546610a}{femus\+::elem\+\_\+type}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_adcb67b007b859b8efef1e35f52ef99c8}\label{classfemus_1_1elem__type__3_d_adcb67b007b859b8efef1e35f52ef99c8}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Get\+Jacobian\+\_\+type@{Get\+Jacobian\+\_\+type}}
+\index{Get\+Jacobian\+\_\+type@{Get\+Jacobian\+\_\+type}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Get\+Jacobian\+\_\+type()}{GetJacobian\_type()}}
+{\footnotesize\ttfamily template$<$class type $>$ \\
+void femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Get\+Jacobian\+\_\+type (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ type $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{type \&}]{Weight,  }\item[{vector$<$ vector$<$ type $>$ $>$ \&}]{jacobian\+Matrix }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_ac25f62fb2b22b534172ce6ef94b89068}\label{classfemus_1_1elem__type__3_d_ac25f62fb2b22b534172ce6ef94b89068}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Get\+Phi@{Get\+Phi}}
+\index{Get\+Phi@{Get\+Phi}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Get\+Phi()}{GetPhi()}}
+{\footnotesize\ttfamily double$\ast$ femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Get\+Phi (\begin{DoxyParamCaption}\item[{const unsigned \&}]{ig }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+To be Added 
+
+Implements \mbox{\hyperlink{classfemus_1_1elem__type_a2aa2a37b15debbee27918f5e3f2df6b3}{femus\+::elem\+\_\+type}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_a6ba1c6d58757d317c455e9041bdb1970}\label{classfemus_1_1elem__type__3_d_a6ba1c6d58757d317c455e9041bdb1970}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Jacobian@{Jacobian}}
+\index{Jacobian@{Jacobian}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Jacobian()}{Jacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{adept\+::adouble \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{phi,  }\item[{vector$<$ adept\+::adouble $>$ \&}]{gradphi,  }\item[{boost\+::optional$<$ vector$<$ adept\+::adouble $>$ \& $>$}]{nablaphi = {\ttfamily boost\+:\+:none} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classfemus_1_1elem__type_a937b1d5ecbeed3b17db831264a3492fa}{femus\+::elem\+\_\+type}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_a83c519de8adf50f547627123db1a82ee}\label{classfemus_1_1elem__type__3_d_a83c519de8adf50f547627123db1a82ee}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Jacobian@{Jacobian}}
+\index{Jacobian@{Jacobian}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Jacobian()}{Jacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ double $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{double \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{phi,  }\item[{vector$<$ double $>$ \&}]{gradphi,  }\item[{boost\+::optional$<$ vector$<$ double $>$ \& $>$}]{nablaphi = {\ttfamily boost\+:\+:none} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classfemus_1_1elem__type_ac3828ecd8ddd057d726a60cb19c60f0b}{femus\+::elem\+\_\+type}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_a277615099e6e69b4aed9e1cd9e84817d}\label{classfemus_1_1elem__type__3_d_a277615099e6e69b4aed9e1cd9e84817d}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Jacobian@{Jacobian}}
+\index{Jacobian@{Jacobian}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Jacobian()}{Jacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&}]{vt,  }\item[{const vector$<$ double $>$ \&}]{xi,  }\item[{adept\+::adouble \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{phi,  }\item[{vector$<$ adept\+::adouble $>$ \&}]{gradphi,  }\item[{boost\+::optional$<$ vector$<$ adept\+::adouble $>$ \& $>$}]{nablaphi = {\ttfamily boost\+:\+:none} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classfemus_1_1elem__type_a2d76133387cebf896c0e51459055fdea}{femus\+::elem\+\_\+type}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_a53f0fe22a3df82bab547a2578d66d7c6}\label{classfemus_1_1elem__type__3_d_a53f0fe22a3df82bab547a2578d66d7c6}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Jacobian@{Jacobian}}
+\index{Jacobian@{Jacobian}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Jacobian()}{Jacobian()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Jacobian (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ double $>$ $>$ \&}]{vt,  }\item[{const vector$<$ double $>$ \&}]{xi,  }\item[{double \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{phi,  }\item[{vector$<$ double $>$ \&}]{gradphi,  }\item[{boost\+::optional$<$ vector$<$ double $>$ \& $>$}]{nablaphi = {\ttfamily boost\+:\+:none} }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classfemus_1_1elem__type_aab6db5851a9810adfe0ff98df2c30810}{femus\+::elem\+\_\+type}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_a8188e7f5aea4cbc3c6ad70d5b14aab4c}\label{classfemus_1_1elem__type__3_d_a8188e7f5aea4cbc3c6ad70d5b14aab4c}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Jacobian\+\_\+type@{Jacobian\+\_\+type}}
+\index{Jacobian\+\_\+type@{Jacobian\+\_\+type}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Jacobian\+\_\+type()}{Jacobian\_type()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$class type $>$ \\
+void femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Jacobian\+\_\+type (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ type $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{type \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{phi,  }\item[{vector$<$ type $>$ \&}]{gradphi,  }\item[{boost\+::optional$<$ vector$<$ type $>$ \& $>$}]{nablaphi }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_a8e2dffc8f5d0e5fa316b93218d331280}\label{classfemus_1_1elem__type__3_d_a8e2dffc8f5d0e5fa316b93218d331280}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Jacobian\+\_\+type@{Jacobian\+\_\+type}}
+\index{Jacobian\+\_\+type@{Jacobian\+\_\+type}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Jacobian\+\_\+type()}{Jacobian\_type()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$class type $>$ \\
+void femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Jacobian\+\_\+type (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ type $>$ $>$ \&}]{vt,  }\item[{const vector$<$ double $>$ \&}]{xi,  }\item[{type \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{phi,  }\item[{vector$<$ type $>$ \&}]{gradphi,  }\item[{boost\+::optional$<$ vector$<$ type $>$ \& $>$}]{nablaphi }\end{DoxyParamCaption}) const}
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_a8eea4f745f548cc10bb55848c4cd2ba3}\label{classfemus_1_1elem__type__3_d_a8eea4f745f548cc10bb55848c4cd2ba3}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Jacobian\+Sur@{Jacobian\+Sur}}
+\index{Jacobian\+Sur@{Jacobian\+Sur}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Jacobian\+Sur()}{JacobianSur()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Jacobian\+Sur (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ adept\+::adouble $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{adept\+::adouble \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{other\+\_\+phi,  }\item[{vector$<$ adept\+::adouble $>$ \&}]{gradphi,  }\item[{vector$<$ adept\+::adouble $>$ \&}]{normal }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classfemus_1_1elem__type_a293052fac0f51472150b1bf7365c6b18}{femus\+::elem\+\_\+type}}.
+
+\mbox{\Hypertarget{classfemus_1_1elem__type__3_d_a35ed7904fbe1fdc2998819384d709bdb}\label{classfemus_1_1elem__type__3_d_a35ed7904fbe1fdc2998819384d709bdb}} 
+\index{femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}!Jacobian\+Sur@{Jacobian\+Sur}}
+\index{Jacobian\+Sur@{Jacobian\+Sur}!femus\+::elem\+\_\+type\+\_\+3D@{femus\+::elem\+\_\+type\+\_\+3D}}
+\subsubsection{\texorpdfstring{Jacobian\+Sur()}{JacobianSur()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void femus\+::elem\+\_\+type\+\_\+3\+D\+::\+Jacobian\+Sur (\begin{DoxyParamCaption}\item[{const vector$<$ vector$<$ double $>$ $>$ \&}]{vt,  }\item[{const unsigned \&}]{ig,  }\item[{double \&}]{Weight,  }\item[{vector$<$ double $>$ \&}]{other\+\_\+phi,  }\item[{vector$<$ double $>$ \&}]{gradphi,  }\item[{vector$<$ double $>$ \&}]{normal }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classfemus_1_1elem__type_aee56bc66a4d90ae7f7669bf7fa9ed8d7}{femus\+::elem\+\_\+type}}.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+fe/\mbox{\hyperlink{_elem_type_8hpp}{Elem\+Type.\+hpp}}\item 
+fe/\mbox{\hyperlink{_elem_type_8cpp}{Elem\+Type.\+cpp}}\end{DoxyCompactItemize}

@@ -1,0 +1,583 @@
+\hypertarget{classfemus_1_1basis}{}\section{femus\+:\+:basis Class Reference}
+\label{classfemus_1_1basis}\index{femus\+::basis@{femus\+::basis}}
+
+
+{\ttfamily \#include $<$Basis.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:basis\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classfemus_1_1basis__inherit__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1basis_a1e819ab49eb14b0727fb214ede9987c3}{basis}} (const int \&nc, const int \&nf, const int \&nlag0, const int \&nlag1, const int \&nlag2, const int \&nlag3, const int \&face\+Number0, const int \&face\+Number1, const int \&face\+Number2)
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1basis_abbae7bf8f31ec5793c911bc6d4ea0572}{Print\+Type}} () const =0
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_ac39cd1bad49bfe9370095558c24c4582}{eval\+\_\+phi}} (const unsigned \&j, const std\+::vector$<$ double $>$ \&x) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_af1cfe0c84a3a4b1e17b5903275410340}{eval\+\_\+dphidx}} (const unsigned \&j, const std\+::vector$<$ double $>$ \&x) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a3c65ece3b826c56b2a05b2221e9ac61f}{eval\+\_\+dphidy}} (const unsigned \&j, const std\+::vector$<$ double $>$ \&x) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a0a7e19ca2f5b312392bc34a64e8f2cf3}{eval\+\_\+dphidz}} (const unsigned \&j, const std\+::vector$<$ double $>$ \&x) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_af8e2384b8327ce9890851e3ae6447853}{eval\+\_\+d2phidx2}} (const unsigned \&j, const std\+::vector$<$ double $>$ \&x) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_abe4127967d317edfc852b0b0432fca98}{eval\+\_\+d2phidy2}} (const unsigned \&j, const std\+::vector$<$ double $>$ \&x) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a9acc0a686ee2c3f77fd33b594c5e2ec3}{eval\+\_\+d2phidz2}} (const unsigned \&j, const std\+::vector$<$ double $>$ \&x) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a9ebb6c277754a3f21be2f9b0f56428ff}{eval\+\_\+d2phidxdy}} (const unsigned \&j, const std\+::vector$<$ double $>$ \&x) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_af7ee9e4c4a8e6204e7504bb25c326d62}{eval\+\_\+d2phidydz}} (const unsigned \&j, const std\+::vector$<$ double $>$ \&x) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_aff9731d83408aa82eb148b8fc83ef9d8}{eval\+\_\+d2phidzdx}} (const unsigned \&j, const std\+::vector$<$ double $>$ \&x) const
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1basis_a89b0797cdccffae5ff6d059b32016ae5}{eval\+\_\+phi}} (const int $\ast$I, const double $\ast$x) const
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1basis_a4db7d29cf8a753ddbccc4a297dafa0bf}{eval\+\_\+dphidx}} (const int $\ast$I, const double $\ast$x) const
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1basis_a2819fac9aae797156b9efec8a0b85cc1}{eval\+\_\+dphidy}} (const int $\ast$I, const double $\ast$x) const
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1basis_affd9927f6e25e264108219d862b8cb3d}{eval\+\_\+dphidz}} (const int $\ast$I, const double $\ast$x) const
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1basis_a0a9839e75d1c9c8302486fc072eed028}{eval\+\_\+d2phidx2}} (const int $\ast$I, const double $\ast$x) const
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1basis_a0febb29fe4b32213ff8d6d428f7241cd}{eval\+\_\+d2phidy2}} (const int $\ast$I, const double $\ast$x) const
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1basis_a9d32da05f49ba2c989fec04fb7836c39}{eval\+\_\+d2phidz2}} (const int $\ast$I, const double $\ast$x) const
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1basis_ac9feaf9e60421143db2a3708f3c7fa48}{eval\+\_\+d2phidxdy}} (const int $\ast$I, const double $\ast$x) const
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1basis_ab9e060e9c9e763d8c10fdffcc5e0b774}{eval\+\_\+d2phidydz}} (const int $\ast$I, const double $\ast$x) const
+\item 
+virtual double \mbox{\hyperlink{classfemus_1_1basis_a5d619ec5bd57b7d2dc34a99d69975c77}{eval\+\_\+d2phidzdx}} (const int $\ast$I, const double $\ast$x) const
+\item 
+virtual const double $\ast$ \mbox{\hyperlink{classfemus_1_1basis_a00597122bbc75877f1c184f8fce4986c}{GetX}} (const int \&i) const =0
+\item 
+virtual const double $\ast$ \mbox{\hyperlink{classfemus_1_1basis_afcabbbda61ede8f30158fe08ee0a5258}{Get\+Xcoarse}} (const int \&i) const
+\item 
+virtual void \mbox{\hyperlink{classfemus_1_1basis_abbb9deb1bd0b2d07a4b2995b07d58d2e}{SetX}} (const unsigned \&i, const unsigned \&j, const double \&value)
+\item 
+virtual const int $\ast$ \mbox{\hyperlink{classfemus_1_1basis_a3f63ad97ce70cd4a1196ede69f1f144b}{Get\+I\+ND}} (const int \&i) const =0
+\item 
+virtual const int $\ast$ \mbox{\hyperlink{classfemus_1_1basis_a95ceb3feae4c484b0baa6a4d35d38909}{Get\+K\+V\+E\+R\+T\+\_\+\+I\+ND}} (const int \&i) const =0
+\item 
+virtual const unsigned \mbox{\hyperlink{classfemus_1_1basis_a2ba867dcfa634c47f1c52caddd9bfdba}{Get\+Fine2\+Coarse\+Vertex\+Mapping}} (const int \&i, const unsigned \&j) const
+\item 
+virtual const unsigned \mbox{\hyperlink{classfemus_1_1basis_a06f93864b6ce0925d41bf08173dc2500}{Get\+Face\+Dof}} (const unsigned \&i, const unsigned \&j) const
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const int \mbox{\hyperlink{classfemus_1_1basis_a8beaeb66f172e318e6f4daa22af0ee29}{\+\_\+nc}}
+\item 
+const int \mbox{\hyperlink{classfemus_1_1basis_ac52171231d44a30dfca075c6918d8197}{\+\_\+nf}}
+\item 
+const int \mbox{\hyperlink{classfemus_1_1basis_a1fd290cb7382616e14715756917d73c1}{\+\_\+nlag0}}
+\item 
+const int \mbox{\hyperlink{classfemus_1_1basis_ab2e292cf67cf16101dac730b9a3b0fd0}{\+\_\+nlag1}}
+\item 
+const int \mbox{\hyperlink{classfemus_1_1basis_a19491d79d0fb5ef8135a51460502041c}{\+\_\+nlag2}}
+\item 
+const int \mbox{\hyperlink{classfemus_1_1basis_afe89e7da4ba55df0492ee96f6bb04838}{\+\_\+nlag3}}
+\item 
+int \mbox{\hyperlink{classfemus_1_1basis_a21732cfb1bec4383fd050d218dfed070}{face\+Number}} \mbox{[}3\mbox{]}
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a614b2d4abe684a504bb0f561d46397fa}{lag\+Linear}} (const double \&x, const int \&i) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_af771f9a5c71d06c873d474cf2bba3177}{dlag\+Linear}} (const double \&x, const int \&i) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a49212826381f3ff3dad0bc61d6b6329c}{lag\+Quadratic}} (const double \&x, const int \&i) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_aba954c5565d837822ee4840f1ed77f33}{dlag\+Quadratic}} (const double \&x, const int \&i) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a1c4544031232a6ae1cb0f8501d650758}{d2lag\+Quadratic}} (const double \&x, const int \&i) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a2571f53dfeae70eccf63033736098d07}{lag\+Biquadratic}} (const double \&x, const int \&i) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a52c019c4c820beb94e20e71b31868384}{dlag\+Biquadratic}} (const double \&x, const int \&i) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a52634884baf22e8f65808ee0eca3e9b8}{d2lag\+Biquadratic}} (const double \&x, const int \&i) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_ae1b0f968c69a125b1437c86691b79659}{triangle\+Linear}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a3393b4ce51e0c786e962220ffb2e7a26}{dtriangle\+Lineardx}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_ae05b1d5b6d73182b91aa079f864096ac}{dtriangle\+Lineardy}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_ae42b607d5f23bdf072243ee3db496a44}{triangle\+Quadratic}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a36ac5b9e572289fb4d552b97dec8a0f1}{dtriangle\+Quadraticdx}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_aa6d822471f1a03034003e0499ca6a2c6}{dtriangle\+Quadraticdy}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_adb2041a297cde6b673e1ae393b4e1abb}{d2triangle\+Quadraticdx2}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_ab4432bf9996b939143fe7a013a397094}{d2triangle\+Quadraticdy2}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_afc53a79c2d4989b204cf69833bd20e91}{d2triangle\+Quadraticdxdy}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_aaf2a0be4f2d29c434293c40f7b268613}{triangle\+Biquadratic}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_aa2007487d021857ff90ba9c3366e54ba}{dtriangle\+Biquadraticdx}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a0d3f013bbb3a95515bb5c6a84f68eef1}{dtriangle\+Biquadraticdy}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a065d6f7c99411b8410bde98fcb12a089}{d2triangle\+Biquadraticdx2}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_a823c2c760606dc5ec50bb749a4dbe10e}{d2triangle\+Biquadraticdy2}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\item 
+double \mbox{\hyperlink{classfemus_1_1basis_aeebd0fb9806e39c3537021aba7f63f1e}{d2triangle\+Biquadraticdxdy}} (const double \&x, const double \&y, const int \&i, const int \&j) const
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1basis_a1e819ab49eb14b0727fb214ede9987c3}\label{classfemus_1_1basis_a1e819ab49eb14b0727fb214ede9987c3}} 
+\index{femus\+::basis@{femus\+::basis}!basis@{basis}}
+\index{basis@{basis}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{basis()}{basis()}}
+{\footnotesize\ttfamily femus\+::basis\+::basis (\begin{DoxyParamCaption}\item[{const int \&}]{nc,  }\item[{const int \&}]{nf,  }\item[{const int \&}]{nlag0,  }\item[{const int \&}]{nlag1,  }\item[{const int \&}]{nlag2,  }\item[{const int \&}]{nlag3,  }\item[{const int \&}]{face\+Number0,  }\item[{const int \&}]{face\+Number1,  }\item[{const int \&}]{face\+Number2 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1basis_a52634884baf22e8f65808ee0eca3e9b8}\label{classfemus_1_1basis_a52634884baf22e8f65808ee0eca3e9b8}} 
+\index{femus\+::basis@{femus\+::basis}!d2lag\+Biquadratic@{d2lag\+Biquadratic}}
+\index{d2lag\+Biquadratic@{d2lag\+Biquadratic}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{d2lag\+Biquadratic()}{d2lagBiquadratic()}}
+{\footnotesize\ttfamily double femus\+::basis\+::d2lag\+Biquadratic (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a1c4544031232a6ae1cb0f8501d650758}\label{classfemus_1_1basis_a1c4544031232a6ae1cb0f8501d650758}} 
+\index{femus\+::basis@{femus\+::basis}!d2lag\+Quadratic@{d2lag\+Quadratic}}
+\index{d2lag\+Quadratic@{d2lag\+Quadratic}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{d2lag\+Quadratic()}{d2lagQuadratic()}}
+{\footnotesize\ttfamily double femus\+::basis\+::d2lag\+Quadratic (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a065d6f7c99411b8410bde98fcb12a089}\label{classfemus_1_1basis_a065d6f7c99411b8410bde98fcb12a089}} 
+\index{femus\+::basis@{femus\+::basis}!d2triangle\+Biquadraticdx2@{d2triangle\+Biquadraticdx2}}
+\index{d2triangle\+Biquadraticdx2@{d2triangle\+Biquadraticdx2}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{d2triangle\+Biquadraticdx2()}{d2triangleBiquadraticdx2()}}
+{\footnotesize\ttfamily double femus\+::basis\+::d2triangle\+Biquadraticdx2 (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_aeebd0fb9806e39c3537021aba7f63f1e}\label{classfemus_1_1basis_aeebd0fb9806e39c3537021aba7f63f1e}} 
+\index{femus\+::basis@{femus\+::basis}!d2triangle\+Biquadraticdxdy@{d2triangle\+Biquadraticdxdy}}
+\index{d2triangle\+Biquadraticdxdy@{d2triangle\+Biquadraticdxdy}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{d2triangle\+Biquadraticdxdy()}{d2triangleBiquadraticdxdy()}}
+{\footnotesize\ttfamily double femus\+::basis\+::d2triangle\+Biquadraticdxdy (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a823c2c760606dc5ec50bb749a4dbe10e}\label{classfemus_1_1basis_a823c2c760606dc5ec50bb749a4dbe10e}} 
+\index{femus\+::basis@{femus\+::basis}!d2triangle\+Biquadraticdy2@{d2triangle\+Biquadraticdy2}}
+\index{d2triangle\+Biquadraticdy2@{d2triangle\+Biquadraticdy2}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{d2triangle\+Biquadraticdy2()}{d2triangleBiquadraticdy2()}}
+{\footnotesize\ttfamily double femus\+::basis\+::d2triangle\+Biquadraticdy2 (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_adb2041a297cde6b673e1ae393b4e1abb}\label{classfemus_1_1basis_adb2041a297cde6b673e1ae393b4e1abb}} 
+\index{femus\+::basis@{femus\+::basis}!d2triangle\+Quadraticdx2@{d2triangle\+Quadraticdx2}}
+\index{d2triangle\+Quadraticdx2@{d2triangle\+Quadraticdx2}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{d2triangle\+Quadraticdx2()}{d2triangleQuadraticdx2()}}
+{\footnotesize\ttfamily double femus\+::basis\+::d2triangle\+Quadraticdx2 (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_afc53a79c2d4989b204cf69833bd20e91}\label{classfemus_1_1basis_afc53a79c2d4989b204cf69833bd20e91}} 
+\index{femus\+::basis@{femus\+::basis}!d2triangle\+Quadraticdxdy@{d2triangle\+Quadraticdxdy}}
+\index{d2triangle\+Quadraticdxdy@{d2triangle\+Quadraticdxdy}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{d2triangle\+Quadraticdxdy()}{d2triangleQuadraticdxdy()}}
+{\footnotesize\ttfamily double femus\+::basis\+::d2triangle\+Quadraticdxdy (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_ab4432bf9996b939143fe7a013a397094}\label{classfemus_1_1basis_ab4432bf9996b939143fe7a013a397094}} 
+\index{femus\+::basis@{femus\+::basis}!d2triangle\+Quadraticdy2@{d2triangle\+Quadraticdy2}}
+\index{d2triangle\+Quadraticdy2@{d2triangle\+Quadraticdy2}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{d2triangle\+Quadraticdy2()}{d2triangleQuadraticdy2()}}
+{\footnotesize\ttfamily double femus\+::basis\+::d2triangle\+Quadraticdy2 (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a52c019c4c820beb94e20e71b31868384}\label{classfemus_1_1basis_a52c019c4c820beb94e20e71b31868384}} 
+\index{femus\+::basis@{femus\+::basis}!dlag\+Biquadratic@{dlag\+Biquadratic}}
+\index{dlag\+Biquadratic@{dlag\+Biquadratic}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{dlag\+Biquadratic()}{dlagBiquadratic()}}
+{\footnotesize\ttfamily double femus\+::basis\+::dlag\+Biquadratic (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_af771f9a5c71d06c873d474cf2bba3177}\label{classfemus_1_1basis_af771f9a5c71d06c873d474cf2bba3177}} 
+\index{femus\+::basis@{femus\+::basis}!dlag\+Linear@{dlag\+Linear}}
+\index{dlag\+Linear@{dlag\+Linear}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{dlag\+Linear()}{dlagLinear()}}
+{\footnotesize\ttfamily double femus\+::basis\+::dlag\+Linear (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_aba954c5565d837822ee4840f1ed77f33}\label{classfemus_1_1basis_aba954c5565d837822ee4840f1ed77f33}} 
+\index{femus\+::basis@{femus\+::basis}!dlag\+Quadratic@{dlag\+Quadratic}}
+\index{dlag\+Quadratic@{dlag\+Quadratic}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{dlag\+Quadratic()}{dlagQuadratic()}}
+{\footnotesize\ttfamily double femus\+::basis\+::dlag\+Quadratic (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_aa2007487d021857ff90ba9c3366e54ba}\label{classfemus_1_1basis_aa2007487d021857ff90ba9c3366e54ba}} 
+\index{femus\+::basis@{femus\+::basis}!dtriangle\+Biquadraticdx@{dtriangle\+Biquadraticdx}}
+\index{dtriangle\+Biquadraticdx@{dtriangle\+Biquadraticdx}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{dtriangle\+Biquadraticdx()}{dtriangleBiquadraticdx()}}
+{\footnotesize\ttfamily double femus\+::basis\+::dtriangle\+Biquadraticdx (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a0d3f013bbb3a95515bb5c6a84f68eef1}\label{classfemus_1_1basis_a0d3f013bbb3a95515bb5c6a84f68eef1}} 
+\index{femus\+::basis@{femus\+::basis}!dtriangle\+Biquadraticdy@{dtriangle\+Biquadraticdy}}
+\index{dtriangle\+Biquadraticdy@{dtriangle\+Biquadraticdy}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{dtriangle\+Biquadraticdy()}{dtriangleBiquadraticdy()}}
+{\footnotesize\ttfamily double femus\+::basis\+::dtriangle\+Biquadraticdy (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a3393b4ce51e0c786e962220ffb2e7a26}\label{classfemus_1_1basis_a3393b4ce51e0c786e962220ffb2e7a26}} 
+\index{femus\+::basis@{femus\+::basis}!dtriangle\+Lineardx@{dtriangle\+Lineardx}}
+\index{dtriangle\+Lineardx@{dtriangle\+Lineardx}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{dtriangle\+Lineardx()}{dtriangleLineardx()}}
+{\footnotesize\ttfamily double femus\+::basis\+::dtriangle\+Lineardx (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_ae05b1d5b6d73182b91aa079f864096ac}\label{classfemus_1_1basis_ae05b1d5b6d73182b91aa079f864096ac}} 
+\index{femus\+::basis@{femus\+::basis}!dtriangle\+Lineardy@{dtriangle\+Lineardy}}
+\index{dtriangle\+Lineardy@{dtriangle\+Lineardy}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{dtriangle\+Lineardy()}{dtriangleLineardy()}}
+{\footnotesize\ttfamily double femus\+::basis\+::dtriangle\+Lineardy (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a36ac5b9e572289fb4d552b97dec8a0f1}\label{classfemus_1_1basis_a36ac5b9e572289fb4d552b97dec8a0f1}} 
+\index{femus\+::basis@{femus\+::basis}!dtriangle\+Quadraticdx@{dtriangle\+Quadraticdx}}
+\index{dtriangle\+Quadraticdx@{dtriangle\+Quadraticdx}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{dtriangle\+Quadraticdx()}{dtriangleQuadraticdx()}}
+{\footnotesize\ttfamily double femus\+::basis\+::dtriangle\+Quadraticdx (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_aa6d822471f1a03034003e0499ca6a2c6}\label{classfemus_1_1basis_aa6d822471f1a03034003e0499ca6a2c6}} 
+\index{femus\+::basis@{femus\+::basis}!dtriangle\+Quadraticdy@{dtriangle\+Quadraticdy}}
+\index{dtriangle\+Quadraticdy@{dtriangle\+Quadraticdy}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{dtriangle\+Quadraticdy()}{dtriangleQuadraticdy()}}
+{\footnotesize\ttfamily double femus\+::basis\+::dtriangle\+Quadraticdy (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_af8e2384b8327ce9890851e3ae6447853}\label{classfemus_1_1basis_af8e2384b8327ce9890851e3ae6447853}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidx2@{eval\+\_\+d2phidx2}}
+\index{eval\+\_\+d2phidx2@{eval\+\_\+d2phidx2}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidx2()}{eval\_d2phidx2()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double femus\+::basis\+::eval\+\_\+d2phidx2 (\begin{DoxyParamCaption}\item[{const unsigned \&}]{j,  }\item[{const std\+::vector$<$ double $>$ \&}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a0a9839e75d1c9c8302486fc072eed028}\label{classfemus_1_1basis_a0a9839e75d1c9c8302486fc072eed028}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidx2@{eval\+\_\+d2phidx2}}
+\index{eval\+\_\+d2phidx2@{eval\+\_\+d2phidx2}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidx2()}{eval\_d2phidx2()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual double femus\+::basis\+::eval\+\_\+d2phidx2 (\begin{DoxyParamCaption}\item[{const int $\ast$}]{I,  }\item[{const double $\ast$}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1linepw_linear_ab935d5269619bc6d422a8fbad4daf017}{femus\+::linepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1line0_accd6354291c1f1f8d91bc5e68087e9eb}{femus\+::line0}}, \mbox{\hyperlink{classfemus_1_1_line_biquadratic_ab6a7b188104b706b792227aaab0ebf2a}{femus\+::\+Line\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_line_linear_a3f8cf26c387b50cdd41d39527c4260d1}{femus\+::\+Line\+Linear}}, \mbox{\hyperlink{classfemus_1_1tripw_linear_aee89b7d0da7add34b1b8fe8b74feb8b1}{femus\+::tripw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tri0_ae832dd28eb7437215ce49ce0bac98ba3}{femus\+::tri0}}, \mbox{\hyperlink{classfemus_1_1_tri_biquadratic_a671d38cd3a1c851e54d71e3a53c85039}{femus\+::\+Tri\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_quadratic_a6fb9f8965f2bbe889a1c67c9ee9ddc01}{femus\+::\+Tri\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_linear_acdd74b2d1bf8e72765539fa6a6a2044d}{femus\+::\+Tri\+Linear}}, \mbox{\hyperlink{classfemus_1_1quadpw_linear_a1e4149a8bc6f1a9c6cd12640b15e6deb}{femus\+::quadpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1quad0_ab862ac9e1b07aa072f566a753b1948a8}{femus\+::quad0}}, \mbox{\hyperlink{classfemus_1_1_quad_biquadratic_ab88f608bc7d87d9639250d165ebafc4e}{femus\+::\+Quad\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_quadratic_abb3a37830ada326faacf6ff6f30f3fe9}{femus\+::\+Quad\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_linear_af75fece3983ee9169c452c287c6b8d09}{femus\+::\+Quad\+Linear}}, \mbox{\hyperlink{classfemus_1_1tetpw_linear_a2239d19a7d3a723383d68d5c38bfdbea}{femus\+::tetpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tet0_a59411acd2cd35da162ad6487fa947a68}{femus\+::tet0}}, \mbox{\hyperlink{classfemus_1_1_tet_biquadratic_ad6fb5a8574508b0e45e49ca891ec3aac}{femus\+::\+Tet\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_quadratic_a41a83721de075980d8138bb457ddc937}{femus\+::\+Tet\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_linear_a7fea6490e2ca09cbd97ce31e4bb9ddef}{femus\+::\+Tet\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedgepw_linear_a97921882858ca490eb3bebebc333bd66}{femus\+::wedgepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedge0_ab6d8e56e02ffedc90f9630db2dd37427}{femus\+::wedge0}}, \mbox{\hyperlink{classfemus_1_1_wedge_biquadratic_aca900bdb24740b8bf69916067272445d}{femus\+::\+Wedge\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_quadratic_a922cf0ab05ffd7f68a74dfaf0ad3f67e}{femus\+::\+Wedge\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_linear_a3d9966a1518937773d444bc5c449ce35}{femus\+::\+Wedge\+Linear}}, \mbox{\hyperlink{classfemus_1_1hexpw_linear_a08b0b6ced1587ddf865452d6039c5e0b}{femus\+::hexpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1hex0_af280499bcecfb346586a8a5aca7bc152}{femus\+::hex0}}, \mbox{\hyperlink{classfemus_1_1_hex_biquadratic_a61e90ab66788a1fed2c6515d514a7642}{femus\+::\+Hex\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_hex_quadratic_a7a68a91e8865121d14f62b88f8756696}{femus\+::\+Hex\+Quadratic}}, and \mbox{\hyperlink{classfemus_1_1_hex_linear_a76ae681b7882ed7ea9683dee6aabc5aa}{femus\+::\+Hex\+Linear}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_a9ebb6c277754a3f21be2f9b0f56428ff}\label{classfemus_1_1basis_a9ebb6c277754a3f21be2f9b0f56428ff}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidxdy@{eval\+\_\+d2phidxdy}}
+\index{eval\+\_\+d2phidxdy@{eval\+\_\+d2phidxdy}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidxdy()}{eval\_d2phidxdy()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double femus\+::basis\+::eval\+\_\+d2phidxdy (\begin{DoxyParamCaption}\item[{const unsigned \&}]{j,  }\item[{const std\+::vector$<$ double $>$ \&}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_ac9feaf9e60421143db2a3708f3c7fa48}\label{classfemus_1_1basis_ac9feaf9e60421143db2a3708f3c7fa48}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidxdy@{eval\+\_\+d2phidxdy}}
+\index{eval\+\_\+d2phidxdy@{eval\+\_\+d2phidxdy}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidxdy()}{eval\_d2phidxdy()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual double femus\+::basis\+::eval\+\_\+d2phidxdy (\begin{DoxyParamCaption}\item[{const int $\ast$}]{I,  }\item[{const double $\ast$}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1tripw_linear_ae9ae33080ac87b5f0f4bcb69859095a4}{femus\+::tripw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tri0_af109d0128644bcac07a88dfba1f457b4}{femus\+::tri0}}, \mbox{\hyperlink{classfemus_1_1_tri_biquadratic_add4c6b1cf71bc83b7d480337d5800808}{femus\+::\+Tri\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_quadratic_a65fb374db41ce0bb2ade38e7e6af58a1}{femus\+::\+Tri\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_linear_ae19bb78f1fd3b9b810d32f561a4bb666}{femus\+::\+Tri\+Linear}}, \mbox{\hyperlink{classfemus_1_1quadpw_linear_a5e98b28c5ca4e382d3bf0ac7f1f3aa0c}{femus\+::quadpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1quad0_aa1987456dd6bdacb2b9038c21bc17566}{femus\+::quad0}}, \mbox{\hyperlink{classfemus_1_1_quad_biquadratic_aff6de056034d2ef2d51f914a872a8d93}{femus\+::\+Quad\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_quadratic_a5f8d571d5684cb6f38087c4b3ba4f0b8}{femus\+::\+Quad\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_linear_a2dd33af4e3c5c38c77ed0b803cf8f099}{femus\+::\+Quad\+Linear}}, \mbox{\hyperlink{classfemus_1_1tetpw_linear_ac652a9ba4f2d1fd2a140563ab97172e3}{femus\+::tetpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tet0_a22abf82712c0aa6a561280f8d9bef8ff}{femus\+::tet0}}, \mbox{\hyperlink{classfemus_1_1_tet_biquadratic_af239043a31782f74d867ecbb4f654689}{femus\+::\+Tet\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_quadratic_a2fcd1051ba5599c11a1d1c570c13d9f1}{femus\+::\+Tet\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_linear_a45330406ce8b3f4ad0651e7ffda5dd82}{femus\+::\+Tet\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedgepw_linear_acc622e61ab2a2c8d81a888600aaa049b}{femus\+::wedgepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedge0_a2453f7ad8629c94abf9001ac43eb495f}{femus\+::wedge0}}, \mbox{\hyperlink{classfemus_1_1_wedge_biquadratic_a640cd05846eea041705474ab453cb062}{femus\+::\+Wedge\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_quadratic_a023bc861013903cfda90cd78069c3d3c}{femus\+::\+Wedge\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_linear_a6b3c2d2415f2fc5c92e7c55a2726c481}{femus\+::\+Wedge\+Linear}}, \mbox{\hyperlink{classfemus_1_1hexpw_linear_ac0018245cf34cd4fc79de13e42b32817}{femus\+::hexpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1hex0_a6fa5e53143dc6f1d3d41a63a26d7ac59}{femus\+::hex0}}, \mbox{\hyperlink{classfemus_1_1_hex_biquadratic_ac95c76060992afc10491cfe13df048d5}{femus\+::\+Hex\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_hex_quadratic_a7725b6736d383a7df2147edef65779de}{femus\+::\+Hex\+Quadratic}}, and \mbox{\hyperlink{classfemus_1_1_hex_linear_ab3978e88ab01f8dcf7002024612523be}{femus\+::\+Hex\+Linear}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_abe4127967d317edfc852b0b0432fca98}\label{classfemus_1_1basis_abe4127967d317edfc852b0b0432fca98}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidy2@{eval\+\_\+d2phidy2}}
+\index{eval\+\_\+d2phidy2@{eval\+\_\+d2phidy2}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidy2()}{eval\_d2phidy2()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double femus\+::basis\+::eval\+\_\+d2phidy2 (\begin{DoxyParamCaption}\item[{const unsigned \&}]{j,  }\item[{const std\+::vector$<$ double $>$ \&}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a0febb29fe4b32213ff8d6d428f7241cd}\label{classfemus_1_1basis_a0febb29fe4b32213ff8d6d428f7241cd}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidy2@{eval\+\_\+d2phidy2}}
+\index{eval\+\_\+d2phidy2@{eval\+\_\+d2phidy2}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidy2()}{eval\_d2phidy2()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual double femus\+::basis\+::eval\+\_\+d2phidy2 (\begin{DoxyParamCaption}\item[{const int $\ast$}]{I,  }\item[{const double $\ast$}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1tripw_linear_a7e8c27384a8008358e7d85ac0c7b3c5e}{femus\+::tripw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tri0_aa01de141909bc67c1f293184b35d444b}{femus\+::tri0}}, \mbox{\hyperlink{classfemus_1_1_tri_biquadratic_a74610251368c2a83d701532e7b1931ed}{femus\+::\+Tri\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_quadratic_a37147196388fbe7fb347816f85c50e5e}{femus\+::\+Tri\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_linear_a39bc9cfe4f0c5d994730b3202abc53c6}{femus\+::\+Tri\+Linear}}, \mbox{\hyperlink{classfemus_1_1quadpw_linear_a0600555381447b94613958383fe5f69f}{femus\+::quadpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1quad0_a8dc516b64dc264896404b1d40019103a}{femus\+::quad0}}, \mbox{\hyperlink{classfemus_1_1_quad_biquadratic_a53f8f00fa4999cb1cfcdaf3f6a98df24}{femus\+::\+Quad\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_quadratic_a265d47435257f480aa10db30913d9780}{femus\+::\+Quad\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_linear_acd036b93e46b4c610a08a71d0ed06745}{femus\+::\+Quad\+Linear}}, \mbox{\hyperlink{classfemus_1_1tetpw_linear_af2376253bf50baccdfe001037aec48a2}{femus\+::tetpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tet0_afc37f82556b5b073967bc48c7317e02f}{femus\+::tet0}}, \mbox{\hyperlink{classfemus_1_1_tet_biquadratic_a2095b54326d389269cd4fff0724138aa}{femus\+::\+Tet\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_quadratic_ab6dcc72f0cf2bdfa021645dbc164e07b}{femus\+::\+Tet\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_linear_a7899d462e924de10cb39e0953fe0b68a}{femus\+::\+Tet\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedgepw_linear_adcd46d6d590e3c11b1b244bfe15d7333}{femus\+::wedgepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedge0_a0e24923793d43732b2b3913c8c94a9dd}{femus\+::wedge0}}, \mbox{\hyperlink{classfemus_1_1_wedge_biquadratic_a76ec3516df27dd1e41d49fcbb652f750}{femus\+::\+Wedge\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_quadratic_aeb0f88d015d9a6c4a44555d13eb4feff}{femus\+::\+Wedge\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_linear_aa175c8d902c2a4a511d6bf798fb003c3}{femus\+::\+Wedge\+Linear}}, \mbox{\hyperlink{classfemus_1_1hexpw_linear_ab01049b3e87767f0f4b04a9cec8efa77}{femus\+::hexpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1hex0_a16cfc0e738c48d75e558479d4da76aa4}{femus\+::hex0}}, \mbox{\hyperlink{classfemus_1_1_hex_biquadratic_a474b484fb23845775c3a5ec26b829784}{femus\+::\+Hex\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_hex_quadratic_a99e2c105b81597d25f6c6f991c72235b}{femus\+::\+Hex\+Quadratic}}, and \mbox{\hyperlink{classfemus_1_1_hex_linear_a4a35e276ff9fac58e4ddd84ad147b726}{femus\+::\+Hex\+Linear}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_af7ee9e4c4a8e6204e7504bb25c326d62}\label{classfemus_1_1basis_af7ee9e4c4a8e6204e7504bb25c326d62}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidydz@{eval\+\_\+d2phidydz}}
+\index{eval\+\_\+d2phidydz@{eval\+\_\+d2phidydz}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidydz()}{eval\_d2phidydz()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double femus\+::basis\+::eval\+\_\+d2phidydz (\begin{DoxyParamCaption}\item[{const unsigned \&}]{j,  }\item[{const std\+::vector$<$ double $>$ \&}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_ab9e060e9c9e763d8c10fdffcc5e0b774}\label{classfemus_1_1basis_ab9e060e9c9e763d8c10fdffcc5e0b774}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidydz@{eval\+\_\+d2phidydz}}
+\index{eval\+\_\+d2phidydz@{eval\+\_\+d2phidydz}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidydz()}{eval\_d2phidydz()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual double femus\+::basis\+::eval\+\_\+d2phidydz (\begin{DoxyParamCaption}\item[{const int $\ast$}]{I,  }\item[{const double $\ast$}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1tetpw_linear_aca0418b87538842e22d123a82a5cb579}{femus\+::tetpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tet0_af44ea8094a0f62c9bc345df68798359c}{femus\+::tet0}}, \mbox{\hyperlink{classfemus_1_1_tet_biquadratic_a55de22b4a8a1d393548efcfa8f5a20c6}{femus\+::\+Tet\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_quadratic_a28d5ce1ce6ee178377194fa24fa9ca10}{femus\+::\+Tet\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_linear_a70ae26a7051a2bf183d18e21c2d59822}{femus\+::\+Tet\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedgepw_linear_ab511f6122a3e02fc3f36b9477d2f056c}{femus\+::wedgepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedge0_a8b230fe06bdf7e089010f19ac81f6e64}{femus\+::wedge0}}, \mbox{\hyperlink{classfemus_1_1_wedge_biquadratic_a56c62427ea3790f8500404d330b81439}{femus\+::\+Wedge\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_quadratic_a731f4fc4d70b8296ecaff5e7e70ef9f9}{femus\+::\+Wedge\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_linear_a9f9a44123df2166e874a72a1b64e2366}{femus\+::\+Wedge\+Linear}}, \mbox{\hyperlink{classfemus_1_1hexpw_linear_abf571d202f00205f9befd746266744a6}{femus\+::hexpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1hex0_a925359d6a2443d05fa45262a8a8da65c}{femus\+::hex0}}, \mbox{\hyperlink{classfemus_1_1_hex_biquadratic_a5281e98ab81a4e3cf554534176d63106}{femus\+::\+Hex\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_hex_quadratic_a09580ff5b8c961f7c0cd929b415fc706}{femus\+::\+Hex\+Quadratic}}, and \mbox{\hyperlink{classfemus_1_1_hex_linear_a5d316275c3efe23b97b0aca494e33d8d}{femus\+::\+Hex\+Linear}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_a9acc0a686ee2c3f77fd33b594c5e2ec3}\label{classfemus_1_1basis_a9acc0a686ee2c3f77fd33b594c5e2ec3}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidz2@{eval\+\_\+d2phidz2}}
+\index{eval\+\_\+d2phidz2@{eval\+\_\+d2phidz2}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidz2()}{eval\_d2phidz2()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double femus\+::basis\+::eval\+\_\+d2phidz2 (\begin{DoxyParamCaption}\item[{const unsigned \&}]{j,  }\item[{const std\+::vector$<$ double $>$ \&}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a9d32da05f49ba2c989fec04fb7836c39}\label{classfemus_1_1basis_a9d32da05f49ba2c989fec04fb7836c39}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidz2@{eval\+\_\+d2phidz2}}
+\index{eval\+\_\+d2phidz2@{eval\+\_\+d2phidz2}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidz2()}{eval\_d2phidz2()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual double femus\+::basis\+::eval\+\_\+d2phidz2 (\begin{DoxyParamCaption}\item[{const int $\ast$}]{I,  }\item[{const double $\ast$}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1tetpw_linear_a199593a6ae0073aaa87a632933111e05}{femus\+::tetpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tet0_a8ce29003823d07fa76934c881b99aa40}{femus\+::tet0}}, \mbox{\hyperlink{classfemus_1_1_tet_biquadratic_a416f03147427a322d96feb511dd6c6d0}{femus\+::\+Tet\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_quadratic_aeb639b58481285526a502c38bec1fcbf}{femus\+::\+Tet\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_linear_adc5774a2ba2c00070315ecad91395f51}{femus\+::\+Tet\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedgepw_linear_a19617340c1a5d61309401bd1e4e4abe5}{femus\+::wedgepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedge0_abdda569dd9042829c15483e9c2000be4}{femus\+::wedge0}}, \mbox{\hyperlink{classfemus_1_1_wedge_biquadratic_abbcd4e11513f29e03873a65c911f4a13}{femus\+::\+Wedge\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_quadratic_a1fe92bed37b71a6831d978a54868b922}{femus\+::\+Wedge\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_linear_a055172338aa9af21099a59e6ebfbb64e}{femus\+::\+Wedge\+Linear}}, \mbox{\hyperlink{classfemus_1_1hexpw_linear_a20b5ae15c57b98fce4255ee29f36456d}{femus\+::hexpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1hex0_a8b54d2de54c8c30de2ead325c661a428}{femus\+::hex0}}, \mbox{\hyperlink{classfemus_1_1_hex_biquadratic_a4810a64e48546a6d0fc3050dccbc5f1b}{femus\+::\+Hex\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_hex_quadratic_a0720366452fe8a95e1d54bbd46e9c174}{femus\+::\+Hex\+Quadratic}}, and \mbox{\hyperlink{classfemus_1_1_hex_linear_a0f8c75ba515b33fdbe02d7c98a233273}{femus\+::\+Hex\+Linear}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_aff9731d83408aa82eb148b8fc83ef9d8}\label{classfemus_1_1basis_aff9731d83408aa82eb148b8fc83ef9d8}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidzdx@{eval\+\_\+d2phidzdx}}
+\index{eval\+\_\+d2phidzdx@{eval\+\_\+d2phidzdx}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidzdx()}{eval\_d2phidzdx()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double femus\+::basis\+::eval\+\_\+d2phidzdx (\begin{DoxyParamCaption}\item[{const unsigned \&}]{j,  }\item[{const std\+::vector$<$ double $>$ \&}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a5d619ec5bd57b7d2dc34a99d69975c77}\label{classfemus_1_1basis_a5d619ec5bd57b7d2dc34a99d69975c77}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+d2phidzdx@{eval\+\_\+d2phidzdx}}
+\index{eval\+\_\+d2phidzdx@{eval\+\_\+d2phidzdx}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+d2phidzdx()}{eval\_d2phidzdx()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual double femus\+::basis\+::eval\+\_\+d2phidzdx (\begin{DoxyParamCaption}\item[{const int $\ast$}]{I,  }\item[{const double $\ast$}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1tetpw_linear_a6b5280c580726c23a3d0557a95c39bd9}{femus\+::tetpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tet0_ab082238423f56a4a4810554511f5feb1}{femus\+::tet0}}, \mbox{\hyperlink{classfemus_1_1_tet_biquadratic_a88998aa6e589aa3919cde8c5eb1ad46d}{femus\+::\+Tet\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_quadratic_a5b0f085e16cb9e4aa9dec091d7abeed9}{femus\+::\+Tet\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_linear_ad4fe543f5c2bd7fe70d3f8b0d11ddac7}{femus\+::\+Tet\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedgepw_linear_a1857628ada7c64496f95bafffd40881b}{femus\+::wedgepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedge0_a7ca29b396daf72718fc2a700b52410f0}{femus\+::wedge0}}, \mbox{\hyperlink{classfemus_1_1_wedge_biquadratic_a19df28dae2ec661641a107ae669f0f92}{femus\+::\+Wedge\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_quadratic_a37fe1d3b6b3ec83d3f2e31319be5ba2d}{femus\+::\+Wedge\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_linear_aaaf11342fc350204f931c19b8241c913}{femus\+::\+Wedge\+Linear}}, \mbox{\hyperlink{classfemus_1_1hexpw_linear_a05244a29bbca8fae4a87d97f5306d4a0}{femus\+::hexpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1hex0_a7ccc33fa4e1701fbbae72b174c7ca4f1}{femus\+::hex0}}, \mbox{\hyperlink{classfemus_1_1_hex_biquadratic_a80b2ad19492b390c105682b7d976bbb6}{femus\+::\+Hex\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_hex_quadratic_a327ecb8081384ae254b7c74ac70478ce}{femus\+::\+Hex\+Quadratic}}, and \mbox{\hyperlink{classfemus_1_1_hex_linear_ae820d40b10b5e402a249f615e4b5f7da}{femus\+::\+Hex\+Linear}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_af1cfe0c84a3a4b1e17b5903275410340}\label{classfemus_1_1basis_af1cfe0c84a3a4b1e17b5903275410340}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+dphidx@{eval\+\_\+dphidx}}
+\index{eval\+\_\+dphidx@{eval\+\_\+dphidx}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+dphidx()}{eval\_dphidx()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double femus\+::basis\+::eval\+\_\+dphidx (\begin{DoxyParamCaption}\item[{const unsigned \&}]{j,  }\item[{const std\+::vector$<$ double $>$ \&}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a4db7d29cf8a753ddbccc4a297dafa0bf}\label{classfemus_1_1basis_a4db7d29cf8a753ddbccc4a297dafa0bf}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+dphidx@{eval\+\_\+dphidx}}
+\index{eval\+\_\+dphidx@{eval\+\_\+dphidx}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+dphidx()}{eval\_dphidx()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual double femus\+::basis\+::eval\+\_\+dphidx (\begin{DoxyParamCaption}\item[{const int $\ast$}]{I,  }\item[{const double $\ast$}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1linepw_linear_a8fca1e50abd1203c8c6867b37969e551}{femus\+::linepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1line0_a9c111514d616c479847a26b0b341ca18}{femus\+::line0}}, \mbox{\hyperlink{classfemus_1_1_line_biquadratic_a05d4702daa38615c5cb8ebd0045d61a4}{femus\+::\+Line\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_line_linear_a1f690ee24508fe7e2a3b552bf6921e96}{femus\+::\+Line\+Linear}}, \mbox{\hyperlink{classfemus_1_1tripw_linear_afc6135a1c5ae6ef1567610e0d764de3d}{femus\+::tripw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tri0_a5c6b15a2746a2d9b8b00d695644a3069}{femus\+::tri0}}, \mbox{\hyperlink{classfemus_1_1_tri_biquadratic_a76b4223ec87d072fb08067629296c6dd}{femus\+::\+Tri\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_quadratic_a98bad1aa37518ed91350f7628b45a380}{femus\+::\+Tri\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_linear_a2cec2770fa07f3f4175b02368e8e7d6a}{femus\+::\+Tri\+Linear}}, \mbox{\hyperlink{classfemus_1_1quadpw_linear_adb19c2091a0836195c299f901ac4bded}{femus\+::quadpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1quad0_a133c55e14eebed1f15970ce98f3823b6}{femus\+::quad0}}, \mbox{\hyperlink{classfemus_1_1_quad_biquadratic_acbc937c5ad4cda84236ba956b4fb0fae}{femus\+::\+Quad\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_quadratic_ad8c70fc688c0ce5a9bac35437d8c09a8}{femus\+::\+Quad\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_linear_a8f5b2825197015a09664548848ceb0bf}{femus\+::\+Quad\+Linear}}, \mbox{\hyperlink{classfemus_1_1tetpw_linear_a2a3c74824c709f2919aa9b0a8681d17e}{femus\+::tetpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tet0_a5ebdbcdd7bcb5ef07e07b7952d2a34d0}{femus\+::tet0}}, \mbox{\hyperlink{classfemus_1_1_tet_biquadratic_afd1125cd520a11a911a596785b75ce4d}{femus\+::\+Tet\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_quadratic_a509e172f88aabecc48e0c6d25b22889d}{femus\+::\+Tet\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_linear_ac073a70b60d884941d44656b9fc4b226}{femus\+::\+Tet\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedgepw_linear_aa8a29e0df55ce4ac28f0f6c3dde95bb8}{femus\+::wedgepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedge0_aa56d06d2f457dc2d60c89343fadac77b}{femus\+::wedge0}}, \mbox{\hyperlink{classfemus_1_1_wedge_biquadratic_aaa7530531bf1306063e7082aaeb82c4f}{femus\+::\+Wedge\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_quadratic_a57c70663dcb6cdda9adea4eeb93a75ba}{femus\+::\+Wedge\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_linear_a0a071d2e692526b8eb39ce5c3c41adf4}{femus\+::\+Wedge\+Linear}}, \mbox{\hyperlink{classfemus_1_1hexpw_linear_a954c0487a8e7fb613697353f7e463024}{femus\+::hexpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1hex0_a6af64d193c685d7d54a589f9cee5a24b}{femus\+::hex0}}, \mbox{\hyperlink{classfemus_1_1_hex_biquadratic_a751fe53056f2ca2e10559ec75253469e}{femus\+::\+Hex\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_hex_quadratic_ad67c4453b00ce3cfb6ff4458fea56d42}{femus\+::\+Hex\+Quadratic}}, and \mbox{\hyperlink{classfemus_1_1_hex_linear_a4c26f08a33fb379f6d6b844ec0eac8c5}{femus\+::\+Hex\+Linear}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_a3c65ece3b826c56b2a05b2221e9ac61f}\label{classfemus_1_1basis_a3c65ece3b826c56b2a05b2221e9ac61f}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+dphidy@{eval\+\_\+dphidy}}
+\index{eval\+\_\+dphidy@{eval\+\_\+dphidy}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+dphidy()}{eval\_dphidy()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double femus\+::basis\+::eval\+\_\+dphidy (\begin{DoxyParamCaption}\item[{const unsigned \&}]{j,  }\item[{const std\+::vector$<$ double $>$ \&}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a2819fac9aae797156b9efec8a0b85cc1}\label{classfemus_1_1basis_a2819fac9aae797156b9efec8a0b85cc1}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+dphidy@{eval\+\_\+dphidy}}
+\index{eval\+\_\+dphidy@{eval\+\_\+dphidy}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+dphidy()}{eval\_dphidy()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual double femus\+::basis\+::eval\+\_\+dphidy (\begin{DoxyParamCaption}\item[{const int $\ast$}]{I,  }\item[{const double $\ast$}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1tripw_linear_a9cf54f3f041baa9d16caaa9e4ccf9040}{femus\+::tripw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tri0_ac2d4659f00d3f914c7f29166f2e2ba71}{femus\+::tri0}}, \mbox{\hyperlink{classfemus_1_1_tri_biquadratic_a123e9959df919b986b96ee8fb172e632}{femus\+::\+Tri\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_quadratic_ab7ac81f22dff08cb99f19414076561af}{femus\+::\+Tri\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_linear_adca4bfeb974a52fe8b8dfc88561d0c4b}{femus\+::\+Tri\+Linear}}, \mbox{\hyperlink{classfemus_1_1quadpw_linear_aef9781d267a0a0a6af0b47e71bba9ec3}{femus\+::quadpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1quad0_a94e861fcc24e2013fac6bdc1a07a88d8}{femus\+::quad0}}, \mbox{\hyperlink{classfemus_1_1_quad_biquadratic_a7d6d24b6ee89e663854d562d573dd3ba}{femus\+::\+Quad\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_quadratic_a73c748c9cdef1636994ed7899b027601}{femus\+::\+Quad\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_linear_a63d5770730442b7e6e5fe81e03a862e7}{femus\+::\+Quad\+Linear}}, \mbox{\hyperlink{classfemus_1_1tetpw_linear_a75d4cc96948c8b36119ce628e2803783}{femus\+::tetpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tet0_a1bbcc8a702fdb19e0b58f94bcfc98959}{femus\+::tet0}}, \mbox{\hyperlink{classfemus_1_1_tet_biquadratic_a00d710cd64c43aab218a91dced7436c8}{femus\+::\+Tet\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_quadratic_a68b5b101bab88132574d0d96f29daeb2}{femus\+::\+Tet\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_linear_a2e636fe3c775bd207e2240588c8185c7}{femus\+::\+Tet\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedgepw_linear_ad125cd826158dcdd9f8f3d215ef3fc24}{femus\+::wedgepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedge0_a9af38b6f15d958fb88a422be0955142d}{femus\+::wedge0}}, \mbox{\hyperlink{classfemus_1_1_wedge_biquadratic_aae739c976101ce3475bcef7ac9927b19}{femus\+::\+Wedge\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_quadratic_afc2bb550f1fc80835eb52bf6a628e8a1}{femus\+::\+Wedge\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_linear_a34ad0ff19e2763f3823814c05fcb44c2}{femus\+::\+Wedge\+Linear}}, \mbox{\hyperlink{classfemus_1_1hexpw_linear_a6ebee6c469d4a59ad8fa29b797a9bd23}{femus\+::hexpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1hex0_a8db705e3c8fdcc9b628fe8ce168c91bb}{femus\+::hex0}}, \mbox{\hyperlink{classfemus_1_1_hex_biquadratic_afa4cdce4824df2744096af085ab1281e}{femus\+::\+Hex\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_hex_quadratic_aeb327519d776cb54e78bab68a3680693}{femus\+::\+Hex\+Quadratic}}, and \mbox{\hyperlink{classfemus_1_1_hex_linear_a04a870728a2d2d135fe8351315e42d7e}{femus\+::\+Hex\+Linear}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_a0a7e19ca2f5b312392bc34a64e8f2cf3}\label{classfemus_1_1basis_a0a7e19ca2f5b312392bc34a64e8f2cf3}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+dphidz@{eval\+\_\+dphidz}}
+\index{eval\+\_\+dphidz@{eval\+\_\+dphidz}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+dphidz()}{eval\_dphidz()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double femus\+::basis\+::eval\+\_\+dphidz (\begin{DoxyParamCaption}\item[{const unsigned \&}]{j,  }\item[{const std\+::vector$<$ double $>$ \&}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_affd9927f6e25e264108219d862b8cb3d}\label{classfemus_1_1basis_affd9927f6e25e264108219d862b8cb3d}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+dphidz@{eval\+\_\+dphidz}}
+\index{eval\+\_\+dphidz@{eval\+\_\+dphidz}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+dphidz()}{eval\_dphidz()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual double femus\+::basis\+::eval\+\_\+dphidz (\begin{DoxyParamCaption}\item[{const int $\ast$}]{I,  }\item[{const double $\ast$}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1tetpw_linear_a6069f0d885dc151f2648b4ff587ef39f}{femus\+::tetpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tet0_ab4d0b4b59fcd80195ebeeaf1375db06b}{femus\+::tet0}}, \mbox{\hyperlink{classfemus_1_1_tet_biquadratic_a9e6a9c61044c0cc4ab68ea0ef6e83f80}{femus\+::\+Tet\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_quadratic_a82790f3f2440511a79ae29447a112fb8}{femus\+::\+Tet\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_linear_ae399d6e283b007349b0170579954e3fc}{femus\+::\+Tet\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedgepw_linear_a2a7e6c2af74aad5a0ad1258598507fa3}{femus\+::wedgepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedge0_ae0c76353c2f04e9fad1083a80a643b57}{femus\+::wedge0}}, \mbox{\hyperlink{classfemus_1_1_wedge_biquadratic_a1aa59bba6892b349afc89f427266e30b}{femus\+::\+Wedge\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_quadratic_a7136bf2e3368d20821306b56ce653752}{femus\+::\+Wedge\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_linear_aedbe9536bad4b99ef918810e6d0d6689}{femus\+::\+Wedge\+Linear}}, \mbox{\hyperlink{classfemus_1_1hexpw_linear_ac46b6a5791227243a89846dbcb967df2}{femus\+::hexpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1hex0_a9273324eeab48b6d166b11f167e89de1}{femus\+::hex0}}, \mbox{\hyperlink{classfemus_1_1_hex_biquadratic_a1dbed34250925ec85764871142ce3597}{femus\+::\+Hex\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_hex_quadratic_ab75b6c916ae7176fa525bdd6d8bd37c4}{femus\+::\+Hex\+Quadratic}}, and \mbox{\hyperlink{classfemus_1_1_hex_linear_aed97c1006402d186cebd957fc3e20896}{femus\+::\+Hex\+Linear}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_ac39cd1bad49bfe9370095558c24c4582}\label{classfemus_1_1basis_ac39cd1bad49bfe9370095558c24c4582}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+phi@{eval\+\_\+phi}}
+\index{eval\+\_\+phi@{eval\+\_\+phi}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+phi()}{eval\_phi()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily double femus\+::basis\+::eval\+\_\+phi (\begin{DoxyParamCaption}\item[{const unsigned \&}]{j,  }\item[{const std\+::vector$<$ double $>$ \&}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a89b0797cdccffae5ff6d059b32016ae5}\label{classfemus_1_1basis_a89b0797cdccffae5ff6d059b32016ae5}} 
+\index{femus\+::basis@{femus\+::basis}!eval\+\_\+phi@{eval\+\_\+phi}}
+\index{eval\+\_\+phi@{eval\+\_\+phi}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{eval\+\_\+phi()}{eval\_phi()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily virtual double femus\+::basis\+::eval\+\_\+phi (\begin{DoxyParamCaption}\item[{const int $\ast$}]{I,  }\item[{const double $\ast$}]{x }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1linepw_linear_aaf2ad7bcf89fee3022a36b677872ae23}{femus\+::linepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1line0_a6e491417e4678a7d982bd8a4e2b1d4ea}{femus\+::line0}}, \mbox{\hyperlink{classfemus_1_1_line_biquadratic_aaea2d87519c0e65678685ab1c64e65f9}{femus\+::\+Line\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_line_linear_a1daec56d3bf6106b18291be2adadb3c5}{femus\+::\+Line\+Linear}}, \mbox{\hyperlink{classfemus_1_1tripw_linear_a64d5b18239123c1983bc7342a1525069}{femus\+::tripw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tri0_a8f439eb29f090a59be31e84de793853b}{femus\+::tri0}}, \mbox{\hyperlink{classfemus_1_1_tri_biquadratic_a54c2fe960a81b80f297e8e7e74e95666}{femus\+::\+Tri\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_quadratic_a9a3b005fa0c0c59ec95935edf9e10d7f}{femus\+::\+Tri\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_linear_ac107e6f9e9f8e34961e40bf0610d54d1}{femus\+::\+Tri\+Linear}}, \mbox{\hyperlink{classfemus_1_1quadpw_linear_a6baa7f92c07d7f745c0f8020e267c8d6}{femus\+::quadpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1quad0_a65b24fd1a96cf9df09f570ca222b84e5}{femus\+::quad0}}, \mbox{\hyperlink{classfemus_1_1_quad_biquadratic_a3c1cd807c76ac39c05399907b980338c}{femus\+::\+Quad\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_quadratic_a940fc09cf194646fc5f3cc27c40760a1}{femus\+::\+Quad\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_linear_aaec6a3a20ec48047ff1de4bbe75a5018}{femus\+::\+Quad\+Linear}}, \mbox{\hyperlink{classfemus_1_1tetpw_linear_aff13fdb969801b6c5e6cfc15ca67a957}{femus\+::tetpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tet0_a7d8d6040a264df9fe50440e9009f5ca4}{femus\+::tet0}}, \mbox{\hyperlink{classfemus_1_1_tet_biquadratic_a4f5066f00ab4577ab2fbdff72b47b4a0}{femus\+::\+Tet\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_quadratic_a7eb28afedc6c1d5dde273832b37c6936}{femus\+::\+Tet\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_linear_a99764a6a2e65bc163dc17c864db6c55d}{femus\+::\+Tet\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedgepw_linear_ad503d897290fadcf86d96fa105521af7}{femus\+::wedgepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedge0_a8ef4bce6068f2c45e922dea7ee104121}{femus\+::wedge0}}, \mbox{\hyperlink{classfemus_1_1_wedge_biquadratic_ae552733ed0284e76d8cd13e3b9b02b7f}{femus\+::\+Wedge\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_quadratic_a3b26fb7ddecdce25a52fd79cdff35c3f}{femus\+::\+Wedge\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_linear_a43a10867684e0d86006836afb3cd02ec}{femus\+::\+Wedge\+Linear}}, \mbox{\hyperlink{classfemus_1_1hexpw_linear_a357f1070933e0eb6ccab44ee02a36ecf}{femus\+::hexpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1hex0_ad2737dbc2c4036ac4920582adde2de2c}{femus\+::hex0}}, \mbox{\hyperlink{classfemus_1_1_hex_biquadratic_aaf08e83ba3ba1eb6f5e27cfafd1af391}{femus\+::\+Hex\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_hex_quadratic_a2e62701d96977559bfbdbc449c93fc3b}{femus\+::\+Hex\+Quadratic}}, and \mbox{\hyperlink{classfemus_1_1_hex_linear_ab6def48278382bd3f39856d158f08287}{femus\+::\+Hex\+Linear}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_a06f93864b6ce0925d41bf08173dc2500}\label{classfemus_1_1basis_a06f93864b6ce0925d41bf08173dc2500}} 
+\index{femus\+::basis@{femus\+::basis}!Get\+Face\+Dof@{Get\+Face\+Dof}}
+\index{Get\+Face\+Dof@{Get\+Face\+Dof}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{Get\+Face\+Dof()}{GetFaceDof()}}
+{\footnotesize\ttfamily virtual const unsigned femus\+::basis\+::\+Get\+Face\+Dof (\begin{DoxyParamCaption}\item[{const unsigned \&}]{i,  }\item[{const unsigned \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1tri__lag_a1f53bf1823d6a1f1e593dc25df0fecc1}{femus\+::tri\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1quad__lag_aad6a7fa04e40018089716a27d78b434e}{femus\+::quad\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tet__lag_a1d112ec062067cef9672bd1a3e726a5e}{femus\+::tet\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1wedge__lag_a3c027b9b1360d01725004434e89b671d}{femus\+::wedge\+\_\+lag}}, and \mbox{\hyperlink{classfemus_1_1hex__lag_a55c8cc6a3fa975cbc7a640c201ae2204}{femus\+::hex\+\_\+lag}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_a2ba867dcfa634c47f1c52caddd9bfdba}\label{classfemus_1_1basis_a2ba867dcfa634c47f1c52caddd9bfdba}} 
+\index{femus\+::basis@{femus\+::basis}!Get\+Fine2\+Coarse\+Vertex\+Mapping@{Get\+Fine2\+Coarse\+Vertex\+Mapping}}
+\index{Get\+Fine2\+Coarse\+Vertex\+Mapping@{Get\+Fine2\+Coarse\+Vertex\+Mapping}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{Get\+Fine2\+Coarse\+Vertex\+Mapping()}{GetFine2CoarseVertexMapping()}}
+{\footnotesize\ttfamily virtual const unsigned femus\+::basis\+::\+Get\+Fine2\+Coarse\+Vertex\+Mapping (\begin{DoxyParamCaption}\item[{const int \&}]{i,  }\item[{const unsigned \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1line__lag_a531a67a6075079df980485134a2ca93a}{femus\+::line\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tri__lag_a884d403e16a7d3bb459809ef8e07a74c}{femus\+::tri\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1quad__lag_a331e1c799946c87cfe43ad7c994aef1b}{femus\+::quad\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tet__lag_a92607e302e1bf2526b2750295950f116}{femus\+::tet\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1wedge__lag_a2e69a8ef73eaecbf5b5abf5db49c3dec}{femus\+::wedge\+\_\+lag}}, and \mbox{\hyperlink{classfemus_1_1hex__lag_a6146b93f321a26a7a40cf3cf51a3d802}{femus\+::hex\+\_\+lag}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_a3f63ad97ce70cd4a1196ede69f1f144b}\label{classfemus_1_1basis_a3f63ad97ce70cd4a1196ede69f1f144b}} 
+\index{femus\+::basis@{femus\+::basis}!Get\+I\+ND@{Get\+I\+ND}}
+\index{Get\+I\+ND@{Get\+I\+ND}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{Get\+I\+N\+D()}{GetIND()}}
+{\footnotesize\ttfamily virtual const int$\ast$ femus\+::basis\+::\+Get\+I\+ND (\begin{DoxyParamCaption}\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1line__const_ab73ed11bab4c16cde08b4f8d47ae90f7}{femus\+::line\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1line__lag_ae8291eceb0b48fd46da4112a75832ad2}{femus\+::line\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tri__const_a8acedcfc88051ca62d624106f0d78363}{femus\+::tri\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1tri__lag_a4418a7f1b7f2402a647232e7d42b1ce0}{femus\+::tri\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1quad__const_a44c52292981696a6f8b36a0b3de5598b}{femus\+::quad\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1quad__lag_a363f9b8e94df40dddec713a4a08350a9}{femus\+::quad\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tet__const_aa52013fbedd8302be24a2622d45d92a8}{femus\+::tet\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1tet__lag_ad7c531de0360446b1ef3abc2e8c76229}{femus\+::tet\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1wedge__const_a46e874c0a6d178ba0fbfa4169419c2f7}{femus\+::wedge\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1wedge__lag_a984c32fdfe395886e9cba8a335f845b7}{femus\+::wedge\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1hex__const_a8dba97c67c9c993a1eedabfd12aac809}{femus\+::hex\+\_\+const}}, and \mbox{\hyperlink{classfemus_1_1hex__lag_ae7c005d638cb17f079302b216114e16e}{femus\+::hex\+\_\+lag}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_a95ceb3feae4c484b0baa6a4d35d38909}\label{classfemus_1_1basis_a95ceb3feae4c484b0baa6a4d35d38909}} 
+\index{femus\+::basis@{femus\+::basis}!Get\+K\+V\+E\+R\+T\+\_\+\+I\+ND@{Get\+K\+V\+E\+R\+T\+\_\+\+I\+ND}}
+\index{Get\+K\+V\+E\+R\+T\+\_\+\+I\+ND@{Get\+K\+V\+E\+R\+T\+\_\+\+I\+ND}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{Get\+K\+V\+E\+R\+T\+\_\+\+I\+N\+D()}{GetKVERT\_IND()}}
+{\footnotesize\ttfamily virtual const int$\ast$ femus\+::basis\+::\+Get\+K\+V\+E\+R\+T\+\_\+\+I\+ND (\begin{DoxyParamCaption}\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1line__const_a6fd1093aa51a8db78167a9b0ab684a4d}{femus\+::line\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1line__lag_af8c8c5450968f7e99f0229743c3098c8}{femus\+::line\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tri__const_a3fd58ad3e2cc9c37e4a92fcab3b11a20}{femus\+::tri\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1tri__lag_a16e3ec116476466d968402ba961917b4}{femus\+::tri\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1quad__const_a1254abf3bc41679deaa514fcd63138a0}{femus\+::quad\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1quad__lag_ab5c2233d78efd00452fabdaf9eb5c942}{femus\+::quad\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tet__const_a45c865d95f6a98e297d24d50893942b3}{femus\+::tet\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1tet__lag_a6fe6b8ef67dd6799487fc1acff5b36de}{femus\+::tet\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1wedge__const_a5b8d6664b44889cea478a6c5c68126d1}{femus\+::wedge\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1wedge__lag_ac966f6d982d2a0aa7231ae1a5e731800}{femus\+::wedge\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1hex__const_a085fcb241d0ab952117945bcdd27215b}{femus\+::hex\+\_\+const}}, and \mbox{\hyperlink{classfemus_1_1hex__lag_a86a146b7f3f4b8af3b41f86f028e0ac2}{femus\+::hex\+\_\+lag}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_a00597122bbc75877f1c184f8fce4986c}\label{classfemus_1_1basis_a00597122bbc75877f1c184f8fce4986c}} 
+\index{femus\+::basis@{femus\+::basis}!GetX@{GetX}}
+\index{GetX@{GetX}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{Get\+X()}{GetX()}}
+{\footnotesize\ttfamily virtual const double$\ast$ femus\+::basis\+::\+GetX (\begin{DoxyParamCaption}\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1line__const_ac4bd40b2dd52c41196e84d328d85691e}{femus\+::line\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1line__lag_a7bb107fa83cf2cc51202f96f10167dc8}{femus\+::line\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tri__const_ac085b6cf3dbfcb6a3cd06337c06fd06f}{femus\+::tri\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1tri__lag_adbc5aaa467d849777aa97a6339dd2c4d}{femus\+::tri\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1quad__const_ae81971dbef2943442e4c10debc5bfa08}{femus\+::quad\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1quad__lag_ad1d8e10798242454170be69efd303523}{femus\+::quad\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tet__const_a12c7aec6a462159e1d191e189cdf6d07}{femus\+::tet\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1tet__lag_a9dd1283cbaae6b1203ec9b4082267fb2}{femus\+::tet\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1wedge__const_a40c858d58d224e133433cf3c071b0acb}{femus\+::wedge\+\_\+const}}, \mbox{\hyperlink{classfemus_1_1wedge__lag_a61a63f8c6773d01c707d49a3038951b3}{femus\+::wedge\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1hex__const_a96b01f930583ac9d99a0a041f82dd0cc}{femus\+::hex\+\_\+const}}, and \mbox{\hyperlink{classfemus_1_1hex__lag_a1cd01fd5ad9c4c92deaf67e68b9d5a9b}{femus\+::hex\+\_\+lag}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_afcabbbda61ede8f30158fe08ee0a5258}\label{classfemus_1_1basis_afcabbbda61ede8f30158fe08ee0a5258}} 
+\index{femus\+::basis@{femus\+::basis}!Get\+Xcoarse@{Get\+Xcoarse}}
+\index{Get\+Xcoarse@{Get\+Xcoarse}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{Get\+Xcoarse()}{GetXcoarse()}}
+{\footnotesize\ttfamily virtual const double$\ast$ femus\+::basis\+::\+Get\+Xcoarse (\begin{DoxyParamCaption}\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1line__lag_aea0db4bd5a70c069b7cbf3f2f92a0c79}{femus\+::line\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tri__lag_a93b897c5080dee5a7415a85735f96330}{femus\+::tri\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1quad__lag_a0e07e085178832564a1be9bf1ea95814}{femus\+::quad\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tet__lag_a7abd03724f2fbcd92829a2c56fb1c49d}{femus\+::tet\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1wedge__lag_a3cd96af653ca43643e6fd8a7a53cda07}{femus\+::wedge\+\_\+lag}}, and \mbox{\hyperlink{classfemus_1_1hex__lag_a85a1a616557275dca6954a04eaaf5042}{femus\+::hex\+\_\+lag}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_a2571f53dfeae70eccf63033736098d07}\label{classfemus_1_1basis_a2571f53dfeae70eccf63033736098d07}} 
+\index{femus\+::basis@{femus\+::basis}!lag\+Biquadratic@{lag\+Biquadratic}}
+\index{lag\+Biquadratic@{lag\+Biquadratic}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{lag\+Biquadratic()}{lagBiquadratic()}}
+{\footnotesize\ttfamily double femus\+::basis\+::lag\+Biquadratic (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a614b2d4abe684a504bb0f561d46397fa}\label{classfemus_1_1basis_a614b2d4abe684a504bb0f561d46397fa}} 
+\index{femus\+::basis@{femus\+::basis}!lag\+Linear@{lag\+Linear}}
+\index{lag\+Linear@{lag\+Linear}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{lag\+Linear()}{lagLinear()}}
+{\footnotesize\ttfamily double femus\+::basis\+::lag\+Linear (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a49212826381f3ff3dad0bc61d6b6329c}\label{classfemus_1_1basis_a49212826381f3ff3dad0bc61d6b6329c}} 
+\index{femus\+::basis@{femus\+::basis}!lag\+Quadratic@{lag\+Quadratic}}
+\index{lag\+Quadratic@{lag\+Quadratic}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{lag\+Quadratic()}{lagQuadratic()}}
+{\footnotesize\ttfamily double femus\+::basis\+::lag\+Quadratic (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const int \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_abbae7bf8f31ec5793c911bc6d4ea0572}\label{classfemus_1_1basis_abbae7bf8f31ec5793c911bc6d4ea0572}} 
+\index{femus\+::basis@{femus\+::basis}!Print\+Type@{Print\+Type}}
+\index{Print\+Type@{Print\+Type}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{Print\+Type()}{PrintType()}}
+{\footnotesize\ttfamily virtual void femus\+::basis\+::\+Print\+Type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classfemus_1_1linepw_linear_a0f482e5b4646b44faebfaeb6d085219a}{femus\+::linepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1line0_a34e5a0791c0d6fe2d4fd3caf2bb51ff2}{femus\+::line0}}, \mbox{\hyperlink{classfemus_1_1_line_biquadratic_a54463fff187f1fb64a4252c16bae0afe}{femus\+::\+Line\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_line_linear_af205b1d34401f8c9aeebb4ee52bb2231}{femus\+::\+Line\+Linear}}, \mbox{\hyperlink{classfemus_1_1tripw_linear_adaef066660723a22e68dd30b91d55357}{femus\+::tripw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tri0_af9e3d9ca27a7fcfef65802eb7ef3f21d}{femus\+::tri0}}, \mbox{\hyperlink{classfemus_1_1_tri_biquadratic_aced862267b6234631f7a67f842d736f1}{femus\+::\+Tri\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_quadratic_a608d29b44811f891b6b823198e957ae5}{femus\+::\+Tri\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tri_linear_a1baabe41cae6c6d1e9e120b1b9869d2c}{femus\+::\+Tri\+Linear}}, \mbox{\hyperlink{classfemus_1_1quadpw_linear_adb6d97e1f50de6b3567a754897517aa9}{femus\+::quadpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1quad0_a8dd7e0be853baa57c6ad824aeb086b79}{femus\+::quad0}}, \mbox{\hyperlink{classfemus_1_1_quad_biquadratic_a8c9442136145808c695979fdcea1e0fc}{femus\+::\+Quad\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_quadratic_ab8a4e2a37b68850c536bffb8d2fddf3b}{femus\+::\+Quad\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_quad_linear_a8d265ad93c9d368a7c1af3a7edac1daf}{femus\+::\+Quad\+Linear}}, \mbox{\hyperlink{classfemus_1_1tetpw_linear_a79576e1c49c1e056f3a869ba8e2a6a0a}{femus\+::tetpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1tet0_a0aa5059ca3b96f3b7f5d53d631bf736f}{femus\+::tet0}}, \mbox{\hyperlink{classfemus_1_1_tet_biquadratic_a2ada2728eefe378323b74924a2c4b4c8}{femus\+::\+Tet\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_quadratic_a64b7e71b4a3e9afb5e129313153dfbe4}{femus\+::\+Tet\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_tet_linear_a3c42a3845b94a0b0d0fd654f6cbee9d2}{femus\+::\+Tet\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedgepw_linear_a8e819b24410a5710c4148cd3518dac29}{femus\+::wedgepw\+Linear}}, \mbox{\hyperlink{classfemus_1_1wedge0_a83944aac1c4b6b97d8fd980c5a68f4d3}{femus\+::wedge0}}, \mbox{\hyperlink{classfemus_1_1_wedge_biquadratic_a7152bbe7398026b63f46d67d7c947f89}{femus\+::\+Wedge\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_quadratic_a418fac73334350c6efa893644208de73}{femus\+::\+Wedge\+Quadratic}}, \mbox{\hyperlink{classfemus_1_1_wedge_linear_a0f4d7583a8442ee5019cf63b70a3eb26}{femus\+::\+Wedge\+Linear}}, \mbox{\hyperlink{classfemus_1_1hexpw_linear_a735e1f1b8e35cddcecfa075dadc460c4}{femus\+::hexpw\+Linear}}, \mbox{\hyperlink{classfemus_1_1hex0_acd0623cd092781f05f3604e102fabe63}{femus\+::hex0}}, \mbox{\hyperlink{classfemus_1_1_hex_biquadratic_a47c356518c173ac4dc43671e5747f7a8}{femus\+::\+Hex\+Biquadratic}}, \mbox{\hyperlink{classfemus_1_1_hex_quadratic_a23f9ff89bfb12290b04237c5152334fd}{femus\+::\+Hex\+Quadratic}}, and \mbox{\hyperlink{classfemus_1_1_hex_linear_a6b28eaf73e48af3bf32ddd31991ec35e}{femus\+::\+Hex\+Linear}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_abbb9deb1bd0b2d07a4b2995b07d58d2e}\label{classfemus_1_1basis_abbb9deb1bd0b2d07a4b2995b07d58d2e}} 
+\index{femus\+::basis@{femus\+::basis}!SetX@{SetX}}
+\index{SetX@{SetX}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{Set\+X()}{SetX()}}
+{\footnotesize\ttfamily virtual void femus\+::basis\+::\+SetX (\begin{DoxyParamCaption}\item[{const unsigned \&}]{i,  }\item[{const unsigned \&}]{j,  }\item[{const double \&}]{value }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classfemus_1_1line__lag_a7b6b910b65c797ed3659b38044c3d1d7}{femus\+::line\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tri__lag_aa031dd1be0ccbd6ebdb8d57b3a28d374}{femus\+::tri\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1quad__lag_a0bd8bb0ef4995d4b70b76e5d92c4c3b2}{femus\+::quad\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1tet__lag_a776f9fdab9de50b036cc3f30abe85d35}{femus\+::tet\+\_\+lag}}, \mbox{\hyperlink{classfemus_1_1wedge__lag_ad022f16d731698ddaeb7113d01e588cb}{femus\+::wedge\+\_\+lag}}, and \mbox{\hyperlink{classfemus_1_1hex__lag_a74583e35eac434d56a9da2fd00d70038}{femus\+::hex\+\_\+lag}}.
+
+\mbox{\Hypertarget{classfemus_1_1basis_aaf2a0be4f2d29c434293c40f7b268613}\label{classfemus_1_1basis_aaf2a0be4f2d29c434293c40f7b268613}} 
+\index{femus\+::basis@{femus\+::basis}!triangle\+Biquadratic@{triangle\+Biquadratic}}
+\index{triangle\+Biquadratic@{triangle\+Biquadratic}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{triangle\+Biquadratic()}{triangleBiquadratic()}}
+{\footnotesize\ttfamily double femus\+::basis\+::triangle\+Biquadratic (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_ae1b0f968c69a125b1437c86691b79659}\label{classfemus_1_1basis_ae1b0f968c69a125b1437c86691b79659}} 
+\index{femus\+::basis@{femus\+::basis}!triangle\+Linear@{triangle\+Linear}}
+\index{triangle\+Linear@{triangle\+Linear}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{triangle\+Linear()}{triangleLinear()}}
+{\footnotesize\ttfamily double femus\+::basis\+::triangle\+Linear (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classfemus_1_1basis_ae42b607d5f23bdf072243ee3db496a44}\label{classfemus_1_1basis_ae42b607d5f23bdf072243ee3db496a44}} 
+\index{femus\+::basis@{femus\+::basis}!triangle\+Quadratic@{triangle\+Quadratic}}
+\index{triangle\+Quadratic@{triangle\+Quadratic}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{triangle\+Quadratic()}{triangleQuadratic()}}
+{\footnotesize\ttfamily double femus\+::basis\+::triangle\+Quadratic (\begin{DoxyParamCaption}\item[{const double \&}]{x,  }\item[{const double \&}]{y,  }\item[{const int \&}]{i,  }\item[{const int \&}]{j }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1basis_a8beaeb66f172e318e6f4daa22af0ee29}\label{classfemus_1_1basis_a8beaeb66f172e318e6f4daa22af0ee29}} 
+\index{femus\+::basis@{femus\+::basis}!\+\_\+nc@{\+\_\+nc}}
+\index{\+\_\+nc@{\+\_\+nc}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{\+\_\+nc}{\_nc}}
+{\footnotesize\ttfamily const int femus\+::basis\+::\+\_\+nc}
+
+\mbox{\Hypertarget{classfemus_1_1basis_ac52171231d44a30dfca075c6918d8197}\label{classfemus_1_1basis_ac52171231d44a30dfca075c6918d8197}} 
+\index{femus\+::basis@{femus\+::basis}!\+\_\+nf@{\+\_\+nf}}
+\index{\+\_\+nf@{\+\_\+nf}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{\+\_\+nf}{\_nf}}
+{\footnotesize\ttfamily const int femus\+::basis\+::\+\_\+nf}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a1fd290cb7382616e14715756917d73c1}\label{classfemus_1_1basis_a1fd290cb7382616e14715756917d73c1}} 
+\index{femus\+::basis@{femus\+::basis}!\+\_\+nlag0@{\+\_\+nlag0}}
+\index{\+\_\+nlag0@{\+\_\+nlag0}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{\+\_\+nlag0}{\_nlag0}}
+{\footnotesize\ttfamily const int femus\+::basis\+::\+\_\+nlag0}
+
+\mbox{\Hypertarget{classfemus_1_1basis_ab2e292cf67cf16101dac730b9a3b0fd0}\label{classfemus_1_1basis_ab2e292cf67cf16101dac730b9a3b0fd0}} 
+\index{femus\+::basis@{femus\+::basis}!\+\_\+nlag1@{\+\_\+nlag1}}
+\index{\+\_\+nlag1@{\+\_\+nlag1}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{\+\_\+nlag1}{\_nlag1}}
+{\footnotesize\ttfamily const int femus\+::basis\+::\+\_\+nlag1}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a19491d79d0fb5ef8135a51460502041c}\label{classfemus_1_1basis_a19491d79d0fb5ef8135a51460502041c}} 
+\index{femus\+::basis@{femus\+::basis}!\+\_\+nlag2@{\+\_\+nlag2}}
+\index{\+\_\+nlag2@{\+\_\+nlag2}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{\+\_\+nlag2}{\_nlag2}}
+{\footnotesize\ttfamily const int femus\+::basis\+::\+\_\+nlag2}
+
+\mbox{\Hypertarget{classfemus_1_1basis_afe89e7da4ba55df0492ee96f6bb04838}\label{classfemus_1_1basis_afe89e7da4ba55df0492ee96f6bb04838}} 
+\index{femus\+::basis@{femus\+::basis}!\+\_\+nlag3@{\+\_\+nlag3}}
+\index{\+\_\+nlag3@{\+\_\+nlag3}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{\+\_\+nlag3}{\_nlag3}}
+{\footnotesize\ttfamily const int femus\+::basis\+::\+\_\+nlag3}
+
+\mbox{\Hypertarget{classfemus_1_1basis_a21732cfb1bec4383fd050d218dfed070}\label{classfemus_1_1basis_a21732cfb1bec4383fd050d218dfed070}} 
+\index{femus\+::basis@{femus\+::basis}!face\+Number@{face\+Number}}
+\index{face\+Number@{face\+Number}!femus\+::basis@{femus\+::basis}}
+\subsubsection{\texorpdfstring{face\+Number}{faceNumber}}
+{\footnotesize\ttfamily int femus\+::basis\+::face\+Number\mbox{[}3\mbox{]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+fe/\mbox{\hyperlink{_basis_8hpp}{Basis.\+hpp}}\end{DoxyCompactItemize}

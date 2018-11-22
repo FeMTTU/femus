@@ -1,0 +1,483 @@
+\hypertarget{classfemus_1_1_multi_level_solution}{}\section{femus\+:\+:Multi\+Level\+Solution Class Reference}
+\label{classfemus_1_1_multi_level_solution}\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+
+
+{\ttfamily \#include $<$Multi\+Level\+Solution.\+hpp$>$}
+
+
+
+Inheritance diagram for femus\+:\+:Multi\+Level\+Solution\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=211pt]{classfemus_1_1_multi_level_solution__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for femus\+:\+:Multi\+Level\+Solution\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classfemus_1_1_multi_level_solution__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_multi_level_solution_a1eb7aedad8ef351fdce884425b7a6928}{Multi\+Level\+Solution}} (\mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}} $\ast$ml\+\_\+msh)
+\item 
+\mbox{\hyperlink{classfemus_1_1_multi_level_solution_a3be34a688b8951bfaa32dc70dd227750}{$\sim$\+Multi\+Level\+Solution}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_ac5f9a3671e02bbf2fb7a893ddee30f8b}{Add\+Solution}} (const char name\mbox{[}$\,$\mbox{]}, const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a7c9a70b7c6b5baf5d7942938d770a664}{F\+E\+Family}} fefamily, const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a00ea9562f0dbb25e22bb3297d596e3ba}{F\+E\+Order}} order, unsigned tmorder=0, const bool \&Pde\+\_\+type=1)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_ad5ac49720e6ce6c853356d87094db343}{Add\+Solution\+Vector}} (const unsigned n\+\_\+components, const std\+::string name, const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a7c9a70b7c6b5baf5d7942938d770a664}{F\+E\+Family}} fefamily, const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a00ea9562f0dbb25e22bb3297d596e3ba}{F\+E\+Order}} order, unsigned tmorder=0, const bool \&Pde\+\_\+type=1)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a23d19b085a62b184c9aee94923a04067}{Add\+Solution\+Level}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_ab34c5b431e194c7748227e3a68bd9a40}{Associate\+Property\+To\+Solution}} (const char solution\+\_\+name\mbox{[}$\,$\mbox{]}, const char solution\+\_\+property\mbox{[}$\,$\mbox{]}, const bool \&bool\+\_\+property=true)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a694ed0e50a403626904f1a48f8860711}{Pair\+Solution}} (const char solution\+\_\+name\mbox{[}$\,$\mbox{]}, const char solution\+\_\+pair\mbox{[}$\,$\mbox{]})
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a26dc48260560a41a45bdf2914aa5aad3}{Resize\+Solution\+Vector}} (const char name\mbox{[}$\,$\mbox{]})
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a396c250390464f543506ab4ccfd41b3b}{Initialize}} (const char name\mbox{[}$\,$\mbox{]}, Init\+Func func=N\+U\+LL)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a453827731acbe90751de895decd54657}{Initialize}} (const char name\mbox{[}$\,$\mbox{]}, Init\+Func func, Init\+Func\+M\+L\+Prob func\+M\+L\+Prob, const \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} $\ast$ml\+\_\+prob)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_aab58bc824c4e1b0cff1ddae73cba678a}{Initialize}} (const char $\ast$name, Init\+Func\+M\+L\+Prob func, const \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} $\ast$ml\+\_\+prob)
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a0c3d81a9146a8e96552da43955f0c7ae}{Get\+Index}} (const char name\mbox{[}$\,$\mbox{]}) const
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a829d506923c3381cc47851e4e45062a7}{Get\+Sol\+Type}} (const char name\mbox{[}$\,$\mbox{]})
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_multi_level_solution_ac54b6f8dfcea29b49969978b9be2068c}{Get\+Solution\+Size}} ()
+\item 
+vector$<$ char $\ast$ $>$ \mbox{\hyperlink{classfemus_1_1_multi_level_solution_ad0212c08f3d71d4691e9b129fc53d0fb}{Get\+Sol\+Name}} ()
+\item 
+vector$<$ int $>$ \mbox{\hyperlink{classfemus_1_1_multi_level_solution_af45613cec7257c9fb30feaa73df75aac}{Get\+Sol\+Type}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_abef48eba2d16ef9fba42154e1703cd39}{Attach\+Set\+Boundary\+Condition\+Function}} (Boundary\+Func Set\+Boundary\+Condition\+Function)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a9ef26adaa5c62a4d565d81f704cacf72}{Attach\+Set\+Boundary\+Condition\+Function}} (Boundary\+Func\+M\+L\+Prob Set\+Boundary\+Condition\+Function)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a4d868cc8db5f7918e2bc64492313f029}{Fix\+Solution\+At\+One\+Point}} (const char sol\mbox{[}$\,$\mbox{]})
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a9a4e6424cf569942496cde740e8602d1}{Generate\+Bdc}} (const char name\mbox{[}$\,$\mbox{]}, const char bdc\+\_\+type\mbox{[}$\,$\mbox{]}=\char`\"{}Steady\char`\"{}, const \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} $\ast$ml\+\_\+prob=N\+U\+LL)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a7dab34eb82a90ff8035142048e9284e8}{Initialize\+Bdc}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a50da205c6e2bb976ecbe64aee18beb84}{Update\+Bdc}} (const double time)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a7ea9a2163b506be744fea42550e4e26e}{Generate\+Bdc}} (const unsigned int k, const unsigned grid0, const double time)
+\item 
+\mbox{\hyperlink{_b_d_c_type_enum_8hpp_ac1efcf28f6f152fe5354b888f616668d}{B\+D\+C\+Type}} \mbox{\hyperlink{classfemus_1_1_multi_level_solution_aac6abd2822ad5642f3214d6feabc387b}{Get\+Boundary\+Condition}} (const std\+::string varname, const unsigned int facename) const
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_multi_level_solution_ac275b90171e6a33628c4fe5ebf9860a1}{Ishomogeneous}} (const std\+::string varname, const unsigned int facename) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a8222acd002287bc27090141ef6e7ef1f}{Set\+Boundary\+Condition\+\_\+new}} (const std\+::string name, const std\+::string facename, const \mbox{\hyperlink{_b_d_c_type_enum_8hpp_ac1efcf28f6f152fe5354b888f616668d}{B\+D\+C\+Type}} bdctype=\mbox{\hyperlink{_b_d_c_type_enum_8hpp_ac1efcf28f6f152fe5354b888f616668da1c2adefa6a3b7015b29913c49ee050c7}{D\+I\+R\+I\+C\+H\+L\+ET}}, const bool istimedependent=false, \mbox{\hyperlink{classfemus_1_1_function_base}{Function\+Base}} $\ast$func=N\+U\+LL)
+\item 
+\mbox{\hyperlink{classfemus_1_1_function_base}{Function\+Base}} $\ast$ \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a6a772d621d92076dfe0e37e376a421b0}{Get\+Bdc\+Function}} (const std\+::string varname, const unsigned int facename) const
+\item 
+\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$ \mbox{\hyperlink{classfemus_1_1_multi_level_solution_afe428eaa84d414762c4cc3b8a1d4f4a7}{Get\+Solution\+Level}} (const unsigned i)
+\item 
+char $\ast$ \mbox{\hyperlink{classfemus_1_1_multi_level_solution_aaa655b342d5b5b9bfbd0bbe1590440d8}{Get\+Solution\+Name}} (unsigned i)
+\item 
+int \mbox{\hyperlink{classfemus_1_1_multi_level_solution_ac6285c5a1907ad1f93ad7b380a08dabe}{Get\+Solution\+Type}} (unsigned i)
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a47d5ef26d0cfa11d7eedcf01cce591a6}{Get\+Solution\+Type}} (const char name\mbox{[}$\,$\mbox{]})
+\item 
+char $\ast$ \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a7c23e5c2e857d76f8c462814fde57b7e}{Get\+Bdc\+Type}} (unsigned i)
+\item 
+int \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a4147ec5f7477689c0c1247f7b5fee0d1}{Get\+Solution\+Time\+Order}} (unsigned i)
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a05e5e6a460e0935f50e33b4d077a7bb7}{Test\+If\+Solution\+Is\+Pressure}} (unsigned i)
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a9075cb433163413c4281cc7258a84a7e}{Get\+Solution\+Pair\+Index}} (const unsigned \&i) const
+\item 
+unsigned \mbox{\hyperlink{classfemus_1_1_multi_level_solution_afed625007506f25cc3ab540965d78c86}{Get\+Solution\+Pair\+Inverse\+Index}} (const unsigned \&i) const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a7d6865114da00ad92090d916217cad3d}{build}} ()
+\item 
+\mbox{\hyperlink{classfemus_1_1_writer}{Writer}} $\ast$ \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a231740aeb542389671b771902bfeeb34}{Get\+Writer}} ()
+\item 
+const \mbox{\hyperlink{classfemus_1_1_writer}{Writer}} $\ast$ \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a775f0e2e4d2b3d55fcaa7f1936f91cf3}{Get\+Writer}} () const
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_ab21db6d274c28e64f6901925878a6f1a}{Set\+Writer}} (const \mbox{\hyperlink{_writer_enum_8hpp_a18b827c3c1f62b8a57febdcad0c871a8}{Writer\+Enum}} format)
+\item 
+Boundary\+Func \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a608732141319d880851214a93c874d25}{Get\+Bdc\+Function}} ()
+\item 
+Boundary\+Func\+M\+L\+Prob \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a529322b37ffbddcf71a3e4ddea60950d}{Get\+Bdc\+Function\+M\+L\+Prob}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a98ee5705ff2d2406ff0f535ef14c96da}{Save\+Solution}} (const char $\ast$filename, const double \&time=0.)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a3844d272681081d0f75a5203cd09a1bc}{Save\+Solution}} (const char $\ast$filename, const unsigned \&iteration)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a7e900e00aa10fddcd32ea102ba109f93}{Load\+Solution}} (const char $\ast$filename)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a47cda9ba86a76ae7465798c25525985e}{Load\+Solution}} (const unsigned \&level, const char $\ast$filename)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a03801744fbed4cae3ac44b36359c12fa}{Refine\+Solution}} (const unsigned \&gridf)
+\item 
+\mbox{\hyperlink{classfemus_1_1_solution}{Solution}} $\ast$ \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a600a860041eb07386bb5eef32fdd8c1e}{Get\+Level}} (const unsigned i)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_aa16b14e3ad6b6e01e70a7c51ffec17ee}{Update\+Solution}} (const char name\mbox{[}$\,$\mbox{]}, Init\+Func func, const double \&time)
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_ae3429a30c2795d3e42820a0f0be6b888}{Copy\+Solution\+To\+Old\+Solution}} ()
+\item 
+void \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a5664b3c589afbffb8506a8208cdda88f}{Set\+If\+F\+SI}} (const bool \&F\+SI=true)
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a61e9f1086f338caabe915b1373168255}{Get\+If\+F\+SI}} ()
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}} $\ast$ \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a0b3054885210f9a51ebff160e52ec2df}{\+\_\+ml\+Mesh}}
+\item 
+bool \mbox{\hyperlink{classfemus_1_1_multi_level_solution_a58feff3cc4013ccce4b3543afe849ddb}{\+\_\+use\+Parsed\+B\+C\+Function}}
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+This class is a black box container to handle multilevel solutions. 
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a1eb7aedad8ef351fdce884425b7a6928}\label{classfemus_1_1_multi_level_solution_a1eb7aedad8ef351fdce884425b7a6928}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Multi\+Level\+Solution@{Multi\+Level\+Solution}}
+\index{Multi\+Level\+Solution@{Multi\+Level\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Multi\+Level\+Solution()}{MultiLevelSolution()}}
+{\footnotesize\ttfamily femus\+::\+Multi\+Level\+Solution\+::\+Multi\+Level\+Solution (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}} $\ast$}]{ml\+\_\+msh }\end{DoxyParamCaption})}
+
+Constructor \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a3be34a688b8951bfaa32dc70dd227750}\label{classfemus_1_1_multi_level_solution_a3be34a688b8951bfaa32dc70dd227750}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!````~Multi\+Level\+Solution@{$\sim$\+Multi\+Level\+Solution}}
+\index{````~Multi\+Level\+Solution@{$\sim$\+Multi\+Level\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{$\sim$\+Multi\+Level\+Solution()}{~MultiLevelSolution()}}
+{\footnotesize\ttfamily femus\+::\+Multi\+Level\+Solution\+::$\sim$\+Multi\+Level\+Solution (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Destructor 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_ac5f9a3671e02bbf2fb7a893ddee30f8b}\label{classfemus_1_1_multi_level_solution_ac5f9a3671e02bbf2fb7a893ddee30f8b}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Add\+Solution@{Add\+Solution}}
+\index{Add\+Solution@{Add\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Add\+Solution()}{AddSolution()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Add\+Solution (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]},  }\item[{const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a7c9a70b7c6b5baf5d7942938d770a664}{F\+E\+Family}}}]{fefamily,  }\item[{const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a00ea9562f0dbb25e22bb3297d596e3ba}{F\+E\+Order}}}]{order,  }\item[{unsigned}]{tmorder = {\ttfamily 0},  }\item[{const bool \&}]{Pde\+\_\+type = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a23d19b085a62b184c9aee94923a04067}\label{classfemus_1_1_multi_level_solution_a23d19b085a62b184c9aee94923a04067}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Add\+Solution\+Level@{Add\+Solution\+Level}}
+\index{Add\+Solution\+Level@{Add\+Solution\+Level}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Add\+Solution\+Level()}{AddSolutionLevel()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Add\+Solution\+Level (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_ad5ac49720e6ce6c853356d87094db343}\label{classfemus_1_1_multi_level_solution_ad5ac49720e6ce6c853356d87094db343}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Add\+Solution\+Vector@{Add\+Solution\+Vector}}
+\index{Add\+Solution\+Vector@{Add\+Solution\+Vector}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Add\+Solution\+Vector()}{AddSolutionVector()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Add\+Solution\+Vector (\begin{DoxyParamCaption}\item[{const unsigned}]{n\+\_\+components,  }\item[{const std\+::string}]{name,  }\item[{const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a7c9a70b7c6b5baf5d7942938d770a664}{F\+E\+Family}}}]{fefamily,  }\item[{const \mbox{\hyperlink{_f_elem_type_enum_8hpp_a00ea9562f0dbb25e22bb3297d596e3ba}{F\+E\+Order}}}]{order,  }\item[{unsigned}]{tmorder = {\ttfamily 0},  }\item[{const bool \&}]{Pde\+\_\+type = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+If you want to add a vector whose components are treated the same way \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_ab34c5b431e194c7748227e3a68bd9a40}\label{classfemus_1_1_multi_level_solution_ab34c5b431e194c7748227e3a68bd9a40}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Associate\+Property\+To\+Solution@{Associate\+Property\+To\+Solution}}
+\index{Associate\+Property\+To\+Solution@{Associate\+Property\+To\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Associate\+Property\+To\+Solution()}{AssociatePropertyToSolution()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Associate\+Property\+To\+Solution (\begin{DoxyParamCaption}\item[{const char}]{solution\+\_\+name\mbox{[}$\,$\mbox{]},  }\item[{const char}]{solution\+\_\+property\mbox{[}$\,$\mbox{]},  }\item[{const bool \&}]{bool\+\_\+property = {\ttfamily true} }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_abef48eba2d16ef9fba42154e1703cd39}\label{classfemus_1_1_multi_level_solution_abef48eba2d16ef9fba42154e1703cd39}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Attach\+Set\+Boundary\+Condition\+Function@{Attach\+Set\+Boundary\+Condition\+Function}}
+\index{Attach\+Set\+Boundary\+Condition\+Function@{Attach\+Set\+Boundary\+Condition\+Function}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Attach\+Set\+Boundary\+Condition\+Function()}{AttachSetBoundaryConditionFunction()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Attach\+Set\+Boundary\+Condition\+Function (\begin{DoxyParamCaption}\item[{Boundary\+Func}]{Set\+Boundary\+Condition\+Function }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a9ef26adaa5c62a4d565d81f704cacf72}\label{classfemus_1_1_multi_level_solution_a9ef26adaa5c62a4d565d81f704cacf72}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Attach\+Set\+Boundary\+Condition\+Function@{Attach\+Set\+Boundary\+Condition\+Function}}
+\index{Attach\+Set\+Boundary\+Condition\+Function@{Attach\+Set\+Boundary\+Condition\+Function}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Attach\+Set\+Boundary\+Condition\+Function()}{AttachSetBoundaryConditionFunction()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Attach\+Set\+Boundary\+Condition\+Function (\begin{DoxyParamCaption}\item[{Boundary\+Func\+M\+L\+Prob}]{Set\+Boundary\+Condition\+Function }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a7d6865114da00ad92090d916217cad3d}\label{classfemus_1_1_multi_level_solution_a7d6865114da00ad92090d916217cad3d}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!build@{build}}
+\index{build@{build}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{build()}{build()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::build (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_ae3429a30c2795d3e42820a0f0be6b888}\label{classfemus_1_1_multi_level_solution_ae3429a30c2795d3e42820a0f0be6b888}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Copy\+Solution\+To\+Old\+Solution@{Copy\+Solution\+To\+Old\+Solution}}
+\index{Copy\+Solution\+To\+Old\+Solution@{Copy\+Solution\+To\+Old\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Copy\+Solution\+To\+Old\+Solution()}{CopySolutionToOldSolution()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Copy\+Solution\+To\+Old\+Solution (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a4d868cc8db5f7918e2bc64492313f029}\label{classfemus_1_1_multi_level_solution_a4d868cc8db5f7918e2bc64492313f029}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Fix\+Solution\+At\+One\+Point@{Fix\+Solution\+At\+One\+Point}}
+\index{Fix\+Solution\+At\+One\+Point@{Fix\+Solution\+At\+One\+Point}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Fix\+Solution\+At\+One\+Point()}{FixSolutionAtOnePoint()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Fix\+Solution\+At\+One\+Point (\begin{DoxyParamCaption}\item[{const char}]{sol\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a9a4e6424cf569942496cde740e8602d1}\label{classfemus_1_1_multi_level_solution_a9a4e6424cf569942496cde740e8602d1}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Generate\+Bdc@{Generate\+Bdc}}
+\index{Generate\+Bdc@{Generate\+Bdc}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Generate\+Bdc()}{GenerateBdc()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Generate\+Bdc (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]},  }\item[{const char}]{bdc\+\_\+type\mbox{[}$\,$\mbox{]} = {\ttfamily \char`\"{}Steady\char`\"{}},  }\item[{const \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} $\ast$}]{ml\+\_\+prob = {\ttfamily NULL} }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a7ea9a2163b506be744fea42550e4e26e}\label{classfemus_1_1_multi_level_solution_a7ea9a2163b506be744fea42550e4e26e}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Generate\+Bdc@{Generate\+Bdc}}
+\index{Generate\+Bdc@{Generate\+Bdc}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Generate\+Bdc()}{GenerateBdc()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Generate\+Bdc (\begin{DoxyParamCaption}\item[{const unsigned int}]{k,  }\item[{const unsigned}]{grid0,  }\item[{const double}]{time }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a6a772d621d92076dfe0e37e376a421b0}\label{classfemus_1_1_multi_level_solution_a6a772d621d92076dfe0e37e376a421b0}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Bdc\+Function@{Get\+Bdc\+Function}}
+\index{Get\+Bdc\+Function@{Get\+Bdc\+Function}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Bdc\+Function()}{GetBdcFunction()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_function_base}{Function\+Base}} $\ast$ femus\+::\+Multi\+Level\+Solution\+::\+Get\+Bdc\+Function (\begin{DoxyParamCaption}\item[{const std\+::string}]{varname,  }\item[{const unsigned int}]{facename }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a608732141319d880851214a93c874d25}\label{classfemus_1_1_multi_level_solution_a608732141319d880851214a93c874d25}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Bdc\+Function@{Get\+Bdc\+Function}}
+\index{Get\+Bdc\+Function@{Get\+Bdc\+Function}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Bdc\+Function()}{GetBdcFunction()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily Boundary\+Func femus\+::\+Multi\+Level\+Solution\+::\+Get\+Bdc\+Function (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a529322b37ffbddcf71a3e4ddea60950d}\label{classfemus_1_1_multi_level_solution_a529322b37ffbddcf71a3e4ddea60950d}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Bdc\+Function\+M\+L\+Prob@{Get\+Bdc\+Function\+M\+L\+Prob}}
+\index{Get\+Bdc\+Function\+M\+L\+Prob@{Get\+Bdc\+Function\+M\+L\+Prob}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Bdc\+Function\+M\+L\+Prob()}{GetBdcFunctionMLProb()}}
+{\footnotesize\ttfamily Boundary\+Func\+M\+L\+Prob femus\+::\+Multi\+Level\+Solution\+::\+Get\+Bdc\+Function\+M\+L\+Prob (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a7c23e5c2e857d76f8c462814fde57b7e}\label{classfemus_1_1_multi_level_solution_a7c23e5c2e857d76f8c462814fde57b7e}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Bdc\+Type@{Get\+Bdc\+Type}}
+\index{Get\+Bdc\+Type@{Get\+Bdc\+Type}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Bdc\+Type()}{GetBdcType()}}
+{\footnotesize\ttfamily char$\ast$ femus\+::\+Multi\+Level\+Solution\+::\+Get\+Bdc\+Type (\begin{DoxyParamCaption}\item[{unsigned}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_aac6abd2822ad5642f3214d6feabc387b}\label{classfemus_1_1_multi_level_solution_aac6abd2822ad5642f3214d6feabc387b}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Boundary\+Condition@{Get\+Boundary\+Condition}}
+\index{Get\+Boundary\+Condition@{Get\+Boundary\+Condition}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Boundary\+Condition()}{GetBoundaryCondition()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{_b_d_c_type_enum_8hpp_ac1efcf28f6f152fe5354b888f616668d}{B\+D\+C\+Type}} femus\+::\+Multi\+Level\+Solution\+::\+Get\+Boundary\+Condition (\begin{DoxyParamCaption}\item[{const std\+::string}]{varname,  }\item[{const unsigned int}]{facename }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a61e9f1086f338caabe915b1373168255}\label{classfemus_1_1_multi_level_solution_a61e9f1086f338caabe915b1373168255}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+If\+F\+SI@{Get\+If\+F\+SI}}
+\index{Get\+If\+F\+SI@{Get\+If\+F\+SI}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+If\+F\+S\+I()}{GetIfFSI()}}
+{\footnotesize\ttfamily bool femus\+::\+Multi\+Level\+Solution\+::\+Get\+If\+F\+SI (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a0c3d81a9146a8e96552da43955f0c7ae}\label{classfemus_1_1_multi_level_solution_a0c3d81a9146a8e96552da43955f0c7ae}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Index@{Get\+Index}}
+\index{Get\+Index@{Get\+Index}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Index()}{GetIndex()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Multi\+Level\+Solution\+::\+Get\+Index (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption}) const}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a600a860041eb07386bb5eef32fdd8c1e}\label{classfemus_1_1_multi_level_solution_a600a860041eb07386bb5eef32fdd8c1e}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Level@{Get\+Level}}
+\index{Get\+Level@{Get\+Level}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Level()}{GetLevel()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_solution}{Solution}}$\ast$ femus\+::\+Multi\+Level\+Solution\+::\+Get\+Level (\begin{DoxyParamCaption}\item[{const unsigned}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_ad0212c08f3d71d4691e9b129fc53d0fb}\label{classfemus_1_1_multi_level_solution_ad0212c08f3d71d4691e9b129fc53d0fb}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Sol\+Name@{Get\+Sol\+Name}}
+\index{Get\+Sol\+Name@{Get\+Sol\+Name}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Sol\+Name()}{GetSolName()}}
+{\footnotesize\ttfamily vector$<$char$\ast$$>$ femus\+::\+Multi\+Level\+Solution\+::\+Get\+Sol\+Name (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a829d506923c3381cc47851e4e45062a7}\label{classfemus_1_1_multi_level_solution_a829d506923c3381cc47851e4e45062a7}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Sol\+Type@{Get\+Sol\+Type}}
+\index{Get\+Sol\+Type@{Get\+Sol\+Type}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Sol\+Type()}{GetSolType()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily unsigned femus\+::\+Multi\+Level\+Solution\+::\+Get\+Sol\+Type (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_af45613cec7257c9fb30feaa73df75aac}\label{classfemus_1_1_multi_level_solution_af45613cec7257c9fb30feaa73df75aac}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Sol\+Type@{Get\+Sol\+Type}}
+\index{Get\+Sol\+Type@{Get\+Sol\+Type}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Sol\+Type()}{GetSolType()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily vector$<$int$>$ femus\+::\+Multi\+Level\+Solution\+::\+Get\+Sol\+Type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_afe428eaa84d414762c4cc3b8a1d4f4a7}\label{classfemus_1_1_multi_level_solution_afe428eaa84d414762c4cc3b8a1d4f4a7}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Solution\+Level@{Get\+Solution\+Level}}
+\index{Get\+Solution\+Level@{Get\+Solution\+Level}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Level()}{GetSolutionLevel()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_solution}{Solution}}$\ast$ femus\+::\+Multi\+Level\+Solution\+::\+Get\+Solution\+Level (\begin{DoxyParamCaption}\item[{const unsigned}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_aaa655b342d5b5b9bfbd0bbe1590440d8}\label{classfemus_1_1_multi_level_solution_aaa655b342d5b5b9bfbd0bbe1590440d8}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Solution\+Name@{Get\+Solution\+Name}}
+\index{Get\+Solution\+Name@{Get\+Solution\+Name}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Name()}{GetSolutionName()}}
+{\footnotesize\ttfamily char$\ast$ femus\+::\+Multi\+Level\+Solution\+::\+Get\+Solution\+Name (\begin{DoxyParamCaption}\item[{unsigned}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a9075cb433163413c4281cc7258a84a7e}\label{classfemus_1_1_multi_level_solution_a9075cb433163413c4281cc7258a84a7e}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Solution\+Pair\+Index@{Get\+Solution\+Pair\+Index}}
+\index{Get\+Solution\+Pair\+Index@{Get\+Solution\+Pair\+Index}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Pair\+Index()}{GetSolutionPairIndex()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Multi\+Level\+Solution\+::\+Get\+Solution\+Pair\+Index (\begin{DoxyParamCaption}\item[{const unsigned \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_afed625007506f25cc3ab540965d78c86}\label{classfemus_1_1_multi_level_solution_afed625007506f25cc3ab540965d78c86}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Solution\+Pair\+Inverse\+Index@{Get\+Solution\+Pair\+Inverse\+Index}}
+\index{Get\+Solution\+Pair\+Inverse\+Index@{Get\+Solution\+Pair\+Inverse\+Index}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Pair\+Inverse\+Index()}{GetSolutionPairInverseIndex()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Multi\+Level\+Solution\+::\+Get\+Solution\+Pair\+Inverse\+Index (\begin{DoxyParamCaption}\item[{const unsigned \&}]{i }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_ac54b6f8dfcea29b49969978b9be2068c}\label{classfemus_1_1_multi_level_solution_ac54b6f8dfcea29b49969978b9be2068c}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Solution\+Size@{Get\+Solution\+Size}}
+\index{Get\+Solution\+Size@{Get\+Solution\+Size}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Size()}{GetSolutionSize()}}
+{\footnotesize\ttfamily unsigned femus\+::\+Multi\+Level\+Solution\+::\+Get\+Solution\+Size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a4147ec5f7477689c0c1247f7b5fee0d1}\label{classfemus_1_1_multi_level_solution_a4147ec5f7477689c0c1247f7b5fee0d1}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Solution\+Time\+Order@{Get\+Solution\+Time\+Order}}
+\index{Get\+Solution\+Time\+Order@{Get\+Solution\+Time\+Order}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Time\+Order()}{GetSolutionTimeOrder()}}
+{\footnotesize\ttfamily int femus\+::\+Multi\+Level\+Solution\+::\+Get\+Solution\+Time\+Order (\begin{DoxyParamCaption}\item[{unsigned}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_ac6285c5a1907ad1f93ad7b380a08dabe}\label{classfemus_1_1_multi_level_solution_ac6285c5a1907ad1f93ad7b380a08dabe}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Solution\+Type@{Get\+Solution\+Type}}
+\index{Get\+Solution\+Type@{Get\+Solution\+Type}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Type()}{GetSolutionType()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily int femus\+::\+Multi\+Level\+Solution\+::\+Get\+Solution\+Type (\begin{DoxyParamCaption}\item[{unsigned}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a47d5ef26d0cfa11d7eedcf01cce591a6}\label{classfemus_1_1_multi_level_solution_a47d5ef26d0cfa11d7eedcf01cce591a6}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Solution\+Type@{Get\+Solution\+Type}}
+\index{Get\+Solution\+Type@{Get\+Solution\+Type}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Solution\+Type()}{GetSolutionType()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily unsigned femus\+::\+Multi\+Level\+Solution\+::\+Get\+Solution\+Type (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a231740aeb542389671b771902bfeeb34}\label{classfemus_1_1_multi_level_solution_a231740aeb542389671b771902bfeeb34}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Writer@{Get\+Writer}}
+\index{Get\+Writer@{Get\+Writer}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Writer()}{GetWriter()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_writer}{Writer}}$\ast$ femus\+::\+Multi\+Level\+Solution\+::\+Get\+Writer (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a775f0e2e4d2b3d55fcaa7f1936f91cf3}\label{classfemus_1_1_multi_level_solution_a775f0e2e4d2b3d55fcaa7f1936f91cf3}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Get\+Writer@{Get\+Writer}}
+\index{Get\+Writer@{Get\+Writer}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Get\+Writer()}{GetWriter()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily const \mbox{\hyperlink{classfemus_1_1_writer}{Writer}}$\ast$ femus\+::\+Multi\+Level\+Solution\+::\+Get\+Writer (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a396c250390464f543506ab4ccfd41b3b}\label{classfemus_1_1_multi_level_solution_a396c250390464f543506ab4ccfd41b3b}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Initialize@{Initialize}}
+\index{Initialize@{Initialize}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Initialize()}{Initialize()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Initialize (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]},  }\item[{Init\+Func}]{func = {\ttfamily NULL} }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a453827731acbe90751de895decd54657}\label{classfemus_1_1_multi_level_solution_a453827731acbe90751de895decd54657}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Initialize@{Initialize}}
+\index{Initialize@{Initialize}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Initialize()}{Initialize()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Initialize (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]},  }\item[{Init\+Func}]{func,  }\item[{Init\+Func\+M\+L\+Prob}]{func\+M\+L\+Prob,  }\item[{const \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} $\ast$}]{ml\+\_\+prob }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_aab58bc824c4e1b0cff1ddae73cba678a}\label{classfemus_1_1_multi_level_solution_aab58bc824c4e1b0cff1ddae73cba678a}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Initialize@{Initialize}}
+\index{Initialize@{Initialize}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Initialize()}{Initialize()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Initialize (\begin{DoxyParamCaption}\item[{const char $\ast$}]{name,  }\item[{Init\+Func\+M\+L\+Prob}]{func,  }\item[{const \mbox{\hyperlink{classfemus_1_1_multi_level_problem}{Multi\+Level\+Problem}} $\ast$}]{ml\+\_\+prob }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a7dab34eb82a90ff8035142048e9284e8}\label{classfemus_1_1_multi_level_solution_a7dab34eb82a90ff8035142048e9284e8}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Initialize\+Bdc@{Initialize\+Bdc}}
+\index{Initialize\+Bdc@{Initialize\+Bdc}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Initialize\+Bdc()}{InitializeBdc()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Initialize\+Bdc (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_ac275b90171e6a33628c4fe5ebf9860a1}\label{classfemus_1_1_multi_level_solution_ac275b90171e6a33628c4fe5ebf9860a1}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Ishomogeneous@{Ishomogeneous}}
+\index{Ishomogeneous@{Ishomogeneous}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Ishomogeneous()}{Ishomogeneous()}}
+{\footnotesize\ttfamily bool femus\+::\+Multi\+Level\+Solution\+::\+Ishomogeneous (\begin{DoxyParamCaption}\item[{const std\+::string}]{varname,  }\item[{const unsigned int}]{facename }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a7e900e00aa10fddcd32ea102ba109f93}\label{classfemus_1_1_multi_level_solution_a7e900e00aa10fddcd32ea102ba109f93}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Load\+Solution@{Load\+Solution}}
+\index{Load\+Solution@{Load\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Load\+Solution()}{LoadSolution()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Load\+Solution (\begin{DoxyParamCaption}\item[{const char $\ast$}]{filename }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a47cda9ba86a76ae7465798c25525985e}\label{classfemus_1_1_multi_level_solution_a47cda9ba86a76ae7465798c25525985e}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Load\+Solution@{Load\+Solution}}
+\index{Load\+Solution@{Load\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Load\+Solution()}{LoadSolution()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Load\+Solution (\begin{DoxyParamCaption}\item[{const unsigned \&}]{level,  }\item[{const char $\ast$}]{filename }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a694ed0e50a403626904f1a48f8860711}\label{classfemus_1_1_multi_level_solution_a694ed0e50a403626904f1a48f8860711}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Pair\+Solution@{Pair\+Solution}}
+\index{Pair\+Solution@{Pair\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Pair\+Solution()}{PairSolution()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Pair\+Solution (\begin{DoxyParamCaption}\item[{const char}]{solution\+\_\+name\mbox{[}$\,$\mbox{]},  }\item[{const char}]{solution\+\_\+pair\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a03801744fbed4cae3ac44b36359c12fa}\label{classfemus_1_1_multi_level_solution_a03801744fbed4cae3ac44b36359c12fa}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Refine\+Solution@{Refine\+Solution}}
+\index{Refine\+Solution@{Refine\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Refine\+Solution()}{RefineSolution()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Refine\+Solution (\begin{DoxyParamCaption}\item[{const unsigned \&}]{gridf }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a26dc48260560a41a45bdf2914aa5aad3}\label{classfemus_1_1_multi_level_solution_a26dc48260560a41a45bdf2914aa5aad3}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Resize\+Solution\+Vector@{Resize\+Solution\+Vector}}
+\index{Resize\+Solution\+Vector@{Resize\+Solution\+Vector}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Resize\+Solution\+Vector()}{ResizeSolutionVector()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Resize\+Solution\+Vector (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a98ee5705ff2d2406ff0f535ef14c96da}\label{classfemus_1_1_multi_level_solution_a98ee5705ff2d2406ff0f535ef14c96da}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Save\+Solution@{Save\+Solution}}
+\index{Save\+Solution@{Save\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Save\+Solution()}{SaveSolution()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Save\+Solution (\begin{DoxyParamCaption}\item[{const char $\ast$}]{filename,  }\item[{const double \&}]{time = {\ttfamily 0.} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a3844d272681081d0f75a5203cd09a1bc}\label{classfemus_1_1_multi_level_solution_a3844d272681081d0f75a5203cd09a1bc}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Save\+Solution@{Save\+Solution}}
+\index{Save\+Solution@{Save\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Save\+Solution()}{SaveSolution()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Save\+Solution (\begin{DoxyParamCaption}\item[{const char $\ast$}]{filename,  }\item[{const unsigned \&}]{iteration }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a8222acd002287bc27090141ef6e7ef1f}\label{classfemus_1_1_multi_level_solution_a8222acd002287bc27090141ef6e7ef1f}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Set\+Boundary\+Condition\+\_\+new@{Set\+Boundary\+Condition\+\_\+new}}
+\index{Set\+Boundary\+Condition\+\_\+new@{Set\+Boundary\+Condition\+\_\+new}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Set\+Boundary\+Condition\+\_\+new()}{SetBoundaryCondition\_new()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Set\+Boundary\+Condition\+\_\+new (\begin{DoxyParamCaption}\item[{const std\+::string}]{name,  }\item[{const std\+::string}]{facename,  }\item[{const \mbox{\hyperlink{_b_d_c_type_enum_8hpp_ac1efcf28f6f152fe5354b888f616668d}{B\+D\+C\+Type}}}]{bdctype = {\ttfamily \mbox{\hyperlink{_b_d_c_type_enum_8hpp_ac1efcf28f6f152fe5354b888f616668da1c2adefa6a3b7015b29913c49ee050c7}{D\+I\+R\+I\+C\+H\+L\+ET}}},  }\item[{const bool}]{istimedependent = {\ttfamily false},  }\item[{\mbox{\hyperlink{classfemus_1_1_function_base}{Function\+Base}} $\ast$}]{func = {\ttfamily NULL} }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a5664b3c589afbffb8506a8208cdda88f}\label{classfemus_1_1_multi_level_solution_a5664b3c589afbffb8506a8208cdda88f}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Set\+If\+F\+SI@{Set\+If\+F\+SI}}
+\index{Set\+If\+F\+SI@{Set\+If\+F\+SI}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Set\+If\+F\+S\+I()}{SetIfFSI()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Set\+If\+F\+SI (\begin{DoxyParamCaption}\item[{const bool \&}]{F\+SI = {\ttfamily true} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_ab21db6d274c28e64f6901925878a6f1a}\label{classfemus_1_1_multi_level_solution_ab21db6d274c28e64f6901925878a6f1a}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Set\+Writer@{Set\+Writer}}
+\index{Set\+Writer@{Set\+Writer}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Set\+Writer()}{SetWriter()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Set\+Writer (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{_writer_enum_8hpp_a18b827c3c1f62b8a57febdcad0c871a8}{Writer\+Enum}}}]{format }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a05e5e6a460e0935f50e33b4d077a7bb7}\label{classfemus_1_1_multi_level_solution_a05e5e6a460e0935f50e33b4d077a7bb7}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Test\+If\+Solution\+Is\+Pressure@{Test\+If\+Solution\+Is\+Pressure}}
+\index{Test\+If\+Solution\+Is\+Pressure@{Test\+If\+Solution\+Is\+Pressure}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Test\+If\+Solution\+Is\+Pressure()}{TestIfSolutionIsPressure()}}
+{\footnotesize\ttfamily bool femus\+::\+Multi\+Level\+Solution\+::\+Test\+If\+Solution\+Is\+Pressure (\begin{DoxyParamCaption}\item[{unsigned}]{i }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a50da205c6e2bb976ecbe64aee18beb84}\label{classfemus_1_1_multi_level_solution_a50da205c6e2bb976ecbe64aee18beb84}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Update\+Bdc@{Update\+Bdc}}
+\index{Update\+Bdc@{Update\+Bdc}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Update\+Bdc()}{UpdateBdc()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Update\+Bdc (\begin{DoxyParamCaption}\item[{const double}]{time }\end{DoxyParamCaption})}
+
+To be Added \mbox{\Hypertarget{classfemus_1_1_multi_level_solution_aa16b14e3ad6b6e01e70a7c51ffec17ee}\label{classfemus_1_1_multi_level_solution_aa16b14e3ad6b6e01e70a7c51ffec17ee}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!Update\+Solution@{Update\+Solution}}
+\index{Update\+Solution@{Update\+Solution}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{Update\+Solution()}{UpdateSolution()}}
+{\footnotesize\ttfamily void femus\+::\+Multi\+Level\+Solution\+::\+Update\+Solution (\begin{DoxyParamCaption}\item[{const char}]{name\mbox{[}$\,$\mbox{]},  }\item[{Init\+Func}]{func,  }\item[{const double \&}]{time }\end{DoxyParamCaption})}
+
+
+
+\subsection{Member Data Documentation}
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a0b3054885210f9a51ebff160e52ec2df}\label{classfemus_1_1_multi_level_solution_a0b3054885210f9a51ebff160e52ec2df}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!\+\_\+ml\+Mesh@{\+\_\+ml\+Mesh}}
+\index{\+\_\+ml\+Mesh@{\+\_\+ml\+Mesh}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+ml\+Mesh}{\_mlMesh}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classfemus_1_1_multi_level_mesh}{Multi\+Level\+Mesh}}$\ast$ femus\+::\+Multi\+Level\+Solution\+::\+\_\+ml\+Mesh}
+
+\mbox{\Hypertarget{classfemus_1_1_multi_level_solution_a58feff3cc4013ccce4b3543afe849ddb}\label{classfemus_1_1_multi_level_solution_a58feff3cc4013ccce4b3543afe849ddb}} 
+\index{femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}!\+\_\+use\+Parsed\+B\+C\+Function@{\+\_\+use\+Parsed\+B\+C\+Function}}
+\index{\+\_\+use\+Parsed\+B\+C\+Function@{\+\_\+use\+Parsed\+B\+C\+Function}!femus\+::\+Multi\+Level\+Solution@{femus\+::\+Multi\+Level\+Solution}}
+\subsubsection{\texorpdfstring{\+\_\+use\+Parsed\+B\+C\+Function}{\_useParsedBCFunction}}
+{\footnotesize\ttfamily bool femus\+::\+Multi\+Level\+Solution\+::\+\_\+use\+Parsed\+B\+C\+Function}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+solution/\mbox{\hyperlink{_multi_level_solution_8hpp}{Multi\+Level\+Solution.\+hpp}}\item 
+solution/\mbox{\hyperlink{_multi_level_solution_8cpp}{Multi\+Level\+Solution.\+cpp}}\end{DoxyCompactItemize}

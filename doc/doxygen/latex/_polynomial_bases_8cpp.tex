@@ -1,0 +1,122 @@
+\hypertarget{_polynomial_bases_8cpp}{}\section{ism/\+Polynomial\+Bases.cpp File Reference}
+\label{_polynomial_bases_8cpp}\index{ism/\+Polynomial\+Bases.\+cpp@{ism/\+Polynomial\+Bases.\+cpp}}
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include \char`\"{}Polynomial\+Bases.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Geom\+El\+Type\+Enum.\+hpp\char`\"{}}\newline
+Include dependency graph for Polynomial\+Bases.\+cpp\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{_polynomial_bases_8cpp__incl}
+\end{center}
+\end{figure}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespacefemus}{femus}}
+\begin{DoxyCompactList}\small\item\em Class \mbox{\hyperlink{classfemus_1_1_femus_init}{Femus\+Init}}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{namespacefemus_afdac57fc6d063ef9ea0b54b401222bc0}{femus\+::\+Project\+Nodal\+To\+Polynomial\+Coefficients}} (std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aP, const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aN, const short unsigned \&iel\+Type, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_a351729c013d7b6818938252c320ad1ff}{femus\+::\+Interpolate\+Polynomial\+Coefficients}} (std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&a\+Xs, const std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&a\+X0, const std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ a\+X1, const double \&s)
+\item 
+void \mbox{\hyperlink{namespacefemus_a0b417b15e6a459ced1afc29b5f28250e}{femus\+::\+Get\+Polynomial\+Shape\+Function}} (std\+::vector$<$ double $>$ \&phi, const std\+::vector$<$ double $>$ \&xi, short unsigned \&iel\+Type, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_aaa94526c56505b615727fd8d6cda22e2}{femus\+::\+Get\+Polynomial\+Shape\+Function\+Gradient}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, const std\+::vector$<$ double $>$ \&xi, short unsigned \&iel\+Type, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_ab0032e28243ff5a107a12dfdc4672a47}{femus\+::\+Get\+Polynomial\+Shape\+Function\+Gradient\+Hessian}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&hess\+Phi, const std\+::vector$<$ double $>$ \&xi, short unsigned \&iel\+Type, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_aaa497abd19628ab5c62593028994890b}{femus\+::\+Project\+Quad\+Nodal\+To\+Polynomial\+Coefficients}} (std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aP, const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aN, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_ae2bcb04cc922daa697c7bf79bfe513ad}{femus\+::\+Get\+Quad\+Polynomial\+Shape\+Function}} (std\+::vector$<$ double $>$ \&phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_a580971c4603abf2e862f38425291afdf}{femus\+::\+Get\+Quad\+Polynomial\+Shape\+Function\+Gradient}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_a94873c1c0c41bf06892b4b1c8208d34e}{femus\+::\+Get\+Quad\+Polynomial\+Shape\+Function\+Gradient\+Hessian}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&hess\+Phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_a9b37c908983e9f07e8aa7d6a56862eee}{femus\+::\+Project\+Tri\+Nodal\+To\+Polynomial\+Coefficients}} (std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aP, const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aN, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_a7b644f5f847656f51ce364a2d101a5d8}{femus\+::\+Get\+Tri\+Polynomial\+Shape\+Function}} (std\+::vector$<$ double $>$ \&phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_ab62adc71e5f5c682a2590ebc0cdc0a5a}{femus\+::\+Get\+Tri\+Polynomial\+Shape\+Function\+Gradient}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_a5a10776bad6d5e3320121c6b6d9ef723}{femus\+::\+Get\+Tri\+Polynomial\+Shape\+Function\+Gradient\+Hessian}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&hess\+Phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_ae9be992fdb8ec064af9414b8a4ca4559}{femus\+::\+Project\+Hex\+Nodal\+To\+Polynomial\+Coefficients}} (std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aP, const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aN, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_ae4c2c2c514f4e0f9d59f4b57731a0f18}{femus\+::\+Get\+Hex\+Polynomial\+Shape\+Function}} (std\+::vector$<$ double $>$ \&phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_ac1f55764bbd18de20213e01daa9aeda9}{femus\+::\+Get\+Hex\+Polynomial\+Shape\+Function\+Gradient}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_a1d9ba028f39ef32f218f17e03d0bbe53}{femus\+::\+Get\+Hex\+Polynomial\+Shape\+Function\+Gradient\+Hessian}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&hess\+Phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_acd82a35cce2441436e19a7fbc240b13c}{femus\+::\+Project\+Tet\+Nodal\+To\+Polynomial\+Coefficients}} (std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aP, const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aN, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_a74ed9e79d7eb35e7c4054a29b08ea878}{femus\+::\+Get\+Tet\+Polynomial\+Shape\+Function}} (std\+::vector$<$ double $>$ \&phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_a05759cf7e10dcbfba9ada7036499b5f7}{femus\+::\+Get\+Tet\+Polynomial\+Shape\+Function\+Gradient}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_aa8fa3f5190981a28b13ad12b68ec7119}{femus\+::\+Get\+Tet\+Polynomial\+Shape\+Function\+Gradient\+Hessian}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&hess\+Phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_ab24f1a73deab6a1df822604fd544a505}{femus\+::\+Project\+Wedge\+Nodal\+To\+Polynomial\+Coefficients}} (std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aP, const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&aN, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_a524cf02fcd06e7ce0eedece31381e256}{femus\+::\+Get\+Wedge\+Polynomial\+Shape\+Function}} (std\+::vector$<$ double $>$ \&phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_a9353c0e0a9cf18b653c60a3dd9b5c08a}{femus\+::\+Get\+Wedge\+Polynomial\+Shape\+Function\+Gradient}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+void \mbox{\hyperlink{namespacefemus_ad4742e8fddfada4e3dbfe5aae4683694}{femus\+::\+Get\+Wedge\+Polynomial\+Shape\+Function\+Gradient\+Hessian}} (std\+::vector$<$ double $>$ \&phi, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&hess\+Phi, const std\+::vector$<$ double $>$ \&xi, const unsigned \&sol\+Type)
+\item 
+bool \mbox{\hyperlink{namespacefemus_a7da70cafeeeae70a143195ebc5f991de}{femus\+::\+Check\+If\+Point\+Is\+Inside\+Reference\+Domain}} (std\+::vector$<$ double $>$ \&xi, const short unsigned \&iel\+Type, const double \&eps)
+\item 
+bool \mbox{\hyperlink{namespacefemus_afbdc1796e04b92a1b1242ec4da84a246}{femus\+::\+Check\+If\+Point\+Is\+Inside\+Reference\+Domain\+Hex}} (std\+::vector$<$ double $>$ \&xi, const double \&eps)
+\item 
+bool \mbox{\hyperlink{namespacefemus_a10204bb57de5df399a274f99b1b3ac2f}{femus\+::\+Check\+If\+Point\+Is\+Inside\+Reference\+Domain\+Tet}} (std\+::vector$<$ double $>$ \&xi, const double \&eps)
+\item 
+bool \mbox{\hyperlink{namespacefemus_a3b749091251a9d0500a95f9c7294e427}{femus\+::\+Check\+If\+Point\+Is\+Inside\+Reference\+Domain\+Wedge}} (std\+::vector$<$ double $>$ \&xi, const double \&eps)
+\item 
+bool \mbox{\hyperlink{namespacefemus_ab66c0e0cf313a357f54330e3674ffa64}{femus\+::\+Check\+If\+Point\+Is\+Inside\+Reference\+Domain\+Quad}} (std\+::vector$<$ double $>$ \&xi, const double \&eps)
+\item 
+bool \mbox{\hyperlink{namespacefemus_ad8bb075186aea0a066daae8531cadb9e}{femus\+::\+Check\+If\+Point\+Is\+Inside\+Reference\+Domain\+Tri}} (std\+::vector$<$ double $>$ \&xi, const double \&eps)
+\item 
+bool \mbox{\hyperlink{namespacefemus_ad7a83e8b49ce11bd61a9a08ec95e8946}{femus\+::\+Check\+If\+Point\+Is\+Inside\+Reference\+Domain\+Line}} (std\+::vector$<$ double $>$ \&xi, const double \&eps)
+\item 
+bool \mbox{\hyperlink{namespacefemus_a6f129a56e82b46e93ade54d62d1e216b}{femus\+::\+S\+P\+D\+Check2D}} (const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&A)
+\item 
+bool \mbox{\hyperlink{namespacefemus_a874a88cde1f4ea068633b14801d54191}{femus\+::\+S\+P\+D\+Check3D}} (const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&A)
+\item 
+bool \mbox{\hyperlink{namespacefemus_a2be78fad3a0b3413f8e22883150153c9}{femus\+::\+Get\+New\+Local\+Coordinates}} (std\+::vector$<$ double $>$ \&xi, const std\+::vector$<$ double $>$ \&x, const std\+::vector$<$ double $>$ \&phi, const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&a)
+\item 
+bool \mbox{\hyperlink{namespacefemus_a695934883c44cf05935b730e622e0bf6}{femus\+::\+Get\+New\+Local\+Coordinates\+Hess}} (std\+::vector$<$ double $>$ \&xi, const std\+::vector$<$ double $>$ \&x, const std\+::vector$<$ double $>$ \&phi, const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&grad\+Phi, const std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ hess\+Phi, const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&a)
+\item 
+void \mbox{\hyperlink{namespacefemus_a576a658153a52c951f9f9fca3dd054ac}{femus\+::\+Inverse\+Matrix}} (const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&A, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&invA)
+\item 
+void \mbox{\hyperlink{namespacefemus_ac631173e3dbf1b7a766d150aca10eab1}{femus\+::\+Get\+Convex\+Hull\+Sphere}} (const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&xv, std\+::vector$<$ double $>$ \&xc, double \&r, const double tolerance)
+\item 
+void \mbox{\hyperlink{namespacefemus_ac278a2a73ea84ae1978b3c39ef49cf73}{femus\+::\+Get\+Bounding\+Box}} (const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&xv, std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&xe, const double tolerance)
+\item 
+void \mbox{\hyperlink{namespacefemus_a434f4672190f9d15cbc5e65705836bda}{femus\+::\+Get\+Inverse\+Mapping}} (const unsigned \&sol\+Type, short unsigned \&iel\+Type, const std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&aP, const std\+::vector$<$ double $>$ \&xl, std\+::vector$<$ double $>$ \&xi)
+\item 
+void \mbox{\hyperlink{namespacefemus_a26952845941ad3ab68f35f0dc647e464}{femus\+::\+Get\+Closest\+Point\+In\+Reference\+Element}} (const std\+::vector$<$ std\+::vector$<$ double $>$ $>$ \&xv, const std\+::vector$<$ double $>$ \&x, const short unsigned \&ieltype, std\+::vector$<$ double $>$ \&xi)
+\item 
+void \mbox{\hyperlink{namespacefemus_aac2a4afaac51207ff5b5ed649f6540c9}{femus\+::\+Print\+Line}} (const std\+::string output\+\_\+path, const std\+::vector$<$ std\+::vector$<$ std\+::vector$<$ double $>$ $>$ $>$ \&xn, const bool \&streamline, const unsigned \&step)
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+const unsigned \mbox{\hyperlink{namespacefemus_aa96ee7b7b7a40356557c4901525affb1}{femus\+::quad\+Number\+Of\+Dofs}} \mbox{[}3\mbox{]} = \{4, 8, 9\}
+\item 
+const unsigned \mbox{\hyperlink{namespacefemus_a52acce8e5ee8a9ac805ec5be5e265bcf}{femus\+::tri\+Number\+Of\+Dofs}} \mbox{[}3\mbox{]} = \{3, 6, 7\}
+\item 
+const unsigned \mbox{\hyperlink{namespacefemus_a5764d8d5cef480482021b6e071cc088d}{femus\+::hex\+Number\+Of\+Dofs}} \mbox{[}3\mbox{]} = \{8, 20, 27\}
+\item 
+const unsigned \mbox{\hyperlink{namespacefemus_a6c7ed3acdc679619e3facecfbc86e342}{femus\+::tet\+Number\+Of\+Dofs}} \mbox{[}3\mbox{]} = \{4, 10, 15\}
+\item 
+const unsigned \mbox{\hyperlink{namespacefemus_a9b495c343e2d245727e13cd51f455566}{femus\+::wedge\+Number\+Of\+Dofs}} \mbox{[}3\mbox{]} = \{6, 15, 21\}
+\item 
+const double \mbox{\hyperlink{namespacefemus_a36856ad1d79c55d94b1f9af895dc7f11}{femus\+::\+XI}} \mbox{[}6\mbox{]}\mbox{[}27\mbox{]}\mbox{[}3\mbox{]}
+\end{DoxyCompactItemize}
