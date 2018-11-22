@@ -33,14 +33,18 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   return dirichlet;
 }
 
-double InitalValue(const std::vector < double >& x) {
+double InitalValueU(const std::vector < double >& x) {
   double r=sqrt( x[0] * x[0] + x[1] * x[1] );  
   double r2 = r * r;
   double R = 1.;
   double R2 = R * R;
   double Vb = 1.268112;
   double V0 = 1.0;
-  return V0/Vb * exp( 1. - R2 / ( R2 - r2 ) ); // IC vanishing near the boundary.
+  return 1. * exp(40 * ( 1. - R2 / ( R2 - r2 )) ); // IC vanishing near the boundary.
+}
+
+double InitalValueD(const std::vector < double >& x) {
+  return 100.;
 }
 
 
@@ -66,7 +70,7 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension(); // Domain dimension of the problem.
   unsigned maxNumberOfMeshes; // The number of mesh levels.
 
-  unsigned numberOfUniformLevels = 7; //We apply uniform refinement.
+  unsigned numberOfUniformLevels = 6; //We apply uniform refinement.
   unsigned numberOfSelectiveLevels = 0; // We may want to see the solution on some levels.
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -87,7 +91,8 @@ int main(int argc, char** args) {
   mlSol.AddSolution("d", LAGRANGE, SECOND,  0, false); // We may have more than one, add each of them as u,v,w with their apprx type.
   
   mlSol.Initialize("All");
-  mlSol.Initialize("u", InitalValue);
+  mlSol.Initialize("u", InitalValueU);
+  mlSol.Initialize("d", InitalValueD);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -310,7 +315,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
           }
           
           // *** phi_i loop ***
-          double eps = 5; 
+          double eps = 5.; 
           for ( unsigned i = 0; i < faceDofs; i++ ) {
             unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i );
             aRes[inode] +=  phi[i] * eps * 0.5 * (solu_gss + soluOld_gss) * weight;
@@ -397,13 +402,21 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
 
 void GetDeadCells(const double &time, MultiLevelSolution &mlSol){
+    
+  std::pair<double,double> uT[12];
+
+  for(unsigned i = 0; i < 12; i++){
+    uT[i].first = (i+1) * 6;
+    uT[i].second = 0.1 * exp( - uT[i].first / 24);
+  }
+   
   
-  double a = 0.0471;
-  double b = -1.4629;
-  double c = 0.0866 * 150;
-  
-  double treshold = a - b * exp( -c * time);
-  std::cout << "time = " << time <<" treshold = " << treshold << std::endl;
+//   double a = 0.0471;
+//   double b = -1.4629;
+//   double c = 0.0866 * 150;
+//   
+//   double treshold = a - b * exp( -c * time);
+//  std::cout << "time = " << time <<" treshold = " << treshold << std::endl;
   
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
   
@@ -417,10 +430,12 @@ void GetDeadCells(const double &time, MultiLevelSolution &mlSol){
   
   for (int inode = msh->_dofOffset[solType][iproc]; inode < msh->_dofOffset[solType][iproc+1]; inode++) {
     double d = (*sol->_Sol[soldIndex])(inode); 
-    if(d < .5){
-      double u = (*sol->_Sol[soluIndex])(inode);   
-      if(u > treshold){
-         sol->_Sol[soldIndex]->set(inode, 1.); 
+    double u = (*sol->_Sol[soluIndex])(inode);   
+      
+    for(unsigned i = 0; i < 12; i++) {
+      if ( d > uT[i].first && u > uT[i].second){
+        sol->_Sol[soldIndex]->set(inode, uT[i].first); 
+        break;
       }
     }
   }
