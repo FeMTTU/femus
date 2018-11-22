@@ -1,9 +1,0 @@
-<map id="mesh/MeshPartitioning.cpp" name="mesh/MeshPartitioning.cpp">
-<area shape="rect" id="node2" href="$_mesh_partitioning_8hpp.html" title="MeshPartitioning.hpp" alt="" coords="98,80,243,107"/>
-<area shape="rect" id="node5" href="$_multi_level_mesh_8hpp.html" title="MultiLevelMesh.hpp" alt="" coords="317,80,456,107"/>
-<area shape="rect" id="node3" href="$_parallel_object_8hpp.html" title="ParallelObject.hpp" alt="" coords="5,229,136,256"/>
-<area shape="rect" id="node7" href="$_elem_type_enum_8hpp.html" title="ElemTypeEnum.hpp" alt="" coords="316,155,457,181"/>
-<area shape="rect" id="node8" href="$_geom_el_type_enum_8hpp.html" title="GeomElTypeEnum.hpp" alt="" coords="481,155,641,181"/>
-<area shape="rect" id="node9" href="$_writer_enum_8hpp.html" title="WriterEnum.hpp" alt="" coords="485,229,600,256"/>
-<area shape="rect" id="node10" href="$_writer_8hpp.html" title="Writer.hpp" alt="" coords="210,155,291,181"/>
-</map>

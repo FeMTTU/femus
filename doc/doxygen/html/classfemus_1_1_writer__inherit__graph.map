@@ -1,6 +1,0 @@
-<map id="femus::Writer" name="femus::Writer">
-<area shape="rect" id="node3" href="$classfemus_1_1_g_m_v_writer.html" title="femus::GMVWriter" alt="" coords="5,155,137,181"/>
-<area shape="rect" id="node4" href="$classfemus_1_1_v_t_k_writer.html" title="femus::VTKWriter" alt="" coords="161,155,291,181"/>
-<area shape="rect" id="node5" href="$classfemus_1_1_x_d_m_f_writer.html" title="femus::XDMFWriter" alt="" coords="315,155,454,181"/>
-<area shape="rect" id="node2" href="$classfemus_1_1_parallel_object.html" title="femus::ParallelObject" alt="" coords="151,5,301,32"/>
-</map>

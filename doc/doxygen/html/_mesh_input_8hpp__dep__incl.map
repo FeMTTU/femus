@@ -1,7 +1,0 @@
-<map id="mesh/MeshInput.hpp" name="mesh/MeshInput.hpp">
-<area shape="rect" id="node2" href="$_gambit_i_o_8hpp.html" title="mesh/GambitIO.hpp" alt="" coords="75,80,213,107"/>
-<area shape="rect" id="node5" href="$_salome_i_o_8hpp.html" title="mesh/SalomeIO.hpp" alt="" coords="238,80,381,107"/>
-<area shape="rect" id="node3" href="$_gambit_i_o_8cpp.html" title="mesh/GambitIO.cpp" alt="" coords="5,155,144,181"/>
-<area shape="rect" id="node4" href="$_mesh_8cpp.html" title="mesh/Mesh.cpp" alt="" coords="169,155,285,181"/>
-<area shape="rect" id="node6" href="$_salome_i_o_8cpp.html" title="mesh/SalomeIO.cpp" alt="" coords="309,155,451,181"/>
-</map>

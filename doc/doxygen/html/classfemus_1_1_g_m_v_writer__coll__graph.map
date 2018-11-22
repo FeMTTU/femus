@@ -1,9 +1,0 @@
-<map id="femus::GMVWriter" name="femus::GMVWriter">
-<area shape="rect" id="node2" href="$classfemus_1_1_writer.html" title="femus::Writer" alt="" coords="99,363,201,389"/>
-<area shape="rect" id="node3" href="$classfemus_1_1_parallel_object.html" title="femus::ParallelObject" alt="" coords="5,184,156,211"/>
-<area shape="rect" id="node8" href="$classfemus_1_1_multi_level_solution.html" title="femus::MultiLevelSolution" alt="" coords="63,273,237,300"/>
-<area shape="rect" id="node4" href="$classfemus_1_1_multi_level_mesh.html" title="femus::MultiLevelMesh" alt="" coords="193,184,352,211"/>
-<area shape="rect" id="node5" href="$classfemus_1_1elem__type.html" title="femus::elem_type" alt="" coords="209,95,337,121"/>
-<area shape="rect" id="node6" href="$classfemus_1_1_gauss.html" title="femus::Gauss" alt="" coords="157,5,263,32"/>
-<area shape="rect" id="node7" href="$classfemus_1_1basis.html" title="femus::basis" alt="" coords="287,5,386,32"/>
-</map>

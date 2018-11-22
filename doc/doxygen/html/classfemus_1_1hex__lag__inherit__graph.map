@@ -1,6 +1,0 @@
-<map id="femus::hex_lag" name="femus::hex_lag">
-<area shape="rect" id="node3" href="$classfemus_1_1_hex_biquadratic.html" title="femus::HexBiquadratic" alt="" coords="5,155,164,181"/>
-<area shape="rect" id="node4" href="$classfemus_1_1_hex_linear.html" title="femus::HexLinear" alt="" coords="188,155,315,181"/>
-<area shape="rect" id="node5" href="$classfemus_1_1_hex_quadratic.html" title="femus::HexQuadratic" alt="" coords="339,155,487,181"/>
-<area shape="rect" id="node2" href="$classfemus_1_1basis.html" title="femus::basis" alt="" coords="202,5,301,32"/>
-</map>
