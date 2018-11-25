@@ -6,7 +6,7 @@ double Gamma = 0.5;
 double gravity[3] = {0., -9.81, 0.};
 double scalingFactor1 =1.e-2;
 double scalingFactor2 =1.e-6;
-double NeumannFactor = .5;
+double NeumannFactor = .3;
 Line* linea;
 
 void AssembleSolidDisp(MultiLevelProblem& ml_prob) {
@@ -265,6 +265,9 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   double K_FEM = E_FEM / (3.*(1. - 2. * nu_FEM)); //bulk modulus
   
   double dt =  my_nnlin_impl_sys.GetIntervalTime();
+  
+  std::cout.precision(10);
+  std::cout << "SF1 = " << scalingFactor1 << " SF2 = " << scalingFactor2 << " NF = "<< NeumannFactor << std::endl;
   
   //vector < adept::adouble >* nullAdoublePointer = NULL;
   // nullDoublePointer = NULL;
@@ -995,7 +998,6 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
   elem* myel = mymsh->el;   // pointer to the elem object in msh (level)
   
   double dt =  my_nnlin_impl_sys.GetIntervalTime();
-  
   const unsigned dim = mymsh->GetDimension();
   
   // data
