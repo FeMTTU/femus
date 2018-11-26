@@ -27,10 +27,10 @@ double GetTimeStep(const double &y){
   
   double dt;
   double DY =  0.184 / pow(2,numberOfUniformLevels0-1);
-  double y0 = -1.52 + 2 * DY;
+  double y0 = -1.52 + DY;
   
   std::cout << y0 << std::endl;
-  double DT0 = 0.002 / pow(2,numberOfUniformLevels0-1);
+  double DT0 = 0.001 / pow(2,numberOfUniformLevels0-1);
   
   double y1 = -0.16;
   double DT1 = 0.005;
@@ -92,20 +92,20 @@ int main(int argc, char** args)
   
   //stiff soft matrix
   
-  SF1[std::make_pair (stiff, 1u)] = 1.e-3;
-  SF1[std::make_pair (stiff, 2u)] = 1.e-3;
-  SF1[std::make_pair (stiff, 3u)] = 1.e-3;
-  SF1[std::make_pair (stiff, 4u)] = 1.e-3;
+  SF1[std::make_pair (stiff, 1u)] = 1.e-2;
+  SF1[std::make_pair (stiff, 2u)] = 1.e-2;
+  SF1[std::make_pair (stiff, 3u)] = 1.e-2;
+  SF1[std::make_pair (stiff, 4u)] = 1.e-2;
   
-  SF2[std::make_pair (stiff, 1u)] = 1.e-7;
-  SF2[std::make_pair (stiff, 2u)] = 1.e-7;
-  SF2[std::make_pair (stiff, 3u)] = 1.e-7;
-  SF2[std::make_pair (stiff, 4u)] = 1.e-7;
+  SF2[std::make_pair (stiff, 1u)] = 1.e-6;
+  SF2[std::make_pair (stiff, 2u)] = 1.e-6;
+  SF2[std::make_pair (stiff, 3u)] = 1.e-6;
+  SF2[std::make_pair (stiff, 4u)] = 1.e-6;
   
-  NF[std::make_pair (stiff, 1u)] = 0.15;
-  NF[std::make_pair (stiff, 2u)] = 0.25;
-  NF[std::make_pair (stiff, 3u)] = 0.35; 
-  NF[std::make_pair (stiff, 4u)] = 0.45;  
+  NF[std::make_pair (stiff, 1u)] = 0.14; //0.15 very little up
+  NF[std::make_pair (stiff, 2u)] = 0.08;  //0.1 little up
+  NF[std::make_pair (stiff, 3u)] = 0.1; //0.13 very little up 
+  NF[std::make_pair (stiff, 4u)] = 0.2; //0.23 very little up  
   
   //soft soft matrix
   
@@ -129,8 +129,11 @@ int main(int argc, char** args)
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps + 1);
   std::vector < std::map < std::pair < std::string, unsigned > , double > > time(n_timesteps + 1); 
   
-  unsigned nli[4]={1,2,3,4};
-  for(unsigned kk = 0; kk < 4; kk++){
+  unsigned nli[1]={4};
+  //unsigned nli[1]={2};
+  //unsigned nli[1]={3};
+  //unsigned nli[1]={4};
+  for(unsigned kk = 0; kk < 1; kk++){
       
     unsigned nl = nli[kk];  
       
