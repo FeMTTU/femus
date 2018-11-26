@@ -22,6 +22,7 @@
 
 #include "slepceps.h"
 #include <slepcmfn.h>
+#include <slepcsvd.h>
 
 using namespace femus;
 
@@ -48,10 +49,18 @@ bool assembly = true; //assembly must be left always true
 const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
                           0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
                          };
+                         
+// const double hRest[80] = {0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
+//                           0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
+//                           0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
+//                           0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125
+//                          };
 
 double InitalValueVi ( const std::vector < double >& x , const unsigned &i )
 {
     double psi1 = 1. - ( x[0] - 5. ) * ( x[0] - 5. ) * ( x[0] - 5. ) * ( x[0] - 5. ) / ( 5.*5.*5.*5. );
+    //double psi1 = 1. - ( pow(( x[0] - 50. ), 40) / pow(50., 40) );
+    //double psi1 = 1. - ( pow(( x[0] - 10. ), 16) / pow(10., 16) );
     double z = -10. + hRest[0] / 2. + hRest[0] * ( NumberOfLayers - i );
     double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
     return ( psi1 * d_psi2 );
@@ -226,127 +235,167 @@ double InitalValueV39 ( const std::vector < double >& x )
 {
     return InitalValueVi ( x, 40 );
 }
+double InitalValueV40 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 41 );
+}
+double InitalValueV41 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 42 );
+}
+double InitalValueV42 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 43 );
+}
+double InitalValueV43 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 44 );
+}
+double InitalValueV44 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 45 );
+}
+double InitalValueV45 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 46 );
+}
+double InitalValueV46 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 47 );
+}
+double InitalValueV47 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 48 );
+}
+double InitalValueV48 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 49 );
+}
+double InitalValueV49 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 50 );
+}
+double InitalValueV50 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 51 );
+}
+double InitalValueV51 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 52 );
+}
+double InitalValueV52 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 53 );
+}
+double InitalValueV53 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 54 );
+}
+double InitalValueV54 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 55 );
+}
+double InitalValueV55 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 56 );
+}
+double InitalValueV56 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 57 );
+}
+double InitalValueV57 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 58 );
+}
+double InitalValueV58 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 59 );
+}
+double InitalValueV59 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 60 );
+}
+double InitalValueV60 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 61 );
+}
+double InitalValueV61 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 62 );
+}
+double InitalValueV62 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 63 );
+}
+double InitalValueV63 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 64 );
+}
+double InitalValueV64 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 65 );
+}
+double InitalValueV65 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 66 );
+}
+double InitalValueV66 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 67 );
+}
+double InitalValueV67 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 68 );
+}
+double InitalValueV68 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 69 );
+}
+double InitalValueV69 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 70 );
+}
+double InitalValueV70 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 71 );
+}
+double InitalValueV71 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 72 );
+}
+double InitalValueV72 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 73 );
+}
+double InitalValueV73 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 74 );
+}
+double InitalValueV74 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 75 );
+}
+double InitalValueV75 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 76 );
+}
+double InitalValueV76 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 77 );
+}
+double InitalValueV77 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 78 );
+}
+double InitalValueV78 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 79 );
+}
+double InitalValueV79 ( const std::vector < double >& x )
+{
+    return InitalValueVi ( x, 80 );
+}
 
-// double InitalValueV0 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV1 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV2 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV3 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV4 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV5 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV6 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV7 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV8 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV9 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV10 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV11 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV12 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV13 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV14 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV15 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV16 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV17 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV18 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV19 ( const std::vector < double >& x ) {
-//   return 0.5;
-// }
-// double InitalValueV20 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV21 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV22 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV23 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV24 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV25 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV26 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV27 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV28 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV29 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV30 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV31 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV32 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV33 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV34 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV35 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV36 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV37 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV38 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
-// double InitalValueV39 ( const std::vector < double >& x ) {
-//   return -0.5;
-// }
 
 
 double InitalValueH ( const std::vector < double >& x )
@@ -412,8 +461,8 @@ int main ( int argc, char** args )
     unsigned numberOfUniformLevels = 1;
     unsigned numberOfSelectiveLevels = 0;
 
-    unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*11*/14 ) + 0.5 ) ); //Grid cell size = 3.90625 m
-    //nx += 1;
+    unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*8*/ 3 ) + 0.5 ) ); //Grid cell size = 3.90625 m
+    nx += 1;
 
     double length = 10.; //2 * 1465700.;
 
@@ -464,26 +513,71 @@ int main ( int argc, char** args )
     mlSol.Initialize ( "v17", InitalValueV17 );
     mlSol.Initialize ( "v18", InitalValueV18 );
     mlSol.Initialize ( "v19", InitalValueV19 );
-    mlSol.Initialize ( "v20", InitalValueV20 );
-    mlSol.Initialize ( "v21", InitalValueV21 );
-    mlSol.Initialize ( "v22", InitalValueV22 );
-    mlSol.Initialize ( "v23", InitalValueV23 );
-    mlSol.Initialize ( "v24", InitalValueV24 );
-    mlSol.Initialize ( "v25", InitalValueV25 );
-    mlSol.Initialize ( "v26", InitalValueV26 );
-    mlSol.Initialize ( "v27", InitalValueV27 );
-    mlSol.Initialize ( "v28", InitalValueV28 );
-    mlSol.Initialize ( "v29", InitalValueV29 );
-    mlSol.Initialize ( "v30", InitalValueV30 );
-    mlSol.Initialize ( "v31", InitalValueV31 );
-    mlSol.Initialize ( "v32", InitalValueV32 );
-    mlSol.Initialize ( "v33", InitalValueV33 );
-    mlSol.Initialize ( "v34", InitalValueV34 );
-    mlSol.Initialize ( "v35", InitalValueV35 );
-    mlSol.Initialize ( "v36", InitalValueV36 );
-    mlSol.Initialize ( "v37", InitalValueV37 );
-    mlSol.Initialize ( "v38", InitalValueV38 );
-    mlSol.Initialize ( "v39", InitalValueV39 );
+    if(NumberOfLayers>39){
+      mlSol.Initialize ( "v20", InitalValueV20 );
+      mlSol.Initialize ( "v21", InitalValueV21 );
+      mlSol.Initialize ( "v22", InitalValueV22 );
+      mlSol.Initialize ( "v23", InitalValueV23 );
+      mlSol.Initialize ( "v24", InitalValueV24 );
+      mlSol.Initialize ( "v25", InitalValueV25 );
+      mlSol.Initialize ( "v26", InitalValueV26 );
+      mlSol.Initialize ( "v27", InitalValueV27 );
+      mlSol.Initialize ( "v28", InitalValueV28 );
+      mlSol.Initialize ( "v29", InitalValueV29 );
+      mlSol.Initialize ( "v30", InitalValueV30 );
+      mlSol.Initialize ( "v31", InitalValueV31 );
+      mlSol.Initialize ( "v32", InitalValueV32 );
+      mlSol.Initialize ( "v33", InitalValueV33 );
+      mlSol.Initialize ( "v34", InitalValueV34 );
+      mlSol.Initialize ( "v35", InitalValueV35 );
+      mlSol.Initialize ( "v36", InitalValueV36 );
+      mlSol.Initialize ( "v37", InitalValueV37 );
+      mlSol.Initialize ( "v38", InitalValueV38 );
+      mlSol.Initialize ( "v39", InitalValueV39 );
+      if(NumberOfLayers>79){
+        mlSol.Initialize ( "v40", InitalValueV40 );
+        mlSol.Initialize ( "v41", InitalValueV41 );
+        mlSol.Initialize ( "v42", InitalValueV42 );
+        mlSol.Initialize ( "v43", InitalValueV43 );
+        mlSol.Initialize ( "v44", InitalValueV44 );
+        mlSol.Initialize ( "v45", InitalValueV45 );
+        mlSol.Initialize ( "v46", InitalValueV46 );
+        mlSol.Initialize ( "v47", InitalValueV47 );
+        mlSol.Initialize ( "v48", InitalValueV48 );
+        mlSol.Initialize ( "v49", InitalValueV49 );
+        mlSol.Initialize ( "v50", InitalValueV50 );
+        mlSol.Initialize ( "v51", InitalValueV51 );
+        mlSol.Initialize ( "v52", InitalValueV52 );
+        mlSol.Initialize ( "v53", InitalValueV53 );
+        mlSol.Initialize ( "v54", InitalValueV54 );
+        mlSol.Initialize ( "v55", InitalValueV55 );
+        mlSol.Initialize ( "v56", InitalValueV56 );
+        mlSol.Initialize ( "v57", InitalValueV57 );
+        mlSol.Initialize ( "v58", InitalValueV58 );
+        mlSol.Initialize ( "v59", InitalValueV59 );
+        mlSol.Initialize ( "v60", InitalValueV60 );
+        mlSol.Initialize ( "v61", InitalValueV61 );
+        mlSol.Initialize ( "v62", InitalValueV62 );
+        mlSol.Initialize ( "v63", InitalValueV63 );
+        mlSol.Initialize ( "v64", InitalValueV64 );
+        mlSol.Initialize ( "v65", InitalValueV65 );
+        mlSol.Initialize ( "v66", InitalValueV66 );
+        mlSol.Initialize ( "v67", InitalValueV67 );
+        mlSol.Initialize ( "v68", InitalValueV68 );
+        mlSol.Initialize ( "v69", InitalValueV69 );
+        mlSol.Initialize ( "v70", InitalValueV70 );
+        mlSol.Initialize ( "v71", InitalValueV71 );
+        mlSol.Initialize ( "v72", InitalValueV72 );
+        mlSol.Initialize ( "v73", InitalValueV73 );
+        mlSol.Initialize ( "v74", InitalValueV74 );
+        mlSol.Initialize ( "v75", InitalValueV75 );
+        mlSol.Initialize ( "v76", InitalValueV76 );
+        mlSol.Initialize ( "v77", InitalValueV77 );
+        mlSol.Initialize ( "v78", InitalValueV78 );
+        mlSol.Initialize ( "v79", InitalValueV79 );
+      }
+    }
+    
 
     for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
         char name[10];
@@ -519,16 +613,16 @@ int main ( int argc, char** args )
     //mlSol.GetWriter()->SetDebugOutput(true);
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-    unsigned numberOfTimeSteps = 2001; //17h=1020 with dt=60, 17h=10200 with dt=6
-    dt = 0.25;
+    unsigned numberOfTimeSteps = 16001; //17h=1020 with dt=60, 17h=10200 with dt=6
+    dt = 0.5;
     bool implicitEuler = true;
     for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
         if ( wave == true ) {
             assembly = ( i == 0 ) ? true : false;
         }
         system.CopySolutionToOldSolution();
-        ETD ( ml_prob, numberOfTimeSteps );
-        //RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
+        //ETD ( ml_prob, numberOfTimeSteps );
+        RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
         mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
         counter = i;
         counter2++;
@@ -743,9 +837,9 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
         double xmid = 0.5 * ( x[1] + x[0] );
         for ( unsigned k = NLayers; k > 1; k-- ) {
-            //if (xmid<=5) w[k-1] = 0.5;
-            //else w[k-1] = -0.5;
             w[k - 1] = - ( - 4. / 625.* ( xmid - 5 ) * ( xmid - 5 ) * ( xmid - 5 ) ) * psi2[k - 1];
+            //w[k - 1] = - ( - 40./(pow(50.,40)) * pow((xmid - 50.), 39) ) * psi2[k - 1];
+            //w[k - 1] = - ( - 16./(pow(10.,16)) * pow((xmid - 10.), 15) ) * psi2[k - 1];
             //std::cout << w[k-1] << " ";
 
             //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];
@@ -976,6 +1070,48 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
     Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
     Vec y = ( static_cast< PetscVector* > ( EPS ) )->vec();
+    
+    //BEGIN condition number of A            
+//     SVD svd;
+//     PetscReal sigma_1,sigma_n;
+//     PetscInt nconv1,nconv2;
+//     
+//     SVDCreate(PETSC_COMM_WORLD,&svd);
+//     SVDSetOperator(svd,A);
+//     SVDSetFromOptions(svd);
+//     SVDSetDimensions(svd,1,PETSC_DEFAULT,PETSC_DEFAULT);
+//     //First request a singular value from one end of the spectrum
+//     SVDSetWhichSingularTriplets(svd,SVD_LARGEST);
+//     SVDSolve(svd);
+//     //Get number of converged singular values
+//     SVDGetConverged(svd,&nconv1);
+//     //Get converged singular values: largest singular value is stored in sigma_1.
+//     if (nconv1 > 0) {
+//       SVDGetSingularTriplet(svd,0,&sigma_1,NULL,NULL);
+//     } 
+//     else {
+//       PetscPrintf(PETSC_COMM_WORLD," Unable to compute large singular value!\n\n");
+//     }
+//     //Request a singular value from the other end of the spectrum
+//     SVDSetWhichSingularTriplets(svd,SVD_SMALLEST);
+//     SVDSolve(svd);
+//     //Get number of converged singular triplets
+//     SVDGetConverged(svd,&nconv2);
+//     //Get converged singular values: smallest singular value is stored in sigma_n.
+//     if (nconv2 > 0) {
+//       SVDGetSingularTriplet(svd,0,&sigma_n,NULL,NULL);
+//     }
+//     else {
+//       PetscPrintf(PETSC_COMM_WORLD," Unable to compute small singular value!\n\n");
+//     }
+//     //Display solution and clean up
+//     if (nconv1 > 0 && nconv2 > 0) {
+//       PetscPrintf(PETSC_COMM_WORLD," Computed singular values: sigma_1=%.4f, sigma_n=%.4f\n",(double)sigma_1,(double)sigma_n);
+//       PetscPrintf(PETSC_COMM_WORLD," Estimated condition number: sigma_1/sigma_n=%.4f\n\n",(double)(sigma_1/sigma_n));
+//     }
+//     //Free work space
+//     SVDDestroy(&svd);
+    //END
 
     PetscReal tol;
     PetscInt ncv,maxit,its;
@@ -990,8 +1126,9 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 // FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
     FNSetScale ( f, dt, dt );
-    tol = 1e-12;
-    MFNSetTolerances ( mfn,tol,150 );
+    MFNSetDimensions(mfn,15);
+    tol = 1e-6;
+    MFNSetTolerances ( mfn,tol,PETSC_DEFAULT );
     MFNSetFromOptions ( mfn );
 
     clock_t etd_time;
@@ -1023,12 +1160,12 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
     }
 
     //BEGIN Get some information from the solver and display it
-//   MFNGetIterationNumber(mfn,&its);
-//   PetscPrintf(PETSC_COMM_WORLD," Number of iterations of the method: %D\n",its);
-//   MFNGetDimensions(mfn,&ncv);
-//   PetscPrintf(PETSC_COMM_WORLD," Subspace dimension: %D\n",ncv);
-//   MFNGetTolerances(mfn,&tol,&maxit);
-//   PetscPrintf(PETSC_COMM_WORLD," Stopping condition: tol=%.4g, maxit=%D\n",(double)tol,maxit);
+//     MFNGetIterationNumber(mfn,&its);
+//     PetscPrintf(PETSC_COMM_WORLD," Number of iterations of the method: %D\n",its);
+//     MFNGetDimensions(mfn,&ncv);
+//     PetscPrintf(PETSC_COMM_WORLD," Subspace dimension: %D\n",ncv);
+//     MFNGetTolerances(mfn,&tol,&maxit);
+//     PetscPrintf(PETSC_COMM_WORLD," Stopping condition: tol=%.4g, maxit=%D\n",(double)tol,maxit);
     //END
 
     MFNDestroy ( &mfn );
@@ -1141,6 +1278,8 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
             double xmid = 0.5 * ( x[1] + x[0] );
             for ( unsigned k = NLayers; k > 1; k-- ) {
                 w[k - 1] = - ( -4. / 625.* ( xmid - 5. ) * ( xmid - 5. ) * ( xmid - 5. ) ) * psi2[k - 1];
+                //w[k - 1] = - ( - 40./(pow(50.,40)) * pow((xmid - 50.), 39) ) * psi2[k - 1];
+                //w[k - 1] = - ( - 16./(pow(10.,16)) * pow((xmid - 10.), 15) ) * psi2[k - 1];
                 //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];
                 if ( maxW[k - 1] < w[k - 1] ) {
                     maxW[k - 1] = w[k - 1];
@@ -1301,6 +1440,8 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
         //FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
         FNSetScale ( f2, dt, dt );
+        MFNSetDimensions(mfn,15);
+        MFNSetTolerances ( mfn,1e-6,PETSC_DEFAULT );
         MFNSetFromOptions ( mfn );
 
         MFNSolve ( mfn, v2, y2 );
@@ -1409,8 +1550,8 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigne
 
     for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
         for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++ ) {
-//             double valueT = ( *sol->_SolOld[solIndexT[k]] ) ( i );
-            double valueT = ( *sol->_Sol[solIndexT[k]] ) ( i );
+            double valueT = ( *sol->_SolOld[solIndexT[k]] ) ( i );
+            //double valueT = ( *sol->_Sol[solIndexT[k]] ) ( i );
             double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
 
             double valueHT = valueT * valueH;
@@ -1528,6 +1669,8 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigne
         double xmid = 0.5 * ( x[1] + x[0] );
         for ( unsigned k = NLayers; k > 1; k-- ) {
             w[k - 1] = - ( -4. / 625.* ( xmid - 5 ) * ( xmid - 5 ) * ( xmid - 5 ) ) * psi2[k - 1];
+            //w[k - 1] = - ( - 40./(pow(50.,40)) * pow((xmid - 50.), 39) ) * psi2[k - 1];
+            //w[k - 1] = - ( - 16./(pow(10.,16)) * pow((xmid - 10.), 15) ) * psi2[k - 1];
             //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];
             if ( maxW[k - 1] < w[k - 1] ) {
                 maxW[k - 1] = w[k - 1];
@@ -1614,14 +1757,6 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigne
                         LHS -= w[k] * ( ( solHT[k - 1] / solh[k - 1] + addition ) );
                     }
                 }
-                //BEGIN MAGHEGGIONE
-//         if ( k == 0 ) {
-//           LHS -= w[k] * ( ( solHT[k] + addition ) / solh[k] );
-//         }
-//         if ( k == NLayers - 1 ) {
-//           LHS -= w[k] * ( ( solHT[k - 2] + addition ) / solh[k - 2] );
-//         }
-                //END
 
 //         if(i > start){
 //           LHS += k_h * (0.5 * (solhm[k] + solh[k])) * ((solHTm[k] / solhm[k] + addition)  - (solHT[k] / solh[k] + addition))/(dx*dx); // horizontal diffusion
@@ -1860,8 +1995,5 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigne
 
 
 }
-
-
-
 
 
