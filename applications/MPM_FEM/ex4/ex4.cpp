@@ -102,10 +102,10 @@ int main(int argc, char** args)
   SF2[std::make_pair (stiff, 3u)] = 1.e-6;
   SF2[std::make_pair (stiff, 4u)] = 1.e-6;
   
-  NF[std::make_pair (stiff, 1u)] = 0.14; //0.15 very little up
-  NF[std::make_pair (stiff, 2u)] = 0.08;  //0.1 little up
-  NF[std::make_pair (stiff, 3u)] = 0.1; //0.13 very little up 
-  NF[std::make_pair (stiff, 4u)] = 0.2; //0.23 very little up  
+  NF[std::make_pair (stiff, 1u)] = 0.14; //0.13 very little little
+  NF[std::make_pair (stiff, 2u)] = 0.06;  //0.07 very little up
+  NF[std::make_pair (stiff, 3u)] = 0.1; //0.1 very little up 
+  NF[std::make_pair (stiff, 4u)] = 0.2; //0.2 very little up  
   
   //soft soft matrix
   
@@ -129,7 +129,7 @@ int main(int argc, char** args)
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps + 1);
   std::vector < std::map < std::pair < std::string, unsigned > , double > > time(n_timesteps + 1); 
   
-  unsigned nli[1]={4};
+  unsigned nli[1]={1};
   //unsigned nli[1]={2};
   //unsigned nli[1]={3};
   //unsigned nli[1]={4};
@@ -345,6 +345,7 @@ int main(int argc, char** args)
         mass.resize(x.size(), rho_MPM * r * dtheta * DL);
       }
       size = x.size();
+      std::cout<< "Number of Particles = " << x.size() << " Number of Layers = "<< NL <<std::endl;
     }
 
     double totalMass = 0;
