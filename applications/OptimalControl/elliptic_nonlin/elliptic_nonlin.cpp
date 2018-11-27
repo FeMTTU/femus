@@ -13,6 +13,17 @@ using namespace femus;
   // ./elliptic_nonlin -mat_view draw -draw_save myfile.ppm
 
 
+double  nonlin_term_function(const double& v) {
+    
+   return 1./( (1. - v)*(1. - v) );
+ }
+
+
+double  nonlin_term_derivative(const double& v) {
+    
+   return  +2. * 1./( (1. - v)*(1. - v)*(1. - v) ); 
+ }
+
 
  inline unsigned int res_row_index(const std::vector<unsigned int>& _Sol_n_el_dofs, const int my_row_pos, const int i) {
 
@@ -506,7 +517,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
           // =============
         Res[ res_row_index(Sol_n_el_dofs,pos_adj,i) ] += - weight_qp *  ( + m_b_f[pos_adj][pos_state] * laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_adj, pos_state, i, dim) 
-                                                                          + m_b_f[pos_adj][pos_ctrl]  * phi_fe_qp[SolFEType[pos_adj]][i] * sol_qp[pos_ctrl] );
+                                                                          - m_b_f[pos_adj][pos_ctrl]  * phi_fe_qp[SolFEType[pos_adj]][i] * sol_qp[pos_ctrl] * nonlin_term_function(sol_qp[pos_state]) 
+                                                                        );
 
 //======================End Residuals=======================
 	      
@@ -539,9 +551,18 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	      }
 	      
 	      //=========== delta_adjoint row ===========================
-		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_state, i, j) ]  += m_b_f[pos_adj][pos_state] * weight_qp * laplacian_row_col(SolFEType, phi_x_fe_qp, pos_adj, pos_state, i, j, dim);;   
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_state, i, j) ]  += m_b_f[pos_adj][pos_state] * weight_qp * (
+                                                                                                                                      laplacian_row_col(SolFEType, phi_x_fe_qp, pos_adj, pos_state, i, j, dim)
+                                                                                                                                      - phi_fe_qp[SolFEType[pos_adj]][i] *
+                                                                                                                                        nonlin_term_derivative(phi_fe_qp[SolFEType[pos_state]][j]) * 
+                                                                                                                                        sol_qp[pos_ctrl]
+                                                                                                                                      );
 
-        Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_ctrl, i, j)  ]  += m_b_f[pos_adj][pos_ctrl] * weight_qp * phi_fe_qp[SolFEType[pos_adj]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j]; 
+        Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_ctrl, i, j)  ]  += m_b_f[pos_adj][pos_ctrl] * weight_qp * ( 
+                                                                                                                                      - phi_fe_qp[SolFEType[pos_adj]][i] * 
+                                                                                                                                        phi_fe_qp[SolFEType[pos_ctrl]][j] * 
+                                                                                                                                        nonlin_term_function(sol_qp[pos_state])
+                                                                                                                                   ); 
 		     
 	      
             } // end phi_j loop
