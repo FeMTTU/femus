@@ -156,6 +156,8 @@ namespace femus {
 
     private:
       static const double _hermiteQuadrature[16][2][16];
+      static const double _legendreQuadrature[16][2][16];
+      static const double _laguerreQuadrature[16][2][16];
       std::map<std::pair<unsigned, unsigned>, std::vector < std::vector <unsigned> > > _Jp;
       std::map<std::pair<unsigned, unsigned>, std::vector < std::vector <unsigned> > > _Tp;
       std::map<std::pair<unsigned, unsigned>, std::vector < std::vector <double> > > _hermitePoly;
