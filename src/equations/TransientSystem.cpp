@@ -31,10 +31,11 @@ namespace femus {
 // ------------------------------------------------------------
 // TransientSystem implementation
 template <class Base>
-TransientSystem<Base>::TransientSystem (MultiLevelProblem& ml_probl,
+TransientSystem<Base>::TransientSystem (
+                    MultiLevelProblem& ml_probl,
 					const std::string& name_in,
-					const unsigned int number_in,const MgSmoother & smoother_type) :
-
+					const unsigned int number_in,
+                    const MgSmoother & smoother_type) :
   Base (ml_probl, name_in, number_in,smoother_type),
   _is_selective_timestep(false),
   _time(0.),

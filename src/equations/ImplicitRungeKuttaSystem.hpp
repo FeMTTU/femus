@@ -1,10 +1,10 @@
 /*=========================================================================
 
- Program: FEMUS
+ Program: FEMuS
  Module: ImplicitRungeKuttaSystem
  Authors: Simone Bnà
 
- Copyright (c) FEMTTU
+ Copyright (c) FEMuS
  All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
@@ -16,161 +16,96 @@
 #ifndef __femus_equations_ImplicitRungeKuttaSystem_hpp__
 #define __femus_equations_ImplicitRungeKuttaSystem_hpp__
 
+//------------------------------------------------------------------------------
+// includes
+//------------------------------------------------------------------------------
+#include "TransientSystem.hpp"
 #include <string>
-
-#include "MgSmootherEnum.hpp"
-#include "MgTypeEnum.hpp"
+#include <vector>
+#include "assert.h"
 
 namespace femus {
-
-
-//------------------------------------------------------------------------------
-// Forward declarations
-//------------------------------------------------------------------------------
-class MonolithicFSINonLinearImplicitSystem;
-class LinearImplicitSystem;
-class NonLinearImplicitSystem;
-class ExplicitSystem;
-class MultiLevelProblem;
-class System;
-
-
+    
 /**
- * This class provides a specific system class.  It aims
- * at transient systems, offering nothing more than just
- * the essentials needed to solve a system.
+ * This class provides a specific system class for the time integration of system PDE
+ * using the Newmark algorithm.
  */
 
 // ------------------------------------------------------------
-// ImplicitRungeKuttaSystem class definition
-template <class Base>
-class ImplicitRungeKuttaSystem : public Base {
+// TransientSystem class definition
+template <class Base> 
+class ImplicitRungeKuttaSystem : public TransientSystem<Base> { 
 
 public:
 
-    /** Constructor.  Initializes required data structures.  */
+    /** Constructor.  Initializes required data structures. */
     ImplicitRungeKuttaSystem (MultiLevelProblem& ml_probl,
-                     const std::string& name,
-                     const unsigned int number, const MgSmoother & smoother_type);
+                            const std::string& name,
+                            const unsigned int number,
+                            const MgSmoother & smoother_type);
 
     /** Destructor. */
     virtual ~ImplicitRungeKuttaSystem ();
-    
-    
-    
-    /** The type of system. */
-    typedef ImplicitRungeKuttaSystem<Base> sys_type;
-
-    /** @returns a clever pointer to the system. */
-    sys_type & system () {
-        return *this;
-    }
-
-    /** Clear all the data structures associated with the system. */
-    virtual void clear ();
-
-    /**
-     * @returns \p "ImplicitRungeKutta" prepended to T::system_type().
-     * Helps in identifying the system type in an equation
-     * system file.
-    */
-    virtual std::string system_type () const;
-
 
     void AddSolutionToSystemPDE(const char solname[]);
     
-    /** Update the old solution with new ones. It calls the update solution function of the Solution class */
-    virtual void CopySolutionToOldSolution();
-
-
-    /** calling the parent solve */
-    virtual void MLsolve();
-
-    /** calling the parent solve */
-    virtual void MGsolve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE );
-
-
-    /** attach the GetTimeInterval Function for selective interval time */
-    void AttachGetTimeIntervalFunction (double (* get_time_interval_function)(const double time));
-
-
-    /** Set the interval time */
-    void SetIntervalTime(const double dt) {
-        _dt = dt;
-    };
-
-
-    /** Get the interval time */
-    double GetIntervalTime() const {
-        return _dt;
-    };
-
-    /** Get the time */
-    double GetTime() const {
-        return _time;
-    };
-
-    /** Get the time */
-    void SetTime(const double time) {
-        _time = time;
-    };
-    
-    void SetRKStage(const unsigned & RK){
+    inline void SetRKStage(const unsigned & RK){
       _RK = RK;
     }
     
-    unsigned GetRKStage(){
+    inline unsigned GetRKStage(){
       return _RK;
     }
-
-protected:
-
-    double _dt;
-
-private:
     
-    unsigned _RK;
-
-    bool _is_selective_timestep;
-
-    double _time;
-
-    unsigned int _time_step;
-
-    /** pointer function to the set time step function */
-    double (* _get_time_interval_function)(const double time);
-
-    unsigned _assembleCounter;
-
+private:
+   unsigned _RK;
 };
 
 
+template <class Base>
+ImplicitRungeKuttaSystem<Base>::ImplicitRungeKuttaSystem(
+            MultiLevelProblem& ml_probl,
+            const std::string& name,
+            const unsigned int number, 
+            const MgSmoother & smoother_type):
+            TransientSystem<Base>(ml_probl, name, number, smoother_type),
+		    _RK(1.0)
+{
+ 
+}
+
+/** Destructor. */
+template <class Base>
+ImplicitRungeKuttaSystem<Base>::~ImplicitRungeKuttaSystem()
+{
+  
+}
+
+template <class Base>
+void ImplicitRungeKuttaSystem<Base>::AddSolutionToSystemPDE(const char solname[]){
+    
+  for(unsigned i = 0; i < _RK; i++){
+    std::ostringstream solnameki;
+    solnameki << solname << "k" << i+1;
+    this->Base::AddSolutionToSystemPDE(solnameki.str().c_str());
+  }
+  
+}
+
 // -----------------------------------------------------------
 // Useful typedefs
-typedef ImplicitRungeKuttaSystem<LinearImplicitSystem> ImplicitRungeKuttaImplicitSystem;
 typedef ImplicitRungeKuttaSystem<LinearImplicitSystem> ImplicitRungeKuttaLinearImplicitSystem;
 typedef ImplicitRungeKuttaSystem<NonLinearImplicitSystem> ImplicitRungeKuttaNonlinearImplicitSystem;
 typedef ImplicitRungeKuttaSystem<MonolithicFSINonLinearImplicitSystem> ImplicitRungeKuttaMonolithicFSINonlinearImplicitSystem;
-typedef ImplicitRungeKuttaSystem<ExplicitSystem> ImplicitRungeKuttaExplicitSystem;
-typedef ImplicitRungeKuttaSystem<System> ImplicitRungeKuttaBaseSystem;
-
-
-// ------------------------------------------------------------
-// ImplicitRungeKuttaSystem inline methods
-template <class Base>
-inline
-std::string ImplicitRungeKuttaSystem<Base>::system_type () const
-{
-    std::string type = "ImplicitRungeKutta";
-    type += Base::system_type ();
-
-    return type;
-}
-
 
 } //end namespace femus
 
 
 
 #endif
+
+
+
+
+
 
