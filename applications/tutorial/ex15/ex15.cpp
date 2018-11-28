@@ -13,7 +13,7 @@
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
-//#include "TransientSystem.hpp"
+#include "ImplicitRungeKuttaSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
  #include "PetscMatrix.hpp"
@@ -76,7 +76,7 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
   for(unsigned i = 0; i < RK; i++){
-    ki[i] << "k" << i+1;
+    ki[i] << "uk" << i+1;
   }
     
   // define MultiLevel object "mlMsh". 
@@ -125,12 +125,16 @@ int main(int argc, char** args) {
   MultiLevelProblem mlProb(&mlSol); //
 
   // add system Poisson in mlProb as a Non Linear Implicit System
-  NonLinearImplicitSystem & system = mlProb.add_system < NonLinearImplicitSystem > ("AllanChan");
+  ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("AllanChan");
+  
+  system.SetRKStage(RK);
 
+  system.AddSolutionToSystemPDE("u");
+  
   // add solution "u" to system
-  for(unsigned i = 0; i < RK; i++){
-    system.AddSolutionToSystemPDE(ki[i].str().c_str());
-  }
+//   for(unsigned i = 0; i < RK; i++){
+//     system.AddSolutionToSystemPDE(ki[i].str().c_str());
+//   }
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleAllanChanProblem_AD);
@@ -206,7 +210,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("AllanChan");   // pointer to the linear implicit system named "Poisson"
+  ImplicitRungeKuttaNonlinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<ImplicitRungeKuttaNonlinearImplicitSystem> ("AllanChan");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble(); // We have different level of meshes. we assemble the problem on the specified one.
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object

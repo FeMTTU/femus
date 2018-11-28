@@ -71,7 +71,7 @@ public:
     void AddSolutionToSystemPDEVector(const unsigned n_components,  const std::string name);
 
     /** Associate the solution variables to the system PDE */
-    void AddSolutionToSystemPDE(const char solname[]);
+    virtual void AddSolutionToSystemPDE(const char solname[]);
 
     /** Register a user function to use in assembling the system matrix and RHS. */
     void SetAssembleFunction (AssembleFunctionType );
