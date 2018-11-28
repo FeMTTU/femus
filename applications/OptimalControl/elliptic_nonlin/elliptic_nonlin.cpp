@@ -15,13 +15,13 @@ using namespace femus;
 
 double  nonlin_term_function(const double& v) {
     
-   return 1./( (1. - v)*(1. - v) );
+   return 1.;//1./( (1. - v)*(1. - v) );
  }
 
 
 double  nonlin_term_derivative(const double& v) {
     
-   return  +2. * 1./( (1. - v)*(1. - v)*(1. - v) ); 
+   return 0.;// +2. * 1./( (1. - v)*(1. - v)*(1. - v) ); 
  }
 
 
@@ -552,8 +552,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
                                                                                                                                       - phi_fe_qp[SolFEType[pos_ctrl]][i] * 
                                                                                                                                         phi_fe_qp[SolFEType[pos_adj]][j] * 
                                                                                                                                         nonlin_term_function(sol_qp[pos_state])
-                                                                                                    )
-		                                                                                  ;
+                                                                                                    );
 	        }
 	      
 	      else if ( control_el_flag == 0 && i == j)  {  
