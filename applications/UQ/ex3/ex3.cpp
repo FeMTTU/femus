@@ -1128,7 +1128,7 @@ void GetStochasticData(std::vector <double>& alphas) {
 //
 void PlotStochasticData() {
 
-  std::cout.precision(10);
+  std::cout.precision(14);
   std::cout << " the mean is " << meanQoI << std::endl;
   std::cout << " the standard deviation is " << stdDeviationQoI << std::endl;
 

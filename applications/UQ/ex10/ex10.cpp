@@ -53,7 +53,7 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
-unsigned numberOfSamples = 10000000; //for MC sampling of the QoI
+unsigned numberOfSamples = 100; //for MC sampling of the QoI
 unsigned nxCoarseBox;
 double xMinCoarseBox = - 5.5; //-5.5 for Gaussian, -2.5 for SGM,  -1.5 for uniform
 double xMaxCoarseBox = 5.5;  //5.5 for Gaussian, 5.5 for SGM, 1.5 for uniform
@@ -979,15 +979,8 @@ void GetMomentsAndCumulants ( std::vector <double>& alphas )
 
         const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet ( pIndex, numberOfEigPairs );
 
-//     std::vector < std::vector < double > >  multivariateHermitePoly;
-//     std::vector < double > multivariateHermiteQuadratureWeights;
-//
-//     myuq.ComputeMultivariateHermite (multivariateHermitePoly, multivariateHermiteQuadratureWeights,
-//                                          numberOfQuadraturePoints, pIndex, numberOfEigPairs);
-
-
-        const std::vector < std::vector < double > >  & multivariateHermitePoly = myuq.GetMultivariateHermitePolynomial ( numberOfQuadraturePoints, pIndex, numberOfEigPairs );
-        const std::vector < double > & multivariateHermiteQuadratureWeights = myuq.GetMultivariateHermiteWeights ( numberOfQuadraturePoints, pIndex, numberOfEigPairs );
+        const std::vector < std::vector < double > >  & multivariatePoly = myuq.GetMultivariatePolynomial ( numberOfQuadraturePoints, pIndex, numberOfEigPairs, quadratureType );
+        const std::vector < double > & multivariateQuadratureWeights = myuq.GetMultivariateWeights ( numberOfQuadraturePoints, pIndex, numberOfEigPairs, quadratureType );
 
 
         //BEGIN computation of the raw moments
@@ -996,10 +989,10 @@ void GetMomentsAndCumulants ( std::vector <double>& alphas )
             for ( unsigned j = 0; j < Tp.size(); j++ ) {
                 double integrandFunction = 0.;
                 for ( unsigned i = 0; i < Jp.size(); i++ ) {
-                    integrandFunction += multivariateHermitePoly[i][j] * alphas[i];
+                    integrandFunction += multivariatePoly[i][j] * alphas[i];
                 }
                 integrandFunction = pow ( integrandFunction, p + 1 );
-                moments[p] += multivariateHermiteQuadratureWeights[j] * integrandFunction;
+                moments[p] += multivariateQuadratureWeights[j] * integrandFunction;
             }
         }
         //END
@@ -1017,10 +1010,10 @@ void GetMomentsAndCumulants ( std::vector <double>& alphas )
         for ( unsigned j = 0; j < Tp.size(); j++ ) {
             double integrandFunctionVariance = 0.;
             for ( unsigned i = 0; i < Jp.size(); i++ ) {
-                integrandFunctionVariance += multivariateHermitePoly[i][j] * alphas[i];
+                integrandFunctionVariance += multivariatePoly[i][j] * alphas[i];
             }
             integrandFunctionVariance = pow ( integrandFunctionVariance - meanQoI, 2 );
-            varianceQoI += multivariateHermiteQuadratureWeights[j] * integrandFunctionVariance;
+            varianceQoI += multivariateQuadratureWeights[j] * integrandFunctionVariance;
         }
 
         stdDeviationQoI = sqrt ( varianceQoI );
@@ -1033,11 +1026,11 @@ void GetMomentsAndCumulants ( std::vector <double>& alphas )
             for ( unsigned j = 0; j < Tp.size(); j++ ) {
                 double integrandFunction = 0.;
                 for ( unsigned i = 0; i < Jp.size(); i++ ) {
-                    integrandFunction += multivariateHermitePoly[i][j] * alphas[i];
+                    integrandFunction += multivariatePoly[i][j] * alphas[i];
                 }
                 integrandFunction = ( integrandFunction - meanQoI ) / stdDeviationQoI; //standardization of the QoI
                 integrandFunction = pow ( integrandFunction, p + 1 );
-                momentsStandardized[p] += multivariateHermiteQuadratureWeights[j] * integrandFunction;
+                momentsStandardized[p] += multivariateQuadratureWeights[j] * integrandFunction;
             }
         }
         //END
@@ -1376,15 +1369,15 @@ void GetQoIStandardizedSamples ( std::vector< double >& alphas, std::vector< std
             for ( unsigned k = 0; k < numberOfEigPairs; k++ ) {
                 samplePoints[k] = var_nor();
             }
-            const std::vector < std::vector <double> > &HermitePolyHistogram =
-                myuq.GetHermitePolyHistogram ( pIndex, samplePoints, numberOfEigPairs );
+            const std::vector < std::vector <double> > &polyHistogram =
+                myuq.GetPolyHistogram ( pIndex, samplePoints, numberOfEigPairs, quadratureType );
 
-            std::vector<double> MultivariateHermitePolyHistogram ( Jp.size(), 1. );
+            std::vector<double> MultivariatePolyHistogram ( Jp.size(), 1. );
             for ( unsigned i = 0; i < Jp.size(); i++ ) {
                 for ( unsigned k = 0; k < numberOfEigPairs; k++ ) {
-                    MultivariateHermitePolyHistogram[i] *= HermitePolyHistogram[Jp[i][k]][k];
+                    MultivariatePolyHistogram[i] *= polyHistogram[Jp[i][k]][k];
                 }
-                sgmQoI += alphas[i] * MultivariateHermitePolyHistogram[i]; //TODO with QoIs that are different from each other, alphas[i] will be alphas[idim][i]
+                sgmQoI += alphas[i] * MultivariatePolyHistogram[i]; //TODO with QoIs that are different from each other, alphas[i] will be alphas[idim][i]
             }
 
 //             sgmQoIStandardized[m][idim] = ( sgmQoI - meanQoI ) / stdDeviationQoI; //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
@@ -1416,7 +1409,7 @@ void GetQoIStandardizedSamples ( std::vector< double >& alphas, std::vector< std
     }
     //END
 
-    myuq.ClearHermitePolynomialHistogram();
+    myuq.ClearPolynomialHistogram(quadratureType);
 
     if ( histoFinest ) {
 
@@ -1432,15 +1425,15 @@ void GetQoIStandardizedSamples ( std::vector< double >& alphas, std::vector< std
                 for ( unsigned k = 0; k < numberOfEigPairs; k++ ) {
                     samplePoints[k] = var_nor();
                 }
-                const std::vector < std::vector <double> > &HermitePolyHistogram =
-                    myuq.GetHermitePolyHistogram ( pIndex, samplePoints, numberOfEigPairs );
+                const std::vector < std::vector <double> > &polyHistogram =
+                    myuq.GetPolyHistogram ( pIndex, samplePoints, numberOfEigPairs, quadratureType );
 
-                std::vector<double> MultivariateHermitePolyHistogram ( Jp.size(), 1. );
+                std::vector<double> MultivariatePolyHistogram ( Jp.size(), 1. );
                 for ( unsigned i = 0; i < Jp.size(); i++ ) {
                     for ( unsigned k = 0; k < numberOfEigPairs; k++ ) {
-                        MultivariateHermitePolyHistogram[i] *= HermitePolyHistogram[Jp[i][k]][k];
+                        MultivariatePolyHistogram[i] *= polyHistogram[Jp[i][k]][k];
                     }
-                    sgmQoI += alphas[i] * MultivariateHermitePolyHistogram[i]; //TODO with QoIs that are different from each other, alphas[i] will be alphas[idim][i]
+                    sgmQoI += alphas[i] * MultivariatePolyHistogram[i]; //TODO with QoIs that are different from each other, alphas[i] will be alphas[idim][i]
                 }
 
                 sgmQoIStandardizedFinest[m][idim] = ( sgmQoI - meanQoI ) / stdDeviationQoI; //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
@@ -1449,7 +1442,7 @@ void GetQoIStandardizedSamples ( std::vector< double >& alphas, std::vector< std
         }
         //END
 
-        myuq.ClearHermitePolynomialHistogram();
+        myuq.ClearPolynomialHistogram(quadratureType);
 
 
     }
