@@ -325,7 +325,7 @@ int main(int argc, char** args)
 
       double factor = 1.14;
       unsigned NL = getNumberOfLayers((R - R0) / DL, factor);
-      std::cout << NL << std::endl;
+      //std::cout << NL << std::endl;
 
       double  r = R0;
       for(unsigned i = 1; i <= NL; i++) {
@@ -345,6 +345,7 @@ int main(int argc, char** args)
         mass.resize(x.size(), rho_MPM * r * dtheta * DL);
       }
       size = x.size();
+      std::cout<< "Number of Particles = " << x.size() << " Number of Layers = "<< NL <<std::endl;
     }
 
     double totalMass = 0;
