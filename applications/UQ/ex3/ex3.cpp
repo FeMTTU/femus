@@ -44,8 +44,8 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-double startPoint = - 1.9;  
-double endPoint = 5.; 
+double startPoint = - 2.5;  
+double endPoint = 2.5; 
 double deltat;
 int pdfHistogramSize;
 

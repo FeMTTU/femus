@@ -131,17 +131,6 @@ int main(int argc, char** argv) {
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
   //END
 
-//   //BEGIN test Hermite Poly
-//   std::vector < std::vector < double > >  HermitePoly;
-//   unsigned orderOfIntegration = 10;
-//   unsigned maxPolyOrder = 2;
-//   EvaluateHermitePoly(HermitePoly, orderOfIntegration, maxPolyOrder);
-//   for(unsigned j = 0; j < orderOfIntegration; j++) {
-//     std::cout << "Hermite =  " << std::setprecision (16) << HermitePoly[0][j] << "   ,   " ;
-//   }
-//   std::cout << std::endl;
-//   //END test Hermite Poly
-
   //BEGIN stochastic index set test
 //   std::vector < std::vector <unsigned> > Jp;
 //   ComputeIndexSetJp(Jp, 3);
