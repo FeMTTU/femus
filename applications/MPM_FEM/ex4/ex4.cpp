@@ -14,7 +14,7 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
-#include "../include/mpmFem4.hpp"
+#include "../include/mpmFem.hpp"
 
 //double yMin;
 
@@ -129,11 +129,8 @@ int main(int argc, char** args)
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps + 1);
   std::vector < std::map < std::pair < std::string, unsigned > , double > > time(n_timesteps + 1); 
   
-  unsigned nli[1]={1};
-  //unsigned nli[1]={2};
-  //unsigned nli[1]={3};
-  //unsigned nli[1]={4};
-  for(unsigned kk = 0; kk < 1; kk++){
+  unsigned nli[3]={2,3,4};
+  for(unsigned kk = 0; kk < 3; kk++){
       
     unsigned nl = nli[kk];  
       
@@ -176,7 +173,7 @@ int main(int argc, char** args)
     solidMPM = Solid(par, E_MPM, nu_MPM, rho_MPM, "Neo-Hookean");
     solidFEM = Solid(par, E_FEM, nu_FEM, rho_FEM, "Neo-Hookean");
 
-    mlMsh.ReadCoarseMesh("../input/basketScaled2.neu", "fifth", scalingFactor);
+    mlMsh.ReadCoarseMesh("../input/basket.neu", "fifth", scalingFactor);
     mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
     mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
