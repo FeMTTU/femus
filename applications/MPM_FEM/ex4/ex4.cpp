@@ -322,7 +322,7 @@ int main(int argc, char** args)
 
       double factor = 1.14;
       unsigned NL = getNumberOfLayers((R - R0) / DL, factor);
-      std::cout << NL << std::endl;
+      //std::cout << NL << std::endl;
 
       double  r = R0;
       for(unsigned i = 1; i <= NL; i++) {
