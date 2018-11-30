@@ -20,33 +20,6 @@
  #include "PetscVector.hpp"
 
 using namespace femus;
-double b[5][5]={
-    {1.},
-    {0.5,0.5},
-    {5./18., 4./9., 5./18.}
-};
-
-// double b[5][5]={
-//     {},
-//     {0.5 * (1.+sqrt(3.)), 0.5 *(1.-sqrt(3.)) }
-// };
-
-double a[5][5][5]={
-    {   {0.5}},
-    {
-        {0.25, 0.25 - sqrt(3.)/6.},
-        {0.25 + sqrt(3.)/6., 0.25 }
-    },
-    {
-        { 5./36.,                   2./9. - sqrt(15.)/15.,   5./36. - sqrt(15.)/30.},
-        { 5./36. + sqrt(15.)/24.,   2./9.,                   5./36. - sqrt(15.)/24.},
-        { 5./36. + sqrt(15.)/30.,   2./9. + sqrt(15.)/15.,   5./36.}
-    }
-};
-
-const unsigned RK = 3;
-
-std::ostringstream ki[RK];
 
 double GetTimeStep(const double time) {
   double dt = 2.;
@@ -65,20 +38,13 @@ double InitalValue(const std::vector < double >& x) {
   return cos(2*pi*x[0]*x[0])*cos(2*pi*x[1]*x[1]); 
 }
 
-
 void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob);
-
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
 
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  for(unsigned i = 0; i < RK; i++){
-    ki[i] << "uk" << i+1;
-  }
-    
   // define MultiLevel object "mlMsh". 
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
@@ -107,19 +73,13 @@ int main(int argc, char** args) {
   // add variables to mlSol
   mlSol.AddSolution("u", LAGRANGE, SECOND); // We may have more than one, add each of them as u,v,w with their apprx type.
   
+  mlSol.AddSolution("v", LAGRANGE, SECOND); // We may have more than one, add each of them as u,v,w with their apprx type.
   
-  for(unsigned i = 0; i < RK; i++){
-    mlSol.AddSolution(ki[i].str().c_str(), LAGRANGE, SECOND); // We may have more than one, add each of them as u,v,w with their apprx type.
-  }
-  
-  mlSol.Initialize("All"); // Since this is time depend problem.
+  mlSol.Initialize("v"); // Since this is time depend problem.
   mlSol.Initialize("u", InitalValue); // Since this is time depend problem.
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  for(unsigned i = 0; i < RK; i++){
-    mlSol.GenerateBdc(ki[i].str().c_str());
-  }
   
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol); //
@@ -127,14 +87,10 @@ int main(int argc, char** args) {
   // add system Poisson in mlProb as a Non Linear Implicit System
   ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("AllanChan");
   
-  system.SetRKStage(RK);
+  system.SetRungeKuttaStages(3);
 
   system.AddSolutionToSystemPDE("u");
   
-  // add solution "u" to system
-//   for(unsigned i = 0; i < RK; i++){
-//     system.AddSolutionToSystemPDE(ki[i].str().c_str());
-//   }
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleAllanChanProblem_AD);
@@ -143,6 +99,7 @@ int main(int argc, char** args) {
   const unsigned int n_timesteps = 25;
   
   system.init();
+  system.AttachGetTimeIntervalFunction(GetTimeStep);
   
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
@@ -162,19 +119,9 @@ int main(int argc, char** args) {
     Solution * sol = mlSol.GetSolutionLevel(0);    // pointer to the solution (level) object
     
     unsigned soluIndex = mlSol.GetIndex("u");  
-      
-    for( unsigned i = 0; i < RK; i++ ){
-      unsigned solkiIndex = mlSol.GetIndex( ki[i].str().c_str() );
-      sol->_Sol[solkiIndex]->zero();
-    }
-        
+           
     system.MGsolve();
     
-    for( unsigned i = 0; i < RK; i++ ){
-      unsigned solkiIndex = mlSol.GetIndex( ki[i].str().c_str() );    
-      sol->_Sol[soluIndex]-> add ( b[RK - 1][i] * dt, *sol->_Sol[solkiIndex]);
-    }
- 
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
   
@@ -231,51 +178,59 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
 
   //solution variable
   unsigned soluIndex;
+ 
+  
+  unsigned RK = mlPdeSys->GetRungeKuttaStages();
   soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned solkIndex[RK];
+  
+  
+  const std::vector < std::ostringstream > & uk = mlPdeSys->GetSolkiNames("u");
+  
+  std::vector < unsigned > solkIndex(RK);
   for( unsigned i = 0; i < RK; i++ ){
-    solkIndex[i] = mlSol->GetIndex( ki[i].str().c_str() );
+    solkIndex[i] = mlSol->GetIndex( uk[i].str().c_str() );
   }
   unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
   
-  unsigned solkPdeIndex[RK];
+  std::vector < unsigned > solkPdeIndex(RK);
   for( unsigned i = 0; i < RK; i++ ){
-    solkPdeIndex[i] = mlPdeSys->GetSolPdeIndex( ki[i].str().c_str() );
+    solkPdeIndex[i] = mlPdeSys->GetSolPdeIndex( uk[i].str().c_str() );
   }
    
-  vector < adept::adouble >  solk[RK]; // local solution
-  vector < adept::adouble >  solu[RK]; // local solution
+  std::vector < std::vector < adept::adouble > >  solk(RK); // local solution
+  std::vector < std::vector < adept::adouble > >  solu(RK); // local solution
+  std::vector < double >  soluOld; // local solution
   
   for( unsigned i = 0; i < RK; i++ ){
     solk[i].reserve(maxSize);  
     solu[i].reserve(maxSize);
   }
-  
+  soluOld.resize(maxSize);
 
-  vector < vector < double > > x(dim);    // local coordinates. x is now dim x m matrix.
+  std::vector < std::vector < double > > x(dim);    // local coordinates. x is now dim x m matrix.
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for (unsigned k = 0; k < dim; k++) { 
     x[k].reserve(maxSize); // dim x maxsize is reserved for x.  
   }
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
+  std::vector <double> phi;  // local test function
+  std::vector <double> phi_x; // local test function first order partial derivatives
   
   double weight; // gauss point weight
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim); // This is probably gradient but he is doing the life difficult for me!
   
-  vector< adept::adouble > aResk[RK]; // local redidual vector
+  std::vector < std::vector< adept::adouble > > aResk(RK); // local redidual vector
   for( unsigned i = 0; i < RK; i++ ){
     aResk[i].reserve(maxSize);
   }
  
-  vector< int > l2GMap; // local to global mapping
+  std::vector< int > l2GMap; // local to global mapping
   l2GMap.reserve(RK * maxSize);
-  vector< double > Res; // local redidual vector
+  std::vector< double > Res; // local redidual vector
   Res.reserve(RK * maxSize);
-  vector < double > Jac;
+  std::vector < double > Jac;
   Jac.reserve(RK * maxSize * RK * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -294,7 +249,8 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
     
     for( unsigned i = 0; i < RK; i++ ){
       solk[i].resize(nDofu);  
-      solu[i].resize(nDofu);  
+      solu[i].resize(nDofu); 
+      soluOld.resize(nDofu);
       aResk[i].assign(nDofu, 0.);    
     }
         
@@ -307,6 +263,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
+      soluOld[i] = (*sol->_Sol[soluIndex])(solDof);
       for( unsigned j = 0; j < RK; j++ ){
         solk[j][i] = (*sol->_Sol[solkIndex[j]])(solDof);          // global extraction and local storage for the solution
         l2GMap[j * nDofu + i] = pdeSys->GetSystemDof(solkIndex[j], solkPdeIndex[j], i, iel);    // global to global mapping between solution node and pdeSys dof
@@ -315,18 +272,8 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
     
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
-            
-    // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofu; i++) {
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-      double soluOld = (*sol->_Sol[soluIndex])(solDof);
-      for( unsigned j = 0; j < RK; j++ ){
-        solu[j][i] = soluOld;
-        for( unsigned k = 0; k < RK; k++ ){
-          solu[j][i] += dt * a[RK-1][j][k]  * solk[k][i]; // global extraction and local storage for the solution
-        }
-      }
-    }
+    
+    mlPdeSys->GetIntermediateSolutions(soluOld, solk, solu);
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {

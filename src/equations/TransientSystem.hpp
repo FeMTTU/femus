@@ -79,7 +79,9 @@ public:
     /** Update the old solution with new ones. It calls the update solution function of the Solution class */
     virtual void CopySolutionToOldSolution();
 
-
+    /** Set up before calling the parent solve */
+    void SetUpForSolve();
+    
     /** calling the parent solve */
     virtual void MLsolve();
 

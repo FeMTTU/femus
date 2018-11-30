@@ -118,6 +118,8 @@ public:
       }
     };
 
+    
+    
 
     /** To be Added */
     void GenerateBdc(const char name[], const char bdc_type[]="Steady", const MultiLevelProblem * ml_prob = NULL);
@@ -185,6 +187,16 @@ public:
     unsigned GetSolutionPairInverseIndex(const unsigned& i) const{
       return _solPairInverseIndex[i];
     }
+    
+    
+    FEFamily GetSolutionFamily(const unsigned& i){
+      return _family[i];  
+    };
+    
+    FEOrder GetSolutionOrder(const unsigned& i){
+      return _order[i];    
+    }
+    
 
     void build();
 
