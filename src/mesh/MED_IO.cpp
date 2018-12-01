@@ -171,7 +171,12 @@ namespace femus
         
       }
              
+    
+    find_boundary_faces_and_set_face_flags(file_id,group_info);
+    
     }
+    
+    
 
     H5Fclose(file_id);
 
@@ -254,6 +259,31 @@ namespace femus
         return;
         
     }
+
+    
+    
+   void MED_IO::find_boundary_faces_and_set_face_flags(const hid_t&  file_id,const std::vector<GroupInfo> & group_info)  {
+       
+       Mesh& mesh = GetMesh();
+       
+       //after the volume connectivity has been read, I can loop over all boundary groups
+       // right now, I'll loop over all groups whose geometric element has dimension n-1
+       // later, one may have have other groups of dimension n-1 that are not on the boundary
+        for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
+                   
+            for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
+
+               for(unsigned gv = 0; gv < group_info.size(); gv++) {
+                               if ( group_info[gv]._geom_el->get_dimension() == mesh.GetDimension() -1   ) { //boundary groups
+      
+                                   
+                                   
+                   
+                               }
+                     }
+                 } //faces
+               }// end volume elements
+   }
    
    
   

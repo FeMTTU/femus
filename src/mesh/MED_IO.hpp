@@ -76,6 +76,8 @@ class MED_IO : public MeshInput<Mesh>
 
    void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::tuple<std::string,unsigned int> & el_fe_type_per_dimension, std::vector<bool>& type_elem_flag);
    
+   void find_boundary_faces_and_set_face_flags(const hid_t&  file_id,const std::vector<GroupInfo> & group_info);
+
    void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
 
    const GroupInfo                get_group_flags_per_mesh(const std::string & group_names) const;
