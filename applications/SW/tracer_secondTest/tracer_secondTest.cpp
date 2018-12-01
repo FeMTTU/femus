@@ -51,7 +51,7 @@ const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
 // const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
 //                           0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
 //                          };
-                         
+
 // const double hRest[80] = {0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
 //                           0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
 //                           0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
@@ -447,7 +447,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps );
 
 void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigned & numberOfTimeSteps );
 
-void RK2 ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps );
+void RK ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps );
 
 
 int main ( int argc, char** args )
@@ -467,6 +467,8 @@ int main ( int argc, char** args )
 
     unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*8*/ 4 ) + 0.5 ) ); //Grid cell size = 3.90625 m
     nx += 3;
+//     nx*=4;
+//     std::cout <<" nx = " << nx << std::endl;
 
     double length = 10.; //2 * 1465700.;
 
@@ -517,71 +519,71 @@ int main ( int argc, char** args )
     mlSol.Initialize ( "v17", InitalValueV17 );
     mlSol.Initialize ( "v18", InitalValueV18 );
     mlSol.Initialize ( "v19", InitalValueV19 );
-    if(NumberOfLayers>39){
-      mlSol.Initialize ( "v20", InitalValueV20 );
-      mlSol.Initialize ( "v21", InitalValueV21 );
-      mlSol.Initialize ( "v22", InitalValueV22 );
-      mlSol.Initialize ( "v23", InitalValueV23 );
-      mlSol.Initialize ( "v24", InitalValueV24 );
-      mlSol.Initialize ( "v25", InitalValueV25 );
-      mlSol.Initialize ( "v26", InitalValueV26 );
-      mlSol.Initialize ( "v27", InitalValueV27 );
-      mlSol.Initialize ( "v28", InitalValueV28 );
-      mlSol.Initialize ( "v29", InitalValueV29 );
-      mlSol.Initialize ( "v30", InitalValueV30 );
-      mlSol.Initialize ( "v31", InitalValueV31 );
-      mlSol.Initialize ( "v32", InitalValueV32 );
-      mlSol.Initialize ( "v33", InitalValueV33 );
-      mlSol.Initialize ( "v34", InitalValueV34 );
-      mlSol.Initialize ( "v35", InitalValueV35 );
-      mlSol.Initialize ( "v36", InitalValueV36 );
-      mlSol.Initialize ( "v37", InitalValueV37 );
-      mlSol.Initialize ( "v38", InitalValueV38 );
-      mlSol.Initialize ( "v39", InitalValueV39 );
-      if(NumberOfLayers>79){
-        mlSol.Initialize ( "v40", InitalValueV40 );
-        mlSol.Initialize ( "v41", InitalValueV41 );
-        mlSol.Initialize ( "v42", InitalValueV42 );
-        mlSol.Initialize ( "v43", InitalValueV43 );
-        mlSol.Initialize ( "v44", InitalValueV44 );
-        mlSol.Initialize ( "v45", InitalValueV45 );
-        mlSol.Initialize ( "v46", InitalValueV46 );
-        mlSol.Initialize ( "v47", InitalValueV47 );
-        mlSol.Initialize ( "v48", InitalValueV48 );
-        mlSol.Initialize ( "v49", InitalValueV49 );
-        mlSol.Initialize ( "v50", InitalValueV50 );
-        mlSol.Initialize ( "v51", InitalValueV51 );
-        mlSol.Initialize ( "v52", InitalValueV52 );
-        mlSol.Initialize ( "v53", InitalValueV53 );
-        mlSol.Initialize ( "v54", InitalValueV54 );
-        mlSol.Initialize ( "v55", InitalValueV55 );
-        mlSol.Initialize ( "v56", InitalValueV56 );
-        mlSol.Initialize ( "v57", InitalValueV57 );
-        mlSol.Initialize ( "v58", InitalValueV58 );
-        mlSol.Initialize ( "v59", InitalValueV59 );
-        mlSol.Initialize ( "v60", InitalValueV60 );
-        mlSol.Initialize ( "v61", InitalValueV61 );
-        mlSol.Initialize ( "v62", InitalValueV62 );
-        mlSol.Initialize ( "v63", InitalValueV63 );
-        mlSol.Initialize ( "v64", InitalValueV64 );
-        mlSol.Initialize ( "v65", InitalValueV65 );
-        mlSol.Initialize ( "v66", InitalValueV66 );
-        mlSol.Initialize ( "v67", InitalValueV67 );
-        mlSol.Initialize ( "v68", InitalValueV68 );
-        mlSol.Initialize ( "v69", InitalValueV69 );
-        mlSol.Initialize ( "v70", InitalValueV70 );
-        mlSol.Initialize ( "v71", InitalValueV71 );
-        mlSol.Initialize ( "v72", InitalValueV72 );
-        mlSol.Initialize ( "v73", InitalValueV73 );
-        mlSol.Initialize ( "v74", InitalValueV74 );
-        mlSol.Initialize ( "v75", InitalValueV75 );
-        mlSol.Initialize ( "v76", InitalValueV76 );
-        mlSol.Initialize ( "v77", InitalValueV77 );
-        mlSol.Initialize ( "v78", InitalValueV78 );
-        mlSol.Initialize ( "v79", InitalValueV79 );
-      }
+    if ( NumberOfLayers>39 ) {
+        mlSol.Initialize ( "v20", InitalValueV20 );
+        mlSol.Initialize ( "v21", InitalValueV21 );
+        mlSol.Initialize ( "v22", InitalValueV22 );
+        mlSol.Initialize ( "v23", InitalValueV23 );
+        mlSol.Initialize ( "v24", InitalValueV24 );
+        mlSol.Initialize ( "v25", InitalValueV25 );
+        mlSol.Initialize ( "v26", InitalValueV26 );
+        mlSol.Initialize ( "v27", InitalValueV27 );
+        mlSol.Initialize ( "v28", InitalValueV28 );
+        mlSol.Initialize ( "v29", InitalValueV29 );
+        mlSol.Initialize ( "v30", InitalValueV30 );
+        mlSol.Initialize ( "v31", InitalValueV31 );
+        mlSol.Initialize ( "v32", InitalValueV32 );
+        mlSol.Initialize ( "v33", InitalValueV33 );
+        mlSol.Initialize ( "v34", InitalValueV34 );
+        mlSol.Initialize ( "v35", InitalValueV35 );
+        mlSol.Initialize ( "v36", InitalValueV36 );
+        mlSol.Initialize ( "v37", InitalValueV37 );
+        mlSol.Initialize ( "v38", InitalValueV38 );
+        mlSol.Initialize ( "v39", InitalValueV39 );
+        if ( NumberOfLayers>79 ) {
+            mlSol.Initialize ( "v40", InitalValueV40 );
+            mlSol.Initialize ( "v41", InitalValueV41 );
+            mlSol.Initialize ( "v42", InitalValueV42 );
+            mlSol.Initialize ( "v43", InitalValueV43 );
+            mlSol.Initialize ( "v44", InitalValueV44 );
+            mlSol.Initialize ( "v45", InitalValueV45 );
+            mlSol.Initialize ( "v46", InitalValueV46 );
+            mlSol.Initialize ( "v47", InitalValueV47 );
+            mlSol.Initialize ( "v48", InitalValueV48 );
+            mlSol.Initialize ( "v49", InitalValueV49 );
+            mlSol.Initialize ( "v50", InitalValueV50 );
+            mlSol.Initialize ( "v51", InitalValueV51 );
+            mlSol.Initialize ( "v52", InitalValueV52 );
+            mlSol.Initialize ( "v53", InitalValueV53 );
+            mlSol.Initialize ( "v54", InitalValueV54 );
+            mlSol.Initialize ( "v55", InitalValueV55 );
+            mlSol.Initialize ( "v56", InitalValueV56 );
+            mlSol.Initialize ( "v57", InitalValueV57 );
+            mlSol.Initialize ( "v58", InitalValueV58 );
+            mlSol.Initialize ( "v59", InitalValueV59 );
+            mlSol.Initialize ( "v60", InitalValueV60 );
+            mlSol.Initialize ( "v61", InitalValueV61 );
+            mlSol.Initialize ( "v62", InitalValueV62 );
+            mlSol.Initialize ( "v63", InitalValueV63 );
+            mlSol.Initialize ( "v64", InitalValueV64 );
+            mlSol.Initialize ( "v65", InitalValueV65 );
+            mlSol.Initialize ( "v66", InitalValueV66 );
+            mlSol.Initialize ( "v67", InitalValueV67 );
+            mlSol.Initialize ( "v68", InitalValueV68 );
+            mlSol.Initialize ( "v69", InitalValueV69 );
+            mlSol.Initialize ( "v70", InitalValueV70 );
+            mlSol.Initialize ( "v71", InitalValueV71 );
+            mlSol.Initialize ( "v72", InitalValueV72 );
+            mlSol.Initialize ( "v73", InitalValueV73 );
+            mlSol.Initialize ( "v74", InitalValueV74 );
+            mlSol.Initialize ( "v75", InitalValueV75 );
+            mlSol.Initialize ( "v76", InitalValueV76 );
+            mlSol.Initialize ( "v77", InitalValueV77 );
+            mlSol.Initialize ( "v78", InitalValueV78 );
+            mlSol.Initialize ( "v79", InitalValueV79 );
+        }
     }
-    
+
 
     for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
         char name[10];
@@ -617,8 +619,8 @@ int main ( int argc, char** args )
     //mlSol.GetWriter()->SetDebugOutput(true);
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-    unsigned numberOfTimeSteps = 40001; //RK4: dt=0.5, numberOfTimeSteps = 16001
-    dt = 0.001;
+    unsigned numberOfTimeSteps = 6001; //RK4: dt=0.5, numberOfTimeSteps = 16001
+    dt = 0.01;
     bool implicitEuler = true;
     for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
         if ( wave == true ) {
@@ -627,7 +629,7 @@ int main ( int argc, char** args )
         system.CopySolutionToOldSolution();
         //ETD ( ml_prob, numberOfTimeSteps );
         //RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
-        RK2 ( ml_prob, numberOfTimeSteps );
+        RK ( ml_prob, numberOfTimeSteps );
         mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
         counter = i;
         counter2++;
@@ -1026,8 +1028,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
                 //store K in the global matrix KK
                 KK->add_matrix_blocked ( Jac, l2GMapRow, l2GMapColumn );
-            } 
-            else {
+            } else {
                 vector < double > Jac ( NLayers * NLayers );
                 s.jacobian ( &Jac[0], true );
 
@@ -1075,12 +1076,12 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
     Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
     Vec y = ( static_cast< PetscVector* > ( EPS ) )->vec();
-    
-    //BEGIN condition number of A            
+
+    //BEGIN condition number of A
 //     SVD svd;
 //     PetscReal sigma_1,sigma_n;
 //     PetscInt nconv1,nconv2;
-//     
+//
 //     SVDCreate(PETSC_COMM_WORLD,&svd);
 //     SVDSetOperator(svd,A);
 //     SVDSetFromOptions(svd);
@@ -1093,7 +1094,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 //     //Get converged singular values: largest singular value is stored in sigma_1.
 //     if (nconv1 > 0) {
 //       SVDGetSingularTriplet(svd,0,&sigma_1,NULL,NULL);
-//     } 
+//     }
 //     else {
 //       PetscPrintf(PETSC_COMM_WORLD," Unable to compute large singular value!\n\n");
 //     }
@@ -1131,7 +1132,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 // FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
     FNSetScale ( f, dt, dt );
-    MFNSetDimensions(mfn,15);
+    MFNSetDimensions ( mfn,15 );
     tol = 1e-6;
     MFNSetTolerances ( mfn,tol,PETSC_DEFAULT );
     MFNSetFromOptions ( mfn );
@@ -1152,7 +1153,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
     MFNSolve ( mfn, v, y );
 
     if ( counter2 == 0 ) {
-         std::cout << " ETD TIME :\t" << static_cast<double> ( clock() - etd_time ) / CLOCKS_PER_SEC << std::endl;
+        std::cout << " ETD TIME :\t" << static_cast<double> ( clock() - etd_time ) / CLOCKS_PER_SEC << std::endl;
 //         PetscInt ySize;
 //         VecGetSize(y, &ySize);
 //         std::cout<< "--------------------- y --------------------- " <<std::endl;
@@ -1445,12 +1446,12 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
         //FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
         FNSetScale ( f2, dt, dt );
-        MFNSetDimensions(mfn,15);
+        MFNSetDimensions ( mfn,15 );
         MFNSetTolerances ( mfn,1e-6,PETSC_DEFAULT );
         MFNSetFromOptions ( mfn );
 
         MFNSolve ( mfn, v2, y2 );
-        
+
         MFNDestroy ( &mfn );
 
         //VecView(y2,PETSC_VIEWER_STDOUT_WORLD);
@@ -1477,7 +1478,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
             double valueT = valueHT / valueH;
             if ( counter==numberOfTimeSteps-2 ) {
-                std::cout.precision(14);
+                std::cout.precision ( 14 );
                 std::cout << valueT << std::endl;
             }
             //if ( i == 10 ) std::cout << "temperature " << valueT << std::endl;
@@ -1940,7 +1941,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigne
                 PetscScalar valueT = 0.;
                 ierr = VecGetValues ( x, 1, &k, &valueT );
                 if ( counter==numberOfTimeSteps-2 ) {
-                    std::cout.precision(14);
+                    std::cout.precision ( 14 );
                     std::cout << valueT << std::endl;
                 }
                 sol->_Sol[solIndexT[k]]->set ( i, valueT );
@@ -1952,7 +1953,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigne
                 sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
                 sol->_Sol[solIndexHT[k]]->close();
             }
-            
+
             MatDestroy ( &triDiagA );
             VecDestroy ( &b );
             VecDestroy ( &x );
@@ -2001,9 +2002,9 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigne
 }
 
 
-void RK2 ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
+void RK ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 {
-  
+
     const unsigned& NLayers = NumberOfLayers;
 
     adept::Stack& s = FemusInit::_adeptStack;
@@ -2036,9 +2037,6 @@ void RK2 ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
     std::vector < unsigned > solIndexT ( NLayers );
 
-    //vector< int > l2GMapRow; // local to global mapping
-    //vector< int > l2GMapColumn; // local to global mapping
-
     for ( unsigned i = 0; i < NLayers; i++ ) {
         char name[10];
         sprintf ( name, "h%d", i );
@@ -2060,18 +2058,18 @@ void RK2 ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
     unsigned solTypev = mlSol->GetSolutionType ( solIndexv[0] ); // get the finite element type for "vi"
     unsigned solTypeHT = mlSol->GetSolutionType ( solIndexHT[0] ); // get the finite element type for "Ti"
 
-    for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
-        for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++ ) {
-            double valueT = ( *sol->_SolOld[solIndexT[k]] ) ( i );
-            //double valueT = ( *sol->_Sol[solIndexT[k]] ) ( i );
-            double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
-
-            double valueHT = valueT * valueH;
-
-            sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
-        }
-        sol->_Sol[solIndexHT[k]]->close();
-    }
+//     for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
+//         for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++ ) {
+//             double valueT = ( *sol->_SolOld[solIndexT[k]] ) ( i );
+//             //double valueT = ( *sol->_Sol[solIndexT[k]] ) ( i );
+//             double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
+//
+//             double valueHT = valueT * valueH;
+//
+//             sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
+//         }
+//         sol->_Sol[solIndexHT[k]]->close();
+//     }
 
     std::vector < double > maxW ( NLayers, -1.e6 );
     maxW[0] = 0.;
@@ -2085,52 +2083,63 @@ void RK2 ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
         vector < double > solhp ( NLayers );
         vector < double > solvm ( NLayers ); // local coordinates
         vector < double > solvp ( NLayers ); // local coordinates
-        vector < double > solHTm ( NLayers ); // local coordinates
-        vector < double > solHT ( NLayers ); // local coordinates
-        vector < double > solHTp ( NLayers ); // local coordinates
+        vector < double > solTm ( NLayers ); // local coordinates
+        vector < double > solT ( NLayers ); // local coordinates
+        vector < double > solTp ( NLayers ); // local coordinates
 
-        vector < double > solHTmm ( NLayers ); // local coordinates
-        vector < double > solHTpp ( NLayers ); // local coordinates
-
-        //vector< adept::adouble > aResHT ( NLayers );
+        vector < double > solTmm ( NLayers ); // local coordinates
+        vector < double > solTpp ( NLayers ); // local coordinates
+        vector < double > solhmm ( NLayers ); // local coordinates
+        vector < double > solhpp ( NLayers ); // local coordinates
+        
+       //  vector < double > solHTmm ( NLayers ); // local coordinates
+       //  vector < double > solHTpp ( NLayers ); // local coordinates
+       //  vector < double > solHT ( NLayers ); // local coordinates
+       //  vector < double > solHTp ( NLayers ); // local coordinates
+       //  vector < double > solHTm ( NLayers ); // local coordinates
 
         unsigned bc1 = ( i == start ) ? 0 : 1;
         unsigned bc2 = ( i == end - 1 ) ? 0 : 1;
-
-        //l2GMapRow.resize ( NLayers );
-        //l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
-
-        //std::fill ( aResHT.begin(), aResHT.end(), 0 ); //set aRes to zero
+        unsigned bc3 = ( i > start + 1 ) ? 1 : 0;
+        unsigned bc4 = ( i < end - 2 ) ? 1 : 0;
 
         for ( unsigned j = 0; j < NLayers; j++ ) {
 
             solh[j] = ( *sol->_Sol[solIndexh[j]] ) ( i );
-            solHT[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i );
-            //l2GMapRow[/*NLayers +*/ j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i );
-
-            //l2GMapColumn[/*NLayers +*/ j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i );
+            solT[j] = ( *sol->_Sol[solIndexT[j]] ) ( i );
+            //solHT[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i );
 
             solvm[j] = ( *sol->_Sol[solIndexv[j]] ) ( i );
             solvp[j] = ( *sol->_Sol[solIndexv[j]] ) ( i + 1 );
 
             if ( i > start ) {
                 solhm[j] = ( *sol->_Sol[solIndexh[j]] ) ( i - 1 );
-                solHTm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 1 );
+                solTm[j] = ( *sol->_Sol[solIndexT[j]] ) ( i - 1 );
+                //solHTm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 1 );
 
-                //l2GMapColumn[NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 1 );
-
-            }
+           }
 
             if ( i < end - 1 ) {
                 solhp[j] = ( *sol->_Sol[solIndexh[j]] ) ( i + 1 );
-                solHTp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 1 );
+                solTp[j] = ( *sol->_Sol[solIndexT[j]] ) ( i + 1 );
+                //solTp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 1 );
 
-                //l2GMapColumn[ ( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 1 );
+            }
+
+            if ( i > start + 1 ) {
+                solTmm[j] = ( *sol->_Sol[solIndexT[j]] ) ( i - 2 );
+                solhmm[j] = ( *sol->_Sol[solIndexh[j]] ) ( i - 2 );
+                //solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
+            }
+
+            if ( i < end - 2 ) {
+                solTpp[j] = ( *sol->_Sol[solIndexT[j]] ) ( i + 2 );
+                solhpp[j] = ( *sol->_Sol[solIndexh[j]] ) ( i + 2 );
+                //solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
             }
 
         }
 
-//   s.new_recording();
 
         vector < double > x ( 2 ); // local coordinates
         for ( unsigned j = 0; j < 2; j++ ) {
@@ -2169,81 +2178,209 @@ void RK2 ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
         std::vector < double > k1_RK ( NLayers, 0. );
         std::vector < double > k2_RK ( NLayers, 0. );
-        //std::vector < double > k3_RK ( NLayers, 0. );
-        //std::vector < double > k4_RK ( NLayers, 0. );
+        std::vector < double > k3_RK ( NLayers, 0. );
+        std::vector < double > k4_RK ( NLayers, 0. );
 
-        for ( unsigned RK_step = 0; RK_step < 2; RK_step++ ) {
+        unsigned RK_order = 3;
+
+        for ( unsigned RK_step = 0; RK_step < RK_order; RK_step++ ) {
             for ( unsigned k = 0; k < NLayers; k++ ) {
                 double LHS = 0.;
                 double addition = 0.;
                 if ( RK_step == 1 ) {
-                    addition = k1_RK[k] * 0.5;
-                } 
-//                 else if ( RK_step == 2 ) {
-//                     addition = k2_RK[k] * 0.5;
-//                 } 
-//                 else if ( RK_step == 3 ) {
-//                     addition = k3_RK[k];
-//                 }
+                    if ( RK_order == 2 ) {
+                        addition = k1_RK[k] ;
+                    } else if ( RK_order == 3 || RK_order == 4 ) {
+                        addition = k1_RK[k] * 0.5;
+                    }
+                } else if ( RK_step == 2 ) {
+                    if ( RK_order == 2 || RK_order == 4 ) {
+                        addition = k2_RK[k] * 0.5;
+                    } else if ( RK_order == 3 ) {
+                        addition = - k1_RK[k] + k2_RK[k] * 2.;
+                    }
+                } else if ( RK_step == 3 ) {
+                    addition = k3_RK[k];
+                }
 
-                //BEGIN FIRST ORDER UPWIND FOR HORIZONTAL ADVECTION
+
+//                 if(addition > 1.e-2 || addition < - 1.e-2) std::cout<< "additon = " << addition <<  std::endl;
+
+                //BEGIN HORIZONTAL ADVECTION
+                
+                
+                
+                //BEGIN CENTRAL DIFF h and T separate
+//                 if ( i > start ) {
+//                      LHS +=  ( 0.5 * (solhm[k] + addition + solh[k] + addition ) ) * solvm[k] * ( 0.5 * (solTm[k] + addition + solT[k] + addition ) ) / dx;                      
+//                 }
+//                 if ( i < end - 1 ) {
+//                       LHS -= ( 0.5 * (solh[k] + addition + solhp[k] + addition) ) * solvp[k] * ( 0.5 * (solT[k] + addition + solTp[k] + addition ) ) / dx; 
+//                 }
+                //END
+    
+                
+                //BEGIN CENTRAL DIFF hT multiplied
+/*                if ( i > start ) {
+                    LHS += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; 
+                }
+                if ( i < end - 1 ) {
+                    LHS -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; 
+                }       */         
+                //END
+                
+                
+                //BEGIN FIRST ORDER UPWINDING h and T separate
                 if ( i > start ) {
-                    //LHS += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //central difference
                     if ( solvm[k] > 0 ) {
-                        LHS += ( solHTm[k] + addition ) * solvm[k] / dx;
+                        LHS += ( ( solTm[k] + addition ) * ( solhm[k] + addition ) ) * solvm[k] / dx;
                     } else {
-                        LHS += ( solHT[k] + addition ) * solvm[k] / dx;
+                        LHS += ( ( solT[k] + addition ) * ( solh[k] + addition ) ) * solvm[k] / dx;
                     }
                 }
                 if ( i < end - 1 ) {
-                    //LHS -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //central difference
                     if ( solvp[k] > 0 ) {
-                        LHS -= ( solHT[k] + addition ) * solvp[k] / dx; //first order upwind
+                        LHS -= ( ( solT[k] + addition ) * ( solh[k] + addition ) ) * solvp[k] / dx; 
                     } else {
-                        LHS -= ( solHTp[k] + addition ) * solvp[k] / dx; //first order upwind
+                        LHS -= ( ( solTp[k] + addition ) * ( solhp[k] + addition ) ) * solvp[k] / dx; 
                     }
                 }
                 //END
                 
-                //BEGIN FIRST ORDER UPWIND FOR VERTICAL ADVECTION
+                
+                //BEGIN FIRST ORDER UPWINDING hT multiplied
+//                 if ( i > start ) {
+//                     if ( solvm[k] > 0 ) {
+//                         LHS += ( solHTm[k] + addition ) * solvm[k] / dx;
+//                     } else {
+//                         LHS += ( solHT[k] + addition ) * solvm[k] / dx;
+//                     }
+//                 }
+//                 if ( i < end - 1 ) {
+//                     if ( solvp[k] > 0 ) {
+//                         LHS -= ( solHT[k] + addition ) * solvp[k] / dx; 
+//                     } else {
+//                         LHS -= ( solHTp[k] + addition ) * solvp[k] / dx; 
+//                     }
+//                 }
+                //END
+                
+                
+                //BEGIN THIRD ORDER UPWINDING h and T separate
+                
+                //                 if ( i > start ) {
+//                     LHS += 0.5 * ( (solTm[k] + addition) * (solhm[k] + addition) + (solT[k] + addition) * (solh[k] + addition) ) * solvm[k] / dx;
+//                     if ( solvm[k] > 0 ) {
+//                         if ( i > start + 1 ) {
+//                             LHS += - 1. / 6. * ( (solT[k] + addition) * (solh[k] + addition) - 2.* (solTm[k] + addition) * (solhm[k] + addition) + (solTmm[k] + addition) * (solhmm[k] + addition) ) * solvm[k]  / dx;
+//                         }
+//                     } else {
+//                         if ( i < end - 1 ) {
+//                             LHS += - 1. / 6. * ( (solTp[k] + addition) * (solhp[k] + addition) - 2.* (solT[k] + addition) * (solh[k] + addition) + (solTm[k] + addition) * (solhm[k] + addition) ) * solvm[k]  / dx;
+//                         }
+//                     }
+//                 }
+//                 if ( i < end - 1 ) {
+//                     LHS -= 0.5 * ( (solTp[k] + addition) * (solhp[k] + addition) + (solT[k] + addition) * (solh[k] + addition) ) * solvp[k] / dx;
+//                     if ( solvp[k] > 0 ) {
+//                         if ( i > start ) {
+//                             LHS -= - 1. / 6. * ( (solTp[k] + addition) * (solhp[k] + addition) - 2.* (solT[k] + addition) * (solh[k] + addition) + (solTm[k] + addition) * (solhm[k] + addition) ) * solvp[k]  / dx;
+//                         }
+//                     } else {
+//                         if ( i < end - 2 ) {
+//                             LHS -= - 1. / 6. * ( (solTpp[k] + addition) * (solhpp[k] + addition) - 2.* (solTp[k] + addition) * (solhp[k] + addition) + (solT[k] + addition) * (solh[k] + addition) ) * solvp[k]  / dx;
+//                         }
+//                     }
+//                 }
+                
+                //END
+                
+                
+                
+                //END HORIZONTAL ADVECTION
+
+                
+                
+                
+                //BEGIN VERTICAL ADVECTION
+                
+                
+                //BEGIN CENTRAL DIFF h and T separate
+//                 if ( k < NLayers - 1 ) {
+//                      LHS += w[k + 1] * 0.5 * ( solT[k] + addition + solT[k + 1] + addition ); 
+//                 }
+//                 if ( k > 0 ) {
+//                     LHS -= w[k] * 0.5 * ( solT[k - 1] + addition + solT[k] + addition ) ; 
+//                 }
+                //END
+                
+                //BEGIN CENTRAL DIFF hT multiplied
+//                 if ( k < NLayers - 1 ) {
+//                     LHS += w[k + 1] * 0.5 * ( ( solHT[k] + addition ) / solh[k] + ( solHT[k + 1] + addition ) / solh[k + 1] ); 
+//                 }
+//                 if ( k > 0 ) {
+//                     LHS -= w[k] * 0.5 * ( ( solHT[k - 1] + addition ) / solh[k - 1] + ( solHT[k] + addition ) / solh[k] ); 
+//                 }
+                //END
+                
+                //BEGIN FIRST ORDER UPWIND h and T separate
                 if ( k < NLayers - 1 ) {
-                    //LHS += w[k + 1] * 0.5 * ( ( solHT[k] + addition ) / solh[k] + ( solHT[k + 1] + addition ) / solh[k + 1] ); //central difference       
                     if ( w[k + 1] > 0 ) {
-                        LHS += w[k + 1] * ( ( solHT[k + 1] + addition ) / solh[k + 1]  );
+                        LHS += w[k + 1] * ( solT[k + 1] + addition ) ;
                     } else {
-                        LHS += w[k + 1] * ( ( solHT[k] + addition ) / solh[k] );
+                        LHS += w[k + 1] * ( solT[k] + addition ) ;
                     }
                 }
                 if ( k > 0 ) {
-                    //LHS -= w[k] * 0.5 * ( ( solHT[k - 1] + addition ) / solh[k - 1] + ( solHT[k] + addition ) / solh[k] ); //central difference
                     if ( w[k] > 0 ) {
-                        LHS -= w[k] * ( ( solHT[k] + addition ) / solh[k] );
+                        LHS -= w[k] * ( solT[k] + addition );
                     } else {
-                        LHS -= w[k] * ( ( solHT[k - 1] + addition ) / solh[k - 1] );
+                        LHS -= w[k] * ( solT[k - 1] + addition );
                     }
                 }
-                //END
-
-//         if(i > start){
+               //END
+               
+               //BEGIN FIRST ORDER UPWIND hT multiplied
+//                 if ( k < NLayers - 1 ) {
+//                     if ( w[k + 1] > 0 ) {
+//                         LHS += w[k + 1] * ( ( solHT[k + 1] + addition ) / solh[k + 1]  );
+//                     } else {
+//                         LHS += w[k + 1] * ( ( solHT[k] + addition ) / solh[k] );
+//                     }
+//                 }
+//                 if ( k > 0 ) {
+//                     if ( w[k] > 0 ) {
+//                         LHS -= w[k] * ( ( solHT[k] + addition ) / solh[k] );
+//                     } else {
+//                         LHS -= w[k] * ( ( solHT[k - 1] + addition ) / solh[k - 1] );
+//                     }
+//                 }
+              //END
+                
+                  
+                  
+               //END VERTICAL ADVECTION
+               
+               
+                if ( i > start ) {
+                    LHS -= k_h * ( ( 0.5 * ( solhm[k] + addition + solh[k] + addition ) ) * ( ( solT[k] + addition )  - ( solTm[k] + addition ) ) / dx ) / dx; // horizontal diffus
 //           LHS += k_h * (0.5 * (solhm[k] + solh[k])) * ((solHTm[k] / solhm[k] + addition)  - (solHT[k] / solh[k] + addition))/(dx*dx); // horizontal diffusion
-//         }
-//         if(i < end-1){
-//           LHS += k_h * (0.5 * (solhp[k] + solh[k])) * ((solHTp[k] / solhp[k] + addition)  - (solHT[k] / solh[k] + addition))/(dx*dx); // horizontal diffusion
-//         }
+                }
+                if ( i < end-1 ) {
+                    LHS += k_h * ( ( 0.5 * ( solh[k] + addition + solhp[k] + addition ) )  * ( ( solTp[k] + addition )  - ( solT[k] + addition ) ) / dx ) / dx; // horizontal diffus
+//          LHS += k_h * (0.5 * (solhp[k] + solh[k])) * ((solHTp[k] / solhp[k] + addition)  - (solHT[k] / solh[k] + addition))/(dx*dx); // horizontal diffusion
+                }
 
 
                 if ( RK_step == 0 ) {
                     k1_RK[k] = LHS * dt;
-                } 
-                else if ( RK_step == 1 ) {
+                } else if ( RK_step == 1 ) {
                     k2_RK[k] = LHS * dt;
-                } 
-//                 else if ( RK_step == 2 ) {
-//                     k3_RK[k] = LHS * dt;
-//                 } 
-//                 else {
-//                     k4_RK[k] = LHS * dt;
-//                 }
+                } else if ( RK_step == 2 ) {
+                    k3_RK[k] = LHS * dt;
+                } else {
+                    k4_RK[k] = LHS * dt;
+                }
 
             }
 
@@ -2251,35 +2388,52 @@ void RK2 ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
         for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
 
-            //std::cout << k1_RK[k] << " " << k2_RK[k] << " " << std::endl;
+            double valueHT;
+            double valueT;
 
-            //double valueHT = solHT[k] + 1. / 6. * ( k1_RK[k] + 2.*k2_RK[k] + 2.*k3_RK[k] + k4_RK[k] );
-            double valueHT = solHT[k] + k2_RK[k];
+            if ( RK_order == 1 ) {
+                valueHT = solT[k] * solh[k] + k1_RK[k] ;
+                valueT = solT[k] + k1_RK[k] / solh[k];
+            }
+
+            else if ( RK_order == 2 ) {
+                valueHT = solT[k] * solh[k] + 0.5 * ( k1_RK[k] + k2_RK[k] );
+                valueT = solT[k]  + ( 0.5 * ( k1_RK[k] + k2_RK[k] ) ) / solh[k];
+            }
+
+            else if ( RK_order == 3 ) {
+                valueHT = solT[k] * solh[k] + 1. / 6. * ( k1_RK[k] + 4. * k2_RK[k] + k3_RK[k] );
+                valueT = solT[k] + ( 1. / 6. * ( k1_RK[k] + 4. * k2_RK[k] + k3_RK[k] ) ) /  solh[k];
+            }
+
+            else if ( RK_order == 4 ) {
+                valueHT = solT[k] * solh[k] + 1. / 6. * ( k1_RK[k] + 2.*k2_RK[k] + 2.*k3_RK[k] + k4_RK[k] );
+                valueT = solT[k] + ( 1. / 6. * ( k1_RK[k] + 2.*k2_RK[k] + 2.*k3_RK[k] + k4_RK[k] ) ) /  solh[k];
+            }
+
             sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
+            sol->_Sol[solIndexT[k]]->set ( i, valueT );
+
             sol->_Sol[solIndexHT[k]]->close();
+            sol->_Sol[solIndexT[k]]->close();
         }
 
-    }    
-    
-     //BEGIN no vertical diffusion
-    for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
-      for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++ ) {
-        double valueHT = ( *sol->_Sol[solIndexHT[k]] ) ( i );
-        double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
-
-        double valueT = valueHT / valueH;
-        std::cout.precision(14);
-        if(counter==numberOfTimeSteps-2) std::cout << valueT << std::endl;
-
-        sol->_Sol[solIndexT[k]]->set ( i, valueT );
-      }
-
-      sol->_Sol[solIndexT[k]]->close();
-
     }
-     //END
 
-    
+    //BEGIN no vertical diffusion
+    for ( unsigned k = 0; k < NumberOfLayers; k++) {
+        for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++) {
+            double valueT = ( *sol->_Sol[solIndexT[k]] ) ( i );
+
+            std::cout.precision ( 14 );
+            if ( counter==numberOfTimeSteps-2 ) {
+              std::cout << valueT << std::endl;
+            }
+        }
+    }
+    //END
+
+
 }
 
 
