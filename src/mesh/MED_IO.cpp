@@ -127,7 +127,6 @@ namespace femus
   };
  
 
-  
 
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
@@ -270,8 +269,10 @@ namespace femus
        // right now, I'll loop over all groups whose geometric element has dimension n-1
        // later, one may have have other groups of dimension n-1 that are not on the boundary
         for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
-                   
+                   unsigned iel_type = mesh.GetElementType(iel);
             for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
+                
+                
 
                for(unsigned gv = 0; gv < group_info.size(); gv++) {
                                if ( group_info[gv]._geom_el->get_dimension() == mesh.GetDimension() -1   ) { //boundary groups

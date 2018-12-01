@@ -21,6 +21,12 @@
 #include "MeshInput.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "GeomElemBase.hpp"
+#include "FEHex27.hpp"
+#include "FETet10.hpp"
+#include "FEQuad9.hpp"
+#include "FETri6.hpp"
+#include "FEEdge3.hpp"
+
 
 #ifdef HAVE_HDF5
   #include "hdf5.h"
@@ -120,12 +126,24 @@ class MED_IO : public MeshInput<Mesh>
    static const std::string group_nodes;      //NOEUD  //if you ever use group of nodes, not used now
    static const uint max_length;
 
+   std::vector< GeomElemBase* > _geom_elems;
+   
 };
 
 inline
 MED_IO::MED_IO (Mesh& mesh) :
    MeshInput<Mesh>  (mesh)
 {
+    
+       _geom_elems.resize(N_GEOM_ELS);
+       
+       _geom_elems[0] = new FEHex27();
+       _geom_elems[1] = new FETet10();
+//        _geom_elems[2] = new Wedge18();
+       _geom_elems[3] = new FEQuad9();
+       _geom_elems[4] = new FETri6();
+       _geom_elems[5] = new FEEdge3();
+    
 }
 
 

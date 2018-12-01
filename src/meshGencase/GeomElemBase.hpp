@@ -20,6 +20,8 @@ public:
     GeomElemBase();
     virtual ~GeomElemBase();
 
+    std::vector< std::vector<unsigned> >  _faces;
+    
     static  GeomElemBase* build(const std::string geomel_id_in, const uint fe_family);
 
     virtual unsigned int get_dimension() const { std::cout << "Not implemented FE" << std::endl; abort(); };
