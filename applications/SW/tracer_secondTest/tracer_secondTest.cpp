@@ -34,7 +34,7 @@ double pi = acos ( -1. );
 //double k_h = 1. / ( 10 * pi );
 double k_h = 0.0001 ;
 
-const unsigned NumberOfLayers = 20;
+const unsigned NumberOfLayers = 4;
 
 unsigned counter = 0;
 unsigned counter2 = 0;
@@ -46,7 +46,9 @@ bool twostage = false;
 bool splitting = true;
 bool assembly = true; //assembly must be left always true
 
-const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
+const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
+
+//const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
 // const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
 //                           0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
@@ -465,8 +467,8 @@ int main ( int argc, char** args )
     unsigned numberOfUniformLevels = 1;
     unsigned numberOfSelectiveLevels = 0;
 
-    unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*8*/ 4 ) + 0.5 ) ); //Grid cell size = 3.90625 m
-    nx += 3;
+    unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*8*/ 3 ) + 0.5 ) ); //Grid cell size = 3.90625 m
+    nx += 1;
 //     nx*=4;
 //     std::cout <<" nx = " << nx << std::endl;
 
