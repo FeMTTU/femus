@@ -505,86 +505,86 @@ int main ( int argc, char** args )
     mlSol.Initialize ( "v1", InitalValueV1 );
     mlSol.Initialize ( "v2", InitalValueV2 );
     mlSol.Initialize ( "v3", InitalValueV3 );
-    mlSol.Initialize ( "v4", InitalValueV4 );
-    mlSol.Initialize ( "v5", InitalValueV5 );
-    mlSol.Initialize ( "v6", InitalValueV6 );
-    mlSol.Initialize ( "v7", InitalValueV7 );
-    mlSol.Initialize ( "v8", InitalValueV8 );
-    mlSol.Initialize ( "v9", InitalValueV9 );
-    mlSol.Initialize ( "v10", InitalValueV10 );
-    mlSol.Initialize ( "v11", InitalValueV11 );
-    mlSol.Initialize ( "v12", InitalValueV12 );
-    mlSol.Initialize ( "v13", InitalValueV13 );
-    mlSol.Initialize ( "v14", InitalValueV14 );
-    mlSol.Initialize ( "v15", InitalValueV15 );
-    mlSol.Initialize ( "v16", InitalValueV16 );
-    mlSol.Initialize ( "v17", InitalValueV17 );
-    mlSol.Initialize ( "v18", InitalValueV18 );
-    mlSol.Initialize ( "v19", InitalValueV19 );
-    if ( NumberOfLayers>39 ) {
-        mlSol.Initialize ( "v20", InitalValueV20 );
-        mlSol.Initialize ( "v21", InitalValueV21 );
-        mlSol.Initialize ( "v22", InitalValueV22 );
-        mlSol.Initialize ( "v23", InitalValueV23 );
-        mlSol.Initialize ( "v24", InitalValueV24 );
-        mlSol.Initialize ( "v25", InitalValueV25 );
-        mlSol.Initialize ( "v26", InitalValueV26 );
-        mlSol.Initialize ( "v27", InitalValueV27 );
-        mlSol.Initialize ( "v28", InitalValueV28 );
-        mlSol.Initialize ( "v29", InitalValueV29 );
-        mlSol.Initialize ( "v30", InitalValueV30 );
-        mlSol.Initialize ( "v31", InitalValueV31 );
-        mlSol.Initialize ( "v32", InitalValueV32 );
-        mlSol.Initialize ( "v33", InitalValueV33 );
-        mlSol.Initialize ( "v34", InitalValueV34 );
-        mlSol.Initialize ( "v35", InitalValueV35 );
-        mlSol.Initialize ( "v36", InitalValueV36 );
-        mlSol.Initialize ( "v37", InitalValueV37 );
-        mlSol.Initialize ( "v38", InitalValueV38 );
-        mlSol.Initialize ( "v39", InitalValueV39 );
-        if ( NumberOfLayers>79 ) {
-            mlSol.Initialize ( "v40", InitalValueV40 );
-            mlSol.Initialize ( "v41", InitalValueV41 );
-            mlSol.Initialize ( "v42", InitalValueV42 );
-            mlSol.Initialize ( "v43", InitalValueV43 );
-            mlSol.Initialize ( "v44", InitalValueV44 );
-            mlSol.Initialize ( "v45", InitalValueV45 );
-            mlSol.Initialize ( "v46", InitalValueV46 );
-            mlSol.Initialize ( "v47", InitalValueV47 );
-            mlSol.Initialize ( "v48", InitalValueV48 );
-            mlSol.Initialize ( "v49", InitalValueV49 );
-            mlSol.Initialize ( "v50", InitalValueV50 );
-            mlSol.Initialize ( "v51", InitalValueV51 );
-            mlSol.Initialize ( "v52", InitalValueV52 );
-            mlSol.Initialize ( "v53", InitalValueV53 );
-            mlSol.Initialize ( "v54", InitalValueV54 );
-            mlSol.Initialize ( "v55", InitalValueV55 );
-            mlSol.Initialize ( "v56", InitalValueV56 );
-            mlSol.Initialize ( "v57", InitalValueV57 );
-            mlSol.Initialize ( "v58", InitalValueV58 );
-            mlSol.Initialize ( "v59", InitalValueV59 );
-            mlSol.Initialize ( "v60", InitalValueV60 );
-            mlSol.Initialize ( "v61", InitalValueV61 );
-            mlSol.Initialize ( "v62", InitalValueV62 );
-            mlSol.Initialize ( "v63", InitalValueV63 );
-            mlSol.Initialize ( "v64", InitalValueV64 );
-            mlSol.Initialize ( "v65", InitalValueV65 );
-            mlSol.Initialize ( "v66", InitalValueV66 );
-            mlSol.Initialize ( "v67", InitalValueV67 );
-            mlSol.Initialize ( "v68", InitalValueV68 );
-            mlSol.Initialize ( "v69", InitalValueV69 );
-            mlSol.Initialize ( "v70", InitalValueV70 );
-            mlSol.Initialize ( "v71", InitalValueV71 );
-            mlSol.Initialize ( "v72", InitalValueV72 );
-            mlSol.Initialize ( "v73", InitalValueV73 );
-            mlSol.Initialize ( "v74", InitalValueV74 );
-            mlSol.Initialize ( "v75", InitalValueV75 );
-            mlSol.Initialize ( "v76", InitalValueV76 );
-            mlSol.Initialize ( "v77", InitalValueV77 );
-            mlSol.Initialize ( "v78", InitalValueV78 );
-            mlSol.Initialize ( "v79", InitalValueV79 );
-        }
-    }
+//     mlSol.Initialize ( "v4", InitalValueV4 );
+//     mlSol.Initialize ( "v5", InitalValueV5 );
+//     mlSol.Initialize ( "v6", InitalValueV6 );
+//     mlSol.Initialize ( "v7", InitalValueV7 );
+//     mlSol.Initialize ( "v8", InitalValueV8 );
+//     mlSol.Initialize ( "v9", InitalValueV9 );
+//     mlSol.Initialize ( "v10", InitalValueV10 );
+//     mlSol.Initialize ( "v11", InitalValueV11 );
+//     mlSol.Initialize ( "v12", InitalValueV12 );
+//     mlSol.Initialize ( "v13", InitalValueV13 );
+//     mlSol.Initialize ( "v14", InitalValueV14 );
+//     mlSol.Initialize ( "v15", InitalValueV15 );
+//     mlSol.Initialize ( "v16", InitalValueV16 );
+//     mlSol.Initialize ( "v17", InitalValueV17 );
+//     mlSol.Initialize ( "v18", InitalValueV18 );
+//     mlSol.Initialize ( "v19", InitalValueV19 );
+//     if ( NumberOfLayers>39 ) {
+//         mlSol.Initialize ( "v20", InitalValueV20 );
+//         mlSol.Initialize ( "v21", InitalValueV21 );
+//         mlSol.Initialize ( "v22", InitalValueV22 );
+//         mlSol.Initialize ( "v23", InitalValueV23 );
+//         mlSol.Initialize ( "v24", InitalValueV24 );
+//         mlSol.Initialize ( "v25", InitalValueV25 );
+//         mlSol.Initialize ( "v26", InitalValueV26 );
+//         mlSol.Initialize ( "v27", InitalValueV27 );
+//         mlSol.Initialize ( "v28", InitalValueV28 );
+//         mlSol.Initialize ( "v29", InitalValueV29 );
+//         mlSol.Initialize ( "v30", InitalValueV30 );
+//         mlSol.Initialize ( "v31", InitalValueV31 );
+//         mlSol.Initialize ( "v32", InitalValueV32 );
+//         mlSol.Initialize ( "v33", InitalValueV33 );
+//         mlSol.Initialize ( "v34", InitalValueV34 );
+//         mlSol.Initialize ( "v35", InitalValueV35 );
+//         mlSol.Initialize ( "v36", InitalValueV36 );
+//         mlSol.Initialize ( "v37", InitalValueV37 );
+//         mlSol.Initialize ( "v38", InitalValueV38 );
+//         mlSol.Initialize ( "v39", InitalValueV39 );
+//         if ( NumberOfLayers>79 ) {
+//             mlSol.Initialize ( "v40", InitalValueV40 );
+//             mlSol.Initialize ( "v41", InitalValueV41 );
+//             mlSol.Initialize ( "v42", InitalValueV42 );
+//             mlSol.Initialize ( "v43", InitalValueV43 );
+//             mlSol.Initialize ( "v44", InitalValueV44 );
+//             mlSol.Initialize ( "v45", InitalValueV45 );
+//             mlSol.Initialize ( "v46", InitalValueV46 );
+//             mlSol.Initialize ( "v47", InitalValueV47 );
+//             mlSol.Initialize ( "v48", InitalValueV48 );
+//             mlSol.Initialize ( "v49", InitalValueV49 );
+//             mlSol.Initialize ( "v50", InitalValueV50 );
+//             mlSol.Initialize ( "v51", InitalValueV51 );
+//             mlSol.Initialize ( "v52", InitalValueV52 );
+//             mlSol.Initialize ( "v53", InitalValueV53 );
+//             mlSol.Initialize ( "v54", InitalValueV54 );
+//             mlSol.Initialize ( "v55", InitalValueV55 );
+//             mlSol.Initialize ( "v56", InitalValueV56 );
+//             mlSol.Initialize ( "v57", InitalValueV57 );
+//             mlSol.Initialize ( "v58", InitalValueV58 );
+//             mlSol.Initialize ( "v59", InitalValueV59 );
+//             mlSol.Initialize ( "v60", InitalValueV60 );
+//             mlSol.Initialize ( "v61", InitalValueV61 );
+//             mlSol.Initialize ( "v62", InitalValueV62 );
+//             mlSol.Initialize ( "v63", InitalValueV63 );
+//             mlSol.Initialize ( "v64", InitalValueV64 );
+//             mlSol.Initialize ( "v65", InitalValueV65 );
+//             mlSol.Initialize ( "v66", InitalValueV66 );
+//             mlSol.Initialize ( "v67", InitalValueV67 );
+//             mlSol.Initialize ( "v68", InitalValueV68 );
+//             mlSol.Initialize ( "v69", InitalValueV69 );
+//             mlSol.Initialize ( "v70", InitalValueV70 );
+//             mlSol.Initialize ( "v71", InitalValueV71 );
+//             mlSol.Initialize ( "v72", InitalValueV72 );
+//             mlSol.Initialize ( "v73", InitalValueV73 );
+//             mlSol.Initialize ( "v74", InitalValueV74 );
+//             mlSol.Initialize ( "v75", InitalValueV75 );
+//             mlSol.Initialize ( "v76", InitalValueV76 );
+//             mlSol.Initialize ( "v77", InitalValueV77 );
+//             mlSol.Initialize ( "v78", InitalValueV78 );
+//             mlSol.Initialize ( "v79", InitalValueV79 );
+//         }
+//     }
 
 
     for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
@@ -621,8 +621,8 @@ int main ( int argc, char** args )
     //mlSol.GetWriter()->SetDebugOutput(true);
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-    unsigned numberOfTimeSteps = 6001; //RK4: dt=0.5, numberOfTimeSteps = 16001
-    dt = 0.01;
+    unsigned numberOfTimeSteps = 10001; //RK4: dt=0.5, numberOfTimeSteps = 16001
+    dt = 0.05;
     bool implicitEuler = true;
     for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
         if ( wave == true ) {
@@ -2183,7 +2183,7 @@ void RK ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
         std::vector < double > k3_RK ( NLayers, 0. );
         std::vector < double > k4_RK ( NLayers, 0. );
 
-        unsigned RK_order = 3;
+        unsigned RK_order = 1;
 
         for ( unsigned RK_step = 0; RK_step < RK_order; RK_step++ ) {
             for ( unsigned k = 0; k < NLayers; k++ ) {
