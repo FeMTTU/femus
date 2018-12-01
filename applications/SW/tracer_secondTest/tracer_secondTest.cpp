@@ -2122,7 +2122,7 @@ void RK ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
             if ( i < end - 1 ) {
                 solhp[j] = ( *sol->_Sol[solIndexh[j]] ) ( i + 1 );
                 solTp[j] = ( *sol->_Sol[solIndexT[j]] ) ( i + 1 );
-                //solTp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 1 );
+                //solHTp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 1 );
 
             }
 
@@ -2390,26 +2390,35 @@ void RK ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
             double valueHT;
             double valueT;
-
-            if ( RK_order == 1 ) {
-                valueHT = solT[k] * solh[k] + k1_RK[k] ;
-                valueT = solT[k] + k1_RK[k] / solh[k];
+            
+            if ( RK_order == 1 ) {                
+              //valueHT = solHT[k] + k1_RK[k] ;
+              //valueT = solHT[k]/solh[k] + k1_RK[k];
+              valueHT = solT[k] * solh[k] + k1_RK[k] ;
+              valueT = solT[k] + k1_RK[k] / solh[k];
             }
 
-            else if ( RK_order == 2 ) {
-                valueHT = solT[k] * solh[k] + 0.5 * ( k1_RK[k] + k2_RK[k] );
-                valueT = solT[k]  + ( 0.5 * ( k1_RK[k] + k2_RK[k] ) ) / solh[k];
+            else if ( RK_order == 2 ) {                
+              //valueHT = solHT[k] + 0.5 * ( k1_RK[k] + k2_RK[k] );
+              //valueT = solHT[k]/solh[k] + ( 0.5 * ( k1_RK[k] + k2_RK[k] ) );
+              valueHT = solT[k] * solh[k] + 0.5 * ( k1_RK[k] + k2_RK[k] );
+              valueT = solT[k]  + ( 0.5 * ( k1_RK[k] + k2_RK[k] ) ) / solh[k];
             }
 
-            else if ( RK_order == 3 ) {
-                valueHT = solT[k] * solh[k] + 1. / 6. * ( k1_RK[k] + 4. * k2_RK[k] + k3_RK[k] );
-                valueT = solT[k] + ( 1. / 6. * ( k1_RK[k] + 4. * k2_RK[k] + k3_RK[k] ) ) /  solh[k];
+            else if ( RK_order == 3 ) {                
+              //valueHT = solHT[k] + 1. / 6. * ( k1_RK[k] + 4. * k2_RK[k] + k3_RK[k] );
+              //valueT = solHT[k]/solh[k] + ( 1. / 6. * ( k1_RK[k] + 4. * k2_RK[k] + k3_RK[k] ) );
+              valueHT = solT[k] * solh[k] + 1. / 6. * ( k1_RK[k] + 4. * k2_RK[k] + k3_RK[k] );
+              valueT = solT[k] + ( 1. / 6. * ( k1_RK[k] + 4. * k2_RK[k] + k3_RK[k] ) ) /  solh[k];
             }
 
-            else if ( RK_order == 4 ) {
-                valueHT = solT[k] * solh[k] + 1. / 6. * ( k1_RK[k] + 2.*k2_RK[k] + 2.*k3_RK[k] + k4_RK[k] );
-                valueT = solT[k] + ( 1. / 6. * ( k1_RK[k] + 2.*k2_RK[k] + 2.*k3_RK[k] + k4_RK[k] ) ) /  solh[k];
+            else if ( RK_order == 4 ) {                
+              //valueHT = solHT[k] + 1. / 6. * ( k1_RK[k] + 2.*k2_RK[k] + 2.*k3_RK[k] + k4_RK[k] );
+              //valueT = solHT[k]/solh[k] + ( 1. / 6. * ( k1_RK[k] + 2.*k2_RK[k] + 2.*k3_RK[k] + k4_RK[k] ) );
+              valueHT = solT[k] * solh[k] + 1. / 6. * ( k1_RK[k] + 2.*k2_RK[k] + 2.*k3_RK[k] + k4_RK[k] );
+              valueT = solT[k] + ( 1. / 6. * ( k1_RK[k] + 2.*k2_RK[k] + 2.*k3_RK[k] + k4_RK[k] ) ) /  solh[k];
             }
+
 
             sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
             sol->_Sol[solIndexT[k]]->set ( i, valueT );
