@@ -21,11 +21,11 @@
 #include "MeshInput.hpp"
 #include "GeomElTypeEnum.hpp"
 #include "GeomElemBase.hpp"
-#include "FEHex27.hpp"
-#include "FETet10.hpp"
-#include "FEQuad9.hpp"
-#include "FETri6.hpp"
-#include "FEEdge3.hpp"
+#include "GeomElemHex27.hpp"
+#include "GeomElemTet10.hpp"
+#include "GeomElemQuad9.hpp"
+#include "GeomElemTri6.hpp"
+#include "GeomElemEdge3.hpp"
 
 
 #ifdef HAVE_HDF5

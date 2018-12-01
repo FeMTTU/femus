@@ -1,4 +1,4 @@
-#include "FETri3.hpp"
+#include "GeomElemTri3.hpp"
 
 
 namespace femus {

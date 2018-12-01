@@ -1,4 +1,4 @@
-#include "FEEdge2.hpp"
+#include "GeomElemEdge2.hpp"
 
 
 namespace femus {

@@ -1,4 +1,4 @@
-#include "FETri1.hpp"
+#include "GeomElemQuad1.hpp"
 
 
 namespace femus {
@@ -7,20 +7,22 @@ namespace femus {
 
 
 // =======================
-FETri1::FETri1() : GeomElemBase() {  }
+FEQuad1::FEQuad1() : GeomElemBase() {   }
 	  
 // =======================
-          FETri1::~FETri1() {    }
+          FEQuad1::~FEQuad1() {    }
 
           
 // =======================
-      float FETri1::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
+      float FEQuad1::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
       
 
 // =======================
 //STATIC data member
-	   const float FETri1::_embedding_matrix[4][1][1] =
-{ // -------------------------------------------
+
+
+ const float FEQuad1::_embedding_matrix[4][1][1] = {
+   
   // embedding matrix for child 0
   {
     // 0  
@@ -42,8 +44,6 @@ FETri1::FETri1() : GeomElemBase() {  }
     {1.0}, // 0
   }
 };
-
-
 
 
 } //end namespace femus
