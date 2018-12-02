@@ -272,7 +272,15 @@ namespace femus
                    unsigned iel_type = mesh.GetElementType(iel);
             for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
                 
+                unsigned n_nodes = _geom_elems[iel_type]->_faces[f].size();
                 
+                std::vector<unsigned> face_nodes(n_nodes);
+                
+               for(unsigned nd = 0; nd < n_nodes; nd++) {
+                   unsigned nd_of_face = _geom_elems[iel_type]->_faces[f][nd];
+                   face_nodes[nd] = mesh.el->GetElementDofIndex(iel,nd_of_face);
+                
+               }               
 
                for(unsigned gv = 0; gv < group_info.size(); gv++) {
                                if ( group_info[gv]._geom_el->get_dimension() == mesh.GetDimension() -1   ) { //boundary groups

@@ -7,19 +7,19 @@ namespace femus {
 
 
 // =======================
-FEQuad9::FEQuad9() : GeomElemBase() {   }
-	  
-// =======================
-          FEQuad9::~FEQuad9() {
-              
-              _faces.resize(4);
+ FEQuad9::FEQuad9() : GeomElemBase() {   
+    
+        _faces.resize(4);
                for(unsigned f = 0; f < _faces.size(); f++) _faces[f].resize(3);
               _faces[0] = {0, 1, 4};
               _faces[1] = {1, 2, 5};
               _faces[2] = {2, 3, 6};
               _faces[3] = {3, 0, 7};
-              
-        }
+
+}
+	  
+// =======================
+ FEQuad9::~FEQuad9() { }
 
           
 // =======================

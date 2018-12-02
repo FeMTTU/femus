@@ -64,7 +64,9 @@ class MED_IO : public MeshInput<Mesh>
    */
   explicit
   MED_IO (Mesh& mesh);
-
+  
+//   ~MED_IO();
+  
   /**
    * Reads in a mesh in the neutral gambit *.neu format
    * from the ASCII file given by name.
@@ -146,6 +148,12 @@ MED_IO::MED_IO (Mesh& mesh) :
     
 }
 
+
+// MED_IO::~MED_IO() {
+//     
+//         for(unsigned g = 0; g < _geom_elems.size(); g++) delete _geom_elems[g];
+// 
+// }
 
 // @todo hybrid meshes (MED can export them)
 // @todo groups with more than one type of element (in the sense hybrid, but at the same dimension)
