@@ -245,6 +245,13 @@ void LinearEquation::DeletePde() {
 
   if(_RESC)
     delete _RESC;
+  
+  _EPS = NULL;
+  _EPSC = NULL;
+  _RES = NULL;
+  _RESC = NULL;
+  _KK = NULL;
+  _KKamr = NULL;
 
 }
 

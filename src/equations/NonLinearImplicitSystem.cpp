@@ -41,6 +41,7 @@ namespace femus {
   }
 
   void NonLinearImplicitSystem::clear() {
+    LinearImplicitSystem::clear();
   }
 
   // ********************************************
