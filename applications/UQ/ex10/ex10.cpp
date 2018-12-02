@@ -53,24 +53,24 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
-unsigned numberOfSamples = 100; //for MC sampling of the QoI
+unsigned numberOfSamples = 1000000; //for MC sampling of the QoI
 unsigned nxCoarseBox;
-double xMinCoarseBox = - 5.5; //-5.5 for Gaussian, -2.5 for SGM,  -1.5 for uniform
-double xMaxCoarseBox = 5.5;  //5.5 for Gaussian, 5.5 for SGM, 1.5 for uniform
+double xMinCoarseBox = - 3.; //-5.5 for Gaussian, -2.5 for SGM with Gaussian KL,  -1.5 for uniform, -3. for SGM with random variable (not KL)
+double xMaxCoarseBox = 25.;  //5.5 for Gaussian, 5.5 for SGM with Gaussian KL, 1.5 for uniform, 25. for SGM with random variable (not KL)
 unsigned nyCoarseBox;
-double yMinCoarseBox = - 5.5;
-double yMaxCoarseBox = 5.5;
+double yMinCoarseBox = - 3.;
+double yMaxCoarseBox = 25.;
 unsigned nzCoarseBox;
 double zMinCoarseBox = - 5.5;
 double zMaxCoarseBox = 5.5;
 
-unsigned numberOfSamplesFinest = 1000000; //for MC sampling of the QoI
-unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamplesFinest ) ) );
-// unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamplesFinest ) ) );
+unsigned numberOfSamplesFinest = 1000000; //10^6 for spatial average, 10^7 for integral of the square
+unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamplesFinest ) ) ); //for spatial average
+// unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamplesFinest ) ) ); //for integral of the square
 unsigned nyCoarseBoxFinest = nxCoarseBoxFinest;
 unsigned nzCoarseBoxFinest = nxCoarseBoxFinest;
 
-bool histoFinest = false;
+bool histoFinest = true; //for SGM must be true
 double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
@@ -567,79 +567,6 @@ void GetEigenPair ( MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std
 
     delete CC;
 
-    //BEGIN OLD
-//   std::vector <unsigned> eigfIndex(numberOfEigPairs);
-//   char name[10];
-//   for(unsigned i = 0; i < numberOfEigPairs; i++) {
-//     sprintf(name, "egnf%d", i);
-//     eigfIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
-//   }
-//
-//   std::vector < double > local_integral(numberOfEigPairs, 0.);
-//   std::vector < double > local_norm2(numberOfEigPairs, 0.);
-//
-//   vector < vector < double > > eigenFunction(numberOfEigPairs); // local solution
-//
-//   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-//
-//     short unsigned ielGeom = msh->GetElementType(iel);
-//     unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
-//     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-//
-//     // resize local arrays
-//     for(unsigned i = 0; i < numberOfEigPairs; i++) {
-//       eigenFunction[i].resize(nDofu);
-//     }
-//
-//     for(int i = 0; i < dim; i++) {
-//       x1[i].resize(nDofx);
-//     }
-//
-//     // local storage of global mapping and solution
-//     for(unsigned i = 0; i < nDofu; i++) {
-//       unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
-//       for(unsigned j = 0; j < numberOfEigPairs; j++) {
-//         eigenFunction[j][i] = (*sol->_Sol[eigfIndex[j]])(solDof);
-//       }
-//     }
-//
-//     // local storage of coordinates
-//     for(unsigned i = 0; i < nDofx; i++) {
-//       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-//       for(unsigned jdim = 0; jdim < dim; jdim++) {
-//         x1[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
-//       }
-//     }
-//     double weight;
-//     vector <double> phi;  // local test function
-//     // *** Gauss point loop ***
-//     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
-//       // *** get gauss point weight, test function and test function partial derivatives ***
-//       msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
-//       for(unsigned j = 0; j < numberOfEigPairs; j++) {
-//         double eigenFunction_gss = 0.;
-//         for(unsigned i = 0; i < nDofu; i++) {
-//           eigenFunction_gss += phi[i] * eigenFunction[j][i];
-//         }
-//         local_integral[j] += eigenFunction_gss * weight;
-//         local_norm2[j] += eigenFunction_gss * eigenFunction_gss * weight;
-//       }
-//     }
-//   }
-//   for(unsigned j = 0; j < numberOfEigPairs; j++) {
-//     double integral = 0.;
-//     MPI_Allreduce(&local_integral[j], &integral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-//     double sign = (integral >= 0) ? 1 : -1;
-//     double norm2 = 0.;
-//     MPI_Allreduce(&local_norm2[j], &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-//     double inorm = /*0.01 * sign*/ 1. / sqrt(norm2);
-//     std::cout << "BBBBBBBBBBBBBBBBBB  " << inorm << std::endl;
-//     sol->_Sol[eigfIndex[j]]->scale(inorm);
-//   }
-//
-    //END OLD
-
-
     //BEGIN GRAM SCHMIDT ORTHONORMALIZATION
 
     std::vector <unsigned> eigfIndex ( numberOfEigPairs );
@@ -1088,6 +1015,7 @@ void GetMomentsAndCumulants ( std::vector <double>& alphas )
         std::cout.precision ( 14 );
         std::cout << " the mean is " << meanQoI << std::endl;
         std::cout << " the standard deviation is " << stdDeviationQoI << std::endl;
+        std::cout << " the variance is " << varianceQoI << std::endl;
 
         std::cout << "Standardized Moments" << std::endl;
         for ( unsigned p = 0; p < totMoments; p++ ) {
@@ -1124,6 +1052,7 @@ void PlotGCandEDExpansion()
     std::cout.precision ( 14 );
     std::cout << " the mean is " << meanQoI << std::endl;
     std::cout << " the standard deviation is " << stdDeviationQoI << std::endl;
+    std::cout << " the variance is " << varianceQoI << std::endl;
 
     std::cout << "Standardized Moments" << std::endl;
     for ( unsigned p = 0; p < totMoments; p++ ) {
@@ -1380,7 +1309,7 @@ void GetQoIStandardizedSamples ( std::vector< double >& alphas, std::vector< std
                 sgmQoI += alphas[i] * MultivariatePolyHistogram[i]; //TODO with QoIs that are different from each other, alphas[i] will be alphas[idim][i]
             }
 
-//             sgmQoIStandardized[m][idim] = ( sgmQoI - meanQoI ) / stdDeviationQoI; //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
+            sgmQoIStandardized[m][idim] = ( sgmQoI - meanQoI ) / stdDeviationQoI; //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
 
 //       double normalSample = var_nor();
 //       sgmQoIStandardized[m][idim] = normalSample;
@@ -1388,28 +1317,29 @@ void GetQoIStandardizedSamples ( std::vector< double >& alphas, std::vector< std
 //             double uniformSample = var_unif();
 //             sgmQoIStandardized[m][idim] = uniformSample;
 
-            if ( idim==0 ) {
-                double U = var_unif1();
-                double signU = 0.;
-                if ( U < 0 ) {
-                    signU = - 1.;
-                } else if ( U > 0 ) {
-                    signU = 1.;
-                }
-                sgmQoIStandardized[m][idim] = muLaplace - bLaplace * signU * log ( 1. - 2. * fabs ( U ) ) ;
-            }
-
-            else if ( idim == 1 ) {
-                double normalSample = var_nor();
-                sgmQoIStandardized[m][idim] = normalSample;
-            }
+//mixed input
+//             if ( idim==0 ) {
+//                 double U = var_unif1();
+//                 double signU = 0.;
+//                 if ( U < 0 ) {
+//                     signU = - 1.;
+//                 } else if ( U > 0 ) {
+//                     signU = 1.;
+//                 }
+//                 sgmQoIStandardized[m][idim] = muLaplace - bLaplace * signU * log ( 1. - 2. * fabs ( U ) ) ;
+//             }
+//
+//             else if ( idim == 1 ) {
+//                 double normalSample = var_nor();
+//                 sgmQoIStandardized[m][idim] = normalSample;
+//             }
 
 
         }
     }
     //END
 
-    myuq.ClearPolynomialHistogram(quadratureType);
+    myuq.ClearPolynomialHistogram ( quadratureType );
 
     if ( histoFinest ) {
 
@@ -1442,7 +1372,7 @@ void GetQoIStandardizedSamples ( std::vector< double >& alphas, std::vector< std
         }
         //END
 
-        myuq.ClearPolynomialHistogram(quadratureType);
+        myuq.ClearPolynomialHistogram ( quadratureType );
 
 
     }
@@ -1608,10 +1538,10 @@ void GetHistogramAndKDE ( std::vector< std::vector <double > > & sgmQoIStandardi
         double dyF = ( dim > 1 ) ? ( yMaxCoarseBox - yMinCoarseBox ) / nyCoarseBoxFinest : 1. ;
         double dzF = ( dim > 2 ) ? ( zMaxCoarseBox - zMinCoarseBox ) / nzCoarseBoxFinest : 1. ;
 
-        double measureFinest = 1000000 * dxF *dyF *dzF;
+        double measureFinest = numberOfSamplesFinest * dxF *dyF *dzF;
 
 
-        for ( unsigned m = 0; m < 1000000; m++ ) {
+        for ( unsigned m = 0; m < numberOfSamplesFinest; m++ ) {
 
 
             if ( dim == 1 ) {
@@ -1904,14 +1834,14 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
 //
 //                     aL2ELocal += (solKDESample - uniform) * (solKDESample - uniform);
 
-                double laplaceDist = (1. / (2. * bLaplace) ) * exp (- fabs(sgmQoIStandardized[m][0] - muLaplace) / bLaplace);
-                double stdGaussian = exp(- sgmQoIStandardized[m][1] * sgmQoIStandardized[m][1] * 0.5) / sqrt(2 * PI);
-                
+                double laplaceDist = ( 1. / ( 2. * bLaplace ) ) * exp ( - fabs ( sgmQoIStandardized[m][0] - muLaplace ) / bLaplace );
+                double stdGaussian = exp ( - sgmQoIStandardized[m][1] * sgmQoIStandardized[m][1] * 0.5 ) / sqrt ( 2 * PI );
+
                 double jointPDF = laplaceDist * stdGaussian;
 
-                aL2ELocal += (solKDESample - jointPDF) * (solKDESample - jointPDF);
+                aL2ELocal += ( solKDESample - jointPDF ) * ( solKDESample - jointPDF );
 
-                    //END
+                //END
 
             }
 

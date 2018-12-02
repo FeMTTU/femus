@@ -46,7 +46,7 @@ double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double startPoint = - 3.8;
 double endPoint = 3.8;
-unsigned M = 100000; //number of samples for the Monte Carlo
+unsigned M = 5000; //number of samples for the Monte Carlo
 double deltat;
 int pdfHistogramSize;
 //END
@@ -1003,10 +1003,11 @@ void GetStochasticData(std::vector <double>& QoI) {
 
 void PlotStochasticData() {
 
-  std::cout.precision(10);
+  std::cout.precision(14);
   std::cout << " the number of MC samples is " << M << std::endl;
   std::cout << " the mean is " << meanQoI << std::endl;
   std::cout << " the standard deviation is " << sqrt(varianceQoI) << std::endl;
+  std::cout << " the variance is " << varianceQoI << std::endl;
 
   std::cout << "Standardized Moments" << std::endl;
   for(unsigned p = 0; p < totMoments; p++) {

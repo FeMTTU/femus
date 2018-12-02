@@ -1031,7 +1031,7 @@ void GetStochasticData(std::vector <double>& alphas) {
       momentsStandardizedMonteCarlo[p] /= momentsCounter;
 
     }
-    std::cout.precision(10);
+    std::cout.precision(14);
     std::cout << "Standardized Monte Carlo Moments" << std::endl;
     for(unsigned p = 0; p < totMoments; p++) {
       std::cout << " & " << momentsStandardizedMonteCarlo[p] << "  ";
@@ -1131,6 +1131,7 @@ void PlotStochasticData() {
   std::cout.precision(14);
   std::cout << " the mean is " << meanQoI << std::endl;
   std::cout << " the standard deviation is " << stdDeviationQoI << std::endl;
+  std::cout << " the variance is " << varianceQoI << std::endl;
 
   std::cout << "Standardized Moments" << std::endl;
   for(unsigned p = 0; p < totMoments; p++) {

@@ -18,14 +18,14 @@ using namespace femus;
 
 // quadratureType = 0; HERMITE
 // quadratureType = 1; LEGENDRE
-unsigned quadratureType = 1;
+unsigned quadratureType = 0;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
 std::vector < std::pair<double, double> > eigenvalues ( numberOfEigPairs );
 
 double amin = 1. / 100.;
 
-double stdDeviationInput = 0.08;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.02;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double meanInput = 0.;
 
 //FOR STD GAUSSIAN SAMPLING
