@@ -35,7 +35,7 @@ double pi = acos (-1.);
 double k_h = 0.0001 ;
 
 const unsigned NumberOfLayers = 4;
-unsigned RK_order = 2;
+unsigned RK_order = 4;
 
 unsigned counter = 0;
 unsigned counter2 = 0;
@@ -672,8 +672,8 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 8001; //RK4: dt=0.5, numberOfTimeSteps = 16001
-  dt = 0.001;
+  unsigned numberOfTimeSteps = 4001; //RK4: dt=0.5, numberOfTimeSteps = 16001
+  dt = 0.5;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {
@@ -2294,12 +2294,12 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
 //     for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
 //         for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++ ) {
-//             double valueT = ( *sol->_SolOld[solIndexT[k]] ) ( i );
-//             //double valueT = ( *sol->_Sol[solIndexT[k]] ) ( i );
+//             //double valueT = ( *sol->_SolOld[solIndexT[k]] ) ( i );
+//             double valueT = ( *sol->_Sol[solIndexT[k]] ) ( i );
 //             double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
-//
+// 
 //             double valueHT = valueT * valueH;
-//
+// 
 //             sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
 //         }
 //         sol->_Sol[solIndexHT[k]]->close();
@@ -2354,11 +2354,11 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       vector < double > solK4pp (NLayers);   // local coordinates
       vector < double > solK4mm (NLayers);   // local coordinates
 
-      //  vector < double > solHTmm ( NLayers ); // local coordinates
-      //  vector < double > solHTpp ( NLayers ); // local coordinates
-      //  vector < double > solHT ( NLayers ); // local coordinates
-      //  vector < double > solHTp ( NLayers ); // local coordinates
-      //  vector < double > solHTm ( NLayers ); // local coordinates
+//        vector < double > solHTmm ( NLayers ); // local coordinates
+//        vector < double > solHTpp ( NLayers ); // local coordinates
+//        vector < double > solHT ( NLayers ); // local coordinates
+//        vector < double > solHTp ( NLayers ); // local coordinates
+//        vector < double > solHTm ( NLayers ); // local coordinates
 
       unsigned bc1 = (i == start) ? 0 : 1;
       unsigned bc2 = (i == end - 1) ? 0 : 1;
@@ -2369,7 +2369,7 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
         solh[j] = (*sol->_Sol[solIndexh[j]]) (i);
         solT[j] = (*sol->_Sol[solIndexT[j]]) (i);
-        //solHT[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i );
+//         solHT[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i );
 
         solK1[j] = (*sol->_Sol[solIndexK1[j]]) (i);
 
@@ -2391,7 +2391,7 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         if (i > start) {
           solhm[j] = (*sol->_Sol[solIndexh[j]]) (i - 1);
           solTm[j] = (*sol->_Sol[solIndexT[j]]) (i - 1);
-          //solHTm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 1 );
+//           solHTm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 1 );
 
           solK1m[j] = (*sol->_Sol[solIndexK1[j]]) (i - 1);
 
@@ -2411,7 +2411,7 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         if (i < end - 1) {
           solhp[j] = (*sol->_Sol[solIndexh[j]]) (i + 1);
           solTp[j] = (*sol->_Sol[solIndexT[j]]) (i + 1);
-          //solHTp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 1 );
+//           solHTp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 1 );
 
           solK1p[j] = (*sol->_Sol[solIndexK1[j]]) (i + 1);
 
@@ -2619,7 +2619,6 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
             RHS -= ( (solTp[k] + addition_p) * solhp[k]) * solvp[k] / dx;
           }
         }
-
         //END
 
 
@@ -2722,7 +2721,6 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
             RHS -= w[k] * (solT[k - 1] + addition_t);
           }
         }
-
         //END
 
         //BEGIN FIRST ORDER UPWIND hT multiplied
@@ -2751,12 +2749,12 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         // horizontal diffussion
         if (i > start) {
           RHS -= k_h * ( (0.5 * (solhm[k] + solh[k])) * ( (solT[k] + addition)  - (solTm[k] + addition_m)) / dx) / dx;
-          //RHS += k_h * (0.5 * (solhm[k] + solh[k])) * ((solHTm[k] / solhm[k] + addition_m)  - (solHT[k] / solh[k] + addition))/(dx*dx); 
+//           RHS += k_h * (0.5 * (solhm[k] + solh[k])) * ((solHTm[k] / solhm[k] + addition_m)  - (solHT[k] / solh[k] + addition))/(dx*dx); 
         }
 
         if (i < end - 1) {
           RHS += k_h * ( (0.5 * (solh[k] + solhp[k] ))  * ( (solTp[k] + addition_p)  - (solT[k] + addition)) / dx) / dx; 
-          //RHS += k_h * (0.5 * (solhp[k] + solh[k])) * ((solHTp[k] / solhp[k] + addition_p)  - (solHT[k] / solh[k] + addition))/(dx*dx);
+//           RHS += k_h * (0.5 * (solhp[k] + solh[k])) * ((solHTp[k] / solhp[k] + addition_p)  - (solHT[k] / solh[k] + addition))/(dx*dx);
         }
 
 
@@ -2799,7 +2797,7 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
   for (unsigned k = 0; k < NumberOfLayers; k++) {
     for (unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++) {
 
-      //double valueHT;
+//       double valueHT = 0.; 
       double valueT = 0.;
 
       if (RK_order == 1) {
@@ -2807,11 +2805,11 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         double K1 = (*sol->_Sol[solIndexK1[k]]) (i);
 
         double Told = (*sol->_Sol[solIndexT[k]]) (i);
-        //double HTold = ( *sol->_Sol[solIndexHT[k]] ) ( i );
+//         double HTold = ( *sol->_Sol[solIndexHT[k]] ) ( i );
 
         valueT = Told + K1 / h;
-        //valueHT = HTold + K1 ;
-        //valueT = valueHT / h;
+//         valueHT = HTold + K1 ;
+//         valueT = valueHT / h;
       }
 
       else if (RK_order == 2) {
@@ -2820,11 +2818,11 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         double K2 = (*sol->_Sol[solIndexK2[k]]) (i);
 
         double Told = (*sol->_Sol[solIndexT[k]]) (i);
-        //double HTold = ( *sol->_Sol[solIndexHT[k]] ) ( i );
+//         double HTold = ( *sol->_Sol[solIndexHT[k]] ) ( i );
 
         valueT = Told  + (0.5 * (K1 + K2)) / h;
-        //valueHT = HTold + 0.5 * ( K1 + K2 );
-        //valueT = valueHT / h;
+//         valueHT = HTold + 0.5 * ( K1 + K2 );
+//         valueT = valueHT / h;
       }
 
       else if (RK_order == 3) {
@@ -2834,11 +2832,11 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         double K3 = (*sol->_Sol[solIndexK3[k]]) (i);
 
         double Told = (*sol->_Sol[solIndexT[k]]) (i);
-        //double HTold = ( *sol->_Sol[solIndexHT[k]] ) ( i );
+//         double HTold = ( *sol->_Sol[solIndexHT[k]] ) ( i );
 
         valueT = Told + (1. / 6. * (K1 + 4. * K2 + K3)) / h;
-        //valueHT = HTold + ( 1. / 6. * ( K1 + 4. * K2 + K3 ) ) ;
-        //valueT = valueHT / h;
+//         valueHT = HTold + ( 1. / 6. * ( K1 + 4. * K2 + K3 ) ) ;
+//         valueT = valueHT / h;
       }
 
       else if (RK_order == 4) {
@@ -2849,17 +2847,17 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         double K4 = (*sol->_Sol[solIndexK4[k]]) (i);
 
         double Told = (*sol->_Sol[solIndexT[k]]) (i);
-        //double HTold = ( *sol->_Sol[solIndexHT[k]] ) ( i );
+//         double HTold = ( *sol->_Sol[solIndexHT[k]] ) ( i );
 
         valueT = Told + (1. / 6. * (K1 + 2.*K2 + 2.*K3 + K4)) /  h;
-        //valueHT = HTold + 1. / 6. * ( K1 + 2.*K2 + 2.*K3 + K4 );
-        //valueT = valueHT / h;
+//         valueHT = HTold + 1. / 6. * ( K1 + 2.*K2 + 2.*K3 + K4 );
+//         valueT = valueHT / h;
       }
 
-      //sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
+//       sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
       sol->_Sol[solIndexT[k]]->set (i, valueT);
 
-      //sol->_Sol[solIndexHT[k]]->close();
+//       sol->_Sol[solIndexHT[k]]->close();
       sol->_Sol[solIndexT[k]]->close();
     }
   }
