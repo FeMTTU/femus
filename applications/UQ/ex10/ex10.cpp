@@ -1834,12 +1834,12 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
 //
 //                     aL2ELocal += (solKDESample - uniform) * (solKDESample - uniform);
 
-                double laplaceDist = ( 1. / ( 2. * bLaplace ) ) * exp ( - fabs ( sgmQoIStandardized[m][0] - muLaplace ) / bLaplace );
-                double stdGaussian = exp ( - sgmQoIStandardized[m][1] * sgmQoIStandardized[m][1] * 0.5 ) / sqrt ( 2 * PI );
-
-                double jointPDF = laplaceDist * stdGaussian;
-
-                aL2ELocal += ( solKDESample - jointPDF ) * ( solKDESample - jointPDF );
+//                 double laplaceDist = ( 1. / ( 2. * bLaplace ) ) * exp ( - fabs ( sgmQoIStandardized[m][0] - muLaplace ) / bLaplace );
+//                 double stdGaussian = exp ( - sgmQoIStandardized[m][1] * sgmQoIStandardized[m][1] * 0.5 ) / sqrt ( 2 * PI );
+// 
+//                 double jointPDF = laplaceDist * stdGaussian;
+// 
+//                 aL2ELocal += ( solKDESample - jointPDF ) * ( solKDESample - jointPDF );
 
                 //END
 
