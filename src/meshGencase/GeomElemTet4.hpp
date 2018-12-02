@@ -1,5 +1,5 @@
-#ifndef __femus_meshGencase_FETet4_hpp__
-#define __femus_meshGencase_FETet4_hpp__
+#ifndef __femus_meshGencase_GeomElemTet4_hpp__
+#define __femus_meshGencase_GeomElemTet4_hpp__
 
 //Class for
 
@@ -11,13 +11,13 @@ namespace femus {
 
 
 
-class FETet4 : public GeomElemBase  {
+class GeomElemTet4 : public GeomElemBase  {
 
 public:
   
-     FETet4();
+     GeomElemTet4();
      
-    ~FETet4();
+    ~GeomElemTet4();
   
     unsigned int  get_dimension() const { return 3; };
     unsigned int n_nodes()        const { return 4; };

@@ -1,5 +1,5 @@
-#ifndef __femus_meshGencase_FEHex27_hpp__
-#define __femus_meshGencase_FEHex27_hpp__
+#ifndef __femus_meshGencase_GeomElemHex27_hpp__
+#define __femus_meshGencase_GeomElemHex27_hpp__
 
 #include <cstdlib>
 #include <iostream>
@@ -13,13 +13,13 @@ namespace femus {
 
 
 
-class FEHex27 : public GeomElemBase {
+class GeomElemHex27 : public GeomElemBase {
 
 public:
   
-     FEHex27();
+     GeomElemHex27();
      
-    ~FEHex27();
+    ~GeomElemHex27();
   
     unsigned int  get_dimension() const { return 3; };
     unsigned int n_nodes()        const { return 27; };

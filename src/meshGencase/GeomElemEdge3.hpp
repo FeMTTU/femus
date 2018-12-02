@@ -1,5 +1,5 @@
-#ifndef __femus_meshGencase_FEEdge3_hpp__
-#define __femus_meshGencase_FEEdge3_hpp__
+#ifndef __femus_meshGencase_GeomElemEdge3_hpp__
+#define __femus_meshGencase_GeomElemEdge3_hpp__
 
 //Class for
 #include <cstdlib>
@@ -12,13 +12,13 @@ namespace femus {
 
 
 
-class FEEdge3 : public GeomElemBase  {
+class GeomElemEdge3 : public GeomElemBase  {
 
 public:
   
-     FEEdge3();
+     GeomElemEdge3();
      
-    ~FEEdge3();
+    ~GeomElemEdge3();
   
     unsigned int  get_dimension() const { return 1; };
     unsigned int n_nodes()        const { return 3; };

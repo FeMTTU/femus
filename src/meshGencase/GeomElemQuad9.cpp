@@ -7,7 +7,7 @@ namespace femus {
 
 
 // =======================
- FEQuad9::FEQuad9() : GeomElemBase() {   
+ GeomElemQuad9::GeomElemQuad9() : GeomElemBase() {   
     
         _faces.resize(4);
                for(unsigned f = 0; f < _faces.size(); f++) _faces[f].resize(3);
@@ -19,18 +19,18 @@ namespace femus {
 }
 	  
 // =======================
- FEQuad9::~FEQuad9() { }
+ GeomElemQuad9::~GeomElemQuad9() { }
 
           
 // =======================
-      float FEQuad9::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
+      float GeomElemQuad9::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
       
 
 // =======================
 //STATIC data member
 
 
- const float FEQuad9::_embedding_matrix[4][9][9] =
+ const float GeomElemQuad9::_embedding_matrix[4][9][9] =
 {
   // embedding matrix for child 0
   {

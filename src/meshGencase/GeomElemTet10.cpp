@@ -7,19 +7,19 @@ namespace femus {
 
 
 // =======================
-FETet10::FETet10() : GeomElemBase() {  }
+GeomElemTet10::GeomElemTet10() : GeomElemBase() {  }
 	  
 // =======================
-          FETet10::~FETet10() {    }
+          GeomElemTet10::~GeomElemTet10() {    }
 
           
 // =======================
-      float FETet10::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
+      float GeomElemTet10::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
       
 
 // =======================
 //STATIC data member
-	   const float FETet10::_embedding_matrix[8][10][10] =
+	   const float GeomElemTet10::_embedding_matrix[8][10][10] =
  { // ------------------------------------------
   {// embedding matrix for child 0
     //    0      1      2      3      4      5      6      7      8      9

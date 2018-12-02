@@ -1,5 +1,5 @@
-#ifndef __femus_meshGencase_FEHex8_hpp__
-#define __femus_meshGencase_FEHex8_hpp__
+#ifndef __femus_meshGencase_GeomElemHex8_hpp__
+#define __femus_meshGencase_GeomElemHex8_hpp__
 
 
 
@@ -11,13 +11,13 @@ namespace femus {
 
 
 
-class  FEHex8 : public GeomElemBase  {
+class  GeomElemHex8 : public GeomElemBase  {
 
 public:
   
-     FEHex8();
+     GeomElemHex8();
      
-    ~FEHex8();
+    ~GeomElemHex8();
   
     unsigned int  get_dimension() const { return 3; };
     unsigned int n_nodes()        const { return 8; };

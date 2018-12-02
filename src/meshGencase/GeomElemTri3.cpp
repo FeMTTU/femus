@@ -7,19 +7,19 @@ namespace femus {
 
 
 // =======================
-FETri3::FETri3() : GeomElemBase() { }
+GeomElemTri3::GeomElemTri3() : GeomElemBase() { }
 	  
 // =======================
-          FETri3::~FETri3() {    }
+          GeomElemTri3::~GeomElemTri3() {    }
 
           
 // =======================
-      float FETri3::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
+      float GeomElemTri3::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
       
 
 // =======================
 //STATIC data member
-	   const float FETri3::_embedding_matrix[4][3][3] =
+	   const float GeomElemTri3::_embedding_matrix[4][3][3] =
 { // -------------------------------------------
   {// embedding matrix for child 0
     // 0    1    2  
@@ -48,7 +48,7 @@ FETri3::FETri3() : GeomElemBase() { }
 };
 
 
-  const double FETri3::_Prol[6*3/*NNDS*NNDSL*/] = { 
+  const double GeomElemTri3::_Prol[6*3/*NNDS*NNDSL*/] = { 
    1.,0.,0.,
    0.,1.,0.,
    0.,0.,1.,

@@ -1,5 +1,5 @@
-#ifndef __femus_meshGencase_FETri6_hpp__
-#define __femus_meshGencase_FETri6_hpp__
+#ifndef __femus_meshGencase_GeomElemTri6_hpp__
+#define __femus_meshGencase_GeomElemTri6_hpp__
 
 //Class for
 #include <cstdlib>
@@ -12,13 +12,13 @@ namespace femus {
 
 
 
-class FETri6 : public GeomElemBase  {
+class GeomElemTri6 : public GeomElemBase  {
 
 public:
   
-     FETri6();
+     GeomElemTri6();
      
-    ~FETri6();
+    ~GeomElemTri6();
   
     unsigned int  get_dimension() const { return 2; };
     unsigned int n_nodes()        const { return 6; };

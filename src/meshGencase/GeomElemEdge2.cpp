@@ -3,9 +3,9 @@
 
 namespace femus {
 
-FEEdge2::FEEdge2() : GeomElemBase() {  }
+GeomElemEdge2::GeomElemEdge2() : GeomElemBase() {  }
 	  
-    FEEdge2::~FEEdge2() { }
+    GeomElemEdge2::~GeomElemEdge2() { }
 
 } //end namespace femus
 

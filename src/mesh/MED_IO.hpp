@@ -139,12 +139,12 @@ MED_IO::MED_IO (Mesh& mesh) :
     
        _geom_elems.resize(N_GEOM_ELS);
        
-       _geom_elems[0] = new FEHex27();
-       _geom_elems[1] = new FETet10();
+       _geom_elems[0] = new GeomElemHex27();
+       _geom_elems[1] = new GeomElemTet10();
 //        _geom_elems[2] = new Wedge18();
-       _geom_elems[3] = new FEQuad9();
-       _geom_elems[4] = new FETri6();
-       _geom_elems[5] = new FEEdge3();
+       _geom_elems[3] = new GeomElemQuad9();
+       _geom_elems[4] = new GeomElemTri6();
+       _geom_elems[5] = new GeomElemEdge3();
     
 }
 

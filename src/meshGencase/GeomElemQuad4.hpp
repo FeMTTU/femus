@@ -1,5 +1,5 @@
-#ifndef __femus_meshGencase_FEQuad4_hpp__
-#define __femus_meshGencase_FEQuad4_hpp__
+#ifndef __femus_meshGencase_GeomElemQuad4_hpp__
+#define __femus_meshGencase_GeomElemQuad4_hpp__
 
 
 
@@ -11,13 +11,13 @@ namespace femus {
 
 
 
-class FEQuad4 : public GeomElemBase  {
+class GeomElemQuad4 : public GeomElemBase  {
 
 public:
   
-     FEQuad4();
+     GeomElemQuad4();
      
-    ~FEQuad4();
+    ~GeomElemQuad4();
   
     
     unsigned int  get_dimension() const { return 2; };

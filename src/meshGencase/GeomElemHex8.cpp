@@ -7,22 +7,22 @@ namespace femus {
 
 
 // =======================
-FEHex8::FEHex8() : GeomElemBase() {  }
+GeomElemHex8::GeomElemHex8() : GeomElemBase() {  }
 	    
 	  
 // =======================
-          FEHex8::~FEHex8() {    }
+          GeomElemHex8::~GeomElemHex8() {    }
 
 // =======================
 //this function is the same for all FE, but we had to do it identical for each one because of the fixed allocation
-      float FEHex8::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
+      float GeomElemHex8::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
       
 
 // =======================
 //the embedding matrix picks every child of an element
 // and, for every child node, gives the value of the FATHER SHAPE FNCS at the CHILD NODE
 //STATIC data member
-	   const float FEHex8::_embedding_matrix[8][8][8] =
+	   const float GeomElemHex8::_embedding_matrix[8][8][8] =
       { // --------------------------------------
   // The 8 children of the Hex-type elements can be thought of as being
   // associated with the 8 vertices of the Hex.  Some of the children are
@@ -129,7 +129,7 @@ FEHex8::FEHex8() : GeomElemBase() {  }
 
 
 
-  const double FEHex8::_Prol[27*8/*NNDS*NNDSL*/] = { 
+  const double GeomElemHex8::_Prol[27*8/*NNDS*NNDSL*/] = { 
    1.,0.,0.,0.,0.,0.,0.,0.,
    0.,1.,0.,0.,0.,0.,0.,0.,
    0.,0.,1.,0.,0.,0.,0.,0.,

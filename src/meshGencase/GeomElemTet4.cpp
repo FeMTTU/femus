@@ -7,19 +7,19 @@ namespace femus {
 
 
 // =======================
-FETet4::FETet4() : GeomElemBase() {  }
+GeomElemTet4::GeomElemTet4() : GeomElemBase() {  }
 	  
 // =======================
-          FETet4::~FETet4() {    }
+          GeomElemTet4::~GeomElemTet4() {    }
 
           
 // =======================
-      float FETet4::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
+      float GeomElemTet4::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
       
 
 // =======================
 //STATIC data member
-	   const float FETet4::_embedding_matrix[8][4][4] =
+	   const float GeomElemTet4::_embedding_matrix[8][4][4] =
  { // --------------------------------------------
     { // embedding matrix for child 0
       // 0    1    2    3  
@@ -82,7 +82,7 @@ FETet4::FETet4() : GeomElemBase() {  }
   };	   
   
   
-   const double FETet4::_Prol[10*4/*NNDS*NNDSL*/] = { 
+   const double GeomElemTet4::_Prol[10*4/*NNDS*NNDSL*/] = { 
    1.,0.,0.,0.,
    0.,1.,0.,0.,
    0.,0.,1.,0.,

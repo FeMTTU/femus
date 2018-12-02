@@ -23,19 +23,14 @@
 //local include
 #include "MED_IO.hpp"
 #include "Mesh.hpp"
-#include "GeomElemQuad1.hpp"
 #include "GeomElemQuad4.hpp"
 #include "GeomElemQuad9.hpp"
-#include "GeomElemHex1.hpp"
 #include "GeomElemHex8.hpp"
 #include "GeomElemHex27.hpp"
-#include "GeomElemTri1.hpp"
 #include "GeomElemTri3.hpp"
 #include "GeomElemTri6.hpp"
-#include "GeomElemTet1.hpp"
 #include "GeomElemTet4.hpp"
 #include "GeomElemTet10.hpp"
-#include "GeomElemEdge1.hpp"
 #include "GeomElemEdge2.hpp"
 #include "GeomElemEdge3.hpp"
 
@@ -854,23 +849,23 @@ namespace femus
   
   GeomElemBase * MED_IO::get_geom_elem_from_med_name(const  std::string el_type) const {
       
-         if(el_type.compare("HE8") == 0) return new FEHex8();
+         if(el_type.compare("HE8") == 0) return new GeomElemHex8();
     else if(el_type.compare("H20") == 0) abort(); ///@todo //return new FEHex20();
-    else if(el_type.compare("H27") == 0) return new FEHex27();
+    else if(el_type.compare("H27") == 0) return new GeomElemHex27();
 
-    else if(el_type.compare("TE4") == 0) return new FETet4();
-    else if(el_type.compare("T10") == 0) return new FETet10();
+    else if(el_type.compare("TE4") == 0) return new GeomElemTet4();
+    else if(el_type.compare("T10") == 0) return new GeomElemTet10();
 
-    else if(el_type.compare("QU4") == 0) return new FEQuad4();
+    else if(el_type.compare("QU4") == 0) return new GeomElemQuad4();
     else if(el_type.compare("QU8") == 0) abort();  
-    else if(el_type.compare("QU9") == 0) return new FEQuad9();
+    else if(el_type.compare("QU9") == 0) return new GeomElemQuad9();
 
-    else if(el_type.compare("TR3") == 0) return new FETri3();
-    else if(el_type.compare("TR6") == 0) return new FETri6();
+    else if(el_type.compare("TR3") == 0) return new GeomElemTri3();
+    else if(el_type.compare("TR6") == 0) return new GeomElemTri6();
     else if(el_type.compare("TR7") == 0) abort(); 
 
-    else if(el_type.compare("SE2") == 0) return new FEEdge2();
-    else if(el_type.compare("SE3") == 0) return new FEEdge3();
+    else if(el_type.compare("SE2") == 0) return new GeomElemEdge2();
+    else if(el_type.compare("SE3") == 0) return new GeomElemEdge3();
     else {
       std::cout << "MED_IO::read: element not supported";
       abort();

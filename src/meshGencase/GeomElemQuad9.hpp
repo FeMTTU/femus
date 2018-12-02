@@ -1,5 +1,5 @@
-#ifndef __femus_meshGencase_FEQuad9_hpp__
-#define __femus_meshGencase_FEQuad9_hpp__
+#ifndef __femus_meshGencase_GeomElemQuad9_hpp__
+#define __femus_meshGencase_GeomElemQuad9_hpp__
 
 #include <cstdlib>
 #include <iostream>
@@ -12,13 +12,13 @@ namespace femus {
 
 
 
-class FEQuad9 : public GeomElemBase  {
+class GeomElemQuad9 : public GeomElemBase  {
 
 public:
   
-     FEQuad9();
+     GeomElemQuad9();
      
-    ~FEQuad9();
+    ~GeomElemQuad9();
   
     unsigned int  get_dimension() const { return 2; };
     unsigned int n_nodes()        const { return 9; };

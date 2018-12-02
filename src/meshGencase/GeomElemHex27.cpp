@@ -4,19 +4,19 @@
 namespace femus {
 
 // =======================
-FEHex27::FEHex27() : GeomElemBase()   { }
+GeomElemHex27::GeomElemHex27() : GeomElemBase()   { }
 	  
 // =======================
-          FEHex27::~FEHex27() {    }
+          GeomElemHex27::~GeomElemHex27() {    }
 
           
 // =======================
-      float FEHex27::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
+      float GeomElemHex27::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
       
 
 // =======================
 //STATIC data member
-	   const float FEHex27::_embedding_matrix[8][27][27] =
+	   const float GeomElemHex27::_embedding_matrix[8][27][27] =
   {
     // embedding matrix for child 0
     {

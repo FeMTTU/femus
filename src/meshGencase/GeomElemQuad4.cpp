@@ -7,21 +7,21 @@ namespace femus {
 
 
 // =======================
-FEQuad4::FEQuad4()  : GeomElemBase() {  }
+GeomElemQuad4::GeomElemQuad4()  : GeomElemBase() {  }
 	  
 // =======================
-          FEQuad4::~FEQuad4() {    }
+          GeomElemQuad4::~GeomElemQuad4() {    }
 
           
 // =======================
-      float FEQuad4::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
+      float GeomElemQuad4::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
       
 
 // =======================
 //STATIC data member
 
 
- const float FEQuad4::_embedding_matrix[4][4][4] = {
+ const float GeomElemQuad4::_embedding_matrix[4][4][4] = {
    
   // embedding matrix for child 0
   {
@@ -59,7 +59,7 @@ FEQuad4::FEQuad4()  : GeomElemBase() {  }
 
 
 
-  const double FEQuad4::_Prol[9*4/*NNDS*NNDSL*/] =  { 
+  const double GeomElemQuad4::_Prol[9*4/*NNDS*NNDSL*/] =  { 
    1.,0.,0.,0.,
    0.,1.,0.,0.,
    0.,0.,1.,0.,
