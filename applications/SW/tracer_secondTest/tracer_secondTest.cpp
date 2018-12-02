@@ -35,7 +35,7 @@ double pi = acos (-1.);
 double k_h = 0.0001 ;
 
 const unsigned NumberOfLayers = 4;
-unsigned RK_order = 4;
+unsigned RK_order = 2;
 
 unsigned counter = 0;
 unsigned counter2 = 0;
@@ -644,8 +644,8 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 10000; //RK4: dt=0.5, numberOfTimeSteps = 16001
-  dt = 0.5;
+  unsigned numberOfTimeSteps = 1000; //RK4: dt=0.5, numberOfTimeSteps = 16001
+  dt = 0.01;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {
@@ -657,7 +657,7 @@ int main (int argc, char** args)
     counter = i;
     //ETD ( ml_prob, numberOfTimeSteps );
     //RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
-    RKe (ml_prob, numberOfTimeSteps);
+    RK (ml_prob, numberOfTimeSteps);
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1) / 1);
     
     counter2++;
@@ -2496,58 +2496,58 @@ void RK (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
         if (RK_step == 1) {
           if (RK_order == 2) {
-            addition = solK1[k];
-            addition_m = solK1m[k];
-            addition_p = solK1p[k];
-//             addition_mm = solK1mm[k];
-//             addition_pp = solK1pp[k];
-            if (k > 0) addition_t = solK1[k-1]; 
-            if (k < NLayers - 1) addition_b = solK1[k+1]; 
+            addition = solK1[k] / solh[k];
+            addition_m = solK1m[k] / solhm[k];
+            addition_p = solK1p[k] / solhp[k];
+//             addition_mm = solK1mm[k] / solhmm[k];
+//             addition_pp = solK1pp[k] / solhpp[k];
+            if (k > 0) addition_t = solK1[k-1] / solh[k-1]; 
+            if (k < NLayers - 1) addition_b = solK1[k+1] / solh[k+1]; 
           }
 
           else if (RK_order == 3 || RK_order == 4) {
-            addition = solK1[k] * 0.5;
-            addition_m = solK1m[k] * 0.5;
-            addition_p = solK1p[k] * 0.5;
-//             addition_mm = solK1mm[k] * 0.5;
-//             addition_pp = solK1pp[k] * 0.5;
-            if (k > 0) addition_t = solK1[k-1] * 0.5; 
-            if (k < NLayers - 1) addition_b = solK1[k+1] * 0.5;
+            addition = solK1[k] * 0.5 / solh[k];
+            addition_m = solK1m[k] * 0.5 / solhm[k];
+            addition_p = solK1p[k] * 0.5 / solhp[k];
+//             addition_mm = solK1mm[k] * 0.5 / solhmm[k];
+//             addition_pp = solK1pp[k] * 0.5 / solhpp[k];
+            if (k > 0) addition_t = solK1[k-1] * 0.5 / solh[k-1]; 
+            if (k < NLayers - 1) addition_b = solK1[k+1] * 0.5 / solh[k+1];
           }
 
         }
 
         else if (RK_step == 2) {
           if (RK_order == 4) {
-            addition = solK2[k] * 0.5;
-            addition_m = solK2m[k] * 0.5;
-            addition_p = solK2p[k] * 0.5;
-//             addition_mm = solK2mm[k] * 0.5;
-//             addition_pp = solK2pp[k] * 0.5;
-            if (k > 0) addition_t = solK2[k-1] * 0.5; 
-            if (k < NLayers - 1) addition_b = solK2[k+1] * 0.5;
+            addition = solK2[k] * 0.5 / solh[k];
+            addition_m = solK2m[k] * 0.5 / solhm[k];
+            addition_p = solK2p[k] * 0.5 / solhp[k];
+//             addition_mm = solK2mm[k] * 0.5 / solhmm[k];
+//             addition_pp = solK2pp[k] * 0.5 / solhpp[k];
+            if (k > 0) addition_t = solK2[k-1] * 0.5 / solh[k-1]; 
+            if (k < NLayers - 1) addition_b = solK2[k+1] * 0.5 / solh[k+1];
           }
 
           else if (RK_order == 3) {
-            addition = - solK1[k] + solK2[k] * 2.;
-            addition_m = - solK1m[k] + solK2m[k] * 2.;
-            addition_p = - solK1p[k] + solK2p[k] * 2.;
-/*            addition_mm = - solK1mm[k] + solK2mm[k] * 2.;
-            addition_pp = - solK1pp[k] + solK2pp[k] * 2.; */           
-            if (k > 0) addition_t = solK2[k-1] * 2.; 
-            if (k < NLayers - 1) addition_b = solK2[k+1] * 2.;
+            addition = (- solK1[k] + solK2[k] * 2.) / solh[k];
+            addition_m = (- solK1m[k] + solK2m[k] * 2.) / solhm[k];
+            addition_p = (- solK1p[k] + solK2p[k] * 2.) / solhp[k];
+/*            addition_mm = (- solK1mm[k] + solK2mm[k] * 2.) / solhmm[k];
+            addition_pp = (- solK1pp[k] + solK2pp[k] * 2.) / solhpp[k]; */           
+            if (k > 0) addition_t = (- solK1[k-1] + solK2[k-1] * 2.) / solh[k-1]; 
+            if (k < NLayers - 1) addition_b = (- solK1[k+1] + solK2[k+1] * 2.) / solh[k+1]; ;
           }
 
         }
 
         else if (RK_step == 3) {
-          addition = solK3[k];
-          addition_m = solK3m[k];
-          addition_p = solK3p[k];
-//           addition_mm = solK3mm[k];
-//           addition_pp = solK3pp[k];
-          if (k > 0) addition_t = solK3[k-1]; 
-          if (k < NLayers - 1) addition_b = solK3[k+1];
+          addition = solK3[k] / solh[k];
+          addition_m = solK3m[k] / solhm[k];
+          addition_p = solK3p[k] / solhp[k];
+//           addition_mm = solK3mm[k] / solhmm[k];
+//           addition_pp = solK3pp[k] / solhpp[k];
+          if (k > 0) addition_t = solK3[k-1] / solh[k-1]; 
+          if (k < NLayers - 1) addition_b = solK3[k+1] / solh[k+1];
         }
 
 
