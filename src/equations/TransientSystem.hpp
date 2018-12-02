@@ -51,7 +51,8 @@ public:
     /** Constructor.  Initializes required data structures.  */
     TransientSystem (MultiLevelProblem& ml_probl,
                      const std::string& name,
-                     const unsigned int number, const MgSmoother & smoother_type);
+                     const unsigned int number, 
+                     const MgSmoother & smoother_type);
 
     /** Destructor. */
     virtual ~TransientSystem ();
@@ -78,7 +79,9 @@ public:
     /** Update the old solution with new ones. It calls the update solution function of the Solution class */
     virtual void CopySolutionToOldSolution();
 
-
+    /** Set up before calling the parent solve */
+    void SetUpForSolve();
+    
     /** calling the parent solve */
     virtual void MLsolve();
 
