@@ -35,10 +35,11 @@
 namespace femus
 {
 
-    
+ #define TYPE_FOR_FAM_FLAGS  int  //do not use "unsigned" because these numbers in MED are NEGATIVE!
+   
 // Auxiliary struct to store group information
   struct GroupInfo {
-      int _salome_flag;
+      TYPE_FOR_FAM_FLAGS _med_flag;
       int _user_defined_flag;
       int _user_defined_property;
       GeomElemBase* _geom_el;
@@ -76,6 +77,8 @@ class MED_IO : public MeshInput<Mesh>
 
  private:
      
+   unsigned int get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS med_flag_in ) const;
+
    void get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const;
     
    void set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i, const std::string el_fe_type_per_dimension, const std::vector<GroupInfo> & group_info);
@@ -107,10 +110,10 @@ class MED_IO : public MeshInput<Mesh>
    const std::vector<std::string>  get_geom_elem_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir);   //@todo this should be const
    
    /** Map from Salome vertex index to Femus vertex index */
-   static const unsigned SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 
+   static const unsigned MEDToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 
  
    /** Map from Salome face index to Femus face index */
-   static const unsigned SalomeToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES];
+   static const unsigned MEDToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES];
 
 //    std::vector<char*> menu_names;
    static const std::string mesh_ensemble;    //ENS_MAA

@@ -54,6 +54,7 @@ namespace femus
   const uint MED_IO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
 
 
+
   //How to determine a general connectivity:
   //you have to align the element with respect to the x-y-z (or xi-eta-zeta) reference frame,
   //and then look at the order in the med file.
@@ -95,7 +96,7 @@ namespace femus
 //   X-------X-------X              -------> xi
 
 
-  const unsigned MED_IO::SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES] = {
+  const unsigned MED_IO::MEDToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES] = {
 
     {4, 7, 3, 0, 5, 6, 2, 1, 15, 19, 11, 16, 13, 18, 9, 17, 12, 14, 10, 8, 23, 25, 22, 24, 20, 21, 26}, //HEX27
     {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, //TET10
@@ -104,21 +105,21 @@ namespace femus
       3, 11, 5, 9, 10, 4,
       12, 17, 14, 15, 16, 13,
       0, 8, 2, 6, 7, 1
-    },  //WEDGE18
+    },                           //WEDGE18
 
     {0, 1, 2, 3, 4, 5, 6, 7, 8}, //QUAD9
-    {0, 1, 2, 3, 4, 5},  //TRI6
-    {0, 1, 2}            //EDGE3
+    {0, 1, 2, 3, 4, 5},          //TRI6
+    {0, 1, 2}                    //EDGE3
   };
 
 
-  const unsigned MED_IO::SalomeToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES] = {
-    {0, 4, 2, 5, 3, 1},
-    {0, 1, 2, 3},
-    {2, 1, 0, 4, 3},
-    {0, 1, 2, 3},
-    {0, 1, 2},
-    {0, 1}
+  const unsigned MED_IO::MEDToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES] = {
+    {0, 4, 2, 5, 3, 1}, //HEX27
+    {0, 1, 2, 3},       //TET10
+    {2, 1, 0, 4, 3},    //WEDGE18
+    {0, 1, 2, 3},       //QUAD9
+    {0, 1, 2},          //TRI6
+    {0, 1}              //EDGE3
   };
  
 
@@ -177,7 +178,19 @@ namespace femus
   }
 
 
-
+   unsigned int MED_IO::get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS med_flag_in ) const {
+       
+       unsigned int user_flag;
+       
+        for(unsigned gv = 0; gv < group_info.size(); gv++) {
+            if(group_info[gv]._med_flag == med_flag_in ) user_flag = group_info[gv]._user_defined_flag;
+        }
+       
+       return user_flag;
+       
+   }
+  
+  
 
 /// @todo do we need these numbers for us?
    void MED_IO::get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const  {
@@ -198,7 +211,7 @@ namespace femus
      //here I need a routine to compute the group GeomElem and the group size
 
     //separate groups by dimension
-    //as soon as an entry is equal to the group_salome_flag, that means the dimension is that of the current element dataset
+    //as soon as an entry is equal to the group_med_flag, that means the dimension is that of the current element dataset
    void MED_IO::compute_group_geom_elem_and_size(const hid_t&  file_id, const std::string mesh_menu, GroupInfo & group_info) const {
        
       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
@@ -227,16 +240,16 @@ namespace femus
        if(status_fam == 0) {     std::cerr << "MED_IO::read dims not found";  abort();  }
       
         const unsigned n_elements = dims_fam[0];
-        std::vector<int> fam_map(n_elements);
+        std::vector< TYPE_FOR_FAM_FLAGS > fam_map(n_elements);
         hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data() );
 
         int group_size = 0;
         for(unsigned k = 0; k < fam_map.size(); k++) {
 
-            if ( fam_map[k] == group_info._salome_flag )   {
+            if ( fam_map[k] == group_info._med_flag )   {
                 group_found = true;
                 group_size++;
-                std::cout << "Current flag " << fam_map[k] << " matches " << group_info._salome_flag << " " << elem_types[j] << std::endl; 
+                std::cout << "Current flag " << fam_map[k] << " matches " << group_info._med_flag << " " << elem_types[j] << std::endl; 
                 group_info._geom_el = get_geom_elem_from_med_name(elem_types_str);
             }
         
@@ -257,38 +270,85 @@ namespace femus
     
     
    void MED_IO::find_boundary_faces_and_set_face_flags(const hid_t&  file_id, const std::string mesh_menu, const std::tuple<std::string,unsigned int> el_fe_type_per_dimension,  const std::vector<GroupInfo> & group_info)  {
+
+
+    //open the FAM and NOD fields of the boundary group
+
+        hsize_t dims_conn[2];                                   
+       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+        std::string conn_name_dir = my_mesh_name_dir +  std::get<0>(el_fe_type_per_dimension) + "/" + connectivity;        // NOD ***************************
+        hid_t dtset_conn     = H5Dopen(file_id, conn_name_dir.c_str(), H5P_DEFAULT);
+        hid_t filespace_conn = H5Dget_space(dtset_conn);
+        hid_t status_conn    = H5Sget_simple_extent_dims(filespace_conn, dims_conn, NULL);
+
+        std::vector<int> conn_map(dims_conn[0]);
+        hid_t status2_conn = H5Dread(dtset_conn, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, conn_map.data() );
+        H5Dclose(dtset_conn);
+
+        hsize_t dims_fam[2];                                   
+        std::string fam_name_dir = my_mesh_name_dir +  std::get<0>(el_fe_type_per_dimension) + "/" + group_fam;        // FAM ***************************
+        hid_t dtset_fam     = H5Dopen(file_id, fam_name_dir.c_str(), H5P_DEFAULT);
+        hid_t filespace_fam = H5Dget_space(dtset_fam);
+        hid_t status_fam    = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
+
+        std::vector< TYPE_FOR_FAM_FLAGS > fam_map(dims_fam[0]);
+        hid_t status2_fam = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data() );
+        H5Dclose(dtset_fam);
+        
+        //check that all boundary faces were set in the mesh file
+        for(unsigned i = 0; i < fam_map.size(); i++) { if (fam_map[i] == 0) { std::cout << "Some boundary face was not set in the mesh MED file" << std::endl; abort(); } }
        
        Mesh& mesh = GetMesh();
        
-       //after the volume connectivity has been read, I can loop over all boundary groups
-       // right now, I'll loop over all groups whose geometric element has dimension n-1
-       // later, one may have have other groups of dimension n-1 that are not on the boundary
+       //loop over the volume connectivity and find the boundary faces 
         for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
-                   unsigned iel_type = mesh.GetElementType(iel);
+            
+                   unsigned iel_geom_type = mesh.GetElementType(iel);
             for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
                 
-                unsigned n_nodes = _geom_elems[iel_type]->_faces[f].size();
+                unsigned n_nodes = _geom_elems[iel_geom_type]->_faces[f].size();
                 
                 std::vector<unsigned> face_nodes(n_nodes);
                 
                for(unsigned nd = 0; nd < n_nodes; nd++) {
-                   unsigned nd_of_face = _geom_elems[iel_type]->_faces[f][nd];
+                   unsigned nd_of_face = _geom_elems[iel_geom_type]->_faces[f][nd];
                    face_nodes[nd] = mesh.el->GetElementDofIndex(iel,nd_of_face);
                 
-               }               
+               }
+               
+               //loop over all the bdry group elements
+               
+             std::vector<unsigned> face_nodes_bdry_group(n_nodes);
+               for(unsigned k = 0; k < fam_map.size(); k++) {
+               for(unsigned nd = 0; nd < n_nodes; nd++) {
+                    face_nodes_bdry_group[nd] = conn_map[ k + nd*fam_map.size() ] - 1;
+                  }
 
+                  
+                  // check any possible order of faces 
+                  std::vector<unsigned> face_nodes_bdry_group_swapped(face_nodes_bdry_group);
+                  std::iter_swap(face_nodes_bdry_group_swapped.begin(), 
+                                 face_nodes_bdry_group_swapped.begin() + 1); //@todo see for 3d elements
+                  
+                  const bool same_face         = (face_nodes == face_nodes_bdry_group);
+                  const bool same_face_swapped = (face_nodes == face_nodes_bdry_group_swapped);
+                  if ( same_face || same_face_swapped )  {
+                      const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
+                      std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << std::endl; 
+           int value =  get_user_flag_from_med_flag(group_info,med_flag);   //flag of the boundary portion
+               value = - (value + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the value in salome must be POSITIVE
+               
+                      std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << value << std::endl; 
 
-                                   //open the FAM field of the group
-                                   //if some value is set to zero, WARN the user that some boundary conditions in the input file were not set
-                                   // (this check could also be done another time)
-                                   //then open the NOD field and pick one face at a time
-                                   //see if this face coincides with the current element face I am considering
-                                   //if so, set the element face flag
+//       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
+      mesh.el->SetFaceElementIndex(iel,f,value);  //value is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
+                      
+                }
+                  // check any possible order of faces - end
+                  
+              }
+               //loop over all the bdry group elements - end
 
-                                   
-       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
-        std::string conn_name_dir_i = my_mesh_name_dir +  std::get<0>(el_fe_type_per_dimension) + "/" + connectivity;        // NOD ***************************
-        hid_t dtset_conn = H5Dopen(file_id, conn_name_dir_i.c_str(), H5P_DEFAULT);
 
 
                
@@ -299,8 +359,12 @@ namespace femus
 //                      }
                      
                      
-                 } //faces
+                 } //faces of volume elements
                }// end volume elements
+               
+               
+               
+               
    }
    
    
@@ -320,7 +384,7 @@ namespace femus
         if(status_fam == 0) {     std::cerr << "MED_IO::read dims not found";  abort();  }
         
         const unsigned n_elements = dims_fam[0];
-        std::vector<int> fam_map(n_elements);
+        std::vector< TYPE_FOR_FAM_FLAGS > fam_map(n_elements);
         hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data());
 
         
@@ -337,7 +401,7 @@ namespace femus
         for(unsigned gv = 0; gv < group_info.size(); gv++) {
             if ( i == group_info[gv]._geom_el->get_dimension() - 1 ) {
         for(unsigned g = 0; g < fam_map.size()/*group_info[gv]._size*//*number_of_group_elements*/; g++) {
-            if (fam_map[g] == group_info[gv]._salome_flag)   mesh.el->SetElementGroup(g, /*fam_map[g]*/ group_info[gv]._user_defined_flag /*gr_integer_name*/);  //I think that 1 is set later as the default  group number
+            if (fam_map[g] == group_info[gv]._med_flag)   mesh.el->SetElementGroup(g, /*fam_map[g]*/ group_info[gv]._user_defined_flag /*gr_integer_name*/);  //I think that 1 is set later as the default  group number
 //         mesh.el->SetElementMaterial(elem_indices[g] - 1 - n_elements_b_bb, group_info[gv]._user_defined_property /*gr_material*/);
 // 	
          if(group_info[gv]._user_defined_property/*gr_material*/ == group_property_fluid_probably          ) materialElementCounter[0] += 1;
@@ -369,7 +433,7 @@ namespace femus
 //       unsigned iel =,   //volume element to which the face belongs
 //       iel--;
 //       unsigned iface; //index of the face in that volume element
-//       iface = MED_IO::SalomeToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
+//       iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
 //       mesh.el->SetFaceElementIndex(iel,iface,value);  //value is (-1) for element faces that are not boundary faces
     }
   }
@@ -453,8 +517,9 @@ namespace femus
           abort();
         }
         for(unsigned i = 0; i < nve; i++) {
-          unsigned inode = SalomeToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
-          mesh.el->SetElementDofIndex(iel, inode, conn_map[iel + i * n_elems_per_dimension ] - 1u);  //MED connectivity is stored on a per-node basis, not a per-element basis
+          unsigned inode = MEDToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
+          const unsigned dof_value = conn_map[iel + i * n_elems_per_dimension ] - 1u;
+          mesh.el->SetElementDofIndex(iel, inode, dof_value);  //MED connectivity is stored on a per-node basis, not a per-element basis
          }
        }
       
@@ -539,7 +604,7 @@ namespace femus
       std::pair<int,int> gr_family_in_salome_pair = isolate_number_in_string( group_name, str_pos );
       std::pair<int,int> gr_name_pair             = isolate_number_in_string( group_name, gr_family_in_salome_pair.second + 1 );
       std::pair<int,int> gr_property_pair         = isolate_number_in_string( group_name, gr_name_pair.second + 1 );
-      group_info._salome_flag           = gr_family_in_salome_pair.first;
+      group_info._med_flag           = gr_family_in_salome_pair.first;
       group_info._user_defined_flag     = gr_name_pair.first;
       group_info._user_defined_property = gr_property_pair.first;      
     
