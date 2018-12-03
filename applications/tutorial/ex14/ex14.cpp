@@ -22,13 +22,20 @@ using namespace femus;
 
 
 double GetTimeStep(const double time) {
-  double dt = .1;
+  double dt = 0.1;
   return dt;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceIndex, const double time) {
-  bool dirichlet = false; //Neumann
-  value = 0.;
+  
+  bool dirichlet = true; //Neumann
+  double pi=acos(-1);
+  
+  //value = cos( sqrt(2. * pi) * x[0] ) * cos( sqrt(2. * pi) * x[1] ) * exp(-2. * pi * time);
+  value = cos(2*pi*x[0]*x[0])*cos(2*pi*x[1]*x[1]) * exp(-time);  
+    
+//   bool dirichlet = false; //Neumann
+//   value = 0.;
 
   return dirichlet;
 }
@@ -36,6 +43,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 double InitalValue(const std::vector < double >& x) {
   double pi=acos(-1);  
   return cos(2*pi*x[0]*x[0])*cos(2*pi*x[1]*x[1]); 
+  //return cos( sqrt(2. * pi) * x[0] ) * cos( sqrt(2. * pi) * x[1] );
 }
 
 
@@ -79,7 +87,7 @@ int main(int argc, char** args) {
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.GenerateBdc("u");
+  mlSol.GenerateBdc("u", "Time_dependent");
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol); //
@@ -329,6 +337,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
         adept::adouble graduGradphi = 0.;
         double graduOldGradphi = 0.;
         double eps=0.01;
+        //double eps=1;
 
         for (unsigned k = 0; k < dim; k++) {
           graduGradphi   +=   phi_x[i * dim + k] * gradSolu_gss[k];
@@ -336,6 +345,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
         }
              
         aRes[i] += ( (solu_gss - soluOld_gss) * phi[i] / dt +  eps*( graduGradphi ) - (solu_gss - solu_gss*solu_gss*solu_gss) * phi[i]  ) * weight;
+        //aRes[i] += ( (solu_gss - soluOld_gss) * phi[i] / dt +  eps*( graduGradphi ) ) * weight;
 
       } // end phi_i loop
     } // end gauss point loop

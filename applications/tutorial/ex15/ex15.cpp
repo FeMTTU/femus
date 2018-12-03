@@ -22,13 +22,18 @@
 using namespace femus;
 
 double GetTimeStep(const double time) {
-  double dt = 2.;
+  double dt = 4.;
   return dt;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceIndex, const double time) {
-  bool dirichlet = false; //Neumann
+  bool dirichlet = true; //Neumann
   value = 0.;
+  if (!strcmp(solName, "u")) {
+    double pi=acos(-1);
+    value = cos(2*pi*x[0]*x[0])*cos(2*pi*x[1]*x[1]) * exp(-time);
+    //value = cos( sqrt(2. * pi) * x[0] ) * cos( sqrt(2. * pi) * x[1] ) * exp(-2. * pi * time);
+  }
 
   return dirichlet;
 }
@@ -36,6 +41,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 double InitalValue(const std::vector < double >& x) {
   double pi=acos(-1);  
   return cos(2*pi*x[0]*x[0])*cos(2*pi*x[1]*x[1]); 
+  //return cos( sqrt(2. * pi) * x[0] ) * cos( sqrt(2. * pi) * x[1] ); 
+
 }
 
 void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob);
@@ -80,6 +87,7 @@ int main(int argc, char** args) {
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol.GenerateBdc("u", "Time_dependent");
   
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol); //
@@ -104,7 +112,7 @@ int main(int argc, char** args) {
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetGraphVariable ("u");
-  mlSol.GetWriter()->SetDebugOutput(false);
+  mlSol.GetWriter()->SetDebugOutput(true);
 
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
@@ -206,7 +214,10 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
     solu[i].reserve(maxSize);
   }
   soluOld.resize(maxSize);
-
+  
+  std::vector< bool > bdc;
+  bdc.reserve(maxSize);
+  
   std::vector < std::vector < double > > x(dim);    // local coordinates. x is now dim x m matrix.
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
@@ -238,7 +249,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
 
   // element loop: each process loops only on the elements that owns
   // Adventure starts here!
-    
+  
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
      
     short unsigned ielGeom = msh->GetElementType(iel);
@@ -258,12 +269,15 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
       x[k].resize(nDofx); // Now we 
     }
     
+    bdc.resize(nDofu);
+    
     l2GMap.resize(RK * nDofu);
             
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       soluOld[i] = (*sol->_Sol[soluIndex])(solDof);
+      bdc[i] = ( (*sol->_Bdc[soluIndex])(solDof) < 0.5) ? true : false;
       for( unsigned j = 0; j < RK; j++ ){
         solk[j][i] = (*sol->_Sol[solkIndex[j]])(solDof);          // global extraction and local storage for the solution
         l2GMap[j * nDofu + i] = pdeSys->GetSystemDof(solkIndex[j], solkPdeIndex[j], i, iel);    // global to global mapping between solution node and pdeSys dof
@@ -272,8 +286,6 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
     
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
-    
-    mlPdeSys->GetIntermediateSolutions(soluOld, solk, solu);
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
@@ -283,7 +295,10 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
         x[k][i] = (*msh->_topology->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
-
+    
+    mlPdeSys->GetIntermediateSolutions(soluOld, solk, x, bdc, "u", solu);
+    
+    
 
            
     // *** Face Gauss point loop (boundary Integral) ***
@@ -353,7 +368,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
         // *** phi_i loop ***
         for (unsigned i = 0; i < nDofu; i++) {
      
-          double eps=0.01;
+          double eps = 0.01;
         
           adept::adouble graduGradphi = 0.;;
           for (unsigned k = 0; k < dim; k++) {
@@ -361,6 +376,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
           }
       
           aResk[j][i] -= ( ( solk_gss  -  solu_gss + solu_gss * solu_gss * solu_gss) * phi[i] +  eps * graduGradphi ) * weight;
+          //aResk[j][i] -= ( solk_gss * phi[i] +  eps * graduGradphi ) * weight;
         }
         
 

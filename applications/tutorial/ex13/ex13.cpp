@@ -38,9 +38,12 @@ double InitalValueU(const std::vector < double >& x) {
   double r2 = r * r;
   double R = 1.;
   double R2 = R * R;
-  double Vb = 1.268112;
-  double V0 = 1.0;
-  return 1. * exp(40 * ( 1. - R2 / ( R2 - r2 )) ); // IC vanishing near the boundary.
+  //double Vb = 1.268112; // exp( (( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
+  double Vb = 0.265048;  // exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
+  double V0 = 1./12.; // fraction of injection vs tumor
+  return V0 * exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb; // IC vanishing near the boundary.
+  
+  
 }
 
 double InitalValueD(const std::vector < double >& x) {
@@ -402,21 +405,23 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
 
 void GetDeadCells(const double &time, MultiLevelSolution &mlSol){
+
+  double a = 0.0471;
+  double b = -1.4629;
+  double c = 0.0866;
     
   std::pair<double,double> uT[12];
 
   for(unsigned i = 0; i < 12; i++){
     uT[i].first = (i+1) * 6;
-    uT[i].second = 0.1 * exp( - uT[i].first / 24);
+    uT[i].second =  a - b * exp( -c * uT[i].first); //0.1 * exp( - uT[i].first / 24);
   }
    
   
-//   double a = 0.0471;
-//   double b = -1.4629;
-//   double c = 0.0866 * 150;
-//   
-//   double treshold = a - b * exp( -c * time);
-//  std::cout << "time = " << time <<" treshold = " << treshold << std::endl;
+
+  
+  double treshold = a - b * exp( -c * time);
+ std::cout << "time = " << time <<" treshold = " << treshold << std::endl;
   
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
   

@@ -70,16 +70,30 @@ public:
     const std::vector < std::ostringstream > & GetSolkiNames(const char name[]);
     
     void GetIntermediateSolutions(const std::vector < double > &soluOld, 
-        const std::vector < std::vector < adept::adouble > > & solk, 
+        const std::vector < std::vector < adept::adouble > > & solk,
+        const std::vector < std::vector < double > > & x,
+        const std::vector < bool > & bdc,
+        const char name[],
         std::vector < std::vector < adept::adouble > > & solu);
     
+     void SetIntermediateTimes();
 private:
    unsigned _RK;
-   static const double _b[5][5];
+   
    static const double _a[5][5][5];
+   static const double _b[5][5];
+   static const double _c[5][5];
    std::vector < std::ostringstream > _solName;
    std::vector < std::vector < std::ostringstream > > _solKiName;
+   std::vector < double > _itime;
 };
+
+template <class Base>
+const double ImplicitRungeKuttaSystem<Base>::_c[5][5]={
+   {0.5},
+   {0.5 - sqrt(3.)/6., 0.5 + sqrt(3)/6.},
+   {0.5 - sqrt(15.)/10., 0.5, 0.5 + sqrt(15.)/10.}
+}; 
 
 
 template <class Base>
@@ -164,12 +178,16 @@ template <class Base>
   void ImplicitRungeKuttaSystem<Base>::MLsolve(){
     TransientSystem<Base>::MLsolve(); 
     UpdateSolution();
+    
+    this->_ml_sol->UpdateBdc(this->_time); 
 }
 
 template <class Base>
   void ImplicitRungeKuttaSystem<Base>::MGsolve(const MgSmootherType& mgSmootherType){
     TransientSystem<Base>::MGsolve(mgSmootherType);  
     UpdateSolution();    
+    
+    this->_ml_sol->UpdateBdc(this->_time); 
   }
 
 template <class Base>
@@ -208,6 +226,9 @@ template <class Base>
 template <class Base>
   void ImplicitRungeKuttaSystem<Base>::GetIntermediateSolutions(const std::vector < double > &soluOld, 
     const std::vector < std::vector < adept::adouble > > & solk, 
+    const std::vector < std::vector < double > > & x,
+    const std::vector < bool > & bdc,
+    const char name[],
     std::vector < std::vector < adept::adouble > > & solu){
       
     //local storage of global mapping and solution
@@ -219,7 +240,33 @@ template <class Base>
         }
       }
     }
+    
+    SetIntermediateTimes();
+    unsigned dim = x.size(); 
+    for (unsigned i = 0; i<soluOld.size(); i++){
+      if( bdc[i] ){
+      std::vector <double> x0( dim );  
+        for(unsigned k = 0; k < dim; k++){
+          x0[k] = x[k][i];  
+        }
+        for( unsigned j = 0; j < _RK; j++ ){
+          double value = 0; 
+          this->_ml_sol->GetBdcFunction()(x0, name, value, 0, _itime[j]);
+          solu[j][i] = value;
+        }
+      }   
+    } 
   }      
+  
+template <class Base>  
+void ImplicitRungeKuttaSystem<Base>::SetIntermediateTimes(){
+    
+    _itime.resize(_RK);
+    
+    for(unsigned i =0;i<_RK; i++){
+      _itime[i] = (this->_time - this->_dt ) + this->_dt * _c[_RK - 1][i];
+    }
+}  
 
 // -----------------------------------------------------------
 // Useful typedefs
