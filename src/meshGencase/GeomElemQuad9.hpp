@@ -26,9 +26,12 @@ public:
     std::string   get_name_xdmf() const { return "Quadrilateral_9"; };
     
       float get_embedding_matrix(const uint,const uint,const uint);
-      static const float _embedding_matrix[4][9][9];   // (volume)
 
          double get_prol(const uint /*j*/) {std::cout << "Quad9: no prolongation needed\n"; abort();};
+
+private:
+    
+     static const float _embedding_matrix[4][9][9];   // (volume)
 
 };
 

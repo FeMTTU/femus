@@ -28,10 +28,12 @@ public:
 
     float get_embedding_matrix(const uint,const uint,const uint);
 
-      static const float _embedding_matrix[8/*NCHILDS*/][27/*NNDS*/][27/*NNDS*/];   // (volume)
 
        double get_prol(const uint /*j*/) {std::cout << "Hex27: no prolongation needed\n"; abort();};
 
+private:
+    
+      static const float _embedding_matrix[8/*NCHILDS*/][27/*NNDS*/][27/*NNDS*/];   // (volume)
 
 };
 

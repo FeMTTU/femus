@@ -27,8 +27,11 @@ public:
     
       float get_embedding_matrix(const uint,const uint,const uint);
 
-      static const float _embedding_matrix[8][10][10];   // (volume)
          double get_prol(const uint /*j*/) {std::cout << "Tet10: no prolongation needed\n"; abort();};
+
+private:
+    
+      static const float _embedding_matrix[8][10][10];   // (volume)
 
 };
 

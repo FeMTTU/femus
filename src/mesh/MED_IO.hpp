@@ -79,15 +79,15 @@ class MED_IO : public MeshInput<Mesh>
      
    unsigned int get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS med_flag_in ) const;
 
-   void get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const;
+   void get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu,  const GeomElemBase* geom_elem_per_dimension) const;
     
-   void set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i, const std::string el_fe_type_per_dimension, const std::vector<GroupInfo> & group_info);
+   void set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i,  const GeomElemBase* geom_elem_per_dimension, const std::vector<GroupInfo> & group_info);
    
    void compute_group_geom_elem_and_size(const hid_t&  file_id, const std::string mesh_menu, GroupInfo & group_info)  const;
 
-   void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::tuple<std::string,unsigned int> & el_fe_type_per_dimension, std::vector<bool>& type_elem_flag);
+   void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const GeomElemBase* geom_elem_per_dimension, std::vector<bool>& type_elem_flag);
    
-   void find_boundary_faces_and_set_face_flags(const hid_t&  file_id, const std::string mesh_menu, const std::tuple<std::string,unsigned int> el_fe_type_per_dimension, const std::vector<GroupInfo> & group_info);
+   void find_boundary_faces_and_set_face_flags(const hid_t&  file_id, const std::string mesh_menu, const GeomElemBase* geom_elem_per_dimension, const std::vector<GroupInfo> & group_info);
 
    void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
 
@@ -100,14 +100,14 @@ class MED_IO : public MeshInput<Mesh>
    std::pair<int,int>  isolate_number_in_string(const std::string & string_in, const int begin_pos_to_investigate) const;
       
    /** Determine mesh dimension from mesh file */
-  std::vector< std::tuple<std::string,unsigned int> >  set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name); //this cannot be const because it sets the dimension in the mesh
+   const std::vector< GeomElemBase* >  set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name); //this cannot be const because it sets the dimension in the mesh
 
    unsigned  get_elem_number_of_nodes(const  std::string el_type) const;
    
    GeomElemBase * get_geom_elem_from_med_name(const  std::string el_type) const;
 
    /** Read FE type */
-   const std::vector<std::string>  get_geom_elem_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir);   //@todo this should be const
+  const std::vector< GeomElemBase* > get_geom_elem_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir);   //@todo this should be const
    
    /** Map from Salome vertex index to Femus vertex index */
    static const unsigned MEDToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 

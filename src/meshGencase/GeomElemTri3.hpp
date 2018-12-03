@@ -25,10 +25,13 @@ public:
     std::string   get_name_xdmf() const { return "Triangle"; };
     
       float get_embedding_matrix(const uint,const uint,const uint);
-      static const float _embedding_matrix[4][3][3];   // (volume)
 
                 double get_prol(const uint j) {return _Prol[j];};
       static const double _Prol[/*NNDS*/6*3/*NNDSL*/];
+
+private:
+    
+      static const float _embedding_matrix[4][3][3];   // (volume)
 
 };
 

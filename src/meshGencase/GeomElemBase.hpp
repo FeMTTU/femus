@@ -20,10 +20,9 @@ public:
     GeomElemBase();
     virtual ~GeomElemBase();
 
-    std::vector< std::vector<unsigned> >  _faces;
-    
     static  GeomElemBase* build(const std::string geomel_id_in, const uint fe_family);
 
+    virtual std::vector<unsigned> get_face(const unsigned f) {         return _faces[f]; };
     virtual unsigned int get_dimension() const { std::cout << "Not implemented FE" << std::endl; abort(); };
     virtual unsigned int n_nodes()       const { std::cout << "Not implemented FE" << std::endl; abort(); };
     virtual std::string  get_name_med()  const { std::cout << "Not implemented FE" << std::endl; abort(); };
@@ -32,8 +31,11 @@ public:
 // Multigrid ===   //only VV
     virtual float get_embedding_matrix(const uint,const uint,const uint) = 0;  //should be geom_el
     virtual double get_prol(const uint) = 0;
- 
+
+protected:  
     
+    std::vector< std::vector<unsigned> >  _faces;
+   
 };
 
 

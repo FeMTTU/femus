@@ -7,22 +7,22 @@ namespace femus {
 
 
 // =======================
- GeomElemQuad9::GeomElemQuad9() : GeomElemBase() {   
-    
-        _faces.resize(4);
+ GeomElemQuad9::GeomElemQuad9() : GeomElemBase() { 
+     
+     _faces.resize(4);
                for(unsigned f = 0; f < _faces.size(); f++) _faces[f].resize(3);
               _faces[0] = {0, 1, 4};
               _faces[1] = {1, 2, 5};
               _faces[2] = {2, 3, 6};
               _faces[3] = {3, 0, 7};
-
+     
 }
 	  
 // =======================
  GeomElemQuad9::~GeomElemQuad9() { }
 
-          
-// =======================
+
+ // =======================
       float GeomElemQuad9::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }
       
 

@@ -26,9 +26,12 @@ public:
     std::string   get_name_xdmf() const { return "Polyline"; };
     
      float get_embedding_matrix(const uint,const uint,const uint){std::cout << "Edge2: embedding matrix not implemented\n"; abort();};
-//       static const float _embedding_matrix[][][];   // (volume)
 
       double get_prol(const uint /*j*/) {std::cout << "Edge2: prolongation not implemented \n"; abort();};
+
+private:
+    
+//       static const float _embedding_matrix[][][];   // (volume)
 
 };
 
