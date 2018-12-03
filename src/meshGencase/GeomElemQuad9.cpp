@@ -5,16 +5,9 @@ namespace femus {
 
 
 
-
 // =======================
  GeomElemQuad9::GeomElemQuad9() : GeomElemBase() { 
      
-     _faces.resize(4);
-               for(unsigned f = 0; f < _faces.size(); f++) _faces[f].resize(3);
-              _faces[0] = {0, 1, 4};
-              _faces[1] = {1, 2, 5};
-              _faces[2] = {2, 3, 6};
-              _faces[3] = {3, 0, 7};
      
 }
 	  
@@ -29,7 +22,13 @@ namespace femus {
 // =======================
 //STATIC data member
 
-
+  const unsigned  GeomElemQuad9::_faces[4][3] = {
+              {0, 1, 4},
+              {1, 2, 5},
+              {2, 3, 6},
+              {3, 0, 7}
+  };
+  
  const float GeomElemQuad9::_embedding_matrix[4][9][9] =
 {
   // embedding matrix for child 0

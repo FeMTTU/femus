@@ -4,19 +4,7 @@
 namespace femus {
 
 // =======================
-GeomElemHex27::GeomElemHex27() : GeomElemBase()   {
-    
-            _faces.resize(6);
-               for(unsigned f = 0; f < _faces.size(); f++) _faces[f].resize(9);
-              _faces[0] =  {0, 1, 5, 4, 8, 17, 12, 16, 20}  ;
-              _faces[1] =  {1, 2, 6, 5, 9, 18, 13, 17, 21}  ;
-              _faces[2] =  {2, 3, 7, 6, 10, 19, 14, 18, 22} ;
-              _faces[3] =  {3, 0, 4, 7, 11, 16, 15, 19, 23} ;
-              _faces[4] =  {0, 3, 2, 1, 11, 10, 9, 8, 24}   ;
-              _faces[5] =  {4, 5, 6, 7, 12, 13, 14, 15, 25} ;
-
-    
-}
+GeomElemHex27::GeomElemHex27() : GeomElemBase()   { }
 	  
 // =======================
           GeomElemHex27::~GeomElemHex27() {    }
@@ -28,6 +16,20 @@ GeomElemHex27::GeomElemHex27() : GeomElemBase()   {
 
 // =======================
 //STATIC data member
+
+ const unsigned GeomElemHex27::_faces[6][9] = {
+       {0, 1, 5, 4, 8, 17, 12, 16, 20}  ,
+       {1, 2, 6, 5, 9, 18, 13, 17, 21}  ,
+       {2, 3, 7, 6, 10, 19, 14, 18, 22} ,
+       {3, 0, 4, 7, 11, 16, 15, 19, 23} ,
+       {0, 3, 2, 1, 11, 10, 9, 8, 24}   ,
+       {4, 5, 6, 7, 12, 13, 14, 15, 25} 
+     
+};
+
+
+
+
 	   const float GeomElemHex27::_embedding_matrix[8][27][27] =
   {
     // embedding matrix for child 0

@@ -22,7 +22,7 @@ public:
 
     static  GeomElemBase* build(const std::string geomel_id_in, const uint fe_family);
 
-    virtual std::vector<unsigned> get_face(const unsigned f) {         return _faces[f]; };
+    virtual std::vector<unsigned> get_face(const unsigned f) const { std::cout << "Not implemented FE" << std::endl; abort();  };
     virtual unsigned int get_dimension() const { std::cout << "Not implemented FE" << std::endl; abort(); };
     virtual unsigned int n_nodes()       const { std::cout << "Not implemented FE" << std::endl; abort(); };
     virtual std::string  get_name_med()  const { std::cout << "Not implemented FE" << std::endl; abort(); };
@@ -34,7 +34,6 @@ public:
 
 protected:  
     
-    std::vector< std::vector<unsigned> >  _faces;
    
 };
 
