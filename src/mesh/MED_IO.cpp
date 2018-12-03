@@ -166,7 +166,7 @@ namespace femus
       }
              
     
-    find_boundary_faces_and_set_face_flags(file_id,group_info);
+    find_boundary_faces_and_set_face_flags(file_id,mesh_menus[j],el_fe_type_per_dimension[mesh.GetDimension() -1 -1],group_info);
     
     }
     
@@ -256,7 +256,7 @@ namespace femus
 
     
     
-   void MED_IO::find_boundary_faces_and_set_face_flags(const hid_t&  file_id,const std::vector<GroupInfo> & group_info)  {
+   void MED_IO::find_boundary_faces_and_set_face_flags(const hid_t&  file_id, const std::string mesh_menu, const std::tuple<std::string,unsigned int> el_fe_type_per_dimension,  const std::vector<GroupInfo> & group_info)  {
        
        Mesh& mesh = GetMesh();
        
@@ -277,14 +277,28 @@ namespace femus
                 
                }               
 
-               for(unsigned gv = 0; gv < group_info.size(); gv++) {
-                               if ( group_info[gv]._geom_el->get_dimension() == mesh.GetDimension() -1   ) { //boundary groups
-      
+
+                                   //open the FAM field of the group
+                                   //if some value is set to zero, WARN the user that some boundary conditions in the input file were not set
+                                   // (this check could also be done another time)
+                                   //then open the NOD field and pick one face at a time
+                                   //see if this face coincides with the current element face I am considering
+                                   //if so, set the element face flag
+
                                    
-                                   
-                   
-                               }
-                     }
+       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+        std::string conn_name_dir_i = my_mesh_name_dir +  std::get<0>(el_fe_type_per_dimension) + "/" + connectivity;        // NOD ***************************
+        hid_t dtset_conn = H5Dopen(file_id, conn_name_dir_i.c_str(), H5P_DEFAULT);
+
+
+               
+//                for(unsigned gv = 0; gv < group_info.size(); gv++) {
+//                                if ( group_info[gv]._geom_el->get_dimension() == mesh.GetDimension() -1   ) { //boundary groups
+//                                    
+//                             }
+//                      }
+                     
+                     
                  } //faces
                }// end volume elements
    }
