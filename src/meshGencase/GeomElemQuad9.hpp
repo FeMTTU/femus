@@ -22,6 +22,7 @@ public:
   
     unsigned int  get_dimension() const { return 2; };
     unsigned int n_nodes()        const { return 9; };
+    unsigned int n_nodes_linear() const { return 4; };
     std::string   get_name_med()  const { return "QU9"; };
     std::string   get_name_xdmf() const { return "Quadrilateral_9"; };
     std::vector<unsigned> get_face (const unsigned f) const { std::vector<unsigned> my_faces(_faces[f],_faces[f] + 3);  return my_faces; }; 

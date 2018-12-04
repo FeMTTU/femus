@@ -300,6 +300,7 @@ namespace femus
        
        Mesh& mesh = GetMesh();
        
+       unsigned count_found_face = 0;
        //loop over the volume connectivity and find the boundary faces 
         for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
             
@@ -326,13 +327,33 @@ namespace femus
 
                   
                   // check any possible order of faces 
-                  std::vector<unsigned> face_nodes_bdry_group_swapped(face_nodes_bdry_group);
-                  std::iter_swap(face_nodes_bdry_group_swapped.begin(), 
-                                 face_nodes_bdry_group_swapped.begin() + 1); //@todo see for 3d elements
                   
-                  const bool same_face         = (face_nodes == face_nodes_bdry_group);
-                  const bool same_face_swapped = (face_nodes == face_nodes_bdry_group_swapped);
-                  if ( same_face || same_face_swapped )  {
+                  //just look for the initial linear element (maybe even the 1st three only); if this is aligned, all the Quad9 will be aligned
+                  //The problem, is that we don't know if the order corresponds to the OUTWARD NORMAL or not.
+                  //How many ways are there? If the nodes are 0 1 2 3, it could only be 0123, or 1230, or 2301, or 3012, so the number is given by the number of nodes (maybe times 2...)
+                  std::vector<unsigned>  face_nodes_linear(face_nodes.begin(),face_nodes.begin() + geom_elem_per_dimension->n_nodes_linear() );
+                  std::vector<unsigned>  face_nodes_bdry_group_linear(face_nodes_bdry_group.begin(),face_nodes_bdry_group.begin() + geom_elem_per_dimension->n_nodes_linear() );
+                  
+                  unsigned n_alternatives = geom_elem_per_dimension->n_nodes_linear();
+                  std::vector< std::vector<unsigned> > face_alternatives(n_alternatives);
+                  
+               for(unsigned alt = 0; alt < n_alternatives; alt++) {
+                   face_alternatives[alt].resize(n_alternatives);
+               for(unsigned i = 0; i < n_alternatives; i++) {
+                   unsigned mod_index = (i+alt)%n_alternatives;
+                          face_alternatives[alt][i] = face_nodes_bdry_group_linear[mod_index];
+                 }
+              }
+          
+             std::vector<bool>  is_same_face(n_alternatives);
+             bool bool_union = false;
+                      for(unsigned alt = 0; alt < n_alternatives; alt++) {
+                            is_same_face[alt] = (face_nodes_linear == face_alternatives[alt]);
+                            if (is_same_face[alt] == true) bool_union = true;
+                       }
+                            
+                  if ( bool_union )  {
+                      count_found_face++;
                       const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
 
            int value =  get_user_flag_from_med_flag(group_info,med_flag);   //flag of the boundary portion
@@ -349,21 +370,13 @@ namespace femus
               }
                //loop over all the bdry group elements - end
 
-
-
-               
-//                for(unsigned gv = 0; gv < group_info.size(); gv++) {
-//                                if ( group_info[gv]._geom_el->get_dimension() == mesh.GetDimension() -1   ) { //boundary groups
-//                                    
-//                             }
-//                      }
                      
-                     
-                 } //faces of volume elements
-               }// end volume elements
+         } //faces of volume elements
+       }// end volume elements
                
-               
-               
+                       std::cout << "Count found face " << count_found_face << std::endl;              
+               if (count_found_face < fam_map.size()) { std::cout << "Found " << count_found_face << " faces out of " << fam_map.size() << std::endl;   abort();   }
+
                
    }
    

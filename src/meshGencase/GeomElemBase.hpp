@@ -25,6 +25,7 @@ public:
     virtual std::vector<unsigned> get_face(const unsigned f) const { std::cout << "Not implemented FE" << std::endl; abort();  };
     virtual unsigned int get_dimension() const { std::cout << "Not implemented FE" << std::endl; abort(); };
     virtual unsigned int n_nodes()       const { std::cout << "Not implemented FE" << std::endl; abort(); };
+    virtual unsigned int n_nodes_linear() const { std::cout << "Not implemented FE" << std::endl; abort(); };
     virtual std::string  get_name_med()  const { std::cout << "Not implemented FE" << std::endl; abort(); };
     virtual std::string  get_name_xdmf() const { std::cout << "Not implemented FE" << std::endl; abort(); };
     

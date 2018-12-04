@@ -22,6 +22,7 @@ public:
   
     unsigned int  get_dimension() const { return 1; };
     unsigned int n_nodes()        const { return 3; };
+    unsigned int n_nodes_linear() const { return 2; };
     std::string   get_name_med()  const { return "SE3"; };
     std::string   get_name_xdmf() const { return "Edge_3"; };
     
