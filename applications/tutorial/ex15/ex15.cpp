@@ -22,11 +22,12 @@
 using namespace femus;
 
 double GetTimeStep(const double time) {
-  double dt = 4.;
+  double dt = 2.;
   return dt;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceIndex, const double time) {
+    
   bool dirichlet = true; //Neumann
   value = 0.;
   if (!strcmp(solName, "u")) {

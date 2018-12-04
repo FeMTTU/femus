@@ -77,15 +77,19 @@ public:
         std::vector < std::vector < adept::adouble > > & solu);
     
      void SetIntermediateTimes();
+     const std::vector < double > & GetIntermediateTimes();
 private:
    unsigned _RK;
    
-   static const double _a[5][5][5];
+   static const double _a[5][5][5], _aI[5][5][5];
    static const double _b[5][5];
    static const double _c[5][5];
    std::vector < std::ostringstream > _solName;
+   std::vector < unsigned > _solIndex;
    std::vector < std::vector < std::ostringstream > > _solKiName;
+   std::vector < std::vector < unsigned > > _solKiIndex;
    std::vector < double > _itime;
+   double _time0;
 };
 
 template <class Base>
@@ -117,6 +121,22 @@ const double ImplicitRungeKuttaSystem<Base>::_a[5][5][5]={
     }
 };   
 
+template <class Base>
+const double ImplicitRungeKuttaSystem<Base>::_aI[5][5][5]={
+  {
+    {2.}},
+  {
+    {3., 0.4641016151377544}, 
+    {-6.464101615137755, 3.}
+  
+  },
+  { 
+    {5., 1.1639777949432233, -0.16397779494322232}, 
+    {-5.727486121839513, 2.,  0.7274861218395138}, 
+    {10.163977794943225, -9.163977794943223, 5.}
+  }
+};
+
 
 template <class Base>
 ImplicitRungeKuttaSystem<Base>::ImplicitRungeKuttaSystem(
@@ -143,6 +163,8 @@ void ImplicitRungeKuttaSystem<Base>::clear()
   _RK = 1;  
   _solName.resize(0);
   _solKiName.resize(0);
+  _solIndex.resize(0);
+  _solKiIndex.resize(0);
   TransientSystem<Base>::clear();
 }
 
@@ -150,44 +172,87 @@ template <class Base>
 void ImplicitRungeKuttaSystem<Base>::AddSolutionToSystemPDE(const char solname[]){
     
     unsigned size = _solName.size();
-   _solName.resize(size+1);
-   _solName[size] << solname;    
+   _solName.resize(size + 1u);
+   _solName[size] << solname;   
    
-   _solKiName.resize(size+1);
+   _solIndex.resize(size + 1u);
+   _solIndex[size] = this->_ml_sol->GetIndex(solname);
+   
+   _solKiName.resize(size + 1u);
    _solKiName[size].resize(_RK);
+   
+   _solKiIndex.resize(size + 1u);
+   _solKiIndex[size].resize(_RK);
+   
+  _itime.assign(_RK,0.); 
+  _time0 = 0.;
    
   for(unsigned i = 0; i < _RK; i++){
     
     _solKiName[size][i] << solname << "k" << i+1;
-    
-    unsigned solIndex = this->_ml_sol->GetIndex(solname);
         
-    this->_ml_sol->AddSolution(_solKiName[size][i].str().c_str(), this->_ml_sol->GetSolutionFamily(solIndex), this->_ml_sol->GetSolutionOrder(solIndex)); 
+    this->_ml_sol->AddSolution(_solKiName[size][i].str().c_str(), this->_ml_sol->GetSolutionFamily(_solIndex[size]), this->_ml_sol->GetSolutionOrder(_solIndex[size])); 
     
     this->_ml_sol->Initialize(_solKiName[size][i].str().c_str()); // Since this is time depend problem.
     
-    this->_ml_sol->GenerateBdc(_solKiName[size][i].str().c_str());
-     
+    _solKiIndex[size][i] = this->_ml_sol->GetIndex(_solKiName[size][i].str().c_str());
+    
+    //this->_ml_sol->GenerateBdc(_solKiName[size][i].str().c_str());
+    
     this->Base::AddSolutionToSystemPDE(_solKiName[size][i].str().c_str());
   }
   
+  this->_ml_sol->GenerateRKBdc(_solIndex[size], _solKiIndex[size],0, _itime, _time0, 1., _aI[_RK - 1]);
 }
 
 
 template <class Base>
   void ImplicitRungeKuttaSystem<Base>::MLsolve(){
-    TransientSystem<Base>::MLsolve(); 
+    
+    TransientSystem<Base>::SetUpForSolve(); 
+    
+    SetIntermediateTimes();
+    
+   
+    for(unsigned i = 0; i<_solIndex.size(); i++){
+      if(!strcmp(this->_ml_sol->GetBdcType(_solIndex[i]), "Time_dependent")) {  
+        this->_ml_sol->GenerateRKBdc(_solIndex[i], _solKiIndex[i],0, _itime, _time0 , this->_dt, _aI[_RK - 1]);
+      }
+    }
+    
+    // call the parent MLsolver
+    Base::_MLsolver = true;
+    Base::_MGsolver = false;
+
+    Base::solve();  
+       
     UpdateSolution();
     
-    this->_ml_sol->UpdateBdc(this->_time); 
+    //this->_ml_sol->UpdateBdc(this->_time); 
 }
 
 template <class Base>
   void ImplicitRungeKuttaSystem<Base>::MGsolve(const MgSmootherType& mgSmootherType){
-    TransientSystem<Base>::MGsolve(mgSmootherType);  
+    TransientSystem<Base>::SetUpForSolve(); 
+    
+    SetIntermediateTimes();
+    
+    std::cout<<std::endl;
+    for(unsigned i = 0; i<_solIndex.size(); i++){
+      if(!strcmp(this->_ml_sol->GetBdcType(_solIndex[i]), "Time_dependent")) {  
+        this->_ml_sol->GenerateRKBdc(_solIndex[i], _solKiIndex[i],0, _itime, _time0 , this->_dt, _aI[_RK - 1]);
+      }
+    }
+    
+    // call the parent MLsolver
+    Base::_MLsolver = false;
+    Base::_MGsolver = true;
+
+    Base::solve( mgSmootherType ); 
+    
     UpdateSolution();    
     
-    this->_ml_sol->UpdateBdc(this->_time); 
+    //this->_ml_sol->UpdateBdc(this->_time); 
   }
 
 template <class Base>
@@ -241,21 +306,21 @@ template <class Base>
       }
     }
     
-    SetIntermediateTimes();
-    unsigned dim = x.size(); 
-    for (unsigned i = 0; i<soluOld.size(); i++){
-      if( bdc[i] ){
-      std::vector <double> x0( dim );  
-        for(unsigned k = 0; k < dim; k++){
-          x0[k] = x[k][i];  
-        }
-        for( unsigned j = 0; j < _RK; j++ ){
-          double value = 0; 
-          this->_ml_sol->GetBdcFunction()(x0, name, value, 0, _itime[j]);
-          solu[j][i] = value;
-        }
-      }   
-    } 
+//     SetIntermediateTimes();
+//     unsigned dim = x.size(); 
+//     for (unsigned i = 0; i<soluOld.size(); i++){
+//       if( bdc[i] ){
+//       std::vector <double> x0( dim );  
+//         for(unsigned k = 0; k < dim; k++){
+//           x0[k] = x[k][i];  
+//         }
+//         for( unsigned j = 0; j < _RK; j++ ){
+//           double value = 0; 
+//           this->_ml_sol->GetBdcFunction()(x0, name, value, 0, _itime[j]);
+//           solu[j][i] = value;
+//         }
+//       }   
+//     } 
   }      
   
 template <class Base>  
@@ -263,10 +328,16 @@ void ImplicitRungeKuttaSystem<Base>::SetIntermediateTimes(){
     
     _itime.resize(_RK);
     
+    _time0 = this->_time - this->_dt;
+    
     for(unsigned i =0;i<_RK; i++){
-      _itime[i] = (this->_time - this->_dt ) + this->_dt * _c[_RK - 1][i];
+      _itime[i] = _time0 + this->_dt * _c[_RK - 1][i];
     }
 }  
+template <class Base>  
+const std::vector < double > & ImplicitRungeKuttaSystem<Base>::GetIntermediateTimes(){
+    return _itime;
+}
 
 // -----------------------------------------------------------
 // Useful typedefs
