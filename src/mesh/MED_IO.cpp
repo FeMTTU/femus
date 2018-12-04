@@ -40,17 +40,17 @@ namespace femus
 {
     
 
-  const std::string MED_IO::mesh_ensemble  = "ENS_MAA";
-  const std::string MED_IO::aux_zeroone    = "-0000000000000000001-0000000000000000001";
-  const std::string MED_IO::elem_list      = "MAI";
-  const std::string MED_IO::group_fam      = "FAM";
-  const std::string MED_IO::connectivity   = "NOD";
-  const std::string MED_IO::dofobj_indices = "NUM";
-  const std::string MED_IO::node_list      = "NOE";
-  const std::string MED_IO::coord_list     = "COO";
-  const std::string MED_IO::group_ensemble = "FAS";
-  const std::string MED_IO::group_elements = "ELEME";
-  const std::string MED_IO::group_nodes    = "NOEUD";
+  const std::string MED_IO::mesh_ensemble           = "ENS_MAA";
+  const std::string MED_IO::aux_zeroone             = "-0000000000000000001-0000000000000000001";
+  const std::string MED_IO::elem_list               = "MAI";
+  const std::string MED_IO::group_fam               = "FAM";
+  const std::string MED_IO::connectivity            = "NOD";
+  const std::string MED_IO::node_or_elem_global_num = "NUM";  //we don't need to read these fields
+  const std::string MED_IO::node_list               = "NOE";
+  const std::string MED_IO::coord_list              = "COO";
+  const std::string MED_IO::group_ensemble          = "FAS";
+  const std::string MED_IO::group_elements          = "ELEME";
+  const std::string MED_IO::group_nodes             = "NOEUD";
   const uint MED_IO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
 
 
@@ -162,8 +162,6 @@ namespace femus
 
          set_elem_group_ownership(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], group_info);
       
-        get_global_elem_numbering(file_id, mesh_menus[j],    geom_elem_per_dimension[i]);
-        
       }
              
     
@@ -191,22 +189,6 @@ namespace femus
    }
   
   
-
-/// @todo do we need these numbers for us?
-   void MED_IO::get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const GeomElemBase* geom_elem_per_dimension) const  {
-       
-         //NUM ***************************
-       hsize_t dims_num[2];
-       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
-        std::string node_name_dir_i = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + dofobj_indices;
-        hid_t dtset_num = H5Dopen(file_id, node_name_dir_i.c_str(), H5P_DEFAULT);
-        hid_t filespace_num = H5Dget_space(dtset_num);
-        hid_t status_bdry  = H5Sget_simple_extent_dims(filespace_num, dims_num, NULL);
-        if(status_bdry == 0) {    std::cerr << "MED_IO::read dims not found";  abort();  }
-        H5Dclose(dtset_num); 
-        
-   }
-   
    
      //here I need a routine to compute the group GeomElem and the group size
 

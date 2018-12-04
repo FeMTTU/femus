@@ -79,8 +79,6 @@ class MED_IO : public MeshInput<Mesh>
      
    unsigned int get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS med_flag_in ) const;
 
-   void get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu,  const GeomElemBase* geom_elem_per_dimension) const;
-    
    void set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i,  const GeomElemBase* geom_elem_per_dimension, const std::vector<GroupInfo> & group_info);
    
    void compute_group_geom_elem_and_size(const hid_t&  file_id, const std::string mesh_menu, GroupInfo & group_info)  const;
@@ -116,19 +114,19 @@ class MED_IO : public MeshInput<Mesh>
    static const unsigned MEDToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES];
 
 //    std::vector<char*> menu_names;
-   static const std::string mesh_ensemble;    //ENS_MAA
-   static const std::string aux_zeroone;      // -0000000000000000001-0000000000000000001
-   static const std::string elem_list;        //MAI
-   static const std::string group_fam;        //FAM
-   static const std::string connectivity;     //NOD    //These are written based on the NOE/NUM numbering !
-   static const std::string dofobj_indices;   //NUM    //this is the Salome global numbering (as you see in Salome) both for nodes (in NOE) and for elements of all dimensions (in MAI). 
+   static const std::string mesh_ensemble;             //ENS_MAA
+   static const std::string aux_zeroone;               // -0000000000000000001-0000000000000000001
+   static const std::string elem_list;                 //MAI
+   static const std::string group_fam;                 //FAM
+   static const std::string connectivity;              //NOD    //These are written based on the NOE/NUM numbering !
+   static const std::string node_or_elem_global_num;   //NUM    //this is the MED global numbering (as you see in Salome) both for nodes (in NOE) and for elements of all dimensions (in MAI). 
                                                        //Salome global Numbering of both Nodes and Elements starts at 1.
                                                        //For Elements, lower dimensional elements are numbered first
-   static const std::string node_list;        //NOE
-   static const std::string coord_list;       //COO
-   static const std::string group_ensemble;   //FAS
-   static const std::string group_elements;   //ELEME
-   static const std::string group_nodes;      //NOEUD  //if you ever use group of nodes, not used now
+   static const std::string node_list;                 //NOE
+   static const std::string coord_list;                //COO
+   static const std::string group_ensemble;            //FAS
+   static const std::string group_elements;            //ELEME
+   static const std::string group_nodes;               //NOEUD  //if you ever use group of nodes, not used now
    static const uint max_length;
 
    std::vector< GeomElemBase* > _geom_elems;
