@@ -53,18 +53,18 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
-unsigned numberOfSamples = 1000000; //for MC sampling of the QoI
+unsigned numberOfSamples = 100; //for MC sampling of the QoI
 unsigned nxCoarseBox;
-double xMinCoarseBox = - 3.; //-5.5 for Gaussian, -2.5 for SGM with Gaussian KL,  -1.5 for uniform, -3. for SGM with random variable (not KL)
-double xMaxCoarseBox = 25.;  //5.5 for Gaussian, 5.5 for SGM with Gaussian KL, 1.5 for uniform, 25. for SGM with random variable (not KL)
+double xMinCoarseBox = - 2.; //-5.5 for Gaussian, -2.5 for SGM with Gaussian KL,  -1.5 for uniform, -2. for SGM with random variable (not KL)
+double xMaxCoarseBox = 4.;  //5.5 for Gaussian, 5.5 for SGM with Gaussian KL, 1.5 for uniform, 4. for SGM with random variable (not KL)
 unsigned nyCoarseBox;
-double yMinCoarseBox = - 3.;
-double yMaxCoarseBox = 25.;
+double yMinCoarseBox = - 2.;
+double yMaxCoarseBox = 4.;
 unsigned nzCoarseBox;
-double zMinCoarseBox = - 5.5;
-double zMaxCoarseBox = 5.5;
+double zMinCoarseBox = - 2.;
+double zMaxCoarseBox = 4.;
 
-unsigned numberOfSamplesFinest = 1000000; //10^6 for spatial average, 10^7 for integral of the square
+unsigned numberOfSamplesFinest = 1000000; //10^6 for spatial average, 10^7 for integral of the square, 10^6 for SGM with random variable (not KL)
 unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamplesFinest ) ) ); //for spatial average
 // unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamplesFinest ) ) ); //for integral of the square
 unsigned nyCoarseBoxFinest = nxCoarseBoxFinest;
@@ -861,8 +861,8 @@ void GetCoefficientsForQuantityOfInterest ( MultiLevelProblem& ml_prob, std::vec
                 for ( unsigned i = 0; i < nDofu; i++ ) {
                     solu_gss += phi[i] * solu[j][i];
                 }
-//          alphasTemp[j] += solu_gss * solu_gss * weight ; // this is the integral of the square.
-                alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
+         alphasTemp[j] += solu_gss * solu_gss * weight ; // this is the integral of the square.
+//                 alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
             }
         } // end gauss point loop
 
@@ -872,6 +872,10 @@ void GetCoefficientsForQuantityOfInterest ( MultiLevelProblem& ml_prob, std::vec
     for ( unsigned j = 0; j < Jp.size(); j++ ) {
         alphas[j] = 0.;
         MPI_Allreduce ( &alphasTemp[j], &alphas[j], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    }
+
+    for ( unsigned j = 0; j < Jp.size(); j++ ) {
+        std::cout << " alpha = " << std::setprecision ( 14 ) << alphas[j] << std::endl;
     }
 
 }
@@ -1296,7 +1300,13 @@ void GetQoIStandardizedSamples ( std::vector< double >& alphas, std::vector< std
 
             std::vector<double> samplePoints ( numberOfEigPairs, 0. );
             for ( unsigned k = 0; k < numberOfEigPairs; k++ ) {
-                samplePoints[k] = var_nor();
+
+                if ( quadratureType == 0 ) {
+                    samplePoints[k] = var_nor();
+                } else if ( quadratureType == 1 ) {
+                    samplePoints[k] = var_unif();
+                }
+
             }
             const std::vector < std::vector <double> > &polyHistogram =
                 myuq.GetPolyHistogram ( pIndex, samplePoints, numberOfEigPairs, quadratureType );
@@ -1353,7 +1363,11 @@ void GetQoIStandardizedSamples ( std::vector< double >& alphas, std::vector< std
 
                 std::vector<double> samplePoints ( numberOfEigPairs, 0. );
                 for ( unsigned k = 0; k < numberOfEigPairs; k++ ) {
-                    samplePoints[k] = var_nor();
+                    if ( quadratureType == 0 ) {
+                        samplePoints[k] = var_nor();
+                    } else if ( quadratureType == 1 ) {
+                        samplePoints[k] = var_unif();
+                    }
                 }
                 const std::vector < std::vector <double> > &polyHistogram =
                     myuq.GetPolyHistogram ( pIndex, samplePoints, numberOfEigPairs, quadratureType );
@@ -1836,9 +1850,9 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
 
 //                 double laplaceDist = ( 1. / ( 2. * bLaplace ) ) * exp ( - fabs ( sgmQoIStandardized[m][0] - muLaplace ) / bLaplace );
 //                 double stdGaussian = exp ( - sgmQoIStandardized[m][1] * sgmQoIStandardized[m][1] * 0.5 ) / sqrt ( 2 * PI );
-// 
+//
 //                 double jointPDF = laplaceDist * stdGaussian;
-// 
+//
 //                 aL2ELocal += ( solKDESample - jointPDF ) * ( solKDESample - jointPDF );
 
                 //END
