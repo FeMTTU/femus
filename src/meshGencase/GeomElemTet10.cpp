@@ -19,6 +19,14 @@ GeomElemTet10::GeomElemTet10() : GeomElemBase() {  }
 
 // =======================
 //STATIC data member
+  const unsigned  GeomElemTet10::_faces[4][6] = {
+      {0, 2, 1, 6, 5, 4},
+      {0, 1, 3, 4, 8, 7},
+      {1, 2, 3, 5, 9, 8},
+      {2, 0, 3, 6, 7, 9}
+  };
+
+
 	   const float GeomElemTet10::_embedding_matrix[8][10][10] =
  { // ------------------------------------------
   {// embedding matrix for child 0

@@ -312,20 +312,27 @@ namespace femus
                   
                   //just look for the initial linear element (maybe even the 1st three only); if this is aligned, all the Quad9 will be aligned
                   //The problem, is that we don't know if the order corresponds to the OUTWARD NORMAL or not.
-                  //How many ways are there? If the nodes are 0 1 2 3, it could only be 0123, or 1230, or 2301, or 3012, so the number is given by the number of nodes (maybe times 2...)
+                  //How many ways are there? If the nodes are 0 1 2 3, it could only be 0123, or 1230, or 2301, or 3012, or the REVERSE of each of them
                   std::vector<unsigned>  face_nodes_linear(face_nodes.begin(),face_nodes.begin() + geom_elem_per_dimension->n_nodes_linear() );
                   std::vector<unsigned>  face_nodes_bdry_group_linear(face_nodes_bdry_group.begin(),face_nodes_bdry_group.begin() + geom_elem_per_dimension->n_nodes_linear() );
                   
-                  unsigned n_alternatives = geom_elem_per_dimension->n_nodes_linear();
+                  unsigned n_alternatives = 2*geom_elem_per_dimension->n_nodes_linear();
                   std::vector< std::vector<unsigned> > face_alternatives(n_alternatives);
                   
-               for(unsigned alt = 0; alt < n_alternatives; alt++) {
-                   face_alternatives[alt].resize(n_alternatives);
-               for(unsigned i = 0; i < n_alternatives; i++) {
-                   unsigned mod_index = (i+alt)%n_alternatives;
+               for(unsigned alt = 0; alt < n_alternatives/2; alt++) {
+                   unsigned face_length = geom_elem_per_dimension->n_nodes_linear();
+                   face_alternatives[alt].resize( face_length );
+                 for(unsigned i = 0; i < face_length; i++) {
+                     unsigned mod_index = (i+alt)%face_length;
                           face_alternatives[alt][i] = face_nodes_bdry_group_linear[mod_index];
-                 }
-              }
+                   }
+               }
+              
+               for(unsigned alt = n_alternatives/2; alt < n_alternatives; alt++) {
+                    face_alternatives[alt] = face_alternatives[alt-(n_alternatives/2)];
+                    std::reverse(face_alternatives[alt].begin(),face_alternatives[alt].end());
+                }
+
           
              std::vector<bool>  is_same_face(n_alternatives);
              bool bool_union = false;
