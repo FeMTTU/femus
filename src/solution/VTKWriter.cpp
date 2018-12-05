@@ -45,9 +45,13 @@ namespace femus {
 
   VTKWriter::~VTKWriter(){}
 
-
-  void VTKWriter::Write( const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
-
+   void VTKWriter::Write(const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+       Write(_gridn, output_path, order, vars, time_step );
+   }
+ 
+  
+  void VTKWriter::Write(const unsigned my_level, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+      
     // *********** open vtu files *************
     std::ofstream fout;
 
@@ -66,7 +70,7 @@ namespace femus {
     else filename_prefix = "mesh";
 
     std::ostringstream filename;
-    filename << output_path << "/" << dirnamePVTK << filename_prefix << ".level" << _gridn << "." << _iproc << "." << time_step << "." << order << ".vtu";
+    filename << output_path << "/" << dirnamePVTK << filename_prefix << ".level" << my_level << "." << _iproc << "." << time_step << "." << order << ".vtu";
 
     fout.open( filename.str().c_str() );
     if( !fout.is_open() ) {
@@ -86,7 +90,7 @@ namespace femus {
     }
     else {
       std::ostringstream Pfilename;
-      Pfilename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".pvtu";
+      Pfilename << output_path << "/" << filename_prefix << ".level" << my_level << "." << time_step << "." << order << ".pvtu";
       Pfout.open( Pfilename.str().c_str() );
       if( Pfout.is_open() ) {
         std::cout << std::endl << " The output is printed to file " << Pfilename.str() << " in parallel VTK-XML (64-based) format" << std::endl;
@@ -103,13 +107,13 @@ namespace femus {
     Pfout << "  <PUnstructuredGrid GhostLevel=\"0\">" << std::endl;
     for( int jproc = 0; jproc < _nprocs; jproc++ ) {
       Pfout << "    <Piece Source=\"" << dirnamePVTK
-            << filename_prefix << ".level" << _gridn << "." << jproc << "." << time_step << "." << order << ".vtu"
+            << filename_prefix << ".level" << my_level << "." << jproc << "." << time_step << "." << order << ".vtu"
             << "\"/>" << std::endl;
     }
     // ****************************************
 
-    Mesh* mesh = _ml_mesh->GetLevel( _gridn - 1 );
-    Solution* solution = _ml_sol->GetSolutionLevel( _gridn - 1 );
+    Mesh* mesh = _ml_mesh->GetLevel( my_level - 1 );
+    Solution* solution = _ml_sol->GetSolutionLevel( my_level - 1 );
 
     //count the own node dofs on all levels
     unsigned nvt = mesh->_ownSize[index][_iproc];

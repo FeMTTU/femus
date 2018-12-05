@@ -15,8 +15,8 @@ using namespace femus;
 
 double  nonlin_term_function(const double& v) {
     
-   return 1.;
-//    return 1./( (1. - v) );
+//    return 1.;
+   return 1./( (1. - v) );
 //    return 0.01*1./( (1. - v)*(1. - v) );
 //     return exp(v);
  }
@@ -24,8 +24,8 @@ double  nonlin_term_function(const double& v) {
 
 double  nonlin_term_derivative(const double& v) {
     
-    return 0.;
-//    return  +2. * 1./( (1. - v)*(1. - v) ); 
+//     return 0.;
+   return  +2. * 1./( (1. - v)*(1. - v) ); 
 //    return 0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
 //     return exp(v);
  }
