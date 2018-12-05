@@ -15,8 +15,12 @@ int main(int argc,char **args) {
   FemusInit init(argc,args,MPI_COMM_WORLD);
 
 //   std::string input_file = "turek_FSI1.neu";
-  std::string input_file = "FourQuad9_boundaries_groups.med";
-//   std::string input_file = "NineQuad9_without_groups.med";
+  std::string input_file = "Quad9_Four_boundaries_groups.med";
+//   std::string input_file = "Quad9_Nine_without_groups.med";
+//   std::string input_file = "Tri6_Two_boundaries.med"; 
+//   std::string input_file = "Hex27_One_boundaries_groups.med";
+//   std::string input_file = "Tet10_Twelve_boundaries.med"; ///@todo there seems to be an error in the output computation of biquadratic nodes
+//   std::string input_file = "OneTet10.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
 

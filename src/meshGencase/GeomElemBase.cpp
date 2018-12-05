@@ -8,21 +8,16 @@
 
 #include "GeomElTypeEnum.hpp"
 #include "FETypeEnum.hpp"
-#include "FEQuad1.hpp"
-#include "FEQuad4.hpp"
-#include "FEQuad9.hpp"
-#include "FEHex1.hpp"
-#include "FEHex8.hpp"
-#include "FEHex27.hpp"
-#include "FETri1.hpp"
-#include "FETri3.hpp"
-#include "FETri6.hpp"
-#include "FETet1.hpp"
-#include "FETet4.hpp"
-#include "FETet10.hpp"
-#include "FEEdge1.hpp"
-#include "FEEdge2.hpp"
-#include "FEEdge3.hpp"
+#include "GeomElemQuad4.hpp"
+#include "GeomElemQuad9.hpp"
+#include "GeomElemHex8.hpp"
+#include "GeomElemHex27.hpp"
+#include "GeomElemTri3.hpp"
+#include "GeomElemTri6.hpp"
+#include "GeomElemTet4.hpp"
+#include "GeomElemTet10.hpp"
+#include "GeomElemEdge2.hpp"
+#include "GeomElemEdge3.hpp"
 
 
 
@@ -53,11 +48,11 @@ GeomElemBase* GeomElemBase::build(const std::string geomel_id_in, const uint fe_
        
       switch(fe_family_in) {
       case(QQ):
-        return new  FEHex27()  ;
+        return new  GeomElemHex27()  ;
       case(LL):
-        return new  FEHex8()  ;
+        return new  GeomElemHex8()  ;
       case(KK):
-        return new  FEHex1()  ;
+        abort()  ;
       }
       
       }
@@ -68,11 +63,11 @@ GeomElemBase* GeomElemBase::build(const std::string geomel_id_in, const uint fe_
 	
       switch(fe_family_in) {
       case(QQ):
-        return new  FETet10()  ;
+        return new  GeomElemTet10()  ;
       case(LL):
-        return new  FETet4()  ;
+        return new  GeomElemTet4()  ;
       case(KK):
-        return new  FETet1()  ;
+        abort() ;
       }
 
       }
@@ -80,11 +75,11 @@ GeomElemBase* GeomElemBase::build(const std::string geomel_id_in, const uint fe_
 	
       switch(fe_family_in) {
       case(QQ):
-        return new  FEQuad9()  ;
+        return new  GeomElemQuad9()  ;
       case(LL):
-        return new  FEQuad4()  ;
+        return new  GeomElemQuad4()  ;
       case(KK):
-        return new  FEQuad1()  ;
+        abort()  ;
       }
       
       }
@@ -92,11 +87,11 @@ GeomElemBase* GeomElemBase::build(const std::string geomel_id_in, const uint fe_
 	
       switch(fe_family_in) {
       case(QQ):
-        return new  FETri6()  ;
+        return new  GeomElemTri6()  ;
       case(LL):
-        return new  FETri3()  ;
+        return new  GeomElemTri3()  ;
       case(KK):
-        return new  FETri1()  ;
+        abort() ;
       }
 	
       }
@@ -105,11 +100,11 @@ GeomElemBase* GeomElemBase::build(const std::string geomel_id_in, const uint fe_
 	
       switch(fe_family_in) {
       case(QQ):
-        return new  FEEdge3()  ;
+        return new  GeomElemEdge3()  ;
       case(LL):
-        return new  FEEdge2()  ;
+        return new  GeomElemEdge2()  ;
       case(KK):
-        return new  FEEdge1()  ; 
+        abort()  ; 
       }
       
       }
