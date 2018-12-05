@@ -52,6 +52,10 @@ namespace femus {
   
   void VTKWriter::Write(const unsigned my_level, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
       
+    std::ostringstream level_name_stream;    
+    level_name_stream << ".level" << my_level;
+    std::string level_name(level_name_stream.str());   
+       
     // *********** open vtu files *************
     std::ofstream fout;
 
@@ -70,7 +74,7 @@ namespace femus {
     else filename_prefix = "mesh";
 
     std::ostringstream filename;
-    filename << output_path << "/" << dirnamePVTK << filename_prefix << ".level" << my_level << "." << _iproc << "." << time_step << "." << order << ".vtu";
+    filename << output_path << "/" << dirnamePVTK << filename_prefix << level_name << "." << _iproc << "." << time_step << "." << order << ".vtu";
 
     fout.open( filename.str().c_str() );
     if( !fout.is_open() ) {
@@ -90,7 +94,7 @@ namespace femus {
     }
     else {
       std::ostringstream Pfilename;
-      Pfilename << output_path << "/" << filename_prefix << ".level" << my_level << "." << time_step << "." << order << ".pvtu";
+      Pfilename << output_path << "/" << filename_prefix << level_name << "." << time_step << "." << order << ".pvtu";
       Pfout.open( Pfilename.str().c_str() );
       if( Pfout.is_open() ) {
         std::cout << std::endl << " The output is printed to file " << Pfilename.str() << " in parallel VTK-XML (64-based) format" << std::endl;
@@ -107,7 +111,7 @@ namespace femus {
     Pfout << "  <PUnstructuredGrid GhostLevel=\"0\">" << std::endl;
     for( int jproc = 0; jproc < _nprocs; jproc++ ) {
       Pfout << "    <Piece Source=\"" << dirnamePVTK
-            << filename_prefix << ".level" << my_level << "." << jproc << "." << time_step << "." << order << ".vtu"
+            << filename_prefix << level_name << "." << jproc << "." << time_step << "." << order << ".vtu"
             << "\"/>" << std::endl;
     }
     // ****************************************
