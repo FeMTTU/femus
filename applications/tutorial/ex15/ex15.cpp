@@ -79,7 +79,7 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh); // Here we provide the mesh info to the problem.
 
   // add variables to mlSol
-  mlSol.AddSolution("u", LAGRANGE, SECOND); // We may have more than one, add each of them as u,v,w with their apprx type.
+  mlSol.AddSolution("u", LAGRANGE, SECOND,2); // We may have more than one, add each of them as u,v,w with their apprx type.
   
   mlSol.AddSolution("v", LAGRANGE, SECOND); // We may have more than one, add each of them as u,v,w with their apprx type.
   
@@ -125,10 +125,8 @@ int main(int argc, char** args) {
 
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
     
-    Solution * sol = mlSol.GetSolutionLevel(0);    // pointer to the solution (level) object
+    system.CopySolutionToOldSolution();
     
-    unsigned soluIndex = mlSol.GetIndex("u");  
-           
     system.MGsolve();
     
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
@@ -277,7 +275,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-      soluOld[i] = (*sol->_Sol[soluIndex])(solDof);
+      soluOld[i] = (*sol->_SolOld[soluIndex])(solDof);
       bdc[i] = ( (*sol->_Bdc[soluIndex])(solDof) < 0.5) ? true : false;
       for( unsigned j = 0; j < RK; j++ ){
         solk[j][i] = (*sol->_Sol[solkIndex[j]])(solDof);          // global extraction and local storage for the solution
@@ -298,6 +296,22 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
     }
     
     mlPdeSys->GetIntermediateSolutions(soluOld, solk, x, bdc, "u", solu);
+    
+//     const std::vector<double> & itime = mlPdeSys->GetIntermediateTimes();
+//     for (unsigned i = 0; i < nDofu; i++) {
+//       if( bdc[i] ){
+//         std::cout<< msh->GetSolutionDof(i, iel, soluType) <<" "<< soluOld[i] << std::endl;  
+//         for(unsigned j = 0; j < itime.size(); j++){
+//           double value;  
+//           std::vector < double> xv (dim);
+//           for (unsigned k = 0; k < dim; k++) {
+//             xv[k] = x[k][i];
+//           }
+//           SetBoundaryCondition(xv, "u", value, 1, itime[j]);
+//           std::cout<< msh->GetSolutionDof(i, iel, soluType) << " " << value << " " << solu[j][i].value() << std::endl;
+//         }
+//       } 
+//     }
     
     
 

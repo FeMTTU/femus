@@ -609,7 +609,7 @@ namespace femus
 
   }
   
-  
+   bool PRINT = false;
    void MultiLevelSolution::GenerateRKBdc(
        const unsigned int &solIndex, const std::vector<unsigned> &solKiIndex, 
        const unsigned int &grid0, const std::vector < double> & itime, const double &time0, const double &dt,const double AI[5][5])
@@ -708,7 +708,9 @@ namespace femus
                                 _SetBoundaryConditionFunction(xx, _solName[solIndex], value0, msh->el->GetBoundaryIndex(iel, jface), time0);
 
                     if(test) {
-                      
+                        
+                      if(PRINT) std::cout << inode_coord_Metis << " "<< value0 << "\n" ;
+                                 
                       std::vector < double > ivalue(solKiIndex.size(),0.);   
                       for(unsigned k = 0; k < solKiIndex.size(); k++){
                         if (_bdcFuncSetMLProb){
@@ -717,6 +719,7 @@ namespace femus
                         else{
                           _SetBoundaryConditionFunction(xx, _solName[solIndex], ivalue[k], msh->el->GetBoundaryIndex(iel, jface), itime[k]);
                         }
+                        if(PRINT) std::cout << inode_coord_Metis << " "<< ivalue[k] << std::endl;
                         ivalue[k] -= value0;
                       }  
                         
@@ -750,7 +753,7 @@ namespace femus
       }
     }
 
-
+  PRINT = false;
   }
   
   

@@ -260,7 +260,10 @@ template <class Base>
     unsigned level = this->_solution.size() - 1u;  
     
     for(unsigned i = 0; i < _solName.size(); i++){
-      unsigned solIndex = this->_ml_sol->GetIndex(_solName[i].str().c_str());  
+      unsigned solIndex = this->_ml_sol->GetIndex(_solName[i].str().c_str()); 
+      
+      *(this->_solution[level]->_Sol[i]) = *(this->_solution[level]->_SolOld[i]);
+      
       for( unsigned j = 0; j < _RK; j++ ){
          
          unsigned solkiIndex = this->_ml_sol->GetIndex( _solKiName[i][j].str().c_str() );   
