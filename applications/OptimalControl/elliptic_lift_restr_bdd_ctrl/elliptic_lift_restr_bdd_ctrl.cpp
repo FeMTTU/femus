@@ -8,6 +8,10 @@
 
 using namespace femus;
 
+double InitialValueActFlag(const std::vector < double >& x) {
+  return 0.;
+}
+
 double InitialValueContReg(const std::vector < double >& x) {
   return ControlDomainFlag_internal_restriction(x);
 }
@@ -92,6 +96,8 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  const unsigned int fake_time_dep_flag = 2;
+  mlSol.AddSolution("act_flag", LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
@@ -102,6 +108,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("mu", InitialValueMu);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
+  mlSol.Initialize("act_flag", InitialValueActFlag);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -280,6 +287,17 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < double >  sol_mu;   sol_mu.reserve(maxSize);
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
+  
+ //************** act flag **************************** 
+   std::string act_flag_name = "act_flag";
+   unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
+   unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
+      if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
+        *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
+      }
+  
+  
+  
   //********* variables for ineq constraints *****************
   const int ineq_flag = INEQ_FLAG;
   const double ctrl_lower =  CTRL_BOX_LOWER;
@@ -417,7 +435,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
     }
     
-    
  //************** update active set flag for current nonlinear iteration **************************** 
  // 0: inactive; 1: active_a; 2: active_b
    assert(nDof_mu == nDof_ctrl);
@@ -428,7 +445,17 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
         if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
         else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
     }
- 
+
+ //************** act flag **************************** 
+    unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag);    // number of solution element dofs
+    
+    for (unsigned i = 0; i < nDof_act_flag; i++) {
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag); 
+      (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);     
+    }    
+    
+    
+    
  //******************** ALL VARS ********************* 
     unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
     int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
@@ -811,6 +838,30 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   }
     RES->add_vector_blocked(one_times_mu, positions);
     RES->print();
+    
+  // ***************** check active flag sets *******************
+    int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare( *(sol->_Sol[solIndex_act_flag]) ) );
+    bool compare_bool;
+    if (compare_return == -1) compare_bool = true;
+      if( compare_bool && (mlPdeSys->GetNonlinearIt() > 0) ) {
+            std::cout << "Active set did not change at iteration " << mlPdeSys->GetNonlinearIt() << std::endl;
+            
+      }
+      
+// This piece of code should go in the NonLinearImplicitSystem::solve function at Line 273, but it is specific of the primal-dual active set method so we have to define another function
+//         // ***************** check active flag sets *******************
+//          Solution*                sol = this->GetMLProb()._ml_sol->GetSolutionLevel(_levelToAssemble);    // pointer to the solution (level) object
+//    std::string act_flag_name = "act_flag";
+//    unsigned int solIndex_act_flag = this->GetMLProb()._ml_sol->GetIndex(act_flag_name.c_str());
+// 
+//     int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare( *(sol->_Sol[solIndex_act_flag]) ) );
+//     bool compare_bool;
+//     if (compare_return == -1) compare_bool = true;
+//       if( compare_bool && (_nonliniteration  > 0) ) {
+//             std::cout << "Active set did not change at iteration " << _nonliniteration << std::endl;
+//             break;
+//       }     
+      
     
   return;
 }

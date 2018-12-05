@@ -40,7 +40,7 @@ namespace femus {
   {
     isMpGDAllocated = false;
     
-      if ( !strcmp(geom_elem, "quad") /*&&  strcmp(geom_elem, "line")*/ ) { //QUAD
+      if ( !strcmp(geom_elem, "quad") || !strcmp(geom_elem, "tri") ) { //QUAD or TRI ///@todo delete in the destructor 
            _gauss_bdry = new  Gauss("line",order_gauss);
        }
 //       else {
@@ -74,6 +74,7 @@ namespace femus {
       delete [] _phi_mapGD;
       delete [] _dphidxez_mapGD;
     }
+    
 
   }
 

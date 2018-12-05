@@ -9,18 +9,14 @@
 
 
 //*********************** Sets the regularization parameters *******************************************************
-#define ALPHA_CTRL_BDRY 1.e-4
-#define BETA_CTRL_BDRY 1.e-4
-
-
 #define ALPHA_CTRL_VOL 1.e-5
 #define BETA_CTRL_VOL 1.e-5
 
 
 //*********************** Control box constraints *******************************************************
 #define  INEQ_FLAG 1
-#define  CTRL_BOX_LOWER   -15
-#define  CTRL_BOX_UPPER   1000
+#define  CTRL_BOX_LOWER   -1000
+#define  CTRL_BOX_UPPER    0.5
 #define  C_COMPL 1.
 
 
@@ -31,8 +27,8 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ******
   int target_flag = 0; //set 0 to 1 to get the entire domain
   
-   if (   /*elem_center[0] < 0.75 + 1.e-5    && elem_center[0] > 0.25  - 1.e-5  && */ 
-        /*elem_center[1] <  0.5  + 1.e-5     && */    elem_center[1] > 0.5 -  1.e-5  /*(1./16. + 1./64.)*/
+   if (   elem_center[0] < 0.75 + 1.e-5    &&  elem_center[0] > 0.25  - 1.e-5  &&  
+          elem_center[1] < 0.9  + 1.e-5   &&  elem_center[1] > 0.75 -  1.e-5  /*(1./16. + 1./64.)*/
   ) {
      
      target_flag = 1;
@@ -48,7 +44,7 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 
 double DesiredTarget()
 {
-   return -1.;
+   return 2.;
 }
 
 

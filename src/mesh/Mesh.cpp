@@ -20,7 +20,7 @@
 #include "MeshGeneration.hpp"
 #include "MeshMetisPartitioning.hpp"
 #include "GambitIO.hpp"
-#include "SalomeIO.hpp"
+#include "MED_IO.hpp"
 #include "NumericVector.hpp"
 
 // C++ includes
@@ -138,7 +138,7 @@ namespace femus
       GambitIO(*this).read(name, _coords, Lref, type_elem_flag);
     }
     else if(name.rfind(".med") < name.size()) {
-      SalomeIO(*this).read(name, _coords, Lref, type_elem_flag);
+      MED_IO(*this).read(name, _coords, Lref, type_elem_flag);
     }
     else {
       std::cerr << " ERROR: Unrecognized file extension: " << name

@@ -21,7 +21,7 @@
 //*********************** Control box constraints *******************************************************
 #define  INEQ_FLAG 1
 #define  CTRL_BOX_LOWER   -1000
-#define  CTRL_BOX_UPPER   0.01
+#define  CTRL_BOX_UPPER   0.5
 #define  C_COMPL 1.
 
 
