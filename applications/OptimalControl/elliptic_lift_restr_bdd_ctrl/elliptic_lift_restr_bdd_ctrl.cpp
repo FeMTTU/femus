@@ -423,16 +423,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
     }
     
- //************** act flag **************************** 
-   std::string act_flag_name = "act_flag";
-    unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
-    unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
-    unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag);    // number of solution element dofs
-    
-    for (unsigned i = 0; i < nDof_act_flag; i++) {
-      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag);   // global to global mapping between solution node and solution dof
-      (sol->_Sol[solIndex_act_flag])->set(solDof_mu,7.);      // global extraction and local storage for the solution 
-    }    
  //************** update active set flag for current nonlinear iteration **************************** 
  // 0: inactive; 1: active_a; 2: active_b
    assert(nDof_mu == nDof_ctrl);
@@ -443,7 +433,20 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
     else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
     }
- 
+
+ //************** act flag **************************** 
+   std::string act_flag_name = "act_flag";
+    unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
+    unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
+    unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag);    // number of solution element dofs
+    
+    for (unsigned i = 0; i < nDof_act_flag; i++) {
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag); 
+      (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);     
+    }    
+    
+    
+    
  //******************** ALL VARS ********************* 
     unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
     int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
