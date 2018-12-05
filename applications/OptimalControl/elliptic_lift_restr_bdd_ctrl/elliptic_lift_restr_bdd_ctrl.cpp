@@ -8,6 +8,10 @@
 
 using namespace femus;
 
+double InitialValueActFlag(const std::vector < double >& x) {
+  return 0.;
+}
+
 double InitialValueContReg(const std::vector < double >& x) {
   return ControlDomainFlag_internal_restriction(x);
 }
@@ -92,6 +96,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  mlSol.AddSolution("act_flag", LAGRANGE, FIRST);               //this variable is not solution of any eqn, it's just a given field
 
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
@@ -102,6 +107,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("mu", InitialValueMu);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
+  mlSol.Initialize("act_flag", InitialValueActFlag);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -417,7 +423,16 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
     }
     
+ //************** act flag **************************** 
+   std::string act_flag_name = "act_flag";
+    unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
+    unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
+    unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag);    // number of solution element dofs
     
+    for (unsigned i = 0; i < nDof_act_flag; i++) {
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag);   // global to global mapping between solution node and solution dof
+      (sol->_Sol[solIndex_act_flag])->set(solDof_mu,7.);      // global extraction and local storage for the solution 
+    }    
  //************** update active set flag for current nonlinear iteration **************************** 
  // 0: inactive; 1: active_a; 2: active_b
    assert(nDof_mu == nDof_ctrl);
@@ -811,6 +826,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   }
     RES->add_vector_blocked(one_times_mu, positions);
     RES->print();
+    
+    
     
   return;
 }
