@@ -19,6 +19,13 @@ GeomElemTri6::GeomElemTri6() : GeomElemBase() {  }
 
 // =======================
 //STATIC data member
+  const unsigned  GeomElemTri6::_faces[3][3] = {
+      {0, 1, 3},
+      {1, 2, 4},
+      {2, 0, 5}
+  };
+
+
 	   const float GeomElemTri6::_embedding_matrix[4][6][6] =
 { // ---------------------------------------
   {// embedding matrix for child 0
