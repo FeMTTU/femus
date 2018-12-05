@@ -640,6 +640,8 @@ namespace femus
         group_info[j] = get_group_flags_per_mesh(group_names[j]);
               
     }
+    
+    H5Gclose(gid_groups);
    
     return group_info;
     
