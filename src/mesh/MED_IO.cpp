@@ -619,10 +619,6 @@ namespace femus
      
      std::string group_list = group_ensemble +  "/" + mesh_menu + "/" + group_elements;
      hid_t  gid_groups      = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
-    if(gid_groups != 0) {
-      std::cout << "Groups of Elements not found" << std::endl;
-//       abort();
-    }
      
      hsize_t n_groups = 0;
      hid_t status_groups = H5Gget_num_objs(gid_groups, &n_groups);
