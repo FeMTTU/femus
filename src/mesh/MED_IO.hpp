@@ -100,8 +100,6 @@ class MED_IO : public MeshInput<Mesh>
    /** Determine mesh dimension from mesh file */
    const std::vector< GeomElemBase* >  set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name); //this cannot be const because it sets the dimension in the mesh
 
-   unsigned  get_elem_number_of_nodes(const  std::string el_type) const;
-   
    GeomElemBase * get_geom_elem_from_med_name(const  std::string el_type) const;
 
    /** Read FE type */
@@ -142,7 +140,7 @@ MED_IO::MED_IO (Mesh& mesh) :
        
        _geom_elems[0] = new GeomElemHex27();
        _geom_elems[1] = new GeomElemTet10();
-//        _geom_elems[2] = new Wedge18();
+//        _geom_elems[2] = new GeomElemWedge18();
        _geom_elems[3] = new GeomElemQuad9();
        _geom_elems[4] = new GeomElemTri6();
        _geom_elems[5] = new GeomElemEdge3();

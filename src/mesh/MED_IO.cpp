@@ -874,35 +874,7 @@ namespace femus
   
   
 
-  unsigned  MED_IO::get_elem_number_of_nodes(const  std::string el_type) const {
 
-    unsigned Node_el;
-
-         if(el_type.compare("HE8") == 0) Node_el = 8;
-    else if(el_type.compare("H20") == 0) Node_el = 20;
-    else if(el_type.compare("H27") == 0) Node_el = 27;
-
-    else if(el_type.compare("TE4") == 0) Node_el = 4;
-    else if(el_type.compare("T10") == 0) Node_el = 10;
-
-    else if(el_type.compare("QU4") == 0) Node_el = 4;
-    else if(el_type.compare("QU8") == 0) Node_el = 8;
-    else if(el_type.compare("QU9") == 0) Node_el = 9;
-
-    else if(el_type.compare("TR3") == 0) Node_el = 3;
-    else if(el_type.compare("TR6") == 0) Node_el = 6;
-
-    else if(el_type.compare("SE3") == 0) Node_el = 3;
-    else if(el_type.compare("SE2") == 0) Node_el = 2;
-    else {
-      std::cout << "MED_IO::read: element not supported";
-      abort();
-    }
-
-    return Node_el;
-  }
-  
-  
   GeomElemBase * MED_IO::get_geom_elem_from_med_name(const  std::string el_type) const {
       
          if(el_type.compare("HE8") == 0) return new GeomElemHex8();
