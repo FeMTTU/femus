@@ -35,7 +35,7 @@ double pi = acos (-1.);
 double k_h = 0.0001 ;
 
 const unsigned NumberOfLayers = 4;
-unsigned RK_order = 2;
+unsigned RK_order = 3;
 
 unsigned counter = 0;
 unsigned counter2 = 0;
@@ -463,7 +463,7 @@ void Assembly (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps);
 
 void ETD_assembly (Vec &v, Vec &y, Mat &A);
 
-void RK_assembly (Vec &HTold, Vec &y, Mat &A);
+void RK_assembly (Vec &HTold, Vec &y, Mat &A, unsigned &RK_order);
 
 //---------- old ----------//
 
@@ -651,8 +651,8 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 4000; //RK4: dt=0.5, numberOfTimeSteps = 16001
-  dt = 0.01;
+  unsigned numberOfTimeSteps = 24000; //RK4: dt=0.5, numberOfTimeSteps = 16001
+  dt = 0.005;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {
@@ -3690,7 +3690,7 @@ void Assembly (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
     }
   }
   
-  RK_assembly(HTold,y,A);
+  RK_assembly(HTold,y,A,RK_order);
 
 // printing of the max value of w in every layer
 //   for ( unsigned k = 0; k < NLayers; k++ ) {
@@ -3858,21 +3858,75 @@ void ETD_assembly (Vec &v, Vec &y, Mat &A)
 
 }
 
-void RK_assembly (Vec &HTold, Vec &y, Mat &A)
+void RK_assembly (Vec &HTold, Vec &y, Mat &A, unsigned &RK_order)
 {
-
-  for (unsigned RK_step = 0; RK_step < 1; RK_step++) {
-
+  
+  if (RK_order==1){
     MatMult(A, HTold, y);    
     VecScale(y, dt);
-
-    //if RK_step == 1 compute K2 according to RK method;
-
-    //if RK_step == 2 compute K3 according to RK method;
-
-    //if RK_step == 3 compute K4 according to RK method;
-
   }
+  else if(RK_order==2){
+    Vec K1, K2, temp;
+    VecDuplicate(y, &K1);
+    VecDuplicate(y, &K2);
+    VecDuplicate(HTold, &temp);
+    
+    MatMult(A, HTold, K1);    
+    VecScale(K1, dt);
+    VecWAXPY(temp, 1., HTold, K1);
+    MatMult(A, temp, K2);
+    VecScale(K1, 0.5);
+    VecWAXPY(y,0.5*dt,K2,K1);
+    
+    VecDestroy(&K1);
+    VecDestroy(&K2);
+    VecDestroy(&temp);
+  }
+  else if(RK_order==3){ 
+    Vec K1, K2, K3, temp;
+    VecDuplicate(y, &K1);
+    VecDuplicate(y, &K2);
+    VecDuplicate(y, &K3);
+    VecDuplicate(HTold, &temp);
 
+    MatMult(A, HTold, K1); 
+    VecWAXPY(temp, dt/3., K1, HTold);
+    MatMult(A, temp, K2);
+    VecWAXPY(temp, 2./3.*dt, K2, HTold);
+    MatMult(A, temp, K3);
+    VecScale(K3, 3./4.*dt);
+    VecWAXPY(y, 1./4.*dt, K1, K3);
+    
+    VecDestroy(&K1);
+    VecDestroy(&K2);
+    VecDestroy(&K3);
+    VecDestroy(&temp);
+  }
+  else if(RK_order==4){
+    Vec K1, K2, K3, K4, temp;
+    VecDuplicate(y, &K1);
+    VecDuplicate(y, &K2);
+    VecDuplicate(y, &K3);
+    VecDuplicate(y, &K4);
+    VecDuplicate(HTold, &temp);
+    
+    MatMult(A, HTold, K1); 
+    VecWAXPY(temp, dt/2., K1, HTold);
+    MatMult(A, temp, K2);
+    VecWAXPY(temp, dt/2., K2, HTold);
+    MatMult(A, temp, K3);
+    VecWAXPY(temp, dt, K3, HTold);
+    MatMult(A, temp, K4);
+    VecScale(K2, dt/3.);
+    VecWAXPY(y, dt/6., K1, K2);
+    VecAXPY(y, dt/3., K3);
+    VecAXPY(y, dt/6., K4);
+    
+    VecDestroy(&K1);
+    VecDestroy(&K2);
+    VecDestroy(&K3);
+    VecDestroy(&K4);
+    VecDestroy(&temp);
+  }
 
 }
