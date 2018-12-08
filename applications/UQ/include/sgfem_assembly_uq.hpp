@@ -182,14 +182,14 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
 //BEGIN coefficient obtained projecting the exponential of the KL
 //             for ( unsigned q1 = 0; q1 < Jq.size(); q1 ++ ) {
 //                 std::vector <double> aStochasticTerm2 ( numberOfEigPairs );
-//
+// 
 //                 unsigned numberOfQuadraturePointsForProjection = 16;
-//
+// 
 //                 const double *quadraturePoints = myuq.GetQuadraturePoints ( numberOfQuadraturePointsForProjection, quadratureType );
 //                 const double *quadratureWeights = myuq.GetQuadratureWeights ( numberOfQuadraturePointsForProjection, quadratureType );
-//
+// 
 //                 const std::vector < std::vector < double > >  &polyProjection = myuq.GetPolynomial ( numberOfQuadraturePointsForProjection, qIndex, quadratureType );
-//
+// 
 //                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
 //                     aStochasticTerm2[i] = 0.;
 //                     for ( unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++ ) {
@@ -197,7 +197,7 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
 //                                                * polyProjection[Jq[q1][i]][j] * quadratureWeights[j];
 //                     }
 //                 }
-//
+// 
 //                 double aS1 = 1.;
 //                 double aS2 = 1.;
 //                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
@@ -206,7 +206,7 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
 //                     aS2 *= aStochasticTerm2[i];
 //                 }
 // //         std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
-//
+// 
 //                 aStochastic[q1] = amin * aS1 + aS2; //a_q(x_ig)
 //                 if ( fabs ( aStochastic[q1] ) > 10. ) {
 //                     std::cout << " coeff =  " << aStochastic[q1] << std::endl;

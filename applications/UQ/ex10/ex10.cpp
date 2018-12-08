@@ -61,8 +61,8 @@ unsigned nyCoarseBox;
 double yMinCoarseBox = - 2.;
 double yMaxCoarseBox = 4.;
 unsigned nzCoarseBox;
-double zMinCoarseBox = - 2.;
-double zMaxCoarseBox = 4.;
+double zMinCoarseBox = - 2.5;
+double zMaxCoarseBox = 5.5;
 
 unsigned numberOfSamplesFinest = 1000000; //10^6 for spatial average, 10^7 for integral of the square, 10^6 for SGM with random variable (not KL)
 unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamplesFinest ) ) ); //for spatial average
@@ -861,8 +861,8 @@ void GetCoefficientsForQuantityOfInterest ( MultiLevelProblem& ml_prob, std::vec
                 for ( unsigned i = 0; i < nDofu; i++ ) {
                     solu_gss += phi[i] * solu[j][i];
                 }
-         alphasTemp[j] += solu_gss * solu_gss * weight ; // this is the integral of the square.
-//                 alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
+//          alphasTemp[j] += solu_gss * solu_gss * weight ; // this is the integral of the square.
+                alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
             }
         } // end gauss point loop
 
@@ -874,9 +874,9 @@ void GetCoefficientsForQuantityOfInterest ( MultiLevelProblem& ml_prob, std::vec
         MPI_Allreduce ( &alphasTemp[j], &alphas[j], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     }
 
-    for ( unsigned j = 0; j < Jp.size(); j++ ) {
-        std::cout << " alpha = " << std::setprecision ( 14 ) << alphas[j] << std::endl;
-    }
+//     for ( unsigned j = 0; j < Jp.size(); j++ ) {
+//         std::cout << " alpha = " << std::setprecision ( 14 ) << alphas[j] << std::endl;
+//     }
 
 }
 //
@@ -1338,7 +1338,7 @@ void GetQoIStandardizedSamples ( std::vector< double >& alphas, std::vector< std
 //                 }
 //                 sgmQoIStandardized[m][idim] = muLaplace - bLaplace * signU * log ( 1. - 2. * fabs ( U ) ) ;
 //             }
-//
+// 
 //             else if ( idim == 1 ) {
 //                 double normalSample = var_nor();
 //                 sgmQoIStandardized[m][idim] = normalSample;
@@ -1453,7 +1453,7 @@ void GetHistogramAndKDE ( std::vector< std::vector <double > > & sgmQoIStandardi
                     vx[0][1] = xRight;
 
                     std::vector < double> sampleLocal ( 1, 0. );
-                    sampleLocal[0] = - 1. + 2. * ( sgmQoIStandardized[m][0] - xRight ) / ( xLeft - xRight );
+                    sampleLocal[0] = - 1. + 2. * ( sgmQoIStandardized[m][0] - xLeft ) / ( xRight - xLeft );
 
                     msh->_finiteElement[ielType][solTypeKDE]->Jacobian ( vx, sampleLocal, weight, phi, gradphi );
 
@@ -1713,6 +1713,7 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
     double PI = acos ( -1. );
 
     double aL2ELocal = 0;
+    double aL2ELocalFinest = 0;
 
     for ( unsigned m = 0; m < numberOfSamples; m++ ) {
 
@@ -1741,8 +1742,8 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
                     vx[0][1] = xRight;
 
                     std::vector < double> sampleLocal ( 1, 0. );
-                    sampleLocal[0] = - 1. + 2. * ( sgmQoIStandardized[m][0] - xRight ) / ( xLeft - xRight );
-
+                    sampleLocal[0] = - 1. + 2. * ( sgmQoIStandardized[m][0] - xLeft ) / ( xRight - xLeft );
+                    
                     msh->_finiteElement[ielType][solTypeKDE]->Jacobian ( vx, sampleLocal, weight, phi, gradphi );
 
                     for ( unsigned inode = 0; inode < nDofsKDE; inode++ ) {
@@ -1757,12 +1758,12 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
                     //END
 
 //           double stdGaussian = exp(- sgmQoIStandardized[m][0] * sgmQoIStandardized[m][0] * 0.5) / sqrt(2 * PI);
-//
+// 
 //           aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
 
 
 //                     double uniform =  (fabs(sgmQoIStandardized[m][0]) <= 1.) ? 0.5 : 0. ;
-//
+// 
 //                     aL2ELocal += (solKDESample - uniform) * (solKDESample - uniform);
 
                     break;
@@ -1787,7 +1788,7 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
                 }
                 //END
 
-                aL2ELocal += ( solKDESample - solHISTOFSample ) * ( solKDESample - solHISTOFSample );
+                aL2ELocalFinest += ( solKDESample - solHISTOFSample ) * ( solKDESample - solHISTOFSample );
             }
 
         }
@@ -1834,25 +1835,25 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
                 }
 
 //                 double stdGaussian = exp ( - dotProduct * 0.5 ) / ( 2 * PI );
-//
+// 
 //                     if(dim == 3) stdGaussian /= sqrt(2 * PI);
-//
+// 
 //                     aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
 
 
 //                     double uniform = (dim == 2) ? 0.25 : 0.125;
-//
+// 
 //                     for(unsigned kdim = 0; kdim < dim; kdim++) {
 //                         if(fabs(sgmQoIStandardized[m][kdim]) > 1. || fabs(sgmQoIStandardized[m][kdim]) < - 1.) uniform = 0.;
 //                     }
-//
+// //
 //                     aL2ELocal += (solKDESample - uniform) * (solKDESample - uniform);
 
 //                 double laplaceDist = ( 1. / ( 2. * bLaplace ) ) * exp ( - fabs ( sgmQoIStandardized[m][0] - muLaplace ) / bLaplace );
 //                 double stdGaussian = exp ( - sgmQoIStandardized[m][1] * sgmQoIStandardized[m][1] * 0.5 ) / sqrt ( 2 * PI );
-//
+// 
 //                 double jointPDF = laplaceDist * stdGaussian;
-//
+// 
 //                 aL2ELocal += ( solKDESample - jointPDF ) * ( solKDESample - jointPDF );
 
                 //END
@@ -1871,18 +1872,27 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
                 }
                 //END
 
-                aL2ELocal += ( solKDESample - solHISTOFSample ) * ( solKDESample - solHISTOFSample );
+                aL2ELocalFinest += ( solKDESample - solHISTOFSample ) * ( solKDESample - solHISTOFSample );
             }
 
         }
     }
 
     double aL2E = 0.;
-    MPI_Allreduce ( &aL2ELocal, &aL2E, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    double aL2EFinest = 0.;
+    
+    
+    if(histoFinest == true) MPI_Allreduce ( &aL2ELocalFinest, &aL2EFinest, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    
+    else MPI_Allreduce ( &aL2ELocal, &aL2E, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
     aL2E = sqrt ( aL2E ) / numberOfSamples;
+    
+    aL2EFinest = sqrt ( aL2EFinest ) / numberOfSamples;
 
-    std::cout << "Average L2 Error = " << std::setprecision ( 11 ) << aL2E << std::endl;
+    if(histoFinest == true) std::cout << "Average L2 Error Finest = " << std::setprecision ( 11 ) << aL2EFinest << std::endl;
+    
+    else std::cout << "Average L2 Error = " << std::setprecision ( 11 ) << aL2E << std::endl;
 
 }
 
