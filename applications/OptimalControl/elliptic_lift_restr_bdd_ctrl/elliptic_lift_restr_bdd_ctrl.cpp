@@ -844,7 +844,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
   // ***************** check active flag sets *******************
     int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare( *(sol->_Sol[solIndex_act_flag]) ) );
-    bool compare_bool;
+    bool compare_bool = false;
     if (compare_return == -1) compare_bool = true;
       if( compare_bool && (mlPdeSys->GetNonlinearIt() > 0) ) {
             std::cout << "(In assembly function) Active set did not change at iteration " << mlPdeSys->GetNonlinearIt() << std::endl;
