@@ -27,67 +27,10 @@ namespace femus {
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod::NonLinearImplicitSystemWithPrimalDualActiveSetMethod(MultiLevelProblem& ml_probl,
       const std::string& name_in,
       const unsigned int number_in, const MgSmoother& smoother_type) :
-    LinearImplicitSystem(ml_probl, name_in, number_in, smoother_type),
-    _final_nonlinear_residual(1.e20),
-    _n_max_nonlinear_iterations(15),
-    _max_nonlinear_convergence_tolerance(1.e-6),
-    _maxNumberOfResidualUpdateIterations(1),
-    _debug_nonlinear(false),
-    _debug_function(NULL),
-    _debug_function_is_initialized(false)
-  {
+    NonLinearImplicitSystem(ml_probl, name_in, number_in, smoother_type)   {
 
   }
 
-  NonLinearImplicitSystemWithPrimalDualActiveSetMethod::~NonLinearImplicitSystemWithPrimalDualActiveSetMethod() {
-    this->clear();
-  }
-
-  void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::clear() {
-  }
-
-  // ********************************************
-
-  void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::init() {
-    Parent::init();
-  }
-
-  // ************************MG********************
-
-  bool NonLinearImplicitSystemWithPrimalDualActiveSetMethod::IsNonLinearConverged(const unsigned igridn, double &nonLinearEps) {
-    bool conv = true;
-    double L2normEps;
-    double L2normSol;
-    double L2normEpsDividedSol;
-    double L2normRes;
-
-    nonLinearEps = 0.;
-    const double absMinNonlinearEps = 1.e-50;
-    const double absMinNormSol = 1.e-15;
-    const double mindeltaNormSol = 1.e-50;
-
-    for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
-      unsigned indexSol = _SolSystemPdeIndex[k];
-      L2normRes    = _solution[igridn]->_Res[indexSol]->l2_norm();
-      L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
-      L2normSol    = _solution[igridn]->_Sol[indexSol]->l2_norm();
-      L2normEpsDividedSol = L2normEps / (L2normSol + mindeltaNormSol);
-
-      std::cout << "     ********* Level Max " << igridn + 1 << " Nonlinear Eps_l2norm/Sol_l2norm " << \
-                std::scientific << _ml_sol->GetSolutionName(indexSol) << "= " << L2normEpsDividedSol << \
-                "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << "  ** Res_l2norm= " << L2normRes << std::endl;
-      nonLinearEps = (nonLinearEps > L2normEpsDividedSol) ? nonLinearEps : L2normEpsDividedSol;
-      
-      if(( L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol ) && conv == true) {
-        conv = true;
-      }
-      else {
-        conv = false;
-      }
-    }
-
-    return conv;
-  }
 
   // ********************************************
 
@@ -269,6 +212,19 @@ restart:
 	      if (_debug_function_is_initialized) _debug_function(this->GetMLProb());
           
         }
+        
+        
+        // ***************** check active flag sets *******************
+         Solution*                sol = this->GetMLProb()._ml_sol->GetSolutionLevel(_levelToAssemble);    // pointer to the solution (level) object
+   unsigned int solIndex_act_flag = this->GetMLProb()._ml_sol->GetIndex(_active_flag_name.c_str());
+
+    int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare( *(sol->_Sol[solIndex_act_flag]) ) );
+    bool compare_bool;
+    if (compare_return == -1) compare_bool = true;
+      if( compare_bool && (_nonliniteration  > 0) ) {
+            std::cout << "Active set did not change at iteration " << _nonliniteration << std::endl;
+            break;
+      }           
         
     
         if(nonLinearIsConverged || _bitFlipOccurred) break;
