@@ -55,7 +55,7 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 6;
+    maxNumberOfMeshes = 5;
   } else {
     maxNumberOfMeshes = 4;
   }
@@ -181,6 +181,9 @@ int main(int argc, char** args) {
 
       VTKWriter vtkIO(&mlSol);
       vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+      
+      VTKWriter vtkIO_finest(mlSol_finest);
+      vtkIO_finest.Write(i+1, DEFAULT_OUTPUTDIR, "biquadratic_finest", variablesToBePrinted, i+1);
 
     }
   }
@@ -692,7 +695,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
       x[i].resize(nDofx);
     }
 
-    const double weird_multigrid_factor = 0.5;
+    const double weird_multigrid_factor = 0.25;  //don't know!
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
@@ -778,6 +781,6 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 
   std::pair < double, double > inexact_pair(sqrt(l2norm_inexact), sqrt(seminorm_inexact));
   
-  return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
+  return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
 
 }
