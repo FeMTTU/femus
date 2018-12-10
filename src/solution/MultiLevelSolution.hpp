@@ -218,6 +218,7 @@ public:
      // *******************************************************
 
     void RefineSolution( const unsigned &gridf );
+    void CoarsenSolutionByOneLevel_wrong( const unsigned &gridf );
 
   // ********************************************
     

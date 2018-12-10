@@ -689,6 +689,22 @@ namespace femus
   }
 
 
+    void MultiLevelSolution::CoarsenSolutionByOneLevel_wrong(const unsigned &grid_fine)  {
+
+    Mesh *msh = _mlMesh->GetLevel(grid_fine);
+    const unsigned grid_coarse = grid_fine - 1;
+    
+    for(unsigned k = 0; k < _solType.size(); k++) {
+
+      unsigned solType = _solType[k];
+      _solution[grid_coarse]->_Sol[k]->matrix_mult_transpose( *(_solution[grid_fine]->_Sol[k]), *(msh->GetCoarseToFineProjection(solType)) );
+      _solution[grid_coarse]->_Sol[k]->close();
+    }
+    
+  }
+
+  
+  
   void MultiLevelSolution::CopySolutionToOldSolution()
   {
     for(unsigned short i = 0; i < _gridn; i++) {
