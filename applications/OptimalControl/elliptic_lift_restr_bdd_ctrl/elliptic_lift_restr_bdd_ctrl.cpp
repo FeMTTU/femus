@@ -1,7 +1,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
 #include "../elliptic_param.hpp"
@@ -123,7 +123,7 @@ int main(int argc, char** args) {
   mlProb.SetFilesHandler(&files);
 
  // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = mlProb.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
 
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
@@ -159,7 +159,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -848,7 +848,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
             
       }
       
-// This piece of code should go in the NonLinearImplicitSystem::solve function at Line 273, but it is specific of the primal-dual active set method so we have to define another function
+// This piece of code should go in the NonLinearImplicitSystemWithPrimalDualActiveSetMethod::solve function at Line 273, but it is specific of the primal-dual active set method so we have to define another function
 //         // ***************** check active flag sets *******************
 //          Solution*                sol = this->GetMLProb()._ml_sol->GetSolutionLevel(_levelToAssemble);    // pointer to the solution (level) object
 //    std::string act_flag_name = "act_flag";
@@ -871,7 +871,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   
-  const NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");
+  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");
   const unsigned          level      = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                          msh = ml_prob._ml_msh->GetLevel(level);

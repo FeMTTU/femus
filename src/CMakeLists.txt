@@ -38,6 +38,7 @@ equations/ImplicitSystem.cpp
 equations/LinearImplicitSystem.cpp
 equations/MonolithicFSINonLinearImplicitSystem.cpp
 equations/NonLinearImplicitSystem.cpp
+equations/NonLinearImplicitSystemWithPrimalDualActiveSetMethod.cpp
 equations/MultiLevelProblem.cpp
 equations/System.cpp
 equations/SystemTwo.cpp
