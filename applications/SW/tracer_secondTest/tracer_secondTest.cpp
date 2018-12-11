@@ -34,7 +34,7 @@ double pi = acos ( -1. );
 //double k_h = 1. / ( 10 * pi );
 double k_h = 0.0001 ;
 
-const unsigned NumberOfLayers = 20;
+const unsigned NumberOfLayers = 4;
 unsigned RK_order = 3;
 
 unsigned counter = 0;
@@ -43,14 +43,14 @@ unsigned counter2 = 0;
 clock_t start_time = clock();
 
 bool wave = false;
-bool twostage = false;
+bool twostage = true;
 bool splitting = true;
 bool assembly = true; //assembly must be left always true
 bool block_diag = false;
 
-// const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
+const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
 
-const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
+// const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
 // const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
 //                           0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
@@ -534,22 +534,22 @@ int main ( int argc, char** args )
     mlSol.Initialize ( "v1", InitalValueV1 );
     mlSol.Initialize ( "v2", InitalValueV2 );
     mlSol.Initialize ( "v3", InitalValueV3 );
-    mlSol.Initialize ( "v4", InitalValueV4 );
-    mlSol.Initialize ( "v5", InitalValueV5 );
-    mlSol.Initialize ( "v6", InitalValueV6 );
-    mlSol.Initialize ( "v7", InitalValueV7 );
-    mlSol.Initialize ( "v8", InitalValueV8 );
-    mlSol.Initialize ( "v9", InitalValueV9 );
-    mlSol.Initialize ( "v10", InitalValueV10 );
-    mlSol.Initialize ( "v11", InitalValueV11 );
-    mlSol.Initialize ( "v12", InitalValueV12 );
-    mlSol.Initialize ( "v13", InitalValueV13 );
-    mlSol.Initialize ( "v14", InitalValueV14 );
-    mlSol.Initialize ( "v15", InitalValueV15 );
-    mlSol.Initialize ( "v16", InitalValueV16 );
-    mlSol.Initialize ( "v17", InitalValueV17 );
-    mlSol.Initialize ( "v18", InitalValueV18 );
-    mlSol.Initialize ( "v19", InitalValueV19 );
+//     mlSol.Initialize ( "v4", InitalValueV4 );
+//     mlSol.Initialize ( "v5", InitalValueV5 );
+//     mlSol.Initialize ( "v6", InitalValueV6 );
+//     mlSol.Initialize ( "v7", InitalValueV7 );
+//     mlSol.Initialize ( "v8", InitalValueV8 );
+//     mlSol.Initialize ( "v9", InitalValueV9 );
+//     mlSol.Initialize ( "v10", InitalValueV10 );
+//     mlSol.Initialize ( "v11", InitalValueV11 );
+//     mlSol.Initialize ( "v12", InitalValueV12 );
+//     mlSol.Initialize ( "v13", InitalValueV13 );
+//     mlSol.Initialize ( "v14", InitalValueV14 );
+//     mlSol.Initialize ( "v15", InitalValueV15 );
+//     mlSol.Initialize ( "v16", InitalValueV16 );
+//     mlSol.Initialize ( "v17", InitalValueV17 );
+//     mlSol.Initialize ( "v18", InitalValueV18 );
+//     mlSol.Initialize ( "v19", InitalValueV19 );
 //     if ( NumberOfLayers>39 ) {
 //         mlSol.Initialize ( "v20", InitalValueV20 );
 //         mlSol.Initialize ( "v21", InitalValueV21 );
@@ -652,8 +652,8 @@ int main ( int argc, char** args )
     //mlSol.GetWriter()->SetDebugOutput(true);
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-    unsigned numberOfTimeSteps = 600; //RK4: dt=0.5, numberOfTimeSteps = 16001
-    dt = 2.;
+    unsigned numberOfTimeSteps = 2400; //RK4: dt=0.5, numberOfTimeSteps = 16001
+    dt = 0.05;
     bool implicitEuler = true;
 
     for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
@@ -1217,7 +1217,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
     //FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
     FNSetScale ( f, dt, dt );
-    MFNSetDimensions ( mfn, 100 );
+    //MFNSetDimensions ( mfn, 100 );
     tol = 1e-6;
     MFNSetTolerances ( mfn, tol, PETSC_DEFAULT );
     MFNSetFromOptions ( mfn );
@@ -1268,8 +1268,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
     if ( !block_diag ) {
         sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
-    } 
-    else {
+    } else {
         for ( int i =  start; i <  end; i++ ) {
             for ( int k = 0; k < NLayers; k++ ) {
                 double valueHT = 0.;
@@ -1320,6 +1319,10 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
                 solh[j] = ( *sol->_Sol[solIndexh[j]] ) ( i );
                 solHT[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i );
                 l2GMapRow[/*NLayers +*/ j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i );
+
+                if ( block_diag ) {
+                    l2GMapRow[j] = i*NLayers + j;
+                }
 
                 l2GMapColumn[/*NLayers +*/ j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i );
 
@@ -1554,6 +1557,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
         //SLEPC
         MFN mfn;
         Mat A2 = ( static_cast<PetscMatrix*> ( KK ) )->mat();
+        //MatView ( A2,PETSC_VIEWER_STDOUT_WORLD );
         FN f2;
 
         //std::cout << "dt = " << dt << std::endl;
@@ -1562,7 +1566,12 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
         //VecView(v2,PETSC_VIEWER_STDOUT_WORLD);
 
-        Vec y2 = ( static_cast< PetscVector* > ( EPS ) )->vec();
+        Vec y2;
+        if ( !block_diag ) {
+            y2 = ( static_cast< PetscVector* > ( EPS ) )->vec();
+        } else {
+            VecDuplicate ( v2,&y2 );
+        }
 
         MFNCreate ( PETSC_COMM_WORLD, &mfn );
 
@@ -1574,7 +1583,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
         //FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
         FNSetScale ( f2, dt, dt*0.5 );
-        MFNSetDimensions ( mfn, 15 );
+        //MFNSetDimensions ( mfn, 15 );
         MFNSetTolerances ( mfn, 1e-6, PETSC_DEFAULT );
         MFNSetFromOptions ( mfn );
 
@@ -1584,7 +1593,21 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
         //VecView(y2,PETSC_VIEWER_STDOUT_WORLD);
 
-        sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
+        if ( !block_diag ) {
+            sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
+        } 
+        else {
+            for ( int i =  start; i <  end; i++ ) {
+                for ( int k = 0; k < NLayers; k++ ) {
+                    double valueHT = 0.;
+                    int yIndex = i * NLayers + k;
+                    VecGetValues ( y2, 1, &yIndex, &valueHT );
+
+                    sol->_Sol[solIndexHT[k]]->add ( i, valueHT );
+                    sol->_Sol[solIndexHT[k]]->close();
+                }
+            }
+        }
 
     }
 

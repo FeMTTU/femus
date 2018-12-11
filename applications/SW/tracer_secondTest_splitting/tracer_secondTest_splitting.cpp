@@ -625,7 +625,7 @@ int main (int argc, char** args)
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
   unsigned numberOfTimeSteps = 600; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 2.;
+  dt = 0.2;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {
@@ -1074,7 +1074,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       // FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
       FNSetScale (f, dt, dt);
-      MFNSetDimensions (mfn, 10);
+//       MFNSetDimensions (mfn, 10);
 // 
 //       if (i == start || i == start + 1 || i == start + 2 || i == end - 3 || i == end - 2 || i == end - 1) {
 //         MFNSetDimensions (mfn, 10);
