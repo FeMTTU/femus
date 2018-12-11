@@ -703,6 +703,18 @@ namespace femus
     
   }
 
+    void MultiLevelSolution::CoarsenSolutionByOneLevel(const unsigned &grid_fine)  {
+        
+     const unsigned grid_coarse = grid_fine - 1;
+     Mesh *msh = _mlMesh->GetLevel(grid_coarse);
+     
+        //loop over the coarse elements
+        //loop over the dofs of each coarse element
+        //loop over the children elements of that coarse element
+        //find the child element to which the coarse dof belongs, and find the child dof
+        //set the _Sol in the coarse dofs to the fine dofs
+        
+    }
   
   
   void MultiLevelSolution::CopySolutionToOldSolution()
