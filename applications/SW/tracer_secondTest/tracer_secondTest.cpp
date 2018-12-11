@@ -46,6 +46,7 @@ bool wave = false;
 bool twostage = false;
 bool splitting = true;
 bool assembly = true; //assembly must be left always true
+bool block_diag = false;
 
 // const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
 
@@ -490,8 +491,8 @@ int main ( int argc, char** args )
     unsigned numberOfUniformLevels = 1;
     unsigned numberOfSelectiveLevels = 0;
 
-    unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*8*/ 3 ) + 0.5 ) ); //Grid cell size = 3.90625 m
-    nx += 1;
+    unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*8*/ 2 ) + 0.5 ) ); //Grid cell size = 3.90625 m
+    //nx += 1;
 //     nx*=4;
 //     std::cout <<" nx = " << nx << std::endl;
 
@@ -686,8 +687,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
     if ( assembly ) {
         s.continue_recording();
-    }
-    else {
+    } else {
         s.pause_recording();
     }
 
@@ -824,6 +824,10 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
             solHT[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i );
             l2GMapRow[/*NLayers +*/ j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i );
 
+            if ( block_diag ) {
+                l2GMapRow[j] = i*NLayers + j;
+            }
+
             l2GMapColumn[/*NLayers +*/ j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i );
 
             solvm[j] = ( *sol->_Sol[solIndexv[j]] ) ( i );
@@ -912,8 +916,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
                     if ( solvm[k] > 0 ) {
                         aResHT[k] += solHTm[k].value() * solvm[k] / dx;
                         aResHTLili[k] += solHTm[k].value() * solvm[k] / dx;
-                    }
-                    else {
+                    } else {
                         aResHT[k] += solHT[k].value() * solvm[k] / dx;
                         aResHTLili[k] += solHT[k].value() * solvm[k] / dx;
                     }
@@ -923,8 +926,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
                     if ( solvp[k] > 0 ) {
                         aResHT[k] -= solHT[k].value() * solvp[k] / dx; //first order upwind
                         aResHTLili[k] -= solHT[k].value() * solvp[k] / dx; //first order upwind
-                    }
-                    else {
+                    } else {
                         aResHT[k] -= solHTp[k].value() * solvp[k] / dx; //first order upwind
                         aResHTLili[k] -= solHTp[k].value() * solvp[k] / dx; //first order upwind
                     }
@@ -936,8 +938,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
                 if ( i > start ) {
                     if ( solvm[k] > 0 ) {
                         aResHT[k] += solHTm[k] * solvm[k] / dx;
-                    }
-                    else {
+                    } else {
                         aResHT[k] += solHT[k] * solvm[k] / dx;
                     }
                 }
@@ -989,8 +990,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
                 //aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k] + solHT[k + 1] / solh[k + 1] );
                 if ( w[k + 1] > 0 ) {
                     aResHT[k] += w[k + 1] * ( solHT[k + 1] / solh[k + 1] );
-                }
-                else {
+                } else {
                     aResHT[k] += w[k + 1] * ( solHT[k] / solh[k] );
                 }
             }
@@ -999,8 +999,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
                 //aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1] / solh[k - 1] + solHT[k] / solh[k] );
                 if ( w[k] > 0 ) {
                     aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
-                }
-                else {
+                } else {
                     aResHT[k] -= w[k] * ( solHT[k - 1] / solh[k - 1] );
                 }
             }
@@ -1012,25 +1011,23 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
             adept::adouble hb = 0.;
 
             if ( k > 0 ) {
-              //ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
-              ht = ( solh[k - 1] + solh[k] ) / 2.;
-              deltaZt = ( solHT[k - 1] / solh[k - 1] - solHT[k] / solh[k] ) / ht;
-            }
-            else {
-              //ht = 0.5 * ( solhm[k] + solhp[k] );
-              ht = solh[k];
-              deltaZt = 0.* ( 0. - solHT[k] ) / ht;
+                //ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+                ht = ( solh[k - 1] + solh[k] ) / 2.;
+                deltaZt = ( solHT[k - 1] / solh[k - 1] - solHT[k] / solh[k] ) / ht;
+            } else {
+                //ht = 0.5 * ( solhm[k] + solhp[k] );
+                ht = solh[k];
+                deltaZt = 0.* ( 0. - solHT[k] ) / ht;
             }
 
             if ( k < NLayers - 1 ) {
-              //hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
-              hb = ( solh[k] + solh[k + 1] ) / 2.;
-              deltaZb = ( solHT[k] / solh[k] - solHT[k + 1] / solh[k + 1] ) / hb;
-            }
-            else {
-              //hb = 0.5 * ( solhm[k] + solhp[k] );
-              hb = solh[k];
-              deltaZb = 0.* ( solHT[k] - 0. ) / hb;
+                //hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+                hb = ( solh[k] + solh[k + 1] ) / 2.;
+                deltaZb = ( solHT[k] / solh[k] - solHT[k + 1] / solh[k + 1] ) / hb;
+            } else {
+                //hb = 0.5 * ( solhm[k] + solhp[k] );
+                hb = solh[k];
+                deltaZb = 0.* ( solHT[k] - 0. ) / hb;
             }
 
             //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAA"<<deltaZt - deltaZb<<std::endl;
@@ -1070,7 +1067,9 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
         }
 
         RES->add_vector_blocked ( Res, l2GMapRow );
-        if ( splitting && twostage ) N->add_vector_blocked ( Nlocal, l2GMapRow );
+        if ( splitting && twostage ) {
+            N->add_vector_blocked ( Nlocal, l2GMapRow );
+        }
 
         if ( assembly ) {
             s.dependent ( &aResHT[0], NLayers );
@@ -1121,6 +1120,10 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
         KK->close();
     }
 
+//     Vec RESplot = ( static_cast< PetscVector* > ( RES ) )->vec();
+//     VecView ( RESplot,PETSC_VIEWER_STDOUT_WORLD );
+//     std::cout<<" --------------------------------------------------------------------- end RES " <<std::endl;
+
     // printing of the max value of w in every layer
 //   for ( unsigned k = 0; k < NLayers; k++ ) {
 //     std::cout << "layer " << k << " " << maxW[k] << std::endl;
@@ -1140,10 +1143,24 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
     MFN mfn;
     Mat A = ( static_cast<PetscMatrix*> ( KK ) )->mat();
+    if ( block_diag ) {
+        MatTranspose ( A, MAT_INPLACE_MATRIX, &A );
+    }
+    //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
     FN f;
 
     Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
-    Vec y = ( static_cast< PetscVector* > ( EPS ) )->vec();
+    Vec y;
+    if ( !block_diag ) {
+        y = ( static_cast< PetscVector* > ( EPS ) )->vec();
+    } else {
+//       NumericVector* Y;
+//       Y = NumericVector::build().release();
+//       Y->init ( *RES );
+//       Y->zero();
+//       y = ( static_cast< PetscVector* > ( Y ) )->vec();;
+        VecDuplicate ( v,&y );
+    }
 
     //BEGIN condition number of A
 //     SVD svd;
@@ -1249,7 +1266,21 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 
     //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
 
-    sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
+    if ( !block_diag ) {
+        sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
+    } 
+    else {
+        for ( int i =  start; i <  end; i++ ) {
+            for ( int k = 0; k < NLayers; k++ ) {
+                double valueHT = 0.;
+                int yIndex = i * NLayers + k;
+                VecGetValues ( y, 1, &yIndex, &valueHT );
+
+                sol->_Sol[solIndexHT[k]]->add ( i, valueHT );
+                sol->_Sol[solIndexHT[k]]->close();
+            }
+        }
+    }
 
     if ( twostage == true ) {
 

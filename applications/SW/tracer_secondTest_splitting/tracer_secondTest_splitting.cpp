@@ -471,8 +471,8 @@ int main (int argc, char** args)
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = static_cast<unsigned> (floor (pow (2.,/*11*/3) + 0.5));       //Grid cell size = 3.90625 m
-  nx += 1;
+  unsigned nx = static_cast<unsigned> (floor (pow (2.,/*11*/2) + 0.5));       //Grid cell size = 3.90625 m
+  //nx += 1;
 
   double length = 10.; //2 * 1465700.;
 
@@ -633,11 +633,11 @@ int main (int argc, char** args)
       assembly = (i == 0) ? true : false;
     }
 
+    counter = i;
     system.CopySolutionToOldSolution();
     ETD (ml_prob, numberOfTimeSteps);
     //RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1) / 1);
-    counter = i;
     counter2++;
   }
 
@@ -1008,10 +1008,12 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       MatSeqDenseSetPreallocation (A, &Jac[0]);
       MatAssemblyBegin (A, MAT_FINAL_ASSEMBLY);
       MatAssemblyEnd (A, MAT_FINAL_ASSEMBLY);
-
+      //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
+      
       VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &Res[0], &v);
       VecAssemblyBegin (v);
-      VecAssemblyEnd (v);
+      VecAssemblyEnd (v);      
+      //VecView(v,PETSC_VIEWER_STDOUT_WORLD);
 
       VecCreate (PETSC_COMM_WORLD, &y);
       VecSetSizes (y, PETSC_DECIDE, NLayers);
@@ -1096,6 +1098,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
       MFNSolve (mfn, v, y);
       MFNGetConvergedReason (mfn, &reason);
+      
+      //VecView(y,PETSC_VIEWER_STDOUT_WORLD);
 
       if (reason < 0) std::cout << "Solver did not converge" << std::endl;
 
@@ -1480,14 +1484,14 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
   for (unsigned k = 0; k < NumberOfLayers; k++) {
 
-    //if(counter == numberOfTimeSteps-2) std::cout << "T" << k << "  ----------------------------------------------------" << std::endl;
+    //if(counter == numberOfTimeSteps-1) std::cout << "T" << k << "  ----------------------------------------------------" << std::endl;
     for (unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++) {
       double valueHT = (*sol->_Sol[solIndexHT[k]]) (i);
       double valueH = (*sol->_Sol[solIndexh[k]]) (i);
 
       double valueT = valueHT / valueH;
 
-      if (counter == numberOfTimeSteps - 2) {
+      if (counter == numberOfTimeSteps - 1) {
         std::cout.precision (14);
         std::cout << valueT << std::endl;
       }
@@ -2001,7 +2005,7 @@ void RK4 (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigned
         PetscScalar valueT = 0.;
         ierr = VecGetValues (x, 1, &k, &valueT);
 
-        if (counter == numberOfTimeSteps - 2) {
+        if (counter == numberOfTimeSteps - 1) {
           std::cout.precision (14);
           std::cout << valueT << std::endl;
         }
