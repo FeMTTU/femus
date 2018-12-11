@@ -1,7 +1,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
 #include "../elliptic_param.hpp"
@@ -97,7 +97,8 @@ int main(int argc, char** args) {
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   const unsigned int fake_time_dep_flag = 2;
-  mlSol.AddSolution("act_flag", LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  const std::string act_set_flag_name = "act_flag";
+  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
@@ -108,7 +109,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("mu", InitialValueMu);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
-  mlSol.Initialize("act_flag", InitialValueActFlag);
+  mlSol.Initialize(act_set_flag_name.c_str(), InitialValueActFlag);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -123,7 +124,9 @@ int main(int argc, char** args) {
   mlProb.SetFilesHandler(&files);
 
  // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = mlProb.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+  
+  system.SetActiveSetFlagName(act_set_flag_name);
 
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
@@ -159,7 +162,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -841,28 +844,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
   // ***************** check active flag sets *******************
     int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare( *(sol->_Sol[solIndex_act_flag]) ) );
-    bool compare_bool;
+    bool compare_bool = false;
     if (compare_return == -1) compare_bool = true;
       if( compare_bool && (mlPdeSys->GetNonlinearIt() > 0) ) {
-            std::cout << "Active set did not change at iteration " << mlPdeSys->GetNonlinearIt() << std::endl;
+            std::cout << "(In assembly function) Active set did not change at iteration " << mlPdeSys->GetNonlinearIt() << std::endl;
             
       }
       
-// This piece of code should go in the NonLinearImplicitSystem::solve function at Line 273, but it is specific of the primal-dual active set method so we have to define another function
-//         // ***************** check active flag sets *******************
-//          Solution*                sol = this->GetMLProb()._ml_sol->GetSolutionLevel(_levelToAssemble);    // pointer to the solution (level) object
-//    std::string act_flag_name = "act_flag";
-//    unsigned int solIndex_act_flag = this->GetMLProb()._ml_sol->GetIndex(act_flag_name.c_str());
-// 
-//     int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare( *(sol->_Sol[solIndex_act_flag]) ) );
-//     bool compare_bool;
-//     if (compare_return == -1) compare_bool = true;
-//       if( compare_bool && (_nonliniteration  > 0) ) {
-//             std::cout << "Active set did not change at iteration " << _nonliniteration << std::endl;
-//             break;
-//       }     
-      
-    
   return;
 }
 
@@ -871,7 +859,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   
-  const NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");
+  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");
   const unsigned          level      = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                          msh = ml_prob._ml_msh->GetLevel(level);

@@ -123,18 +123,10 @@ int main(int argc, char** args) {
     if (i < maxNumberOfMeshes - 1) {
         
         //restrict the fine solution at the current level  ==================
-       for(unsigned k = 0; k < mlSol_finest->GetSolutionSize(); k++) {
-// 
-      unsigned SolIndex = k;
-      unsigned solType = mlSol_finest->GetSolutionType(SolIndex);
-//      
 //     for(unsigned short j = 0; j < mlSol._mlMesh->GetNumberOfLevels(); j++) { //all levels
       const unsigned coarse = i;
       const unsigned fine   = coarse + 1;
-              mlSol_finest->GetSolutionLevel(coarse)->_Sol[SolIndex]->matrix_mult_transpose( *(mlSol_finest->GetSolutionLevel(fine)->_Sol[SolIndex]), *(mlMsh_finest.GetLevel(fine)->GetCoarseToFineProjection(solType)) );
-                Solution* sol_coarse = mlSol_finest->GetSolutionLevel(coarse);      sol_coarse->_Sol[SolIndex]->close();
-                Solution*   sol_fine = mlSol_finest->GetSolutionLevel(fine);          sol_fine->_Sol[SolIndex]->close();
-           }
+      mlSol_finest->CoarsenSolutionByOneLevel_wrong(fine);
 //        }
 
         //pass the restriction of the fine solution to the function that computes the error  ==================
