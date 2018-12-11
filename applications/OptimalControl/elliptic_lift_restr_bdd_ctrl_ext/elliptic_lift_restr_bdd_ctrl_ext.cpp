@@ -331,8 +331,9 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   double u_des = DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
-  double penalty_strong = 10e+14;
-  double penalty_interface = 1.e+10;         //penalty for u=q
+  double penalty_strong_ctrl = 1.e30;
+  double penalty_strong_u = 1.e20;
+  double penalty_interface = 1.e10;         //penalty for u=q
  //***************************************************  
 
   RES->zero();
@@ -557,7 +558,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 //============ Bdry Residuals ==================	
         if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  -  penalty_interface * ( sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
 		
-		if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=  -  weight_bdry * ( - grad_dot_n_adj_res * phi_ctrl_bdry[i_bdry] );  //boundary optimality condition
+	//	if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=  -  weight_bdry * penalty_interface * (-1) * ( grad_dot_n_adj_res * phi_ctrl_bdry[i_bdry] );  //boundary optimality condition
 //============ Bdry Residuals ==================	
 		    for(unsigned j_bdry=0; j_bdry < nDofu_bdry; j_bdry ++) {
 		         unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
@@ -597,11 +598,10 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   
 		      
 //==========block delta_control/adjoint ========
-    if ( i_vol < nDof_ctrl    && j < nDof_adj)   
+/*    if ( i_vol < nDof_ctrl    && j < nDof_adj)   
        Jac[ 
           (nDof_u + i_vol) * nDof_AllVars  +
-          (nDof_u + nDof_ctrl + j)                 ]  += /*control_node_flag[i_vol] **/ (-1) *
-								  ( weight_bdry * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry] );    		      
+          (nDof_u + nDof_ctrl + j)                 ]  +=  weight_bdry * penalty_interface * (-1) * ( grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry] ); */   		      
 		  }   //end loop i_bdry // j_vol
         }  //end ig_bdry loop
       }
@@ -700,7 +700,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 	  if (i < nDof_u)  {
 	     if ( group_flag == 12 )            Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss - u_des) - laplace_rhs_du_adj_i - 0.);
 	  
-	     else if ( group_flag == 13 )       Res[0      + i] +=  (1-interface_flag[i]) * (- penalty_strong) * (sol_u[i] - 0.);
+	     else if ( group_flag == 13 )       Res[0      + i] +=  (1-interface_flag[i]) * (- penalty_strong_u) * (sol_u[i] - 0.);
 	  }
       // SECOND ROW
 	  if (i < nDof_ctrl)  {
@@ -708,13 +708,13 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                                                                             - laplace_rhs_dctrl_adj_i 
                                                                             + beta * laplace_rhs_dctrl_ctrl_i - 0.);
          
-	     else if ( group_flag == 12 )       Res[nDof_u + i] +=  (1-interface_flag[i]) * (- penalty_strong) * (sol_ctrl[i] - 0.);
+	     else if ( group_flag == 12 )       Res[nDof_u + i] +=  (1-interface_flag[i]) * (- penalty_strong_ctrl) * (sol_ctrl[i] - 0.);
 	  }
       // THIRD ROW
       if (i < nDof_adj) {  
 	     if ( group_flag == 12 )      Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_u_i    - 0.) ;
 	     
-	     else if ( group_flag == 13 ) Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_ctrl_i - 0.) ;
+	     else if ( group_flag == 13 ) Res[nDof_u + nDof_ctrl + i] += - weight *  (  laplace_rhs_dadj_ctrl_i - 0.) ;
 	  }
 //======================Volume Residuals=======================
 	      
@@ -757,7 +757,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
             //BLOCK delta_state - state
             if ( i < nDof_u   && j < nDof_u  &&  i==j ) {
 		       Jac[ (0 + i) * nDof_AllVars +
-		            (0 + j)                          ]  += (1-interface_flag[i]) * 1. * penalty_strong;
+		            (0 + j)                          ]  += (1-interface_flag[i]) * 1. * penalty_strong_u;
 	        }
 	        
         }
@@ -783,7 +783,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
            //BLOCK delta_control - control
            if ( i < nDof_ctrl   && j < nDof_ctrl &&  i==j ) {
 		      Jac[ (nDof_u + i) * nDof_AllVars +
-		           (nDof_u + j)                      ]  += (1-interface_flag[i]) * 1. * penalty_strong;
+		           (nDof_u + j)                      ]  += (1-interface_flag[i]) * 1. * penalty_strong_ctrl;
 		   }
 	      
        }
