@@ -104,6 +104,7 @@ utils/Files.cpp
 utils/InputParser.cpp
 utils/JsonInputParser.cpp
 uq/uq.cpp
+uq/sparseGrid.cpp
 )
 
 IF (NOT LIBRARY_OUTPUT_PATH)
