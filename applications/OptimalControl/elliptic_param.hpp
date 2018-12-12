@@ -1,6 +1,7 @@
 #ifndef ELLIPTIC_PARAMETERS
 #define ELLIPTIC_PARAMETERS
 
+//#include </elliptic_lift_restr_bdd_ctrl_ext/input/ext_box.neu>
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
@@ -81,6 +82,19 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
 
 }
 
+
+//*********************** Find volume elements that contain a Control domain element *********************************
+
+int ControlDomainFlag_external_restriction(const std::vector<double> & elem_center) {
+
+ //***** set target domain flag ******
+ // flag = 1: we are in the lifting nonzero domain
+  int exterior_el_flag = 0.;
+   if ( elem_center[0] >  0.95) { exterior_el_flag = 1; }
+
+     return exterior_el_flag;
+
+}
 
 
 
