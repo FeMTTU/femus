@@ -314,11 +314,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
   //********* variables for ineq constraints *****************
   const int ineq_flag = INEQ_FLAG;
-  double ctrl_lower =  CTRL_BOX_LOWER;
-  double ctrl_upper =  CTRL_BOX_UPPER;
-  assert(ctrl_lower < ctrl_upper);
   const double c_compl = C_COMPL;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
+  vector < double >  ctrl_lower;   ctrl_lower.reserve(maxSize);
+  vector < double >  ctrl_upper;   ctrl_upper.reserve(maxSize);
   //***************************************************  
 
  //*************************************************** 
@@ -438,26 +437,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
     }
     
-    
- //************** update active set flag for current nonlinear iteration **************************** 
- // 0: inactive; 1: active_a; 2: active_b
-   assert(nDof_mu == nDof_ctrl);
-   sol_actflag.resize(nDof_mu);
-     std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
-   
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {
-        if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
-        else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
-    }
-  
 
- //************** act flag **************************** 
-    unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag);    // number of solution element dofs
-    
-    for (unsigned i = 0; i < nDof_act_flag; i++) {
-      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag); 
-      (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);     
-    } 
+
+             sol_actflag.resize(nDof_mu);  //AAA volume allocation, but we should change all to the boundary
+
     
     
   
@@ -511,17 +494,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
 	      if(  face == 3) { //control face
               
-         //************** update active set flag for current nonlinear iteration **************************** 
-         // 0: inactive; 1: active_a; 2: active_b
-            assert(nDof_mu == nDof_ctrl);
-            sol_actflag.resize(nDof_mu);
-            std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
-   
-            for (unsigned i = 0; i < sol_actflag.size(); i++) {
-                if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
-                else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
-            }
-
  //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
 	      bool  dir_bool = mlSol->GetBdcFunction()(xyz_bdc,ctrl_name.c_str(),tau,face,0.);
@@ -541,7 +513,35 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  }
 		}
  //========================================================================================================== 
-		
+
+         //************** update active set flag for current nonlinear iteration **************************** 
+         // 0: inactive; 1: active_a; 2: active_b
+            assert(nDof_mu == nDof_ctrl);
+            sol_actflag.resize(nDof_mu);
+            ctrl_lower.resize(nDof_mu);
+            ctrl_upper.resize(nDof_mu);
+           std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+           std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
+           std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
+   
+            for (unsigned i = 0; i < sol_actflag.size(); i++) {
+        std::vector<double> node_coords_i(dim,0.);
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x_bdry[d][i];
+        ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
+        ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
+
+        if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
+        else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
+            }
+            
+        //************** act flag **************************** 
+    unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag);    // number of solution element dofs
+    
+    for (unsigned i = 0; i < nDof_act_flag; i++) {
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag); 
+      (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);     
+    }     
+ 
 //========= initialize gauss quantities on the boundary ============================================
                 double sol_ctrl_bdry_gss = 0.;
                 double sol_adj_bdry_gss = 0.;
@@ -949,13 +949,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
       else if (sol_actflag[i] == 1){  //active_a 
-	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
+	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower[i]);
       }
       else if (sol_actflag[i] == 2){  //active_b 
-	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
+	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper[i]);
       }
     }
- //          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
+ //          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower[i] - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
  //          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
 
     

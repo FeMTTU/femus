@@ -452,7 +452,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
         for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x[d][i];
         ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
         ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
-         assert(ctrl_lower[i] < ctrl_upper[i]);
 
         if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
         else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
