@@ -46,7 +46,7 @@ bool wave = false;
 bool twostage = true;
 bool splitting = true;
 bool assembly = true; //assembly must be left always true
-bool block_diag = false;
+bool block_diag = true;
 
 const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
 
@@ -652,8 +652,8 @@ int main ( int argc, char** args )
     //mlSol.GetWriter()->SetDebugOutput(true);
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-    unsigned numberOfTimeSteps = 2400; //RK4: dt=0.5, numberOfTimeSteps = 16001
-    dt = 0.05;
+    unsigned numberOfTimeSteps = 600; //RK4: dt=0.5, numberOfTimeSteps = 16001
+    dt = 0.2;
     bool implicitEuler = true;
 
     for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
