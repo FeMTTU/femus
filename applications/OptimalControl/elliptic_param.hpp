@@ -20,9 +20,22 @@
 
 //*********************** Control box constraints *******************************************************
 #define  INEQ_FLAG 1
+#define  C_COMPL 1.
 #define  CTRL_BOX_LOWER   -1000
 #define  CTRL_BOX_UPPER   0.5
-#define  C_COMPL 1.
+
+
+ double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
+
+     double constr_value = 0.;
+     
+    if (upper)       constr_value = 0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
+    else             constr_value = -1000.;
+    
+  return constr_value;
+     
+}
+    
 
 
 //*********************** Find volume elements that contain a  Target domain element **************************************
