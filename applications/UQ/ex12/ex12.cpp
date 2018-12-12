@@ -86,6 +86,12 @@ int main (int argc, char** argv)
 
 
     sparseGrid spg (N, M, samples);
+    
+    double phi;
+    double x = 0.75;
+    spg.EvaluateOneDimensionalPhi(phi, x, 0, 1, 2, false);
+    
+    std::cout << "phi = " << phi << std::endl;
 
     return 0;
 

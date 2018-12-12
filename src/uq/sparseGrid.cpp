@@ -61,6 +61,26 @@ namespace femus
         //END
 
     }
+    
+    void sparseGrid::EvaluateOneDimensionalPhi (double &phi, const double &x, const unsigned &n, const unsigned &l, const unsigned &i, const bool &scale){
+        
+        //i tells you that you are going to compute the phi associated with the i-th node
+        
+        double leftBoundOfSupport = _nodes[n][l][i] - _hs[n][l]; // this is xi - h
+        double rightBoundOfSupport = _nodes[n][l][i] + _hs[n][l]; // this is xi + h
+        
+        if( x >= leftBoundOfSupport && x <= rightBoundOfSupport ) {
+            
+            phi = 1 - fabs( (x - _nodes[n][l][i]) / _hs[n][l] );
+            
+            if(scale == true) {   //this is to be used when building the nodal values of the PDF approximation
+                phi /= _hs[n][l];
+            }
+            
+        }
+        
+        else phi = 0.;
+    }
 
 
 }

@@ -19,6 +19,8 @@ public:
 
     sparseGrid(const unsigned &_N, const unsigned &_M, std::vector < std::vector < double > >  &samples);
     
+    void EvaluateOneDimensionalPhi (double &phi, const double &x, const unsigned &n, const unsigned &l, const unsigned &i, const bool &scale);
+    
 private:
     //defining parameters
     unsigned _N; //number of dimensions of the parameter space
