@@ -41,9 +41,7 @@ namespace femus
                     bn = samples[m][n];
                 }
             }
-        }
 
-        for (unsigned n = 0; n < _N; n++) {
             _intervals[n][0] = an - 0.5; //the 0.5 is just to add some tolerance
             _intervals[n][1] = bn + 0.5;
 
@@ -57,7 +55,9 @@ namespace femus
                     std::cout << "node[" << n << "][" << l << "][" << i << "]= " << _nodes[n][l][i] << std::endl;
                 }
             }
+
         }
+
         //END
 
     }
