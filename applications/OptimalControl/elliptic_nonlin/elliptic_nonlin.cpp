@@ -15,18 +15,18 @@ using namespace femus;
 
 double  nonlin_term_function(const double& v) {
     
-//    return 1.;
+   return 1.;
 //    return 1./( (1. - v) );
-   return 0.01*1./( (1. - v)*(1. - v) );
+//    return 0.01*1./( (1. - v)*(1. - v) );
 //     return exp(v);
  }
 
 
 double  nonlin_term_derivative(const double& v) {
     
-//     return 0.;
+    return 0.;
 //    return  +2. * 1./( (1. - v)*(1. - v) ); 
-   return 0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
+//    return 0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
 //     return exp(v);
  }
 
@@ -390,12 +390,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     
   //********* variables for ineq constraints *****************
   const int ineq_flag = INEQ_FLAG;
-  const double ctrl_lower =  CTRL_BOX_LOWER;
-  const double ctrl_upper =  CTRL_BOX_UPPER;
-  assert(ctrl_lower < ctrl_upper);
   const double c_compl = C_COMPL;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
-  //***************************************************  
+  vector < double >  ctrl_lower;   ctrl_lower.reserve(maxSize);
+  vector < double >  ctrl_upper;   ctrl_upper.reserve(maxSize);
+ //***************************************************  
 
   //********************* DATA ************************ 
   double u_des = DesiredTarget();
@@ -460,11 +459,20 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  // 0: inactive; 1: active_a; 2: active_b
    assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);
    sol_actflag.resize(Sol_n_el_dofs[pos_mu]);
+   ctrl_lower.resize(Sol_n_el_dofs[pos_mu]);
+   ctrl_upper.resize(Sol_n_el_dofs[pos_mu]);
      std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+     std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
+     std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
    
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {  
-    if      ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
-    else if ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
+    for (unsigned i = 0; i < sol_actflag.size(); i++) {
+        std::vector<double> node_coords_i(dim,0.);
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coordX[d][i];
+        ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
+        ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
+        
+    if      ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
+    else if ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
     }
  
  //************** act flag **************************** 
@@ -641,10 +649,10 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 // 	 Res_mu [i] = Res[res_row_index(Sol_n_el_dofs,pos_mu,i)]; 
       }
       else if (sol_actflag[i] == 1) {  //active_a 
-	     Res_mu [i] = (- ineq_flag) * c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_lower);
+	     Res_mu [i] = (- ineq_flag) * c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_lower[i]);
       }
       else if (sol_actflag[i] == 2) {  //active_b 
-	     Res_mu [i] = (- ineq_flag) * c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_upper);
+	     Res_mu [i] = (- ineq_flag) * c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_upper[i]);
       }
     }
     
