@@ -96,7 +96,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  const unsigned int fake_time_dep_flag = 2;
+  const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
   const std::string act_set_flag_name = "act_flag";
   mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
@@ -850,15 +850,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     RES->add_vector_blocked(one_times_mu, positions);
     RES->print();
     
-  // ***************** check active flag sets *******************
-    int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare( *(sol->_Sol[solIndex_act_flag]) ) );
-    bool compare_bool = false;
-    if (compare_return == -1) compare_bool = true;
-      if( compare_bool && (mlPdeSys->GetNonlinearIt() > 0) ) {
-            std::cout << "(In assembly function) Active set did not change at iteration " << mlPdeSys->GetNonlinearIt() << std::endl;
-            
-      }
-      
+
   return;
 }
 
