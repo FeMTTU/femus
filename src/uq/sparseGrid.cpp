@@ -1,5 +1,6 @@
 #include <math.h>
 #include "sparseGrid.hpp"
+#include <iostream>
 
 namespace femus
 {
@@ -25,11 +26,13 @@ namespace femus
             }
         }
 
+        double an;
+        double bn;
 
         //BEGIN figuring out the one dimensional intervals, mesh sizes and node coordinates
         for (unsigned n = 0; n < _N; n++) {
-            double an = - 1.; //temporary left extremum of the n-th interval [an,bn]
-            double bn = 1.;   //temporary right extremum of the n-th interval [an,bn]
+            an = - 1.; //temporary left extremum of the n-th interval [an,bn]
+            bn = 1.;   //temporary right extremum of the n-th interval [an,bn]
             for (unsigned m = 0; m < _M; m++) {
                 if (samples[m][n] <= an) {
                     an = samples[m][n];
@@ -38,13 +41,20 @@ namespace femus
                     bn = samples[m][n];
                 }
             }
+        }
+
+        for (unsigned n = 0; n < _N; n++) {
             _intervals[n][0] = an - 0.5; //the 0.5 is just to add some tolerance
             _intervals[n][1] = bn + 0.5;
 
+            std::cout << "a = " << _intervals[n][0] << " , " << "b = " << _intervals[n][1] << std::endl;
+
             for (unsigned l = 0; l < _L; l++) {
                 _hs[n][l] = fabs (_intervals[n][1] - _intervals[n][0]) / pow (2, l + 1); // mesh size of the n-th interval
+                std::cout << "h[" << n << "][" << l << "]= " << _hs[n][l] << std::endl;
                 for (unsigned i = 0; i < _nodes[n][l].size(); i++) {
                     _nodes[n][l][i] = _intervals[n][0] + (i + 1) * _hs[n][l]; //coordinates of the nodes of the n-th interval
+                    std::cout << "node[" << n << "][" << l << "][" << i << "]= " << _nodes[n][l][i] << std::endl;
                 }
             }
         }
