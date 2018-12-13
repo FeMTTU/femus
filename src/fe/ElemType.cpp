@@ -553,14 +553,14 @@ namespace femus {
     // construction of coordinates
     if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
-        double xm = 0.;
+        std::vector<double> xm(1,0.);
         for(int k = 0; k <  _nlag[0]; k++) {
           unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
           double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
           unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
+          xm[0] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
         }
-        _pt_basis->SetX(i, 0, xm);
+        _pt_basis->SetX(i, 0, xm[0]);
 
         //std::cout << *(_pt_basis->GetX(i) + 0) << std::endl;
       }
@@ -785,17 +785,17 @@ namespace femus {
     // construction of coordinates
     if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
-        double xm = 0., ym = 0.;
+        std::vector<double> xm(2,0.);
         for(int k = 0; k <  _nlag[0]; k++) {
           unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
           double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
           double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
           unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
-          ym += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
+          xm[0] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
+          xm[1] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
         }
-        _pt_basis->SetX(i, 0, xm);
-        _pt_basis->SetX(i, 1, ym);
+        _pt_basis->SetX(i, 0, xm[0]);
+        _pt_basis->SetX(i, 1, xm[1]);
 
         //std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << std::endl;
       }
@@ -1125,7 +1125,7 @@ namespace femus {
     // construction of coordinates
     if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
-        double xm = 0., ym = 0., zm = 0.;
+        std::vector<double> xm(3,0.);
         for(int k = 0; k <  _nlag[0]; k++) {
           unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
           double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
@@ -1133,13 +1133,13 @@ namespace femus {
           double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 2);
 
           unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
-          ym += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
-          zm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * zv;
+          xm[0] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
+          xm[1] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
+          xm[2] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * zv;
         }
-        _pt_basis->SetX(i, 0, xm);
-        _pt_basis->SetX(i, 1, ym);
-        _pt_basis->SetX(i, 2, zm);
+        _pt_basis->SetX(i, 0, xm[0]);
+        _pt_basis->SetX(i, 1, xm[1]);
+        _pt_basis->SetX(i, 2, xm[2]);
 
         //std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << " " << *(_pt_basis->GetX(i) + 2) << std::endl;
       }
