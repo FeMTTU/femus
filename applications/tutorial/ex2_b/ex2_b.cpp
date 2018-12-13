@@ -43,17 +43,28 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  // define multilevel mesh
+    // ======= Quad Rule ========================
+  std::string fe_quad_rule("seventh");
+ /* "seventh" is the order of accuracy that is used in the gauss integration scheme
+    In the future it is not going to be an argument of the mesh function   */
+
+ // define multilevel mesh
   MultiLevelMesh mlMsh;
  // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  const unsigned int nsub_x = 2;
+  const unsigned int nsub_y = 2;
+  const unsigned int nsub_z = 0;
+  const std::vector<double> xyz_min = {-0.5,-0.5,0.};
+  const std::vector<double> xyz_max = { 0.5, 0.5,0.};
+  const ElemType geom_elem_type = QUAD9;
+  mlMsh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
   MultiLevelMesh mlMsh_finest;
-  mlMsh_finest.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
-  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-    probably in furure it is not going to be an argument of this function   */
+  mlMsh_finest.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   mlMsh_finest.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
 
@@ -778,6 +789,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 
   std::pair < double, double > inexact_pair(sqrt(l2norm_inexact), sqrt(seminorm_inexact));
   
-  return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
+  return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
+//   return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
 
 }

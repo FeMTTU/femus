@@ -493,6 +493,18 @@ namespace femus {
 //----------------------------------------------------------------------------------------------------
 
 
+  void elem_type::set_coarse_fine_elem_data(const basis* pt_basis_in)  {
+  
+    _nc 	 = pt_basis_in->_nc;
+    _nf 	 = pt_basis_in->_nf;
+    _nlag[0] = pt_basis_in->_nlag0;
+    _nlag[1] = pt_basis_in->_nlag1;
+    _nlag[2] = pt_basis_in->_nlag2;
+    _nlag[3] = pt_basis_in->_nlag3;
+      
+      
+  }
+
 
   elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
     elem_type(geom_elem, fe_order, order_gauss)
@@ -522,17 +534,11 @@ namespace femus {
     }
     else {
       cout << geom_elem << " is not a valid option" << endl;
-      exit(0);
+      abort();
     }
 
     // get data from basis object
-    _nc 	   = _pt_basis->_nc;
-    _nf 	   = _pt_basis->_nf;
-    _nlag[0] = _pt_basis->_nlag0;
-    _nlag[1] = _pt_basis->_nlag1;
-    _nlag[2] = _pt_basis->_nlag2;
-    _nlag[3] = _pt_basis->_nlag3;
-
+    set_coarse_fine_elem_data(_pt_basis);
 
     _IND = new const int * [_nc];
 
@@ -544,6 +550,7 @@ namespace femus {
     _X = new const double * [_nf];
 
     //******************************************************
+    // construction of coordinates
     if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
         double xm = 0.;
@@ -718,10 +725,6 @@ namespace femus {
 
 
 
-
-
-
-
 //=====================
     EvaluateShapeAtQP(geom_elem, fe_order);
 
@@ -776,12 +779,7 @@ namespace femus {
     }
 
     // get data from basis object
-    _nc 	   = _pt_basis->_nc;
-    _nf 	   = _pt_basis->_nf;
-    _nlag[0] = _pt_basis->_nlag0;
-    _nlag[1] = _pt_basis->_nlag1;
-    _nlag[2] = _pt_basis->_nlag2;
-    _nlag[3] = _pt_basis->_nlag3;
+    set_coarse_fine_elem_data(_pt_basis);
 
     _IND = new const int * [_nc];
 
@@ -791,8 +789,6 @@ namespace femus {
 
     _KVERT_IND = new const int * [_nf];
     _X = new const double * [_nf];
-
-
 
     //***********************************************************
     // construction of coordinates
@@ -1132,13 +1128,7 @@ namespace femus {
     }
 
     // get data from basis object
-    _nc 	   = _pt_basis->_nc;
-    _nf 	   = _pt_basis->_nf;
-    _nlag[0] = _pt_basis->_nlag0;
-    _nlag[1] = _pt_basis->_nlag1;
-    _nlag[2] = _pt_basis->_nlag2;
-    _nlag[3] = _pt_basis->_nlag3;
-
+    set_coarse_fine_elem_data(_pt_basis);
 
     _IND = new const int * [_nc];
 
@@ -1180,10 +1170,6 @@ namespace femus {
       _X[i] = _pt_basis->GetX(i);
     }
 
-    for(int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
-      _X[i] = _pt_basis->GetX(i);
-    }
 
     // local projection matrix evaluation
     int counter = 0;

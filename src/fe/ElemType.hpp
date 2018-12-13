@@ -159,6 +159,9 @@ namespace femus
         return _dim;
       };
 
+      /** Set numbers of coarse and fine dofs for 1 element */
+      void set_coarse_fine_elem_data(const basis* pt_basis_in);
+      
       // member data
       static unsigned _refindex;
 
@@ -188,7 +191,12 @@ namespace femus
 
       // member data
       unsigned _dim; /*Spatial dimension of the geometric element*/
-      int _nc, _nf, _nlag[4];
+      int _nc, _nf, _nlag[4];  /* _nc: number of dofs of 1 element;  _nf: number of dofs in that element after refinement; 
+                                  _nlag[0] = number of linear dofs in 1 element;
+                                  _nlag[1] = number of serendipity dofs in 1 element; 
+                                  _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
+                                  _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
+                                  */
       unsigned _SolType;   /*Finite Element Family flag*/
       const double** _X;
       const int** _IND;
@@ -198,6 +206,7 @@ namespace femus
       int** _prol_ind;
       double* _mem_prol_val;
       int* _mem_prol_ind;
+      
       basis* _pt_basis;
 
 //  Gauss
