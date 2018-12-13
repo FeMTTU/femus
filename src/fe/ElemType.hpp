@@ -48,7 +48,7 @@ namespace femus
     public:
 
       /** constructor that receives Geometric Element and Gauss info */
-      elem_type(const char* geom_elem, const char* order_gauss);
+      elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss);
 
       /** destructor */
       virtual ~elem_type();

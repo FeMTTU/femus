@@ -36,8 +36,20 @@ namespace femus {
   unsigned elem_type::_refindex = 1;
 
 //   Constructor
-  elem_type::elem_type(const char* geom_elem, const char* order_gauss) : _gauss(geom_elem, order_gauss)
+  elem_type::elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss) : _gauss(geom_elem, order_gauss)
   {
+      
+    if(!strcmp(fe_order, "linear"))           _SolType = 0;
+    else if(!strcmp(fe_order, "quadratic"))   _SolType = 1;
+    else if(!strcmp(fe_order, "biquadratic")) _SolType = 2;
+    else if(!strcmp(fe_order, "constant"))    _SolType = 3;
+    else if(!strcmp(fe_order, "disc_linear")) _SolType = 4;
+    else {
+      cout << fe_order << " is not a valid option for " << geom_elem << endl;
+      abort();
+    }  
+      
+      
     isMpGDAllocated = false;
     
       if ( !strcmp(geom_elem, "quad") || !strcmp(geom_elem, "tri") ) { //QUAD or TRI ///@todo delete in the destructor 
@@ -482,8 +494,8 @@ namespace femus {
 
 
 
-  elem_type_1D::elem_type_1D(const char* geom_elem, const char* order, const char* order_gauss) :
-    elem_type(geom_elem, order_gauss)
+  elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
   {
 
     basis* linearElement;
@@ -493,15 +505,7 @@ namespace femus {
     _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
 
     //************ BEGIN FE and MG SETUP ******************
-    if(!strcmp(order, "linear")) 		 _SolType = 0;
-    else if(!strcmp(order, "quadratic")) 	 _SolType = 1;
-    else if(!strcmp(order, "biquadratic")) _SolType = 2;
-    else if(!strcmp(order, "constant"))    _SolType = 3;
-    else if(!strcmp(order, "disc_linear")) _SolType = 4;
-    else {
-      cout << order << " is not a valid option for " << geom_elem << endl;
-      exit(0);
-    }
+
 
     if(!strcmp(geom_elem, "line")) {  //line
       linearElement = new LineLinear;
@@ -512,8 +516,8 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new line0;
       else if(_SolType == 4) _pt_basis = new linepwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
       }
     }
     else {
@@ -719,15 +723,15 @@ namespace femus {
 
 
 //=====================
-    EvaluateShapeAtQP(geom_elem, order);
+    EvaluateShapeAtQP(geom_elem, fe_order);
 
     delete linearElement;
 
   }
 
 
-  elem_type_2D::elem_type_2D(const char* geom_elem, const char* order, const char* order_gauss):
-    elem_type(geom_elem, order_gauss)
+  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order, const char* order_gauss):
+    elem_type(geom_elem, fe_order, order_gauss)
   {
 
     basis* linearElement;
@@ -738,15 +742,7 @@ namespace femus {
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
 
     //************ BEGIN FE and MG SETUP ******************
-    if(!strcmp(order, "linear")) 	 _SolType = 0;
-    else if(!strcmp(order, "quadratic"))   _SolType = 1;
-    else if(!strcmp(order, "biquadratic")) _SolType = 2;
-    else if(!strcmp(order, "constant"))    _SolType = 3;
-    else if(!strcmp(order, "disc_linear")) _SolType = 4;
-    else {
-      cout << order << " is not a valid option for " << geom_elem << endl;
-      abort();
-    }
+
 
     if(!strcmp(geom_elem, "quad")) {  //QUAD
       linearElement = new QuadLinear;
@@ -757,7 +753,7 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new quad0;
       else if(_SolType == 4) _pt_basis = new quadpwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
         abort();
       }
     }
@@ -770,7 +766,7 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new tri0;
       else if(_SolType == 4) _pt_basis = new tripwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
         abort();
       }
     }
@@ -1065,7 +1061,7 @@ namespace femus {
 
 //
 //=====================
-    EvaluateShapeAtQP(geom_elem, order);
+    EvaluateShapeAtQP(geom_elem, fe_order);
 
     //std::cout << std::endl;
 
@@ -1075,8 +1071,8 @@ namespace femus {
   }
   
 
-  elem_type_3D::elem_type_3D(const char* geom_elem, const char* order, const char* order_gauss) :
-    elem_type(geom_elem, order_gauss)
+  elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
   {
 
     _dim = 3;
@@ -1088,15 +1084,7 @@ namespace femus {
     basis* linearElement;
 
     //************ BEGIN FE and MG SETUP ******************
-    if(!strcmp(order, "linear")) 	 _SolType = 0;
-    else if(!strcmp(order, "quadratic")) 	 _SolType = 1;
-    else if(!strcmp(order, "biquadratic")) _SolType = 2;
-    else if(!strcmp(order, "constant"))    _SolType = 3;
-    else if(!strcmp(order, "disc_linear")) _SolType = 4;
-    else {
-      cout << order << " is not a valid option for " << geom_elem << endl;
-      exit(0);
-    }
+
 
     if(!strcmp(geom_elem, "hex")) {  //HEX
 
@@ -1108,8 +1096,8 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new hex0;
       else if(_SolType == 4) _pt_basis = new hexpwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
       }
     }
     else if(!strcmp(geom_elem, "wedge")) {  //WEDGE
@@ -1121,8 +1109,8 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new wedge0;
       else if(_SolType == 4) _pt_basis = new wedgepwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
       }
     }
     else if(!strcmp(geom_elem, "tet")) {  //TETRAHEDRA
@@ -1134,13 +1122,13 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new tet0;
       else if(_SolType == 4) _pt_basis = new tetpwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
       }
     }
     else {
       cout << geom_elem << " is not a valid option" << endl;
-      exit(0);
+      abort();
     }
 
     // get data from basis object
@@ -1486,7 +1474,7 @@ namespace femus {
     }
 
 //=====================
-    EvaluateShapeAtQP(geom_elem, order);
+    EvaluateShapeAtQP(geom_elem, fe_order);
 
     //std::cout << std::endl;
 
