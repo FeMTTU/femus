@@ -493,7 +493,7 @@ namespace femus {
 //----------------------------------------------------------------------------------------------------
 
 
-  void elem_type::set_coarse_fine_elem_data(const basis* pt_basis_in)  {
+  void elem_type::set_coarse_and_fine_elem_data(const basis* pt_basis_in)  {
   
     _nc 	 = pt_basis_in->_nc;
     _nf 	 = pt_basis_in->_nf;
@@ -501,8 +501,17 @@ namespace femus {
     _nlag[1] = pt_basis_in->_nlag1;
     _nlag[2] = pt_basis_in->_nlag2;
     _nlag[3] = pt_basis_in->_nlag3;
-      
-      
+
+    
+    _IND = new const int * [_nc];
+
+    for(int i = 0; i < _nc; i++) {
+      _IND[i] = _pt_basis->GetIND(i);
+    }
+
+    _KVERT_IND = new const int * [_nf];
+    _X = new const double * [_nf];
+
   }
 
 
@@ -538,16 +547,7 @@ namespace femus {
     }
 
     // get data from basis object
-    set_coarse_fine_elem_data(_pt_basis);
-
-    _IND = new const int * [_nc];
-
-    for(int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->GetIND(i);
-    }
-
-    _KVERT_IND = new const int * [_nf];
-    _X = new const double * [_nf];
+    set_coarse_and_fine_elem_data(_pt_basis);
 
     //******************************************************
     // construction of coordinates
@@ -779,16 +779,7 @@ namespace femus {
     }
 
     // get data from basis object
-    set_coarse_fine_elem_data(_pt_basis);
-
-    _IND = new const int * [_nc];
-
-    for(int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->GetIND(i);
-    }
-
-    _KVERT_IND = new const int * [_nf];
-    _X = new const double * [_nf];
+    set_coarse_and_fine_elem_data(_pt_basis);
 
     //***********************************************************
     // construction of coordinates
@@ -1128,16 +1119,7 @@ namespace femus {
     }
 
     // get data from basis object
-    set_coarse_fine_elem_data(_pt_basis);
-
-    _IND = new const int * [_nc];
-
-    for(int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->GetIND(i);
-    }
-
-    _KVERT_IND = new const int * [_nf];
-    _X = new const double * [_nf];
+    set_coarse_and_fine_elem_data(_pt_basis);
 
     // ****************************************************
     // construction of coordinates

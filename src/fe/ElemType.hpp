@@ -160,7 +160,7 @@ namespace femus
       };
 
       /** Set numbers of coarse and fine dofs for 1 element */
-      void set_coarse_fine_elem_data(const basis* pt_basis_in);
+      void set_coarse_and_fine_elem_data(const basis* pt_basis_in);
       
       // member data
       static unsigned _refindex;
@@ -198,7 +198,7 @@ namespace femus
                                   _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
                                   */
       unsigned _SolType;   /*Finite Element Family flag*/
-      const double** _X;
+      const double** _X;   /*coordinates of the tensor-product quadratic dof objects in the refined elements*/ 
       const int** _IND;
       const int** _KVERT_IND;
 
@@ -207,7 +207,7 @@ namespace femus
       double* _mem_prol_val;
       int* _mem_prol_ind;
       
-      basis* _pt_basis;
+      basis* _pt_basis;  /* FE basis functions*/
 
 //  Gauss
       const Gauss _gauss;
