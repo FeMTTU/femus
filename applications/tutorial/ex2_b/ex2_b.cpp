@@ -16,6 +16,9 @@
 #include "LinearImplicitSystem.hpp"
 #include "adept.h"
 
+// command to view matrices
+// ./tutorial_ex2_b -mat_view ::ascii_info_detail
+
 
 using namespace femus;
 
@@ -69,7 +72,10 @@ int main(int argc, char** args) {
   
   MultiLevelSolution * mlSol_finest;
   
-  for (int i = maxNumberOfMeshes - 1; i >= 0; i--) {   // loop on the mesh level
+    std::vector< FEOrder > feOrder = {FIRST, SERENDIPITY, SECOND};
+
+    
+    for (int i = maxNumberOfMeshes - 1; i >= 0; i--) {   // loop on the mesh level
 
     unsigned numberOfUniformLevels = i + 1;
     unsigned numberOfSelectiveLevels = 0;
@@ -87,11 +93,10 @@ int main(int argc, char** args) {
     // print mesh info
     mlMsh.PrintInfo();
 
-    FEOrder feOrder[3] = {FIRST, SERENDIPITY, SECOND};
-    l2Norm[i].resize(3);
-    semiNorm[i].resize(3);
+    l2Norm[i].resize(feOrder.size());
+    semiNorm[i].resize(feOrder.size());
 
-    for (unsigned j = 0; j < 3; j++) {   // loop on the FE Order
+    for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
       
@@ -192,7 +197,7 @@ int main(int argc, char** args) {
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
-    for (unsigned j = 0; j < 3; j++) {
+    for (unsigned j = 0; j < feOrder.size(); j++) {
       std::cout << l2Norm[i][j] << "\t";
     }
 
@@ -202,7 +207,7 @@ int main(int argc, char** args) {
       std::cout.precision(3);
       std::cout << "\t\t";
 
-      for (unsigned j = 0; j < 3; j++) {
+      for (unsigned j = 0; j < feOrder.size(); j++) {
         std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "\t\t\t";
       }
 
@@ -220,7 +225,7 @@ int main(int argc, char** args) {
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
-    for (unsigned j = 0; j < 3; j++) {
+    for (unsigned j = 0; j < feOrder.size(); j++) {
       std::cout << semiNorm[i][j] << "\t";
     }
 
@@ -230,7 +235,7 @@ int main(int argc, char** args) {
       std::cout.precision(3);
       std::cout << "\t\t";
 
-      for (unsigned j = 0; j < 3; j++) {
+      for (unsigned j = 0; j < feOrder.size(); j++) {
         std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "\t\t\t";
       }
 
