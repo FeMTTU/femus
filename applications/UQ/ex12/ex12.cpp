@@ -22,9 +22,9 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 2;
+unsigned alpha = 3;
 unsigned M = pow (10, alpha); //number of samples
-unsigned N = 1; //dimension of the parameter space (each of the M samples has N entries)
+unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -88,8 +88,12 @@ int main (int argc, char** argv)
     sparseGrid spg (N, M, samples);
     
     double phi;
-    double x = 0.75;
-    spg.EvaluateOneDimensionalPhi(phi, x, 0, 1, 2, false);
+    double x = 0.;
+    unsigned nn = 0;
+    unsigned ll = 1;
+    unsigned ii = 0;
+    bool scale = false;
+    spg.EvaluateOneDimensionalPhi(phi, x, nn, ll, ii, scale);
     
     std::cout << "phi = " << phi << std::endl;
 
