@@ -1335,7 +1335,7 @@ namespace femus {
       };
 
     protected:
-      double X[5][2];
+      double X[5][2];  ///@todo why does this have 2 in the second component instead of 1?
       static const double Xc[3][1];
       static const int IND[3][1];
       static const int KVERT_IND[5][2];

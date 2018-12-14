@@ -17,8 +17,8 @@
 // includes :
 //----------------------------------------------------------------------------
 
-#include "GaussPoints.hpp"
 #include "ElemType.hpp"
+#include "GaussPoints.hpp"
 #include "FETypeEnum.hpp"
 #include "Elem.hpp"
 #include "NumericVector.hpp"
@@ -97,8 +97,7 @@ namespace femus {
 // evaluate shape functions at all quadrature points  TODO DEALLOCATE at destructor TODO FEFamilies TODO change HEX27 connectivity
 //-----------------------------------------------------------------------------------------------------
 
-  void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in, const std::string fe_in)
-  {
+  void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in, const std::string fe_in)  {
 
 // if (  (!strcmp(fe_in.c_str(),"disc_linear"))  || (!strcmp(fe_in.c_str(),"quadratic")) ) {  std::cout << "BEWARE, family not supported yet" << std::endl; return; }
 
@@ -180,7 +179,6 @@ namespace femus {
 
 
 
-    return;
   }
 
 
@@ -492,7 +490,35 @@ namespace femus {
 //END prolungator for solution printing
 //----------------------------------------------------------------------------------------------------
 
+  void elem_type::allocate_and_set_IND(const basis* pt_basis_in)  {
+      
+    _IND = new const int * [_nc];
 
+    for(int i = 0; i < _nc; i++) {
+      _IND[i] = pt_basis_in->GetIND(i);
+    }
+    
+  }
+  
+  
+  void elem_type::allocate_coordinates_and_KVERT_IND()  {
+      
+    _X         = new const double * [_nf];
+    _KVERT_IND = new const int * [_nf];
+      
+  }
+  
+  
+  void elem_type::set_coordinates_and_KVERT_IND(const basis* pt_basis_in)  {
+       
+      for(int i = 0; i < _nf; i++) {
+      _KVERT_IND[i] = pt_basis_in->GetKVERT_IND(i);
+              _X[i] = pt_basis_in->GetX(i);
+    }
+    
+  } 
+  
+  
   void elem_type::set_coarse_and_fine_elem_data(const basis* pt_basis_in)  {
   
     _nc 	 = pt_basis_in->_nc;
@@ -503,17 +529,44 @@ namespace femus {
     _nlag[3] = pt_basis_in->_nlag3;
 
     
-    _IND = new const int * [_nc];
+    allocate_and_set_IND(pt_basis_in);
 
-    for(int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->GetIND(i);
+    allocate_coordinates_and_KVERT_IND();
+    
+  }
+  
+  
+  
+   void elem_type::set_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement_in) const  {
+       
+     if(_SolType <= 2) {
+         
+      for(int i = 0; i < _nlag[3]; i++) {
+          
+        std::vector<double> xm(_dim,0.);
+        for(int k = 0; k <  _nlag[0]; k++) {
+            
+          unsigned element = *(linearElement_in->GetKVERT_IND(i) + 0);
+          std::vector< double > xv(_dim);
+          for(int d = 0; d < _dim; d++)  xv[d] = * (linearElement_in->GetXcoarse(linearElement_in->GetFine2CoarseVertexMapping(element, k)) + d);
+          
+          unsigned vertex = *(linearElement_in->GetKVERT_IND(i) + 1);
+          for(int d = 0; d < _dim; d++)  xm[d] += linearElement_in->eval_phi(linearElement_in->GetIND(k), linearElement_in->GetXcoarse(vertex)) * xv[d];
+            
+        }
+        
+        for(int d = 0; d < _dim; d++)    pt_basis_in->SetX(i, d, xm[d]);
+ 
+      }
+      
     }
 
-    _KVERT_IND = new const int * [_nf];
-    _X = new const double * [_nf];
-
+       
   }
 
+  
+
+    
 
   elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
     elem_type(geom_elem, fe_order, order_gauss)
@@ -549,28 +602,12 @@ namespace femus {
     // get data from basis object
     set_coarse_and_fine_elem_data(_pt_basis);
 
-    //******************************************************
+    //***********************************************************
     // construction of coordinates
-    if(_SolType <= 2) {
-      for(int i = 0; i < _nlag[3]; i++) {
-        std::vector<double> xm(1,0.);
-        for(int k = 0; k <  _nlag[0]; k++) {
-          unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
-          unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm[0] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
-        }
-        _pt_basis->SetX(i, 0, xm[0]);
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
 
-        //std::cout << *(_pt_basis->GetX(i) + 0) << std::endl;
-      }
-    }
-
-    for(int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
-      _X[i] = _pt_basis->GetX(i);
-    }
-    //******************************************************
+    set_coordinates_and_KVERT_IND(_pt_basis);
+    //***********************************************************
 
     // local projection matrix evaluation
     int counter = 0;
@@ -580,7 +617,7 @@ namespace femus {
       double jac[2] = {0, 0};
 
       if(_SolType == 4 && i / 2 == 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k <  _nlag[0]; k++) {
+        for(int k = 0; k < _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect the fine elements
           double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 2,  k)) + 0);
           jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
@@ -783,31 +820,9 @@ namespace femus {
 
     //***********************************************************
     // construction of coordinates
-    if(_SolType <= 2) {
-      for(int i = 0; i < _nlag[3]; i++) {
-        std::vector<double> xm(2,0.);
-        for(int k = 0; k <  _nlag[0]; k++) {
-          unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
-          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
-          unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm[0] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
-          xm[1] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
-        }
-        _pt_basis->SetX(i, 0, xm[0]);
-        _pt_basis->SetX(i, 1, xm[1]);
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
 
-        //std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << std::endl;
-      }
-    }
-
-
-
-    for(int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
-      _X[i] = _pt_basis->GetX(i);
-    }
-
+    set_coordinates_and_KVERT_IND(_pt_basis);
     //***********************************************************
 
     // local projection matrix evaluation
@@ -818,7 +833,7 @@ namespace femus {
       double jac[3] = {0, 0, 0};
 
       if(_SolType == 4 && i / 4 >= 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k <  _nlag[0]; k++) {
+        for(int k = 0; k < _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect the fine elements
           double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 0);
           double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 1);
@@ -1121,37 +1136,12 @@ namespace femus {
     // get data from basis object
     set_coarse_and_fine_elem_data(_pt_basis);
 
-    // ****************************************************
+    //***********************************************************
     // construction of coordinates
-    if(_SolType <= 2) {
-      for(int i = 0; i < _nlag[3]; i++) {
-        std::vector<double> xm(3,0.);
-        for(int k = 0; k <  _nlag[0]; k++) {
-          unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
-          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
-          double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 2);
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
 
-          unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm[0] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
-          xm[1] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
-          xm[2] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * zv;
-        }
-        _pt_basis->SetX(i, 0, xm[0]);
-        _pt_basis->SetX(i, 1, xm[1]);
-        _pt_basis->SetX(i, 2, xm[2]);
-
-        //std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << " " << *(_pt_basis->GetX(i) + 2) << std::endl;
-      }
-    }
-
-    // ****************************************************
-
-    for(int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
-      _X[i] = _pt_basis->GetX(i);
-    }
-
+    set_coordinates_and_KVERT_IND(_pt_basis);
+    //***********************************************************
 
     // local projection matrix evaluation
     int counter = 0;
@@ -1159,6 +1149,7 @@ namespace femus {
     for(int i = 0; i < _nf; i++) {
 
       double jac[4] = {0, 0, 0, 0};
+      
       if(_SolType == 4 && i / 8 >= 1) {  //if piece_wise_linear derivatives
         for(int k = 0; k < _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect to the fine elements
