@@ -28,7 +28,7 @@ namespace femus {
     
 /**
  * This class provides a specific system class for the time integration of system PDE
- * using the Newmark algorithm.
+ * using the Runge Kutta schemes.
  */
 
 // ------------------------------------------------------------

@@ -1,4 +1,4 @@
-/** tutorial/Ex14 
+/** tutorial/Ex15 
  * This example shows how to set and solve the weak form of the Bistable Equation 
  *          $$ \dfrac{\partial u}{ \partial t}-\epsilon \nabla \cdot u=u-u^3  \text{in} \Omega $$
  *          $$ \nabla u.n=0 \text{ on} \partial \Omega $$
@@ -84,13 +84,12 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol); //
 
-  // add system Poisson in mlProb as a Non Linear Implicit System
+  // add system AllanChan in mlProb as an ImplicitRungeKuttaNonlinearImplicitSystem
   ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("AllanChan");
   
   system.SetRungeKuttaStages(3);
 
   system.AddSolutionToSystemPDE("u");
-  
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleAllanChanProblem_AD);
@@ -255,7 +254,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
     }
         
     for (int k = 0; k < dim; k++) {
-      x[k].resize(nDofx); // Now we 
+      x[k].resize(nDofx);  
     }
     
     l2GMap.resize(RK * nDofu);
