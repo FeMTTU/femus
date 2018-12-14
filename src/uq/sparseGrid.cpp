@@ -115,24 +115,24 @@ namespace femus
 
             if (sum <= _L + _N - 1) {
 
-                _indexSet.resize (indexCounter + 1);
-                _indexSet[indexCounter].resize (_N);
+                _indexSetW.resize (indexCounter + 1);
+                _indexSetW[indexCounter].resize (_N);
 
                 for (unsigned j = 0; j < _N; j++) {
-                    _indexSet[indexCounter][j] = Tp[i][j];
+                    _indexSetW[indexCounter][j] = Tp[i][j];
                 }
                 indexCounter++;
             }
         }
 
-        for (unsigned i = 0; i < _indexSet.size(); i++) {
+        for (unsigned i = 0; i < _indexSetW.size(); i++) {
             for (unsigned j = 0; j < _N; j++) {
-                std::cout << "_indexSet[" << i << "][" << j << "]= " << _indexSet[i][j];
+                std::cout << "_indexSetW[" << i << "][" << j << "]= " << _indexSetW[i][j];
             }
             std::cout << std::endl;
         }
 
-        _numberOfWs = _indexSet.size();
+        _numberOfWs = _indexSetW.size();
 
 
         //END
@@ -142,15 +142,17 @@ namespace femus
 
         _dofIdentifier.resize (_numberOfWs);
 
+        std::cout << "-------------------------- Number of W sets = " << _numberOfWs <<  "-------------------------- " << std::endl;
+
         std::vector< unsigned > maxDofs (_numberOfWs);
 
         for (unsigned w = 0; w < _numberOfWs; w++) {
             unsigned identifiersOfW = 1;
-            for (unsigned i = 0; i < _N; i++) {
+            for (unsigned n = 0; n < _N; n++) {
 
-                identifiersOfW *= _hierarchicalDofs[i][_indexSet[w][i]].size();
+                identifiersOfW *= _hierarchicalDofs[n][_indexSetW[w][n]].size();
 
-                if (_nodes[i][_indexSet[w][i]].size() >= maxDofs[w]) maxDofs[w] = _nodes[i][_indexSet[w][i]].size();
+                if (_nodes[n][_indexSetW[w][n]].size() >= maxDofs[w]) maxDofs[w] = _nodes[n][_indexSetW[w][n]].size();
 
             }
 
@@ -163,57 +165,117 @@ namespace femus
         }
 
 
-        //TODO continue from here...
+        //Here we create the dofs for each W
+        std::vector<std::vector< std::vector < unsigned > > > dofsW;
+        dofsW.resize (_numberOfWs);
+        std::vector < unsigned> counterW (_numberOfWs, 0);
         for (unsigned w = 0; w < _numberOfWs; w++) {
 
-            std::vector <std::vector <unsigned> > Vdofs;
-            ComputeTensorProductSet (Vdofs, maxDofs[w], _N);
+            std::cout << "--------------------------- w = " << w << " ---------------------- " << std::endl;
 
-            std::cout << " ---------------------------------------------------- " << std::endl;
+            std::vector < std::vector < unsigned > > Tw;
+            ComputeTensorProductSet (Tw, maxDofs[w], _N);
+            for (unsigned j = 0; j < Tw.size(); j++) {
+                //now for each Tw[j]:
+                //1. we need to check if it has to be included
+                //2. if yes, we have to check if it has already been included
+                //3. if not, include it, and move to the next one
 
-            std::vector <std::vector <unsigned> >  nodesToKeep (_N);
-
-            unsigned counterKeep = 0;
-            for (unsigned i = 0; i < Vdofs.size(); i++) {
-                bool skip = false;
+                //1.
+                std::vector< unsigned > satisfiesRequirements (_N, 0);
                 for (unsigned n = 0; n < _N; n++) {
-                    for (unsigned j = 0; j < _hierarchicalDofs[n][_indexSet[w][n]].size(); j++) {
+                    for (unsigned i = 0; i < _hierarchicalDofs[n][_indexSetW[w][n]].size(); i++) {
 
-                        if (Vdofs[i][n] != _hierarchicalDofs[n][_indexSet[w][n]][j]) {
-                            skip = true;
+                        std::cout << "Tw[" << j << "][" << n << "]  = " << Tw[j][n] << " , " << "i = " << i << " ," << _hierarchicalDofs[n][_indexSetW[w][n]][i] << std::endl;
+
+                        if (Tw[j][n] == _hierarchicalDofs[n][_indexSetW[w][n]][i]) {
+                            satisfiesRequirements[n] = 1;
+                            std::cout << "satisfiesRequirements[" << n << "] = " << satisfiesRequirements[n] << std::endl;
+                        }
+                    }
+                }
+
+                unsigned shouldBeThere = 0;
+                for (unsigned n = 0; n < _N; n++) {
+                    shouldBeThere += satisfiesRequirements[n];
+                }
+
+                std::cout << "--------------------------- done 1 ---------------------- " << std::endl;
+
+                //2.
+                if (shouldBeThere == _N) {
+
+                    std::vector< unsigned> seeIfItIsThere (_N, 0);
+
+                    for (unsigned i = 0; i < dofsW[w].size(); i++) {
+                        for (unsigned n = 0; n < _N; n++) {
+                            if (dofsW[w][i][n] == Tw[j][n]) seeIfItIsThere[n] = 1;
+                        }
+                    }
+
+                    unsigned itIsThere = 0;
+                    for (unsigned n = 0; n < _N; n++) {
+                        itIsThere += seeIfItIsThere[n];
+                    }
+
+                    std::cout << "--------------------------- done 2 ---------------------- " << std::endl;
+
+                    //3.
+                    if (itIsThere != _N) {
+
+                        dofsW[w].resize (counterW[w] + 1);
+                        dofsW[w][counterW[w]].resize (_N);
+
+                        for (unsigned n = 0; n < _N; n++) {
+                            dofsW[w][counterW[w]][n] = Tw[j][n];
                         }
 
-                        if (skip) break;
+                        counterW[w] += 1;
 
                     }
 
-                    if (skip) break;
+                    std::cout << "--------------------------- done 3 ---------------------- " << std::endl;
                 }
-                
-                if (!skip){
-                    
-                    nodesToKeep.resize(counterKeep + 1);
-                    for (unsigned n = 0; n < _N; n++) {
-                        nodesToKeep[counterKeep][n] = Vdofs[i][n];
-                    }
-                    counterKeep++;
-                    
-                }
-                
             }
-            
-            //to erase
-            for (unsigned ii = 0; ii < nodesToKeep.size(); ii++) {
+
+
+            for (unsigned i = 0; i < dofsW[w].size(); i++) {
                 for (unsigned n = 0; n < _N; n++) {
-                    std::cout << "nodesToKeep[" << ii << "][" << n << "] = " << nodesToKeep[ii][n];
+                    std::cout << "dofsW[" << w << "][" << i << "][" << n << "] = " << dofsW[w][i][n] << " ";
                 }
                 std::cout << std::endl;
             }
-            
 
         }
 
 
+        //now we need to store these dofs in _dofIdentifier
+        for (unsigned w = 0; w < _numberOfWs; w++) {
+            for (unsigned i = 0; i < _dofIdentifier[w].size(); i++) {
+                _dofIdentifier[w][i].resize (_N);
+                for (unsigned n = 0; n < _N; n++) {
+                    _dofIdentifier[w][i][n].resize (3);
+                    _dofIdentifier[w][i][n][0] = n;
+                    _dofIdentifier[w][i][n][1] = _indexSetW[w][n];
+                    _dofIdentifier[w][i][n][2] = dofsW[w][i][n];
+                }
+            }
+        }
+
+        //to erase (it is just a check)
+        for (unsigned w = 0; w < _numberOfWs; w++) {
+            std::cout << " ------------------------- w = " << w << " ------------------------- " <<std::endl;
+            for (unsigned i = 0; i < _dofIdentifier[w].size(); i++) {
+                std::cout << " ------------------------- i = " << i << " ------------------------- " <<std::endl;
+                for (unsigned n = 0; n < _N; n++) {
+                    std::cout << " ------------------------- dim = " << n << " ------------------------- " <<std::endl;
+                    for (unsigned j = 0; j < 3; j++) {
+                       std::cout << "_dofIdentifier[" << w <<"][" << i <<"]["<< n << "]["<< j <<"] = " << _dofIdentifier[w][i][n][j] << " " ;
+                    }
+                    std::cout<< std::endl;
+                }
+            }
+        }
 
         //END
 
@@ -291,6 +353,8 @@ namespace femus
 
 
 }
+
+
 
 
 

@@ -35,10 +35,10 @@ private:
     std::vector < std::vector < double > > _hs;
     std::vector < std::vector < std::vector < double > > > _nodes;
     std::vector < std::vector < std::vector < double > > > _hierarchicalDofs;
-    std::vector < std::vector < unsigned > > _indexSet;
     
     //sparse grid quantities
     unsigned _numberOfWs; // V = direct sum_{i=1,...,_numberOfWs} W_i, see (3.61) in Bungartz and Griebel, Acta Numerica 2004
+    std::vector < std::vector < unsigned > > _indexSetW; //these are the indices of the W sets
     std::vector < std::vector < std::vector < std::vector < unsigned > > > > _dofIdentifier; //contains all identifiers 
     
 };
