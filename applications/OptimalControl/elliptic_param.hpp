@@ -1,6 +1,7 @@
 #ifndef ELLIPTIC_PARAMETERS
 #define ELLIPTIC_PARAMETERS
 
+//#include </elliptic_lift_restr_bdd_ctrl_ext/input/ext_box.neu>
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
@@ -19,9 +20,24 @@
 
 //*********************** Control box constraints *******************************************************
 #define  INEQ_FLAG 1
-#define  CTRL_BOX_LOWER   -1000
-#define  CTRL_BOX_UPPER   0.5
 #define  C_COMPL 1.
+
+
+ double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
+
+     double constr_value = 0.;
+     double constr_value_upper = 0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
+     double constr_value_lower = -1000.;
+     assert(constr_value_lower < constr_value_upper); 
+     
+    if (upper)   constr_value = constr_value_upper;
+    else         constr_value = constr_value_lower; 
+    
+    
+  return constr_value;
+     
+}
+   
 
 
 //*********************** Find volume elements that contain a  Target domain element **************************************
@@ -81,6 +97,19 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
 
 }
 
+
+//*********************** Find volume elements that contain a Control domain element *********************************
+
+int ControlDomainFlag_external_restriction(const std::vector<double> & elem_center) {
+
+ //***** set target domain flag ******
+ // flag = 1: we are in the lifting nonzero domain
+  int exterior_el_flag = 0.;
+   if ( elem_center[0] >  0.95) { exterior_el_flag = 1; }
+
+     return exterior_el_flag;
+
+}
 
 
 

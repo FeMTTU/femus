@@ -16,6 +16,9 @@
 #include "LinearImplicitSystem.hpp"
 #include "adept.h"
 
+// command to view matrices
+// ./tutorial_ex2_b -mat_view ::ascii_info_detail
+
 
 using namespace femus;
 
@@ -40,17 +43,28 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  // define multilevel mesh
+    // ======= Quad Rule ========================
+  std::string fe_quad_rule("seventh");
+ /* "seventh" is the order of accuracy that is used in the gauss integration scheme
+    In the future it is not going to be an argument of the mesh function   */
+
+ // define multilevel mesh
   MultiLevelMesh mlMsh;
  // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  const unsigned int nsub_x = 2;
+  const unsigned int nsub_y = 2;
+  const unsigned int nsub_z = 0;
+  const std::vector<double> xyz_min = {-0.5,-0.5,0.};
+  const std::vector<double> xyz_max = { 0.5, 0.5,0.};
+  const ElemType geom_elem_type = QUAD9;
+  mlMsh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
   MultiLevelMesh mlMsh_finest;
-  mlMsh_finest.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
-  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-    probably in furure it is not going to be an argument of this function   */
+  mlMsh_finest.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   mlMsh_finest.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
 
@@ -69,7 +83,10 @@ int main(int argc, char** args) {
   
   MultiLevelSolution * mlSol_finest;
   
-  for (int i = maxNumberOfMeshes - 1; i >= 0; i--) {   // loop on the mesh level
+    std::vector< FEOrder > feOrder = {FIRST, SERENDIPITY, SECOND};
+
+    
+    for (int i = maxNumberOfMeshes - 1; i >= 0; i--) {   // loop on the mesh level
 
     unsigned numberOfUniformLevels = i + 1;
     unsigned numberOfSelectiveLevels = 0;
@@ -87,11 +104,10 @@ int main(int argc, char** args) {
     // print mesh info
     mlMsh.PrintInfo();
 
-    FEOrder feOrder[3] = {FIRST, SERENDIPITY, SECOND};
-    l2Norm[i].resize(3);
-    semiNorm[i].resize(3);
+    l2Norm[i].resize(feOrder.size());
+    semiNorm[i].resize(feOrder.size());
 
-    for (unsigned j = 0; j < 3; j++) {   // loop on the FE Order
+    for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
       
@@ -192,7 +208,7 @@ int main(int argc, char** args) {
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
-    for (unsigned j = 0; j < 3; j++) {
+    for (unsigned j = 0; j < feOrder.size(); j++) {
       std::cout << l2Norm[i][j] << "\t";
     }
 
@@ -202,7 +218,7 @@ int main(int argc, char** args) {
       std::cout.precision(3);
       std::cout << "\t\t";
 
-      for (unsigned j = 0; j < 3; j++) {
+      for (unsigned j = 0; j < feOrder.size(); j++) {
         std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "\t\t\t";
       }
 
@@ -220,7 +236,7 @@ int main(int argc, char** args) {
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
-    for (unsigned j = 0; j < 3; j++) {
+    for (unsigned j = 0; j < feOrder.size(); j++) {
       std::cout << semiNorm[i][j] << "\t";
     }
 
@@ -230,7 +246,7 @@ int main(int argc, char** args) {
       std::cout.precision(3);
       std::cout << "\t\t";
 
-      for (unsigned j = 0; j < 3; j++) {
+      for (unsigned j = 0; j < feOrder.size(); j++) {
         std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "\t\t\t";
       }
 
@@ -773,6 +789,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 
   std::pair < double, double > inexact_pair(sqrt(l2norm_inexact), sqrt(seminorm_inexact));
   
-  return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
+  return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
+//   return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
 
 }

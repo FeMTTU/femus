@@ -36,8 +36,20 @@ namespace femus {
   unsigned elem_type::_refindex = 1;
 
 //   Constructor
-  elem_type::elem_type(const char* geom_elem, const char* order_gauss) : _gauss(geom_elem, order_gauss)
+  elem_type::elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss) : _gauss(geom_elem, order_gauss)
   {
+      
+    if(!strcmp(fe_order, "linear"))           _SolType = 0;
+    else if(!strcmp(fe_order, "quadratic"))   _SolType = 1;
+    else if(!strcmp(fe_order, "biquadratic")) _SolType = 2;
+    else if(!strcmp(fe_order, "constant"))    _SolType = 3;
+    else if(!strcmp(fe_order, "disc_linear")) _SolType = 4;
+    else {
+      cout << fe_order << " is not a valid option for " << geom_elem << endl;
+      abort();
+    }  
+      
+      
     isMpGDAllocated = false;
     
       if ( !strcmp(geom_elem, "quad") || !strcmp(geom_elem, "tri") ) { //QUAD or TRI ///@todo delete in the destructor 
@@ -481,9 +493,30 @@ namespace femus {
 //----------------------------------------------------------------------------------------------------
 
 
+  void elem_type::set_coarse_and_fine_elem_data(const basis* pt_basis_in)  {
+  
+    _nc 	 = pt_basis_in->_nc;
+    _nf 	 = pt_basis_in->_nf;
+    _nlag[0] = pt_basis_in->_nlag0;
+    _nlag[1] = pt_basis_in->_nlag1;
+    _nlag[2] = pt_basis_in->_nlag2;
+    _nlag[3] = pt_basis_in->_nlag3;
 
-  elem_type_1D::elem_type_1D(const char* geom_elem, const char* order, const char* order_gauss) :
-    elem_type(geom_elem, order_gauss)
+    
+    _IND = new const int * [_nc];
+
+    for(int i = 0; i < _nc; i++) {
+      _IND[i] = _pt_basis->GetIND(i);
+    }
+
+    _KVERT_IND = new const int * [_nf];
+    _X = new const double * [_nf];
+
+  }
+
+
+  elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
   {
 
     basis* linearElement;
@@ -493,15 +526,7 @@ namespace femus {
     _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
 
     //************ BEGIN FE and MG SETUP ******************
-    if(!strcmp(order, "linear")) 		 _SolType = 0;
-    else if(!strcmp(order, "quadratic")) 	 _SolType = 1;
-    else if(!strcmp(order, "biquadratic")) _SolType = 2;
-    else if(!strcmp(order, "constant"))    _SolType = 3;
-    else if(!strcmp(order, "disc_linear")) _SolType = 4;
-    else {
-      cout << order << " is not a valid option for " << geom_elem << endl;
-      exit(0);
-    }
+
 
     if(!strcmp(geom_elem, "line")) {  //line
       linearElement = new LineLinear;
@@ -512,44 +537,30 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new line0;
       else if(_SolType == 4) _pt_basis = new linepwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
       }
     }
     else {
       cout << geom_elem << " is not a valid option" << endl;
-      exit(0);
+      abort();
     }
 
     // get data from basis object
-    _nc 	   = _pt_basis->_nc;
-    _nf 	   = _pt_basis->_nf;
-    _nlag[0] = _pt_basis->_nlag0;
-    _nlag[1] = _pt_basis->_nlag1;
-    _nlag[2] = _pt_basis->_nlag2;
-    _nlag[3] = _pt_basis->_nlag3;
-
-
-    _IND = new const int * [_nc];
-
-    for(int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->GetIND(i);
-    }
-
-    _KVERT_IND = new const int * [_nf];
-    _X = new const double * [_nf];
+    set_coarse_and_fine_elem_data(_pt_basis);
 
     //******************************************************
+    // construction of coordinates
     if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
-        double xm = 0.;
+        std::vector<double> xm(1,0.);
         for(int k = 0; k <  _nlag[0]; k++) {
           unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
           double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
           unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
+          xm[0] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
         }
-        _pt_basis->SetX(i, 0, xm);
+        _pt_basis->SetX(i, 0, xm[0]);
 
         //std::cout << *(_pt_basis->GetX(i) + 0) << std::endl;
       }
@@ -714,20 +725,16 @@ namespace femus {
 
 
 
-
-
-
-
 //=====================
-    EvaluateShapeAtQP(geom_elem, order);
+    EvaluateShapeAtQP(geom_elem, fe_order);
 
     delete linearElement;
 
   }
 
 
-  elem_type_2D::elem_type_2D(const char* geom_elem, const char* order, const char* order_gauss):
-    elem_type(geom_elem, order_gauss)
+  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order, const char* order_gauss):
+    elem_type(geom_elem, fe_order, order_gauss)
   {
 
     basis* linearElement;
@@ -738,15 +745,7 @@ namespace femus {
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
 
     //************ BEGIN FE and MG SETUP ******************
-    if(!strcmp(order, "linear")) 	 _SolType = 0;
-    else if(!strcmp(order, "quadratic"))   _SolType = 1;
-    else if(!strcmp(order, "biquadratic")) _SolType = 2;
-    else if(!strcmp(order, "constant"))    _SolType = 3;
-    else if(!strcmp(order, "disc_linear")) _SolType = 4;
-    else {
-      cout << order << " is not a valid option for " << geom_elem << endl;
-      abort();
-    }
+
 
     if(!strcmp(geom_elem, "quad")) {  //QUAD
       linearElement = new QuadLinear;
@@ -757,7 +756,7 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new quad0;
       else if(_SolType == 4) _pt_basis = new quadpwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
         abort();
       }
     }
@@ -770,7 +769,7 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new tri0;
       else if(_SolType == 4) _pt_basis = new tripwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
         abort();
       }
     }
@@ -780,39 +779,23 @@ namespace femus {
     }
 
     // get data from basis object
-    _nc 	   = _pt_basis->_nc;
-    _nf 	   = _pt_basis->_nf;
-    _nlag[0] = _pt_basis->_nlag0;
-    _nlag[1] = _pt_basis->_nlag1;
-    _nlag[2] = _pt_basis->_nlag2;
-    _nlag[3] = _pt_basis->_nlag3;
-
-    _IND = new const int * [_nc];
-
-    for(int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->GetIND(i);
-    }
-
-    _KVERT_IND = new const int * [_nf];
-    _X = new const double * [_nf];
-
-
+    set_coarse_and_fine_elem_data(_pt_basis);
 
     //***********************************************************
     // construction of coordinates
     if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
-        double xm = 0., ym = 0.;
+        std::vector<double> xm(2,0.);
         for(int k = 0; k <  _nlag[0]; k++) {
           unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
           double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
           double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
           unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
-          ym += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
+          xm[0] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
+          xm[1] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
         }
-        _pt_basis->SetX(i, 0, xm);
-        _pt_basis->SetX(i, 1, ym);
+        _pt_basis->SetX(i, 0, xm[0]);
+        _pt_basis->SetX(i, 1, xm[1]);
 
         //std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << std::endl;
       }
@@ -1065,7 +1048,7 @@ namespace femus {
 
 //
 //=====================
-    EvaluateShapeAtQP(geom_elem, order);
+    EvaluateShapeAtQP(geom_elem, fe_order);
 
     //std::cout << std::endl;
 
@@ -1075,8 +1058,8 @@ namespace femus {
   }
   
 
-  elem_type_3D::elem_type_3D(const char* geom_elem, const char* order, const char* order_gauss) :
-    elem_type(geom_elem, order_gauss)
+  elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
   {
 
     _dim = 3;
@@ -1088,15 +1071,7 @@ namespace femus {
     basis* linearElement;
 
     //************ BEGIN FE and MG SETUP ******************
-    if(!strcmp(order, "linear")) 	 _SolType = 0;
-    else if(!strcmp(order, "quadratic")) 	 _SolType = 1;
-    else if(!strcmp(order, "biquadratic")) _SolType = 2;
-    else if(!strcmp(order, "constant"))    _SolType = 3;
-    else if(!strcmp(order, "disc_linear")) _SolType = 4;
-    else {
-      cout << order << " is not a valid option for " << geom_elem << endl;
-      exit(0);
-    }
+
 
     if(!strcmp(geom_elem, "hex")) {  //HEX
 
@@ -1108,8 +1083,8 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new hex0;
       else if(_SolType == 4) _pt_basis = new hexpwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
       }
     }
     else if(!strcmp(geom_elem, "wedge")) {  //WEDGE
@@ -1121,8 +1096,8 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new wedge0;
       else if(_SolType == 4) _pt_basis = new wedgepwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
       }
     }
     else if(!strcmp(geom_elem, "tet")) {  //TETRAHEDRA
@@ -1134,38 +1109,23 @@ namespace femus {
       else if(_SolType == 3) _pt_basis = new tet0;
       else if(_SolType == 4) _pt_basis = new tetpwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
       }
     }
     else {
       cout << geom_elem << " is not a valid option" << endl;
-      exit(0);
+      abort();
     }
 
     // get data from basis object
-    _nc 	   = _pt_basis->_nc;
-    _nf 	   = _pt_basis->_nf;
-    _nlag[0] = _pt_basis->_nlag0;
-    _nlag[1] = _pt_basis->_nlag1;
-    _nlag[2] = _pt_basis->_nlag2;
-    _nlag[3] = _pt_basis->_nlag3;
-
-
-    _IND = new const int * [_nc];
-
-    for(int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->GetIND(i);
-    }
-
-    _KVERT_IND = new const int * [_nf];
-    _X = new const double * [_nf];
+    set_coarse_and_fine_elem_data(_pt_basis);
 
     // ****************************************************
     // construction of coordinates
     if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
-        double xm = 0., ym = 0., zm = 0.;
+        std::vector<double> xm(3,0.);
         for(int k = 0; k <  _nlag[0]; k++) {
           unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
           double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
@@ -1173,13 +1133,13 @@ namespace femus {
           double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 2);
 
           unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
-          ym += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
-          zm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * zv;
+          xm[0] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
+          xm[1] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
+          xm[2] += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * zv;
         }
-        _pt_basis->SetX(i, 0, xm);
-        _pt_basis->SetX(i, 1, ym);
-        _pt_basis->SetX(i, 2, zm);
+        _pt_basis->SetX(i, 0, xm[0]);
+        _pt_basis->SetX(i, 1, xm[1]);
+        _pt_basis->SetX(i, 2, xm[2]);
 
         //std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << " " << *(_pt_basis->GetX(i) + 2) << std::endl;
       }
@@ -1192,10 +1152,6 @@ namespace femus {
       _X[i] = _pt_basis->GetX(i);
     }
 
-    for(int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
-      _X[i] = _pt_basis->GetX(i);
-    }
 
     // local projection matrix evaluation
     int counter = 0;
@@ -1486,7 +1442,7 @@ namespace femus {
     }
 
 //=====================
-    EvaluateShapeAtQP(geom_elem, order);
+    EvaluateShapeAtQP(geom_elem, fe_order);
 
     //std::cout << std::endl;
 

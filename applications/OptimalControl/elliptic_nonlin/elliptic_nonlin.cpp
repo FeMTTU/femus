@@ -1,7 +1,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
 #include "./elliptic_nonlin_param.hpp"
@@ -15,8 +15,8 @@ using namespace femus;
 
 double  nonlin_term_function(const double& v) {
     
-//    return 1.;
-   return 1./( (1. - v) );
+   return 1.;
+//    return 1./( (1. - v) );
 //    return 0.01*1./( (1. - v)*(1. - v) );
 //     return exp(v);
  }
@@ -24,8 +24,8 @@ double  nonlin_term_function(const double& v) {
 
 double  nonlin_term_derivative(const double& v) {
     
-//     return 0.;
-   return  +2. * 1./( (1. - v)*(1. - v) ); 
+    return 0.;
+//    return  +2. * 1./( (1. - v)*(1. - v) ); 
 //    return 0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
 //     return exp(v);
  }
@@ -103,6 +103,9 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
              if(!strcmp(name,"ContReg")) {
                  value = ControlDomainFlag_internal_restriction(x);
              }
+             if(!strcmp(name,"act_flag")) {
+                 value = 0.;
+             }
            
       return value;   
 }
@@ -171,7 +174,9 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu",      LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg", DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg", DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-
+  const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
+  const std::string act_set_flag_name = "act_flag";
+  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               
 
     // ======= Problem ========================
   MultiLevelProblem ml_prob(&mlSol);  // define the multilevel problem attach the mlSol object to it
@@ -188,6 +193,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("mu",      SetInitialCondition, &ml_prob);
   mlSol.Initialize("TargReg", SetInitialCondition, &ml_prob);
   mlSol.Initialize("ContReg", SetInitialCondition, &ml_prob);
+  mlSol.Initialize(act_set_flag_name.c_str(),  SetInitialCondition, &ml_prob);
 
     // ======= Boundary Conditions ========================
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);  // attach the boundary condition function and generate boundary data
@@ -199,7 +205,9 @@ int main(int argc, char** args) {
   mlSol.GenerateBdc("mu");  //we need this for all Pde variables to make the matrix iterations work... but this should be related to the matrix and not to the sol... The same for the initial condition
 
     // ======= System ========================
-  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("OptSys");    // add system in ml_prob
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("OptSys");    // add system in ml_prob
+
+  system.SetActiveSetFlagName(act_set_flag_name);
 
   //here we decide the order in the matrix!
   const std::vector < std::string > sol_matrix_pos = {"state","control","adjoint","mu"};
@@ -239,7 +247,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("OptSys");
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("OptSys");
   const unsigned          level      = mlPdeSys->GetLevelToAssemble();
   const bool          assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -370,15 +378,23 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
         sol_grad_qp[k].resize(dim);
         std::fill(sol_grad_qp[k].begin(), sol_grad_qp[k].end(), 0.);
     }
-  
+
+//************** act flag **************************** 
+   std::string act_flag_name = "act_flag";
+   unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
+   unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
+      if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
+        *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
+      }
+    
+    
   //********* variables for ineq constraints *****************
   const int ineq_flag = INEQ_FLAG;
-  const double ctrl_lower =  CTRL_BOX_LOWER;
-  const double ctrl_upper =  CTRL_BOX_UPPER;
-  assert(ctrl_lower < ctrl_upper);
   const double c_compl = C_COMPL;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
-  //***************************************************  
+  vector < double >  ctrl_lower;   ctrl_lower.reserve(maxSize);
+  vector < double >  ctrl_upper;   ctrl_upper.reserve(maxSize);
+ //***************************************************  
 
   //********************* DATA ************************ 
   double u_des = DesiredTarget();
@@ -443,14 +459,31 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  // 0: inactive; 1: active_a; 2: active_b
    assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);
    sol_actflag.resize(Sol_n_el_dofs[pos_mu]);
+   ctrl_lower.resize(Sol_n_el_dofs[pos_mu]);
+   ctrl_upper.resize(Sol_n_el_dofs[pos_mu]);
      std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+     std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
+     std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
    
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {  
-    if      ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
-    else if ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
+    for (unsigned i = 0; i < sol_actflag.size(); i++) {
+        std::vector<double> node_coords_i(dim,0.);
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coordX[d][i];
+        ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
+        ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
+        
+    if      ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
+    else if ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
     }
  
- //******************** ALL VARS ********************* 
+ //************** act flag **************************** 
+    unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag);    // number of solution element dofs
+    
+    for (unsigned i = 0; i < nDof_act_flag; i++) {
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag); 
+      (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);     
+    }    
+
+    //******************** ALL VARS ********************* 
     unsigned nDof_AllVars = 0;
     for (unsigned  k = 0; k < n_unknowns; k++) { nDof_AllVars += Sol_n_el_dofs[k]; }
  // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
@@ -616,10 +649,10 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 // 	 Res_mu [i] = Res[res_row_index(Sol_n_el_dofs,pos_mu,i)]; 
       }
       else if (sol_actflag[i] == 1) {  //active_a 
-	     Res_mu [i] = (- ineq_flag) * c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_lower);
+	     Res_mu [i] = (- ineq_flag) * c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_lower[i]);
       }
       else if (sol_actflag[i] == 2) {  //active_b 
-	     Res_mu [i] = (- ineq_flag) * c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_upper);
+	     Res_mu [i] = (- ineq_flag) * c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_upper[i]);
       }
     }
     
@@ -670,7 +703,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
 void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
-  const NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("OptSys");
+  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("OptSys");
   const unsigned          level      = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                          msh = ml_prob._ml_msh->GetLevel(level);
