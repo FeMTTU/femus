@@ -22,7 +22,7 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 5;
+unsigned alpha = 2;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
 
@@ -173,26 +173,65 @@ int main ( int argc, char** argv )
     std::vector < std::vector < double > > grid;
 
     unsigned counterGrid = 0;
+
     for ( unsigned j = 0; j < gridPoints[1]; j++ ) {
         for ( unsigned i = 0; i < gridPoints[0]; i++ ) {
-            grid.resize(counterGrid + 1);
-            grid[counterGrid].resize(N);
+            grid.resize ( counterGrid + 1 );
+            grid[counterGrid].resize ( N );
             grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
             grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
             counterGrid++;
         }
     }
-    
-    spg.EvaluateNodalValuesPDF(samples);
-    
-    for(unsigned i=0; i<grid.size(); i++){
-        //std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
-        spg.EvaluatePDF(grid[i]);
+
+    spg.EvaluateNodalValuesPDF ( samples );
+
+
+    std::vector< std::vector < unsigned > > idPhi ( N );
+
+    for ( unsigned n = 0; n < N; n++ ) {
+        idPhi[n].resize ( 3 );
     }
 
+    // phi_000 * phi_100
+//     idPhi[0][0] = 0;
+//     idPhi[0][1] = 0;
+//     idPhi[0][2] = 0;
+//     idPhi[1][0] = 1;
+//     idPhi[1][1] = 0;
+//     idPhi[1][2] = 0;
+
+    // phi_010 * phi_100
+    idPhi[0][0] = 0;
+    idPhi[0][1] = 1;
+    idPhi[0][2] = 0;
+    idPhi[1][0] = 1;
+    idPhi[1][1] = 0;
+    idPhi[1][2] = 0;
+
+    // phi_012 * phi_100
+//     idPhi[0][0] = 0;
+//     idPhi[0][1] = 1;
+//     idPhi[0][2] = 2;
+//     idPhi[1][0] = 1;
+//     idPhi[1][1] = 0;
+//     idPhi[1][2] = 0;
+
+
+    
+    for ( unsigned i = 0; i < grid.size(); i++ ) {
+//         spg.EvaluatePDF(grid[i]);
+        double phiTensorProductTest;
+        spg.EvaluatePhi ( phiTensorProductTest, grid[i], idPhi, false );
+//         std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
+        std::cout << phiTensorProductTest << std::endl;
+    }
+
+
+
     //END plot PDF in 2D
-    
-    
+
+
 
     return 0;
 
