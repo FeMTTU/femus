@@ -35,7 +35,7 @@ double pi = acos (-1.);
 //double k_h = 1. / ( 10 * pi );
 double k_h = 0.0001 ;
 
-const unsigned NumberOfLayers = 4;
+const unsigned NumberOfLayers = 40;
 
 unsigned counter = 0;
 unsigned counter2 = 0;
@@ -46,14 +46,12 @@ bool wave = false;
 bool twostage = true;
 bool assembly = true; //assembly must be left always true
 
-const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
+// const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
 
 // const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
 
-// const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
-//                           0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
-//                          };
+const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,                         0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25};
 
 // const double hRest[80] = {0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
 //                           0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
@@ -471,8 +469,8 @@ int main (int argc, char** args)
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = static_cast<unsigned> (floor (pow (2.,/*11*/2) + 0.5));       //Grid cell size = 3.90625 m
-  //nx += 1;
+  unsigned nx = static_cast<unsigned> (floor (pow (2.,/*11*/3) + 0.5));       //Grid cell size = 3.90625 m
+  nx += 2;
 
   double length = 10.; //2 * 1465700.;
 
@@ -507,43 +505,43 @@ int main (int argc, char** args)
   mlSol.Initialize ("v1", InitalValueV1);
   mlSol.Initialize ("v2", InitalValueV2);
   mlSol.Initialize ("v3", InitalValueV3);
-//   mlSol.Initialize ( "v4", InitalValueV4 );
-//   mlSol.Initialize ( "v5", InitalValueV5 );
-//   mlSol.Initialize ( "v6", InitalValueV6 );
-//   mlSol.Initialize ( "v7", InitalValueV7 );
-//   mlSol.Initialize ( "v8", InitalValueV8 );
-//   mlSol.Initialize ( "v9", InitalValueV9 );
-//   mlSol.Initialize ( "v10", InitalValueV10 );
-//   mlSol.Initialize ( "v11", InitalValueV11 );
-//   mlSol.Initialize ( "v12", InitalValueV12 );
-//   mlSol.Initialize ( "v13", InitalValueV13 );
-//   mlSol.Initialize ( "v14", InitalValueV14 );
-//   mlSol.Initialize ( "v15", InitalValueV15 );
-//   mlSol.Initialize ( "v16", InitalValueV16 );
-//   mlSol.Initialize ( "v17", InitalValueV17 );
-//   mlSol.Initialize ( "v18", InitalValueV18 );
-//   mlSol.Initialize ( "v19", InitalValueV19 );
-//     if(NumberOfLayers>39){
-//       mlSol.Initialize ( "v20", InitalValueV20 );
-//       mlSol.Initialize ( "v21", InitalValueV21 );
-//       mlSol.Initialize ( "v22", InitalValueV22 );
-//       mlSol.Initialize ( "v23", InitalValueV23 );
-//       mlSol.Initialize ( "v24", InitalValueV24 );
-//       mlSol.Initialize ( "v25", InitalValueV25 );
-//       mlSol.Initialize ( "v26", InitalValueV26 );
-//       mlSol.Initialize ( "v27", InitalValueV27 );
-//       mlSol.Initialize ( "v28", InitalValueV28 );
-//       mlSol.Initialize ( "v29", InitalValueV29 );
-//       mlSol.Initialize ( "v30", InitalValueV30 );
-//       mlSol.Initialize ( "v31", InitalValueV31 );
-//       mlSol.Initialize ( "v32", InitalValueV32 );
-//       mlSol.Initialize ( "v33", InitalValueV33 );
-//       mlSol.Initialize ( "v34", InitalValueV34 );
-//       mlSol.Initialize ( "v35", InitalValueV35 );
-//       mlSol.Initialize ( "v36", InitalValueV36 );
-//       mlSol.Initialize ( "v37", InitalValueV37 );
-//       mlSol.Initialize ( "v38", InitalValueV38 );
-//       mlSol.Initialize ( "v39", InitalValueV39 );
+  mlSol.Initialize ( "v4", InitalValueV4 );
+  mlSol.Initialize ( "v5", InitalValueV5 );
+  mlSol.Initialize ( "v6", InitalValueV6 );
+  mlSol.Initialize ( "v7", InitalValueV7 );
+  mlSol.Initialize ( "v8", InitalValueV8 );
+  mlSol.Initialize ( "v9", InitalValueV9 );
+  mlSol.Initialize ( "v10", InitalValueV10 );
+  mlSol.Initialize ( "v11", InitalValueV11 );
+  mlSol.Initialize ( "v12", InitalValueV12 );
+  mlSol.Initialize ( "v13", InitalValueV13 );
+  mlSol.Initialize ( "v14", InitalValueV14 );
+  mlSol.Initialize ( "v15", InitalValueV15 );
+  mlSol.Initialize ( "v16", InitalValueV16 );
+  mlSol.Initialize ( "v17", InitalValueV17 );
+  mlSol.Initialize ( "v18", InitalValueV18 );
+  mlSol.Initialize ( "v19", InitalValueV19 );
+    if(NumberOfLayers>39){
+      mlSol.Initialize ( "v20", InitalValueV20 );
+      mlSol.Initialize ( "v21", InitalValueV21 );
+      mlSol.Initialize ( "v22", InitalValueV22 );
+      mlSol.Initialize ( "v23", InitalValueV23 );
+      mlSol.Initialize ( "v24", InitalValueV24 );
+      mlSol.Initialize ( "v25", InitalValueV25 );
+      mlSol.Initialize ( "v26", InitalValueV26 );
+      mlSol.Initialize ( "v27", InitalValueV27 );
+      mlSol.Initialize ( "v28", InitalValueV28 );
+      mlSol.Initialize ( "v29", InitalValueV29 );
+      mlSol.Initialize ( "v30", InitalValueV30 );
+      mlSol.Initialize ( "v31", InitalValueV31 );
+      mlSol.Initialize ( "v32", InitalValueV32 );
+      mlSol.Initialize ( "v33", InitalValueV33 );
+      mlSol.Initialize ( "v34", InitalValueV34 );
+      mlSol.Initialize ( "v35", InitalValueV35 );
+      mlSol.Initialize ( "v36", InitalValueV36 );
+      mlSol.Initialize ( "v37", InitalValueV37 );
+      mlSol.Initialize ( "v38", InitalValueV38 );
+      mlSol.Initialize ( "v39", InitalValueV39 );
 //       if(NumberOfLayers>79){
 //         mlSol.Initialize ( "v40", InitalValueV40 );
 //         mlSol.Initialize ( "v41", InitalValueV41 );
@@ -586,7 +584,7 @@ int main (int argc, char** args)
 //         mlSol.Initialize ( "v78", InitalValueV78 );
 //         mlSol.Initialize ( "v79", InitalValueV79 );
 //       }
-//     }
+    }
 
   for (unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
@@ -625,7 +623,7 @@ int main (int argc, char** args)
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
   unsigned numberOfTimeSteps = 600; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 0.2;
+  dt = 3.;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {
@@ -989,6 +987,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       MatSeqDenseSetPreallocation (A, &Jac[i][0]);
       MatAssemblyBegin (A, MAT_FINAL_ASSEMBLY);
       MatAssemblyEnd (A, MAT_FINAL_ASSEMBLY);
+      MatTranspose(A, MAT_INPLACE_MATRIX, &A);
       //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
       
       VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &Res[0], &v);
@@ -1283,7 +1282,9 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       MatSeqDenseSetPreallocation (A, &Jac[i][0]);
       MatAssemblyBegin (A, MAT_FINAL_ASSEMBLY);
       MatAssemblyEnd (A, MAT_FINAL_ASSEMBLY);
+      MatTranspose(A, MAT_INPLACE_MATRIX, &A);
       //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
+      
       
       Vec v, y;
       MFN mfn;
