@@ -24,6 +24,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <vector>
+#include <cassert>
 
 namespace femus {
 
@@ -65,6 +66,20 @@ namespace femus {
       double eval_dphidz(const unsigned &j, const std::vector < double > &x) const {
         return eval_dphidz(this->GetIND(j), &x[0]);
       };
+      
+      /** Evaluate the derivatives either in the x, y or z direction **/
+      double eval_dphidxyz(const unsigned int dim, const int* j, const double* x) const {
+          
+        assert(dim < 3); //0, 1, 2
+
+        switch(dim) {
+            case(0): { return eval_dphidx(j, x); }
+            case(1): { return eval_dphidy(j, x); }
+            case(2): { return eval_dphidz(j, x); }
+            default: {std::cout << "Only up to dim 3" << std::endl; abort(); }
+        }
+        
+    };
       
       double eval_d2phidx2(const unsigned &j, const std::vector < double > &x) const {
         return eval_d2phidx2(this->GetIND(j), &x[0]);

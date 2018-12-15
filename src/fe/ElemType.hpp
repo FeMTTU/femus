@@ -172,6 +172,9 @@ namespace femus
       /** Compute node coordinates in basis object */
       void set_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
    
+      /** Compute element prolongation operator */
+      void set_element_prolongation(const basis* linearElement);
+      
      // member data
       static unsigned _refindex;
 
@@ -207,10 +210,10 @@ namespace femus
                                   _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
                                   _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
                                   */
-      unsigned _SolType;   /* Finite Element Family flag */
-      const double** _X;   /* [_nf][_dim] coordinates of the _nf nodes in the refined elements */ 
-      const int** _IND;    /* [_nc][_dim] */
-      const int** _KVERT_IND; /* [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element*/
+      unsigned _SolType;       /* Finite Element Family flag */
+      const double** _X;       /* [_nf][_dim] coordinates of the _nf nodes in the refined elements */ 
+      const int** _IND;        /* [_nc][_dim] */
+      const int** _KVERT_IND;  /* [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element*/
 
       double** _prol_val;
       int** _prol_ind;
