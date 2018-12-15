@@ -33,7 +33,7 @@ namespace femus
         //defining parameters
         unsigned _N; //number of dimensions of the parameter space
         unsigned _M; //number of samples for each dimension, has to be expressed as M=pow(10,alpha), with unsigned alpha
-        unsigned _L; //number of levels (L=log10(M)+1) I have decided to relate M and L in this way
+        unsigned _L; //number of levels 
 
         //monodimensional quantities
         std::vector < std::vector < double > > _intervals;
