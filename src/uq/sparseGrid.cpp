@@ -173,6 +173,8 @@ namespace femus
 
             _dofIdentifier[w].resize ( identifiersOfW );
             _nodalValuesPDF[w].resize ( identifiersOfW );
+
+            std::cout << "identifiersOfW = " << identifiersOfW << std::endl;
         }
 
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
@@ -207,7 +209,7 @@ namespace femus
                     for ( unsigned i = 0; i < _hierarchicalDofs[n][_indexSetW[w][n]].size(); i++ ) {
 
                         if ( _output ) {
-                            std::cout << "Tw[" << j << "][" << n << "]  = " << Tw[j][n] << " , " << "i = " << i << " ," << _hierarchicalDofs[n][_indexSetW[w][n]][i] << std::endl;
+                            std::cout << "Tw[" << j << "][" << n << "]  = " << Tw[j][n] << " , " << "(index) i = " << i << " , checked against " << _hierarchicalDofs[n][_indexSetW[w][n]][i] << std::endl;
                         }
 
                         if ( Tw[j][n] == _hierarchicalDofs[n][_indexSetW[w][n]][i] ) {
@@ -229,24 +231,43 @@ namespace femus
                 //2.
                 if ( shouldBeThere == _N ) {
 
-                    std::vector< unsigned> seeIfItIsThere ( _N, 0 );
+                    std::vector< std::vector <unsigned> > seeIfItIsThere ( dofsW[w].size() );
 
                     for ( unsigned i = 0; i < dofsW[w].size(); i++ ) {
+                        seeIfItIsThere[i].resize ( _N );
+
                         for ( unsigned n = 0; n < _N; n++ ) {
-                            if ( dofsW[w][i][n] == Tw[j][n] ) seeIfItIsThere[n] = 1;
+                            seeIfItIsThere[i][n] = 0;
                         }
                     }
 
-                    unsigned itIsThere = 0;
+                    for ( unsigned i = 0; i < dofsW[w].size(); i++ ) {
+                        for ( unsigned n = 0; n < _N; n++ ) {
+                            if ( dofsW[w][i][n] == Tw[j][n] ) seeIfItIsThere[i][n] = 1;
+                        }
+                    }
 
-                    for ( unsigned n = 0; n < _N; n++ ) {
-                        itIsThere += seeIfItIsThere[n];
+                    std::vector<unsigned> itIsThereMaybe ( dofsW[w].size(), 0 );
+
+                    for ( unsigned i = 0; i < dofsW[w].size(); i++ ) {
+                        for ( unsigned n = 0; n < _N; n++ ) {
+                            itIsThereMaybe[i] += seeIfItIsThere[i][n];
+                        }
+                    }
+
+                    bool itIsThere = false;
+
+                    for ( unsigned i = 0; i < dofsW[w].size(); i++ ) {
+                        if ( itIsThereMaybe[i] == _N ) {
+                            itIsThere = true;
+                            break;
+                        }
                     }
 
                     if ( _output )   std::cout << "--------------------------- done 2 ---------------------- " << std::endl;
 
                     //3.
-                    if ( itIsThere != _N ) {
+                    if ( !itIsThere ) {
 
                         dofsW[w].resize ( counterW[w] + 1 );
                         dofsW[w][counterW[w]].resize ( _N );
@@ -255,11 +276,11 @@ namespace femus
                             dofsW[w][counterW[w]][n] = Tw[j][n];
                         }
 
-                        counterW[w] += 1;
+                        counterW[w] = counterW[w] + 1;
+
+                        if ( _output )   std::cout << "--------------------------- done 3 ---------------------- " << std::endl;
 
                     }
-
-                    if ( _output )   std::cout << "--------------------------- done 3 ---------------------- " << std::endl;
                 }
             }
 
@@ -364,7 +385,9 @@ namespace femus
                 }
 
                 sum /= _M;
+
                 _nodalValuesPDF[w][i] = sum;
+
             }
         }
 
@@ -381,26 +404,28 @@ namespace femus
         }
 
     }
-    
-    void sparseGrid::EvaluatePDF ( std::vector < double >  &x ){
-        
+
+    void sparseGrid::EvaluatePDF ( std::vector < double >  &x )
+    {
+
         double PDFvalue = 0.;
-        
+
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
-                    double valuePhi;
-                    EvaluatePhi ( valuePhi, x, _dofIdentifier[w][i], false);
-                    PDFvalue += _nodalValuesPDF[w][i] * valuePhi;
+                double valuePhi;
+                EvaluatePhi ( valuePhi, x, _dofIdentifier[w][i], false );
+                PDFvalue += _nodalValuesPDF[w][i] * valuePhi;
             }
         }
-        
-        if(_output) {
-            for(unsigned i=0; i<x.size(); i++){
-                std::cout<< x[i] << " " ;
+
+        if ( _output ) {
+            for ( unsigned i = 0; i < x.size(); i++ ) {
+                std::cout << x[i] << " " ;
             }
+
             std::cout << PDFvalue << " " << std::endl;
         }
-        
+
     }
 
     void sparseGrid::ComputeTensorProductSet ( std::vector< std::vector <unsigned>> &Tp, const unsigned &T1, const unsigned &T2 )
@@ -443,6 +468,7 @@ namespace femus
 
 
 }
+
 
 
 

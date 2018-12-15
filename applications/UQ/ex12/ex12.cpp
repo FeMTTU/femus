@@ -22,7 +22,7 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 1;
+unsigned alpha = 2;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
 
@@ -124,7 +124,7 @@ int main ( int argc, char** argv )
 // //     std::cout<<"phiTensorProduct = " << phiTensorProduct << std::endl;
     //END
 
-    //BEGIN  grid for plot
+    //BEGIN  plot PDF in 2D
     //sampling from [-1,1] for both variables, testing on uniform PDF on [-1.5,1,5] x [-1.5,1.5]
 
     std::vector < unsigned > refinementLevel ( N );
@@ -140,7 +140,7 @@ int main ( int argc, char** argv )
 
     for ( unsigned n = 0; n < N; n++ ) {
         gridPoints[n] = static_cast<unsigned> ( pow ( 2, refinementLevel[n] ) + 1 );
-        gridBounds[n].resize (2);
+        gridBounds[n].resize ( 2 );
     }
 
     unsigned gridSize = 1;
@@ -155,13 +155,13 @@ int main ( int argc, char** argv )
     if ( N > 1 ) {
 
         gridBounds[1][0] = -1.5;
-        gridBounds[1][0] = 1.5;
+        gridBounds[1][1] = 1.5;
     }
 
     if ( N > 2 ) {
 
         gridBounds[2][0] = -1.5;
-        gridBounds[2][0] = 1.5;
+        gridBounds[2][1] = 1.5;
     }
 
     std::vector < double > h ( N );
@@ -170,15 +170,29 @@ int main ( int argc, char** argv )
         h[n] = ( gridBounds[n][1] - gridBounds[n][0] ) / pow ( 2, refinementLevel[n] );
     }
 
-    std::vector < std::vector < double > > grid ( gridSize );
+    std::vector < std::vector < double > > grid;
 
-    //TODO write grid properly
-    for(unsigned i=0; i<gridPoints[0]; i++){
-        for(unsigned j=0; j<gridPoints[1]; j++){
+    unsigned counterGrid = 0;
+    for ( unsigned j = 0; j < gridPoints[1]; j++ ) {
+        for ( unsigned i = 0; i < gridPoints[0]; i++ ) {
+            grid.resize(counterGrid + 1);
+            grid[counterGrid].resize(N);
+            grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
+            grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
+            counterGrid++;
         }
     }
+    
+    spg.EvaluateNodalValuesPDF(samples);
+    
+    for(unsigned i=0; i<grid.size(); i++){
+        //std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
+        spg.EvaluatePDF(grid[i]);
+    }
 
-    //END grid for plot
+    //END plot PDF in 2D
+    
+    
 
     return 0;
 

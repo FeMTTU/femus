@@ -29,7 +29,6 @@ namespace femus
         
         void PrintNodalValuesPDF();
 
-
     private:
         //defining parameters
         unsigned _N; //number of dimensions of the parameter space
@@ -48,7 +47,7 @@ namespace femus
         std::vector < std::vector < std::vector < std::vector < unsigned > > > > _dofIdentifier; //contains all identifiers
         //_dofIdentifier[*][][][]:ranges of W subspaces, _dofIdentifier[][*][][]: ranges over the dofs of the W subspace,
         //_dofIdentifier[][][*][]:ranges over the identifier of W, _dofIdentifier[][][][*]: ranges from 0 to 2, 0=dim, 1=level, 2=dof
-        std::vector < std::vector < unsigned > > _nodalValuesPDF; //nodal values of the approximate PDF
+        std::vector < std::vector < double > > _nodalValuesPDF; //nodal values of the approximate PDF
 
         //output parameter
         bool _output;
