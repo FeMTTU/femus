@@ -80,7 +80,7 @@ int main(int argc, char** args) {
   //mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.PrintInfo();
@@ -1100,7 +1100,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
           for (unsigned idim = 0; idim < dim; idim ++) ctrl_x_gss  += sol_ctrl[i] * phi_ctrl_x[i + idim * nDof_ctrl];
          }
 
-          integral_target += target_flag * weight * (u_gss +  ctrl_gss - udes_gss) * (u_gss +  ctrl_gss - udes_gss);
+          integral_target += target_flag * weight * (u_gss - udes_gss) * (u_gss - udes_gss);
           integral_alpha  += (group_flag - 12) * weight * ctrl_gss * ctrl_gss;
           integral_beta   += (group_flag - 12) * weight * ctrl_x_gss * ctrl_x_gss;
 	  
