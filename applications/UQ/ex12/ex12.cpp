@@ -202,12 +202,12 @@ int main ( int argc, char** argv )
 //     idPhi[1][2] = 0;
 
     // phi_010 * phi_100
-    idPhi[0][0] = 0;
-    idPhi[0][1] = 1;
-    idPhi[0][2] = 0;
-    idPhi[1][0] = 1;
-    idPhi[1][1] = 0;
-    idPhi[1][2] = 0;
+//     idPhi[0][0] = 0;
+//     idPhi[0][1] = 1;
+//     idPhi[0][2] = 0;
+//     idPhi[1][0] = 1;
+//     idPhi[1][1] = 0;
+//     idPhi[1][2] = 0;
 
     // phi_012 * phi_100
 //     idPhi[0][0] = 0;
@@ -220,11 +220,11 @@ int main ( int argc, char** argv )
 
     
     for ( unsigned i = 0; i < grid.size(); i++ ) {
-//         spg.EvaluatePDF(grid[i]);
-        double phiTensorProductTest;
-        spg.EvaluatePhi ( phiTensorProductTest, grid[i], idPhi, false );
+        spg.EvaluatePDF(grid[i]);
+//         double phiTensorProductTest;
+//         spg.EvaluatePhi ( phiTensorProductTest, grid[i], idPhi, false );
 //         std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
-        std::cout << phiTensorProductTest << std::endl;
+//         std::cout << phiTensorProductTest << std::endl;
     }
 
 

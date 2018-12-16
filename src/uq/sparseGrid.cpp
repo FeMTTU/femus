@@ -11,7 +11,7 @@ namespace femus
 
         _N = samples[0].size();
         _M = samples.size();
-        _L = static_cast<unsigned> ( log10 ( _M ) + 1 ); //NOTE this might change if we see fit
+        _L = static_cast<unsigned> ( 2 * log10 ( _M ) + 1 ); //NOTE this might change if we see fit
 
         _intervals.resize ( _N );
         _hs.resize ( _N );
@@ -381,7 +381,22 @@ namespace femus
                 for ( unsigned m = 0; m < _M; m++ ) {
                     double valuePhi;
                     EvaluatePhi ( valuePhi, samples[m], _dofIdentifier[w][i], true );
-                    sum += valuePhi;
+
+                    //BEGIN still don't know if this is the appropriate scaling
+                    //sumDenom is \sum_{i=1}^{N_h} \phi_i(X_m) in order to have unitary integral
+                    double sumDenom = 0.;
+
+                    for ( unsigned w1 = 0; w1 < _numberOfWs; w1++ ) {
+                        for ( unsigned i1 = 0; i1 < _nodalValuesPDF[w1].size(); i1++ ) {
+                            double valuePhiDenom;
+                            EvaluatePhi ( valuePhiDenom, samples[m], _dofIdentifier[w1][i1], true );
+                            sumDenom += valuePhiDenom;
+                        }
+                    }
+
+                    //END
+
+                    sum += ( valuePhi / sumDenom );
                 }
 
                 sum /= _M;
@@ -390,6 +405,17 @@ namespace femus
 
             }
         }
+
+//         double sumOfNodalValues = 0.;
+// 
+//         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+//             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
+//                 sumOfNodalValues += _nodalValuesPDF[w][i];
+//             }
+//         }
+//         
+//         std::cout<<" sumOfNodalValues =" << sumOfNodalValues << std::endl;
+
 
     }
 
@@ -419,9 +445,9 @@ namespace femus
         }
 
         if ( _output ) {
-            for ( unsigned i = 0; i < x.size(); i++ ) {
-                std::cout << x[i] << " " ;
-            }
+//             for ( unsigned i = 0; i < x.size(); i++ ) {
+//                 std::cout << x[i] << " " ;
+//             }
 
             std::cout << PDFvalue << " " << std::endl;
         }
