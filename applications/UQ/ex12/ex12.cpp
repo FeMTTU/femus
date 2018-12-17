@@ -22,9 +22,10 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 2;
+unsigned alpha = 4;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
+unsigned L = alpha + 1;
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -129,11 +130,11 @@ int main ( int argc, char** argv )
 
     std::vector < unsigned > refinementLevel ( N );
 
-    refinementLevel[0] = 5; //refinement level in x
+    refinementLevel[0] = L; //refinement level in x
 
-    if ( N > 1 )  refinementLevel[1] = 5; //refinement level in y
+    if ( N > 1 )  refinementLevel[1] = L; //refinement level in y
 
-    if ( N > 2 )  refinementLevel[2] = 5; //refinement level in x
+    if ( N > 2 )  refinementLevel[2] = L; //refinement level in x
 
     std::vector < unsigned > gridPoints ( N );
     std::vector < std::vector < double> > gridBounds ( N );
@@ -202,12 +203,12 @@ int main ( int argc, char** argv )
 //     idPhi[1][2] = 0;
 
     // phi_010 * phi_100
-//     idPhi[0][0] = 0;
-//     idPhi[0][1] = 1;
-//     idPhi[0][2] = 0;
-//     idPhi[1][0] = 1;
-//     idPhi[1][1] = 0;
-//     idPhi[1][2] = 0;
+    idPhi[0][0] = 0;
+    idPhi[0][1] = 1;
+    idPhi[0][2] = 0;
+    idPhi[1][0] = 1;
+    idPhi[1][1] = 0;
+    idPhi[1][2] = 0;
 
     // phi_012 * phi_100
 //     idPhi[0][0] = 0;
@@ -218,16 +219,21 @@ int main ( int argc, char** argv )
 //     idPhi[1][2] = 0;
 
 
-    
+
     for ( unsigned i = 0; i < grid.size(); i++ ) {
-        spg.EvaluatePDF(grid[i]);
+        spg.EvaluatePDF ( grid[i] );
 //         double phiTensorProductTest;
 //         spg.EvaluatePhi ( phiTensorProductTest, grid[i], idPhi, false );
 //         std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
 //         std::cout << phiTensorProductTest << std::endl;
     }
 
-
+//     double phiTensorProductTest;
+//     std::vector< double> trialX ( 2 );
+//     trialX[0] = -0.75;
+//     trialX[1] = 0.;
+//     spg.EvaluatePhi ( phiTensorProductTest, trialX, idPhi, true );
+//     std::cout << phiTensorProductTest << std::endl;
 
     //END plot PDF in 2D
 

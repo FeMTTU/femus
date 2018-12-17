@@ -11,7 +11,7 @@ namespace femus
 
         _N = samples[0].size();
         _M = samples.size();
-        _L = static_cast<unsigned> ( 2 * log10 ( _M ) + 1 ); //NOTE this might change if we see fit
+        _L = static_cast<unsigned> (log10 ( _M ) + 1 ); //NOTE this might change if we see fit
 
         _intervals.resize ( _N );
         _hs.resize ( _N );
@@ -406,6 +406,7 @@ namespace femus
             }
         }
 
+        //to remove, this is just a check
 //         double sumOfNodalValues = 0.;
 // 
 //         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
@@ -445,9 +446,9 @@ namespace femus
         }
 
         if ( _output ) {
-//             for ( unsigned i = 0; i < x.size(); i++ ) {
-//                 std::cout << x[i] << " " ;
-//             }
+            for ( unsigned i = 0; i < x.size(); i++ ) {
+                std::cout << x[i] << " " ;
+            }
 
             std::cout << PDFvalue << " " << std::endl;
         }
