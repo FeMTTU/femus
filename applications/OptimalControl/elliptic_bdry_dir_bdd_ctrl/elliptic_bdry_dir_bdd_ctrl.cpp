@@ -145,6 +145,7 @@ int main(int argc, char** args) {
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = mlProb.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
   
   system.SetActiveSetFlagName(act_set_flag_name);
+//   system.SetMaxNumberOfNonLinearIterations(50);
 
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
