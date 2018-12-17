@@ -5,13 +5,13 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  32
-#define NSUB_Y  32
+#define NSUB_X  2
+#define NSUB_Y  2
 
 
 //*********************** Sets the regularization parameters *******************************************************
-#define ALPHA_CTRL_BDRY 1.
-#define BETA_CTRL_BDRY 1.
+#define ALPHA_CTRL_BDRY 1.e-3
+#define BETA_CTRL_BDRY 1.e-2
 
 
 #define ALPHA_CTRL_VOL 1.e-3
