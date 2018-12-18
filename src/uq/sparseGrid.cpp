@@ -295,21 +295,17 @@ namespace femus
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) { //here we loop on the dofs of W
                 double sum = 0.;
 
-                unsigned counterM = 0.;
                 for ( unsigned m = 0; m < _M; m++ ) {
                     double valuePhi;
                     EvaluatePhi ( valuePhi, samples[m], _dofIdentifier[w][i], true );
 
-                    if ( valuePhi != 0 ) counterM++;
-
-                    //BEGIN still don't know if this is the appropriate scaling
-                    //sumDenom is \sum_{i=1}^{N_h} \phi_i(X_m) in order to have unitary integral
+                    //BEGIN scaling to have unitary integral
                     double sumDenom = 0.;
 
                     for ( unsigned w1 = 0; w1 < _numberOfWs; w1++ ) {
                         for ( unsigned i1 = 0; i1 < _nodalValuesPDF[w1].size(); i1++ ) {
                             double valuePhiDenom;
-                            EvaluatePhi ( valuePhiDenom, samples[m], _dofIdentifier[w1][i1], true );
+                            EvaluatePhi ( valuePhiDenom, samples[m], _dofIdentifier[w1][i1], false );
                             sumDenom += valuePhiDenom;
                         }
                     }
@@ -319,9 +315,7 @@ namespace femus
                     sum += ( valuePhi / sumDenom );
                 }
 
-                if ( counterM == 0 ) counterM = 1;
-
-                sum /= counterM;
+                sum /= _M;
 
                 _nodalValuesPDF[w][i] = sum;
 
@@ -329,15 +323,15 @@ namespace femus
         }
 
         //to remove, this is just a check
-        double sumOfNodalValues = 0.;
-
-        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-            for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
-                sumOfNodalValues += _nodalValuesPDF[w][i];
-            }
-        }
-
-        std::cout << " sumOfNodalValues =" << sumOfNodalValues << std::endl;
+//         double sumOfNodalValues = 0.;
+// 
+//         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+//             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
+//                 sumOfNodalValues += _nodalValuesPDF[w][i];
+//             }
+//         }
+// 
+//         std::cout << " sumOfNodalValues =" << sumOfNodalValues << std::endl;
 
 
     }
