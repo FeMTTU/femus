@@ -22,7 +22,7 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 2;
+unsigned alpha = 4;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
 unsigned L = alpha + 1;
@@ -86,7 +86,7 @@ int main ( int argc, char** argv )
         }
     }
 
-    bool output = true;
+    bool output = false;
     sparseGrid spg ( samples, output );
 
 

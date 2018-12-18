@@ -161,8 +161,6 @@ namespace femus
 
         if ( _output )  std::cout << "-------------------------- Number of W sets = " << _numberOfWs <<  "-------------------------- " << std::endl;
 
-        std::vector< unsigned > maxDofs ( _numberOfWs );
-
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
             unsigned identifiersOfW = 1;
 
@@ -170,22 +168,13 @@ namespace femus
 
                 identifiersOfW *= _hierarchicalDofs[n][_indexSetW[w][n]].size();
 
-                if ( _nodes[n][_indexSetW[w][n]].size() >= maxDofs[w] ) maxDofs[w] = _nodes[n][_indexSetW[w][n]].size();
-
             }
 
             _dofIdentifier[w].resize ( identifiersOfW );
             _nodalValuesPDF[w].resize ( identifiersOfW );
 
-            std::cout << "identifiersOfW = " << identifiersOfW << std::endl;
+            if ( _output ) std::cout << "identifiersOfW = " << identifiersOfW << std::endl;
         }
-
-        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-            if ( maxDofs[w] < 2 ) maxDofs[w] = 2; //otherwise ComputeTensorProductSet doesn't work
-
-            if ( _output )  std::cout << "maxDofs[" << w << "] = " << maxDofs[w] << std::endl;
-        }
-
 
         //Here we create the dofs for each W
         std::vector<std::vector< std::vector < unsigned > > > dofsW;
@@ -210,12 +199,14 @@ namespace femus
             CartesianProduct ( inputCartesian, dofsW[w] );
 
 
-            for ( unsigned i = 0; i < dofsW[w].size(); i++ ) {
-                for ( unsigned n = 0; n < _N; n++ ) {
-                    std::cout << "dofsW[" << w << "][" << i << "][" << n << "] = " << dofsW[w][i][n] << " ";
-                }
+            if ( _output ) {
+                for ( unsigned i = 0; i < dofsW[w].size(); i++ ) {
+                    for ( unsigned n = 0; n < _N; n++ ) {
+                        std::cout << "dofsW[" << w << "][" << i << "][" << n << "] = " << dofsW[w][i][n] << " ";
+                    }
 
-                std::cout << std::endl;
+                    std::cout << std::endl;
+                }
             }
 
         }
@@ -370,13 +361,13 @@ namespace femus
             }
         }
 
-//         if ( _output ) {
-//             for ( unsigned i = 0; i < x.size(); i++ ) {
-//                 std::cout << x[i] << " " ;
-//             }
-//
-//             std::cout << PDFvalue << " " << std::endl;
-//         }
+
+        for ( unsigned i = 0; i < x.size(); i++ ) {
+            std::cout << x[i] << " " ;
+        }
+
+        std::cout << PDFvalue << " " << std::endl;
+
 
     }
 
@@ -436,8 +427,6 @@ namespace femus
                 u[i] = inputCartesian[i][q.rem];
             }
 
-            // Do what you want here with u.
-//             for ( int x : u ) std::cout << x << ' ';
             dofsWi.resize ( counterDofs + 1 );
             dofsWi[counterDofs].resize ( u.size() );
 
