@@ -291,12 +291,16 @@ namespace femus
     {
 
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+    
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) { //here we loop on the dofs of W
                 double sum = 0.;
 
+                unsigned counterM = 0.;
                 for ( unsigned m = 0; m < _M; m++ ) {
                     double valuePhi;
                     EvaluatePhi ( valuePhi, samples[m], _dofIdentifier[w][i], true );
+
+                    if ( valuePhi != 0 ) counterM++;
 
                     //BEGIN still don't know if this is the appropriate scaling
                     //sumDenom is \sum_{i=1}^{N_h} \phi_i(X_m) in order to have unitary integral
@@ -315,7 +319,9 @@ namespace femus
                     sum += ( valuePhi / sumDenom );
                 }
 
-                sum /= _M;
+                if ( counterM == 0 ) counterM = 1;
+
+                sum /= counterM;
 
                 _nodalValuesPDF[w][i] = sum;
 
@@ -323,15 +329,15 @@ namespace femus
         }
 
         //to remove, this is just a check
-//         double sumOfNodalValues = 0.;
-//
-//         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-//             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
-//                 sumOfNodalValues += _nodalValuesPDF[w][i];
-//             }
-//         }
-//
-//         std::cout<<" sumOfNodalValues =" << sumOfNodalValues << std::endl;
+        double sumOfNodalValues = 0.;
+
+        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+            for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
+                sumOfNodalValues += _nodalValuesPDF[w][i];
+            }
+        }
+
+        std::cout << " sumOfNodalValues =" << sumOfNodalValues << std::endl;
 
 
     }
