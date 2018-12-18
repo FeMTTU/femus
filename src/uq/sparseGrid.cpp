@@ -1,6 +1,9 @@
 #include <math.h>
 #include "sparseGrid.hpp"
 #include <iostream>
+#include <cstdlib>
+#include <numeric>
+#include <vector>
 
 namespace femus
 {
@@ -11,7 +14,7 @@ namespace femus
 
         _N = samples[0].size();
         _M = samples.size();
-        _L = static_cast<unsigned> (log10 ( _M ) + 1 ); //NOTE this might change if we see fit
+        _L = static_cast<unsigned> ( log10 ( _M ) + 1 ); //NOTE this might change if we see fit
 
         _intervals.resize ( _N );
         _hs.resize ( _N );
@@ -187,110 +190,32 @@ namespace femus
         //Here we create the dofs for each W
         std::vector<std::vector< std::vector < unsigned > > > dofsW;
         dofsW.resize ( _numberOfWs );
+
         std::vector < unsigned> counterW ( _numberOfWs, 0 );
 
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
 
-            if ( _output )    std::cout << "--------------------------- w = " << w << " ---------------------- " << std::endl;
+            dofsW[w].resize ( _dofIdentifier[w].size() );
 
-            std::vector < std::vector < unsigned > > Tw;
-            ComputeTensorProductSet ( Tw, maxDofs[w], _N );
+            std::vector< std::vector <int> > inputCartesian ( _N );
 
-            for ( unsigned j = 0; j < Tw.size(); j++ ) {
-                //now for each Tw[j]:
-                //1. we need to check if it has to be included
-                //2. if yes, we have to check if it has already been included
-                //3. if not, include it, and move to the next one
+            for ( unsigned n = 0; n < _N; n++ ) {
+                inputCartesian[n].resize ( _hierarchicalDofs[n][_indexSetW[w][n]].size() );
 
-                //1.
-                std::vector< unsigned > satisfiesRequirements ( _N, 0 );
-
-                for ( unsigned n = 0; n < _N; n++ ) {
-                    for ( unsigned i = 0; i < _hierarchicalDofs[n][_indexSetW[w][n]].size(); i++ ) {
-
-                        if ( _output ) {
-                            std::cout << "Tw[" << j << "][" << n << "]  = " << Tw[j][n] << " , " << "(index) i = " << i << " , checked against " << _hierarchicalDofs[n][_indexSetW[w][n]][i] << std::endl;
-                        }
-
-                        if ( Tw[j][n] == _hierarchicalDofs[n][_indexSetW[w][n]][i] ) {
-                            satisfiesRequirements[n] = 1;
-
-                            if ( _output )   std::cout << "satisfiesRequirements[" << n << "] = " << satisfiesRequirements[n] << std::endl;
-                        }
-                    }
-                }
-
-                unsigned shouldBeThere = 0;
-
-                for ( unsigned n = 0; n < _N; n++ ) {
-                    shouldBeThere += satisfiesRequirements[n];
-                }
-
-                if ( _output )  std::cout << "--------------------------- done 1 ---------------------- " << std::endl;
-
-                //2.
-                if ( shouldBeThere == _N ) {
-
-                    std::vector< std::vector <unsigned> > seeIfItIsThere ( dofsW[w].size() );
-
-                    for ( unsigned i = 0; i < dofsW[w].size(); i++ ) {
-                        seeIfItIsThere[i].resize ( _N );
-
-                        for ( unsigned n = 0; n < _N; n++ ) {
-                            seeIfItIsThere[i][n] = 0;
-                        }
-                    }
-
-                    for ( unsigned i = 0; i < dofsW[w].size(); i++ ) {
-                        for ( unsigned n = 0; n < _N; n++ ) {
-                            if ( dofsW[w][i][n] == Tw[j][n] ) seeIfItIsThere[i][n] = 1;
-                        }
-                    }
-
-                    std::vector<unsigned> itIsThereMaybe ( dofsW[w].size(), 0 );
-
-                    for ( unsigned i = 0; i < dofsW[w].size(); i++ ) {
-                        for ( unsigned n = 0; n < _N; n++ ) {
-                            itIsThereMaybe[i] += seeIfItIsThere[i][n];
-                        }
-                    }
-
-                    bool itIsThere = false;
-
-                    for ( unsigned i = 0; i < dofsW[w].size(); i++ ) {
-                        if ( itIsThereMaybe[i] == _N ) {
-                            itIsThere = true;
-                            break;
-                        }
-                    }
-
-                    if ( _output )   std::cout << "--------------------------- done 2 ---------------------- " << std::endl;
-
-                    //3.
-                    if ( !itIsThere ) {
-
-                        dofsW[w].resize ( counterW[w] + 1 );
-                        dofsW[w][counterW[w]].resize ( _N );
-
-                        for ( unsigned n = 0; n < _N; n++ ) {
-                            dofsW[w][counterW[w]][n] = Tw[j][n];
-                        }
-
-                        counterW[w] = counterW[w] + 1;
-
-                        if ( _output )   std::cout << "--------------------------- done 3 ---------------------- " << std::endl;
-
-                    }
+                for ( unsigned i1 = 0; i1 < _hierarchicalDofs[n][_indexSetW[w][n]].size(); i1++ ) {
+                    inputCartesian[n][i1] = _hierarchicalDofs[n][_indexSetW[w][n]][i1];
                 }
             }
+
+            CartesianProduct ( inputCartesian, dofsW[w] );
 
 
             for ( unsigned i = 0; i < dofsW[w].size(); i++ ) {
                 for ( unsigned n = 0; n < _N; n++ ) {
-                    if ( _output )   std::cout << "dofsW[" << w << "][" << i << "][" << n << "] = " << dofsW[w][i][n] << " ";
+                    std::cout << "dofsW[" << w << "][" << i << "][" << n << "] = " << dofsW[w][i][n] << " ";
                 }
 
-                if ( _output )   std::cout << std::endl;
+                std::cout << std::endl;
             }
 
         }
@@ -408,13 +333,13 @@ namespace femus
 
         //to remove, this is just a check
 //         double sumOfNodalValues = 0.;
-// 
+//
 //         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
 //             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
 //                 sumOfNodalValues += _nodalValuesPDF[w][i];
 //             }
 //         }
-//         
+//
 //         std::cout<<" sumOfNodalValues =" << sumOfNodalValues << std::endl;
 
 
@@ -445,13 +370,13 @@ namespace femus
             }
         }
 
-        if ( _output ) {
-            for ( unsigned i = 0; i < x.size(); i++ ) {
-                std::cout << x[i] << " " ;
-            }
-
-            std::cout << PDFvalue << " " << std::endl;
-        }
+//         if ( _output ) {
+//             for ( unsigned i = 0; i < x.size(); i++ ) {
+//                 std::cout << x[i] << " " ;
+//             }
+//
+//             std::cout << PDFvalue << " " << std::endl;
+//         }
 
     }
 
@@ -493,10 +418,42 @@ namespace femus
 
     }
 
+    void sparseGrid::CartesianProduct ( std::vector<std::vector<int> >& inputCartesian, std::vector<std::vector<unsigned> >& dofsWi )
+    {
+        unsigned counterDofs = 0;
+
+        auto product = [] ( long long a, std::vector<int>& b ) {
+            return a * b.size();
+        };
+        const long long N = accumulate ( inputCartesian.begin(), inputCartesian.end(), 1LL, product );
+        std::vector<int> u ( inputCartesian.size() );
+
+        for ( long long n = 0 ; n < N ; ++n ) {
+            lldiv_t q { n, 0 };
+
+            for ( long long i = inputCartesian.size() - 1 ; 0 <= i ; --i ) {
+                q = div ( q.quot, inputCartesian[i].size() );
+                u[i] = inputCartesian[i][q.rem];
+            }
+
+            // Do what you want here with u.
+//             for ( int x : u ) std::cout << x << ' ';
+            dofsWi.resize ( counterDofs + 1 );
+            dofsWi[counterDofs].resize ( u.size() );
+
+            for ( int j = 0; j < u.size(); j++ ) {
+
+                dofsWi[counterDofs][j] = u[j];
+
+            }
+
+            counterDofs++;
+
+        }
+    }
+
 
 }
-
-
 
 
 

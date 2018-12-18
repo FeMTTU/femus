@@ -28,6 +28,8 @@ namespace femus
         void ComputeTensorProductSet ( std::vector< std::vector <unsigned>> &Tp, const unsigned &T1, const unsigned &T2 );
         
         void PrintNodalValuesPDF();
+        
+        void CartesianProduct ( std::vector<std::vector<int> >& inputCartesian, std::vector<std::vector<unsigned> >& dofsWi );
 
     private:
         //defining parameters
