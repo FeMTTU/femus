@@ -56,9 +56,9 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 
 //******************************************* Desired Target *******************************************************
 
-double DesiredTarget()
+double DesiredTarget(const std::vector<double> & xyz)
 {
-   return 2.;
+   return /*sin(M_PI * xyz[0]) * sin(M_PI * xyz[1]);*/ 2.;
 }
 
 
