@@ -524,47 +524,47 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 		    
 //========= initialize gauss quantities on the boundary ============================================
 		
-		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
-		  
-		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
-		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
-		  msh->_finiteElement[kelGeom][solType_adj]->ShapeAtBoundary(x,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+// 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) { (2)
+// 		  
+// 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
+// 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
+// 		  msh->_finiteElement[kelGeom][solType_adj]->ShapeAtBoundary(x,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
-         double dx_dxi = 0.;
-		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
-		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
-		      for (int inode = 0; inode < nDofu_bdry/*_nc*/; inode++) dx_dxi += myptr[inode] * x_bdry[0][inode];
-  
-		      for (int inode = 0; inode < nDofu_bdry/*_nc*/; inode++) {
-                            for (int d = 0; d < dim; d++) {
-                              if (d==0 ) phi_ctrl_x_bdry[inode + d*nDofu_bdry/*_nc*/] = myptr[inode]* (1./ dx_dxi);
-                              else  phi_ctrl_x_bdry[inode + d*nDofu_bdry/*_nc*/] = 0.;
-                         }
-                     }
+//          double dx_dxi = 0.;
+// 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
+// 		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
+// 		      for (int inode = 0; inode < nDofu_bdry/*_nc*/; inode++) dx_dxi += myptr[inode] * x_bdry[0][inode];
+//   
+// 		      for (int inode = 0; inode < nDofu_bdry/*_nc*/; inode++) {
+//                             for (int d = 0; d < dim; d++) {
+//                               if (d==0 ) phi_ctrl_x_bdry[inode + d*nDofu_bdry/*_nc*/] = myptr[inode]* (1./ dx_dxi);
+//                               else  phi_ctrl_x_bdry[inode + d*nDofu_bdry/*_nc*/] = 0.;
+//                          }
+//                      }
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  
 
 //=============== grad dot n for residual ========================================= 
-//     compute gauss quantities on the boundary through VOLUME interpolation
-           std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
-		      for (int iv = 0; iv < nDof_adj; iv++)  {
-			
-                            for (int d = 0; d < dim; d++) {
-//    std::cout << " ivol " << iv << std::endl;
-//    std::cout << " adj dofs " << sol_adj[iv] << std::endl;
-			      sol_adj_x_vol_at_bdry_gss[d] += sol_adj[iv] * phi_adj_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
-			    }
-		      }  
-		      
-        double grad_dot_n_adj_res = 0.;
-        for(unsigned d=0; d<dim; d++) {
-	  grad_dot_n_adj_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
-	}
+// //     compute gauss quantities on the boundary through VOLUME interpolation
+//            std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
+// 		      for (int iv = 0; iv < nDof_adj; iv++)  {
+// 			
+//                             for (int d = 0; d < dim; d++) {
+// //    std::cout << " ivol " << iv << std::endl;
+// //    std::cout << " adj dofs " << sol_adj[iv] << std::endl;
+// 			      sol_adj_x_vol_at_bdry_gss[d] += sol_adj[iv] * phi_adj_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
+// 			    }
+// 		      }  
+// 		      
+//         double grad_dot_n_adj_res = 0.;
+//         for(unsigned d=0; d<dim; d++) {
+// 	  grad_dot_n_adj_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
+// 	}
 //=============== grad dot n  for residual =========================================      
 		    
 //============ Bdry Residuals ==================	
-        if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  -  penalty_interface * ( sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
+        if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  -  penalty_interface * interface_flag[i_vol] * ( sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
 		
 	//	if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=  -  weight_bdry * penalty_interface * (-1) * ( grad_dot_n_adj_res * phi_ctrl_bdry[i_bdry] );  //boundary optimality condition
 //============ Bdry Residuals ==================	
@@ -579,27 +579,27 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     if (i_vol < nDof_u && j_vol < nDof_u && i_vol == j_vol)  {
        Jac[    
           (0 + i_vol) * nDof_AllVars  +
-          (0 + j_vol)                                ]  += penalty_interface * ( 1.);
+          (0 + j_vol)                                ]  += penalty_interface * interface_flag[i_vol] * ( 1.);
        }
 
 // block delta_state/control ===================
     if (i_vol < nDof_u && j_vol < nDof_ctrl && i_vol == j_vol) {
        Jac[    
 		  (0     + i_vol) * nDof_AllVars  +
-		  (nDof_u + j_vol)                           ]  += penalty_interface  * (-1.);
+		  (nDof_u + j_vol)                           ]  += penalty_interface  * interface_flag[i_vol] * (-1.);
        }
 //============ u = q ===========================		    
 		    
      } //end j_vol 
 		    
 //===================loop over j in the VOLUME (while i is in the boundary)	      
-	for(unsigned j=0; j < nDof_max; j ++) {
+//	for(unsigned j=0; j < nDof_max; j ++) { (1)
   
 //=============== grad dot n  =========================================    
-    double grad_adj_dot_n_mat = 0.;
-      for(unsigned d=0; d<dim; d++) {
-	  grad_adj_dot_n_mat += phi_adj_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
-	}
+//     double grad_adj_dot_n_mat = 0.;
+//       for(unsigned d=0; d<dim; d++) {
+// 	  grad_adj_dot_n_mat += phi_adj_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
+// 	}
 //=============== grad dot n  =========================================    
 
   //std::cout << " gradadjdotn " << grad_adj_dot_n_mat << std::endl;
@@ -610,8 +610,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
        Jac[ 
           (nDof_u + i_vol) * nDof_AllVars  +
           (nDof_u + nDof_ctrl + j)                 ]  +=  weight_bdry * penalty_interface * (-1) * ( grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry] ); */   		      
-		  }   //end loop i_bdry // j_vol
-        }  //end ig_bdry loop
+//		  }   //end loop i_bdry // j_vol (1)
+//        }  //end ig_bdry loop (2)
       }
       
     }
