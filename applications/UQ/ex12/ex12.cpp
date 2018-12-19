@@ -22,10 +22,12 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 4;
+unsigned alpha = 3;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = alpha + 1;
+unsigned L = alpha;
+bool output = false;
+bool matlabView = false;
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -86,19 +88,18 @@ int main ( int argc, char** argv )
         }
     }
 
-    bool output = false;
-
+    clock_t total_time = clock();
     clock_t grid_time = clock();
     sparseGrid spg ( samples, output );
 
 
-    std::cout << std::endl << " Builda sparse grid in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+    std::cout << std::endl << " Builds sparse grid in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - grid_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
     clock_t nodal_time = clock();
     spg.EvaluateNodalValuesPDF ( samples );
 
-    std::cout << std::endl << " Builda nodal values in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+    std::cout << std::endl << " Builds nodal values in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - nodal_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
 
@@ -137,7 +138,7 @@ int main ( int argc, char** argv )
 // //     std::cout<<"phiTensorProduct = " << phiTensorProduct << std::endl;
     //END
 
-    //BEGIN  plot PDF in 2D
+    //BEGIN  create grid for plot in 2D
     //sampling from [-1,1] for both variables, testing on uniform PDF on [-1.5,1,5] x [-1.5,1.5]
 
     std::vector < unsigned > refinementLevel ( N );
@@ -197,6 +198,8 @@ int main ( int argc, char** argv )
         }
     }
 
+//END create grid
+
 
     std::vector< std::vector < unsigned > > idPhi ( N );
 
@@ -204,6 +207,7 @@ int main ( int argc, char** argv )
         idPhi[n].resize ( 3 );
     }
 
+        //BEGIN these are just tests
     // phi_000 * phi_100
 //     idPhi[0][0] = 0;
 //     idPhi[0][1] = 0;
@@ -227,31 +231,85 @@ int main ( int argc, char** argv )
 //     idPhi[1][0] = 1;
 //     idPhi[1][1] = 0;
 //     idPhi[1][2] = 0;
+//END
 
 
-    clock_t pdf_time = clock();
+//BEGIN grid plot
+    if ( matlabView ) {
+        std::cout << "x=[" << std::endl;
 
-    for ( unsigned i = 0; i < grid.size(); i++ ) {
-        spg.EvaluatePDF ( grid[i] );
-//         double phiTensorProductTest;
-//         spg.EvaluatePhi ( phiTensorProductTest, grid[i], idPhi, false );
-//         std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
-//         std::cout << phiTensorProductTest << std::endl;
+        for ( unsigned i = 0; i < grid.size(); i++ ) {
+            std::cout << grid[i][0] << std::endl;
+        }
+
+        std::cout << "];" << std::endl;
+
+        std::cout << "y=[" << std::endl;
+
+        for ( unsigned i = 0; i < grid.size(); i++ ) {
+            std::cout << grid[i][1] << std::endl;
+        }
+
+        std::cout << "];" << std::endl;
+
+        clock_t pdf_time = clock();
+
+        std::cout << "PDF=[" << std::endl;
+
+        for ( unsigned i = 0; i < grid.size(); i++ ) {
+            double pdfValue;
+            spg.EvaluatePDF ( pdfValue, grid[i] );
+            std::cout << pdfValue << std::endl;
+            double phiTensorProductTest;
+            spg.EvaluatePhi ( phiTensorProductTest, grid[i], idPhi, false );
+            std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
+            std::cout << phiTensorProductTest << std::endl;
+        }
+
+        std::cout << "];" << std::endl;
+
+        std::cout << std::endl << " Builds PDF in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+                  << static_cast<double> ( ( clock() - pdf_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
+
     }
 
-    std::cout << std::endl << " Builda PDF in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
-              << static_cast<double> ( ( clock() - pdf_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
+//END grid plot
 
+
+    //BEGIN these are just tests
 //     double phiTensorProductTest;
 //     std::vector< double> trialX ( 2 );
 //     trialX[0] = -0.75;
 //     trialX[1] = 0.;
 //     spg.EvaluatePhi ( phiTensorProductTest, trialX, idPhi, true );
 //     std::cout << phiTensorProductTest << std::endl;
+//END
 
-    //END plot PDF in 2D
+//BEGIN compute error
+    clock_t error_time = clock();
+
+    double sumError = 0.;
+
+    for ( unsigned m = 0; m < samples.size(); m++ ) {
+        double pdfValue;
+        spg.EvaluatePDF ( pdfValue, samples[m] );
+        double uniformPDF = ( fabs ( samples[m][0] ) <= 1 && fabs ( samples[m][1] ) <= 1 ) ? 0.25 : 0.;
+        double errorSquared = ( pdfValue - uniformPDF ) * ( pdfValue - uniformPDF );
+        sumError += errorSquared;
+    }
+
+    double aL2E = sqrt ( sumError ) / M;
+
+    std::cout << " Averaged L2 error is = " << aL2E << std::endl;
+
+    //END
+
+    std::cout << std::endl << " Computes error in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+              << static_cast<double> ( ( clock() - error_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
 
+    std::cout << std::endl << " Total time: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+              << static_cast<double> ( ( clock() - total_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
     return 0;
 

@@ -14,7 +14,7 @@ namespace femus
 
         _N = samples[0].size();
         _M = samples.size();
-        _L = static_cast<unsigned> ( log10 ( _M ) + 1 ); //NOTE this might change if we see fit
+        _L = static_cast<unsigned> ( log10 ( _M ) ); //NOTE this might change if we see fit
 
         _intervals.resize ( _N );
         _hs.resize ( _N );
@@ -354,26 +354,17 @@ namespace femus
 
     }
 
-    void sparseGrid::EvaluatePDF ( std::vector < double >  &x )
+    void sparseGrid::EvaluatePDF (double &pdfValue, std::vector < double >  &x)
     {
-
-        double PDFvalue = 0.;
+        pdfValue = 0.;
 
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 double valuePhi;
                 EvaluatePhi ( valuePhi, x, _dofIdentifier[w][i], false );
-                PDFvalue += _nodalValuesPDF[w][i] * valuePhi;
+                pdfValue += _nodalValuesPDF[w][i] * valuePhi;
             }
         }
-
-
-        for ( unsigned i = 0; i < x.size(); i++ ) {
-            std::cout << x[i] << " " ;
-        }
-
-        std::cout << PDFvalue << " " << std::endl;
-
 
     }
 
