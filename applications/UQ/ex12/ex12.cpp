@@ -31,7 +31,7 @@ bool matlabView = true;
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
-boost::normal_distribution<> nd ( 0., 0.3 );
+boost::normal_distribution<> nd ( 0., 1. );
 boost::variate_generator < boost::mt19937&,
       boost::normal_distribution<> > var_nor ( rng, nd );
 
