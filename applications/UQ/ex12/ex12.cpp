@@ -69,7 +69,7 @@ int main ( int argc, char** argv )
 //     samples[m][n] = var * var * var;
 //     samples[m][n] = exp(var);
 //         samples[m][n] = exp (varunif);
-            samples[m][n] = varunif;
+            samples[m][n] = var;
 
             //exp of truncated gaussian
 //     if(fabs(var) <= 1.) {
@@ -163,13 +163,13 @@ int main ( int argc, char** argv )
         gridSize *= gridPoints[n];
     }
 
-    gridBounds[0][0] = -1.5; //-1.5 for uniform // -5.5 for Gaussian
-    gridBounds[0][1] = 1.5; //1.5 for uniform // 5.5 for Gaussian
+    gridBounds[0][0] = -5.5; //-1.5 for uniform // -5.5 for Gaussian
+    gridBounds[0][1] = 5.5; //1.5 for uniform // 5.5 for Gaussian
 
     if ( N > 1 ) {
 
-        gridBounds[1][0] = -1.5;
-        gridBounds[1][1] = 1.5;
+        gridBounds[1][0] = -5.5;
+        gridBounds[1][1] = 5.5;
     }
 
     if ( N > 2 ) {
@@ -260,10 +260,10 @@ int main ( int argc, char** argv )
             double pdfValue;
             spg.EvaluatePDF ( pdfValue, grid[i] );
             std::cout << pdfValue << std::endl;
-            double phiTensorProductTest;
-            spg.EvaluatePhi ( phiTensorProductTest, grid[i], idPhi, false );
-            std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
-            std::cout << phiTensorProductTest << std::endl;
+//             double phiTensorProductTest;
+//             spg.EvaluatePhi ( phiTensorProductTest, grid[i], idPhi, false );
+//             std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
+//             std::cout << phiTensorProductTest << std::endl;
         }
 
         std::cout << "];" << std::endl;
@@ -293,9 +293,9 @@ int main ( int argc, char** argv )
     for ( unsigned m = 0; m < samples.size(); m++ ) {
         double pdfValue;
         spg.EvaluatePDF ( pdfValue, samples[m] );
-        double uniformPDF = ( fabs ( samples[m][0] ) <= 1 && fabs ( samples[m][1] ) <= 1 ) ? 0.25 : 0.;
-//         double Gaussian = exp(-samples[m][0]*samples[m][0]*0.5) * exp(-samples[m][1]*samples[m][1]*0.5) / (2*acos(-1));
-        double errorSquared = ( pdfValue - uniformPDF ) * ( pdfValue - uniformPDF );
+//         double uniformPDF = ( fabs ( samples[m][0] ) <= 1 && fabs ( samples[m][1] ) <= 1 ) ? 0.25 : 0.;
+        double Gaussian = exp(-samples[m][0]*samples[m][0]*0.5) * exp(-samples[m][1]*samples[m][1]*0.5) / (2*acos(-1));
+        double errorSquared = ( pdfValue - Gaussian ) * ( pdfValue - Gaussian );
         sumError += errorSquared;
     }
 
