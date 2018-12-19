@@ -16,6 +16,9 @@
 
 #include "../include/sgfem_assembly_uq.hpp"
 
+//THIS IS AN APPLICATION TO TRY FIELD SPLIT WITH SGM 
+
+
 using namespace femus;
 
 

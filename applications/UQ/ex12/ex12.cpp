@@ -22,7 +22,7 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 5;
+unsigned alpha = 4;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
 unsigned L = alpha + 1;
@@ -87,7 +87,19 @@ int main ( int argc, char** argv )
     }
 
     bool output = false;
+
+    clock_t grid_time = clock();
     sparseGrid spg ( samples, output );
+
+
+    std::cout << std::endl << " Builda sparse grid in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+              << static_cast<double> ( ( clock() - grid_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
+
+    clock_t nodal_time = clock();
+    spg.EvaluateNodalValuesPDF ( samples );
+
+    std::cout << std::endl << " Builda nodal values in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+              << static_cast<double> ( ( clock() - nodal_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
 
     //BEGIN these are just tests
@@ -185,8 +197,6 @@ int main ( int argc, char** argv )
         }
     }
 
-    spg.EvaluateNodalValuesPDF ( samples );
-
 
     std::vector< std::vector < unsigned > > idPhi ( N );
 
@@ -203,12 +213,12 @@ int main ( int argc, char** argv )
 //     idPhi[1][2] = 0;
 
     // phi_010 * phi_100
-    idPhi[0][0] = 0;
-    idPhi[0][1] = 1;
-    idPhi[0][2] = 0;
-    idPhi[1][0] = 1;
-    idPhi[1][1] = 0;
-    idPhi[1][2] = 0;
+//     idPhi[0][0] = 0;
+//     idPhi[0][1] = 1;
+//     idPhi[0][2] = 0;
+//     idPhi[1][0] = 1;
+//     idPhi[1][1] = 0;
+//     idPhi[1][2] = 0;
 
     // phi_012 * phi_100
 //     idPhi[0][0] = 0;
@@ -219,6 +229,7 @@ int main ( int argc, char** argv )
 //     idPhi[1][2] = 0;
 
 
+    clock_t pdf_time = clock();
 
     for ( unsigned i = 0; i < grid.size(); i++ ) {
         spg.EvaluatePDF ( grid[i] );
@@ -227,6 +238,9 @@ int main ( int argc, char** argv )
 //         std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
 //         std::cout << phiTensorProductTest << std::endl;
     }
+
+    std::cout << std::endl << " Builda PDF in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+              << static_cast<double> ( ( clock() - pdf_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
 //     double phiTensorProductTest;
 //     std::vector< double> trialX ( 2 );
