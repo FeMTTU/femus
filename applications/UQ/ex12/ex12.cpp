@@ -22,12 +22,12 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 3;
+unsigned alpha = 6;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
 unsigned L = alpha;
-bool output = false;
-bool matlabView = false;
+bool output = false; //for debugging
+bool matlabView = true;
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -163,8 +163,8 @@ int main ( int argc, char** argv )
         gridSize *= gridPoints[n];
     }
 
-    gridBounds[0][0] = -1.5;
-    gridBounds[0][1] = 1.5;
+    gridBounds[0][0] = -1.5; //-1.5 for uniform // -5.5 for Gaussian
+    gridBounds[0][1] = 1.5; //1.5 for uniform // 5.5 for Gaussian
 
     if ( N > 1 ) {
 
@@ -294,6 +294,7 @@ int main ( int argc, char** argv )
         double pdfValue;
         spg.EvaluatePDF ( pdfValue, samples[m] );
         double uniformPDF = ( fabs ( samples[m][0] ) <= 1 && fabs ( samples[m][1] ) <= 1 ) ? 0.25 : 0.;
+//         double Gaussian = exp(-samples[m][0]*samples[m][0]*0.5) * exp(-samples[m][1]*samples[m][1]*0.5) / (2*acos(-1));
         double errorSquared = ( pdfValue - uniformPDF ) * ( pdfValue - uniformPDF );
         sumError += errorSquared;
     }
