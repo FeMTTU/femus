@@ -706,9 +706,9 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 //======================Volume Residuals=======================
       // FIRST ROW
 	  if (i < nDof_u)  {
-	     if ( group_flag == 12 )            Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss - u_des) - laplace_rhs_du_adj_i - 0.);
+         if ( group_flag == 12 )            Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss - u_des) - laplace_rhs_du_adj_i - 0.);
 	  
-	     else if ( group_flag == 13 )       Res[0      + i] +=  (1-interface_flag[i]) * (- penalty_strong_u) * (sol_u[i] - 0.);
+         else if ( group_flag == 13 )       Res[0      + i] +=  (1-interface_flag[i]) * (- penalty_strong_u) * (sol_u[i] - 0.);
 	  }
       // SECOND ROW
 	  if (i < nDof_ctrl)  {
@@ -719,10 +719,14 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 	     else if ( group_flag == 12 )       Res[nDof_u + i] +=  (1-interface_flag[i]) * (- penalty_strong_ctrl) * (sol_ctrl[i] - 0.);
 	  }
       // THIRD ROW
-      if (i < nDof_adj) {  
-	     if ( group_flag == 12 )      Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_u_i    - 0.) ;
+      if (i < nDof_adj) {
+         if ( interface_flag[i] == 1 )      Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_u_i + laplace_rhs_dadj_ctrl_i - 0.) ;
+             
+         else {
+               if ( group_flag == 12 )      Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_u_i    - 0.) ;
 	     
-	     else if ( group_flag == 13 ) Res[nDof_u + nDof_ctrl + i] += - weight *  (  laplace_rhs_dadj_ctrl_i - 0.) ;
+               else if ( group_flag == 13 ) Res[nDof_u + nDof_ctrl + i] += - weight *  ( laplace_rhs_dadj_ctrl_i - 0.) ;
+              }
 	  }
 //======================Volume Residuals=======================
 	      
@@ -747,8 +751,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 	      }
 
         //============ delta_state row ============================
-        if ( group_flag == 12 ) { 
-		
+        if ( group_flag == 12 ){		
             //DIAG BLOCK delta_state - state
 	        if ( i < nDof_u && j < nDof_u )       
 		       Jac[ (0 + i) * nDof_AllVars   +
@@ -758,8 +761,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
             if ( i < nDof_u && j < nDof_adj )  
                Jac[ (0 + i) * nDof_AllVars  +
                     (nDof_u + nDof_ctrl + j)         ]  += weight * (-1) * laplace_mat_du_adj;
-        }
-		      
+        
+        }      
         else if ( group_flag == 13 ) {  
 		
             //BLOCK delta_state - state
@@ -806,12 +809,12 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 		          (0 + j)                            ]  += weight * (-1) * laplace_mat_dadj_u;   
        }
 	      
-       else if ( group_flag == 13 ) {
+       if ( group_flag == 13 ) { //interor boundary belongs to both groups 12 and 13.
 		
           // BLOCK delta_adjoint - control   
           if ( i < nDof_adj && j < nDof_ctrl )  
 		     Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
-		          (nDof_u  + j)                      ]  += weight * (-1) * laplace_mat_dadj_ctrl; 
+		          (nDof_u  + j)                      ]  += weight * (1) * laplace_mat_dadj_ctrl; 
        }
 		          
           } // end phi_j loop
