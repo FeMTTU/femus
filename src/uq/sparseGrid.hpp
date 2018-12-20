@@ -40,7 +40,7 @@ namespace femus
         //monodimensional quantities
         std::vector < std::vector < double > > _intervals;
         std::vector < std::vector < double > > _hs;
-        std::vector < std::vector < std::vector < double > > > _nodes;
+        std::vector < std::vector < std::vector < double > > > _nodes; //number of internal nodes of the grid
         std::vector < std::vector < std::vector < double > > > _hierarchicalDofs;
 
         //sparse grid quantities

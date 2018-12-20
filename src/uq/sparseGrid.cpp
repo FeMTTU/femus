@@ -30,15 +30,8 @@ namespace femus
             for ( unsigned l = 0; l < _L; l++ ) {
                 unsigned dofsFullGrid = static_cast<unsigned> ( pow ( 2, l + 1 ) - 1 );
                 _nodes[n][l].resize ( dofsFullGrid );
-                unsigned dofsHierarchical;
 
-                if ( dofsFullGrid % 2 != 0 ) { //odd number
-                    dofsHierarchical = static_cast<unsigned> ( ( ( pow ( 2, l + 1 ) - 1 ) + 1. ) * 0.5 );
-                }
-
-                else { //even number
-                    dofsHierarchical = static_cast<unsigned> ( ( ( pow ( 2, l + 1 ) - 1 ) ) * 0.5 );
-                }
+                unsigned   dofsHierarchical = static_cast<unsigned> ( ( ( pow ( 2, l + 1 ) - 1 ) + 1. ) * 0.5 );
 
                 _hierarchicalDofs[n][l].resize ( dofsHierarchical );
 
@@ -354,7 +347,7 @@ namespace femus
 
     }
 
-    void sparseGrid::EvaluatePDF (double &pdfValue, std::vector < double >  &x)
+    void sparseGrid::EvaluatePDF ( double &pdfValue, std::vector < double >  &x )
     {
         pdfValue = 0.;
 
