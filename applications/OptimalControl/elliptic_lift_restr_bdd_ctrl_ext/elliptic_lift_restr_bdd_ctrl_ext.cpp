@@ -1,12 +1,16 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
 #include "../elliptic_param.hpp"
 
 using namespace femus;
+
+double InitialValueActFlag(const std::vector < double >& x) {
+  return 0.;
+}
 
 double InitialValueContReg(const std::vector < double >& x) {
   return ControlDomainFlag_external_restriction(x);
@@ -37,12 +41,12 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   bool dirichlet = true; //dirichlet
   value = 0.;
   
-  if(!strcmp(name,"control")) {
-      value = 0.;
-  if (faceName == 3)
-    dirichlet = false;
-  
-  }
+//   if(!strcmp(name,"control")) {
+//       value = 0.;
+//   if (faceName == 3)
+//     dirichlet = false;
+//   
+//   }
   
   if(!strcmp(name,"mu")) {
 //       value = 0.;
@@ -96,6 +100,9 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  const unsigned int fake_time_dep_flag = 2;
+  const std::string act_set_flag_name = "act_flag";
+  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
@@ -106,6 +113,8 @@ int main(int argc, char** args) {
   mlSol.Initialize("mu", InitialValueMu);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
+  mlSol.Initialize(act_set_flag_name.c_str(), InitialValueActFlag);
+
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -120,7 +129,9 @@ int main(int argc, char** args) {
   mlProb.SetFilesHandler(&files);
 
  // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = mlProb.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+  
+  system.SetActiveSetFlagName(act_set_flag_name);
 
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
@@ -159,7 +170,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -280,6 +291,14 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   unsigned solType_mu = mlSol->GetSolutionType(solIndex_mu);    // get the finite element type for "mu"
   vector < double >  sol_mu;   sol_mu.reserve(maxSize);
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
+  
+  //************** act flag **************************** 
+  std::string act_flag_name = "act_flag";
+  unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
+  unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
+     if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
+       *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
+     }
 
   //********* variables for ineq constraints *****************
   const int ineq_flag = INEQ_FLAG;
@@ -423,27 +442,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     }
     
     
- //************** update active set flag for current nonlinear iteration **************************** 
- // 0: inactive; 1: active_a; 2: active_b
-   assert(nDof_mu == nDof_ctrl);
-   sol_actflag.resize(nDof_mu);
-   ctrl_lower.resize(nDof_mu);
-   ctrl_upper.resize(nDof_mu);
-     std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
-     std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
-     std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
-   
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {
-         std::vector<double> node_coords_i(dim,0.);
-        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x[d][i];
-        ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
-        ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
-       
-    if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
-    else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
-    }
- 
- //******************** ALL VARS ********************* 
+    
+    //******************** ALL VARS ********************* 
     unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
     int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
@@ -521,6 +521,98 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
       		      for (int i_bdry = 0; i_bdry < nDofu_bdry; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 		    interface_flag[i_vol] = 1.;
+            
+            
+ //========================================================================================================== 
+
+         //************** update active set flag for current nonlinear iteration **************************** 
+         // 0: inactive; 1: active_a; 2: active_b
+            assert(nDof_mu == nDof_ctrl);
+            sol_actflag.resize(nDofctrl_bdry/*nDof_mu*/);
+            ctrl_lower.resize(nDofctrl_bdry/*nDof_mu*/);
+            ctrl_upper.resize(nDofctrl_bdry/*nDof_mu*/);
+           std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+           std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
+           std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
+   
+		      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+//             for (unsigned i = 0; i < sol_actflag.size(); i++) {
+        std::vector<double> node_coords_i(dim,0.);
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x_bdry[d][i_bdry];
+        ctrl_lower[i_bdry] = InequalityConstraint(node_coords_i,false);
+        ctrl_upper[i_bdry] = InequalityConstraint(node_coords_i,true);
+
+        if      ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_lower[i_bdry] )) < 0 )  sol_actflag[i_bdry] = 1;
+        else if ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_upper[i_bdry] )) > 0 )  sol_actflag[i_bdry] = 2;
+            }
+            
+        //************** act flag **************************** 
+      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+      unsigned solDof_actflag = msh->GetSolutionDof(i_vol, iel, solFEType_act_flag); 
+      (sol->_Sol[solIndex_act_flag])->set(solDof_actflag,sol_actflag[i_bdry]);     
+    }
+    
+    
+     // ===================================================
+ //node-based insertion on the boundary ===============
+ // ===================================================
+    
+ //============= delta_mu row ===============================
+      std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
+      
+      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+//     for (unsigned i = 0; i < sol_actflag.size(); i++) {
+      if (sol_actflag[i_bdry] == 0){  //inactive
+         Res_mu [i_vol] = - ineq_flag * ( 1. * sol_mu[i_vol] - 0. ); 
+// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+      }
+      else if (sol_actflag[i_bdry] == 1){  //active_a 
+	 Res_mu [i_vol] = - ineq_flag * ( c_compl *  sol_ctrl[i_vol] - c_compl * ctrl_lower[i_bdry]);
+      }
+      else if (sol_actflag[i_bdry] == 2){  //active_b 
+	Res_mu [i_vol]  =  - ineq_flag * ( c_compl *  sol_ctrl[i_vol] - c_compl * ctrl_upper[i_bdry]);
+      }
+    }
+
+    
+    RES->insert(Res_mu, l2GMap_mu);    
+ //============= delta_mu row - end ===============================
+    
+ //============= delta_mu-delta_ctrl row ===============================
+ //auxiliary volume vector for act flag
+ unsigned nDof_actflag_vol  = msh->GetElementDofNumber(iel, solFEType_act_flag);
+ std::vector<double> sol_actflag_vol(nDof_actflag_vol); 
+
+
+ for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) if (sol_actflag[i_bdry] != 0 ) sol_actflag[i_bdry] = ineq_flag * c_compl;    
+ 
+ std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+    }
+ 
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag_vol);
+ //============= delta_mu-delta_ctrl row - end ===============================
+
+ //============= delta_mu-delta_mu row ===============================
+  for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) sol_actflag[i_bdry] =  ineq_flag * (1 - sol_actflag[i_bdry]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
+
+ std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+    }
+  
+  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag_vol );
+ //============= delta_mu-delta_mu row - end ===============================
+    
+ // =========================================================
+ //node-based insertion on the boundary - end ===============
+ // =========================================================
 		    
 //========= initialize gauss quantities on the boundary ============================================
 		
@@ -728,6 +820,11 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                else if ( group_flag == 13 ) Res[nDof_u + nDof_ctrl + i] += - weight *  ( laplace_rhs_dadj_ctrl_i - 0.) ;
               }
 	  }
+	  // FOURTH ROW
+      if (i < nDof_mu)     
+          //if ( group_flag == 12 )           
+              Res[nDof_u + nDof_ctrl + nDof_adj + i] += - penalty_strong_ctrl * ( (1 - interface_flag[i]) * (  sol_mu[i] - 0.)  );
+	  
 //======================Volume Residuals=======================
 	      
           if (assembleMatrix) {
@@ -816,6 +913,13 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 		     Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
 		          (nDof_u  + j)                      ]  += weight * (1) * laplace_mat_dadj_ctrl; 
        }
+       
+        //============= delta_mu row ===============================
+        //if ( group_flag == 12 ) {
+            if ( i < nDof_mu && j < nDof_mu && i==j )   
+		    Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+		       (nDof_u + nDof_ctrl + nDof_adj + j)]  += penalty_strong_ctrl * ( (1 - interface_flag[i]));
+           // }
 		          
           } // end phi_j loop
         } // endif assemble_matrix
@@ -832,41 +936,41 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
       if (assembleMatrix)  KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
     
     
- //========== dof-based part, without summation
- 
- //============= delta_mu row ===============================
-    std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {
-      if (sol_actflag[i] == 0){  //inactive
-              Res_mu [i] = - ineq_flag * ( 1. * sol_mu[i] - 0. ); 
-      }
-      else if (sol_actflag[i] == 1){  //active_a 
-	          Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower[i]);
-      }
-      else if (sol_actflag[i] == 2){  //active_b 
-	          Res_mu [i]  = - ineq_flag * ( c_compl * sol_ctrl[i] - c_compl * ctrl_upper[i]);
-      }
-    }
+//  //========== dof-based part, without summation
+//  
+//  //============= delta_mu row ===============================
+//     std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
+//     for (unsigned i = 0; i < sol_actflag.size(); i++) {
+//       if (sol_actflag[i] == 0){  //inactive
+//               Res_mu [i] = - ineq_flag * ( 1. * sol_mu[i] - 0. ); 
+//       }
+//       else if (sol_actflag[i] == 1){  //active_a 
+// 	          Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower[i]);
+//       }
+//       else if (sol_actflag[i] == 2){  //active_b 
+// 	          Res_mu [i]  = - ineq_flag * ( c_compl * sol_ctrl[i] - c_compl * ctrl_upper[i]);
+//       }
+//     }
 
     
-    RES->insert(Res_mu, l2GMap_mu);
+//    RES->insert(Res_mu, l2GMap_mu);
   
   //============= delta_ctrl-delta_mu row ===============================
   KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, ineq_flag * 1.);
   
-  //============= delta_mu-delta_ctrl row ===============================
-  for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
-  
-  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
-
-  //============= delta_mu-delta_mu row ===============================
-  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =  ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;
-
-  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );
+//   //============= delta_mu-delta_ctrl row ===============================
+//   for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
+//   
+//   KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
+// 
+//   //============= delta_mu-delta_mu row ===============================
+//   for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =  ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;
+// 
+//   KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );
   
   } //end element loop for each process
   
-  RES->close();
+   RES->close();
 
   if (assembleMatrix) KK->close();
   std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->GetNonlinearIt()  << ".txt";
