@@ -42,6 +42,7 @@ namespace femus
         std::vector < std::vector < double > > _hs;
         std::vector < std::vector < std::vector < double > > > _nodes; //number of internal nodes of the grid
         std::vector < std::vector < std::vector < double > > > _hierarchicalDofs;
+        std::vector < std::vector < std::vector < double > > > _hierarchicalDofsCoordinates;
 
         //sparse grid quantities
         unsigned _numberOfWs; // V = direct sum_{i=1,...,_numberOfWs} W_i, see (3.61) in Bungartz and Griebel, Acta Numerica 2004

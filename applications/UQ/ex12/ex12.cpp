@@ -25,7 +25,7 @@ using namespace femus;
 unsigned alpha = 6;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = alpha ;
+unsigned L = alpha;
 bool output = false; //for debugging
 bool matlabView = true;
 
@@ -101,7 +101,6 @@ int main ( int argc, char** argv )
 
     std::cout << std::endl << " Builds nodal values in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - nodal_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
-
 
     //BEGIN these are just tests
 //     double phi;
@@ -207,7 +206,7 @@ int main ( int argc, char** argv )
         idPhi[n].resize ( 3 );
     }
 
-        //BEGIN these are just tests
+    //BEGIN these are just tests
     // phi_000 * phi_100
 //     idPhi[0][0] = 0;
 //     idPhi[0][1] = 0;
@@ -294,7 +293,7 @@ int main ( int argc, char** argv )
         double pdfValue;
         spg.EvaluatePDF ( pdfValue, samples[m] );
 //         double uniformPDF = ( fabs ( samples[m][0] ) <= 1 && fabs ( samples[m][1] ) <= 1 ) ? 0.25 : 0.;
-        double Gaussian = exp(-samples[m][0]*samples[m][0]*0.5) * exp(-samples[m][1]*samples[m][1]*0.5) / (2*acos(-1));
+        double Gaussian = exp ( -samples[m][0] * samples[m][0] * 0.5 ) * exp ( -samples[m][1] * samples[m][1] * 0.5 ) / ( 2 * acos ( -1 ) );
         double errorSquared = ( pdfValue - Gaussian ) * ( pdfValue - Gaussian );
         sumError += errorSquared;
     }

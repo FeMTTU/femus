@@ -84,13 +84,15 @@ namespace femus
 
         }
 
-        for ( unsigned n = 0; n < _N; n++ ) {
-            for ( unsigned l = 0; l < _L; l++ ) {
-                for ( unsigned i = 0; i < _hierarchicalDofs[n][l].size(); i++ ) {
-                    if ( _output )    std::cout << "_hierarchicalDofs[" << n << "][" << l << "][" << i << "] = " << _hierarchicalDofs[n][l][i] << " " ;
-                }
+        if ( _output ) {
+            for ( unsigned n = 0; n < _N; n++ ) {
+                for ( unsigned l = 0; l < _L; l++ ) {
+                    for ( unsigned i = 0; i < _hierarchicalDofs[n][l].size(); i++ ) {
+                        std::cout << "_hierarchicalDofs[" << n << "][" << l << "][" << i << "] = " << _hierarchicalDofs[n][l][i] << " " ;
+                    }
 
-                if ( _output )   std::cout << std::endl;
+                    std::cout << std::endl;
+                }
             }
         }
 
@@ -133,12 +135,14 @@ namespace femus
             }
         }
 
-        for ( unsigned i = 0; i < _indexSetW.size(); i++ ) {
-            for ( unsigned j = 0; j < _N; j++ ) {
-                if ( _output )     std::cout << "_indexSetW[" << i << "][" << j << "]= " << _indexSetW[i][j];
-            }
+        if ( _output ) {
+            for ( unsigned i = 0; i < _indexSetW.size(); i++ ) {
+                for ( unsigned j = 0; j < _N; j++ ) {
+                    std::cout << "_indexSetW[" << i << "][" << j << "]= " << _indexSetW[i][j];
+                }
 
-            if ( _output )   std::cout << std::endl;
+                std::cout << std::endl;
+            }
         }
 
         _numberOfWs = _indexSetW.size();
@@ -219,26 +223,53 @@ namespace femus
             }
         }
 
-        //to erase (it is just a check)
-        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-            if ( _output )   std::cout << " ------------------------- w = " << w << " ------------------------- " << std::endl;
+        if ( _output ) {
+            for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+                std::cout << " ------------------------- w = " << w << " ------------------------- " << std::endl;
 
-            for ( unsigned i = 0; i < _dofIdentifier[w].size(); i++ ) {
-                if ( _output )   std::cout << " ------------------------- i = " << i << " ------------------------- " << std::endl;
+                for ( unsigned i = 0; i < _dofIdentifier[w].size(); i++ ) {
+                    std::cout << " ------------------------- i = " << i << " ------------------------- " << std::endl;
 
-                for ( unsigned n = 0; n < _N; n++ ) {
-                    if ( _output )      std::cout << " ------------------------- dim = " << n << " ------------------------- " << std::endl;
+                    for ( unsigned n = 0; n < _N; n++ ) {
+                        std::cout << " ------------------------- dim = " << n << " ------------------------- " << std::endl;
 
-                    for ( unsigned j = 0; j < 3; j++ ) {
-                        if ( _output )      std::cout << "_dofIdentifier[" << w << "][" << i << "][" << n << "][" << j << "] = " << _dofIdentifier[w][i][n][j] << " " ;
+                        for ( unsigned j = 0; j < 3; j++ ) {
+                            std::cout << "_dofIdentifier[" << w << "][" << i << "][" << n << "][" << j << "] = " << _dofIdentifier[w][i][n][j] << " " ;
+                        }
+
+                        std::cout << std::endl;
                     }
-
-                    if ( _output )   std::cout << std::endl;
                 }
             }
         }
 
         //END
+
+
+        //BEGIN construction of _hierarchicalDofsCoordinates
+
+
+        _hierarchicalDofsCoordinates.resize ( _numberOfWs );
+
+        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+
+            _hierarchicalDofsCoordinates[w].resize ( _dofIdentifier[w].size() );
+
+            for ( unsigned i = 0; i < _dofIdentifier[w].size(); i++ ) {
+
+                _hierarchicalDofsCoordinates[w][i].resize ( _N );
+
+                for ( unsigned n = 0; n < _N; n++ ) {
+
+                    _hierarchicalDofsCoordinates[w][i][n] = _nodes[_dofIdentifier[w][i][n][0]][_dofIdentifier[w][i][n][1]][_dofIdentifier[w][i][n][2]];
+
+                }
+            }
+        }
+
+        //END
+
+
 
     }
 
@@ -340,6 +371,12 @@ namespace femus
 
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
+
+                for ( unsigned n = 0; n < _N; n++ ) {
+
+                    std::cout << _hierarchicalDofsCoordinates[w][i][n] << " " ;
+
+                }
 
                 std::cout << _nodalValuesPDF[w][i] << std::endl;
             }
