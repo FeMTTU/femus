@@ -756,6 +756,10 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                else if ( group_flag == 13 ) Res[nDof_u + nDof_ctrl + i] += - weight *  ( laplace_rhs_dadj_ctrl_i - 0.) ;
               }
 	  }
+    // FOURTH ROW
+     if (i < nDof_mu)     
+        if ( group_flag == 12 )           
+              Res[nDof_u + nDof_ctrl + nDof_adj + i] += - penalty_strong_ctrl * ( (1 - interface_flag[i]) * (  sol_mu[i] - 0.)  );
 //======================Volume Residuals=======================
 	      
           if (assembleMatrix) {
@@ -844,6 +848,13 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 		     Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
 		          (nDof_u  + j)                      ]  += weight * (1) * laplace_mat_dadj_ctrl; 
        }
+                  
+       //============= delta_mu row ===============================
+        if ( group_flag == 12 ) {
+          if ( i < nDof_mu && j < nDof_mu && i==j )   
+		    Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+		       (nDof_u + nDof_ctrl + nDof_adj + j)]  += penalty_strong_ctrl * ( (1 - interface_flag[i]));
+          }
 		          
           } // end phi_j loop
         } // endif assemble_matrix
