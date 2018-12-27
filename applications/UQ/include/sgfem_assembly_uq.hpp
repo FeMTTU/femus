@@ -7,7 +7,7 @@ using namespace femus;
 
 //quadratureType = 0; HERMITE
 //quadratureType = 1; LEGENDRE
-unsigned quadratureType = 1;
+unsigned quadratureType = 0;
 
 unsigned pIndex = 4;
 unsigned qIndex = 5;
@@ -180,43 +180,8 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
             vector< double > aStochastic ( Jq.size() );
 
 //BEGIN coefficient obtained projecting the exponential of the KL
-//             for ( unsigned q1 = 0; q1 < Jq.size(); q1 ++ ) {
-//                 std::vector <double> aStochasticTerm2 ( numberOfEigPairs );
-// 
-//                 unsigned numberOfQuadraturePointsForProjection = 16;
-// 
-//                 const double *quadraturePoints = myuq.GetQuadraturePoints ( numberOfQuadraturePointsForProjection, quadratureType );
-//                 const double *quadratureWeights = myuq.GetQuadratureWeights ( numberOfQuadraturePointsForProjection, quadratureType );
-// 
-//                 const std::vector < std::vector < double > >  &polyProjection = myuq.GetPolynomial ( numberOfQuadraturePointsForProjection, qIndex, quadratureType );
-// 
-//                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
-//                     aStochasticTerm2[i] = 0.;
-//                     for ( unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++ ) {
-//                         aStochasticTerm2[i] += exp ( sqrt ( eigenvalues[i].first ) * eigVectorGauss[i] * quadraturePoints[j] )
-//                                                * polyProjection[Jq[q1][i]][j] * quadratureWeights[j];
-//                     }
-//                 }
-// 
-//                 double aS1 = 1.;
-//                 double aS2 = 1.;
-//                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
-// //           std::cout << "------------------- " << Jq[q1][i] << " ";
-//                     aS1 *= integralMatrix[Jq[q1][i]][0][0];
-//                     aS2 *= aStochasticTerm2[i];
-//                 }
-// //         std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
-// 
-//                 aStochastic[q1] = amin * aS1 + aS2; //a_q(x_ig)
-//                 if ( fabs ( aStochastic[q1] ) > 10. ) {
-//                     std::cout << " coeff =  " << aStochastic[q1] << std::endl;
-//                 }
-//             }
-//END coefficient obtained projecting the exponential of the KL
-
-
-//BEGIN random coefficient (not a random field), a(y1,y2,y3) = 1 + y1^2 + y2^2 + y3^2
             for ( unsigned q1 = 0; q1 < Jq.size(); q1 ++ ) {
+                std::vector <double> aStochasticTerm2 ( numberOfEigPairs );
 
                 unsigned numberOfQuadraturePointsForProjection = 16;
 
@@ -225,32 +190,67 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
 
                 const std::vector < std::vector < double > >  &polyProjection = myuq.GetPolynomial ( numberOfQuadraturePointsForProjection, qIndex, quadratureType );
 
-                std::vector <double> aStochasticTerms ( numberOfEigPairs,0. );
-
                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
+                    aStochasticTerm2[i] = 0.;
                     for ( unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++ ) {
-                        aStochasticTerms[i] += quadraturePoints[j] * quadraturePoints[j] * polyProjection[Jq[q1][i]][j] * quadratureWeights[j];
-                    }
-                    for ( unsigned k = 0; k < numberOfEigPairs; k++ ) {
-                        if( k != i) aStochasticTerms[i] *= integralMatrix[Jq[q1][k]][0][0];
+                        aStochasticTerm2[i] += exp ( sqrt ( eigenvalues[i].first ) * eigVectorGauss[i] * quadraturePoints[j] )
+                                               * polyProjection[Jq[q1][i]][j] * quadratureWeights[j];
                     }
                 }
 
                 double aS1 = 1.;
+                double aS2 = 1.;
                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
+//           std::cout << "------------------- " << Jq[q1][i] << " ";
                     aS1 *= integralMatrix[Jq[q1][i]][0][0];
+                    aS2 *= aStochasticTerm2[i];
                 }
+//         std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
 
-                aStochastic[q1] = aS1;
-                for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
-                    aStochastic[q1] += aStochasticTerms[i];
-                }
-              
-
+                aStochastic[q1] = amin * aS1 + aS2; //a_q(x_ig)
                 if ( fabs ( aStochastic[q1] ) > 10. ) {
                     std::cout << " coeff =  " << aStochastic[q1] << std::endl;
                 }
             }
+//END coefficient obtained projecting the exponential of the KL
+
+
+//BEGIN random coefficient (not a random field), a(y1,y2,y3) = 1 + y1^2 + y2^2 + y3^2
+//             for ( unsigned q1 = 0; q1 < Jq.size(); q1 ++ ) {
+// 
+//                 unsigned numberOfQuadraturePointsForProjection = 16;
+// 
+//                 const double *quadraturePoints = myuq.GetQuadraturePoints ( numberOfQuadraturePointsForProjection, quadratureType );
+//                 const double *quadratureWeights = myuq.GetQuadratureWeights ( numberOfQuadraturePointsForProjection, quadratureType );
+// 
+//                 const std::vector < std::vector < double > >  &polyProjection = myuq.GetPolynomial ( numberOfQuadraturePointsForProjection, qIndex, quadratureType );
+// 
+//                 std::vector <double> aStochasticTerms ( numberOfEigPairs,0. );
+// 
+//                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
+//                     for ( unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++ ) {
+//                         aStochasticTerms[i] += quadraturePoints[j] * quadraturePoints[j] * polyProjection[Jq[q1][i]][j] * quadratureWeights[j];
+//                     }
+//                     for ( unsigned k = 0; k < numberOfEigPairs; k++ ) {
+//                         if( k != i) aStochasticTerms[i] *= integralMatrix[Jq[q1][k]][0][0];
+//                     }
+//                 }
+// 
+//                 double aS1 = 1.;
+//                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
+//                     aS1 *= integralMatrix[Jq[q1][i]][0][0];
+//                 }
+// 
+//                 aStochastic[q1] = aS1;
+//                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
+//                     aStochastic[q1] += aStochasticTerms[i];
+//                 }
+//               
+// 
+//                 if ( fabs ( aStochastic[q1] ) > 10. ) {
+//                     std::cout << " coeff =  " << aStochastic[q1] << std::endl;
+//                 }
+//             }
 //END coefficient without KL, not a field, just dependent on y
 
             vector < vector < double > > laplace ( nDofu );
