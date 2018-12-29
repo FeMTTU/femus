@@ -314,21 +314,60 @@ namespace femus
     void sparseGrid::EvaluateNodalValuesPDF ( std::vector < std::vector < double > >  &samples )
     {
 
+        //BEGIN to erase
+//         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+//
+//             unsigned indexMax = 1;
+//
+//             for ( unsigned n = 0; n < _N; n++ ) {
+// //                 std::cout << "_indexSetW[ " << w << "][" << n << "] = " << _indexSetW[w][n];
+//
+//                 if ( _indexSetW[w][n] + 1 > indexMax ) indexMax =  _indexSetW[w][n] + 1;
+//             }
+//
+//             std::cout << std::endl;
+//
+//
+//             unsigned denomMlocal = static_cast<unsigned> ( pow ( 10, _L - indexMax ) ) ;
+//             unsigned Mlocal = _M / denomMlocal;
+//
+// //             std::cout << "Mlocal = " << Mlocal << std::endl;
+//
+//             std::vector <double> sumDofs ( Mlocal, 0. );
+//             for ( unsigned m1 = 0; m1 < Mlocal; m1++ ) {
+//                 for ( unsigned w1 = 0; w1 < _numberOfWs; w1++ ) {
+//                     for ( unsigned i1 = 0; i1 < _nodalValuesPDF[w1].size(); i1++ ) {
+//                         double valuePhiDenom;
+//                         EvaluatePhi ( valuePhiDenom, samples[m1], _dofIdentifier[w1][i1], false );
+//                         sumDofs[m1] += valuePhiDenom;
+//                     }
+//                 }
+//             }
+//
+//             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
+//                 _nodalValuesPDF[w][i] = 0.;
+//
+//                 for ( unsigned m = 0; m < Mlocal; m++ ) {
+//
+//                     double valuePhi;
+//                     EvaluatePhi ( valuePhi, samples[m], _dofIdentifier[w][i], true );
+//
+//                     _nodalValuesPDF[w][i] += ( valuePhi / sumDofs[m] ) / Mlocal;
+//
+//                 }
+//             }
+//         }
+        //END
+        
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
-
                 _nodalValuesPDF[w][i] = 0.;
-
             }
         }
 
-
-//here we loop on the dofs of W
         for ( unsigned m = 0; m < _M; m++ ) {
 
-            //BEGIN scaling to have unitary integral
             double sumDenom = 0.;
-
             for ( unsigned w1 = 0; w1 < _numberOfWs; w1++ ) {
                 for ( unsigned i1 = 0; i1 < _nodalValuesPDF[w1].size(); i1++ ) {
                     double valuePhiDenom;
@@ -336,31 +375,29 @@ namespace femus
                     sumDenom += valuePhiDenom;
                 }
             }
-
-            //END
-
+            
+            
             for ( unsigned w = 0; w < _numberOfWs; w++ ) {
                 for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
-
                     double valuePhi;
                     EvaluatePhi ( valuePhi, samples[m], _dofIdentifier[w][i], true );
 
                     _nodalValuesPDF[w][i] += ( valuePhi / sumDenom ) / _M;
-
                 }
-
             }
+
+
         }
 
         //to remove, this is just a check
 //         double sumOfNodalValues = 0.;
-//
+// 
 //         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
 //             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
 //                 sumOfNodalValues += _nodalValuesPDF[w][i];
 //             }
 //         }
-//
+// 
 //         std::cout << " sumOfNodalValues =" << sumOfNodalValues << std::endl;
 
 

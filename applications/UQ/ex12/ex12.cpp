@@ -22,9 +22,9 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 6;
+unsigned alpha = 5;
 unsigned M = pow ( 10, alpha ); //number of samples
-unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
+unsigned N = 1; //dimension of the parameter space (each of the M samples has N entries)
 unsigned L = alpha;
 bool output = false; //for debugging
 bool matlabView = true;
@@ -91,13 +91,13 @@ int main ( int argc, char** argv )
     clock_t total_time = clock();
     clock_t grid_time = clock();
     sparseGrid spg ( samples, output );
-
-
+  
     std::cout << std::endl << " Builds sparse grid in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - grid_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
     clock_t nodal_time = clock();
     spg.EvaluateNodalValuesPDF ( samples );
+//     spg.PrintNodalValuesPDF();
 
     std::cout << std::endl << " Builds nodal values in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - nodal_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
@@ -162,8 +162,8 @@ int main ( int argc, char** argv )
         gridSize *= gridPoints[n];
     }
 
-    gridBounds[0][0] = -5.5; //-1.5 for uniform // -5.5 for Gaussian
-    gridBounds[0][1] = 5.5; //1.5 for uniform // 5.5 for Gaussian
+    gridBounds[0][0] = -5.45091; //-1.5 for uniform // -5.5 for Gaussian
+    gridBounds[0][1] = 5.41019; //1.5 for uniform // 5.5 for Gaussian
 
     if ( N > 1 ) {
 
@@ -187,15 +187,15 @@ int main ( int argc, char** argv )
 
     unsigned counterGrid = 0;
 
-    for ( unsigned j = 0; j < gridPoints[1]; j++ ) {
+//     for ( unsigned j = 0; j < gridPoints[1]; j++ ) {
         for ( unsigned i = 0; i < gridPoints[0]; i++ ) {
             grid.resize ( counterGrid + 1 );
             grid[counterGrid].resize ( N );
             grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
-            grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
+//             grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
             counterGrid++;
         }
-    }
+//     }
 
 //END create grid
 
@@ -243,13 +243,13 @@ int main ( int argc, char** argv )
 
         std::cout << "];" << std::endl;
 
-        std::cout << "y=[" << std::endl;
-
-        for ( unsigned i = 0; i < grid.size(); i++ ) {
-            std::cout << grid[i][1] << std::endl;
-        }
-
-        std::cout << "];" << std::endl;
+//         std::cout << "y=[" << std::endl;
+// 
+//         for ( unsigned i = 0; i < grid.size(); i++ ) {
+//             std::cout << grid[i][1] << std::endl;
+//         }
+// 
+//         std::cout << "];" << std::endl;
 
         clock_t pdf_time = clock();
 
@@ -258,7 +258,7 @@ int main ( int argc, char** argv )
         for ( unsigned i = 0; i < grid.size(); i++ ) {
             double pdfValue;
             spg.EvaluatePDF ( pdfValue, grid[i] );
-            std::cout << pdfValue << std::endl;
+            std::cout << std::setprecision ( 14 ) << pdfValue << std::endl;
 //             double phiTensorProductTest;
 //             spg.EvaluatePhi ( phiTensorProductTest, grid[i], idPhi, false );
 //             std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
@@ -293,7 +293,7 @@ int main ( int argc, char** argv )
         double pdfValue;
         spg.EvaluatePDF ( pdfValue, samples[m] );
 //         double uniformPDF = ( fabs ( samples[m][0] ) <= 1 && fabs ( samples[m][1] ) <= 1 ) ? 0.25 : 0.;
-        double Gaussian = exp ( -samples[m][0] * samples[m][0] * 0.5 ) * exp ( -samples[m][1] * samples[m][1] * 0.5 ) / ( 2 * acos ( -1 ) );
+        double Gaussian = exp ( -samples[m][0] * samples[m][0] * 0.5 ) / sqrt( 2 * acos ( -1 ) ) /** exp ( -samples[m][1] * samples[m][1] * 0.5 ) / sqrt( 2 * acos ( -1 ) )*/;
         double errorSquared = ( pdfValue - Gaussian ) * ( pdfValue - Gaussian );
         sumError += errorSquared;
     }
