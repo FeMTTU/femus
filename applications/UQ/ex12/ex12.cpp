@@ -25,7 +25,7 @@ using namespace femus;
 unsigned alpha = 5;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 1; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = alpha;
+unsigned L = alpha * 2;
 bool output = false; //for debugging
 bool matlabView = true;
 

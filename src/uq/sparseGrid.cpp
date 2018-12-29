@@ -14,7 +14,7 @@ namespace femus
 
         _N = samples[0].size();
         _M = samples.size();
-        _L = static_cast<unsigned> ( log10 ( _M ) ); //NOTE this might change if we see fit
+        _L = static_cast<unsigned> ( log10 ( _M ) * 2 ); //NOTE this might change if we see fit
 
         _intervals.resize ( _N );
         _hs.resize ( _N );
