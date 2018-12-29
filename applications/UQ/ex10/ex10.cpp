@@ -53,8 +53,8 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
-unsigned kOrder = 5; //for order tests
-unsigned numberOfSamples = 100000; //for MC sampling of the QoI
+unsigned kOrder = 3; //for order tests
+unsigned numberOfSamples = 1000; //for MC sampling of the QoI
 unsigned nxCoarseBox;
 double xMinCoarseBox = - 2.5; //-5.5 for Gaussian, -2.5 for SGM with Gaussian KL,  -1.5 for uniform, -2. for SGM with random variable (not KL)
 double xMaxCoarseBox = 5.5;  //5.5 for Gaussian, 5.5 for SGM with Gaussian KL, 1.5 for uniform, 4. for SGM with random variable (not KL)

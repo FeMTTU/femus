@@ -22,10 +22,10 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 5;
+unsigned alpha = 6;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 1; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = alpha * 2;
+unsigned L = alpha + 3;
 bool output = false; //for debugging
 bool matlabView = true;
 
@@ -97,7 +97,7 @@ int main ( int argc, char** argv )
 
     clock_t nodal_time = clock();
     spg.EvaluateNodalValuesPDF ( samples );
-//     spg.PrintNodalValuesPDF();
+    spg.PrintNodalValuesPDF();
 
     std::cout << std::endl << " Builds nodal values in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - nodal_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
