@@ -14,7 +14,7 @@ namespace femus
 
         _N = samples[0].size();
         _M = samples.size();
-        _L = static_cast<unsigned> ( log10 ( _M ) + 3 ); //NOTE this might change if we see fit
+        _L = static_cast<unsigned> ( log10 ( _M ) ); //NOTE this might change if we see fit
 
         _intervals.resize ( _N );
         _hs.resize ( _N );
@@ -34,6 +34,7 @@ namespace femus
                 unsigned   dofsHierarchical = static_cast<unsigned> ( ( ( pow ( 2, l + 1 ) - 1 ) + 1. ) * 0.5 );
 
                 _hierarchicalDofs[n][l].resize ( dofsHierarchical );
+//                 _hierarchicalDofs[n][l].resize ( dofsFullGrid ); //this is to use the method with standard FEM
 
                 if ( _output ) std::cout << "dofsFullGrid = " << dofsFullGrid << " , " << "dofsHierarchical = " << dofsHierarchical << std::endl;
 
@@ -79,6 +80,8 @@ namespace femus
                         _hierarchicalDofs[n][l][hierarchicalCounter] = i;
                         hierarchicalCounter++;
                     }
+                    
+//                     _hierarchicalDofs[n][l][i] = i; //this is to use the method with standard FEM
                 }
             }
 
@@ -122,7 +125,8 @@ namespace femus
                 sum += ( Tp[i][j] + 1 ); //this is because our indices start from 0 but the requirement assumes they start from 1
             }
 
-            if ( sum <= _L + _N - 1 ) {
+            if ( sum <= _L + _N - 1 ) {  
+//                if ( sum == _L * _N ) { //this is to use the method with standard FEM
 
                 _indexSetW.resize ( indexCounter + 1 );
                 _indexSetW[indexCounter].resize ( _N );
@@ -423,16 +427,20 @@ namespace femus
 
     void sparseGrid::EvaluatePDF ( double &pdfValue, std::vector < double >  &x )
     {
-        pdfValue = 0.;
+//         pdfValue = 0.;
 
+        std::vector<std::vector<double>> phiFncts(_numberOfWs);
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+            phiFncts[w].resize(_nodalValuesPDF[w].size());
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 double valuePhi;
                 EvaluatePhi ( valuePhi, x, _dofIdentifier[w][i], false );
-                pdfValue += _nodalValuesPDF[w][i] * valuePhi;
+//                 pdfValue += _nodalValuesPDF[w][i] * valuePhi;
+              phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
+              std::cout<< phiFncts[w][i] << "," ;
             }
-        }
-
+        }        
+        std::cout<<std::endl;
     }
 
     void sparseGrid::ComputeTensorProductSet ( std::vector< std::vector <unsigned>> &Tp, const unsigned &T1, const unsigned &T2 )
@@ -507,6 +515,7 @@ namespace femus
 
 
 }
+
 
 
 
