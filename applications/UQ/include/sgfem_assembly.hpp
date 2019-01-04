@@ -610,7 +610,7 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
         unsigned solDof = msh->GetSolutionDof(i, iel, soluType);
         eigVectorGauss[i] = 0.;
         for(unsigned j = 0; j < nDofu; j++) {
-          eigVectorGauss[i] += (*sol->_Sol[eigfIndex[i]])(solDof) * phi[i];
+          eigVectorGauss[i] += (*sol->_Sol[eigfIndex[i]])(solDof) * phi[j];
         }
       }
 

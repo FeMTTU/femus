@@ -44,8 +44,8 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-double startPoint = - 3.8;
-double endPoint = 3.8;
+double startPoint = - 2.5;
+double endPoint = 2.5;
 unsigned M = 5000; //number of samples for the Monte Carlo
 double deltat;
 int pdfHistogramSize;
