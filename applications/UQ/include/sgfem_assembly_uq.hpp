@@ -68,6 +68,7 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
     unsigned n1 = 2 * pIndex + qIndex + 1;
     n1 = ( n1 % 2 == 0 ) ? n1 / 2 : ( n1 + 1 ) / 2;
     unsigned numberOfQuadraturePoints = ( n1 <= 16 ) ? n1 : 16;
+
     if ( n1 > 16 ) {
         std::cout <<
                   "------------------------------- WARNING: less quadrature points than needed were employed in function AssembleSysSG -------------------------------"
@@ -79,16 +80,19 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
 
     //solution Index
     std::vector <unsigned> soluIndex ( Jp.size() );
+
     for ( unsigned i = 0; i < Jp.size(); i++ ) {
         char name[10];
         sprintf ( name, "uSG%d", i );
         soluIndex[i] = mlSol->GetIndex ( name ); // get the position of "u" in the ml_sol object
     }
+
     unsigned soluType = mlSol->GetSolutionType ( soluIndex[0] );
 
 
     //solution PdeIndex
     std::vector <unsigned> soluPdeIndex ( Jp.size() );
+
     for ( unsigned i = 0; i < Jp.size(); i++ ) {
         char name[10];
         sprintf ( name, "uSG%d", i );
@@ -98,6 +102,7 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
 
     //eigenfunction Index
     std::vector <unsigned> eigfIndex ( numberOfEigPairs );
+
     for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
         char name[10];
         sprintf ( name, "egnf%d", i );
@@ -146,6 +151,7 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
         // local storage of global mapping and solution
         for ( unsigned i = 0; i < nDofu; i++ ) {
             unsigned solDof = msh->GetSolutionDof ( i, iel, soluType ); // global to global mapping between solution node and solution dof
+
             for ( unsigned j = 0; j < Jp.size(); j++ ) {
                 solu[j][i] = ( *sol->_Sol[soluIndex[j]] ) ( solDof ); // global extraction and local storage for the solution
                 l2GMap[j * nDofu + i] = pdeSys->GetSystemDof ( soluIndex[j], soluPdeIndex[j], i, iel ); // global to global mapping between solution node and pdeSys dof
@@ -169,9 +175,10 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
             msh->_finiteElement[ielGeom][soluType]->Jacobian ( x, ig, weight, phi, phi_x, phi_xx );
 
             for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
-                unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
                 eigVectorGauss[i] = 0.;
+
                 for ( unsigned j = 0; j < nDofu; j++ ) {
+                    unsigned solDof = msh->GetSolutionDof ( j, iel, soluType );
                     eigVectorGauss[i] += ( *sol->_Sol[eigfIndex[i]] ) ( solDof ) * phi[j];
                 }
             }
@@ -192,6 +199,7 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
 
                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
                     aStochasticTerm2[i] = 0.;
+
                     for ( unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++ ) {
                         aStochasticTerm2[i] += exp ( sqrt ( eigenvalues[i].first ) * eigVectorGauss[i] * quadraturePoints[j] )
                                                * polyProjection[Jq[q1][i]][j] * quadratureWeights[j];
@@ -200,33 +208,37 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
 
                 double aS1 = 1.;
                 double aS2 = 1.;
+
                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
 //           std::cout << "------------------- " << Jq[q1][i] << " ";
                     aS1 *= integralMatrix[Jq[q1][i]][0][0];
                     aS2 *= aStochasticTerm2[i];
                 }
+
 //         std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
 
                 aStochastic[q1] = amin * aS1 + aS2; //a_q(x_ig)
+
                 if ( fabs ( aStochastic[q1] ) > 10. ) {
                     std::cout << " coeff =  " << aStochastic[q1] << std::endl;
                 }
             }
+
 //END coefficient obtained projecting the exponential of the KL
 
 
 //BEGIN random coefficient (not a random field), a(y1,y2,y3) = 1 + y1^2 + y2^2 + y3^2
 //             for ( unsigned q1 = 0; q1 < Jq.size(); q1 ++ ) {
-// 
+//
 //                 unsigned numberOfQuadraturePointsForProjection = 16;
-// 
+//
 //                 const double *quadraturePoints = myuq.GetQuadraturePoints ( numberOfQuadraturePointsForProjection, quadratureType );
 //                 const double *quadratureWeights = myuq.GetQuadratureWeights ( numberOfQuadraturePointsForProjection, quadratureType );
-// 
+//
 //                 const std::vector < std::vector < double > >  &polyProjection = myuq.GetPolynomial ( numberOfQuadraturePointsForProjection, qIndex, quadratureType );
-// 
+//
 //                 std::vector <double> aStochasticTerms ( numberOfEigPairs,0. );
-// 
+//
 //                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
 //                     for ( unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++ ) {
 //                         aStochasticTerms[i] += quadraturePoints[j] * quadraturePoints[j] * polyProjection[Jq[q1][i]][j] * quadratureWeights[j];
@@ -235,18 +247,18 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
 //                         if( k != i) aStochasticTerms[i] *= integralMatrix[Jq[q1][k]][0][0];
 //                     }
 //                 }
-// 
+//
 //                 double aS1 = 1.;
 //                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
 //                     aS1 *= integralMatrix[Jq[q1][i]][0][0];
 //                 }
-// 
+//
 //                 aStochastic[q1] = aS1;
 //                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
 //                     aStochastic[q1] += aStochasticTerms[i];
 //                 }
-//               
-// 
+//
+//
 //                 if ( fabs ( aStochastic[q1] ) > 10. ) {
 //                     std::cout << " coeff =  " << aStochastic[q1] << std::endl;
 //                 }
@@ -254,8 +266,10 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
 //END coefficient without KL, not a field, just dependent on y
 
             vector < vector < double > > laplace ( nDofu );
+
             for ( unsigned i = 0; i < nDofu; i++ ) {
                 laplace[i].assign ( nDofu, 0. );
+
                 for ( unsigned j = 0; j < nDofu; j++ ) {
                     for ( unsigned kdim = 0; kdim < dim; kdim++ ) {
                         laplace[i][j] += ( phi_x[i * dim + kdim] * phi_x[j * dim + kdim] ) * weight;
@@ -267,22 +281,27 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
             for ( unsigned p1 = 0; p1 < Jp.size(); p1++ ) {
 
                 double srcTermStoch = 1.;
+
                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
                     srcTermStoch *= integralMatrix[0][Jp[p1][i]][0];
                 }
 
                 for ( unsigned i = 0; i < nDofu; i++ ) {
                     double resU = 1. * phi[i] * srcTermStoch * weight;
+
                     for ( unsigned p2 = 0; p2 < Jp.size(); p2++ ) {
                         for ( unsigned j = 0; j < nDofu; j++ ) {
                             double AG = 0;
+
                             for ( unsigned q1 = 0; q1 < Jq.size(); q1++ ) {
                                 AG += aStochastic[q1] * laplace[i][j] * G[q1][p1][p2];
                             }
+
                             Jac[ ( p1 * nDofu + i ) * ( Jp.size() * nDofu ) +  p2 * nDofu + j] -= AG;
                             resU +=  AG * solu[p2][j];
                         }
                     }
+
                     Res[ p1 * nDofu + i ] += resU;
                 }
             }
