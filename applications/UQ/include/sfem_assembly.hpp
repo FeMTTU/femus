@@ -18,14 +18,14 @@ using namespace femus;
 
 // quadratureType = 0; HERMITE
 // quadratureType = 1; LEGENDRE
-unsigned quadratureType = 0;
+unsigned quadratureType = 1;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
 std::vector < std::pair<double, double> > eigenvalues ( numberOfEigPairs );
 
 double amin = 1. / 100.;
 
-double stdDeviationInput = 0.4;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.08;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double meanInput = 0.;
 
 //FOR STD GAUSSIAN SAMPLING
@@ -133,17 +133,22 @@ void AssembleUQSys ( MultiLevelProblem& ml_prob )
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
     std::vector <double> yOmega ( numberOfEigPairs, 0. );
+
     for ( unsigned eig = 0; eig < numberOfEigPairs; eig++ ) {
         if ( iproc == 0 ) {
             if ( quadratureType == 0 ) {
                 yOmega[eig] = var_nor();
-            } else if ( quadratureType == 1 ) {
+            }
+
+            else if ( quadratureType == 1 ) {
                 yOmega[eig] = var_unif();
             }
         }
+
         MPI_Bcast ( &yOmega[eig], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
         std::cout << " ----------------------------- yOmega =" << yOmega[eig] << " ";
     }
+
     std::cout << std::endl;
 
 
@@ -175,9 +180,11 @@ void AssembleUQSys ( MultiLevelProblem& ml_prob )
             unsigned solDof = msh->GetSolutionDof ( i, iel, soluType ); // global to global mapping between solution node and solution dof
             solu[i] = ( *sol->_Sol[soluIndex] ) ( solDof ); // global extraction and local storage for the solution
             KLexpansion[i] = 0.;
+
             for ( unsigned j = 0; j < numberOfEigPairs; j++ ) {
                 KLexpansion[i] += sqrt ( eigenvalues[j].first ) * ( *sol->_Sol[eigfIndex[j]] ) ( solDof ) * yOmega[j];
             }
+
             l2GMap[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
         }
 
@@ -216,15 +223,20 @@ void AssembleUQSys ( MultiLevelProblem& ml_prob )
             }
 
             //BEGIN log(a-amin) = KL expansion
-            double aCoeff = amin + exp ( KLexpansion_gss );
+//             double aCoeff = amin + exp ( KLexpansion_gss );
 //       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
             //END log(a-amin) = KL expansion
 
-//BEGIN a = KL expansion
-//       double aCoeff = meanInput + KLexpansion_gss;
-//       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
+            //BEGIN a = KL expansion
+            //       double aCoeff = meanInput + KLexpansion_gss;
+            //       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
             //END a = KL expansion
 
+            //BEGIN a = 1 + y_1^2 + y_2^2 with y_i uniformly distributed
+            double yunif1 = var_unif();
+            double yunif2 = var_unif();
+            double aCoeff = 1. + yunif1 * yunif1 + yunif2 * yunif2;
+            //END
 
 
             // *** phi_i loop ***
@@ -280,6 +292,7 @@ void AssembleUQSys ( MultiLevelProblem& ml_prob )
 
     // ***************** END ASSEMBLY *******************
 }
+
 
 
 

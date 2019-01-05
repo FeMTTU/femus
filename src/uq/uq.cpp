@@ -547,25 +547,25 @@ void uq::ComputeLegendrePoly ( std::vector < std::vector < double > >  & legendr
             legendrePoly[0][j] = 1. ;
 
             if ( maxPolyOrder > 0 ) {
-                legendrePoly[1][j] = x / sqrt ( 3 ) ;
+                legendrePoly[1][j] = x * sqrt ( 3 ) ;
                 if ( maxPolyOrder > 1 ) {
-                    legendrePoly[2][j] = ( - 1. + 3. * x * x ) / ( 2 * sqrt ( 5 ) ) ;
+                    legendrePoly[2][j] = ( - 1. + 3. * x * x ) * 0.5 * sqrt ( 5 ) ;
                     if ( maxPolyOrder > 2 ) {
-                        legendrePoly[3][j] = ( - 3. * x + 5. * x * x * x ) / ( 2. * sqrt ( 7 ) ) ;
+                        legendrePoly[3][j] = ( - 3. * x + 5. * x * x * x ) * 0.5 * sqrt ( 7 ) ;
                         if ( maxPolyOrder > 3 ) {
-                            legendrePoly[4][j] = ( 1. / 24. ) * ( 3. - 30. * x * x + 35. * pow ( x, 4 ) ) ;
+                            legendrePoly[4][j] = ( sqrt(9) / 8. ) * ( 3. - 30. * x * x + 35. * pow ( x, 4 ) ) ;
                             if ( maxPolyOrder > 4 ) {
-                                legendrePoly[5][j] = ( 15. * x - 70. * pow ( x, 3 ) + 63. * pow ( x, 5 ) ) / ( 8. * sqrt ( 11 ) ) ;
+                                legendrePoly[5][j] = ( 15. * x - 70. * pow ( x, 3 ) + 63. * pow ( x, 5 ) ) * sqrt ( 11 ) / 8. ;
                                 if ( maxPolyOrder > 5 ) {
-                                    legendrePoly[6][j] = ( - 5. + 105. * x * x - 315. * pow ( x, 4 ) + 231. * pow ( x, 6 ) ) / ( 16. * sqrt ( 13 ) ) ;
+                                    legendrePoly[6][j] = ( - 5. + 105. * x * x - 315. * pow ( x, 4 ) + 231. * pow ( x, 6 ) ) * sqrt ( 13 ) / 16. ;
                                     if ( maxPolyOrder > 6 ) {
-                                        legendrePoly[7][j] = ( - 35. * x + 315. * pow ( x, 3 ) - 693. * pow ( x, 5 ) + 429. * pow ( x, 7 ) ) / ( 16.* sqrt ( 15 ) );
+                                        legendrePoly[7][j] = ( - 35. * x + 315. * pow ( x, 3 ) - 693. * pow ( x, 5 ) + 429. * pow ( x, 7 ) ) * sqrt ( 15 ) / 16.;
                                         if ( maxPolyOrder > 7 ) {
-                                            legendrePoly[8][j] = ( 35. - 1260. * x * x + 6930. * pow ( x, 4 ) - 12012. * pow ( x, 6 ) + 6435. * pow ( x, 8 ) ) / ( 128. *                sqrt ( 17 ) );
+                                            legendrePoly[8][j] = ( 35. - 1260. * x * x + 6930. * pow ( x, 4 ) - 12012. * pow ( x, 6 ) + 6435. * pow ( x, 8 ) ) *                sqrt ( 17 )  / 128.;
                                             if ( maxPolyOrder > 8 ) {
-                                                legendrePoly[9][j] = ( 315. * x - 4620. * pow ( x, 3 ) + 18018. * pow ( x, 5 ) - 25740. * pow ( x, 7 ) + 12155. * pow ( x, 9 ) ) / ( 128. * sqrt ( 19 ) );
+                                                legendrePoly[9][j] = ( 315. * x - 4620. * pow ( x, 3 ) + 18018. * pow ( x, 5 ) - 25740. * pow ( x, 7 ) + 12155. * pow ( x, 9 ) ) * sqrt ( 19 ) / 128.;
                                                 if ( maxPolyOrder > 9 ) {
-                                                    legendrePoly[10][j] = ( - 63. + 3465. * x * x - 30030. * pow ( x, 4 ) + 90090. * pow ( x, 6 ) - 109395. * pow ( x, 8 ) + 46189 * pow ( x, 10 ) ) / ( 256. * sqrt ( 21 ) );
+                                                    legendrePoly[10][j] = ( - 63. + 3465. * x * x - 30030. * pow ( x, 4 ) + 90090. * pow ( x, 6 ) - 109395. * pow ( x, 8 ) + 46189 * pow ( x, 10 ) ) * sqrt ( 21 ) / 256. ;
                                                     if ( maxPolyOrder > 10 ) {
                                                         std::cout << "Polynomial order is too big. For now, it has to be not greater than 10." << std::endl;
                                                         abort();

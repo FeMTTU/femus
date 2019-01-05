@@ -65,7 +65,7 @@ unsigned nzCoarseBox;
 double zMinCoarseBox = - 2.5;
 double zMaxCoarseBox = 5.5;
 
-unsigned numberOfSamplesFinest = 1000000; //10^6 for spatial average, 10^7 for integral of the square, 10^6 for SGM with random variable (not KL)
+unsigned numberOfSamplesFinest = 1000000; //10^6 for spatial average, 10^7 for "integral" of the square, 10^6 for SGM with random variable (not KL)
 unsigned kOrderFinest = 6;
 unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamplesFinest ) ) ); //for spatial average
 // unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamplesFinest ) ) ); //for integral of the square
@@ -908,7 +908,7 @@ void GetCoefficientsForQuantityOfInterest ( MultiLevelProblem& ml_prob, std::vec
                     solu_gss += phi[i] * solu[j][i];
                 }
 
-//          alphasTemp[j] += solu_gss * solu_gss * weight ; // this is the integral of the square.
+//          alphasTemp[j] += solu_gss * solu_gss * weight ; // this is similar to the integral of the square.
                 alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
             }
         } // end gauss point loop

@@ -44,8 +44,8 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-double startPoint = - 2.5;  
-double endPoint = 5.5; 
+double startPoint = - 3.8;  
+double endPoint = 3.8; 
 double deltat;
 int pdfHistogramSize;
 
@@ -860,8 +860,8 @@ void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vecto
         for(unsigned i = 0; i < nDofu; i++) {
           solu_gss += phi[i] * solu[j][i];
         }
-//      	alphasTemp[j] += solu_gss * solu_gss * weight ; // this is the integral of the square.
-        alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
+     	alphasTemp[j] += solu_gss * solu_gss * weight ; // this is similar to the integral of the square.
+//         alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
       }
     } // end gauss point loop
 
