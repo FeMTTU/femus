@@ -25,7 +25,7 @@ std::vector < std::pair<double, double> > eigenvalues ( numberOfEigPairs );
 
 double amin = 1. / 100.;
 
-double stdDeviationInput = 0.08;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.8;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double meanInput = 0.;
 
 //FOR STD GAUSSIAN SAMPLING
@@ -223,19 +223,15 @@ void AssembleUQSys ( MultiLevelProblem& ml_prob )
             }
 
             //BEGIN log(a-amin) = KL expansion
-//             double aCoeff = amin + exp ( KLexpansion_gss );
+            double aCoeff = amin + exp ( KLexpansion_gss );
 //       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
             //END log(a-amin) = KL expansion
 
-            //BEGIN a = KL expansion
-            //       double aCoeff = meanInput + KLexpansion_gss;
-            //       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
-            //END a = KL expansion
 
-            //BEGIN a = 1 + y_1^2 + y_2^2 with y_i uniformly distributed
-            double yunif1 = var_unif();
-            double yunif2 = var_unif();
-            double aCoeff = 1. + yunif1 * yunif1 + yunif2 * yunif2;
+            //BEGIN a = 1 + y1^2 + y2^2 with y_i uniformly distributed
+//             double yunif1 = var_unif();
+//             double yunif2 = var_unif();
+//             double aCoeff = 1. + yunif1 * yunif1 + yunif2 * yunif2;
             //END
 
 
