@@ -18,7 +18,7 @@ using namespace femus;
 
 // quadratureType = 0; HERMITE
 // quadratureType = 1; LEGENDRE
-unsigned quadratureType = 1;
+unsigned quadratureType = 0;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
 std::vector < std::pair<double, double> > eigenvalues ( numberOfEigPairs );
@@ -228,10 +228,11 @@ void AssembleUQSys ( MultiLevelProblem& ml_prob )
             //END log(a-amin) = KL expansion
 
 
-            //BEGIN a = 1 + y1^2 + y2^2 with y_i uniformly distributed
-//             double yunif1 = var_unif();
-//             double yunif2 = var_unif();
-//             double aCoeff = 1. + yunif1 * yunif1 + yunif2 * yunif2;
+            //BEGIN a = 1 + y1^2 + y2^2 + y3^2 
+//             double aCoeff = 1.;
+//             for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
+//                 aCoeff += yOmega[i] * yOmega[i];
+//             }
             //END
 
 

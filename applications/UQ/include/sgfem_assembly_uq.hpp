@@ -1,13 +1,13 @@
 
 using namespace femus;
 
-//THIS IS THE MOST UPDATED ASSEMBLY TO SGM SIMULATIONS OF POISSON's EQUATION with HERMITE or LEGENDRE POLYNOMIALS
+//THIS IS THE MOST UPDATED ASSEMBLY FOR SGM SIMULATIONS OF POISSON's EQUATION with HERMITE or LEGENDRE POLYNOMIALS
 
 //BEGIN Stochastic Input Parameters
 
 //quadratureType = 0; HERMITE
 //quadratureType = 1; LEGENDRE
-unsigned quadratureType = 1;
+unsigned quadratureType = 0;
 
 unsigned pIndex = 4;
 unsigned qIndex = 5;
@@ -223,7 +223,6 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
                     std::cout << " coeff =  " << aStochastic[q1] << std::endl;
                 }
             }
-
 //END coefficient obtained projecting the exponential of the KL
 
 
@@ -237,23 +236,26 @@ void AssembleSysSG ( MultiLevelProblem& ml_prob )
 // 
 //                 const std::vector < std::vector < double > >  &polyProjection = myuq.GetPolynomial ( numberOfQuadraturePointsForProjection, qIndex, quadratureType );
 // 
-//                 std::vector <double> aStochasticTerms ( numberOfEigPairs,0. );
+//                 std::vector <double> aStochasticTerms ( numberOfEigPairs, 0. );
 // 
 //                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
 //                     for ( unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++ ) {
 //                         aStochasticTerms[i] += quadraturePoints[j] * quadraturePoints[j] * polyProjection[Jq[q1][i]][j] * quadratureWeights[j];
 //                     }
+// 
 //                     for ( unsigned k = 0; k < numberOfEigPairs; k++ ) {
-//                         if( k != i) aStochasticTerms[i] *= integralMatrix[Jq[q1][k]][0][0];
+//                         if ( k != i ) aStochasticTerms[i] *= integralMatrix[Jq[q1][k]][0][0];
 //                     }
 //                 }
 // 
 //                 double aS1 = 1.;
+// 
 //                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
 //                     aS1 *= integralMatrix[Jq[q1][i]][0][0];
 //                 }
 // 
 //                 aStochastic[q1] = aS1;
+// 
 //                 for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
 //                     aStochastic[q1] += aStochasticTerms[i];
 //                 }

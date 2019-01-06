@@ -46,7 +46,7 @@ double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double startPoint = - 3.8;
 double endPoint = 3.8;
-unsigned M = 5000; //number of samples for the Monte Carlo
+unsigned M = 10000; //number of samples for the Monte Carlo
 double deltat;
 int pdfHistogramSize;
 //END
