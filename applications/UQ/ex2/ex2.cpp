@@ -887,10 +887,10 @@ void GetStochasticData(std::vector <double>& QoI) {
     stdDeviationQoI = sqrt(varianceQoI);
     //END
 
-    pdfHistogramSize = static_cast <int>(1. + 3.3 * log(M));;
+    pdfHistogramSize = static_cast <int>(floor(1. + 3.3 * log(M)));
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
     double lengthOfTheInterval = fabs(endPoint - startPoint);
-    deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
+    deltat = lengthOfTheInterval / pdfHistogramSize;
 
     std::vector < double > QoIStandardized(M, 0.);
     //BEGIN standardization of QoI before computing the moments
@@ -901,8 +901,8 @@ void GetStochasticData(std::vector <double>& QoI) {
       //BEGIN estimation of the PDF
       bool sampleCaptured = false;
       for(unsigned i = 0; i < pdfHistogramSize; i++) {
-        double leftBound = startPoint + i * deltat - deltat * 0.5;
-        double rightBound = startPoint + i * deltat + deltat * 0.5;
+        double leftBound = startPoint + i*deltat;
+        double rightBound = startPoint + (i+1)*deltat;
         if(leftBound <=  QoIStandardized[m] && QoIStandardized[m] < rightBound) {
           pdfHistogram[i]++;
 //           std::cout << "leftBound = " << leftBound << " " << "rightBound = " << rightBound << " " << " standardized QoI = " << QoIStandardized[m] << std::endl;
@@ -926,7 +926,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     //BEGIN histogram check
     double checkHistogram = 0;
     for(unsigned i = 0; i < pdfHistogramSize; i++) {
-      double point = startPoint + i * deltat;
+      double point = (startPoint + i * deltat + startPoint + (i+1) * deltat) * 0.5;
       double pdfCheck = pdfHistogram[i] / M;
       pdfHistogram[i] /= pdfIntegral;
       std::cout << point << "  " << pdfHistogram[i]  << std::endl;

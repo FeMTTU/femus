@@ -44,8 +44,8 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-double startPoint = - 3.8;  
-double endPoint = 3.8; 
+double startPoint = - 3.;  
+double endPoint = 6.5; 
 double deltat;
 int pdfHistogramSize;
 
@@ -964,10 +964,10 @@ void GetStochasticData(std::vector <double>& alphas) {
 
     //BEGIN estimation of the PDF
     unsigned numberOfSamples = 100000;
-    pdfHistogramSize = static_cast <int>(1. + 3.3 * log(numberOfSamples));
+    pdfHistogramSize = static_cast <int>(floor(1. + 3.3 * log(numberOfSamples)));
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
     double lengthOfTheInterval = fabs(endPoint - startPoint);
-    deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
+    deltat = lengthOfTheInterval / pdfHistogramSize;
     boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
     boost::normal_distribution<> nd(0., 1.);
     boost::variate_generator < boost::mt19937&,
@@ -997,8 +997,8 @@ void GetStochasticData(std::vector <double>& alphas) {
 
       bool sampleCaptured = false;
       for(unsigned i = 0; i < pdfHistogramSize; i++) {
-        double leftBound = startPoint + i * deltat - deltat * 0.5;
-        double rightBound = startPoint + i * deltat + deltat * 0.5;
+        double leftBound = startPoint + i*deltat;
+        double rightBound = startPoint + (i+1)*deltat;
         if(leftBound <=  sgmQoIStandardized[m] && sgmQoIStandardized[m] < rightBound) {
           pdfHistogram[i]++;
 //           std::cout << "sgmQoIStandardized[" << m << "] = " << sgmQoIStandardized[m] << std::endl;
@@ -1056,7 +1056,7 @@ void GetStochasticData(std::vector <double>& alphas) {
     //BEGIN histogram check
     double checkHistogram = 0;
     for(unsigned i = 0; i < pdfHistogramSize; i++) {
-      double point = startPoint + i * deltat;
+      double point = (startPoint + i * deltat + startPoint + (i+1) * deltat) * 0.5;
       double pdfCheck = pdfHistogram[i] / numberOfSamples;
       pdfHistogram[i] /= pdfIntegral;
       std::cout << point << "  " << pdfHistogram[i]  << std::endl;
