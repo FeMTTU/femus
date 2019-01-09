@@ -48,8 +48,8 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
   int target_flag = 0; //set 0 to 1 to get the entire domain
   
    if (   /*elem_center[0] < 0.75 + 1.e-5    && elem_center[0] > 0.25  - 1.e-5  && */ 
-        /*elem_center[1] <  0.5  + 1.e-5     && */    /*elem_center[1] > 0.5 -  1.e-5  (1./16. + 1./64.)*/
-        elem_center[0] > 0.5 -  1.e-5
+        /*elem_center[1] <  0.5  + 1.e-5     && */    elem_center[1] > 0.5 -  1.e-5  /*(1./16. + 1./64.)*/
+        //elem_center[0] > 0.5 -  1.e-5
   ) {
      
      target_flag = 1;
