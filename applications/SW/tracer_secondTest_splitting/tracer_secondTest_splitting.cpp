@@ -51,7 +51,8 @@ bool assembly = true; //assembly must be left always true
 // const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
 
-const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,                         0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25};
+const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 
+                          0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25};
 
 // const double hRest[80] = {0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
 //                           0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
@@ -622,7 +623,7 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 600; //17h=1020 with dt=60, 17h=10200 with dt=6
+  unsigned numberOfTimeSteps = 1500; //17h=1020 with dt=60, 17h=10200 with dt=6
   dt = 3.;
   bool implicitEuler = true;
 
@@ -1054,11 +1055,11 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       // FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
       FNSetScale (f, dt, dt);
-//       MFNSetDimensions (mfn, 10);
-// 
-//       if (i == start || i == start + 1 || i == start + 2 || i == end - 3 || i == end - 2 || i == end - 1) {
-//         MFNSetDimensions (mfn, 10);
-//       }
+      
+      MFNSetDimensions (mfn, 5);
+      if (i == start || i == start + 1 || i == start + 2 || i == end - 3 || i == end - 2 || i == end - 1) {
+        MFNSetDimensions (mfn, 10);
+      }
 
       tol = 1e-6;
       MFNSetTolerances (mfn, tol, PETSC_DEFAULT);
@@ -1356,11 +1357,11 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       // FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
       FNSetScale (f, dt, dt*0.5);
-//       MFNSetDimensions (mfn, 10);
-// 
-//       if (i == start || i == start + 1 || i == start + 2 || i == end - 3 || i == end - 2 || i == end - 1) {
-//         MFNSetDimensions (mfn, 10);
-//       }
+
+      MFNSetDimensions (mfn, 5);
+      if (i == start || i == start + 1 || i == start + 2 || i == end - 3 || i == end - 2 || i == end - 1) {
+        MFNSetDimensions (mfn, 10);
+      }
 
       tol = 1e-6;
       MFNSetTolerances (mfn, tol, PETSC_DEFAULT);
