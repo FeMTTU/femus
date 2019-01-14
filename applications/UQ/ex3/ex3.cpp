@@ -46,7 +46,7 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double startPoint = - 3.;
-double endPoint = 6.5;
+double endPoint = 5.5;
 double deltat;
 int pdfHistogramSize;
 
@@ -1300,7 +1300,7 @@ void PlotStochasticData()
     std::cout << " ------------------------- GRAM CHARLIER ------------------------- " << std::endl;
 
     for ( unsigned i = 0; i < pdfHistogramSize; i++ ) {
-        double t = startPoint + i * deltat;
+        double t = ( startPoint + i * deltat + startPoint + ( i + 1 ) * deltat ) * 0.5;
         std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
         double gaussian = 1. / ( sqrt ( 2 * acos ( - 1 ) ) ) * exp ( - 0.5 * ( t * t ) ) ;
@@ -1392,7 +1392,7 @@ void PlotStochasticData()
 
     for ( unsigned i = 0; i < pdfHistogramSize; i++ ) {
 
-        double t = startPoint + i * deltat;
+        double t = ( startPoint + i * deltat + startPoint + ( i + 1 ) * deltat ) * 0.5;
 
         std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
