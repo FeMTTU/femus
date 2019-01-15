@@ -276,11 +276,11 @@ const double* uq::GetQuadraturePoints ( const unsigned &numberOfQuadraturePoints
     //quadratureType = 1 : Legendre quadrature
 
     if ( quadratureType == 0 ) {
-        GetHermiteQuadraturePoints ( numberOfQuadraturePoints );
+      return  GetHermiteQuadraturePoints ( numberOfQuadraturePoints );
     }
 
     else if ( quadratureType == 1 ) {
-        GetLegendreQuadraturePoints ( numberOfQuadraturePoints );
+      return  GetLegendreQuadraturePoints ( numberOfQuadraturePoints );
     }
 
 
@@ -293,11 +293,11 @@ const double* uq::GetQuadratureWeights ( const unsigned &numberOfQuadraturePoint
     //quadratureType = 1 : Legendre quadrature
 
     if ( quadratureType == 0 ) {
-        GetHermiteQuadratureWeights ( numberOfQuadraturePoints );
+      return  GetHermiteQuadratureWeights ( numberOfQuadraturePoints );
     }
 
     else if ( quadratureType == 1 ) {
-        GetLegendreQuadratureWeights ( numberOfQuadraturePoints );
+      return  GetLegendreQuadratureWeights ( numberOfQuadraturePoints );
     }
 
 }
@@ -675,11 +675,11 @@ const std::vector < std::vector <double> > & uq::GetPolynomial ( const unsigned 
     //quadratureType = 1 : Legendre quadrature
 
     if ( quadratureType == 0 ) {
-        GetHermitePolynomial ( numberOfQuadraturePoints, maxPolyOrder );
+     return   GetHermitePolynomial ( numberOfQuadraturePoints, maxPolyOrder );
     }
 
     else if ( quadratureType == 1 ) {
-        GetLegendrePolynomial ( numberOfQuadraturePoints, maxPolyOrder );
+     return   GetLegendrePolynomial ( numberOfQuadraturePoints, maxPolyOrder );
     }
 
 
@@ -693,11 +693,11 @@ const std::vector < std::vector < double > >  & uq::GetPolyHistogram (
     //quadratureType = 1 : Legendre quadrature
 
     if ( quadratureType == 0 ) {
-        GetHermitePolyHistogram ( pIndex, samplePoints, numberOfEigPairs );
+      return  GetHermitePolyHistogram ( pIndex, samplePoints, numberOfEigPairs );
     }
 
     else if ( quadratureType == 1 ) {
-        GetLegendrePolyHistogram ( pIndex, samplePoints, numberOfEigPairs );
+     return   GetLegendrePolyHistogram ( pIndex, samplePoints, numberOfEigPairs );
     }
 
 }
@@ -721,11 +721,11 @@ void uq::ErasePolynomial ( const unsigned & numberOfQuadraturePoints, const unsi
 void uq::ClearPolynomial ( const unsigned & quadratureType )
 {
     if ( quadratureType == 0 ) {
-        _hermitePoly.clear();
+      return  _hermitePoly.clear();
     }
 
     else if ( quadratureType == 1 ) {
-        _legendrePoly.clear();
+      return  _legendrePoly.clear();
     }
 
 }
@@ -1138,11 +1138,11 @@ void uq::ComputeMultivariate (
 {
 
     if ( quadratureType == 0 ) {
-        ComputeMultivariateHermite ( multivariatePoly, multivariateQuadratureWeights, numberOfQuadraturePoints, p, numberOfEigPairs );
+      return  ComputeMultivariateHermite ( multivariatePoly, multivariateQuadratureWeights, numberOfQuadraturePoints, p, numberOfEigPairs );
     }
 
     else if ( quadratureType == 1 ) {
-        ComputeMultivariateLegendre ( multivariatePoly, multivariateQuadratureWeights, numberOfQuadraturePoints, p, numberOfEigPairs );
+      return  ComputeMultivariateLegendre ( multivariatePoly, multivariateQuadratureWeights, numberOfQuadraturePoints, p, numberOfEigPairs );
     }
 
 
@@ -1154,11 +1154,11 @@ const std::vector < std::vector < double > >  & uq::GetMultivariatePolynomial (
 {
 
     if ( quadratureType == 0 ) {
-        GetMultivariateHermitePolynomial ( numberOfQuadraturePoints, p, numberOfEigPairs );
+      return  GetMultivariateHermitePolynomial ( numberOfQuadraturePoints, p, numberOfEigPairs );
     }
 
     else if ( quadratureType == 1 ) {
-        GetMultivariateLegendrePolynomial ( numberOfQuadraturePoints, p, numberOfEigPairs );
+     return   GetMultivariateLegendrePolynomial ( numberOfQuadraturePoints, p, numberOfEigPairs );
     }
 
 };
@@ -1170,11 +1170,11 @@ const std::vector < double > & uq::GetMultivariateWeights (
 {
 
     if ( quadratureType == 0 ) {
-        GetMultivariateHermiteWeights ( numberOfQuadraturePoints,  p,  numberOfEigPairs );
+      return  GetMultivariateHermiteWeights ( numberOfQuadraturePoints,  p,  numberOfEigPairs );
     }
 
     else if ( quadratureType == 1 ) {
-        GetMultivariateLegendreWeights ( numberOfQuadraturePoints,  p,  numberOfEigPairs );
+      return  GetMultivariateLegendreWeights ( numberOfQuadraturePoints,  p,  numberOfEigPairs );
     }
 
 };
@@ -1184,11 +1184,11 @@ void uq::EraseMultivariate ( const unsigned & numberOfQuadraturePoints, const un
 {
 
     if ( quadratureType == 0 ) {
-        EraseMultivariateHermite ( numberOfQuadraturePoints, p, numberOfEigPairs );
+      return  EraseMultivariateHermite ( numberOfQuadraturePoints, p, numberOfEigPairs );
     }
 
     else if ( quadratureType == 1 ) {
-        EraseMultivariateLegendre ( numberOfQuadraturePoints, p, numberOfEigPairs );
+      return  EraseMultivariateLegendre ( numberOfQuadraturePoints, p, numberOfEigPairs );
     }
 
 }
@@ -1198,11 +1198,11 @@ void uq::ClearMultivariate ( const unsigned & quadratureType )
 {
 
     if ( quadratureType == 0 ) {
-        ClearMultivariateHermite();
+      return  ClearMultivariateHermite();
     }
 
     else if ( quadratureType == 1 ) {
-        ClearMultivariateLegendre();
+      return  ClearMultivariateLegendre();
     }
 
 }
@@ -1211,11 +1211,11 @@ void uq::ClearPolynomialHistogram ( const unsigned & quadratureType )
 {
 
     if ( quadratureType == 0 ) {
-        _hermitePolyHistogram.clear();
+     return   _hermitePolyHistogram.clear();
     }
 
     else if ( quadratureType == 1 ) {
-        _legendrePolyHistogram.clear();
+     return   _legendrePolyHistogram.clear();
     }
 
 };
