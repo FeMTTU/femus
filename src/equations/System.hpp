@@ -120,7 +120,7 @@ public:
 
     inline unsigned GetLevelToAssemble(){ return _levelToAssemble; }
 
-    inline unsigned SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
+    inline void SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
 
 protected:
 
