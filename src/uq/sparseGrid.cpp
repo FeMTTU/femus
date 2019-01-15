@@ -384,7 +384,7 @@ namespace femus
             for ( unsigned w = 0; w < _numberOfWs; w++ ) {
                 for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                     double valuePhi;
-                    EvaluatePhi ( valuePhi, samples[m], _dofIdentifier[w][i], true );
+                    EvaluatePhi ( valuePhi, samples[m], _dofIdentifier[w][i], false );
 
                     _nodalValuesPDF[w][i] += ( valuePhi / sumDenom ) / _M;
                 }
@@ -394,15 +394,15 @@ namespace femus
         }
 
         //to remove, this is just a check
-//         double sumOfNodalValues = 0.;
-// 
-//         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-//             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
-//                 sumOfNodalValues += _nodalValuesPDF[w][i];
-//             }
-//         }
-// 
-//         std::cout << " sumOfNodalValues =" << sumOfNodalValues << std::endl;
+        double sumOfNodalValues = 0.;
+
+        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+            for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
+                sumOfNodalValues += _nodalValuesPDF[w][i];
+            }
+        }
+
+        std::cout << " sumOfNodalValues =" << sumOfNodalValues << std::endl;
 
 
     }
@@ -427,17 +427,17 @@ namespace femus
 
     void sparseGrid::EvaluatePDF ( double &pdfValue, std::vector < double >  &x )
     {
-//         pdfValue = 0.;
+        pdfValue = 0.;
 
         std::vector<std::vector<double>> phiFncts(_numberOfWs);
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-            phiFncts[w].resize(_nodalValuesPDF[w].size());
+//             phiFncts[w].resize(_nodalValuesPDF[w].size());
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 double valuePhi;
-                EvaluatePhi ( valuePhi, x, _dofIdentifier[w][i], false );
-//                 pdfValue += _nodalValuesPDF[w][i] * valuePhi;
-              phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
-              std::cout<< phiFncts[w][i] << "," ;
+                EvaluatePhi ( valuePhi, x, _dofIdentifier[w][i], true );
+                pdfValue += _nodalValuesPDF[w][i] * valuePhi;
+//               phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
+//               std::cout<< phiFncts[w][i] << "," ;
             }
         }        
         std::cout<<std::endl;
