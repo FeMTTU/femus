@@ -137,6 +137,7 @@ namespace femus {
 
       virtual const double* GetXcoarse(const int &i) const {
         std::cout << "Warning this function in not yet implemented for this element type" << std::endl;
+        return NULL;
       };
 
       virtual void SetX(const unsigned &i, const unsigned &j, const double &value) {
@@ -149,10 +150,12 @@ namespace femus {
 
       virtual const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
         std::cout << "Warning this function in not implemented for const element type" << std::endl;
+        return 0u;
       };
 
       virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
 	std::cout << "Warning AAA this function in not yet implemented for this element type" << std::endl;
+    return 0u;
       }
 
     protected:

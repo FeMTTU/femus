@@ -420,7 +420,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     s.independent(&solP[0], nDofsP);
 
     // get the and store jacobian matrix (row-major)
-    s.jacobian(&Jac[0] , true);
+    s.jacobian(&Jac[0] , true); // This is rowwise order.
     KK->add_matrix_blocked(Jac, sysDof, sysDof);
 
     s.clear_independents();

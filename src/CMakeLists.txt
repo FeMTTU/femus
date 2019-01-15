@@ -43,7 +43,6 @@ equations/System.cpp
 equations/SystemTwo.cpp
 equations/TimeLoop.cpp
 equations/TransientSystem.cpp
-equations/NewmarkTransientSystem.cpp
 fe/ElemType.cpp
 fe/Hexaedron.cpp
 fe/Line.cpp

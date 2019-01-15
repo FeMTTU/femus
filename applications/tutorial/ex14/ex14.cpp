@@ -1,9 +1,9 @@
-/** tutorial/Ex12 Diffusion problem
- * This example shows how to set and solve the weak form of the Poisson problem
- *          $$ \dfrac{\partial u}{ \partial t}\=\nabla \cdot (a(u)\nabla u)   $$
- *          $$ \nabla u.n=-\epsilon \text{ on} \partial B(0,1) $$
- *          $$ u= V0*exp(1-1/(1-r^2)) for r< 1, u=0 for r>=1 where r=||x|| $$
- * on a sphere domain B(0,1) with boundary $\Gamma$;
+/** tutorial/Ex14 
+ * This example shows how to set and solve the weak form of the Bistable Equation 
+ *          $$ \dfrac{\partial u}{ \partial t}-\epsilon \nabla \cdot u=u-u^3  \text{in} \Omega $$
+ *          $$ \nabla u.n=0 \text{ on} \partial \Omega $$
+ *          $$ u= u_{0} in \Omega x {t=0} $$
+ * on a square domain \Omega=[-1,1]x[-1,1]. 
  * all the coarse-level meshes are removed;
  * a multilevel problem and an equation system are initialized;
  * a direct solver is used to solve the problem.
@@ -22,38 +22,32 @@ using namespace femus;
 
 
 double GetTimeStep(const double time) {
-  double dt = .002;
+  double dt = 0.1;
   return dt;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceIndex, const double time) {
-  bool dirichlet = false; //Neumann
-  value = 0.;
+  
+  bool dirichlet = true; //Neumann
+  double pi=acos(-1);
+  
+  //value = cos( sqrt(2. * pi) * x[0] ) * cos( sqrt(2. * pi) * x[1] ) * exp(-2. * pi * time);
+  value = cos(2*pi*x[0]*x[0])*cos(2*pi*x[1]*x[1]) * exp(-time);  
+    
+//   bool dirichlet = false; //Neumann
+//   value = 0.;
 
   return dirichlet;
 }
 
-double InitalValueU(const std::vector < double >& x) {
-  double r=sqrt( x[0] * x[0] + x[1] * x[1] );  
-  double r2 = r * r;
-  double R = 1.;
-  double R2 = R * R;
-  //double Vb = 1.268112; // exp( (( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
-  double Vb = 0.265048;  // exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
-  double V0 = 1./12.; // fraction of injection vs tumor
-  return V0 * exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb; // IC vanishing near the boundary.
-  
-  
-}
-
-double InitalValueD(const std::vector < double >& x) {
-  return 100.;
+double InitalValue(const std::vector < double >& x) {
+  double pi=acos(-1);  
+  return cos(2*pi*x[0]*x[0])*cos(2*pi*x[1]*x[1]); 
+  //return cos( sqrt(2. * pi) * x[0] ) * cos( sqrt(2. * pi) * x[1] );
 }
 
 
-void GetDeadCells(const double &time, MultiLevelSolution &mlSol);
-
-void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
+void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob);
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
 
@@ -66,14 +60,14 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/disk.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in future it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension(); // Domain dimension of the problem.
   unsigned maxNumberOfMeshes; // The number of mesh levels.
 
-  unsigned numberOfUniformLevels = 6; //We apply uniform refinement.
+  unsigned numberOfUniformLevels = 5; //We apply uniform refinement.
   unsigned numberOfSelectiveLevels = 0; // We may want to see the solution on some levels.
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -89,33 +83,27 @@ int main(int argc, char** args) {
 
   // add variables to mlSol
   mlSol.AddSolution("u", LAGRANGE, SECOND, 2); // We may have more than one, add each of them as u,v,w with their apprx type.
-  
-  
-  mlSol.AddSolution("d", LAGRANGE, SECOND,  0, false); // We may have more than one, add each of them as u,v,w with their apprx type.
-  
-  mlSol.Initialize("All");
-  mlSol.Initialize("u", InitalValueU);
-  mlSol.Initialize("d", InitalValueD);
+  mlSol.Initialize("u", InitalValue); // Since this is time depend problem.
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.GenerateBdc("u");
+  mlSol.GenerateBdc("u", "Time_dependent");
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol); //
 
   // add system Poisson in mlProb as a Non Linear Implicit System
-  TransientNonlinearImplicitSystem & system = mlProb.add_system < TransientNonlinearImplicitSystem > ("Poisson");
+  TransientNonlinearImplicitSystem & system = mlProb.add_system < TransientNonlinearImplicitSystem > ("AllanChan");
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("u");
 
   // attach the assembling function to system
-  system.SetAssembleFunction(AssemblePoissonProblem_AD);
+  system.SetAssembleFunction(AssembleAllanChanProblem_AD);
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(GetTimeStep);
-  const unsigned int n_timesteps = 300;
+  const unsigned int n_timesteps = 250;
 
   
   system.init();
@@ -128,21 +116,14 @@ int main(int argc, char** args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
   
-  
-  double time = system.GetTime();
-  GetDeadCells(time, mlSol);
-  
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
-  
-  
+
+
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
 
     system.MGsolve();
-    
-    double time = system.GetTime();
-    GetDeadCells(time, mlSol);
 
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
@@ -165,7 +146,7 @@ int main(int argc, char** args) {
  * thus
  *                  J w = f(x) - J u0
  **/
-void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
+void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -178,7 +159,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  TransientNonlinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<TransientNonlinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
+  TransientNonlinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<TransientNonlinearImplicitSystem> ("AllanChan");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble(); // We have different level of meshes. we assemble the problem on the specified one.
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -284,48 +265,48 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     s.new_recording();
            
     // *** Face Gauss point loop (boundary Integral) ***
-    for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
-      int faceIndex = el->GetBoundaryIndex(iel, jface);
-      // look for boundary faces
-      if ( faceIndex == 1 ) {  
-        const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
-        unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, soluType);
-                    
-        vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
-        for ( int k = 0; k < dim; k++ ) {
-          faceCoordinates[k].resize (faceDofs);
-        }
-        for ( unsigned i = 0; i < faceDofs; i++ ) {
-          unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i ); // face-to-element local node mapping.
-          for ( unsigned k = 0; k < dim; k++ ) {
-            faceCoordinates[k][i] =  x[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
-          }
-        }
-        for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][soluType]->GetGaussPointNumber(); ig++ ) { 
-            // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh. 
-          vector < double> normal;
-          msh->_finiteElement[faceGeom][soluType]->JacobianSur ( faceCoordinates, ig, weight, phi, phi_x, normal );
-            
-          adept::adouble solu_gss = 0;
-          double soluOld_gss = 0;
-      
-            
-
-          for ( unsigned i = 0; i < faceDofs; i++ ) {
-            unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i ); // face-to-element local node mapping.
-            solu_gss += phi[i] * solu[inode];
-            soluOld_gss += phi[i] * soluOld[inode];
-          }
-          
-          // *** phi_i loop ***
-          double eps = 5.; 
-          for ( unsigned i = 0; i < faceDofs; i++ ) {
-            unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i );
-            aRes[inode] +=  phi[i] * eps * 0.5 * (solu_gss + soluOld_gss) * weight;
-          }        
-        }
-      }
-    }   
+//     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
+//       int faceIndex = el->GetBoundaryIndex(iel, jface);
+//       // look for boundary faces
+//       if ( faceIndex == 1 ) {  
+//         const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
+//         unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, soluType);
+//                     
+//         vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
+//         for ( int k = 0; k < dim; k++ ) {
+//           faceCoordinates[k].resize (faceDofs);
+//         }
+//         for ( unsigned i = 0; i < faceDofs; i++ ) {
+//           unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i ); // face-to-element local node mapping.
+//           for ( unsigned k = 0; k < dim; k++ ) {
+//             faceCoordinates[k][i] =  x[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
+//           }
+//         }
+//         for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][soluType]->GetGaussPointNumber(); ig++ ) { 
+//             // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh. 
+//           vector < double> normal;
+//           msh->_finiteElement[faceGeom][soluType]->JacobianSur ( faceCoordinates, ig, weight, phi, phi_x, normal );
+//             
+//           adept::adouble solu_gss = 0;
+//           double soluOld_gss = 0;
+//       
+//             
+// 
+//           for ( unsigned i = 0; i < faceDofs; i++ ) {
+//             unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i ); // face-to-element local node mapping.
+//             solu_gss += phi[i] * solu[inode];
+//             soluOld_gss += phi[i] * soluOld[inode];
+//           }
+//           
+//           // *** phi_i loop ***
+//           double eps = 10; 
+//           for ( unsigned i = 0; i < faceDofs; i++ ) {
+//             unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i );
+//             aRes[inode] +=  phi[i] * eps * 0.5 * (solu_gss + soluOld_gss) * weight;
+//           }        
+//         }
+//       }
+//     }   
     
     // *** Element Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
@@ -355,13 +336,16 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
         adept::adouble graduGradphi = 0.;
         double graduOldGradphi = 0.;
+        double eps=0.01;
+        //double eps=1;
 
         for (unsigned k = 0; k < dim; k++) {
           graduGradphi   +=   phi_x[i * dim + k] * gradSolu_gss[k];
           graduOldGradphi   +=   phi_x[i * dim + k] * gradSoluOld_gss[k];
         }
              
-        aRes[i] += ( (solu_gss - soluOld_gss) * phi[i] / dt +  ( .5 * graduGradphi + .5 * graduOldGradphi ) ) * weight;
+        aRes[i] += ( (solu_gss - soluOld_gss) * phi[i] / dt +  eps*( graduGradphi ) - (solu_gss - solu_gss*solu_gss*solu_gss) * phi[i]  ) * weight;
+        //aRes[i] += ( (solu_gss - soluOld_gss) * phi[i] / dt +  eps*( graduGradphi ) ) * weight;
 
       } // end phi_i loop
     } // end gauss point loop
@@ -403,46 +387,3 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
-
-void GetDeadCells(const double &time, MultiLevelSolution &mlSol){
-
-  double a = 0.0471;
-  double b = -1.4629;
-  double c = 0.0866;
-    
-  std::pair<double,double> uT[12];
-
-  for(unsigned i = 0; i < 12; i++){
-    uT[i].first = (i+1) * 6;
-    uT[i].second =  a - b * exp( -c * uT[i].first); //0.1 * exp( - uT[i].first / 24);
-  }
-   
-  
-
-  
-  double treshold = a - b * exp( -c * time);
- std::cout << "time = " << time <<" treshold = " << treshold << std::endl;
-  
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  
-  Solution *sol  = mlSol.GetSolutionLevel(level);
-  Mesh     *msh	  = mlSol._mlMesh->GetLevel(level);
-  unsigned iproc  = msh->processor_id();
-  
-  unsigned soluIndex = mlSol.GetIndex("u");
-  unsigned soldIndex = mlSol.GetIndex("d");
-  unsigned solType = mlSol.GetSolutionType(soluIndex);
-  
-  for (int inode = msh->_dofOffset[solType][iproc]; inode < msh->_dofOffset[solType][iproc+1]; inode++) {
-    double d = (*sol->_Sol[soldIndex])(inode); 
-    double u = (*sol->_Sol[soluIndex])(inode);   
-      
-    for(unsigned i = 0; i < 12; i++) {
-      if ( d > uT[i].first && u > uT[i].second){
-        sol->_Sol[soldIndex]->set(inode, uT[i].first); 
-        break;
-      }
-    }
-  }
-  sol->_Sol[soldIndex]->close();
-}

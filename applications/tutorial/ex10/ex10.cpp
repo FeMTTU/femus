@@ -1,9 +1,8 @@
 /** tutorial/Ex10
- * This example shows how to set and solve the weak form of the Poisson problem
- *                    $$ \Div.( a(u)\Delta u) = f \text{ on }\Omega, $$
- *          $$ u=0 \text{ on } \Gamma, $$
- *          $$ u=\Delta u.n \text{on the left} of \Omega  $$
- * on a square domain [-1,1]^2 $\Omega$ with boundary $\Gamma$;
+ * This example shows how to set and solve the weak form of the NonLinearPoisson problem
+ *                  $\nabla \cdot (a(u)\nabla u)=f$,  $in\Omega= [-1,1]^{2} $ \\
+ *                  $a(u)\nabla u \cdot n=g_{N}$, on $\partial\Omega_{\text{left}}$ \\
+ *                  $u=0$,  on $\partial\Omega_{rest}$
  * all the coarse-level meshes are removed;
  * a multilevel problem and an equation system are initialized;
  * a direct solver is used to solve the problem.
@@ -19,6 +18,7 @@
 
 
 using namespace femus;
+using namespace std;
 
 double GetExactSolutionValue(const std::vector < double >& x);
 void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad);
@@ -41,6 +41,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
+
 
 int main(int argc, char** args) {
 
@@ -113,7 +114,7 @@ int main(int argc, char** args) {
       // initilaize and solve the system
       system.init();
       system.MLsolve();
-
+    
       std::pair< double , double > norm = GetErrorNorm(&mlSol);
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
@@ -186,7 +187,6 @@ int main(int argc, char** args) {
     }
 
   }
-
   return 0;
 }
 
@@ -236,7 +236,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("NonLinearPoisson");   // pointer to the linear implicit system named "Poisson"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("NonLinearPoisson");   // pointer to the linear implicit system named "NonLinearPoisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble(); // We have different level of meshes. we assemble the problem on the specified one.
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -298,7 +298,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
      
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);// number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
     // resize local arrays
@@ -306,7 +306,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     solu.resize(nDofu);
 
     for (int k = 0; k < dim; k++) {
-      x[k].resize(nDofx); // Now we 
+      x[k].resize(nDofx); // 
     }
 
     aRes.resize(nDofu);    //resize
@@ -338,8 +338,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
       // look for boundary faces
       if ( faceIndex == 1 ) {  
         const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
-        unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, soluType);
-                    
+        unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, soluType);         
         vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
         for ( int k = 0; k < dim; k++ ) {
           faceCoordinates[k].resize (faceDofs);
@@ -366,7 +365,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
           // *** phi_i loop ***
           for ( unsigned i = 0; i < faceDofs; i++ ) {
             unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i );
-            aRes[inode] +=  phi[i] * tau * weight;
+            aRes[inode] +=  phi[i] * tau * weight; 
           }        
         }
       }
@@ -378,16 +377,17 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+      // Note that we dont compute the hat functions at gauss points.
       adept::adouble solu_gss = 0;
       vector < adept::adouble > gradSolu_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
-        solu_gss += phi[i] * solu[i];
+        solu_gss += phi[i] * solu[i]; 
 
         for (unsigned k = 0; k < dim; k++) {
-          gradSolu_gss[k] += phi_x[i * dim + k] * solu[i];
-          x_gss[k] += x[k][i] * phi[i];
+          gradSolu_gss[k] += phi_x[i * dim + k] * solu[i]; 
+          x_gss[k] += x[k][i] * phi[i]; // We map the gausspoints from the reference element to physical element.
         }
       }
 
@@ -441,7 +441,14 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   KK->close();
 
   // ***************** END ASSEMBLY *******************
+  
+  
 }
+
+  
+
+
+
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
