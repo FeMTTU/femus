@@ -265,7 +265,7 @@ namespace femus {
   }
 
 /// Get quadrature point coordinates
-  const double* uq::GetQuadraturePoints (const unsigned &numberOfQuadraturePoints, const UqQuadratureType &quadratureType ) {
+  const double* uq::GetQuadraturePoints (const unsigned &numberOfQuadraturePoints, const UqQuadratureType &quadratureType) {
     //quadratureType = 0 : Hermite quadrature
     //quadratureType = 1 : Legendre quadrature
 
@@ -834,7 +834,7 @@ namespace femus {
   };
 
 /// Get the Integral Matrix at the key < q0, p0>
-  const std::vector < std::vector < std::vector < double > > > & uq::GetIntegralMatrix (const unsigned & q0, const unsigned & p0, 
+  const std::vector < std::vector < std::vector < double > > > & uq::GetIntegralMatrix (const unsigned & q0, const unsigned & p0,
                                                                                         const UqQuadratureType &quadratureType) {
     std::pair<unsigned, unsigned> integralMatrixIndex = std::make_pair (q0, p0);
 
@@ -862,7 +862,7 @@ namespace femus {
 
 /// Compute the Integral Matrix at the key < q0, p0, numberOfEigPairs>
   void uq::ComputeStochasticMassMatrix (std::vector < std::vector < std::vector < double > > > & G,
-                                        const unsigned & q0, const unsigned & p0, const unsigned & numberOfEigPairs, 
+                                        const unsigned & q0, const unsigned & p0, const unsigned & numberOfEigPairs,
                                         const UqQuadratureType &quadratureType) {
 
     const std::vector < std::vector < std::vector < double > > > & integralMatrix = GetIntegralMatrix (q0, p0, quadratureType);
@@ -897,7 +897,7 @@ namespace femus {
 
 /// Return the Stochastic Mass Matrix at the key < q0, p0, numberOfEigPairs>
   std::vector < std::vector < std::vector < double > > > & uq::GetStochasticMassMatrix (const unsigned & q0, const unsigned & p0,
-                                                                                        const unsigned & numberOfEigPairs, 
+                                                                                        const unsigned & numberOfEigPairs,
                                                                                         const UqQuadratureType &quadratureType) {
 
     std::pair < std::pair<unsigned, unsigned>, unsigned> stochasticMassMatrixIndex = std::make_pair (std::make_pair (q0, p0), numberOfEigPairs);
@@ -1088,7 +1088,7 @@ namespace femus {
 /// Compute the Multivariate prescribed polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
   void uq::ComputeMultivariate (
     std::vector < std::vector < double > >  & multivariatePoly,
-    std::vector < double > & multivariateQuadratureWeights, const unsigned & numberOfQuadraturePoints, 
+    std::vector < double > & multivariateQuadratureWeights, const unsigned & numberOfQuadraturePoints,
     const unsigned & p, const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType) {
 
     if (quadratureType == 0) {
@@ -1104,7 +1104,7 @@ namespace femus {
 
 /// Return the Multivariate prescribed polynomials at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
   const std::vector < std::vector < double > >  & uq::GetMultivariatePolynomial (
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, 
+    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs,
     const UqQuadratureType &quadratureType) {
 
     if (quadratureType == UQ_HERMITE) {
@@ -1120,7 +1120,7 @@ namespace femus {
 
 /// Return the Multivariate prescribed weight at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
   const std::vector < double > & uq::GetMultivariateWeights (
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, 
+    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs,
     const UqQuadratureType &quadratureType) {
 
     if (quadratureType == UQ_HERMITE) {
@@ -1134,7 +1134,7 @@ namespace femus {
   };
 
 /// Erase the Multivariate prescribed polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-  void uq::EraseMultivariate (const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, 
+  void uq::EraseMultivariate (const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs,
                               const UqQuadratureType &quadratureType) {
 
     if (quadratureType == UQ_HERMITE) {
