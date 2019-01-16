@@ -12,6 +12,8 @@
 #include <boost/random/normal_distribution.hpp>
 #include <boost/math/special_functions/binomial.hpp>
 
+#include "UqQuadratureTypeEnum.hpp"
+
 namespace femus
 {
 
