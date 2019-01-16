@@ -6,7 +6,7 @@
  * add in mlMsh uniform refined level-meshes;
  * define the multilevel-solution object mlSol associated to mlMsh;
  * add in mlSol different types of finite element solution variables;
- * initialize the solution varables;
+ * initialize the solution variables;
  * define vtk and gmv writer objects associated to mlSol;
  * print vtk and gmv binary-format files in ./output directory.
  **/
@@ -64,8 +64,8 @@ const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 
 
 double InitalValueVi (const std::vector < double >& x , const unsigned &i)
 {
-  double psi1 = 1. - (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) / (5.*5.*5.*5.);
-  //double psi1 = 1. - ( pow(( x[0] - 50. ), 40) / pow(50., 40) );
+  //double psi1 = 1. - (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) / (5.*5.*5.*5.); //10x10 box test
+  double psi1 = 1. - ( pow(( x[0] - 20. ), 16) / pow(20., 16) ); //40x10 rectangle test
   //double psi1 = 1. - ( pow(( x[0] - 10. ), 16) / pow(10., 16) );
   double z = -10. + hRest[0] / 2. + hRest[0] * (NumberOfLayers - i);
   double d_psi2 = (- (2.*z + 10.)) / (5 * 5);
@@ -415,11 +415,9 @@ double InitalValueT (const std::vector < double >& x)
 {
   double pi = acos (-1.);
 
-  if (x[0] < 5) {
+  if (x[0] < 20) {
     return 5.;
-
   }
-
   else {
     return 30.;
   }
@@ -489,12 +487,12 @@ int main (int argc, char** args)
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = static_cast<unsigned> (floor (pow (2.,/*8*/ 3) + 0.5));       //Grid cell size = 3.90625 m
-  nx += 2;
-//     nx*=4;
+  unsigned nx = static_cast<unsigned> (floor (pow (2.,/*3*/ 5) + 0.5));       //Grid cell size = 3.90625 m
+  //nx += 2;
+  nx += 8;
 //     std::cout <<" nx = " << nx << std::endl;
 
-  double length = 10.; //2 * 1465700.;
+  double length = 40.; //2 * 1465700.;
 
   //mlMsh.GenerateCoarseBoxMesh ( nx, 0, 0, -length / 2, length / 2, 0., 0., 0., 0., EDGE3, "seventh" );
   mlMsh.GenerateCoarseBoxMesh (nx, 0, 0, 0, length, 0., 0., 0., 0., EDGE3, "seventh");
@@ -548,7 +546,6 @@ int main (int argc, char** args)
   mlSol.Initialize ("v17", InitalValueV17);
   mlSol.Initialize ("v18", InitalValueV18);
   mlSol.Initialize ("v19", InitalValueV19);
-
   if (NumberOfLayers > 39) {
     mlSol.Initialize ("v20", InitalValueV20);
     mlSol.Initialize ("v21", InitalValueV21);
@@ -651,7 +648,7 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 1500; //RK4: dt=0.5, numberOfTimeSteps = 16001
+  unsigned numberOfTimeSteps = 30000; //RK4: dt=0.5, numberOfTimeSteps = 16001
   dt = 0.5;
   bool implicitEuler = true;
 
@@ -2022,9 +2019,9 @@ void RK_HT (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsign
       double xmid = 0.5 * (x[1] + x[0]);
 
       for (unsigned k = NLayers; k > 1; k--) {
-        w[k - 1] = - (-4. / 625.* (xmid - 5) * (xmid - 5) * (xmid - 5)) * psi2[k - 1];
-
-        //w[k - 1] = - ( - 40./(pow(50.,40)) * pow((xmid - 50.), 39) ) * psi2[k - 1];
+        //w[k - 1] = - (-4. / 625.* (xmid - 5) * (xmid - 5) * (xmid - 5)) * psi2[k - 1]; //10x10 box test
+        w[k - 1] = - ( - 16./(pow(20., 16)) * pow((xmid - 20.), 15) ) * psi2[k - 1]; //40x10 rectangle test
+        
         //w[k - 1] = - ( - 16./(pow(10.,16)) * pow((xmid - 10.), 15) ) * psi2[k - 1];
         //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];
         if (maxW[k - 1] < w[k - 1]) {
@@ -2550,20 +2547,19 @@ void RK_HT (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsign
 
   }
 
-//   //BEGIN no vertical diffusion
-//   for (unsigned k = 0; k < NumberOfLayers; k++) {
-//     for (unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++) {
-//       double valueT = (*sol->_Sol[solIndexT[k]]) (i);
-//
-//       std::cout.precision (14);
-//
-//       if (counter == numberOfTimeSteps - 1) {
-//         std::cout << valueT << std::endl;
-//       }
-//     }
-//   }
-//
-//   //END
+  //BEGIN no vertical diffusion
+  for (unsigned k = 0; k < NumberOfLayers; k++) {
+    for (unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++) {
+      double valueT = (*sol->_Sol[solIndexT[k]]) (i);
+
+      std::cout.precision (14);
+
+      if (counter == numberOfTimeSteps - 1) {
+        std::cout << valueT << std::endl;
+      }
+    }
+  }
+  //END
 
 
 }
