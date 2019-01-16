@@ -265,11 +265,11 @@ namespace femus {
   }
 
 /// Get quadrature point coordinates
-  const double* uq::GetQuadraturePoints (const unsigned &numberOfQuadraturePoints, const unsigned &quadratureType) {
+  const double* uq::GetQuadraturePoints (const unsigned &numberOfQuadraturePoints, const UqQuadratureType &quadratureType ) {
     //quadratureType = 0 : Hermite quadrature
     //quadratureType = 1 : Legendre quadrature
 
-    if (quadratureType == 0) {
+    if (quadratureType == UQ_HERMITE) {
       return  GetHermiteQuadraturePoints (numberOfQuadraturePoints);
     }
 
@@ -281,11 +281,11 @@ namespace femus {
   }
 
 /// Get quadrature weights
-  const double* uq::GetQuadratureWeights (const unsigned &numberOfQuadraturePoints, const unsigned &quadratureType) {
+  const double* uq::GetQuadratureWeights (const unsigned &numberOfQuadraturePoints, const UqQuadratureType &quadratureType) {
     //quadratureType = 0 : Hermite quadrature
     //quadratureType = 1 : Legendre quadrature
 
-    if (quadratureType == 0) {
+    if (quadratureType == UQ_HERMITE) {
       return  GetHermiteQuadratureWeights (numberOfQuadraturePoints);
     }
 
@@ -647,12 +647,12 @@ namespace femus {
 ////////////////////////////////////////////////  GENERAL STUFF
 
   const std::vector < std::vector <double> > & uq::GetPolynomial (const unsigned & numberOfQuadraturePoints,
-                                                                  const unsigned & maxPolyOrder, const unsigned &quadratureType) {
+                                                                  const unsigned & maxPolyOrder, const UqQuadratureType &quadratureType) {
 
     //quadratureType = 0 : Hermite quadrature
     //quadratureType = 1 : Legendre quadrature
 
-    if (quadratureType == 0) {
+    if (quadratureType == UQ_HERMITE) {
       return   GetHermitePolynomial (numberOfQuadraturePoints, maxPolyOrder);
     }
 
@@ -664,12 +664,12 @@ namespace femus {
   }
 
   const std::vector < std::vector < double > >  & uq::GetPolyHistogram (
-    const unsigned & pIndex, const std::vector<double> & samplePoints, const unsigned & numberOfEigPairs, const unsigned & quadratureType) {
+    const unsigned & pIndex, const std::vector<double> & samplePoints, const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType) {
 
     //quadratureType = 0 : Hermite quadrature
     //quadratureType = 1 : Legendre quadrature
 
-    if (quadratureType == 0) {
+    if (quadratureType == UQ_HERMITE) {
       return  GetHermitePolyHistogram (pIndex, samplePoints, numberOfEigPairs);
     }
 
@@ -680,26 +680,26 @@ namespace femus {
   }
 
 /// Erase the Hermite polynomial in the key < numberOfQuadraturePoints , maxPolyOrder >
-  void uq::ErasePolynomial (const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder, const unsigned & quadratureType) {
+  void uq::ErasePolynomial (const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder, const UqQuadratureType &quadratureType) {
 
-    if (quadratureType == 0) {
+    if (quadratureType == UQ_HERMITE) {
       _hermitePoly.erase (std::make_pair (numberOfQuadraturePoints, maxPolyOrder));
     }
 
 
-    else if (quadratureType == 1) {
+    else if (quadratureType == UQ_LEGENDRE) {
       _legendrePoly.erase (std::make_pair (numberOfQuadraturePoints, maxPolyOrder));
     }
 
   }
 
 /// Clear all stored Hermite polynomials
-  void uq::ClearPolynomial (const unsigned & quadratureType) {
-    if (quadratureType == 0) {
+  void uq::ClearPolynomial (const UqQuadratureType &quadratureType) {
+    if (quadratureType == UQ_HERMITE) {
       _hermitePoly.clear();
     }
 
-    else if (quadratureType == 1) {
+    else if (quadratureType == UQ_LEGENDRE) {
       _legendrePoly.clear();
     }
 
@@ -785,7 +785,7 @@ namespace femus {
 
 /// Compute the Integral Matrix at the key < q0, p0>
   void uq::ComputeIntegralMatrix (std::vector < std::vector < std::vector < double > > > &integralMatrix,
-                                  const unsigned & q0, const unsigned & p0, const unsigned & quadratureType) {
+                                  const unsigned & q0, const unsigned & p0, const UqQuadratureType &quadratureType) {
 
     unsigned maxPolyOrder = (q0 > p0) ? q0 : p0;
 
@@ -834,8 +834,8 @@ namespace femus {
   };
 
 /// Get the Integral Matrix at the key < q0, p0>
-  const std::vector < std::vector < std::vector < double > > > & uq::GetIntegralMatrix (const unsigned & q0,
-                                                                                        const unsigned & p0, const unsigned & quadratureType) {
+  const std::vector < std::vector < std::vector < double > > > & uq::GetIntegralMatrix (const unsigned & q0, const unsigned & p0, 
+                                                                                        const UqQuadratureType &quadratureType) {
     std::pair<unsigned, unsigned> integralMatrixIndex = std::make_pair (q0, p0);
 
     std::map<std::pair<unsigned, unsigned>, std::vector < std::vector < std::vector <double> > > >::iterator it;
@@ -862,7 +862,8 @@ namespace femus {
 
 /// Compute the Integral Matrix at the key < q0, p0, numberOfEigPairs>
   void uq::ComputeStochasticMassMatrix (std::vector < std::vector < std::vector < double > > > & G,
-                                        const unsigned & q0, const unsigned & p0, const unsigned & numberOfEigPairs, const unsigned & quadratureType) {
+                                        const unsigned & q0, const unsigned & p0, const unsigned & numberOfEigPairs, 
+                                        const UqQuadratureType &quadratureType) {
 
     const std::vector < std::vector < std::vector < double > > > & integralMatrix = GetIntegralMatrix (q0, p0, quadratureType);
 
@@ -896,7 +897,8 @@ namespace femus {
 
 /// Return the Stochastic Mass Matrix at the key < q0, p0, numberOfEigPairs>
   std::vector < std::vector < std::vector < double > > > & uq::GetStochasticMassMatrix (const unsigned & q0, const unsigned & p0,
-                                                                                        const unsigned & numberOfEigPairs, const unsigned & quadratureType) {
+                                                                                        const unsigned & numberOfEigPairs, 
+                                                                                        const UqQuadratureType &quadratureType) {
 
     std::pair < std::pair<unsigned, unsigned>, unsigned> stochasticMassMatrixIndex = std::make_pair (std::make_pair (q0, p0), numberOfEigPairs);
 
@@ -1086,8 +1088,8 @@ namespace femus {
 /// Compute the Multivariate prescribed polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
   void uq::ComputeMultivariate (
     std::vector < std::vector < double > >  & multivariatePoly,
-    std::vector < double > & multivariateQuadratureWeights,
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const unsigned & quadratureType) {
+    std::vector < double > & multivariateQuadratureWeights, const unsigned & numberOfQuadraturePoints, 
+    const unsigned & p, const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType) {
 
     if (quadratureType == 0) {
       ComputeMultivariateHermite (multivariatePoly, multivariateQuadratureWeights, numberOfQuadraturePoints, p, numberOfEigPairs);
@@ -1102,9 +1104,10 @@ namespace femus {
 
 /// Return the Multivariate prescribed polynomials at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
   const std::vector < std::vector < double > >  & uq::GetMultivariatePolynomial (
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const unsigned & quadratureType) {
+    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, 
+    const UqQuadratureType &quadratureType) {
 
-    if (quadratureType == 0) {
+    if (quadratureType == UQ_HERMITE) {
       return  GetMultivariateHermitePolynomial (numberOfQuadraturePoints, p, numberOfEigPairs);
     }
 
@@ -1117,9 +1120,10 @@ namespace femus {
 
 /// Return the Multivariate prescribed weight at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
   const std::vector < double > & uq::GetMultivariateWeights (
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const unsigned & quadratureType) {
+    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, 
+    const UqQuadratureType &quadratureType) {
 
-    if (quadratureType == 0) {
+    if (quadratureType == UQ_HERMITE) {
       return  GetMultivariateHermiteWeights (numberOfQuadraturePoints,  p,  numberOfEigPairs);
     }
 
@@ -1130,38 +1134,39 @@ namespace femus {
   };
 
 /// Erase the Multivariate prescribed polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-  void uq::EraseMultivariate (const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const unsigned & quadratureType) {
+  void uq::EraseMultivariate (const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, 
+                              const UqQuadratureType &quadratureType) {
 
-    if (quadratureType == 0) {
+    if (quadratureType == UQ_HERMITE) {
       EraseMultivariateHermite (numberOfQuadraturePoints, p, numberOfEigPairs);
     }
 
-    else if (quadratureType == 1) {
+    else if (quadratureType == UQ_LEGENDRE) {
       EraseMultivariateLegendre (numberOfQuadraturePoints, p, numberOfEigPairs);
     }
 
   }
 
 /// Clear all Multivariate prescribed polynomials and weights
-  void uq::ClearMultivariate (const unsigned & quadratureType) {
+  void uq::ClearMultivariate (const UqQuadratureType &quadratureType) {
 
-    if (quadratureType == 0) {
+    if (quadratureType == UQ_HERMITE) {
       ClearMultivariateHermite();
     }
 
-    else if (quadratureType == 1) {
+    else if (quadratureType == UQ_LEGENDRE) {
       ClearMultivariateLegendre();
     }
 
   }
 
-  void uq::ClearPolynomialHistogram (const unsigned & quadratureType) {
+  void uq::ClearPolynomialHistogram (const UqQuadratureType &quadratureType) {
 
-    if (quadratureType == 0) {
+    if (quadratureType == UQ_HERMITE) {
       _hermitePolyHistogram.clear();
     }
 
-    else if (quadratureType == 1) {
+    else if (quadratureType == UQ_LEGENDRE) {
       _legendrePolyHistogram.clear();
     }
 

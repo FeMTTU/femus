@@ -3,7 +3,7 @@
 
 enum  UqQuadratureType {
   UQ_HERMITE = 0,
-  UQ_LAGRANGE    
+  UQ_LEGENDRE    
 };
 
 

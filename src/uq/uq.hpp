@@ -35,10 +35,10 @@ public:
     const double* GetLegendreQuadratureWeights ( const unsigned &numberOfQuadraturePoints );
 
     /// Get quadrature point coordinates
-    const double* GetQuadraturePoints ( const unsigned &numberOfQuadraturePoints, const unsigned &quadratureType );
+    const double* GetQuadraturePoints ( const unsigned &numberOfQuadraturePoints, const UqQuadratureType &quadratureType );
 
     /// Get quadrature weights
-    const double* GetQuadratureWeights ( const unsigned &numberOfQuadraturePoints, const unsigned &quadratureType );
+    const double* GetQuadratureWeights ( const unsigned &numberOfQuadraturePoints, const UqQuadratureType &quadratureType );
 
     ////////////////////////////////////////////
 
@@ -78,7 +78,7 @@ public:
 
     /// Return the prescribed polynomial at the key < numberOfQuadraturePoints , maxPolyOrder >
     const std::vector < std::vector <double> > & GetPolynomial ( const unsigned & numberOfQuadraturePoints,
-            const unsigned & maxPolyOrder, const unsigned & quadratureType );
+            const unsigned & maxPolyOrder, const UqQuadratureType &quadratureType );
 
     /// Erase the Hermite polynomial at the key < numberOfQuadraturePoints , maxPolyOrder >, if stored
     void EraseHermitePolynomial ( const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder );
@@ -87,7 +87,7 @@ public:
     void EraseLegendrePolynomial ( const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder );
 
     /// Erase the prescribed polynomial at the key < numberOfQuadraturePoints , maxPolyOrder >, if stored
-    void ErasePolynomial ( const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder, const unsigned & quadratureType );
+    void ErasePolynomial ( const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder, const UqQuadratureType &quadratureType );
 
     /// Clear all stored Hermite polynomials
     void ClearHermitePolynomial();
@@ -96,7 +96,7 @@ public:
     void ClearLegendrePolynomial();
 
     /// Clear all stored  polynomials
-    void ClearPolynomial ( const unsigned & quadratureType );
+    void ClearPolynomial ( const UqQuadratureType &quadratureType );
 
     /////////////////////////////////////////////////
 
@@ -108,7 +108,7 @@ public:
 
     /// Compute the prescribed Polynomial Histogram at the key < pIndex, samplePoints, numberOfEigPairs >
     const std::vector < std::vector < double > >  & GetPolyHistogram (
-        const unsigned & pIndex, const std::vector<double> & samplePoints, const unsigned & numberOfEigPairs, const unsigned & quadratureType );
+        const unsigned & pIndex, const std::vector<double> & samplePoints, const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType );
 
 
     void ClearHermitePolynomialHistogram()
@@ -121,7 +121,7 @@ public:
         _legendrePolyHistogram.clear();
     }
     
-    void ClearPolynomialHistogram(const unsigned & quadratureType);
+    void ClearPolynomialHistogram(const UqQuadratureType &quadratureType);
     /////////////////////////////////////////////////
 
     /// Compute the Index Set Jp at the key < p, numberOfEigPairs>
@@ -141,10 +141,10 @@ public:
 
     /// Compute the Integral Matrix at the key < q0, p0>
     void ComputeIntegralMatrix ( std::vector < std::vector < std::vector < double > > > &integralMatrix,
-                                 const unsigned & q0, const unsigned & p0, const unsigned & quadratureType );
+                                 const unsigned & q0, const unsigned & p0, const UqQuadratureType &quadratureType );
 
     /// Get the Integral Matrix at the key < q0, p0>
-    const std::vector < std::vector < std::vector < double > > > &GetIntegralMatrix ( const unsigned & q0, const unsigned & p0, const unsigned & quadratureType );
+    const std::vector < std::vector < std::vector < double > > > &GetIntegralMatrix ( const unsigned & q0, const unsigned & p0, const UqQuadratureType &quadratureType );
 
     /// Erase the Integral Matrix at the key < q0, p0>
     void EraseIntegralMatrix ( const unsigned & q0, const unsigned & p0 );;
@@ -156,11 +156,11 @@ public:
 
     /// Compute the Integral Matrix at the key < q0, p0, numberOfEigPairs>
     void ComputeStochasticMassMatrix ( std::vector < std::vector < std::vector < double > > > & G,
-                                       const unsigned & q0, const unsigned & p0, const unsigned & numberOfEigPairs, const unsigned & quadratureType );
+                                       const unsigned & q0, const unsigned & p0, const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType );
 
     /// Return the Stochastic Mass Matrix at the key < q0, p0, numberOfEigPairs>
     std::vector < std::vector < std::vector < double > > > & GetStochasticMassMatrix ( const unsigned & q0, const unsigned & p0,
-            const unsigned & numberOfEigPairs, const unsigned & quadratureType );
+            const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType );
 
 
     /// Erase the Stochastic Mass Matrix at the key < q0, p0, numberOfEigPairs>
@@ -188,7 +188,7 @@ public:
     void ComputeMultivariate (
         std::vector < std::vector < double > >  & multivariatePoly,
         std::vector < double > & multivariateQuadratureWeights,
-        const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const unsigned & quadratureType );
+        const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType );
 
     /// Return the Multivariate Hermite polynomials at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
     const std::vector < std::vector < double > >  & GetMultivariateHermitePolynomial (
@@ -200,7 +200,7 @@ public:
 
     /// Return the Multivariate prescribed polynomials at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
     const std::vector < std::vector < double > >  & GetMultivariatePolynomial (
-        const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const unsigned & quadratureType );
+        const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType );
 
     /// Return the Multivariate Hermite weight at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
     const std::vector < double > & GetMultivariateHermiteWeights (
@@ -212,7 +212,7 @@ public:
 
     /// Return the Multivariate prescribed weight at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
     const std::vector < double > & GetMultivariateWeights (
-        const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const unsigned & quadratureType );
+        const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType );
 
     /// Erase the Multivariate Hermite polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
     void EraseMultivariateHermite ( const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs );
@@ -221,7 +221,7 @@ public:
     void EraseMultivariateLegendre ( const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs );
     
         /// Erase the Multivariate prescribed polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-    void EraseMultivariate ( const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const unsigned & quadratureType );
+    void EraseMultivariate ( const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType );
 
     /// Clear all Multivariate Hermite polynomials and weights
     void ClearMultivariateHermite();
@@ -230,7 +230,7 @@ public:
     void ClearMultivariateLegendre();
     
     /// Clear all Multivariate polynomials and weights
-    void ClearMultivariate(const unsigned & quadratureType);
+    void ClearMultivariate(const UqQuadratureType &quadratureType);
 
     /////////////////////////////////////////////////
 

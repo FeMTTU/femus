@@ -1,18 +1,18 @@
-
+#include "UqQuadratureTypeEnum.hpp"
 using namespace femus;
 
 //THIS IS THE MOST UPDATED ASSEMBLY FOR SGM SIMULATIONS OF POISSON's EQUATION with HERMITE or LEGENDRE POLYNOMIALS
 
 //BEGIN Stochastic Input Parameters
 
-//quadratureType = 0; HERMITE
-//quadratureType = 1; LEGENDRE
-unsigned quadratureType = 0;
+//quadratureType = UQ_HERMITE
+//quadratureType = UQ_LEGENDRE
+UqQuadratureType quadratureType = UQ_LEGENDRE;
 
 unsigned pIndex = 4;
 unsigned qIndex = 5;
 
-int numberOfEigPairs = 2; //dimension of the stochastic variable
+int  numberOfEigPairs = 2; //dimension of the stochastic variable
 double stdDeviationInput = 1.4;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double meanInput = 0.;
 double amin = 1. / 100.; // for the KL expansion
