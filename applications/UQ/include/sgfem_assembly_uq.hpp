@@ -7,7 +7,7 @@ using namespace femus;
 
 //quadratureType = UQ_HERMITE
 //quadratureType = UQ_LEGENDRE
-UqQuadratureType quadratureType = UQ_LEGENDRE;
+UqQuadratureType quadratureType = UQ_HERMITE;
 
 unsigned pIndex = 4;
 unsigned qIndex = 5;
