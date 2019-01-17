@@ -16,7 +16,7 @@
 
 #include "../include/sgfem_assembly_uq.hpp"
 
-//THIS IS AN APPLICATION TO TRY FIELD SPLIT WITH SGM 
+//THIS IS AN APPLICATION TO TRY FIELD SPLIT WITH SGM
 
 
 using namespace femus;
@@ -61,18 +61,18 @@ int main (int argc, char** argv) {
   // init Petsc-MPI communicator
   FemusInit mpinit (argc, argv, MPI_COMM_WORLD);
 
-  uq &myuq = FemusInit::_uq;
-  
+  //uq &myuq = FemusInit::_uqHermite;
+
   //myuq.SetOutput(true);
-  
+
   //BEGIN deterministic FEM instances
   eigenvalues.resize (numberOfEigPairs); //this is where we store the eigenvalues
-  
+
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.ReadCoarseMesh ("../input/square.neu", "fifth", scalingFactor);
-  mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+  mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
   unsigned dim = mlMsh.GetDimension();
 
@@ -85,7 +85,7 @@ int main (int argc, char** argv) {
     sprintf (name, "egnf%d", i);
     mlSol.AddSolution (name, LAGRANGE, SECOND, 0, false);
   }
-  
+
   const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet (pIndex, numberOfEigPairs);
 
   for (unsigned i = 0; i < Jp.size(); i++) {
@@ -142,34 +142,34 @@ int main (int argc, char** argv) {
     sprintf (name, "uSG%d", i);
     systemSG.AddSolutionToSystemPDE (name);
   }
-  
+
   FieldSplitTree **FielduSGi;
-  
+
   FielduSGi = new FieldSplitTree * [Jp.size()];
-  
+
   std::vector < FieldSplitTree *> FSAll;
-  FSAll.reserve(Jp.size());
-  
-  
+  FSAll.reserve (Jp.size());
+
+
   //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
   for (unsigned i = 0; i < Jp.size(); i++) {
     char name[10];
     sprintf (name, "uSG%d", i);
-    std::vector < unsigned > fielduSGi(1);
-    fielduSGi[0] = systemSG.GetSolPdeIndex(name);
-  
-    std::vector < unsigned > solutionTypeuSGi(1);
-    solutionTypeuSGi[0] = mlSol.GetSolutionType(name);
-    
+    std::vector < unsigned > fielduSGi (1);
+    fielduSGi[0] = systemSG.GetSolPdeIndex (name);
+
+    std::vector < unsigned > solutionTypeuSGi (1);
+    solutionTypeuSGi[0] = mlSol.GetSolutionType (name);
+
     FielduSGi[i] = new FieldSplitTree (PREONLY, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
-    
-    FSAll.push_back(FielduSGi[i]);
+
+    FSAll.push_back (FielduSGi[i]);
   }
-  
-  FieldSplitTree uSG(RICHARDSON, FIELDSPLIT_PRECOND, FSAll, "uSG");
-  
+
+  FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_PRECOND, FSAll, "uSG");
+
   //END buid fieldSplitTree
-  systemSG.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
+  systemSG.SetMgSmoother (FIELDSPLIT_SMOOTHER);  // Field-Split preconditioned
   //systemSG.SetMgSmoother (GMRES_SMOOTHER);
 
   // ******* System FEM Assembly *******
@@ -184,12 +184,12 @@ int main (int argc, char** argv) {
   systemSG.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  
+
 
   systemSG.init();
 
-  systemSG.SetFieldSplitTree(&uSG);
-  
+  systemSG.SetFieldSplitTree (&uSG);
+
   // ******* Set Smoother *******
   //systemSG.SetSolverFineGrids (GMRES);
 
@@ -263,11 +263,11 @@ int main (int argc, char** argv) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
-  for(unsigned i=0;i<Jp.size();i++){
+  for (unsigned i = 0; i < Jp.size(); i++) {
     delete FielduSGi[i];
   }
   delete [] FielduSGi;
-  
+
   return 0;
 
 } //end main
@@ -694,9 +694,9 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
       }
 
     }
-    
+
     sol->_Sol[eigfIndex[iGS]]->close();
-    
+
     double local_norm2 = 0.;
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -816,8 +816,8 @@ void GetCoefficientsForQuantityOfInterest (MultiLevelProblem& ml_prob, std::vect
 
   //  extract pointers to the several objects that we are going to use
 
-  uq &myuq = FemusInit::_uq;
-  
+  //uq &myuq = FemusInit::_uqHermite;
+
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("SG");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
@@ -920,8 +920,8 @@ void GetStochasticData (std::vector <double>& alphas) {
 
   //let's standardize the quantity of interest after finding moments and standard deviation
 
-  uq &myuq = FemusInit::_uq;
-  
+  //uq &myuq = FemusInit::_uqHermite;
+
   if (totMoments <= 0) {
 
     std::cout << "ERROR: total number of moments has to be a positive integer" << std::endl;
@@ -952,8 +952,8 @@ void GetStochasticData (std::vector <double>& alphas) {
 //                                          numberOfQuadraturePoints, pIndex, numberOfEigPairs);
 
 
-    const std::vector < std::vector < double > >  & multivariateHermitePoly = myuq.GetMultivariateHermitePolynomial (numberOfQuadraturePoints, pIndex, numberOfEigPairs);
-    const std::vector < double > & multivariateHermiteQuadratureWeights = myuq.GetMultivariateHermiteWeights (numberOfQuadraturePoints, pIndex, numberOfEigPairs);
+    const std::vector < std::vector < double > >  & multivariateHermitePoly = myuq.GetMultivariatePolynomial (numberOfQuadraturePoints, pIndex, numberOfEigPairs);
+    const std::vector < double > & multivariateHermiteQuadratureWeights = myuq.GetMultivariateWeights (numberOfQuadraturePoints, pIndex, numberOfEigPairs);
 
 
     //BEGIN computation of the raw moments
@@ -1033,7 +1033,7 @@ void GetStochasticData (std::vector <double>& alphas) {
         samplePoints[k] = var_nor();
       }
       const std::vector < std::vector <double> > &HermitePolyHistogram =
-        myuq.GetHermitePolyHistogram (pIndex, samplePoints, numberOfEigPairs);
+        myuq.GetPolynomialHistogram (pIndex, samplePoints, numberOfEigPairs);
 
       std::vector<double> MultivariateHermitePolyHistogram (Jp.size(), 1.);
       for (unsigned i = 0; i < Jp.size(); i++) {
@@ -1063,7 +1063,7 @@ void GetStochasticData (std::vector <double>& alphas) {
     }
     //END
 
-    myuq.ClearHermitePolynomialHistogram();
+    myuq.ClearPolynomialHistogram();
 
     //BEGIN computation of the moments via Monte Carlo integration
     std::vector <double> momentsMonteCarlo (numberOfSamples);
