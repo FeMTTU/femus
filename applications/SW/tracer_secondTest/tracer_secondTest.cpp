@@ -415,7 +415,7 @@ double InitalValueT (const std::vector < double >& x)
 {
   double pi = acos (-1.);
 
-  if (x[0] < 20) {
+  if (x[0] < 20.) {
     return 5.;
   }
 
@@ -491,7 +491,7 @@ int main (int argc, char** args)
   unsigned nx = static_cast<unsigned> (floor (pow (2.,/*3*/ 5) + 0.5));       //Grid cell size = 3.90625 m
   //nx += 2;
   nx += 8;
-//     std::cout <<" nx = " << nx << std::endl;
+  //std::cout <<" nx = " << nx << std::endl;
 
   double length = 40.; //2 * 1465700.;
 
@@ -547,7 +547,6 @@ int main (int argc, char** args)
   mlSol.Initialize ("v17", InitalValueV17);
   mlSol.Initialize ("v18", InitalValueV18);
   mlSol.Initialize ("v19", InitalValueV19);
-
   if (NumberOfLayers > 39) {
     mlSol.Initialize ("v20", InitalValueV20);
     mlSol.Initialize ("v21", InitalValueV21);
@@ -650,7 +649,7 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 24000; //RK4: dt=0.5, numberOfTimeSteps = 16001
+  unsigned numberOfTimeSteps = 28000; //RK4: dt=0.5, numberOfTimeSteps = 16001
   dt = 0.5;
   bool implicitEuler = true;
 
@@ -661,7 +660,7 @@ int main (int argc, char** args)
 
     system.CopySolutionToOldSolution();
     counter = i;
-//     ETD (ml_prob, numberOfTimeSteps);
+    //ETD (ml_prob, numberOfTimeSteps);
     //Assembly ( ml_prob, numberOfTimeSteps );
     RK_HT (ml_prob, implicitEuler, numberOfTimeSteps);
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1) / 1);
@@ -1564,13 +1563,12 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 //
 //                 aResHT[k] += solh[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
 
-//       //aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
-//         if(i > start){
-//           aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
-//         }
-//         if(i < end-1){
-//           aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
-//         }
+        if(i > start){
+          aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+        }
+        if(i < end-1){
+          aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+        }
 
       }
 
