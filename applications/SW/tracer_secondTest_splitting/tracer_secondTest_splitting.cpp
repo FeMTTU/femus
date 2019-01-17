@@ -624,8 +624,8 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 5000; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 3.;
+  unsigned numberOfTimeSteps = 6000; //17h=1020 with dt=60, 17h=10200 with dt=6
+  dt = 2.;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {

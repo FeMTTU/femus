@@ -43,10 +43,10 @@ unsigned counter2 = 0;
 clock_t start_time = clock();
 
 bool wave = false;
-bool twostage = true;
-bool splitting = true;
+bool twostage = false;
+bool splitting = false;
 bool assembly = true; //assembly must be left always true
-bool block_diag = true;
+bool block_diag = false;
 
 // const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
 
@@ -65,7 +65,7 @@ const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 
 double InitalValueVi (const std::vector < double >& x , const unsigned &i)
 {
   //double psi1 = 1. - (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) / (5.*5.*5.*5.); //10x10 box test
-  double psi1 = 1. - ( pow(( x[0] - 20. ), 16) / pow(20., 16) ); //40x10 rectangle test
+  double psi1 = 1. - (pow ( (x[0] - 20.), 16) / pow (20., 16));  //40x10 rectangle test
   //double psi1 = 1. - ( pow(( x[0] - 10. ), 16) / pow(10., 16) );
   double z = -10. + hRest[0] / 2. + hRest[0] * (NumberOfLayers - i);
   double d_psi2 = (- (2.*z + 10.)) / (5 * 5);
@@ -418,6 +418,7 @@ double InitalValueT (const std::vector < double >& x)
   if (x[0] < 20) {
     return 5.;
   }
+
   else {
     return 30.;
   }
@@ -546,6 +547,7 @@ int main (int argc, char** args)
   mlSol.Initialize ("v17", InitalValueV17);
   mlSol.Initialize ("v18", InitalValueV18);
   mlSol.Initialize ("v19", InitalValueV19);
+
   if (NumberOfLayers > 39) {
     mlSol.Initialize ("v20", InitalValueV20);
     mlSol.Initialize ("v21", InitalValueV21);
@@ -648,7 +650,7 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 30000; //RK4: dt=0.5, numberOfTimeSteps = 16001
+  unsigned numberOfTimeSteps = 24000; //RK4: dt=0.5, numberOfTimeSteps = 16001
   dt = 0.5;
   bool implicitEuler = true;
 
@@ -659,7 +661,7 @@ int main (int argc, char** args)
 
     system.CopySolutionToOldSolution();
     counter = i;
-    //ETD (ml_prob, numberOfTimeSteps);
+//     ETD (ml_prob, numberOfTimeSteps);
     //Assembly ( ml_prob, numberOfTimeSteps );
     RK_HT (ml_prob, implicitEuler, numberOfTimeSteps);
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1) / 1);
@@ -892,8 +894,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
     double xmid = 0.5 * (x[1] + x[0]);
 
     for (unsigned k = NLayers; k > 1; k--) {
-      w[k - 1] = - (-4. / 625.* (xmid - 5) * (xmid - 5) * (xmid - 5)) * psi2[k - 1];
-      //w[k - 1] = - ( - 40./(pow(50.,40)) * pow((xmid - 50.), 39) ) * psi2[k - 1];
+      //w[k - 1] = - (-4. / 625.* (xmid - 5) * (xmid - 5) * (xmid - 5)) * psi2[k - 1]; //10x10 box test
+      w[k - 1] = - (- 16. / (pow (20., 16)) * pow ( (xmid - 20.), 15)) * psi2[k - 1]; //40x10 rectangle test
       //w[k - 1] = - ( - 16./(pow(10.,16)) * pow((xmid - 10.), 15) ) * psi2[k - 1];
       //std::cout << w[k-1] << " ";
 
@@ -1430,9 +1432,9 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       double xmid = 0.5 * (x[1] + x[0]);
 
       for (unsigned k = NLayers; k > 1; k--) {
-        w[k - 1] = - (-4. / 625.* (xmid - 5.) * (xmid - 5.) * (xmid - 5.)) * psi2[k - 1];
+        //w[k - 1] = - (-4. / 625.* (xmid - 5.) * (xmid - 5.) * (xmid - 5.)) * psi2[k - 1]; //10x10 box test
+        w[k - 1] = - (- 16. / (pow (20., 16)) * pow ( (xmid - 20.), 15)) * psi2[k - 1]; //40x10 rectangle test
 
-        //w[k - 1] = - ( - 40./(pow(50.,40)) * pow((xmid - 50.), 39) ) * psi2[k - 1];
         //w[k - 1] = - ( - 16./(pow(10.,16)) * pow((xmid - 10.), 15) ) * psi2[k - 1];
         //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];
         if (maxW[k - 1] < w[k - 1]) {
@@ -2020,8 +2022,8 @@ void RK_HT (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsign
 
       for (unsigned k = NLayers; k > 1; k--) {
         //w[k - 1] = - (-4. / 625.* (xmid - 5) * (xmid - 5) * (xmid - 5)) * psi2[k - 1]; //10x10 box test
-        w[k - 1] = - ( - 16./(pow(20., 16)) * pow((xmid - 20.), 15) ) * psi2[k - 1]; //40x10 rectangle test
-        
+        w[k - 1] = - (- 16. / (pow (20., 16)) * pow ( (xmid - 20.), 15)) * psi2[k - 1]; //40x10 rectangle test
+
         //w[k - 1] = - ( - 16./(pow(10.,16)) * pow((xmid - 10.), 15) ) * psi2[k - 1];
         //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];
         if (maxW[k - 1] < w[k - 1]) {
@@ -2303,17 +2305,47 @@ void RK_HT (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsign
 
         //END VERTICAL ADVECTION
 
-        // horizontal diffussion
+        //BEGIN HORIZONTAL DIFFUSION hT multiplied
         if (i > start) {
-//           RHS -= k_h * ( (0.5 * (solhm[k] + solh[k])) * ( (solT[k] + addition)  - (solTm[k] + addition_m)) / dx) / dx;
-          RHS += k_h * (0.5 * (solhm[k] + solh[k])) * ( (solHTm[k] / solhm[k] + addition_m)  - (solHT[k] / solh[k] + addition)) / (dx * dx);
+          RHS += k_h * (0.5 * (solhm[k] + solh[k])) * ( (solHTm[k] + addition_m) / solhm[k]  - (solHT[k] + addition) / solh[k]) / (dx * dx);
         }
 
         if (i < end - 1) {
-//           RHS += k_h * ( (0.5 * (solh[k] + solhp[k] ))  * ( (solTp[k] + addition_p)  - (solT[k] + addition)) / dx) / dx;
-          RHS += k_h * (0.5 * (solhp[k] + solh[k])) * ( (solHTp[k] / solhp[k] + addition_p)  - (solHT[k] / solh[k] + addition)) / (dx * dx);
+          RHS += k_h * (0.5 * (solhp[k] + solh[k])) * ( (solHTp[k] + addition_p) / solhp[k]  - (solHT[k] + addition) / solh[k]) / (dx * dx);
         }
 
+        //END
+
+        if (implicitEuler == false) {
+          double deltaZt = 0.;
+          double deltaZb = 0.;
+          double ht = 0.;
+          double hb = 0.;
+
+          if (k > 0) {
+            ht = (solh[k - 1] + solh[k]) / 2.;
+            deltaZt = ( (solHT[k - 1] + addition_t) / solh[k - 1] - (solHT[k] + addition) / solh[k]) / ht;
+          }
+
+          else {
+            ht = solh[k];
+            deltaZt = 0.* (0. - solHT[k]) / ht;
+          }
+
+          if (k < NLayers - 1) {
+            hb = (solh[k] + solh[k + 1]) / 2.;
+            deltaZb = ( (solHT[k] + addition) / solh[k] - (solHT[k + 1] + addition_b) / solh[k + 1]) / hb;
+          }
+
+          else {
+            hb = solh[k];
+            deltaZb = 0.* (solHT[k] - 0.) / hb;
+          }
+
+          //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAA"<<deltaZt - deltaZb<<std::endl;
+
+          RHS += solh[k] * k_v * (deltaZt - deltaZb) / ( (ht + hb) / 2.);      // vertical diffusion
+        }
 
         if (RK_step == 0) {
           double valueK1 = RHS * dt;
@@ -2459,7 +2491,7 @@ void RK_HT (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsign
 
         if (k > 0) {
           ht = (solh[k - 1] + solh[k]) / 2.;
-          A = solh[k] * k_v / ht ;
+          A = - 2. * k_v / ht ;
         }
 
         else {
@@ -2468,17 +2500,17 @@ void RK_HT (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsign
 
         if (k < NLayers - 1) {
           hb = (solh[k] + solh[k + 1]) / 2.;
-          C = solh[k] * k_v / hb;
-          C /= (ht + hb) * 0.5 ;
+          C = - 2. * k_v / hb;
+          C /= (ht + hb);
 
           if (k > 0) {
-            A /= (ht + hb) * 0.5 ;
+            A /= (ht + hb);
           }
         }
 
         else {
           hb = solh[k];
-          A /= (ht + hb) * 0.5 ;
+          A /= (ht + hb);
         }
 
         A *= dt;
@@ -2502,31 +2534,20 @@ void RK_HT (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsign
 
       }
 
-       MatAssemblyBegin (triDiagA, MAT_FINAL_ASSEMBLY);
-       MatAssemblyEnd (triDiagA, MAT_FINAL_ASSEMBLY);
+      MatAssemblyBegin (triDiagA, MAT_FINAL_ASSEMBLY);
+      MatAssemblyEnd (triDiagA, MAT_FINAL_ASSEMBLY);
 
-//       PetscViewer    viewer;
-//       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-//       PetscObjectSetName((PetscObject)viewer,"implicit Euler matrix");
-//       PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-//       MatView(triDiagA,viewer);
-//       double a;
-//       std::cin>>a;
+      //MatView (triDiagA, PETSC_VIEWER_STDOUT_WORLD);
 
-       KSPCreate (PETSC_COMM_WORLD, &solver);
-       KSPSetOperators (solver, triDiagA, triDiagA);
-       KSPSetType (solver, KSPRICHARDSON);
-       KSPSolve (solver, b, x);
+      KSPCreate (PETSC_COMM_WORLD, &solver);
+      KSPSetOperators (solver, triDiagA, triDiagA);
+      KSPSetType (solver, KSPRICHARDSON);
+      KSPSolve (solver, b, x);
 
       //1. aggiornare solT con x
       for (k = 0; k < nlayers; k++) {
         PetscScalar valueT = 0.;
         VecGetValues (x, 1, &k, &valueT);
-
-        if (counter == numberOfTimeSteps - 1) {
-          std::cout.precision (14);
-          std::cout << valueT << std::endl;
-        }
 
         sol->_Sol[solIndexT[k]]->set (i, valueT);
         sol->_Sol[solIndexT[k]]->close();
@@ -2542,24 +2563,22 @@ void RK_HT (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsign
       VecDestroy (&b);
       VecDestroy (&x);
       KSPDestroy (&solver);
-      
+
     }
 
   }
 
-  //BEGIN no vertical diffusion
-  for (unsigned k = 0; k < NumberOfLayers; k++) {
-    for (unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++) {
-      double valueT = (*sol->_Sol[solIndexT[k]]) (i);
+    for (unsigned k = 0; k < NumberOfLayers; k++) {
+      for (unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++) {
+        double valueT = (*sol->_Sol[solIndexT[k]]) (i);
 
-      std::cout.precision (14);
+        std::cout.precision (14);
 
-      if (counter == numberOfTimeSteps - 1) {
-        std::cout << valueT << std::endl;
+        if (counter == numberOfTimeSteps - 1) {
+          std::cout << valueT << std::endl;
+        }
       }
     }
-  }
-  //END
 
 
 }
