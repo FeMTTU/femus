@@ -842,15 +842,15 @@ namespace femus {
       multivariatePoly[i].assign (Tp.size(), 1.);
     }
 
-    const std::vector < std::vector < double > >  &hermitePoly = GetPolynomial (numberOfQuadraturePoints, p);
+    const std::vector < std::vector < double > >  &Polynomial = GetPolynomial (numberOfQuadraturePoints, p);
 
-    const double* hermiteQuadratureWeights = GetQuadratureWeights (numberOfQuadraturePoints);
+    const double* QuadratureWeights = GetQuadratureWeights (numberOfQuadraturePoints);
 
     for (unsigned j = 0; j < Tp.size(); j++) {
       for (unsigned k = 0; k < numberOfEigPairs; k++) {
-        multivariateQuadratureWeights[j] *= hermiteQuadratureWeights[Tp[j][k]] ;
+        multivariateQuadratureWeights[j] *= QuadratureWeights[Tp[j][k]] ;
         for (unsigned i = 0; i < Jp.size(); i++) {
-          multivariatePoly[i][j] *= hermitePoly[Jp[i][k]][Tp[j][k]] ;
+          multivariatePoly[i][j] *= Polynomial[Jp[i][k]][Tp[j][k]] ;
         }
       }
     }
