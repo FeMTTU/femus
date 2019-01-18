@@ -259,7 +259,7 @@ int main ( int argc, char** argv )
         for ( unsigned i = 0; i < grid.size(); i++ ) {
             double pdfValue;
             spg.EvaluatePDF ( pdfValue, grid[i] );
-            std::cout << std::setprecision ( 14 ) << pdfValue ;
+//             std::cout << std::setprecision ( 14 ) << pdfValue ;
 //             double phiTensorProductTest;
 //             spg.EvaluatePhi ( phiTensorProductTest, grid[i], idPhi, false );
 //             std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
