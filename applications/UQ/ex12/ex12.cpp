@@ -224,11 +224,7 @@ int main ( int argc, char** argv )
     std::cout << " Computes error in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - error_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 //END
-
-
-
-
-    std::cout << std::endl << " Total time: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+    std::cout << " Total time: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - total_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
     return 0;

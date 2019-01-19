@@ -437,14 +437,14 @@ namespace femus
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 double valuePhi;
                 PiecewiseConstPhi ( valuePhi, x, _dofIdentifier[w][i] );
-//                 pdfValue += _nodalValuesPDF[w][i] * valuePhi;
-                phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
+                pdfValue += _nodalValuesPDF[w][i] * valuePhi;
+//                 phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
 
                 if ( print == true )      std::cout << phiFncts[w][i] << "," ;
             }
         }
 
-//       if(print == true)     std::cout << pdfValue;
+      if(print == true)     std::cout << pdfValue;
         if ( print == true )   std::cout << std::endl;
     }
 
