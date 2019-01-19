@@ -14,7 +14,7 @@ namespace femus
 
         _N = samples[0].size();
         _M = samples.size();
-        _L = 2 /*static_cast<unsigned> ( log10 ( _M )  )*/; //NOTE this might change if we see fit
+        _L = static_cast<unsigned> ( log10 ( _M ) );  //NOTE this might change if we see fit
 
         _intervals.resize ( _N );
         _hs.resize ( _N );
@@ -80,7 +80,7 @@ namespace femus
                         _hierarchicalDofs[n][l][hierarchicalCounter] = i;
                         hierarchicalCounter++;
                     }
-                    
+
 //                     _hierarchicalDofs[n][l][i] = i; //this is to use the method with standard FEM
                 }
             }
@@ -125,7 +125,7 @@ namespace femus
                 sum += ( Tp[i][j] + 1 ); //this is because our indices start from 0 but the requirement assumes they start from 1
             }
 
-            if ( sum <= _L + _N - 1 ) {  
+            if ( sum <= _L + _N - 1 ) {
 //                if ( sum == _L * _N ) { //this is to use the method with standard FEM
 
                 _indexSetW.resize ( indexCounter + 1 );
@@ -285,7 +285,7 @@ namespace femus
         double leftBoundOfSupport = _nodes[n][l][i] - _hs[n][l]; // this is xi - h
         double rightBoundOfSupport = _nodes[n][l][i] + _hs[n][l]; // this is xi + h
 
-        if ( x >= leftBoundOfSupport && x <= rightBoundOfSupport ) {
+        if ( x > leftBoundOfSupport && x <= rightBoundOfSupport ) {
 
             phi = 1 - fabs ( ( x - _nodes[n][l][i] ) / _hs[n][l] );
 
@@ -315,51 +315,107 @@ namespace femus
 
     }
 
+    void sparseGrid::InSupportOneDimensional ( unsigned &maybeThere, const double &x, const unsigned &n, const unsigned &l, const unsigned &i )
+    {
+
+        for ( unsigned n = 0; n < _N; n++ ) {
+            double leftBoundOfSupport = _nodes[n][l][i] - _hs[n][l]; // this is xi - h
+            double rightBoundOfSupport = _nodes[n][l][i] + _hs[n][l]; // this is xi + h
+
+            if ( x > leftBoundOfSupport && x <= rightBoundOfSupport ) maybeThere = 1;
+
+            else maybeThere = 0;
+        }
+
+    }
+
+    void sparseGrid::InSupport ( unsigned &isIt, const std::vector <double> &x, std::vector < std::vector < unsigned > > identifier )
+    {
+
+        std::vector < unsigned > isItOneDim ( _N, 0. );
+
+        isIt = 1;
+
+        for ( unsigned n = 0; n < _N; n++ ) {
+            InSupportOneDimensional ( isItOneDim[n], x[n], identifier[n][0], identifier[n][1], identifier[n][2] );
+
+            if ( isItOneDim[n] == 0 ) {
+                isIt = 0;
+                break;
+            }
+
+            else isIt *= isItOneDim[n];
+        }
+    }
+
+    void sparseGrid::PiecewiseConstPhi ( double &phi, const std::vector <double> &x, std::vector < std::vector < unsigned > > identifier )
+    {
+
+        unsigned checkSupport = 0;
+        InSupport ( checkSupport, x, identifier );
+
+        if ( checkSupport == 1 ) phi = 1.;
+
+        else phi = 0.;
+
+    }
+
     void sparseGrid::EvaluateNodalValuesPDF ( std::vector < std::vector < double > >  &samples )
     {
-        
-        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+
+        double supportMeasure = 1.;
+
+        for ( unsigned n = 0; n < _N; n++ ) {
+            supportMeasure *= 2 * _hs[n][_dofIdentifier[0][0][n][1]];
+        }
+
+        _nodalValuesPDF[0][0] = 1. / supportMeasure;        
+
+
+        for ( unsigned w = 1; w < _numberOfWs; w++ ) {
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 _nodalValuesPDF[w][i] = 0.;
             }
         }
 
-        for ( unsigned m = 0; m < _M; m++ ) {
 
-            double sumDenom = 1.;
-//             double sumDenom = 0.;
-//             for ( unsigned w1 = 0; w1 < _numberOfWs; w1++ ) {
-//                 for ( unsigned i1 = 0; i1 < _nodalValuesPDF[w1].size(); i1++ ) {
-//                     double valuePhiDenom;
-//                     EvaluatePhi ( valuePhiDenom, samples[m], _dofIdentifier[w1][i1], false );
-//                     sumDenom += valuePhiDenom;
-//                 }
-//             }
-            
-            
-            for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-                for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
-                    double valuePhi;
-                    EvaluatePhi ( valuePhi, samples[m], _dofIdentifier[w][i], false );
 
-                    _nodalValuesPDF[w][i] += ( valuePhi / sumDenom ) / _M;
+        for ( unsigned w = 1; w < _numberOfWs; w++ ) {
+            for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
+                for ( unsigned m = 0; m < _M; m++ ) {
+
+                    unsigned isThere;
+                    InSupport ( isThere, samples[m], _dofIdentifier[w][i] );
+
+                    if ( isThere == 1 ) _nodalValuesPDF[w][i]++;
                 }
+
+                supportMeasure = 1.;
+
+                for ( unsigned n = 0; n < _N; n++ ) {
+                    supportMeasure *= 2 * _hs[n][_dofIdentifier[w][i][n][1]];
+                }
+
+                _nodalValuesPDF[w][i] /= ( supportMeasure * _M );
+
+//                 std::cout << "_nodalValuesPDF[" << w << "][" << i << "] =" << _nodalValuesPDF[w][i] << std::endl;
+
+                for ( unsigned w1 = 0; w1 < w; w1++ ) {
+                    for ( unsigned i1 = 0; i1 < _nodalValuesPDF[w1].size(); i1++ ) {
+
+//                         std::cout << "w = " << w << " w1 = " << w1 << " i1 " << i1 << " point = " << _hierarchicalDofsCoordinates[w][i][0] <<std::endl;
+                        unsigned isThere;
+                        InSupport ( isThere, _hierarchicalDofsCoordinates[w][i], _dofIdentifier[w1][i1] );
+                        
+//                         std::cout<<"isThere = " << isThere << std::endl;
+
+                        if ( isThere == 1 ) _nodalValuesPDF[w][i] -= _nodalValuesPDF[w1][i1];
+
+                    }
+                }
+
             }
-
-
         }
-
-//         //to remove, this is just a check
-//         double sumOfNodalValues = 0.;
-// 
-//         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-//             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
-//                 sumOfNodalValues += _nodalValuesPDF[w][i];
-//             }
-//         }
-// 
-//         std::cout << " sumOfNodalValues =" << sumOfNodalValues << std::endl;
-
 
     }
 
@@ -383,20 +439,23 @@ namespace femus
 
     void sparseGrid::EvaluatePDF ( double &pdfValue, std::vector < double >  &x )
     {
-//         pdfValue = 0.;
+        pdfValue = 0.;
 
-        std::vector<std::vector<double>> phiFncts(_numberOfWs);
+        std::vector<std::vector<double>> phiFncts ( _numberOfWs );
+
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-            phiFncts[w].resize(_nodalValuesPDF[w].size());
+            phiFncts[w].resize ( _nodalValuesPDF[w].size() );
+
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 double valuePhi;
-                EvaluatePhi ( valuePhi, x, _dofIdentifier[w][i], true );
-//                 pdfValue += _nodalValuesPDF[w][i] * valuePhi;
-              phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
-              std::cout<< phiFncts[w][i] << "," ;
+                PiecewiseConstPhi ( valuePhi, x, _dofIdentifier[w][i] );
+                pdfValue += _nodalValuesPDF[w][i] * valuePhi;
+//                 phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
+//                 std::cout << phiFncts[w][i] << "," ;
             }
-        }        
-        std::cout<<std::endl;
+        }
+
+        std::cout << std::endl;
     }
 
     void sparseGrid::ComputeTensorProductSet ( std::vector< std::vector <unsigned>> &Tp, const unsigned &T1, const unsigned &T2 )

@@ -20,6 +20,12 @@ namespace femus
         void EvaluateOneDimensionalPhi ( double &phi, const double &x, const unsigned &n, const unsigned &l, const unsigned &i, const bool &scale );
 
         void EvaluatePhi ( double &phi, const std::vector <double> &x, std::vector < std::vector < unsigned > > identifier, const bool &scale );
+        
+        void InSupportOneDimensional ( unsigned &maybeThere, const double &x, const unsigned &n, const unsigned &l, const unsigned &i );
+        
+        void InSupport ( unsigned &isIt, const std::vector <double> &x, std::vector < std::vector < unsigned > > identifier );
+        
+        void PiecewiseConstPhi( double &phi, const std::vector <double> &x, std::vector < std::vector < unsigned > > identifier );
 
         void EvaluateNodalValuesPDF ( std::vector < std::vector < double > >  &samples );
         
