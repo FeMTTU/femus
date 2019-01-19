@@ -15,7 +15,7 @@ namespace femus
 
     public:
 
-        sparseGrid ( std::vector < std::vector < double > >  &samples, const bool &output );
+        sparseGrid ( std::vector < std::vector < double > >  &samples, const double &xmin, const double &xmax, const bool &output );
 
         void EvaluateOneDimensionalPhi ( double &phi, const double &x, const unsigned &n, const unsigned &l, const unsigned &i, const bool &scale );
 

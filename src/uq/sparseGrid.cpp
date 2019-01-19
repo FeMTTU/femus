@@ -8,7 +8,7 @@
 namespace femus
 {
 
-    sparseGrid::sparseGrid ( std::vector < std::vector < double > >  &samples, const bool & output )
+    sparseGrid::sparseGrid ( std::vector < std::vector < double > >  &samples, const double &xmin, const double &xmax, const bool & output )
     {
         _output = output;
 
@@ -46,21 +46,9 @@ namespace femus
 
         //BEGIN figuring out the one dimensional intervals, mesh sizes and node coordinates
         for ( unsigned n = 0; n < _N; n++ ) {
-            an = - 1.; //temporary left extremum of the n-th interval [an,bn]
-            bn = 1.;   //temporary right extremum of the n-th interval [an,bn]
 
-            for ( unsigned m = 0; m < _M; m++ ) {
-                if ( samples[m][n] <= an ) {
-                    an = samples[m][n];
-                }
-
-                else if ( samples[m][n] >= bn ) {
-                    bn = samples[m][n];
-                }
-            }
-
-            _intervals[n][0] = an - 0.5; //the 0.5 is just to add some tolerance
-            _intervals[n][1] = bn + 0.5;
+            _intervals[n][0] = xmin; 
+            _intervals[n][1] = xmax;
 
             if ( _output )  std::cout << "a = " << _intervals[n][0] << " , " << "b = " << _intervals[n][1] << std::endl;
 

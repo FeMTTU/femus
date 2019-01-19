@@ -26,8 +26,11 @@ unsigned alpha = 5;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 1; //dimension of the parameter space (each of the M samples has N entries)
 unsigned L = alpha;
-bool output = false; //for debugging
+bool output = true; //for debugging
 bool matlabView = true;
+
+double xmin = - 5.5;   //-1.5 for uniform // -5.5 for Gaussian
+double xmax = 5.5;     //1.5 for uniform // 5.5 for Gaussian
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -90,7 +93,7 @@ int main ( int argc, char** argv )
 
     clock_t total_time = clock();
     clock_t grid_time = clock();
-    sparseGrid spg ( samples, output );
+    sparseGrid spg ( samples, xmin, xmax, output );
 
     std::cout << std::endl << " Builds sparse grid in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - grid_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
@@ -162,19 +165,19 @@ int main ( int argc, char** argv )
         gridSize *= gridPoints[n];
     }
 
-    gridBounds[0][0] = -5.5; //-1.5 for uniform // -5.5 for Gaussian
-    gridBounds[0][1] = 5.5; //1.5 for uniform // 5.5 for Gaussian
+    gridBounds[0][0] = xmin; 
+    gridBounds[0][1] = xmax; 
 
     if ( N > 1 ) {
 
-        gridBounds[1][0] = -5.5;
-        gridBounds[1][1] = 5.5;
+        gridBounds[1][0] = xmin;
+        gridBounds[1][1] = xmax;
     }
 
     if ( N > 2 ) {
 
-        gridBounds[2][0] = -1.5;
-        gridBounds[2][1] = 1.5;
+        gridBounds[2][0] = xmin;
+        gridBounds[2][1] = xmax;
     }
 
     std::vector < double > h ( N );
