@@ -285,25 +285,25 @@ int main ( int argc, char** argv )
 //END
 
 //BEGIN compute error
-    clock_t error_time = clock();
-
-    double sumError = 0.;
-
-    for ( unsigned m = 0; m < samples.size(); m++ ) {
-        double pdfValue;
-        spg.EvaluatePDF ( pdfValue, samples[m] );
-//         double uniformPDF = ( fabs ( samples[m][0] ) <= 1 /*&& fabs ( samples[m][1]) <= 1*/)  ? 0.5 : 0.;
-        double Gaussian = exp ( -samples[m][0] * samples[m][0] * 0.5 ) / sqrt( 2 * acos ( -1 ) ) /** exp ( -samples[m][1] * samples[m][1] * 0.5 ) / sqrt( 2 * acos ( -1 ) )*/;
-        double errorSquared = ( pdfValue - Gaussian ) * ( pdfValue - Gaussian );
-        sumError += errorSquared;
-    }
-
-    double aL2E = sqrt ( sumError ) / M;
-
-    std::cout << " Averaged L2 error is = " << aL2E << std::endl;
-
-        std::cout << " Computes error in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
-              << static_cast<double> ( ( clock() - error_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
+//     clock_t error_time = clock();
+// 
+//     double sumError = 0.;
+// 
+//     for ( unsigned m = 0; m < samples.size(); m++ ) {
+//         double pdfValue;
+//         spg.EvaluatePDF ( pdfValue, samples[m] );
+// //         double uniformPDF = ( fabs ( samples[m][0] ) <= 1 /*&& fabs ( samples[m][1]) <= 1*/)  ? 0.5 : 0.;
+//         double Gaussian = exp ( -samples[m][0] * samples[m][0] * 0.5 ) / sqrt( 2 * acos ( -1 ) ) /** exp ( -samples[m][1] * samples[m][1] * 0.5 ) / sqrt( 2 * acos ( -1 ) )*/;
+//         double errorSquared = ( pdfValue - Gaussian ) * ( pdfValue - Gaussian );
+//         sumError += errorSquared;
+//     }
+// 
+//     double aL2E = sqrt ( sumError ) / M;
+// 
+//     std::cout << " Averaged L2 error is = " << aL2E << std::endl;
+// 
+//         std::cout << " Computes error in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+//               << static_cast<double> ( ( clock() - error_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
     //END
 
 
