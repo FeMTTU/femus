@@ -29,7 +29,9 @@ namespace femus
 
         void EvaluateNodalValuesPDF ( std::vector < std::vector < double > >  &samples );
         
-        void EvaluatePDF (double &pdfValue, std::vector < double >  &x);
+        void EvaluatePDF (double &pdfValue, std::vector < double >  &x, const bool &print);
+        
+        void ComputeAvgL2Error( double &aL2E, std::vector < std::vector < double > >  &samples, const unsigned &analyticPdfType);
 
         void ComputeTensorProductSet ( std::vector< std::vector <unsigned>> &Tp, const unsigned &T1, const unsigned &T2 );
         

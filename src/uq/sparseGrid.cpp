@@ -47,7 +47,7 @@ namespace femus
         //BEGIN figuring out the one dimensional intervals, mesh sizes and node coordinates
         for ( unsigned n = 0; n < _N; n++ ) {
 
-            _intervals[n][0] = xmin; 
+            _intervals[n][0] = xmin;
             _intervals[n][1] = xmax;
 
             if ( _output )  std::cout << "a = " << _intervals[n][0] << " , " << "b = " << _intervals[n][1] << std::endl;
@@ -357,7 +357,7 @@ namespace femus
             supportMeasure *= 2 * _hs[n][_dofIdentifier[0][0][n][1]];
         }
 
-        _nodalValuesPDF[0][0] = 1. / supportMeasure;        
+        _nodalValuesPDF[0][0] = 1. / supportMeasure;
 
 
         for ( unsigned w = 1; w < _numberOfWs; w++ ) {
@@ -394,7 +394,7 @@ namespace femus
 //                         std::cout << "w = " << w << " w1 = " << w1 << " i1 " << i1 << " point = " << _hierarchicalDofsCoordinates[w][i][0] <<std::endl;
                         unsigned isThere;
                         InSupport ( isThere, _hierarchicalDofsCoordinates[w][i], _dofIdentifier[w1][i1] );
-                        
+
 //                         std::cout<<"isThere = " << isThere << std::endl;
 
                         if ( isThere == 1 ) _nodalValuesPDF[w][i] -= _nodalValuesPDF[w1][i1];
@@ -425,7 +425,7 @@ namespace femus
 
     }
 
-    void sparseGrid::EvaluatePDF ( double &pdfValue, std::vector < double >  &x )
+    void sparseGrid::EvaluatePDF ( double &pdfValue, std::vector < double >  &x, const bool &print )
     {
         pdfValue = 0.;
 
@@ -437,16 +437,58 @@ namespace femus
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 double valuePhi;
                 PiecewiseConstPhi ( valuePhi, x, _dofIdentifier[w][i] );
-                pdfValue += _nodalValuesPDF[w][i] * valuePhi;
-//                 phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
-//                 std::cout << phiFncts[w][i] << "," ;
+//                 pdfValue += _nodalValuesPDF[w][i] * valuePhi;
+                phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
+
+                if ( print == true )      std::cout << phiFncts[w][i] << "," ;
             }
         }
 
-        std::cout << std::endl;
+//       if(print == true)     std::cout << pdfValue;
+        if ( print == true )   std::cout << std::endl;
     }
 
-    void sparseGrid::ComputeTensorProductSet ( std::vector< std::vector <unsigned>> &Tp, const unsigned &T1, const unsigned &T2 )
+    void sparseGrid::ComputeAvgL2Error ( double &aL2E, std::vector < std::vector < double > >  &samples, const unsigned &analyticPdfType )
+    {
+
+        aL2E = 0.;
+
+        for ( unsigned m = 0; m < samples.size(); m++ ) {
+            double pdfValue;
+            EvaluatePDF ( pdfValue, samples[m], false );
+
+            double analyticValue = 1.;
+
+            //compute the analytic PDF value
+            if ( analyticPdfType == 0 ) { // uniform PDF in [-1,1]
+
+                for ( unsigned n = 0; n < _N; n++ ) {
+                    if ( fabs ( samples[m][n] ) <= 1. ) analyticValue *= 0.5;
+
+                    else {
+                        analyticValue = 0.;
+                        break;
+                    }
+                }
+
+            }
+
+            else if ( analyticPdfType == 0 ) { // standard Gaussian PDF
+
+                for ( unsigned n = 0; n < _N; n++ ) {
+                    analyticValue *=  exp ( -samples[m][n] * samples[m][n] * 0.5 ) / sqrt ( 2 * acos ( -1 ) );
+                }
+            }
+
+            aL2E += ( pdfValue - analyticValue ) * ( pdfValue - analyticValue );
+
+        }
+        
+        aL2E = sqrt(aL2E) / _M;
+        
+    }
+
+    void sparseGrid::ComputeTensorProductSet ( std::vector< std::vector <unsigned>> &Tp, const unsigned & T1, const unsigned & T2 )
     {
 
         unsigned tensorProductDim = pow ( T1, T2 );
