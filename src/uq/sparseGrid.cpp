@@ -440,7 +440,7 @@ namespace femus
                 pdfValue += _nodalValuesPDF[w][i] * valuePhi;
 //                 phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
 
-                if ( print == true )      std::cout << phiFncts[w][i] << "," ;
+//                 if ( print == true )      std::cout << phiFncts[w][i] << "," ;
             }
         }
 

@@ -26,7 +26,7 @@ unsigned alpha = 5;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 1; //dimension of the parameter space (each of the M samples has N entries)
 unsigned L = alpha;
-bool output = true; //for debugging
+bool output = false; //for debugging
 bool matlabView = true;
 
 double xmin = - 5.5;   //-1.5 for uniform // -5.5 for Gaussian
