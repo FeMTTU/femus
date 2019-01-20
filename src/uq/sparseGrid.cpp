@@ -273,7 +273,7 @@ namespace femus
         double leftBoundOfSupport = _nodes[n][l][i] - _hs[n][l]; // this is xi - h
         double rightBoundOfSupport = _nodes[n][l][i] + _hs[n][l]; // this is xi + h
 
-        if ( x > leftBoundOfSupport && x <= rightBoundOfSupport ) {
+        if ( x > leftBoundOfSupport && x < rightBoundOfSupport ) {
 
             phi = 1 - fabs ( ( x - _nodes[n][l][i] ) / _hs[n][l] );
 
@@ -310,7 +310,7 @@ namespace femus
             double leftBoundOfSupport = _nodes[n][l][i] - _hs[n][l]; // this is xi - h
             double rightBoundOfSupport = _nodes[n][l][i] + _hs[n][l]; // this is xi + h
 
-            if ( x > leftBoundOfSupport && x <= rightBoundOfSupport ) maybeThere = 1;
+            if ( x > leftBoundOfSupport && x < rightBoundOfSupport ) maybeThere = 1;
 
             else maybeThere = 0;
         }
@@ -390,7 +390,7 @@ namespace femus
                     if ( _dofIdentifier[w][i][n][1] > levelOfPhi ) levelOfPhi = _dofIdentifier[w][i][n][1];
                 }
 
-                if ( _output )      std::cout << "w = " << w << " i = " << i <<  " supportMeasure = " << supportMeasure << std::endl;
+                if ( _output )   std::cout << "w = " << w << " i = " << i <<  " supportMeasure = " << supportMeasure << std::endl;
 
                 _nodalValuesPDF[w][i] /= ( supportMeasure * _M );
 
@@ -401,10 +401,13 @@ namespace femus
 
                         unsigned isThere;
                         InSupport ( isThere, _hierarchicalDofsCoordinates[w][i], _dofIdentifier[w1][i1] );
+                        
+                        std::cout<<"w = "<<  w <<  " w1 = " << w1 << " i1 = " << i1 << " isThere = " << isThere << " dofsOfW = " << dofsOfW << " dofsOfWLower = " << dofsOfWLower <<std::endl;
 
                         if ( isThere == 1 && dofsOfWLower < dofsOfW ) {
 
                             _nodalValuesPDF[w][i] -= _nodalValuesPDF[w1][i1] ;
+                            if(w==2 || w== 5) std::cout<<  " let's see " << _nodalValuesPDF[w1][i1] << std::endl;
                         }
 
                     }
