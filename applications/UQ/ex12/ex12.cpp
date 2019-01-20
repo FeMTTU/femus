@@ -22,11 +22,11 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 5;
+unsigned alpha = 3;
 unsigned M = pow ( 10, alpha ); //number of samples
-unsigned N = 1; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = alpha;
-bool output = false; //for debugging
+unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
+unsigned L = alpha; //max refinement level
+bool output = true; //for debugging
 bool matlabView = true;
 
 double xmin = - 5.5;   //-1.5 for uniform // -5.5 for Gaussian
@@ -92,8 +92,8 @@ int main ( int argc, char** argv )
     }
 
     //END
-    
-    
+
+
 
     //BEGIN initialize grid and compute nodal values
     clock_t total_time = clock();
@@ -105,13 +105,13 @@ int main ( int argc, char** argv )
 
     clock_t nodal_time = clock();
     spg.EvaluateNodalValuesPDF ( samples );
-//     spg.PrintNodalValuesPDF();
+    spg.PrintNodalValuesPDF();
 
     std::cout << std::endl << " Builds nodal values in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - nodal_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
     //END
-              
-              
+
+
 
     //BEGIN  create grid for plot in 2D
 
@@ -162,16 +162,26 @@ int main ( int argc, char** argv )
 
     unsigned counterGrid = 0;
 
-//     for ( unsigned j = 0; j < gridPoints[1]; j++ ) {
-    for ( unsigned i = 0; i < gridPoints[0]; i++ ) {
-        grid.resize ( counterGrid + 1 );
-        grid[counterGrid].resize ( N );
-        grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
-//             grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
-        counterGrid++;
+    if ( N == 1 ) {
+        for ( unsigned i = 0; i < gridPoints[0]; i++ ) {
+            grid.resize ( counterGrid + 1 );
+            grid[counterGrid].resize ( N );
+            grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
+            counterGrid++;
+        }
     }
 
-//     }
+    else if ( N > 1 ) {
+        for ( unsigned j = 0; j < gridPoints[1]; j++ ) {
+            for ( unsigned i = 0; i < gridPoints[0]; i++ ) {
+                grid.resize ( counterGrid + 1 );
+                grid[counterGrid].resize ( N );
+                grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
+                grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
+                counterGrid++;
+            }
+        }
+    }
 
 //END create grid
 
@@ -186,13 +196,15 @@ int main ( int argc, char** argv )
 
         std::cout << "];" << std::endl;
 
-//         std::cout << "y=[" << std::endl;
-//
-//         for ( unsigned i = 0; i < grid.size(); i++ ) {
-//             std::cout << grid[i][1] << std::endl;
-//         }
-//
-//         std::cout << "];" << std::endl;
+        if ( N > 1 ) {
+            std::cout << "y=[" << std::endl;
+
+            for ( unsigned i = 0; i < grid.size(); i++ ) {
+                std::cout << grid[i][1] << std::endl;
+            }
+
+            std::cout << "];" << std::endl;
+        }
 
         clock_t pdf_time = clock();
 
@@ -212,12 +224,17 @@ int main ( int argc, char** argv )
 
 //END grid plot
 
+    double integral;
+    spg.EvaluatePDFIntegral ( integral );
+
+    std::cout << " PDF Integral is = " << integral << std::endl;
+
 
 //BEGIN compute error
     clock_t error_time = clock();
 
- double aL2E;
- spg.ComputeAvgL2Error(aL2E, samples, 1);
+    double aL2E;
+    spg.ComputeAvgL2Error ( aL2E, samples, 1 );
 
     std::cout << " Averaged L2 error is = " << aL2E << std::endl;
 
