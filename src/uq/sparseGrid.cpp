@@ -113,8 +113,9 @@ namespace femus
                 sum += ( Tp[i][j] + 1 ); //this is because our indices start from 0 but the requirement assumes they start from 1
             }
 
-            if ( sum <= _L + _N - 1 ) {
+            if ( sum <= _L + _N - 1 ) { //this is to use sparse grid
 //                if ( sum == _L * _N ) { //this is to use the method with standard FEM
+//             if ( sum <= _L * _N ) { //this is to use full grid
 
                 _indexSetW.resize ( indexCounter + 1 );
                 _indexSetW[indexCounter].resize ( _N );
@@ -310,7 +311,7 @@ namespace femus
             double leftBoundOfSupport = _nodes[n][l][i] - _hs[n][l]; // this is xi - h
             double rightBoundOfSupport = _nodes[n][l][i] + _hs[n][l]; // this is xi + h
 
-            if ( x > leftBoundOfSupport && x < rightBoundOfSupport ) maybeThere = 1;
+            if ( x > leftBoundOfSupport && x <= rightBoundOfSupport ) maybeThere = 1;
 
             else maybeThere = 0;
         }
@@ -372,7 +373,8 @@ namespace femus
 
         for ( unsigned w = 1; w < _numberOfWs; w++ ) {
             unsigned dofsOfW =  _nodalValuesPDF[w].size();
-            for ( unsigned i = 0; i <dofsOfW; i++ ) {
+
+            for ( unsigned i = 0; i < dofsOfW; i++ ) {
                 for ( unsigned m = 0; m < _M; m++ ) {
 
                     unsigned isThere;
@@ -394,20 +396,22 @@ namespace femus
 
                 _nodalValuesPDF[w][i] /= ( supportMeasure * _M );
 
-                
+
                 for ( unsigned w1 = 0; w1 < w; w1++ ) {
                     unsigned dofsOfWLower = _nodalValuesPDF[w1].size();
+
                     for ( unsigned i1 = 0; i1 < dofsOfWLower; i1++ ) {
 
                         unsigned isThere;
                         InSupport ( isThere, _hierarchicalDofsCoordinates[w][i], _dofIdentifier[w1][i1] );
-                        
-                        std::cout<<"w = "<<  w <<  " w1 = " << w1 << " i1 = " << i1 << " isThere = " << isThere << " dofsOfW = " << dofsOfW << " dofsOfWLower = " << dofsOfWLower <<std::endl;
+
+                        std::cout << "w = " <<  w <<  " w1 = " << w1 << " i1 = " << i1 << " isThere = " << isThere << " dofsOfW = " << dofsOfW << " dofsOfWLower = " << dofsOfWLower << std::endl;
 
                         if ( isThere == 1 && dofsOfWLower < dofsOfW ) {
 
                             _nodalValuesPDF[w][i] -= _nodalValuesPDF[w1][i1] ;
-                            if(w==2 || w== 5) std::cout<<  " let's see " << _nodalValuesPDF[w1][i1] << std::endl;
+
+                            if ( w == 2 || w == 5 ) std::cout <<  " let's see " << _nodalValuesPDF[w1][i1] << std::endl;
                         }
 
                     }
@@ -422,7 +426,8 @@ namespace femus
     {
 
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-            std::cout<< "------------------------ w = " << w << " ------------------------ " << std::endl;
+            std::cout << "------------------------ w = " << w << " ------------------------ " << std::endl;
+
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
 
                 for ( unsigned n = 0; n < _N; n++ ) {
