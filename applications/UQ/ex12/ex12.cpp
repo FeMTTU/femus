@@ -22,11 +22,11 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 6;
+unsigned alpha = 5;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
 unsigned L = alpha; //max refinement level
-bool output = true; //for debugging
+bool output = false; //for debugging
 bool matlabView = true;
 
 double xmin = - 5.5;   //-1.5 for uniform // -5.5 for Gaussian
@@ -127,7 +127,8 @@ int main ( int argc, char** argv )
     std::vector < std::vector < double> > gridBounds ( N );
 
     for ( unsigned n = 0; n < N; n++ ) {
-        gridPoints[n] = static_cast<unsigned> ( pow ( 2, refinementLevel[n] ) + 1 );
+//         gridPoints[n] = static_cast<unsigned> ( pow ( 2, refinementLevel[n] ) + 1 );
+        gridPoints[n] = static_cast<unsigned> ( pow ( 2, refinementLevel[n] )  ); //to compare the histogram with the full grid
         gridBounds[n].resize ( 2 );
     }
 
@@ -176,14 +177,98 @@ int main ( int argc, char** argv )
             for ( unsigned i = 0; i < gridPoints[0]; i++ ) {
                 grid.resize ( counterGrid + 1 );
                 grid[counterGrid].resize ( N );
-                grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
-                grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
+//                 grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
+//                 grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
+                grid[counterGrid][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0]; //to compare the histogram with the full grid
+                grid[counterGrid][1] = ( gridBounds[1][0] + h[1] * 0.5 ) + j * h[0]; //to compare the histogram with the full grid
                 counterGrid++;
             }
         }
     }
 
-//END create grid
+    //END create grid
+
+
+    //BEGIN create histogram on finest grid for comparison
+    unsigned histoSize1D =  static_cast<unsigned> ( pow ( 2, refinementLevel[0] ) ) ;
+    unsigned totNumberOfBins = static_cast<unsigned> ( pow ( histoSize1D, N ) ); //tot number of bins
+    std::vector <double> histogram ( totNumberOfBins );
+
+    std::vector < std::vector < double > > histoGrid ( totNumberOfBins );
+
+    for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+        histoGrid[i].resize ( N );
+    }
+
+    unsigned counterHisto = 0;
+
+    if ( N == 1 ) {
+        for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+            histoGrid[counterHisto][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0];
+            counterHisto++;
+        }
+    }
+
+    else if ( N > 1 ) {
+        for ( unsigned j = 0; j < histoSize1D; j++ ) {
+            for ( unsigned i = 0; i < histoSize1D; i++ ) {
+                histoGrid[counterHisto][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0];
+                histoGrid[counterHisto][1] = ( gridBounds[1][0] + h[1] * 0.5 ) + j * h[1];
+                counterHisto++;
+            }
+        }
+    }
+
+    for ( unsigned m = 0; m < M; m++ ) {
+        for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+
+            std::vector<unsigned> inSupport ( N, 0 );
+
+            for ( unsigned n = 0; n < N; n++ ) {
+                if ( samples[m][n] > histoGrid[i][n] - h[n] && samples[m][n] <= histoGrid[i][n] + h[n] ) {
+                    inSupport[n] = 1;
+                }
+            }
+
+            unsigned sumCheck = 0;
+
+            for ( unsigned n = 0; n < N; n++ ) {
+                sumCheck += inSupport[n];
+            }
+
+            if ( sumCheck == N ) {
+                histogram[i]++;
+                break;
+            }
+
+        }
+    }
+
+    //evaluation of histogram integral
+
+    double histoIntegral = 0.;
+    double supportMeasure = pow ( h[0] , N );
+
+    for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+        histoIntegral += supportMeasure * histogram[i];
+    }
+
+    for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+        histogram[i] /= histoIntegral;
+    }
+
+    std::cout<< " HISTO" << std::endl;
+    for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+        for ( unsigned n = 0; n < N; n++ ) {
+            std::cout << histoGrid[i][n] << " , " ;
+        }
+
+        std::cout << histogram[i] << std::endl;
+    }
+
+
+//END
+
 
 
 //BEGIN grid plot
@@ -221,6 +306,7 @@ int main ( int argc, char** argv )
                   << static_cast<double> ( ( clock() - pdf_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
     }
+
 
 //END grid plot
 
