@@ -405,7 +405,7 @@ namespace femus
                         unsigned isThere;
                         InSupport ( isThere, _hierarchicalDofsCoordinates[w][i], _dofIdentifier[w1][i1] );
 
-                        std::cout << "w = " <<  w <<  " w1 = " << w1 << " i1 = " << i1 << " isThere = " << isThere << " dofsOfW = " << dofsOfW << " dofsOfWLower = " << dofsOfWLower << std::endl;
+//                         std::cout << "w = " <<  w <<  " w1 = " << w1 << " i1 = " << i1 << " isThere = " << isThere << " dofsOfW = " << dofsOfW << " dofsOfWLower = " << dofsOfWLower << std::endl;
 
                         bool doThey;
                         SupportIsContained ( doThey, w, i, w1, i1 );
@@ -415,7 +415,7 @@ namespace femus
 
                             _nodalValuesPDF[w][i] -= _nodalValuesPDF[w1][i1] ;
 
-                            if ( w == 2 || w == 5 ) std::cout <<  " let's see " << _nodalValuesPDF[w1][i1] << std::endl;
+//                             if ( w == 2 || w == 5 ) std::cout <<  " let's see " << _nodalValuesPDF[w1][i1] << std::endl;
                         }
 
                     }

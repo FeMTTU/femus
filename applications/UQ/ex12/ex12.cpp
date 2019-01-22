@@ -24,10 +24,11 @@ using namespace femus;
 
 unsigned alpha = 6;
 unsigned M = pow ( 10, alpha ); //number of samples
-unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
+unsigned N = 3; //dimension of the parameter space (each of the M samples has N entries)
 unsigned L = alpha; //max refinement level
 bool output = false; //for debugging
-bool matlabView = true;
+bool matlabView = false;
+bool histoView = false;
 
 double xmin = - 5.5;   //-1.5 for uniform // -5.5 for Gaussian
 double xmax = 5.5;     //1.5 for uniform // 5.5 for Gaussian
@@ -105,7 +106,7 @@ int main ( int argc, char** argv )
 
     clock_t nodal_time = clock();
     spg.EvaluateNodalValuesPDF ( samples );
-    spg.PrintNodalValuesPDF();
+//     spg.PrintNodalValuesPDF();
 
     std::cout << std::endl << " Builds nodal values in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - nodal_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
@@ -128,7 +129,6 @@ int main ( int argc, char** argv )
 
     for ( unsigned n = 0; n < N; n++ ) {
         gridPoints[n] = static_cast<unsigned> ( pow ( 2, refinementLevel[n] ) + 1 );
-//         gridPoints[n] = static_cast<unsigned> ( pow ( 2, refinementLevel[n] )  ); //to compare the histogram with the full grid
         gridBounds[n].resize ( 2 );
     }
 
@@ -179,8 +179,6 @@ int main ( int argc, char** argv )
                 grid[counterGrid].resize ( N );
                 grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
                 grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
-//                 grid[counterGrid][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0]; //to compare the histogram with the full grid
-//                 grid[counterGrid][1] = ( gridBounds[1][0] + h[1] * 0.5 ) + j * h[0]; //to compare the histogram with the full grid
                 counterGrid++;
             }
         }
@@ -190,82 +188,76 @@ int main ( int argc, char** argv )
 
 
     //BEGIN create histogram on finest grid for comparison
+
     unsigned histoSize1D =  static_cast<unsigned> ( pow ( 2, refinementLevel[0] ) ) ;
     unsigned totNumberOfBins = static_cast<unsigned> ( pow ( histoSize1D, N ) ); //tot number of bins
     std::vector <double> histogram ( totNumberOfBins );
 
     std::vector < std::vector < double > > histoGrid ( totNumberOfBins );
 
-    for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
-        histoGrid[i].resize ( N );
-    }
+    if ( histoView ) {
 
-    unsigned counterHisto = 0;
-
-    if ( N == 1 ) {
         for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
-            histoGrid[counterHisto][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0];
-            counterHisto++;
+            histoGrid[i].resize ( N );
         }
-    }
 
-    else if ( N > 1 ) {
-        for ( unsigned j = 0; j < histoSize1D; j++ ) {
-            for ( unsigned i = 0; i < histoSize1D; i++ ) {
+        unsigned counterHisto = 0;
+
+        if ( N == 1 ) {
+            for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
                 histoGrid[counterHisto][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0];
-                histoGrid[counterHisto][1] = ( gridBounds[1][0] + h[1] * 0.5 ) + j * h[1];
                 counterHisto++;
             }
         }
-    }
 
-    for ( unsigned m = 0; m < M; m++ ) {
-        for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
-
-            std::vector<unsigned> inSupport ( N, 0 );
-
-            for ( unsigned n = 0; n < N; n++ ) {
-                if ( samples[m][n] > histoGrid[i][n] - h[n] && samples[m][n] <= histoGrid[i][n] + h[n] ) {
-                    inSupport[n] = 1;
+        else if ( N > 1 ) {
+            for ( unsigned j = 0; j < histoSize1D; j++ ) {
+                for ( unsigned i = 0; i < histoSize1D; i++ ) {
+                    histoGrid[counterHisto][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0];
+                    histoGrid[counterHisto][1] = ( gridBounds[1][0] + h[1] * 0.5 ) + j * h[1];
+                    counterHisto++;
                 }
             }
-
-            unsigned sumCheck = 0;
-
-            for ( unsigned n = 0; n < N; n++ ) {
-                sumCheck += inSupport[n];
-            }
-
-            if ( sumCheck == N ) {
-                histogram[i]++;
-                break;
-            }
-
-        }
-    }
-
-    //evaluation of histogram integral
-
-    double histoIntegral = 0.;
-    double supportMeasure = pow ( h[0] , N );
-
-    for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
-        histoIntegral += supportMeasure * histogram[i];
-    }
-
-    for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
-        histogram[i] /= histoIntegral;
-    }
-
-    std::cout<< " HISTO" << std::endl;
-    for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
-        for ( unsigned n = 0; n < N; n++ ) {
-            std::cout << histoGrid[i][n] << " , " ;
         }
 
-        std::cout << histogram[i] << std::endl;
-    }
+        for ( unsigned m = 0; m < M; m++ ) {
+            for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
 
+                std::vector<unsigned> inSupport ( N, 0 );
+
+                for ( unsigned n = 0; n < N; n++ ) {
+                    if ( samples[m][n] > ( histoGrid[i][n] - h[n] ) && samples[m][n] <= ( histoGrid[i][n] + h[n] ) ) {
+                        inSupport[n] = 1;
+                    }
+                }
+
+                unsigned sumCheck = 0;
+
+                for ( unsigned n = 0; n < N; n++ ) {
+                    sumCheck += inSupport[n];
+                }
+
+                if ( sumCheck == N ) {
+                    histogram[i]++;
+                    break;
+                }
+
+            }
+        }
+
+        //evaluation of histogram integral
+
+        double histoIntegral = 0.;
+        double supportMeasure = pow ( h[0] , N );
+
+        for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+            histoIntegral += supportMeasure * histogram[i];
+        }
+
+        for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+            histogram[i] /= histoIntegral;
+        }
+    }
 
 //END
 
@@ -305,10 +297,65 @@ int main ( int argc, char** argv )
         std::cout << std::endl << " Builds PDF in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
                   << static_cast<double> ( ( clock() - pdf_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
+
+
+        if ( histoView ) {
+            std::cout << "HISTO=[" << std::endl;
+
+            for ( unsigned i = 0; i < grid.size(); i++ ) {
+
+                bool sampleCought  = false;
+
+                for ( unsigned j = 0; j < histoGrid.size(); j++ ) {
+
+                    std::vector <unsigned> inBin ( N, 0 );
+
+                    for ( unsigned n = 0; n < N; n++ ) {
+
+                        double leftBound = histoGrid[j][n] - h[n] * 0.5;
+
+                        double rightBound = histoGrid[j][n] + h[n] * 0.5;
+
+                        if ( grid[i][n] >  leftBound && grid[i][n] <= rightBound ) {
+
+                            inBin[n] = 1;
+
+                        }
+
+                    }
+
+                    unsigned sumCheck = 0;
+
+                    for ( unsigned n = 0; n < N; n++ ) {
+                        sumCheck += inBin[n];
+                    }
+
+                    if ( sumCheck == N ) {
+
+                        for ( unsigned n = 0; n < N; n++ ) {
+//                     std::cout << "grid[" << i << "][" << n << "] = " << grid[i][n] << " " << histoGrid[j][n] - h[n] * 0.5 << " , " <<  histoGrid[j][n] + h[n] * 0.5  << std::endl;
+                        }
+
+                        std::cout << histogram[j] << std::endl;
+
+                        sampleCought = true;
+
+                        break;
+
+                    }
+
+                }
+
+                if ( sampleCought == false ) std::cout << 0 << std::endl;
+
+            }
+
+            std::cout << "];" << std::endl;
+        }
+
     }
 
-
-//END grid plot
+//END  plot
 
     double integral;
     spg.EvaluatePDFIntegral ( integral );
