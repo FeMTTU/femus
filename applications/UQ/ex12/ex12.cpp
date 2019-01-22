@@ -22,7 +22,7 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 5;
+unsigned alpha = 6;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
 unsigned L = alpha; //max refinement level
@@ -127,8 +127,8 @@ int main ( int argc, char** argv )
     std::vector < std::vector < double> > gridBounds ( N );
 
     for ( unsigned n = 0; n < N; n++ ) {
-//         gridPoints[n] = static_cast<unsigned> ( pow ( 2, refinementLevel[n] ) + 1 );
-        gridPoints[n] = static_cast<unsigned> ( pow ( 2, refinementLevel[n] )  ); //to compare the histogram with the full grid
+        gridPoints[n] = static_cast<unsigned> ( pow ( 2, refinementLevel[n] ) + 1 );
+//         gridPoints[n] = static_cast<unsigned> ( pow ( 2, refinementLevel[n] )  ); //to compare the histogram with the full grid
         gridBounds[n].resize ( 2 );
     }
 
@@ -177,10 +177,10 @@ int main ( int argc, char** argv )
             for ( unsigned i = 0; i < gridPoints[0]; i++ ) {
                 grid.resize ( counterGrid + 1 );
                 grid[counterGrid].resize ( N );
-//                 grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
-//                 grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
-                grid[counterGrid][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0]; //to compare the histogram with the full grid
-                grid[counterGrid][1] = ( gridBounds[1][0] + h[1] * 0.5 ) + j * h[0]; //to compare the histogram with the full grid
+                grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
+                grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
+//                 grid[counterGrid][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0]; //to compare the histogram with the full grid
+//                 grid[counterGrid][1] = ( gridBounds[1][0] + h[1] * 0.5 ) + j * h[0]; //to compare the histogram with the full grid
                 counterGrid++;
             }
         }

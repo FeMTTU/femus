@@ -113,9 +113,9 @@ namespace femus
                 sum += ( Tp[i][j] + 1 ); //this is because our indices start from 0 but the requirement assumes they start from 1
             }
 
-//             if ( sum <= _L + _N - 1 ) { //this is to use sparse grid
+            if ( sum <= _L + _N - 1 ) { //this is to use sparse grid
 //                if ( sum == _L * _N ) { //this is to use the method with standard FEM
-            if ( sum <= _L * _N ) { //this is to use full grid
+//             if ( sum <= _L * _N ) { //this is to use full grid
 
                 _indexSetW.resize ( indexCounter + 1 );
                 _indexSetW[indexCounter].resize ( _N );
@@ -405,13 +405,17 @@ namespace femus
                         unsigned isThere;
                         InSupport ( isThere, _hierarchicalDofsCoordinates[w][i], _dofIdentifier[w1][i1] );
 
-//                         std::cout << "w = " <<  w <<  " w1 = " << w1 << " i1 = " << i1 << " isThere = " << isThere << " dofsOfW = " << dofsOfW << " dofsOfWLower = " << dofsOfWLower << std::endl;
+                        std::cout << "w = " <<  w <<  " w1 = " << w1 << " i1 = " << i1 << " isThere = " << isThere << " dofsOfW = " << dofsOfW << " dofsOfWLower = " << dofsOfWLower << std::endl;
 
-                        if ( isThere == 1 && dofsOfWLower < dofsOfW ) {
+                        bool doThey;
+                        SupportIsContained ( doThey, w, i, w1, i1 );
+
+
+                        if ( isThere == 1 && dofsOfWLower < dofsOfW && doThey == true) {
 
                             _nodalValuesPDF[w][i] -= _nodalValuesPDF[w1][i1] ;
 
-//                             if ( w == 2 || w == 5 ) std::cout <<  " let's see " << _nodalValuesPDF[w1][i1] << std::endl;
+                            if ( w == 2 || w == 5 ) std::cout <<  " let's see " << _nodalValuesPDF[w1][i1] << std::endl;
                         }
 
                     }
@@ -419,6 +423,37 @@ namespace femus
 
             }
         }
+
+    }
+
+    void sparseGrid::SupportIsContained ( bool &check, const unsigned &w, const unsigned &i, const unsigned &wLower, const unsigned &iLower )
+    {
+
+        check = false;
+
+        std::vector < double > dimensionalCheck ( _N, 0 );
+
+        for ( unsigned n = 0; n < _N; n++ ) {
+
+            double leftBound = _hierarchicalDofsCoordinates[w][i][n] - _hs[n][_dofIdentifier[w][i][n][1]];
+            double rightBound = _hierarchicalDofsCoordinates[w][i][n] + _hs[n][_dofIdentifier[w][i][n][1]];
+
+            double leftBoundLower = _hierarchicalDofsCoordinates[wLower][iLower][n] - _hs[n][_dofIdentifier[wLower][iLower][n][1]];
+            double rightBoundLower = _hierarchicalDofsCoordinates[wLower][iLower][n] + _hs[n][_dofIdentifier[wLower][iLower][n][1]];
+
+            if ( leftBoundLower <= leftBound && rightBound <= rightBoundLower ) dimensionalCheck[n] = 1;
+        }
+
+
+        double sumCheck = 0;
+
+        for ( unsigned n = 0; n < _N; n++ ) {
+
+            sumCheck += dimensionalCheck[n];
+
+        }
+
+        if ( sumCheck == _N ) check = true;
 
     }
 
@@ -599,6 +634,7 @@ namespace femus
 
 
 }
+
 
 
 

@@ -34,6 +34,8 @@ namespace femus
         void ComputeAvgL2Error( double &aL2E, std::vector < std::vector < double > >  &samples, const unsigned &analyticPdfType);
         
         void EvaluatePDFIntegral (double &integral);
+        
+        void SupportIsContained ( bool &check, const unsigned &w, const unsigned &i, const unsigned &wLower, const unsigned &iLower);
 
         void ComputeTensorProductSet ( std::vector< std::vector <unsigned>> &Tp, const unsigned &T1, const unsigned &T2 );
         
