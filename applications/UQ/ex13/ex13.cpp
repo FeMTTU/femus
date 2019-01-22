@@ -17,7 +17,6 @@
 
 #include <vector>
 
-//THIS EXTENDS WHAT IS IN EX10 TO SPARSE GRIDS (so stochastic dimension grater than 3)
 
 using namespace femus;
 
