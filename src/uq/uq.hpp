@@ -166,6 +166,20 @@ namespace femus {
       ////////////////////////////////////////////
 
     private:
+        
+      /// Get Hermite quadrature point coordinates
+      const double* GetHermiteQuadraturePoints (const unsigned &numberOfQuadraturePoints);
+
+      /// Get Hermite quadrature weights
+      const double* GetHermiteQuadratureWeights (const unsigned &numberOfQuadraturePoints);  
+      
+      /// Get Legenndre quadrature point coordinates
+      const double* GetLegendreQuadraturePoints (const unsigned &numberOfQuadraturePoints);
+
+      /// Get Legendrew quadrature weights
+      const double* GetLegendreQuadratureWeights (const unsigned &numberOfQuadraturePoints);  
+      
+        
       /// Compute the Hermite Polynomial at the key < numberOfQuadraturePoints, maxPolyOrder >
       void ComputeHermitePolynomial (std::vector < std::vector < double > >  & hermitePoly,
                                      const unsigned &numberOfQuadraturePoints, const unsigned & maxPolyOrder);
