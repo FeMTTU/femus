@@ -228,40 +228,64 @@ namespace femus {
     }
   };
 
+/// Get Hermite quadrature point coordinates
+  const double* uq::GetHermiteQuadraturePoints (const unsigned &numberOfQuadraturePoints) {
+    if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
+      std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetHermiteQuadaturePoints(...)" << std::endl;
+      abort();
+    }
+    return _hermiteQuadrature[numberOfQuadraturePoints - 1][1];
+  }
+
+  /// Get Legendre quadrature point coordinates
+  const double* uq::GetLegendreQuadraturePoints (const unsigned &numberOfQuadraturePoints) {
+    if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
+      std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetLegendreQuadaturePoints(...)" << std::endl;
+      abort();
+    }
+    return _legendreQuadrature[numberOfQuadraturePoints - 1][1];
+
+  }
+
 /// Get quadrature point coordinates
   const double* uq::GetQuadraturePoints (const unsigned &numberOfQuadraturePoints) {
-
     if (_quadratureType == UQ_HERMITE) {
-      if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
-        std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetHermiteQuadaturePoints(...)" << std::endl;
-        abort();
-      }
-      return _hermiteQuadrature[numberOfQuadraturePoints - 1][1];
+      return GetHermiteQuadraturePoints (numberOfQuadraturePoints);
     }
     else {
-      if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
-        std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetLegendreQuadaturePoints(...)" << std::endl;
-        abort();
-      }
-      return _legendreQuadrature[numberOfQuadraturePoints - 1][1];
+      return GetLegendreQuadraturePoints (numberOfQuadraturePoints);
     }
   }
+
+
+/// Get Hermite quadrature weights
+  const double* uq::GetHermiteQuadratureWeights (const unsigned &numberOfQuadraturePoints) {
+    if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
+      std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetHermiteQuadatureWeights(...)" << std::endl;
+      abort();
+    }
+    return _hermiteQuadrature[numberOfQuadraturePoints - 1][0];
+
+  }
+
+/// Get Legendre quadrature weights
+  const double* uq::GetLegendreQuadratureWeights (const unsigned &numberOfQuadraturePoints) {
+    if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
+      std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetLegendreQuadatureWeights(...)" << std::endl;
+      abort();
+    }
+    return _legendreQuadrature[numberOfQuadraturePoints - 1][0];
+
+  }
+
 
 /// Get quadrature weights
   const double* uq::GetQuadratureWeights (const unsigned &numberOfQuadraturePoints) {
     if (_quadratureType == UQ_HERMITE) {
-      if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
-        std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetHermiteQuadatureWeights(...)" << std::endl;
-        abort();
-      }
-      return _hermiteQuadrature[numberOfQuadraturePoints - 1][0];
+      return GetHermiteQuadratureWeights (numberOfQuadraturePoints);
     }
     else {
-      if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
-        std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetLegendreQuadatureWeights(...)" << std::endl;
-        abort();
-      }
-      return _legendreQuadrature[numberOfQuadraturePoints - 1][0];
+      return GetLegendreQuadratureWeights (numberOfQuadraturePoints);
     }
   }
 
@@ -350,7 +374,7 @@ namespace femus {
         hermitePoly[i].resize (numberOfQuadraturePoints);
       }
 
-      const double* hermiteQuadraturePoints = GetQuadraturePoints (numberOfQuadraturePoints);
+      const double* hermiteQuadraturePoints = GetHermiteQuadraturePoints (numberOfQuadraturePoints);
 
       for (unsigned j = 0; j < numberOfQuadraturePoints; j++) {
 
@@ -411,7 +435,7 @@ namespace femus {
         legendrePoly[i].resize (numberOfQuadraturePoints);
       }
 
-      const double* legendreQuadraturePoints = GetQuadraturePoints (numberOfQuadraturePoints);
+      const double* legendreQuadraturePoints = GetLegendreQuadraturePoints (numberOfQuadraturePoints);
 
       for (unsigned j = 0; j < numberOfQuadraturePoints; j++) {
 
@@ -910,6 +934,7 @@ namespace femus {
 
 
 }
+
 
 
 

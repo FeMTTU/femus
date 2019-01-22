@@ -5,8 +5,8 @@ using namespace femus;
 
 //BEGIN Stochastic Input Parameters
 
-uq &myuq = FemusInit::_uqHermite;
-// uq &myuq = FemusInit::_uqLegendre;
+//uq &myuq = FemusInit::_uqHermite;
+uq &myuq = FemusInit::_uqLegendre;
 
 unsigned pIndex = 4;
 unsigned qIndex = 5;
@@ -19,18 +19,12 @@ std::vector < std::pair<double, double> > eigenvalues (numberOfEigPairs);
 
 //END Stochastic Input Parameters
 
-
-
 void AssembleSysSG (MultiLevelProblem& ml_prob) {
-
-
 
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
-
-
   //  extract pointers to the several objects that we are going to use
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("SG");   // pointer to the linear implicit system named "Poisson"
