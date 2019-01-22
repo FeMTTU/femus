@@ -25,6 +25,8 @@ using namespace femus;
 
 //BEGIN stochastic data
 
+bool sparse = false;
+
 unsigned alpha = 6;
 unsigned M = pow (10, alpha);   //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
@@ -32,8 +34,8 @@ unsigned L = 5; //max refinement level
 bool output = false; //for debugging
 bool matlabView = true;
 
-double xmin = - 1.5;   //-1.5 for uniform // -5.5 for Gaussian
-double xmax = 1.5;     //1.5 for uniform // 5.5 for Gaussian
+double xmin = - 1.;   //-1.5 for uniform // -5.5 for Gaussian
+double xmax = 1.;     //1.5 for uniform // 5.5 for Gaussian
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -143,7 +145,7 @@ int main (int argc, char** argv) {
     for (unsigned iL = 0; iL < cH.size(); iL++) {
       double hx = Hx / pow (2., iL);
       double x = X * pow (2., iL);
-      for (unsigned jL = 0; jL < cH[iL].size(); jL++) {
+      for (unsigned jL = 0; iL * sparse + jL < cH[iL].size(); jL++) {
         double hy = Hy / pow (2., jL);
         double y = Y * pow (2., jL);
         unsigned i = static_cast < unsigned > (floor (x));
@@ -157,7 +159,7 @@ int main (int argc, char** argv) {
 
 
   for (unsigned iL = 0; iL < cH.size(); iL++) {
-    for (unsigned jL = 0; jL < cH[iL].size(); jL++) {
+    for (unsigned jL = 0; iL * sparse + jL < cH[iL].size(); jL++) {
       //std::cout << iL << " " << jL << std::endl;
       int iL1 = iL;
       while (iL1 >= 0) {
@@ -218,9 +220,19 @@ int main (int argc, char** argv) {
     }
   }
 
+  std::cout<<"Histogram reconstructed from Hierarchical Bases"<<std::endl;
+  for (unsigned i = 0; i < dim; i++) {
+    for (unsigned j = 0; j < dim; j++) {
+      std::cout << cIr[i][j] << " ";
+    }
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
+  std::cout << std::endl;
+  
+  
 
   std::cout<<"Difference between Histogram and Histogram reconstructed from Hierarchical Bases"<<std::endl;
-  std::cout << std::endl;
   for (unsigned i = 0; i < dim; i++) {
     for (unsigned j = 0; j < dim; j++) {
       std::cout << (cI[i][j] - cIr[i][j]) << " ";
