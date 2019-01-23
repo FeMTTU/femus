@@ -113,9 +113,9 @@ namespace femus
                 sum += ( Tp[i][j] + 1 ); //this is because our indices start from 0 but the requirement assumes they start from 1
             }
 
-            if ( sum <= _L + _N - 1 ) { //this is to use sparse grid
+//            if ( sum <= _L + _N - 1 ) { //this is to use sparse grid
 //                if ( sum == _L * _N ) { //this is to use the method with standard FEM
-//             if ( sum <= _L * _N ) { //this is to use full grid
+             if ( sum <= _L * _N ) { //this is to use full grid
 
                 _indexSetW.resize ( indexCounter + 1 );
                 _indexSetW[indexCounter].resize ( _N );

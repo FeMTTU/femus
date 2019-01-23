@@ -33,8 +33,8 @@ unsigned L = 5; //max refinement level
 bool output = false; //for debugging
 bool matlabView = true;
 
-double xmin = - 1.;   //-1.5 for uniform // -5.5 for Gaussian
-double xmax = 1.;     //1.5 for uniform // 5.5 for Gaussian
+double xmin = - 5.5;   //-1.5 for uniform // -5.5 for Gaussian
+double xmax = 5.5;     //1.5 for uniform // 5.5 for Gaussian
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -71,8 +71,8 @@ int main (int argc, char** argv) {
       double var = var_nor();
       double varunif = var_unif();
       double U = var_unif1();
-      //samples[m][n] = var;
-      samples[m][n] = varunif;
+      samples[m][n] = var;
+      //samples[m][n] = varunif;
     }
   }
   //END

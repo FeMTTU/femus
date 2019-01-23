@@ -22,13 +22,13 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 7;
+unsigned alpha = 4;
 unsigned M = pow ( 10, alpha ); //number of samples
-unsigned N = 3; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = alpha; //max refinement level
+unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
+unsigned L = 3;//alpha; //max refinement level
 bool output = false; //for debugging
-bool matlabView = false;
-bool histoView = false;
+bool matlabView = true;
+bool histoView = true;
 
 double xmin = - 5.5;   //-1.5 for uniform // -5.5 for Gaussian
 double xmax = 5.5;     //1.5 for uniform // 5.5 for Gaussian
@@ -377,6 +377,16 @@ int main ( int argc, char** argv )
     std::cout << " Total time: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - total_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
+    for(unsigned i = 0; i < histoSize1D; i++ ){
+      for(unsigned j = 0; j < histoSize1D; j++ ){  
+        
+        unsigned k = j * histoSize1D + i;
+                
+        std::cout << histogram[k] << " ";
+      }
+      std::cout<<std::endl;
+    }
+              
     return 0;
 
 } //end main
