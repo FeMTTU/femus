@@ -91,13 +91,13 @@ int main (int argc, char** argv) {
     double x = (samples[m][0] - xmin) / h;
     unsigned i;
     if (x < 0.) i = 0;
-    else if (x > dim) i = dim - 1;
+    else if (x >= dim) i = dim - 1;
     else i = static_cast < unsigned > (floor (x));
 
     double y = (samples[m][1] - xmin) / h;
     unsigned j;
     if (y < 0.) j = 0;
-    else if (y > dim) j = dim - 1;
+    else if (y >= dim) j = dim - 1;
     else j = static_cast < unsigned > (floor (y));
 
     cI[i][j] += 1. / (M * h2);
