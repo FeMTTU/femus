@@ -121,12 +121,12 @@ public:
 protected:
 
     double _dt;
+    
+    double _time;
 
 private:
 
     bool _is_selective_timestep;
-
-    double _time;
 
     unsigned int _time_step;
 
