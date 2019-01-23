@@ -24,12 +24,12 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-bool sparse = false;
+bool sparse = true;
 
 unsigned alpha = 6;
 unsigned M = pow (10, alpha);   //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = 5; //max refinement level
+unsigned L = 10; //max refinement level
 bool output = false; //for debugging
 bool matlabView = true;
 
@@ -103,13 +103,13 @@ int main (int argc, char** argv) {
   }
 
   
-  std::cout << "Histogram "<<std::endl;
-  for (unsigned i = 0; i < dim; i++) {
-    for (unsigned j = 0; j < dim; j++) {
-      std::cout << cI[i][j] << " ";
-    }
-    std::cout << std::endl;
-  }
+//   std::cout << "Histogram "<<std::endl;
+//   for (unsigned i = 0; i < dim; i++) {
+//     for (unsigned j = 0; j < dim; j++) {
+//       std::cout << cI[i][j] << " ";
+//     }
+//     std::cout << std::endl;
+//   }
 
   
   //Build Hierarchical Bases
@@ -181,21 +181,21 @@ int main (int argc, char** argv) {
   }
 
 
-  std::cout << std::endl;
-  std::cout << "Hierarchical bases "<<std::endl;
-  for (unsigned iL = 0; iL < cH.size(); iL++) {
-    for (unsigned jL = 0; jL < cH[iL].size(); jL++) {
-      std::cout << "iL = " << iL << " jL = "<< jL <<std::endl;   
-      for (unsigned i = 0; i < cH[iL][iL].size(); i++) {
-        for (unsigned j = 0; j < cH[iL][jL][i].size(); j++) {
-          std::cout << cH[iL][jL][i][j] << " ";
-        }
-        std::cout << std::endl;
-      }
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
-  }
+//   std::cout << std::endl;
+//   std::cout << "Hierarchical bases "<<std::endl;
+//   for (unsigned iL = 0; iL < cH.size(); iL++) {
+//     for (unsigned jL = 0; jL < cH[iL].size(); jL++) {
+//       std::cout << "iL = " << iL << " jL = "<< jL <<std::endl;   
+//       for (unsigned i = 0; i < cH[iL][iL].size(); i++) {
+//         for (unsigned j = 0; j < cH[iL][jL][i].size(); j++) {
+//           std::cout << cH[iL][jL][i][j] << " ";
+//         }
+//         std::cout << std::endl;
+//       }
+//       std::cout << std::endl;
+//     }
+//     std::cout << std::endl;
+//   }
 
 
   
@@ -219,25 +219,25 @@ int main (int argc, char** argv) {
     }
   }
 
-  std::cout<<"Histogram reconstructed from Hierarchical Bases"<<std::endl;
+ // std::cout<<"Histogram reconstructed from Hierarchical Bases"<<std::endl;
   for (unsigned i = 0; i < dim; i++) {
     for (unsigned j = 0; j < dim; j++) {
       std::cout << cIr[i][j] << " ";
     }
     std::cout << std::endl;
   }
-  std::cout << std::endl;
-  std::cout << std::endl;
+//   std::cout << std::endl;
+//   std::cout << std::endl;
   
   
 
-  std::cout<<"Difference between Histogram and Histogram reconstructed from Hierarchical Bases"<<std::endl;
-  for (unsigned i = 0; i < dim; i++) {
-    for (unsigned j = 0; j < dim; j++) {
-      std::cout << (cI[i][j] - cIr[i][j]) << " ";
-    }
-    std::cout << std::endl;
-  }
+//   std::cout<<"Difference between Histogram and Histogram reconstructed from Hierarchical Bases"<<std::endl;
+//   for (unsigned i = 0; i < dim; i++) {
+//     for (unsigned j = 0; j < dim; j++) {
+//       std::cout << (cI[i][j] - cIr[i][j]) << " ";
+//     }
+//     std::cout << std::endl;
+//   }
 
 
 
