@@ -18,23 +18,19 @@
 //----------------------------------------------------------------------------
 #include "MultiLevelProblem.hpp"
 #include "TransientSystem.hpp"
-#include "ExplicitSystem.hpp"
-#include "LinearImplicitSystem.hpp"
-#include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 
 namespace femus {
 
-
-
 // ------------------------------------------------------------
 // TransientSystem implementation
 template <class Base>
-TransientSystem<Base>::TransientSystem (MultiLevelProblem& ml_probl,
+TransientSystem<Base>::TransientSystem (
+                    MultiLevelProblem& ml_probl,
 					const std::string& name_in,
-					const unsigned int number_in,const MgSmoother & smoother_type) :
-
+					const unsigned int number_in,
+                    const MgSmoother & smoother_type) :
   Base (ml_probl, name_in, number_in,smoother_type),
   _is_selective_timestep(false),
   _time(0.),
@@ -45,20 +41,27 @@ TransientSystem<Base>::TransientSystem (MultiLevelProblem& ml_probl,
 
 }
 
+// ------------------------------------------------------------
 template <class Base>
 TransientSystem<Base>::~TransientSystem ()
 {
   this->clear();
 }
 
+// ------------------------------------------------------------
 template <class Base>
 void TransientSystem<Base>::clear ()
 {
   // clear the parent data
+  _is_selective_timestep = false;
+  _time = 0.;
+  _time_step = 0;
+  _dt = 0.1;
+  _assembleCounter= 0;     
   Base::clear();
-
 }
 
+// ------------------------------------------------------------
 template <class Base>
 void TransientSystem<Base>::CopySolutionToOldSolution() {
 
@@ -68,15 +71,14 @@ void TransientSystem<Base>::CopySolutionToOldSolution() {
 
 }
 
+// ------------------------------------------------------------
 template <class Base>
-void TransientSystem<Base>::MLsolve() {
-
+void TransientSystem<Base>::SetUpForSolve(){
   double dtOld = _dt;
 
   if (_is_selective_timestep) {
     _dt = _get_time_interval_function(_time);
   }
-
 
   if(_assembleCounter % 1 == 0 || _dt != dtOld){
     std::cout<<"Assemble Matrix\n";
@@ -98,12 +100,18 @@ void TransientSystem<Base>::MLsolve() {
   //update time step
   _time_step++;
 
-  std::cout << " Simulation Time: " << _time << "   TimeStep: " << _time_step << std::endl;
+  std::cout << " Simulation Time: " << _time << " TimeStep: " << _dt << " Iteration: " << _time_step << std::endl;
 
    //update boundary condition
-  this->_ml_sol->UpdateBdc(_time);
+  this->_ml_sol->UpdateBdc(_time); 
+}
 
-  // call the parent solver
+// ------------------------------------------------------------
+template <class Base>
+void TransientSystem<Base>::MLsolve() {
+  
+  SetUpForSolve(); 
+  // call the parent MLsolver
   Base::_MLsolver = true;
   Base::_MGsolver = false;
 
@@ -111,42 +119,12 @@ void TransientSystem<Base>::MLsolve() {
 
 }
 
+// ------------------------------------------------------------
 template <class Base>
 void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
 
-  double dtOld = _dt;
-
-  if (_is_selective_timestep) {
-    _dt = _get_time_interval_function(_time);
-  }
-
-
-  if(_assembleCounter % 1 == 0 || _dt != dtOld){
-    std::cout<<"Assemble Matrix\n";
-    Base::_buildSolver = true;
-    if( _dt != dtOld )
-      _assembleCounter = 0;
-  }
-  else{
-    std::cout<<"Do not Assemble Matrix";
-    Base::_buildSolver = false;
-  }
-  std::cout<<"assemble counter = "<<_assembleCounter<<std::endl;
-  _assembleCounter++;
-
-
-  //update time
-  _time += _dt;
-
-  //update time step
-  _time_step++;
-
-  std::cout << " Simulation Time:  " << _time << "   TimeStep: " << _time_step << std::endl;
-
-   //update boundary condition
-  this->_ml_sol->UpdateBdc(_time);
-
-  // call the parent solver
+  SetUpForSolve();  
+  // call the parent MGsolver
   Base::_MLsolver = false;
   Base::_MGsolver = true;
 
@@ -154,10 +132,7 @@ void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
 
 }
 
-
-
 //---------------------------------------------------------------------------------------------------------
-
 template <class Base>
 void TransientSystem<Base>::NewmarkAccUpdate() {
 
@@ -187,94 +162,20 @@ void TransientSystem<Base>::NewmarkAccUpdate() {
   }
 }
 
-
-//------------------------------------------------------------------------------------------------------
-
-// template <class Base>
-// int TransientSystem<Base>::SaveData() const {
-//   char *filename = new char[80];
-//   PetscVector* petsc_vec_sol;
-//
-//   PetscErrorCode ierr;
-//   PetscViewer bin_viewer;
-//   for (unsigned ig=0; ig<_gridn; ig++) {
-//     for (unsigned i=0; i<SolType.size(); i++) {
-//       sprintf(filename,"./save/save.time_%d.level_%d.%s.bin",_time_step,ig,SolName[i]);
-//       ierr = PetscViewerBinaryOpen(MPI_COMM_WORLD,filename,FILE_MODE_WRITE,&bin_viewer);
-//       CHKERRQ(ierr);
-//       //petsc_vec_sol  = static_cast<PetscVector*>(_LinSolver[0][ig]->Sol_[i]);
-//       petsc_vec_sol  = static_cast<PetscVector*>(_solution[ig]->_Sol[i]);
-//       ierr = VecView(petsc_vec_sol->vec(),bin_viewer);
-//       CHKERRQ(ierr);
-//       ierr = PetscViewerDestroy(&bin_viewer);
-//     }
-//   }
-//   delete [] filename;
-//   return ierr;
-// }
-//
-// //------------------------------------------------------------------------------------------------------
-
-// template <class Base>
-// int TransientSystem<Base>::InitializeFromRestart(unsigned restart_time_step) {
-//
-//   // Set the restart time step
-//   SetInitTimeStep(restart_time_step+1);
-//
-//   //Set the restart time
-//   if(_ats_flag==0) {
-//     _time = restart_time_step*_dt;
-//   }
-//   else {
-//     _time = 0;
-//     for(unsigned i=0; i<restart_time_step; i++) {
-//       _dt = _set_time_step_function(_time);
-//       _time += _dt;
-//     }
-//   }
-//
-//   //Set the restart time step
-//   _time_step = restart_time_step+1;
-//
-//   char *filename = new char[80];
-//   PetscVector* petsc_vec_sol;
-//
-//   PetscErrorCode ierr;
-//   PetscViewer bin_viewer;
-//   for(unsigned ig=0;ig<_gridn;ig++){
-//     for(unsigned i=0;i<SolType.size();i++){
-//       sprintf(filename,"./save/save.time_%d.level_%d.%s.bin",restart_time_step,ig,SolName[i]);
-//       ierr = PetscViewerBinaryOpen(MPI_COMM_WORLD,filename,FILE_MODE_READ,&bin_viewer); CHKERRQ(ierr);
-//       //petsc_vec_sol  = static_cast<PetscVector*>(_LinSolver[0][ig]->Sol_[i]);
-//       petsc_vec_sol  = static_cast<PetscVector*>(_solution[ig]->_Sol[i]);
-//       ierr = VecLoad(petsc_vec_sol->vec(),bin_viewer); CHKERRQ(ierr);
-//       ierr = PetscViewerDestroy(&bin_viewer);
-//     }
-//     _solution[ig]->UpdateSolution();
-//   }
-//
-//   delete [] filename;
-//   return ierr;
-// }
-
-
-
+// ------------------------------------------------------------
 template <class Base>
 void TransientSystem<Base>::AttachGetTimeIntervalFunction (double (* get_time_interval_function)(const double time)) {
   _get_time_interval_function = get_time_interval_function;
   _is_selective_timestep = true;
 }
 
-
 // ------------------------------------------------------------
-// TransientSystem instantiations
+// TransientSystem forward instantiations
 template class TransientSystem<LinearImplicitSystem>;
 template class TransientSystem<NonLinearImplicitSystem>;
 template class TransientSystem<MonolithicFSINonLinearImplicitSystem>;
 template class TransientSystem<ExplicitSystem>;
 template class TransientSystem<System>;
-
-
 
 } //end namespace femus
 

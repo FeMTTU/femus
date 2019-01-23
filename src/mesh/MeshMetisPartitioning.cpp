@@ -135,8 +135,8 @@ namespace femus
         }
         
         std::vector<unsigned> MaterialElementCounter = _mesh.el->GetMaterialElementCounter();
-        std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA\n";
-        std::cout << MaterialElementCounter[0]<<" "<< MaterialElementCounter[1]<<" "<< MaterialElementCounter[2]<<" \n";
+        //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+        //std::cout << MaterialElementCounter[0]<<" "<< MaterialElementCounter[1]<<" "<< MaterialElementCounter[2]<<" \n";
       }
       else{
       

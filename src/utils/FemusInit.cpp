@@ -18,10 +18,14 @@
 //----------------------------------------------------------------------------
 #include <iostream>
 #include "FemusInit.hpp"
+#include "UqQuadratureTypeEnum.hpp"
 
 namespace femus {
 
 adept::Stack FemusInit::_adeptStack;
+
+uq FemusInit::_uqHermite(UQ_HERMITE); 
+uq FemusInit::_uqLegendre(UQ_LEGENDRE); 
 
 // =======================================================
 /// This function initializes the libraries if it is parallel

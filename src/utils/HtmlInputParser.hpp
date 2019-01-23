@@ -43,36 +43,36 @@ public:
     ~HtmlInputParser ();
 
     /** See father class */
-    const bool isTrue(const std::string& base, const std::string& type) {};
+    const bool isTrue(const std::string& base, const std::string& type) { return true; }; // added only for watning pourposes in compile
 
     /** See father class */
-    const unsigned int getSize(const std::string& base) {};
+    const unsigned int getSize(const std::string& base) { return 0u; };// added only for watning pourposes in compile
 
     /** See father class */
-    const int getValue(const std::string& fullpath, const int defaultvalue) {};
+    const int getValue(const std::string& fullpath, const int defaultvalue) { return 0; };// added only for watning pourposes in compile
 
     /** See father class */
-    const double getValue(const std::string& fullpath, const double defaultvalue) {};
+    const double getValue(const std::string& fullpath, const double defaultvalue) { return 0.; };// added only for watning pourposes in compile
 
     /** See father class */
-    const ElemType getValue(const std::string& fullpath, const ElemType defaultvalue) {};
+    const ElemType getValue(const std::string& fullpath, const ElemType defaultvalue) { return EDGE2; };// added only for watning pourposes in compile
 
     /** See father class */
-    const std::string getValue(const std::string& fullpath, const std::string defaultvalue) {};
+    const std::string getValue(const std::string& fullpath, const std::string defaultvalue) { return "a"; };// added only for watning pourposes in compile
 
     /** See father class */
-    const FEOrder getValue(const std::string& fullpath, const FEOrder defaultvalue) {};
+    const FEOrder getValue(const std::string& fullpath, const FEOrder defaultvalue) { return ZERO; };// added only for watning pourposes in compile
 
     /** See father class */
-    const MgType getValue(const std::string& fullpath, const MgType defaultvalue) {};
+    const MgType getValue(const std::string& fullpath, const MgType defaultvalue) { return F_CYCLE; };// added only for watning pourposes in compile
 
     /** See father class */
     const std::string getValueFromArray(const std::string& basepath, const unsigned int index,
-                                        const std::string entry, const std::string defaultvalue) {};
+                                        const std::string entry, const std::string defaultvalue) { return "a"; };// added only for watning pourposes in compile
 
     /** See father class */
     const BDCType getValueFromArray(const std::string& basepath, const unsigned int index,
-                                    const std::string entry, const BDCType defaultvalue) {};
+                                    const std::string entry, const BDCType defaultvalue) {return DIRICHLET;};// added only for watning pourposes in compile
 
 };
 
