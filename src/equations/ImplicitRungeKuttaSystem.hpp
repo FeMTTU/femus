@@ -72,7 +72,6 @@ namespace femus {
       void GetIntermediateSolutions (const std::vector < double > &soluOld,
                                      const std::vector < std::vector < adept::adouble > > & solk,
                                      const std::vector < std::vector < double > > & x,
-                                     const std::vector < bool > & bdc,
                                      const char name[],
                                      std::vector < std::vector < adept::adouble > > & solu);
 
@@ -293,7 +292,6 @@ namespace femus {
   void ImplicitRungeKuttaSystem<Base>::GetIntermediateSolutions (const std::vector < double > &soluOld,
       const std::vector < std::vector < adept::adouble > > & solk,
       const std::vector < std::vector < double > > & x,
-      const std::vector < bool > & bdc,
       const char name[],
       std::vector < std::vector < adept::adouble > > & solu) {
 
@@ -306,22 +304,6 @@ namespace femus {
         }
       }
     }
-
-//     SetIntermediateTimes();
-//     unsigned dim = x.size();
-//     for (unsigned i = 0; i<soluOld.size(); i++){
-//       if( bdc[i] ){
-//       std::vector <double> x0( dim );
-//         for(unsigned k = 0; k < dim; k++){
-//           x0[k] = x[k][i];
-//         }
-//         for( unsigned j = 0; j < _RK; j++ ){
-//           double value = 0;
-//           this->_ml_sol->GetBdcFunction()(x0, name, value, 0, _itime[j]);
-//           solu[j][i] = value;
-//         }
-//       }
-//     }
   }
 
   template <class Base>
