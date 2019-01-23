@@ -24,11 +24,11 @@ using namespace femus;
 
 unsigned alpha = 4;
 unsigned M = pow ( 10, alpha ); //number of samples
-unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = 3;//alpha; //max refinement level
+unsigned N = 10; //dimension of the parameter space (each of the M samples has N entries)
+unsigned L = alpha; //max refinement level
 bool output = false; //for debugging
-bool matlabView = true;
-bool histoView = true;
+bool matlabView = false;
+bool histoView = false;
 
 double xmin = - 5.5;   //-1.5 for uniform // -5.5 for Gaussian
 double xmax = 5.5;     //1.5 for uniform // 5.5 for Gaussian
@@ -204,7 +204,7 @@ int main ( int argc, char** argv )
         unsigned counterHisto = 0;
 
         if ( N == 1 ) {
-            for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+            for ( unsigned i = 0; i < histoSize1D; i++ ) {
                 histoGrid[counterHisto][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0];
                 counterHisto++;
             }
@@ -213,8 +213,8 @@ int main ( int argc, char** argv )
         else if ( N > 1 ) {
             for ( unsigned j = 0; j < histoSize1D; j++ ) {
                 for ( unsigned i = 0; i < histoSize1D; i++ ) {
-                    histoGrid[counterHisto][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0];
-                    histoGrid[counterHisto][1] = ( gridBounds[1][0] + h[1] * 0.5 ) + j * h[1];
+                    histoGrid[counterHisto][0] = ( xmin + h[0] * 0.5 ) + i * h[0];
+                    histoGrid[counterHisto][1] = ( xmin + h[1] * 0.5 ) + j * h[1];
                     counterHisto++;
                 }
             }
@@ -226,7 +226,7 @@ int main ( int argc, char** argv )
                 std::vector<unsigned> inSupport ( N, 0 );
 
                 for ( unsigned n = 0; n < N; n++ ) {
-                    if ( samples[m][n] > ( histoGrid[i][n] - h[n] ) && samples[m][n] <= ( histoGrid[i][n] + h[n] ) ) {
+                    if ( samples[m][n] > ( histoGrid[i][n] - 0.5 * h[n] ) && samples[m][n] <= ( histoGrid[i][n] + 0.5 * h[n] ) ) {
                         inSupport[n] = 1;
                     }
                 }
@@ -377,16 +377,37 @@ int main ( int argc, char** argv )
     std::cout << " Total time: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - total_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
-    for(unsigned i = 0; i < histoSize1D; i++ ){
-      for(unsigned j = 0; j < histoSize1D; j++ ){  
-        
-        unsigned k = j * histoSize1D + i;
-                
-        std::cout << histogram[k] << " ";
-      }
-      std::cout<<std::endl;
-    }
               
+              //BEGIN check sparse grid and histo
+//     for ( unsigned i = 0; i < histoSize1D; i++ ) {
+//         for ( unsigned j = 0; j < histoSize1D; j++ ) {
+// 
+//             unsigned k = j * histoSize1D + i;
+// 
+//             std::cout << histogram[k] << " ";
+//         }
+// 
+//         std::cout << std::endl;
+//     }
+/*    
+    std::cout<<"------------------------------------------------------"<<std::endl;
+
+    for ( unsigned i = 0; i < histoSize1D; i++ ) {
+        for ( unsigned j = 0; j < histoSize1D; j++ ) {
+            
+            unsigned k = j * histoSize1D + i;
+
+            double pdfValue;
+            spg.EvaluatePDF ( pdfValue, histoGrid[k], false );
+            
+            std::cout << pdfValue << " ";
+
+        }
+        
+           std::cout << std::endl;
+    }*/
+//END
+
     return 0;
 
 } //end main

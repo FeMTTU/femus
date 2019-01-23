@@ -24,12 +24,12 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-bool sparse = false;
+bool sparse = true;
 
-unsigned alpha = 6;
+unsigned alpha = 4;
 unsigned M = pow (10, alpha);   //number of samples
 unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = 5; //max refinement level
+unsigned L = 4; //max refinement level
 bool output = false; //for debugging
 bool matlabView = true;
 
