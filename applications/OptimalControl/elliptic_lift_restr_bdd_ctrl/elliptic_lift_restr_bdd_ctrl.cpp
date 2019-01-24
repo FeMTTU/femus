@@ -4,6 +4,8 @@
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
+#define FACE_FOR_CONTROL 2  //we do control on the right (=2) face
+#define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
 #include "../elliptic_param.hpp"
 
 using namespace femus;
@@ -43,14 +45,14 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   if(!strcmp(name,"control")) {
       value = 0.;
-  if (faceName == 2)
+  if (faceName == FACE_FOR_CONTROL)
     dirichlet = false;
   
   }
   
   if(!strcmp(name,"mu")) {
 //       value = 0.;
-//   if (faceName == 2)
+//   if (faceName == FACE_FOR_CONTROL)
     dirichlet = false;
   }
   

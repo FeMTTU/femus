@@ -4,6 +4,8 @@
 #include "LinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
+#define FACE_FOR_CONTROL 3  //we do control on the right (=2) face
+#define AXIS_DIRECTION_CONTROL_SIDE  0  //change this accordingly to the other variable above
 #include "../elliptic_param.hpp"
 
 #define SERVICE 1.
