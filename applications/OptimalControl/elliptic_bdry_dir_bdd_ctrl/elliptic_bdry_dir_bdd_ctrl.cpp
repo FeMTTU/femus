@@ -8,7 +8,7 @@
 
 
 #define FACE_FOR_CONTROL 3  //we do control on the right (=2) face
-#define AXIS_DIRECTION_CONTROL_SIDE  0  //change this accordingly to the other variable above
+#define AXIS_DIRECTION_CONTROL_SIDE  0 //change this accordingly to the other variable above
 
 #include "../elliptic_param.hpp"
 
@@ -1310,7 +1310,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
                  //========= compute gauss quantities on the boundary ================================================
                   integral_alpha +=  weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
-                  integral_beta  +=  weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
+                  integral_beta  +=  weight * (sol_ctrl_x_bdry_gss[AXIS_DIRECTION_CONTROL_SIDE] * sol_ctrl_x_bdry_gss[AXIS_DIRECTION_CONTROL_SIDE] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
                  
 		}
 	      } //end face == 3
