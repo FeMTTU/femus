@@ -33,7 +33,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   return dirichlet;
 }
 
-double InitalValueU(const std::vector < double >& x) {
+double InitalValueU2D(const std::vector < double >& x) {
   double r=sqrt( x[0] * x[0] + x[1] * x[1] );  
   double r2 = r * r;
   double R = 1.;
@@ -42,8 +42,18 @@ double InitalValueU(const std::vector < double >& x) {
   double Vb = 0.265048;  // exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
   double V0 = 1./12.; // fraction of injection vs tumor
   return V0 * exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb; // IC vanishing near the boundary.
-  
-  
+}
+
+
+double InitalValueU3D(const std::vector < double >& x) {
+  double r=sqrt( x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);  
+  double r2 = r * r;
+  double R = 1.;
+  double R2 = R * R;
+  //double Vb = 1.268112; // exp( (( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
+  double Vb = 0.265048;  // exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
+  double V0 = 1./12.; // fraction of injection vs tumor
+  return V0 * exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb; // IC vanishing near the boundary.
 }
 
 double InitalValueD(const std::vector < double >& x) {
@@ -66,14 +76,14 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/disk.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/ball.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in future it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension(); // Domain dimension of the problem.
   unsigned maxNumberOfMeshes; // The number of mesh levels.
 
-  unsigned numberOfUniformLevels = 6; //We apply uniform refinement.
+  unsigned numberOfUniformLevels = 1; //We apply uniform refinement.
   unsigned numberOfSelectiveLevels = 0; // We may want to see the solution on some levels.
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -94,7 +104,10 @@ int main(int argc, char** args) {
   mlSol.AddSolution("d", LAGRANGE, SECOND,  0, false); // We may have more than one, add each of them as u,v,w with their apprx type.
   
   mlSol.Initialize("All");
-  mlSol.Initialize("u", InitalValueU);
+  if(dim==2)
+   mlSol.Initialize("u", InitalValueU2D);
+  else
+    mlSol.Initialize("u", InitalValueU3D);
   mlSol.Initialize("d", InitalValueD);
 
   // attach the boundary condition function and generate boundary data
@@ -122,7 +135,7 @@ int main(int argc, char** args) {
   
    // ******* Print solution *******
   mlSol.SetWriter(VTK);
-  mlSol.GetWriter()->SetGraphVariable ("u");
+  //mlSol.GetWriter()->SetGraphVariable ("u");
   mlSol.GetWriter()->SetDebugOutput(false);
 
   std::vector<std::string> print_vars;
