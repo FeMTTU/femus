@@ -47,7 +47,7 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ******
   int target_flag = 0; //set 0 to 1 to get the entire domain
   
-   if (   /*elem_center[0] < 0.75 + 1.e-5    && */      elem_center[0] > 0.5  - 1.e-5 /* && */ 
+   if (   /*elem_center[0] < 0.75 + 1.e-5    && */      elem_center[0] < 0.5  + 1.e-5 /* && */ 
         /*elem_center[1] <  0.5  + 1.e-5     && */    /*elem_center[1] > 0.5 -  1.e-5*/  /*(1./16. + 1./64.)*/
         //elem_center[0] > 0.5 -  1.e-5
   ) {
@@ -78,7 +78,7 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
  //***** set control domain flag ***** 
   double mesh_size = 1./NSUB_Y;
   int control_el_flag = 0;
-   if ( elem_center[1] >  1. - mesh_size ) { control_el_flag = 1; }
+   if ( elem_center[0] <  0. + mesh_size ) { control_el_flag = 1; }
 
      return control_el_flag;
 }

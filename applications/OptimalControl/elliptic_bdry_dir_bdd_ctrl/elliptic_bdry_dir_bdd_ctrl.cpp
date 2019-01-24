@@ -6,6 +6,10 @@
 
 #include "ElemType.hpp"
 
+
+#define FACE_FOR_CONTROL 4  //we do control on the right (=2) face
+#define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
+
 #include "../elliptic_param.hpp"
 
 using namespace femus;
@@ -44,30 +48,32 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   value = 0.;
 
   if(!strcmp(name,"control")) {
-  if (faceName == 3)
+  if (faceName == FACE_FOR_CONTROL)
+//   if (x[1-AXIS_DIRECTION_CONTROL_SIDE] > 1. - 1.e-5 && x[1-AXIS_DIRECTION_CONTROL_SIDE] < 1. + 1.e-5)    
     dirichlet = false;
   }
 
   if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u=q)
-  if (faceName == 3)
+  if (faceName == FACE_FOR_CONTROL)
+//   if (x[1-AXIS_DIRECTION_CONTROL_SIDE] > 1. - 1.e-5 && x[1-AXIS_DIRECTION_CONTROL_SIDE] < 1. + 1.e-5)    
     dirichlet = false;
   }
 
   if(!strcmp(name,"mu")) {
 //       value = 0.;
-//   if (faceName == 3)
+//   if (faceName == FACE_FOR_CONTROL)
     dirichlet = false;
   }
   
 //     if(!strcmp(name,"adjoint")) { 
-//   if (faceName == 3)
+//   if (faceName == FACE_FOR_CONTROL)
 //     dirichlet = false;
 //   }
 
   
   
 //     if(!strcmp(name,"adjoint")) {  //"adjoint" corresponds to the third block row
-//   if (faceName == 3)    value = 1.;
+//   if (faceName == FACE_FOR_CONTROL)    value = 1.;
 //   }
 
   
@@ -488,7 +494,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
-	      if(  face == 3) { //control face
+	      if(  face == FACE_FOR_CONTROL) { //control face
               
  //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
@@ -614,14 +620,15 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  msh->_finiteElement[kelGeom][solType_adj]->ShapeAtBoundary(x,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
-		  double dx_dxi = 0.;
+          const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
+		  double dx_dcurv_abscissa = 0.;
 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
-		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
-		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dxi += myptr[inode] * x_bdry[0][inode];
+		 double * myptr = myptr = myeltype->GetDPhiDXi(ig_bdry);
+		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dcurv_abscissa += myptr[inode] * x_bdry[axis_direction_control_side][inode];
   
 		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) {
                             for (int d = 0; d < dim; d++) {
-                              if (d==0 ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dxi);
+                              if (d == axis_direction_control_side ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dcurv_abscissa);
                               else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
                          }
                      }
@@ -1249,7 +1256,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 	      
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
-	      if(  face == 3) { //control face
+	      if(  face == FACE_FOR_CONTROL) { //control face
 
  //========= compute coordinates of boundary nodes on each element ========================================== 
 		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
@@ -1273,19 +1280,21 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 		  
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 
-		 //========== temporary soln for surface gradient on a face parallel to the X axis ==================
-		 double dx_dxi = 0.;
+//========== temporary soln for surface gradient on a face parallel to the X axis ===================
+          const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
+		  double dx_dcurv_abscissa = 0.;
 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
-		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
-		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dxi += myptr[inode] * x_bdry[0][inode];
+		 double * myptr = myptr = myeltype->GetDPhiDXi(ig_bdry);
+		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dcurv_abscissa += myptr[inode] * x_bdry[axis_direction_control_side][inode];
   
 		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) {
                             for (int d = 0; d < dim; d++) {
-                              if (d==0 ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dxi);
+                              if (d == axis_direction_control_side ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dcurv_abscissa);
                               else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
                          }
                      }
-		 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
+//========== temporary soln for surface gradient on a face parallel to the X axis ===================
+
 		  
 		 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_bdry_gss = 0.;
