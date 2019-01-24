@@ -1,12 +1,16 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
 #include "../elliptic_param.hpp"
 
 using namespace femus;
+
+double InitialValueActFlag(const std::vector < double >& x) {
+  return 0.;
+}
 
 double InitialValueContReg(const std::vector < double >& x) {
   return ControlDomainFlag_external_restriction(x);
@@ -37,12 +41,12 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   bool dirichlet = true; //dirichlet
   value = 0.;
   
-  if(!strcmp(name,"control")) {
-      value = 0.;
-  if (faceName == 3)
-    dirichlet = false;
-  
-  }
+//   if(!strcmp(name,"control")) {
+//       value = 0.;
+//   if (faceName == 3)
+//     dirichlet = false;
+//   
+//   }
   
   if(!strcmp(name,"mu")) {
 //       value = 0.;
@@ -96,7 +100,9 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-
+  const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
+  const std::string act_set_flag_name = "act_flag";
+  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
@@ -106,7 +112,8 @@ int main(int argc, char** args) {
   mlSol.Initialize("mu", InitialValueMu);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
-
+  mlSol.Initialize(act_set_flag_name.c_str(), InitialValueActFlag);
+  
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("state");
@@ -120,7 +127,9 @@ int main(int argc, char** args) {
   mlProb.SetFilesHandler(&files);
 
  // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = mlProb.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+    
+  system.SetActiveSetFlagName(act_set_flag_name);
 
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
@@ -280,6 +289,15 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   unsigned solType_mu = mlSol->GetSolutionType(solIndex_mu);    // get the finite element type for "mu"
   vector < double >  sol_mu;   sol_mu.reserve(maxSize);
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
+  
+  
+  //************** act flag **************************** 
+  std::string act_flag_name = "act_flag";
+  unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
+  unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
+      if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
+        *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
+      }
 
   //********* variables for ineq constraints *****************
   const int ineq_flag = INEQ_FLAG;
@@ -442,6 +460,16 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
     else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
     }
+    
+ //************** act flag **************************** 
+    unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag);    // number of solution element dofs
+    
+    for (unsigned i = 0; i < nDof_act_flag; i++) {
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag); 
+      (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);     
+    }  
+ 
+ 
  
  //******************** ALL VARS ********************* 
     unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
@@ -524,47 +552,47 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 		    
 //========= initialize gauss quantities on the boundary ============================================
 		
-		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
-		  
-		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
-		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
-		  msh->_finiteElement[kelGeom][solType_adj]->ShapeAtBoundary(x,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+// 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) { (2)
+// 		  
+// 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
+// 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
+// 		  msh->_finiteElement[kelGeom][solType_adj]->ShapeAtBoundary(x,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
-         double dx_dxi = 0.;
-		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
-		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
-		      for (int inode = 0; inode < nDofu_bdry/*_nc*/; inode++) dx_dxi += myptr[inode] * x_bdry[0][inode];
-  
-		      for (int inode = 0; inode < nDofu_bdry/*_nc*/; inode++) {
-                            for (int d = 0; d < dim; d++) {
-                              if (d==0 ) phi_ctrl_x_bdry[inode + d*nDofu_bdry/*_nc*/] = myptr[inode]* (1./ dx_dxi);
-                              else  phi_ctrl_x_bdry[inode + d*nDofu_bdry/*_nc*/] = 0.;
-                         }
-                     }
+//          double dx_dxi = 0.;
+// 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
+// 		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
+// 		      for (int inode = 0; inode < nDofu_bdry/*_nc*/; inode++) dx_dxi += myptr[inode] * x_bdry[0][inode];
+//   
+// 		      for (int inode = 0; inode < nDofu_bdry/*_nc*/; inode++) {
+//                             for (int d = 0; d < dim; d++) {
+//                               if (d==0 ) phi_ctrl_x_bdry[inode + d*nDofu_bdry/*_nc*/] = myptr[inode]* (1./ dx_dxi);
+//                               else  phi_ctrl_x_bdry[inode + d*nDofu_bdry/*_nc*/] = 0.;
+//                          }
+//                      }
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  
 
 //=============== grad dot n for residual ========================================= 
-//     compute gauss quantities on the boundary through VOLUME interpolation
-           std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
-		      for (int iv = 0; iv < nDof_adj; iv++)  {
-			
-                            for (int d = 0; d < dim; d++) {
-//    std::cout << " ivol " << iv << std::endl;
-//    std::cout << " adj dofs " << sol_adj[iv] << std::endl;
-			      sol_adj_x_vol_at_bdry_gss[d] += sol_adj[iv] * phi_adj_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
-			    }
-		      }  
-		      
-        double grad_dot_n_adj_res = 0.;
-        for(unsigned d=0; d<dim; d++) {
-	  grad_dot_n_adj_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
-	}
+// //     compute gauss quantities on the boundary through VOLUME interpolation
+//            std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
+// 		      for (int iv = 0; iv < nDof_adj; iv++)  {
+// 			
+//                             for (int d = 0; d < dim; d++) {
+// //    std::cout << " ivol " << iv << std::endl;
+// //    std::cout << " adj dofs " << sol_adj[iv] << std::endl;
+// 			      sol_adj_x_vol_at_bdry_gss[d] += sol_adj[iv] * phi_adj_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
+// 			    }
+// 		      }  
+// 		      
+//         double grad_dot_n_adj_res = 0.;
+//         for(unsigned d=0; d<dim; d++) {
+// 	  grad_dot_n_adj_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
+// 	}
 //=============== grad dot n  for residual =========================================      
 		    
 //============ Bdry Residuals ==================	
-        if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  -  penalty_interface * ( sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
+        if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  -  penalty_interface * interface_flag[i_vol] * ( sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
 		
 	//	if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=  -  weight_bdry * penalty_interface * (-1) * ( grad_dot_n_adj_res * phi_ctrl_bdry[i_bdry] );  //boundary optimality condition
 //============ Bdry Residuals ==================	
@@ -579,27 +607,27 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     if (i_vol < nDof_u && j_vol < nDof_u && i_vol == j_vol)  {
        Jac[    
           (0 + i_vol) * nDof_AllVars  +
-          (0 + j_vol)                                ]  += penalty_interface * ( 1.);
+          (0 + j_vol)                                ]  += penalty_interface * interface_flag[i_vol] * ( 1.);
        }
 
 // block delta_state/control ===================
     if (i_vol < nDof_u && j_vol < nDof_ctrl && i_vol == j_vol) {
        Jac[    
 		  (0     + i_vol) * nDof_AllVars  +
-		  (nDof_u + j_vol)                           ]  += penalty_interface  * (-1.);
+		  (nDof_u + j_vol)                           ]  += penalty_interface  * interface_flag[i_vol] * (-1.);
        }
 //============ u = q ===========================		    
 		    
      } //end j_vol 
 		    
 //===================loop over j in the VOLUME (while i is in the boundary)	      
-	for(unsigned j=0; j < nDof_max; j ++) {
+//	for(unsigned j=0; j < nDof_max; j ++) { (1)
   
 //=============== grad dot n  =========================================    
-    double grad_adj_dot_n_mat = 0.;
-      for(unsigned d=0; d<dim; d++) {
-	  grad_adj_dot_n_mat += phi_adj_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
-	}
+//     double grad_adj_dot_n_mat = 0.;
+//       for(unsigned d=0; d<dim; d++) {
+// 	  grad_adj_dot_n_mat += phi_adj_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
+// 	}
 //=============== grad dot n  =========================================    
 
   //std::cout << " gradadjdotn " << grad_adj_dot_n_mat << std::endl;
@@ -610,8 +638,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
        Jac[ 
           (nDof_u + i_vol) * nDof_AllVars  +
           (nDof_u + nDof_ctrl + j)                 ]  +=  weight_bdry * penalty_interface * (-1) * ( grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry] ); */   		      
-		  }   //end loop i_bdry // j_vol
-        }  //end ig_bdry loop
+//		  }   //end loop i_bdry // j_vol (1)
+//        }  //end ig_bdry loop (2)
       }
       
     }
@@ -706,9 +734,9 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 //======================Volume Residuals=======================
       // FIRST ROW
 	  if (i < nDof_u)  {
-	     if ( group_flag == 12 )            Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss - u_des) - laplace_rhs_du_adj_i - 0.);
+         if ( group_flag == 12 )            Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss - u_des) - laplace_rhs_du_adj_i - 0.);
 	  
-	     else if ( group_flag == 13 )       Res[0      + i] +=  (1-interface_flag[i]) * (- penalty_strong_u) * (sol_u[i] - 0.);
+         else if ( group_flag == 13 )       Res[0      + i] +=  (1-interface_flag[i]) * (- penalty_strong_u) * (sol_u[i] - 0.);
 	  }
       // SECOND ROW
 	  if (i < nDof_ctrl)  {
@@ -719,11 +747,19 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 	     else if ( group_flag == 12 )       Res[nDof_u + i] +=  (1-interface_flag[i]) * (- penalty_strong_ctrl) * (sol_ctrl[i] - 0.);
 	  }
       // THIRD ROW
-      if (i < nDof_adj) {  
-	     if ( group_flag == 12 )      Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_u_i    - 0.) ;
+      if (i < nDof_adj) {
+         if ( interface_flag[i] == 1 )      Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_u_i + laplace_rhs_dadj_ctrl_i - 0.) ;
+             
+         else {
+               if ( group_flag == 12 )      Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_u_i    - 0.) ;
 	     
-	     else if ( group_flag == 13 ) Res[nDof_u + nDof_ctrl + i] += - weight *  (  laplace_rhs_dadj_ctrl_i - 0.) ;
+               else if ( group_flag == 13 ) Res[nDof_u + nDof_ctrl + i] += - weight *  ( laplace_rhs_dadj_ctrl_i - 0.) ;
+              }
 	  }
+    // FOURTH ROW
+     if (i < nDof_mu)     
+        if ( group_flag == 12 )           
+              Res[nDof_u + nDof_ctrl + nDof_adj + i] += - penalty_strong_ctrl * ( (1 - interface_flag[i]) * (  sol_mu[i] - 0.)  );
 //======================Volume Residuals=======================
 	      
           if (assembleMatrix) {
@@ -747,8 +783,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 	      }
 
         //============ delta_state row ============================
-        if ( group_flag == 12 ) { 
-		
+        if ( group_flag == 12 ){		
             //DIAG BLOCK delta_state - state
 	        if ( i < nDof_u && j < nDof_u )       
 		       Jac[ (0 + i) * nDof_AllVars   +
@@ -758,8 +793,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
             if ( i < nDof_u && j < nDof_adj )  
                Jac[ (0 + i) * nDof_AllVars  +
                     (nDof_u + nDof_ctrl + j)         ]  += weight * (-1) * laplace_mat_du_adj;
-        }
-		      
+        
+        }      
         else if ( group_flag == 13 ) {  
 		
             //BLOCK delta_state - state
@@ -806,13 +841,20 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 		          (0 + j)                            ]  += weight * (-1) * laplace_mat_dadj_u;   
        }
 	      
-       else if ( group_flag == 13 ) {
+       if ( group_flag == 13 ) { //interor boundary belongs to both groups 12 and 13.
 		
           // BLOCK delta_adjoint - control   
           if ( i < nDof_adj && j < nDof_ctrl )  
 		     Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
-		          (nDof_u  + j)                      ]  += weight * (-1) * laplace_mat_dadj_ctrl; 
+		          (nDof_u  + j)                      ]  += weight * (1) * laplace_mat_dadj_ctrl; 
        }
+                  
+       //============= delta_mu row ===============================
+        if ( group_flag == 12 ) {
+          if ( i < nDof_mu && j < nDof_mu && i==j )   
+		    Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+		       (nDof_u + nDof_ctrl + nDof_adj + j)]  += penalty_strong_ctrl * ( (1 - interface_flag[i]));
+          }
 		          
           } // end phi_j loop
         } // endif assemble_matrix

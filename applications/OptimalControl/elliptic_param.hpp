@@ -26,8 +26,8 @@
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper = 0.2; //0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
-     double constr_value_lower = -3.e-13;
+     double constr_value_upper = 0.5; //0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
+     double constr_value_lower = -1000; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      
     if (upper)   constr_value = constr_value_upper;
@@ -49,6 +49,7 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
   
    if (   /*elem_center[0] < 0.75 + 1.e-5    && elem_center[0] > 0.25  - 1.e-5  && */ 
         /*elem_center[1] <  0.5  + 1.e-5     && */    elem_center[1] > 0.5 -  1.e-5  /*(1./16. + 1./64.)*/
+        //elem_center[0] > 0.5 -  1.e-5
   ) {
      
      target_flag = 1;
@@ -105,7 +106,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
  //***** set target domain flag ******
  // flag = 1: we are in the lifting nonzero domain
   int exterior_el_flag = 0.;
-   if ( elem_center[0] >  0.95) { exterior_el_flag = 1; }
+   if ( elem_center[0] >  1. -  1.e-5) { exterior_el_flag = 1; }
 
      return exterior_el_flag;
 
