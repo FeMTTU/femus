@@ -43,14 +43,14 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   if(!strcmp(name,"control")) {
       value = 0.;
-  if (faceName == 3)
+  if (faceName == 2)
     dirichlet = false;
   
   }
   
   if(!strcmp(name,"mu")) {
 //       value = 0.;
-//   if (faceName == 3)
+//   if (faceName == 2)
     dirichlet = false;
   }
   
