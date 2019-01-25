@@ -52,27 +52,27 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
-unsigned kOrder = 2; //for order tests
-unsigned numberOfSamples = 100000; //for MC sampling of the QoI
+unsigned kOrder = 7; //for order tests
+unsigned numberOfSamples = 1000; //for MC sampling of the QoI
 unsigned nxCoarseBox;
-double xMinCoarseBox = - 5.5; //-5.5 for Gaussian, -5. for SGM (average) with Gaussian KL, -3. for SGM (integral),  -1.5 for uniform, not KL: -0.6 for avg and int
-double xMaxCoarseBox = 5.5;  //5.5 for Gaussian, 3. for SGM (average) with Gaussian KL,  5.5 for SGM (integral), 1.5 for uniform, not KL: 0.6 for avg and 0.8 for int
+double xMinCoarseBox = - 5.; //-5.5 for Gaussian, -5. for SGM (average) with Gaussian KL, -3. for SGM (integral),  -1.5 for uniform, not KL: -0.6 for avg and int
+double xMaxCoarseBox = 3.;  //5.5 for Gaussian, 3. for SGM (average) with Gaussian KL,  5.5 for SGM (integral), 1.5 for uniform, not KL: 0.6 for avg and 0.8 for int
 unsigned nyCoarseBox;
-double yMinCoarseBox = - 5.5;
-double yMaxCoarseBox = 5.;
+double yMinCoarseBox = - 5.;
+double yMaxCoarseBox = 3.;
 unsigned nzCoarseBox;
-double zMinCoarseBox = - 5.5;
-double zMaxCoarseBox = 5.5;
+double zMinCoarseBox = - 5.;
+double zMaxCoarseBox = 3.;
 
-unsigned numberOfSamplesFinest = 10; //10^6 for spatial average, 10^7 for "integral" of the square, 10^7 for SGM with random variable (not KL)
-unsigned kOrderFinest = 1;
+unsigned numberOfSamplesFinest = 100000000; //10^6 for spatial average, 10^7 for "integral" of the square, 10^7 for SGM with random variable (not KL)
+unsigned kOrderFinest = 8;
 // unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamplesFinest ) ) ); //for spatial average
 // unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamplesFinest ) ) ); //for integral of the square
 unsigned nxCoarseBoxFinest = static_cast<unsigned> ( pow(2,kOrderFinest) );
 unsigned nyCoarseBoxFinest = nxCoarseBoxFinest;
 unsigned nzCoarseBoxFinest = nxCoarseBoxFinest;
 
-bool histoFinest = false; //for SGM must be true
+bool histoFinest = true; //for SGM must be true
 bool histoErr = false; //true only if the histogram error is to be calculated, for analytic sampling
 double bLaplace = 1.5;
 double muLaplace = 0.;
@@ -240,13 +240,13 @@ int main (int argc, char** argv) {
     nyCoarseBox = nxCoarseBox;
     nzCoarseBox = nxCoarseBox;
 
-//     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
+    mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
 //     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
-    mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, nzCoarseBox, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh" ); //for 3D
+//     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, nzCoarseBox, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh" ); //for 3D
 
-//     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
+    mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
 //     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
-    mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, nzCoarseBoxFinest, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh" ); //for 3D
+//     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, nzCoarseBoxFinest, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh" ); //for 3D
 
   mlMshHisto.PrintInfo();
 
@@ -1396,10 +1396,10 @@ void GetQoIStandardizedSamples (std::vector< double >& alphas, std::vector< std:
         sgmQoI += alphas[i] * MultivariatePolyHistogram[i]; //TODO with QoIs that are different from each other, alphas[i] will be alphas[idim][i]
       }
 
-//             sgmQoIStandardized[m][idim] = ( sgmQoI - meanQoI ) / stdDeviationQoI; //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
+            sgmQoIStandardized[m][idim] = ( sgmQoI - meanQoI ) / stdDeviationQoI; //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
 
-            double normalSample = var_nor();
-            sgmQoIStandardized[m][idim] = normalSample;
+//             double normalSample = var_nor();
+//             sgmQoIStandardized[m][idim] = normalSample;
 
 //             double uniformSample = var_unif();
 //             sgmQoIStandardized[m][idim] = uniformSample;
