@@ -1370,23 +1370,24 @@ namespace femus {
 
   bool CheckIfPointIsInsideReferenceDomain(std::vector<double> &xi, const short unsigned &ielType, const double &eps) {
     if(ielType == 0) {
-      CheckIfPointIsInsideReferenceDomainHex(xi, eps);
+      return CheckIfPointIsInsideReferenceDomainHex(xi, eps);
     }
     else if(ielType == 1) {
-      CheckIfPointIsInsideReferenceDomainTet(xi, eps);
+      return CheckIfPointIsInsideReferenceDomainTet(xi, eps);
     }
     else if(ielType == 2) {
-      CheckIfPointIsInsideReferenceDomainWedge(xi, eps);
+      return CheckIfPointIsInsideReferenceDomainWedge(xi, eps);
     }
     else if(ielType == 3) {
-      CheckIfPointIsInsideReferenceDomainQuad(xi, eps);
+      return CheckIfPointIsInsideReferenceDomainQuad(xi, eps);
     }
     else if(ielType == 4) {
-      CheckIfPointIsInsideReferenceDomainTri(xi, eps);
+      return CheckIfPointIsInsideReferenceDomainTri(xi, eps);
     }
-    else if(ielType == 5) {
-      CheckIfPointIsInsideReferenceDomainLine(xi, eps);
+    else{// if(ielType == 5) {
+      return CheckIfPointIsInsideReferenceDomainLine(xi, eps);
     }
+    
   }
   bool CheckIfPointIsInsideReferenceDomainHex(std::vector<double> &xi, const double &eps) {
     double threshold = 1. + eps;

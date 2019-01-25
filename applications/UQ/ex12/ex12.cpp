@@ -24,10 +24,14 @@ using namespace femus;
 
 unsigned alpha = 4;
 unsigned M = pow ( 10, alpha ); //number of samples
-unsigned N = 1; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = alpha;
-bool output = true; //for debugging
-bool matlabView = true;
+unsigned N = 10; //dimension of the parameter space (each of the M samples has N entries)
+unsigned L = alpha; //max refinement level
+bool output = false; //for debugging
+bool matlabView = false;
+bool histoView = false;
+
+double xmin = - 5.5;   //-1.5 for uniform // -5.5 for Gaussian
+double xmax = 5.5;     //1.5 for uniform // 5.5 for Gaussian
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -52,13 +56,13 @@ double b = 2.;
 int main ( int argc, char** argv )
 {
 
+    //BEGIN construction of the sample set
     std::vector < std::vector < double > >  samples;
     samples.resize ( M );
 
     for ( unsigned m = 0; m < M; m++ ) {
         samples[m].resize ( N );
     }
-
 
     for ( unsigned m = 0; m < M; m++ ) {
         for ( unsigned n = 0; n < N; n++ ) {
@@ -69,7 +73,7 @@ int main ( int argc, char** argv )
 //     samples[m][n] = var * var * var;
 //     samples[m][n] = exp(var);
 //         samples[m][n] = exp (varunif);
-            samples[m][n] = varunif;
+            samples[m][n] = var;
 
             //exp of truncated gaussian
 //     if(fabs(var) <= 1.) {
@@ -88,9 +92,14 @@ int main ( int argc, char** argv )
         }
     }
 
+    //END
+
+
+
+    //BEGIN initialize grid and compute nodal values
     clock_t total_time = clock();
     clock_t grid_time = clock();
-    sparseGrid spg ( samples, output );
+    sparseGrid spg ( samples, xmin, xmax, output );
 
     std::cout << std::endl << " Builds sparse grid in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - grid_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
@@ -101,44 +110,11 @@ int main ( int argc, char** argv )
 
     std::cout << std::endl << " Builds nodal values in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - nodal_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
-
-    //BEGIN these are just tests
-//     double phi;
-//     double x = 0.;
-//     unsigned nn = 0;
-//     unsigned ll = 0;
-//     unsigned ii = 0;
-//     bool scale = false;
-//     spg.EvaluateOneDimensionalPhi(phi, x, nn, ll, ii, scale);
-//
-// //     std::cout << "phi = " << phi << std::endl;
-//
-//     std::vector< std::vector < unsigned > > id;
-//     id.resize(N);
-//     for(unsigned n=0; n<N; n++){
-//         id[n].resize(3);
-//     }
-//
-//     id[0][0] = 0;
-//     id[0][1] = 0;
-//     id[0][2] = 0;
-//     id[1][0] = 1;
-//     id[1][1] = 0;
-//     id[1][2] = 0;
-//
-//     double phiTensorProduct;
-//     std::vector<double> coords(N);
-//     for(unsigned n=0; n<N; n++){
-//         coords[n]=0.;
-//     }
-//
-//     spg.EvaluatePhi (phiTensorProduct, coords, id, false);
-//
-// //     std::cout<<"phiTensorProduct = " << phiTensorProduct << std::endl;
     //END
 
+
+
     //BEGIN  create grid for plot in 2D
-    //sampling from [-1,1] for both variables, testing on uniform PDF on [-1.5,1,5] x [-1.5,1.5]
 
     std::vector < unsigned > refinementLevel ( N );
 
@@ -162,19 +138,19 @@ int main ( int argc, char** argv )
         gridSize *= gridPoints[n];
     }
 
-    gridBounds[0][0] = -1.5; //-1.5 for uniform // -5.5 for Gaussian
-    gridBounds[0][1] = 1.5; //1.5 for uniform // 5.5 for Gaussian
+    gridBounds[0][0] = xmin;
+    gridBounds[0][1] = xmax;
 
     if ( N > 1 ) {
 
-        gridBounds[1][0] = -5.5;
-        gridBounds[1][1] = 5.5;
+        gridBounds[1][0] = xmin;
+        gridBounds[1][1] = xmax;
     }
 
     if ( N > 2 ) {
 
-        gridBounds[2][0] = -1.5;
-        gridBounds[2][1] = 1.5;
+        gridBounds[2][0] = xmin;
+        gridBounds[2][1] = xmax;
     }
 
     std::vector < double > h ( N );
@@ -187,51 +163,104 @@ int main ( int argc, char** argv )
 
     unsigned counterGrid = 0;
 
-//     for ( unsigned j = 0; j < gridPoints[1]; j++ ) {
-    for ( unsigned i = 0; i < gridPoints[0]; i++ ) {
-        grid.resize ( counterGrid + 1 );
-        grid[counterGrid].resize ( N );
-        grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
-//             grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
-        counterGrid++;
+    if ( N == 1 ) {
+        for ( unsigned i = 0; i < gridPoints[0]; i++ ) {
+            grid.resize ( counterGrid + 1 );
+            grid[counterGrid].resize ( N );
+            grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
+            counterGrid++;
+        }
     }
 
-//     }
-
-//END create grid
-
-
-    std::vector< std::vector < unsigned > > idPhi ( N );
-
-    for ( unsigned n = 0; n < N; n++ ) {
-        idPhi[n].resize ( 3 );
+    else if ( N > 1 ) {
+        for ( unsigned j = 0; j < gridPoints[1]; j++ ) {
+            for ( unsigned i = 0; i < gridPoints[0]; i++ ) {
+                grid.resize ( counterGrid + 1 );
+                grid[counterGrid].resize ( N );
+                grid[counterGrid][0] = gridBounds[0][0] + i * h[0];
+                grid[counterGrid][1] = gridBounds[1][0] + j * h[1];
+                counterGrid++;
+            }
+        }
     }
 
-    //BEGIN these are just tests
-    // phi_000 * phi_100
-//     idPhi[0][0] = 0;
-//     idPhi[0][1] = 0;
-//     idPhi[0][2] = 0;
-//     idPhi[1][0] = 1;
-//     idPhi[1][1] = 0;
-//     idPhi[1][2] = 0;
+    //END create grid
 
-    // phi_010 * phi_100
-//     idPhi[0][0] = 0;
-//     idPhi[0][1] = 1;
-//     idPhi[0][2] = 0;
-//     idPhi[1][0] = 1;
-//     idPhi[1][1] = 0;
-//     idPhi[1][2] = 0;
 
-    // phi_012 * phi_100
-//     idPhi[0][0] = 0;
-//     idPhi[0][1] = 1;
-//     idPhi[0][2] = 2;
-//     idPhi[1][0] = 1;
-//     idPhi[1][1] = 0;
-//     idPhi[1][2] = 0;
+    //BEGIN create histogram on finest grid for comparison
+
+    unsigned histoSize1D =  static_cast<unsigned> ( pow ( 2, refinementLevel[0] ) ) ;
+    unsigned totNumberOfBins = static_cast<unsigned> ( pow ( histoSize1D, N ) ); //tot number of bins
+    std::vector <double> histogram ( totNumberOfBins );
+
+    std::vector < std::vector < double > > histoGrid ( totNumberOfBins );
+
+    if ( histoView ) {
+
+        for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+            histoGrid[i].resize ( N );
+        }
+
+        unsigned counterHisto = 0;
+
+        if ( N == 1 ) {
+            for ( unsigned i = 0; i < histoSize1D; i++ ) {
+                histoGrid[counterHisto][0] = ( gridBounds[0][0] + h[0] * 0.5 ) + i * h[0];
+                counterHisto++;
+            }
+        }
+
+        else if ( N > 1 ) {
+            for ( unsigned j = 0; j < histoSize1D; j++ ) {
+                for ( unsigned i = 0; i < histoSize1D; i++ ) {
+                    histoGrid[counterHisto][0] = ( xmin + h[0] * 0.5 ) + i * h[0];
+                    histoGrid[counterHisto][1] = ( xmin + h[1] * 0.5 ) + j * h[1];
+                    counterHisto++;
+                }
+            }
+        }
+
+        for ( unsigned m = 0; m < M; m++ ) {
+            for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+
+                std::vector<unsigned> inSupport ( N, 0 );
+
+                for ( unsigned n = 0; n < N; n++ ) {
+                    if ( samples[m][n] > ( histoGrid[i][n] - 0.5 * h[n] ) && samples[m][n] <= ( histoGrid[i][n] + 0.5 * h[n] ) ) {
+                        inSupport[n] = 1;
+                    }
+                }
+
+                unsigned sumCheck = 0;
+
+                for ( unsigned n = 0; n < N; n++ ) {
+                    sumCheck += inSupport[n];
+                }
+
+                if ( sumCheck == N ) {
+                    histogram[i]++;
+                    break;
+                }
+
+            }
+        }
+
+        //evaluation of histogram integral
+
+        double histoIntegral = 0.;
+        double supportMeasure = pow ( h[0] , N );
+
+        for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+            histoIntegral += supportMeasure * histogram[i];
+        }
+
+        for ( unsigned i = 0; i < histoGrid.size(); i++ ) {
+            histogram[i] /= histoIntegral;
+        }
+    }
+
 //END
+
 
 
 //BEGIN grid plot
@@ -244,13 +273,15 @@ int main ( int argc, char** argv )
 
         std::cout << "];" << std::endl;
 
-//         std::cout << "y=[" << std::endl;
-//
-//         for ( unsigned i = 0; i < grid.size(); i++ ) {
-//             std::cout << grid[i][1] << std::endl;
-//         }
-//
-//         std::cout << "];" << std::endl;
+        if ( N > 1 ) {
+            std::cout << "y=[" << std::endl;
+
+            for ( unsigned i = 0; i < grid.size(); i++ ) {
+                std::cout << grid[i][1] << std::endl;
+            }
+
+            std::cout << "];" << std::endl;
+        }
 
         clock_t pdf_time = clock();
 
@@ -258,12 +289,7 @@ int main ( int argc, char** argv )
 
         for ( unsigned i = 0; i < grid.size(); i++ ) {
             double pdfValue;
-            spg.EvaluatePDF ( pdfValue, grid[i] );
-            std::cout << std::setprecision ( 14 ) << pdfValue ;
-//             double phiTensorProductTest;
-//             spg.EvaluatePhi ( phiTensorProductTest, grid[i], idPhi, false );
-//             std::cout << grid[i][0] << " , " << grid[i][1] << std::endl;
-//             std::cout << phiTensorProductTest << std::endl;
+            spg.EvaluatePDF ( pdfValue, grid[i], true );
         }
 
         std::cout << "];" << std::endl;
@@ -271,47 +297,116 @@ int main ( int argc, char** argv )
         std::cout << std::endl << " Builds PDF in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
                   << static_cast<double> ( ( clock() - pdf_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
 
+
+
+        if ( histoView ) {
+            std::cout << "HISTO=[" << std::endl;
+
+            for ( unsigned i = 0; i < grid.size(); i++ ) {
+
+                bool sampleCought  = false;
+
+                for ( unsigned j = 0; j < histoGrid.size(); j++ ) {
+
+                    std::vector <unsigned> inBin ( N, 0 );
+
+                    for ( unsigned n = 0; n < N; n++ ) {
+
+                        double leftBound = histoGrid[j][n] - h[n] * 0.5;
+
+                        double rightBound = histoGrid[j][n] + h[n] * 0.5;
+
+                        if ( grid[i][n] >  leftBound && grid[i][n] <= rightBound ) {
+
+                            inBin[n] = 1;
+
+                        }
+
+                    }
+
+                    unsigned sumCheck = 0;
+
+                    for ( unsigned n = 0; n < N; n++ ) {
+                        sumCheck += inBin[n];
+                    }
+
+                    if ( sumCheck == N ) {
+
+                        for ( unsigned n = 0; n < N; n++ ) {
+//                     std::cout << "grid[" << i << "][" << n << "] = " << grid[i][n] << " " << histoGrid[j][n] - h[n] * 0.5 << " , " <<  histoGrid[j][n] + h[n] * 0.5  << std::endl;
+                        }
+
+                        std::cout << histogram[j] << std::endl;
+
+                        sampleCought = true;
+
+                        break;
+
+                    }
+
+                }
+
+                if ( sampleCought == false ) std::cout << 0 << std::endl;
+
+            }
+
+            std::cout << "];" << std::endl;
+        }
+
     }
 
-//END grid plot
+//END  plot
 
+    double integral;
+    spg.EvaluatePDFIntegral ( integral );
 
-    //BEGIN these are just tests
-//     double phiTensorProductTest;
-//     std::vector< double> trialX ( 2 );
-//     trialX[0] = -0.75;
-//     trialX[1] = 0.;
-//     spg.EvaluatePhi ( phiTensorProductTest, trialX, idPhi, true );
-//     std::cout << phiTensorProductTest << std::endl;
-//END
+    std::cout << " PDF Integral is = " << integral << std::endl;
+
 
 //BEGIN compute error
-//     clock_t error_time = clock();
-//
-//     double sumError = 0.;
-//
-//     for ( unsigned m = 0; m < samples.size(); m++ ) {
-//         double pdfValue;
-//         spg.EvaluatePDF ( pdfValue, samples[m] );
-//         double uniformPDF = ( fabs ( samples[m][0] ) <= 1 /*&& fabs ( samples[m][1]) <= 1*/)  ? 0.5 : 0.;
-// //         double Gaussian = exp ( -samples[m][0] * samples[m][0] * 0.5 ) / sqrt( 2 * acos ( -1 ) ) /** exp ( -samples[m][1] * samples[m][1] * 0.5 ) / sqrt( 2 * acos ( -1 ) )*/;
-//         double errorSquared = ( pdfValue - uniformPDF ) * ( pdfValue - uniformPDF );
-//         sumError += errorSquared;
-//     }
-//
-//     double aL2E = sqrt ( sumError ) / M;
-//
-//     std::cout << " Averaged L2 error is = " << aL2E << std::endl;
-//
-//         std::cout << std::endl << " Computes error in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
-//               << static_cast<double> ( ( clock() - error_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
-    //END
+    clock_t error_time = clock();
 
+    double aL2E;
+    spg.ComputeAvgL2Error ( aL2E, samples, 1 );
 
+    std::cout << " Averaged L2 error is = " << aL2E << std::endl;
 
-
-    std::cout << std::endl << " Total time: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+    std::cout << " Computes error in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+              << static_cast<double> ( ( clock() - error_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
+//END
+    std::cout << " Total time: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
               << static_cast<double> ( ( clock() - total_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
+
+              
+              //BEGIN check sparse grid and histo
+//     for ( unsigned i = 0; i < histoSize1D; i++ ) {
+//         for ( unsigned j = 0; j < histoSize1D; j++ ) {
+// 
+//             unsigned k = j * histoSize1D + i;
+// 
+//             std::cout << histogram[k] << " ";
+//         }
+// 
+//         std::cout << std::endl;
+//     }
+/*    
+    std::cout<<"------------------------------------------------------"<<std::endl;
+
+    for ( unsigned i = 0; i < histoSize1D; i++ ) {
+        for ( unsigned j = 0; j < histoSize1D; j++ ) {
+            
+            unsigned k = j * histoSize1D + i;
+
+            double pdfValue;
+            spg.EvaluatePDF ( pdfValue, histoGrid[k], false );
+            
+            std::cout << pdfValue << " ";
+
+        }
+        
+           std::cout << std::endl;
+    }*/
+//END
 
     return 0;
 

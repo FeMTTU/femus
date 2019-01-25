@@ -237,6 +237,27 @@ namespace femus {
     return _hermiteQuadrature[numberOfQuadraturePoints - 1][1];
   }
 
+  /// Get Legendre quadrature point coordinates
+  const double* uq::GetLegendreQuadraturePoints (const unsigned &numberOfQuadraturePoints) {
+    if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
+      std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetLegendreQuadaturePoints(...)" << std::endl;
+      abort();
+    }
+    return _legendreQuadrature[numberOfQuadraturePoints - 1][1];
+
+  }
+
+/// Get quadrature point coordinates
+  const double* uq::GetQuadraturePoints (const unsigned &numberOfQuadraturePoints) {
+    if (_quadratureType == UQ_HERMITE) {
+      return GetHermiteQuadraturePoints (numberOfQuadraturePoints);
+    }
+    else {
+      return GetLegendreQuadraturePoints (numberOfQuadraturePoints);
+    }
+  }
+
+
 /// Get Hermite quadrature weights
   const double* uq::GetHermiteQuadratureWeights (const unsigned &numberOfQuadraturePoints) {
     if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
@@ -244,15 +265,7 @@ namespace femus {
       abort();
     }
     return _hermiteQuadrature[numberOfQuadraturePoints - 1][0];
-  }
 
-/// Get Legendre quadrature point coordinates
-  const double* uq::GetLegendreQuadraturePoints (const unsigned &numberOfQuadraturePoints) {
-    if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
-      std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetLegendreQuadaturePoints(...)" << std::endl;
-      abort();
-    }
-    return _legendreQuadrature[numberOfQuadraturePoints - 1][1];
   }
 
 /// Get Legendre quadrature weights
@@ -262,37 +275,18 @@ namespace femus {
       abort();
     }
     return _legendreQuadrature[numberOfQuadraturePoints - 1][0];
-  }
-
-/// Get quadrature point coordinates
-  const double* uq::GetQuadraturePoints (const unsigned &numberOfQuadraturePoints, const UqQuadratureType &quadratureType) {
-    //quadratureType = 0 : Hermite quadrature
-    //quadratureType = 1 : Legendre quadrature
-
-    if (quadratureType == UQ_HERMITE) {
-      return  GetHermiteQuadraturePoints (numberOfQuadraturePoints);
-    }
-
-    //else if ( quadratureType == 1 ) {
-    return  GetLegendreQuadraturePoints (numberOfQuadraturePoints);
-    //}
-
 
   }
+
 
 /// Get quadrature weights
-  const double* uq::GetQuadratureWeights (const unsigned &numberOfQuadraturePoints, const UqQuadratureType &quadratureType) {
-    //quadratureType = 0 : Hermite quadrature
-    //quadratureType = 1 : Legendre quadrature
-
-    if (quadratureType == UQ_HERMITE) {
-      return  GetHermiteQuadratureWeights (numberOfQuadraturePoints);
+  const double* uq::GetQuadratureWeights (const unsigned &numberOfQuadraturePoints) {
+    if (_quadratureType == UQ_HERMITE) {
+      return GetHermiteQuadratureWeights (numberOfQuadraturePoints);
     }
-
-    //else if ( quadratureType == 1 ) {
-    return  GetLegendreQuadratureWeights (numberOfQuadraturePoints);
-    //}
-
+    else {
+      return GetLegendreQuadratureWeights (numberOfQuadraturePoints);
+    }
   }
 
 ////////////////////////////////////////////////
@@ -363,11 +357,11 @@ namespace femus {
     _Tp.clear();
   }
 
-////////////////////////////////////////////////  HERMITE POLY STUFF
+////////////////////////////////////////////////  POLY STUFF
 
 /// Compute the Hermite Polynomial corresponding corresponding to the pair < numberOfQuadraturePoints, maxPolyOrder >
-  void uq::ComputeHermitePoly (std::vector < std::vector < double > >  & hermitePoly,
-                               const unsigned &numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
+  void uq::ComputeHermitePolynomial (std::vector < std::vector < double > >  & hermitePoly,
+                                     const unsigned &numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
 
     if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
       std::cout << "The selected order of integration has not been implemented yet, choose an integer in [1,16]" << std::endl;
@@ -426,89 +420,9 @@ namespace femus {
     }
   }
 
-/// Return the Hermite polynomial in the key < numberOfQuadraturePoints , maxPolyOrder >
-  const std::vector < std::vector <double> > & uq::GetHermitePolynomial (const unsigned & numberOfQuadraturePoints,
-                                                                         const unsigned & maxPolyOrder) {
-
-    std::pair<unsigned, unsigned> hermitePolyIndex = std::make_pair (numberOfQuadraturePoints, maxPolyOrder);
-
-    std::map<std::pair<unsigned, unsigned>, std::vector < std::vector <double> > >::iterator it;
-
-    it = _hermitePoly.find (hermitePolyIndex);
-    if (it == _hermitePoly.end()) {
-      ComputeHermitePoly (_hermitePoly[hermitePolyIndex], numberOfQuadraturePoints, maxPolyOrder);
-    }
-    return _hermitePoly[hermitePolyIndex];
-  };
-
-/// Erase the Hermite polynomial in the key < numberOfQuadraturePoints , maxPolyOrder >
-  void uq::EraseHermitePolynomial (const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
-    _hermitePoly.erase (std::make_pair (numberOfQuadraturePoints, maxPolyOrder));
-  }
-
-/// Clear all stored Hermite polynomials
-  void uq::ClearHermitePolynomial() {
-    _hermitePoly.clear();
-  }
-
-/// Compute the Hermite Polynomial Histogram at the key < pIndex, samplePoints, numberOfEigPairs >
-  const std::vector < std::vector < double > >  & uq::GetHermitePolyHistogram (
-    const unsigned & pIndex, const std::vector<double> & samplePoints, const unsigned & numberOfEigPairs) {
-
-    _hermitePolyHistogram.resize (pIndex + 1);
-    for (unsigned i = 0; i < pIndex + 1; i++) {
-      _hermitePolyHistogram[i].resize (samplePoints.size());
-    }
-
-    for (unsigned j = 0; j < numberOfEigPairs; j++) {
-
-      double x = samplePoints[j];
-
-      _hermitePolyHistogram[0][j] = 1. ;
-
-      if (pIndex > 0) {
-        _hermitePolyHistogram[1][j] = x ;
-        if (pIndex > 1) {
-          _hermitePolyHistogram[2][j] = (pow (x, 2) - 1.) / sqrt (2) ;
-          if (pIndex > 2) {
-            _hermitePolyHistogram[3][j] = (pow (x, 3) - 3. * x) / sqrt (6) ;
-            if (pIndex > 3) {
-              _hermitePolyHistogram[4][j] = (pow (x, 4) - 6. * x * x + 3.) / sqrt (24) ;
-              if (pIndex > 4) {
-                _hermitePolyHistogram[5][j] = (pow (x, 5) - 10. * pow (x, 3) + 15. * x) / sqrt (120) ;
-                if (pIndex > 5) {
-                  _hermitePolyHistogram[6][j] = (pow (x, 6) - 15. * pow (x, 4) + 45. * pow (x, 2) - 15.) / sqrt (720) ;
-                  if (pIndex > 6) {
-                    _hermitePolyHistogram[7][j] = (pow (x, 7) - 21. * pow (x, 5) + 105. * pow (x, 3) -  105. * x) / sqrt (5040) ;
-                    if (pIndex > 7) {
-                      _hermitePolyHistogram[8][j] = (pow (x, 8) - 28. * pow (x, 6) + 210. * pow (x, 4) - 420. * pow (x, 4) + 105.) / sqrt (40320) ;
-                      if (pIndex > 8) {
-                        _hermitePolyHistogram[9][j] = (pow (x, 9) - 36. * pow (x, 7) + 378. * pow (x, 5) - 1260. * pow (x, 3) + 945. * x) / sqrt (362880);
-                        if (pIndex > 9) {
-                          _hermitePolyHistogram[10][j] = (pow (x, 10) - 45. * pow (x, 8) + 630. * pow (x, 6) - 3150. * pow (x, 4) + 4725. * pow (x, 2) - 945.) / sqrt (3628800);
-                          if (pIndex > 10) {
-                            std::cout << "Polynomial order is too big. For now, it has to be not greater than 10." << std::endl;
-                            abort();
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    return _hermitePolyHistogram;
-  }
-
-////////////////////////////////////////////////  LEGENDRE POLY STUFF
-
 /// Compute the Legendre Polynomial corresponding corresponding to the pair < numberOfQuadraturePoints, maxPolyOrder >
-  void uq::ComputeLegendrePoly (std::vector < std::vector < double > >  & legendrePoly,
-                                const unsigned &numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
+  void uq::ComputeLegendrePolynomial (std::vector < std::vector < double > >  & legendrePoly,
+                                      const unsigned &numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
 
     if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
       std::cout << "The selected order of integration has not been implemented yet, choose an integer in [1,16]" << std::endl;
@@ -567,65 +481,73 @@ namespace femus {
     }
   }
 
-  const std::vector < std::vector <double> > & uq::GetLegendrePolynomial (const unsigned & numberOfQuadraturePoints,
-                                                                          const unsigned & maxPolyOrder) {
+/// Return the polynomial in the key < numberOfQuadraturePoints , maxPolyOrder >
+  const std::vector < std::vector <double> > & uq::GetPolynomial (const unsigned & numberOfQuadraturePoints,
+                                                                  const unsigned & maxPolyOrder) {
 
-    std::pair<unsigned, unsigned> legendrePolyIndex = std::make_pair (numberOfQuadraturePoints, maxPolyOrder);
+    std::pair<unsigned, unsigned> PolyIndex = std::make_pair (numberOfQuadraturePoints, maxPolyOrder);
 
     std::map<std::pair<unsigned, unsigned>, std::vector < std::vector <double> > >::iterator it;
 
-    it = _legendrePoly.find (legendrePolyIndex);
-    if (it == _legendrePoly.end()) {
-      ComputeLegendrePoly (_legendrePoly[legendrePolyIndex], numberOfQuadraturePoints, maxPolyOrder);
+    it = _polynomial.find (PolyIndex);
+    if (it == _polynomial.end()) {
+      if (_quadratureType == UQ_HERMITE) {
+        ComputeHermitePolynomial (_polynomial[PolyIndex], numberOfQuadraturePoints, maxPolyOrder);
+      }
+      else {
+        ComputeLegendrePolynomial (_polynomial[PolyIndex], numberOfQuadraturePoints, maxPolyOrder);
+      }
     }
-    return _legendrePoly[legendrePolyIndex];
+    return _polynomial[PolyIndex];
   };
 
-/// Erase the Hermite polynomial in the key < numberOfQuadraturePoints , maxPolyOrder >
-  void uq::EraseLegendrePolynomial (const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
-    _legendrePoly.erase (std::make_pair (numberOfQuadraturePoints, maxPolyOrder));
+/// Erase the polynomial in the key < numberOfQuadraturePoints , maxPolyOrder >
+  void uq::ErasePolynomial (const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
+    _polynomial.erase (std::make_pair (numberOfQuadraturePoints, maxPolyOrder));
   }
 
-/// Clear all stored Hermite polynomials
-  void uq::ClearLegendrePolynomial() {
-    _legendrePoly.clear();
+/// Clear all stored polynomials
+  void uq::ClearPolynomial() {
+    _polynomial.clear();
   }
 
-/// Compute the Legendre Polynomial Histogram at the key < pIndex, samplePoints, numberOfEigPairs >
-  const std::vector < std::vector < double > >  & uq::GetLegendrePolyHistogram (
+
+
+/// Compute the Hermite Polynomial Histogram at the key < pIndex, samplePoints, numberOfEigPairs >
+  const std::vector < std::vector < double > >  & uq::GetHermitePolynomialHistogram (
     const unsigned & pIndex, const std::vector<double> & samplePoints, const unsigned & numberOfEigPairs) {
 
-    _legendrePolyHistogram.resize (pIndex + 1);
+    _polynomialHistogram.resize (pIndex + 1);
     for (unsigned i = 0; i < pIndex + 1; i++) {
-      _legendrePolyHistogram[i].resize (samplePoints.size());
+      _polynomialHistogram[i].resize (samplePoints.size());
     }
 
     for (unsigned j = 0; j < numberOfEigPairs; j++) {
 
       double x = samplePoints[j];
 
-      _legendrePolyHistogram[0][j] = 1. ;
+      _polynomialHistogram[0][j] = 1. ;
 
       if (pIndex > 0) {
-        _legendrePolyHistogram[1][j] = x / sqrt (3) ;
+        _polynomialHistogram[1][j] = x ;
         if (pIndex > 1) {
-          _legendrePolyHistogram[2][j] = (- 1. + 3. * x * x) / (2 * sqrt (5)) ;
+          _polynomialHistogram[2][j] = (pow (x, 2) - 1.) / sqrt (2) ;
           if (pIndex > 2) {
-            _legendrePolyHistogram[3][j] = (- 3. * x + 5. * x * x * x) / (2. * sqrt (7)) ;
+            _polynomialHistogram[3][j] = (pow (x, 3) - 3. * x) / sqrt (6) ;
             if (pIndex > 3) {
-              _legendrePolyHistogram[4][j] = (1. / 24.) * (3. - 30. * x * x + 35. * pow (x, 4)) ;
+              _polynomialHistogram[4][j] = (pow (x, 4) - 6. * x * x + 3.) / sqrt (24) ;
               if (pIndex > 4) {
-                _legendrePolyHistogram[5][j] = (15. * x - 70. * pow (x, 3) + 63. * pow (x, 5)) / (8. * sqrt (11)) ;
+                _polynomialHistogram[5][j] = (pow (x, 5) - 10. * pow (x, 3) + 15. * x) / sqrt (120) ;
                 if (pIndex > 5) {
-                  _legendrePolyHistogram[6][j] = (- 5. + 105. * x * x - 315. * pow (x, 4) + 231. * pow (x, 6)) / (16. * sqrt (13)) ;
+                  _polynomialHistogram[6][j] = (pow (x, 6) - 15. * pow (x, 4) + 45. * pow (x, 2) - 15.) / sqrt (720) ;
                   if (pIndex > 6) {
-                    _legendrePolyHistogram[7][j] = (- 35. * x + 315. * pow (x, 3) - 693. * pow (x, 5) + 429. * pow (x, 7)) / (16.* sqrt (15));
+                    _polynomialHistogram[7][j] = (pow (x, 7) - 21. * pow (x, 5) + 105. * pow (x, 3) -  105. * x) / sqrt (5040) ;
                     if (pIndex > 7) {
-                      _legendrePolyHistogram[8][j] = (35. - 1260. * x * x + 6930. * pow (x, 4) - 12012. * pow (x, 6) + 6435. * pow (x, 8)) / (128. *                sqrt (17));
+                      _polynomialHistogram[8][j] = (pow (x, 8) - 28. * pow (x, 6) + 210. * pow (x, 4) - 420. * pow (x, 4) + 105.) / sqrt (40320) ;
                       if (pIndex > 8) {
-                        _legendrePolyHistogram[9][j] = (315. * x - 4620. * pow (x, 3) + 18018. * pow (x, 5) - 25740. * pow (x, 7) + 12155. * pow (x, 9)) / (128. * sqrt (19));
+                        _polynomialHistogram[9][j] = (pow (x, 9) - 36. * pow (x, 7) + 378. * pow (x, 5) - 1260. * pow (x, 3) + 945. * x) / sqrt (362880);
                         if (pIndex > 9) {
-                          _legendrePolyHistogram[10][j] = (- 63. + 3465. * x * x - 30030. * pow (x, 4) + 90090. * pow (x, 6) - 109395. * pow (x, 8) + 46189 * pow (x, 10)) / (256. * sqrt (21));
+                          _polynomialHistogram[10][j] = (pow (x, 10) - 45. * pow (x, 8) + 630. * pow (x, 6) - 3150. * pow (x, 4) + 4725. * pow (x, 2) - 945.) / sqrt (3628800);
                           if (pIndex > 10) {
                             std::cout << "Polynomial order is too big. For now, it has to be not greater than 10." << std::endl;
                             abort();
@@ -641,70 +563,72 @@ namespace femus {
         }
       }
     }
-    return _legendrePolyHistogram;
+    return _polynomialHistogram;
   }
 
-////////////////////////////////////////////////  GENERAL STUFF
+/// Compute the Legendre Polynomial Histogram at the key < pIndex, samplePoints, numberOfEigPairs >
+  const std::vector < std::vector < double > >  & uq::GetLegendrePolynomialHistogram (
+    const unsigned & pIndex, const std::vector<double> & samplePoints, const unsigned & numberOfEigPairs) {
 
-  const std::vector < std::vector <double> > & uq::GetPolynomial (const unsigned & numberOfQuadraturePoints,
-                                                                  const unsigned & maxPolyOrder, const UqQuadratureType &quadratureType) {
-
-    //quadratureType = 0 : Hermite quadrature
-    //quadratureType = 1 : Legendre quadrature
-
-    if (quadratureType == UQ_HERMITE) {
-      return   GetHermitePolynomial (numberOfQuadraturePoints, maxPolyOrder);
+    _polynomialHistogram.resize (pIndex + 1);
+    for (unsigned i = 0; i < pIndex + 1; i++) {
+      _polynomialHistogram[i].resize (samplePoints.size());
     }
 
-    //else if ( quadratureType == 1 ) {
-    return   GetLegendrePolynomial (numberOfQuadraturePoints, maxPolyOrder);
-    //}
+    for (unsigned j = 0; j < numberOfEigPairs; j++) {
 
+      double x = samplePoints[j];
 
+      _polynomialHistogram[0][j] = 1. ;
+
+      if (pIndex > 0) {
+        _polynomialHistogram[1][j] = x / sqrt (3) ;
+        if (pIndex > 1) {
+          _polynomialHistogram[2][j] = (- 1. + 3. * x * x) / (2 * sqrt (5)) ;
+          if (pIndex > 2) {
+            _polynomialHistogram[3][j] = (- 3. * x + 5. * x * x * x) / (2. * sqrt (7)) ;
+            if (pIndex > 3) {
+              _polynomialHistogram[4][j] = (1. / 24.) * (3. - 30. * x * x + 35. * pow (x, 4)) ;
+              if (pIndex > 4) {
+                _polynomialHistogram[5][j] = (15. * x - 70. * pow (x, 3) + 63. * pow (x, 5)) / (8. * sqrt (11)) ;
+                if (pIndex > 5) {
+                  _polynomialHistogram[6][j] = (- 5. + 105. * x * x - 315. * pow (x, 4) + 231. * pow (x, 6)) / (16. * sqrt (13)) ;
+                  if (pIndex > 6) {
+                    _polynomialHistogram[7][j] = (- 35. * x + 315. * pow (x, 3) - 693. * pow (x, 5) + 429. * pow (x, 7)) / (16.* sqrt (15));
+                    if (pIndex > 7) {
+                      _polynomialHistogram[8][j] = (35. - 1260. * x * x + 6930. * pow (x, 4) - 12012. * pow (x, 6) + 6435. * pow (x, 8)) / (128. *                sqrt (17));
+                      if (pIndex > 8) {
+                        _polynomialHistogram[9][j] = (315. * x - 4620. * pow (x, 3) + 18018. * pow (x, 5) - 25740. * pow (x, 7) + 12155. * pow (x, 9)) / (128. * sqrt (19));
+                        if (pIndex > 9) {
+                          _polynomialHistogram[10][j] = (- 63. + 3465. * x * x - 30030. * pow (x, 4) + 90090. * pow (x, 6) - 109395. * pow (x, 8) + 46189 * pow (x, 10)) / (256. * sqrt (21));
+                          if (pIndex > 10) {
+                            std::cout << "Polynomial order is too big. For now, it has to be not greater than 10." << std::endl;
+                            abort();
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return _polynomialHistogram;
   }
 
-  const std::vector < std::vector < double > >  & uq::GetPolyHistogram (
-    const unsigned & pIndex, const std::vector<double> & samplePoints, const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType) {
+  const std::vector < std::vector < double > >  & uq::GetPolynomialHistogram (
+    const unsigned & pIndex, const std::vector<double> & samplePoints, const unsigned & numberOfEigPairs) {
 
-    //quadratureType = 0 : Hermite quadrature
-    //quadratureType = 1 : Legendre quadrature
-
-    if (quadratureType == UQ_HERMITE) {
-      return  GetHermitePolyHistogram (pIndex, samplePoints, numberOfEigPairs);
+    if (_quadratureType == UQ_HERMITE) {
+      return GetHermitePolynomialHistogram (pIndex, samplePoints, numberOfEigPairs);
     }
-
-    //else if ( quadratureType == 1 ) {
-    return   GetLegendrePolyHistogram (pIndex, samplePoints, numberOfEigPairs);
-    //}
-
+    else {
+      return GetLegendrePolynomialHistogram (pIndex, samplePoints, numberOfEigPairs);
+    }
   }
-
-/// Erase the Hermite polynomial in the key < numberOfQuadraturePoints , maxPolyOrder >
-  void uq::ErasePolynomial (const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder, const UqQuadratureType &quadratureType) {
-
-    if (quadratureType == UQ_HERMITE) {
-      _hermitePoly.erase (std::make_pair (numberOfQuadraturePoints, maxPolyOrder));
-    }
-
-
-    else if (quadratureType == UQ_LEGENDRE) {
-      _legendrePoly.erase (std::make_pair (numberOfQuadraturePoints, maxPolyOrder));
-    }
-
-  }
-
-/// Clear all stored Hermite polynomials
-  void uq::ClearPolynomial (const UqQuadratureType &quadratureType) {
-    if (quadratureType == UQ_HERMITE) {
-      _hermitePoly.clear();
-    }
-
-    else if (quadratureType == UQ_LEGENDRE) {
-      _legendrePoly.clear();
-    }
-
-  }
-
 
 ////////////////////////////////////////////////
 
@@ -785,7 +709,7 @@ namespace femus {
 
 /// Compute the Integral Matrix at the key < q0, p0>
   void uq::ComputeIntegralMatrix (std::vector < std::vector < std::vector < double > > > &integralMatrix,
-                                  const unsigned & q0, const unsigned & p0, const UqQuadratureType &quadratureType) {
+                                  const unsigned & q0, const unsigned & p0) {
 
     unsigned maxPolyOrder = (q0 > p0) ? q0 : p0;
 
@@ -801,12 +725,12 @@ namespace femus {
       std::cout << " Needed : " << n1 << " , " << " Used : " << 16 << std::endl;
     }
 
-    const std::vector < std::vector < double > >  &poly = GetPolynomial (numberOfQuadraturePoints, maxPolyOrder, quadratureType);
+    const std::vector < std::vector < double > >  &poly = GetPolynomial (numberOfQuadraturePoints, maxPolyOrder);
 
     unsigned q = q0 + 1;
     unsigned p = p0 + 1;
 
-    const double* quadratureWeights = GetQuadratureWeights (numberOfQuadraturePoints, quadratureType);
+    const double* quadratureWeights = GetQuadratureWeights (numberOfQuadraturePoints);
 
     integralMatrix.resize (q);
     for (unsigned q1 = 0; q1 < q; q1++) {
@@ -834,15 +758,14 @@ namespace femus {
   };
 
 /// Get the Integral Matrix at the key < q0, p0>
-  const std::vector < std::vector < std::vector < double > > > & uq::GetIntegralMatrix (const unsigned & q0, const unsigned & p0,
-                                                                                        const UqQuadratureType &quadratureType) {
+  const std::vector < std::vector < std::vector < double > > > & uq::GetIntegralMatrix (const unsigned & q0, const unsigned & p0) {
     std::pair<unsigned, unsigned> integralMatrixIndex = std::make_pair (q0, p0);
 
     std::map<std::pair<unsigned, unsigned>, std::vector < std::vector < std::vector <double> > > >::iterator it;
 
     it = _integralMatrix.find (integralMatrixIndex);
     if (it == _integralMatrix.end()) {
-      ComputeIntegralMatrix (_integralMatrix[integralMatrixIndex], q0, p0, quadratureType);
+      ComputeIntegralMatrix (_integralMatrix[integralMatrixIndex], q0, p0);
     }
     return _integralMatrix[integralMatrixIndex];
   }
@@ -862,10 +785,9 @@ namespace femus {
 
 /// Compute the Integral Matrix at the key < q0, p0, numberOfEigPairs>
   void uq::ComputeStochasticMassMatrix (std::vector < std::vector < std::vector < double > > > & G,
-                                        const unsigned & q0, const unsigned & p0, const unsigned & numberOfEigPairs,
-                                        const UqQuadratureType &quadratureType) {
+                                        const unsigned & q0, const unsigned & p0, const unsigned & numberOfEigPairs) {
 
-    const std::vector < std::vector < std::vector < double > > > & integralMatrix = GetIntegralMatrix (q0, p0, quadratureType);
+    const std::vector < std::vector < std::vector < double > > > & integralMatrix = GetIntegralMatrix (q0, p0);
 
     const std::vector < std::vector <unsigned> > &Jq = GetIndexSet (q0, numberOfEigPairs);
     const std::vector < std::vector <unsigned> > &Jp = GetIndexSet (p0, numberOfEigPairs);
@@ -897,8 +819,7 @@ namespace femus {
 
 /// Return the Stochastic Mass Matrix at the key < q0, p0, numberOfEigPairs>
   std::vector < std::vector < std::vector < double > > > & uq::GetStochasticMassMatrix (const unsigned & q0, const unsigned & p0,
-                                                                                        const unsigned & numberOfEigPairs,
-                                                                                        const UqQuadratureType &quadratureType) {
+                                                                                        const unsigned & numberOfEigPairs) {
 
     std::pair < std::pair<unsigned, unsigned>, unsigned> stochasticMassMatrixIndex = std::make_pair (std::make_pair (q0, p0), numberOfEigPairs);
 
@@ -906,7 +827,7 @@ namespace femus {
 
     it = _stochasticMassMatrix.find (stochasticMassMatrixIndex);
     if (it == _stochasticMassMatrix.end()) {
-      ComputeStochasticMassMatrix (_stochasticMassMatrix[stochasticMassMatrixIndex], q0, p0, numberOfEigPairs, quadratureType);
+      ComputeStochasticMassMatrix (_stochasticMassMatrix[stochasticMassMatrixIndex], q0, p0, numberOfEigPairs);
     }
     return _stochasticMassMatrix[stochasticMassMatrixIndex];
 
@@ -929,248 +850,80 @@ namespace femus {
 /////////////////////////////////////////// MULTIVARIATE HERMITE STUFF
 
 
-/// Compute the Multivariate Hermite polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-  void uq::ComputeMultivariateHermite (
-    std::vector < std::vector < double > >  & multivariateHermitePoly,
-    std::vector < double > & multivariateHermiteQuadratureWeights,
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
-
-    const std::vector < std::vector <unsigned> > & Jp = GetIndexSet (p, numberOfEigPairs);
-    const std::vector < std::vector <unsigned> > & Tp = GetTensorProductSet (numberOfQuadraturePoints, numberOfEigPairs);
-
-    multivariateHermiteQuadratureWeights.assign (Tp.size(), 1.);
-
-    multivariateHermitePoly.resize (Jp.size());
-    for (unsigned i = 0; i < Jp.size(); i++) {
-      multivariateHermitePoly[i].assign (Tp.size(), 1.);
-    }
-
-    const std::vector < std::vector < double > >  &hermitePoly = GetHermitePolynomial (numberOfQuadraturePoints, p);
-
-    const double* hermiteQuadratureWeights = GetHermiteQuadratureWeights (numberOfQuadraturePoints);
-
-    for (unsigned j = 0; j < Tp.size(); j++) {
-      for (unsigned k = 0; k < numberOfEigPairs; k++) {
-        multivariateHermiteQuadratureWeights[j] *= hermiteQuadratureWeights[Tp[j][k]] ;
-        for (unsigned i = 0; i < Jp.size(); i++) {
-          multivariateHermitePoly[i][j] *= hermitePoly[Jp[i][k]][Tp[j][k]] ;
-        }
-      }
-    }
-  };
-
-/// Return the Multivariate Hermite polynomials at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-  const std::vector < std::vector < double > >  & uq::GetMultivariateHermitePolynomial (
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
-
-    std::pair < std::pair<unsigned, unsigned>, unsigned> multivariateHermiteIndex = std::make_pair (std::make_pair (numberOfQuadraturePoints, p), numberOfEigPairs);
-
-    std::map<std::pair < std::pair<unsigned, unsigned>, unsigned>, std::vector < std::vector <double> > >::iterator it;
-
-    it = _multivariateHermitePoly.find (multivariateHermiteIndex);
-    if (it == _multivariateHermitePoly.end()) {
-      ComputeMultivariateHermite (_multivariateHermitePoly[multivariateHermiteIndex], _multivariateHermiteWeight[multivariateHermiteIndex], numberOfQuadraturePoints, p, numberOfEigPairs);
-    }
-    return _multivariateHermitePoly[multivariateHermiteIndex];
-
-  }
-
-/// Return the Multivariate Hermite weight at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-  const std::vector < double > & uq::GetMultivariateHermiteWeights (
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
-
-    std::pair < std::pair<unsigned, unsigned>, unsigned> multivariateHermiteIndex = std::make_pair (std::make_pair (numberOfQuadraturePoints, p), numberOfEigPairs);
-
-    std::map<std::pair < std::pair<unsigned, unsigned>, unsigned>, std::vector < std::vector <double> > >::iterator it;
-
-    it = _multivariateHermitePoly.find (multivariateHermiteIndex);
-    if (it == _multivariateHermitePoly.end()) {
-      ComputeMultivariateHermite (_multivariateHermitePoly[multivariateHermiteIndex], _multivariateHermiteWeight[multivariateHermiteIndex], numberOfQuadraturePoints, p, numberOfEigPairs);
-    }
-    return _multivariateHermiteWeight[multivariateHermiteIndex];
-
-  }
-
-/// Erase the Multivariate Hermite polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-  void uq::EraseMultivariateHermite (const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
-    std::pair < std::pair<unsigned, unsigned>, unsigned> multivariateHermiteIndex = std::make_pair (std::make_pair (numberOfQuadraturePoints, p), numberOfEigPairs);
-    _multivariateHermitePoly.erase (multivariateHermiteIndex);
-    _multivariateHermiteWeight.erase (multivariateHermiteIndex);
-  }
-
-/// Clear all Multivariate Hermite polynomials and weights
-  void uq::ClearMultivariateHermite() {
-    _multivariateHermitePoly.clear();
-    _multivariateHermiteWeight.clear();
-  }
-
-
-/////////////////////////////////////////// MULTIVARIATE LEGENDRE STUFF
-
-
-/// Compute the Multivariate Legendre polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-  void uq::ComputeMultivariateLegendre (
-    std::vector < std::vector < double > >  & multivariateLegendrePoly,
-    std::vector < double > & multivariateLegendreQuadratureWeights,
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
-
-    const std::vector < std::vector <unsigned> > & Jp = GetIndexSet (p, numberOfEigPairs);
-    const std::vector < std::vector <unsigned> > & Tp = GetTensorProductSet (numberOfQuadraturePoints, numberOfEigPairs);
-
-    multivariateLegendreQuadratureWeights.assign (Tp.size(), 1.);
-
-    multivariateLegendrePoly.resize (Jp.size());
-    for (unsigned i = 0; i < Jp.size(); i++) {
-      multivariateLegendrePoly[i].assign (Tp.size(), 1.);
-    }
-
-    const std::vector < std::vector < double > >  &legendrePoly = GetLegendrePolynomial (numberOfQuadraturePoints, p);
-
-    const double* legendreQuadratureWeights = GetLegendreQuadratureWeights (numberOfQuadraturePoints);
-
-    for (unsigned j = 0; j < Tp.size(); j++) {
-      for (unsigned k = 0; k < numberOfEigPairs; k++) {
-        multivariateLegendreQuadratureWeights[j] *= legendreQuadratureWeights[Tp[j][k]] ;
-        for (unsigned i = 0; i < Jp.size(); i++) {
-          multivariateLegendrePoly[i][j] *= legendrePoly[Jp[i][k]][Tp[j][k]] ;
-        }
-      }
-    }
-  };
-
-/// Return the Multivariate Legendre polynomials at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-  const std::vector < std::vector < double > >  & uq::GetMultivariateLegendrePolynomial (
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
-
-    std::pair < std::pair<unsigned, unsigned>, unsigned> multivariateLegendreIndex = std::make_pair (std::make_pair (numberOfQuadraturePoints, p), numberOfEigPairs);
-
-    std::map<std::pair < std::pair<unsigned, unsigned>, unsigned>, std::vector < std::vector <double> > >::iterator it;
-
-    it = _multivariateLegendrePoly.find (multivariateLegendreIndex);
-    if (it == _multivariateLegendrePoly.end()) {
-      ComputeMultivariateLegendre (_multivariateLegendrePoly[multivariateLegendreIndex], _multivariateLegendreWeight[multivariateLegendreIndex], numberOfQuadraturePoints, p, numberOfEigPairs);
-    }
-    return _multivariateLegendrePoly[multivariateLegendreIndex];
-
-  }
-
-/// Return the Multivariate Legendre weight at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-  const std::vector < double > & uq::GetMultivariateLegendreWeights (
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
-
-    std::pair < std::pair<unsigned, unsigned>, unsigned> multivariateLegendreIndex = std::make_pair (std::make_pair (numberOfQuadraturePoints, p), numberOfEigPairs);
-
-    std::map<std::pair < std::pair<unsigned, unsigned>, unsigned>, std::vector < std::vector <double> > >::iterator it;
-
-    it = _multivariateLegendrePoly.find (multivariateLegendreIndex);
-    if (it == _multivariateLegendrePoly.end()) {
-      ComputeMultivariateLegendre (_multivariateLegendrePoly[multivariateLegendreIndex], _multivariateLegendreWeight[multivariateLegendreIndex], numberOfQuadraturePoints, p, numberOfEigPairs);
-    }
-    return _multivariateLegendreWeight[multivariateLegendreIndex];
-
-  }
-
-/// Erase the Multivariate Hermite polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-  void uq::EraseMultivariateLegendre (const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
-    std::pair < std::pair<unsigned, unsigned>, unsigned> multivariateLegendreIndex = std::make_pair (std::make_pair (numberOfQuadraturePoints, p), numberOfEigPairs);
-    _multivariateLegendrePoly.erase (multivariateLegendreIndex);
-    _multivariateLegendreWeight.erase (multivariateLegendreIndex);
-  }
-
-/// Clear all Multivariate Legendre polynomials and weights
-  void uq::ClearMultivariateLegendre() {
-    _multivariateLegendrePoly.clear();
-    _multivariateLegendreWeight.clear();
-  }
-
-/////////////////////////////////////////// MULTIVARIATE GENERAL STUFF
-
-/// Compute the Multivariate prescribed polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
+/// Compute the Multivariate  polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
   void uq::ComputeMultivariate (
     std::vector < std::vector < double > >  & multivariatePoly,
-    std::vector < double > & multivariateQuadratureWeights, const unsigned & numberOfQuadraturePoints,
-    const unsigned & p, const unsigned & numberOfEigPairs, const UqQuadratureType &quadratureType) {
+    std::vector < double > & multivariateQuadratureWeights,
+    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
 
-    if (quadratureType == 0) {
-      ComputeMultivariateHermite (multivariatePoly, multivariateQuadratureWeights, numberOfQuadraturePoints, p, numberOfEigPairs);
+    const std::vector < std::vector <unsigned> > & Jp = GetIndexSet (p, numberOfEigPairs);
+    const std::vector < std::vector <unsigned> > & Tp = GetTensorProductSet (numberOfQuadraturePoints, numberOfEigPairs);
+
+    multivariateQuadratureWeights.assign (Tp.size(), 1.);
+
+    multivariatePoly.resize (Jp.size());
+    for (unsigned i = 0; i < Jp.size(); i++) {
+      multivariatePoly[i].assign (Tp.size(), 1.);
     }
 
-    else if (quadratureType == 1) {
-      ComputeMultivariateLegendre (multivariatePoly, multivariateQuadratureWeights, numberOfQuadraturePoints, p, numberOfEigPairs);
+    const std::vector < std::vector < double > >  &Polynomial = GetPolynomial (numberOfQuadraturePoints, p);
+
+    const double* QuadratureWeights = GetQuadratureWeights (numberOfQuadraturePoints);
+
+    for (unsigned j = 0; j < Tp.size(); j++) {
+      for (unsigned k = 0; k < numberOfEigPairs; k++) {
+        multivariateQuadratureWeights[j] *= QuadratureWeights[Tp[j][k]] ;
+        for (unsigned i = 0; i < Jp.size(); i++) {
+          multivariatePoly[i][j] *= Polynomial[Jp[i][k]][Tp[j][k]] ;
+        }
+      }
     }
-
-
   };
 
-/// Return the Multivariate prescribed polynomials at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
+/// Return the Multivariate  polynomials at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
   const std::vector < std::vector < double > >  & uq::GetMultivariatePolynomial (
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs,
-    const UqQuadratureType &quadratureType) {
+    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
 
-    if (quadratureType == UQ_HERMITE) {
-      return  GetMultivariateHermitePolynomial (numberOfQuadraturePoints, p, numberOfEigPairs);
+    std::pair < std::pair<unsigned, unsigned>, unsigned> multivariateIndex = std::make_pair (std::make_pair (numberOfQuadraturePoints, p), numberOfEigPairs);
+
+    std::map<std::pair < std::pair<unsigned, unsigned>, unsigned>, std::vector < std::vector <double> > >::iterator it;
+
+    it = _multivariatePolynomial.find (multivariateIndex);
+    if (it == _multivariatePolynomial.end()) {
+      ComputeMultivariate (_multivariatePolynomial[multivariateIndex], _multivariateWeight[multivariateIndex], numberOfQuadraturePoints, p, numberOfEigPairs);
     }
+    return _multivariatePolynomial[multivariateIndex];
 
-    //else if ( quadratureType == 1 ) {
-    return   GetMultivariateLegendrePolynomial (numberOfQuadraturePoints, p, numberOfEigPairs);
-    //}
+  }
 
-  };
-
-
-/// Return the Multivariate prescribed weight at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
+/// Return the Multivariate  weight at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
   const std::vector < double > & uq::GetMultivariateWeights (
-    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs,
-    const UqQuadratureType &quadratureType) {
+    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
 
-    if (quadratureType == UQ_HERMITE) {
-      return  GetMultivariateHermiteWeights (numberOfQuadraturePoints,  p,  numberOfEigPairs);
+    std::pair < std::pair<unsigned, unsigned>, unsigned> multivariateIndex = std::make_pair (std::make_pair (numberOfQuadraturePoints, p), numberOfEigPairs);
+
+    std::map<std::pair < std::pair<unsigned, unsigned>, unsigned>, std::vector < std::vector <double> > >::iterator it;
+
+    it = _multivariatePolynomial.find (multivariateIndex);
+    if (it == _multivariatePolynomial.end()) {
+      ComputeMultivariate (_multivariatePolynomial[multivariateIndex], _multivariateWeight[multivariateIndex], numberOfQuadraturePoints, p, numberOfEigPairs);
     }
-
-    //else if ( quadratureType == 1 ) {
-    return  GetMultivariateLegendreWeights (numberOfQuadraturePoints,  p,  numberOfEigPairs);
-    //}
-
-  };
-
-/// Erase the Multivariate prescribed polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
-  void uq::EraseMultivariate (const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs,
-                              const UqQuadratureType &quadratureType) {
-
-    if (quadratureType == UQ_HERMITE) {
-      EraseMultivariateHermite (numberOfQuadraturePoints, p, numberOfEigPairs);
-    }
-
-    else if (quadratureType == UQ_LEGENDRE) {
-      EraseMultivariateLegendre (numberOfQuadraturePoints, p, numberOfEigPairs);
-    }
+    return _multivariateWeight[multivariateIndex];
 
   }
 
-/// Clear all Multivariate prescribed polynomials and weights
-  void uq::ClearMultivariate (const UqQuadratureType &quadratureType) {
-
-    if (quadratureType == UQ_HERMITE) {
-      ClearMultivariateHermite();
-    }
-
-    else if (quadratureType == UQ_LEGENDRE) {
-      ClearMultivariateLegendre();
-    }
-
+/// Erase the Multivariate  polynomials and weights at the key < numberOfQuadraturePoints, p,numberOfEigPairs>
+  void uq::EraseMultivariate (const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
+    std::pair < std::pair<unsigned, unsigned>, unsigned> multivariateIndex = std::make_pair (std::make_pair (numberOfQuadraturePoints, p), numberOfEigPairs);
+    _multivariatePolynomial.erase (multivariateIndex);
+    _multivariateWeight.erase (multivariateIndex);
   }
 
-  void uq::ClearPolynomialHistogram (const UqQuadratureType &quadratureType) {
-
-    if (quadratureType == UQ_HERMITE) {
-      _hermitePolyHistogram.clear();
-    }
-
-    else if (quadratureType == UQ_LEGENDRE) {
-      _legendrePolyHistogram.clear();
-    }
-
-  };
+/// Clear all Multivariate  polynomials and weights
+  void uq::ClearMultivariate() {
+    _multivariatePolynomial.clear();
+    _multivariateWeight.clear();
+  }
 
 ///////////////////////////////////////////
 
@@ -1181,6 +934,7 @@ namespace femus {
 
 
 }
+
 
 
 

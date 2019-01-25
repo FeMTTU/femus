@@ -57,7 +57,8 @@ public:
     ~FemusInit();
     
     static adept::Stack _adeptStack; 
-    static uq _uq; 
+    static uq _uqHermite; 
+    static uq _uqLegendre; 
      
 };
 
