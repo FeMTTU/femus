@@ -44,7 +44,11 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 100000; //number of samples for the Monte Carlo
+double startPoint = - 3.8;
+double endPoint = 3.8;
+unsigned M = 10000; //number of samples for the Monte Carlo
+double deltat;
+int pdfHistogramSize;
 //END
 
 unsigned numberOfUniformLevels = 4;
@@ -126,17 +130,6 @@ int main(int argc, char** argv) {
 
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
   //END
-
-//   //BEGIN test Hermite Poly
-//   std::vector < std::vector < double > >  HermitePoly;
-//   unsigned orderOfIntegration = 10;
-//   unsigned maxPolyOrder = 2;
-//   EvaluateHermitePoly(HermitePoly, orderOfIntegration, maxPolyOrder);
-//   for(unsigned j = 0; j < orderOfIntegration; j++) {
-//     std::cout << "Hermite =  " << std::setprecision (16) << HermitePoly[0][j] << "   ,   " ;
-//   }
-//   std::cout << std::endl;
-//   //END test Hermite Poly
 
   //BEGIN stochastic index set test
 //   std::vector < std::vector <unsigned> > Jp;
@@ -240,7 +233,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
   }
 
   vector <double> phi_x; // local test function first order partial derivatives
-  
+
   phi_x.reserve(maxSize * dim);
 
   vector< int > l2GMap1; // local to global mapping
@@ -621,6 +614,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 
     }
 
+    sol->_Sol[eigfIndex[iGS]]->close();
+    
     double local_norm2 = 0.;
     for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -815,7 +810,7 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  
       }
     }
 
- 
+
     // *** Gauss point loop ***
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
@@ -869,7 +864,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     meanQoI = 0.;
     unsigned meanCounter = 0;
     for(unsigned m = 0; m < M; m++) {
-      if(fabs(QoI[m]) <= 5.5) {
+      if(QoI[m] < endPoint && QoI[m] > startPoint) {
         meanQoI += QoI[m];
         meanCounter++;
       }
@@ -882,7 +877,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     varianceQoI = 0;
     unsigned varianceCounter = 0;
     for(unsigned m = 0; m < M; m++) {
-      if(fabs(QoI[m]) <= 5.5) {
+      if(QoI[m] < endPoint && QoI[m] > startPoint) {
         varianceQoI += (QoI[m] - meanQoI) * (QoI[m] - meanQoI);
         varianceCounter++;
       }
@@ -892,12 +887,10 @@ void GetStochasticData(std::vector <double>& QoI) {
     stdDeviationQoI = sqrt(varianceQoI);
     //END
 
-    int pdfHistogramSize = static_cast <int>(1. + 3.3 * log(M));;
+    pdfHistogramSize = static_cast <int>(floor(1. + 3.3 * log(M)));
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
-    double startPoint = - 5.5;
-    double endPoint = 5.5;
     double lengthOfTheInterval = fabs(endPoint - startPoint);
-    double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
+    deltat = lengthOfTheInterval / pdfHistogramSize;
 
     std::vector < double > QoIStandardized(M, 0.);
     //BEGIN standardization of QoI before computing the moments
@@ -908,8 +901,8 @@ void GetStochasticData(std::vector <double>& QoI) {
       //BEGIN estimation of the PDF
       bool sampleCaptured = false;
       for(unsigned i = 0; i < pdfHistogramSize; i++) {
-        double leftBound = startPoint + i * deltat - deltat * 0.5;
-        double rightBound = startPoint + i * deltat + deltat * 0.5;
+        double leftBound = startPoint + i*deltat;
+        double rightBound = startPoint + (i+1)*deltat;
         if(leftBound <=  QoIStandardized[m] && QoIStandardized[m] < rightBound) {
           pdfHistogram[i]++;
 //           std::cout << "leftBound = " << leftBound << " " << "rightBound = " << rightBound << " " << " standardized QoI = " << QoIStandardized[m] << std::endl;
@@ -924,14 +917,21 @@ void GetStochasticData(std::vector <double>& QoI) {
     }
     //END
 
+    double pdfIntegral = 0;
+    for(unsigned i = 0; i < pdfHistogramSize; i++) {
+      pdfIntegral += pdfHistogram[i] * deltat;
+    }
+
 
     //BEGIN histogram check
     double checkHistogram = 0;
     for(unsigned i = 0; i < pdfHistogramSize; i++) {
-      double point = startPoint + i * deltat;
-      pdfHistogram[i] /= M;
+      double point = (startPoint + i * deltat + startPoint + (i+1) * deltat) * 0.5;
+      double pdfCheck = pdfHistogram[i] / M;
+      pdfHistogram[i] /= pdfIntegral;
       std::cout << point << "  " << pdfHistogram[i]  << std::endl;
-      checkHistogram += pdfHistogram[i];
+      //       std::cout << "{" << point << "," << pdfHistogram[i]  << "}," << std::endl;
+      checkHistogram += pdfCheck;
     }
     std::cout << "checkHistogram = " << checkHistogram << std::endl;
     //END
@@ -944,7 +944,7 @@ void GetStochasticData(std::vector <double>& QoI) {
       momentsStandardized[p] = 0.;
       unsigned momentsCounter = 0;
       for(unsigned m = 0; m < M; m++) {
-        if(fabs(QoI[m]) <= 5.5) {
+        if(QoI[m] < endPoint && QoI[m] > startPoint) {
           moments[p] += pow(QoI[m], p + 1);
           momentsStandardized[p] += pow(QoIStandardized[m], p + 1);
           momentsCounter++;
@@ -1007,6 +1007,7 @@ void PlotStochasticData() {
   std::cout << " the number of MC samples is " << M << std::endl;
   std::cout << " the mean is " << meanQoI << std::endl;
   std::cout << " the standard deviation is " << sqrt(varianceQoI) << std::endl;
+  std::cout << " the variance is " << varianceQoI << std::endl;
 
   std::cout << "Standardized Moments" << std::endl;
   for(unsigned p = 0; p < totMoments; p++) {
@@ -1062,14 +1063,12 @@ void PlotStochasticData() {
   double d10gaussian;
   double d12gaussian;
 
-  double t = -  5.5;
-  double dt = (11.) / 300.;
-
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
   //BEGIN GRAM CHARLIER PRINT
   std::cout << " ------------------------- GRAM CHARLIER ------------------------- " << std::endl;
-  for(unsigned i = 0; i <= 300; i++) {
+  for(unsigned i = 0; i < pdfHistogramSize; i++) {
+    double t = startPoint + i * deltat;
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
@@ -1108,7 +1107,7 @@ void PlotStochasticData() {
 
           generalizedGC4Terms = generalizedGC3Terms + 1. / 24 * (cumulantsStandardized[3] + 4. * cumulantsStandardized[2] * cumulantsStandardized[0]
                                 + 3. * pow((cumulantsStandardized[1] - 1.), 2) + 6. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 2)
-	                        + pow(cumulantsStandardized[0], 4)) * d4gaussian;
+                                + pow(cumulantsStandardized[0], 4)) * d4gaussian;
 
           std::cout << generalizedGC4Terms << " ";
 
@@ -1138,16 +1137,12 @@ void PlotStochasticData() {
         }
       }
     }
-
-    t += dt;
   }
-
-  t = -  5.5;
-  dt = (11.) / 300.;
 
   //BEGIN EDGEWORTH PRINT
   std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
-  for(unsigned i = 0; i <= 300; i++) {
+  for(unsigned i = 0; i < pdfHistogramSize; i++) {
+    double t = startPoint + i * deltat;
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
@@ -1202,8 +1197,6 @@ void PlotStochasticData() {
 
       }
     }
-
-    t += dt;
   }
   //END
 

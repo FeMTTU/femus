@@ -14,13 +14,14 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
-#include "../include/mpmFem1.hpp"
+#include "../include/mpmFem.hpp"
 
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cstring>
+//double NeumannFactor = 0.;
 
 using namespace femus;
 
@@ -42,13 +43,26 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   value = 0.;
 
   if(!strcmp(name, "DY")) {
-    if(3 == facename || 4 == facename) {
+    if(2 == facename || 3 == facename || 4 == facename) {
       test = 0;
       value = 0;
     }
   }
   else if(!strcmp(name, "DX")) {
-    if(/*1 == facename ||*/ 2 == facename) {
+    if(2 == facename || 3 == facename || 4 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  
+  if(!strcmp(name, "VY")) {
+    if(2 == facename || 3 == facename || 4 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if(!strcmp(name, "VX")) {
+    if(2 == facename || 3 == facename || 4 == facename ) {
       test = 0;
       value = 0;
     }
@@ -70,51 +84,71 @@ int main(int argc, char** args)
   std::string  material[2] ={soft, stiff};
   
   std::map < std::pair < std::string, unsigned > , double > YC; 
-    
-  YC[std::make_pair (soft, 3u)] = 0.1;
-  YC[std::make_pair (soft, 4u)] = 0.075;
-  YC[std::make_pair (soft, 5u)] = 0.05;
-
-  YC[std::make_pair (stiff, 3u)] = 0.15;
-  YC[std::make_pair (stiff, 4u)] = 0.09;
-  YC[std::make_pair (stiff, 5u)] = 0.05;  
   
-  std::map < std::pair < std::string, unsigned > , double > NF; 
-  
-  NF[std::make_pair (soft, 3u)] = 0.;
-  NF[std::make_pair (soft, 4u)] = 0.;
-  NF[std::make_pair (soft, 5u)] = 0.3;
+//   YC[std::make_pair (soft, 2u)] = 0.2;  
+//   YC[std::make_pair (soft, 3u)] = 0.1;
+//   YC[std::make_pair (soft, 4u)] = 0.075;
+//   YC[std::make_pair (soft, 5u)] = 0.05;
+// 
+//   YC[std::make_pair (stiff, 2u)] = 0.3;
+//   YC[std::make_pair (stiff, 3u)] = 0.15;
+//   YC[std::make_pair (stiff, 4u)] = 0.09;
+//   YC[std::make_pair (stiff, 5u)] = 0.05;
 
-  NF[std::make_pair (stiff, 3u)] = 0.3;
-  NF[std::make_pair (stiff, 4u)] = 0.3;
-  NF[std::make_pair (stiff, 5u)] = 0.6;  
+  YC[std::make_pair (soft, 2u)] = 0.2;  
+  YC[std::make_pair (soft, 3u)] = 0.2 / 2.;
+  YC[std::make_pair (soft, 4u)] = 0.2 / 4.;
+  YC[std::make_pair (soft, 5u)] = 0.2 / 8.;
+
+  YC[std::make_pair (stiff, 2u)] = 0.3;  
+  YC[std::make_pair (stiff, 3u)] = 0.3 / 2.;
+  YC[std::make_pair (stiff, 4u)] = 0.3 / 4.;
+  YC[std::make_pair (stiff, 5u)] = 0.3 / 8.;    
+  
+//   std::map < std::pair < std::string, unsigned > , double > NF; 
+//   
+//   NF[std::make_pair (soft, 2u)] = 0.;
+//   NF[std::make_pair (soft, 3u)] = 0.;
+//   NF[std::make_pair (soft, 4u)] = 0.;
+//   NF[std::make_pair (soft, 5u)] = 0.3;
+// 
+//   NF[std::make_pair (stiff, 2u)] = 0.3;
+//   NF[std::make_pair (stiff, 3u)] = 0.3;
+//   NF[std::make_pair (stiff, 4u)] = 0.3;
+//   NF[std::make_pair (stiff, 5u)] = 0.6;  
   
   std::map < std::pair < std::string, unsigned > , double > SF1; 
   
   std::map < std::pair < std::string, unsigned > , double > SF2; 
   
-  SF1[std::make_pair (soft, 3u)] = 1.e-2;
-  SF1[std::make_pair (soft, 4u)] = 1.e-2;
-  SF1[std::make_pair (soft, 5u)] = 1.e-2;
+  SF1[std::make_pair (soft, 2u)] = 1.e-3;
+  SF1[std::make_pair (soft, 3u)] = 1.e-3;
+  SF1[std::make_pair (soft, 4u)] = 1.e-3;
+  SF1[std::make_pair (soft, 5u)] = 1.e-3;
     
-  SF2[std::make_pair (soft, 3u)] = 1.e-6;
-  SF2[std::make_pair (soft, 4u)] = 1.e-6;
-  SF2[std::make_pair (soft, 5u)] = 1.e-6;
+  SF2[std::make_pair (soft, 2u)] = 1.e-7;
+  SF2[std::make_pair (soft, 3u)] = 1.e-7;
+  SF2[std::make_pair (soft, 4u)] = 1.e-7;
+  SF2[std::make_pair (soft, 5u)] = 1.e-7;
   
-  SF1[std::make_pair (stiff, 3u)] = 1.e-4;
-  SF1[std::make_pair (stiff, 4u)] = 1.e-4;
-  SF1[std::make_pair (stiff, 5u)] = 1.e-4;  
+  SF1[std::make_pair (stiff, 2u)] = 1.e-5;
+  SF1[std::make_pair (stiff, 3u)] = 1.e-5;
+  SF1[std::make_pair (stiff, 4u)] = 1.e-5;
+  SF1[std::make_pair (stiff, 5u)] = 1.e-5;  
 
-  SF2[std::make_pair (stiff, 3u)] = 1.e-8;
-  SF2[std::make_pair (stiff, 4u)] = 1.e-8;
-  SF2[std::make_pair (stiff, 5u)] = 1.e-8;  
+  SF2[std::make_pair (stiff, 2u)] = 1.e-9;
+  SF2[std::make_pair (stiff, 3u)] = 1.e-9;
+  SF2[std::make_pair (stiff, 4u)] = 1.e-9;
+  SF2[std::make_pair (stiff, 5u)] = 1.e-9;  
   
   std::map < std::pair < std::string, unsigned > , double > YM; 
   
+  YM[std::make_pair (soft, 2u)] = 4.2 * 1.e6;
   YM[std::make_pair (soft, 3u)] = 4.2 * 1.e6;
   YM[std::make_pair (soft, 4u)] = 4.2 * 1.e6;
   YM[std::make_pair (soft, 5u)] = 4.2 * 1.e6;
 
+  YM[std::make_pair (stiff, 2u)] = 4.2 * 1.e8;
   YM[std::make_pair (stiff, 3u)] = 4.2 * 1.e8;
   YM[std::make_pair (stiff, 4u)] = 4.2 * 1.e8;
   YM[std::make_pair (stiff, 5u)] = 4.2 * 1.e8;  
@@ -127,10 +161,13 @@ int main(int argc, char** args)
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
     
   unsigned mat0 = 0;
-  unsigned matn = 1;
+  unsigned matn = 2;
+  
+  unsigned nl0 = 2;
+  unsigned nln = 6;
   
   for(unsigned mat = mat0; mat< matn; mat++){
-    for(unsigned nl = 3; nl < 6; nl++) {
+    for(unsigned nl = nl0; nl < nln; nl++) {
       
       simulation = std::make_pair (material[mat], nl);
              
@@ -153,12 +190,7 @@ int main(int argc, char** args)
       solid = Solid(par, E, nu, rhos, "Neo-Hookean");
             
       MultiLevelMesh mlMsh;
-      if(material[mat] == soft){
-        mlMsh.ReadCoarseMesh("../input/inclined_plane_2D_bl.neu", "fifth", 1.);
-      }
-      else{
-        mlMsh.ReadCoarseMesh("../input/inclined_plane_2D_bl.neu", "fifth", 1.);
-      }
+      mlMsh.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", 1.);
       mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
       mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -173,10 +205,14 @@ int main(int argc, char** args)
       if(dim > 1) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
       if(dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
 
+//       mlSol.AddSolution("VX", LAGRANGE, SECOND, 2, false);
+//       if(dim > 1) mlSol.AddSolution("VY", LAGRANGE, SECOND, 2, false);
+//       if(dim > 2) mlSol.AddSolution("VZ", LAGRANGE, SECOND, 2, false);
+            
       mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
       mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
       
-      mlSol.AddSolution("NF", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+      //mlSol.AddSolution("NF", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
       mlSol.Initialize("All");
 
@@ -186,6 +222,11 @@ int main(int argc, char** args)
       mlSol.GenerateBdc("DX", "Steady");
       if(dim > 1) mlSol.GenerateBdc("DY", "Steady");
       if(dim > 2) mlSol.GenerateBdc("DZ", "Steady");
+      
+//       mlSol.GenerateBdc("VX", "Steady");
+//       if(dim > 1) mlSol.GenerateBdc("VY", "Steady");
+//       if(dim > 2) mlSol.GenerateBdc("VZ", "Steady");
+      
       mlSol.GenerateBdc("M", "Steady");
 
       MultiLevelProblem ml_prob(&mlSol);
@@ -198,6 +239,10 @@ int main(int argc, char** args)
       system.AddSolutionToSystemPDE("DX");
       if(dim > 1)system.AddSolutionToSystemPDE("DY");
       if(dim > 2) system.AddSolutionToSystemPDE("DZ");
+      
+//       system.AddSolutionToSystemPDE("VX");
+//       if(dim > 1)system.AddSolutionToSystemPDE("VY");
+//       if(dim > 2) system.AddSolutionToSystemPDE("VZ");
 
       // ******* System MPM Assembly *******
       system.SetAssembleFunction(AssembleMPMSys);
@@ -352,14 +397,15 @@ int main(int argc, char** args)
         scalingFactor1 = SF1[simulation];
         scalingFactor2 = SF2[simulation];
     
-        NeumannFactor = NF[simulation];
-    
-        if ( time_step <= timestep0 ){
-          gravity[0] = 0.;
-          NeumannFactor = 0.;
-        }
+//         //NeumannFactor = NF[simulation];
+//     
+//         if ( time_step <= timestep0 ){
+//           gravity[0] = 0.;
+//           NeumannFactor = 0.;
+//         }
+//         
+//         //SetNeumannFactor(&mlSol);
         
-        SetNeumannFactor(&mlSol);
         
         system.MGsolve();
 
@@ -391,7 +437,7 @@ int main(int argc, char** args)
   fout.open( filename.str().c_str() );
   fout << "iteration, time, analytic, ";
   for(unsigned mat = mat0; mat < matn; mat++){
-    for(unsigned nl = 3; nl < 6; nl++) {
+    for(unsigned nl = nl0; nl < nln; nl++) {
       simulation = std::make_pair (material[mat], nl);
       fout << "E" << simulation.first  << "Level"<<simulation.second<<", "; 
     }
@@ -401,7 +447,7 @@ int main(int argc, char** args)
     double time = it * DT;
     fout << it <<", "<< time <<", "<<1./3.*9.81*time*time*sqrt(2.)/2. << ", ";
     for(unsigned mat = mat0; mat< matn; mat++){
-      for(unsigned nl = 3; nl < 6; nl++) {
+      for(unsigned nl = nl0; nl < nln; nl++) {
         simulation = std::make_pair (material[mat], nl);
         fout << CM[it][simulation] <<", ";
       }

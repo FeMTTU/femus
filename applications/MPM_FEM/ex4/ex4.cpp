@@ -16,30 +16,47 @@
 
 #include "../include/mpmFem.hpp"
 
-double yMin;
+//double yMin;
 
 using namespace femus;
 
 double DT = 0.001;
+unsigned numberOfUniformLevels0;
+
+double GetTimeStep(const double &y){
+  
+  double dt;
+  double DY =  0.184 / pow(2,numberOfUniformLevels0-1);
+  double y0 = -1.52 + DY;
+  
+  std::cout << y0 << std::endl;
+  double DT0 = 0.001 / pow(2,numberOfUniformLevels0-1);
+  
+  double y1 = -0.16;
+  double DT1 = 0.005;
+  
+  if(y < y0){
+    dt = DT0;
+  }
+  else if(y < y1){
+    const double y2 = 0.5 * (y0 + y1);
+    const double DT2 = 0.01;
+    double f0 = (y - y1) / (y0 - y1) * (y - y2) / (y0 - y2);
+    double f1 = (y - y0) / (y1 - y0) * (y - y2) / (y1 - y2);
+    double f2 = (y - y0) / (y2 - y0) * (y - y1) / (y2 - y1);
+   
+    dt = f0 * DT0 + f1 * DT1 + f2 * DT2;
+  }
+  else {
+    dt = DT1;
+  }
+  return dt;
+  
+}
 
 double SetVariableTimeStep(const double time)
 {
-  double dt = DT;
-//   if(time >= 0.5311 - 0.012 && time <= 0.5311 + 0.012) {
-//     dt =  0.0001;
-//   }
-//   else if(time >= 3 * 0.5311 - 0.012 && time <= 3 * 0.5311 + 0.012) {
-//     dt =  0.0001;
-//   }
-//   else if(time >= 5 * 0.5311 - 0.012 && time <= 5 * 0.5311 + 0.012) {
-//     dt =  0.0001;
-//   }
-//   
-  if( yMin <= -1.27) {
-       dt =  0.001;
-  }
-  
-  return dt;
+  return DT;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int facename, const double time)
@@ -48,6 +65,10 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   value = 0.;
 
   if(1 == facename) test = 0;
+  
+  if(!strcmp(name,"DY") && 3 == facename){
+    test = 0;    
+  }
 
   return test;
 
@@ -62,6 +83,7 @@ int main(int argc, char** args)
   std::string stiff = "stiff";
   std::string soft = "soft";
   
+  //std::string material = stiff;
   std::string material = stiff;
   
   std::map < std::pair < std::string, unsigned > , double > SF1; 
@@ -73,34 +95,44 @@ int main(int argc, char** args)
   SF1[std::make_pair (stiff, 1u)] = 1.e-2;
   SF1[std::make_pair (stiff, 2u)] = 1.e-2;
   SF1[std::make_pair (stiff, 3u)] = 1.e-2;
+  SF1[std::make_pair (stiff, 4u)] = 1.e-2;
   
   SF2[std::make_pair (stiff, 1u)] = 1.e-6;
   SF2[std::make_pair (stiff, 2u)] = 1.e-6;
   SF2[std::make_pair (stiff, 3u)] = 1.e-6;
+  SF2[std::make_pair (stiff, 4u)] = 1.e-6;
   
-  NF[std::make_pair (stiff, 1u)] = 0.;
-  NF[std::make_pair (stiff, 2u)] = 0.;
-  NF[std::make_pair (stiff, 3u)] = 0.;  
+  NF[std::make_pair (stiff, 1u)] = 0.14; //0.13 very little little
+  NF[std::make_pair (stiff, 2u)] = 0.06;  //0.07 very little up
+  NF[std::make_pair (stiff, 3u)] = 0.1; //0.1 very little up 
+  NF[std::make_pair (stiff, 4u)] = 0.2; //0.2 very little up  
   
   //soft soft matrix
   
-  SF1[std::make_pair (soft, 1u)] = 1.e-6;
-  SF1[std::make_pair (soft, 2u)] = 1.e-6;
-  SF1[std::make_pair (soft, 3u)] = 1.e-6;  
+  SF1[std::make_pair (soft, 1u)] = 1.e-5;
+  SF1[std::make_pair (soft, 2u)] = 1.e-5;
+  SF1[std::make_pair (soft, 3u)] = 1.e-5;  
+  SF1[std::make_pair (soft, 4u)] = 1.e-5;  
     
-  SF2[std::make_pair (soft, 1u)] = 1.e-10;
-  SF2[std::make_pair (soft, 2u)] = 1.e-10;
-  SF2[std::make_pair (soft, 3u)] = 1.e-10;  
+  SF2[std::make_pair (soft, 1u)] = 1.e-9;
+  SF2[std::make_pair (soft, 2u)] = 1.e-9;
+  SF2[std::make_pair (soft, 3u)] = 1.e-9;  
+  SF2[std::make_pair (soft, 4u)] = 1.e-9;  
     
   NF[std::make_pair (soft, 1u)] = 0.;
   NF[std::make_pair (soft, 2u)] = 0.;
-  NF[std::make_pair (soft, 3u)] = 0.;
+  NF[std::make_pair (soft, 3u)] = 0.1;
+  NF[std::make_pair (soft, 4u)] = 0.2;
       
   unsigned n_timesteps = 3500;
   
-  std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps + 1); 
+  std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps + 1);
+  std::vector < std::map < std::pair < std::string, unsigned > , double > > time(n_timesteps + 1); 
+  
+  unsigned nli[3]={2,3,4};
+  for(unsigned kk = 0; kk < 3; kk++){
       
-  for(unsigned nl = 1; nl < 4; nl++){
+    unsigned nl = nli[kk];  
       
     std::pair <std::string, unsigned > simulation = std::make_pair (material, nl);
     
@@ -112,6 +144,7 @@ int main(int argc, char** args)
     MultiLevelMesh mlMsh;
     double scalingFactor = 1.;
     unsigned numberOfUniformLevels = simulation.second; //for refinement in 3D
+    numberOfUniformLevels0 = numberOfUniformLevels;
     //unsigned numberOfUniformLevels = 1;
     unsigned numberOfSelectiveLevels = 0;
 
@@ -124,7 +157,7 @@ int main(int argc, char** args)
     double E_MPM = 5.91 * 1.e6;
 
     //initialize parameters for plate (FEM)
-    double rho_FEM = 10000.;
+    double rho_FEM = 1000.;
     double nu_FEM = 0.4;
     double E_FEM = 4.2 * 1.e7;
 
@@ -140,7 +173,7 @@ int main(int argc, char** args)
     solidMPM = Solid(par, E_MPM, nu_MPM, rho_MPM, "Neo-Hookean");
     solidFEM = Solid(par, E_FEM, nu_FEM, rho_FEM, "Neo-Hookean");
 
-    mlMsh.ReadCoarseMesh("../input/basketScaled2.neu", "fifth", scalingFactor);
+    mlMsh.ReadCoarseMesh("../input/basket.neu", "fifth", scalingFactor);
     mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
     mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -215,6 +248,39 @@ int main(int argc, char** args)
 
     system.SetTolerances(1.e-10, 1.e-15, 1.e+50, 40, 40);
 
+    // ******* Add MPM system to the MultiLevel problem *******
+    NonLinearImplicitSystem& system2 = ml_prob.add_system < NonLinearImplicitSystem > ("DISP");
+    system2.AddSolutionToSystemPDE("DX");
+    if(dim > 1)system2.AddSolutionToSystemPDE("DY");
+    if(dim > 2) system2.AddSolutionToSystemPDE("DZ");
+      
+    // ******* System MPM Assembly *******
+    system2.SetAssembleFunction(AssembleSolidDisp);
+    //system2.SetAssembleFunction(AssembleFEM);
+    // ******* set MG-Solver *******
+    system2.SetMgType(V_CYCLE);
+      
+      
+    system2.SetAbsoluteLinearConvergenceTolerance(1.0e-10);
+    system2.SetMaxNumberOfLinearIterations(1);
+    system2.SetNonLinearConvergenceTolerance(1.e-9);
+    system2.SetMaxNumberOfNonLinearIterations(1);
+      
+    system2.SetNumberPreSmoothingStep(1);
+    system2.SetNumberPostSmoothingStep(1);
+      
+    // ******* Set Preconditioner *******
+    system2.SetMgSmoother(GMRES_SMOOTHER);
+      
+    system2.init();
+      
+    // ******* Set Smoother *******
+    system2.SetSolverFineGrids(GMRES);
+      
+    system2.SetPreconditionerFineGrids(ILU_PRECOND);
+      
+    system2.SetTolerances(1.e-10, 1.e-15, 1.e+50, 2, 2);
+    
 
     //BEGIN init particles
     unsigned size = 1;
@@ -256,7 +322,7 @@ int main(int argc, char** args)
 
       double factor = 1.14;
       unsigned NL = getNumberOfLayers((R - R0) / DL, factor);
-      std::cout << NL << std::endl;
+      //std::cout << NL << std::endl;
 
       double  r = R0;
       for(unsigned i = 1; i <= NL; i++) {
@@ -276,6 +342,7 @@ int main(int argc, char** args)
         mass.resize(x.size(), rho_MPM * r * dtheta * DL);
       }
       size = x.size();
+      std::cout<< "Number of Particles = " << x.size() << " Number of Layers = "<< NL <<std::endl;
     }
 
     double totalMass = 0;
@@ -332,10 +399,11 @@ int main(int argc, char** args)
     filename <<outputFolder.str()<< "/centerOfMass.txt";
     std::ofstream fout;
     fout.open( filename.str().c_str() );
-    fout << "iteration, time ";
+    fout << "iteration, time, ";
     fout << "E" << simulation.first  << "Level"<<simulation.second << std::endl;
     
     CM[0][simulation] = line[0][0][1];  
+    time[0][simulation] = 0.;  
     fout << "0, 0., "<< CM[0][simulation] << std::endl;
     
     
@@ -352,27 +420,41 @@ int main(int argc, char** args)
 
       linea->GetExtrema(xMin, xMax);
 
-      yMin = xMin[1];
+      DT = GetTimeStep(xMin[1]);
+      
+      //std::cout << "ymin = " << xMin[1] << " DT = " << DT << std::endl;
     
       system.CopySolutionToOldSolution();
 
       system.MGsolve();
-
+      
+      GridToParticlesProjection(ml_prob, *linea);
+       
+      if(xMin[1] < -1.336){
+        system2.MGsolve();
+      }
+        
       // ******* Print solution *******
       mlSol.GetWriter()->Write(outputFolder.str(), "biquadratic", print_vars, time_step);
 
-      GridToParticlesProjection(ml_prob, *linea);
+//       // ******* Print solution *******
+//       mlSol.GetWriter()->Write(outputFolder.str(), "biquadratic", print_vars, time_step);
+// 
+//       GridToParticlesProjection(ml_prob, *linea);
 
       linea->GetLine(line[0]);
       PrintLine(outputFolder.str(), line, false, time_step);
 
       CM[time_step][simulation] = line[0][0][1];  
         
-      unsigned it = time_step;
-      double time = it * DT;
-      fout << it <<", "<< time <<", ";
-      fout << CM[it][simulation] <<std::endl;
+      time[time_step][simulation] = system.GetTime();
       
+      std::cout << "it = " << time_step <<" time = "<< time[time_step][simulation] <<" DT = " << DT << " ymin = " << xMin[1] << std::endl;
+      
+      fout << time_step <<", "<< time[time_step][simulation] <<", ";
+      fout << CM[time_step][simulation] <<std::endl;
+      
+      if( time[time_step][simulation] > 3.5) break;
     }
     
     fout.close();
@@ -381,28 +463,28 @@ int main(int argc, char** args)
   }
   
   
-  std::ostringstream filename;
-  filename << "./centerOfMass"<< material <<".txt";
-  std::ofstream fout;
-  fout.open( filename.str().c_str() );
-  fout << "iteration, time, ";
-  for(unsigned nl = 1; nl < 4; nl++) {
-    std::pair <std::string, unsigned > simulation = std::make_pair (material, nl);
-     fout << "E" << simulation.first  << "Level"<<simulation.second<<", "; 
-  }
-  
-  fout << std::endl;
-  for(unsigned it = 0;it < CM.size();it++){
-    double time = it * DT;
-    fout << it <<", "<< time << ", ";
-    for(unsigned nl = 1; nl < 4; nl++) {
-      std::pair <std::string, unsigned > simulation = std::make_pair (material, nl);
-      fout << CM[it][simulation] <<", ";
-    }
-    fout << std::endl;
-  }
-  
-  fout.close();
+//   std::ostringstream filename;
+//   filename << "./centerOfMass"<< material <<".txt";
+//   std::ofstream fout;
+//   fout.open( filename.str().c_str() );
+//   fout << "iteration, time, ";
+//   for(unsigned nl = 1; nl < 4; nl++) {
+//     std::pair <std::string, unsigned > simulation = std::make_pair (material, nl);
+//      fout << "E" << simulation.first  << "Level"<<simulation.second<<", "; 
+//   }
+//   
+//   fout << std::endl;
+//   for(unsigned it = 0;it < CM.size();it++){
+//     
+//     fout << it <<", "<< time[it][simulation] << ", ";
+//     for(unsigned nl = 1; nl < 4; nl++) {
+//       std::pair <std::string, unsigned > simulation = std::make_pair (material, nl);
+//       fout << CM[it][simulation] <<", ";
+//     }
+//     fout << std::endl;
+//   }
+//   
+//   fout.close();
   
   
   

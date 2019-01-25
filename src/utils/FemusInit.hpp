@@ -40,6 +40,7 @@
 // ========================================
 
 #include "adept.h"
+#include "uq.hpp"
 
 namespace femus {
 
@@ -56,6 +57,7 @@ public:
     ~FemusInit();
     
     static adept::Stack _adeptStack; 
+    static uq _uq; 
      
 };
 

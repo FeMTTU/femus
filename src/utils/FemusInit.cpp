@@ -23,6 +23,8 @@ namespace femus {
 
 adept::Stack FemusInit::_adeptStack;
 
+uq FemusInit::_uq; 
+
 // =======================================================
 /// This function initializes the libraries if it is parallel
 FemusInit::FemusInit(
