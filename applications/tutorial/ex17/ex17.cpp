@@ -140,7 +140,7 @@ int main (int argc, char** args) {
   // add system Poisson in mlProb as a Linear Implicit System
   ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("NS");
 
-  system.SetRungeKuttaStages (3);
+  system.SetRungeKuttaStages (1);
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE ("U");
@@ -168,7 +168,7 @@ int main (int argc, char** args) {
 
   std::vector<std::string> print_vars;
   print_vars.push_back ("All");
-  mlSol.GetWriter()->SetDebugOutput (true);
+  //mlSol.GetWriter()->SetDebugOutput (true);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back ("DX");
@@ -183,7 +183,7 @@ int main (int argc, char** args) {
 
     system.MGsolve();
 
-    std::cout << "VVVVVVVVVVVVVVVVVVVVVv = " << GetSolutionFluxes (mlSol) << "    " << sin (M_PI * system.GetTime()) << std::endl;
+    std::cout << "Fluxes = " << GetSolutionFluxes (mlSol) << "    " << sin (M_PI * system.GetTime()) << std::endl;
 
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
@@ -193,7 +193,7 @@ int main (int argc, char** args) {
 
 
 void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
-}/*
+
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -228,6 +228,14 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
 
   unsigned RK = mlPdeSys->GetRungeKuttaStages();
 
+  std::vector < std::string > solVName (dim);
+  std::vector < std::string > solDName (dim);
+  solVName[0] = "U";
+  solVName[1] = "V";
+  solDName[0] = "DX";
+  solDName[1] = "DY";
+  std::string  solPName = "P";
+
   //solution variable
   vector < unsigned > solVIndex (dim);
   vector < unsigned > solDIndex (dim);
@@ -254,12 +262,12 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
     solDkIndex[k].resize (RK);
   }
 
-  for (unsigned i = 0; i < RK; i++) {
-    solVkIndex[0][i] = mlSol->GetIndex (ukName[i].str().c_str());
-    solVkIndex[1][i] = mlSol->GetIndex (vkName[i].str().c_str());
-    solDkIndex[0][i] = mlSol->GetIndex (dxkName[i].str().c_str());
-    solDkIndex[1][i] = mlSol->GetIndex (dykName[i].str().c_str());
-    solPkIndex[i] = mlSol->GetIndex (pkName[i].str().c_str());
+  for (unsigned jj = 0; jj < RK; jj++) {
+    solVkIndex[0][jj] = mlSol->GetIndex (ukName[jj].str().c_str());
+    solVkIndex[1][jj] = mlSol->GetIndex (vkName[jj].str().c_str());
+    solDkIndex[0][jj] = mlSol->GetIndex (dxkName[jj].str().c_str());
+    solDkIndex[1][jj] = mlSol->GetIndex (dykName[jj].str().c_str());
+    solPkIndex[jj] = mlSol->GetIndex (pkName[jj].str().c_str());
   }
 
   //solution variable
@@ -271,12 +279,12 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
     solVkPdeIndex[k].resize (RK);
     solDkPdeIndex[k].resize (RK);
   }
-  for (unsigned i = 0; i < RK; i++) {
-    solVkPdeIndex[0][i] = mlPdeSys->GetSolPdeIndex (ukName[i].str().c_str());
-    solVkPdeIndex[1][i] = mlPdeSys->GetSolPdeIndex (vkName[i].str().c_str());
-    solDkPdeIndex[0][i] = mlPdeSys->GetSolPdeIndex (dxkName[i].str().c_str());
-    solDkPdeIndex[1][i] = mlPdeSys->GetSolPdeIndex (dykName[i].str().c_str());
-    solPkPdeIndex[i] = mlPdeSys->GetSolPdeIndex (pkName[i].str().c_str());
+  for (unsigned jj = 0; jj < RK; jj++) {
+    solVkPdeIndex[0][jj] = mlPdeSys->GetSolPdeIndex (ukName[jj].str().c_str());
+    solVkPdeIndex[1][jj] = mlPdeSys->GetSolPdeIndex (vkName[jj].str().c_str());
+    solDkPdeIndex[0][jj] = mlPdeSys->GetSolPdeIndex (dxkName[jj].str().c_str());
+    solDkPdeIndex[1][jj] = mlPdeSys->GetSolPdeIndex (dykName[jj].str().c_str());
+    solPkPdeIndex[jj] = mlPdeSys->GetSolPdeIndex (pkName[jj].str().c_str());
   }
 
 
@@ -292,7 +300,7 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
   vector < vector < adept::adouble > > solP (RK); // local solution
   vector < vector < adept::adouble > > solPk (RK); // local solution
   vector < double > solPOld;
-  
+
   vector < vector< vector < adept::adouble > > > aResV (dim);   // local redidual vector
   vector < vector< vector < adept::adouble > > > aResD (dim);   // local redidual vector
   vector < vector< adept::adouble > > aResP (RK); // local redidual vector
@@ -302,8 +310,8 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
     solVk[k].resize (RK);
     solD[k].resize (RK);
     solDk[k].resize (RK);
-    aResV.resize (RK);
-    aResD.resize (RK);
+    aResV[k].resize (RK);
+    aResD[k].resize (RK);
   }
 
 
@@ -311,15 +319,11 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
   vector < vector < double > > xHat (dim);   // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector <double> phiHat;  // local test function for velocity
-  vector <double> phiHat_x; // local test function first order partial derivatives
-
   vector <double> phi;  // local test function for velocity
   vector <adept::adouble> phi_x; // local test function first order partial derivatives
 
   double* phiP; // local test function for the pressure
   adept::adouble weight; // gauss point weight
-  double weightHat; // gauss point weight
 
   vector< int > sysDof; // local to global pdeSys dofs
   vector< double > Res; // local redidual vector
@@ -341,17 +345,18 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
     // resize local arrays
     sysDof.resize (nDofsVDP);
 
-    for (unsigned i = 0; i < RK; i++) {
+    for (unsigned jj = 0; jj < RK; jj++) {
       for (unsigned  k = 0; k < dim; k++) {
-        solV[k][i].resize (nDofs);
-        solVk[k][i].resize (nDofs);
-        solD[k][i].resize (nDofs);
-        solDk[k][i].resize (nDofs);
-        aResV[k][i].assign (nDofs, 0.);
-        aResD[k][i].assign (nDofs, 0.);
+        solV[k][jj].resize (nDofs);
+        solVk[k][jj].resize (nDofs);
+        solD[k][jj].resize (nDofs);
+        solDk[k][jj].resize (nDofs);
+        aResV[k][jj].assign (nDofs, 0.);
+        aResD[k][jj].assign (nDofs, 0.);
       }
-      solP[i].resize (nDofsP);
-      aResP[i].assign (nDofsP, 0.);
+      solP[jj].resize (nDofsP);
+      solPk[jj].resize (nDofsP);
+      aResP[jj].assign (nDofsP, 0.);
     }
 
     for (unsigned  k = 0; k < dim; k++) {
@@ -360,8 +365,8 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
       xHat[k].resize (nDofs);
       x[k].resize (nDofs);
     }
-    solPOld.resize(nDofsP);
-    
+    solPOld.resize (nDofsP);
+
     // local storage of global mapping and solution
     unsigned dStart = dim * RK * nDofs;
     for (unsigned i = 0; i < nDofs; i++) {
@@ -370,24 +375,24 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
       for (unsigned  k = 0; k < dim; k++) {
         solVOld[k][i] = (*sol->_SolOld[solVIndex[k]]) (idof);     // global extraction and local storage for the solution
         solDOld[k][i] = (*sol->_SolOld[solDIndex[k]]) (idof);     // global extraction and local storage for the solution
-        for (unsigned j = 0; j < RK; j++) {
-            solVk[k][j][i] = (*sol->_Sol[solVkIndex[k][j]]) (idof);     // global extraction and local storage for the solution
-            sysDof[k * RK * nDofs + j * nDofs + i] = pdeSys->GetSystemDof (solVkIndex[k][j], solVkPdeIndex[k][j], i, iel);   
-            // stacking of the U1, U2, ..., Uk,V1,V2,...,Vk
-            solDk[k][j][i] = (*sol->_Sol[solDkIndex[k][j]]) (idof);  
-            sysDof[ dStart + k * RK * nDofs + j * nDofs + i] = pdeSys->GetSystemDof (solDkIndex[k][j], solDkPdeIndex[k][j], i, iel);  
-            // stacking of the DX1, DX2, ..., DXk,DY1,DY2,...,DYk after all the velocities (starting from dStart)
+        for (unsigned jj = 0; jj < RK; jj++) {
+          solVk[k][jj][i] = (*sol->_Sol[solVkIndex[k][jj]]) (idof);     // global extraction and local storage for the solution
+          sysDof[k * RK * nDofs + jj * nDofs + i] = pdeSys->GetSystemDof (solVkIndex[k][jj], solVkPdeIndex[k][jj], i, iel);
+          // stacking of the Uk1, Uk2, ..., UkRK,Vk1,Vk2,...,VkRK
+          solDk[k][jj][i] = (*sol->_Sol[solDkIndex[k][jj]]) (idof);
+          sysDof[ dStart + k * RK * nDofs + jj * nDofs + i] = pdeSys->GetSystemDof (solDkIndex[k][jj], solDkPdeIndex[k][jj], i, iel);
+          // stacking of the DXk1, DXk2, ..., DXkRK,DYk1,DYk2,...,DYkRK after all the velocities (starting from dStart)
         }
       }
     }
 
     for (unsigned i = 0; i < nDofsP; i++) {
       unsigned solPDof = msh->GetSolutionDof (i, iel, solPType);   // local to global mapping between solution node and solution dof
-      solPOld[i] = (*sol->_SolOld[solPIndex]) (solPDof); 
-     
-      for (unsigned j = 0; j < RK; j++) {
-        solPk[i][j] = (*sol->_Sol[solPkIndex[j]]) (solPDof);     // global extraction and local storage for the solution
-        sysDof[ 2 * dStart + j * nDofsP + i ] = pdeSys->GetSystemDof (solPkIndex[j], solPkPdeIndex[j], i, iel);   
+      solPOld[i] = (*sol->_SolOld[solPIndex]) (solPDof);
+
+      for (unsigned jj = 0; jj < RK; jj++) {
+        solPk[jj][i] = (*sol->_Sol[solPkIndex[jj]]) (solPDof);     // global extraction and local storage for the solution
+        sysDof[ 2 * dStart + jj * nDofsP + i ] = pdeSys->GetSystemDof (solPkIndex[jj], solPkPdeIndex[jj], i, iel);
         // global to global mapping betweensolution node and pdeSys dof
       }
     }
@@ -403,149 +408,109 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
 
-
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofs; i++) {
-      unsigned coordXDof  = msh->GetSolutionDof (i, iel, coordXType);   // local to global mapping between coordinates node and coordinate dof
-      for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = xHat[k][i] + 0.5 * (solDOld[k][i] + solD[k][i]) ;      // global extraction and local storage for the element coordinates
-      }
+    for (unsigned  k = 0; k < dim; k++) {
+      mlPdeSys->GetIntermediateSolutions (solVOld[k], solVk[k], xHat,  solVName[k].c_str(), solV[k]);
+      mlPdeSys->GetIntermediateSolutions (solDOld[k], solDk[k], xHat,  solDName[k].c_str(), solD[k]);
     }
+    mlPdeSys->GetIntermediateSolutions (solPOld, solPk, xHat,  solPName.c_str(), solP);
 
+    for (unsigned jj = 0; jj < RK; jj++) {
 
-//     // *** Face Gauss point loop (boundary Integral) ***
-//     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
-//       int faceIndex = el->GetBoundaryIndex(iel, jface);
-//       // look for boundary faces
-//       if ( faceIndex == 3 ) {
-//         const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
-//         unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, solVType);
-//
-//         vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
-//         for ( int k = 0; k < dim; k++ ) {
-//           faceCoordinates[k].resize (faceDofs);
-//         }
-//         for ( unsigned i = 0; i < faceDofs; i++ ) {
-//           unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i ); // face-to-element local node mapping.
-//           for ( unsigned k = 0; k < dim; k++ ) {
-//             faceCoordinates[k][i] =  coordX[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
-//           }
-//         }
-//         for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][solVType]->GetGaussPointNumber(); ig++ ) {
-//             // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh.
-//           vector < double> normal;
-//           msh->_finiteElement[faceGeom][solVType]->JacobianSur ( faceCoordinates, ig, weight, phiV, phiV_x, normal );
-//
-//           vector< double > xg(dim,0.);
-//           for ( unsigned i = 0; i < faceDofs; i++ ) {
-//             for( unsigned k=0; k<dim; k++){
-//               xg[k] += phiV[i] * faceCoordinates[k][i]; // xg(ig)= \sum_{i=0}^faceDofs phi[i](xig) facecoordinates[i]
-//             }
-//           }
-//           double tau; // a(u)*grad_u\cdot normal
-//           SetBoundaryCondition( xg, "P", tau, faceIndex, 0. ); // return tau
-//           // *** phi_i loop ***
-//           for ( unsigned i = 0; i < faceDofs; i++ ) {
-//             unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i );
-//             for(unsigned k=0;k<dim;k++){
-//               aResV[k][inode] +=  -phiV[i] * tau * normal[k] * weight;
-//             }
-//           }
-//         }
-//       }
-//     }
-
-    // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
-      // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][solType]->Jacobian (x, ig, weight, phi, phi_x);
-      msh->_finiteElement[ielGeom][solType]->Jacobian (xHat, ig, weightHat, phiHat, phiHat_x);
-
-      phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi (ig);
-
-      vector < adept::adouble > solV_gss (dim, 0);
-      vector < double > solVOld_gss (dim, 0);
-      vector < vector < adept::adouble > > gradSolV_gss (dim);
-      vector < vector < adept::adouble > > gradSolVOld_gss (dim);
-
-      vector < adept::adouble > solD_gss (dim, 0);
-      vector < double > solDOld_gss (dim, 0);
-      vector < vector < adept::adouble > > gradSolDHat_gss (dim);
-
-
-
-      for (unsigned  k = 0; k < dim; k++) {
-        gradSolV_gss[k].assign (dim, 0.);
-        gradSolVOld_gss[k].assign (dim, 0.);
-        gradSolDHat_gss[k].assign (dim, 0.);
+      // local storage of coordinates
+      for (unsigned i = 0; i < nDofs; i++) {
+        unsigned coordXDof  = msh->GetSolutionDof (i, iel, coordXType);   // local to global mapping between coordinates node and coordinate dof
+        for (unsigned k = 0; k < dim; k++) {
+          x[k][i] = xHat[k][i] + solD[k][jj][i];      // global extraction and local storage for the element coordinates
+        }
       }
 
-      for (unsigned i = 0; i < nDofs; i++) {
+      // *** Gauss point loop ***
+      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+        // *** get gauss point weight, test function and test function partial derivatives ***
+        msh->_finiteElement[ielGeom][solType]->Jacobian (x, ig, weight, phi, phi_x);
+        //msh->_finiteElement[ielGeom][solType]->Jacobian (xHat, ig, weightHat, phiHat, phiHat_x);
+
+        phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi (ig);
+
+        vector < adept::adouble > solV_gss (dim, 0);
+        vector < adept::adouble > solVk_gss (dim, 0);
+        vector < adept::adouble > solDk_gss (dim, 0);
+
+        vector < vector < adept::adouble > > gradSolV_gss (dim);
+        vector < vector < adept::adouble > > gradSolD_gss (dim);
         for (unsigned  k = 0; k < dim; k++) {
-          solV_gss[k] += solV[k][i] * phi[i];
-          solVOld_gss[k] += solVOld[k][i] * phi[i];
-          solD_gss[k] += solD[k][i] * phi[i];
-          solDOld_gss[k] += solDOld[k][i] * phi[i];
+          gradSolV_gss[k].assign (dim, 0.);
+          gradSolD_gss[k].assign (dim, 0.);
         }
-        for (unsigned j = 0; j < dim; j++) {
+
+        for (unsigned i = 0; i < nDofs; i++) {
           for (unsigned  k = 0; k < dim; k++) {
-            gradSolV_gss[k][j] += solV[k][i] * phi_x[i * dim + j];
-            gradSolVOld_gss[k][j] += solVOld[k][i] * phi_x[i * dim + j];
-            gradSolDHat_gss[k][j] += solD[k][i] * phiHat_x[i * dim + j];
+            solV_gss[k] += solV[k][jj][i] * phi[i];
+            solVk_gss[k] += solVk[k][jj][i] * phi[i];
+            solDk_gss[k] += solDk[k][jj][i] * phi[i];
+          }
+          for (unsigned j = 0; j < dim; j++) {
+            for (unsigned  k = 0; k < dim; k++) {
+              gradSolV_gss[k][j] += solV[k][jj][i] * phi_x[i * dim + j];
+              gradSolD_gss[k][j] += solD[k][jj][i] * phi_x[i * dim + j];
+            }
           }
         }
-      }
 
-      adept::adouble solP_gss = 0;
-      for (unsigned i = 0; i < nDofsP; i++) {
-        solP_gss += phiP[i] * solP[i];
-      }
+        adept::adouble solP_gss = 0;
+        for (unsigned i = 0; i < nDofsP; i++) {
+          solP_gss += phiP[i] * solP[jj][i];
+        }
 
-      double nu = 1.;
+        double nu = 1.;
 
-      // *** phiV_i loop ***
-      for (unsigned i = 0; i < nDofs; i++) {
-        vector < adept::adouble > NSV (dim, 0.);
-        vector < adept::adouble > DISP (dim, 0.);
+        // *** phiV_i loop ***
+        for (unsigned i = 0; i < nDofs; i++) {
+          vector < adept::adouble > NSV (dim, 0.);
+          vector < adept::adouble > DISP (dim, 0.);
 
-        for (unsigned  k = 0; k < dim; k++) { //momentum equation in k
-          for (unsigned j = 0; j < dim; j++) { // second index j in each equation
-            NSV[k]   +=  nu * phi_x[i * dim + j] * 0.5 * ( (gradSolV_gss[k][j] + gradSolV_gss[j][k]) + (gradSolVOld_gss[k][j] + gradSolVOld_gss[j][k]));  // laplace
-            NSV[k]   +=  phi[i] * (0.5 * (solV_gss[j] + solVOld_gss[j]) - (solD_gss[j] - solDOld_gss[j]) / dt) * 0.5 * (gradSolV_gss[k][j] + gradSolVOld_gss[k][j]);    // non-linear term
-            DISP[k]  +=  phiHat_x[i * dim + j] * (gradSolDHat_gss[k][j] + gradSolDHat_gss[j][k]); // laplace
+          for (unsigned  k = 0; k < dim; k++) { //momentum equation in k
+            for (unsigned j = 0; j < dim; j++) { // second index j in each equation
+              NSV[k]   +=  nu * phi_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);   // weak laplace
+              NSV[k]   +=  phi[i] * (solV_gss[j] - solDk_gss[j]) * gradSolV_gss[k][j];      // non-linear term
+              DISP[k]  +=  phi_x[i * dim + j] * gradSolD_gss[k][j]; // laplace
+            }
+            NSV[k] += -solP_gss * phi_x[i * dim + k]; // pressure gradient
           }
-          NSV[k] += -solP_gss * phi_x[i * dim + k]; // pressure gradient
-        }
-        for (unsigned  k = 0; k < dim; k++) {
-          aResV[k][i] += (- phi[i] * (solV_gss[k] + solVOld_gss[k]) / dt - NSV[k]) * weight;
-          aResD[k][i] += (- DISP[k]) * weightHat;
-        }
-      } // end phiV_i loop
+          for (unsigned  k = 0; k < dim; k++) {
+            aResV[k][jj][i] += (- phi[i] * solVk_gss[k] - NSV[k]) * weight;
+            aResD[k][jj][i] += (- DISP[k]) * weight;
+          }
+        } // end phiV_i loop
 
-      // *** phiP_i loop ***
-      for (unsigned i = 0; i < nDofsP; i++) {
-        for (int k = 0; k < dim; k++) {
-          aResP[i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
-        }
-      } // end phiP_i loop
-
-    } // end gauss point loop
-
+        // *** phiP_i loop ***
+        for (unsigned i = 0; i < nDofsP; i++) {
+          for (int k = 0; k < dim; k++) {
+            aResP[jj][i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
+          }
+        } // end phiP_i loop
+      } // end gauss point loop
+    }
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
     //copy the value of the adept::adoube aRes in double Res and store them in RES
     Res.resize (nDofsVDP);   //resize
 
-    for (int i = 0; i < nDofs; i++) {
-      for (unsigned  k = 0; k < dim; k++) {
-        Res[ k * nDofs + i ] = -aResV[k][i].value();
-        Res[ (dim + k) * nDofs + i ] = -aResD[k][i].value();
+
+    for (unsigned  k = 0; k < dim; k++) {
+      for (unsigned  jj = 0; jj < RK; jj++) {
+        for (unsigned i = 0; i < nDofs; i++) {
+          Res[ k * RK * nDofs + jj * nDofs + i ] = -aResV[k][jj][i].value();
+          Res[ dStart + k * RK * nDofs + jj * nDofs + i ] = -aResD[k][jj][i].value();
+        }
       }
     }
 
-    for (int i = 0; i < nDofsP; i++) {
-      Res[2 * dim * nDofs + i ] = -aResP[i].value();
+    for (unsigned  jj = 0; jj < RK; jj++) {
+      for (int i = 0; i < nDofsP; i++) {
+        Res[2 * dStart + jj * nDofsP + i] = -aResP[jj][i].value();
+      }
     }
 
     RES->add_vector_blocked (Res, sysDof);
@@ -556,22 +521,33 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
     // define the dependent variables
 
     for (unsigned  k = 0; k < dim; k++) {
-      s.dependent (&aResV[k][0], nDofs);
+      for (unsigned  jj = 0; jj < RK; jj++) {
+        s.dependent (&aResV[k][jj][0], nDofs);
+      }
     }
     for (unsigned  k = 0; k < dim; k++) {
-      s.dependent (&aResD[k][0], nDofs);
+      for (unsigned  jj = 0; jj < RK; jj++) {
+        s.dependent (&aResD[k][jj][0], nDofs);
+      }
     }
-
-    s.dependent (&aResP[0], nDofsP);
+    for (unsigned  jj = 0; jj < RK; jj++) {
+      s.dependent (&aResP[jj][0], nDofsP);
+    }
 
     // define the independent variables
     for (unsigned  k = 0; k < dim; k++) {
-      s.independent (&solV[k][0], nDofs);
+      for (unsigned  jj = 0; jj < RK; jj++) {
+        s.independent (&solVk[k][jj][0], nDofs);
+      }
     }
     for (unsigned  k = 0; k < dim; k++) {
-      s.independent (&solD[k][0], nDofs);
+      for (unsigned  jj = 0; jj < RK; jj++) {
+        s.independent (&solDk[k][jj][0], nDofs);
+      }
     }
-    s.independent (&solP[0], nDofsP);
+    for (unsigned  jj = 0; jj < RK; jj++) {
+      s.independent (&solPk[jj][0], nDofsP);
+    }
 
     // get the and store jacobian matrix (row-major)
     s.jacobian (&Jac[0], true); // This is rowwise order.
@@ -586,7 +562,7 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
   KK->close();
 // ***************** END ASSEMBLY *******************
 }
-*/
+
 
 
 

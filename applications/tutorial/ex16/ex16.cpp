@@ -181,7 +181,7 @@ int main(int argc, char** args) {
 
     system.MGsolve();
     
-    std::cout <<"VVVVVVVVVVVVVVVVVVVVVv = "<< GetSolutionFluxes(mlSol) << "    " << sin( M_PI * system.GetTime() ) << std::endl;
+    std::cout<<"Fluxes = " << GetSolutionFluxes(mlSol) << "    " << sin( M_PI * system.GetTime() ) << std::endl;
 
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
