@@ -7,7 +7,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL 3  //we do control on the right (=2) face
+#define FACE_FOR_CONTROL             3  //we do control on the right (=2) face
 #define AXIS_DIRECTION_CONTROL_SIDE  0 //change this accordingly to the other variable above
 
 #include "../elliptic_param.hpp"
@@ -619,6 +619,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
 		  msh->_finiteElement[kelGeom][solType_adj]->ShapeAtBoundary(x,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
+          std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
+		      for (int iv = 0; iv < nDof_adj; iv++)  {
+                  for (int d = 0; d < dim; d++) {
+                       std::cout << " " <<   phi_adj_x_vol_at_bdry[iv * dim + d];
+                }
+              }
+          
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
           const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
 		  double dx_dcurv_abscissa = 0.;
@@ -660,9 +667,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 			    }
 		      }  
 		      
-    double grad_dot_n_adj_res = 0.;
+    double grad_adj_dot_n_res = 0.;
         for(unsigned d=0; d<dim; d++) {
-	  grad_dot_n_adj_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
+	  grad_adj_dot_n_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
 	}
 //=============== grad dot n  for residual =========================================       
 
@@ -697,7 +704,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                 if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] *  weight_bdry *
                                                                                 (    alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							                           +  beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
-							                           - grad_dot_n_adj_res * phi_ctrl_bdry[i_bdry]
+							                           - grad_adj_dot_n_res * phi_ctrl_bdry[i_bdry]
 // 							                           -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss // for Neumann control
 							                         );  //boundary optimality condition
                 if (i_vol < nDof_adj)   Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += 0.; 

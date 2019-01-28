@@ -11,7 +11,7 @@
 
 //*********************** Sets the regularization parameters *******************************************************
 #define ALPHA_CTRL_BDRY 1.e-3
-#define BETA_CTRL_BDRY 1.e-2
+#define BETA_CTRL_BDRY 0 //1.e-2
 
 
 #define ALPHA_CTRL_VOL 1.e-3
@@ -19,7 +19,7 @@
 
 
 //*********************** Control box constraints *******************************************************
-#define  INEQ_FLAG 1
+#define  INEQ_FLAG 0
 #define  C_COMPL 1.
 
 
