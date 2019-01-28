@@ -29,8 +29,8 @@ bool sparse = true;
 
 unsigned alpha = 7;
 unsigned M = pow (10, alpha);   //number of samples
-unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = 4; //max refinement level
+unsigned N = 10; //dimension of the parameter space (each of the M samples has N entries)
+unsigned L = 5; //max refinement level
 bool output = false; //for debugging
 bool matlabView = true;
 
@@ -115,27 +115,27 @@ int main (int argc, char** argv) {
 
   clock_t time0 = clock();
 
-  std::vector <double> cI (static_cast< unsigned > (pow (n1D[Lm1], N)), 0.);
-  std::vector < unsigned > I (N);
-
-  double h = (xmax - xmin) / n1D[Lm1];
-  for (unsigned m = 0u; m < M; m++) {
-    for (unsigned k = 0u; k < N; k++) {
-      double x = (samples[m][k] - xmin) / h;
-      if (x < 0.) I[k] = 0u;
-      else if (x >= n1D[Lm1]) I[k] = n1D[Lm1] - 1u;
-      else I[k] = static_cast < unsigned > (floor (x));
-    }
-    cI[GetBaseIndex (IL, I, n1D)]++;
-  }
-
-  double vol = pow (h, N);
-  vol *= M;
-  for (unsigned i = 0u; i < cI.size(); i++) {
-    cI[i] = cI[i] / vol;
-  }
-
-  std::cout << std::endl << "HISTOGRAM TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
+//   std::vector <double> cI (static_cast< unsigned > (pow (n1D[Lm1], N)), 0.);
+   std::vector < unsigned > I (N);
+// 
+//   double h = (xmax - xmin) / n1D[Lm1];
+//   for (unsigned m = 0u; m < M; m++) {
+//     for (unsigned k = 0u; k < N; k++) {
+//       double x = (samples[m][k] - xmin) / h;
+//       if (x < 0.) I[k] = 0u;
+//       else if (x >= n1D[Lm1]) I[k] = n1D[Lm1] - 1u;
+//       else I[k] = static_cast < unsigned > (floor (x));
+//     }
+//     cI[GetBaseIndex (IL, I, n1D)]++;
+//   }
+// 
+//   double vol = pow (h, N);
+//   vol *= M;
+//   for (unsigned i = 0u; i < cI.size(); i++) {
+//     cI[i] = cI[i] / vol;
+//   }
+// 
+//   std::cout << std::endl << "HISTOGRAM TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
 
 //   std::cout << "Histogram " << std::endl;
 //   PrintBaseCoefficients (cI, IL, n1D);
@@ -149,25 +149,28 @@ int main (int argc, char** argv) {
   std::vector <std::vector <double> > CH (static_cast< unsigned > (pow (L, N)));
   std::vector <std::vector <unsigned> > CHu (static_cast< unsigned > (pow (L, N)));
   unsigned cnt = 0u;
-  
-  std::vector<std::vector<unsigned>> JT(static_cast< unsigned > (pow (L, N)));
+
+  std::vector<std::vector<unsigned>> JT (static_cast< unsigned > (pow (L, N)));
 
   IL.assign (N, 0u);
   for (unsigned l = 0u; l < CHu.size(); l++) {
     unsigned sum = SumIndexes (IL);
     if (!sparse || sum < L) {
-      JT[cnt] = IL;  
-      cnt++;
+      JT[cnt] = IL;
       unsigned spaceSize = 1u;
       for (unsigned k = 0u; k < N; k++) {
         spaceSize *= n1D[IL[k]];
       }
-      CH[l].assign (spaceSize, 0.);
-      CHu[l].assign (spaceSize, 0u);
+      CH[cnt].assign (spaceSize, 0.);
+      CHu[cnt].assign (spaceSize, 0u);
+      cnt++;
     }
     IncreaseLevelIndex (Lm1, N, IL);
   }
-  std::cout << std::endl << "Total number of Hiearchical spaces: " << cnt << std::endl;
+  JT.resize (cnt);
+  CH.resize (cnt);
+  CHu.resize (cnt);
+  std::cout << std::endl << "Total number of Hiearchical spaces: " << cnt << " " << JT.size() << std::endl;
 
   double H = (xmax - xmin);
   std::vector < std::vector <unsigned> > iiL (N);
@@ -186,35 +189,26 @@ int main (int argc, char** argv) {
         iiL[k][j - 1] = iiL[k][j] / 2u;
       }
     }
-    IL.assign (N, 0u);
-    for (unsigned l = 0u; l < CHu.size(); l++) {
-      if (CHu[l].size() > 0u) {
-        GetLevelIndexes (l, L, IL);  
-        CHu[l][GetBaseIndex (IL, iiL, n1D)]++;
-      }
-      //IncreaseLevelIndex (Lm1, N, &IL[N - 1u]);
+    for (unsigned l = 0u; l < JT.size(); l++) {
+      CHu[l][GetBaseIndex (JT[l], iiL, n1D)]++;
     }
   }
 
-  IL.assign (N, 0u);
-  for (unsigned l = 0u; l < CHu.size(); l++) {
-    if (CHu[l].size() > 0u) {
-      double vol = 1.;
-      for (unsigned k = 0u; k < N; k++) {
-        vol *= H / n1D[IL[k]];
-      }
-      vol *= M;
-      for (unsigned i = 0u; i < CH[l].size(); i++) {
-        CH[l][i] = CHu[l][i] / vol;
-      }
+  for (unsigned l = 0u; l < JT.size(); l++) {
+    double vol = 1.;
+    for (unsigned k = 0u; k < N; k++) {
+      vol *= H / n1D[JT[l][k]];
     }
-    IncreaseLevelIndex (Lm1, N, &IL[N - 1u]);
+    vol *= M;
+    for (unsigned i = 0u; i < CH[l].size(); i++) {
+      CH[l][i] = CHu[l][i] / vol;
+    }
   }
 
 //  std::vector <std::vector <double> > CH (static_cast< unsigned > (pow (L, N)));
 //  std::vector <std::vector <unsigned> > CHu (static_cast< unsigned > (pow (L, N)));
 //  unsigned cnt = 0u;
-// 
+//
 //   double H = (xmax - xmin);
 //   IL.assign (N, 0u);
 //   std::vector <unsigned> nL(N);
@@ -249,50 +243,37 @@ int main (int argc, char** argv) {
 //   }
 
 
-  std::cout << std::endl << "Total number of Hiearchical spaces: " << cnt << std::endl;  
+  std::cout << std::endl << "Total number of Hiearchical spaces: " << cnt << std::endl;
 
   std::cout << std::endl << "HIERARCHICAL BASE STAGE 1 TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
   clock_t time1 = clock();
 
-  IL.assign (N, 0u);
-  std::vector < unsigned > JL (N);
   std::vector < unsigned > J (N);
-
-  for (unsigned l = 0u; l < CH.size(); l++) {
-    if (CH[l].size() > 0u) {
-      JL.assign (N, 0u);
-      for (unsigned m = 0u; m < l; m++) {
-        if (CH[m].size() > 0u) {
-          bool subSpace = true;
-          for (unsigned k = 0u; k < N; k++) {
-            if (JL[k] > IL[k]) {
-              subSpace = false;
-              break;
-            }
-          }
-          if (subSpace) {
-            for (unsigned  i = 0u; i < CH[l].size(); i++) {
-              GetBaseIndexes (IL, n1D, i, I);
-              GetCoarseBaseIndexes (IL, JL, n1D, I, J);
-              CH[l][i] -= CH[m][ GetBaseIndex (JL, J, n1D) ];
-            }
-          }
+  for (unsigned l = 0u; l < JT.size(); l++) {
+    for (unsigned m = 0u; m < l; m++) {
+      bool subSpace = true;
+      for (unsigned k = 0u; k < N; k++) {
+        if (JT[m][k] > JT[l][k]) {
+          subSpace = false;
+          break;
         }
-        IncreaseLevelIndex (Lm1, N, &JL[N - 1u]);
+      }
+      if (subSpace) {
+        for (unsigned  i = 0u; i < CH[l].size(); i++) {
+          GetBaseIndexes (JT[l], n1D, i, I);
+          GetCoarseBaseIndexes (JT[l], JT[m], n1D, I, J);
+          CH[l][i] -= CH[m][ GetBaseIndex (JT[m], J, n1D) ];
+        }
       }
     }
-    IncreaseLevelIndex (Lm1, N, &IL[N - 1u]);
   }
   std::cout << std::endl << "HIERARCHICAL BASE STAGE 2 TIME:\t" << static_cast<double> ( (clock() - time1)) / CLOCKS_PER_SEC << std::endl;
-
   std::cout << std::endl << "HIERARCHICAL BASE TOTAL TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
 
 //   std::cout << std::endl;
 //   std::cout << "Hierarchical bases " << std::endl;
-//   for (unsigned l = 0u; l < CH.size(); l++) {
-//     if (CH[l].size() > 0u) {
-//       PrintBaseCoefficients (CH[l], IL, n1D);
-//     }
+//   for (unsigned l = 0u; l < JT.size(); l++) {
+//   PrintBaseCoefficients (CH[l], JT[l], n1D);
 //   }
 
 //////////////////////////////////////////////////////////////////////
@@ -300,39 +281,33 @@ int main (int argc, char** argv) {
 //Reconstruct Histogram from Hierarchical Bases
 
   time0 = clock();
-
   std::vector <double> cIr (static_cast< unsigned > (pow (n1D[Lm1], N)));
   IL.assign (N, Lm1);
   for (unsigned i = 0u; i < cIr.size(); i++) {
     GetBaseIndexes (IL, n1D, i, I);
-    JL.assign (N, 0u);
-    for (unsigned l = 0u; l < CH.size(); l++) {
-      if (CH[l].size() > 0u) {
-        GetCoarseBaseIndexes (IL, JL, n1D, I, J);
-        cIr[ GetBaseIndex (IL, I, n1D) ] += CH[l][GetBaseIndex (JL, J, n1D)];
-      }
-      IncreaseLevelIndex (Lm1, N, &JL[N - 1u]);
+    for (unsigned l = 0u; l < JT.size(); l++) {
+      GetCoarseBaseIndexes (IL, JT[l], n1D, I, J);
+      cIr[ GetBaseIndex (IL, I, n1D) ] += CH[l][GetBaseIndex (JT[l], J, n1D)];
     }
   }
-
-  std::cout << std::endl << "RECONSTRUCTION TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
-
-
-//   std::cout << "Histogram reconstructed from Hierarchical Bases" << std::endl;
-//   IL.assign (N, Lm1);
-//   PrintBaseCoefficients (cIr, IL, n1D);
-//
-//   std::cout << "Difference between Histogram and Histogram reconstructed from Hierarchical Bases" << std::endl;
-//   for (unsigned i = 0u; i < cIr.size(); i++) cIr[i] -= cI[i];
-//   PrintBaseCoefficients (cIr, IL, n1D);
-
-  double error = 0.;
-  for (unsigned i = 0u; i < cIr.size(); i++) 
-    error += fabs(cIr[i] - cI[i]);
-  
-  std::cout << "Difference between Histogram and Histogram reconstructed from Hierarchical Bases = "<< error<<std::endl;
-  
-  PrintVTKHistogram (cI, cIr, IL, n1D);
+// 
+//   std::cout << std::endl << "RECONSTRUCTION TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
+// 
+// //   std::cout << "Histogram reconstructed from Hierarchical Bases" << std::endl;
+// //   IL.assign (N, Lm1);
+// //   PrintBaseCoefficients (cIr, IL, n1D);
+// //
+// //   std::cout << "Difference between Histogram and Histogram reconstructed from Hierarchical Bases" << std::endl;
+// //   for (unsigned i = 0u; i < cIr.size(); i++) cIr[i] -= cI[i];
+// //   PrintBaseCoefficients (cIr, IL, n1D);
+// 
+//   double error = 0.;
+//   for (unsigned i = 0u; i < cIr.size(); i++)
+//     error += fabs (cIr[i] - cI[i]);
+// 
+//   std::cout << "Difference between Histogram and Histogram reconstructed from Hierarchical Bases = " << error << std::endl;
+// 
+//   PrintVTKHistogram (cI, cIr, IL, n1D);
 
 
   return 0u;
