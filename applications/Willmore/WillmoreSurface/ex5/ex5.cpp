@@ -21,8 +21,14 @@
 #include <cstdlib>
 #include "PetscMatrix.hpp"
 
-const unsigned P = 2;
+#include "petsc.h"
+#include "petscmat.h"
+#include "PetscMatrix.hpp"
+
+const unsigned P = 3;
 using namespace femus;
+
+const bool volumeConstraint = true;
 
 
 void AssemblePWillmore (MultiLevelProblem&);
@@ -30,7 +36,7 @@ void AssemblePWillmore (MultiLevelProblem&);
 void AssembleInit (MultiLevelProblem&);
 
 double GetTimeStep (const double time) {
-  return 0.01;
+  return 0.0002;
 }
 
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -92,8 +98,8 @@ int main (int argc, char** args) {
   double scalingFactor = 1.;
 
   //mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/ellipsoidRef2.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/ellipsoidRef2.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
   unsigned numberOfUniformLevels = 2;
@@ -161,7 +167,7 @@ int main (int argc, char** args) {
   system0.AddSolutionToSystemPDE ("Y2");
   system0.AddSolutionToSystemPDE ("Y3");
 
-  system0.SetMaxNumberOfNonLinearIterations (2);
+  system0.SetMaxNumberOfNonLinearIterations (10);
   system0.SetNonLinearConvergenceTolerance (1.e-9);
 
   // attach the assembling function to system
@@ -197,7 +203,6 @@ int main (int argc, char** args) {
 
   // initilaize and solve the system
   system.init();
-
 
   mlSol.SetWriter (VTK);
   std::vector<std::string> mov_vars;
@@ -302,25 +307,32 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   std::vector< adept::adouble > aResLambda;
   std::vector< adept::adouble > aResx[3]; // local redidual vector
   std::vector< adept::adouble > aResY[3]; // local redidual vector
+  adept::adouble aResLambda0;
 
   vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
 
+  //MatSetOption ( ( static_cast<PetscMatrix*> ( KK ) )->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE );
+
   KK->zero();  // Set to zero all the entries of the Global Matrix
   RES->zero(); // Set to zero all the entries of the Global Residual
-  
-  unsigned Lambda0Dof;
+
+  unsigned lambda0SolDof;
   double solLambda0;
-  if(iproc == 0){
-    Lambda0Dof = msh->GetSolutionDof (0, 0, solLambdaType); // global to local mapping between solution node and solution dof
-    solLambda0 = (*sol->_Sol[solLambdaIndex]) (Lambda0Dof); // global to local solution
+  unsigned lambda0PdeDof;
+  if (iproc == 0) {
+    lambda0SolDof = msh->GetSolutionDof (0, 0, solLambdaType); // global to local mapping between solution node and solution dof
+    solLambda0 = (*sol->_Sol[solLambdaIndex]) (lambda0SolDof); // global to local solution
+    lambda0PdeDof = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, 0);
   }
-  MPI_Bcast( &Lambda0Dof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-  MPI_Bcast( &solLambda0, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  //SYSDOF[DIM * nxDofs + DIM * nYDofs + 0] = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, i, iel); // global to global mapping between solution node and pdeSys dof
-  
-  
+  MPI_Bcast (&lambda0SolDof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+  MPI_Bcast (&solLambda0, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast (&lambda0PdeDof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+
+  double volume = 0.;
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    bool iel0 = (iel == 0) ? true : false;
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nxDofs  = msh->GetElementDofNumber (iel, solxType);   // number of solution element dofs
@@ -336,15 +348,16 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
     solLambda.resize (nLambdaDofs);
 
     // resize local arrays
-    SYSDOF.resize (DIM * (nxDofs + nYDofs) + nLambdaDofs);
+    SYSDOF.resize (DIM * (nxDofs + nYDofs) + nLambdaDofs + !iel0);
 
-    Res.resize (DIM * (nxDofs + nYDofs) + nLambdaDofs);       //resize
+    Res.resize (DIM * (nxDofs + nYDofs) + nLambdaDofs + !iel0);       //resize
 
     for (unsigned K = 0; K < DIM; K++) {
       aResx[K].assign (nxDofs, 0.);  //resize and set to zero
       aResY[K].assign (nYDofs, 0.);  //resize and zet to zero
     }
     aResLambda.assign (nLambdaDofs, 0.);
+    aResLambda0 = 0;
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nxDofs; i++) {
@@ -374,14 +387,13 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       solLambda[i] = (*sol->_Sol[solLambdaIndex]) (iLambdaDof); // global to local solution
       SYSDOF[DIM * nxDofs + DIM * nYDofs + i] = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, i, iel); // global to global mapping between solution node and pdeSys dof
     }
-    
-    
-    
+
+    adept::adouble lambda0 = solLambda0;
+    if (!iel0) SYSDOF[DIM * (nxDofs + nYDofs) + nLambdaDofs ] = lambda0PdeDof;
 
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
-    
-    aResLambda[0] = solLambda[0];
+    if (iel != 0 || !volumeConstraint) aResLambda[0] = solLambda[0];
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solxType]->GetGaussPointNumber(); ig++) {
@@ -489,6 +501,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         }
       }
 
+
       double Area = weight * sqrt (detg);
 
       double Jir[2][3] = {{0., 0., 0.}, {0., 0., 0.}};
@@ -570,13 +583,19 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             term3 += P * phiY_Xtan[J][i] * term4;
 
           }
-          aResx[K][i] += (P * (0. * normal[K] + (solxg[K] - solxOldg[K])  / dt) * phiY[i]
+          aResx[K][i] += (P * ( volumeConstraint * lambda0 * normal[K] + (solxg[K] - solxOldg[K])  / dt) * phiY[i]
                           + term0
                           + pow (A , P) * term1.value()
                           + term2.value() * phiY_Xtan[K][i]
                           + term3.value()) * Area;
         }
       }
+      for (unsigned K = 0; K < DIM; K++) {
+        if ( volumeConstraint )  aResLambda0 += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
+
+        volume += (solxg[K].value()  * normal[K]) * Area;
+      }
+
     } // end gauss point loop
 
     //--------------------------------------------------------------------------------------------------------
@@ -597,11 +616,12 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
     for (int i = 0; i < nLambdaDofs; i++) {
       Res[DIM * nxDofs + DIM * nYDofs + i] = -aResLambda[i].value();
     }
-    
+    if (!iel0) Res[DIM * (nxDofs + nYDofs) +  nLambdaDofs ] = - aResLambda0.value();
+
 
     RES->add_vector_blocked (Res, SYSDOF);
 
-    Jac.resize ( (DIM * (nxDofs + nYDofs) + nLambdaDofs) * (DIM * (nxDofs + nYDofs) + nLambdaDofs) );
+    Jac.resize ( (DIM * (nxDofs + nYDofs) + nLambdaDofs + !iel0) * (DIM * (nxDofs + nYDofs) + nLambdaDofs + !iel0));
 
     // define the dependent variables
     for (int K = 0; K < DIM; K++) {
@@ -612,6 +632,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
     }
     s.dependent (&aResLambda[0], nLambdaDofs);
 
+    if (!iel0) s.dependent (&aResLambda0, 1);
+
     // define the dependent variables
     for (int K = 0; K < DIM; K++) {
       s.independent (&solx[K][0], nxDofs);
@@ -620,6 +642,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       s.independent (&solY[K][0], nYDofs);
     }
     s.independent (&solLambda[0], nLambdaDofs);
+    if (!iel0) s.independent (&lambda0, 1);
 
     // get the jacobian matrix (ordered by row)
     s.jacobian (&Jac[0], true);
@@ -633,6 +656,12 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
   RES->close();
   KK->close();
+
+
+  double volumeAll;
+  MPI_Reduce (&volume, &volumeAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+  std::cout << "VOLUME = " << volumeAll << std::endl;
 
   //VecView((static_cast<PetscVector*>(RES))->vec(),  PETSC_VIEWER_STDOUT_SELF );
 
