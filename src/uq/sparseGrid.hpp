@@ -15,15 +15,27 @@ namespace femus
 
     public:
 
-        sparseGrid ( std::vector < std::vector < double > >  &samples, const bool &output );
+        sparseGrid ( std::vector < std::vector < double > >  &samples, const double &xmin, const double &xmax, const bool &output );
 
         void EvaluateOneDimensionalPhi ( double &phi, const double &x, const unsigned &n, const unsigned &l, const unsigned &i, const bool &scale );
 
         void EvaluatePhi ( double &phi, const std::vector <double> &x, std::vector < std::vector < unsigned > > identifier, const bool &scale );
+        
+        void InSupportOneDimensional ( unsigned &maybeThere, const double &x, const unsigned &n, const unsigned &l, const unsigned &i );
+        
+        void InSupport ( unsigned &isIt, const std::vector <double> &x, std::vector < std::vector < unsigned > > identifier );
+        
+        void PiecewiseConstPhi( double &phi, const std::vector <double> &x, std::vector < std::vector < unsigned > > identifier );
 
         void EvaluateNodalValuesPDF ( std::vector < std::vector < double > >  &samples );
         
-        void EvaluatePDF (double &pdfValue, std::vector < double >  &x);
+        void EvaluatePDF (double &pdfValue, std::vector < double >  &x, const bool &print);
+        
+        void ComputeAvgL2Error( double &aL2E, std::vector < std::vector < double > >  &samples, const unsigned &analyticPdfType);
+        
+        void EvaluatePDFIntegral (double &integral);
+        
+        void SupportIsContained ( bool &check, const unsigned &w, const unsigned &i, const unsigned &wLower, const unsigned &iLower);
 
         void ComputeTensorProductSet ( std::vector< std::vector <unsigned>> &Tp, const unsigned &T1, const unsigned &T2 );
         

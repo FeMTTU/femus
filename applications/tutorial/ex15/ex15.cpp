@@ -224,8 +224,6 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
   }
   soluOld.resize (maxSize);
 
-  std::vector< bool > bdc;
-  bdc.reserve (maxSize);
 
   std::vector < std::vector < double > > x (dim);   // local coordinates. x is now dim x m matrix.
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -270,9 +268,9 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < RK; i++) {
       solk[i].resize (nDofu);
       solu[i].resize (nDofu);
-      soluOld.resize (nDofu);
       aResk[i].assign (nDofu, 0.);
     }
+    soluOld.resize (nDofu);
 
     for (int k = 0; k < dim; k++) {
 <<<<<<< HEAD
@@ -282,7 +280,7 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
 >>>>>>> 137150e40fff16af420ad8fc7bb9d8ebac4df18f
     }
 
-    bdc.resize (nDofu);
+  
 
     l2GMap.resize (RK * nDofu);
 
@@ -290,7 +288,7 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof (i, iel, soluType);   // global to global mapping between solution node and solution dof
       soluOld[i] = (*sol->_SolOld[soluIndex]) (solDof);
-      bdc[i] = ( (*sol->_Bdc[soluIndex]) (solDof) < 0.5) ? true : false;
+     
       for (unsigned j = 0; j < RK; j++) {
         solk[j][i] = (*sol->_Sol[solkIndex[j]]) (solDof);         // global extraction and local storage for the solution
         l2GMap[j * nDofu + i] = pdeSys->GetSystemDof (solkIndex[j], solkPdeIndex[j], i, iel);   // global to global mapping between solution node and pdeSys dof
@@ -309,7 +307,7 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
       }
     }
 
-    mlPdeSys->GetIntermediateSolutions (soluOld, solk, x, bdc, "u", solu);
+    mlPdeSys->GetIntermediateSolutions (soluOld, solk, x, "u", solu);
 
 //     const std::vector<double> & itime = mlPdeSys->GetIntermediateTimes();
 //     for (unsigned i = 0; i < nDofu; i++) {

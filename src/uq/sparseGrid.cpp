@@ -8,13 +8,13 @@
 namespace femus
 {
 
-    sparseGrid::sparseGrid ( std::vector < std::vector < double > >  &samples, const bool & output )
+    sparseGrid::sparseGrid ( std::vector < std::vector < double > >  &samples, const double &xmin, const double &xmax, const bool & output )
     {
         _output = output;
 
         _N = samples[0].size();
         _M = samples.size();
-        _L = static_cast<unsigned> ( log10 ( _M ) ); //NOTE this might change if we see fit
+        _L = static_cast<unsigned> ( log10 ( _M ) );  //NOTE this might change if we see fit
 
         _intervals.resize ( _N );
         _hs.resize ( _N );
@@ -46,21 +46,9 @@ namespace femus
 
         //BEGIN figuring out the one dimensional intervals, mesh sizes and node coordinates
         for ( unsigned n = 0; n < _N; n++ ) {
-            an = - 1.; //temporary left extremum of the n-th interval [an,bn]
-            bn = 1.;   //temporary right extremum of the n-th interval [an,bn]
 
-            for ( unsigned m = 0; m < _M; m++ ) {
-                if ( samples[m][n] <= an ) {
-                    an = samples[m][n];
-                }
-
-                else if ( samples[m][n] >= bn ) {
-                    bn = samples[m][n];
-                }
-            }
-
-            _intervals[n][0] = an - 0.5; //the 0.5 is just to add some tolerance
-            _intervals[n][1] = bn + 0.5;
+            _intervals[n][0] = xmin;
+            _intervals[n][1] = xmax;
 
             if ( _output )  std::cout << "a = " << _intervals[n][0] << " , " << "b = " << _intervals[n][1] << std::endl;
 
@@ -80,7 +68,7 @@ namespace femus
                         _hierarchicalDofs[n][l][hierarchicalCounter] = i;
                         hierarchicalCounter++;
                     }
-                    
+
 //                     _hierarchicalDofs[n][l][i] = i; //this is to use the method with standard FEM
                 }
             }
@@ -125,8 +113,9 @@ namespace femus
                 sum += ( Tp[i][j] + 1 ); //this is because our indices start from 0 but the requirement assumes they start from 1
             }
 
-            if ( sum <= _L + _N - 1 ) {  
+           if ( sum <= _L + _N - 1 ) { //this is to use sparse grid
 //                if ( sum == _L * _N ) { //this is to use the method with standard FEM
+//              if ( sum <= _L * _N ) { //this is to use full grid
 
                 _indexSetW.resize ( indexCounter + 1 );
                 _indexSetW[indexCounter].resize ( _N );
@@ -285,7 +274,7 @@ namespace femus
         double leftBoundOfSupport = _nodes[n][l][i] - _hs[n][l]; // this is xi - h
         double rightBoundOfSupport = _nodes[n][l][i] + _hs[n][l]; // this is xi + h
 
-        if ( x >= leftBoundOfSupport && x <= rightBoundOfSupport ) {
+        if ( x > leftBoundOfSupport && x < rightBoundOfSupport ) {
 
             phi = 1 - fabs ( ( x - _nodes[n][l][i] ) / _hs[n][l] );
 
@@ -315,95 +304,156 @@ namespace femus
 
     }
 
+    void sparseGrid::InSupportOneDimensional ( unsigned &maybeThere, const double &x, const unsigned &n, const unsigned &l, const unsigned &i )
+    {
+
+        for ( unsigned n = 0; n < _N; n++ ) {
+            double leftBoundOfSupport = _nodes[n][l][i] - _hs[n][l]; // this is xi - h
+            double rightBoundOfSupport = _nodes[n][l][i] + _hs[n][l]; // this is xi + h
+
+            if ( x > leftBoundOfSupport && x <= rightBoundOfSupport ) maybeThere = 1;
+
+            else maybeThere = 0;
+        }
+
+    }
+
+    void sparseGrid::InSupport ( unsigned &isIt, const std::vector <double> &x, std::vector < std::vector < unsigned > > identifier )
+    {
+
+        std::vector < unsigned > isItOneDim ( _N, 0. );
+
+        isIt = 1;
+
+        for ( unsigned n = 0; n < _N; n++ ) {
+            InSupportOneDimensional ( isItOneDim[n], x[n], identifier[n][0], identifier[n][1], identifier[n][2] );
+
+            if ( isItOneDim[n] == 0 ) {
+                isIt = 0;
+                break;
+            }
+
+            else isIt *= isItOneDim[n];
+        }
+    }
+
+    void sparseGrid::PiecewiseConstPhi ( double &phi, const std::vector <double> &x, std::vector < std::vector < unsigned > > identifier )
+    {
+
+        unsigned checkSupport = 0;
+        InSupport ( checkSupport, x, identifier );
+
+        if ( checkSupport == 1 ) phi = 1.;
+
+        else phi = 0.;
+
+    }
+
     void sparseGrid::EvaluateNodalValuesPDF ( std::vector < std::vector < double > >  &samples )
     {
 
-        //BEGIN to erase
-//         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-//
-//             unsigned indexMax = 1;
-//
-//             for ( unsigned n = 0; n < _N; n++ ) {
-// //                 std::cout << "_indexSetW[ " << w << "][" << n << "] = " << _indexSetW[w][n];
-//
-//                 if ( _indexSetW[w][n] + 1 > indexMax ) indexMax =  _indexSetW[w][n] + 1;
-//             }
-//
-//             std::cout << std::endl;
-//
-//
-//             unsigned denomMlocal = static_cast<unsigned> ( pow ( 10, _L - indexMax ) ) ;
-//             unsigned Mlocal = _M / denomMlocal;
-//
-// //             std::cout << "Mlocal = " << Mlocal << std::endl;
-//
-//             std::vector <double> sumDofs ( Mlocal, 0. );
-//             for ( unsigned m1 = 0; m1 < Mlocal; m1++ ) {
-//                 for ( unsigned w1 = 0; w1 < _numberOfWs; w1++ ) {
-//                     for ( unsigned i1 = 0; i1 < _nodalValuesPDF[w1].size(); i1++ ) {
-//                         double valuePhiDenom;
-//                         EvaluatePhi ( valuePhiDenom, samples[m1], _dofIdentifier[w1][i1], false );
-//                         sumDofs[m1] += valuePhiDenom;
-//                     }
-//                 }
-//             }
-//
-//             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
-//                 _nodalValuesPDF[w][i] = 0.;
-//
-//                 for ( unsigned m = 0; m < Mlocal; m++ ) {
-//
-//                     double valuePhi;
-//                     EvaluatePhi ( valuePhi, samples[m], _dofIdentifier[w][i], true );
-//
-//                     _nodalValuesPDF[w][i] += ( valuePhi / sumDofs[m] ) / Mlocal;
-//
-//                 }
-//             }
-//         }
-        //END
-        
-        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+        double supportMeasureLowerLevel = 1.;
+
+        for ( unsigned n = 0; n < _N; n++ ) {
+            supportMeasureLowerLevel *= 2 * _hs[n][_dofIdentifier[0][0][n][1]];
+        }
+
+        if ( _output )  std::cout << "supportMeasureLowerLevel = " << supportMeasureLowerLevel << std::endl;
+
+        _nodalValuesPDF[0][0] = 1. / supportMeasureLowerLevel;
+
+
+        for ( unsigned w = 1; w < _numberOfWs; w++ ) {
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 _nodalValuesPDF[w][i] = 0.;
             }
         }
 
-        for ( unsigned m = 0; m < _M; m++ ) {
 
-            double sumDenom = 0.;
-            for ( unsigned w1 = 0; w1 < _numberOfWs; w1++ ) {
-                for ( unsigned i1 = 0; i1 < _nodalValuesPDF[w1].size(); i1++ ) {
-                    double valuePhiDenom;
-                    EvaluatePhi ( valuePhiDenom, samples[m], _dofIdentifier[w1][i1], false );
-                    sumDenom += valuePhiDenom;
+
+        for ( unsigned w = 1; w < _numberOfWs; w++ ) {
+            unsigned dofsOfW =  _nodalValuesPDF[w].size();
+
+            for ( unsigned i = 0; i < dofsOfW; i++ ) {
+                for ( unsigned m = 0; m < _M; m++ ) {
+
+                    unsigned isThere;
+                    InSupport ( isThere, samples[m], _dofIdentifier[w][i] );
+
+                    if ( isThere == 1 ) _nodalValuesPDF[w][i]++;
                 }
-            }
-            
-            
-            for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-                for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
-                    double valuePhi;
-                    EvaluatePhi ( valuePhi, samples[m], _dofIdentifier[w][i], false );
 
-                    _nodalValuesPDF[w][i] += ( valuePhi / sumDenom ) / _M;
+                double supportMeasure = 1.;
+                unsigned levelOfPhi = _dofIdentifier[w][i][0][1];
+
+                for ( unsigned n = 0; n < _N; n++ ) {
+                    supportMeasure *= 2 * _hs[n][_dofIdentifier[w][i][n][1]];
+
+                    if ( _dofIdentifier[w][i][n][1] > levelOfPhi ) levelOfPhi = _dofIdentifier[w][i][n][1];
                 }
-            }
 
+                if ( _output )   std::cout << "w = " << w << " i = " << i <<  " supportMeasure = " << supportMeasure << std::endl;
+
+                _nodalValuesPDF[w][i] /= ( supportMeasure * _M );
+
+
+                for ( unsigned w1 = 0; w1 < w; w1++ ) {
+                    unsigned dofsOfWLower = _nodalValuesPDF[w1].size();
+
+                    for ( unsigned i1 = 0; i1 < dofsOfWLower; i1++ ) {
+
+                        unsigned isThere;
+                        InSupport ( isThere, _hierarchicalDofsCoordinates[w][i], _dofIdentifier[w1][i1] );
+
+//                         std::cout << "w = " <<  w <<  " w1 = " << w1 << " i1 = " << i1 << " isThere = " << isThere << " dofsOfW = " << dofsOfW << " dofsOfWLower = " << dofsOfWLower << std::endl;
+
+                        bool doThey;
+                        SupportIsContained ( doThey, w, i, w1, i1 );
+
+
+                        if ( isThere == 1 && dofsOfWLower < dofsOfW && doThey == true) {
+
+                            _nodalValuesPDF[w][i] -= _nodalValuesPDF[w1][i1] ;
+
+//                             if ( w == 2 || w == 5 ) std::cout <<  " let's see " << _nodalValuesPDF[w1][i1] << std::endl;
+                        }
+
+                    }
+                }
+
+            }
+        }
+
+    }
+
+    void sparseGrid::SupportIsContained ( bool &check, const unsigned &w, const unsigned &i, const unsigned &wLower, const unsigned &iLower )
+    {
+
+        check = false;
+
+        std::vector < double > dimensionalCheck ( _N, 0 );
+
+        for ( unsigned n = 0; n < _N; n++ ) {
+
+            double leftBound = _hierarchicalDofsCoordinates[w][i][n] - _hs[n][_dofIdentifier[w][i][n][1]];
+            double rightBound = _hierarchicalDofsCoordinates[w][i][n] + _hs[n][_dofIdentifier[w][i][n][1]];
+
+            double leftBoundLower = _hierarchicalDofsCoordinates[wLower][iLower][n] - _hs[n][_dofIdentifier[wLower][iLower][n][1]];
+            double rightBoundLower = _hierarchicalDofsCoordinates[wLower][iLower][n] + _hs[n][_dofIdentifier[wLower][iLower][n][1]];
+
+            if ( leftBoundLower <= leftBound && rightBound <= rightBoundLower ) dimensionalCheck[n] = 1;
+        }
+
+
+        double sumCheck = 0;
+
+        for ( unsigned n = 0; n < _N; n++ ) {
+
+            sumCheck += dimensionalCheck[n];
 
         }
 
-        //to remove, this is just a check
-        double sumOfNodalValues = 0.;
-
-        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-            for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
-                sumOfNodalValues += _nodalValuesPDF[w][i];
-            }
-        }
-
-        std::cout << " sumOfNodalValues =" << sumOfNodalValues << std::endl;
-
+        if ( sumCheck == _N ) check = true;
 
     }
 
@@ -411,6 +461,8 @@ namespace femus
     {
 
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+            std::cout << "------------------------ w = " << w << " ------------------------ " << std::endl;
+
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
 
                 for ( unsigned n = 0; n < _N; n++ ) {
@@ -425,25 +477,92 @@ namespace femus
 
     }
 
-    void sparseGrid::EvaluatePDF ( double &pdfValue, std::vector < double >  &x )
+    void sparseGrid::EvaluatePDF ( double &pdfValue, std::vector < double >  &x, const bool &print )
     {
         pdfValue = 0.;
 
-        std::vector<std::vector<double>> phiFncts(_numberOfWs);
+        std::vector<std::vector<double>> phiFncts ( _numberOfWs );
+
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-//             phiFncts[w].resize(_nodalValuesPDF[w].size());
+            phiFncts[w].resize ( _nodalValuesPDF[w].size() );
+
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 double valuePhi;
-                EvaluatePhi ( valuePhi, x, _dofIdentifier[w][i], true );
+                PiecewiseConstPhi ( valuePhi, x, _dofIdentifier[w][i] );
                 pdfValue += _nodalValuesPDF[w][i] * valuePhi;
-//               phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
-//               std::cout<< phiFncts[w][i] << "," ;
+//                 phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
+
+//                 if ( print == true )      std::cout << phiFncts[w][i] << "," ;
             }
-        }        
-        std::cout<<std::endl;
+        }
+
+        if ( print == true )     std::cout << pdfValue;
+
+        if ( print == true )   std::cout << std::endl;
     }
 
-    void sparseGrid::ComputeTensorProductSet ( std::vector< std::vector <unsigned>> &Tp, const unsigned &T1, const unsigned &T2 )
+    void sparseGrid::ComputeAvgL2Error ( double &aL2E, std::vector < std::vector < double > >  &samples, const unsigned &analyticPdfType )
+    {
+
+        aL2E = 0.;
+
+        for ( unsigned m = 0; m < samples.size(); m++ ) {
+            double pdfValue;
+            EvaluatePDF ( pdfValue, samples[m], false );
+
+            double analyticValue = 1.;
+
+            //compute the analytic PDF value
+            if ( analyticPdfType == 0 ) { // uniform PDF in [-1,1]
+
+                for ( unsigned n = 0; n < _N; n++ ) {
+                    if ( fabs ( samples[m][n] ) <= 1. ) analyticValue *= 0.5;
+
+                    else {
+                        analyticValue = 0.;
+                        break;
+                    }
+                }
+
+            }
+
+            else if ( analyticPdfType == 0 ) { // standard Gaussian PDF
+
+                for ( unsigned n = 0; n < _N; n++ ) {
+                    analyticValue *=  exp ( -samples[m][n] * samples[m][n] * 0.5 ) / sqrt ( 2 * acos ( -1 ) );
+                }
+            }
+
+            aL2E += ( pdfValue - analyticValue ) * ( pdfValue - analyticValue );
+
+        }
+
+        aL2E = sqrt ( aL2E ) / _M;
+
+    }
+
+    void sparseGrid::EvaluatePDFIntegral ( double &integral )
+    {
+
+        integral = 0.;
+
+        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+            for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
+
+                double supportMeasure = 1.;
+
+                for ( unsigned n = 0; n < _N; n++ ) {
+                    supportMeasure *= 2 * _hs[n][_dofIdentifier[w][i][n][1]];
+                }
+
+                integral += _nodalValuesPDF[w][i] * supportMeasure;
+
+            }
+        }
+
+    }
+
+    void sparseGrid::ComputeTensorProductSet ( std::vector< std::vector <unsigned>> &Tp, const unsigned & T1, const unsigned & T2 )
     {
 
         unsigned tensorProductDim = pow ( T1, T2 );
@@ -515,6 +634,7 @@ namespace femus
 
 
 }
+
 
 
 
