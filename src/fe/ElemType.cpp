@@ -920,6 +920,11 @@ namespace femus {
 
     
     // boundary 
+    //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
+    //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
+    //we should access the bdry element and compute the abscissa using the coordinates of it
+    //here what we have to do is to locate the reference boundary element in the reference volume element
+    //Notice that the SIGN of the direction is also important
     const double* ptx_bdry[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
     
     for (unsigned i = 0; i < n_gauss_bdry; i++) {
@@ -928,10 +933,15 @@ namespace femus {
         x_bdry[j] = *ptx_bdry[j];
         ptx_bdry[j]++;
       }
+      
+      double x_vol[2];
+             x_vol[0] = x_bdry[0]; 
+             x_vol[1] = +1.;
+      
       for (int j = 0; j < _nc; j++) {
-        _phi_bdry[i][j]      = _pt_basis->eval_phi(_IND[j], x_bdry);
-        _dphidxi_bdry[i][j]  = _pt_basis->eval_dphidx(_IND[j], x_bdry);
-        _dphideta_bdry[i][j] = _pt_basis->eval_dphidy(_IND[j], x_bdry);
+        _phi_bdry[i][j]      = _pt_basis->eval_phi(_IND[j], x_vol);
+        _dphidxi_bdry[i][j]  = _pt_basis->eval_dphidx(_IND[j], x_vol);
+        _dphideta_bdry[i][j] = _pt_basis->eval_dphidy(_IND[j], x_vol);
       }
       
     }
@@ -1737,10 +1747,10 @@ namespace femus {
     const double* dxi = _dphidxi_bdry[ig];
     const double* deta = _dphideta_bdry[ig];
     for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
-      Jac[0][0] += (*dxi) * vt_vol[0][inode];
-      Jac[0][1] += (*dxi) * vt_vol[1][inode];
-      Jac[1][0] += (*deta) * vt_vol[0][inode];
-      Jac[1][1] += (*deta) * vt_vol[1][inode];
+      Jac[0][0] += (*dxi) * vt_vol[0][inode];  // d x/d csi
+      Jac[0][1] += (*dxi) * vt_vol[1][inode];  // d y/d csi
+      Jac[1][0] += (*deta) * vt_vol[0][inode]; // d x/d eta
+      Jac[1][1] += (*deta) * vt_vol[1][inode]; // d y/d eta
     }
     double det = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
 
