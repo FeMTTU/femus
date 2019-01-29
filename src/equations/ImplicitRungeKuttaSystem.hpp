@@ -75,25 +75,26 @@ namespace femus {
       /** calling the parent solve */
       void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 
-      const std::vector < std::ostringstream > & GetSolkiNames (const char name[]);
+      const std::vector < std::string > & GetSolkiNames (const char name[]);
 
       void GetIntermediateSolutions (const std::vector < double > &soluOld,
                                      const std::vector < std::vector < adept::adouble > > & solk,
-                                     const std::vector < std::vector < double > > & x,
-                                     const char name[],
                                      std::vector < std::vector < adept::adouble > > & solu);
 
       void SetIntermediateTimes();
       const std::vector < double > & GetIntermediateTimes();
+      void SetRKVariableType (const char solname[], const bool &type);
+      
     private:
       unsigned _RK;
 
       static const double _a[5][5][5], _aI[5][5][5];
       static const double _b[5][5];
       static const double _c[5][5];
-      std::vector < std::ostringstream > _solName;
+      std::vector < std::string > _solName;
       std::vector < unsigned > _solIndex;
-      std::vector < std::vector < std::ostringstream > > _solKiName;
+      std::vector < bool > _solRKType;
+      std::vector < std::vector < std::string > > _solKiName;
       std::vector < std::vector < unsigned > > _solKiIndex;
       std::vector < double > _itime;
       double _time0;
@@ -170,16 +171,19 @@ namespace femus {
     _solKiName.resize (0);
     _solIndex.resize (0);
     _solKiIndex.resize (0);
+    _solRKType.resize(0);
     TransientSystem<Base>::clear();
   }
 
   template <class Base>
   void ImplicitRungeKuttaSystem<Base>::AddSolutionToSystemPDE (const char solname[]) {
 
+    std::ostringstream soliname;
+    soliname << solname; 
     unsigned size = _solName.size();
     _solName.resize (size + 1u);
-    _solName[size] << solname;
-
+    _solName[size] = soliname.str();
+   
     _solIndex.resize (size + 1u);
     _solIndex[size] = this->_ml_sol->GetIndex (solname);
 
@@ -189,27 +193,47 @@ namespace femus {
     _solKiIndex.resize (size + 1u);
     _solKiIndex[size].resize (_RK);
 
+    _solRKType.resize(size + 1u);
+    _solRKType[size] = true;
+    
     _itime.assign (_RK, 0.);
     _time0 = 0.;
 
     for (unsigned i = 0; i < _RK; i++) {
 
-      _solKiName[size][i] << solname << "k" << i + 1;
+      std::ostringstream solkiname; 
+      solkiname << solname << "k" << i + 1; 
+      _solKiName[size][i] = solkiname.str();
 
-      this->_ml_sol->AddSolution (_solKiName[size][i].str().c_str(), this->_ml_sol->GetSolutionFamily (_solIndex[size]), this->_ml_sol->GetSolutionOrder (_solIndex[size]));
+      this->_ml_sol->AddSolution (_solKiName[size][i].c_str(), this->_ml_sol->GetSolutionFamily (_solIndex[size]), this->_ml_sol->GetSolutionOrder (_solIndex[size]));
 
-      this->_ml_sol->Initialize (_solKiName[size][i].str().c_str()); // Since this is time depend problem.
+      this->_ml_sol->Initialize (_solKiName[size][i].c_str()); // Since this is time depend problem.
 
-      _solKiIndex[size][i] = this->_ml_sol->GetIndex (_solKiName[size][i].str().c_str());
+      _solKiIndex[size][i] = this->_ml_sol->GetIndex (_solKiName[size][i].c_str());
 
-      //this->_ml_sol->GenerateBdc(_solKiName[size][i].str().c_str());
-
-      this->Base::AddSolutionToSystemPDE (_solKiName[size][i].str().c_str());
+      this->Base::AddSolutionToSystemPDE (_solKiName[size][i].c_str());
     }
 
     this->_ml_sol->GenerateRKBdc (_solIndex[size], _solKiIndex[size], 0, _itime, _time0, 1., _aI[_RK - 1]);
   }
 
+  template <class Base>
+  void ImplicitRungeKuttaSystem<Base>::SetRKVariableType (const char solname[], const bool &type) {
+    
+    unsigned index = 0;
+    
+    while (strcmp (_solName[index].c_str(), solname)) {
+      index++;
+      
+      if (index == _solName.size()) {
+        std:: cout << "error! invalid solution name: in entry ImplicitRungeKuttaSystem.SetRKVariableType(\" ... \")" << std::endl;
+        abort();
+      }
+    }
+    _solRKType[index] = type;
+    
+  }
+  
 
   template <class Base>
   void ImplicitRungeKuttaSystem<Base>::MLsolve() {
@@ -232,8 +256,6 @@ namespace femus {
     Base::solve();
 
     UpdateSolution();
-
-    //this->_ml_sol->UpdateBdc(this->_time);
   }
 
   template <class Base>
@@ -256,8 +278,6 @@ namespace femus {
     Base::solve (mgSmootherType);
 
     UpdateSolution();
-
-    //this->_ml_sol->UpdateBdc(this->_time);
   }
 
   template <class Base>
@@ -265,26 +285,33 @@ namespace femus {
     unsigned level = this->_solution.size() - 1u;
 
     for (unsigned i = 0; i < _solName.size(); i++) {
-      unsigned solIndex = this->_ml_sol->GetIndex (_solName[i].str().c_str());
+      
+      unsigned solIndex = _solIndex[i];//this->_ml_sol->GetIndex (_solName[i].str().c_str());
+      if( _solRKType[i] ) {
+        
+        * (this->_solution[level]->_Sol[solIndex]) = * (this->_solution[level]->_SolOld[solIndex]);
 
-      * (this->_solution[level]->_Sol[i]) = * (this->_solution[level]->_SolOld[i]);
+        for (unsigned j = 0; j < _RK; j++) {
 
-      for (unsigned j = 0; j < _RK; j++) {
+          unsigned solkiIndex = _solKiIndex[i][j]; // this->_ml_sol->GetIndex (_solKiName[i][j].str().c_str());
 
-        unsigned solkiIndex = this->_ml_sol->GetIndex (_solKiName[i][j].str().c_str());
-
-        this->_solution[level]->_Sol[solIndex]-> add (_b[_RK - 1][j] * this->_dt, * (this->_solution[level]->_Sol[solkiIndex]));
+          this->_solution[level]->_Sol[solIndex]-> add (_b[_RK - 1][j] * this->_dt, * (this->_solution[level]->_Sol[solkiIndex]));
+        }
+        this->_solution[level]->_Sol[solIndex]->close();
       }
-      this->_solution[level]->_Sol[solIndex]->close();
+      else{
+        unsigned solkiIndex = _solKiIndex[i][_RK-1]; //this->_ml_sol->GetIndex (_solKiName[i][_RK - 1].str().c_str());
+        * (this->_solution[level]->_Sol[solIndex]) = * (this->_solution[level]->_Sol[solkiIndex]);
+      }
     }
   }
 
   template <class Base>
-  const std::vector < std::ostringstream > & ImplicitRungeKuttaSystem<Base>::GetSolkiNames (const char name[]) {
+  const std::vector < std::string > & ImplicitRungeKuttaSystem<Base>::GetSolkiNames (const char name[]) {
 
     unsigned index = 0;
 
-    while (strcmp (_solName[index].str().c_str(), name)) {
+    while (strcmp (_solName[index].c_str(), name)) {
       index++;
 
       if (index == _solName.size()) {
@@ -297,10 +324,9 @@ namespace femus {
   }
 
   template <class Base>
-  void ImplicitRungeKuttaSystem<Base>::GetIntermediateSolutions (const std::vector < double > &soluOld,
+  void ImplicitRungeKuttaSystem<Base>::GetIntermediateSolutions (
+      const std::vector < double > &soluOld,
       const std::vector < std::vector < adept::adouble > > & solk,
-      const std::vector < std::vector < double > > & x,
-      const char name[],
       std::vector < std::vector < adept::adouble > > & solu) {
 
     //local storage of global mapping and solution

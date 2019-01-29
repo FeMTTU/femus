@@ -179,6 +179,10 @@ OPTION(BUILD_UQ "Build the UQ apps" ON)
 
 OPTION(BUILD_SW "Build the Shallow Water apps" ON)
 
+OPTION(BUILD_TUMOR "Build the Tumor apps" ON)
+
+OPTION(BUILD_RK "Build the Runge-Kutta apps" ON)
+
 #############################################################################################
 ### Build documentation (Doxygen)
 #############################################################################################
