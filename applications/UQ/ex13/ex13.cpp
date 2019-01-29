@@ -81,18 +81,6 @@ unsigned SumIndexes (std::vector <unsigned> &IL) {
 void PrintVTKHistogram (const std::vector <double> &C, const std::vector <double> &Cr, const std::vector <unsigned > &IL, const std::vector < unsigned > &n);
 
 int main (int argc, char** argv) {
-    
-    
-/*  // a = 5(00000101), b = 9(00001001) 
-    unsigned char a = 50, b = 90;  
-  
-    // The result is 00001010  
-    printf("a<<1 = %d\n", a>>2); 
-    
-    // The result is 00010010  
-    printf("b<<1 = %d\n", b>>2);   
-    return 0; */  
-    
 
   //BEGIN construction of the sample set
   std::vector < std::vector < double > >  samples;
@@ -127,7 +115,7 @@ int main (int argc, char** argv) {
   clock_t time0 = clock();
 
   std::vector <double> cI (static_cast< unsigned > (pow (n1D[Lm1], N)), 0.);
-   std::vector < unsigned > I (N);
+  std::vector < unsigned > I (N);
 
   double h = (xmax - xmin) / n1D[Lm1];
   for (unsigned m = 0u; m < M; m++) {
@@ -181,7 +169,7 @@ int main (int argc, char** argv) {
   JT.resize (cnt);
   CH.resize (cnt);
   CHu.resize (cnt);
-  std::cout << std::endl << "Total number of Hiearchical spaces: " << JT.size() << std::endl;
+  std::cout << std::endl << "Total number of Hierarchical spaces: " << JT.size() << std::endl;
 
   double H = (xmax - xmin);
   std::vector < std::vector <unsigned> > iiL (N);
@@ -190,11 +178,11 @@ int main (int argc, char** argv) {
   }
 
   unsigned nL = n1D[Lm1];
-  double nLdH = n1D[Lm1]/H;
-    
+  double nLdH = n1D[Lm1] / H;
+
   for (unsigned m = 0u; m < M; m++) {
     for (unsigned k = 0u; k < N; k++) {
-      iiL[k][Lm1] = static_cast < unsigned > (floor ((samples[m][k] - xmin) * nLdH));
+      iiL[k][Lm1] = static_cast < unsigned > (floor ( (samples[m][k] - xmin) * nLdH));
       if (iiL[k][Lm1] < 0.) iiL[k][Lm1] = 0u;
       else if (iiL[k][Lm1] >= nL) iiL[k][Lm1] = nL - 1u;
       for (unsigned j = Lm1; j > 1u; j--) {
@@ -216,44 +204,6 @@ int main (int argc, char** argv) {
       CH[l][i] = CHu[l][i] / vol;
     }
   }
-
-//  std::vector <std::vector <double> > CH (static_cast< unsigned > (pow (L, N)));
-//  std::vector <std::vector <unsigned> > CHu (static_cast< unsigned > (pow (L, N)));
-//  unsigned cnt = 0u;
-//
-//   double H = (xmax - xmin);
-//   IL.assign (N, 0u);
-//   std::vector <unsigned> nL(N);
-//   for (unsigned l = 0u; l < CHu.size(); l++) {
-//     unsigned sum = SumIndexes (IL);
-//     if (!sparse || sum < L) {
-//       cnt++;
-//       unsigned spaceSize = 1u;
-//       double vol = 1.;
-//       for (unsigned k = 0u; k < N; k++) {
-//         nL[k] = n1D[IL[k]];
-//         spaceSize *= nL[k];
-//         vol *= H / nL[k];
-//       }
-//       vol *= M;
-//       CH[l].assign (spaceSize, 0.);
-//       CHu[l].assign (spaceSize, 0u);
-//       for (unsigned m = 0u; m < M; m++) {
-//         for (unsigned k = 0u; k < N; k++) {
-//           double x = (samples[m][k] - xmin) * nL[k] / H;
-//           if (x < 0.) I[k] = 0u;
-//           else if (x >= nL[k] ) I[k] = nL[k] - 1u;
-//           else I[k] = static_cast < unsigned > (floor (x));
-//         }
-//         CHu[l][GetBaseIndex (IL, I, n1D)]++;
-//       }
-//       for(unsigned i = 0u; i < CH[l].size(); i++){
-//         CH[l][i] = CHu[l][i] / vol;
-//       }
-//     }
-//     IncreaseLevelIndex (Lm1, N, &IL[N - 1u]);
-//   }
-
 
   std::cout << std::endl << "HIERARCHICAL BASE STAGE 1 TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
   clock_t time1 = clock();
@@ -289,7 +239,7 @@ int main (int argc, char** argv) {
 //Reconstruct Histogram from Hierarchical Bases
 
   time0 = clock();
-  std::vector <double> cIr (static_cast< unsigned > (pow (n1D[Lm1], N)),0);
+  std::vector <double> cIr (static_cast< unsigned > (pow (n1D[Lm1], N)), 0);
   IL.assign (N, Lm1);
   for (unsigned i = 0u; i < cIr.size(); i++) {
     GetBaseIndexes (IL, i, I);
@@ -371,7 +321,7 @@ void GetBaseIndexes (const std::vector <unsigned> &IL, const unsigned &i, std::v
 }
 
 unsigned GetCoarseBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &JL, std::vector <unsigned> &I) {
-  
+
   unsigned i = (I[0] >> (IL[0] - JL[0]));
   for (unsigned k = 1u; k < I.size(); k++) {
     i = (i << JL[k]) + (I[k] >> (IL[k] - JL[k]));
