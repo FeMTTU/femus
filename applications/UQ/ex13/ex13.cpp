@@ -24,13 +24,13 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-//bool sparse = true;
-bool sparse = false;
+bool sparse = true;
+//bool sparse = false;
 
 unsigned alpha = 7;
 unsigned M = pow (10, alpha);   //number of samples
-unsigned N = 4; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = 4; //max refinement level
+unsigned N = 3; //dimension of the parameter space (each of the M samples has N entries)
+unsigned L = 9; //max refinement level
 bool output = false; //for debugging
 bool matlabView = true;
 
@@ -58,21 +58,17 @@ double b = 2.;
 //END
 
 void PrintBaseCoefficients (const std::vector < double > & c, const std::vector <unsigned> &I, const std::vector < unsigned > &n);
-unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &I, const std::vector < unsigned > &n);
-unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector < std::vector <unsigned> > &iiL, const std::vector < unsigned > &n);
+unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &I);
+unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector < std::vector <unsigned> > &iiL);
 
 
-void GetBaseIndexes (const std::vector <unsigned> &IL, const std::vector < unsigned > &n, const unsigned &i, std::vector <unsigned> &I);
+void GetBaseIndexes (const std::vector <unsigned> &IL, const unsigned &i, std::vector <unsigned> &I);
 
-void GetCoarseBaseIndexes (const std::vector <unsigned> &IL, const std::vector <unsigned> &JL, const std::vector < unsigned > &n,
-                           std::vector <unsigned> &I, std::vector <unsigned> &J);
 
-unsigned GetCoarseBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &JL, const std::vector < unsigned > &n,
-                           std::vector <unsigned> &I);
+unsigned GetCoarseBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &JL, std::vector <unsigned> &I);
 
-void GetLevelIndexes (const unsigned &l, const unsigned &L, std::vector <unsigned> &IL);
+
 void IncreaseLevelIndex (const unsigned &Lm1, const unsigned &N, std::vector <unsigned> &IL);
-void IncreaseLevelIndex (const unsigned &Lm1, const unsigned &N, unsigned *ptr);
 
 unsigned SumIndexes (std::vector <unsigned> &IL) {
   unsigned sum = 0u;
@@ -141,7 +137,7 @@ int main (int argc, char** argv) {
       else if (x >= n1D[Lm1]) I[k] = n1D[Lm1] - 1u;
       else I[k] = static_cast < unsigned > (floor (x));
     }
-    cI[GetBaseIndex (IL, I, n1D)]++;
+    cI[GetBaseIndex (IL, I)]++;
   }
 
   double vol = pow (h, N);
@@ -174,7 +170,7 @@ int main (int argc, char** argv) {
       JT[cnt] = IL;
       unsigned spaceSize = 1u;
       for (unsigned k = 0u; k < N; k++) {
-        spaceSize *= n1D[IL[k]];
+        spaceSize <<= IL[k];
       }
       CH[cnt].assign (spaceSize, 0.);
       CHu[cnt].assign (spaceSize, 0u);
@@ -193,19 +189,20 @@ int main (int argc, char** argv) {
     iiL[k].assign (L, 0u);
   }
 
+  unsigned nL = n1D[Lm1];
+  double nLdH = n1D[Lm1]/H;
+    
   for (unsigned m = 0u; m < M; m++) {
-    unsigned nL = n1D[Lm1];
     for (unsigned k = 0u; k < N; k++) {
-      double x = (samples[m][k] - xmin) * nL / H;
-      if (x < 0.) iiL[k][Lm1] = 0u;
-      else if (x >= nL) iiL[k][Lm1] = nL - 1u;
-      else iiL[k][Lm1] = static_cast < unsigned > (floor (x));
+      iiL[k][Lm1] = static_cast < unsigned > (floor ((samples[m][k] - xmin) * nLdH));
+      if (iiL[k][Lm1] < 0.) iiL[k][Lm1] = 0u;
+      else if (iiL[k][Lm1] >= nL) iiL[k][Lm1] = nL - 1u;
       for (unsigned j = Lm1; j > 1u; j--) {
-        iiL[k][j - 1] = iiL[k][j] / 2u;
+        iiL[k][j - 1] = (iiL[k][j] >> 1);
       }
     }
     for (unsigned l = 0u; l < JT.size(); l++) {
-      CHu[l][GetBaseIndex (JT[l], iiL, n1D)]++;
+      CHu[l][GetBaseIndex (JT[l], iiL)]++;
     }
   }
 
@@ -272,8 +269,8 @@ int main (int argc, char** argv) {
       }
       if (subSpace) {
         for (unsigned  i = 0u; i < CH[l].size(); i++) {
-          GetBaseIndexes (JT[l], n1D, i, I);
-          CH[l][i] -= CH[m][ GetCoarseBaseIndex (JT[l], JT[m], n1D, I) ];
+          GetBaseIndexes (JT[l], i, I);
+          CH[l][i] -= CH[m][ GetCoarseBaseIndex (JT[l], JT[m], I) ];
         }
       }
     }
@@ -295,12 +292,11 @@ int main (int argc, char** argv) {
   std::vector <double> cIr (static_cast< unsigned > (pow (n1D[Lm1], N)),0);
   IL.assign (N, Lm1);
   for (unsigned i = 0u; i < cIr.size(); i++) {
-    GetBaseIndexes (IL, n1D, i, I);
+    GetBaseIndexes (IL, i, I);
     for (unsigned l = 0u; l < JT.size(); l++) {
-      cIr[i] += CH[l][GetCoarseBaseIndex (IL, JT[l], n1D, I)];
+      cIr[i] += CH[l][GetCoarseBaseIndex (IL, JT[l], I)];
     }
   }
-// 
   std::cout << std::endl << "RECONSTRUCTION TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
 
 //   std::cout << "Histogram reconstructed from Hierarchical Bases" << std::endl;
@@ -347,60 +343,40 @@ void PrintBaseCoefficients (const std::vector < double > & c, const std::vector 
   }
 }
 
-unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &I, const std::vector < unsigned > &n) {
+unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &I) {
   unsigned i = I[0u];
   for (unsigned k = 1u; k < I.size(); k++) {
-    i = i * n[IL[k]] + I[k];
+    i = (i << IL[k]) + I[k];
   }
   return i;
 }
 
-unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector < std::vector <unsigned> > &iiL, const std::vector < unsigned > &n) {
+unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector < std::vector <unsigned> > &iiL) {
   unsigned i = iiL[0u][IL[0u]];
   for (unsigned k = 1u; k < IL.size(); k++) {
-    i = i * n[IL[k]] + iiL[k][IL[k]];
+    i = (i << IL[k]) + iiL[k][IL[k]];
   }
   return i;
 }
 
 
-void GetBaseIndexes (const std::vector <unsigned> &IL, const std::vector < unsigned > &n, const unsigned &i, std::vector <unsigned> &I) {
+void GetBaseIndexes (const std::vector <unsigned> &IL, const unsigned &i, std::vector <unsigned> &I) {
   unsigned N = IL.size();
-  unsigned ii = i;
+  unsigned ii = i, jj;
   for (unsigned k = 0u; k < N; k++) {
-    I[N - 1u - k] = ii % n[IL[N - 1u - k]];
-    ii /= n[IL[N - 1u - k]];
+    jj = ii >> IL[N - 1u - k]  ;
+    I[N - 1u - k] = ii - (jj << IL[N - 1u - k]);
+    ii = jj;
   }
 }
 
-void GetCoarseBaseIndexes (const std::vector <unsigned> &IL, const std::vector <unsigned> &JL, const std::vector < unsigned > &n,
-                           std::vector <unsigned> &I, std::vector <unsigned> &J) {
-  unsigned N = IL.size();
-  for (unsigned k = 0u; k < N; k++) {
-    J[N - 1u - k] = static_cast < unsigned > (floor (I[N - 1u - k] / n[IL[N - 1u - k] - JL[N - 1u - k] ]));
-  }
-}
-
-unsigned GetCoarseBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &JL, const std::vector < unsigned > &n,
-                           std::vector <unsigned> &I) {
+unsigned GetCoarseBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &JL, std::vector <unsigned> &I) {
   
   unsigned i = (I[0] >> (IL[0] - JL[0]));
   for (unsigned k = 1u; k < I.size(); k++) {
-    i = i * n[JL[k]] + (I[k] >> (IL[k] - JL[k]));
+    i = (i << JL[k]) + (I[k] >> (IL[k] - JL[k]));
   }
-  
   return i;
-}
-
-
-void GetLevelIndexes (const unsigned &l, const unsigned &L, std::vector <unsigned> &IL) {
-
-  unsigned ll = l;
-  unsigned N = IL.size();
-  for (unsigned k = 0u; k < N; k++) {
-    IL[N - 1u - k] = ll % L;
-    ll /= L;
-  }
 }
 
 void PrintVTKHistogram (const std::vector <double> &C, const std::vector <double> &Cr, const std::vector <unsigned > &IL, const std::vector < unsigned > &n) {
@@ -453,18 +429,6 @@ void PrintVTKHistogram (const std::vector <double> &C, const std::vector <double
   fout.close();
 }
 
-// void IncreaseLevelIndex (const unsigned &L, const unsigned &N, std::vector <unsigned> &IL) {
-//   for (int k = N - 1; k >= 0; k--) {
-//     IL[k] += 1u;
-//     if (IL[k] == L) {
-//       IL[k] = 0;
-//     }
-//     else {
-//       return;
-//     }
-//   }
-// }
-
 void IncreaseLevelIndex (const unsigned &Lm1, const unsigned &N, std::vector <unsigned> &IL) {
   unsigned* ptr = &IL[N - 1u];
   for (int k = 0; k < N; k++, ptr--) {
@@ -478,14 +442,4 @@ void IncreaseLevelIndex (const unsigned &Lm1, const unsigned &N, std::vector <un
   }
 }
 
-void IncreaseLevelIndex (const unsigned &Lm1, const unsigned &N, unsigned *ptr) {
-  for (int k = 0; k < N; k++, ptr--) {
-    if ( (*ptr) == Lm1) {
-      (*ptr) = 0u;
-    }
-    else {
-      (*ptr) += 1u;
-      return;
-    }
-  }
-}
+
