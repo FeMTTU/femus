@@ -48,12 +48,15 @@ double InitalValueU2D(const std::vector < double >& x) {
 double InitalValueU3D(const std::vector < double >& x) {
   double r=sqrt( x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);  
   double r2 = r * r;
-  double R = 1.;
+  double R = 1.0001;
   double R2 = R * R;
+  double R3 = R2 * R;
   //double Vb = 1.268112; // exp( (( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
-  double Vb = 0.265048;  // exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
-  double V0 = 1./12.; // fraction of injection vs tumor
-  return V0 * exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb; // IC vanishing near the boundary.
+  double Vb = 4./3. * M_PI * R3; //0.265048;  // exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
+  double V0 = 1./1.2; // fraction of injection vs tumor
+  //std::cout << V0/Vb * exp( (10.*( 1. - R2 / ( R2 - r2 )) ))<<" "; // IC vanishing near the boundary.
+  
+  return V0/Vb * exp( (12.*( 1. - R2 / ( R2 - r2 )) ));
 }
 
 double InitalValueD(const std::vector < double >& x) {

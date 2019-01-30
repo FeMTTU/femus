@@ -64,6 +64,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   else if (!strcmp (SolName, "DX")) { // strcmp compares two string in lexiographic sense. why !strcmp??? not false ==true?
     value = (1. - cos (M_PI * time)) / M_PI * (L - (x[0] - xl)) / L;
   }
+  
   return dirichlet;
 }
 
