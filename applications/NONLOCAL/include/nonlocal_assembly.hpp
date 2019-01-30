@@ -1,7 +1,7 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
 
-//THIS IS THE ASSEMBLY TO RUN MONTE CARLO SIMULATIONS OF POISSON's EQUATION
+//THIS IS THE ASSEMBLY FOR THE NONLOCAL INTERACTION PROBLEM
 
 using namespace femus;
 
@@ -9,15 +9,19 @@ using namespace femus;
 //   double pi = acos(-1.);
 //   return cos(pi * x[0]) * cos(pi * x[1]);
 // };
-//
+// 
 // void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
 //   double pi = acos(-1.);
 //   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
 //   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
 // };
+// 
+// double GetExactSolutionLaplace ( const std::vector < double >& x )
+// {
+//     double pi = acos ( -1. );
+//     return -pi * pi * cos ( pi * x[0] ) * cos ( pi * x[1] ) - pi * pi * cos ( pi * x[0] ) * cos ( pi * x[1] );
+// };
 
-// quadratureType = 0; HERMITE
-// quadratureType = 1; LEGENDRE
 unsigned quadratureType = 0;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
@@ -39,23 +43,9 @@ boost::mt19937 rng1; // I don't seed it on purpouse (it's not relevant)
 boost::random::uniform_real_distribution<> un ( - 1., 1. );
 boost::variate_generator < boost::mt19937&, boost::random::uniform_real_distribution<> > var_unif ( rng1, un );
 
-double GetExactSolutionLaplace ( const std::vector < double >& x )
+
+void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
 {
-    double pi = acos ( -1. );
-    return -pi * pi * cos ( pi * x[0] ) * cos ( pi * x[1] ) - pi * pi * cos ( pi * x[0] ) * cos ( pi * x[1] );
-};
-
-
-void AssembleUQSys ( MultiLevelProblem& ml_prob )
-{
-    //  ml_prob is the global object from/to where get/set all the data
-    //  level is the level of the PDE system to be assembled
-    //  levelMax is the Maximum level of the MultiLevelProblem
-    //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
-
-    // call the adept stack object
-
-
     adept::Stack& s = FemusInit::_adeptStack;
 
     //  extract pointers to the several objects that we are going to use
@@ -150,10 +140,6 @@ void AssembleUQSys ( MultiLevelProblem& ml_prob )
     }
 
     std::cout << std::endl;
-
-
-
-
 
 
     // element loop: each process loops only on the elements that owns
