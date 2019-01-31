@@ -24,12 +24,13 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-bool sparse = false;
+bool sparse = true;
+//bool sparse = false;
 
-unsigned alpha = 4;
+unsigned alpha = 7;
 unsigned M = pow (10, alpha);   //number of samples
-unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = 4; //max refinement level
+unsigned N = 3; //dimension of the parameter space (each of the M samples has N entries)
+unsigned L = 9; //max refinement level
 bool output = false; //for debugging
 bool matlabView = true;
 
@@ -56,18 +57,41 @@ boost::variate_generator < boost::mt19937&,
 double b = 2.;
 //END
 
+void PrintBaseCoefficients (const std::vector < double > & c, const std::vector <unsigned> &I, const std::vector < unsigned > &n);
+unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &I);
+unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector < std::vector <unsigned> > &iiL);
+
+
+void GetBaseIndexes (const std::vector <unsigned> &IL, const unsigned &i, std::vector <unsigned> &I);
+
+
+unsigned GetCoarseBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &JL, std::vector <unsigned> &I);
+
+
+void IncreaseLevelIndex (const unsigned &Lm1, const unsigned &N, std::vector <unsigned> &IL);
+
+unsigned SumIndexes (std::vector <unsigned> &IL) {
+  unsigned sum = 0u;
+  for (unsigned k = 0u; k < IL.size(); k++) {
+    sum += IL[k];
+  }
+  return sum;
+}
+
+void PrintVTKHistogram (const std::vector <double> &C, const std::vector <double> &Cr, const std::vector <unsigned > &IL, const std::vector < unsigned > &n);
+
 int main (int argc, char** argv) {
 
   //BEGIN construction of the sample set
   std::vector < std::vector < double > >  samples;
   samples.resize (M);
 
-  for (unsigned m = 0; m < M; m++) {
+  for (unsigned m = 0u; m < M; m++) {
     samples[m].resize (N);
   }
 
-  for (unsigned m = 0; m < M; m++) {
-    for (unsigned n = 0; n < N; n++) {
+  for (unsigned m = 0u; m < M; m++) {
+    for (unsigned n = 0u; n < N; n++) {
       double var = var_nor();
       double varunif = var_unif();
       double U = var_unif1();
@@ -77,178 +101,295 @@ int main (int argc, char** argv) {
   }
   //END
 
-  
-  std::vector< double > n1(L);
-  n1[0] = 1u;
-  for(unsigned i = 1; i < L; i++){
-    n1[i] = n1[i-1] * 2u;    
+  const unsigned Lm1 = L - 1u;
+  std::vector< unsigned > n1D (L);
+  n1D[0u] = 1u;
+  for (unsigned i = 1u; i < n1D.size(); i++) {
+    n1D[i] = n1D[i - 1u] * 2u;
   }
+
+  std::vector <unsigned> IL (N, Lm1);
 
   //Build Histogram
-   
-  std::vector < std::vector <double> > cI(n1[L-1]);
-  for (unsigned i = 0; i < n1[L-1]; i++) cI[i].assign (n1[L-1], 0.);
 
-  double h = (xmax - xmin) / n1[L-1];
-  double h2 = h * h;
+  clock_t time0 = clock();
 
-  for (unsigned m = 0; m < M; m++) {
-      
-    std::vector < unsigned > i(N);
-    for(unsigned k = 0; k < N; k++){
+  std::vector <double> cI (static_cast< unsigned > (pow (n1D[Lm1], N)), 0.);
+  std::vector < unsigned > I (N);
+
+  double h = (xmax - xmin) / n1D[Lm1];
+  for (unsigned m = 0u; m < M; m++) {
+    for (unsigned k = 0u; k < N; k++) {
       double x = (samples[m][k] - xmin) / h;
-      if (x < 0.) i[k] = 0;
-      else if (x >= n1[L-1]) i[k] = n1[L-1] - 1;
-      else i[k] = static_cast < unsigned > (floor (x));
+      if (x < 0.) I[k] = 0u;
+      else if (x >= n1D[Lm1]) I[k] = n1D[Lm1] - 1u;
+      else I[k] = static_cast < unsigned > (floor (x));
     }
-    cI[i[0]][i[1]] += 1. / (M * h2);
+    cI[GetBaseIndex (IL, I)]++;
   }
 
+  double vol = pow (h, N);
+  vol *= M;
+  for (unsigned i = 0u; i < cI.size(); i++) {
+    cI[i] = cI[i] / vol;
+  }
 
-//   std::cout << "Histogram "<<std::endl;
-//   for (unsigned i = 0; i < n1[L-1]; i++) {
-//     for (unsigned j = 0; j < n1[L-1]; j++) {
-//       std::cout << cI[i][j] << " ";
-//     }
-//     std::cout << std::endl;
-//   }
+  std::cout << std::endl << "HISTOGRAM TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
 
+//   std::cout << "Histogram " << std::endl;
+//   PrintBaseCoefficients (cI, IL, n1D);
+
+  ///////////////////////////////////////////////////////////////////////////////
+
+  time0 = clock();
 
   //Build Hierarchical Bases
 
-  std::vector < std::vector < std::vector <std::vector <double> > > > cH (L);
-  for (unsigned iL = 0; iL < cH.size(); iL++) {
-    cH[iL].resize (L);
-    unsigned iDim = n1[iL];
-    for (unsigned jL = 0; iL * sparse + jL < cH[iL].size(); jL++) {
-      cH[iL][jL].resize (iDim);
-      unsigned jDim = n1[jL];
-      for (unsigned i = 0; i < cH[iL][jL].size(); i++) {
-        cH[iL][jL][i].assign (jDim, 0.);
+  std::vector <std::vector <double> > CH (static_cast< unsigned > (pow (L, N)));
+  std::vector <std::vector <unsigned> > CHu (static_cast< unsigned > (pow (L, N)));
+  unsigned cnt = 0u;
+
+  std::vector<std::vector<unsigned>> JT (static_cast< unsigned > (pow (L, N)));
+
+  IL.assign (N, 0u);
+  for (unsigned l = 0u; l < CHu.size(); l++) {
+    unsigned sum = SumIndexes (IL);
+    if (!sparse || sum < L) {
+      JT[cnt] = IL;
+      unsigned spaceSize = 1u;
+      for (unsigned k = 0u; k < N; k++) {
+        spaceSize <<= IL[k];
       }
+      CH[cnt].assign (spaceSize, 0.);
+      CHu[cnt].assign (spaceSize, 0u);
+      cnt++;
+    }
+    IncreaseLevelIndex (Lm1, N, IL);
+  }
+  JT.resize (cnt);
+  CH.resize (cnt);
+  CHu.resize (cnt);
+  std::cout << std::endl << "Total number of Hierarchical spaces: " << JT.size() << std::endl;
+
+  double H = (xmax - xmin);
+  std::vector < std::vector <unsigned> > iiL (N);
+  for (unsigned k = 0u; k < N; k++) {
+    iiL[k].assign (L, 0u);
+  }
+
+  unsigned nL = n1D[Lm1];
+  double nLdH = n1D[Lm1] / H;
+
+  for (unsigned m = 0u; m < M; m++) {
+    for (unsigned k = 0u; k < N; k++) {
+      iiL[k][Lm1] = static_cast < unsigned > (floor ( (samples[m][k] - xmin) * nLdH));
+      if (iiL[k][Lm1] >= nL) iiL[k][Lm1] = nL - 1u;
+      for (unsigned j = Lm1; j > 1u; j--) {
+        iiL[k][j - 1] = (iiL[k][j] >> 1);
+      }
+    }
+    for (unsigned l = 0u; l < JT.size(); l++) {
+      CHu[l][GetBaseIndex (JT[l], iiL)]++;
     }
   }
 
-
-
-  double Hx = (xmax - xmin);
-  double Hy = (xmax - xmin);
-
-  for (unsigned m = 0; m < M; m++) {
-    double X = (samples[m][0] - xmin) / Hx;
-    double Y = (samples[m][1] - xmin) / Hy;
-
-    if (X < 0.)  X = 0.;
-    if (Y >= 1.) X = 0.9999999999999999999999999999999999;
-
-    if (Y < 0.)  Y = 0.;
-    if (Y >= 1.) Y = 0.9999999999999999999999999999999999;
-
-    for (unsigned iL = 0; iL < cH.size(); iL++) {
-      double hx = Hx / n1[iL];
-      double x = X * n1[iL];
-      for (unsigned jL = 0; iL * sparse + jL < cH[iL].size(); jL++) {
-        double hy = Hy / n1[jL];
-        double y = Y * n1[jL];
-        unsigned i = static_cast < unsigned > (floor (x));
-        unsigned j = static_cast < unsigned > (floor (y));
-
-        cH[iL][jL][i][j] += 1. / (M * hx * hy);
-      }
+  for (unsigned l = 0u; l < JT.size(); l++) {
+    double vol = 1.;
+    for (unsigned k = 0u; k < N; k++) {
+      vol *= H / n1D[JT[l][k]];
+    }
+    vol *= M;
+    for (unsigned i = 0u; i < CH[l].size(); i++) {
+      CH[l][i] = CHu[l][i] / vol;
     }
   }
 
+  std::cout << std::endl << "HIERARCHICAL BASE STAGE 1 TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
+  clock_t time1 = clock();
 
-
-  for (unsigned iL = 0; iL < cH.size(); iL++) {
-    for (unsigned jL = 0; iL * sparse + jL < cH[iL].size(); jL++) {
-      //std::cout << iL << " " << jL << std::endl;
-      int iL1 = iL;
-      while (iL1 >= 0) {
-        int jL1 = (iL1 == iL) ? jL : jL + 1;
-        while (jL1 >= 1) {
-          jL1--;
-          //std::cout << "\t\t" << iL1 << " " << jL1 << std::endl;
-          for (unsigned  i = 0; i < cH[iL][jL].size(); i++) {
-            unsigned i1 = static_cast < unsigned > (floor (i / n1[iL-iL1]));
-            for (unsigned  j = 0; j < cH[iL][jL][i].size(); j++) {
-              unsigned j1 = static_cast < unsigned > (floor (j / n1[jL - jL1]));
-              cH[iL][jL][i][j] -= cH[iL1][jL1][i1][j1];
-            }
-          }
+  for (unsigned l = 0u; l < JT.size(); l++) {
+    for (unsigned m = 0u; m < l; m++) {
+      bool subSpace = true;
+      for (unsigned k = 0u; k < N; k++) {
+        if (JT[m][k] > JT[l][k]) {
+          subSpace = false;
+          break;
         }
-        iL1--;
-        //std::cout<<std::endl;
+      }
+      if (subSpace) {
+        for (unsigned  i = 0u; i < CH[l].size(); i++) {
+          GetBaseIndexes (JT[l], i, I);
+          CH[l][i] -= CH[m][ GetCoarseBaseIndex (JT[l], JT[m], I) ];
+        }
       }
     }
   }
-
-
+  std::cout << std::endl << "HIERARCHICAL BASE STAGE 2 TIME:\t" << static_cast<double> ( (clock() - time1)) / CLOCKS_PER_SEC << std::endl;
+  std::cout << std::endl << "HIERARCHICAL BASE TOTAL TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
 
 //   std::cout << std::endl;
-//   std::cout << "Hierarchical bases "<<std::endl;
-//   for (unsigned iL = 0; iL < cH.size(); iL++) {
-//     for (unsigned jL = 0; jL < cH[iL].size(); jL++) {
-//       std::cout << "iL = " << iL << " jL = "<< jL <<std::endl;
-//       for (unsigned i = 0; i < cH[iL][iL].size(); i++) {
-//         for (unsigned j = 0; j < cH[iL][jL][i].size(); j++) {
-//           std::cout << cH[iL][jL][i][j] << " ";
-//         }
-//         std::cout << std::endl;
-//       }
-//       std::cout << std::endl;
-//     }
-//     std::cout << std::endl;
+//   std::cout << "Hierarchical bases " << std::endl;
+//   for (unsigned l = 0u; l < JT.size(); l++) {
+//   PrintBaseCoefficients (CH[l], JT[l], n1D);
 //   }
 
+//////////////////////////////////////////////////////////////////////
 
+//Reconstruct Histogram from Hierarchical Bases
 
-  //Reconstruct Histogram from Hierarchical Bases
-  std::vector < std::vector <double> > cIr (n1[L-1]);
-  for (unsigned i = 0; i < n1[L-1]; i++) cIr[i].assign (n1[L-1], 0.);
-
-  for (unsigned i = 0; i < cIr.size(); i++) {
-    for (unsigned j = 0; j < cIr[i].size(); j++) {
-      int iL = L - 1;
-      while (iL >= 0) {
-        unsigned i1 = static_cast < unsigned > (floor (i / n1[L - 1 - iL]));
-        int jL = L - 1;
-        while (jL >= 0) {
-          if (iL * sparse + jL < cH[iL].size()) {
-            unsigned j1 = static_cast < unsigned > (floor (j / n1[L - 1 - jL]));
-            cIr[i][j] += cH[iL][jL][i1][j1];
-          }
-          jL--;
-        }
-        iL--;
-      }
+  time0 = clock();
+  std::vector <double> cIr (static_cast< unsigned > (pow (n1D[Lm1], N)), 0);
+  IL.assign (N, Lm1);
+  for (unsigned i = 0u; i < cIr.size(); i++) {
+    GetBaseIndexes (IL, i, I);
+    for (unsigned l = 0u; l < JT.size(); l++) {
+      cIr[i] += CH[l][GetCoarseBaseIndex (IL, JT[l], I)];
     }
   }
+  std::cout << std::endl << "RECONSTRUCTION TIME:\t" << static_cast<double> ( (clock() - time0)) / CLOCKS_PER_SEC << std::endl;
 
-  std::cout<<"Histogram reconstructed from Hierarchical Bases"<<std::endl;
-  for (unsigned i = 0; i < n1[L-1]; i++) {
-    for (unsigned j = 0; j < n1[L-1]; j++) {
-      std::cout << cIr[i][j] << " ";
-    }
-    std::cout << std::endl;
-  }
-//   std::cout << std::endl;
-//   std::cout << std::endl;
+//   std::cout << "Histogram reconstructed from Hierarchical Bases" << std::endl;
+//   IL.assign (N, Lm1);
+//   PrintBaseCoefficients (cIr, IL, n1D);
+//
+//   std::cout << "Difference between Histogram and Histogram reconstructed from Hierarchical Bases" << std::endl;
+//   for (unsigned i = 0u; i < cIr.size(); i++) cIr[i] -= cI[i];
+//   PrintBaseCoefficients (cIr, IL, n1D);
+
+  double error = 0.;
+  for (unsigned i = 0u; i < cIr.size(); i++)
+    error += fabs (cIr[i] - cI[i]);
+
+  std::cout << "Difference between Histogram and Histogram reconstructed from Hierarchical Bases = " << error << std::endl;
+
+  PrintVTKHistogram (cI, cIr, IL, n1D);
 
 
-  std::cout<<"Difference between Histogram and Histogram reconstructed from Hierarchical Bases"<<std::endl;
-  for (unsigned i = 0; i < n1[L-1]; i++) {
-    for (unsigned j = 0; j < n1[L-1]; j++) {
-      std::cout << (cI[i][j] - cIr[i][j]) << " ";
-    }
-    std::cout << std::endl;
-  }
-//   std::cout << std::endl;
-//   std::cout << std::endl;
-
-  return 0;
+  return 0u;
 
 } //end main
 
+
+void PrintBaseCoefficients (const std::vector < double > & c, const std::vector <unsigned> &I, const std::vector < unsigned > &n) {
+
+  for (unsigned k = 0; k < N; k++) {
+    std::cout << "I[" << k << "] = " << I[k] << ", ";
+  }
+  std::cout << std::endl;
+
+  unsigned N = I.size();
+  unsigned Nm1 = N - 1u;
+  unsigned Nm2 = N - 2u;
+  unsigned nNm1 = n[ I[Nm1] ];
+  for (unsigned i = 0u; i < c.size(); i++) {
+    std::cout << c[i] << " ";
+    unsigned size = nNm1;
+    unsigned ip1 = i + 1u;
+    for (unsigned k = 0u; k < N; k++) {
+      if (ip1 % size == 0u) std::cout << std::endl;
+      if (k < Nm1) size *= n[ I[Nm2 - k]];
+    }
+  }
+}
+
+unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &I) {
+  unsigned i = I[0u];
+  for (unsigned k = 1u; k < I.size(); k++) {
+    i = (i << IL[k]) + I[k];
+  }
+  return i;
+}
+
+unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector < std::vector <unsigned> > &iiL) {
+  unsigned i = iiL[0u][IL[0u]];
+  unsigned N = IL.size();
+  for (unsigned k = 1u; k < N; k++) {
+    i = (i << IL[k]) + iiL[k][IL[k]];
+  }
+  return i;
+}
+
+
+void GetBaseIndexes (const std::vector <unsigned> &IL, const unsigned &i, std::vector <unsigned> &I) {
+  unsigned N = IL.size();
+  unsigned ii = i, jj;
+  for (unsigned k = 0u; k < N; k++) {
+    jj = ii >> IL[N - 1u - k]  ;
+    I[N - 1u - k] = ii - (jj << IL[N - 1u - k]);
+    ii = jj;
+  }
+}
+
+unsigned GetCoarseBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsigned> &JL, std::vector <unsigned> &I) {
+
+  unsigned i = (I[0] >> (IL[0] - JL[0]));
+  for (unsigned k = 1u; k < I.size(); k++) {
+    i = (i << JL[k]) + (I[k] >> (IL[k] - JL[k]));
+  }
+  return i;
+}
+
+void PrintVTKHistogram (const std::vector <double> &C, const std::vector <double> &Cr, const std::vector <unsigned > &IL, const std::vector < unsigned > &n) {
+  if (IL.size() > 3) {
+    std::cout << "VTK Output: dimension greater than 3 is not supported" << std::endl;
+    return;
+  }
+  std::ofstream fout;
+  fout.open ("./output/Histogram.vtk");
+
+  fout << "# vtk DataFile Version 2.0" << std::endl;
+  fout << "Volume example" << std::endl;
+  fout << "ASCII" << std::endl;
+  fout << "DATASET STRUCTURED_POINTS " << std::endl;
+  fout << "DIMENSIONS ";
+  unsigned totalNodes = 1;
+  for (unsigned k = 0u; k < IL.size(); k++) {
+    fout << n[IL[k]] << " ";
+    totalNodes *= n[IL[k]];
+  }
+  if (IL.size() == 2) fout << "1 ";
+  if (IL.size() == 1) fout << "1 1 ";
+  fout << std::endl;
+  fout << "ASPECT_RATIO 1 1 1" << std::endl;
+  fout << "ORIGIN 0 0 0" << std::endl;
+  fout << "POINT_DATA " << totalNodes << std::endl;
+  fout << "SCALARS Histogram float 1" << std::endl;
+  fout << "LOOKUP_TABLE default" << std::endl;
+  for (unsigned i = 0u; i < C.size(); i++) {
+    fout << C[i] << " ";
+  }
+
+  fout << std::endl;
+  fout << "SCALARS Reconstructed float 1" << std::endl;
+  fout << "LOOKUP_TABLE default" << std::endl;
+  for (unsigned i = 0u; i < C.size(); i++) {
+    fout << Cr[i] << " ";
+  }
+  fout << std::endl;
+
+  fout << std::endl;
+  fout << "SCALARS Difference float 1" << std::endl;
+  fout << "LOOKUP_TABLE default" << std::endl;
+  for (unsigned i = 0u; i < C.size(); i++) {
+    fout << C[i] - Cr[i] << " ";
+  }
+  fout << std::endl;
+
+  fout << std::endl;
+  fout.close();
+}
+
+void IncreaseLevelIndex (const unsigned &Lm1, const unsigned &N, std::vector <unsigned> &IL) {
+  unsigned* ptr = &IL[N - 1u];
+  for (int k = 0; k < N; k++, ptr--) {
+    if ( (*ptr) == Lm1) {
+      (*ptr) = 0u;
+    }
+    else {
+      (*ptr) += 1u;
+      return;
+    }
+  }
+}
 
 
