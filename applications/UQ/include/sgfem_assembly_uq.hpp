@@ -5,8 +5,8 @@ using namespace femus;
 
 //BEGIN Stochastic Input Parameters
 
-//uq &myuq = FemusInit::_uqHermite;
-uq &myuq = FemusInit::_uqLegendre;
+uq &myuq = FemusInit::_uqHermite;
+// uq &myuq = FemusInit::_uqLegendre;
 
 unsigned pIndex = 4;
 unsigned qIndex = 5;
