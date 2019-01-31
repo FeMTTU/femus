@@ -584,7 +584,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             term3 += P * phiY_Xtan[J][i] * term4;
 
           }
-          aResx[K][i] += (P * ( volumeConstraint * lambda0 * normal[K] + (solxg[K] - solxOldg[K])  / dt) * phiY[i]
+          aResx[K][i] += (P * (volumeConstraint * lambda0 * normal[K] + (solxg[K] - solxOldg[K])  / dt) * phiY[i]
                           + term0
                           + pow (A , P) * term1.value()
                           + term2.value() * phiY_Xtan[K][i]
@@ -592,7 +592,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         }
       }
       for (unsigned K = 0; K < DIM; K++) {
-        if ( volumeConstraint )  aResLambda0 += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
+        if (volumeConstraint)  aResLambda0 += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
 
         volume += (solxg[K].value()  * normal[K]) * Area;
       }
@@ -993,18 +993,18 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
   RES->close();
   KK->close();
 
-  //VecView((static_cast<PetscVector*>(RES))->vec(),  PETSC_VIEWER_STDOUT_SELF );
+  //VecView ( (static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_SELF);
 
-  //abort();
-  // MatView((static_cast<PetscMatrix*>(KK))->mat(), PETSC_VIEWER_STDOUT_SELF );
+  
+  MatView ( (static_cast<PetscMatrix*> (KK))->mat(), PETSC_VIEWER_STDOUT_SELF);
 
-  //     PetscViewer    viewer;
-  //     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-  //     PetscObjectSetName((PetscObject)viewer,"FSI matrix");
-  //     PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-  //     MatView((static_cast<PetscMatrix*>(KK))->mat(),viewer);
-  //     double a;
-  //     std::cin>>a;
+  PetscViewer    viewer;
+  PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+  PetscObjectSetName ( (PetscObject) viewer, "FSI matrix");
+  PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
+  MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
+  double a;
+  std::cin >> a;
 
 
   // ***************** END ASSEMBLY *******************
