@@ -617,7 +617,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
-		  msh->_finiteElement[kelGeom][solType_adj]->ShapeAtBoundary(x,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+		  msh->_finiteElement[kelGeom][solType_adj]->VolumeShapeAtBoundary(x,x_bdry,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
 		      for (int iv = 0; iv < nDof_adj; iv++)  {

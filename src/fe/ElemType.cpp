@@ -1707,7 +1707,7 @@ namespace femus {
 
 //---------------------------------------------------------------------------------------------------------
 
-  void elem_type_2D::ShapeAtBoundary(const vector < vector < double > >& vt_vol, const unsigned& ig, 
+  void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry, const unsigned& ig, 
                                    vector < double >& phi, vector < double >& gradphi) const {
                                        
     //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
@@ -1720,17 +1720,17 @@ namespace femus {
     // 2) in what direction it is oriented
     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
     
-    const double* ptx_bdry[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
+    const double* pt_one_dim[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
     
     for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      double x_bdry[1];
+      double x_one_dim[1];
       for (unsigned j = 0; j < 1; j++) {
-        x_bdry[j] = *ptx_bdry[j];
-        ptx_bdry[j]++;
+        x_one_dim[j] = *pt_one_dim[j];
+        pt_one_dim[j]++;
       }
       
       double x_vol[2];
-             x_vol[0] = -x_bdry[0]; 
+             x_vol[0] = -x_one_dim[0]; 
              x_vol[1] = +1.;
       
       for (int j = 0; j < _nc; j++) {

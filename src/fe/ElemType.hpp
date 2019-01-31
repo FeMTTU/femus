@@ -190,7 +190,7 @@ namespace femus
  
       static const int _fe_new_to_old[NFE_FAMS];
   
-      virtual void ShapeAtBoundary(const vector < vector < double > > &vt,const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const {
+      virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const {
            std::cout << "Implemented only for quad4 now" << std::endl; abort(); 
       };
 
@@ -441,7 +441,7 @@ namespace femus
         return _dphideta[ig];
       }
 
-  void ShapeAtBoundary(const vector < vector < double > >& vt_vol, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+  void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
   private:
       double** _phi;
