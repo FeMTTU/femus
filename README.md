@@ -23,7 +23,7 @@ From the directory $INSTALLATION_DIR clone petsc
     
 Configure, compile, test PETSC with the following options
     
-    ./configure --with-debugging=0 --withx=1 COPTFLAGS="-O3 -march=native -mtune=native" CXXOPTFLAGS="-O3 -march=native -mtune=native" FOPTFLAGS="-O3 -march=native -mtune=native" --download-openmpi=1 --download-fblaslapack=1 --download-hdf5=1 --download-metis=1 --download-parmetis=1 --with-shared-libraries=1 --download-blacs=1 --download-scalapack=1 --download-mumps=1 --download-suitesparse
+    ./configure --with-debugging=0 --with-x=1 COPTFLAGS="-O3 -march=native -mtune=native" CXXOPTFLAGS="-O3 -march=native -mtune=native" FOPTFLAGS="-O3 -march=native -mtune=native" --download-openmpi=1 --download-fblaslapack=1 --download-hdf5=1 --download-metis=1 --download-parmetis=1 --with-shared-libraries=1 --download-blacs=1 --download-scalapack=1 --download-mumps=1 --download-suitesparse
 
     make PETSC_DIR=$INSTALLATION_DIR/petsc PETSC_ARCH=arch-linux2-c-opt all
 
