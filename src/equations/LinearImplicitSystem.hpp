@@ -207,7 +207,7 @@ namespace femus {
       /** enforce sparcity pattern for setting uncoupled variables and save on memory allocation **/
       void SetSparsityPattern(vector < bool > other_sparcity_pattern);
 
-
+      void SetSparsityPatternMultiplyingFactor(const unsigned &multyplyingFactor);
 
       bool GetAssembleMatrix() {
         return _assembleMatrix;
@@ -299,6 +299,8 @@ namespace femus {
       short _AMRnorm;
       double _AMReighborThresholdValue;
       std::vector <double> _AMRthreshold;
+      
+      unsigned _sparsityPatternMultiplyingFactor;
 
       vector <bool> _SparsityPattern;
 

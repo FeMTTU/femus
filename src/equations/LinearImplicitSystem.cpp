@@ -44,11 +44,13 @@ namespace femus {
     _MGmatrixFineReuse(false),
     _MGmatrixCoarseReuse(false),
     _printSolverInfo(false),
-    _assembleMatrix(true) {
+    _assembleMatrix(true),
+    _sparsityPatternMultiplyingFactor(1u){
     _SparsityPattern.resize(0);
     _outer_ksp_solver = "gmres";
     _totalAssemblyTime = 0.;
     _totalSolverTime =0.;
+    
   }
 
   // ********************************************
@@ -91,6 +93,12 @@ namespace femus {
   }
 
   // ********************************************
+  
+  void LinearImplicitSystem::SetSparsityPatternMultiplyingFactor(const unsigned &multyplyingFactor){
+    _sparsityPatternMultiplyingFactor=(multyplyingFactor < 2u) ? 1u : multyplyingFactor;
+  }
+  
+  // ******************************************
 
   void LinearImplicitSystem::init() {
 
@@ -100,6 +108,9 @@ namespace femus {
 
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _SmootherType).release();
+      if(_sparsityPatternMultiplyingFactor != 1u){
+        _LinSolver[i]->SetSparsityPatternMultiplyingFactor(_sparsityPatternMultiplyingFactor);
+      }
     }
 
     for(unsigned i = 0; i < _gridn; i++) {

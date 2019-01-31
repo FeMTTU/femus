@@ -105,6 +105,8 @@ int main ( int argc, char** argv )
     // ******* Set Preconditioner *******
     system.SetMgSmoother ( GMRES_SMOOTHER );
 
+    system.SetSparsityPatternMultiplyingFactor(10u);
+    
     system.init();
 
     // ******* Set Smoother *******

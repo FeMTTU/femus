@@ -105,9 +105,11 @@ public:
   vector < vector < int> > KKghost_nd;
   vector <int> KKIndex;
   unsigned _gridn;
-
+  
   vector < int > d_nnz;
   vector < int > o_nnz;
+  
+  void SetSparsityPatternMultiplyingFactor(const unsigned &multyplyingFactor);
 
 protected:
 
@@ -120,6 +122,7 @@ protected:
   vector <char*> _SolName;
   const vector <NumericVector*> *_Bdc;
   vector <bool> _SparsityPattern;
+  unsigned _sparsityPatternMultiplyingFactor; 
 
 };
 
