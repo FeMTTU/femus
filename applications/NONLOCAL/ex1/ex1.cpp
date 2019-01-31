@@ -24,7 +24,7 @@ using namespace femus;
 
 bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time )
 {
-    bool dirichlet = true; //Neumann
+    bool dirichlet = true; 
     value = 0.;
     return dirichlet;
 }
