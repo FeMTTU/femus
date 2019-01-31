@@ -664,18 +664,16 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
   std::cout << "VOLUME = " << volumeAll << std::endl;
 
-  //VecView((static_cast<PetscVector*>(RES))->vec(),  PETSC_VIEWER_STDOUT_SELF );
+  //VecView ( (static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_SELF);
+  //MatView ( (static_cast<PetscMatrix*> (KK))->mat(), PETSC_VIEWER_STDOUT_SELF);
 
-  //abort();
-// MatView((static_cast<PetscMatrix*>(KK))->mat(), PETSC_VIEWER_STDOUT_SELF );
-
-//     PetscViewer    viewer;
-//     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-//     PetscObjectSetName((PetscObject)viewer,"FSI matrix");
-//     PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-//     MatView((static_cast<PetscMatrix*>(KK))->mat(),viewer);
-//     double a;
-//     std::cin>>a;
+//   PetscViewer    viewer;
+//   PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+//   PetscObjectSetName ( (PetscObject) viewer, "PWilmore matrix");
+//   PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
+//   MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
+//   double a;
+//   std::cin >> a;
 
 
   // ***************** END ASSEMBLY *******************
@@ -993,18 +991,7 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
   RES->close();
   KK->close();
 
-  //VecView ( (static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_SELF);
-
   
-  MatView ( (static_cast<PetscMatrix*> (KK))->mat(), PETSC_VIEWER_STDOUT_SELF);
-
-  PetscViewer    viewer;
-  PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
-  PetscObjectSetName ( (PetscObject) viewer, "FSI matrix");
-  PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
-  MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
-  double a;
-  std::cin >> a;
 
 
   // ***************** END ASSEMBLY *******************
