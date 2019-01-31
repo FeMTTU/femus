@@ -9,40 +9,31 @@ using namespace femus;
 //   double pi = acos(-1.);
 //   return cos(pi * x[0]) * cos(pi * x[1]);
 // };
-// 
+//
 // void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
 //   double pi = acos(-1.);
 //   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
 //   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
 // };
-// 
+//
 // double GetExactSolutionLaplace ( const std::vector < double >& x )
 // {
 //     double pi = acos ( -1. );
 //     return -pi * pi * cos ( pi * x[0] ) * cos ( pi * x[1] ) - pi * pi * cos ( pi * x[0] ) * cos ( pi * x[1] );
 // };
 
+//BEGIN to remove
 unsigned quadratureType = 0;
-
 int numberOfEigPairs = 2; //dimension of the stochastic variable
 std::vector < std::pair<double, double> > eigenvalues ( numberOfEigPairs );
-
-double amin = 1. / 100.;
-
 double stdDeviationInput = 0.8;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double meanInput = 0.;
+//END to remove
 
-//FOR STD GAUSSIAN SAMPLING
-boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
-boost::normal_distribution<> nd ( 0., 1. );
-boost::variate_generator < boost::mt19937&,
-      boost::normal_distribution<> > var_nor ( rng, nd );
-
-//FOR UNIFORM SAMPLING
-boost::mt19937 rng1; // I don't seed it on purpouse (it's not relevant)
-boost::random::uniform_real_distribution<> un ( - 1., 1. );
-boost::variate_generator < boost::mt19937&, boost::random::uniform_real_distribution<> > var_unif ( rng1, un );
-
+void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
+{
+    value = 1.;
+}
 
 void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
 {
@@ -74,24 +65,11 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
     soluIndex = mlSol->GetIndex ( "u" ); // get the position of "u" in the ml_sol object
     unsigned soluType = mlSol->GetSolutionType ( soluIndex ); // get the finite element type for "u"
 
-    char name[10];
-    std::vector <unsigned> eigfIndex ( numberOfEigPairs );
-
-    for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
-        sprintf ( name, "egnf%d", i );
-        eigfIndex[i] = mlSol->GetIndex ( name ); // get the position of "u" in the ml_sol object
-    }
-
-
     unsigned soluPdeIndex;
     soluPdeIndex = mlPdeSys->GetSolPdeIndex ( "u" ); // get the position of "u" in the pdeSys object
 
     vector < adept::adouble >  solu; // local solution
     solu.reserve ( maxSize );
-
-
-    vector < double > KLexpansion; // local solution
-    KLexpansion.reserve ( maxSize );
 
 
     vector < vector < double > > x ( dim ); // local coordinates
@@ -122,25 +100,35 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
 
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
-    std::vector <double> yOmega ( numberOfEigPairs, 0. );
+    //loop to change _bdc in the boundary elements and assign the BoundaryFunctionValue to their nodes
+    //BEGIN
+    for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
-    for ( unsigned eig = 0; eig < numberOfEigPairs; eig++ ) {
-        if ( iproc == 0 ) {
-            if ( quadratureType == 0 ) {
-                yOmega[eig] = var_nor();
-            }
+        short unsigned ielGroup = msh->GetElementGroup ( iel );
 
-            else if ( quadratureType == 1 ) {
-                yOmega[eig] = var_unif();
+        if ( ielGroup == 5 ) { //5 is the boundary surface in nonlocal_boundary_test.neu
+            
+            unsigned nDofu  = msh->GetElementDofNumber ( iel, soluType );
+            std::vector <double> dofCoordinates (dim);
+
+            for ( unsigned i = 0; i < nDofu; i++ ) {
+                unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
+                sol->_Bdc[0]->set ( solDof, 0. ); //TODO not sure about _Bdc[0] solution
+
+            for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                dofCoordinates[jdim] = ( *msh->_topology->_Sol[jdim] ) ( solDof ); 
             }
+            
+            double bdFunctionValue;
+            GetBoundaryFunctionValue ( bdFunctionValue, dofCoordinates );
+            sol->_Sol[soluIndex]->set(solDof, bdFunctionValue);
+            
+            }
+            
         }
 
-        MPI_Bcast ( &yOmega[eig], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-        std::cout << " ----------------------------- yOmega =" << yOmega[eig] << " ";
     }
-
-    std::cout << std::endl;
-
+    //END
 
     // element loop: each process loops only on the elements that owns
     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
@@ -152,7 +140,6 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
         // resize local arrays
         l2GMap.resize ( nDofu );
         solu.resize ( nDofu );
-        KLexpansion.resize ( nDofu );
 
         for ( int i = 0; i < dim; i++ ) {
             x[i].resize ( nDofx );
@@ -165,11 +152,6 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
         for ( unsigned i = 0; i < nDofu; i++ ) {
             unsigned solDof = msh->GetSolutionDof ( i, iel, soluType ); // global to global mapping between solution node and solution dof
             solu[i] = ( *sol->_Sol[soluIndex] ) ( solDof ); // global extraction and local storage for the solution
-            KLexpansion[i] = 0.;
-
-            for ( unsigned j = 0; j < numberOfEigPairs; j++ ) {
-                KLexpansion[i] += sqrt ( eigenvalues[j].first ) * ( *sol->_Sol[eigfIndex[j]] ) ( solDof ) * yOmega[j];
-            }
 
             l2GMap[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
         }
@@ -194,33 +176,17 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
 
             // evaluate the solution, the solution derivatives and the coordinates in the gauss point
 
-            double KLexpansion_gss = 0.;
             vector < adept::adouble > gradSolu_gss ( dim, 0. );
             vector < double > x_gss ( dim, 0. );
 
             for ( unsigned i = 0; i < nDofu; i++ ) {
-
-                KLexpansion_gss += phi[i] * KLexpansion[i];
-
                 for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
                     gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
                     x_gss[jdim] += x[jdim][i] * phi[i];
                 }
             }
 
-            //BEGIN log(a-amin) = KL expansion
-            double aCoeff = amin + exp ( KLexpansion_gss );
-//       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
-            //END log(a-amin) = KL expansion
-
-
-            //BEGIN a = 1 + y1^2 + y2^2 + y3^2 
-//             double aCoeff = 1.;
-//             for ( unsigned i = 0; i < numberOfEigPairs; i++ ) {
-//                 aCoeff += yOmega[i] * yOmega[i];
-//             }
-            //END
-
+            double aCoeff = 1.;
 
             // *** phi_i loop ***
             for ( unsigned i = 0; i < nDofu; i++ ) {
@@ -248,8 +214,6 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
         }
 
         RES->add_vector_blocked ( Res, l2GMap );
-
-
 
         // define the dependent variables
         s.dependent ( &aRes[0], nDofu );
