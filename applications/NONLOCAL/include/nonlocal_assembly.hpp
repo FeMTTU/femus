@@ -33,7 +33,10 @@ double meanInput = 0.;
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
     value = 1.;
+
 }
+
+void IsRectangleInBall ( unsigned &check, const std::vector<double> &ballCenter, const double &ballRadius, const std::vector < std::vector < double> > &elementCoordinates,  std::vector < std::vector < double> > &newCoordinates );
 
 void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
 {
@@ -107,27 +110,28 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
         short unsigned ielGroup = msh->GetElementGroup ( iel );
 
         if ( ielGroup == 5 ) { //5 is the boundary surface in nonlocal_boundary_test.neu
-            
+
             unsigned nDofu  = msh->GetElementDofNumber ( iel, soluType );
-            std::vector <double> dofCoordinates (dim);
+            std::vector <double> dofCoordinates ( dim );
 
             for ( unsigned i = 0; i < nDofu; i++ ) {
                 unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
-                sol->_Bdc[0]->set ( solDof, 0. ); //TODO not sure about _Bdc[0] solution
+                sol->_Bdc[0]->set ( solDof, 0. ); //TODO not sure about _Bdc[0] solution but it seems to work
 
-            for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
-                dofCoordinates[jdim] = ( *msh->_topology->_Sol[jdim] ) ( solDof ); 
+                for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                    dofCoordinates[jdim] = ( *msh->_topology->_Sol[jdim] ) ( solDof );
+                }
+
+                double bdFunctionValue;
+                GetBoundaryFunctionValue ( bdFunctionValue, dofCoordinates );
+                sol->_Sol[soluIndex]->set ( solDof, bdFunctionValue );
+
             }
-            
-            double bdFunctionValue;
-            GetBoundaryFunctionValue ( bdFunctionValue, dofCoordinates );
-            sol->_Sol[soluIndex]->set(solDof, bdFunctionValue);
-            
-            }
-            
+
         }
 
     }
+
     //END
 
     // element loop: each process loops only on the elements that owns
@@ -241,5 +245,92 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
 }
 
 
+void IsRectangleInBall ( unsigned &check, const std::vector<double> &ballCenter, const double &ballRadius, const std::vector < std::vector < double> > &elementCoordinates, std::vector < std::vector < double> > &newCoordinates )
+{
+
+    //check = 0 : element entirely contained in ball
+    //check = 1 : element and ball intersect
+    //check = 2 : element and ball are disjoint
+
+    unsigned dim = 2;
+
+    std::vector< std::vector < double > > rescaledCoordinates ( dim );
+    newCoordinates.resize ( dim );
+
+    for ( unsigned n = 0; n < dim; n++ ) {
+        rescaledCoordinates[n].resize ( 4 );
+        newCoordinates[n].resize ( 4 );
+
+        for ( unsigned i = 0; i < 4; i++ ) {
+            rescaledCoordinates[n][i] = elementCoordinates[n][i] - ballCenter[n]; //rescaling so that the center is the origin
+            newCoordinates[n][i] = 0.;
+        }
+    }
+
+    std::vector<unsigned> vertexCheck ( 4, 0. );
+
+    for ( unsigned i = 0; i < 4; i++ ) {
+        double lInfinityNorm = 0.;
+
+        for ( unsigned n = 0; n < dim; n++ ) {
+            if ( fabs ( rescaledCoordinates[n][i] ) >= lInfinityNorm ) lInfinityNorm = fabs ( rescaledCoordinates[n][i] );
+        }
+
+        if ( lInfinityNorm <= ballRadius ) vertexCheck[i] = 1;
+    }
+
+    unsigned insideCheck = 0;
+
+    for ( unsigned i = 0; i < 4; i++ ) {
+        insideCheck += vertexCheck[i];
+    }
+
+    if ( insideCheck == 4 ) check = 0; //the element is entirely contained in the ball
+
+    else { //either the element is outside or they intersect
+
+        //bottom left corner of ball (south west)
+        double xBallSW =  - ballRadius;
+        double yBallSW =  - ballRadius;
+
+        //top right corner of ball (north east)
+        double xBallNE = ballRadius;
+        double yBallNE = ballRadius;
+
+        //bottom left corner of rectangle (south west)
+        double xRecSW = rescaledCoordinates[0][0]; //ordering according to Elem.hpp, 0 is SW node
+        double yRecSW = rescaledCoordinates[1][0];
+
+        //top right corner of rectangle (north east)
+        double xRecNE = rescaledCoordinates[0][2]; //ordering according to Elem.hpp, 2 is NE node
+        double yRecNE = rescaledCoordinates[1][2];
+        
+        newCoordinates[0][0] = (xBallSW >= xRecSW) ? xBallSW : xRecSW;
+        newCoordinates[1][0] = (yBallSW >= yRecSW) ? yBallSW : yRecSW;
+        
+        newCoordinates[0][2] = (xBallNE >= xRecNE) ? xRecNE : xBallNE;
+        newCoordinates[1][2] = (yBallNE >= yRecNE) ? yRecNE : yBallNE;
+        
+        if(newCoordinates[0][0] >= newCoordinates[0][2] || newCoordinates[1][0] >= newCoordinates[1][2]){ //ball and rectangle are disjoint
+            
+            check = 2;
+        }
+        
+        else{ //there is an intersection
+            
+
+           check = 1;
+           
+           newCoordinates[0][1] = newCoordinates[0][2];
+           newCoordinates[1][1] = newCoordinates[1][0];
+           
+           newCoordinates[0][3] = newCoordinates[0][0];
+           newCoordinates[1][3] = newCoordinates[1][2];
+            
+        }
+
+    }
+
+}
 
 

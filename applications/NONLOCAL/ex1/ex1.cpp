@@ -33,8 +33,6 @@ double L = 0.1;
 
 void GetEigenPair ( MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues );
 
-void IsElementInBall ( unsigned &check, const std::vector<double> &ballCenter, const double &ballRadius, const std::vector <double> &elementCoordinates );
-
 unsigned numberOfUniformLevels = 2;
 
 int main ( int argc, char** argv )
@@ -643,21 +641,7 @@ void GetEigenPair ( MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std
 }
 
 
-void IsElementInBall ( unsigned &check, const std::vector<double> &ballCenter, const double &ballRadius, const std::vector <double> &elementCoordinates )
-{
 
-    unsigned dim = ballCenter.size();
-
-    std::vector<double> rescaledCoordinates ( dim, 0. );
-
-    for ( unsigned n = 0; n < dim; n++ ) {
-        rescaledCoordinates[n] = elementCoordinates[n] - ballCenter[n]; //rescaling so that the center is the origin
-    }
-
-
-
-
-}
 
 
 
