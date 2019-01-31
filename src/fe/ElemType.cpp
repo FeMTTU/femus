@@ -864,7 +864,6 @@ namespace femus {
 
     _d2phidxi2_memory  = new double [n_gauss * _nc];
     _d2phideta2_memory = new double [n_gauss * _nc];
-
     _d2phidxideta_memory  = new double [n_gauss * _nc];
 
     for(unsigned i = 0; i < n_gauss; i++) {
@@ -879,24 +878,6 @@ namespace femus {
 
     }
     
-    // boundary 
-    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
-    
-    _phi_bdry = new double*[n_gauss_bdry];
-    _dphidxi_bdry  = new double*[n_gauss_bdry];
-    _dphideta_bdry = new double*[n_gauss_bdry];
-    _phi_memory_bdry = new double [n_gauss_bdry * _nc];
-    _dphidxi_memory_bdry  = new double [n_gauss_bdry * _nc];
-    _dphideta_memory_bdry = new double [n_gauss_bdry * _nc];
-    
-     for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_bdry[i] = &_phi_memory_bdry[i * _nc];
-      _dphidxi_bdry[i]  = &_dphidxi_memory_bdry[i * _nc];
-      _dphideta_bdry[i] = &_dphideta_memory_bdry[i * _nc];
-     }
-
-
-
     const double* ptx[2] = {_gauss.GetGaussWeightsPointer() + n_gauss, _gauss.GetGaussWeightsPointer() + 2 * n_gauss};
 
     for(unsigned i = 0; i < n_gauss; i++) {
@@ -919,34 +900,24 @@ namespace femus {
     }
 
     
-    // boundary 
-    //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
-    //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
-    //we should access the bdry element and compute the abscissa using the coordinates of it
-    //here what we have to do is to locate the reference boundary element in the reference volume element
-    //Notice that the SIGN of the direction is also important
-    const double* ptx_bdry[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
+    // boundary
+    // here I will only leave the memory allocation; the evaluations go in the ShapeAtBoundary function
+    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
     
-    for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      double x_bdry[1];
-      for (unsigned j = 0; j < 1; j++) {
-        x_bdry[j] = *ptx_bdry[j];
-        ptx_bdry[j]++;
-      }
-      
-      double x_vol[2];
-             x_vol[0] = x_bdry[0]; 
-             x_vol[1] = +1.;
-      
-      for (int j = 0; j < _nc; j++) {
-        _phi_bdry[i][j]      = _pt_basis->eval_phi(_IND[j], x_vol);
-        _dphidxi_bdry[i][j]  = _pt_basis->eval_dphidx(_IND[j], x_vol);
-        _dphideta_bdry[i][j] = _pt_basis->eval_dphidy(_IND[j], x_vol);
-      }
-      
-    }
+    _phi_bdry = new double*[n_gauss_bdry];
+    _dphidxi_bdry  = new double*[n_gauss_bdry];
+    _dphideta_bdry = new double*[n_gauss_bdry];
+    _phi_memory_bdry = new double [n_gauss_bdry * _nc];
+    _dphidxi_memory_bdry  = new double [n_gauss_bdry * _nc];
+    _dphideta_memory_bdry = new double [n_gauss_bdry * _nc];
+    
+     for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      _phi_bdry[i] = &_phi_memory_bdry[i * _nc];
+      _dphidxi_bdry[i]  = &_dphidxi_memory_bdry[i * _nc];
+      _dphideta_bdry[i] = &_dphideta_memory_bdry[i * _nc];
+     }
+     
 
-    //std::cout << std::endl;
 
     if(_SolType < 3) {
       basis* linearLine = new LineLinear;
@@ -1738,6 +1709,37 @@ namespace femus {
 
   void elem_type_2D::ShapeAtBoundary(const vector < vector < double > >& vt_vol, const unsigned& ig, 
                                    vector < double >& phi, vector < double >& gradphi) const {
+                                       
+    //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
+    //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
+    //we should access the bdry element and compute the abscissa using the coordinates of it
+    //here what we have to do is to locate the reference boundary element in the reference volume element
+    //Notice that the SIGN of the direction is also important
+    //we need to understand:
+    // 1) where my boundary element is located in the reference volume element
+    // 2) in what direction it is oriented
+    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    const double* ptx_bdry[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
+    
+    for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      double x_bdry[1];
+      for (unsigned j = 0; j < 1; j++) {
+        x_bdry[j] = *ptx_bdry[j];
+        ptx_bdry[j]++;
+      }
+      
+      double x_vol[2];
+             x_vol[0] = -x_bdry[0]; 
+             x_vol[1] = +1.;
+      
+      for (int j = 0; j < _nc; j++) {
+        _phi_bdry[i][j]      = _pt_basis->eval_phi(_IND[j], x_vol);
+        _dphidxi_bdry[i][j]  = _pt_basis->eval_dphidx(_IND[j], x_vol);
+        _dphideta_bdry[i][j] = _pt_basis->eval_dphidy(_IND[j], x_vol);
+      }
+      
+    }
 
     phi.resize(_nc);
     gradphi.resize(_nc * 2);
