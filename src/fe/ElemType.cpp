@@ -356,11 +356,15 @@ namespace femus {
 //BEGIN  build matrix sparsity pattern size and build prolungator matrix for single solution
 //-----------------------------------------------------------------------------------------------------
 
-  void elem_type::GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const
+  void elem_type::GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o, const char el_dofs[]) const
   {
 
+      unsigned n_elemdofs = 0;
+      if ( !strcmp(el_dofs, "fine") ) n_elemdofs = _nf;
+      else if ( !strcmp(el_dofs, "coarse") ) n_elemdofs = _nc;
+      
     if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
-      for(int i = 0; i < _nf; i++) {
+      for(int i = 0; i < n_elemdofs /*_nf*/; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
         int irow = meshf.GetSolutionDof(ielc, i0, i1, _SolType, &meshc);
@@ -398,13 +402,18 @@ namespace femus {
   }
 
   void elem_type::BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc,
-                                    SparseMatrix* Projmat) const
+                                    SparseMatrix* Projmat, const char el_dofs[]) const
   {
-    if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+ 
+      unsigned n_elemdofs = 0;
+      if ( !strcmp(el_dofs, "fine") ) n_elemdofs = _nf;
+      else if ( !strcmp(el_dofs, "coarse") ) n_elemdofs = _nc;
+      
+      if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
 
       vector<int> jcols(_nc);
 
-      for(int i = 0; i < _nf; i++) {
+      for(int i = 0; i < n_elemdofs /*_nf*/; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
         int irow = meshf.GetSolutionDof(ielc, i0, i1, _SolType, &meshc);

@@ -852,6 +852,22 @@ namespace femus
 
 
 
+   SparseMatrix* Mesh::GetCoarseToFineProjectionRestrictionOnCoarse(const unsigned& solType)
+  {
+
+    if(solType >= 5) {
+      std::cout << "Wrong argument range in function \"GetCoarseToFineProjection\": "
+                << "solType is greater then SolTypeMax" << std::endl;
+      abort();
+    }
+
+    if(_ProjCoarseToFine[solType])
+      BuildCoarseToFineProjection(solType, "coarse");
+
+    return _ProjCoarseToFine[solType];
+  }
+
+  
   SparseMatrix* Mesh::GetCoarseToFineProjection(const unsigned& solType)
   {
 
@@ -862,14 +878,14 @@ namespace femus
     }
 
     if(!_ProjCoarseToFine[solType])
-      BuildCoarseToFineProjection(solType);
+      BuildCoarseToFineProjection(solType, "fine");
 
     return _ProjCoarseToFine[solType];
   }
 
 
 
-  void Mesh::BuildCoarseToFineProjection(const unsigned& solType)
+  void Mesh::BuildCoarseToFineProjection(const unsigned& solType, const char el_dofs[])
   {
 
     if(!_coarseMsh) {
@@ -877,7 +893,7 @@ namespace femus
       abort();
     }
 
-    if(!_ProjCoarseToFine[solType]) {
+//     if(!_ProjCoarseToFine[solType]) {
 
       int nf     = _dofOffset[solType][_nprocs];
       int nc     = _coarseMsh->_dofOffset[solType][_nprocs];
@@ -908,7 +924,7 @@ namespace femus
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = _coarseMsh->GetElementType(iel);
-          _finiteElement[ielt][solType]->GetSparsityPatternSize(*this, *_coarseMsh, iel, NNZ_d, NNZ_o);
+          _finiteElement[ielt][solType]->GetSparsityPatternSize(*this, *_coarseMsh, iel, NNZ_d, NNZ_o, el_dofs);
         }
       }
 
@@ -935,12 +951,12 @@ namespace femus
       for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for(int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = _coarseMsh->GetElementType(iel);
-          _finiteElement[ielt][solType]->BuildProlongation(*this, *_coarseMsh, iel, _ProjCoarseToFine[solType]);
+          _finiteElement[ielt][solType]->BuildProlongation(*this, *_coarseMsh, iel, _ProjCoarseToFine[solType], el_dofs);
         }
       }
 
       _ProjCoarseToFine[solType]->close();
-    }
+//     }
   }
 
 

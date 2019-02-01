@@ -15,6 +15,7 @@
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "adept.h"
+// #include "Files.hpp"
 
 // command to view matrices
 // ./tutorial_ex2_b -mat_view ::ascii_info_detail
@@ -36,14 +37,20 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
 
 void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_from_restriction);
+std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_from_restriction); 
+// ||u_i - u_h||/||u_i-u_(h/2)|| = 2^alpha, alpha is order of conv 
 
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-    // ======= Quad Rule ========================
+//   // ======= Files ========================
+//   Files files; 
+//         files.CheckIODirectories();
+//         files.RedirectCout();
+ 
+  // ======= Quad Rule ========================
   std::string fe_quad_rule("seventh");
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     In the future it is not going to be an argument of the mesh function   */
@@ -74,11 +81,13 @@ int main(int argc, char** args) {
     maxNumberOfMeshes = 4;
   }
 
+  const unsigned gap = 2;
+
   vector < vector < double > > l2Norm;
-  l2Norm.resize(maxNumberOfMeshes);
+  l2Norm.resize(maxNumberOfMeshes + 1 - gap);
 
   vector < vector < double > > semiNorm;
-  semiNorm.resize(maxNumberOfMeshes);
+  semiNorm.resize(maxNumberOfMeshes + 1 - gap);
 
   
   MultiLevelSolution * mlSol_finest;
@@ -88,7 +97,7 @@ int main(int argc, char** args) {
     
     for (int i = maxNumberOfMeshes - 1; i >= 0; i--) {   // loop on the mesh level
 
-    unsigned numberOfUniformLevels = i + 1;
+   unsigned numberOfUniformLevels = i + 1;
     unsigned numberOfSelectiveLevels = 0;
     mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
     // erase all the coarse mesh levels
@@ -103,10 +112,12 @@ int main(int argc, char** args) {
     
     // print mesh info
     mlMsh.PrintInfo();
-
+    
+    if (i < l2Norm.size()) {
     l2Norm[i].resize(feOrder.size());
     semiNorm[i].resize(feOrder.size());
-
+    }
+    
     for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
@@ -122,6 +133,8 @@ int main(int argc, char** args) {
       // define the multilevel problem attach the mlSol object to it
       MultiLevelProblem mlProb(&mlSol);
 
+//       mlProb.SetFilesHandler(&files);
+      
       // add system Poisson in mlProb as a Linear Implicit System
       LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Poisson");
 
@@ -133,16 +146,27 @@ int main(int argc, char** args) {
 
       // initilaize and solve the system
       system.init();
+//       system.ClearVariablesToBeSolved();
+//       system.AddVariableToBeSolved("All");
+// 
+//       mlSol.SetWriter(VTK);
+//       mlSol.GetWriter()->SetDebugOutput(true);
+//   
+//       system.SetDebugLinear(true);
+//       system.SetMaxNumberOfLinearIterations(6);
+//       system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
+
       system.MLsolve();
       
-      
-    if (i < maxNumberOfMeshes - 1) {
-        
+     
+    if (i < maxNumberOfMeshes - gap/*1*/) {
         //restrict the fine solution at the current level  ==================
 //     for(unsigned short j = 0; j < mlSol._mlMesh->GetNumberOfLevels(); j++) { //all levels
       const unsigned coarse = i;
-      const unsigned fine   = coarse + 1;
-      mlSol_finest->CoarsenSolutionByOneLevel_wrong(fine);
+      const unsigned fine   = coarse + gap;
+    for (unsigned nf = 0; nf < gap; nf++) {
+      mlSol_finest->CoarsenSolutionByOneLevel_wrong( fine - nf);
+    }
 //        }
 
         //pass the restriction of the fine solution to the function that computes the error  ==================
@@ -156,7 +180,6 @@ int main(int argc, char** args) {
         
     }
     else if (i == maxNumberOfMeshes - 1) {
-
         //store the fine solution  ==================
               mlSol_finest = new MultiLevelSolution (&mlMsh_finest);  //with the declaration outside and a "new" inside it persists outside the loop scopes
               mlSol_finest->AddSolution("u", LAGRANGE, feOrder[j]);
@@ -169,7 +192,7 @@ int main(int argc, char** args) {
 //     for(unsigned short k = 0; k < mlSol._mlMesh->GetNumberOfLevels(); k++) { //all levels (only one)
     //       _solution[k]->CopySolutionToOldSolution();  //started from here
               
-        const unsigned level_index_current = 0;
+       const unsigned level_index_current = 0;
       //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
      for(unsigned short j = 0; j <   mlSol.GetSolutionLevel(level_index_current)->_Sol.size(); j++) {    //all variables
                *(mlSol_finest->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
@@ -188,23 +211,23 @@ int main(int argc, char** args) {
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+      vtkIO.Write(/*files.GetOutputPath()*/ DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
       
       VTKWriter vtkIO_finest(mlSol_finest);
-      vtkIO_finest.Write(i+1, DEFAULT_OUTPUTDIR, "biquadratic_finest", variablesToBePrinted, i+1);
+      vtkIO_finest.Write(i+1, /*files.GetOutputPath()*/ DEFAULT_OUTPUTDIR, "biquadratic"/*_finest*/, variablesToBePrinted, i+3 + maxNumberOfMeshes);
 
     }
   }
   
   delete mlSol_finest; 
 
-  // print the seminorm of the error and the order of convergence between different levels
+//   print the seminorm of the error and the order of convergence between different levels
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
+  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\tSECOND\n";
 
-  for (int i = maxNumberOfMeshes - 1; i >= 0; i--) {   // loop on the mesh level
+  for (int i = l2Norm.size() - 1; i >= 0; i--) {   // loop on the mesh level
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
@@ -214,12 +237,12 @@ int main(int argc, char** args) {
 
     std::cout << std::endl;
 
-    if (i < maxNumberOfMeshes - 1) {
+    if (i < l2Norm.size() - 2) {
       std::cout.precision(3);
-      std::cout << "\t\t";
+      std::cout << "\t";
 
       for (unsigned j = 0; j < feOrder.size(); j++) {
-        std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "\t\t\t";
+        std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "  \t\t";
       }
 
       std::cout << std::endl;
@@ -230,9 +253,9 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
+  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\tSECOND\n";
 
-  for (int i = maxNumberOfMeshes - 1; i >= 0; i--) {   // loop on the mesh level
+  for (int i = l2Norm.size() - 1; i >= 0; i--) {   // loop on the mesh level
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
@@ -242,12 +265,12 @@ int main(int argc, char** args) {
 
     std::cout << std::endl;
 
-    if (i < maxNumberOfMeshes - 1) {
+    if (i < l2Norm.size() - 2) {
       std::cout.precision(3);
-      std::cout << "\t\t";
+      std::cout << "\t";
 
       for (unsigned j = 0; j < feOrder.size(); j++) {
-        std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "\t\t\t";
+        std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "  \t\t";
       }
 
       std::cout << std::endl;
@@ -320,6 +343,9 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   vector < double >  solu; // local solution
   solu.reserve(maxSize);
 
+  vector < double >  solu_exact_at_dofs; // local solution
+  solu_exact_at_dofs.reserve(maxSize);
+
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
@@ -356,6 +382,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     // resize local arrays
     l2GMap.resize(nDofu);
     solu.resize(nDofu);
+    solu_exact_at_dofs.resize(nDofu);
 
     for (int i = 0; i < dim; i++) {
       x[i].resize(nDofx);
@@ -367,13 +394,6 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     Jac.resize(nDofu * nDofu);    //resize
     std::fill(Jac.begin(), Jac.end(), 0);    //set Jac to zero
 
-    // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofu; i++) {
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-      solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-      l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
-    }
-
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
@@ -381,7 +401,19 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
       for (unsigned jdim = 0; jdim < dim; jdim++) {
         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
+    } 
+    
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofu; i++) {
+        std::vector<double> x_at_node(dim,0.);
+        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
+      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
+      solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
+      solu_exact_at_dofs[i] = GetExactSolutionValue(x_at_node);
+      l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
+
+
 
 
 
@@ -393,13 +425,15 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       double solu_gss = 0;
       vector < double > gradSolu_gss(dim, 0.);
+      vector < double > gradSolu_exact_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+                gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+          gradSolu_exact_gss[jdim] += phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
           x_gss[jdim] += x[jdim][i] * phi[i];
         }
       }
@@ -408,13 +442,16 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofu; i++) {
 
         double laplace = 0.;
+        double laplace_weak_exact = 0.;
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+          laplace_weak_exact +=  phi_x[i * dim + jdim] * gradSolu_exact_gss[jdim];
         }
 
-        double srcTerm = - GetExactSolutionLaplace(x_gss);
-        Res[i] += (srcTerm * phi[i] - laplace) * weight;
+//         double srcTerm = - GetExactSolutionLaplace(x_gss);
+//         Res[i] += (srcTerm * phi[i] - laplace) * weight;
+        Res[i] += (laplace_weak_exact - laplace) * weight;
 
         // *** phi_j loop ***
         for (unsigned j = 0; j < nDofu; j++) {
@@ -502,6 +539,9 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   vector < adept::adouble >  solu; // local solution
   solu.reserve(maxSize);
+  
+  vector < adept::adouble >  solu_exact_at_dofs; // local solution
+  solu_exact_at_dofs.reserve(maxSize);
 
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -533,7 +573,6 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-     
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
@@ -541,6 +580,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     // resize local arrays
     l2GMap.resize(nDofu);
     solu.resize(nDofu);
+    solu_exact_at_dofs.resize(nDofu);
 
     for (int i = 0; i < dim; i++) {
       x[i].resize(nDofx);
@@ -549,13 +589,6 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     aRes.resize(nDofu);    //resize
     std::fill(aRes.begin(), aRes.end(), 0);    //set aRes to zero
 
-    // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofu; i++) {
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-      solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-      l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
-    }
-
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
@@ -563,7 +596,19 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
       for (unsigned jdim = 0; jdim < dim; jdim++) {
         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
+    } 
+    
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofu; i++) {
+        std::vector<double> x_at_node(dim,0.);
+        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
+      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
+                    solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
+      solu_exact_at_dofs[i] = GetExactSolutionValue(x_at_node);
+      l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
+
+
 
 
     // start a new recording of all the operations involving adept::adouble variables
@@ -577,13 +622,15 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       adept::adouble solu_gss = 0;
       vector < adept::adouble > gradSolu_gss(dim, 0.);
+      vector < adept::adouble > gradSolu_exact_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+                gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+          gradSolu_exact_gss[jdim] += phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
           x_gss[jdim] += x[jdim][i] * phi[i];
         }
       }
@@ -592,13 +639,17 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofu; i++) {
 
         adept::adouble laplace = 0.;
+        adept::adouble laplace_weak_exact = 0.;
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+          laplace            +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+          laplace_weak_exact +=  phi_x[i * dim + jdim] * gradSolu_exact_gss[jdim];
         }
+        
 
-        double srcTerm = - GetExactSolutionLaplace(x_gss);
-        aRes[i] += (srcTerm * phi[i] - laplace) * weight;
+//         double srcTerm = - GetExactSolutionLaplace(x_gss);
+//         aRes[i] += (srcTerm * phi[i] - laplace) * weight;
+        aRes[i] += (laplace_weak_exact - laplace) * weight;
 
       } // end phi_i loop
     } // end gauss point loop
@@ -643,7 +694,6 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 }
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_finer) {
-    
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*     msh = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
@@ -674,6 +724,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 
   vector < double >  solu_finer;   solu_finer.reserve(maxSize);
   
+  vector < double >  solu_exact_at_dofs;   solu_exact_at_dofs.reserve(maxSize);
+
   for (unsigned i = 0; i < dim; i++)
     x[i].reserve(maxSize);
 
@@ -684,6 +736,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 
   double seminorm = 0.;
   double l2norm = 0.;
+  double seminorm_exact_dofs = 0.;
+  double l2norm_exact_dofs = 0.;
   double seminorm_inexact = 0.;
   double l2norm_inexact = 0.;
 
@@ -698,17 +752,10 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
     // resize local arrays
     solu.resize(nDofu);
     solu_finer.resize(nDofu);
+    solu_exact_at_dofs.resize(nDofu);
 
     for (int i = 0; i < dim; i++) {
       x[i].resize(nDofx);
-    }
-
-    const double weird_multigrid_factor = 0.25;  //don't know!
-    // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofu; i++) {
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-      solu[i]       = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-      solu_finer[i] = weird_multigrid_factor * (*sol_finer->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
     }
 
     // local storage of coordinates
@@ -719,6 +766,26 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);  // global extraction and local storage for the element coordinates
       }
     }
+    
+    const double weird_multigrid_factor = 0.25;  //don't know!
+    
+         vector<double> x_at_node(dim,0.);
+      for (unsigned i = 0; i < nDofu; i++) {
+         for (unsigned jdim = 0; jdim < dim; jdim++) {
+             x_at_node[jdim] = x[jdim][i];
+         }
+      }
+
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofu; i++) {
+//         std::vector<double> x_at_node(dim,0.);
+//         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
+      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
+      solu[i]       = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
+      solu_finer[i] = /*weird_multigrid_factor * */(*sol_finer->_Sol[soluIndex])(solDof);
+      solu_exact_at_dofs[i] = GetExactSolutionValue(x_at_node);
+    }
+
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
@@ -728,32 +795,37 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       double solu_gss = 0.;
       double solu_finer_gss = 0.;
+      double exactSol_from_dofs_gss = 0.;
       vector < double > gradSolu_gss(dim, 0.);
+      vector < double > gradSolu_exact_at_dofs_gss(dim, 0.);
       vector < double > gradSolu_finer_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss       += phi[i] * solu[i];
         solu_finer_gss += phi[i] * solu_finer[i];
+        exactSol_from_dofs_gss += phi[i] * solu_exact_at_dofs[i];
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+          gradSolu_exact_at_dofs_gss[jdim] += phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
           gradSolu_finer_gss[jdim] += phi_x[i * dim + jdim] * solu_finer[i];
           x_gss[jdim] += x[jdim][i] * phi[i];
         }
       }
 
-      vector <double> exactGradSol(dim);
-      GetExactSolutionGradient(x_gss, exactGradSol);
+      vector <double> exactGradSol(dim);    GetExactSolutionGradient(x_gss, exactGradSol);
 
       for (unsigned j = 0; j < dim ; j++) {
         seminorm           += ((gradSolu_gss[j]       - exactGradSol[j]) * (gradSolu_gss[j]       - exactGradSol[j])) * weight;
         seminorm_inexact   += ((gradSolu_gss[j] - gradSolu_finer_gss[j]) * (gradSolu_gss[j] - gradSolu_finer_gss[j])) * weight;
+        seminorm_exact_dofs      += ((gradSolu_gss[j]       - gradSolu_exact_at_dofs_gss[j]) * (gradSolu_gss[j]       - gradSolu_exact_at_dofs_gss[j])) * weight;
       }
 
       double exactSol = GetExactSolutionValue(x_gss);
-      l2norm         += (solu_gss - exactSol)       * (solu_gss - exactSol)       * weight;
-      l2norm_inexact += (solu_gss - solu_finer_gss) * (solu_gss - solu_finer_gss) * weight;
+      l2norm              += (solu_gss - exactSol)                * (solu_gss - exactSol)       * weight;
+      l2norm_exact_dofs   += (solu_gss - exactSol_from_dofs_gss)  * (solu_gss - exactSol_from_dofs_gss)       * weight;
+      l2norm_inexact      += (solu_gss - solu_finer_gss)          * (solu_gss - solu_finer_gss) * weight;
    } // end gauss point loop
   } //end element loop for each process
 
@@ -772,7 +844,22 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 
   delete norm_vec;
 
-    // add the norms of all processes
+   // add the norms of all processes
+  NumericVector* norm_vec_exact_dofs;
+  norm_vec_exact_dofs = NumericVector::build().release();
+  norm_vec_exact_dofs->init(msh->n_processors(), 1 , false, AUTOMATIC);
+
+  norm_vec_exact_dofs->set(iproc, l2norm_exact_dofs);
+  norm_vec_exact_dofs->close();
+  l2norm_exact_dofs = norm_vec_exact_dofs->l1_norm();
+
+  norm_vec_exact_dofs->set(iproc, seminorm_exact_dofs);
+  norm_vec_exact_dofs->close();
+  seminorm_exact_dofs = norm_vec_exact_dofs->l1_norm();
+
+  delete norm_vec_exact_dofs;
+
+  // add the norms of all processes
   NumericVector* norm_vec_inexact;
   norm_vec_inexact = NumericVector::build().release();
   norm_vec_inexact->init(msh->n_processors(), 1 , false, AUTOMATIC);
@@ -789,7 +876,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 
   std::pair < double, double > inexact_pair(sqrt(l2norm_inexact), sqrt(seminorm_inexact));
   
-  return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
-//   return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
+//   return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
+//   return std::pair < double, double > (sqrt(l2norm_exact_dofs), sqrt(seminorm_exact_dofs));
+  return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
 
 }
