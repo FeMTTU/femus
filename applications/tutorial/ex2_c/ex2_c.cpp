@@ -69,12 +69,13 @@ int main(int argc, char** args) {
   const std::vector<double> xyz_min = {-0.5,-0.5,0.};
   const std::vector<double> xyz_max = { 0.5, 0.5,0.};
   const ElemType geom_elem_type = QUAD9;
+  
   mlMsh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 //   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
-  MultiLevelMesh mlMsh_finest;
-  mlMsh_finest.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//   mlMsh_finest.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  MultiLevelMesh mlMsh_previous_and_current;
+  mlMsh_previous_and_current.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   mlMsh_previous_and_current.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
@@ -87,17 +88,31 @@ int main(int argc, char** args) {
 
   const unsigned gap = 1;
 
-  vector < vector < double > > l2Norm;
-  l2Norm.resize(maxNumberOfMeshes + 1 - gap);
-
-  vector < vector < double > > semiNorm;
-  semiNorm.resize(maxNumberOfMeshes + 1 - gap);
+  vector < vector < double > > l2Norm;       l2Norm.resize(maxNumberOfMeshes + 1 - gap);
+  vector < vector < double > > semiNorm;   semiNorm.resize(maxNumberOfMeshes + 1 - gap);
 
   
     std::vector< FEOrder > feOrder = {FIRST, SERENDIPITY, SECOND};
 
+  
+     for (int i = 0; i < l2Norm.size(); i++) {   // loop on the mesh level
+    l2Norm[i].resize(feOrder.size());
+    semiNorm[i].resize(feOrder.size());
+     }   
+
+     
+  MultiLevelSolution * mlSol_previous_coarser;
+
+   unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
+    mlMsh_previous_and_current.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
+//     mlMsh_previous_and_current.EraseCoarseLevels(numberOfUniformLevels - 2);
+
     
-    for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
+    for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
+        
+        
+    
+     for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
    unsigned numberOfUniformLevels = i + 1;
     unsigned numberOfSelectiveLevels = 0;
@@ -106,18 +121,11 @@ int main(int argc, char** args) {
     mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
     
-        unsigned numberOfUniformLevels_finest = numberOfUniformLevels;
-        mlMsh_finest.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest + numberOfSelectiveLevels, NULL);
-//         mlMsh_finest.EraseCoarseLevels(numberOfUniformLevels_finest - 1 - 1); //I need to keep the structures at all levels here so I can restrict every time
-    
     // print mesh info
     mlMsh.PrintInfo();
     
-    l2Norm[i].resize(feOrder.size());
-    semiNorm[i].resize(feOrder.size());
-
-    
-    for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
+       
+        
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
       
@@ -157,12 +165,30 @@ int main(int argc, char** args) {
 
       system.MLsolve();
       
-      Solution* sol = mlSol.GetSolutionLevel(i);    // pointer to the solution (level) object
-      std::pair< double , double > norm = GetErrorNorm(&mlSol,sol);
+//store the last computed solution
+//   mlSol_previous_coarser = new MultiLevelSolution (&mlMsh);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+//   mlSol_previous_coarser->AddSolution("u", LAGRANGE, feOrder[j]);
+//   mlSol_previous_coarser->Initialize("All");
+//   mlSol_previous_coarser->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+//   mlSol_previous_coarser->GenerateBdc("u");
+// 
+//        const unsigned level_index_current = i;
+//       //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
+//      for(unsigned short j = 0; j <   mlSol.GetSolutionLevel(level_index_current)->_Sol.size(); j++) {    //all variables
+//                *(mlSol_previous_coarser->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
+//           }
+//     if ( i > 0 ) {
+        
+//prolongation of coarser  
+        
+  Solution* sol_previous_coarser = mlSol.GetSolutionLevel(i);    // pointer to the solution (level) object
+
+      std::pair< double , double > norm = GetErrorNorm(&mlSol,sol_previous_coarser);
 
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
       
+//     }
         
       // print solutions
       std::vector < std::string > variablesToBePrinted;
@@ -171,9 +197,9 @@ int main(int argc, char** args) {
       VTKWriter vtkIO(&mlSol);
       vtkIO.Write(/*files.GetOutputPath()*/ DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
       
-    }
-  }
-  
+      }  //end h refinement
+    }  //end FE families
+ 
   
   
    std::pair< std::string, std::string > norm_names("L2-NORM","SEMINORM");
