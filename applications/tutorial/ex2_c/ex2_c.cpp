@@ -73,15 +73,15 @@ int main(int argc, char** args) {
   mlMsh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 //   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
-  MultiLevelMesh mlMsh_previous_and_current;
-  mlMsh_previous_and_current.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//   mlMsh_previous_and_current.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  MultiLevelMesh mlMsh_all_levels;
+  mlMsh_all_levels.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   mlMsh_all_levels.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 5;
+    maxNumberOfMeshes = 6;
   } else {
     maxNumberOfMeshes = 4;
   }
@@ -101,16 +101,23 @@ int main(int argc, char** args) {
      }   
 
      
-  MultiLevelSolution * mlSol_previous_coarser;
+    
+
+    for (unsigned fe = 0; fe < feOrder.size(); fe++) {   // loop on the FE Order
+   
 
    unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
-    mlMsh_previous_and_current.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
-//     mlMsh_previous_and_current.EraseCoarseLevels(numberOfUniformLevels - 2);
-
-    
-    for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
+   mlMsh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
+//     mlMsh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);
         
-        
+  MultiLevelSolution * mlSol_all_levels;
+  mlSol_all_levels = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+  mlSol_all_levels->AddSolution("u", LAGRANGE, feOrder[fe]);
+  mlSol_all_levels->Initialize("All");
+  mlSol_all_levels->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol_all_levels->GenerateBdc("u");
+  
+  
     
      for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
@@ -130,7 +137,7 @@ int main(int argc, char** args) {
       MultiLevelSolution mlSol(&mlMsh);
       
       // add variables to mlSol
-      mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
+      mlSol.AddSolution("u", LAGRANGE, feOrder[fe]);
       mlSol.Initialize("All");
       
       // attach the boundary condition function and generate boundary data
@@ -165,30 +172,28 @@ int main(int argc, char** args) {
 
       system.MLsolve();
       
-//store the last computed solution
-//   mlSol_previous_coarser = new MultiLevelSolution (&mlMsh);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-//   mlSol_previous_coarser->AddSolution("u", LAGRANGE, feOrder[j]);
-//   mlSol_previous_coarser->Initialize("All");
-//   mlSol_previous_coarser->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-//   mlSol_previous_coarser->GenerateBdc("u");
-// 
-//        const unsigned level_index_current = i;
-//       //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
-//      for(unsigned short j = 0; j <   mlSol.GetSolutionLevel(level_index_current)->_Sol.size(); j++) {    //all variables
-//                *(mlSol_previous_coarser->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
-//           }
-//     if ( i > 0 ) {
+    if ( i > 0 ) {
         
 //prolongation of coarser  
-        
-  Solution* sol_previous_coarser = mlSol.GetSolutionLevel(i);    // pointer to the solution (level) object
+    mlSol_all_levels->RefineSolution(i);
+  Solution* sol_coarser_prolongated = mlSol_all_levels->GetSolutionLevel(i);
+  
+  
+      std::pair< double , double > norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
 
-      std::pair< double , double > norm = GetErrorNorm(&mlSol,sol_previous_coarser);
+      l2Norm[i-1][fe]  = norm.first;
+      semiNorm[i-1][fe] = norm.second;
+    }
 
-      l2Norm[i][j]  = norm.first;
-      semiNorm[i][j] = norm.second;
-      
-//     }
+//store the last computed solution
+// 
+       const unsigned level_index_current = 0;
+      //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
+       const unsigned n_vars = mlSol.GetSolutionLevel(level_index_current)->_Sol.size();
+       
+     for(unsigned short j = 0; j < n_vars; j++) {  
+               *(mlSol_all_levels->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
+          }
         
       // print solutions
       std::vector < std::string > variablesToBePrinted;
@@ -198,6 +203,7 @@ int main(int argc, char** args) {
       vtkIO.Write(/*files.GetOutputPath()*/ DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
       
       }  //end h refinement
+      
     }  //end FE families
  
   
@@ -219,9 +225,9 @@ void output_convergence_rate( std::vector < std::vector < double > > &  norm, st
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << norm_name << " ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\tSECOND\n";
+  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\t\tSECOND\n";
 
-  for (int i = 0; i < norm.size()-1; i++) {   // loop on the mesh level
+  for (int i = 0; i < norm.size() - 1; i++) {   // loop on the mesh level
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
@@ -231,15 +237,15 @@ void output_convergence_rate( std::vector < std::vector < double > > &  norm, st
 
     std::cout << std::endl;
 
-      std::cout.precision(3);
+     std::cout.precision(3);
       std::cout << "\t";
 
       for (unsigned j = 0; j < norm[i].size(); j++) {
-        std::cout << log(norm[i][j] / norm[i + 1][j]) / log(2.) << "  \t\t";
+        std::cout << log( norm[i][j] / norm[i + 1][j] ) / log(2.) << "  \t\t";
       }
 
       std::cout << std::endl;
-
+     
   }
   
   
