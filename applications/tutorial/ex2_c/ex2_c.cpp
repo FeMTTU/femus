@@ -40,6 +40,10 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_from_restriction); 
 // ||u_i - u_h||/||u_i-u_(h/2)|| = 2^alpha, alpha is order of conv 
 
+void output_convergence_rate( std::vector < std::vector < double > > &  norm, std::string norm_name );
+
+
+
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -170,64 +174,50 @@ int main(int argc, char** args) {
     }
   }
   
+  
+  
+   std::pair< std::string, std::string > norm_names("L2-NORM","SEMINORM");
 
-//   print the seminorm of the error and the order of convergence between different levels
-  std::cout << std::endl;
-  std::cout << std::endl;
-  std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\tSECOND\n";
+   output_convergence_rate(l2Norm, norm_names.first );
+   
+   output_convergence_rate(semiNorm, norm_names.second );
 
-  for (int i = 0; i < l2Norm.size()-1; i++) {   // loop on the mesh level
-    std::cout << i + 1 << "\t";
-    std::cout.precision(14);
-
-    for (unsigned j = 0; j < feOrder.size(); j++) {
-      std::cout << l2Norm[i][j] << "\t";
-    }
-
-    std::cout << std::endl;
-
-      std::cout.precision(3);
-      std::cout << "\t";
-
-      for (unsigned j = 0; j < feOrder.size(); j++) {
-        std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "  \t\t";
-      }
-
-      std::cout << std::endl;
-
-  }
-
-  std::cout << std::endl;
-  std::cout << std::endl;
-  std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\tSECOND\n";
-
-  for (int i = 0; i < semiNorm.size()-1; i++) {   // loop on the mesh level
-    std::cout << i + 1 << "\t";
-    std::cout.precision(14);
-
-    for (unsigned j = 0; j < feOrder.size(); j++) {
-      std::cout << semiNorm[i][j] << "\t";
-    }
-
-    std::cout << std::endl;
-
-      std::cout.precision(3);
-      std::cout << "\t";
-
-      for (unsigned j = 0; j < feOrder.size(); j++) {
-        std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "  \t\t";
-      }
-
-      std::cout << std::endl;
-
-  }
 
   return 0;
 }
 
 
+void output_convergence_rate( std::vector < std::vector < double > > &  norm, std::string norm_name ) {
+
+//   print the seminorm of the error and the order of convergence between different levels
+  std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << norm_name << " ERROR and ORDER OF CONVERGENCE:\n\n";
+  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\tSECOND\n";
+
+  for (int i = 0; i < norm.size()-1; i++) {   // loop on the mesh level
+    std::cout << i + 1 << "\t";
+    std::cout.precision(14);
+
+    for (unsigned j = 0; j < norm[i].size(); j++) {
+      std::cout << norm[i][j] << "\t";
+    }
+
+    std::cout << std::endl;
+
+      std::cout.precision(3);
+      std::cout << "\t";
+
+      for (unsigned j = 0; j < norm[i].size(); j++) {
+        std::cout << log(norm[i][j] / norm[i + 1][j]) / log(2.) << "  \t\t";
+      }
+
+      std::cout << std::endl;
+
+  }
+  
+  
+}
 
 
 double GetExactSolutionValue(const std::vector < double >& x) {
