@@ -190,6 +190,80 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
                 }
             }
 
+
+            if ( iel == 73 ) {
+
+                std::cout << "--------------------------------------------------------------------" << std::endl;
+
+                std::vector< double > centerCoordinates ( dim );
+
+
+                for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                    centerCoordinates[jdim] = x[jdim][2] ; //node 98, elem 73 is the center, mesh size is 0.0625 with numberOfUnifRef = 2
+                }
+
+                for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+
+                    std::cout << centerCoordinates[jdim] << " "; //node 98, elem 73 is the center, mesh size is 0.0625 with numberOfUnifRef = 2
+                }
+
+                std::cout << std::endl;
+
+
+                double radius = 0.09375; // (1.5 of the mesh size)
+
+                for ( int jel = msh->_elementOffset[iproc]; jel < msh->_elementOffset[iproc + 1]; jel++ ) {
+
+                    std::vector< std::vector < double > > newCoordinates;
+                    unsigned check;
+
+                    unsigned nDofx2 = msh->GetElementDofNumber ( jel, xType ); // number of coordinate element dofs
+
+                    std::vector< std::vector < double >> x2 ( dim );
+
+                    for ( int ii = 0; ii < dim; ii++ ) {
+                        x2[ii].resize ( nDofx2 );
+                    }
+
+                    // local storage of coordinates
+                    for ( unsigned ii = 0; ii < nDofx2; ii++ ) {
+                        unsigned xDof2  = msh->GetSolutionDof ( ii, jel, xType ); // global to global mapping between coordinates node and coordinate dof
+
+                        for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                            x2[jdim][ii] = ( *msh->_topology->_Sol[jdim] ) ( xDof2 ); // global extraction and local storage for the element coordinates
+                        }
+                    }
+
+                    IsRectangleInBall ( check, centerCoordinates, radius, x2, newCoordinates );
+
+                    if ( check == 0 || check == 1 ) {
+                        std::cout << "elem = " << jel << " , " << "check = " << check << std::endl;
+
+                        for ( unsigned ivertex = 0; ivertex < newCoordinates[0].size(); ivertex++ ) {
+                            for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                                std::cout << "xOld[" << jdim << "][" << ivertex << "]= " << x2[jdim][ivertex];
+                            }
+
+                            std::cout << std::endl;
+                        }
+
+                        for ( unsigned ivertex = 0; ivertex < newCoordinates[0].size(); ivertex++ ) {
+                            for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                                std::cout << "xNew[" << jdim << "][" << ivertex << "]= " << newCoordinates[jdim][ivertex];
+                            }
+
+                            std::cout << std::endl;
+                        }
+
+                        std::cout << std::endl;
+                    }
+
+                }
+
+                std::cout << "--------------------------------------------------------------------" << std::endl;
+
+            }
+
             double aCoeff = 1.;
 
             // *** phi_i loop ***
@@ -252,10 +326,13 @@ void IsRectangleInBall ( unsigned &check, const std::vector<double> &ballCenter,
     //check = 1 : element and ball intersect
     //check = 2 : element and ball are disjoint
 
+    check = 2; //by default we assume the two sets are disjoint
+
     unsigned dim = 2;
 
     std::vector< std::vector < double > > rescaledCoordinates ( dim );
     newCoordinates.resize ( dim );
+
 
     for ( unsigned n = 0; n < dim; n++ ) {
         rescaledCoordinates[n].resize ( 4 );
@@ -304,29 +381,30 @@ void IsRectangleInBall ( unsigned &check, const std::vector<double> &ballCenter,
         //top right corner of rectangle (north east)
         double xRecNE = rescaledCoordinates[0][2]; //ordering according to Elem.hpp, 2 is NE node
         double yRecNE = rescaledCoordinates[1][2];
-        
-        newCoordinates[0][0] = (xBallSW >= xRecSW) ? xBallSW : xRecSW;
-        newCoordinates[1][0] = (yBallSW >= yRecSW) ? yBallSW : yRecSW;
-        
-        newCoordinates[0][2] = (xBallNE >= xRecNE) ? xRecNE : xBallNE;
-        newCoordinates[1][2] = (yBallNE >= yRecNE) ? yRecNE : yBallNE;
-        
-        if(newCoordinates[0][0] >= newCoordinates[0][2] || newCoordinates[1][0] >= newCoordinates[1][2]){ //ball and rectangle are disjoint
-            
-            check = 2;
-        }
-        
-        else{ //there is an intersection
-            
 
-           check = 1;
-           
-           newCoordinates[0][1] = newCoordinates[0][2];
-           newCoordinates[1][1] = newCoordinates[1][0];
-           
-           newCoordinates[0][3] = newCoordinates[0][0];
-           newCoordinates[1][3] = newCoordinates[1][2];
-            
+        newCoordinates[0][0] = ( xBallSW >= xRecSW ) ? xBallSW : xRecSW;
+        newCoordinates[1][0] = ( yBallSW >= yRecSW ) ? yBallSW : yRecSW;
+
+        newCoordinates[0][2] = ( xBallNE >= xRecNE ) ? xRecNE : xBallNE;
+        newCoordinates[1][2] = ( yBallNE >= yRecNE ) ? yRecNE : yBallNE;
+
+        if ( newCoordinates[0][0] < newCoordinates[0][2] && newCoordinates[1][0] < newCoordinates[1][2] ) { //ball and rectangle intersect
+
+            check = 1;
+
+            newCoordinates[0][1] = newCoordinates[0][2];
+            newCoordinates[1][1] = newCoordinates[1][0];
+
+            newCoordinates[0][3] = newCoordinates[0][0];
+            newCoordinates[1][3] = newCoordinates[1][2];
+
+            //translate back
+            for ( unsigned n = 0; n < dim; n++ ) {
+                for ( unsigned i = 0; i < 4; i++ ) {
+                    newCoordinates[n][i] += ballCenter[n] ;
+                }
+            }
+
         }
 
     }
