@@ -191,6 +191,7 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
             }
 
 
+            //BEGIN testing IsRectangleInBall
             if ( iel == 73 ) {
 
                 std::cout << "--------------------------------------------------------------------" << std::endl;
@@ -204,13 +205,16 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
 
                 for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
 
-                    std::cout << centerCoordinates[jdim] << " "; //node 98, elem 73 is the center, mesh size is 0.0625 with numberOfUnifRef = 2
+                    std::cout << centerCoordinates[jdim] << " "; // elem 73, node 98 is the center, mesh size is 0.0625 with numberOfUnifRef = 2
                 }
 
                 std::cout << std::endl;
 
 
-                double radius = 0.09375; // (1.5 of the mesh size)
+//                 double radius = 0.09375; // (1.5 of the mesh size)
+//                 double radius = 0.0625; // (the mesh size)
+                double radius = 0.03125; // (0.5 of the mesh size)
+
 
                 for ( int jel = msh->_elementOffset[iproc]; jel < msh->_elementOffset[iproc + 1]; jel++ ) {
 
@@ -263,6 +267,8 @@ void AssembleNonlocalSys ( MultiLevelProblem& ml_prob )
                 std::cout << "--------------------------------------------------------------------" << std::endl;
 
             }
+
+            //END testing IsRectangleInBall
 
             double aCoeff = 1.;
 
