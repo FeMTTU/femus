@@ -173,7 +173,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                 // resize local arrays
                 l2GMap2.resize ( nDof2 );
-                soluNonLoc.resize ( nDof2 ); //TODO check
+                soluNonLoc.resize ( nDof2 ); 
 
                 for ( int k = 0; k < dim; k++ ) {
                     x2[k].resize ( nDofx2 );
@@ -231,7 +231,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                     // element loop: each process loops only on the elements that owns
                     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-
+                        
                         short unsigned ielGeom1 = msh->GetElementType ( iel );
                         short unsigned ielGroup1 = msh->GetElementGroup ( iel );
                         unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType ); // number of solution element dofs
@@ -285,12 +285,12 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                     for ( unsigned i = 0; i < nDof1; i++ ) {
                                         double resU = 0.;
 
-                                        if ( ielGroup2 == 6 || ielGroup2 == 7 ) { //6 is Omega_1, 7 is Omega_2
-                                            resU = - 1. * phi1x[i] * weight;
+                                        if ( ielGroup2 == 7 || ielGroup2 == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
+                                            resU = - 1. * phi1x[i] * weight; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            double jacValue = weight1 * weight2[jg] * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
+                                            double jacValue = weight1 * weight2[jg] * (1. / pow(delta1,4)) * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
                                             Jac[i * nDof2 + j] += jacValue;
                                             resU +=  jacValue * soluNonLoc[j];
 
@@ -321,12 +321,12 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                     for ( unsigned i = 0; i < nDof1; i++ ) {
                                         double resU = 0.;
 
-                                        if ( ielGroup2 == 6 || ielGroup2 == 7 ) { //6 is Omega_1, 7 is Omega_2
-                                            resU = - 1. * phi1x[i] * weight;
+                                        if ( ielGroup2 == 7 || ielGroup2 == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
+                                            resU = - 1. * phi1x[i] * weight; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            double jacValue = weight1 * weight2[jg] * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
+                                            double jacValue = weight1 * weight2[jg] * (1. / pow(epsilon,4)) * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
                                             Jac[i * nDof2 + j] += jacValue;
                                             resU +=  jacValue * soluNonLoc[j];
                                         }//endl j loop
@@ -357,12 +357,12 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                     for ( unsigned i = 0; i < nDof1; i++ ) {
                                         double resU = 0.;
 
-                                        if ( ielGroup2 == 6 || ielGroup2 == 7 ) { //6 is Omega_1, 7 is Omega_2
-                                            resU = - 1. * phi1x[i] * weight;
+                                        if ( ielGroup2 == 7 || ielGroup2 == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
+                                            resU = - 1. * phi1x[i] * weight; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            double jacValue = weight1 * weight2[jg] * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
+                                            double jacValue = weight1 * weight2[jg] * (1. / pow(epsilon,4)) * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
                                             Jac[i * nDof2 + j] += jacValue;
                                             resU +=  jacValue * soluNonLoc[j];
                                         }//endl j loop
@@ -393,12 +393,12 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                     for ( unsigned i = 0; i < nDof1; i++ ) {
                                         double resU = 0.;
 
-                                        if ( ielGroup2 == 6 || ielGroup2 == 7 ) { //6 is Omega_1, 7 is Omega_2
-                                            resU = - 1. * phi1x[i] * weight;
+                                        if ( ielGroup2 == 7 || ielGroup2 == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
+                                            resU = - 1. * phi1x[i] * weight; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            double jacValue = weight1 * weight2[jg] * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
+                                            double jacValue = weight1 * weight2[jg] * (1. / pow(delta2,4)) * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
                                             Jac[i * nDof2 + j] += jacValue;
                                             resU +=  jacValue * soluNonLoc[j];
                                         }//endl j loop
@@ -412,7 +412,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                         }
 
-                        RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check I think for some reason i is the row index
+                        RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check 
                         //store K in the global matrix KK
                         KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 ); //TODO check
                     } // end iel loop
