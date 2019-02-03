@@ -24,8 +24,14 @@ using namespace femus;
 
 bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time )
 {
+    
     bool dirichlet = true; 
     value = 0.;
+    
+    if(facename == 2){
+        bool dirichlet = false; //Neumann at the interface boundaries 
+    }
+    
     return dirichlet;
 }
 
@@ -59,7 +65,8 @@ int main ( int argc, char** argv )
     double scalingFactor = 1.;
     unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.ReadCoarseMesh("../input/square.neu", "fifth", scalingFactor);
-    mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "fifth", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/interface.neu", "fifth", scalingFactor );
     mlMsh.RefineMesh ( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL );
 
     unsigned dim = mlMsh.GetDimension();
@@ -85,11 +92,11 @@ int main ( int argc, char** argv )
     MultiLevelProblem ml_prob ( &mlSol );
 
     // ******* Add FEM system to the MultiLevel problem *******
-    LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ( "UQ" );
+    LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ( "NonLocal" );
     system.AddSolutionToSystemPDE ( "u" );
 
     // ******* System FEM Assembly *******
-    system.SetAssembleFunction ( AssembleNonlocalSys );
+    system.SetAssembleFunction ( AssembleNonLocalSys );
     system.SetMaxNumberOfLinearIterations ( 1 );
     //system.SetAssembleFunction(AssembleFEM);
     // ******* set MG-Solver *******
@@ -641,6 +648,7 @@ void GetEigenPair ( MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std
 
     // ***************** END ASSEMBLY *******************
 }
+
 
 
 
