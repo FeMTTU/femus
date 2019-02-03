@@ -65,8 +65,8 @@ int main ( int argc, char** argv )
     double scalingFactor = 1.;
     unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.ReadCoarseMesh("../input/square.neu", "fifth", scalingFactor);
-//     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "fifth", scalingFactor );
-    mlMsh.ReadCoarseMesh ( "../input/interface.neu", "fifth", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
     mlMsh.RefineMesh ( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL );
 
     unsigned dim = mlMsh.GetDimension();
@@ -112,7 +112,7 @@ int main ( int argc, char** argv )
     // ******* Set Preconditioner *******
     system.SetMgSmoother ( GMRES_SMOOTHER );
 
-    system.SetSparsityPatternMultiplyingFactor(200u); //TODO tune 10u
+    system.SetSparsityPatternMultiplyingFactor(10u); //TODO tune 10u
     
     system.init();
 

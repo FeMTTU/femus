@@ -31,8 +31,8 @@ double meanInput = 0.;
 //END to remove
 
 bool nonLocalAssembly = true;
-double delta1 = 0.009375; //1.5 * mesh size
-double delta2 = 0.00625; //mesh size
+double delta1 = 0.0015; //1.5 * mesh size
+double delta2 = 0.001; //mesh size (it is 0.1 for 2 refinements)
 double epsilon = delta1; //max{delta_1,delta_2}
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
@@ -41,7 +41,7 @@ void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 
 }
 
-void IsRectangleInBall ( unsigned &check, const std::vector<double> &ballCenter, const double &ballRadius, const std::vector < std::vector < double> > &elementCoordinates,  std::vector < std::vector < double> > &newCoordinates );
+void RectangleAndBallRelation ( bool &theyIntersect, const std::vector<double> &ballCenter, const double &ballRadius, const std::vector < std::vector < double> > &elementCoordinates,  std::vector < std::vector < double> > &newCoordinates );
 
 void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 {
@@ -173,7 +173,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                 // resize local arrays
                 l2GMap2.resize ( nDof2 );
-                soluNonLoc.resize ( nDof2 ); 
+                soluNonLoc.resize ( nDof2 );
 
                 for ( int k = 0; k < dim; k++ ) {
                     x2[k].resize ( nDofx2 );
@@ -222,31 +222,23 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         }
                     }
                 }
-                
+
                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
                     std::vector< std::vector < double > > x1New;
-                    unsigned check;
+                    bool theyIntersect;
                     double radius;
 
                     // element loop: each process loops only on the elements that owns
                     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-                        
+
                         short unsigned ielGeom1 = msh->GetElementType ( iel );
                         short unsigned ielGroup1 = msh->GetElementGroup ( iel );
                         unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType ); // number of solution element dofs
                         unsigned nDofx1 = msh->GetElementDofNumber ( iel, xType ); // number of coordinate element dofs
 
-                        // resize local arrays
-                        l2GMap1.resize ( nDof1 );
-
                         for ( int k = 0; k < dim; k++ ) {
                             x1[k].resize ( nDofx1 );
-                        }
-
-                        // local storage of global mapping and solution
-                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                            l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
                         }
 
                         // local storage of coordinates
@@ -257,9 +249,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                 x1[k][i] = ( *msh->_topology->_Sol[k] ) ( xDof ); // global extraction and local storage for the element coordinates
                             }
                         }
-
-                        Res.assign ( nDof1, 0. );
-                        Jac.assign ( nDof1 * nDof2, 0. );;
 
                         // *** Gauss point loop ***
                         unsigned igNumber = msh->_finiteElement[ielGeom1][soluType]->GetGaussPointNumber();
@@ -272,9 +261,22 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             radius = delta1;
 
-                            IsRectangleInBall ( check, xg2[jg], radius, x1, x1New );
+                            RectangleAndBallRelation ( theyIntersect, xg2[jg], radius, x1, x1New );
 
-                            if ( check != 2 ) {
+                            if ( theyIntersect ) {
+
+                                if ( jel == 45 ) std::cout << "jel = " << jel << " , " << "iel = " << iel << " , " << "jg = " << jg << std::endl;
+
+                                // resize local arrays
+                                l2GMap1.resize ( nDof1 );
+
+                                // local storage of global mapping and solution
+                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                    l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
+                                }
+
+                                Res.assign ( nDof1, 0. );
+                                Jac.assign ( nDof1 * nDof2, 0. );
 
                                 for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
@@ -286,11 +288,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         double resU = 0.;
 
                                         if ( ielGroup2 == 7 || ielGroup2 == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * phi1x[i] * weight; //Res = Ax - f so f = 1
+                                            resU = - 1. * phi1x[i] * weight2[jg]; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            double jacValue = weight1 * weight2[jg] * (1. / pow(delta1,4)) * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
+                                            double jacValue = weight1 * weight2[jg] * 1. /*( 1. / pow ( delta1, 4 ) )*/ * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
                                             Jac[i * nDof2 + j] += jacValue;
                                             resU +=  jacValue * soluNonLoc[j];
 
@@ -300,6 +302,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                     } //endl i loop
                                 } //endl ig loop
+
+
+                                RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check
+                                //store K in the global matrix KK
+                                KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 ); //TODO check
 
                             }
                         }
@@ -308,9 +315,20 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             radius = epsilon;
 
-                            IsRectangleInBall ( check, xg2[jg], radius, x1, x1New );
+                            RectangleAndBallRelation ( theyIntersect, xg2[jg], radius, x1, x1New );
 
-                            if ( check != 2 ) {
+                            if ( theyIntersect ) {
+
+                                // resize local arrays
+                                l2GMap1.resize ( nDof1 );
+
+                                // local storage of global mapping and solution
+                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                    l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
+                                }
+
+                                Res.assign ( nDof1, 0. );
+                                Jac.assign ( nDof1 * nDof2, 0. );
 
                                 for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
@@ -322,11 +340,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         double resU = 0.;
 
                                         if ( ielGroup2 == 7 || ielGroup2 == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * phi1x[i] * weight; //Res = Ax - f so f = 1
+                                            resU = - 1. * phi1x[i] * weight2[jg]; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            double jacValue = weight1 * weight2[jg] * (1. / pow(epsilon,4)) * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
+                                            double jacValue = weight1 * weight2[jg] * 1./*( 1. / pow ( epsilon, 4 ) )*/ * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
                                             Jac[i * nDof2 + j] += jacValue;
                                             resU +=  jacValue * soluNonLoc[j];
                                         }//endl j loop
@@ -335,6 +353,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                     } //endl i loop
                                 } //endl ig loop
+
+
+                                RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check
+                                //store K in the global matrix KK
+                                KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 ); //TODO check
 
                             }
 
@@ -344,9 +367,20 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             radius = epsilon;
 
-                            IsRectangleInBall ( check, xg2[jg], radius, x1, x1New );
+                            RectangleAndBallRelation ( theyIntersect, xg2[jg], radius, x1, x1New );
 
-                            if ( check != 2 ) {
+                            if ( theyIntersect ) {
+
+                                // resize local arrays
+                                l2GMap1.resize ( nDof1 );
+
+                                // local storage of global mapping and solution
+                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                    l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
+                                }
+
+                                Res.assign ( nDof1, 0. );
+                                Jac.assign ( nDof1 * nDof2, 0. );
 
                                 for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
@@ -358,11 +392,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         double resU = 0.;
 
                                         if ( ielGroup2 == 7 || ielGroup2 == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * phi1x[i] * weight; //Res = Ax - f so f = 1
+                                            resU = - 1. * phi1x[i] * weight2[jg]; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            double jacValue = weight1 * weight2[jg] * (1. / pow(epsilon,4)) * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
+                                            double jacValue = weight1 * weight2[jg] * 1./*( 1. / pow ( epsilon, 4 ) )*/ * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
                                             Jac[i * nDof2 + j] += jacValue;
                                             resU +=  jacValue * soluNonLoc[j];
                                         }//endl j loop
@@ -371,6 +405,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                     } //endl i loop
                                 } //endl ig loop
+
+
+                                RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check
+                                //store K in the global matrix KK
+                                KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 ); //TODO check
 
                             }
 
@@ -380,9 +419,20 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             radius = delta2;
 
-                            IsRectangleInBall ( check, xg2[jg], radius, x1, x1New );
+                            RectangleAndBallRelation ( theyIntersect, xg2[jg], radius, x1, x1New );
 
-                            if ( check != 2 ) {
+                            if ( theyIntersect ) {
+
+                                // resize local arrays
+                                l2GMap1.resize ( nDof1 );
+
+                                // local storage of global mapping and solution
+                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                    l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
+                                }
+
+                                Res.assign ( nDof1, 0. );
+                                Jac.assign ( nDof1 * nDof2, 0. );
 
                                 for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
@@ -394,11 +444,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         double resU = 0.;
 
                                         if ( ielGroup2 == 7 || ielGroup2 == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * phi1x[i] * weight; //Res = Ax - f so f = 1
+                                            resU = - 1. * phi1x[i] * weight2[jg]; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            double jacValue = weight1 * weight2[jg] * (1. / pow(delta2,4)) * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
+                                            double jacValue = weight1 * weight2[jg] * 1./*( 1. / pow ( delta2, 4 ) )*/ * ( phi1x[i] - phi1y[i] ) * ( phi2[jg][j] - phi2y[j] );
                                             Jac[i * nDof2 + j] += jacValue;
                                             resU +=  jacValue * soluNonLoc[j];
                                         }//endl j loop
@@ -408,13 +458,15 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                     } //endl i loop
                                 } //endl ig loop
 
+
+                                RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check
+                                //store K in the global matrix KK
+                                KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 ); //TODO check
+
                             }
 
                         }
 
-                        RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check 
-                        //store K in the global matrix KK
-                        KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 ); //TODO check
                     } // end iel loop
                 }//end jg loop
             } //end jel loop
@@ -422,7 +474,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
         //END nonlocal assembly
     }
-
 
     else {
 
@@ -484,83 +535,85 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                 }
 
 
-                //BEGIN testing IsRectangleInBall
-//             if ( iel == 73 ) {
-//
-//                 std::cout << "--------------------------------------------------------------------" << std::endl;
-//
-//                 std::vector< double > centerCoordinates ( dim );
-//
-//
-//                 for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                //BEGIN testing RectangleAndBallRelation
+            if ( iel == 73 ) {
+
+                std::cout << "--------------------------------------------------------------------" << std::endl;
+
+                std::vector< double > centerCoordinates ( dim );
+
+
+                for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
 //                     centerCoordinates[jdim] = x1[jdim][2] ; //node 98, elem 73 is the center, mesh size is 0.0625 with numberOfUnifRef = 2
-//                 }
-//
-//                 for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
-//
-//                     std::cout << centerCoordinates[jdim] << " "; // elem 73, node 98 is the center, mesh size is 0.0625 with numberOfUnifRef = 2
-//                 }
-//
-//                 std::cout << std::endl;
-//
-//
-// //                 double radius = 0.09375; // (1.5 of the mesh size)
-// //                 double radius = 0.0625; // (the mesh size)
+                      centerCoordinates[jdim] = x1[jdim][8] ; //central node, elem 73 is the center, mesh size is 0.0625 with numberOfUnifRef = 2
+                }
+
+                for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+
+                    std::cout << centerCoordinates[jdim] << " "; // elem 73, node 98 is the center, mesh size is 0.0625 with numberOfUnifRef = 2
+                }
+
+                std::cout << std::endl;
+
+
+//                 double radius = 0.09375; // (1.5 of the mesh size)
+                double radius = 0.0625; // (the mesh size)
 //                 double radius = 0.03125; // (0.5 of the mesh size)
-//
-//
-//                 for ( int jel = msh->_elementOffset[iproc]; jel < msh->_elementOffset[iproc + 1]; jel++ ) {
-//
-//                     std::vector< std::vector < double > > newCoordinates;
-//                     unsigned check;
-//
-//                     unsigned nDofx2 = msh->GetElementDofNumber ( jel, xType ); // number of coordinate element dofs
-//
-//                     std::vector< std::vector < double >> x2 ( dim );
-//
-//                     for ( int ii = 0; ii < dim; ii++ ) {
-//                         x2[ii].resize ( nDofx2 );
-//                     }
-//
-//                     // local storage of coordinates
-//                     for ( unsigned ii = 0; ii < nDofx2; ii++ ) {
-//                         unsigned xDof2  = msh->GetSolutionDof ( ii, jel, xType ); // global to global mapping between coordinates node and coordinate dof
-//
-//                         for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
-//                             x2[jdim][ii] = ( *msh->_topology->_Sol[jdim] ) ( xDof2 ); // global extraction and local storage for the element coordinates
-//                         }
-//                     }
-//
-//                     IsRectangleInBall ( check, centerCoordinates, radius, x2, newCoordinates );
-//
-//                     if ( check == 0 || check == 1 ) {
-//                         std::cout << "elem = " << jel << " , " << "check = " << check << std::endl;
-//
-//                         for ( unsigned ivertex = 0; ivertex < newCoordinates[0].size(); ivertex++ ) {
-//                             for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
-//                                 std::cout << "xOld[" << jdim << "][" << ivertex << "]= " << x2[jdim][ivertex];
-//                             }
-//
-//                             std::cout << std::endl;
-//                         }
-//
-//                         for ( unsigned ivertex = 0; ivertex < newCoordinates[0].size(); ivertex++ ) {
-//                             for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
-//                                 std::cout << "xNew[" << jdim << "][" << ivertex << "]= " << newCoordinates[jdim][ivertex];
-//                             }
-//
-//                             std::cout << std::endl;
-//                         }
-//
-//                         std::cout << std::endl;
-//                     }
-//
-//                 }
-//
-//                 std::cout << "--------------------------------------------------------------------" << std::endl;
-//
-//             }
-                //END testing IsRectangleInBall
+//                 double radius = 0.015625; // (0.25 of the mesh size)
+
+
+                for ( int jel = msh->_elementOffset[iproc]; jel < msh->_elementOffset[iproc + 1]; jel++ ) {
+
+                    std::vector< std::vector < double > > newCoordinates;
+                    bool theyIntersect;
+
+                    unsigned nDofx2 = msh->GetElementDofNumber ( jel, xType ); // number of coordinate element dofs
+
+                    std::vector< std::vector < double >> x2 ( dim );
+
+                    for ( int ii = 0; ii < dim; ii++ ) {
+                        x2[ii].resize ( nDofx2 );
+                    }
+
+                    // local storage of coordinates
+                    for ( unsigned ii = 0; ii < nDofx2; ii++ ) {
+                        unsigned xDof2  = msh->GetSolutionDof ( ii, jel, xType ); // global to global mapping between coordinates node and coordinate dof
+
+                        for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                            x2[jdim][ii] = ( *msh->_topology->_Sol[jdim] ) ( xDof2 ); // global extraction and local storage for the element coordinates
+                        }
+                    }
+
+                    RectangleAndBallRelation ( theyIntersect, centerCoordinates, radius, x2, newCoordinates );
+
+                    if ( theyIntersect ) {
+                        std::cout << "elem = " << jel << " , " << "theyIntersect = " << theyIntersect << std::endl;
+
+                        for ( unsigned ivertex = 0; ivertex < newCoordinates[0].size(); ivertex++ ) {
+                            for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                                std::cout << "xOld[" << jdim << "][" << ivertex << "]= " << x2[jdim][ivertex];
+                            }
+
+                            std::cout << std::endl;
+                        }
+
+                        for ( unsigned ivertex = 0; ivertex < newCoordinates[0].size(); ivertex++ ) {
+                            for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                                std::cout << "xNew[" << jdim << "][" << ivertex << "]= " << newCoordinates[jdim][ivertex];
+                            }
+
+                            std::cout << std::endl;
+                        }
+
+                        std::cout << std::endl;
+                    }
+
+                }
+
+                std::cout << "--------------------------------------------------------------------" << std::endl;
+
+            }
+                //END testing RectangleAndBallRelation
 
                 double aCoeff = 1.;
 
@@ -620,98 +673,70 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 }
 
 
-void IsRectangleInBall ( unsigned &check, const std::vector<double> &ballCenter, const double &ballRadius, const std::vector < std::vector < double> > &elementCoordinates, std::vector < std::vector < double> > &newCoordinates )
+void RectangleAndBallRelation ( bool &theyIntersect, const std::vector<double> &ballCenter, const double &ballRadius, const std::vector < std::vector < double> > &elementCoordinates, std::vector < std::vector < double> > &newCoordinates )
 {
 
-    //check = 0 : element entirely contained in ball
-    //check = 1 : element and ball intersect
-    //check = 2 : element and ball are disjoint
+    //theyIntersect = true : element and ball intersect
+    //theyIntersect = false : element and ball are disjoint
 
     //elementCoordinates are the coordinates of the vertices of the element
 
-    check = 2; //by default we assume the two sets are disjoint
+    theyIntersect = false; //by default we assume the two sets are disjoint
 
     unsigned dim = 2;
 
-    std::vector< std::vector < double > > rescaledCoordinates ( dim );
+    std::vector< std::vector < double > > ballVerticesCoordinates ( dim );
     newCoordinates.resize ( dim );
 
 
     for ( unsigned n = 0; n < dim; n++ ) {
-        rescaledCoordinates[n].resize ( 4 );
         newCoordinates[n].resize ( 4 );
+        ballVerticesCoordinates[n].resize ( 4 );
 
         for ( unsigned i = 0; i < 4; i++ ) {
-            rescaledCoordinates[n][i] = elementCoordinates[n][i] - ballCenter[n]; //rescaling so that the center is the origin
             newCoordinates[n][i] = elementCoordinates[n][i];
         }
     }
 
-    std::vector<unsigned> vertexCheck ( 4, 0. );
+    //bottom left corner of ball (south west)
+    ballVerticesCoordinates[0][0] =  ballCenter[0] - ballRadius;
+    ballVerticesCoordinates[1][0] =  ballCenter[1] - ballRadius;
 
-    for ( unsigned i = 0; i < 4; i++ ) {
-        double lInfinityNorm = 0.;
+    //top right corner of ball (north east)
+    ballVerticesCoordinates[0][2] = ballCenter[0] + ballRadius;
+    ballVerticesCoordinates[1][2] = ballCenter[1] + ballRadius;
 
-        for ( unsigned n = 0; n < dim; n++ ) {
-            if ( fabs ( rescaledCoordinates[n][i] ) >= lInfinityNorm ) lInfinityNorm = fabs ( rescaledCoordinates[n][i] );
-        }
+    newCoordinates[0][0] = ( ballVerticesCoordinates[0][0] >= elementCoordinates[0][0] ) ? ballVerticesCoordinates[0][0] : elementCoordinates[0][0];
+    newCoordinates[1][0] = ( ballVerticesCoordinates[1][0] >= elementCoordinates[1][0] ) ? ballVerticesCoordinates[1][0] : elementCoordinates[1][0];
 
-        if ( lInfinityNorm <= ballRadius ) vertexCheck[i] = 1;
-    }
+    newCoordinates[0][2] = ( ballVerticesCoordinates[0][2] >= elementCoordinates[0][2] ) ? elementCoordinates[0][2] : ballVerticesCoordinates[0][2];
+    newCoordinates[1][2] = ( ballVerticesCoordinates[1][2] >= elementCoordinates[1][2] ) ? elementCoordinates[1][2] : ballVerticesCoordinates[1][2];
 
-    unsigned insideCheck = 0;
+    if ( newCoordinates[0][0] < newCoordinates[0][2] && newCoordinates[1][0] < newCoordinates[1][2] ) { //ball and rectangle intersect
 
-    for ( unsigned i = 0; i < 4; i++ ) {
-        insideCheck += vertexCheck[i];
-    }
+        theyIntersect = true;
 
-    if ( insideCheck == 4 ) check = 0; //the element is entirely contained in the ball
+        newCoordinates[0][1] = newCoordinates[0][2];
+        newCoordinates[1][1] = newCoordinates[1][0];
 
-    else { //either the element is outside or they intersect
+        newCoordinates[0][3] = newCoordinates[0][0];
+        newCoordinates[1][3] = newCoordinates[1][2];
 
-        //bottom left corner of ball (south west)
-        double xBallSW =  - ballRadius;
-        double yBallSW =  - ballRadius;
 
-        //top right corner of ball (north east)
-        double xBallNE = ballRadius;
-        double yBallNE = ballRadius;
+        bool check1 = ( newCoordinates[0][0] == ballVerticesCoordinates[0][0] && newCoordinates[1][0] == ballVerticesCoordinates[1][0] ) ? true : false;
+        bool check2 = ( newCoordinates[0][2] == ballVerticesCoordinates[0][2] && newCoordinates[1][2] == ballVerticesCoordinates[1][2] ) ? true : false;
 
-        //bottom left corner of rectangle (south west)
-        double xRecSW = rescaledCoordinates[0][0]; //ordering according to Elem.hpp, 0 is SW node
-        double yRecSW = rescaledCoordinates[1][0];
-
-        //top right corner of rectangle (north east)
-        double xRecNE = rescaledCoordinates[0][2]; //ordering according to Elem.hpp, 2 is NE node
-        double yRecNE = rescaledCoordinates[1][2];
-
-        newCoordinates[0][0] = ( xBallSW >= xRecSW ) ? xBallSW : xRecSW;
-        newCoordinates[1][0] = ( yBallSW >= yRecSW ) ? yBallSW : yRecSW;
-
-        newCoordinates[0][2] = ( xBallNE >= xRecNE ) ? xRecNE : xBallNE;
-        newCoordinates[1][2] = ( yBallNE >= yRecNE ) ? yRecNE : yBallNE;
-
-        if ( newCoordinates[0][0] < newCoordinates[0][2] && newCoordinates[1][0] < newCoordinates[1][2] ) { //ball and rectangle intersect
-
-            check = 1;
-
-            newCoordinates[0][1] = newCoordinates[0][2];
-            newCoordinates[1][1] = newCoordinates[1][0];
-
-            newCoordinates[0][3] = newCoordinates[0][0];
-            newCoordinates[1][3] = newCoordinates[1][2];
-
-            //translate back
+        if ( check1 && check2 ) { //this means the ball entirely contained in the rectangle, so we should keep the initial coordinates
             for ( unsigned n = 0; n < dim; n++ ) {
                 for ( unsigned i = 0; i < 4; i++ ) {
-                    newCoordinates[n][i] += ballCenter[n] ;
+                    newCoordinates[n][i] = elementCoordinates[n][i];
                 }
             }
-
         }
-
     }
 
 }
+
+
 
 
