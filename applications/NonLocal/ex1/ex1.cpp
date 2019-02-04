@@ -24,14 +24,14 @@ using namespace femus;
 
 bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time )
 {
-    
-    bool dirichlet = true; 
+
+    bool dirichlet = true;
     value = 0.;
-    
-    if(facename == 2){
-        bool dirichlet = false; //Neumann at the interface boundaries 
+
+    if ( facename == 2 ) {
+        bool dirichlet = false; //Neumann at the interface boundaries
     }
-    
+
     return dirichlet;
 }
 
@@ -68,6 +68,9 @@ int main ( int argc, char** argv )
 //     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "fifth", scalingFactor );
     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
     mlMsh.RefineMesh ( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL );
+    
+//         mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+//     numberOfUniformLevels = 1;
 
     unsigned dim = mlMsh.GetDimension();
 
@@ -112,8 +115,8 @@ int main ( int argc, char** argv )
     // ******* Set Preconditioner *******
     system.SetMgSmoother ( GMRES_SMOOTHER );
 
-    system.SetSparsityPatternMultiplyingFactor(10u); //TODO tune 10u
-    
+    system.SetSparsityPatternMultiplyingFactor ( 200u ); //TODO tune 10u
+
     system.init();
 
     // ******* Set Smoother *******

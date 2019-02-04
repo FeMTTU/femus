@@ -232,10 +232,25 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     // element loop: each process loops only on the elements that owns
                     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
+
+
                         short unsigned ielGeom1 = msh->GetElementType ( iel );
                         short unsigned ielGroup1 = msh->GetElementGroup ( iel );
                         unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType ); // number of solution element dofs
                         unsigned nDofx1 = msh->GetElementDofNumber ( iel, xType ); // number of coordinate element dofs
+
+
+                        // resize local arrays
+                        l2GMap1.resize ( nDof1 );
+
+                        // local storage of global mapping and solution
+                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                            l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
+                        }
+
+                        Res.assign ( nDof1, 0. );
+                        Jac.assign ( nDof1 * nDof2, 0. );
+
 
                         for ( int k = 0; k < dim; k++ ) {
                             x1[k].resize ( nDofx1 );
@@ -268,16 +283,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             if ( theyIntersect ) {
 
-                                // resize local arrays
-                                l2GMap1.resize ( nDof1 );
-
-                                // local storage of global mapping and solution
-                                for ( unsigned i = 0; i < nDof1; i++ ) {
-                                    l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
-                                }
-
-                                Res.assign ( nDof1, 0. );
-                                Jac.assign ( nDof1 * nDof2, 0. );
 
                                 for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
@@ -304,11 +309,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                     } //endl i loop
                                 } //endl ig loop
 
-
-                                RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check
-                                //store K in the global matrix KK
-                                KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 ); //TODO check
-
                             }
                         }
 
@@ -322,17 +322,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             RectangleAndBallRelation ( theyIntersect, xg2[jg], radius, x1, x1New );
 
                             if ( theyIntersect ) {
-
-                                // resize local arrays
-                                l2GMap1.resize ( nDof1 );
-
-                                // local storage of global mapping and solution
-                                for ( unsigned i = 0; i < nDof1; i++ ) {
-                                    l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
-                                }
-
-                                Res.assign ( nDof1, 0. );
-                                Jac.assign ( nDof1 * nDof2, 0. );
 
                                 for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
@@ -357,11 +346,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                     } //endl i loop
                                 } //endl ig loop
-
-
-                                RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check
-                                //store K in the global matrix KK
-                                KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 ); //TODO check
 
                             }
 
@@ -378,17 +362,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             if ( theyIntersect ) {
 
-                                // resize local arrays
-                                l2GMap1.resize ( nDof1 );
-
-                                // local storage of global mapping and solution
-                                for ( unsigned i = 0; i < nDof1; i++ ) {
-                                    l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
-                                }
-
-                                Res.assign ( nDof1, 0. );
-                                Jac.assign ( nDof1 * nDof2, 0. );
-
                                 for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
                                     msh->_finiteElement[ielGeom1][soluType]->Jacobian ( x1New, ig, weight1, phi1y, phi_x );
@@ -413,11 +386,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                     } //endl i loop
                                 } //endl ig loop
 
-
-                                RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check
-                                //store K in the global matrix KK
-                                KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 ); //TODO check
-
                             }
 
                         }
@@ -432,17 +400,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             RectangleAndBallRelation ( theyIntersect, xg2[jg], radius, x1, x1New );
 
                             if ( theyIntersect ) {
-
-                                // resize local arrays
-                                l2GMap1.resize ( nDof1 );
-
-                                // local storage of global mapping and solution
-                                for ( unsigned i = 0; i < nDof1; i++ ) {
-                                    l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
-                                }
-
-                                Res.assign ( nDof1, 0. );
-                                Jac.assign ( nDof1 * nDof2, 0. );
 
                                 for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
@@ -468,14 +425,13 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                     } //endl i loop
                                 } //endl ig loop
 
-
-                                RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check
-                                //store K in the global matrix KK
-                                KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 ); //TODO check
-
                             }
 
                         }
+
+                        RES->add_vector_blocked ( Res, l2GMap1 ); //TODO check
+                        //store K in the global matrix KK
+                        KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 ); //TODO check
 
                     } // end iel loop
                 }//end jg loop
