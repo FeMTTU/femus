@@ -215,7 +215,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     short unsigned jelGroup;
                     unsigned nDof2;
                     unsigned nDofx2;
-                    
+
 
                     if ( iproc == kproc ) {
                         jelGeom = msh->GetElementType ( jel );
@@ -298,10 +298,9 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         }
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            double jacValue = weight1[ig] * weight2 * 1. /*( 1. / pow ( delta1, 4 ) )*/ * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
+                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta1, 4 ) ) * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
-
                                         }//endl i loop
 
                                         Res[j] += resU;
@@ -336,10 +335,9 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         }
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            double jacValue = weight1[ig] * weight2 * 1. /*( 1. / pow ( epsilon, 4 ) )*/ * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
+                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
-
                                         }//endl i loop
 
                                         Res[j] += resU;
@@ -374,10 +372,9 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         }
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            double jacValue = weight1[ig] * weight2 * 1. /*( 1. / pow ( epsilon, 4 ) )*/ * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
+                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
-
                                         }//endl i loop
 
                                         Res[j] += resU;
@@ -412,10 +409,9 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         }
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            double jacValue = weight1[ig] * weight2 * 1. /*( 1. / pow ( delta2, 4 ) )*/ * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
+                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta2, 4 ) ) * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
-
                                         }//endl i loop
 
                                         Res[j] += resU;
@@ -930,6 +926,10 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
     RES->close();
 
     KK->close();
+
+//     Mat A = ( static_cast<PetscMatrix*> ( KK ) )->mat();
+//     PetscViewer viewer;
+//     MatView(A, viewer);
 
     // ***************** END ASSEMBLY *******************
 }
