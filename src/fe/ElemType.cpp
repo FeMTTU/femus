@@ -1716,9 +1716,35 @@ namespace femus {
 
 //---------------------------------------------------------------------------------------------------------
 
-  void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry, const unsigned& ig, 
+  void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, 
                                    vector < double >& phi, vector < double >& gradphi) const {
                                        
+                                       
+    //check that our volume element shape is a quadrilateral, doesn't work for triangles for now
+    std::vector<int> face_orient_ref(_dim);     std::fill(face_orient_ref.begin(), face_orient_ref.end(), 0.);
+    std::vector<double> face_orient_real(_dim);    std::fill(face_orient_real.begin(), face_orient_real.end(), 0.);
+    double xi_factor;
+        
+    if      (jface == 0) { face_orient_ref[0]  = 1;  face_orient_ref[1] =  0; xi_factor = -1; }
+    else if (jface == 1) { face_orient_ref[0]  = 0;  face_orient_ref[1] =  1; xi_factor = +1; }
+    else if (jface == 2) { face_orient_ref[0] =  1;  face_orient_ref[1] =  0; xi_factor = +1; }
+    else if (jface == 3) { face_orient_ref[0]  = 0;  face_orient_ref[1] =  1; xi_factor = -1; }
+    
+    face_orient_real[0] = vt_bdry[0][1] - vt_bdry[0][0]; 
+    face_orient_real[1] = vt_bdry[1][1] - vt_bdry[1][0];
+    
+    double magn = 0.;
+    for (unsigned d = 0; d < _dim; d++) magn += face_orient_real[d]*face_orient_real[d]; 
+        
+     magn = sqrt(magn);
+    
+    for (unsigned d = 0; d < _dim; d++) { face_orient_real[d] /= magn; }
+    
+    double cosine_theta = 0.; 
+    for (unsigned d = 0; d < _dim; d++) cosine_theta += face_orient_real[d]*face_orient_ref[d];
+
+    
+    
     //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
     //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
     //we should access the bdry element and compute the abscissa using the coordinates of it
@@ -1732,20 +1758,20 @@ namespace femus {
     const double* pt_one_dim[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
     
     for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      double x_one_dim[1];
+      double xi_one_dim[1];
       for (unsigned j = 0; j < 1; j++) {
-        x_one_dim[j] = *pt_one_dim[j];
+        xi_one_dim[j] = *pt_one_dim[j];
         pt_one_dim[j]++;
       }
       
-      double x_vol[2];
-             x_vol[0] = -x_one_dim[0]; 
-             x_vol[1] = +1.;
+      double xi_vol[2];
+             xi_vol[1-abs(face_orient_ref[0])] = /*-*//*cosine_theta **/ xi_one_dim[0]; 
+             xi_vol[abs(face_orient_ref[0])]   = xi_factor * 1.;
       
       for (int j = 0; j < _nc; j++) {
-        _phi_bdry[i][j]      = _pt_basis->eval_phi(_IND[j], x_vol);
-        _dphidxi_bdry[i][j]  = _pt_basis->eval_dphidx(_IND[j], x_vol);
-        _dphideta_bdry[i][j] = _pt_basis->eval_dphidy(_IND[j], x_vol);
+        _phi_bdry[i][j]      = _pt_basis->eval_phi(_IND[j], xi_vol);
+        _dphidxi_bdry[i][j]  = _pt_basis->eval_dphidx(_IND[j], xi_vol);
+        _dphideta_bdry[i][j] = _pt_basis->eval_dphidy(_IND[j], xi_vol);
       }
       
     }

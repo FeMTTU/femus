@@ -7,7 +7,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             3  //we do control on the right (=2) face
+#define FACE_FOR_CONTROL             1  //we do control on the right (=2) face
 #define AXIS_DIRECTION_CONTROL_SIDE  0 //change this accordingly to the other variable above
 
 #include "../elliptic_param.hpp"
@@ -613,11 +613,24 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 //========= initialize gauss quantities on the boundary ============================================
 		
-		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
-		  
+        const unsigned n_gauss_bdry = msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber();
+        
+		for(unsigned ig_bdry=0; ig_bdry < n_gauss_bdry; ig_bdry++) {
+
+        //show the coordinate of the current ig_bdry point    
+    const double* pt_one_dim[1] = {msh->_finiteElement[kelGeom][solType_ctrl]->GetGaussRule_bdry()->GetGaussWeightsPointer() + 1*n_gauss_bdry };
+    
+      double xi_one_dim[1];
+      for (unsigned j = 0; j < 1; j++) {
+        xi_one_dim[j] = *pt_one_dim[j];
+        pt_one_dim[j]++;
+      }
+
+            
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
-		  msh->_finiteElement[kelGeom][solType_adj]->VolumeShapeAtBoundary(x,x_bdry,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+          if (kelGeom != QUAD) { std::cout << "VolumeShapeAtBoundary not implemented" << std::endl; abort(); } 
+		  msh->_finiteElement[kelGeom][solType_adj]->VolumeShapeAtBoundary(x,x_bdry,jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
 		      for (int iv = 0; iv < nDof_adj; iv++)  {
