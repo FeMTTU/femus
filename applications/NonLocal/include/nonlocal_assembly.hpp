@@ -1,7 +1,7 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
 
-//THIS IS THE ASSEMBLY FOR THE NONLOCAL INTERACTION PROBLEM
+//THIS IS THE ASSEMBLY FOR THE NONLOCAL INTERFACE PROBLEM
 
 using namespace femus;
 
