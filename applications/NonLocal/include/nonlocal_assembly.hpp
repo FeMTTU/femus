@@ -289,9 +289,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                         // *** Gauss point loop ***
                         unsigned jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
-                        vector < vector < double > > xg2 ( jgNumber );
-                        vector <double> weight2 ( jgNumber );
-                        vector < vector <double> > phi2y ( jgNumber ); // local test function
+                        vector <double>  phi2y;
+                        double weight2;
 
                         if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 5 || jelGroup == 7 ) ) { //both x and y are in Omega_1
 
@@ -328,40 +327,28 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );//TODO when using this function
-                                    //do the coordinates have to be order in any specific way?
-
-                                    xg2[jg].assign ( dim, 0. );
-
-                                    for ( unsigned j = 0; j < nDof2; j++ ) {
-                                        for ( unsigned k = 0; k < dim; k++ ) {
-                                            xg2[jg][k] += x2New[k][j] * phi2y[jg][j];
-                                        }
-                                    }
-                                }
-
-                                if ( iel == 48 ) {
-
-                                    for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
-                                        for ( unsigned k = 0; k < dim; k++ ) {
-                                            std::cout << "xg2[" << jg << "][" << k << "] = " << xg2[jg][k] << " ";
-                                        }
-
-                                        std::cout << std::endl;
-                                    }
-                                }
-
-
-                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
 
-                                        basis* jelBasis = msh->GetBasis ( jelGeom, soluType ); //TODO need a different function. for iel = 48 and jel = 45. two phi should be zero at xg1[0]
-                                        double phi2x = jelBasis->eval_phi ( j, xg1[ig] );
+                                        double phi2x = 0.;
 
-                                        if ( jel == 45 && iel == 48 ) std::cout << "jel =" << jel << " dof = " << j << " phi at " << ig << " = " << phi2x << std::endl;
+                                        unsigned globaljDof = msh->GetSolutionDof ( j, jel, soluType );
+                                        unsigned globaliDof;
 
-                                        if ( jel == 46 && iel == 48 ) std::cout << "jel =" << jel << " dof = " << j << " phi at " << ig << " = " << phi2x << std::endl;
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+
+                                            if ( globaljDof == globaliDof ) {
+                                                phi2x = phi1x[ig][i];
+                                            }
+                                        }
+
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );//TODO when using this function
+//do the x2New have to be ordered in a particular order?
+
+                                        if ( jel == 45 && iel == 48 ) std::cout << "jel =" << jel << " dof = " << globaljDof << " phi at " << ig << " = " << phi2x << std::endl;
+
+                                        if ( jel == 46 && iel == 48 ) std::cout << "jel =" << jel << " dof = " << globaljDof << " phi at " << ig << " = " << phi2x << std::endl;
 
                                         double resU = 0.;
 
@@ -371,10 +358,19 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
 
-                                            basis* ielBasis = msh->GetBasis ( ielGeom, soluType );
-                                            double phi1y = ielBasis->eval_phi ( i, xg2[jg] );
+                                            double phi1y = 0.;
 
-                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( delta1, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[jg][j] );
+                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                globaljDof = msh->GetSolutionDof ( j, jel, soluType );
+
+                                                if ( globaljDof == globaliDof ) {
+                                                    phi1y = phi2y[j];
+                                                }
+                                            }
+
+                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta1, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
@@ -398,23 +394,23 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             if ( theyIntersect ) {
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
-
-                                    xg2[jg].assign ( dim, 0. );
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
-                                        for ( unsigned k = 0; k < dim; k++ ) {
-                                            xg2[jg][k] += x2New[k][j] * phi2y[jg][j];
+
+                                        double phi2x = 0.;
+
+                                        unsigned globaljDof = msh->GetSolutionDof ( j, jel, soluType );
+                                        unsigned globaliDof;
+
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+
+                                            if ( globaljDof == globaliDof ) {
+                                                phi2x = phi1x[ig][i];
+                                            }
                                         }
-                                    }
-                                }
 
-                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
-
-                                    for ( unsigned j = 0; j < nDof2; j++ ) {
-
-                                        basis* jelBasis = msh->GetBasis ( jelGeom, soluType );
-                                        double phi2x = jelBasis->eval_phi ( j, xg1[ig] );
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
 
                                         double resU = 0.;
 
@@ -424,10 +420,19 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
 
-                                            basis* ielBasis = msh->GetBasis ( ielGeom, soluType );
-                                            double phi1y = ielBasis->eval_phi ( i, xg2[jg] );
+                                            double phi1y = 0.;
 
-                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[jg][j] );
+                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                globaljDof = msh->GetSolutionDof ( j, jel, soluType );
+
+                                                if ( globaljDof == globaliDof ) {
+                                                    phi1y = phi2y[j];
+                                                }
+                                            }
+
+                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
@@ -451,24 +456,24 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             if ( theyIntersect ) {
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
-
-                                    xg2[jg].assign ( dim, 0. );
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
-                                        for ( unsigned k = 0; k < dim; k++ ) {
-                                            xg2[jg][k] += x2New[k][j] * phi2y[jg][j];
+
+                                        double phi2x = 0.;
+
+                                        unsigned globaljDof = msh->GetSolutionDof ( j, jel, soluType );
+                                        unsigned globaliDof;
+
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+
+                                            if ( globaljDof == globaliDof ) {
+                                                phi2x = phi1x[ig][i];
+                                            }
                                         }
-                                    }
-                                }
 
-                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
-
-                                    for ( unsigned j = 0; j < nDof2; j++ ) {
-
-                                        basis* jelBasis = msh->GetBasis ( jelGeom, soluType );
-                                        double phi2x = jelBasis->eval_phi ( j, xg1[ig] );
-
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                        
                                         double resU = 0.;
 
                                         if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
@@ -477,10 +482,19 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
 
-                                            basis* ielBasis = msh->GetBasis ( ielGeom, soluType );
-                                            double phi1y = ielBasis->eval_phi ( i, xg2[jg] );
+                                            double phi1y = 0.;
 
-                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[jg][j] );
+                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                globaljDof = msh->GetSolutionDof ( j, jel, soluType );
+
+                                                if ( globaljDof == globaliDof ) {
+                                                    phi1y = phi2y[j];
+                                                }
+                                            }
+
+                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
@@ -503,25 +517,48 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             if ( theyIntersect ) {
 
-                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
-
-                                    xg2[jg].assign ( dim, 0. );
+                                if ( iel == 48 ) {
+                                    std::cout << "ig = " << ig << " jel intersected = " << jel << std::endl;
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
                                         for ( unsigned k = 0; k < dim; k++ ) {
-                                            xg2[jg][k] += x2New[k][j] * phi2y[jg][j];
+                                            std::cout << "x2Old[" << k << "][" << j << "] = " << x2[k][j] << " ";
                                         }
+
+                                        std::cout << std::endl;
                                     }
+
+
+                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+                                        for ( unsigned k = 0; k < dim; k++ ) {
+                                            std::cout << "x2New[" << k << "][" << j << "] = " << x2New[k][j] << " ";
+                                        }
+
+                                        std::cout << std::endl;
+                                    }
+
                                 }
+
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
 
-                                        basis* jelBasis = msh->GetBasis ( jelGeom, soluType );
-                                        double phi2x = jelBasis->eval_phi ( j, xg1[ig] );
+                                        double phi2x = 0.;
 
+                                        unsigned globaljDof = msh->GetSolutionDof ( j, jel, soluType );
+                                        unsigned globaliDof;
+
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+
+                                            if ( globaljDof == globaliDof ) {
+                                                phi2x = phi1x[ig][i];
+                                            }
+                                        }
+
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                        
                                         double resU = 0.;
 
                                         if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
@@ -530,10 +567,19 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
 
-                                            basis* ielBasis = msh->GetBasis ( ielGeom, soluType );
-                                            double phi1y = ielBasis->eval_phi ( i, xg2[jg] );
+                                            double phi1y = 0.;
 
-                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( delta2, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[jg][j] );
+                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                globaljDof = msh->GetSolutionDof ( j, jel, soluType );
+
+                                                if ( globaljDof == globaliDof ) {
+                                                    phi1y = phi2y[j];
+                                                }
+                                            }
+
+                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta2, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
@@ -1141,6 +1187,7 @@ void RectangleAndBallRelation ( bool &theyIntersect, const std::vector<double> &
     }
 
 }
+
 
 
 
