@@ -207,39 +207,40 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
             bool theyIntersect;
             double radius;
 
-            for ( int kproc = 0; kproc < nprocs; kproc++ ) {
-                // element loop: each process loops only on the elements that owns
-                for ( int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++ ) {
 
-                    short unsigned jelGeom;
-                    short unsigned jelGroup;
-                    unsigned nDof2;
-                    unsigned nDofx2;
+            for ( unsigned ig = 0; ig < igNumber; ig++ ) {
+
+                for ( int kproc = 0; kproc < nprocs; kproc++ ) {
+                    // element loop: each process loops only on the elements that owns
+                    for ( int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++ ) {
+
+                        short unsigned jelGeom;
+                        short unsigned jelGroup;
+                        unsigned nDof2;
+                        unsigned nDofx2;
 
 
-                    if ( iproc == kproc ) {
-                        jelGeom = msh->GetElementType ( jel );
-                        jelGroup = msh->GetElementGroup ( jel );
-                        nDof2  = msh->GetElementDofNumber ( jel, soluType ); // number of solution element dofs
-                        nDofx2 = msh->GetElementDofNumber ( jel, xType ); // number of coordinate element dofs
-                    }
+                        if ( iproc == kproc ) {
+                            jelGeom = msh->GetElementType ( jel );
+                            jelGroup = msh->GetElementGroup ( jel );
+                            nDof2  = msh->GetElementDofNumber ( jel, soluType ); // number of solution element dofs
+                            nDofx2 = msh->GetElementDofNumber ( jel, xType ); // number of coordinate element dofs
+                        }
 
-                    MPI_Bcast ( &jelGeom, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD );
-                    MPI_Bcast ( &jelGroup, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD );
-                    MPI_Bcast ( &nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
-                    MPI_Bcast ( &nDofx2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
+                        MPI_Bcast ( &jelGeom, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD );
+                        MPI_Bcast ( &jelGroup, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD );
+                        MPI_Bcast ( &nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
+                        MPI_Bcast ( &nDofx2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
 
-                    // resize local arrays
-                    l2GMap2.resize ( nDof2 );
+                        // resize local arrays
+                        l2GMap2.resize ( nDof2 );
 
-                    Res.assign ( nDof2, 0. );
-                    Jac.assign ( nDof1 * nDof2, 0. );
+                        Res.assign ( nDof2, 0. );
+                        Jac.assign ( nDof1 * nDof2, 0. );
 
-                    for ( int k = 0; k < dim; k++ ) {
-                        x2[k].resize ( nDofx2 );
-                    }
-
-                    for ( unsigned ig = 0; ig < igNumber; ig++ ) {
+                        for ( int k = 0; k < dim; k++ ) {
+                            x2[k].resize ( nDofx2 );
+                        }
 
                         // local storage of global mapping and solution
                         if ( iproc == kproc ) {
@@ -249,7 +250,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         }
 
                         MPI_Bcast ( &l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
-                        MPI_Bcast ( &soluNonLoc[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
 
                         // local storage of coordinates
                         if ( iproc == kproc ) {
@@ -268,10 +268,9 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                         // *** Gauss point loop ***
                         unsigned jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
-                        double weight2;
-                        vector <double> phi1y;  // local test function
-                        vector <double> phi2x;
-                        vector <double> phi2y;
+                        vector < vector < double > > xg2 ( jgNumber );
+                        vector <double> weight2 ( jgNumber );
+                        vector < vector <double> > phi2y ( jgNumber ); // local test function
 
                         if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 5 || jelGroup == 7 ) ) { //both x and y are in Omega_1
 
@@ -285,20 +284,36 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             if ( theyIntersect ) {
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
 
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi1y, phi_x );
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
-                                    msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight1[ig], phi2x, phi_x );
+                                    xg2[jg].assign ( dim, 0. );
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
+                                        for ( unsigned k = 0; k < dim; k++ ) {
+                                            xg2[jg][k] += x2New[k][j] * phi2y[jg][j];
+                                        }
+                                    }
+                                }
+
+                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+
+                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+
+                                        basis* jelBasis = msh->GetBasis ( jelGeom, soluType );
+                                        double phi2x = jelBasis->eval_phi ( j, xg1[ig] );
+
                                         double resU = 0.;
 
                                         if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * weight2 * phi2x[j]; //Res = Ax - f so f = 1
+                                            resU = - 1. * weight1[ig] * phi2x; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta1, 4 ) ) * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
+
+                                            basis* ielBasis = msh->GetBasis ( ielGeom, soluType );
+                                            double phi1y = ielBasis->eval_phi ( i, xg2[jg] );
+
+                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( delta1, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[jg][j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
@@ -322,20 +337,36 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             if ( theyIntersect ) {
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
 
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi1y, phi_x );
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
-                                    msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight1[ig], phi2x, phi_x );
+                                    xg2[jg].assign ( dim, 0. );
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
+                                        for ( unsigned k = 0; k < dim; k++ ) {
+                                            xg2[jg][k] += x2New[k][j] * phi2y[jg][j];
+                                        }
+                                    }
+                                }
+
+                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+
+                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+
+                                        basis* jelBasis = msh->GetBasis ( jelGeom, soluType );
+                                        double phi2x = jelBasis->eval_phi ( j, xg1[ig] );
+
                                         double resU = 0.;
 
                                         if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * weight2 * phi2x[j]; //Res = Ax - f so f = 1
+                                            resU = - 1. * weight1[ig] * phi2x; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
+
+                                            basis* ielBasis = msh->GetBasis ( ielGeom, soluType );
+                                            double phi1y = ielBasis->eval_phi ( i, xg2[jg] );
+
+                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[jg][j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
@@ -359,20 +390,36 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             if ( theyIntersect ) {
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
 
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi1y, phi_x );
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
-                                    msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight1[ig], phi2x, phi_x );
+                                    xg2[jg].assign ( dim, 0. );
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
+                                        for ( unsigned k = 0; k < dim; k++ ) {
+                                            xg2[jg][k] += x2New[k][j] * phi2y[jg][j];
+                                        }
+                                    }
+                                }
+
+                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+
+                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+
+                                        basis* jelBasis = msh->GetBasis ( jelGeom, soluType );
+                                        double phi2x = jelBasis->eval_phi ( j, xg1[ig] );
+
                                         double resU = 0.;
 
                                         if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * weight2 * phi2x[j]; //Res = Ax - f so f = 1
+                                            resU = - 1. * weight1[ig] * phi2x; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
+
+                                            basis* ielBasis = msh->GetBasis ( ielGeom, soluType );
+                                            double phi1y = ielBasis->eval_phi ( i, xg2[jg] );
+
+                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[jg][j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
@@ -396,20 +443,36 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             if ( theyIntersect ) {
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
 
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi1y, phi_x );
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
-                                    msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight1[ig], phi2x, phi_x );
+                                    xg2[jg].assign ( dim, 0. );
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
+                                        for ( unsigned k = 0; k < dim; k++ ) {
+                                            xg2[jg][k] += x2New[k][j] * phi2y[jg][j];
+                                        }
+                                    }
+                                }
+
+                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+
+                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+
+                                        basis* jelBasis = msh->GetBasis ( jelGeom, soluType );
+                                        double phi2x = jelBasis->eval_phi ( j, xg1[ig] );
+
                                         double resU = 0.;
 
                                         if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * weight2 * phi2x[j]; //Res = Ax - f so f = 1
+                                            resU = - 1. * weight1[ig] * phi2x; //Res = Ax - f so f = 1
                                         }
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta2, 4 ) ) * ( phi1x[ig][i] -  phi1y[i] ) * ( bc1 * phi2x[j] - bc2 * phi2y[j] );
+
+                                            basis* ielBasis = msh->GetBasis ( ielGeom, soluType );
+                                            double phi1y = ielBasis->eval_phi ( i, xg2[jg] );
+
+                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( delta2, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[jg][j] );
                                             Jac[j * nDof1 + i] += jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
@@ -998,6 +1061,7 @@ void RectangleAndBallRelation ( bool &theyIntersect, const std::vector<double> &
     }
 
 }
+
 
 
 
