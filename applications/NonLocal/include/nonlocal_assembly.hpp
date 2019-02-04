@@ -188,7 +188,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
             if ( iel == 48 ) {//TODO why they are not in order as in elem?
                 for ( unsigned i = 0; i < nDofx1; i++ ) {
                     for ( unsigned k = 0; k < dim; k++ ) {
-                        std::cout << "x1[" << k << "][" << i << "] = " << x1[k][i] ;
+                        std::cout << "x1[" << k << "][" << i << "] = " << x1[k][i] << " ";
                     }
 
                     std::cout << std::endl;
@@ -216,7 +216,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
             if ( iel == 48 ) {
                 for ( unsigned ig = 0; ig < igNumber; ig++ ) {
                     for ( unsigned k = 0; k < dim; k++ ) {
-                        std::cout << "xg1[" << ig << "][" << k << "] = " << xg1[ig][k] ;
+                        std::cout << "xg1[" << ig << "][" << k << "] = " << xg1[ig][k] << " ";
                     }
 
                     std::cout << std::endl;
@@ -287,17 +287,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             MPI_Bcast ( & x2[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
                         }
 
-                        if ( jel == 48 && iel == 48 ) {
-                            for ( unsigned j = 0; j < nDofx2; j++ ) {
-                                for ( unsigned k = 0; k < dim; k++ ) {
-                                    std::cout << "x2[" << k << "][" << j << "] = " << x2[k][j] ;
-                                }
-
-                                std::cout << std::endl;
-                            }
-                        }
-
-
                         // *** Gauss point loop ***
                         unsigned jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
                         vector < vector < double > > xg2 ( jgNumber );
@@ -313,14 +302,34 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             RectangleAndBallRelation ( theyIntersect, xg1[ig], radius, x2, x2New );
 
-                            if ( iel == 48 && jel == 48 ) std::cout << "theyIntersect = " << theyIntersect << std::endl; //TODO problem here
-
                             if ( theyIntersect ) {
 
-                                if ( iel == 48 ) std::cout << "jel intersected = " << jel << std::endl;
+                                if ( iel == 48 ) {
+                                    std::cout << "ig = " << ig << " jel intersected = " << jel << std::endl;
+
+                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+                                        for ( unsigned k = 0; k < dim; k++ ) {
+                                            std::cout << "x2Old[" << k << "][" << j << "] = " << x2[k][j] << " ";
+                                        }
+
+                                        std::cout << std::endl;
+                                    }
+
+
+                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+                                        for ( unsigned k = 0; k < dim; k++ ) {
+                                            std::cout << "x2New[" << k << "][" << j << "] = " << x2New[k][j] << " ";
+                                        }
+
+                                        std::cout << std::endl;
+                                    }
+
+                                }
+
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
-                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
+                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );//TODO when using this function
+                                    //do the coordinates have to be order in any specific way?
 
                                     xg2[jg].assign ( dim, 0. );
 
@@ -331,12 +340,28 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                     }
                                 }
 
+                                if ( iel == 48 ) {
+
+                                    for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                        for ( unsigned k = 0; k < dim; k++ ) {
+                                            std::cout << "xg2[" << jg << "][" << k << "] = " << xg2[jg][k] << " ";
+                                        }
+
+                                        std::cout << std::endl;
+                                    }
+                                }
+
+
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
 
-                                        basis* jelBasis = msh->GetBasis ( jelGeom, soluType );
+                                        basis* jelBasis = msh->GetBasis ( jelGeom, soluType ); //TODO need a different function. for iel = 48 and jel = 45. two phi should be zero at xg1[0]
                                         double phi2x = jelBasis->eval_phi ( j, xg1[ig] );
+
+                                        if ( jel == 45 && iel == 48 ) std::cout << "jel =" << jel << " dof = " << j << " phi at " << ig << " = " << phi2x << std::endl;
+
+                                        if ( jel == 46 && iel == 48 ) std::cout << "jel =" << jel << " dof = " << j << " phi at " << ig << " = " << phi2x << std::endl;
 
                                         double resU = 0.;
 
@@ -1065,12 +1090,15 @@ void RectangleAndBallRelation ( bool &theyIntersect, const std::vector<double> &
     double yMaxElem = elementCoordinates[1][2];
 
 
-        for ( unsigned i = 0; i < 4; i++ ) {
-            if(elementCoordinates[0][i] < xMinElem) xMinElem = elementCoordinates[0][i];
-            if(elementCoordinates[0][i] > xMaxElem) xMaxElem = elementCoordinates[0][i];
-            if(elementCoordinates[1][i] < yMinElem) yMinElem = elementCoordinates[1][i];
-            if(elementCoordinates[1][i] > yMaxElem) yMaxElem = elementCoordinates[1][i];
-        }
+    for ( unsigned i = 0; i < 4; i++ ) {
+        if ( elementCoordinates[0][i] < xMinElem ) xMinElem = elementCoordinates[0][i];
+
+        if ( elementCoordinates[0][i] > xMaxElem ) xMaxElem = elementCoordinates[0][i];
+
+        if ( elementCoordinates[1][i] < yMinElem ) yMinElem = elementCoordinates[1][i];
+
+        if ( elementCoordinates[1][i] > yMaxElem ) yMaxElem = elementCoordinates[1][i];
+    }
 
 
 
