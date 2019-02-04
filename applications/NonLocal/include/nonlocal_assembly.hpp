@@ -31,9 +31,9 @@ double meanInput = 0.;
 //END to remove
 
 bool nonLocalAssembly = true;
-double delta1 = 0.15; //1.5 * mesh size
-double delta2 = 0.1; //mesh size (it is 0.1 for 2 refinements)
-double epsilon = delta1; //max{delta_1,delta_2}
+double delta1 = 0.1; //mesh size (it is 0.1 for 2 refinements)
+double delta2 = 0.15; //1.5 * mesh size
+double epsilon = delta2; //max{delta_1,delta_2}
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
@@ -185,6 +185,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                 }
             }
 
+            if ( iel == 48 ) {//TODO why they are not in order as in elem?
+                for ( unsigned i = 0; i < nDofx1; i++ ) {
+                    for ( unsigned k = 0; k < dim; k++ ) {
+                        std::cout << "x1[" << k << "][" << i << "] = " << x1[k][i] ;
+                    }
+
+                    std::cout << std::endl;
+                }
+            }
+
             unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
             vector < vector < double > > xg1 ( igNumber );
             vector <double> weight1 ( igNumber );
@@ -199,6 +209,17 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     for ( unsigned k = 0; k < dim; k++ ) {
                         xg1[ig][k] += x1[k][i] * phi1x[ig][i];
                     }
+                }
+            }
+
+
+            if ( iel == 48 ) {
+                for ( unsigned ig = 0; ig < igNumber; ig++ ) {
+                    for ( unsigned k = 0; k < dim; k++ ) {
+                        std::cout << "xg1[" << ig << "][" << k << "] = " << xg1[ig][k] ;
+                    }
+
+                    std::cout << std::endl;
                 }
             }
 
@@ -266,6 +287,17 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             MPI_Bcast ( & x2[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
                         }
 
+                        if ( jel == 48 && iel == 48 ) {
+                            for ( unsigned j = 0; j < nDofx2; j++ ) {
+                                for ( unsigned k = 0; k < dim; k++ ) {
+                                    std::cout << "x2[" << k << "][" << j << "] = " << x2[k][j] ;
+                                }
+
+                                std::cout << std::endl;
+                            }
+                        }
+
+
                         // *** Gauss point loop ***
                         unsigned jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
                         vector < vector < double > > xg2 ( jgNumber );
@@ -281,7 +313,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             RectangleAndBallRelation ( theyIntersect, xg1[ig], radius, x2, x2New );
 
+                            if ( iel == 48 && jel == 48 ) std::cout << "theyIntersect = " << theyIntersect << std::endl; //TODO problem here
+
                             if ( theyIntersect ) {
+
+                                if ( iel == 48 ) std::cout << "jel intersected = " << jel << std::endl;
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
                                     msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
@@ -1023,6 +1059,22 @@ void RectangleAndBallRelation ( bool &theyIntersect, const std::vector<double> &
         }
     }
 
+    double xMinElem = elementCoordinates[0][0];
+    double yMinElem = elementCoordinates[1][0];
+    double xMaxElem = elementCoordinates[0][2];
+    double yMaxElem = elementCoordinates[1][2];
+
+
+        for ( unsigned i = 0; i < 4; i++ ) {
+            if(elementCoordinates[0][i] < xMinElem) xMinElem = elementCoordinates[0][i];
+            if(elementCoordinates[0][i] > xMaxElem) xMaxElem = elementCoordinates[0][i];
+            if(elementCoordinates[1][i] < yMinElem) yMinElem = elementCoordinates[1][i];
+            if(elementCoordinates[1][i] > yMaxElem) yMaxElem = elementCoordinates[1][i];
+        }
+
+
+
+
     //bottom left corner of ball (south west)
     ballVerticesCoordinates[0][0] =  ballCenter[0] - ballRadius;
     ballVerticesCoordinates[1][0] =  ballCenter[1] - ballRadius;
@@ -1031,11 +1083,11 @@ void RectangleAndBallRelation ( bool &theyIntersect, const std::vector<double> &
     ballVerticesCoordinates[0][2] = ballCenter[0] + ballRadius;
     ballVerticesCoordinates[1][2] = ballCenter[1] + ballRadius;
 
-    newCoordinates[0][0] = ( ballVerticesCoordinates[0][0] >= elementCoordinates[0][0] ) ? ballVerticesCoordinates[0][0] : elementCoordinates[0][0];
-    newCoordinates[1][0] = ( ballVerticesCoordinates[1][0] >= elementCoordinates[1][0] ) ? ballVerticesCoordinates[1][0] : elementCoordinates[1][0];
+    newCoordinates[0][0] = ( ballVerticesCoordinates[0][0] >= xMinElem ) ? ballVerticesCoordinates[0][0] : xMinElem;
+    newCoordinates[1][0] = ( ballVerticesCoordinates[1][0] >= yMinElem ) ? ballVerticesCoordinates[1][0] : yMinElem;
 
-    newCoordinates[0][2] = ( ballVerticesCoordinates[0][2] >= elementCoordinates[0][2] ) ? elementCoordinates[0][2] : ballVerticesCoordinates[0][2];
-    newCoordinates[1][2] = ( ballVerticesCoordinates[1][2] >= elementCoordinates[1][2] ) ? elementCoordinates[1][2] : ballVerticesCoordinates[1][2];
+    newCoordinates[0][2] = ( ballVerticesCoordinates[0][2] >= xMaxElem ) ? xMaxElem : ballVerticesCoordinates[0][2];
+    newCoordinates[1][2] = ( ballVerticesCoordinates[1][2] >= yMaxElem ) ? yMaxElem : ballVerticesCoordinates[1][2];
 
     if ( newCoordinates[0][0] < newCoordinates[0][2] && newCoordinates[1][0] < newCoordinates[1][2] ) { //ball and rectangle intersect
 
