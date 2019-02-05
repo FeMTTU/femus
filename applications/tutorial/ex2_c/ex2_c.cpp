@@ -81,7 +81,7 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 6;
+    maxNumberOfMeshes = 3;
   } else {
     maxNumberOfMeshes = 4;
   }
@@ -753,7 +753,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 //         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i]       = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-//       solu_finer[i] = /*weird_multigrid_factor * */(*sol_finer->_Sol[soluIndex])(solDof);
+      solu_finer[i] = /*weird_multigrid_factor * */(*sol_finer->_Sol[soluIndex])(solDof);
       solu_exact_at_dofs[i] = GetExactSolutionValue(x_at_node);
     }
 
@@ -847,8 +847,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 
   std::pair < double, double > inexact_pair(sqrt(l2norm_inexact), sqrt(seminorm_inexact));
   
-  return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
+//   return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
 //   return std::pair < double, double > (sqrt(l2norm_exact_dofs), sqrt(seminorm_exact_dofs));
-//   return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
+  return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
 
 }
