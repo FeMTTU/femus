@@ -25,19 +25,13 @@
 #include "assert.h"
 
 namespace femus {
-<<<<<<< HEAD
+
     
 /**
  * This class provides a specific system class for the time integration of system PDE
  * using the Runge Kutta schemes.
  */
-=======
 
-  /**
-   * This class provides a specific system class for the time integration of system PDE
-   * using the Newmark algorithm.
-   */
->>>>>>> 137150e40fff16af420ad8fc7bb9d8ebac4df18f
 
 // ------------------------------------------------------------
 // TransientSystem class definition

@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-/** tutorial/Ex15 
- * This example shows how to set and solve the weak form of the Bistable Equation 
-=======
+
 /** tutorial/Ex14
  * This example shows how to set and solve the weak form of the Bistable Equation
 >>>>>>> 137150e40fff16af420ad8fc7bb9d8ebac4df18f
@@ -101,16 +98,14 @@ int main (int argc, char** args) {
   // add system AllanChan in mlProb as an ImplicitRungeKuttaNonlinearImplicitSystem
   ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("AllanChan");
 
-<<<<<<< HEAD
-  system.AddSolutionToSystemPDE("u");
+
   
-=======
   system.SetRungeKuttaStages (3);
 
   system.AddSolutionToSystemPDE ("u");
 
 
->>>>>>> 137150e40fff16af420ad8fc7bb9d8ebac4df18f
+
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleAllanChanProblem_AD);
 
@@ -273,11 +268,9 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
     soluOld.resize (nDofu);
 
     for (int k = 0; k < dim; k++) {
-<<<<<<< HEAD
-      x[k].resize(nDofx);  
-=======
+
       x[k].resize (nDofx); // Now we
->>>>>>> 137150e40fff16af420ad8fc7bb9d8ebac4df18f
+
     }
 
   

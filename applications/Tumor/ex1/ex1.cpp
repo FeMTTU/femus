@@ -108,10 +108,10 @@ int main(int argc, char** args) {
   
   mlSol.Initialize("All");
   if(dim==2)
-   mlSol.Initialize("u", InitalValueU2D);
+    mlSol.Initialize("u", InitalValueU2D);
   else
     mlSol.Initialize("u", InitalValueU3D);
-  mlSol.Initialize("d", InitalValueD);
+    mlSol.Initialize("d", InitalValueD);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -263,7 +263,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
      
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType); // number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
     // resize local arrays
