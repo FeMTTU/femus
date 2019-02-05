@@ -22,7 +22,7 @@ using namespace femus;
 
 
 double GetTimeStep(const double time) {
-  double dt = .002;
+  double dt = .01;
   return dt;
 }
 
@@ -51,12 +51,11 @@ double InitalValueU3D(const std::vector < double >& x) {
   double R = 1.0001;
   double R2 = R * R;
   double R3 = R2 * R;
-  //double Vb = 1.268112; // exp( (( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
-  double Vb = 4./3. * M_PI * R3; //0.265048;  // exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
-  double V0 = 1./1.2; // fraction of injection vs tumor
-  //std::cout << V0/Vb * exp( (10.*( 1. - R2 / ( R2 - r2 )) ))<<" "; // IC vanishing near the boundary.
+  double Vb = 1.1990039070212866;
+  double V0 = 0.25; // fraction of injection vs tumor
   
-  return V0/Vb * exp( (12.*( 1. - R2 / ( R2 - r2 )) ));
+  
+  return V0 / Vb * exp(  ( 1. - R2 / ( R2 - r2 ) ));
 }
 
 double InitalValueD(const std::vector < double >& x) {
@@ -76,22 +75,30 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
   // define MultiLevel object "mlMsh". 
-  MultiLevelMesh mlMsh;
+  //MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/ball.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/ball.neu", "seventh", scalingFactor);
+  
+  
+ 
+  
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in future it is not going to be an argument of this function   */
-  unsigned dim = mlMsh.GetDimension(); // Domain dimension of the problem.
+  // Domain dimension of the problem.
   unsigned maxNumberOfMeshes; // The number of mesh levels.
 
-  unsigned numberOfUniformLevels = 1; //We apply uniform refinement.
+  unsigned numberOfUniformLevels = 3; //We apply uniform refinement.
   unsigned numberOfSelectiveLevels = 0; // We may want to see the solution on some levels.
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  //mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
+  MultiLevelMesh mlMsh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels,
+                       "./input/ball.neu", "fifth", 1., NULL);
+  
+  unsigned dim = mlMsh.GetDimension();
     // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
+  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
 
     // print mesh info
   mlMsh.PrintInfo();
@@ -115,8 +122,12 @@ int main(int argc, char** args) {
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.GenerateBdc("u");
+  
+   
+  mlSol.GenerateBdc("u","Steady");
 
+   
+  
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol); //
 
@@ -125,7 +136,8 @@ int main(int argc, char** args) {
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("u");
-
+  
+  
   // attach the assembling function to system
   system.SetAssembleFunction(AssemblePoissonProblem_AD);
 
@@ -134,7 +146,17 @@ int main(int argc, char** args) {
   const unsigned int n_timesteps = 300;
 
   
+  system.SetMaxNumberOfNonLinearIterations(1);
+  system.SetMaxNumberOfLinearIterations (10);
+  system.SetAbsoluteLinearConvergenceTolerance ( 1.e-8 );
+  
+  
+  
+  
   system.init();
+  
+  system.SetPreconditionerFineGrids(JACOBI_PRECOND);
+  system.SetMgType(V_CYCLE);
   
    // ******* Print solution *******
   mlSol.SetWriter(VTK);
@@ -337,7 +359,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
           double eps = 5.; 
           for ( unsigned i = 0; i < faceDofs; i++ ) {
             unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i );
-            aRes[inode] +=  phi[i] * eps * 0.5 * (solu_gss + soluOld_gss) * weight;
+            aRes[inode] +=  phi[i] * eps * ( 1.0 * solu_gss + 0. * soluOld_gss) * weight;
           }        
         }
       }
@@ -377,7 +399,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
           graduOldGradphi   +=   phi_x[i * dim + k] * gradSoluOld_gss[k];
         }
              
-        aRes[i] += ( (solu_gss - soluOld_gss) * phi[i] / dt +  ( .5 * graduGradphi + .5 * graduOldGradphi ) ) * weight;
+        aRes[i] += ( (solu_gss - soluOld_gss) * phi[i] / dt +  ( 1. * graduGradphi + 0. * graduOldGradphi ) ) * weight;
 
       } // end phi_i loop
     } // end gauss point loop
