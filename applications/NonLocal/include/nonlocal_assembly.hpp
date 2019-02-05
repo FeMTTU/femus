@@ -1,5 +1,6 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
+#include "Marker.hpp"
 
 //THIS IS THE ASSEMBLY FOR THE NONLOCAL INTERFACE PROBLEM
 
@@ -332,23 +333,75 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double phi2x = 0.;
 
-                                        unsigned globaljDof = msh->GetSolutionDof ( j, jel, soluType );
-                                        unsigned globaliDof;
+                                        std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
 
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+                                        for ( unsigned n = 0; n < dim; n++ ) {
+                                            sameNodePhi2x[n].assign ( nDof1, 0 );
 
-                                            if ( globaljDof == globaliDof ) {
-                                                phi2x = phi1x[ig][i];
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
                                             }
                                         }
 
-                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );//TODO when using this function
-//do the x2New have to be ordered in a particular order?
+                                        std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
 
-                                        if ( jel == 45 && iel == 48 ) std::cout << "jel =" << jel << " dof = " << globaljDof << " phi at " << ig << " = " << phi2x << std::endl;
 
-                                        if ( jel == 46 && iel == 48 ) std::cout << "jel =" << jel << " dof = " << globaljDof << " phi at " << ig << " = " << phi2x << std::endl;
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
+                                            }
+                                        }
+
+
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            if ( areTheyTheSamePhi2x[i] == dim ) {
+                                                phi2x = phi1x[ig][i];
+
+                                                if ( jel == 45 && iel == 48 ) std::cout << "dof check:" << msh->GetSolutionDof ( j, jel, soluType ) << "," << msh->GetSolutionDof ( i, iel, soluType ) << "j= " << j << ", " << "i= " << i << std::endl;
+                                            }
+                                        }
+
+
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+
+
+                                        std::vector<double> xg2 ( dim, 0. );
+
+                                        for ( unsigned j = 0; j < nDof2; j++ ) {
+                                            for ( unsigned k = 0; k < dim; k++ ) {
+                                                xg2[k] += x2New[k][j] * phi2y[j];
+                                            }
+                                        }
+
+                                        Marker marker ( xg2, 0., VOLUME, mlSol->GetLevel ( level ), 2, true );
+                                        std::vector<double> xg2Local;
+                                        marker.GetMarkerLocalCoordinates ( xg2Local );
+
+                                        if ( jel == 45 && iel == 48 ) {
+
+                                            std::cout << "xg2Local[" << 0 << "]= " << xg2Local[0] << " , " << "xg2Local[" << 1 << "]= " << xg2Local[1] << std::endl;
+                                        }
+
+                                        double weightTemp;
+
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+
+                                        if ( jel == 45 && iel == 48 ) {
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                std::cout << "phi2y[" << j << "] = " << phi2y[j] << " ";
+                                            }
+
+                                            std::cout << std::endl;
+
+
+                                            for ( unsigned k = 0; k < dim; k++ ) {
+                                                std::cout << "new Gauss points xg2[ " << k << " ] = " << xg2[k] ;
+                                            }
+
+                                            std::cout << std::endl;
+
+                                            std::cout << "jel =" << jel << " dof = " << msh->GetSolutionDof ( j, jel, soluType ) << " phi at ig = " << ig << " = " << phi2x << std::endl;
+                                        }
 
                                         double resU = 0.;
 
@@ -360,15 +413,35 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                             double phi1y = 0.;
 
-                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+                                            std::vector< std::vector <unsigned > > sameNodePhi1y ( dim );
 
-                                            for ( unsigned j = 0; j < nDof2; j++ ) {
-                                                globaljDof = msh->GetSolutionDof ( j, jel, soluType );
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                sameNodePhi1y[n].assign ( nDof2, 0 );
 
-                                                if ( globaljDof == globaliDof ) {
-                                                    phi1y = phi2y[j];
+                                                for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                    if ( x1[n][i] == x2[n][j] ) sameNodePhi1y[n][j] = 1;
                                                 }
                                             }
+
+                                            std::vector<unsigned> areTheyTheSamePh1y ( nDof2, 0 );
+
+
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                for ( unsigned n = 0; n < dim; n++ ) {
+                                                    areTheyTheSamePh1y[j] += sameNodePhi1y[n][j];
+                                                }
+                                            }
+
+
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                if ( areTheyTheSamePh1y[j] == dim ) {
+                                                    phi1y = phi2y[j];
+
+                                                    if ( jel == 45 && iel == 48 ) std::cout << "dof check 2:" << msh->GetSolutionDof ( j, jel, soluType ) << "," << msh->GetSolutionDof ( i, iel, soluType ) << "j= " << j << ", " << "i= " << i << std::endl;
+                                                }
+                                            }
+
+                                            if ( jel == 45 && iel == 48 ) std::cout << "jel =" << jel << " dof i = " << msh->GetSolutionDof ( i, iel, soluType ) << " phi at " << jg << " = " << phi1y << std::endl;
 
                                             double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta1, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
                                             Jac[j * nDof1 + i] += jacValue;
@@ -399,18 +472,48 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double phi2x = 0.;
 
-                                        unsigned globaljDof = msh->GetSolutionDof ( j, jel, soluType );
-                                        unsigned globaliDof;
+                                        std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
 
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+                                        for ( unsigned n = 0; n < dim; n++ ) {
+                                            sameNodePhi2x[n].assign ( nDof1, 0 );
 
-                                            if ( globaljDof == globaliDof ) {
-                                                phi2x = phi1x[ig][i];
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
                                             }
                                         }
 
+                                        std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
+
+
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
+                                            }
+                                        }
+
+
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            if ( areTheyTheSamePhi2x[i] == dim ) phi2x = phi1x[ig][i];
+                                        }
+
                                         msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+
+
+                                        std::vector<double> xg2 ( dim, 0. );
+
+                                        for ( unsigned j = 0; j < nDof2; j++ ) {
+                                            for ( unsigned k = 0; k < dim; k++ ) {
+                                                xg2[k] += x2New[k][j] * phi2y[j];
+                                            }
+                                        }
+
+                                        Marker marker ( xg2, 0., VOLUME, mlSol->GetLevel ( level ), 2, true );
+                                        std::vector<double> xg2Local;
+                                        marker.GetMarkerLocalCoordinates ( xg2Local );
+
+                                        double weightTemp;
+
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
 
                                         double resU = 0.;
 
@@ -422,14 +525,28 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                             double phi1y = 0.;
 
-                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+                                            std::vector< std::vector <unsigned > > sameNodePhi1y ( dim );
+
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                sameNodePhi1y[n].assign ( nDof2, 0 );
+
+                                                for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                    if ( x1[n][i] == x2[n][j] ) sameNodePhi1y[n][j] = 1;
+                                                }
+                                            }
+
+                                            std::vector<unsigned> areTheyTheSamePh1y ( nDof2, 0 );
+
 
                                             for ( unsigned j = 0; j < nDof2; j++ ) {
-                                                globaljDof = msh->GetSolutionDof ( j, jel, soluType );
-
-                                                if ( globaljDof == globaliDof ) {
-                                                    phi1y = phi2y[j];
+                                                for ( unsigned n = 0; n < dim; n++ ) {
+                                                    areTheyTheSamePh1y[j] += sameNodePhi1y[n][j];
                                                 }
+                                            }
+
+
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                if ( areTheyTheSamePh1y[j] == dim ) phi1y = phi2y[j];
                                             }
 
                                             double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
@@ -461,19 +578,49 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double phi2x = 0.;
 
-                                        unsigned globaljDof = msh->GetSolutionDof ( j, jel, soluType );
-                                        unsigned globaliDof;
+                                        std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
 
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+                                        for ( unsigned n = 0; n < dim; n++ ) {
+                                            sameNodePhi2x[n].assign ( nDof1, 0 );
 
-                                            if ( globaljDof == globaliDof ) {
-                                                phi2x = phi1x[ig][i];
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
                                             }
                                         }
 
+                                        std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
+
+
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
+                                            }
+                                        }
+
+
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            if ( areTheyTheSamePhi2x[i] == dim ) phi2x = phi1x[ig][i];
+                                        }
+
                                         msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
-                                        
+
+
+                                        std::vector<double> xg2 ( dim, 0. );
+
+                                        for ( unsigned j = 0; j < nDof2; j++ ) {
+                                            for ( unsigned k = 0; k < dim; k++ ) {
+                                                xg2[k] += x2New[k][j] * phi2y[j];
+                                            }
+                                        }
+
+                                        Marker marker ( xg2, 0., VOLUME, mlSol->GetLevel ( level ), 2, true );
+                                        std::vector<double> xg2Local;
+                                        marker.GetMarkerLocalCoordinates ( xg2Local );
+
+                                        double weightTemp;
+
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+
                                         double resU = 0.;
 
                                         if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
@@ -484,14 +631,28 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                             double phi1y = 0.;
 
-                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+                                            std::vector< std::vector <unsigned > > sameNodePhi1y ( dim );
+
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                sameNodePhi1y[n].assign ( nDof2, 0 );
+
+                                                for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                    if ( x1[n][i] == x2[n][j] ) sameNodePhi1y[n][j] = 1;
+                                                }
+                                            }
+
+                                            std::vector<unsigned> areTheyTheSamePh1y ( nDof2, 0 );
+
 
                                             for ( unsigned j = 0; j < nDof2; j++ ) {
-                                                globaljDof = msh->GetSolutionDof ( j, jel, soluType );
-
-                                                if ( globaljDof == globaliDof ) {
-                                                    phi1y = phi2y[j];
+                                                for ( unsigned n = 0; n < dim; n++ ) {
+                                                    areTheyTheSamePh1y[j] += sameNodePhi1y[n][j];
                                                 }
+                                            }
+
+
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                if ( areTheyTheSamePh1y[j] == dim ) phi1y = phi2y[j];
                                             }
 
                                             double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
@@ -517,48 +678,55 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             if ( theyIntersect ) {
 
-                                if ( iel == 48 ) {
-                                    std::cout << "ig = " << ig << " jel intersected = " << jel << std::endl;
-
-                                    for ( unsigned j = 0; j < nDof2; j++ ) {
-                                        for ( unsigned k = 0; k < dim; k++ ) {
-                                            std::cout << "x2Old[" << k << "][" << j << "] = " << x2[k][j] << " ";
-                                        }
-
-                                        std::cout << std::endl;
-                                    }
-
-
-                                    for ( unsigned j = 0; j < nDof2; j++ ) {
-                                        for ( unsigned k = 0; k < dim; k++ ) {
-                                            std::cout << "x2New[" << k << "][" << j << "] = " << x2New[k][j] << " ";
-                                        }
-
-                                        std::cout << std::endl;
-                                    }
-
-                                }
-
-
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
 
                                         double phi2x = 0.;
 
-                                        unsigned globaljDof = msh->GetSolutionDof ( j, jel, soluType );
-                                        unsigned globaliDof;
+                                        std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
 
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+                                        for ( unsigned n = 0; n < dim; n++ ) {
+                                            sameNodePhi2x[n].assign ( nDof1, 0 );
 
-                                            if ( globaljDof == globaliDof ) {
-                                                phi2x = phi1x[ig][i];
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
                                             }
                                         }
 
+                                        std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
+
+
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
+                                            }
+                                        }
+
+
+                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            if ( areTheyTheSamePhi2x[i] == dim ) phi2x = phi1x[ig][i];
+                                        }
+
                                         msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
-                                        
+
+
+                                        std::vector<double> xg2 ( dim, 0. );
+
+                                        for ( unsigned j = 0; j < nDof2; j++ ) {
+                                            for ( unsigned k = 0; k < dim; k++ ) {
+                                                xg2[k] += x2New[k][j] * phi2y[j];
+                                            }
+                                        }
+
+                                        Marker marker ( xg2, 0., VOLUME, mlSol->GetLevel ( level ), 2, true );
+                                        std::vector<double> xg2Local;
+                                        marker.GetMarkerLocalCoordinates ( xg2Local );
+
+                                        double weightTemp;
+
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+
                                         double resU = 0.;
 
                                         if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
@@ -569,14 +737,28 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                             double phi1y = 0.;
 
-                                            globaliDof = msh->GetSolutionDof ( i, iel, soluType );
+                                            std::vector< std::vector <unsigned > > sameNodePhi1y ( dim );
+
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                sameNodePhi1y[n].assign ( nDof2, 0 );
+
+                                                for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                    if ( x1[n][i] == x2[n][j] ) sameNodePhi1y[n][j] = 1;
+                                                }
+                                            }
+
+                                            std::vector<unsigned> areTheyTheSamePh1y ( nDof2, 0 );
+
 
                                             for ( unsigned j = 0; j < nDof2; j++ ) {
-                                                globaljDof = msh->GetSolutionDof ( j, jel, soluType );
-
-                                                if ( globaljDof == globaliDof ) {
-                                                    phi1y = phi2y[j];
+                                                for ( unsigned n = 0; n < dim; n++ ) {
+                                                    areTheyTheSamePh1y[j] += sameNodePhi1y[n][j];
                                                 }
+                                            }
+
+
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                if ( areTheyTheSamePh1y[j] == dim ) phi1y = phi2y[j];
                                             }
 
                                             double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta2, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
