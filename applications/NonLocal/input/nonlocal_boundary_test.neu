@@ -2,7 +2,7 @@
 ** GAMBIT NEUTRAL FILE
 nonlocal_boundary_test
 PROGRAM:                Gambit     VERSION:  2.3.16
-30 Jan 2019    17:21:32 
+ 5 Feb 2019    15:54:13 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
        625       144         2         1         2         2
 ENDOFSECTION
@@ -938,7 +938,7 @@ GROUP:          1 ELEMENTS:         80 MATERIAL:          4 NFLAGS:          1
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
 GROUP:          2 ELEMENTS:         64 MATERIAL:          2 NFLAGS:          1
-                               6
+                               7
        0
       49      50      51      52      53      54      55      56      57      58
       59      60      61      62      63      64      65      66      67      68

@@ -1049,8 +1049,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 //     PetscViewer viewer;
 //     MatView ( A, viewer );
 
-    Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
-    VecView(v,PETSC_VIEWER_STDOUT_WORLD);
+//     Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
+//     VecView(v,PETSC_VIEWER_STDOUT_WORLD);
 
     // ***************** END ASSEMBLY *******************
 }
