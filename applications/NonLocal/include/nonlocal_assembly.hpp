@@ -1,6 +1,6 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
-#include "Marker.hpp"
+
 
 //THIS IS THE ASSEMBLY FOR THE NONLOCAL INTERFACE PROBLEM
 
@@ -372,9 +372,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                             }
                                         }
 
-                                        Marker marker ( xg2, 0., VOLUME, mlSol->GetLevel ( level ), 2, true );
-                                        std::vector<double> xg2Local;
-                                        marker.GetMarkerLocalCoordinates ( xg2Local );
+                                        std::vector < std::vector < std::vector <double > > > aP ( 3 );
+
+                                        for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
+                                            ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
+                                        }
+
+                                        std::vector <double> xg2Local;
+
+                                        GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
+                                        GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
 
 //                                         if ( jel == 352 && iel == 3 ) {
 //
@@ -549,9 +556,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                             }
                                         }
 
-                                        Marker marker ( xg2, 0., VOLUME, mlSol->GetLevel ( level ), 2, true );
-                                        std::vector<double> xg2Local;
-                                        marker.GetMarkerLocalCoordinates ( xg2Local );
+                                        std::vector < std::vector < std::vector <double > > > aP ( 3 );
+
+                                        for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
+                                            ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
+                                        }
+
+                                        std::vector <double> xg2Local;
+
+                                        GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
+                                        GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
 
 //                                         if ( jel == 166 && iel == 3 ) {
 //
@@ -691,9 +705,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                             }
                                         }
 
-                                        Marker marker ( xg2, 0., VOLUME, mlSol->GetLevel ( level ), 2, true );
-                                        std::vector<double> xg2Local;
-                                        marker.GetMarkerLocalCoordinates ( xg2Local );
+                                        std::vector < std::vector < std::vector <double > > > aP ( 3 );
+
+                                        for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
+                                            ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
+                                        }
+
+                                        std::vector <double> xg2Local;
+
+                                        GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
+                                        GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
 
                                         double weightTemp;
 
@@ -807,9 +828,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                             }
                                         }
 
-                                        Marker marker ( xg2, 0., VOLUME, mlSol->GetLevel ( level ), 2, true );
-                                        std::vector<double> xg2Local;
-                                        marker.GetMarkerLocalCoordinates ( xg2Local );
+                                        std::vector < std::vector < std::vector <double > > > aP ( 3 );
+
+                                        for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
+                                            ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
+                                        }
+
+                                        std::vector <double> xg2Local;
+
+                                        GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
+                                        GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
 
                                         double weightTemp;
 
