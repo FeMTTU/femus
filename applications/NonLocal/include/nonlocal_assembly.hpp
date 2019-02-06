@@ -24,7 +24,7 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-double delta1 = 0.025; //with interface.neu the mesh size is 0.1 (with 2 refinements) | with mesh trial1.new the mesh size is 0.05 (with 2 refinements)
+double delta1 = 0.005; //with interface.neu the mesh size is 0.1 (with 2 refinements) | with mesh trial1.new the mesh size is 0.05 (with 2 refinements)
 double delta2 = 0.05; //1.5 * mesh size
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
@@ -462,7 +462,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 //                                             if ( jel == 352 && iel == 3 ) std::cout << "jel =" << jel << " dof i = " << msh->GetSolutionDof ( i, iel, soluType ) << " phi at jg " << jg << " = " << phi1y << std::endl;
 
                                             double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta1, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
-                                            Jac[j * nDof1 + i] += jacValue;
+                                            Jac[j * nDof1 + i] -= jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
 
@@ -634,7 +634,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 //                                             if ( jel == 166 && iel == 3 ) std::cout << "jel =" << jel << " dof i = " << msh->GetSolutionDof ( i, iel, soluType ) << " phi at jg " << jg << " = " << phi1y << std::endl;
 
                                             double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
-                                            Jac[j * nDof1 + i] += jacValue;
+                                            Jac[j * nDof1 + i] -= jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
 
@@ -757,7 +757,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                             }
 
                                             double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
-                                            Jac[j * nDof1 + i] += jacValue;
+                                            Jac[j * nDof1 + i] -= jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
 
@@ -881,7 +881,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                             }
 
                                             double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta2, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
-                                            Jac[j * nDof1 + i] += jacValue;
+                                            Jac[j * nDof1 + i] -= jacValue;
                                             resU +=  jacValue * soluNonLoc[i];
                                         }//endl i loop
 
@@ -1056,7 +1056,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
                     }
 
-                    double srcTerm = 1./*- GetExactSolutionLaplace(x_gss)*/ ;
+                    double srcTerm = - 1./*- GetExactSolutionLaplace(x_gss)*/ ;
                     aRes[i] += ( srcTerm * phi[i] + laplace ) * weight;
 
                 } // end phi_i loop
