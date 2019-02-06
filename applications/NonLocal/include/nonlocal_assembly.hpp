@@ -23,18 +23,10 @@ using namespace femus;
 //     return -pi * pi * cos ( pi * x[0] ) * cos ( pi * x[1] ) - pi * pi * cos ( pi * x[0] ) * cos ( pi * x[1] );
 // };
 
-//BEGIN to remove
-unsigned quadratureType = 0;
-int numberOfEigPairs = 2; //dimension of the stochastic variable
-std::vector < std::pair<double, double> > eigenvalues ( numberOfEigPairs );
-double stdDeviationInput = 0.8;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
-double meanInput = 0.;
-//END to remove
-
 bool nonLocalAssembly = true;
 double delta1 = 0.1; //mesh size (it is 0.1 for 2 refinements)
 double delta2 = 0.15; //1.5 * mesh size
-double epsilon = (delta1 > delta2) ? delta1 : delta2;
+double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
@@ -48,29 +40,26 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 {
     adept::Stack& s = FemusInit::_adeptStack;
 
-    //  extract pointers to the several objects that we are going to use
-
-    LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ( "NonLocal" ); // pointer to the linear implicit system named "Poisson"
+    LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ( "NonLocal" );
     const unsigned level = mlPdeSys->GetLevelToAssemble();
 
-    Mesh*                    msh = ml_prob._ml_msh->GetLevel ( level ); // pointer to the mesh (level) object
-    elem*                     el = msh->el;  // pointer to the elem object in msh (level)
+    Mesh*                    msh = ml_prob._ml_msh->GetLevel ( level );
+    elem*                     el = msh->el;
 
-    MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-    Solution*                sol = ml_prob._ml_sol->GetSolutionLevel ( level ); // pointer to the solution (level) object
+    MultiLevelSolution*    mlSol = ml_prob._ml_sol;
+    Solution*                sol = ml_prob._ml_sol->GetSolutionLevel ( level );
 
-    LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-    SparseMatrix*             KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
-    NumericVector*           RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+    LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
+    SparseMatrix*             KK = pdeSys->_KK;
+    NumericVector*           RES = pdeSys->_RES;
 
-    const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-    unsigned dim2 = ( 3 * ( dim - 1 ) + ! ( dim - 1 ) ); // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+    const unsigned  dim = msh->GetDimension();
+    unsigned dim2 = ( 3 * ( dim - 1 ) + ! ( dim - 1 ) );
     const unsigned maxSize = static_cast< unsigned > ( ceil ( pow ( 3, dim ) ) ); // conservative: based on line3, quad9, hex27
 
     unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
-    unsigned    nprocs = msh->n_processors(); // get the process_id (for parallel computation)
+    unsigned    nprocs = msh->n_processors(); // get the noumber of processes (for parallel computation)
 
-    //solution variable
     unsigned soluIndex;
     soluIndex = mlSol->GetIndex ( "u" ); // get the position of "u" in the ml_sol object
     unsigned soluType = mlSol->GetSolutionType ( soluIndex ); // get the finite element type for "u"
@@ -78,16 +67,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
     unsigned soluPdeIndex;
     soluPdeIndex = mlPdeSys->GetSolPdeIndex ( "u" ); // get the position of "u" in the pdeSys object
 
-    vector < adept::adouble >  solu; // local solution
+    vector < adept::adouble >  solu; // local solution for the local assembly (it uses adept)
     solu.reserve ( maxSize );
 
-    vector < double >  soluNonLoc; // local solution
+    vector < double >  soluNonLoc; // local solution for the nonlocal assembly
     soluNonLoc.reserve ( maxSize );
 
     unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-    vector < vector < double > > x1 ( dim ); // local coordinates
-    vector < vector < double > > x2 ( dim ); // local coordinates
+    vector < vector < double > > x1 ( dim );
+    vector < vector < double > > x2 ( dim );
 
     for ( unsigned k = 0; k < dim; k++ ) {
         x1[k].reserve ( maxSize );
@@ -118,7 +107,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
-    //loop to change _bdc in the boundary elements and assign the BoundaryFunctionValue to their nodes
+    //loop to change _Bdc in the boundary elements and assign the BoundaryFunctionValue to their nodes
     //BEGIN
     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
@@ -157,19 +146,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
             short unsigned ielGeom = msh->GetElementType ( iel );
             short unsigned ielGroup = msh->GetElementGroup ( iel );
-            unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType ); // number of solution element dofs
-            unsigned nDofx1 = msh->GetElementDofNumber ( iel, xType ); // number of coordinate element dofs
+            unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType );
+            unsigned nDofx1 = msh->GetElementDofNumber ( iel, xType );
 
-
-            // resize local arrays
             l2GMap1.resize ( nDof1 );
             soluNonLoc.resize ( nDof1 );
 
-            // local storage of global mapping and solution
             for ( unsigned i = 0; i < nDof1; i++ ) {
-                l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
-                unsigned solDof = msh->GetSolutionDof ( i, iel, soluType ); // global to global mapping between solution node and solution dof
-                soluNonLoc[i] = ( *sol->_Sol[soluIndex] ) ( solDof ); // global extraction and local storage for the solution
+                l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel );
+                unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
+                soluNonLoc[i] = ( *sol->_Sol[soluIndex] ) ( solDof );
             }
 
 
@@ -177,12 +163,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                 x1[k].resize ( nDofx1 );
             }
 
-            // local storage of coordinates
             for ( unsigned i = 0; i < nDofx1; i++ ) {
-                unsigned xDof  = msh->GetSolutionDof ( i, iel, xType ); // global to global mapping between coordinates node and coordinate dof
+                unsigned xDof  = msh->GetSolutionDof ( i, iel, xType );
 
                 for ( unsigned k = 0; k < dim; k++ ) {
-                    x1[k][i] = ( *msh->_topology->_Sol[k] ) ( xDof ); // global extraction and local storage for the element coordinates
+                    x1[k][i] = ( *msh->_topology->_Sol[k] ) ( xDof );
                 }
             }
 
@@ -199,7 +184,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
             unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
             vector < vector < double > > xg1 ( igNumber );
             vector <double> weight1 ( igNumber );
-            vector < vector <double> > phi1x ( igNumber ); // local test function
+            vector < vector <double> > phi1x ( igNumber );
 
             for ( unsigned ig = 0; ig < igNumber; ig++ ) {
                 msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight1[ig], phi1x[ig], phi_x );
@@ -233,7 +218,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
             for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
                 for ( int kproc = 0; kproc < nprocs; kproc++ ) {
-                    // element loop: each process loops only on the elements that owns
                     for ( int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++ ) {
 
                         short unsigned jelGeom;
@@ -245,8 +229,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         if ( iproc == kproc ) {
                             jelGeom = msh->GetElementType ( jel );
                             jelGroup = msh->GetElementGroup ( jel );
-                            nDof2  = msh->GetElementDofNumber ( jel, soluType ); // number of solution element dofs
-                            nDofx2 = msh->GetElementDofNumber ( jel, xType ); // number of coordinate element dofs
+                            nDof2  = msh->GetElementDofNumber ( jel, soluType );
+                            nDofx2 = msh->GetElementDofNumber ( jel, xType );
                         }
 
                         MPI_Bcast ( &jelGeom, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD );
@@ -254,7 +238,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         MPI_Bcast ( &nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
                         MPI_Bcast ( &nDofx2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
 
-                        // resize local arrays
                         l2GMap2.resize ( nDof2 );
 
                         Res.assign ( nDof2, 0. );
@@ -264,22 +247,20 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             x2[k].resize ( nDofx2 );
                         }
 
-                        // local storage of global mapping and solution
                         if ( iproc == kproc ) {
                             for ( unsigned j = 0; j < nDof2; j++ ) {
-                                l2GMap2[j] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, j, jel ); // global to global mapping between solution node and pdeSys dof
+                                l2GMap2[j] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, j, jel );
                             }
                         }
 
                         MPI_Bcast ( &l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
 
-                        // local storage of coordinates
                         if ( iproc == kproc ) {
                             for ( unsigned j = 0; j < nDofx2; j++ ) {
-                                unsigned xDof  = msh->GetSolutionDof ( j, jel, xType ); // global to global mapping between coordinates node and coordinate dof
+                                unsigned xDof  = msh->GetSolutionDof ( j, jel, xType );
 
                                 for ( unsigned k = 0; k < dim; k++ ) {
-                                    x2[k][j] = ( *msh->_topology->_Sol[k] ) ( xDof ); // global extraction and local storage for the element coordinates
+                                    x2[k][j] = ( *msh->_topology->_Sol[k] ) ( xDof );
                                 }
                             }
                         }
@@ -288,7 +269,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             MPI_Bcast ( & x2[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
                         }
 
-                        // *** Gauss point loop ***
                         unsigned jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
                         vector <double>  phi2y;
                         double weight2;
@@ -418,9 +398,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double resU = 0.;
 
-                                        if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * weight1[ig] * phi2x; //Res = Ax - f so f = 1
-                                        }
+                                        resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
 
@@ -580,9 +558,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double resU = 0.;
 
-                                        if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * weight1[ig] * phi2x; //Res = Ax - f so f = 1
-                                        }
+                                            resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
 
@@ -688,9 +664,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double resU = 0.;
 
-                                        if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * weight1[ig] * phi2x; //Res = Ax - f so f = 1
-                                        }
+                                            resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
 
@@ -794,9 +768,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double resU = 0.;
 
-                                        if ( jelGroup == 7 || jelGroup == 8 ) { //7 is Omega_1 hat, 8 is Omega_2 hat
-                                            resU = - 1. * weight1[ig] * phi2x; //Res = Ax - f so f = 1
-                                        }
+                                            resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
+
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
 
@@ -1049,8 +1022,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 //     PetscViewer viewer;
 //     MatView ( A, viewer );
 
-//     Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
-//     VecView(v,PETSC_VIEWER_STDOUT_WORLD);
+    Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
+    VecView(v,PETSC_VIEWER_STDOUT_WORLD);
 
     // ***************** END ASSEMBLY *******************
 }
@@ -1135,6 +1108,7 @@ void RectangleAndBallRelation ( bool &theyIntersect, const std::vector<double> &
     }
 
 }
+
 
 
 
