@@ -24,8 +24,8 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-double delta1 = 0.1; //mesh size (it is 0.1 for 2 refinements)
-double delta2 = 0.15; //1.5 * mesh size
+double delta1 = 0.025; //with interface.neu the mesh size is 0.1 (with 2 refinements) | with mesh trial1.new the mesh size is 0.05 (with 2 refinements)
+double delta2 = 0.05; //1.5 * mesh size
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
