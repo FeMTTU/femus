@@ -269,9 +269,13 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                             MPI_Bcast ( & x2[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
                         }
 
-                        unsigned jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
-                        vector <double>  phi2y;
-                        double weight2;
+                        unsigned jgNumber;
+
+                        if ( iproc == kproc ) {
+                            jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
+                        }
+
+                        MPI_Bcast ( &jgNumber, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
 
                         if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 5 || jelGroup == 7 ) ) { //both x and y are in Omega_1
 
@@ -349,7 +353,15 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         //BEGIN evaluate phi_j at xg2[jg] (called it phi2y)
 
-                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                        vector <double>  phi2y;
+                                        double weight2;
+
+                                        if ( iproc == kproc ) {
+                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                        }
+
+                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                        MPI_Bcast ( &weight2, 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
 
 
                                         std::vector<double> xg2 ( dim, 0. );
@@ -371,7 +383,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double weightTemp;
 
-                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+                                        if ( iproc == kproc ) {
+                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+                                        }
+
+                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
 
                                         //END evaluate phi_j at xg2[jg] (called it phi2y)
 
@@ -513,7 +529,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                             if ( areTheyTheSamePhi2x[i] == dim ) phi2x = phi1x[ig][i];
                                         }
 
-                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+
+                                        vector <double>  phi2y;
+                                        double weight2;
+
+                                        if ( iproc == kproc ) {
+                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                        }
+
+                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                        MPI_Bcast ( &weight2, 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
 
 
                                         std::vector<double> xg2 ( dim, 0. );
@@ -535,7 +560,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double weightTemp;
 
-                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+                                        if ( iproc == kproc ) {
+                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+                                        }
+
+                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
 
                                         //begin to remove
 //                                         if ( jel == 166 && iel == 3 ) {
@@ -558,7 +587,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double resU = 0.;
 
-                                            resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
+                                        resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
 
@@ -643,7 +672,15 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                             if ( areTheyTheSamePhi2x[i] == dim ) phi2x = phi1x[ig][i];
                                         }
 
-                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                        vector <double>  phi2y;
+                                        double weight2;
+
+                                        if ( iproc == kproc ) {
+                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                        }
+
+                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                        MPI_Bcast ( &weight2, 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
 
 
                                         std::vector<double> xg2 ( dim, 0. );
@@ -660,11 +697,15 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double weightTemp;
 
-                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+                                        if ( iproc == kproc ) {
+                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+                                        }
+
+                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
 
                                         double resU = 0.;
 
-                                            resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
+                                        resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
 
@@ -747,7 +788,15 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                             if ( areTheyTheSamePhi2x[i] == dim ) phi2x = phi1x[ig][i];
                                         }
 
-                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                        vector <double>  phi2y;
+                                        double weight2;
+
+                                        if ( iproc == kproc ) {
+                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                        }
+
+                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                        MPI_Bcast ( &weight2, 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
 
 
                                         std::vector<double> xg2 ( dim, 0. );
@@ -764,11 +813,15 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         double weightTemp;
 
-                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+                                        if ( iproc == kproc ) {
+                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+                                        }
+
+                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
 
                                         double resU = 0.;
 
-                                            resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
+                                        resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
 
 
                                         for ( unsigned i = 0; i < nDof1; i++ ) {
@@ -1022,8 +1075,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 //     PetscViewer viewer;
 //     MatView ( A, viewer );
 
-    Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
-    VecView(v,PETSC_VIEWER_STDOUT_WORLD);
+//     Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
+//     VecView(v,PETSC_VIEWER_STDOUT_WORLD);
 
     // ***************** END ASSEMBLY *******************
 }
