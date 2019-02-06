@@ -50,7 +50,7 @@ double InitalValueU3D(const std::vector < double >& x) {
   double r2 = r * r;
   double R = 1.0001;
   double R2 = R * R;
-  double R3 = R2 * R;
+  double R3 = R *R*R;
   //double Vb = 1.268112; // exp( (( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
   double Vb = 4./3. * M_PI * R3; //0.265048;  // exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
   double V0 = 1./1.2; // fraction of injection vs tumor
@@ -437,7 +437,7 @@ void GetDeadCells(const double &time, MultiLevelSolution &mlSol){
 
   
   double treshold = a - b * exp( -c * time);
- std::cout << "time = " << time <<" treshold = " << treshold << std::endl;
+std::cout << "time = " << time <<" treshold = " << treshold << std::endl;
   
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
   
