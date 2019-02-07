@@ -150,7 +150,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
             unsigned nDofx1 = msh->GetElementDofNumber ( iel, xType );
 
             l2GMap1.resize ( nDof1 );
- 
+
             for ( unsigned i = 0; i < nDof1; i++ ) {
                 l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel );
             }
@@ -215,7 +215,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         soluNonLoc.resize ( nDof2 );
 
                         Jac.assign ( nDof1 * nDof2, 0. );
-                         Res.assign ( nDof1, 0. );
+                        Res.assign ( nDof1, 0. );
 
                         for ( int k = 0; k < dim; k++ ) {
                             x2[k].resize ( nDofx2 );
@@ -388,6 +388,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                             Jac[i * nDof2 + j] -= jacValue;
                                             Au +=  jacValue * soluNonLoc[j];
                                         }//endl j loop
+
                                         Res[i] += Au;
                                     } //endl i loop
                                 }//end jg loop
