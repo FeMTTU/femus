@@ -24,8 +24,8 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-double delta1 = 0.05; //with interface.neu the mesh size is 0.1 (with 2 refinements) | with mesh trial1.new the mesh size is 0.05 (with 2 refinements)
-double delta2 = 0.05;
+double delta1 = 0.0005; //MESH SIZES: interface: 0.1 (with 2 refinements), trial1 and trial2: 0.05 (with 2 refinements), nonlocal_boundary_test.neu: 0.0625
+double delta2 = 0.0005;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
@@ -256,9 +256,9 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                         if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 5 || jelGroup == 7 ) ) { //both x and y are in Omega_1
 
-                            unsigned bc1 = ( ielGroup == 5 ) ? 0 : 1; //the test function is zero on 5 and 6
+                            unsigned bc1 = 1;/*( ielGroup == 5 ) ? 0 : 1; //the test function is zero on 5 and 6*/
 
-                            unsigned bc2 = ( jelGroup == 5 ) ? 0 : 1; //the test function is zero on 5 and 6
+                            unsigned bc2 = 1;/*( jelGroup == 5 ) ? 0 : 1; //the test function is zero on 5 and 6*/
 
                             radius = delta1;
 
@@ -388,8 +388,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                         else if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 6 || jelGroup == 8 ) ) { // x is  Omega_1 and y is in Omega_2
 
-                            unsigned bc1 = ( ielGroup == 5 ) ? 0 : 1; //the test function is zero on 5 and 6
-                            unsigned bc2 = ( jelGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6
+                            unsigned bc1 = 1;/*( ielGroup == 5 ) ? 0 : 1; //the test function is zero on 5 and 6*/
+                            unsigned bc2 = 1;/*( jelGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6*/
 
                             radius = epsilon;
 
@@ -519,9 +519,9 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                         else if ( ( ielGroup == 6 || ielGroup == 8 ) && ( jelGroup == 5 || jelGroup == 7 ) ) { // x is  Omega_2 and y is in Omega_1
 
-                            unsigned bc1 = ( ielGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6
+                            unsigned bc1 = 1;/*( ielGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6*/
 
-                            unsigned bc2 = ( jelGroup == 5 ) ? 0 : 1; //the test function is zero on 5 and 6
+                            unsigned bc2 = 1;/*( jelGroup == 5 ) ? 0 : 1; //the test function is zero on 5 and 6*/
 
                             radius = epsilon;
 
@@ -651,9 +651,9 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                         else if ( ( ielGroup == 6 || ielGroup == 8 ) && ( jelGroup == 6 || jelGroup == 8 ) ) { // x and y are both in Omega_2
 
-                            unsigned bc1 = ( ielGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6
+                            unsigned bc1 = 1;/*( ielGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6*/
 
-                            unsigned bc2 = ( jelGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6
+                            unsigned bc2 = 1;/*( jelGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6*/
 
                             radius = delta2;
 
@@ -786,7 +786,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                 } //end kproc loop
 
                 // up to here Res only contains A_ij*u_j, now we take out f
-                unsigned bc1 = ( ielGroup == 5 || ielGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6
+                unsigned bc1 = 1;/*( ielGroup == 5 || ielGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6*/
 
                 for ( unsigned i = 0; i < nDof1; i++ ) {
                     Res[i] -= 1. * weight1[ig] * bc1 * phi1x[ig][i]; //Ax - f (so f = 1)
