@@ -1716,9 +1716,15 @@ namespace femus {
 
 //---------------------------------------------------------------------------------------------------------
 
-  void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, 
-                                   vector < double >& phi, vector < double >& gradphi) const {
+  void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, 
+                                           const vector < vector < double> > & vt_bdry,  
+                                           const unsigned& jface, 
+                                           const unsigned& ig, 
+                                           vector < double >& phi, 
+                                           vector < double >& gradphi) const {
                                        
+
+//********* EVALUATION STAGE **********************
                                        
     //check that our volume element shape is a quadrilateral, doesn't work for triangles for now
     std::vector<int> face_orient_ref(_dim);     std::fill(face_orient_ref.begin(), face_orient_ref.end(), 0.);
@@ -1753,28 +1759,43 @@ namespace femus {
     //we need to understand:
     // 1) where my boundary element is located in the reference volume element
     // 2) in what direction it is oriented
+    
+    //here we compute for ALL quadrature points and for ALL dofs the test functions
     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
     
     const double* pt_one_dim[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
     
-    for (unsigned i = 0; i < n_gauss_bdry; i++) {
+    std::vector < std::vector<double> > xi_qps(n_gauss_bdry);
+    for (unsigned qp = 0; qp < n_gauss_bdry; qp++) { xi_qps[qp].resize(_dim); }
+    
+std::cout << "Inside  ig = " << ig << " ";
+for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
+        
       double xi_one_dim[1];
-      for (unsigned j = 0; j < 1; j++) {
-        xi_one_dim[j] = *pt_one_dim[j];
-        pt_one_dim[j]++;
+      for (unsigned d = 0; d < 1; d++) {
+        xi_one_dim[d] = *pt_one_dim[d];
+        pt_one_dim[d]++;
       }
       
-      double xi_vol[2];
+      std::vector <double> xi_vol(2);
              xi_vol[1-abs(face_orient_ref[0])] = /*-*//*cosine_theta **/ xi_one_dim[0]; 
              xi_vol[abs(face_orient_ref[0])]   = xi_factor * 1.;
       
-      for (int j = 0; j < _nc; j++) {
-        _phi_bdry[i][j]      = _pt_basis->eval_phi(_IND[j], xi_vol);
-        _dphidxi_bdry[i][j]  = _pt_basis->eval_dphidx(_IND[j], xi_vol);
-        _dphideta_bdry[i][j] = _pt_basis->eval_dphidy(_IND[j], xi_vol);
+             xi_qps[qp] = xi_vol;
+             
+      for (int dof = 0; dof < _nc; dof++) {
+             _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &xi_vol[0]);
+         _dphidxi_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &xi_vol[0]);
+        _dphideta_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &xi_vol[0]);
       }
       
     }
+    
+      for (unsigned d = 0; d < _dim; d++) std::cout << xi_qps[ig][d] << " ";
+std::cout << std::endl;
+    
+//********* END EVALUATION STAGE **********************
+    
 
     phi.resize(_nc);
     gradphi.resize(_nc * 2);

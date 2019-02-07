@@ -7,7 +7,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             4  //we do control on the right (=2) face
+#define FACE_FOR_CONTROL             2  //we do control on the right (=2) face
 #define AXIS_DIRECTION_CONTROL_SIDE  1 //change this accordingly to the other variable above
 
 #include "../elliptic_param.hpp"
@@ -489,16 +489,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
             std::vector < double > xyz_bdc(3,0.);  //not being used, because the boundaries are identified by the face numbers
 	    // look for boundary faces
-	    if(el->GetFaceElementIndex(iel,jface) < 0) {
-	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
-	      
+            const int bdry_index = el->GetFaceElementIndex(iel,jface);
+            
+	    if( bdry_index <  0) {
+	      unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
-	      if(  face == FACE_FOR_CONTROL) { //control face
+	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
               
  //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-	      bool  dir_bool = mlSol->GetBdcFunction()(xyz_bdc,ctrl_name.c_str(),tau,face,0.);
+	      bool  dir_bool = mlSol->GetBdcFunction()(xyz_bdc,ctrl_name.c_str(),tau,face_in_rectangle_domain,0.);
 
  //=================================================== 
 
@@ -615,10 +616,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		
         const unsigned n_gauss_bdry = msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber();
         
-		for(unsigned ig_bdry=0; ig_bdry < n_gauss_bdry; ig_bdry++) {
-
         //show the coordinate of the current ig_bdry point    
     const double* pt_one_dim[1] = {msh->_finiteElement[kelGeom][solType_ctrl]->GetGaussRule_bdry()->GetGaussWeightsPointer() + 1*n_gauss_bdry };
+    
+		for(unsigned ig_bdry=0; ig_bdry < n_gauss_bdry; ig_bdry++) {
     
       double xi_one_dim[1];
       for (unsigned j = 0; j < 1; j++) {
@@ -626,18 +627,20 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         pt_one_dim[j]++;
       }
 
+std::cout << "Outside ig = " << ig_bdry << " ";
+      for (unsigned d = 0; d < 1; d++) std::cout << xi_one_dim[d] << " ";
             
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
           if (kelGeom != QUAD) { std::cout << "VolumeShapeAtBoundary not implemented" << std::endl; abort(); } 
 		  msh->_finiteElement[kelGeom][solType_adj]->VolumeShapeAtBoundary(x,x_bdry,jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
-          std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
-		      for (int iv = 0; iv < nDof_adj; iv++)  {
-                  for (int d = 0; d < dim; d++) {
-                       std::cout << " " <<   phi_adj_x_vol_at_bdry[iv * dim + d];
-                }
-              }
+//           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
+// 		      for (int iv = 0; iv < nDof_adj; iv++)  {
+//                   for (int d = 0; d < dim; d++) {
+//                        std::cout << " " <<   phi_adj_x_vol_at_bdry[iv * dim + d];
+//                 }
+//               }
           
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
           const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
