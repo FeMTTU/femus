@@ -150,9 +150,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
             unsigned nDofx1 = msh->GetElementDofNumber ( iel, xType );
 
             l2GMap1.resize ( nDof1 );
-            Res.assign ( nDof1, 0. );
-            std::vector<double> rhs ( nDof1, 0. );
-
+ 
             for ( unsigned i = 0; i < nDof1; i++ ) {
                 l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel );
             }
@@ -190,13 +188,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
             bool theyIntersect;
             double radius;
 
-            unsigned bcRhs = ( ielGroup == 5 || ielGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6
-
             for ( unsigned ig = 0; ig < igNumber; ig++ ) {
-
-                for ( unsigned i = 0; i < nDof1; i++ ) {
-                    rhs[i] += 1. * weight1[ig] * bcRhs * phi1x[ig][i];
-                }
 
                 for ( int kproc = 0; kproc < nprocs; kproc++ ) {
                     for ( int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++ ) {
@@ -223,6 +215,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         soluNonLoc.resize ( nDof2 );
 
                         Jac.assign ( nDof1 * nDof2, 0. );
+                         Res.assign ( nDof1, 0. );
 
                         for ( int k = 0; k < dim; k++ ) {
                             x2[k].resize ( nDofx2 );
@@ -400,7 +393,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                 }//end jg loop
 
                                 for ( unsigned i = 0; i < nDof1; i++ ) {
-                                    Res[i] -= rhs[i];
+                                    Res[i] -= 1. * weight1[ig] * bc1 * phi1x[ig][i]; //Ax - f (so f = 1)
                                 }
                             }
                         }
@@ -544,7 +537,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                 }//end jg loop
 
                                 for ( unsigned i = 0; i < nDof1; i++ ) {
-                                    Res[i] -= rhs[i];
+                                    Res[i] -= 1. * weight1[ig] * bc1 * phi1x[ig][i]; //Ax - f (so f = 1)
                                 }
                             }
                         }
@@ -689,7 +682,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                 }//end jg loop
 
                                 for ( unsigned i = 0; i < nDof1; i++ ) {
-                                    Res[i] -= rhs[i];
+                                    Res[i] -= 1. * weight1[ig] * bc1 * phi1x[ig][i]; //Ax - f (so f = 1)
                                 }
                             }
                         }
@@ -834,7 +827,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                 }//end jg loop
 
                                 for ( unsigned i = 0; i < nDof1; i++ ) {
-                                    Res[i] -= rhs[i];
+                                    Res[i] -= 1. * weight1[ig] * bc1 * phi1x[ig][i]; //Ax - f (so f = 1)
                                 }
                             }
                         }
