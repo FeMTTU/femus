@@ -92,8 +92,8 @@ unsigned System::GetSolPdeIndex(const char solname[]) {
   while (strcmp(_ml_sol->GetSolutionName(_SolSystemPdeIndex[index]),solname)) {
     index++;
     if (index==_SolSystemPdeIndex.size()) {
-      std::cout<<"error! invalid name entry MultiLevelProblem::GetSolPdeIndex(const char pdename[], const char solname[])"<<std::endl;
-      exit(0);
+      std::cout<<"error! invalid name entry" << std::endl;
+      abort();
     }
   }
   return index;

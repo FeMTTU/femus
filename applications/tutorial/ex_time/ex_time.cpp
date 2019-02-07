@@ -23,24 +23,39 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[],
                           double &value, const int FaceName, const double time);
 
+double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+         
+           double value = 0.;
+
+             if(!strcmp(name,"U")) {
+                 value = 0.;
+             }
+
+           
+      return value;   
+}
+
+
 int main(int argc,char **args) {
 
-  /// Init Petsc-MPI communicator
-  FemusInit mpinit(argc,args,MPI_COMM_WORLD);
-
-  Files files;
+    // ======= Init ========================
+  // init Petsc-MPI communicator
+  FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
+    // ======= Files ========================
+  Files files; 
         files.CheckIODirectories();
         files.RedirectCout();
-
-  /// INIT MESH =================================
-  //Adimensional quantity (Lref,Uref)
-  double Lref = 1.;
-  double Uref = 1.;
 
   // ======= Quad Rule ===================
   std::string fe_quad_rule("seventh");
 
   // ======= Mesh ========================
+  /// INIT MESH =================================
+  //Adimensional quantity (Lref,Uref)
+  double Lref = 1.;
+  double Uref = 1.;
+
   MultiLevelMesh ml_msh;
   ml_msh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
   unsigned numberOfUniformLevels = 1;
@@ -49,28 +64,26 @@ int main(int argc,char **args) {
   ml_msh.PrintInfo();
 
 
-  MultiLevelSolution ml_sol(&ml_msh);
+    // ======= Solution ========================
+  MultiLevelSolution mlSol(&ml_msh);  // define the multilevel solution and attach the mlMsh object to it
+  mlSol.AddSolution("U",   LAGRANGE, FIRST,2);
 
-  // generate solution vector
-  ml_sol.AddSolution("U",LAGRANGE,SECOND,2);
-  ml_sol.AddSolution("V",LAGRANGE,SECOND,2);
-  // the pressure variable should be the last for the Schur decomposition
-  ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
-  ml_sol.AssociatePropertyToSolution("P","Pressure");
+    // ======= Problem ========================
+  MultiLevelProblem ml_prob(&mlSol);  // define the multilevel problem attach the mlSol object to it
 
-  //Initialize (update Init(...) function)
-  ml_sol.Initialize("All");
+  ml_prob.SetFilesHandler(&files);
+  
+    // ======= Initial values ========================
+  mlSol.Initialize("All");    // initialize all variables to zero
+  mlSol.Initialize("U",   SetInitialCondition, &ml_prob);
 
-  //Set Boundary (update Dirichlet(...) function)
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  ml_sol.GenerateBdc("U","Time_dependent");
-  ml_sol.GenerateBdc("V");
-  ml_sol.GenerateBdc("P");
+    // ======= Boundary Conditions ========================
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);  // attach the boundary condition function and generate boundary data
 
+//   mlSol.GenerateBdc("All");  //this would do it also for the non-equation-related variables
+  mlSol.GenerateBdc("U"); //"Time_dependent");
 
-  MultiLevelProblem ml_prob(&ml_sol);
-
-
+    // ======= Parameters ========================
   Parameter parameter(Lref,Uref);
 
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
@@ -85,10 +98,8 @@ int main(int argc,char **args) {
 
   //create systems
   // add the system Navier-Stokes to the MultiLevel problem
-  TransientNonlinearImplicitSystem & system = ml_prob.add_system<TransientNonlinearImplicitSystem> ("Navier-Stokes");
+  TransientNonlinearImplicitSystem & system = ml_prob.add_system<TransientNonlinearImplicitSystem> ("Timedep");
   system.AddSolutionToSystemPDE("U");
-  system.AddSolutionToSystemPDE("V");
-  system.AddSolutionToSystemPDE("P");
 
   // init all the systems
   system.init();
@@ -100,6 +111,13 @@ int main(int argc,char **args) {
   system.SetMgType(V_CYCLE);
   system.SetMaxNumberOfNonLinearIterations(15);
 
+  //**************
+   mlSol.SetWriter(VTK);   //need to move this here for the DebugNonlinear function
+//    mlSol.GetWriter()->SetDebugOutput(true);
+  //**************
+
+  
+  
   // time loop parameter
   system.SetIntervalTime(0.1);
   const unsigned int n_timesteps = 20;
@@ -109,24 +127,20 @@ int main(int argc,char **args) {
 
     // Solving Navier-Stokes system
     std::cout << std::endl;
-    std::cout << " *********** Navier-Stokes ************  " << std::endl;
-    ml_prob.get_system("Navier-Stokes").MLsolve();
+    std::cout << " *********** Timedep ************  " << std::endl;
+    ml_prob.get_system("Timedep").MLsolve();
 
     //update Solution
-    ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes").CopySolutionToOldSolution();
+    ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep").CopySolutionToOldSolution();
 
     // print solution
     if ( !(time_step%write_interval) ) {
 
-      //print solution
-      std::vector<std::string> print_vars;
-      print_vars.push_back("U");
-      print_vars.push_back("V");
-      print_vars.push_back("P");
+    // ======= Final Print ========================
+  std::vector < std::string > variablesToBePrinted;
+  variablesToBePrinted.push_back("all");
+  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted,time_step);    // print solutions
 
-//       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
-      VTKWriter vtkio(&ml_sol);
-      vtkio.Write(files.GetOutputPath(),"biquadratic",print_vars,time_step);
     }
 
   } //end loop timestep
@@ -235,13 +249,13 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 
   //pointers
 
-  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes");
-  const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  TransientNonlinearImplicitSystem* mlPdeSys = & ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep");
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   MultiLevelSolution *ml_sol			      = ml_prob._ml_sol;
   Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
-  LinearEquationSolver*  mylsyspde	              = my_nnlin_impl_sys._LinSolver[level];
-  const char* pdename                                 = my_nnlin_impl_sys.name().c_str();
+  LinearEquationSolver*  mylsyspde	              = mlPdeSys->_LinSolver[level];
+  const char* pdename                                 = mlPdeSys->name().c_str();
 
   Mesh*		 mymsh    	   = ml_prob._ml_msh->GetLevel(level);
   elem*		 myel		   = mymsh->el;
@@ -249,7 +263,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
   NumericVector* myRES 		   = mylsyspde->_RES;
 
   //data
-  double dt = my_nnlin_impl_sys.GetIntervalTime();
+  double dt = mlPdeSys->GetIntervalTime();
   double theta = 0.5;
   const unsigned dim = mymsh->GetDimension();
   unsigned nel= mymsh->GetNumberOfElements();
@@ -264,21 +278,21 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
   bool newton = (nwtn_alg==0) ? 0:1;
 
   // solution and coordinate variables
-  const char Solname[4][2] = {"U","V","W","P"};
-  vector < unsigned > SolPdeIndex(dim+1);
-  vector < unsigned > SolIndex(dim+1);
+  const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
+
+  const char Solname[1][2] = {"U"};
+  vector < unsigned > SolPdeIndex(n_unknowns);
+  vector < unsigned > SolIndex(n_unknowns);
 
   vector< vector < double> > coordinates(dim);
 
-  for(unsigned ivar=0; ivar<dim; ivar++) {
-    SolPdeIndex[ivar]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[ivar][0]);
+  for(unsigned ivar=0; ivar< SolPdeIndex.size(); ivar++) {
+    SolPdeIndex[ivar]=mlPdeSys->GetSolPdeIndex(&Solname[ivar][0]);
     SolIndex[ivar]=ml_sol->GetIndex(&Solname[ivar][0]);
   }
-  SolPdeIndex[dim]=my_nnlin_impl_sys.GetSolPdeIndex(&Solname[3][0]);
-  SolIndex[dim]=ml_sol->GetIndex(&Solname[3][0]);
+
   //solution order
   unsigned order_ind2 = ml_sol->GetSolutionType(SolIndex[0]);
-  unsigned order_ind1 = ml_sol->GetSolutionType(SolIndex[dim]);
 
   // declare
   vector < int > metis_node2;
@@ -341,17 +355,20 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
     unsigned kel = iel;
     short unsigned kelt= mymsh->GetElementType(kel);
     unsigned nve2=mymsh->GetElementDofNumber(kel,order_ind2);
-    unsigned nve1=mymsh->GetElementDofNumber(kel,order_ind1);
 
     //set to zero all the entries of the FE matrices
     metis_node2.resize(nve2);
-    node1.resize(nve1);
     phi2.resize(nve2);
     gradphi2.resize(nve2*dim);
     nablaphi2.resize(nve2*(3*(dim-1)));
 
-    for(int ivar=0; ivar<dim; ivar++) {
-      coordinates[ivar].resize(nve2);
+    for(int ivar=0; ivar< dim; ivar++) {
+       coordinates[ivar].resize(nve2);
+     }
+        
+
+    
+    for(int ivar=0; ivar<n_unknowns; ivar++) {
       KK_dof[ivar].resize(nve2);
 
       F[SolPdeIndex[ivar]].resize(nve2);
@@ -359,16 +376,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 
 
       B[SolPdeIndex[ivar]][SolPdeIndex[ivar]].resize(nve2*nve2);
-      B[SolPdeIndex[ivar]][SolPdeIndex[dim]].resize(nve2*nve1);
-      B[SolPdeIndex[dim]][SolPdeIndex[ivar]].resize(nve1*nve2);
       memset(&B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][0],0,nve2*nve2*sizeof(double));
-      memset(&B[SolPdeIndex[ivar]][SolPdeIndex[dim]][0],0,nve2*nve1*sizeof(double));
-      memset(&B[SolPdeIndex[dim]][SolPdeIndex[ivar]][0],0,nve1*nve2*sizeof(double));
 
     }
-    KK_dof[dim].resize(nve1);
-    F[SolPdeIndex[dim]].resize(nve1);
-    memset(&F[SolPdeIndex[dim]][0],0,nve1*sizeof(double));
 
 
     if(nwtn_alg==2){
@@ -380,35 +390,28 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
       }
     }
 
-    if(penalty){
-      B[SolPdeIndex[dim]][SolPdeIndex[dim]].resize(nve1*nve1,0.);
-      memset(&B[SolPdeIndex[dim]][SolPdeIndex[dim]][0],0,nve1*nve1*sizeof(double));
-    }
 
-    for( unsigned i=0;i<nve2;i++){
+
+    for( unsigned i=0;i<nve2;i++) {
       unsigned inode_metis=mymsh->GetSolutionDof(i, iel, 2);
       metis_node2[i]=inode_metis;
       for(unsigned ivar=0; ivar<dim; ivar++) {
 	coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_metis);
-	KK_dof[ivar][i]=mylsyspde->GetSystemDof(SolIndex[ivar],SolPdeIndex[ivar],i, iel);
-      }
+      }	
+      for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
+           KK_dof[ivar][i]=mylsyspde->GetSystemDof(SolIndex[ivar],SolPdeIndex[ivar],i, iel);
+        }
     }
 
-    for(unsigned i=0;i<nve1;i++) {
-      unsigned inode=mymsh->GetSolutionDof(i, iel, order_ind1);
-      node1[i]=inode;
-      KK_dof[dim][i]=mylsyspde->GetSystemDof(SolIndex[dim],SolPdeIndex[dim],i, iel);
-    }
 
-    {
+
       // *** Gauss poit loop ***
       for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
 	// *** get Jacobian and test function and test function derivatives ***
 	ml_prob._ml_msh->_finiteElement[kelt][order_ind2]->Jacobian(coordinates,ig,Weight2,phi2,gradphi2,nablaphi2);
-	phi1=ml_prob._ml_msh->_finiteElement[kelt][order_ind1]->GetPhi(ig);
 
 	//velocity variable
-	for(unsigned ivar=0; ivar<dim; ivar++) {
+	for(unsigned ivar=0; ivar<n_unknowns; ivar++) {
 	  Sol[ivar]=0.;
 	  SolOld[ivar]=0.;
 	  //AccSol[ivar]=0.;
@@ -429,26 +432,18 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 	    }
 	  }
 	}
-	//pressure variable
-	Sol[dim]=0;
-	unsigned SolIndex=ml_sol->GetIndex(&Solname[3][0]);
-	unsigned SolType=ml_sol->GetSolutionType(&Solname[3][0]);
-	for(unsigned i=0; i<nve1; i++){
-	  unsigned sol_dof = node1[i];
-	  double soli = (*mysolution->_Sol[SolIndex])(sol_dof);
-	  Sol[dim]+=phi1[i]*soli;
-	}
+
 
 	// *** phi_i loop ***
 	for(unsigned i=0; i<nve2; i++){
 
 	  //BEGIN RESIDUALS A block ===========================
-	  for(unsigned ivar=0; ivar<dim; ivar++) {
+	  for(unsigned ivar=0; ivar<n_unknowns; ivar++) {
 	    double Adv_rhs=0;
 	    double Adv_old_rhs=0;
 	    double Lap_rhs=0;
 	    double Lap_old_rhs=0;
-	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
+	    for(unsigned ivar2=0; ivar2< dim; ivar2++) {
 	      Lap_rhs 	  += gradphi2[i*dim+ivar2]*gradSol[ivar][ivar2];
 	      Lap_old_rhs += gradphi2[i*dim+ivar2]*gradSolOld[ivar][ivar2];
 	      Adv_rhs 	  += Sol[ivar2]*gradSol[ivar][ivar2];
@@ -478,7 +473,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 		Adv1 += Sol[ivar]*gradphi2[j*dim+ivar]*phi2[i]*Weight2;
 	      }
 
-	      for(unsigned ivar=0; ivar<dim; ivar++) {
+	      for(unsigned ivar=0; ivar< n_unknowns; ivar++) {
 		B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j] += theta*dt*IRe*Lap + theta*dt*NavierStokes*newton*Adv1 + Mass;
 		if(nwtn_alg==2){
 		  // Advection term II
@@ -490,45 +485,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 	      }
   	    } //end phij loop
 
-	    // *** phi1_j loop ***
-	    for(unsigned j=0; j<nve1; j++){
-	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		B[SolPdeIndex[ivar]][SolPdeIndex[dim]][i*nve1+j] -= dt*gradphi2[i*dim+ivar]*phi1[j]*Weight2;
-	      }
-	    } //end phi1_j loop
 	  } // endif assemble_matrix
 	} //end phii loop
 
 
-	// *** phi1_i loop ***
-	for(unsigned i=0; i<nve1; i++){
-	  //BEGIN RESIDUALS B block ===========================
-	  double div = 0;
-	  for(unsigned ivar=0; ivar<dim; ivar++) {
-	    div += gradSol[ivar][ivar];
-	  }
-	  F[SolPdeIndex[dim]][i]+= dt*(phi1[i]*div +penalty*ILambda*phi1[i]*Sol[dim])*Weight2;
-	  //END RESIDUALS  B block ===========================
-
-	  {
-	    // *** phi_j loop ***
-	    for(unsigned j=0; j<nve2; j++) {
-	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		B[SolPdeIndex[dim]][SolPdeIndex[ivar]][i*nve2+j]-= dt*phi1[i]*gradphi2[j*dim+ivar]*Weight2;
-	      }
-	    }  //end phij loop
-	  } // endif assemble_matrix
-	}  //end phi1_i loop
-
-	if(penalty){  //block nve1 nve1
-	  // *** phi_i loop ***
-	  for(unsigned i=0; i<nve1; i++){
-	    // *** phi_j loop ***
-	    for(unsigned j=0; j<nve1; j++){
-	      B[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nve1+j]-=  dt*ILambda*phi1[i]*phi1[j]*Weight2;
-	    }
-	  }
-	}   //end if penalty
       }  // end gauss point loop
 
       //--------------------------------------------------------------------------------------------------------
@@ -549,26 +509,13 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 // 	  }
 // 	}
 //       }
-      //--------------------------------------------------------------------------------------------------------
-    } // endif single element not refined or fine grid loop
-    //--------------------------------------------------------------------------------------------------------
+
+//--------------------------------------------------------------------------------------------------------
     //Sum the local matrices/vectors into the Global Matrix/Vector
-    for(unsigned ivar=0; ivar<dim; ivar++) {
+    for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
       myRES->add_vector_blocked(F[SolPdeIndex[ivar]],KK_dof[ivar]);
-      {
-	myKK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[ivar]],KK_dof[ivar],KK_dof[ivar]);
-	myKK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[dim]],KK_dof[ivar],KK_dof[dim]);
-	myKK->add_matrix_blocked(B[SolPdeIndex[dim]][SolPdeIndex[ivar]],KK_dof[dim],KK_dof[ivar]);
-	if(nwtn_alg==2){
-	  for(unsigned ivar2=1; ivar2<dim; ivar2++) {
-	    myKK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[(ivar+ivar2)%dim]],KK_dof[ivar],KK_dof[(ivar+ivar2)%dim]);
-	  }
-	}
-      }
+       myKK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[ivar]],KK_dof[ivar],KK_dof[ivar]);
     }
-    //Penalty
-    if(penalty) myKK->add_matrix_blocked(B[SolPdeIndex[dim]][SolPdeIndex[dim]],KK_dof[dim],KK_dof[dim]);
-    myRES->add_vector_blocked(F[SolPdeIndex[dim]],KK_dof[dim]);
     //--------------------------------------------------------------------------------------------------------
   } //end list of elements loop for each subdomain
 
