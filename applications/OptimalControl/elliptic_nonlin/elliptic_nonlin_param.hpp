@@ -1,5 +1,5 @@
-#ifndef ELLIPTIC_PARAMETERS
-#define ELLIPTIC_PARAMETERS
+#ifndef ELLIPTIC_NONLIN_PARAMETERS
+#define ELLIPTIC_NONLIN_PARAMETERS
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -15,9 +15,23 @@
 
 //*********************** Control box constraints *******************************************************
 #define  INEQ_FLAG 1
-#define  CTRL_BOX_LOWER   -1000
-#define  CTRL_BOX_UPPER    0.5
 #define  C_COMPL 1.
+
+
+ double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
+
+     double constr_value = 0.;
+     double constr_value_upper = 0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
+     double constr_value_lower = -1000.;
+     assert(constr_value_lower < constr_value_upper); 
+     
+    if (upper)   constr_value = constr_value_upper;
+    else         constr_value = constr_value_lower; 
+    
+    
+  return constr_value;
+     
+}
 
 
 //*********************** Find volume elements that contain a  Target domain element **************************************
@@ -42,9 +56,9 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 
 //******************************************* Desired Target *******************************************************
 
-double DesiredTarget()
+double DesiredTarget(const std::vector<double> & xyz)
 {
-   return 2.;
+   return /*sin(M_PI * xyz[0]) * sin(M_PI * xyz[1]);*/ 2.;
 }
 
 

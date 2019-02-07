@@ -1,15 +1,22 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
 #include "ElemType.hpp"
+
+
+#define FACE_FOR_CONTROL             3  //we do control on the right (=2) face
+#define AXIS_DIRECTION_CONTROL_SIDE  0 //change this accordingly to the other variable above
 
 #include "../elliptic_param.hpp"
 
 using namespace femus;
 
+double InitialValueActFlag(const std::vector < double >& x) {
+  return 0.;
+}
 
 double InitialValueContReg(const std::vector < double >& x) {
   return ControlDomainFlag_bdry(x);
@@ -38,33 +45,35 @@ double InitialValueControl(const std::vector < double >& x) {
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
   bool dirichlet = true; //dirichlet
-  value = 0;
+  value = 0.;
 
   if(!strcmp(name,"control")) {
-  if (faceName == 3)
+  if (faceName == FACE_FOR_CONTROL)
+//   if (x[1-AXIS_DIRECTION_CONTROL_SIDE] > 1. - 1.e-5 && x[1-AXIS_DIRECTION_CONTROL_SIDE] < 1. + 1.e-5)    
     dirichlet = false;
   }
 
   if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u=q)
-  if (faceName == 3)
+  if (faceName == FACE_FOR_CONTROL)
+//   if (x[1-AXIS_DIRECTION_CONTROL_SIDE] > 1. - 1.e-5 && x[1-AXIS_DIRECTION_CONTROL_SIDE] < 1. + 1.e-5)    
     dirichlet = false;
   }
 
   if(!strcmp(name,"mu")) {
 //       value = 0.;
-//   if (faceName == 3)
+//   if (faceName == FACE_FOR_CONTROL)
     dirichlet = false;
   }
   
 //     if(!strcmp(name,"adjoint")) { 
-//   if (faceName == 3)
+//   if (faceName == FACE_FOR_CONTROL)
 //     dirichlet = false;
 //   }
 
   
   
 //     if(!strcmp(name,"adjoint")) {  //"adjoint" corresponds to the third block row
-//   if (faceName == 3)    value = 1.;
+//   if (faceName == FACE_FOR_CONTROL)    value = 1.;
 //   }
 
   
@@ -111,6 +120,9 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  const unsigned int fake_time_dep_flag = 2;
+  const std::string act_set_flag_name = "act_flag";
+  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
@@ -121,6 +133,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("mu", InitialValueMu);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
+  mlSol.Initialize(act_set_flag_name.c_str(), InitialValueActFlag);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -135,8 +148,11 @@ int main(int argc, char** args) {
   mlProb.SetFilesHandler(&files);
 
  // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
- 
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = mlProb.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+  
+  system.SetActiveSetFlagName(act_set_flag_name);
+//   system.SetMaxNumberOfNonLinearIterations(50);
+
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
   system.AddSolutionToSystemPDE("adjoint");  
@@ -174,7 +190,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -294,13 +310,21 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   vector < double >  sol_mu;   sol_mu.reserve(maxSize);
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
+  
+  //************** act flag **************************** 
+  std::string act_flag_name = "act_flag";
+  unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
+  unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
+     if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
+       *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
+     }
+  
   //********* variables for ineq constraints *****************
   const int ineq_flag = INEQ_FLAG;
-  double ctrl_lower =  CTRL_BOX_LOWER;
-  double ctrl_upper =  CTRL_BOX_UPPER;
-  assert(ctrl_lower < ctrl_upper);
   const double c_compl = C_COMPL;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
+  vector < double >  ctrl_lower;   ctrl_lower.reserve(maxSize);
+  vector < double >  ctrl_upper;   ctrl_upper.reserve(maxSize);
   //***************************************************  
 
  //*************************************************** 
@@ -420,18 +444,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
     }
     
-    
- //************** update active set flag for current nonlinear iteration **************************** 
- // 0: inactive; 1: active_a; 2: active_b
-   assert(nDof_mu == nDof_ctrl);
-   sol_actflag.resize(nDof_mu);
-     std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
-   
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {
-        if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
-        else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
-    }
-    
+
+ 
  //********************* ALL VARS ******************** 
     unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
     int nDof_max    =  nDof_u;   // AAAAAAAAAAAAAAAAAAAAAAAAAAA TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
@@ -480,19 +494,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
-	      if(  face == 3) { //control face
+	      if(  face == FACE_FOR_CONTROL) { //control face
               
-         //************** update active set flag for current nonlinear iteration **************************** 
-         // 0: inactive; 1: active_a; 2: active_b
-            assert(nDof_mu == nDof_ctrl);
-            sol_actflag.resize(nDof_mu);
-            std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
-   
-            for (unsigned i = 0; i < sol_actflag.size(); i++) {
-                if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
-                else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
-            }
-
  //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
 	      bool  dir_bool = mlSol->GetBdcFunction()(xyz_bdc,ctrl_name.c_str(),tau,face,0.);
@@ -504,15 +507,105 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
 	        for (unsigned idim = 0; idim < dim; idim++) {  x_bdry[idim].resize(nve_bdry); }
 		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
-		for(unsigned i=0; i < nve_bdry; i++) {
-		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
+		for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
+		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
                   unsigned iDof = msh->GetSolutionDof(i_vol, iel, xType);
 		  for(unsigned idim=0; idim<dim; idim++) {
-		      x_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
+		      x_bdry[idim][i_bdry]=(*msh->_topology->_Sol[idim])(iDof);
 		  }
 		}
  //========================================================================================================== 
-		
+
+         //************** update active set flag for current nonlinear iteration **************************** 
+         // 0: inactive; 1: active_a; 2: active_b
+            assert(nDof_mu == nDof_ctrl);
+            sol_actflag.resize(nve_bdry/*nDof_mu*/);
+            ctrl_lower.resize(nve_bdry/*nDof_mu*/);
+            ctrl_upper.resize(nve_bdry/*nDof_mu*/);
+           std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+           std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
+           std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
+   
+		      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+//             for (unsigned i = 0; i < sol_actflag.size(); i++) {
+        std::vector<double> node_coords_i(dim,0.);
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x_bdry[d][i_bdry];
+        ctrl_lower[i_bdry] = InequalityConstraint(node_coords_i,false);
+        ctrl_upper[i_bdry] = InequalityConstraint(node_coords_i,true);
+
+        if      ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_lower[i_bdry] )) < 0 )  sol_actflag[i_bdry] = 1;
+        else if ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_upper[i_bdry] )) > 0 )  sol_actflag[i_bdry] = 2;
+            }
+            
+        //************** act flag **************************** 
+      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+      unsigned solDof_actflag = msh->GetSolutionDof(i_vol, iel, solFEType_act_flag); 
+      (sol->_Sol[solIndex_act_flag])->set(solDof_actflag,sol_actflag[i_bdry]);     
+    }
+    
+
+ // ===================================================
+ //node-based insertion on the boundary ===============
+ // ===================================================
+    
+ //============= delta_mu row ===============================
+      std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
+      
+      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+//     for (unsigned i = 0; i < sol_actflag.size(); i++) {
+      if (sol_actflag[i_bdry] == 0){  //inactive
+         Res_mu [i_vol] = - ineq_flag * ( 1. * sol_mu[i_vol] - 0. ); 
+// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+      }
+      else if (sol_actflag[i_bdry] == 1){  //active_a 
+	 Res_mu [i_vol] = - ineq_flag * ( c_compl *  sol_ctrl[i_vol] - c_compl * ctrl_lower[i_bdry]);
+      }
+      else if (sol_actflag[i_bdry] == 2){  //active_b 
+	Res_mu [i_vol]  =  - ineq_flag * ( c_compl *  sol_ctrl[i_vol] - c_compl * ctrl_upper[i_bdry]);
+      }
+    }
+
+    
+    RES->insert(Res_mu, l2GMap_mu);    
+ //============= delta_mu row - end ===============================
+    
+ //============= delta_mu-delta_ctrl row ===============================
+ //auxiliary volume vector for act flag
+ unsigned nDof_actflag_vol  = msh->GetElementDofNumber(iel, solFEType_act_flag);
+ std::vector<double> sol_actflag_vol(nDof_actflag_vol); 
+
+
+ for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) if (sol_actflag[i_bdry] != 0 ) sol_actflag[i_bdry] = ineq_flag * c_compl;    
+ 
+ std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+    }
+ 
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag_vol);
+ //============= delta_mu-delta_ctrl row - end ===============================
+
+ //============= delta_mu-delta_mu row ===============================
+  for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) sol_actflag[i_bdry] =  ineq_flag * (1 - sol_actflag[i_bdry]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
+
+ std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+    }
+  
+  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag_vol );
+ //============= delta_mu-delta_mu row - end ===============================
+    
+ // =========================================================
+ //node-based insertion on the boundary - end ===============
+ // =========================================================
+    
+ 
 //========= initialize gauss quantities on the boundary ============================================
                 double sol_ctrl_bdry_gss = 0.;
                 double sol_adj_bdry_gss = 0.;
@@ -524,17 +617,25 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
-		  msh->_finiteElement[kelGeom][solType_adj]->ShapeAtBoundary(x,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+		  msh->_finiteElement[kelGeom][solType_adj]->VolumeShapeAtBoundary(x,x_bdry,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
+          std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
+		      for (int iv = 0; iv < nDof_adj; iv++)  {
+                  for (int d = 0; d < dim; d++) {
+                       std::cout << " " <<   phi_adj_x_vol_at_bdry[iv * dim + d];
+                }
+              }
+          
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
-		  double dx_dxi = 0.;
+          const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
+		  double dx_dcurv_abscissa = 0.;
 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
-		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
-		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dxi += myptr[inode] * x_bdry[0][inode];
+		 double * myptr = myptr = myeltype->GetDPhiDXi(ig_bdry);
+		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dcurv_abscissa += myptr[inode] * x_bdry[axis_direction_control_side][inode];
   
 		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) {
                             for (int d = 0; d < dim; d++) {
-                              if (d==0 ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dxi);
+                              if (d == axis_direction_control_side ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dcurv_abscissa);
                               else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
                          }
                      }
@@ -566,9 +667,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 			    }
 		      }  
 		      
-    double grad_dot_n_adj_res = 0.;
+    double grad_adj_dot_n_res = 0.;
         for(unsigned d=0; d<dim; d++) {
-	  grad_dot_n_adj_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
+	  grad_adj_dot_n_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
 	}
 //=============== grad dot n  for residual =========================================       
 
@@ -603,7 +704,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                 if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] *  weight_bdry *
                                                                                 (    alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							                           +  beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
-							                           - grad_dot_n_adj_res * phi_ctrl_bdry[i_bdry]
+							                           - grad_adj_dot_n_res * phi_ctrl_bdry[i_bdry]
 // 							                           -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss // for Neumann control
 							                         );  //boundary optimality condition
                 if (i_vol < nDof_adj)   Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += 0.; 
@@ -760,7 +861,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
 	msh->_finiteElement[kelGeom][solType_u]  ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
-        msh->_finiteElement[kelGeom][solType_adj]->Jacobian(x, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
+    msh->_finiteElement[kelGeom][solType_adj]->Jacobian(x, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
           
 	sol_u_gss = 0.;
 	sol_adj_gss = 0.;
@@ -797,6 +898,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
           if (i < nDof_ctrl)   Res[nDof_u             + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_ctrl[i] - 0.)  );
 	      
           if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += - weight * (-1) * (laplace_rhs_dadj_u_i);
+          if (i < nDof_mu)     Res[nDof_u + nDof_ctrl + nDof_adj + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_mu[i] - 0.)  );
 //============  Volume Residuals ==================	    
 	      
 	      
@@ -849,19 +951,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // 		(nDof_u + nDof_ctrl + j)               ]  += 0.;     //weight * phi_adj[i]*phi_adj[j];
 	      
 	      //============= delta_mu row ===============================
-//	      if (sol_actflag[i] == 0) //inactive
-//	      { // BLOCK delta_mu - mu	      
-// 	        if ( i < nDof_mu && j < nDof_mu && i==j )   
-// 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-// 		       (nDof_u + nDof_ctrl + nDof_adj + j)]  = 1. ;  
-// 	     // }
-// 	      else //active
-// 	      { // BLOCK delta_mu - ctrl	      
-//                 if ( i < nDof_mu && j < nDof_ctrl && i==j )   
-// 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-// 		       (nDof_u + j)                       ]  = c_compl * 1. ; 
-	     // }
-	      
+	        if ( i < nDof_mu && j < nDof_mu && i==j )   
+		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+		       (nDof_u + nDof_ctrl + nDof_adj + j)]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));  
 	    } // end phi_j loop
           } // endif assemble_matrix
 
@@ -909,53 +1001,16 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       //store K in the global matrix KK
       KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
     }
+    
+    
     //========== dof-based part, without summation
  
- //============= delta_mu row ===============================
-      std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
-      
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {
-      if (sol_actflag[i] == 0){  //inactive
-         Res_mu [i] = - ineq_flag * ( 1. * sol_mu[i] - 0. ); 
-// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
-      }
-      else if (sol_actflag[i] == 1){  //active_a 
-	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
-      }
-      else if (sol_actflag[i] == 2){  //active_b 
-	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
-      }
-    }
- //          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
- //          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+
 
     
-    RES->insert(Res_mu, l2GMap_mu);
- //     RES->insert(Res_ctrl, l2GMap_ctrl);
- //     RES->insert(Res_u, l2GMap_u);
- //     RES->insert(Res_adj, l2GMap_adj);
-    
- //  //============= delta_state-delta_state row ===============================
- //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_u, l2GMap_u, 1.);
-
- //  //============= delta_ctrl-delta_ctrl row ===============================
- //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_ctrl, 1.);
- 
- //  //============= delta_adj-delta_adj row ===============================
- //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
-  
  //============= delta_ctrl-delta_mu row ===============================
  KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, ineq_flag * 1.);//------------------------------->>>>>>
   
- //============= delta_mu-delta_ctrl row ===============================
- for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
-  
- KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
-
- //============= delta_mu-delta_mu row ===============================
-  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =  ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
-
-  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );
   
   } //end element loop for each process
   
@@ -1006,8 +1061,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
-
-  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
@@ -1210,7 +1263,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 	      
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
-	      if(  face == 3) { //control face
+	      if(  face == FACE_FOR_CONTROL) { //control face
 
  //========= compute coordinates of boundary nodes on each element ========================================== 
 		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
@@ -1234,19 +1287,21 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 		  
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 
-		 //========== temporary soln for surface gradient on a face parallel to the X axis ==================
-		 double dx_dxi = 0.;
+//========== temporary soln for surface gradient on a face parallel to the X axis ===================
+          const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
+		  double dx_dcurv_abscissa = 0.;
 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
-		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
-		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dxi += myptr[inode] * x_bdry[0][inode];
+		 double * myptr = myptr = myeltype->GetDPhiDXi(ig_bdry);
+		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dcurv_abscissa += myptr[inode] * x_bdry[axis_direction_control_side][inode];
   
 		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) {
                             for (int d = 0; d < dim; d++) {
-                              if (d==0 ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dxi);
+                              if (d == axis_direction_control_side ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dcurv_abscissa);
                               else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
                          }
                      }
-		 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
+//========== temporary soln for surface gradient on a face parallel to the X axis ===================
+
 		  
 		 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_bdry_gss = 0.;
@@ -1262,7 +1317,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
                  //========= compute gauss quantities on the boundary ================================================
                   integral_alpha +=  weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
-                  integral_beta  +=  weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
+                  integral_beta  +=  weight * (sol_ctrl_x_bdry_gss[AXIS_DIRECTION_CONTROL_SIDE] * sol_ctrl_x_bdry_gss[AXIS_DIRECTION_CONTROL_SIDE]);  //in 3D you'll need two directions
                  
 		}
 	      } //end face == 3

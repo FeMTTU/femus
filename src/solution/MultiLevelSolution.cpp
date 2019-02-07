@@ -697,7 +697,7 @@ namespace femus
     for(unsigned k = 0; k < _solType.size(); k++) {
 
       unsigned solType = _solType[k];
-      _solution[grid_coarse]->_Sol[k]->matrix_mult_transpose( *(_solution[grid_fine]->_Sol[k]), *(msh->GetCoarseToFineProjection(solType)) );
+      _solution[grid_coarse]->_Sol[k]->matrix_mult_transpose( *(_solution[grid_fine]->_Sol[k]), *(msh->GetCoarseToFineProjectionRestrictionOnCoarse(solType)) );
       _solution[grid_coarse]->_Sol[k]->close();
     }
     

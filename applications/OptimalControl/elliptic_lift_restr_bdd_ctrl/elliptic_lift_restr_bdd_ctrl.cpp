@@ -4,6 +4,8 @@
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
+#define FACE_FOR_CONTROL 2  //we do control on the right (=2) face
+#define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
 #include "../elliptic_param.hpp"
 
 using namespace femus;
@@ -33,7 +35,7 @@ double InitialValueMu(const std::vector < double >& x) {
 }
 
 double InitialValueControl(const std::vector < double >& x) {
-  return .0;
+  return 0.;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
@@ -43,14 +45,14 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   if(!strcmp(name,"control")) {
       value = 0.;
-  if (faceName == 3)
+  if (faceName == FACE_FOR_CONTROL)
     dirichlet = false;
   
   }
   
   if(!strcmp(name,"mu")) {
 //       value = 0.;
-//   if (faceName == 3)
+//   if (faceName == FACE_FOR_CONTROL)
     dirichlet = false;
   }
   
@@ -96,7 +98,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  const unsigned int fake_time_dep_flag = 2;
+  const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
   const std::string act_set_flag_name = "act_flag";
   mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
@@ -303,11 +305,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
   //********* variables for ineq constraints *****************
   const int ineq_flag = INEQ_FLAG;
-  const double ctrl_lower =  CTRL_BOX_LOWER;
-  const double ctrl_upper =  CTRL_BOX_UPPER;
-  assert(ctrl_lower < ctrl_upper);
   const double c_compl = C_COMPL;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
+  vector < double >  ctrl_lower;   ctrl_lower.reserve(maxSize);
+  vector < double >  ctrl_upper;   ctrl_upper.reserve(maxSize);
   //***************************************************  
 
  //***************************************************  
@@ -442,11 +443,20 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  // 0: inactive; 1: active_a; 2: active_b
    assert(nDof_mu == nDof_ctrl);
    sol_actflag.resize(nDof_mu);
+   ctrl_lower.resize(nDof_mu);
+   ctrl_upper.resize(nDof_mu);
      std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+     std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
+     std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
    
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {  
-    if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
-    else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
+    for (unsigned i = 0; i < sol_actflag.size(); i++) {
+        std::vector<double> node_coords_i(dim,0.);
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x[d][i];
+        ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
+        ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
+
+        if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
+        else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
     }
 
  //************** act flag **************************** 
@@ -779,13 +789,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 // 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
       else if (sol_actflag[i] == 1){  //active_a 
-	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
+	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower[i]);
       }
       else if (sol_actflag[i] == 2){  //active_b 
-	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
+	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper[i]);
       }
     }
-//          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
+//          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower[i] - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper[i] - sol_ctrl[i])  ) ;
 //          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
 
     
@@ -842,15 +852,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     RES->add_vector_blocked(one_times_mu, positions);
     RES->print();
     
-  // ***************** check active flag sets *******************
-    int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare( *(sol->_Sol[solIndex_act_flag]) ) );
-    bool compare_bool = false;
-    if (compare_return == -1) compare_bool = true;
-      if( compare_bool && (mlPdeSys->GetNonlinearIt() > 0) ) {
-            std::cout << "(In assembly function) Active set did not change at iteration " << mlPdeSys->GetNonlinearIt() << std::endl;
-            
-      }
-      
+
   return;
 }
 
@@ -926,8 +928,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   vector < double >  sol_ctrl; // local solution
   sol_ctrl.reserve(maxSize);
-//   vector< int > l2GMap_ctrl;
-//   l2GMap_ctrl.reserve(maxSize);
   
   double ctrl_gss = 0.;
   double ctrl_x_gss = 0.;
@@ -941,9 +941,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   vector <double> phi_udes_x;
   vector <double> phi_udes_xx;
 
-    phi_udes.reserve(maxSize);
-    phi_udes_x.reserve(maxSize * dim);
-    phi_udes_xx.reserve(maxSize * dim2);
+  phi_udes.reserve(maxSize);
+  phi_udes_x.reserve(maxSize * dim);
+  phi_udes_xx.reserve(maxSize * dim2);
  
   
 //  unsigned solIndex_udes;
@@ -952,9 +952,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   vector < double >  sol_udes; // local solution
   sol_udes.reserve(maxSize);
-//   vector< int > l2GMap_udes;
-//   l2GMap_udes.reserve(maxSize);
-   double udes_gss = 0.;
+
+  double udes_gss = 0.;
  //*************************************************** 
  //*************************************************** 
 
@@ -962,8 +961,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  //*************************************************** 
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
-
-  const int n_unknowns = 4;
  //*************************************************** 
 
   
@@ -1088,7 +1085,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
   std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta << std::endl;
 
-  
 return;
   
 }

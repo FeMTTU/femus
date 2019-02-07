@@ -1,16 +1,17 @@
 #ifndef ELLIPTIC_PARAMETERS
 #define ELLIPTIC_PARAMETERS
 
+//#include </elliptic_lift_restr_bdd_ctrl_ext/input/ext_box.neu>
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  32
-#define NSUB_Y  32
+#define NSUB_X  16
+#define NSUB_Y  16
 
 
 //*********************** Sets the regularization parameters *******************************************************
-#define ALPHA_CTRL_BDRY 1.
-#define BETA_CTRL_BDRY 1.
+#define ALPHA_CTRL_BDRY 1.e-3
+#define BETA_CTRL_BDRY 0 //1.e-2
 
 
 #define ALPHA_CTRL_VOL 1.e-3
@@ -18,10 +19,25 @@
 
 
 //*********************** Control box constraints *******************************************************
-#define  INEQ_FLAG 1
-#define  CTRL_BOX_LOWER   -1000
-#define  CTRL_BOX_UPPER   0.5
+#define  INEQ_FLAG 0
 #define  C_COMPL 1.
+
+
+ double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
+
+     double constr_value = 0.;
+     double constr_value_upper = 0.5; //0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
+     double constr_value_lower = -1000; //-3.e-13;
+     assert(constr_value_lower < constr_value_upper); 
+     
+    if (upper)   constr_value = constr_value_upper;
+    else         constr_value = constr_value_lower; 
+    
+    
+  return constr_value;
+     
+}
+   
 
 
 //*********************** Find volume elements that contain a  Target domain element **************************************
@@ -31,13 +47,8 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ******
   int target_flag = 0; //set 0 to 1 to get the entire domain
   
-   if (   /*elem_center[0] < 0.75 + 1.e-5    && elem_center[0] > 0.25  - 1.e-5  && */ 
-        /*elem_center[1] <  0.5  + 1.e-5     && */    elem_center[1] > 0.5 -  1.e-5  /*(1./16. + 1./64.)*/
-  ) {
-     
-     target_flag = 1;
-     
-  }
+   if (   elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] > 0.5  - 1.e-5 ) {    target_flag = 1;  }
+//    if (   elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] < 0.5  + 1.e-5 ) {    target_flag = 1;  }
   
      return target_flag;
 
@@ -61,7 +72,8 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
  //***** set control domain flag ***** 
   double mesh_size = 1./NSUB_Y;
   int control_el_flag = 0;
-   if ( elem_center[1] >  1. - mesh_size ) { control_el_flag = 1; }
+   if ( elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] >  1. - mesh_size ) { control_el_flag = 1; }
+//    if ( elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] <       mesh_size ) { control_el_flag = 1; }
 
      return control_el_flag;
 }
@@ -75,12 +87,25 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
  //***** set target domain flag ******
  // flag = 1: we are in the lifting nonzero domain
   int control_el_flag = 0.;
-   if ( elem_center[1] >  0.7) { control_el_flag = 1; }
+   if ( elem_center[0] >  0.7) { control_el_flag = 1; }
 
      return control_el_flag;
 
 }
 
+
+//*********************** Find volume elements that contain a Control domain element *********************************
+
+int ControlDomainFlag_external_restriction(const std::vector<double> & elem_center) {
+
+ //***** set target domain flag ******
+ // flag = 1: we are in the lifting nonzero domain
+  int exterior_el_flag = 0.;
+   if ( elem_center[0] >  1. -  1.e-5) { exterior_el_flag = 1; }
+
+     return exterior_el_flag;
+
+}
 
 
 

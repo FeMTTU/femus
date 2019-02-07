@@ -40,6 +40,10 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_from_restriction); 
 // ||u_i - u_h||/||u_i-u_(h/2)|| = 2^alpha, alpha is order of conv 
 
+void output_convergence_rate( std::vector < std::vector < double > > &  norm, std::string norm_name );
+
+
+
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -65,37 +69,57 @@ int main(int argc, char** args) {
   const std::vector<double> xyz_min = {-0.5,-0.5,0.};
   const std::vector<double> xyz_max = { 0.5, 0.5,0.};
   const ElemType geom_elem_type = QUAD9;
+  
   mlMsh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 //   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
-  MultiLevelMesh mlMsh_finest;
-  mlMsh_finest.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//   mlMsh_finest.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  MultiLevelMesh mlMsh_all_levels;
+  mlMsh_all_levels.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   mlMsh_all_levels.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 5;
+    maxNumberOfMeshes = 6;
   } else {
     maxNumberOfMeshes = 4;
   }
 
-  const unsigned gap = 2;
+  const unsigned gap = 1;
 
-  vector < vector < double > > l2Norm;
-  l2Norm.resize(maxNumberOfMeshes + 1 - gap);
+  vector < vector < double > > l2Norm;       l2Norm.resize(maxNumberOfMeshes + 1 - gap);
+  vector < vector < double > > semiNorm;   semiNorm.resize(maxNumberOfMeshes + 1 - gap);
 
-  vector < vector < double > > semiNorm;
-  semiNorm.resize(maxNumberOfMeshes + 1 - gap);
-
-  
-  MultiLevelSolution * mlSol_finest;
   
     std::vector< FEOrder > feOrder = {FIRST, SERENDIPITY, SECOND};
 
+  
+     for (int i = 0; i < l2Norm.size(); i++) {   // loop on the mesh level
+    l2Norm[i].resize(feOrder.size());
+    semiNorm[i].resize(feOrder.size());
+     }   
+
+     
     
-    for (int i = maxNumberOfMeshes - 1; i >= 0; i--) {   // loop on the mesh level
+
+    for (unsigned fe = 0; fe < feOrder.size(); fe++) {   // loop on the FE Order
+   
+
+   unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
+   mlMsh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
+//     mlMsh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);
+        
+  MultiLevelSolution * mlSol_all_levels;
+  mlSol_all_levels = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+  mlSol_all_levels->AddSolution("u", LAGRANGE, feOrder[fe]);
+  mlSol_all_levels->Initialize("All");
+  mlSol_all_levels->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol_all_levels->GenerateBdc("u");
+  
+  
+    
+     for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
    unsigned numberOfUniformLevels = i + 1;
     unsigned numberOfSelectiveLevels = 0;
@@ -104,26 +128,16 @@ int main(int argc, char** args) {
     mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
     
-    if (i == maxNumberOfMeshes - 1) {
-        unsigned numberOfUniformLevels_finest = numberOfUniformLevels;
-        mlMsh_finest.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest + numberOfSelectiveLevels, NULL);
-//         mlMsh_finest.EraseCoarseLevels(numberOfUniformLevels_finest - 1 - 1); //I need to keep the structures at all levels here so I can restrict every time
-    }
-    
     // print mesh info
     mlMsh.PrintInfo();
     
-    if (i < l2Norm.size()) {
-    l2Norm[i].resize(feOrder.size());
-    semiNorm[i].resize(feOrder.size());
-    }
-    
-    for (unsigned j = 0; j < feOrder.size(); j++) {   // loop on the FE Order
+       
+        
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol(&mlMsh);
       
       // add variables to mlSol
-      mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
+      mlSol.AddSolution("u", LAGRANGE, feOrder[fe]);
       mlSol.Initialize("All");
       
       // attach the boundary condition function and generate boundary data
@@ -158,54 +172,29 @@ int main(int argc, char** args) {
 
       system.MLsolve();
       
-     
-    if (i < maxNumberOfMeshes - gap/*1*/) {
-        //restrict the fine solution at the current level  ==================
-//     for(unsigned short j = 0; j < mlSol._mlMesh->GetNumberOfLevels(); j++) { //all levels
-      const unsigned coarse = i;
-      const unsigned fine   = coarse + gap;
-    for (unsigned nf = 0; nf < gap; nf++) {
-      mlSol_finest->CoarsenSolutionByOneLevel_wrong( fine - nf);
-    }
-//        }
-
-        //pass the restriction of the fine solution to the function that computes the error  ==================
-      Solution* sol = mlSol_finest->GetSolutionLevel(i);    // pointer to the solution (level) object
-      std::pair< double , double > norm = GetErrorNorm(&mlSol,sol);
-
-      l2Norm[i][j]  = norm.first;
-      semiNorm[i][j] = norm.second;
-      
-      
+    if ( i > 0 ) {
         
-    }
-    else if (i == maxNumberOfMeshes - 1) {
-        //store the fine solution  ==================
-              mlSol_finest = new MultiLevelSolution (&mlMsh_finest);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-              mlSol_finest->AddSolution("u", LAGRANGE, feOrder[j]);
-              mlSol_finest->Initialize("All");
-              mlSol_finest->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-              mlSol_finest->GenerateBdc("u");
-              
-//       assert( mlSol._mlMesh->GetNumberOfLevels() == mlSol_finest->_mlMesh->GetNumberOfLevels() - 1 );
+//prolongation of coarser  
+    mlSol_all_levels->RefineSolution(i);
+  Solution* sol_coarser_prolongated = mlSol_all_levels->GetSolutionLevel(i);
+  
+  
+      std::pair< double , double > norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
 
-//     for(unsigned short k = 0; k < mlSol._mlMesh->GetNumberOfLevels(); k++) { //all levels (only one)
-    //       _solution[k]->CopySolutionToOldSolution();  //started from here
-              
+      l2Norm[i-1][fe]  = norm.first;
+      semiNorm[i-1][fe] = norm.second;
+    }
+
+//store the last computed solution
+// 
        const unsigned level_index_current = 0;
       //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
-     for(unsigned short j = 0; j <   mlSol.GetSolutionLevel(level_index_current)->_Sol.size(); j++) {    //all variables
-               *(mlSol_finest->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
+       const unsigned n_vars = mlSol.GetSolutionLevel(level_index_current)->_Sol.size();
+       
+     for(unsigned short j = 0; j < n_vars; j++) {  
+               *(mlSol_all_levels->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
           }
-//        }
-      
-      
-       
-       
-    }
         
-    
-    
       // print solutions
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back("All");
@@ -213,73 +202,55 @@ int main(int argc, char** args) {
       VTKWriter vtkIO(&mlSol);
       vtkIO.Write(/*files.GetOutputPath()*/ DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
       
-      VTKWriter vtkIO_finest(mlSol_finest);
-      vtkIO_finest.Write(i+1, /*files.GetOutputPath()*/ DEFAULT_OUTPUTDIR, "biquadratic"/*_finest*/, variablesToBePrinted, i+3 + maxNumberOfMeshes);
-
-    }
-  }
+      }  //end h refinement
+      
+    }  //end FE families
+ 
   
-  delete mlSol_finest; 
+  
+   std::pair< std::string, std::string > norm_names("L2-NORM","SEMINORM");
+
+   output_convergence_rate(l2Norm, norm_names.first );
+   
+   output_convergence_rate(semiNorm, norm_names.second );
+
+
+  return 0;
+}
+
+
+void output_convergence_rate( std::vector < std::vector < double > > &  norm, std::string norm_name ) {
 
 //   print the seminorm of the error and the order of convergence between different levels
   std::cout << std::endl;
   std::cout << std::endl;
-  std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\tSECOND\n";
+  std::cout << norm_name << " ERROR and ORDER OF CONVERGENCE:\n\n";
+  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\t\tSECOND\n";
 
-  for (int i = l2Norm.size() - 1; i >= 0; i--) {   // loop on the mesh level
+  for (int i = 0; i < norm.size() - 1; i++) {   // loop on the mesh level
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
-    for (unsigned j = 0; j < feOrder.size(); j++) {
-      std::cout << l2Norm[i][j] << "\t";
+    for (unsigned j = 0; j < norm[i].size(); j++) {
+      std::cout << norm[i][j] << "\t";
     }
 
     std::cout << std::endl;
 
-    if (i < l2Norm.size() - 2) {
-      std::cout.precision(3);
+     std::cout.precision(3);
       std::cout << "\t";
 
-      for (unsigned j = 0; j < feOrder.size(); j++) {
-        std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "  \t\t";
+      for (unsigned j = 0; j < norm[i].size(); j++) {
+        std::cout << log( norm[i][j] / norm[i + 1][j] ) / log(2.) << "  \t\t";
       }
 
       std::cout << std::endl;
-    }
-
+     
   }
-
-  std::cout << std::endl;
-  std::cout << std::endl;
-  std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\tSERENDIPITY\tSECOND\n";
-
-  for (int i = l2Norm.size() - 1; i >= 0; i--) {   // loop on the mesh level
-    std::cout << i + 1 << "\t";
-    std::cout.precision(14);
-
-    for (unsigned j = 0; j < feOrder.size(); j++) {
-      std::cout << semiNorm[i][j] << "\t";
-    }
-
-    std::cout << std::endl;
-
-    if (i < l2Norm.size() - 2) {
-      std::cout.precision(3);
-      std::cout << "\t";
-
-      for (unsigned j = 0; j < feOrder.size(); j++) {
-        std::cout << log(semiNorm[i][j] / semiNorm[i + 1][j]) / log(2.) << "  \t\t";
-      }
-
-      std::cout << std::endl;
-    }
-
-  }
-
-  return 0;
+  
+  
 }
+
 
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
@@ -782,7 +753,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 //         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i]       = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-      solu_finer[i] = /*weird_multigrid_factor * */(*sol_finer->_Sol[soluIndex])(solDof);
+//       solu_finer[i] = /*weird_multigrid_factor * */(*sol_finer->_Sol[soluIndex])(solDof);
       solu_exact_at_dofs[i] = GetExactSolutionValue(x_at_node);
     }
 
@@ -876,8 +847,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 
   std::pair < double, double > inexact_pair(sqrt(l2norm_inexact), sqrt(seminorm_inexact));
   
-//   return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
+  return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
 //   return std::pair < double, double > (sqrt(l2norm_exact_dofs), sqrt(seminorm_exact_dofs));
-  return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
+//   return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
 
 }

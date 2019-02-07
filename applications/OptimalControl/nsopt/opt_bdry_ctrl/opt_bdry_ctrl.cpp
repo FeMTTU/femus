@@ -658,7 +658,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 // // 				}
 		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[theta_index]]->JacobianSur(coordX_bd,ig_bd,weight_bd,phi_bd_gss_fe[SolFEType[theta_index]],phi_x_bd_gss_fe[SolFEType[theta_index]],normal);
 		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]->JacobianSur(coordX_bd,ig_bd,weight_bd,phi_bd_gss_fe[SolFEType[ctrl_pos_begin]],phi_x_bd_gss_fe[SolFEType[ctrl_pos_begin]],normal);
-		      ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[adj_pos_begin]]->ShapeAtBoundary(coordX,ig_bd,phi_vol_at_bdry_fe[SolFEType[adj_pos_begin]],phi_x_vol_at_bdry_fe[SolFEType[adj_pos_begin]]);
+		      ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[adj_pos_begin]]->VolumeShapeAtBoundary(coordX,coordX_bd,ig_bd,phi_vol_at_bdry_fe[SolFEType[adj_pos_begin]],phi_x_vol_at_bdry_fe[SolFEType[adj_pos_begin]]);
 
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		    double dx_dxi = 0.;

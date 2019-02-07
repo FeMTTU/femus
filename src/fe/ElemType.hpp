@@ -48,7 +48,7 @@ namespace femus
     public:
 
       /** constructor that receives Geometric Element and Gauss info */
-      elem_type(const char* geom_elem, const char* order_gauss);
+      elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss);
 
       /** destructor */
       virtual ~elem_type();
@@ -63,7 +63,7 @@ namespace femus
                                      const unsigned& index_pair_sol, const unsigned& kkindex_pair_sol) const;
 
       /** To be Added */
-      void BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc, SparseMatrix* Projmat) const;
+      void BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc, SparseMatrix* Projmat, const char el_dofs[]) const;
       /** To be Added */
       void BuildProlongation(const Mesh& mymesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const;
 
@@ -159,14 +159,30 @@ namespace femus
         return _dim;
       };
 
-      // member data
+      /** Set numbers of coarse and fine dofs for 1 element */
+      void set_coarse_and_fine_elem_data(const basis* pt_basis_in);
+      
+      void allocate_and_set_IND(const basis* pt_basis_in);
+
+      void allocate_coordinates_and_KVERT_IND();
+      
+      /** Set node coordinates and fine node indices */
+      void set_coordinates_and_KVERT_IND(const basis* pt_basis_in);
+      
+      /** Compute node coordinates in basis object */
+      void set_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
+   
+      /** Compute element prolongation operator */
+      void set_element_prolongation(const basis* linearElement);
+      
+     // member data
       static unsigned _refindex;
 
       void GetSparsityPatternSize(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc,
                                   NumericVector* NNZ_d, NumericVector* NNZ_o,
                                   const unsigned& index_sol, const unsigned& kkindex_sol) const;
 
-      void GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const;
+      void GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o, const char el_dofs[]) const;
 
       void GetSparsityPatternSize(const Mesh& Mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const;
 
@@ -174,7 +190,7 @@ namespace femus
  
       static const int _fe_new_to_old[NFE_FAMS];
   
-      virtual void ShapeAtBoundary(const vector < vector < double > > &vt,const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const {
+      virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const {
            std::cout << "Implemented only for quad4 now" << std::endl; abort(); 
       };
 
@@ -187,18 +203,24 @@ namespace femus
    protected:
 
       // member data
-      unsigned _dim; /*Spatial dimension of the geometric element*/
-      int _nc, _nf, _nlag[4];
-      unsigned _SolType;   /*Finite Element Family flag*/
-      const double** _X;
-      const int** _IND;
-      const int** _KVERT_IND;
+      unsigned _dim; /* Spatial dimension of the geometric element */
+      int _nc, _nf, _nlag[4];  /* _nc: number of dofs of 1 element;  _nf: number of dofs in that element after refinement; 
+                                  _nlag[0] = number of linear dofs in 1 element;
+                                  _nlag[1] = number of serendipity dofs in 1 element; 
+                                  _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
+                                  _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
+                                  */
+      unsigned _SolType;       /* Finite Element Family flag */
+      const double** _X;       /* [_nf][_dim] coordinates of the _nf nodes in the refined elements */ 
+      const int** _IND;        /* [_nc][_dim] */
+      const int** _KVERT_IND;  /* [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element*/
 
       double** _prol_val;
       int** _prol_ind;
       double* _mem_prol_val;
       int* _mem_prol_ind;
-      basis* _pt_basis;
+      
+      basis* _pt_basis;  /* FE basis functions*/
 
 //  Gauss
       const Gauss _gauss;
@@ -419,7 +441,7 @@ namespace femus
         return _dphideta[ig];
       }
 
-  void ShapeAtBoundary(const vector < vector < double > >& vt_vol, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+  void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
   private:
       double** _phi;
