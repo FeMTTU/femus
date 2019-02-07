@@ -50,10 +50,12 @@ double InitalValueU3D(const std::vector < double >& x) {
   double r2 = r * r;
   double R = 1.0001;
   double R2 = R * R;
+
   double R3 = R2 * R;
   double Vb = 1.1990039070212866;
   double V0 = 0.25 * M_PI * 4./3.; // fraction of injection vs tumor
   
+
   
   return V0 / Vb * exp(  ( 1. - R2 / ( R2 - r2 ) ));
 }
@@ -115,10 +117,10 @@ int main(int argc, char** args) {
   
   mlSol.Initialize("All");
   if(dim==2)
-   mlSol.Initialize("u", InitalValueU2D);
+    mlSol.Initialize("u", InitalValueU2D);
   else
     mlSol.Initialize("u", InitalValueU3D);
-  mlSol.Initialize("d", InitalValueD);
+    mlSol.Initialize("d", InitalValueD);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -285,7 +287,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
      
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType); // number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
     // resize local arrays
@@ -459,7 +461,7 @@ void GetDeadCells(const double &time, MultiLevelSolution &mlSol){
 
   
   double treshold = a - b * exp( -c * time);
- std::cout << "time = " << time <<" treshold = " << treshold << std::endl;
+std::cout << "time = " << time <<" treshold = " << treshold << std::endl;
   
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
   

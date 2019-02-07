@@ -26,10 +26,12 @@
 
 namespace femus {
 
-  /**
-   * This class provides a specific system class for the time integration of system PDE
-   * using the Newmark algorithm.
-   */
+    
+/**
+ * This class provides a specific system class for the time integration of system PDE
+ * using the Runge Kutta schemes.
+ */
+
 
 // ------------------------------------------------------------
 // TransientSystem class definition
@@ -96,7 +98,8 @@ namespace femus {
   const double ImplicitRungeKuttaSystem<Base>::_c[5][5] = {
     {0.5},
     {0.5 - sqrt (3.) / 6., 0.5 + sqrt (3) / 6.},
-    {0.5 - sqrt (15.) / 10., 0.5, 0.5 + sqrt (15.) / 10.}
+    {0.5 - sqrt (15.) / 10., 0.5, 0.5 + sqrt (15.) / 10.},
+    {1.06858, .5, -0.06858}
   };
 
 
@@ -104,7 +107,8 @@ namespace femus {
   const double ImplicitRungeKuttaSystem<Base>::_b[5][5] = {
     {1.},
     {0.5, 0.5},
-    {5. / 18., 4. / 9., 5. / 18.}
+    {5. / 18., 4. / 9., 5. / 18.},
+    {0.1288859568,.7422280863, .1288859568}
   };
 
   template <class Base>
@@ -118,7 +122,14 @@ namespace femus {
       { 5. / 36.,                   2. / 9. - sqrt (15.) / 15.,   5. / 36. - sqrt (15.) / 30.},
       { 5. / 36. + sqrt (15.) / 24.,   2. / 9.,                   5. / 36. - sqrt (15.) / 24.},
       { 5. / 36. + sqrt (15.) / 30.,   2. / 9. + sqrt (15.) / 15.,   5. / 36.}
+    },
+    {
+        {1.06858, 0.0,0.},
+        {-.56858, 1.06858,0.},
+        {2.13716, -3.27432, 1.06858}, // Nørsett's three-stage, 4th order Diagonally IRK
     }
+    
+    
   };
 
   template <class Base>
@@ -128,13 +139,18 @@ namespace femus {
     },
     {
       {3., 0.4641016151377544},
-      {-6.464101615137755, 3.}
+      {-6.464101615137755, 3.},
 
     },
     {
       {5., 1.1639777949432233, -0.16397779494322232},
       {-5.727486121839513, 2.,  0.7274861218395138},
       {10.163977794943225, -9.163977794943223, 5.}
+    },
+    {
+        {.9358213704, 0.,0.},
+        {.4979405519, .9358213704, 0.},
+        {-.3458639439, 2.867523845, .9358213704},
     }
   };
 
