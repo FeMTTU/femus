@@ -30,7 +30,7 @@ double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
-    value = 1.;
+    value = 0.;
 
 }
 
@@ -150,14 +150,12 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
             unsigned nDofx1 = msh->GetElementDofNumber ( iel, xType );
 
             l2GMap1.resize ( nDof1 );
-            soluNonLoc.resize ( nDof1 );
+            Res.assign ( nDof1, 0. );
+            std::vector<double> rhs ( nDof1, 0. );
 
             for ( unsigned i = 0; i < nDof1; i++ ) {
                 l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel );
-                unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
-                soluNonLoc[i] = ( *sol->_Sol[soluIndex] ) ( solDof );
             }
-
 
             for ( int k = 0; k < dim; k++ ) {
                 x1[k].resize ( nDofx1 );
@@ -170,16 +168,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     x1[k][i] = ( *msh->_topology->_Sol[k] ) ( xDof );
                 }
             }
-
-//             if ( iel == 48 ) {
-//                 for ( unsigned i = 0; i < nDofx1; i++ ) {
-//                     for ( unsigned k = 0; k < dim; k++ ) {
-//                         std::cout << "x1[" << k << "][" << i << "] = " << x1[k][i] << " ";
-//                     }
-//
-//                     std::cout << std::endl;
-//                 }
-//             }
 
             unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
             vector < vector < double > > xg1 ( igNumber );
@@ -198,24 +186,17 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                 }
             }
 
-
-//             if ( iel == 3 ) {
-//                 for ( unsigned ig = 0; ig < igNumber; ig++ ) {
-//                     for ( unsigned k = 0; k < dim; k++ ) {
-//                         std::cout << "xg1[" << ig << "][" << k << "] = " << xg1[ig][k] << " ";
-//                     }
-//
-//                     std::cout << std::endl;
-//                 }
-//             }
-
-
             std::vector< std::vector < double > > x2New;
             bool theyIntersect;
             double radius;
 
+            unsigned bcRhs = ( ielGroup == 5 || ielGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6
 
             for ( unsigned ig = 0; ig < igNumber; ig++ ) {
+
+                for ( unsigned i = 0; i < nDof1; i++ ) {
+                    rhs[i] += 1. * weight1[ig] * bcRhs * phi1x[ig][i];
+                }
 
                 for ( int kproc = 0; kproc < nprocs; kproc++ ) {
                     for ( int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++ ) {
@@ -239,8 +220,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         MPI_Bcast ( &nDofx2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
 
                         l2GMap2.resize ( nDof2 );
+                        soluNonLoc.resize ( nDof2 );
 
-                        Res.assign ( nDof2, 0. );
                         Jac.assign ( nDof1 * nDof2, 0. );
 
                         for ( int k = 0; k < dim; k++ ) {
@@ -250,10 +231,13 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         if ( iproc == kproc ) {
                             for ( unsigned j = 0; j < nDof2; j++ ) {
                                 l2GMap2[j] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, j, jel );
+                                unsigned solDof = msh->GetSolutionDof ( j, jel, soluType );
+                                soluNonLoc[j] = ( *sol->_Sol[soluIndex] ) ( solDof );
                             }
                         }
 
                         MPI_Bcast ( &l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
+                        MPI_Bcast ( &soluNonLoc[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
 
                         if ( iproc == kproc ) {
                             for ( unsigned j = 0; j < nDofx2; j++ ) {
@@ -280,6 +264,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 5 || jelGroup == 7 ) ) { //both x and y are in Omega_1
 
                             unsigned bc1 = ( ielGroup == 5 ) ? 0 : 1; //the test function is zero on 5 and 6
+
                             unsigned bc2 = ( jelGroup == 5 ) ? 0 : 1; //the test function is zero on 5 and 6
 
                             radius = delta1;
@@ -288,142 +273,91 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             if ( theyIntersect ) {
 
-//                                 if ( iel == 48 ) {
-//                                     std::cout << "ig = " << ig << " jel intersected = " << jel << std::endl;
-//                                 }
+                                vector < vector <double> >  phi2y ( jgNumber );
+                                vector <double> weight2 ( jgNumber );
 
-//                                     if ( iel == 48 ) {
-//                                     for ( unsigned j = 0; j < nDof2; j++ ) {
-//                                         for ( unsigned k = 0; k < dim; k++ ) {
-//                                             std::cout << "x2Old[" << k << "][" << j << "] = " << x2[k][j] << " ";
-//                                         }
-//
-//                                         std::cout << std::endl;
-//                                     }
-//
-//
-//                                     for ( unsigned j = 0; j < nDof2; j++ ) {
-//                                         for ( unsigned k = 0; k < dim; k++ ) {
-//                                             std::cout << "x2New[" << k << "][" << j << "] = " << x2New[k][j] << " ";
-//                                         }
-//
-//                                         std::cout << std::endl;
-//                                     }
-//
-//                                 }
+                                if ( iproc == kproc ) {
+                                    for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
+                                    }
+                                }
+
+                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                    MPI_Bcast ( &phi2y[jg][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                    MPI_Bcast ( &weight2[jg], 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                }
 
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
-                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+                                    for ( unsigned i = 0; i < nDof1; i++ ) {
 
-
-                                        //BEGIN evaluate phi_j at xg1[ig] (called it phi2x)
-                                        double phi2x = 0.;
-
-                                        std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
-
-                                        for ( unsigned n = 0; n < dim; n++ ) {
-                                            sameNodePhi2x[n].assign ( nDof1, 0 );
-
-                                            for ( unsigned i = 0; i < nDof1; i++ ) {
-                                                if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
-                                            }
-                                        }
-
-                                        std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
-
-
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            for ( unsigned n = 0; n < dim; n++ ) {
-                                                areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
-                                            }
-                                        }
-
-
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            if ( areTheyTheSamePhi2x[i] == dim ) {
-                                                phi2x = phi1x[ig][i];
-
-//                                                 if ( jel == 45 && iel == 48 ) std::cout << "dof check:" << msh->GetSolutionDof ( j, jel, soluType ) << "," << msh->GetSolutionDof ( i, iel, soluType ) << "j= " << j << ", " << "i= " << i << std::endl;
-                                            }
-                                        }
-
-                                        //END evaluate phi_j at xg1[ig] (called it phi2x)
-
-                                        //BEGIN evaluate phi_j at xg2[jg] (called it phi2y)
-
-                                        vector <double>  phi2y;
-                                        double weight2;
-
-                                        if ( iproc == kproc ) {
-                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
-                                        }
-
-                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-                                        MPI_Bcast ( &weight2, 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-
-
-                                        std::vector<double> xg2 ( dim, 0. );
+                                        double Au = 0.;
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            for ( unsigned k = 0; k < dim; k++ ) {
-                                                xg2[k] += x2New[k][j] * phi2y[j];
+
+
+                                            //BEGIN evaluate phi_j at xg1[ig] (called it phi2x)
+                                            double phi2x = 0.;
+
+                                            std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
+
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                sameNodePhi2x[n].assign ( nDof1, 0 );
+
+                                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                    if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
+                                                }
                                             }
-                                        }
 
-                                        std::vector < std::vector < std::vector <double > > > aP ( 3 );
-
-                                        for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
-                                            ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
-                                        }
-
-                                        std::vector <double> xg2Local;
-
-                                        GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
-                                        GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
-
-//                                         if ( jel == 352 && iel == 3 ) {
-//
-//                                             std::cout << "xg2Local[" << 0 << "]= " << xg2Local[0] << " , " << "xg2Local[" << 1 << "]= " << xg2Local[1] << std::endl;
-//                                         }
-
-                                        double weightTemp;
-
-                                        if ( iproc == kproc ) {
-                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
-                                        }
-
-                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-
-                                        //END evaluate phi_j at xg2[jg] (called it phi2y)
+                                            std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
 
 
-                                        //begin to remove
-//                                         if ( jel == 352 && iel == 3 ) {
-//                                             for ( unsigned j = 0; j < nDof2; j++ ) {
-//                                                 std::cout << "phi2y[" << j << "] = " << phi2y[j] << " ";
-//                                             }
-//
-//                                             std::cout << std::endl;
-//
-//
-//                                             for ( unsigned k = 0; k < dim; k++ ) {
-//                                                 std::cout << "new Gauss points xg2[ " << k << " ] = " << xg2[k] ;
-//                                             }
-//
-//                                             std::cout << std::endl;
-//
-//                                             std::cout << "jel =" << jel << " dof j = " << msh->GetSolutionDof ( j, jel, soluType ) << " phi at ig = " << ig << " = " << phi2x << std::endl;
-//                                         }
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                for ( unsigned n = 0; n < dim; n++ ) {
+                                                    areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
+                                                }
+                                            }
 
-                                        //end to remove
 
-                                        double resU = 0.;
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                if ( areTheyTheSamePhi2x[i] == dim ) {
+                                                    phi2x = phi1x[ig][i];
+                                                }
+                                            }
 
-                                        resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
+                                            //END evaluate phi_j at xg1[ig] (called it phi2x)
 
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            //BEGIN evaluate phi_j at xg2[jg] (called it phi2y)
+                                            std::vector<double> xg2 ( dim, 0. );
+
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                for ( unsigned k = 0; k < dim; k++ ) {
+                                                    xg2[k] += x2New[k][j] * phi2y[jg][j];
+                                                }
+                                            }
+
+                                            std::vector < std::vector < std::vector <double > > > aP ( 3 );
+
+                                            for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
+                                                ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
+                                            }
+
+                                            std::vector <double> xg2Local;
+
+                                            GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
+                                            GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
+
+                                            double weightTemp;
+
+                                            if ( iproc == kproc ) {
+                                                msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y[jg], phi_x );
+                                            }
+
+
+                                            MPI_Bcast ( &phi2y[jg][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+
+                                            //END evaluate phi_j at xg2[jg] (called it phi2y)
 
                                             //BEGIN evaluate phi_i at xg2[jg] (called it ph1y)
 
@@ -451,25 +385,23 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                             for ( unsigned j = 0; j < nDof2; j++ ) {
                                                 if ( areTheyTheSamePh1y[j] == dim ) {
-                                                    phi1y = phi2y[j];
-
-//                                                     if ( jel == 45 && iel == 48 ) std::cout << "dof check 2:" << msh->GetSolutionDof ( j, jel, soluType ) << "," << msh->GetSolutionDof ( i, iel, soluType ) << "j= " << j << ", " << "i= " << i << std::endl;
+                                                    phi1y = phi2y[jg][j];
                                                 }
                                             }
 
                                             //END evaluate phi_i at xg2[jg] (called it ph1y)
 
-//                                             if ( jel == 352 && iel == 3 ) std::cout << "jel =" << jel << " dof i = " << msh->GetSolutionDof ( i, iel, soluType ) << " phi at jg " << jg << " = " << phi1y << std::endl;
-
-                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta1, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
-                                            Jac[j * nDof1 + i] -= jacValue;
-                                            resU +=  jacValue * soluNonLoc[i];
-                                        }//endl i loop
-
-                                        Res[j] += resU;
-
-                                    } //endl j loop
+                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( delta1, 4 ) ) * ( bc1 * phi1x[ig][i] -  bc2 * phi1y ) * ( bc1 * phi2x - bc2 *  phi2y[jg][j] );
+                                            Jac[i * nDof2 + j] -= jacValue;
+                                            Au +=  jacValue * soluNonLoc[j];
+                                        }//endl j loop
+                                        Res[i] += Au;
+                                    } //endl i loop
                                 }//end jg loop
+
+                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                    Res[i] -= rhs[i];
+                                }
                             }
                         }
 
@@ -484,126 +416,93 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             if ( theyIntersect ) {
 
-//                                 if ( iel == 3 ) {
-//                                     std::cout << "ig = " << ig << " jel intersected = " << jel << std::endl;
-//
-//                                     for ( unsigned j = 0; j < nDof2; j++ ) {
-//                                         for ( unsigned k = 0; k < dim; k++ ) {
-//                                             std::cout << "x2Old[" << k << "][" << j << "] = " << x2[k][j] << " ";
-//                                         }
-//
-//                                         std::cout << std::endl;
-//                                     }
-//
-//
-//                                     for ( unsigned j = 0; j < nDof2; j++ ) {
-//                                         for ( unsigned k = 0; k < dim; k++ ) {
-//                                             std::cout << "x2New[" << k << "][" << j << "] = " << x2New[k][j] << " ";
-//                                         }
-//
-//                                         std::cout << std::endl;
-//                                     }
-//
-//                                 }
+                                vector < vector <double> >  phi2y ( jgNumber );
+                                vector <double> weight2 ( jgNumber );
+
+                                if ( iproc == kproc ) {
+                                    for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
+                                    }
+                                }
+
+                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                    MPI_Bcast ( &phi2y[jg][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                    MPI_Bcast ( &weight2[jg], 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                }
+
 
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
-                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+                                    for ( unsigned i = 0; i < nDof1; i++ ) {
 
-                                        double phi2x = 0.;
-
-                                        std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
-
-                                        for ( unsigned n = 0; n < dim; n++ ) {
-                                            sameNodePhi2x[n].assign ( nDof1, 0 );
-
-                                            for ( unsigned i = 0; i < nDof1; i++ ) {
-                                                if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
-                                            }
-                                        }
-
-                                        std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
-
-
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            for ( unsigned n = 0; n < dim; n++ ) {
-                                                areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
-                                            }
-                                        }
-
-
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            if ( areTheyTheSamePhi2x[i] == dim ) phi2x = phi1x[ig][i];
-                                        }
-
-
-                                        vector <double>  phi2y;
-                                        double weight2;
-
-                                        if ( iproc == kproc ) {
-                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
-                                        }
-
-                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-                                        MPI_Bcast ( &weight2, 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-
-
-                                        std::vector<double> xg2 ( dim, 0. );
+                                        double Au = 0.;
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            for ( unsigned k = 0; k < dim; k++ ) {
-                                                xg2[k] += x2New[k][j] * phi2y[j];
+
+
+                                            //BEGIN evaluate phi_j at xg1[ig] (called it phi2x)
+                                            double phi2x = 0.;
+
+                                            std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
+
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                sameNodePhi2x[n].assign ( nDof1, 0 );
+
+                                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                    if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
+                                                }
                                             }
-                                        }
 
-                                        std::vector < std::vector < std::vector <double > > > aP ( 3 );
+                                            std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
 
-                                        for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
-                                            ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
-                                        }
 
-                                        std::vector <double> xg2Local;
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                for ( unsigned n = 0; n < dim; n++ ) {
+                                                    areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
+                                                }
+                                            }
 
-                                        GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
-                                        GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
 
-//                                         if ( jel == 166 && iel == 3 ) {
-//
-//                                             std::cout << "xg2Local[" << 0 << "]= " << xg2Local[0] << " , " << "xg2Local[" << 1 << "]= " << xg2Local[1] << std::endl;
-//                                         }
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                if ( areTheyTheSamePhi2x[i] == dim ) {
+                                                    phi2x = phi1x[ig][i];
+                                                }
+                                            }
 
-                                        double weightTemp;
+                                            //END evaluate phi_j at xg1[ig] (called it phi2x)
 
-                                        if ( iproc == kproc ) {
-                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
-                                        }
+                                            //BEGIN evaluate phi_j at xg2[jg] (called it phi2y)
+                                            std::vector<double> xg2 ( dim, 0. );
 
-                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                for ( unsigned k = 0; k < dim; k++ ) {
+                                                    xg2[k] += x2New[k][j] * phi2y[jg][j];
+                                                }
+                                            }
 
-                                        //begin to remove
-//                                         if ( jel == 166 && iel == 3 ) {
-//                                             for ( unsigned j = 0; j < nDof2; j++ ) {
-//                                                 std::cout << "phi2y[" << j << "] = " << phi2y[j] << " ";
-//                                             }
-//
-//                                             std::cout << std::endl;
-//
-//
-//                                             for ( unsigned k = 0; k < dim; k++ ) {
-//                                                 std::cout << "new Gauss points xg2[ " << k << " ] = " << xg2[k] ;
-//                                             }
-//
-//                                             std::cout << std::endl;
-//
-//                                             std::cout << "jel =" << jel << " dof j = " << msh->GetSolutionDof ( j, jel, soluType ) << " phi at ig = " << ig << " = " << phi2x << std::endl;
-//                                         }
-                                        //end to remove
+                                            std::vector < std::vector < std::vector <double > > > aP ( 3 );
 
-                                        double resU = 0.;
+                                            for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
+                                                ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
+                                            }
 
-                                        resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
+                                            std::vector <double> xg2Local;
 
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
+                                            GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
+
+                                            double weightTemp;
+
+                                            if ( iproc == kproc ) {
+                                                msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y[jg], phi_x );
+                                            }
+
+
+                                            MPI_Bcast ( &phi2y[jg][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+
+                                            //END evaluate phi_j at xg2[jg] (called it phi2y)
+
+                                            //BEGIN evaluate phi_i at xg2[jg] (called it ph1y)
 
                                             double phi1y = 0.;
 
@@ -628,26 +527,32 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
 
                                             for ( unsigned j = 0; j < nDof2; j++ ) {
-                                                if ( areTheyTheSamePh1y[j] == dim ) phi1y = phi2y[j];
+                                                if ( areTheyTheSamePh1y[j] == dim ) {
+                                                    phi1y = phi2y[jg][j];
+                                                }
                                             }
 
-//                                             if ( jel == 166 && iel == 3 ) std::cout << "jel =" << jel << " dof i = " << msh->GetSolutionDof ( i, iel, soluType ) << " phi at jg " << jg << " = " << phi1y << std::endl;
+                                            //END evaluate phi_i at xg2[jg] (called it ph1y)
 
-                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
-                                            Jac[j * nDof1 + i] -= jacValue;
-                                            resU +=  jacValue * soluNonLoc[i];
-                                        }//endl i loop
+                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( epsilon, 4 ) ) * ( bc1 * phi1x[ig][i] -  bc2 * phi1y ) * ( bc1 * phi2x - bc2 *  phi2y[jg][j] );
+                                            Jac[i * nDof2 + j] -= jacValue;
+                                            Au +=  jacValue * soluNonLoc[j];
+                                        }//endl j loop
 
-                                        Res[j] += resU;
-
-                                    } //endl j loop
+                                        Res[i] += Au;
+                                    } //endl i loop
                                 }//end jg loop
+
+                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                    Res[i] -= rhs[i];
+                                }
                             }
                         }
 
                         else if ( ( ielGroup == 6 || ielGroup == 8 ) && ( jelGroup == 5 || jelGroup == 7 ) ) { // x is  Omega_2 and y is in Omega_1
 
                             unsigned bc1 = ( ielGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6
+
                             unsigned bc2 = ( jelGroup == 5 ) ? 0 : 1; //the test function is zero on 5 and 6
 
                             radius = epsilon;
@@ -656,79 +561,93 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             if ( theyIntersect ) {
 
+                                vector < vector <double> >  phi2y ( jgNumber );
+                                vector <double> weight2 ( jgNumber );
+
+                                if ( iproc == kproc ) {
+                                    for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
+                                    }
+                                }
+
+                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                    MPI_Bcast ( &phi2y[jg][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                    MPI_Bcast ( &weight2[jg], 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                }
+
+
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
-                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+                                    for ( unsigned i = 0; i < nDof1; i++ ) {
 
-                                        double phi2x = 0.;
-
-                                        std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
-
-                                        for ( unsigned n = 0; n < dim; n++ ) {
-                                            sameNodePhi2x[n].assign ( nDof1, 0 );
-
-                                            for ( unsigned i = 0; i < nDof1; i++ ) {
-                                                if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
-                                            }
-                                        }
-
-                                        std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
-
-
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            for ( unsigned n = 0; n < dim; n++ ) {
-                                                areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
-                                            }
-                                        }
-
-
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            if ( areTheyTheSamePhi2x[i] == dim ) phi2x = phi1x[ig][i];
-                                        }
-
-                                        vector <double>  phi2y;
-                                        double weight2;
-
-                                        if ( iproc == kproc ) {
-                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
-                                        }
-
-                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-                                        MPI_Bcast ( &weight2, 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-
-
-                                        std::vector<double> xg2 ( dim, 0. );
+                                        double Au = 0.;
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            for ( unsigned k = 0; k < dim; k++ ) {
-                                                xg2[k] += x2New[k][j] * phi2y[j];
+
+
+                                            //BEGIN evaluate phi_j at xg1[ig] (called it phi2x)
+                                            double phi2x = 0.;
+
+                                            std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
+
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                sameNodePhi2x[n].assign ( nDof1, 0 );
+
+                                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                    if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
+                                                }
                                             }
-                                        }
 
-                                        std::vector < std::vector < std::vector <double > > > aP ( 3 );
+                                            std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
 
-                                        for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
-                                            ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
-                                        }
 
-                                        std::vector <double> xg2Local;
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                for ( unsigned n = 0; n < dim; n++ ) {
+                                                    areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
+                                                }
+                                            }
 
-                                        GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
-                                        GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
 
-                                        double weightTemp;
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                if ( areTheyTheSamePhi2x[i] == dim ) {
+                                                    phi2x = phi1x[ig][i];
+                                                }
+                                            }
 
-                                        if ( iproc == kproc ) {
-                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
-                                        }
+                                            //END evaluate phi_j at xg1[ig] (called it phi2x)
 
-                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                            //BEGIN evaluate phi_j at xg2[jg] (called it phi2y)
+                                            std::vector<double> xg2 ( dim, 0. );
 
-                                        double resU = 0.;
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                for ( unsigned k = 0; k < dim; k++ ) {
+                                                    xg2[k] += x2New[k][j] * phi2y[jg][j];
+                                                }
+                                            }
 
-                                        resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
+                                            std::vector < std::vector < std::vector <double > > > aP ( 3 );
 
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
+                                                ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
+                                            }
+
+                                            std::vector <double> xg2Local;
+
+                                            GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
+                                            GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
+
+                                            double weightTemp;
+
+                                            if ( iproc == kproc ) {
+                                                msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y[jg], phi_x );
+                                            }
+
+
+                                            MPI_Bcast ( &phi2y[jg][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+
+                                            //END evaluate phi_j at xg2[jg] (called it phi2y)
+
+                                            //BEGIN evaluate phi_i at xg2[jg] (called it ph1y)
 
                                             double phi1y = 0.;
 
@@ -753,24 +672,32 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
 
                                             for ( unsigned j = 0; j < nDof2; j++ ) {
-                                                if ( areTheyTheSamePh1y[j] == dim ) phi1y = phi2y[j];
+                                                if ( areTheyTheSamePh1y[j] == dim ) {
+                                                    phi1y = phi2y[jg][j];
+                                                }
                                             }
 
-                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( epsilon, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
-                                            Jac[j * nDof1 + i] -= jacValue;
-                                            resU +=  jacValue * soluNonLoc[i];
-                                        }//endl i loop
+                                            //END evaluate phi_i at xg2[jg] (called it ph1y)
 
-                                        Res[j] += resU;
+                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( epsilon, 4 ) ) * ( bc1 * phi1x[ig][i] -  bc2 * phi1y ) * ( bc1 * phi2x - bc2 *  phi2y[jg][j] );
+                                            Jac[i * nDof2 + j] -= jacValue;
+                                            Au +=  jacValue * soluNonLoc[j];
+                                        }//endl j loop
 
-                                    } //endl j loop
+                                        Res[i] += Au;
+                                    } //endl i loop
                                 }//end jg loop
+
+                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                    Res[i] -= rhs[i];
+                                }
                             }
                         }
 
                         else if ( ( ielGroup == 6 || ielGroup == 8 ) && ( jelGroup == 6 || jelGroup == 8 ) ) { // x and y are both in Omega_2
 
                             unsigned bc1 = ( ielGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6
+
                             unsigned bc2 = ( jelGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6
 
                             radius = delta2;
@@ -779,80 +706,93 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             if ( theyIntersect ) {
 
+                                vector < vector <double> >  phi2y ( jgNumber );
+                                vector <double> weight2 ( jgNumber );
+
+                                if ( iproc == kproc ) {
+                                    for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2[jg], phi2y[jg], phi_x );
+                                    }
+                                }
+
+                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                    MPI_Bcast ( &phi2y[jg][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                    MPI_Bcast ( &weight2[jg], 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                                }
+
+
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
-                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+                                    for ( unsigned i = 0; i < nDof1; i++ ) {
 
-                                        double phi2x = 0.;
-
-                                        std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
-
-                                        for ( unsigned n = 0; n < dim; n++ ) {
-                                            sameNodePhi2x[n].assign ( nDof1, 0 );
-
-                                            for ( unsigned i = 0; i < nDof1; i++ ) {
-                                                if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
-                                            }
-                                        }
-
-                                        std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
-
-
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            for ( unsigned n = 0; n < dim; n++ ) {
-                                                areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
-                                            }
-                                        }
-
-
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
-                                            if ( areTheyTheSamePhi2x[i] == dim ) phi2x = phi1x[ig][i];
-                                        }
-
-                                        vector <double>  phi2y;
-                                        double weight2;
-
-                                        if ( iproc == kproc ) {
-                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
-                                        }
-
-                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-                                        MPI_Bcast ( &weight2, 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-
-
-                                        std::vector<double> xg2 ( dim, 0. );
+                                        double Au = 0.;
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            for ( unsigned k = 0; k < dim; k++ ) {
-                                                xg2[k] += x2New[k][j] * phi2y[j];
+
+
+                                            //BEGIN evaluate phi_j at xg1[ig] (called it phi2x)
+                                            double phi2x = 0.;
+
+                                            std::vector< std::vector <unsigned > > sameNodePhi2x ( dim );
+
+                                            for ( unsigned n = 0; n < dim; n++ ) {
+                                                sameNodePhi2x[n].assign ( nDof1, 0 );
+
+                                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                    if ( x2[n][j] == x1[n][i] ) sameNodePhi2x[n][i] = 1;
+                                                }
                                             }
-                                        }
 
-                                        std::vector < std::vector < std::vector <double > > > aP ( 3 );
-
-                                        for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
-                                            ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
-                                        }
-
-                                        std::vector <double> xg2Local;
-
-                                        GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
-                                        GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
-
-                                        double weightTemp;
-
-                                        if ( iproc == kproc ) {
-                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
-                                        }
-
-                                        MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-
-                                        double resU = 0.;
-
-                                        resU = - 1. * weight1[ig] * bc1 * phi2x; //Res = Ax - f so f = 1
+                                            std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
 
 
-                                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                for ( unsigned n = 0; n < dim; n++ ) {
+                                                    areTheyTheSamePhi2x[i] += sameNodePhi2x[n][i];
+                                                }
+                                            }
+
+
+                                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                                if ( areTheyTheSamePhi2x[i] == dim ) {
+                                                    phi2x = phi1x[ig][i];
+                                                }
+                                            }
+
+                                            //END evaluate phi_j at xg1[ig] (called it phi2x)
+
+                                            //BEGIN evaluate phi_j at xg2[jg] (called it phi2y)
+                                            std::vector<double> xg2 ( dim, 0. );
+
+                                            for ( unsigned j = 0; j < nDof2; j++ ) {
+                                                for ( unsigned k = 0; k < dim; k++ ) {
+                                                    xg2[k] += x2New[k][j] * phi2y[jg][j];
+                                                }
+                                            }
+
+                                            std::vector < std::vector < std::vector <double > > > aP ( 3 );
+
+                                            for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
+                                                ProjectNodalToPolynomialCoefficients ( aP[jtype], x2, jelGeom, jtype ) ;
+                                            }
+
+                                            std::vector <double> xg2Local;
+
+                                            GetClosestPointInReferenceElement ( x2, xg2, jelGeom, xg2Local );
+                                            GetInverseMapping ( 2, jelGeom, aP, xg2, xg2Local );
+
+                                            double weightTemp;
+
+                                            if ( iproc == kproc ) {
+                                                msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y[jg], phi_x );
+                                            }
+
+
+                                            MPI_Bcast ( &phi2y[jg][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+
+                                            //END evaluate phi_j at xg2[jg] (called it phi2y)
+
+                                            //BEGIN evaluate phi_i at xg2[jg] (called it ph1y)
 
                                             double phi1y = 0.;
 
@@ -877,23 +817,30 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
 
                                             for ( unsigned j = 0; j < nDof2; j++ ) {
-                                                if ( areTheyTheSamePh1y[j] == dim ) phi1y = phi2y[j];
+                                                if ( areTheyTheSamePh1y[j] == dim ) {
+                                                    phi1y = phi2y[jg][j];
+                                                }
                                             }
 
-                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta2, 4 ) ) * ( phi1x[ig][i] -  phi1y ) * ( bc1 * phi2x - bc2 * phi2y[j] );
-                                            Jac[j * nDof1 + i] -= jacValue;
-                                            resU +=  jacValue * soluNonLoc[i];
-                                        }//endl i loop
+                                            //END evaluate phi_i at xg2[jg] (called it ph1y)
 
-                                        Res[j] += resU;
+                                            double jacValue = weight1[ig] * weight2[jg] * ( 1. / pow ( delta2, 4 ) ) * ( bc1 * phi1x[ig][i] -  bc2 * phi1y ) * ( bc1 * phi2x - bc2 *  phi2y[jg][j] );
+                                            Jac[i * nDof2 + j] -= jacValue;
+                                            Au +=  jacValue * soluNonLoc[j];
+                                        }//endl j loop
 
-                                    } //endl j loop
+                                        Res[i] += Au;
+                                    } //endl i loop
                                 }//end jg loop
+
+                                for ( unsigned i = 0; i < nDof1; i++ ) {
+                                    Res[i] -= rhs[i];
+                                }
                             }
                         }
 
-                        RES->add_vector_blocked ( Res, l2GMap2 ); //TODO check
-                        KK->add_matrix_blocked ( Jac, l2GMap2, l2GMap1 ); //TODO check
+                        RES->add_vector_blocked ( Res, l2GMap1 );
+                        KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 );
                     } // end jel loop
                 } //end kproc loop
             }//end ig loop
