@@ -24,6 +24,8 @@
 #include <vector>
 #include "assert.h"
 
+#include "ImplicitRKEnum.hpp"
+
 namespace femus {
 
     
@@ -53,9 +55,16 @@ namespace femus {
 
       void AddSolutionToSystemPDE (const char solname[]);
 
-      inline void SetRungeKuttaStages (const unsigned & RK) {
-        _RK = RK;
+      void SetImplicitRungeKuttaScheme(const ImplicitRKScheme & RKtype);
+      
+      ImplicitRKScheme GetImplicitRungeKuttaScheme(){
+        return _RKScheme;
       }
+      
+//       inline void SetRungeKuttaStages (const unsigned & RK) {
+//         _RK = RK;
+//         _type = RK - 1;
+//       }
 
       inline unsigned GetRungeKuttaStages() {
         return _RK;
@@ -81,10 +90,12 @@ namespace femus {
       
     private:
       unsigned _RK;
+      unsigned _type;
+      ImplicitRKScheme _RKScheme;
 
-      static const double _a[5][5][5], _aI[5][5][5];
-      static const double _b[5][5];
-      static const double _c[5][5];
+      static const double _a[4][4][4], _aI[4][4][4];
+      static const double _b[4][4];
+      static const double _c[4][4];
       std::vector < std::string > _solName;
       std::vector < unsigned > _solIndex;
       std::vector < bool > _solRKType;
@@ -95,24 +106,24 @@ namespace femus {
   };
 
   template <class Base>
-  const double ImplicitRungeKuttaSystem<Base>::_c[5][5] = {
+  const double ImplicitRungeKuttaSystem<Base>::_c[4][4] = {
     {0.5},
     {0.5 - sqrt (3.) / 6., 0.5 + sqrt (3) / 6.},
     {0.5 - sqrt (15.) / 10., 0.5, 0.5 + sqrt (15.) / 10.},
-    {1.06858, .5, -0.06858}
+    {1.0685790213016289, 0.5, -.06857902130162885}
   };
 
 
   template <class Base>
-  const double ImplicitRungeKuttaSystem<Base>::_b[5][5] = {
+  const double ImplicitRungeKuttaSystem<Base>::_b[4][4] = {
     {1.},
     {0.5, 0.5},
     {5. / 18., 4. / 9., 5. / 18.},
-    {0.1288859568,.7422280863, .1288859568}
+    {0.1288864005157204, 0.7422271989685593, 0.1288864005157204}
   };
 
   template <class Base>
-  const double ImplicitRungeKuttaSystem<Base>::_a[5][5][5] = {
+  const double ImplicitRungeKuttaSystem<Base>::_a[4][4][4] = {
     { {0.5}},
     {
       {0.25, 0.25 - sqrt (3.) / 6.},
@@ -124,16 +135,14 @@ namespace femus {
       { 5. / 36. + sqrt (15.) / 30.,   2. / 9. + sqrt (15.) / 15.,   5. / 36.}
     },
     {
-        {1.06858, 0.0,0.},
-        {-.56858, 1.06858,0.},
-        {2.13716, -3.27432, 1.06858}, // Nørsett's three-stage, 4th order Diagonally IRK
+      {1.0685790213016289, 0, 0}, 
+      {-0.5685790213016289, 1.0685790213016289, 0}, 
+      {2.1371580426032577, -3.2743160852065154,1.0685790213016289}
     }
-    
-    
   };
 
   template <class Base>
-  const double ImplicitRungeKuttaSystem<Base>::_aI[5][5][5] = {
+  const double ImplicitRungeKuttaSystem<Base>::_aI[4][4][4] = {
     {
       {2.}
     },
@@ -148,9 +157,9 @@ namespace femus {
       {10.163977794943225, -9.163977794943223, 5.}
     },
     {
-        {.9358213704, 0.,0.},
-        {.4979405519, .9358213704, 0.},
-        {-.3458639439, 2.867523845, .9358213704},
+      {0.9358222275240877, 0.,0.},
+      {0.497940606760015, 0.9358222275240878,0.}, 
+      {-0.34586591580096865,2.867525668568206, 0.935822227524088}
     }
   };
 
@@ -162,7 +171,8 @@ namespace femus {
     const unsigned int number,
     const MgSmoother & smoother_type) :
     TransientSystem<Base> (ml_probl, name, number, smoother_type),
-    _RK (1) {
+    _RK (1),
+    _type (0){
 
   }
 
@@ -222,7 +232,7 @@ namespace femus {
       this->Base::AddSolutionToSystemPDE (_solKiName[size][i].c_str());
     }
 
-    this->_ml_sol->GenerateRKBdc (_solIndex[size], _solKiIndex[size], 0, _itime, _time0, 1., _aI[_RK - 1]);
+    this->_ml_sol->GenerateRKBdc (_solIndex[size], _solKiIndex[size], 0, _itime, _time0, 1., _aI[_type]);
   }
 
   template <class Base>
@@ -253,7 +263,7 @@ namespace femus {
 
     for (unsigned i = 0; i < _solIndex.size(); i++) {
       if (!strcmp (this->_ml_sol->GetBdcType (_solIndex[i]), "Time_dependent")) {
-        this->_ml_sol->GenerateRKBdc (_solIndex[i], _solKiIndex[i], 0, _itime, _time0, this->_dt, _aI[_RK - 1]);
+        this->_ml_sol->GenerateRKBdc (_solIndex[i], _solKiIndex[i], 0, _itime, _time0, this->_dt, _aI[_type]);
       }
     }
 
@@ -275,7 +285,7 @@ namespace femus {
     std::cout << std::endl;
     for (unsigned i = 0; i < _solIndex.size(); i++) {
       if (!strcmp (this->_ml_sol->GetBdcType (_solIndex[i]), "Time_dependent")) {
-        this->_ml_sol->GenerateRKBdc (_solIndex[i], _solKiIndex[i], 0, _itime, _time0, this->_dt, _aI[_RK - 1]);
+        this->_ml_sol->GenerateRKBdc (_solIndex[i], _solKiIndex[i], 0, _itime, _time0, this->_dt, _aI[_type]);
       }
     }
 
@@ -303,7 +313,7 @@ namespace femus {
 
           unsigned solkiIndex = _solKiIndex[i][j]; // this->_ml_sol->GetIndex (_solKiName[i][j].str().c_str());
 
-          this->_solution[level]->_Sol[solIndex]-> add (_b[_RK - 1][j] * this->_dt, * (this->_solution[level]->_Sol[solkiIndex]));
+          this->_solution[level]->_Sol[solIndex]-> add (_b[_type][j] * this->_dt, * (this->_solution[level]->_Sol[solkiIndex]));
         }
         this->_solution[level]->_Sol[solIndex]->close();
       }
@@ -342,7 +352,7 @@ namespace femus {
       for (unsigned j = 0; j < _RK; j++) {
         solu[j][i] = soluOld[i];
         for (unsigned k = 0; k < _RK; k++) {
-          solu[j][i] += this->_dt * _a[_RK - 1][j][k]  * solk[k][i]; // global extraction and local storage for the solution
+          solu[j][i] += this->_dt * _a[_type][j][k]  * solk[k][i]; // global extraction and local storage for the solution
         }
       }
     }
@@ -356,7 +366,7 @@ namespace femus {
     _time0 = this->_time - this->_dt;
 
     for (unsigned i = 0; i < _RK; i++) {
-      _itime[i] = _time0 + this->_dt * _c[_RK - 1][i];
+      _itime[i] = _time0 + this->_dt * _c[_type][i];
     }
   }
   template <class Base>
@@ -364,6 +374,27 @@ namespace femus {
     return _itime;
   }
 
+  template <class Base>
+  void ImplicitRungeKuttaSystem<Base>::SetImplicitRungeKuttaScheme(const ImplicitRKScheme & RKscheme){
+    _RKScheme = RKscheme;
+    if( RKscheme == LEGENDRE1){
+      _RK = 1;
+      _type = 0;
+    }
+    else if ( RKscheme == LEGENDRE2){
+      _RK = 2;
+      _type = 1;
+    }
+    else if ( RKscheme == LEGENDRE3){
+      _RK = 3;
+      _type = 2;
+    }
+    else if ( RKscheme == NORSET3){
+      _RK = 3;
+      _type = 3;
+    }
+  }
+  
 // -----------------------------------------------------------
 // Useful typedefs
   typedef ImplicitRungeKuttaSystem<LinearImplicitSystem> ImplicitRungeKuttaLinearImplicitSystem;

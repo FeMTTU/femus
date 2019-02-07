@@ -612,7 +612,7 @@ namespace femus
    bool PRINT = false;
    void MultiLevelSolution::GenerateRKBdc(
        const unsigned int &solIndex, const std::vector<unsigned> &solKiIndex, 
-       const unsigned int &grid0, const std::vector < double> & itime, const double &time0, const double &dt,const double AI[5][5])
+       const unsigned int &grid0, const std::vector < double> & itime, const double &time0, const double &dt,const double AI[4][4])
   {
     
     for(unsigned k = 0; k < solKiIndex.size(); k++){  

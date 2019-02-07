@@ -143,7 +143,7 @@ int main (int argc, char** args) {
   // add system Poisson in mlProb as a Linear Implicit System
   ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("NS");
 
-  system.SetRungeKuttaStages (2);
+  system.SetImplicitRungeKuttaScheme (LEGENDRE2);
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE ("U");

@@ -21,10 +21,12 @@
 #include "PetscMatrix.hpp"
 #include "PetscVector.hpp"
 
+#include "ImplicitRKEnum.hpp"
+
 using namespace femus;
 
 double GetTimeStep (const double time) {
-  double dt = 2.;
+  double dt = 0.2;
   return dt;
 }
 
@@ -100,7 +102,8 @@ int main (int argc, char** args) {
 
 
   
-  system.SetRungeKuttaStages (3);
+  //system.SetImplicitRungeKuttaScheme (LEGENDRE2);
+  system.SetImplicitRungeKuttaScheme (NORSET3);
 
   system.AddSolutionToSystemPDE ("u");
 
@@ -110,7 +113,7 @@ int main (int argc, char** args) {
   system.SetAssembleFunction (AssembleAllanChanProblem_AD);
 
   // time loop parameter
-  const unsigned int n_timesteps = 25;
+  const unsigned int n_timesteps = 250;
 
   system.init();
   system.AttachGetTimeIntervalFunction (GetTimeStep);

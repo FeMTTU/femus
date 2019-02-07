@@ -55,8 +55,6 @@ double InitalValueU3D(const std::vector < double >& x) {
   double Vb = 1.1990039070212866;
   double V0 = 0.25 * M_PI * 4./3.; // fraction of injection vs tumor
   
-
-  
   return V0 / Vb * exp(  ( 1. - R2 / ( R2 - r2 ) ));
 }
 
