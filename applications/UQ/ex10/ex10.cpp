@@ -78,7 +78,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 3; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -229,7 +229,7 @@ int main (int argc, char** argv) {
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
   //END
 
-
+/*
   //BEGIN Define the instances of the problem for HISTOGRAM and KDE
   MultiLevelMesh mlMshHisto;
   MultiLevelMesh mlMshHistoFinest;
@@ -298,6 +298,7 @@ int main (int argc, char** argv) {
   mlSolHistoFinest.GetWriter()->Write (DEFAULT_OUTPUTDIR, "histo_finer", print_vars_3, 0);
   //END
 
+ */ 
   return 0;
 
 } //end main
