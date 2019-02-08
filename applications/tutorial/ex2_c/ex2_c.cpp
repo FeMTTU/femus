@@ -51,10 +51,10 @@ void output_convergence_rate( std::vector < std::vector < double > > &  norm, st
 
 int main(int argc, char** args) {
 
-  // init Petsc-MPI communicator
+  // ======= Init ==========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  // ======= Files ========================
+  // ======= Files =========================
   Files files; 
         files.CheckIODirectories();
         files.RedirectCout();
@@ -64,7 +64,7 @@ int main(int argc, char** args) {
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     In the future it is not going to be an argument of the mesh function   */
 
- // define multilevel mesh
+  // ======= Mesh ========================
   MultiLevelMesh mlMsh;
  // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
@@ -78,6 +78,7 @@ int main(int argc, char** args) {
   mlMsh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 //   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
+  
   MultiLevelMesh mlMsh_all_levels;
   mlMsh_all_levels.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 //   mlMsh_all_levels.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
@@ -86,11 +87,10 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 3;
+    maxNumberOfMeshes = 6;
   } else {
     maxNumberOfMeshes = 4;
   }
-
 
   vector < vector < double > > l2Norm;       l2Norm.resize(maxNumberOfMeshes);
   vector < vector < double > > semiNorm;   semiNorm.resize(maxNumberOfMeshes);
@@ -107,32 +107,43 @@ int main(int argc, char** args) {
      
     
 
-    for (unsigned fe = 0; fe < feOrder.size(); fe++) {   // loop on the FE Order
    
 
+        //Fine solution  ==================
         unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
         mlMsh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
 //      mlMsh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
         
-        //store the fine solution  ==================
-        MultiLevelSolution * mlSol_all_levels;
-        mlSol_all_levels = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-        mlSol_all_levels->AddSolution("u", LAGRANGE, feOrder[fe]);
-        mlSol_all_levels->Initialize("All");
-        mlSol_all_levels->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-        mlSol_all_levels->GenerateBdc("u");
+            std::vector <MultiLevelSolution * > mlSol_all_levels( feOrder.size() );
+           for (unsigned fe = 0; fe < feOrder.size(); fe++) {
+               mlSol_all_levels[fe] = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+           }
+            
+            
+       for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
+              
+
+           
+           for (unsigned fe = 0; fe < feOrder.size(); fe++) {   // loop on the FE Order
+        
   
   
     
-        for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
+        
+            mlSol_all_levels[fe]->AddSolution("u", LAGRANGE, feOrder[fe]);  //We have to do so to avoid buildup of AddSolution with different FE families
+            mlSol_all_levels[fe]->Initialize("All");
+            mlSol_all_levels[fe]->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+            mlSol_all_levels[fe]->GenerateBdc("u");
+        
+        
+       //Current level  ==================
             unsigned numberOfUniformLevels = i + 1;
             unsigned numberOfSelectiveLevels = 0;
             mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
             // erase all the coarse mesh levels
             mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
-    
             // print mesh info
             mlMsh.PrintInfo();
     
@@ -178,11 +189,19 @@ int main(int argc, char** args) {
 
             system.MLsolve();
       
-    if ( i > 0 ) {
+  // ======= Print ========================
+      std::vector < std::string > variablesToBePrinted;
+      variablesToBePrinted.push_back("All");
+
+      VTKWriter vtkIO(&mlSol);
+      vtkIO.Write(files.GetOutputPath() /*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted, i);  
+      
+      
+      if ( i > 0 ) {
         
 //prolongation of coarser  
-      mlSol_all_levels->RefineSolution(i);
-      Solution* sol_coarser_prolongated = mlSol_all_levels->GetSolutionLevel(i);
+      mlSol_all_levels[fe]->RefineSolution(i);
+      Solution* sol_coarser_prolongated = mlSol_all_levels[fe]->GetSolutionLevel(i);
   
   
       std::pair< double , double > norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
@@ -198,19 +217,16 @@ int main(int argc, char** args) {
        const unsigned n_vars = mlSol.GetSolutionLevel(level_index_current)->_Sol.size();
        
         for(unsigned short j = 0; j < n_vars; j++) {  
-               *(mlSol_all_levels->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
+               *(mlSol_all_levels[fe]->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
         }
         
-      // print solutions
-      std::vector < std::string > variablesToBePrinted;
-      variablesToBePrinted.push_back("All");
 
-      VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(files.GetOutputPath() /*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted, i);
+  delete mlSol_all_levels[fe];
       
-      }  //end h refinement
+      } //end FE families
       
-  }  //end FE families
+        
+    }   //end h refinement
  
   
   
