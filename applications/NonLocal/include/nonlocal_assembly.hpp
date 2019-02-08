@@ -24,13 +24,14 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-double delta1 = 0.0005; //MESH SIZES: interface: 0.1 (with 2 refinements), trial1 and trial2: 0.05 (with 2 refinements), nonlocal_boundary_test.neu: 0.0625
+double delta1 = 0.01; //MESH SIZES: martaTest1: 0.1 (with 2 refinements) interface: 0.1 (with 2 refinements), trial1 and trial2: 0.05 (with 2 refinements), nonlocal_boundary_test.neu: 0.0625
 double delta2 = 0.0005;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
-    value = 0.;
+//     value = 0.;
+    value = x[0];
 
 }
 
@@ -135,7 +136,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
         }
 
     }
-
+    
     //END
 
     if ( nonLocalAssembly ) {
@@ -377,7 +378,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                             //END evaluate phi_i at xg2[jg] (called it ph1y)
 
-                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta1, 4 ) ) * ( bc1 * phi1x[ig][i] -  bc2 * phi1y ) * ( bc1 * phi2x - bc2 *  phi2y[j] );
+                                            double jacValue = weight1[ig] * weight2 * 8. / acos(-1) * ( 1. / pow ( delta1, 4 ) ) * ( bc1 * phi1x[ig][i] -  bc2 * phi1y ) * ( bc1 * phi2x - bc2 *  phi2y[j] );
                                             Jac[i * nDof2 + j] -= jacValue;
                                             Res[i] +=  jacValue * soluNonLoc[j];
                                         }//endl j loop
@@ -789,7 +790,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                 unsigned bc1 = 1;/*( ielGroup == 5 || ielGroup == 6 ) ? 0 : 1; //the test function is zero on 5 and 6*/
 
                 for ( unsigned i = 0; i < nDof1; i++ ) {
-                    Res[i] -= 1. * weight1[ig] * bc1 * phi1x[ig][i]; //Ax - f (so f = 1)
+//                     Res[i] -= 1. * weight1[ig] * bc1 * phi1x[ig][i]; //Ax - f (so f = 1)
+                    Res[i] -= 0. * weight1[ig] * bc1 * phi1x[ig][i]; //Ax - f (so f = 0)
                 }
 
                 RES->add_vector_blocked ( Res, l2GMap1 );
