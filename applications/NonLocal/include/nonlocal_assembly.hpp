@@ -175,7 +175,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 //                     for ( unsigned k = 0; k < dim; k++ ) {
 //                         std::cout << "x1[" << k << "][" << i << "] = " << x1[k][i] << " " ;
 //                     }
-// 
+//
 //                     std::cout << std::endl;
 //                 }
 //             }
@@ -202,7 +202,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 //                     for ( unsigned k = 0; k < dim; k++ ) {
 //                         std::cout << "xg1[" << ig << "][" << k << "] = " << xg1[ig][k] << " " ;
 //                     }
-// 
+//
 //                     std::cout << std::endl;
 //                 }
 //             }
@@ -290,12 +290,12 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
 //                                 if ( jel == 91 ) {
 //                                     std::cout << "iel = " << iel << std::endl;
-// 
+//
 //                                     for ( unsigned j = 0; j < nDofx2; j++ ) {
 //                                         for ( unsigned k = 0; k < dim; k++ ) {
 //                                             std::cout << "x2New[" << k << "][" << j << "] = " << x2New[k][j] << " " ;
 //                                         }
-// 
+//
 //                                         std::cout << std::endl;
 //                                     }
 //                                 }
@@ -359,11 +359,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
 //                                             if ( jel == 91 ) {
 //                                                 std::cout << "iel = " << iel << std::endl;
-// 
+//
 //                                                 for ( unsigned k = 0; k < dim; k++ ) {
 //                                                     std::cout << "jg = " << jg << " , " << "xg2[" << k << "] = " << xg2[k] << " " ;
 //                                                 }
-// 
+//
 //                                                 std::cout << std::endl;
 //                                             }
 
@@ -421,7 +421,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                             //END evaluate phi_i at xg2[jg] (called it ph1y)
 
-                                            double jacValue = weight1[ig] * weight2 * 8. / acos ( -1 ) * ( 1. / pow ( delta1, 4 ) ) * ( bc1 * phi1x[ig][i] -  bc2 * phi1y ) * ( bc1 * phi2x - bc2 *  phi2y[j] );
+                                            double jacValue = weight1[ig] * weight2 * ( 1. / pow ( delta1, 4 ) ) * ( bc1 * phi1x[ig][i] -  bc2 * phi1y ) * ( bc1 * phi2x - bc2 *  phi2y[j] );
                                             Jac[i * nDof2 + j] -= jacValue;
                                             Res[i] +=  jacValue * soluNonLoc[j];
                                         }//endl j loop
