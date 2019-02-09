@@ -122,10 +122,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
             for ( unsigned i = 0; i < nDofu; i++ ) {
                 unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
-                sol->_Bdc[0]->set ( solDof, 0. ); //TODO not sure about _Bdc[0] solution but it seems to work
+                unsigned xDof = msh->GetSolutionDof ( i, iel, xType );
+                sol->_Bdc[soluIndex]->set ( solDof, 0. ); //TODO not sure about _Bdc[0] solution but it seems to work
 
                 for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
-                    dofCoordinates[jdim] = ( *msh->_topology->_Sol[jdim] ) ( solDof );
+                    dofCoordinates[jdim] = ( *msh->_topology->_Sol[jdim] ) ( xDof );
                 }
 
                 double bdFunctionValue;
