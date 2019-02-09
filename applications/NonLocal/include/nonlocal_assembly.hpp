@@ -24,7 +24,7 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-//DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, maxTest1: both 0.5
+//DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, maxTest1: both 0.5, maxTest2: both 0.1.
 double delta1 = 0.1; //MESH SIZES: interface: 0.1 (with 2 refinements), trial1 and trial2: 0.05 (with 2 refinements), nonlocal_boundary_test.neu: 0.0625
 double delta2 = 0.1;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
