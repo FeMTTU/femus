@@ -72,9 +72,9 @@ int main ( int argc, char** argv )
     // add variables to mlSol
     mlSol.AddSolution ( "u", LAGRANGE, FIRST, 2 );
 
-    mlSol.Initialize("u", InitalValueU);
+//     mlSol.Initialize("u", InitalValueU);
     
-    //mlSol.Initialize ( "All" );
+    mlSol.Initialize ( "All" );
 
     mlSol.AttachSetBoundaryConditionFunction ( SetBoundaryCondition );
 
