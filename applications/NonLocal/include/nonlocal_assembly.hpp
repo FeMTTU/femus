@@ -24,9 +24,9 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-//DELTA 1 sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001 
-double delta1 = 0.01; //MESH SIZES: interface: 0.1 (with 2 refinements), trial1 and trial2: 0.05 (with 2 refinements), nonlocal_boundary_test.neu: 0.0625
-double delta2 = 0.0005;
+//DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, maxTest1: both 0.5
+double delta1 = 0.4; //MESH SIZES: interface: 0.1 (with 2 refinements), trial1 and trial2: 0.05 (with 2 refinements), nonlocal_boundary_test.neu: 0.0625
+double delta2 = 0.4;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
@@ -137,7 +137,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
         }
 
     }
-    
+
     //END
 
     if ( nonLocalAssembly ) {
@@ -170,6 +170,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                 }
             }
 
+//             if ( iel == 91 ) {
+//                 for ( unsigned i = 0; i < nDofx1; i++ ) {
+//                     for ( unsigned k = 0; k < dim; k++ ) {
+//                         std::cout << "x1[" << k << "][" << i << "] = " << x1[k][i] << " " ;
+//                     }
+// 
+//                     std::cout << std::endl;
+//                 }
+//             }
+
             unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
             vector < vector < double > > xg1 ( igNumber );
             vector <double> weight1 ( igNumber );
@@ -186,6 +196,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     }
                 }
             }
+
+//             if ( iel == 91 ) {
+//                 for ( unsigned ig = 0; ig < igNumber; ig++ ) {
+//                     for ( unsigned k = 0; k < dim; k++ ) {
+//                         std::cout << "xg1[" << ig << "][" << k << "] = " << xg1[ig][k] << " " ;
+//                     }
+// 
+//                     std::cout << std::endl;
+//                 }
+//             }
 
             std::vector< std::vector < double > > x2New;
             bool theyIntersect;
@@ -268,6 +288,18 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             if ( theyIntersect ) {
 
+//                                 if ( jel == 91 ) {
+//                                     std::cout << "iel = " << iel << std::endl;
+// 
+//                                     for ( unsigned j = 0; j < nDofx2; j++ ) {
+//                                         for ( unsigned k = 0; k < dim; k++ ) {
+//                                             std::cout << "x2New[" << k << "][" << j << "] = " << x2New[k][j] << " " ;
+//                                         }
+// 
+//                                         std::cout << std::endl;
+//                                     }
+//                                 }
+
                                 for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
                                     for ( unsigned i = 0; i < nDof1; i++ ) {
@@ -325,6 +357,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                                 }
                                             }
 
+//                                             if ( jel == 91 ) {
+//                                                 std::cout << "iel = " << iel << std::endl;
+// 
+//                                                 for ( unsigned k = 0; k < dim; k++ ) {
+//                                                     std::cout << "jg = " << jg << " , " << "xg2[" << k << "] = " << xg2[k] << " " ;
+//                                                 }
+// 
+//                                                 std::cout << std::endl;
+//                                             }
+
                                             std::vector < std::vector < std::vector <double > > > aP ( 3 );
 
                                             for ( unsigned jtype = 0; jtype < 3; jtype++ ) {
@@ -379,7 +421,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                             //END evaluate phi_i at xg2[jg] (called it ph1y)
 
-                                            double jacValue = weight1[ig] * weight2 * 8. / acos(-1) * ( 1. / pow ( delta1, 4 ) ) * ( bc1 * phi1x[ig][i] -  bc2 * phi1y ) * ( bc1 * phi2x - bc2 *  phi2y[j] );
+                                            double jacValue = weight1[ig] * weight2 * 8. / acos ( -1 ) * ( 1. / pow ( delta1, 4 ) ) * ( bc1 * phi1x[ig][i] -  bc2 * phi1y ) * ( bc1 * phi2x - bc2 *  phi2y[j] );
                                             Jac[i * nDof2 + j] -= jacValue;
                                             Res[i] +=  jacValue * soluNonLoc[j];
                                         }//endl j loop
@@ -957,7 +999,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
                     }
 
-                    double srcTerm = - 1./*- GetExactSolutionLaplace(x_gss)*/ ;
+//                     double srcTerm = - 1./*- GetExactSolutionLaplace(x_gss)*/ ;
+                    double srcTerm = - 0./*- GetExactSolutionLaplace(x_gss)*/ ;
                     aRes[i] += ( srcTerm * phi[i] + laplace ) * weight;
 
                 } // end phi_i loop
@@ -1022,16 +1065,17 @@ void RectangleAndBallRelation ( bool &theyIntersect, const std::vector<double> &
     theyIntersect = false; //by default we assume the two sets are disjoint
 
     unsigned dim = 2;
+    unsigned nDofs = elementCoordinates[0].size();
 
     std::vector< std::vector < double > > ballVerticesCoordinates ( dim );
     newCoordinates.resize ( dim );
 
 
     for ( unsigned n = 0; n < dim; n++ ) {
-        newCoordinates[n].resize ( 4 );
+        newCoordinates[n].resize ( nDofs );
         ballVerticesCoordinates[n].resize ( 4 );
 
-        for ( unsigned i = 0; i < 4; i++ ) {
+        for ( unsigned i = 0; i < nDofs; i++ ) {
             newCoordinates[n][i] = elementCoordinates[n][i]; //this is just an initalization, it will be overwritten
         }
     }
@@ -1076,17 +1120,21 @@ void RectangleAndBallRelation ( bool &theyIntersect, const std::vector<double> &
         newCoordinates[0][3] = newCoordinates[0][0];
         newCoordinates[1][3] = newCoordinates[1][2];
 
+        newCoordinates[0][4] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][1] );
+        newCoordinates[1][4] = newCoordinates[1][0];
 
-        bool check1 = ( newCoordinates[0][0] == ballVerticesCoordinates[0][0] && newCoordinates[1][0] == ballVerticesCoordinates[1][0] ) ? true : false;
-        bool check2 = ( newCoordinates[0][2] == ballVerticesCoordinates[0][2] && newCoordinates[1][2] == ballVerticesCoordinates[1][2] ) ? true : false;
+        newCoordinates[0][5] = newCoordinates[0][1];
+        newCoordinates[1][5] = 0.5 * ( newCoordinates[1][1] + newCoordinates[1][2] );
 
-        if ( check1 && check2 ) { //this means the ball entirely contained in the rectangle, so we should keep the initial coordinates
-            for ( unsigned n = 0; n < dim; n++ ) {
-                for ( unsigned i = 0; i < 4; i++ ) {
-                    newCoordinates[n][i] = elementCoordinates[n][i];
-                }
-            }
-        }
+        newCoordinates[0][6] = 0.5 * ( newCoordinates[0][3] + newCoordinates[0][2] );
+        newCoordinates[1][6] = newCoordinates[1][2];
+
+        newCoordinates[0][7] = newCoordinates[0][0];
+        newCoordinates[1][7] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][3] );;
+
+        newCoordinates[0][8] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][1] );
+        newCoordinates[1][8] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][3] );;
+
     }
 
 }
