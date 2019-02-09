@@ -63,7 +63,7 @@ int main ( int argc, char** argv )
 //     mlMsh.ReadCoarseMesh ( "../input/trial2.neu", "second", scalingFactor );
     mlMsh.RefineMesh ( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL );
     
-    //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+    mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 //     numberOfUniformLevels = 1;
 
     unsigned dim = mlMsh.GetDimension();

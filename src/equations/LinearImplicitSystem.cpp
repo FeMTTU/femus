@@ -105,7 +105,8 @@ namespace femus {
     _LinSolver.resize(_gridn);
 
     _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], GMRES_SMOOTHER).release();
-
+    _LinSolver[0]->SetSparsityPatternMultiplyingFactor(_sparsityPatternMultiplyingFactor);
+    
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _SmootherType).release();
       if(_sparsityPatternMultiplyingFactor != 1u){
