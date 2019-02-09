@@ -21,6 +21,10 @@
 
 using namespace femus;
 
+double InitalValueU(const std::vector < double >& x) {
+  return x[0] + 0. * (0.51 * 0.51 - x[0] * x[0]) * (0.51 * 0.51 - x[1] * x[1]);
+}
+
 
 bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time )
 {
@@ -58,7 +62,7 @@ int main ( int argc, char** argv )
 //     mlMsh.ReadCoarseMesh ( "../input/trial2.neu", "second", scalingFactor );
     mlMsh.RefineMesh ( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL );
     
-//         mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+    //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 //     numberOfUniformLevels = 1;
 
     unsigned dim = mlMsh.GetDimension();
@@ -68,7 +72,9 @@ int main ( int argc, char** argv )
     // add variables to mlSol
     mlSol.AddSolution ( "u", LAGRANGE, FIRST, 2 );
 
-    mlSol.Initialize ( "All" );
+    mlSol.Initialize("u", InitalValueU);
+    
+    //mlSol.Initialize ( "All" );
 
     mlSol.AttachSetBoundaryConditionFunction ( SetBoundaryCondition );
 
