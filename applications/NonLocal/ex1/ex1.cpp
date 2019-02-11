@@ -21,10 +21,12 @@
 
 using namespace femus;
 
-double InitalValueU(const std::vector < double >& x) {
-  return x[0] + 0. * (0.51 * 0.51 - x[0] * x[0]) * (0.51 * 0.51 - x[1] * x[1]);
+double InitalValueU ( const std::vector < double >& x )
+{
+    return x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
 }
 
+void GetL2Norm ( MultiLevelProblem& ml_prob );
 
 bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time )
 {
@@ -46,7 +48,7 @@ int main ( int argc, char** argv )
 {
 
 
-   // init Petsc-MPI communicator
+    // init Petsc-MPI communicator
     FemusInit mpinit ( argc, argv, MPI_COMM_WORLD );
 
     MultiLevelMesh mlMsh;
@@ -55,15 +57,15 @@ int main ( int argc, char** argv )
 //     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
-        mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
 //         mlMsh.ReadCoarseMesh ( "../input/martaTest3.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial2.neu", "second", scalingFactor );
     mlMsh.RefineMesh ( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL );
-    
-    mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+
+    mlMsh.EraseCoarseLevels ( numberOfUniformLevels - 1 );
 //     numberOfUniformLevels = 1;
 
     unsigned dim = mlMsh.GetDimension();
@@ -74,7 +76,7 @@ int main ( int argc, char** argv )
     mlSol.AddSolution ( "u", LAGRANGE, FIRST, 2 );
 
 //     mlSol.Initialize("u", InitalValueU);
-    
+
     mlSol.Initialize ( "All" );
 
     mlSol.AttachSetBoundaryConditionFunction ( SetBoundaryCondition );
@@ -115,7 +117,11 @@ int main ( int argc, char** argv )
 
     system.SetTolerances ( 1.e-20, 1.e-20, 1.e+50, 100 );
 
+// ******* Solution *******
+
     system.MGsolve();
+
+    GetL2Norm ( ml_prob );
 
     // ******* Print solution *******
     mlSol.SetWriter ( VTK );
@@ -131,7 +137,88 @@ int main ( int argc, char** argv )
 
 
 
+void GetL2Norm ( MultiLevelProblem& ml_prob )
+{
 
+    LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ( "NonLocal" );
+    const unsigned level = mlPdeSys->GetLevelToAssemble();
+    Mesh*                    msh = ml_prob._ml_msh->GetLevel ( level );
+    elem*                     el = msh->el;
+    MultiLevelSolution*    mlSol = ml_prob._ml_sol;
+    Solution*                sol = ml_prob._ml_sol->GetSolutionLevel ( level );
+
+    const unsigned  dim = msh->GetDimension();
+
+    unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+    double local_norm2 = 0.;
+
+    unsigned soluIndex;
+    soluIndex = mlSol->GetIndex ( "u" );
+    unsigned soluType = mlSol->GetSolutionType ( soluIndex );
+
+
+    unsigned    iproc = msh->processor_id();
+
+    for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+
+        short unsigned ielGeom = msh->GetElementType ( iel );
+        unsigned nDofu  = msh->GetElementDofNumber ( iel, soluType );
+        unsigned nDofx = msh->GetElementDofNumber ( iel, xType );
+
+        vector < vector < double > > x1 ( dim );
+
+        for ( int i = 0; i < dim; i++ ) {
+            x1[i].resize ( nDofx );
+        }
+
+        vector < double >  soluNonLoc ( nDofu );
+
+        for ( unsigned i = 0; i < nDofu; i++ ) {
+            unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
+            soluNonLoc[i] = ( *sol->_Sol[soluIndex] ) ( solDof );
+        }
+
+        for ( unsigned i = 0; i < nDofx; i++ ) {
+            unsigned xDof  = msh->GetSolutionDof ( i, iel, xType );
+
+            for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                x1[jdim][i] = ( *msh->_topology->_Sol[jdim] ) ( xDof );
+            }
+        }
+
+        vector <double> phi;  // local test function
+        vector <double> phi_x; // local test function first order partial derivatives
+        double weight; // gauss point weight
+
+        // *** Gauss point loop ***
+        for ( unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++ ) {
+            // *** get gauss point weight, test function and test function partial derivatives ***
+            msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight, phi, phi_x );
+            double soluNonLoc_gss = 0.;
+            double exactSol_gss = 0.;
+            
+            
+            for ( unsigned i = 0; i < nDofu; i++ ) {
+                soluNonLoc_gss += phi[i] * soluNonLoc[i];
+                    exactSol_gss += phi[i] * x1[0][i]; //TODO this is if the exact sol is u = x
+            }
+
+            
+//             std::cout<<" soluNonLoc_gss = " << soluNonLoc_gss << " , " << "exactSol_gss = " << exactSol_gss << std::endl;
+
+
+            local_norm2 += (soluNonLoc_gss -  exactSol_gss) * (soluNonLoc_gss - exactSol_gss) * weight;
+        }
+    }
+
+    double norm2 = 0.;
+    MPI_Allreduce ( &local_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    double norm = sqrt ( norm2 );
+    std::cout.precision(14);
+    std::cout << "Error L2 norm = " << norm << std::endl;
+
+}
 
 
 
