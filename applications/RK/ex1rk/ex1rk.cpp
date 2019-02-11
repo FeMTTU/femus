@@ -26,7 +26,7 @@
 using namespace femus;
 
 double GetTimeStep (const double time) {
-  double dt = 0.2;
+  double dt = 2.;
   return dt;
 }
 
@@ -111,9 +111,11 @@ int main (int argc, char** args) {
 
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleAllanChanProblem_AD);
+  
+  system.SetMaxNumberOfNonLinearIterations(100);
 
   // time loop parameter
-  const unsigned int n_timesteps = 250;
+  const unsigned int n_timesteps = 25;
 
   system.init();
   system.AttachGetTimeIntervalFunction (GetTimeStep);

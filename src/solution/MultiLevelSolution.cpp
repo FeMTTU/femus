@@ -687,13 +687,16 @@ namespace femus
                           xyzt[3] = itime[k];
                           ivalue[k] = (*bdcfunc)(xyzt) - value0;
                         }
-                      }
-                      for(unsigned k1 = 0; k1 < solKiIndex.size(); k1++){
-                        double value = 0.;  
-                        for(unsigned k2 = 0; k2 < solKiIndex.size(); k2++){
-                          value += AI[k1][k2] * ivalue[k2];
+                        if(_solTimeOrder[solIndex]==2){
+                          _solution[igridn]->_SolOld[solIndex]->set(inode_Metis, value0);
                         }
-                        _solution[igridn]->_Sol[solKiIndex[k1]]->set(inode_Metis, value / dt);
+                        for(unsigned k1 = 0; k1 < solKiIndex.size(); k1++){
+                          double value = 0.;  
+                          for(unsigned k2 = 0; k2 < solKiIndex.size(); k2++){
+                            value += AI[k1][k2] * ivalue[k2];
+                          }
+                          _solution[igridn]->_Sol[solKiIndex[k1]]->set(inode_Metis, value / dt);
+                        }
                       }
                     }
                   }
@@ -725,6 +728,9 @@ namespace femus
                         
                       unsigned idof = msh->GetSolutionDof(i, iel, _solType[solIndex]);
                       
+                      if(_solTimeOrder[solIndex]==2){
+                        _solution[igridn]->_SolOld[solIndex]->set(idof, value0);
+                      }
                       for(unsigned k1 = 0; k1 < solKiIndex.size(); k1++){
                         double value = 0.;  
                         for(unsigned k2 = 0; k2 < solKiIndex.size(); k2++){
@@ -741,14 +747,20 @@ namespace femus
           }
         }
         if(_fixSolutionAtOnePoint[solIndex] == true  && igridn == 0 && _iproc == 0) {
-          for(unsigned k = 0; k < solKiIndex.size(); k++){  
+          for(unsigned k = 0; k < solKiIndex.size(); k++){ 
+            
             _solution[igridn]->_Bdc[solKiIndex[k]]->set(0, 0.);
             _solution[igridn]->_Sol[solKiIndex[k]]->set(0, 0.);
+            
           }
+        }
+        if(_solTimeOrder[solIndex]==2){
+          _solution[igridn]->_SolOld[solIndex]->close();
         }
         for(unsigned k = 0; k < solKiIndex.size(); k++){  
           _solution[igridn]->_Sol[solKiIndex[k]]->close();
           _solution[igridn]->_Bdc[solKiIndex[k]]->close();
+          
         }
       }
     }
