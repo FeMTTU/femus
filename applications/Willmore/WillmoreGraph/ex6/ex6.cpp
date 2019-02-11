@@ -24,7 +24,7 @@ using namespace femus;
 
 int simulation = 1; // =1 sphere (default) = 2 torus
 
-unsigned P = 11;
+unsigned P = 3;
 
 //Sphere
 
