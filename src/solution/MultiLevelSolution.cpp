@@ -612,7 +612,7 @@ namespace femus
    bool PRINT = false;
    void MultiLevelSolution::GenerateRKBdc(
        const unsigned int &solIndex, const std::vector<unsigned> &solKiIndex, 
-       const unsigned int &grid0, const std::vector < double> & itime, const double &time0, const double &dt,const double AI[4][4])
+       const unsigned int &grid0, const std::vector < double> & itime, const double &time0, const double &dt,const double *AI)
   {
     
     for(unsigned k = 0; k < solKiIndex.size(); k++){  
@@ -693,7 +693,7 @@ namespace femus
                         for(unsigned k1 = 0; k1 < solKiIndex.size(); k1++){
                           double value = 0.;  
                           for(unsigned k2 = 0; k2 < solKiIndex.size(); k2++){
-                            value += AI[k1][k2] * ivalue[k2];
+                            value += AI[k1 * solKiIndex.size() + k2] * ivalue[k2];
                           }
                           _solution[igridn]->_Sol[solKiIndex[k1]]->set(inode_Metis, value / dt);
                         }
@@ -734,7 +734,7 @@ namespace femus
                       for(unsigned k1 = 0; k1 < solKiIndex.size(); k1++){
                         double value = 0.;  
                         for(unsigned k2 = 0; k2 < solKiIndex.size(); k2++){
-                          value += AI[k1][k2] * ivalue[k2];
+                          value += AI[k1*solKiIndex.size() + k2] * ivalue[k2];
                         }
                         _solution[igridn]->_Bdc[solKiIndex[k1]]->set(idof, 0.);
                         _solution[igridn]->_Sol[solKiIndex[k1]]->set(idof, value / dt);

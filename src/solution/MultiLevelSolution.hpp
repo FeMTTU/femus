@@ -134,7 +134,7 @@ public:
     void GenerateBdc( const unsigned int k, const unsigned grid0, const double time );
     void GenerateRKBdc(const unsigned int &solIndex, const std::vector<unsigned> &solKiIndex, 
                        const unsigned int &grid0, const std::vector < double> & time,  const double &time0, 
-                       const double &dt, const double AI[4][4]);
+                       const double &dt, const double* AI);
 
     /** To be Added */
     BDCType GetBoundaryCondition(const std::string varname, const unsigned int facename) const;

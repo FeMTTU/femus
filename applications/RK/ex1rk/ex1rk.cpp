@@ -102,7 +102,7 @@ int main (int argc, char** args) {
 
 
   
-  //system.SetImplicitRungeKuttaScheme (LEGENDRE2);
+  //system.SetImplicitRungeKuttaScheme (LEGENDRE3);
   system.SetImplicitRungeKuttaScheme (NORSET3);
 
   system.AddSolutionToSystemPDE ("u");
