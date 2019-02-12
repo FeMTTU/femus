@@ -75,7 +75,6 @@ int main(int argc, char** args) {
   const std::vector<double> xyz_max = { 0.5, 0.5,0.};
   const ElemType geom_elem_type = QUAD9;
   
-  mlMsh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 //   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
   
