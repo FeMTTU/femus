@@ -72,6 +72,9 @@ public:
     void AddSolutionLevel();
 
     /** To be Added */
+    void ResizeSolution_par(const unsigned new_size);
+    
+    /** To be Added */
     void AssociatePropertyToSolution(const char solution_name[], const char solution_property[], const bool &bool_property = true);
 
     /** To be Added */
@@ -110,7 +113,9 @@ public:
 
     /** To be Added */
     void AttachSetBoundaryConditionFunction( BoundaryFunc SetBoundaryConditionFunction );
+    
     void AttachSetBoundaryConditionFunction( BoundaryFuncMLProb SetBoundaryConditionFunction );
+    
     void FixSolutionAtOnePoint( const char sol[] ){
       _fixSolutionAtOnePoint[GetIndex(sol)] = true ;
       for(unsigned ig = 1; ig < _gridn; ig++){
@@ -245,6 +250,7 @@ public:
     
     
 private:
+    
     /** boundary condition function pointer */
 
     BoundaryFunc _SetBoundaryConditionFunction;
@@ -264,28 +270,26 @@ private:
 
     /** Array of solution, dimension number of levels */
     vector < Solution* >  _solution;
-
-
+    unsigned short  _gridn;
+    
 
     /** This group of vectors has the size of the number of added solutions */
-    vector< vector <BDCType> > _boundaryConditions;
-    vector< vector <bool> > _isHomogeneous;
-    vector< vector <FunctionBase *> > _nonHomogeneousBCFunction;
+    vector < vector <BDCType> >         _boundaryConditions;
+    vector < vector <bool> >            _isHomogeneous;
+    vector < vector <FunctionBase *> >  _nonHomogeneousBCFunction;
+    vector < int >                      _solType;    /* Tells the FE index */
+    vector < FEFamily >                 _family;
+    vector < FEOrder >                  _order;
+    vector < char* >                    _solName;
+    vector < char* >                    _bdcType;
+    vector < int >                      _solTimeOrder;
+    vector < bool >                     _pdeType;    /*Tells whether the Solution is an unknown of a PDE or not*/
+    vector < bool >                     _testIfPressure;
+    vector < bool >                     _addAMRPressureStability;
+    vector < bool >                     _fixSolutionAtOnePoint;
 
-    unsigned short  _gridn;
-    vector < int >    _solType;    /* Tells the FE index */
-    vector < FEFamily > _family;
-    vector < FEOrder > _order;
-    vector < char* >  _solName;
-    vector < char* >  _bdcType;
-    vector < int >    _solTimeOrder;
-    vector < bool >   _pdeType;    /*Tells whether the Solution is an unknown of a PDE or not*/
-    vector < bool >   _testIfPressure;
-    vector < bool >   _addAMRPressureStability;
-    vector < bool >   _fixSolutionAtOnePoint;
-
-    vector <unsigned> _solPairIndex;
-    vector <unsigned> _solPairInverseIndex;
+    vector <unsigned>                   _solPairIndex;
+    vector <unsigned>                   _solPairInverseIndex;
 
     /** Multilevel solution writer */
     Writer* _writer;

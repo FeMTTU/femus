@@ -104,12 +104,8 @@ int main(int argc, char** args) {
             semiNorm[i].resize(feOrder.size());
      }   
 
-     
-    
 
-   
-
-        //Fine solution  ==================
+        //Solution  ==================
         unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
         mlMsh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
 //      mlMsh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
@@ -117,7 +113,13 @@ int main(int argc, char** args) {
             std::vector <MultiLevelSolution * > mlSol_all_levels( feOrder.size() );
            for (unsigned fe = 0; fe < feOrder.size(); fe++) {
                mlSol_all_levels[fe] = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+               mlSol_all_levels[fe]->AddSolution("u", LAGRANGE, feOrder[fe]);  //We have to do so to avoid buildup of AddSolution with different FE families
+               mlSol_all_levels[fe]->Initialize("All");
+               mlSol_all_levels[fe]->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+               mlSol_all_levels[fe]->GenerateBdc("All");
            }
+            
+
             
             
        for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
@@ -127,16 +129,6 @@ int main(int argc, char** args) {
            for (unsigned fe = 0; fe < feOrder.size(); fe++) {   // loop on the FE Order
         
   
-  
-    
-
-        
-            mlSol_all_levels[fe]->AddSolution("u", LAGRANGE, feOrder[fe]);  //We have to do so to avoid buildup of AddSolution with different FE families
-            mlSol_all_levels[fe]->Initialize("All");
-            mlSol_all_levels[fe]->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-            mlSol_all_levels[fe]->GenerateBdc("u");
-        
-        
        //Current level  ==================
             unsigned numberOfUniformLevels = i + 1;
             unsigned numberOfSelectiveLevels = 0;
@@ -189,40 +181,40 @@ int main(int argc, char** args) {
 
             system.MLsolve();
       
-  // ======= Print ========================
-      std::vector < std::string > variablesToBePrinted;
-      variablesToBePrinted.push_back("All");
+            // ======= Print ========================
+            std::vector < std::string > variablesToBePrinted;
+            variablesToBePrinted.push_back("All");
 
-      VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(files.GetOutputPath() /*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted, i);  
+            VTKWriter vtkIO(&mlSol);
+            vtkIO.Write(files.GetOutputPath() /*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted, i);  
       
       
-      if ( i > 0 ) {
+            if ( i > 0 ) {
         
-//prolongation of coarser  
-      mlSol_all_levels[fe]->RefineSolution(i);
-      Solution* sol_coarser_prolongated = mlSol_all_levels[fe]->GetSolutionLevel(i);
+            // ======= prolongation of coarser ========================
+            mlSol_all_levels[fe]->RefineSolution(i);
+            Solution* sol_coarser_prolongated = mlSol_all_levels[fe]->GetSolutionLevel(i);
   
   
-      std::pair< double , double > norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
+            // ======= error norm computation ========================
+            std::pair< double , double > norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
 
-      l2Norm[i-1][fe]   = norm.first;
-      semiNorm[i-1][fe] = norm.second;
-    }
+              l2Norm[i-1][fe] = norm.first;
+            semiNorm[i-1][fe] = norm.second;
+            
+            }
+            
 
-//store the last computed solution
-// 
-       const unsigned level_index_current = 0;
-      //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
-       const unsigned n_vars = mlSol.GetSolutionLevel(level_index_current)->_Sol.size();
+            // ======= store the last computed solution ========================
+            const unsigned level_index_current = 0;
+            //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
+            const unsigned n_vars = mlSol.GetSolutionLevel(level_index_current)->_Sol.size();
        
-        for(unsigned short j = 0; j < n_vars; j++) {  
-               *(mlSol_all_levels[fe]->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
-        }
+            for(unsigned short j = 0; j < n_vars; j++) {  
+                 *(mlSol_all_levels[fe]->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
+            }
         
 
-  delete mlSol_all_levels[fe];
-      
       } //end FE families
       
         

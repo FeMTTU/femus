@@ -169,7 +169,21 @@ namespace femus
   }
 
 
+  void MultiLevelSolution::ResizeSolution_par(const unsigned new_size)  {
 
+      for(unsigned ig = 0; ig < _solution.size(); ig++) {
+
+    for(unsigned s = 0; s < _solType.size(); s++) {
+
+     _solution[ig]->ResizeSolution_par(new_size);
+
+    }
+  }
+
+      
+}
+  
+  
 //---------------------------------------------------------------------------------------------------
   void MultiLevelSolution::AssociatePropertyToSolution(const char solution_name[], const char solution_property[],
       const bool& bool_property)
@@ -434,7 +448,7 @@ namespace femus
       cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine"
            << endl;
 
-      exit(1);
+      abort();
     }
 
     if(_bdcFuncSetMLProb == true && ml_prob != NULL) {
