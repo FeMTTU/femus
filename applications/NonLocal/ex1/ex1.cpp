@@ -23,7 +23,9 @@ using namespace femus;
 
 double InitalValueU ( const std::vector < double >& x )
 {
-    return x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
+//     return x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
+//     return x[0];
+    return x[0] * x[0];
 }
 
 void GetL2Norm ( MultiLevelProblem& ml_prob );
@@ -33,7 +35,8 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 
     bool dirichlet = true;
 //     value = 0.;
-    value = x[0];
+//     value = x[0];
+    value = x[0] * x[0];
 
     if ( facename == 2 ) {
         bool dirichlet = false; //Neumann at the interface boundaries
@@ -75,9 +78,9 @@ int main ( int argc, char** argv )
     // add variables to mlSol
     mlSol.AddSolution ( "u", LAGRANGE, FIRST, 2 );
 
-//     mlSol.Initialize("u", InitalValueU);
-
     mlSol.Initialize ( "All" );
+    
+//     mlSol.Initialize("u", InitalValueU);
 
     mlSol.AttachSetBoundaryConditionFunction ( SetBoundaryCondition );
 
@@ -201,9 +204,10 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
             
             for ( unsigned i = 0; i < nDofu; i++ ) {
                 soluNonLoc_gss += phi[i] * soluNonLoc[i];
-                    exactSol_gss += phi[i] * x1[0][i]; //TODO this is if the exact sol is u = x
+                exactSol_gss += phi[i] * x1[0][i]; //TODO this is if the exact sol is u = x
             }
 
+            exactSol_gss *= exactSol_gss; //TODO this is if the exact sol is u = x^2
             
 //             std::cout<<" soluNonLoc_gss = " << soluNonLoc_gss << " , " << "exactSol_gss = " << exactSol_gss << std::endl;
 
@@ -219,6 +223,7 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
     std::cout << "Error L2 norm = " << norm << std::endl;
 
 }
+
 
 
 

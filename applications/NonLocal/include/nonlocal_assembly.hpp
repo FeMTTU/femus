@@ -32,7 +32,8 @@ double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
 //     value = 0.;
-    value = x[0];
+//     value = x[0];
+    value = x[0] * x[0];
 
 }
 
@@ -312,7 +313,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         double weight2;
 
 //                                         if ( iproc == kproc ) {
-                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
 //                                         }
 
 //                                         MPI_Bcast ( &phi2y[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
@@ -340,7 +341,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         double weightTemp;
 
 //                                         if ( iproc == kproc ) {
-                                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+                                        msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
 //                                         }
 
 
@@ -387,12 +388,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                 } //endl i loop
                             }//end jg loop
                         }
-
-                        // up to here Res only contains A_ij*u_j, now we take out f
-                        for ( unsigned i = 0; i < nDof1; i++ ) {
-//                     Res[i] -= 1. * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = 1)
-                            Res[i] -= 0. * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
-                        }
                     }//end ig loop
 
                     KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 );
@@ -403,6 +398,51 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
             } // end jel loop
         } //end kproc loop
+
+
+        //subtraction of the rhs from the residual
+        for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+
+            short unsigned ielGeom = msh->GetElementType ( iel );
+            short unsigned ielGroup = msh->GetElementGroup ( iel );
+            unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType );
+            unsigned nDofx1 = msh->GetElementDofNumber ( iel, xType );
+
+            l2GMap1.resize ( nDof1 );
+            Res.assign ( nDof1, 0. );
+
+            for ( unsigned i = 0; i < nDof1; i++ ) {
+                l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel );
+            }
+
+            for ( int k = 0; k < dim; k++ ) {
+                x1[k].resize ( nDofx1 );
+            }
+
+            for ( unsigned i = 0; i < nDofx1; i++ ) {
+                unsigned xDof  = msh->GetSolutionDof ( i, iel, xType );
+
+                for ( unsigned k = 0; k < dim; k++ ) {
+                    x1[k][i] = ( *msh->_topology->_Sol[k] ) ( xDof );
+                }
+            }
+
+
+            unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
+            for ( unsigned ig = 0; ig < igNumber; ig++ ) {
+                msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight, phi, phi_x );
+
+                // up to here Res only contains A_ij*u_j, now we take out f
+                for ( unsigned i = 0; i < nDof1; i++ ) {
+//                  Res[i] -= - 1. * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 1)
+//                  Res[i] -= 0. * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
+                 Res[i] -=  - 2. * weight * phi[i]; //Ax - f (so f = - 2)
+                }
+            }
+            
+            RES->add_vector_blocked ( Res, l2GMap1 );
+
+        }
 
 
         //END nonlocal assembly
