@@ -138,6 +138,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
   }
 
+  sol->_Bdc[soluIndex]->close();
+  sol->_Sol[soluIndex]->close();
   //END
 
   if (nonLocalAssembly) {
