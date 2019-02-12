@@ -45,7 +45,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 2;
+unsigned numberOfUniformLevels = 3;
 
 int main ( int argc, char** argv )
 {
@@ -156,6 +156,10 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
 
     double local_norm2 = 0.;
 
+    double sol_norn2 = 0.;
+    
+    double sol_exact_norm2 = 0.;
+    
     unsigned soluIndex;
     soluIndex = mlSol->GetIndex ( "u" );
     unsigned soluType = mlSol->GetSolutionType ( soluIndex );
@@ -213,6 +217,10 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
 
 
             local_norm2 += (soluNonLoc_gss -  exactSol_gss) * (soluNonLoc_gss - exactSol_gss) * weight;
+            
+            sol_norn2 += soluNonLoc_gss * soluNonLoc_gss * weight;
+            
+            sol_exact_norm2 += exactSol_gss * exactSol_gss * weight;
         }
     }
 
@@ -221,6 +229,19 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
     double norm = sqrt ( norm2 );
     std::cout.precision(14);
     std::cout << "Error L2 norm = " << norm << std::endl;
+    
+    norm2 = 0.;
+    MPI_Allreduce ( &sol_norn2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    norm = sqrt ( norm2 );
+    std::cout.precision(14);
+    std::cout << "Sol L2 norm = " << norm << std::endl;
+    
+    norm2 = 0.;
+    MPI_Allreduce ( &sol_exact_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    norm = sqrt ( norm2 );
+    std::cout.precision(14);
+    std::cout << "Sol Exact L2 norm = " << norm << std::endl;
+    
 
 }
 

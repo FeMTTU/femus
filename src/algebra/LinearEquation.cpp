@@ -195,15 +195,16 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   int KK_local_size =KKoffset[KKIndex.size()-1][processor_id()] - KKoffset[0][processor_id()];
 
   if( _sparsityPatternMultiplyingFactor != 1u){
+    
+    for(unsigned i=0; i< o_nnz.size();i++){
+      int newSize = o_nnz[i] + d_nnz[i] * _sparsityPatternMultiplyingFactor;
+      o_nnz[i] = ( newSize > KK_size - KK_local_size )?  KK_size - KK_local_size : newSize;
+    }
+    
     for(unsigned i=0; i< d_nnz.size();i++){
       int newSize = d_nnz[i] * _sparsityPatternMultiplyingFactor;
       d_nnz[i] = ( newSize > KK_local_size )?  KK_local_size : newSize;
     }
-    for(unsigned i=0; i< o_nnz.size();i++){
-      int newSize = o_nnz[i] * _sparsityPatternMultiplyingFactor;
-      o_nnz[i] = ( newSize > KK_size - KK_local_size )?  KK_size - KK_local_size : newSize;
-    }
-    
   }
   _KK = SparseMatrix::build().release();
   _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
