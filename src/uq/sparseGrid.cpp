@@ -388,19 +388,19 @@ namespace femus
 
                         if ( isThere == 1 && dofsOfWLower < dofsOfW && doThey == true ) {
 
-                            double supportMeasureLower = 1.;
-                            double supportMeasure = 1.;
+                            double halfSupportMeasureLower = 1.;
+                            double halfSupportMeasure = 1.;
 
                             for ( unsigned n = 0; n < _N; n++ ) {
-                                supportMeasureLower *=  _hs[n][_dofIdentifier[w1][i1][n][1]];
+                                halfSupportMeasureLower *=  _hs[n][_dofIdentifier[w1][i1][n][1]];
                             }
 
                             for ( unsigned n = 0; n < _N; n++ ) {
-                                supportMeasure *=  _hs[n][_dofIdentifier[w][i][n][1]];
+                                halfSupportMeasure *=  _hs[n][_dofIdentifier[w][i][n][1]];
                             }
 
 
-                            _nodalValuesPDF[w][i] -=  supportMeasure * _nodalValuesPDF[w1][i1] / supportMeasureLower ;
+                            _nodalValuesPDF[w][i] -=  halfSupportMeasure * _nodalValuesPDF[w1][i1] / halfSupportMeasureLower ;
 
                         }
 

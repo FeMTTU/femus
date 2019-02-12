@@ -22,7 +22,7 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 6;
+unsigned alpha = 7;
 unsigned M = pow ( 10, alpha ); //number of samples
 unsigned N = 1; //dimension of the parameter space (each of the M samples has N entries)
 unsigned L = 6; //max refinement level
