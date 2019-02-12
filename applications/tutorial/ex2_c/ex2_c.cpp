@@ -45,7 +45,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
-void output_convergence_rate( std::vector < std::vector < std::vector < double > > > &  norm, std::string norm_name );
+void output_convergence_rate(const unsigned fam, const unsigned ord,  std::vector < double > &  norm, std::string norm_name );
 
 
 
@@ -92,20 +92,20 @@ int main(int argc, char** args) {
     maxNumberOfMeshes = 4;
   }
 
-  vector < vector < vector < double > > >  l2Norm;       l2Norm.resize(maxNumberOfMeshes);
-  vector < vector < vector < double > > >  semiNorm;   semiNorm.resize(maxNumberOfMeshes);
 
   
     std::vector< FEFamily > feFamily = {LAGRANGE/*, DISCONTINOUS_POLYNOMIAL*/};
     std::vector< FEOrder > feOrder = {FIRST, SERENDIPITY, SECOND};
 
+  vector < vector < vector < double > > >  l2Norm;       l2Norm.resize(feFamily.size());
+  vector < vector < vector < double > > >  semiNorm;   semiNorm.resize(feFamily.size());
   
-     for (int i = 0; i < l2Norm.size(); i++) {
-              l2Norm[i].resize(feFamily.size());
-            semiNorm[i].resize(feFamily.size());
-        for (int fam = 0; fam < feFamily.size(); fam++) {
-              l2Norm[i][fam].resize(feOrder.size());
-            semiNorm[i][fam].resize(feOrder.size());
+        for (unsigned int fam = 0; fam < feFamily.size(); fam++) {
+              l2Norm[fam].resize(feOrder.size());
+            semiNorm[fam].resize(feOrder.size());
+     for (unsigned int ord = 0; ord < feOrder.size(); ord++) {
+              l2Norm[fam][ord].resize(maxNumberOfMeshes);
+            semiNorm[fam][ord].resize(maxNumberOfMeshes);
            }   
         }
 
@@ -116,14 +116,14 @@ int main(int argc, char** args) {
         
             std::vector < std::vector < MultiLevelSolution * > >   mlSol_all_levels;      mlSol_all_levels.resize(feFamily.size());
         
-             for (int fam = 0; fam < feFamily.size(); fam++) {
+             for (unsigned int fam = 0; fam < feFamily.size(); fam++) {
                  mlSol_all_levels[fam].resize(feOrder.size());
-               for (unsigned fe = 0; fe < feOrder.size(); fe++) {
-               mlSol_all_levels[fam][fe] = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-               mlSol_all_levels[fam][fe]->AddSolution("u", feFamily[fam], feOrder[fe]);  //We have to do so to avoid buildup of AddSolution with different FE families
-               mlSol_all_levels[fam][fe]->Initialize("All");
-               mlSol_all_levels[fam][fe]->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-               mlSol_all_levels[fam][fe]->GenerateBdc("All");
+               for (unsigned int ord = 0; ord < feOrder.size(); ord++) {
+               mlSol_all_levels[fam][ord] = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+               mlSol_all_levels[fam][ord]->AddSolution("u", feFamily[fam], feOrder[ord]);  //We have to do so to avoid buildup of AddSolution with different FE families
+               mlSol_all_levels[fam][ord]->Initialize("All");
+               mlSol_all_levels[fam][ord]->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+               mlSol_all_levels[fam][ord]->GenerateBdc("All");
                 }
              }  
            
@@ -210,8 +210,8 @@ int main(int argc, char** args) {
             // ======= error norm computation ========================
             std::pair< double , double > norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
 
-              l2Norm[i-1][fam][fe] = norm.first;
-            semiNorm[i-1][fam][fe] = norm.second;
+              l2Norm[fam][fe][i-1] = norm.first;
+            semiNorm[fam][fe][i-1] = norm.second;
             
             }
             
@@ -237,32 +237,30 @@ int main(int argc, char** args) {
   
    std::pair< std::string, std::string > norm_names("L2-NORM","SEMINORM");
 
-   output_convergence_rate(l2Norm, norm_names.first );
-   
-   output_convergence_rate(semiNorm, norm_names.second );
-
+        for (unsigned  fam = 0; fam < feFamily.size(); fam++) {
+             for (unsigned ord = 0; ord < feOrder.size(); ord++) {
+   output_convergence_rate(fam, ord, l2Norm[fam][ord], norm_names.first );
+   output_convergence_rate(fam, ord, semiNorm[fam][ord], norm_names.second );
+             }
+        }
+        
 
   return 0;
 }
 
 
-void output_convergence_rate( std::vector < std::vector < std::vector < double > > >  &  norm, std::string norm_name ) {
+void output_convergence_rate(const unsigned fam, const unsigned ord,  std::vector < double > &  norm, std::string norm_name ) {
 
 //   print the seminorm of the error and the order of convergence between different levels
   std::cout << std::endl;
   std::cout << std::endl;
-  std::cout << norm_name << " ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\t\t\tSERENDIPITY\t\t\tSECOND\n";
+  std::cout << norm_name << " ERROR and ORDER OF CONVERGENCE: " << fam << " " << ord << "\n\n";
 
   for (int i = 0; i < norm.size() - 1; i++) {   // loop on the mesh level
     std::cout << i + 1 << "\t\t";
     std::cout.precision(14);
 
-        for (int fam = 0; fam < norm[i].size(); fam++) {
-             for (unsigned fe = 0; fe < norm[i][fam].size(); fe++) {
-                 std::cout << norm[i][fam][fe] << "\t";
-               }
-            }
+                 std::cout << norm[i] << "\t";
 
     std::cout << std::endl;
   
@@ -270,11 +268,7 @@ void output_convergence_rate( std::vector < std::vector < std::vector < double >
       std::cout.precision(3);
       std::cout << "\t\t";
 
-        for (int fam = 0; fam < norm[i].size(); fam++) {
-             for (unsigned fe = 0; fe < norm[i][fam].size(); fe++) {
-        std::cout << log( norm[i][fam][fe] / norm[i + 1][fam][fe] ) / log(2.) << "  \t\t\t\t";
-                  }
-             }
+        std::cout << log( norm[i] / norm[i + 1] ) / log(2.) << "  \t\t\t\t";
 
       std::cout << std::endl;
     }
@@ -697,6 +691,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 }
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated) {
+    
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*     msh = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
