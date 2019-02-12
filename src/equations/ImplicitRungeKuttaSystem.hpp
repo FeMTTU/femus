@@ -318,9 +318,9 @@ namespace femus {
   void ImplicitRungeKuttaSystem<Base>::SetImplicitRungeKuttaScheme(const ImplicitRKScheme & RKscheme){
     _RKScheme = RKscheme;
     _RK = nRK[RKscheme]; 
-    _c = cIRK[RKscheme];
-    _b = bIRK[RKscheme];
-    _a = aIRK[RKscheme];
+    _c  = cIRK[RKscheme];
+    _b  = bIRK[RKscheme];
+    _a  = aIRK[RKscheme];
     _aI = aiIRK[RKscheme];
   }
   

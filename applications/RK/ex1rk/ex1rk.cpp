@@ -26,7 +26,7 @@
 using namespace femus;
 
 double GetTimeStep (const double time) {
-  double dt = 2.;
+  double dt = 2;
   return dt;
 }
 
@@ -103,11 +103,10 @@ int main (int argc, char** args) {
 
   
   //system.SetImplicitRungeKuttaScheme (LEGENDRE3);
-  system.SetImplicitRungeKuttaScheme (NORSET3);
+  //system.SetImplicitRungeKuttaScheme (NORSET3);
+  system.SetImplicitRungeKuttaScheme (CROUZEIX2);
 
   system.AddSolutionToSystemPDE ("u");
-
-
 
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleAllanChanProblem_AD);
