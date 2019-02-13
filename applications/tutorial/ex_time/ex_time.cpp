@@ -19,8 +19,36 @@ using namespace femus;
 
 void AssembleMatrixRes(MultiLevelProblem &ml_prob);
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char name[],
-                          double &value, const int FaceName, const double time);
+//-------------------------------------------------------------------------------------------------------------------
+
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
+			  double &value, const int FaceName, const double time){
+  bool test = 1; //Dirichlet
+  value = 0.;
+
+  if(!strcmp(name,"u")) {
+    if (1==FaceName) { //inflow
+      test=1;
+     value=0.;
+    }
+    else if(2==FaceName ){  //outflow
+     test=1;
+     value=0.;
+    }
+    else if(3==FaceName ){  // no-slip fluid wall
+      test=1;
+      value=0.;
+    }
+    else if(4==FaceName ){  // no-slip solid wall
+      test=1;
+      value=0.;
+    }
+  }
+
+
+  return test;
+}
+
 
 double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
          
@@ -153,35 +181,7 @@ int main(int argc,char **args) {
   return 0;
 }
 
-//-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
-			  double &value, const int FaceName, const double time){
-  bool test=1; //Dirichlet
-  value=0.;
-
-  if(!strcmp(name,"u")) {
-    if (1==FaceName) { //inflow
-      test=1;
-     value=0.;
-    }
-    else if(2==FaceName ){  //outflow
-     test=1;
-     value=0.;
-    }
-    else if(3==FaceName ){  // no-slip fluid wall
-      test=1;
-      value=0.;
-    }
-    else if(4==FaceName ){  // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
-
-
-  return test;
-}
 
 
 //------------------------------------------------------------------------------------------------------------
@@ -197,8 +197,8 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 
   Mesh*		 msh    	   = ml_prob._ml_msh->GetLevel(level);
   elem*		 myel		   = msh->el;
-  SparseMatrix*	 myKK	 	   = mylsyspde->_KK;
-  NumericVector* myRES 		   = mylsyspde->_RES;
+  SparseMatrix*	 KK	 	   = mylsyspde->_KK;
+  NumericVector* RES 		   = mylsyspde->_RES;
 
   //data
   const unsigned dim = msh->GetDimension();
@@ -298,7 +298,8 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
   //vector < double > AccSol(dim);
 
   // Set to zeto all the entries of the matrix
-  myKK->zero();
+  KK->zero();
+  RES->zero();
 
   // *** element loop ***
 
@@ -437,15 +438,15 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 //--------------------------------------------------------------------------------------------------------
     //Sum the local matrices/vectors into the Global Matrix/Vector
     for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-      myRES->add_vector_blocked(F[SolPdeIndex[ivar]],KK_dof[ivar]);
-       myKK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[ivar]],KK_dof[ivar],KK_dof[ivar]);
+      RES->add_vector_blocked(F[SolPdeIndex[ivar]],KK_dof[ivar]);
+      KK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[ivar]],KK_dof[ivar],KK_dof[ivar]);
     }
     //--------------------------------------------------------------------------------------------------------
   } //end list of elements loop for each subdomain
 
 
-  myKK->close();
-  myRES->close();
+  KK->close();
+  RES->close();
   // ***************** END ASSEMBLY *******************
 }
 
