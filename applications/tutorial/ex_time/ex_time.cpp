@@ -220,6 +220,8 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
   
   
  //************* shape functions (at dofs and quadrature points) **************************************  
+  const int solType_max = BIQUADR_FE;  //biquadratic
+
   double weight_qp; // gauss point weight
   
   vector < vector < double > > phi_fe_qp(NFE_FAMS);
@@ -252,13 +254,11 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
       SolFEType[ivar] = ml_sol->GetSolutionType  ( SolIndex[ivar]);
   }
   
-  //solution order
-  unsigned order_ind2 = ml_sol->GetSolutionType(SolIndex[0]);
 
   // declare
   vector< int > metis_node2;
   vector< vector< int > > KK_dof(n_unknowns);
-  vector<double> phi2;
+//   vector<double> phi2;
   vector<double> gradphi2;
   vector<double> nablaphi2;
   double Weight2;
@@ -267,7 +267,6 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
   vector< vector< vector< double > > > B(n_unknowns);
 
   metis_node2.reserve(max_size);
-  phi2.reserve(max_size);
   gradphi2.reserve(max_size*dim);
   nablaphi2.reserve(max_size*(3*(dim-1)));
   for(int i=0;i<dim;i++) {
@@ -305,7 +304,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc+1]; iel++) {
 
-    unsigned kel = iel;
+    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
     
      //******************** GEOMETRY ********************* 
     unsigned nDofx = msh->GetElementDofNumber(iel, coords_fe_type);    // number of coordinate element dofs
@@ -323,12 +322,10 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
     
     
     
-    short unsigned kelt= msh->GetElementType(kel);
-    unsigned nve2=msh->GetElementDofNumber(kel,order_ind2);
+    unsigned nve2 = msh->GetElementDofNumber(iel,SolFEType[0]);
 
     //set to zero all the entries of the FE matrices
     metis_node2.resize(nve2);
-    phi2.resize(nve2);
     gradphi2.resize(nve2*dim);
     nablaphi2.resize(nve2*(3*(dim-1)));
 
@@ -360,10 +357,15 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 
 
       // *** Gauss poit loop ***
-      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelt][order_ind2]->GetGaussPointNumber(); ig++) {
-	// *** get Jacobian and test function and test function derivatives ***
-	ml_prob._ml_msh->_finiteElement[kelt][order_ind2]->Jacobian(coords_at_dofs,ig,Weight2,phi2,gradphi2,nablaphi2);
-
+      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
+          
+      // *** get gauss point weight, test function and test function partial derivatives ***
+      for(int fe=0; fe < NFE_FAMS; fe++) {
+         msh->_finiteElement[ielGeom][fe]->Jacobian(coords_at_dofs,ig,weight_qp,phi_fe_qp[fe],phi_x_fe_qp[fe],phi_xx_fe_qp[fe]);
+      }
+   //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
+         msh->_finiteElement[ielGeom][coords_fe_type]->Jacobian(coords_at_dofs,ig,weight_qp,phi_fe_qp[coords_fe_type],phi_x_fe_qp[coords_fe_type],phi_xx_fe_qp[coords_fe_type]);
+          
 	//velocity variable
 	for(unsigned ivar=0; ivar<n_unknowns; ivar++) {
 	  Sol[ivar]=0.;
@@ -378,8 +380,8 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 	  for(unsigned i=0; i<nve2; i++) {
 	    double soli    = (*mysolution->_Sol[SolIndex])(metis_node2[i]);
 	    double sololdi = (*mysolution->_SolOld[SolIndex])(metis_node2[i]);
-	    Sol[ivar]+=phi2[i]*soli;
-	    SolOld[ivar]+=phi2[i]*sololdi;
+	    Sol[ivar]    += phi_fe_qp[ SolFEType[0] ][i]*soli;
+	    SolOld[ivar] += phi_fe_qp[ SolFEType[0] ][i]*sololdi;
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++){
 	      gradSol[ivar][ivar2]    += gradphi2[i*dim+ivar2]*soli;
 	      gradSolOld[ivar][ivar2] += gradphi2[i*dim+ivar2]*sololdi;
@@ -399,11 +401,11 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 	      Lap_rhs 	  += gradphi2[i*dim+ivar2]*gradSol[ivar][ivar2];
 	      Lap_old_rhs += gradphi2[i*dim+ivar2]*gradSolOld[ivar][ivar2];
 	    }
-	    F[SolPdeIndex[ivar]][i]+= ( 
+	    F[SolPdeIndex[ivar]][i] += ( 
                     -theta*dt*Lap_rhs                           // Laplacian
 					-(1.-theta)*dt*Lap_old_rhs                  // Laplacian
 					+dt*Sol[dim]*gradphi2[i*dim+ivar]                  // pressure
-					-(Sol[ivar] - SolOld[ivar])*phi2[i]        // acceleration
+					-(Sol[ivar] - SolOld[ivar])*phi_fe_qp[ SolFEType[0] ][i]        // acceleration
 	    )*Weight2;
 	  }
 	  //END RESIDUALS A block ===========================
@@ -411,10 +413,9 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 	  {
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nve2; j++) {
-	      double Lap=0;
-	      double Adv1=0;
-	      double Adv2 = phi2[i]*phi2[j]*Weight2;
-	      double Mass = phi2[i]*phi2[j]*Weight2;
+	      double Lap = 0.;
+          double Mass = phi_fe_qp[ SolFEType[0] ][i]*phi_fe_qp[ SolFEType[0] ][j]*Weight2;
+          
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
 		// Laplacian
 		Lap  += gradphi2[i*dim+ivar]*gradphi2[j*dim+ivar]*Weight2;
@@ -432,24 +433,6 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 
       }  // end gauss point loop
 
-      //--------------------------------------------------------------------------------------------------------
-      // Boundary Integral --> to be added
-      //number of faces for each type of element
-//       if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {
-//
-// 	unsigned nfaces = myel->GetElementFaceNumber(kel);
-//
-// 	// loop on faces
-// 	for(unsigned jface=0;jface<nfaces;jface++){
-//
-// 	  // look for boundary faces
-// 	  if(myel->GetFaceElementIndex(kel,jface)<0){
-// 	    for(unsigned ivar=0; ivar<dim; ivar++) {
-// 	      ml_prob.ComputeBdIntegral(pdename, &Solname[ivar][0], kel, jface, level, ivar);
-// 	    }
-// 	  }
-// 	}
-//       }
 
 //--------------------------------------------------------------------------------------------------------
     //Sum the local matrices/vectors into the Global Matrix/Vector
