@@ -25,7 +25,7 @@ using namespace femus;
 
 //int simulation = 1; // =1 sphere (default) = 2 torus
 
-unsigned P = 6;
+unsigned P = 2;
 
 //Sphere
 
@@ -298,6 +298,8 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
 
   double dt = GetTimeStep (0);
   
+  double HPintegralLocal = 0.;
+  
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -388,6 +390,8 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
       adept::adouble A = sqrt (1. + u_xNorm2);
       adept::adouble A2 = A * A;
 
+      HPintegralLocal += pow( H.value(), P) * A.value() * weight; 
+            
       double Id[2][2] = {{1., 0.}, {0., 1.}};
       vector < vector < adept::adouble> > B (dim);
 
@@ -455,6 +459,12 @@ void AssembleWillmoreProblem_AD (MultiLevelProblem& ml_prob) {
 
   RES->close();
   KK->close();
+  
+  double HPIntegral = 0.;
+  MPI_Allreduce ( &HPintegralLocal, &HPIntegral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  std::cout.precision(14);
+  std::cout << "int_S H^p dS = " << HPIntegral << std::endl;
+  
 
   // ***************** END ASSEMBLY *******************
 }
