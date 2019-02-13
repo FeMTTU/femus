@@ -39,7 +39,8 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     value = x[0] * x[0];
 
     if ( facename == 2 ) {
-        bool dirichlet = false; //Neumann at the interface boundaries
+      dirichlet = false; //Neumann at the interface boundaries
+      value = 0.;
     }
 
     return dirichlet;
