@@ -2,7 +2,7 @@
 ** GAMBIT NEUTRAL FILE
 maxTest2
 PROGRAM:                Gambit     VERSION:  2.3.16
- 9 Feb 2019    00:53:58 
+13 Feb 2019    10:22:16 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
        390        84         4         2         2         2
 ENDOFSECTION
@@ -640,7 +640,11 @@ ENDOFSECTION
         65    2    2
 ENDOFSECTION
  BOUNDARY CONDITIONS 2.3.16
-                               2       1      10       0       6
+                               2       1      14       0       6
+        70    2    1
+        61    2    3
+        76    2    1
+        75    2    3
         30    2    1
         29    2    1
         28    2    1
