@@ -1,5 +1,7 @@
+
 /** tutorial/Ex14
  * This example shows how to set and solve the weak form of the Bistable Equation
+>>>>>>> 137150e40fff16af420ad8fc7bb9d8ebac4df18f
  *          $$ \dfrac{\partial u}{ \partial t}-\epsilon \nabla \cdot u=u-u^3  \text{in} \Omega $$
  *          $$ \nabla u.n=0 \text{ on} \partial \Omega $$
  *          $$ u= u_{0} in \Omega x {t=0} $$
@@ -19,10 +21,12 @@
 #include "PetscMatrix.hpp"
 #include "PetscVector.hpp"
 
+#include "ImplicitRKEnum.hpp"
+
 using namespace femus;
 
 double GetTimeStep (const double time) {
-  double dt = 2.;
+  double dt = 2;
   return dt;
 }
 
@@ -93,16 +97,21 @@ int main (int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb (&mlSol); //
 
-  // add system Poisson in mlProb as a Non Linear Implicit System
+  // add system AllanChan in mlProb as an ImplicitRungeKuttaNonlinearImplicitSystem
   ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("AllanChan");
 
-  system.SetRungeKuttaStages (3);
+
+  
+  //system.SetImplicitRungeKuttaScheme (LEGENDRE3);
+  //system.SetImplicitRungeKuttaScheme (NORSET3);
+  system.SetImplicitRungeKuttaScheme (CROUZEIX2);
 
   system.AddSolutionToSystemPDE ("u");
 
-
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleAllanChanProblem_AD);
+  
+  system.SetMaxNumberOfNonLinearIterations(100);
 
   // time loop parameter
   const unsigned int n_timesteps = 25;
@@ -263,7 +272,9 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
     soluOld.resize (nDofu);
 
     for (int k = 0; k < dim; k++) {
+
       x[k].resize (nDofx); // Now we
+
     }
 
   

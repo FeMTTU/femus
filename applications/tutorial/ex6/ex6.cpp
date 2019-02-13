@@ -26,7 +26,7 @@ using namespace femus;
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
 
-  if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense. why !strcmp??? not false ==true?
+  if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense. 
     value = 0.;
     if (facename == 1) {
       if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
