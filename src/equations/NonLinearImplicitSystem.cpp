@@ -56,8 +56,8 @@ namespace femus {
     double L2normEps, L2normSol, L2normEpsDividedSol;
 
     nonLinearEps = 0.;
-    const double absMinNonlinearEps = 1.e-50;
-    const double absMinNormSol = 1.e-13;
+    const double absMinNonlinearEps = 1.e-12;
+    const double absMinNormSol = 1.e-12;
     const double mindeltaNormSol = 1.e-50;
 
     for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {

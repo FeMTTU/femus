@@ -143,7 +143,7 @@ int main (int argc, char** args) {
   // add system Poisson in mlProb as a Linear Implicit System
   ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("NS");
 
-  system.SetImplicitRungeKuttaScheme (LEGENDRE2);
+  system.SetImplicitRungeKuttaScheme (PIPPO3);
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE ("U");
@@ -311,7 +311,7 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
   std::vector < double > Jac;
   
   std::vector < adept::adouble > solV_gss (dim), solVk_gss (dim), solDk_gss (dim), NSV (dim), DISP (dim);
-  std::vector < std::vector < adept::adouble > > gradSolV_gss (dim), gradSolVk_gss (dim), gradSolDk_gss (dim);
+  std::vector < std::vector < adept::adouble > > gradSolV_gss (dim), /*gradSolVk_gss (dim),*/ gradSolDk_gss (dim);
   
   RES->zero(); // Set to zero all the entries of the Global Residual vector
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -419,7 +419,7 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
        
         for (unsigned  k = 0; k < dim; k++) {
           gradSolV_gss[k].assign (dim, 0.);
-          gradSolVk_gss[k].assign (dim, 0.);
+          //gradSolVk_gss[k].assign (dim, 0.);
           gradSolDk_gss[k].assign (dim, 0.);
         }
 
@@ -432,7 +432,7 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
           for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
               gradSolV_gss[k][j] += solV[k][jj][i] * phi_x[i * dim + j];
-              gradSolVk_gss[k][j] += solVk[k][jj][i] * phi_x[i * dim + j];
+              //gradSolVk_gss[k][j] += solVk[k][jj][i] * phi_x[i * dim + j];
               gradSolDk_gss[k][j] += solDk[k][jj][i] * phi_x[i * dim + j];
             }
           }
@@ -469,7 +469,7 @@ void AssembleBoussinesqAppoximation_AD (MultiLevelProblem& ml_prob) {
         // *** phiP_i loop ***
         for (unsigned i = 0; i < nDofsP; i++) {
           for (int k = 0; k < dim; k++) {
-            aResP[jj][i] += - (gradSolVk_gss[k][k]) * phiP[i]  * weight;
+            aResP[jj][i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
           }
         } // end phiP_i loop
       } // end gauss point loop

@@ -25,7 +25,7 @@ using namespace femus;
 
 //int simulation = 1; // =1 sphere (default) = 2 torus
 
-unsigned P = 4;
+unsigned P = 3;
 
 //Sphere
 
@@ -55,7 +55,7 @@ bool SetBoundaryConditionSphere (const std::vector < double >& x, const char Sol
 
 double InitalValueHSphere (const std::vector < double >& x) {
   double r = sqrt( x[0] * x[0] + x[1] * x[1]);
-  return -sin(0.5 * M_PI * (1.-r));
+  return sin(0.5 * M_PI * (1.-r));
 }
 
 double GetTimeStep (const double time) {

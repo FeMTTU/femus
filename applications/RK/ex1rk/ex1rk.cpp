@@ -104,14 +104,15 @@ int main (int argc, char** args) {
   
   //system.SetImplicitRungeKuttaScheme (LEGENDRE3);
   //system.SetImplicitRungeKuttaScheme (NORSET3);
-  system.SetImplicitRungeKuttaScheme (CROUZEIX2);
+  //system.SetImplicitRungeKuttaScheme (CROUZEIX2);
+  system.SetImplicitRungeKuttaScheme (PIPPO3);
 
   system.AddSolutionToSystemPDE ("u");
 
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleAllanChanProblem_AD);
   
-  system.SetMaxNumberOfNonLinearIterations(100);
+  system.SetMaxNumberOfNonLinearIterations(10);
 
   // time loop parameter
   const unsigned int n_timesteps = 25;

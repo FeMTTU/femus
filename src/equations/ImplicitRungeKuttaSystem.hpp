@@ -84,11 +84,16 @@ namespace femus {
       const std::vector < double > & GetIntermediateTimes();
       void SetRKVariableType (const char solname[], const bool &type);
       
+      void GetbAi();
+      
     private:
       unsigned _RK;
       ImplicitRKScheme _RKScheme;
 
-      const double *_a, *_aI, *_b, *_c;
+      const double *_A, *_Ai, *_b, *_c;
+      std::vector< double > _bAi;
+      double _bAiSum;
+      
       
       std::vector < std::string > _solName;
       std::vector < unsigned > _solIndex;
@@ -110,10 +115,10 @@ namespace femus {
     _RKScheme(LEGENDRE1),
     _c (cLEGENDRE1),
     _b (bLEGENDRE1),
-    _a (aLEGENDRE1),
-    _aI(aiLEGENDRE1)
+    _A (aLEGENDRE1),
+    _Ai(aiLEGENDRE1)
     {
-
+      GetbAi();
   }
 
   /** Destructor. */
@@ -172,7 +177,7 @@ namespace femus {
       this->Base::AddSolutionToSystemPDE (_solKiName[size][i].c_str());
     }
 
-    this->_ml_sol->GenerateRKBdc (_solIndex[size], _solKiIndex[size], 0, _itime, _time0, 1., _aI);
+    this->_ml_sol->GenerateRKBdc (_solIndex[size], _solKiIndex[size], 0, _itime, _time0, 1., _Ai);
   }
 
   template <class Base>
@@ -203,7 +208,7 @@ namespace femus {
 
     for (unsigned i = 0; i < _solIndex.size(); i++) {
       if (!strcmp (this->_ml_sol->GetBdcType (_solIndex[i]), "Time_dependent")) {
-        this->_ml_sol->GenerateRKBdc (_solIndex[i], _solKiIndex[i], 0, _itime, _time0, this->_dt, _aI);
+        this->_ml_sol->GenerateRKBdc (_solIndex[i], _solKiIndex[i], 0, _itime, _time0, this->_dt, _Ai);
       }
     }
 
@@ -225,7 +230,7 @@ namespace femus {
     std::cout << std::endl;
     for (unsigned i = 0; i < _solIndex.size(); i++) {
       if (!strcmp (this->_ml_sol->GetBdcType (_solIndex[i]), "Time_dependent")) {
-        this->_ml_sol->GenerateRKBdc (_solIndex[i], _solKiIndex[i], 0, _itime, _time0, this->_dt, _aI);
+        this->_ml_sol->GenerateRKBdc (_solIndex[i], _solKiIndex[i], 0, _itime, _time0, this->_dt, _Ai);
       }
     }
 
@@ -244,21 +249,25 @@ namespace femus {
 
     for (unsigned i = 0; i < _solName.size(); i++) {
       
-      unsigned solIndex = _solIndex[i];//this->_ml_sol->GetIndex (_solName[i].str().c_str());
+      unsigned solIndex = _solIndex[i];
       if( _solRKType[i] ) {
-        
         * (this->_solution[level]->_Sol[solIndex]) = * (this->_solution[level]->_SolOld[solIndex]);
-
         for (unsigned j = 0; j < _RK; j++) {
-
-          unsigned solkiIndex = _solKiIndex[i][j]; // this->_ml_sol->GetIndex (_solKiName[i][j].str().c_str());
-
+          unsigned solkiIndex = _solKiIndex[i][j]; 
           this->_solution[level]->_Sol[solIndex]-> add (_b[j] * this->_dt, * (this->_solution[level]->_Sol[solkiIndex]));
         }
         this->_solution[level]->_Sol[solIndex]->close();
       }
-      else{
-        unsigned solkiIndex = _solKiIndex[i][_RK-1]; //this->_ml_sol->GetIndex (_solKiName[i][_RK - 1].str().c_str());
+      else if( this->_ml_sol->GetSolutionTimeOrder(solIndex) != 2 ){
+        * (this->_solution[level]->_Sol[solIndex]) = * (this->_solution[level]->_SolOld[solIndex]);
+        this->_solution[level]->_Sol[solIndex]->scale (1. - _bAiSum);
+        for (unsigned j = 0; j < _RK; j++) {
+          unsigned solkiIndex = _solKiIndex[i][j]; 
+          this->_solution[level]->_Sol[solIndex]-> add (_bAi[j], * (this->_solution[level]->_Sol[solkiIndex]));
+        }
+      }
+      else{       
+        unsigned solkiIndex = _solKiIndex[i][_RK-1]; 
         * (this->_solution[level]->_Sol[solIndex]) = * (this->_solution[level]->_Sol[solkiIndex]);
       }
     }
@@ -292,7 +301,7 @@ namespace femus {
       for (unsigned j = 0; j < _RK; j++) {
         solu[j][i] = soluOld[i];
         for (unsigned k = 0; k < _RK; k++) {
-          solu[j][i] += this->_dt * _a[ j * _RK + k]  * solk[k][i]; // global extraction and local storage for the solution
+          solu[j][i] += this->_dt * _A[ j * _RK + k]  * solk[k][i]; // global extraction and local storage for the solution
         }
       }
     }
@@ -320,8 +329,21 @@ namespace femus {
     _RK = nRK[RKscheme]; 
     _c  = cIRK[RKscheme];
     _b  = bIRK[RKscheme];
-    _a  = aIRK[RKscheme];
-    _aI = aiIRK[RKscheme];
+    _A  = aIRK[RKscheme];
+    _Ai = aiIRK[RKscheme];
+    GetbAi();
+  }
+  
+  template <class Base>
+  void ImplicitRungeKuttaSystem<Base>::GetbAi(){
+    _bAi.assign(_RK, 0.);
+    _bAiSum = 0.;
+    for (unsigned i = 0; i <_RK; i++ ){
+      for (unsigned j = 0; j <_RK; j++ ){
+        _bAi[i] += _b[i] * _Ai[ i *_RK + j];
+      }
+      _bAiSum += _bAi[i];
+    }
   }
   
 // -----------------------------------------------------------
