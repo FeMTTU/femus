@@ -256,6 +256,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     std::vector< std::vector < double > > x2New;
                     bool theyIntersect;
                     double radius;
+                    
+                    bool ifAnyIntersection = false;
 
                     for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
@@ -271,6 +273,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         RectangleAndBallRelation ( theyIntersect, xg1[ig], radius, x2, x2New );
 
                         if ( theyIntersect ) {
+                            
+                            ifAnyIntersection = true;
 
                             for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
@@ -392,9 +396,12 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         }
                     }//end ig loop
 
-                    KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 );
+                    if(ifAnyIntersection){
+                    
+                        KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 );
 
-                    RES->add_vector_blocked ( Res, l2GMap1 );
+                        RES->add_vector_blocked ( Res, l2GMap1 );
+                    }
 
                 } //end iel loop
 
@@ -444,7 +451,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     for ( unsigned i = 0; i < nDof1; i++ ) {
 //                  Res[i] -= - 1. * weight * phi[i]; //Ax - f (so f = - 1)
 //                  Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
-                        Res[i] -=  - 2. * weight * phi[i]; //Ax - f (so f = - 2)
+                        Res[i] -=  - 4./3. * 2. * weight * phi[i]; //Ax - f (so f = - 2)
                     }
                 }
 
