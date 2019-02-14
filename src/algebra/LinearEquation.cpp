@@ -195,12 +195,12 @@ namespace femus {
 
     _KK = SparseMatrix::build().release();
 
-    if (_iproc == 0 && KKIndex.size() == 8) {
-      d_nnz[ KKoffset[KKIndex.size() - 2][_iproc] ] = KK_local_size;
-      if (_nprocs > 0) {
-        o_nnz[KKoffset[KKIndex.size() - 2][_iproc] ] =  KK_size;
-      }
-    }
+//     if (_iproc == 0 && KKIndex.size() == 8) {
+//       d_nnz[ KKoffset[KKIndex.size() - 2][_iproc] ] = KK_local_size;
+//       if (_nprocs > 0) {
+//         o_nnz[KKoffset[KKIndex.size() - 2][_iproc] ] =  KK_size;
+//       }
+//     }
 
     _KK->init (KK_size, KK_size, KK_local_size, KK_local_size, d_nnz, o_nnz);
     _KKamr = SparseMatrix::build().release();
@@ -380,9 +380,9 @@ namespace femus {
     int o_max = KKIndex[KKIndex.size() - 1u] - owned_dofs + 1;
 
     for (int i = 0; i < owned_dofs; i++) {
-      d_nnz[i] = static_cast <int> ( (*sizeDnBM_d) (IndexStart + i)) + BlgToMe_d[i].size() + 1;
+      d_nnz[i] = static_cast <int> ( (*sizeDnBM_d) (IndexStart + i)) + BlgToMe_d[i].size();// + 1;
       if (d_nnz[i] > d_max) d_nnz[i] = d_max;
-      o_nnz[i] = static_cast <int> ( (*sizeDnBM_o) (IndexStart + i)) + BlgToMe_o[i].size() + 1;
+      o_nnz[i] = static_cast <int> ( (*sizeDnBM_o) (IndexStart + i)) + BlgToMe_o[i].size();// + 1;
       if (o_nnz[i] > o_max) o_nnz[i] = o_max;
     }
 
