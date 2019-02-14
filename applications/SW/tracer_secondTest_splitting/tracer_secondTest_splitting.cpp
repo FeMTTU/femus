@@ -43,7 +43,7 @@ unsigned counter2 = 0;
 clock_t start_time = clock();
 
 bool wave = false;
-bool twostage = false;
+bool twostage = true;
 bool assembly = true; //assembly must be left always true
 bool slepc = false;
 
@@ -475,10 +475,10 @@ int main (int argc, char** args)
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = static_cast<unsigned> (floor (pow (2., 2) + 0.5));
-  //unsigned nx = static_cast<unsigned> (floor (pow (2.,/*5*/3) + 0.5));       //Grid cell size = 3.90625 m
+  //unsigned nx = static_cast<unsigned> (floor (pow (2., 2) + 0.5));
+  unsigned nx = static_cast<unsigned> (floor (pow (2.,/*5*/3) + 0.5));       //Grid cell size = 3.90625 m
   //nx += 8;
-  //nx += 2;
+  nx += 2;
 
   double length = 10.; //2 * 1465700.;
 
@@ -1133,6 +1133,9 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       else {
         unsigned CFL_pow = 3;
         MatScale(A, dt/pow(2,CFL_pow));
+        PetscReal norm1;
+        MatNorm(A, NORM_1, &norm1);
+//         std::cout << "norm 1 of (dt/2^CFL_pow A) = " << norm1 << std::endl;
 
         build_phi1Av(v, y, A, CFL_pow);
         
