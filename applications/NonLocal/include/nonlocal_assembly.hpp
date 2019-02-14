@@ -32,8 +32,8 @@ double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
 //     value = 0.;
-//     value = x[0];
-    value = x[0] * x[0];
+    value = x[0];
+//     value = x[0] * x[0];
 
 }
 
@@ -387,7 +387,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                         //END evaluate phi_i at xg2[jg] (called it ph1y)
 
-                                        double jacValue = weight1[ig] * weight2 * ( 1. / pow ( radius, 4 ) ) * ( phi1x[ig][i] -   phi1y ) * ( phi2x -  phi2y[j] );
+                                        double jacValue = weight1[ig] * weight2 * 3./4. * ( 1. / pow ( radius, 4 ) ) * ( phi1x[ig][i] -   phi1y ) * ( phi2x -  phi2y[j] );
                                         Jac[i * nDof2 + j] -= jacValue;
                                         Res[i] +=  jacValue * soluNonLoc[j];
                                     }//endl j loop
@@ -415,7 +415,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
             short unsigned ielGroup = msh->GetElementGroup ( iel );
 
-            if ( ielGroup != 5 && ielGroup != 6 ) {
                 short unsigned ielGeom = msh->GetElementType ( iel );
                 unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType );
                 unsigned nDofx1 = msh->GetElementDofNumber ( iel, xType );
@@ -450,14 +449,12 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     // up to here Res only contains A_ij*u_j, now we take out f
                     for ( unsigned i = 0; i < nDof1; i++ ) {
 //                  Res[i] -= - 1. * weight * phi[i]; //Ax - f (so f = - 1)
-//                  Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
-                        Res[i] -=  - 4./3. * 2. * weight * phi[i]; //Ax - f (so f = - 2)
+                 Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
+//                         Res[i] -=  - 2. * weight * phi[i]; //Ax - f (so f = - 2)
                     }
                 }
 
                 RES->add_vector_blocked ( Res, l2GMap1 );
-
-            }
 
         }
 
