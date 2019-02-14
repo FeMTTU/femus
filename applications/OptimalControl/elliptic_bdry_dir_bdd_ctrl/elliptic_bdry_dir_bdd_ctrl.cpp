@@ -7,7 +7,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             4  //we do control on the right (=2) face
+#define FACE_FOR_CONTROL             2  //we do control on the right (=2) face
 #define AXIS_DIRECTION_CONTROL_SIDE  1 //change this accordingly to the other variable above
 
 #include "../elliptic_param.hpp"
@@ -648,6 +648,35 @@ std::cout << "Outside ig = " << ig_bdry << " ";
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
 		  msh->_finiteElement[felt_bdry][solType_coords]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_coords_bdry,phi_coords_x_bdry,normal);
       
+ //========= fill gauss value xyz ==================   
+   // it is the JacobianSur function that defines the mapping between real quadrature points and reference quadrature points 
+   // and that is the result of how the element is oriented (how the nodes are listed)
+   // the fact is that you don't know where this boundary gauss point is located with respect to the reference VOLUME...
+   //it could be on xi = -1, xi=1, eta=-1, eta=1...
+   //what I know is that all that matters eventually is to find the corresponding REFERENCE position, because that's where I will evaluate my derivatives at the boundary,
+   // to compute the normal derivative and so on
+   //so, I propose once and for all to make a JACOBIAN FUNCTION that depends on the REAL coordinate, and yields the CANONICAL ONE.
+    
+   // The alternative to this approach, which is the most general one, is to do like I did with the cosines and so on to switch between X and Y axis,
+   // but as soon as you'll have an inclined boundary you'll be stuck. So let's go general
+      
+   //The problem with the general approach is that the Gauss evaluation is done INSIDE this Gauss loop, instead of being done once and for all OUTSIDE
+   //One should build a map that says: 
+   // "if this is the face(top/bottome/left/right) in the reference element AND if the real face is oriented concordantly/discordantly with respect to the reference face, then    
+   // use this point or the other point..." Not very convenient
+      
+   //Another problem with the general approach is that it is the INVERSION of the JACOBIAN MAPPING, and that can only be done when the mapping is a LINEAR FUNCTION...
+      
+   std::fill(coord_at_qp_bdry.begin(), coord_at_qp_bdry.end(), 0.);
+    for (unsigned  d = 0; d < dim; d++) {
+        	for (unsigned i = 0; i < x_bdry[d].size(); i++) {
+               coord_at_qp_bdry[d] += x_bdry[d][i] * phi_coords_bdry[i];
+            }
+std::cout <<  " qp_" << d << " " << coord_at_qp_bdry[d];
+    }
+    
+  //========= fill gauss value xyz ==================   
+  
           if (kelGeom != QUAD) { std::cout << "VolumeShapeAtBoundary not implemented" << std::endl; abort(); } 
 		  msh->_finiteElement[kelGeom][solType_adj]->VolumeShapeAtBoundary(x,x_bdry,jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
@@ -658,15 +687,6 @@ std::cout << "Outside ig = " << ig_bdry << " ";
 //                 }
 //               }
 
- //========= fill gauss value xyz ==================   
-   std::fill(coord_at_qp_bdry.begin(), coord_at_qp_bdry.end(), 0.);
-    for (unsigned  d = 0; d < dim; d++) {
-        	for (unsigned i = 0; i < x_bdry[d].size(); i++) {
-               coord_at_qp_bdry[d] += x_bdry[d][i] * phi_coords_bdry[i];
-            }
-std::cout <<  " qp_" << d << " " << coord_at_qp_bdry[d];
-    }
-  //========= fill gauss value xyz ==================   
       
       
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================

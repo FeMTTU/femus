@@ -1715,6 +1715,42 @@ namespace femus {
 
 
 //---------------------------------------------------------------------------------------------------------
+  template <class type>
+  void elem_type_2D::Jacobian_at_point(const vector < vector < double > >& vt, 
+                                       const vector < double >& pos_in, 
+                                       vector < double >& pos_out) const {
+      
+      
+/*    vector <double> phi(_nc);
+    vector <double> gradphi(_nc * 2);
+
+    vector <double> dphidxi(_nc);
+    vector <double> dphideta(_nc);
+
+       
+    for(int j = 0; j < _nc; j++) {
+           phi[j] = _pt_basis->eval_phi(_IND[j], &xi[0]);
+       dphidxi[j] = _pt_basis->eval_dphidx(_IND[j], &xi[0]);
+      dphideta[j] = _pt_basis->eval_dphidy(_IND[j], &xi[0]);
+     }
+                                           
+                                           
+                                           
+    type Jac[2][2] = {{0, 0}, {0, 0}};
+    type JacI[2][2];
+    
+    
+     for(int inode = 0; inode < _nc; inode++) {
+      Jac[0][0] += (*dxi) * vt[0][inode];
+      Jac[0][1] += (*dxi) * vt[1][inode];
+      Jac[1][0] += (*deta) * vt[0][inode];
+      Jac[1][1] += (*deta) * vt[1][inode];
+    }*/    
+      
+                                               
+  }
+
+//---------------------------------------------------------------------------------------------------------
 
   void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, 
                                            const vector < vector < double> > & vt_bdry,  

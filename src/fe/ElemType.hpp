@@ -446,7 +446,10 @@ namespace femus
         return _dphideta[ig];
       }
 
-  void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+     void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+
+     template <class type>
+     void Jacobian_at_point(const vector < vector < double > >& vt, const vector < double >& pos_in, vector < double >& pos_out) const;
 
   private:
       double** _phi;
