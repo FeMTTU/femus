@@ -24,7 +24,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob);
 bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time){
   bool test = 1; //Dirichlet
-  value = 7.;
+  value = 0.;
 
   if(!strcmp(name,"u")) {
     if (1==FaceName) { //inflow
@@ -55,7 +55,7 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
            double value = 0.;
 
              if(!strcmp(name,"u")) {
-                 value = 7.;
+                 value = sin(M_PI * x[0]) * sin(M_PI * x[1]);
              }
 
            
@@ -156,7 +156,6 @@ int main(int argc,char **args) {
     // ======= Final Print ========================
     if ( !(time_step%write_interval) ) {
 
-    // ======= Final Print ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
   ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted,time_step);    // print solutions
@@ -192,14 +191,14 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   MultiLevelSolution *ml_sol			      = ml_prob._ml_sol;
-  Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
-  LinearEquationSolver*  mylsyspde	              = mlPdeSys->_LinSolver[level];
+  Solution*	 sol  	                      = ml_sol->GetSolutionLevel(level);
+  LinearEquationSolver*  pdeSys	              = mlPdeSys->_LinSolver[level];
   const char* pdename                                 = mlPdeSys->name().c_str();
 
   Mesh*		 msh    	   = ml_prob._ml_msh->GetLevel(level);
   elem*		 myel		   = msh->el;
-  SparseMatrix*	 KK	 	   = mylsyspde->_KK;
-  NumericVector* RES 		   = mylsyspde->_RES;
+  SparseMatrix*	 KK	 	   = pdeSys->_KK;
+  NumericVector* RES 		   = pdeSys->_RES;
 
   //data
   const unsigned dim = msh->GetDimension();
@@ -255,52 +254,48 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
       SolFEType[ivar] = ml_sol->GetSolutionType  ( SolIndex[ivar]);
   }
   
+  //------------ quantities (at quadrature points) ---------------------
+            vector<double>        sol_qp(n_unknowns);
+            vector<double>    sol_old_qp(n_unknowns);
+    vector< vector<double> > sol_grad_qp(n_unknowns);
+    vector< vector<double> > sol_old_grad_qp(n_unknowns);
+    
+      std::fill(sol_qp.begin(), sol_qp.end(), 0.);
+      std::fill(sol_old_qp.begin(), sol_old_qp.end(), 0.);
+    for (unsigned  k = 0; k < n_unknowns; k++) {
+        sol_grad_qp[k].resize(dim);
+        std::fill(sol_grad_qp[k].begin(), sol_grad_qp[k].end(), 0.);
+        sol_old_grad_qp[k].resize(dim);
+        std::fill(sol_old_grad_qp[k].begin(), sol_old_grad_qp[k].end(), 0.);
+    }
 
-  // declare
-  vector< int > metis_node2;
-  vector< vector< int > > KK_dof(n_unknowns);
-//   vector<double> phi2;
-  vector<double> gradphi2;
-  vector<double> nablaphi2;
-  double Weight2;
-  double normal[3];
+  //----------- quantities (at dof objects) ------------------------------
+  vector < vector < double > >     sol_eldofs(n_unknowns);
+  vector < vector < double > >     sol_old_eldofs(n_unknowns);
+  for(int k=0; k<n_unknowns; k++) { sol_eldofs[k].reserve(max_size);
+                                sol_old_eldofs[k].reserve(max_size);
+   }
+  
+  //******** linear system *******************************************  
+  vector < vector < int > > L2G_dofmap(n_unknowns);     for(int i = 0; i < n_unknowns; i++) { L2G_dofmap[i].reserve(max_size); }
+            vector< int >   L2G_dofmap_AllVars; L2G_dofmap_AllVars.reserve( n_unknowns*max_size );
+          
   vector< vector< double > > F(n_unknowns);
   vector< vector< vector< double > > > B(n_unknowns);
 
-  metis_node2.reserve(max_size);
-  gradphi2.reserve(max_size*dim);
-  nablaphi2.reserve(max_size*(3*(dim-1)));
-  for(int i=0;i<dim;i++) {
-    KK_dof[i].reserve(max_size);
-  }
+   for(int i = 0; i < n_unknowns; i++) F[i].reserve(max_size);
 
-  for(int i = 0; i < n_unknowns; i++) F[i].reserve(max_size);
-
-
-  for(int i = 0; i < n_unknowns; i++) {
+   for(int i = 0; i < n_unknowns; i++) {
     B[i].resize(n_unknowns);
     for(int j = 0; j < n_unknowns; j++) {
       B[i][j].reserve(max_size*max_size);
     }
   }
 
-
-  vector < double > Sol(1);
-  vector < vector < double > > gradSol(dim);
-  for(int i = 0; i < dim; i++) {
-    gradSol[i].resize(dim);
-  }
-
-  vector < double > SolOld(n_unknowns);
-  vector < vector < double > > gradSolOld(dim);
-  for(int i = 0; i < dim; i++) {
-    gradSolOld[i].resize(dim);
-  }
-  //vector < double > AccSol(dim);
-
-  // Set to zeto all the entries of the matrix
-  KK->zero();
+  
+  // Set to zero all the entries of the matrix
   RES->zero();
+   KK->zero();
 
   // *** element loop ***
 
@@ -321,45 +316,47 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
     }
  //***************************************************  
     
+   //all vars###################################################################  
+  for (unsigned  k = 0; k < n_unknowns; k++) {
+    unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+	   Sol_n_el_dofs[k] = ndofs_unk;
+          sol_eldofs[k].resize(ndofs_unk);
+      sol_old_eldofs[k].resize(ndofs_unk);
+          L2G_dofmap[k].resize(ndofs_unk); 
+    for (unsigned i = 0; i < ndofs_unk; i++) {
+           unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);                        // global to global mapping between solution node and solution dof // via local to global solution node
+           sol_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);                            // global extraction and local storage for the solution
+       sol_old_eldofs[k][i] = (*sol->_SolOld[SolIndex[k]])(solDof);                            // global extraction and local storage for the solution
+           L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+      }
+    }
     
     
+    unsigned nDof_AllVars = 0;
+    for (unsigned  k = 0; k < n_unknowns; k++) { nDof_AllVars += Sol_n_el_dofs[k]; }
+ // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
+    int nDof_max    =  0;   
+      for (unsigned  k = 0; k < n_unknowns; k++)     {
+          if(Sol_n_el_dofs[k] > nDof_max)    nDof_max = Sol_n_el_dofs[k];
+      }
     
-    unsigned nve2 = msh->GetElementDofNumber(iel,SolFEType[0]);
 
-    //set to zero all the entries of the FE matrices
-    metis_node2.resize(nve2);
-    gradphi2.resize(nve2*dim);
-    nablaphi2.resize(nve2*(3*(dim-1)));
+     for(int k = 0; k < n_unknowns; k++) {
+     L2G_dofmap[k].resize(Sol_n_el_dofs[k]);
 
-
-    
-    for(int ivar=0; ivar<n_unknowns; ivar++) {
-      KK_dof[ivar].resize(nve2);
-
-      F[SolPdeIndex[ivar]].resize(nve2);
-      memset(&F[SolPdeIndex[ivar]][0],0,nve2*sizeof(double));
+      F[SolPdeIndex[k]].resize(Sol_n_el_dofs[k]);
+      memset(&F[SolPdeIndex[k]][0], 0., Sol_n_el_dofs[k]*sizeof(double));
 
 
-      B[SolPdeIndex[ivar]][SolPdeIndex[ivar]].resize(nve2*nve2);
-      memset(&B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][0],0,nve2*nve2*sizeof(double));
-
+      B[SolPdeIndex[k]][SolPdeIndex[k]].resize(Sol_n_el_dofs[k] * Sol_n_el_dofs[k]);
+      memset(&B[SolPdeIndex[k]][SolPdeIndex[k]][0], 0., Sol_n_el_dofs[k] * Sol_n_el_dofs[k] * sizeof(double));
     }
 
+  //all vars###################################################################    
 
 
-
-    for( unsigned i=0;i<nve2;i++) {
-      unsigned inode_metis=msh->GetSolutionDof(i, iel, 2);
-      metis_node2[i]=inode_metis;
-      for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-           KK_dof[ivar][i]=mylsyspde->GetSystemDof(SolIndex[ivar],SolPdeIndex[ivar],i, iel);
-        }
-    }
-
-
-
-      // *** Gauss poit loop ***
-      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      // *** quadrature loop ***
+      for(unsigned ig = 0; ig < ml_prob._ml_msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
           
       // *** get gauss point weight, test function and test function partial derivatives ***
       for(int fe=0; fe < NFE_FAMS; fe++) {
@@ -367,66 +364,57 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
       }
    //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
          msh->_finiteElement[ielGeom][coords_fe_type]->Jacobian(coords_at_dofs,ig,weight_qp,phi_fe_qp[coords_fe_type],phi_x_fe_qp[coords_fe_type],phi_xx_fe_qp[coords_fe_type]);
-          
-	//velocity variable
-	for(unsigned ivar=0; ivar<n_unknowns; ivar++) {
-	  Sol[ivar]=0.;
-	  SolOld[ivar]=0.;
-	  //AccSol[ivar]=0.;
-	  for(unsigned ivar2=0; ivar2<dim; ivar2++){
-	    gradSol[ivar][ivar2]=0;
-	    gradSolOld[ivar][ivar2]=0;
-	  }
-	  unsigned SolIndex=ml_sol->GetIndex(&Solname[ivar][0]);
-	  unsigned SolType =ml_sol->GetSolutionType(&Solname[ivar][0]);
-	  for(unsigned i=0; i<nve2; i++) {
-	    double soli    = (*mysolution->_Sol[SolIndex])(metis_node2[i]);
-	    double sololdi = (*mysolution->_SolOld[SolIndex])(metis_node2[i]);
-	    Sol[ivar]    += phi_fe_qp[ SolFEType[0] ][i]*soli;
-	    SolOld[ivar] += phi_fe_qp[ SolFEType[0] ][i]*sololdi;
-	    for(unsigned ivar2=0; ivar2<dim; ivar2++){
-	      gradSol[ivar][ivar2]    += gradphi2[i*dim+ivar2]*soli;
-	      gradSolOld[ivar][ivar2] += gradphi2[i*dim+ivar2]*sololdi;
-	    }
-	  }
-	}
+         
 
+ //========= fill gauss value quantities ==================   
+   std::fill(sol_qp.begin(), sol_qp.end(), 0.);
+   std::fill(sol_old_qp.begin(), sol_old_qp.end(), 0.);
+   for (unsigned  k = 0; k < n_unknowns; k++) { std::fill(sol_grad_qp[k].begin(), sol_grad_qp[k].end(), 0.); 
+                                                std::fill(sol_old_grad_qp[k].begin(), sol_old_grad_qp[k].end(), 0.);
+                                            }
+    
+    for (unsigned  k = 0; k < n_unknowns; k++) {
+	for (unsigned i = 0; i < Sol_n_el_dofs[k]; i++) {
+	                                                         sol_qp[k]    +=     sol_eldofs[k][i] *   phi_fe_qp[SolFEType[k]][i];
+	                                                     sol_old_qp[k]    += sol_old_eldofs[k][i] *   phi_fe_qp[SolFEType[k]][i];
+                   for (unsigned d = 0; d < dim; d++) {      sol_grad_qp[k][d] +=     sol_eldofs[k][i] * phi_x_fe_qp[SolFEType[k]][i * dim + d]; 
+                                                         sol_old_grad_qp[k][d] += sol_old_eldofs[k][i] * phi_x_fe_qp[SolFEType[k]][i * dim + d]; 
+                                     }
+       }        
+    }
+ //========= fill gauss value quantities ==================
+         
 
 	// *** phi_i loop ***
-	for(unsigned i=0; i<nve2; i++){
+	for(unsigned i=0; i<nDof_max; i++){
 
 	  //BEGIN RESIDUALS A block ===========================
-	  for(unsigned ivar=0; ivar<n_unknowns; ivar++) {
-	    double Lap_rhs=0;
-	    double Lap_old_rhs=0;
-	    for(unsigned ivar2=0; ivar2< dim; ivar2++) {
-	      Lap_rhs 	  += gradphi2[i*dim+ivar2]*gradSol[ivar][ivar2];
-	      Lap_old_rhs += gradphi2[i*dim+ivar2]*gradSolOld[ivar][ivar2];
+	    double Lap_rhs = 0.;
+	    double Lap_old_rhs = 0.;
+	    for(unsigned d = 0;  d < dim;  d++) {
+	      Lap_rhs 	  += phi_x_fe_qp[SolFEType[0]][i * dim + d] *     sol_grad_qp[0][d];
+	      Lap_old_rhs += phi_x_fe_qp[SolFEType[0]][i * dim + d] * sol_old_grad_qp[0][d];
 	    }
-	    F[SolPdeIndex[ivar]][i] += ( 
-                    -theta*dt*Lap_rhs                           // Laplacian
-					-(1.-theta)*dt*Lap_old_rhs                  // Laplacian
-					+dt*Sol[dim]*gradphi2[i*dim+ivar]                  // pressure
-					-(Sol[ivar] - SolOld[ivar])*phi_fe_qp[ SolFEType[0] ][i]        // acceleration
-	    )*Weight2;
-	  }
+	    F[SolPdeIndex[0]][i] += weight_qp * ( 
+                    -       theta  * dt * Lap_rhs                           // Laplacian
+					- (1. - theta) * dt * Lap_old_rhs                  // Laplacian
+					- (sol_qp[0] - sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i]        // acceleration
+            );
 	  //END RESIDUALS A block ===========================
 
 	  {
 	    // *** phi_j loop ***
-	    for(unsigned j=0; j<nve2; j++) {
-	      double Lap = 0.;
-          double Mass = phi_fe_qp[ SolFEType[0] ][i]*phi_fe_qp[ SolFEType[0] ][j]*Weight2;
-          
-	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		// Laplacian
-		Lap  += gradphi2[i*dim+ivar]*gradphi2[j*dim+ivar]*Weight2;
-		// advection term I
+	    for(unsigned j=0; j<nDof_max; j++) {
+            
+          double Mass = phi_fe_qp[ SolFEType[0] ][i]*phi_fe_qp[ SolFEType[0] ][j];
+
+          double Lap_mat = 0.;
+          for(unsigned d = 0; d < dim; d++) {
+	        Lap_mat  += phi_x_fe_qp[SolFEType[0]][i * dim + d] * phi_x_fe_qp[SolFEType[0]][j * dim + d];
 	      }
 
-	      for(unsigned ivar=0; ivar< n_unknowns; ivar++) {
-		B[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nve2+j] += theta*dt*Lap + Mass;
-	      }
+		B[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * theta * dt * (Lap_mat + Mass);
+	      
   	    } //end phij loop
 
 	  } // endif assemble_matrix
@@ -439,8 +427,8 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 //--------------------------------------------------------------------------------------------------------
     //Sum the local matrices/vectors into the Global Matrix/Vector
     for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-      RES->add_vector_blocked(F[SolPdeIndex[ivar]],KK_dof[ivar]);
-      KK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[ivar]],KK_dof[ivar],KK_dof[ivar]);
+      RES->add_vector_blocked(F[SolPdeIndex[ivar]],L2G_dofmap[ivar]);
+      KK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[ivar]],L2G_dofmap[ivar],L2G_dofmap[ivar]);
     }
     //--------------------------------------------------------------------------------------------------------
   } //end list of elements loop for each subdomain
