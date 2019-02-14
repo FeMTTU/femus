@@ -24,7 +24,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob);
 bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time){
   bool test = 1; //Dirichlet
-  value = 0.;
+  value = 7.;
 
   if(!strcmp(name,"u")) {
     if (1==FaceName) { //inflow
@@ -55,7 +55,7 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
            double value = 0.;
 
              if(!strcmp(name,"u")) {
-                 value = 0.;
+                 value = 7.;
              }
 
            
@@ -153,14 +153,6 @@ int main(int argc,char **args) {
     // ======= Time Loop ========================
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
-    // ======= Solve ========================
-    std::cout << std::endl;
-    std::cout << " *********** Timedep ************  " << std::endl;
-    ml_prob.get_system("Timedep").MLsolve();
-
-    //update Solution
-    ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep").CopySolutionToOldSolution();
-
     // ======= Final Print ========================
     if ( !(time_step%write_interval) ) {
 
@@ -170,6 +162,15 @@ int main(int argc,char **args) {
   ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted,time_step);    // print solutions
 
     }
+    
+    // ======= Solve ========================
+    std::cout << std::endl;
+    std::cout << " *********** Timedep ************  " << std::endl;
+    ml_prob.get_system("Timedep").MLsolve();
+
+    //update Solution
+    ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep").CopySolutionToOldSolution();
+
 
   } //end loop timestep
 
