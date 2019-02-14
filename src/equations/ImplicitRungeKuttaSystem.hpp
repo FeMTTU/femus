@@ -258,7 +258,7 @@ namespace femus {
         }
         this->_solution[level]->_Sol[solIndex]->close();
       }
-      else if( this->_ml_sol->GetSolutionTimeOrder(solIndex) != 2 ){
+      else if( this->_ml_sol->GetSolutionTimeOrder(solIndex) == 2 ){
         * (this->_solution[level]->_Sol[solIndex]) = * (this->_solution[level]->_SolOld[solIndex]);
         this->_solution[level]->_Sol[solIndex]->scale (1. - _bAiSum);
         for (unsigned j = 0; j < _RK; j++) {
