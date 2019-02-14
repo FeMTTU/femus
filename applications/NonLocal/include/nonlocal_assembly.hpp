@@ -25,8 +25,8 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, maxTest1: both 0.4, maxTest2: both 0.1.
-double delta1 = 0.4; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.4;
+double delta1 = 0.1; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.1;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
@@ -442,8 +442,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                     // up to here Res only contains A_ij*u_j, now we take out f
                     for ( unsigned i = 0; i < nDof1; i++ ) {
-//                  Res[i] -= - 1. * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 1)
-//                  Res[i] -= 0. * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
+//                  Res[i] -= - 1. * weight * phi[i]; //Ax - f (so f = - 1)
+//                  Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
                         Res[i] -=  - 2. * weight * phi[i]; //Ax - f (so f = - 2)
                     }
                 }
