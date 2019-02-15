@@ -24,8 +24,8 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-//DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, maxTest1: both 0.4, maxTest2: both 0.1.
-double delta1 = 0.4; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+//DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, martaTes4: 1, maxTest1: both 0.4, maxTest2: both 0.1.
+double delta1 = 0.5; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
 double delta2 = 0.4;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
@@ -192,11 +192,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                         for ( unsigned k = 0; k < dim; k++ ) {
                             x2[k][j] = ( *msh->_topology->_Sol[k] ) ( xDof );
-
-                            if ( jel == 68 ) std::cout <<  "x2[" << k << "][" << j << "] = " << x2[k][j] << " " ;
                         }
-
-                        if ( jel == 68 ) std::cout << std::endl;
                     }
                 }
 
@@ -237,11 +233,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                         for ( unsigned k = 0; k < dim; k++ ) {
                             x1[k][i] = ( *msh->_topology->_Sol[k] ) ( xDof );
-
-                            if ( iel == 66 && jel == 68 ) std::cout <<  "x1[" << k << "][" << i << "] = " << x1[k][i] << " " ;
                         }
-
-                        if ( iel == 66 && jel == 68 ) std::cout << std::endl;
                     }
 
                     unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
@@ -259,28 +251,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                 xg1[ig][k] += x1[k][i] * phi1x[ig][i];
                             }
                         }
-                    }
-
-                    if ( iel == 66 && jel == 68 ) {
-
-                        for ( unsigned ig = 0; ig < igNumber; ig++ ) {
-
-                            std::cout << "ig = " << ig << " , coordinates of ig :";
-
-                            for ( unsigned k = 0; k < dim; k++ ) {
-                                std::cout << xg1[ig][k] << " , ";
-                            }
-
-                            std::cout << std::endl;
-
-                            for ( unsigned i = 0; i < nDof1; i++ ) {
-                                std::cout<< "dof i = " << i << " phi value at ig =" << ig << " is : " << phi1x[ig][i];
-                            }
-                            
-                            std::cout<<std::endl;
-                            
-                        }
-
                     }
 
                     std::vector< std::vector < double > > x2New;
@@ -340,27 +310,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             //END evaluate phi_j at xg2[jg] (called it phi2y)
 
-                            if ( iel == 66 && jel == 68 ) {
-
-                                std::cout << "ig = " << ig << std::endl;
-
-                                double phiii = 0.;
-                                
-                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
-                                    std::cout << weight2[jg] << " " << phi2y[jg][3] << std::endl;
-                                    
-                                    if(ig == 0) phiii = 0.166667;
-                                    else if (ig == 1) phiii = 0.0446582;
-                                    else if (ig == 2) phiii = 0.622008;
-                                    else phiii = 0.166667;
-                                    
-                                    
-                                    sumPhi_j[ig] +=  weight2[jg] * ( phiii - phi2y[jg][3] );
-                                }
-
-                                std::cout << "integral of phi_j=" << 3 <<  " = " << sumPhi_j[ig] << std::endl;
-                            }
-
                             for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
                                 for ( unsigned i = 0; i < nDof1; i++ ) {
@@ -369,35 +318,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                     double phi1y = 0.;
 
-                                    std::vector< std::vector <unsigned > > sameNodePhi1y ( dim );
-
-                                    for ( unsigned n = 0; n < dim; n++ ) {
-                                        sameNodePhi1y[n].assign ( nDof2, 0 );
-
-                                        for ( unsigned j = 0; j < nDof2; j++ ) {
-                                            if ( x1[n][i] == x2[n][j] ) sameNodePhi1y[n][j] = 1;
-                                        }
-                                    }
-
-                                    std::vector<unsigned> areTheyTheSamePh1y ( nDof2, 0 );
-
+                                    unsigned iDof  = msh->GetSolutionDof ( i, iel, soluType );
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
-                                        for ( unsigned n = 0; n < dim; n++ ) {
-                                            areTheyTheSamePh1y[j] += sameNodePhi1y[n][j];
-                                        }
-                                    }
+                                        unsigned jDof  = msh->GetSolutionDof ( j, jel, soluType );
 
-
-                                    for ( unsigned j = 0; j < nDof2; j++ ) {
-                                        if ( areTheyTheSamePh1y[j] == dim ) {
+                                        if ( iDof == jDof ) {
                                             phi1y = phi2y[jg][j];
-
-                                            if ( iel == 66 && jel == 68 ) std::cout << "i = " << i << " , " << " phi1y non zero, same as dof j = " << j << std::endl;
+                                            break;
                                         }
                                     }
-
-
 
                                     //END evaluate phi_i at xg2[jg] (called it ph1y)
 
@@ -406,22 +336,13 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         //BEGIN evaluate phi_j at xg1[ig] (called it phi2x)
                                         double phi2x = 0.;
 
-                                        std::vector<unsigned> areTheyTheSamePhi2x ( nDof1, 0 );
-
-                                        for ( unsigned n = 0; n < dim; n++ ) {
-                                            for ( unsigned ii = 0; ii < nDof1; ii++ ) {
-                                                if ( x2[n][j] == x1[n][ii] ) areTheyTheSamePhi2x[ii]++;
-                                            }
-                                        }
+                                        unsigned jDof  = msh->GetSolutionDof ( j, jel, soluType );
 
                                         for ( unsigned ii = 0; ii < nDof1; ii++ ) {
-                                            if ( areTheyTheSamePhi2x[ii] == dim ) {
+                                            unsigned iiDof  = msh->GetSolutionDof ( ii, iel, soluType );
+
+                                            if ( jDof == iiDof ) {
                                                 phi2x = phi1x[ig][ii];
-
-                                                if ( iel == 66 && jel == 68 && j == 3) { 
-                                                     std::cout.precision(14);
-                                                    std::cout << "i = " << i << " , " << "j = " << j << " phi2x non zero, same as dof ii = " << ii << " , " << "phi2x = " << phi2x << std::endl;}
-
                                                 break;
                                             }
                                         }
@@ -438,29 +359,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     }//end ig loop
 
                     if ( ifAnyIntersection ) {
-
-                        if ( iel == 66 && jel == 68 ) {
-
-                            double entry = 0.;
-
-                            for ( unsigned ig = 0; ig < igNumber; ig++ ) {
-                                entry += 3. / 4. * ( 1. / pow ( 0.4, 4 ) ) * phi1x[ig][0] * sumPhi_j[ig] * weight1[ig];
-                                std::cout<<"entry partial sums " << entry << std::endl;
-                            }
-
-                            std::cout << "A[" << 0 << "][" << 3 << "]= " << entry << std::endl;
-
-                            std::cout << " iel = " << iel << " , " << " jel = " << jel << std::endl;
-
-                            for ( unsigned i = 0; i < nDof1; i++ ) {
-                                for ( unsigned j = 0; j < nDof2; j++ ) {
-                                    std::cout << Jac[i * nDof2 + j] <<  " " ;
-                                }
-
-                                std::cout << std::endl;
-                            }
-
-                        }
 
                         KK->add_matrix_blocked ( Jac, l2GMap1, l2GMap2 );
 
