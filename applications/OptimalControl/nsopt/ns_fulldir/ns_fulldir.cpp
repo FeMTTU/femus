@@ -24,11 +24,11 @@ bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName
   //1: bottom  //2: right  //3: top  //4: left
   
   bool dirichlet = true;
-   value = 0.;
+  value = 0.;
   
 // TOP ==========================  
       if (facename == 3) {
-       if (!strcmp(SolName, "U"))    { value = 7.; } //lid - driven
+       if (!strcmp(SolName, "U"))    { value = 70.; } //lid - driven
   else if (!strcmp(SolName, "V"))    { value = 0.; } 
   	
       }
@@ -90,7 +90,7 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 5;
+    maxNumberOfMeshes = 3;
   } else {
     maxNumberOfMeshes = 4;
   }
@@ -219,7 +219,7 @@ int main(int argc, char** args) {
 
 //   delete mlSol_all_levels; 
 
-   std::vector< std::string > norm_names = {"L2-NORM of U","L2-NORM of V", "L2-NORM of P" , "L2-Norm of U and V"};
+   std::vector< std::string > norm_names = {"L2-NORM of U","L2-NORM of V", "L2-NORM of P" , "L2-Norm of div U"};
 
    for(int j = 0; j <  NO_OF_NORMS; j++)  {
   std::cout << std::endl;
@@ -480,7 +480,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
       for (unsigned i = 0; i < nDofsV; i++) {
         for (unsigned  k = 0; k < dim; k++) {
-          solV_gss[k] += phiV[i] * solV[k][i];
+          solV_gss[k] += phiV[i] * solV[k][i];    
         }
 
         for (unsigned j = 0; j < dim; j++) {
@@ -503,7 +503,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned  k = 0; k < dim; k++) {
-            NSV[k]   +=  IRe * phiV_x[i * dim + j] * (gradSolV_gss[k][j] /*+ gradSolV_gss[j][k]*/)
+            NSV[k]   +=  IRe * phiV_x[i * dim + j] * (gradSolV_gss[k][j]/* + gradSolV_gss[j][k]*/)
                         + advection_flag * phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
           }
         }
@@ -1193,6 +1193,8 @@ double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongat
 	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
 	  SolVAR_qp[unk] = 0.;
 	  SolVAR_coarser_prol_qp[unk] = 0.;
+      gradSolVAR_qp[unk].resize(dim);  
+      gradSolVAR_coarser_prol_qp[unk].resize(dim);  
 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
 	    gradSolVAR_qp[unk][ivar2] = 0.; 
 	    gradSolVAR_coarser_prol_qp[unk][ivar2] = 0.; 
@@ -1218,8 +1220,8 @@ double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongat
         
      } 
      
- for(int k = 0; k < dim; k++){
-    l2norm[n_unknowns] += (SolVAR_qp[k] - SolVAR_coarser_prol_qp[k] ) * ( SolVAR_qp[k] - SolVAR_coarser_prol_qp[k] ) * weight ;
+  for(int k = 0; k < dim; k++){
+    l2norm[n_unknowns] += (gradSolVAR_qp[k][k] - gradSolVAR_coarser_prol_qp[k][k] ) * ( gradSolVAR_qp[k][k] - gradSolVAR_coarser_prol_qp[k][k] ) * weight ;
  }
      
     } // end gauss point loop
