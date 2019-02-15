@@ -99,9 +99,18 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
 
  //***** set target domain flag ******
  // flag = 1: we are in the lifting nonzero domain
-  int control_el_flag = 1.;
-   if ( elem_center[0] >  0.7) { control_el_flag = 1; }
-
+  int control_el_flag = 0.;
+  
+  double control_domain_width = 0.3;
+  
+  double target_line_sign;
+  double extreme_pos;
+  
+        if (FACE_FOR_CONTROL == 3 || FACE_FOR_CONTROL == 2) { target_line_sign = -1; extreme_pos = 1.;}
+   else if (FACE_FOR_CONTROL == 1 || FACE_FOR_CONTROL == 4) { target_line_sign = 1;  extreme_pos = 0.;}
+   
+   if (  target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] <   target_line_sign * ( extreme_pos + target_line_sign * control_domain_width )) { control_el_flag = 1; }
+   
      return control_el_flag;
 
 }
