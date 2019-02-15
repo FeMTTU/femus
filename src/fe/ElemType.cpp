@@ -1715,10 +1715,78 @@ namespace femus {
 
 
 //---------------------------------------------------------------------------------------------------------
+  template <class type>
+  void elem_type_2D::Jacobian_at_point(const vector < vector < double > >& vt, 
+                                       const vector < double >& pos_in, 
+                                       vector < double >& pos_out) const {
+      
+      
+/*    vector <double> phi(_nc);
+    vector <double> gradphi(_nc * 2);
 
-  void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry, const unsigned& ig, 
-                                   vector < double >& phi, vector < double >& gradphi) const {
+    vector <double> dphidxi(_nc);
+    vector <double> dphideta(_nc);
+
+       
+    for(int j = 0; j < _nc; j++) {
+           phi[j] = _pt_basis->eval_phi(_IND[j], &xi[0]);
+       dphidxi[j] = _pt_basis->eval_dphidx(_IND[j], &xi[0]);
+      dphideta[j] = _pt_basis->eval_dphidy(_IND[j], &xi[0]);
+     }
+                                           
+                                           
+                                           
+    type Jac[2][2] = {{0, 0}, {0, 0}};
+    type JacI[2][2];
+    
+    
+     for(int inode = 0; inode < _nc; inode++) {
+      Jac[0][0] += (*dxi) * vt[0][inode];
+      Jac[0][1] += (*dxi) * vt[1][inode];
+      Jac[1][0] += (*deta) * vt[0][inode];
+      Jac[1][1] += (*deta) * vt[1][inode];
+    }*/    
+      
+                                               
+  }
+
+//---------------------------------------------------------------------------------------------------------
+
+  void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, 
+                                           const vector < vector < double> > & vt_bdry,  
+                                           const unsigned& jface, 
+                                           const unsigned& ig_bdry, 
+                                           vector < double >& phi, 
+                                           vector < double >& gradphi) const {
                                        
+
+//********* EVALUATION STAGE **********************
+                                       
+    //check that our volume element shape is a quadrilateral, doesn't work for triangles for now
+    std::vector<int> face_orient_ref(_dim);     std::fill(face_orient_ref.begin(), face_orient_ref.end(), 0.);
+    std::vector<double> face_orient_real(_dim);    std::fill(face_orient_real.begin(), face_orient_real.end(), 0.);
+    double xi_factor;
+        
+    if      (jface == 0) { face_orient_ref[0]  = 1;  face_orient_ref[1] =  0; xi_factor = -1; }
+    else if (jface == 1) { face_orient_ref[0]  = 0;  face_orient_ref[1] =  1; xi_factor = +1; }
+    else if (jface == 2) { face_orient_ref[0] =  1;  face_orient_ref[1] =  0; xi_factor = +1; }
+    else if (jface == 3) { face_orient_ref[0]  = 0;  face_orient_ref[1] =  1; xi_factor = -1; }
+    
+    face_orient_real[0] = vt_bdry[0][1] - vt_bdry[0][0]; 
+    face_orient_real[1] = vt_bdry[1][1] - vt_bdry[1][0];
+    
+    double magn = 0.;
+    for (unsigned d = 0; d < _dim; d++) magn += face_orient_real[d]*face_orient_real[d]; 
+        
+     magn = sqrt(magn);
+    
+    for (unsigned d = 0; d < _dim; d++) { face_orient_real[d] /= magn; }
+    
+    double cosine_theta = 0.; 
+    for (unsigned d = 0; d < _dim; d++) cosine_theta += face_orient_real[d]*face_orient_ref[d];
+
+    
+    
     //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
     //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
     //we should access the bdry element and compute the abscissa using the coordinates of it
@@ -1727,36 +1795,54 @@ namespace femus {
     //we need to understand:
     // 1) where my boundary element is located in the reference volume element
     // 2) in what direction it is oriented
+    
+    //here we compute for ALL quadrature points and for ALL dofs the test functions
     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
     
     const double* pt_one_dim[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
     
-    for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      double x_one_dim[1];
-      for (unsigned j = 0; j < 1; j++) {
-        x_one_dim[j] = *pt_one_dim[j];
-        pt_one_dim[j]++;
+    std::vector < std::vector<double> > xi_qps(n_gauss_bdry);
+    for (unsigned qp = 0; qp < n_gauss_bdry; qp++) { xi_qps[qp].resize(_dim); }
+    
+std::cout << "Inside  ig = " << ig_bdry << " ";
+for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
+        
+      double xi_one_dim[1];
+      for (unsigned d = 0; d < 1; d++) {
+        xi_one_dim[d] = *pt_one_dim[d];
+        pt_one_dim[d]++;
+      }
+
+//here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
+      std::vector <double> xi_vol(2);
+             xi_vol[1-abs(face_orient_ref[0])] = cosine_theta * xi_one_dim[0]; 
+             xi_vol[abs(face_orient_ref[0])]   = xi_factor * 1.;
+      
+             
+      for (int dof = 0; dof < _nc; dof++) {
+             _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &xi_vol[0]);
+         _dphidxi_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &xi_vol[0]);
+        _dphideta_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &xi_vol[0]);
       }
       
-      double x_vol[2];
-             x_vol[0] = -x_one_dim[0]; 
-             x_vol[1] = +1.;
-      
-      for (int j = 0; j < _nc; j++) {
-        _phi_bdry[i][j]      = _pt_basis->eval_phi(_IND[j], x_vol);
-        _dphidxi_bdry[i][j]  = _pt_basis->eval_dphidx(_IND[j], x_vol);
-        _dphideta_bdry[i][j] = _pt_basis->eval_dphidy(_IND[j], x_vol);
-      }
-      
+             xi_qps[qp] = xi_vol;
+             
     }
+    
+             
+      for (unsigned d = 0; d < _dim; d++) std::cout << xi_qps[ig_bdry][d] << " ";
+std::cout << std::endl;
+    
+//********* END EVALUATION STAGE **********************
+    
 
     phi.resize(_nc);
     gradphi.resize(_nc * 2);
 
     double Jac[2][2] = {{0, 0}, {0, 0}};
     double JacInv[2][2];
-    const double* dxi = _dphidxi_bdry[ig];
-    const double* deta = _dphideta_bdry[ig];
+    const double* dxi = _dphidxi_bdry[ig_bdry];
+    const double* deta = _dphideta_bdry[ig_bdry];
     for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
       Jac[0][0] += (*dxi) * vt_vol[0][inode];  // d x/d csi
       Jac[0][1] += (*dxi) * vt_vol[1][inode];  // d y/d csi
@@ -1769,13 +1855,17 @@ namespace femus {
     JacInv[0][1] = -Jac[0][1] / det;
     JacInv[1][0] = -Jac[1][0] / det;
     JacInv[1][1] = Jac[0][0] / det;
+    
+    
+    //Use the Jacobian here to go from the REAL back to the CANONICAL coordinates
+    
 
-    dxi  = _dphidxi_bdry[ig];
-    deta = _dphideta_bdry[ig];
+    dxi  = _dphidxi_bdry[ig_bdry];
+    deta = _dphideta_bdry[ig_bdry];
 
     for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
 
-      phi[inode] = _phi_bdry[ig][inode];
+      phi[inode] = _phi_bdry[ig_bdry][inode];
 
       gradphi[2 * inode + 0] = (*dxi) * JacInv[0][0] + (*deta) * JacInv[0][1];
       gradphi[2 * inode + 1] = (*dxi) * JacInv[1][0] + (*deta) * JacInv[1][1];
