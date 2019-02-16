@@ -14,7 +14,7 @@
 
 #include "slepceps.h"
 
-#include "../include/nonlocal_assembly.hpp"
+#include "../include/nonlocal_assembly1.hpp"
 
 
 //FIRST NONLOCAL EX IN FEMUS: nonlocal diffusion for a body with different material properties
