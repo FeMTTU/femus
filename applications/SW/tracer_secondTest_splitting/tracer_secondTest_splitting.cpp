@@ -35,7 +35,7 @@ double pi = acos (-1.);
 //double k_h = 1. / ( 10 * pi );
 double k_h = 0.0001 ;
 
-const unsigned NumberOfLayers = 4;
+const unsigned NumberOfLayers = 20;
 
 unsigned counter = 0;
 unsigned counter2 = 0;
@@ -45,12 +45,12 @@ clock_t start_time = clock();
 bool wave = false;
 bool twostage = true;
 bool assembly = true; //assembly must be left always true
-bool slepc = false;
+bool slepc = true;
 
 
-const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
+// const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
 
-// const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
+const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
 
 // const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
@@ -416,6 +416,7 @@ double InitalValueT (const std::vector < double >& x)
   if (x[0] < 5.) {
     return 5.;
   }
+
   else {
     return 30.;
   }
@@ -513,22 +514,22 @@ int main (int argc, char** args)
   mlSol.Initialize ("v1", InitalValueV1);
   mlSol.Initialize ("v2", InitalValueV2);
   mlSol.Initialize ("v3", InitalValueV3);
-//   mlSol.Initialize ("v4", InitalValueV4);
-//   mlSol.Initialize ("v5", InitalValueV5);
-//   mlSol.Initialize ("v6", InitalValueV6);
-//   mlSol.Initialize ("v7", InitalValueV7);
-//   mlSol.Initialize ("v8", InitalValueV8);
-//   mlSol.Initialize ("v9", InitalValueV9);
-//   mlSol.Initialize ("v10", InitalValueV10);
-//   mlSol.Initialize ("v11", InitalValueV11);
-//   mlSol.Initialize ("v12", InitalValueV12);
-//   mlSol.Initialize ("v13", InitalValueV13);
-//   mlSol.Initialize ("v14", InitalValueV14);
-//   mlSol.Initialize ("v15", InitalValueV15);
-//   mlSol.Initialize ("v16", InitalValueV16);
-//   mlSol.Initialize ("v17", InitalValueV17);
-//   mlSol.Initialize ("v18", InitalValueV18);
-//   mlSol.Initialize ("v19", InitalValueV19);
+  mlSol.Initialize ("v4", InitalValueV4);
+  mlSol.Initialize ("v5", InitalValueV5);
+  mlSol.Initialize ("v6", InitalValueV6);
+  mlSol.Initialize ("v7", InitalValueV7);
+  mlSol.Initialize ("v8", InitalValueV8);
+  mlSol.Initialize ("v9", InitalValueV9);
+  mlSol.Initialize ("v10", InitalValueV10);
+  mlSol.Initialize ("v11", InitalValueV11);
+  mlSol.Initialize ("v12", InitalValueV12);
+  mlSol.Initialize ("v13", InitalValueV13);
+  mlSol.Initialize ("v14", InitalValueV14);
+  mlSol.Initialize ("v15", InitalValueV15);
+  mlSol.Initialize ("v16", InitalValueV16);
+  mlSol.Initialize ("v17", InitalValueV17);
+  mlSol.Initialize ("v18", InitalValueV18);
+  mlSol.Initialize ("v19", InitalValueV19);
 //   if (NumberOfLayers > 39) {
 //     mlSol.Initialize ("v20", InitalValueV20);
 //     mlSol.Initialize ("v21", InitalValueV21);
@@ -630,14 +631,15 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 1500; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 3.;
+  unsigned numberOfTimeSteps = 6000; //17h=1020 with dt=60, 17h=10200 with dt=6
+  dt = 0.05;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {
     if (wave == true) {
       assembly = (i == 0) ? true : false;
     }
+
     counter = i;
     system.CopySolutionToOldSolution();
     ETD (ml_prob, numberOfTimeSteps);
@@ -993,11 +995,19 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       //vector < double > Jac (NLayers * NLayers);
       Jac[i].resize (NLayers * NLayers);
       s.jacobian (&Jac[i][0], true);
-      
-      //building objects for computing ∆tφ1(∆tJn)F(Tn) 
+
+//       std::cout<<"FIRST STAGE ------------  i  = " << i << " ---------------------- " << std::endl;
+//       for(unsigned k1=0; k1<NLayers; k1++){
+//         for(unsigned k2=0; k2<NLayers; k2++){
+//           std::cout <<Jac[i][NLayers * k1 + k2] << " " ;
+//         }
+//         std::cout<<std::endl;
+//       }
+
+      //building objects for computing ∆tφ1(∆tJn)F(Tn)
       Mat A;
       Vec v, y;
-      
+
       MatCreate (MPI_COMM_SELF, &A);
       MatSetSizes (A, NLayers, NLayers, NLayers, NLayers);
       MatSetType (A, MATSEQDENSE);
@@ -1006,7 +1016,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       MatAssemblyEnd (A, MAT_FINAL_ASSEMBLY);
       MatTranspose (A, MAT_INPLACE_MATRIX, &A);
       //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
-      
+
       VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &Res[0], &v);
       VecAssemblyBegin (v);
       VecAssemblyEnd (v);
@@ -1116,7 +1126,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 //                 }
 //                 //std::cout<< "--------------------- END --------------------- " <<std::endl;
         }
-        
+
         //BEGIN Get some information from the solver and display it
 //         MFNGetIterationNumber(mfn,&its);
 //         PetscPrintf(PETSC_COMM_WORLD," Number of iterations of the method: %D\n",its);
@@ -1127,19 +1137,19 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         //END
 
         MFNDestroy (&mfn);
-        
+
       }
-      
+
       else {
         unsigned CFL_pow = 3;
-        MatScale(A, dt/pow(2,CFL_pow));
+        MatScale (A, dt / pow (2, CFL_pow));
         PetscReal norm1;
-        MatNorm(A, NORM_1, &norm1);
+        MatNorm (A, NORM_1, &norm1);
 //         std::cout << "norm 1 of (dt/2^CFL_pow A) = " << norm1 << std::endl;
 
-        build_phi1Av(v, y, A, CFL_pow);
-        
-        VecScale(y, dt);
+        build_phi1Av (v, y, A, CFL_pow);
+
+        VecScale (y, dt);
       }
 
       std::vector<double> EPS_local (NLayers);
@@ -1151,7 +1161,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       }
 
       EPS->add_vector_blocked (EPS_local, l2GMapRow);
-      
+
       MatDestroy (&A);
       VecDestroy (&v);
       VecDestroy (&y); //TODO
@@ -1182,7 +1192,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
   if (twostage == true) {
 
-    //std::cout << "second stage " << std::endl;
+    std::cout << "second stage " << std::endl;
 
     EPS->zero();
 
@@ -1255,6 +1265,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
           if (solvm[k] > 0) {
             aResHT[k] += solHTm[k] * solvm[k] / dx;
           }
+
           else {
             aResHT[k] += solHT[k] * solvm[k] / dx;
           }
@@ -1265,6 +1276,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
           if (solvp[k] > 0) {
             aResHT[k] -= solHT[k] * solvp[k] / dx; //first order upwind
           }
+
           else {
             aResHT[k] -= solHTp[k] * solvp[k] / dx; //first order upwind
           }
@@ -1318,9 +1330,17 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
       //END
 
+//       std::cout<<"SECOND STAGE ------------  i  = " << i << " ---------------------- " << std::endl;
+//       for(unsigned k1=0; k1<NLayers; k1++){
+//         for(unsigned k2=0; k2<NLayers; k2++){
+//           std::cout <<Jac[i][NLayers * k1 + k2] << " " ;
+//         }
+//         std::cout<<std::endl;
+//       }
+
       Mat A;
       Vec v, y;
-      
+
       MatCreate (MPI_COMM_SELF, &A);
       MatSetSizes (A, NLayers, NLayers, NLayers, NLayers);
       MatSetType (A, MATSEQDENSE);
@@ -1329,7 +1349,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       MatAssemblyEnd (A, MAT_FINAL_ASSEMBLY);
       MatTranspose (A, MAT_INPLACE_MATRIX, &A);
       //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
-      
+
       VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &aResHT[0], &v);
       VecAssemblyBegin (v);
       VecAssemblyEnd (v);
@@ -1338,9 +1358,9 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       VecCreate (PETSC_COMM_WORLD, &y);
       VecSetSizes (y, PETSC_DECIDE, NLayers);
       VecSetFromOptions (y);
-      
+
       if (slepc) {
-        
+
         MFN mfn;
         FN f;
         MFNConvergedReason reason;
@@ -1452,20 +1472,20 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         //END
 
         MFNDestroy (&mfn);
-        
+
       }
-      
-      else{
-        
+
+      else {
+
         unsigned CFL_pow = 3;
-        MatScale(A, dt/pow(2,CFL_pow));
-        
+        MatScale (A, dt / pow (2, CFL_pow));
+
         build_phi1Av (v, y, A, CFL_pow);
-        
-        VecScale(y, 0.5*dt);
-        
+
+        VecScale (y, 0.5 * dt);
+
       }
-      
+
       std::vector<double> EPS_local (NLayers);
 
       for (int k = 0; k < NLayers; k++) {
@@ -1475,7 +1495,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       }
 
       EPS->add_vector_blocked (EPS_local, l2GMapRow);
-      
+
       MatDestroy (&A);
       VecDestroy (&v);
       VecDestroy (&y); //TODO
@@ -2081,58 +2101,71 @@ void RK4 (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigned
 
 }
 
-void build_phi1Av (Vec &v, Vec &y, Mat &A, const unsigned &CFL_pow){
-  
-        Mat AA;
-        Mat AAA;
-        Mat Temp;
-        Mat phi1A;
-        PetscInt k1;
-        PetscInt k2;
+void build_phi1Av (Vec &v, Vec &y, Mat &A, const unsigned &CFL_pow)
+{
 
-        MatDuplicate (A, MAT_DO_NOT_COPY_VALUES, &AA);
-        MatDuplicate (A, MAT_DO_NOT_COPY_VALUES, &AAA);
-        MatDuplicate (A, MAT_DO_NOT_COPY_VALUES, &phi1A);
+  Mat AA;
+  Mat AAA;
+  Mat Temp;
+  Mat phi1A;
+  PetscInt k1;
+  PetscInt k2;
 
-        MatMatMult (A, A, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &AA);
-        MatMatMult (AA, A, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &AAA);
+  MatDuplicate (A, MAT_DO_NOT_COPY_VALUES, &AA);
+  MatDuplicate (A, MAT_DO_NOT_COPY_VALUES, &AAA);
+  MatDuplicate (A, MAT_DO_NOT_COPY_VALUES, &phi1A);
 
-        for (k1 = 0; k1 < NumberOfLayers; k1++) {
-          for (k2 = 0; k2 < NumberOfLayers; k2++) {
-            double value = (k1 == k2) ? 1. : 0. ;
-            MatSetValues (phi1A, 1, &k1, 1, &k2, &value, INSERT_VALUES);
-            //phi1A has been set has the identity matrix
-          }
-        }
-        
-        MatAssemblyBegin (phi1A, MAT_FINAL_ASSEMBLY);
-        MatAssemblyEnd (phi1A, MAT_FINAL_ASSEMBLY);
+  MatMatMult (A, A, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &AA);
+  MatMatMult (AA, A, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &AAA);
 
-        MatAXPY (phi1A, 1. / 2., A, SAME_NONZERO_PATTERN);
+  for (k1 = 0; k1 < NumberOfLayers; k1++) {
+    for (k2 = 0; k2 < NumberOfLayers; k2++) {
+      double value = (k1 == k2) ? 1. : 0. ;
+      MatSetValues (phi1A, 1, &k1, 1, &k2, &value, INSERT_VALUES);
+      //phi1A has been set has the identity matrix
+    }
+  }
 
-        MatAXPY (phi1A, 1. / 6., AA, SAME_NONZERO_PATTERN);
+  MatAssemblyBegin (phi1A, MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd (phi1A, MAT_FINAL_ASSEMBLY);
 
-        MatAXPY (phi1A, 1. / 24., AAA, SAME_NONZERO_PATTERN);
+  MatAXPY (phi1A, 1. / 2., A, SAME_NONZERO_PATTERN);
 
-        for (unsigned i = 0; i < CFL_pow; i++) {
+  MatAXPY (phi1A, 1. / 6., AA, SAME_NONZERO_PATTERN);
 
-          MatDuplicate (phi1A, MAT_COPY_VALUES, &Temp);
+  MatAXPY (phi1A, 1. / 24., AAA, SAME_NONZERO_PATTERN);
 
-          MatMatMult (A, phi1A, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &Temp);
-          MatMatMult (phi1A, Temp, MAT_REUSE_MATRIX, PETSC_DEFAULT, &Temp);
-          MatAXPY (phi1A, 1. / 2., Temp, SAME_NONZERO_PATTERN);
-          //phi1(2A) = (1 / 2) * (2 * I + A * phi1A) * phi1A = phi1A + A*(phi1A)^2/2 ;
-        }
-        
-        //MatView ( phi1A, PETSC_VIEWER_STDOUT_WORLD );
-        
-        MatMult (phi1A, v, y);
-        //VecView(y,PETSC_VIEWER_STDOUT_WORLD);
+  for (unsigned i = 0; i < CFL_pow; i++) {
 
-        MatDestroy (&AA);
-        MatDestroy (&AAA);
-        MatDestroy (&phi1A);
-        MatDestroy (&Temp);
+    MatDuplicate (phi1A, MAT_COPY_VALUES, &Temp);
+
+    MatMatMult (A, phi1A, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &Temp);
+    MatMatMult (phi1A, Temp, MAT_REUSE_MATRIX, PETSC_DEFAULT, &Temp);
+    //double power = pow(2,i-1);
+    double power = 0.5;
+
+    if (i == 1) power = 1.;
+    else if (i == 2) power = 2.;
+    else if (i == 3) power = 4.;
+    else if (i == 4) power = 8.;
+    else {
+      std::cout << "CFL pow is too big" << std::endl;
+      abort();
+    }
+
+    MatAXPY (phi1A, power, Temp, SAME_NONZERO_PATTERN);
+    //phi1(2A) = (1 / 2) * (2 * I + 2^i * A * phi1A) * phi1A = phi1A + 2^(i-1)*A*(phi1A)^2 ;
+  }
+
+  MatView (phi1A, PETSC_VIEWER_STDOUT_WORLD);
+
+  MatMult (phi1A, v, y);
+  //VecView(y,PETSC_VIEWER_STDOUT_WORLD);
+
+  MatDestroy (&AA);
+  MatDestroy (&AAA);
+  MatDestroy (&phi1A);
+  MatDestroy (&Temp);
 
 }
 
