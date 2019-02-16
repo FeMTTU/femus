@@ -119,14 +119,6 @@ int main(int argc,char **args) {
     // ======= Parameters ========================
   Parameter parameter(Lref,Uref);
 
-  // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,0.001,1.,"Newtonian");
-  cout << "Fluid properties: " << endl;
-  cout << fluid << endl;
-
-  // add fluid material
-  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
-
 
   // ======= System ========================
   TransientNonlinearImplicitSystem & system = ml_prob.add_system<TransientNonlinearImplicitSystem> ("Timedep");
@@ -146,8 +138,8 @@ int main(int argc,char **args) {
   //**************
   
   // time loop parameter
-  system.SetIntervalTime(0.1);
-  const unsigned int n_timesteps = 20;
+  system.SetIntervalTime(0.001);
+  const unsigned int n_timesteps = 100;
   const unsigned int write_interval = 1;
 
     // ======= Time Loop ========================
@@ -413,7 +405,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 	        Lap_mat  += phi_x_fe_qp[SolFEType[0]][i * dim + d] * phi_x_fe_qp[SolFEType[0]][j * dim + d];
 	      }
 
-		B[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * theta * dt * (Lap_mat + Mass);
+		B[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * (Lap_mat + Mass);
 	      
   	    } //end phij loop
 
