@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: VTKWriter
- Authors: Eugenio Aulisa, Simone Bnà
+ Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
  Copyright (c) FEMTTU
  All rights reserved.
@@ -44,13 +44,36 @@ namespace femus {
   }
 
   VTKWriter::~VTKWriter(){}
+  
 
    void VTKWriter::Write(const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
-       Write(_gridn, output_path, order, vars, time_step );
+       
+    std::string filename_prefix;
+    if( _ml_sol != NULL ) filename_prefix = "sol";
+    else filename_prefix = "mesh";
+    
+       Write(_gridn, filename_prefix, output_path, order, vars, time_step );
    }
- 
-  
+   
+
   void VTKWriter::Write(const unsigned my_level, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+       
+    std::string filename_prefix;
+    if( _ml_sol != NULL ) filename_prefix = "sol";
+    else filename_prefix = "mesh";
+    
+       Write(my_level, filename_prefix, output_path, order, vars, time_step );
+   }
+   
+   
+   
+  void VTKWriter::Write(const std::string filename_prefix, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+       
+       Write(_gridn, filename_prefix, output_path, order, vars, time_step );
+   }
+   
+  
+  void VTKWriter::Write(const unsigned my_level, const std::string filename_prefix, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
       
     std::ostringstream level_name_stream;    
     level_name_stream << ".level" << my_level;
@@ -69,9 +92,6 @@ namespace femus {
     else if( !strcmp( order, "quadratic" ) ) 	 index = 1; //quadratic
     else if( !strcmp( order, "biquadratic" ) ) index = 2; //biquadratic
 
-    std::string filename_prefix;
-    if( _ml_sol != NULL ) filename_prefix = "sol";
-    else filename_prefix = "mesh";
 
     std::ostringstream filename;
     filename << output_path << "/" << dirnamePVTK << filename_prefix << level_name << "." << _iproc << "." << time_step << "." << order << ".vtu";
