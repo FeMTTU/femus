@@ -1,3 +1,32 @@
+/**
+ * 
+ * This code develops a (simple) FEM-FDM approximation to the following parabolic problem:
+ * 
+ *      u_t = \Delta u,     t > 0, x \in \Omega,
+ *      u = 0,              t > 0, x \in \partial\Omega,
+ *      u(x,0) = u_0,       x \in \Omega,
+ * 
+ * using a standard \theta method in time (and linear FEM in space). 
+ * 
+ * Currently the problem is set up for a two-dimensional square domain.
+ * 
+ * Goals:
+ *      
+ *      1. Update code so that it is cleaner/runs more efficiently.
+ *      2. Add the nonlinear source term.
+ *      3. Add adaptive time stepping mechanism to code (that reacts to the nonlinearity).
+ *      4. Update code so that most calculations are set up as functions (outside of main loop).
+ *      5. Add norm calculations (just for JLP's sake---for practice).
+ *      6. Check and see if the code still works for one-dimensional problems (in space).
+ *      7. Need to finish updating initial and boundary conditions to be more robust.
+ *      8. Update so that \Delta is replaced with a general elliptic operator.
+ *      9. The code is a little slow---maybe code a generalized Thomas algorithm to help with nonlinear solver?
+ *      10. The code may need updating for more complex geometries (not sure).
+ * 
+ * Note: (To Giorgio) The extensive comments are just to let me keep notes all in one place.
+ * 
+ */
+
 #include "MultiLevelProblem.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
@@ -9,9 +38,6 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "FElemTypeEnum.hpp"
 #include "Files.hpp"
-
-
-
 
 using std::cout;
 using std::endl;
@@ -49,7 +75,6 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
   return test;
 }
 
-
 double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
          
            double value = 0.;
@@ -62,14 +87,13 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
       return value;   
 }
 
-
 int main(int argc,char **args) {
 
-    // ======= Init ========================
+  // ======= Initialize ========================
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
-    // ======= Files ========================
+  // ======= Files ========================
   Files files; 
         files.CheckIODirectories();
         files.RedirectCout();
