@@ -25,7 +25,7 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, martaTes4: 1, maxTest1: both 0.4, maxTest2: both 0.1.
-double delta1 = 0.5; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta1 = 0.25; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
 double delta2 = 0.4;
 double epsilon = (delta1 > delta2) ? delta1 : delta2;
 
@@ -197,14 +197,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           MPI_Bcast (& x2[k][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
         }
 
-//         unsigned jgNumber;
-//
-//         if (iproc == kproc) {
-//           jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
-//         }
-//
-//         MPI_Bcast (&jgNumber, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
-
         for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
           short unsigned ielGeom = msh->GetElementType (iel);
@@ -216,18 +208,16 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           l2GMap1.resize (nDof1);
           solu1.resize (nDof1);
           Res.assign (nDof1, 0.);
-
-          for (unsigned i = 0; i < nDof1; i++) {
-            l2GMap1[i] = pdeSys->GetSystemDof (soluIndex, soluPdeIndex, i, iel);
-          }
-
+          
           for (int k = 0; k < dim; k++) {
             x1[k].resize (nDof1);
           }
 
           for (unsigned i = 0; i < nDof1; i++) {
+            l2GMap1[i] = pdeSys->GetSystemDof (soluIndex, soluPdeIndex, i, iel);
+            unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
+            solu1[i] = (*sol->_Sol[soluIndex]) (solDof);
             unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
-
             for (unsigned k = 0; k < dim; k++) {
               x1[k][i] = (*msh->_topology->_Sol[k]) (xDof);
             }
@@ -252,17 +242,12 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             }
           }
 
-
           double radius;
 
           if ( (ielGroup == 5 || ielGroup == 7) && (jelGroup == 5 || jelGroup == 7)) radius = delta1; //both x and y are in Omega_1
-
           else if ( (ielGroup == 5 || ielGroup == 7) && (jelGroup == 6 || jelGroup == 8)) radius = epsilon; // x is in Omega_1 and y is in Omega_2
-
           else if ( (ielGroup == 6 || ielGroup == 8) && (jelGroup == 5 || jelGroup == 7)) radius = epsilon; // x is in Omega_2 and y is in Omega_1
-
           else if ( (ielGroup == 6 || ielGroup == 8) && (jelGroup == 6 || jelGroup == 8)) radius = delta2; // both x and y are in Omega_2
-
 
           bool coarseIntersectionTest = true;
           for (unsigned k = 0; k < dim; k++) {
@@ -279,13 +264,12 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
           if (coarseIntersectionTest) {
 
-            std::vector< std::vector < double > > x2New;
-            bool theyIntersect;
-
             bool ifAnyIntersection = false;     
 
             for (unsigned ig = 0; ig < igNumber; ig++) {
 
+              std::vector< std::vector < double > > x2New;  
+              bool theyIntersect;  
               RectangleAndBallRelation (theyIntersect, xg1[ig], radius, x2, x2New);
 
               if (theyIntersect) {
@@ -337,7 +321,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
 
                     for (unsigned j = 0; j < nDof2; j++) {
-                      double jacValue2 = - weight1[ig] * weight2 * 3. / 4. * (1. / pow (radius, 4)) * (phi1x[ig][i] -   phi1y) * phi2y[j];
+                      double jacValue2 = - weight1[ig] * weight2 * 3. / 4. * (1. / pow (radius, 4)) * (phi1x[ig][i] - phi1y) * phi2y[j];
                       Jac2[i * nDof2 + j] -= jacValue2;
 
                       Res[i] +=  jacValue2 * solu2[j];
