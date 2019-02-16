@@ -318,10 +318,10 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                     double phi1y = 0.;
 
-                                    unsigned iDof  = msh->GetSolutionDof ( i, iel, soluType );
+                                    unsigned iDof  = l2GMap1[i];
 
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
-                                        unsigned jDof  = msh->GetSolutionDof ( j, jel, soluType );
+                                        unsigned jDof  = l2GMap2[j];
 
                                         if ( iDof == jDof ) {
                                             phi1y = phi2y[jg][j];
@@ -336,10 +336,10 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                         //BEGIN evaluate phi_j at xg1[ig] (called it phi2x)
                                         double phi2x = 0.;
 
-                                        unsigned jDof  = msh->GetSolutionDof ( j, jel, soluType );
+                                        unsigned jDof  = l2GMap2[j];
 
                                         for ( unsigned ii = 0; ii < nDof1; ii++ ) {
-                                            unsigned iiDof  = msh->GetSolutionDof ( ii, iel, soluType );
+                                            unsigned iiDof  = l2GMap1[ii];
 
                                             if ( jDof == iiDof ) {
                                                 phi2x = phi1x[ig][ii];
