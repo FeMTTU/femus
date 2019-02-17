@@ -17,7 +17,7 @@
 #include "../include/nonlocal_assembly1.hpp"
 
 
-//FIRST NONLOCAL EX IN FEMUS: nonlocal diffusion for a body with different material properties
+//SECOND NONLOCAL EX IN FEMUS: nonlocal diffusion for a body with different material properties
 
 using namespace femus;
 
@@ -46,7 +46,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 3;
+unsigned numberOfUniformLevels = 4;
 
 int main ( int argc, char** argv )
 {
@@ -60,13 +60,13 @@ int main ( int argc, char** argv )
     unsigned numberOfSelectiveLevels = 0;
 //     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest3.neu", "second", scalingFactor );
-       mlMsh.ReadCoarseMesh ( "../input/martaTest4.neu", "second", scalingFactor );
+//        mlMsh.ReadCoarseMesh ( "../input/martaTest4.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial2.neu", "second", scalingFactor );
     mlMsh.RefineMesh ( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL );
@@ -112,7 +112,7 @@ int main ( int argc, char** argv )
     // ******* Set Preconditioner *******
     system.SetMgSmoother ( GMRES_SMOOTHER );
 
-    system.SetSparsityPatternMultiplyingFactor ( 100u ); //TODO tune 
+    system.SetSparsityPatternMultiplyingFactor ( 500u ); //TODO tune 
 
     system.init();
 

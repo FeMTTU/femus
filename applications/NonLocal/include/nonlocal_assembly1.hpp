@@ -2,7 +2,7 @@
 #include <boost/random/normal_distribution.hpp>
 
 
-//THIS IS THE ASSEMBLY FOR THE NONLOCAL INTERFACE PROBLEM
+//THIS IS THE SECOND ASSEMBLY FOR THE NONLOCAL INTERFACE PROBLEM
 
 using namespace femus;
 
@@ -24,8 +24,8 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-//DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, martaTes4: 1, maxTest1: both 0.4, maxTest2: both 0.1.
-double delta1 = 0.25; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+//DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, martaTes4: 0.5, maxTest1: both 0.4, maxTest2: both 0.1.
+double delta1 = 0.4; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
 double delta2 = 0.4;
 double epsilon = (delta1 > delta2) ? delta1 : delta2;
 
@@ -129,7 +129,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofu; i++) {
         unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
         unsigned xDof = msh->GetSolutionDof (i, iel, xType);
-        sol->_Bdc[soluIndex]->set (solDof, 0.);   //TODO not sure about _Bdc[0] solution but it seems to work
+        sol->_Bdc[soluIndex]->set (solDof, 0.);   
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
@@ -710,13 +710,13 @@ const unsigned swap[4][9] = {
 void ReorderElement (std::vector < int > &dofs, std::vector < double > & sol, std::vector < std::vector < double > > & x) {
   unsigned type = 0;
   if (fabs (x[0][0] - x[0][1]) > 1.e-10) {
-    if (x[0][0] < x[0][1]) {
+    if (x[0][0] > x[0][1]) {
       type = 2;
     }
   }
   else {
     type = 1;
-    if (x[1][0] < x[1][1]) {
+    if (x[1][0] > x[1][1]) {
       type = 3;
     }
   }
