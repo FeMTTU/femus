@@ -155,6 +155,11 @@ public:
     };
 
     /** To be Added */
+    const Solution* GetSolutionLevel(const unsigned i) const {
+        return _solution[i];
+    };
+    
+    /** To be Added */
     char* GetSolutionName(unsigned i) {
         return _solName[i];
     };
@@ -164,6 +169,11 @@ public:
         return _solType[i];
     };
 
+    /** To be Added */
+    const int GetSolutionType(unsigned i) const {
+        return _solType[i];
+    };
+    
     /** To be Added */
     unsigned GetSolutionType(const char name[]);
 

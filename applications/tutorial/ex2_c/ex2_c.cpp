@@ -41,13 +41,13 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
 
 void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated); 
+std::pair < double, double > GetErrorNorm(const MultiLevelSolution* mlSol, const Solution* sol_coarser_prolongated); 
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
-void output_convergence_rate(std::vector < double > &  norm, const unsigned int i );
+void output_convergence_rate(const std::vector < double > &  norm, const unsigned int i );
 
-  MultiLevelSolution  main_single_level(const std::string & unknown, FEFamily fe_fam, FEOrder fe_ord, const Files & files, MultiLevelMesh & mlMsh, const unsigned i);
+ const MultiLevelSolution  main_single_level(const std::string & unknown, const FEFamily fe_fam, const FEOrder fe_ord, const Files & files, MultiLevelMesh & mlMsh, const unsigned i);
 
   
   
@@ -106,8 +106,8 @@ int main(int argc, char** args) {
      
 
  //Error norm definition  ==================
-  vector < vector < double > > l2Norm;       l2Norm.resize( unknowns.size());
-  vector < vector < double > >  semiNorm;   semiNorm.resize( unknowns.size());
+  vector < vector < double > > l2Norm( unknowns.size() );
+  vector < vector < double > >  semiNorm( unknowns.size() );
   
      for (unsigned int u = 0; u < unknowns.size(); u++) {
               l2Norm[u].resize(maxNumberOfMeshes);
@@ -132,7 +132,7 @@ int main(int argc, char** args) {
 
  
  //Solution ==================
-        std::vector < MultiLevelSolution * >   mlSol_all_levels;      mlSol_all_levels.resize(unknowns.size());
+        std::vector < MultiLevelSolution * >   mlSol_all_levels(unknowns.size());
         
      for (unsigned int u = 0; u < unknowns.size(); u++) {
                mlSol_all_levels[u] = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
@@ -159,14 +159,14 @@ int main(int argc, char** args) {
 
             mlMsh.PrintInfo();
                   
-             MultiLevelSolution mlSol  =   main_single_level(unknowns[u], feFamily[u], feOrder[u], files, mlMsh, i);
+             const MultiLevelSolution mlSol  =   main_single_level(unknowns[u], feFamily[u], feOrder[u], files, mlMsh, i);
       
       
             if ( i > 0 ) {
         
             // ======= prolongation of coarser ========================
             mlSol_all_levels[u]->RefineSolution(i);
-            Solution* sol_coarser_prolongated = mlSol_all_levels[u]->GetSolutionLevel(i);
+            const Solution* sol_coarser_prolongated = mlSol_all_levels[u]->GetSolutionLevel(i);
   
             // ======= error norm computation ========================
             std::pair< double , double > norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
@@ -214,7 +214,7 @@ int main(int argc, char** args) {
 
 
 
-  MultiLevelSolution   main_single_level(const std::string & unknown, FEFamily fe_fam, FEOrder fe_ord,  const Files & files, MultiLevelMesh & mlMsh, const unsigned i)  {
+  const MultiLevelSolution  main_single_level(const std::string & unknown, const FEFamily fe_fam, const FEOrder fe_ord,  const Files & files, MultiLevelMesh & mlMsh, const unsigned i)  {
 
       
      
@@ -270,7 +270,7 @@ int main(int argc, char** args) {
 
 
 //   print the error and the order of convergence between different levels
-void output_convergence_rate(std::vector < double > &  norm, const unsigned int i ) {
+void output_convergence_rate(const std::vector < double > &  norm, const unsigned int i ) {
 
    if(i < norm.size() - 2)  {
 //   std::cout << norm_name << " ERROR and ORDER OF CONVERGENCE: " << fam << " " << ord << "\n\n";
@@ -702,13 +702,13 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated) {
+std::pair < double, double > GetErrorNorm(const MultiLevelSolution* mlSol, const Solution* sol_coarser_prolongated) {
     
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*     msh = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
   elem*     el  = msh->el;  // pointer to the elem object in msh (level)
-  Solution* sol = mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  const Solution* sol = mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
