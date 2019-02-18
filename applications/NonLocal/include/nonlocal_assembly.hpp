@@ -338,39 +338,19 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                     //END evaluate phi_i at xg2[jg] (called it ph1y)
 
+                                    for ( unsigned j = 0; j < nDof1; j++ ) {
+
+                                        double jacValue1 = weight1[ig] * weight2[jg] * 3. / 4. * ( 1. / pow ( radius, 4 ) ) * ( phi1x[ig][i] -   phi1y ) * phi1x[ig][j];
+                                        Jac1[i * nDof1 + j] -= jacValue1;
+                                        Res[i] +=  jacValue1 * solu1[j];
+                                    }//endl j loop on iel's dofs
+
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
-
-                                        unsigned iiJac1;
-                                        bool assembleJac1 = false;
-
-                                        //BEGIN evaluate phi_j at xg1[ig] (called it phi2x)
-                                        double phi2x = 0.;
-
-                                        unsigned jDof  = l2GMap2[j];
-
-                                        for ( unsigned ii = 0; ii < nDof1; ii++ ) {
-                                            unsigned iiDof  = l2GMap1[ii];
-
-                                            if ( jDof == iiDof ) {
-                                                phi2x = phi1x[ig][ii];
-                                                iiJac1 = ii;
-                                                assembleJac1 = true;
-                                                break;
-                                            }
-                                        }
-
-                                        //END evaluate phi_j at xg1[ig] (called it phi2x)
-
-                                        if ( assembleJac1 ) {
-                                            double jacValue1 = weight1[ig] * weight2[jg] * 3. / 4. * ( 1. / pow ( radius, 4 ) ) * ( phi1x[ig][i] -   phi1y ) * phi2x;
-                                            Jac1[i * nDof1 + iiJac1] -= jacValue1;
-                                            Res[i] +=  jacValue1 * solu1[iiJac1];
-                                        }
 
                                         double jacValue2 = - weight1[ig] * weight2[jg] * 3. / 4. * ( 1. / pow ( radius, 4 ) ) * ( phi1x[ig][i] -   phi1y ) * phi2y[jg][j];
                                         Jac2[i * nDof2 + j] -= jacValue2;
                                         Res[i] +=  jacValue2 * solu2[j];
-                                    }//endl j loop
+                                    }//endl j loop on jel's dofs
                                 } //endl i loop
                             }//end jg loop
                         }
@@ -741,6 +721,7 @@ void RectangleAndBallRelation ( bool & theyIntersect, const std::vector<double> 
     }
 
 }
+
 
 
 
