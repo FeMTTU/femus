@@ -45,9 +45,9 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
-void output_convergence_rate(const unsigned fam, const unsigned ord,  std::vector < double > &  norm, const unsigned int i );
+void output_convergence_rate(std::vector < double > &  norm, const unsigned int i );
 
-  void  main_single_level(MultiLevelSolution & mlSol, const std::string & unknown, const Files & files, MultiLevelMesh & mlMsh, const unsigned i);
+  MultiLevelSolution  main_single_level(const std::string & unknown, FEFamily fe_fam, FEOrder fe_ord, const Files & files, MultiLevelMesh & mlMsh, const unsigned i);
 
   
   
@@ -67,80 +67,80 @@ int main(int argc, char** args) {
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     In the future it is not going to be an argument of the mesh function   */
 
-  // ======= Mesh ========================
-  MultiLevelMesh mlMsh;
- // read coarse level mesh and generate finers level meshes
-  double scalingFactor = 1.;
-  const unsigned int nsub_x = 2;
-  const unsigned int nsub_y = 2;
-  const unsigned int nsub_z = 0;
-  const std::vector<double> xyz_min = {-0.5,-0.5,0.};
-  const std::vector<double> xyz_max = { 0.5, 0.5,0.};
-  const ElemType geom_elem_type = QUAD9;
+
   
-  mlMsh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+  const ElemType geom_elem_type = QUAD9;
+  const std::vector< unsigned int > nsub = {2,2,0};
+  const std::vector< double >      xyz_min = {-0.5,-0.5,0.};
+  const std::vector< double >      xyz_max = { 0.5, 0.5,0.};
+
+   // ======= Mesh ========================
+  MultiLevelMesh mlMsh;
+  mlMsh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 //   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
   
   
   
-   //Mesh  ==================
-  MultiLevelMesh mlMsh_all_levels;
-  mlMsh_all_levels.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//   mlMsh_all_levels.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-
-  unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
 
-  if (dim == 2) {
+  if (nsub[2] == 0) {
     maxNumberOfMeshes = 6;
   } else {
     maxNumberOfMeshes = 4;
   }
 
+  
+ //Unknown definition  ==================
+    std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE, LAGRANGE/*, DISCONTINOUS_POLYNOMIAL*//*, DISCONTINOUS_POLYNOMIAL*/};
+    std::vector< FEOrder > feOrder = {FIRST, SERENDIPITY ,SECOND/*,ZERO, FIRST*/};
+    
+     std::vector< std::string > unknowns( feFamily.size() );
+//      if (unknowns.size() > 1) abort();
+     for (unsigned int fe = 0; fe < feFamily.size(); fe++) {
+            std::ostringstream unk; unk << "u" << "_" << feFamily[fe] << "_" << feOrder[fe];
+              unknowns[fe] = unk.str();
+     }
+ //Unknown definition  ==================
+
+     
+
+ //Error norm definition  ==================
+  vector < vector < double > > l2Norm;       l2Norm.resize( unknowns.size());
+  vector < vector < double > >  semiNorm;   semiNorm.resize( unknowns.size());
+  
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+              l2Norm[u].resize(maxNumberOfMeshes);
+            semiNorm[u].resize(maxNumberOfMeshes);
+        }   
+        
+    const std::vector< std::string > norm_names = {"L2-NORM","SEMINORM"};
+ //Error norm definition  ==================
+
+ 
+  
+   //Mesh  ==================
+  MultiLevelMesh mlMsh_all_levels;
+  mlMsh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   mlMsh_all_levels.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+
+
         unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
         mlMsh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
 //      mlMsh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
+   //Mesh  ==================
 
+ 
+ //Solution ==================
+        std::vector < MultiLevelSolution * >   mlSol_all_levels;      mlSol_all_levels.resize(unknowns.size());
         
-        
- //Solution  ==================
-    std::vector< FEFamily > feFamily = {LAGRANGE/*, DISCONTINOUS_POLYNOMIAL*/};
-    std::vector< FEOrder > feOrder = {/*FIRST,*/ SERENDIPITY, SECOND};
-//     std::vector< FEOrder > feOrder = {ZERO, FIRST};
-    
-     std::vector< std::string > unknowns( feFamily.size() * feOrder.size() );
-//      if (unknowns.size() > 1) abort();
-        
-
-  vector < vector < vector < double > > > l2Norm;       l2Norm.resize( feFamily.size());
-  vector < vector < vector < double > > >  semiNorm;   semiNorm.resize( feFamily.size());
-  
-     for (unsigned int fe_fam = 0; fe_fam < feFamily.size(); fe_fam++) {
-              l2Norm[fe_fam].resize(feOrder.size());
-            semiNorm[fe_fam].resize(feOrder.size());
-          for (unsigned int fe_ord = 0; fe_ord < feOrder.size(); fe_ord++) {
-              unsigned int idx = fe_fam * feOrder.size() + fe_ord;
-            std::ostringstream unk; unk << "u" << "_" << fe_fam << "_" << fe_ord;
-              unknowns[idx] = unk.str();
-              l2Norm[fe_fam][fe_ord].resize(maxNumberOfMeshes);
-            semiNorm[fe_fam][fe_ord].resize(maxNumberOfMeshes);
-        }   
-     }
-        
-        std::vector < std::vector < MultiLevelSolution * > >   mlSol_all_levels;      mlSol_all_levels.resize(feFamily.size());
-        
-             for (unsigned int fe_fam = 0; fe_fam < feFamily.size(); fe_fam++) {
-                 mlSol_all_levels[fe_fam].resize(feOrder.size());
-               for (unsigned int fe_ord = 0; fe_ord < feOrder.size(); fe_ord++) {
-              unsigned int idx = fe_fam * feOrder.size() + fe_ord;
-               mlSol_all_levels[fe_fam][fe_ord] = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-               mlSol_all_levels[fe_fam][fe_ord]->AddSolution(unknowns[idx].c_str(), feFamily[fe_fam], feOrder[fe_ord]);  //We have to do so to avoid buildup of AddSolution with different FE families
-               mlSol_all_levels[fe_fam][fe_ord]->Initialize("All");
-               mlSol_all_levels[fe_fam][fe_ord]->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-               mlSol_all_levels[fe_fam][fe_ord]->GenerateBdc("All");
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+               mlSol_all_levels[u] = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+               mlSol_all_levels[u]->AddSolution(unknowns[u].c_str(), feFamily[u], feOrder[u]);  //We have to do so to avoid buildup of AddSolution with different FE families
+               mlSol_all_levels[u]->Initialize("All");
+               mlSol_all_levels[u]->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+               mlSol_all_levels[u]->GenerateBdc("All");
                 }
-             }  
  //Solution  ==================
            
             
@@ -148,47 +148,31 @@ int main(int argc, char** args) {
             
        for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
-           
-           for (unsigned fe_fam = 0; fe_fam < feFamily.size(); fe_fam++) {   // loop on the FE Family
-               
-              for (unsigned fe_ord = 0; fe_ord < feOrder.size(); fe_ord++) {   // loop on the FE Order
-        
+            
+         for (unsigned int u = 0; u < unknowns.size(); u++) {
                   
-
-         //Current level  ==================
+             //Mesh  ==================
             unsigned numberOfUniformLevels = i + 1;
             unsigned numberOfSelectiveLevels = 0;
             mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
             mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
             mlMsh.PrintInfo();
-    
-     
-              unsigned int idx = fe_fam * feOrder.size() + fe_ord;
-            
-            // define the multilevel solution and attach the mlMsh object to it
-            MultiLevelSolution mlSol(&mlMsh); 
-            mlSol.AddSolution(unknowns[idx].c_str(), feFamily[fe_fam], feOrder[fe_ord]);
-            mlSol.Initialize("All");
-            mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-            mlSol.GenerateBdc("All");
-            
                   
-                   main_single_level(mlSol,unknowns[idx],files,mlMsh,i);
+             MultiLevelSolution mlSol  =   main_single_level(unknowns[u], feFamily[u], feOrder[u], files, mlMsh, i);
       
       
             if ( i > 0 ) {
         
             // ======= prolongation of coarser ========================
-            mlSol_all_levels[fe_fam][fe_ord]->RefineSolution(i);
-            Solution* sol_coarser_prolongated = mlSol_all_levels[fe_fam][fe_ord]->GetSolutionLevel(i);
-  
+            mlSol_all_levels[u]->RefineSolution(i);
+            Solution* sol_coarser_prolongated = mlSol_all_levels[u]->GetSolutionLevel(i);
   
             // ======= error norm computation ========================
             std::pair< double , double > norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
 
-              l2Norm[fe_fam][fe_ord][i-1] = norm.first;
-            semiNorm[fe_fam][fe_ord][i-1] = norm.second;
+              l2Norm[u][i-1] = norm.first;
+            semiNorm[u][i-1] = norm.second;
             
             }
             
@@ -199,13 +183,11 @@ int main(int argc, char** args) {
             const unsigned n_vars = mlSol.GetSolutionLevel(level_index_current)->_Sol.size();
        
             for(unsigned short j = 0; j < n_vars; j++) {  
-                 *(mlSol_all_levels[fe_fam][fe_ord]->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
+                 *(mlSol_all_levels[u]->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
             }
         
 
-        } //end FE order
-               
-      } //end FE families
+      } //end unknowns
       
         
     }   //end h refinement
@@ -213,17 +195,13 @@ int main(int argc, char** args) {
   
   
   // ======= Error computation ========================
-    const std::vector< std::string > norm_names = {"L2-NORM","SEMINORM"};
-
-        for (unsigned  fe_fam = 0; fe_fam < feFamily.size(); fe_fam++) {
-             for (unsigned fe_ord = 0; fe_ord < feOrder.size(); fe_ord++) {
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
        for (int n = 0; n < norm_names.size(); n++) {
-  std::cout << norm_names[n] << " ERROR and ORDER OF CONVERGENCE: " << fe_fam << " " << fe_ord << "\n\n";
-       for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
-        if (n == 0)   output_convergence_rate(fe_fam, fe_ord,   l2Norm[fe_fam][fe_ord], i );
-   else if (n == 1)   output_convergence_rate(fe_fam, fe_ord, semiNorm[fe_fam][fe_ord], i );
-              }
-           }
+            std::cout << norm_names[n] << " ERROR and ORDER OF CONVERGENCE: " << unknowns[u] << "\n\n";
+         for (int i = 0; i < maxNumberOfMeshes; i++) {
+        if (n == 0)   output_convergence_rate(l2Norm[u], i );
+   else if (n == 1)   output_convergence_rate(semiNorm[u], i );
+            }
          }
       }
   // ======= Error computation - end ========================
@@ -236,9 +214,17 @@ int main(int argc, char** args) {
 
 
 
-  void main_single_level(MultiLevelSolution & mlSol, const std::string & unknown, const Files & files, MultiLevelMesh & mlMsh, const unsigned i)  {
-    
-    
+  MultiLevelSolution   main_single_level(const std::string & unknown, FEFamily fe_fam, FEOrder fe_ord,  const Files & files, MultiLevelMesh & mlMsh, const unsigned i)  {
+
+      
+     
+           //Solution  ==================
+            MultiLevelSolution mlSol(&mlMsh); 
+
+            mlSol.AddSolution(unknown.c_str(), fe_fam, fe_ord);
+            mlSol.Initialize("All");
+            mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+            mlSol.GenerateBdc("All");
       
             // define the multilevel problem attach the mlSol object to it
             MultiLevelProblem mlProb(&mlSol);
@@ -265,7 +251,7 @@ int main(int argc, char** args) {
             mlSol.SetWriter(VTK);
             mlSol.GetWriter()->SetDebugOutput(true);
   
-            system.SetDebugLinear(true);
+//             system.SetDebugLinear(true);
 //             system.SetMaxNumberOfLinearIterations(6);
 //             system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
 
@@ -276,14 +262,15 @@ int main(int argc, char** args) {
             variablesToBePrinted.push_back("All");
             mlSol.GetWriter()->Write(unknown, files.GetOutputPath(), "biquadratic", variablesToBePrinted, i);  
     
-    
+
+            return mlSol;
 }
 
 
 
 
 //   print the error and the order of convergence between different levels
-void output_convergence_rate(const unsigned fam, const unsigned ord,  std::vector < double > &  norm, const unsigned int i ) {
+void output_convergence_rate(std::vector < double > &  norm, const unsigned int i ) {
 
    if(i < norm.size() - 2)  {
 //   std::cout << norm_name << " ERROR and ORDER OF CONVERGENCE: " << fam << " " << ord << "\n\n";
