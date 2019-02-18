@@ -105,7 +105,7 @@ int main (int argc, char** args) {
   //system.SetImplicitRungeKuttaScheme (LEGENDRE3);
   //system.SetImplicitRungeKuttaScheme (NORSET3);
   //system.SetImplicitRungeKuttaScheme (CROUZEIX2);
-  system.SetImplicitRungeKuttaScheme (PIPPO3);
+  system.SetImplicitRungeKuttaScheme (DIRK3);
 
   system.AddSolutionToSystemPDE ("u");
 

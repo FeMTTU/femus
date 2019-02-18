@@ -94,7 +94,7 @@ int main (int argc, char** args) {
   mlMsh.RefineMesh (numberOfUniformLevels, numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 2);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -143,20 +143,68 @@ int main (int argc, char** args) {
   // add system Poisson in mlProb as a Linear Implicit System
   ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("NS");
 
-  system.SetImplicitRungeKuttaScheme (PIPPO3);
+  system.SetImplicitRungeKuttaScheme (DIRK3);
 
-  // add solution "u" to system
-  system.AddSolutionToSystemPDE ("U");
-  system.AddSolutionToSystemPDE ("V");
-  if (dim == 3) system.AddSolutionToSystemPDE ("W");
-
-  system.AddSolutionToSystemPDE ("DX");
-  system.AddSolutionToSystemPDE ("DY");
-  if (dim == 3) system.AddSolutionToSystemPDE ("DZ");
-
+  std::vector < std::string > solVName (3), solDName (3);
+  solVName[0] = "U";
+  solVName[1] = "V";
+  solVName[2] = "W";
+  solDName[0] = "DX";
+  solDName[1] = "DY";
+  solDName[2] = "DZ";
+  
+  for(unsigned k=0; k < dim; k++){
+    system.AddSolutionToSystemPDE ( solVName[k].c_str());
+  }
+  for(unsigned k=0; k < dim; k++){
+    system.AddSolutionToSystemPDE ( solDName[k].c_str());
+  }
   system.AddSolutionToSystemPDE ("P");
   system.SetRKVariableType ("P", false);
+    
+  
+  std::vector < std::vector < std::string > > solVkName(dim), solDkName(dim);
+  for(unsigned k = 0; k<dim; k++){ 
+    solVkName[k] = system.GetSolkiNames( solVName[k].c_str() );
+    solDkName[k] = system.GetSolkiNames( solDName[k].c_str() );
+  }
+  const std::vector < std::string > solPkName = system.GetSolkiNames ("P");
+  
+  unsigned RK = system.GetRungeKuttaStages();
+  
+  std::vector < std::vector < unsigned > > fieldVDP(RK);
+  std::vector < std::vector < unsigned > > solutionTypeVDP(RK);
+  for(unsigned i = 0; i < RK; i++){
+    fieldVDP[i].resize(2 * dim + 1);
+    solutionTypeVDP[i].resize(2 * dim + 1);
+    for(unsigned k = 0; k < dim; k++){
+      fieldVDP[i][k] = system.GetSolPdeIndex(solVkName[k][i].c_str());
+      solutionTypeVDP[i][k] = mlSol.GetSolutionType(solVkName[k][i].c_str());
+    }
+    for(unsigned k = 0; k < dim; k++){
+      fieldVDP[i][dim + k] = system.GetSolPdeIndex(solDkName[k][i].c_str());
+      solutionTypeVDP[i][dim + k] = mlSol.GetSolutionType(solDkName[k][i].c_str());
+    }
+    fieldVDP[i][2 * dim] = system.GetSolPdeIndex(solPkName[i].c_str());
+    solutionTypeVDP[i][2 * dim ] = mlSol.GetSolutionType(solPkName[i].c_str());
+  }
+  
+  FieldSplitTree VDP0(PREONLY, MLU_PRECOND, fieldVDP[0], solutionTypeVDP[0], "VDP0");
+  FieldSplitTree VDP1(PREONLY, MLU_PRECOND, fieldVDP[1], solutionTypeVDP[1], "VDP1");
+  FieldSplitTree VDP2(PREONLY, MLU_PRECOND, fieldVDP[2], solutionTypeVDP[2], "VDP2");
+  
+  std::vector < FieldSplitTree *> FSi;
+  FSi.reserve(RK);
+  
+  FSi.push_back(&VDP0);  //displacement first
+  FSi.push_back(&VDP1);  // velocity second
+  FSi.push_back(&VDP2);  // velocity second
+  
+  FieldSplitTree FS(RICHARDSON, FIELDSPLIT_PRECOND, FSi, "RK");
+  
 
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
+  
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleBoussinesqAppoximation_AD);
 
@@ -166,6 +214,8 @@ int main (int argc, char** args) {
   system.AttachGetTimeIntervalFunction (GetTimeStep);
   const unsigned int n_timesteps = 100;
 
+  system.SetFieldSplitTree(&FS);
+  
   // ******* Print solution *******
   mlSol.SetWriter (VTK);
   mlSol.GetWriter()->SetDebugOutput (false);
