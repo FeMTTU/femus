@@ -330,6 +330,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   MPI_Bcast (&lambda0PdeDof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
 
   double volume = 0.;
+  
+  double energy = 0.;
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -481,9 +483,9 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
 
       double normal[DIM];
-      normal[0] = (solxOld_uv[1][0] * solxOld_uv[2][1] - solxOld_uv[2][0] * solxOld_uv[1][1]) / sqrt (detg);
-      normal[1] = (solxOld_uv[2][0] * solxOld_uv[0][1] - solxOld_uv[0][0] * solxOld_uv[2][1]) / sqrt (detg);;
-      normal[2] = (solxOld_uv[0][0] * solxOld_uv[1][1] - solxOld_uv[1][0] * solxOld_uv[0][1]) / sqrt (detg);;
+      normal[0] = -(solxOld_uv[1][0] * solxOld_uv[2][1] - solxOld_uv[2][0] * solxOld_uv[1][1]) / sqrt (detg);
+      normal[1] = -(solxOld_uv[2][0] * solxOld_uv[0][1] - solxOld_uv[0][0] * solxOld_uv[2][1]) / sqrt (detg);;
+      normal[2] = -(solxOld_uv[0][0] * solxOld_uv[1][1] - solxOld_uv[1][0] * solxOld_uv[0][1]) / sqrt (detg);;
 
       double gi[dim][dim];
       gi[0][0] =  g[1][1] / detg;
@@ -555,7 +557,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           for (unsigned J = 0; J < DIM; J++) {
             term1 +=  solx_Xtan[K][J] * phix_Xtan[J][i];
           }
-          aResY[K][i] += (solYg[K] * pow (A, 2. - P)  * phix[i] + term1) * Area;
+          aResY[K][i] += (solYg[K] /** pow (A, 2. - P)*/  * phix[i] + term1) * Area;
         }
         for (unsigned i = 0; i < nYDofs; i++) {
           adept::adouble term0 = 0.;
@@ -596,6 +598,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
         volume += (solxg[K].value()  * normal[K]) * Area;
       }
+      
+      energy += pow(A,P) * Area;
 
     } // end gauss point loop
 
@@ -663,6 +667,12 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   MPI_Reduce (&volume, &volumeAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
   std::cout << "VOLUME = " << volumeAll << std::endl;
+  
+  
+  double energyAll;
+  MPI_Reduce (&energy, &energyAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  
+  std::cout << "ENERGY = " << energyAll << std::endl;
 
   //VecView ( (static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_SELF);
   //MatView ( (static_cast<PetscMatrix*> (KK))->mat(), PETSC_VIEWER_STDOUT_SELF);
@@ -869,9 +879,9 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
       double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
 
       double normal[DIM];
-      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
-      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);;
-      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);;
+      normal[0] = -(solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
+      normal[1] = -(solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);;
+      normal[2] = -(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);;
 
       double gi[dim][dim];
       gi[0][0] =  g[1][1] / detg;
@@ -945,7 +955,7 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
             //abort();
           }
 //           std::cout << A <<" ";
-          aResY[K][i] += (solYg[K] * pow (A.value(), 2. - P)  * phiY[i] + term1) * Area;
+          aResY[K][i] += (solYg[K] /** pow (A.value(), 2. - P)*/  * phiY[i] + term1) * Area;
         }
       }
     } // end gauss point loop
