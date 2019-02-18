@@ -49,6 +49,9 @@ void output_convergence_rate(const unsigned fam, const unsigned ord,  std::vecto
 
   void  main_single_level(MultiLevelSolution & mlSol, const std::string & unknown, const Files & files, MultiLevelMesh & mlMsh, const unsigned i);
 
+  
+  
+  
 int main(int argc, char** args) {
 
   // ======= Init ==========================
@@ -102,31 +105,37 @@ int main(int argc, char** args) {
         
         
  //Solution  ==================
-     std::vector< std::string > unknowns(1); unknowns[0] = "u";
-     if (unknowns.size() > 1) abort();
-        
     std::vector< FEFamily > feFamily = {LAGRANGE/*, DISCONTINOUS_POLYNOMIAL*/};
-    std::vector< FEOrder > feOrder = {FIRST, SERENDIPITY, SECOND};
+    std::vector< FEOrder > feOrder = {/*FIRST,*/ SERENDIPITY, SECOND};
+//     std::vector< FEOrder > feOrder = {ZERO, FIRST};
+    
+     std::vector< std::string > unknowns( feFamily.size() * feOrder.size() );
+//      if (unknowns.size() > 1) abort();
+        
 
-  vector < vector < vector < double > > >  l2Norm;       l2Norm.resize(feFamily.size());
-  vector < vector < vector < double > > >  semiNorm;   semiNorm.resize(feFamily.size());
+  vector < vector < vector < double > > > l2Norm;       l2Norm.resize( feFamily.size());
+  vector < vector < vector < double > > >  semiNorm;   semiNorm.resize( feFamily.size());
   
-        for (unsigned int fam = 0; fam < feFamily.size(); fam++) {
-              l2Norm[fam].resize(feOrder.size());
-            semiNorm[fam].resize(feOrder.size());
-     for (unsigned int ord = 0; ord < feOrder.size(); ord++) {
-              l2Norm[fam][ord].resize(maxNumberOfMeshes);
-            semiNorm[fam][ord].resize(maxNumberOfMeshes);
-           }   
-        }
+     for (unsigned int fe_fam = 0; fe_fam < feFamily.size(); fe_fam++) {
+              l2Norm[fe_fam].resize(feOrder.size());
+            semiNorm[fe_fam].resize(feOrder.size());
+          for (unsigned int fe_ord = 0; fe_ord < feOrder.size(); fe_ord++) {
+              unsigned int idx = fe_fam * feOrder.size() + fe_ord;
+            std::ostringstream unk; unk << "u" << "_" << fe_fam << "_" << fe_ord;
+              unknowns[idx] = unk.str();
+              l2Norm[fe_fam][fe_ord].resize(maxNumberOfMeshes);
+            semiNorm[fe_fam][fe_ord].resize(maxNumberOfMeshes);
+        }   
+     }
         
         std::vector < std::vector < MultiLevelSolution * > >   mlSol_all_levels;      mlSol_all_levels.resize(feFamily.size());
         
              for (unsigned int fe_fam = 0; fe_fam < feFamily.size(); fe_fam++) {
                  mlSol_all_levels[fe_fam].resize(feOrder.size());
                for (unsigned int fe_ord = 0; fe_ord < feOrder.size(); fe_ord++) {
+              unsigned int idx = fe_fam * feOrder.size() + fe_ord;
                mlSol_all_levels[fe_fam][fe_ord] = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-               mlSol_all_levels[fe_fam][fe_ord]->AddSolution(unknowns[0].c_str(), feFamily[fe_fam], feOrder[fe_ord]);  //We have to do so to avoid buildup of AddSolution with different FE families
+               mlSol_all_levels[fe_fam][fe_ord]->AddSolution(unknowns[idx].c_str(), feFamily[fe_fam], feOrder[fe_ord]);  //We have to do so to avoid buildup of AddSolution with different FE families
                mlSol_all_levels[fe_fam][fe_ord]->Initialize("All");
                mlSol_all_levels[fe_fam][fe_ord]->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
                mlSol_all_levels[fe_fam][fe_ord]->GenerateBdc("All");
@@ -150,26 +159,22 @@ int main(int argc, char** args) {
             unsigned numberOfUniformLevels = i + 1;
             unsigned numberOfSelectiveLevels = 0;
             mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-            // erase all the coarse mesh levels
             mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
-            // print mesh info
             mlMsh.PrintInfo();
     
      
+              unsigned int idx = fe_fam * feOrder.size() + fe_ord;
+            
             // define the multilevel solution and attach the mlMsh object to it
             MultiLevelSolution mlSol(&mlMsh); 
-            
-            std::ostringstream unk; unk << unknowns[0] << "_" << fe_fam << "_" << fe_ord;
-            
-            // add variables to mlSol
-            mlSol.AddSolution(unk.str().c_str(), feFamily[fe_fam], feOrder[fe_ord]);
+            mlSol.AddSolution(unknowns[idx].c_str(), feFamily[fe_fam], feOrder[fe_ord]);
             mlSol.Initialize("All");
             mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-            mlSol.GenerateBdc(unk.str().c_str());
+            mlSol.GenerateBdc("All");
             
                   
-                   main_single_level(mlSol,unk.str(),files,mlMsh,i);
+                   main_single_level(mlSol,unknowns[idx],files,mlMsh,i);
       
       
             if ( i > 0 ) {
@@ -249,11 +254,10 @@ int main(int argc, char** args) {
             system.AddSolutionToSystemPDE(unknown.c_str());
 
             
-            
             // attach the assembling function to system
             system.SetAssembleFunction(AssemblePoissonProblem_AD);
 
-            // initilaize and solve the system
+            // initialize and solve the system
             system.init();
             system.ClearVariablesToBeSolved();
             system.AddVariableToBeSolved("All");
@@ -270,9 +274,7 @@ int main(int argc, char** args) {
             // ======= Print ========================
             std::vector < std::string > variablesToBePrinted;
             variablesToBePrinted.push_back("All");
-
-            VTKWriter vtkIO(&mlSol);
-            vtkIO.Write(unknown, files.GetOutputPath(), "biquadratic", variablesToBePrinted, i);  
+            mlSol.GetWriter()->Write(unknown, files.GetOutputPath(), "biquadratic", variablesToBePrinted, i);  
     
     
 }
