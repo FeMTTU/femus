@@ -163,58 +163,62 @@ int main (int argc, char** args) {
   system.SetRKVariableType ("P", false);
     
   
-//   std::vector < std::vector < std::string > > solVkName(dim), solDkName(dim);
-//   for(unsigned k = 0; k<dim; k++){ 
-//     solVkName[k] = system.GetSolkiNames( solVName[k].c_str() );
-//     solDkName[k] = system.GetSolkiNames( solDName[k].c_str() );
-//   }
-//   const std::vector < std::string > solPkName = system.GetSolkiNames ("P");
-//   
-//   unsigned RK = system.GetRungeKuttaStages();
-//   
-//   std::vector < std::vector < unsigned > > fieldVDP(RK);
-//   std::vector < std::vector < unsigned > > solutionTypeVDP(RK);
-//   for(unsigned i = 0; i < RK; i++){
-//     fieldVDP[i].resize(2 * dim + 1);
-//     solutionTypeVDP[i].resize(2 * dim + 1);
-//     for(unsigned k = 0; k < dim; k++){
-//       fieldVDP[i][k] = system.GetSolPdeIndex(solVkName[k][i].c_str());
-//       solutionTypeVDP[i][k] = mlSol.GetSolutionType(solVkName[k][i].c_str());
-//     }
-//     for(unsigned k = 0; k < dim; k++){
-//       fieldVDP[i][dim + k] = system.GetSolPdeIndex(solDkName[k][i].c_str());
-//       solutionTypeVDP[i][dim + k] = mlSol.GetSolutionType(solDkName[k][i].c_str());
-//     }
-//     fieldVDP[i][2 * dim] = system.GetSolPdeIndex(solPkName[i].c_str());
-//     solutionTypeVDP[i][2 * dim ] = mlSol.GetSolutionType(solPkName[i].c_str());
-//   }
-//   
-//   FieldSplitTree VDP0(PREONLY, MLU_PRECOND, fieldVDP[0], solutionTypeVDP[0], "VDP0");
-//   FieldSplitTree VDP1(PREONLY, MLU_PRECOND, fieldVDP[1], solutionTypeVDP[1], "VDP1");
-//   FieldSplitTree VDP2(PREONLY, MLU_PRECOND, fieldVDP[2], solutionTypeVDP[2], "VDP2");
-//   
-//   std::vector < FieldSplitTree *> FSi;
-//   FSi.reserve(RK);
-//   
-//   FSi.push_back(&VDP0);  //displacement first
-//   FSi.push_back(&VDP1);  // velocity second
-//   FSi.push_back(&VDP2);  // velocity second
-//   
-//   FieldSplitTree FS(RICHARDSON, FIELDSPLIT_PRECOND, FSi, "RK");
-//   
-// 
-//   system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
+  std::vector < std::vector < std::string > > solVkName(dim), solDkName(dim);
+  for(unsigned k = 0; k<dim; k++){ 
+    solVkName[k] = system.GetSolkiNames( solVName[k].c_str() );
+    solDkName[k] = system.GetSolkiNames( solDName[k].c_str() );
+  }
+  const std::vector < std::string > solPkName = system.GetSolkiNames ("P");
+  
+  unsigned RK = system.GetRungeKuttaStages();
+  
+  std::vector < std::vector < unsigned > > fieldVDP(RK);
+  std::vector < std::vector < unsigned > > solutionTypeVDP(RK);
+  for(unsigned i = 0; i < RK; i++){
+    fieldVDP[i].resize(2 * dim + 1);
+    solutionTypeVDP[i].resize(2 * dim + 1);
+    for(unsigned k = 0; k < dim; k++){
+      fieldVDP[i][k] = system.GetSolPdeIndex(solVkName[k][i].c_str());
+      solutionTypeVDP[i][k] = mlSol.GetSolutionType(solVkName[k][i].c_str());
+    }
+    for(unsigned k = 0; k < dim; k++){
+      fieldVDP[i][dim + k] = system.GetSolPdeIndex(solDkName[k][i].c_str());
+      solutionTypeVDP[i][dim + k] = mlSol.GetSolutionType(solDkName[k][i].c_str());
+    }
+    fieldVDP[i][2 * dim] = system.GetSolPdeIndex(solPkName[i].c_str());
+    solutionTypeVDP[i][2 * dim ] = mlSol.GetSolutionType(solPkName[i].c_str());
+  }
+  
+  FieldSplitTree VDP0(PREONLY, MLU_PRECOND, fieldVDP[0], solutionTypeVDP[0], "VDP0");
+  FieldSplitTree VDP1(PREONLY, MLU_PRECOND, fieldVDP[1], solutionTypeVDP[1], "VDP1");
+  //FieldSplitTree VDP2(PREONLY, MLU_PRECOND, fieldVDP[2], solutionTypeVDP[2], "VDP2");
+  
+  std::vector < FieldSplitTree *> FSi;
+  FSi.reserve(RK);
+  
+  FSi.push_back(&VDP0);  //displacement first
+  FSi.push_back(&VDP1);  // velocity second
+  //FSi.push_back(&VDP2);  // velocity second
+  
+  FieldSplitTree FS(RICHARDSON, FIELDSPLIT_PRECOND, FSi, "RK");
+  
+
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
   
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleBoussinesqAppoximation_AD);
-
+ 
   // initilaize and solve the system
   system.init();
 
+//   system.SetSolverCoarseGrid(GMRES);
+//   system.SetPreconditionerCoarseGrid(MLU_PRECOND);
+//   system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 1, 1); //GMRES tolerances
+  
   system.AttachGetTimeIntervalFunction (GetTimeStep);
   const unsigned int n_timesteps = 100;
 
-  //system.SetFieldSplitTree(&FS);
+  system.SetFieldSplitTree(&FS);
   
   // ******* Print solution *******
   mlSol.SetWriter (VTK);

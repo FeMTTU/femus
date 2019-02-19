@@ -215,10 +215,18 @@ namespace femus {
   void FieldSplitTree::BuildIndexSet(const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc,
                                      const unsigned& nprocs, const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver) {
 
-    if(_MatrixOffset.size() < level) _MatrixOffset.resize(level);
+    std::cout<<"AAAAAAAAAAAAAAAAAAA\n"<<std::flush;
+    
+    std::cout<<_MatrixOffset.size()<< " "<< "AAAAAAAAAAAAAAAAAAA\n"<<std::flush;
+    
+    if(_MatrixOffset.size() < level + 1) _MatrixOffset.resize(level + 1);
 
-    _MatrixOffset[level - 1] = KKoffset;
+    
+    
+    _MatrixOffset[level] = KKoffset;
 
+    
+    
     if(GetNumberOfSplits() == 1) {
       if(_preconditioner == ASM_PRECOND && !_asmStandard) {
         BuildASMIndexSet(level, solver);
@@ -227,9 +235,11 @@ namespace femus {
       return;
     }
 
-    if(_isSplit.size() < level) _isSplit.resize(level);
+    std::cout<<"AAAAAAAAAAAAAAAAAAA\n"<<std::flush;
+    
+    if(_isSplit.size() < level + 1) _isSplit.resize(level + 1);
 
-    _isSplit[level - 1].resize(GetNumberOfSplits());
+    _isSplit[level].resize(GetNumberOfSplits());
 
     for(unsigned i = 0; i < GetNumberOfSplits(); i++) {
 
@@ -262,7 +272,7 @@ namespace femus {
         }
       }
 
-      ISCreateGeneral(MPI_COMM_WORLD, size, isSplitIndex, PETSC_USE_POINTER, &_isSplit[level - 1][i]);
+      ISCreateGeneral(MPI_COMM_WORLD, size, isSplitIndex, PETSC_USE_POINTER, &_isSplit[level][i]);
 
       // on the child branches
 
@@ -335,6 +345,8 @@ namespace femus {
     PC pc;
     KSPGetPC(ksp, &pc);
 
+    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAA\n"<<std::flush;
+    
     //BEGIN from here
     if(_preconditioner == FIELDSPLIT_PRECOND) {
       PetscPreconditioner::set_petsc_preconditioner_type(_preconditioner, pc);
@@ -343,7 +355,7 @@ namespace femus {
       //PCFieldSplitSetType( pc, PC_COMPOSITE_MULTIPLICATIVE );
       
       for(unsigned i = 0; i < _numberOfSplits; i++) {
-        PCFieldSplitSetIS(pc, NULL, _isSplit[level - 1][i]);
+        PCFieldSplitSetIS(pc, NULL, _isSplit[level][i]);
       }
 
       PCSetUp(pc);
@@ -381,7 +393,7 @@ namespace femus {
       PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, pc);
 
       if(!_asmStandard) {
-        PCASMSetLocalSubdomains(pc, _asmLocalIsIndex[level - 1].size(), &_asmOverlappingIs[level - 1][0], &_asmLocalIs[level - 1][0]);
+        PCASMSetLocalSubdomains(pc, _asmLocalIsIndex[level].size(), &_asmOverlappingIs[level][0], &_asmLocalIs[level][0]);
       }
 
       PCASMSetOverlap(pc, _asmOverlapping);
@@ -399,10 +411,10 @@ namespace femus {
 
       if(!_asmStandard) {
 	for(unsigned j = 0;j < 2; j++){//loop on the material
-	  unsigned istart = (j == 0) ? 0 : _asmBlockMaterialRange[level - 1][j - 1];
+	  unsigned istart = (j == 0) ? 0 : _asmBlockMaterialRange[level][j - 1];
 	  
 	  //std::cout << " number of blocks in split "<< j <<" = "<< _asmBlockMaterialRange[level - 1][j] << std::endl;
-	  for(int i = istart; i < _asmBlockMaterialRange[level - 1][j]; i++) {
+	  for(int i = istart; i < _asmBlockMaterialRange[level][j]; i++) {
 	    PC subpcs;
 	    KSPGetPC(subksps[i], &subpcs);
 	    KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
@@ -451,7 +463,7 @@ namespace femus {
       SetSchurPreType(pc);
 
       for(int i = 0; i < _numberOfSplits; i++) {
-        PCFieldSplitSetIS(pc, NULL, _isSplit[level - 1][i]);
+        PCFieldSplitSetIS(pc, NULL, _isSplit[level][i]);
       }
 
       PCSetUp(pc);
@@ -681,8 +693,8 @@ namespace femus {
 
     unsigned iproc = solver->processor_id();
 
-    unsigned DofOffset = _MatrixOffset[level - 1][0][iproc];
-    unsigned DofOffsetSize = _MatrixOffset[level - 1][_solutionType.size()][iproc] - DofOffset;
+    unsigned DofOffset = _MatrixOffset[level][0][iproc];
+    unsigned DofOffsetSize = _MatrixOffset[level][_solutionType.size()][iproc] - DofOffset;
 
     vector < unsigned > indexa(DofOffsetSize, DofOffsetSize);
     vector < unsigned > indexb(DofOffsetSize, DofOffsetSize);
@@ -709,11 +721,11 @@ namespace femus {
     //elementBlockNumber[0] = 16;
     //elementBlockNumber[1] = 16;
 
-    _asmBlockMaterialRange.resize(level);
+    _asmBlockMaterialRange.resize(level+1);
 
     MeshASMPartitioning meshasmpartitioning(*msh);
 
-    meshasmpartitioning.DoPartitionOld(elementBlockNumber, block_elements, _asmBlockMaterialRange[level - 1]);
+    meshasmpartitioning.DoPartitionOld(elementBlockNumber, block_elements, _asmBlockMaterialRange[level]);
 
     vector <bool> ThisVaribaleIsNonSchur(_solutionType.size(), true);
 
@@ -723,15 +735,15 @@ namespace femus {
 
     // *** Start Vanka Block ***
 
-    _asmLocalIsIndex.resize(level);
-    _asmOverlappingIsIndex.resize(level);
+    _asmLocalIsIndex.resize(level+1);
+    _asmOverlappingIsIndex.resize(level+1);
 
-    _asmLocalIsIndex[level - 1].resize(block_elements.size());
-    _asmOverlappingIsIndex[level - 1].resize(block_elements.size());
+    _asmLocalIsIndex[level].resize(block_elements.size());
+    _asmOverlappingIsIndex[level ].resize(block_elements.size());
 
     for(int vb_index = 0; vb_index < block_elements.size(); vb_index++) { //loop on the vanka-blocks
-      _asmLocalIsIndex[level - 1][vb_index].resize(DofOffsetSize);
-      _asmOverlappingIsIndex[level - 1][vb_index].resize(DofOffsetSize);
+      _asmLocalIsIndex[level ][vb_index].resize(DofOffsetSize);
+      _asmOverlappingIsIndex[level ][vb_index].resize(DofOffsetSize);
 
       PetscInt PAsize = 0;
       PetscInt PBsize = 0;
@@ -757,18 +769,18 @@ namespace femus {
                   for(unsigned jj = 0; jj < nvej; jj++) {
                     unsigned jdof = msh->GetSolutionDof(jj, jel, SolType);
 
-                    unsigned kkdof = solver->GetSystemDof(SolType, indexSol, jj, jel, _MatrixOffset[level - 1]);
+                    unsigned kkdof = solver->GetSystemDof(SolType, indexSol, jj, jel, _MatrixOffset[level]);
                   
                     if(jdof >= msh->_dofOffset[SolType][iproc] &&
                         jdof <  msh->_dofOffset[SolType][iproc + 1]) {
                       if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
                         owned[kkdof - DofOffset] = true;
-                        _asmLocalIsIndex[level - 1][vb_index][PAsize] = kkdof;
+                        _asmLocalIsIndex[level][vb_index][PAsize] = kkdof;
                         indexa[kkdof - DofOffset] = PAsize++;
                       }
 
                       if(indexb[kkdof - DofOffset] == DofOffsetSize) {
-                        _asmOverlappingIsIndex[level - 1][vb_index][PBsize] = kkdof;
+                        _asmOverlappingIsIndex[level][vb_index][PBsize] = kkdof;
                         indexb[kkdof - DofOffset] = PBsize++;
                       }
                     }
@@ -794,18 +806,18 @@ namespace femus {
               for(unsigned ii = 0; ii < nvei; ii++) {
                 unsigned inode_Metis = msh->GetSolutionDof(ii, iel, SolType);
 
-                unsigned kkdof = solver->GetSystemDof(SolType, indexSol, ii, iel, _MatrixOffset[level - 1]);
+                unsigned kkdof = solver->GetSystemDof(SolType, indexSol, ii, iel, _MatrixOffset[level]);
 
                 if(inode_Metis >= msh->_dofOffset[SolType][iproc] &&
                     inode_Metis <  msh->_dofOffset[SolType][iproc + 1]) {
                   if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
                     owned[kkdof - DofOffset] = true;
-                    _asmLocalIsIndex[level - 1][vb_index][PAsize] = kkdof;
+                    _asmLocalIsIndex[level][vb_index][PAsize] = kkdof;
                     indexa[kkdof - DofOffset] = PAsize++;
                   }
 
                   if(indexb[kkdof - DofOffset] == DofOffsetSize) {
-                    _asmOverlappingIsIndex[level - 1][vb_index][PBsize] = kkdof;
+                    _asmOverlappingIsIndex[level][vb_index][PBsize] = kkdof;
                     indexb[kkdof - DofOffset] = PBsize++;
                   }
                 }
@@ -821,47 +833,47 @@ namespace femus {
 
       // *** re-initialize indeces(a,c,d)
       for(PetscInt i = 0; i < PAsize; i++) {
-        indexa[_asmLocalIsIndex[level - 1][vb_index][i] - DofOffset] = DofOffsetSize;
+        indexa[_asmLocalIsIndex[level ][vb_index][i] - DofOffset] = DofOffsetSize;
       }
 
       for(PetscInt i = 0; i < PBsize; i++) {
-        indexb[_asmOverlappingIsIndex[level - 1][vb_index][i] - DofOffset] = DofOffsetSize;
+        indexb[_asmOverlappingIsIndex[level][vb_index][i] - DofOffset] = DofOffsetSize;
       }
 
       for(PetscInt i = 0; i < Csize; i++) {
         indexc[indexci[i]] = ElemOffsetSize;
       }
 
-      _asmLocalIsIndex[level - 1][vb_index].resize(PAsize);
-      std::vector < PetscInt >(_asmLocalIsIndex[level - 1][vb_index]).swap(_asmLocalIsIndex[level - 1][vb_index]);
+      _asmLocalIsIndex[level ][vb_index].resize(PAsize);
+      std::vector < PetscInt >(_asmLocalIsIndex[level ][vb_index]).swap(_asmLocalIsIndex[level ][vb_index]);
 
-      _asmOverlappingIsIndex[level - 1][vb_index].resize(PBsize + mymap.size());
+      _asmOverlappingIsIndex[level ][vb_index].resize(PBsize + mymap.size());
       int i = 0;
 
       for(std::map<int, bool>::iterator it = mymap.begin(); it != mymap.end(); ++it, ++i) {
-        _asmOverlappingIsIndex[level - 1][vb_index][PBsize + i] = it->first;
+        _asmOverlappingIsIndex[level][vb_index][PBsize + i] = it->first;
       }
 
-      std::vector < PetscInt >(_asmOverlappingIsIndex[level - 1][vb_index]).swap(_asmOverlappingIsIndex[level - 1][vb_index]);
+      std::vector < PetscInt >(_asmOverlappingIsIndex[level ][vb_index]).swap(_asmOverlappingIsIndex[level ][vb_index]);
 
 
       mymap.clear();
 
-      std::sort(_asmLocalIsIndex[level - 1][vb_index].begin(), _asmLocalIsIndex[level - 1][vb_index].end());
-      std::sort(_asmOverlappingIsIndex[level - 1][vb_index].begin(), _asmOverlappingIsIndex[level - 1][vb_index].end());
+      std::sort(_asmLocalIsIndex[level][vb_index].begin(), _asmLocalIsIndex[level][vb_index].end());
+      std::sort(_asmOverlappingIsIndex[level][vb_index].begin(), _asmOverlappingIsIndex[level][vb_index].end());
 
 
     }
 
     //BEGIN Generate std::vector<IS> for ASM PC ***********
-    _asmLocalIs.resize(level);
-    _asmOverlappingIs.resize(level);
-    _asmLocalIs[level - 1].resize(_asmLocalIsIndex[level - 1].size());
-    _asmOverlappingIs[level - 1].resize(_asmOverlappingIsIndex[level - 1].size());
+    _asmLocalIs.resize(level+1);
+    _asmOverlappingIs.resize(level+1);
+    _asmLocalIs[level].resize(_asmLocalIsIndex[level].size());
+    _asmOverlappingIs[level].resize(_asmOverlappingIsIndex[level].size());
 
-    for(unsigned vb_index = 0; vb_index < _asmLocalIsIndex[level - 1].size(); vb_index++) {
-      ISCreateGeneral(MPI_COMM_SELF, _asmLocalIsIndex[level - 1][vb_index].size(), &_asmLocalIsIndex[level - 1][vb_index][0], PETSC_USE_POINTER, &_asmLocalIs[level - 1][vb_index]);
-      ISCreateGeneral(MPI_COMM_SELF, _asmOverlappingIsIndex[level - 1][vb_index].size(), &_asmOverlappingIsIndex[level - 1][vb_index][0], PETSC_USE_POINTER, &_asmOverlappingIs[level - 1][vb_index]);
+    for(unsigned vb_index = 0; vb_index < _asmLocalIsIndex[level].size(); vb_index++) {
+      ISCreateGeneral(MPI_COMM_SELF, _asmLocalIsIndex[level][vb_index].size(), &_asmLocalIsIndex[level][vb_index][0], PETSC_USE_POINTER, &_asmLocalIs[level][vb_index]);
+      ISCreateGeneral(MPI_COMM_SELF, _asmOverlappingIsIndex[level][vb_index].size(), &_asmOverlappingIsIndex[level][vb_index][0], PETSC_USE_POINTER, &_asmOverlappingIs[level][vb_index]);
     }
 
     //END Generate std::vector<IS> for ASM PC ***********
