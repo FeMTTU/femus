@@ -25,8 +25,8 @@ double InitalValueU ( const std::vector < double >& x )
 {
 //     return x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
 //     return x[0];
-//     return x[0] * x[0];
-    return x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
+    return x[0] * x[0];
+//     return x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 }
 
 void GetL2Norm ( MultiLevelProblem& ml_prob );
@@ -37,8 +37,8 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     bool dirichlet = true;
 //     value = 0.;
 //     value = x[0];
-//     value = x[0] * x[0];
-    value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
+    value = x[0] * x[0];
+//     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 
     if ( facename == 2 ) {
       dirichlet = false; //Neumann at the interface boundaries
@@ -64,7 +64,8 @@ int main ( int argc, char** argv )
 //     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
-        mlMsh.ReadCoarseMesh ( "../input/maxTest3.neu", "second", scalingFactor );
+//         mlMsh.ReadCoarseMesh ( "../input/maxTest3.neu", "second", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );

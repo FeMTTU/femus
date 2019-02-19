@@ -24,17 +24,17 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-//DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, martaTest4: 0.5, maxTest1: both 0.4, maxTest2: both 0.1, maxTest3: both 0.53.
-double delta1 = 0.53; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.53;
+//DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, martaTest4: 0.5, maxTest1: both 0.4, maxTest2: both 0.1, maxTest3: both 0.53, maxTest4: both 2.5
+double delta1 = 2.5; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 2.5;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
 //     value = 0.;
 //   value = x[0];
-//     value = x[0] * x[0];
-    value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
+    value = x[0] * x[0];
+//     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 
 }
 
@@ -413,7 +413,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                 for ( unsigned i = 0; i < nDof1; i++ ) {
 //           Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
 //           Res[i] -=  - 1. * weight * phi[i]; //Ax - f (so f = - 1)
-                    Res[i] -=  - 3. * ( xg1[0] + xg1[1] ) * weight * phi[i]; //Ax - f (so f = - 3 (x + y))
+//                     Res[i] -=  - 3. * ( xg1[0] + xg1[1] ) * weight * phi[i]; //Ax - f (so f = - 3 (x + y))
+                    
+                    if(ielGroup == 5 || ielGroup == 7){
+                        Res[i] -=  - 0. * weight * phi[i]; //Ax - f (so f = - 0)
+                    }
+                    
+                    else if(ielGroup == 6 || ielGroup == 8){
+                        Res[i] -=  - 1. * weight * phi[i]; //Ax - f (so f = - 1)
+                    }
+                    
                 }
             }
 
