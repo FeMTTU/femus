@@ -184,6 +184,33 @@ double myval_g = pt2func(time,xyz._val_g);
 } //end namespace Math
 
 
+
+namespace FE_convergence {
+    
+    
+ //this is based on the AddSolution function in MLSol
+ class Unknowns_definition {
+     
+ public:
+     
+     std::string _name;
+     FEFamily _fe_family;     
+     FEOrder  _fe_order;     
+     
+ };
+    
+    
+    
+    
+    
+    
+    
+    
+}
+
+
+
+
 } //end namespace femus
 
 

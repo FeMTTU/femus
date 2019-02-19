@@ -20,12 +20,42 @@
 #include "LinearImplicitSystem.hpp"
 #include "adept.h"
 #include "Files.hpp"
+#include "Math.hpp"
 
 // command to view matrices
 // ./tutorial_ex2_c -mat_view ::ascii_info_detail
 // ./tutorial_ex2_c -mat_view > matview_print_in_file.txt
 
 using namespace femus;
+
+ 
+ 
+ //Unknown definition  ==================
+ const std::vector< FE_convergence::Unknowns_definition >  provide_list_of_unknowns() {
+     
+     
+  std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE,  LAGRANGE/*, DISCONTINOUS_POLYNOMIAL*//*, DISCONTINOUS_POLYNOMIAL*/};
+  std::vector< FEOrder > feOrder = {FIRST, SERENDIPITY ,SECOND/*,ZERO, FIRST*/};
+
+  assert( feFamily.size() == feOrder.size() );
+ 
+ std::vector< FE_convergence::Unknowns_definition >  unknowns(feFamily.size());
+ 
+     for (unsigned int fe = 0; fe < unknowns.size(); fe++) {
+         
+            std::ostringstream unk; unk << "u" << "_" << feFamily[fe] << "_" << feOrder[fe];
+              unknowns[fe]._name      = unk.str();
+              unknowns[fe]._fe_family = feFamily[fe];
+              unknowns[fe]._fe_order  = feOrder[fe];
+              
+     }
+ 
+ 
+   return unknowns;
+     
+}
+
+
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
   bool dirichlet = true; //dirichlet
@@ -50,9 +80,9 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
 void output_convergence_rate(const std::vector < double > &  norm, const unsigned int i );
 
 
-const MultiLevelSolution  main_single_level(const std::vector< std::string > & unknown, const std::vector< FEFamily > feFamily, const std::vector< FEOrder > feOrder,  const Files & files, MultiLevelMesh & ml_mesh, const unsigned i);
+const MultiLevelSolution  main_single_level(const std::vector< FE_convergence::Unknowns_definition > & unknowns,  const Files & files, MultiLevelMesh & ml_mesh, const unsigned i);
   
-const MultiLevelSolution  prepare_convergence_study( const std::vector< std::string > unknowns,  const std::vector< FEFamily > feFamily, const std::vector< FEOrder > feOrder, MultiLevelMesh & ml_mesh_all_levels, const unsigned maxNumberOfMeshes);
+const MultiLevelSolution  prepare_convergence_study(const std::vector< FE_convergence::Unknowns_definition > &  unknowns, MultiLevelMesh & ml_mesh_all_levels, const unsigned maxNumberOfMeshes);
   
   
 
@@ -100,20 +130,12 @@ int main(int argc, char** args) {
 //   ml_mesh_all_levels.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
   
- //Unknown definition  ==================
-    std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE,  LAGRANGE/*, DISCONTINOUS_POLYNOMIAL*//*, DISCONTINOUS_POLYNOMIAL*/};
-    std::vector< FEOrder > feOrder = {FIRST, SERENDIPITY ,SECOND/*,ZERO, FIRST*/};
-    
-     std::vector< std::string > unknowns( feFamily.size() );
-//      if (unknowns.size() > 1) abort();
-     for (unsigned int fe = 0; fe < feFamily.size(); fe++) {
-            std::ostringstream unk; unk << "u" << "_" << feFamily[fe] << "_" << feOrder[fe];
-              unknowns[fe] = unk.str();
-     }
- //Unknown definition  ==================
+  
+    std::vector< FE_convergence::Unknowns_definition > unknowns = provide_list_of_unknowns();
+  
 
      //Error norm definition  ==================
-    const unsigned norm_flag = 0; //0 only L2: //1 L2+H1
+    const unsigned norm_flag = 1; //0 only L2: //1 L2+H1
    vector < vector < vector < double > > > norms(norm_flag + 1);
   
        for (int n = 0; n < norms.size(); n++) {
@@ -126,13 +148,13 @@ int main(int argc, char** args) {
 
  
 
-     MultiLevelSolution  ml_sol_all_levels =  prepare_convergence_study(unknowns, feFamily, feOrder, ml_mesh_all_levels, maxNumberOfMeshes);
+     MultiLevelSolution  ml_sol_all_levels =  prepare_convergence_study(unknowns, ml_mesh_all_levels, maxNumberOfMeshes);
     
             
        for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
                   
              
-            const MultiLevelSolution ml_sol_single_level  =   main_single_level(unknowns, feFamily, feOrder, files, ml_mesh, i);
+            const MultiLevelSolution ml_sol_single_level  =   main_single_level(unknowns, files, ml_mesh, i);
 
             
             
@@ -143,18 +165,15 @@ int main(int argc, char** args) {
             
             // ======= error norm computation ========================
             for (unsigned int u = 0; u < unknowns.size(); u++) {
-            const std::vector< double > norm_out = GetErrorNorm( & ml_sol_single_level, & ml_sol_all_levels, unknowns[u], i, norm_flag);
+            const std::vector< double > norm_out = GetErrorNorm( & ml_sol_single_level, & ml_sol_all_levels, unknowns[u]._name, i, norm_flag);
 
               for (int n = 0; n < norms.size(); n++)      norms[n][u][i-1] = norm_out[n];
                                        
                   }
               
               }
-            
 
              // ======= store the last computed solution ========================
-//             const unsigned level_index_current = 0;
-            
             ml_sol_all_levels.fill_at_level_from_level(i, ml_mesh.GetNumberOfLevels() - 1, ml_sol_single_level);
 
    }   //end h refinement
@@ -165,7 +184,7 @@ int main(int argc, char** args) {
     const std::vector< std::string > norm_names = {"L2-NORM","H1-SEMINORM"};
      for (unsigned int u = 0; u < unknowns.size(); u++) {
        for (int n = 0; n < norms.size(); n++) {
-            std::cout << norm_names[n] << " ERROR and ORDER OF CONVERGENCE: " << unknowns[u] << "\n\n";
+            std::cout << norm_names[n] << " ERROR and ORDER OF CONVERGENCE: " << unknowns[u]._name << "\n\n";
          for (int i = 0; i < maxNumberOfMeshes; i++) {
                 output_convergence_rate(norms[n][u], i );
             }
@@ -179,12 +198,8 @@ int main(int argc, char** args) {
 
 
 
-  const MultiLevelSolution  prepare_convergence_study( const std::vector< std::string > unknowns, const std::vector< FEFamily > feFamily, const std::vector< FEOrder > feOrder,  MultiLevelMesh & ml_mesh_all_levels, const unsigned maxNumberOfMeshes)  {
 
-    
- 
- 
-  
+  const MultiLevelSolution  prepare_convergence_study(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,  MultiLevelMesh & ml_mesh_all_levels, const unsigned maxNumberOfMeshes)  {
 
 
         unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
@@ -199,7 +214,7 @@ int main(int argc, char** args) {
                MultiLevelSolution ml_sol_all_levels(& ml_mesh_all_levels);
                
      for (unsigned int u = 0; u < unknowns.size(); u++) {
-               ml_sol_all_levels.AddSolution(unknowns[u].c_str(), feFamily[u], feOrder[u]);  //We have to do so to avoid buildup of AddSolution with different FE families
+               ml_sol_all_levels.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);  //We have to do so to avoid buildup of AddSolution with different FE families
                ml_sol_all_levels.Initialize("All");
                ml_sol_all_levels.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
                ml_sol_all_levels.GenerateBdc("All");
@@ -212,7 +227,7 @@ int main(int argc, char** args) {
 
 
 
-  const MultiLevelSolution  main_single_level(const std::vector< std::string > & unknowns, const std::vector< FEFamily > feFamily, const std::vector< FEOrder > feOrder,  const Files & files, MultiLevelMesh & ml_mesh, const unsigned i)  {
+  const MultiLevelSolution  main_single_level(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,  const Files & files, MultiLevelMesh & ml_mesh, const unsigned i)  {
       
       
             //Mesh  ==================
@@ -229,10 +244,10 @@ int main(int argc, char** args) {
 
          for (unsigned int u = 0; u < unknowns.size(); u++) {
              
-            ml_sol_single_level.AddSolution(unknowns[u].c_str(), feFamily[u], feOrder[u]);
-            ml_sol_single_level.Initialize(unknowns[u].c_str());
+            ml_sol_single_level.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);
+            ml_sol_single_level.Initialize(unknowns[u]._name.c_str());
             ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-            ml_sol_single_level.GenerateBdc(unknowns[u].c_str());
+            ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str());
       
             
             
@@ -247,10 +262,10 @@ int main(int argc, char** args) {
             LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Poisson");
 
             // add solution "u" to system
-            system.AddSolutionToSystemPDE(unknowns[u].c_str());
+            system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
 
             
-            mlProb.set_current_unknown_assembly(unknowns[u]); //way to communicate to the assemble function, which doesn't belong to any class
+            mlProb.set_current_unknown_assembly(unknowns[u]._name); //way to communicate to the assemble function, which doesn't belong to any class
             
             // attach the assembling function to system
             system.SetAssembleFunction(AssemblePoissonProblem_AD);
@@ -271,8 +286,8 @@ int main(int argc, char** args) {
       
             // ======= Print ========================
             std::vector < std::string > variablesToBePrinted;
-            variablesToBePrinted.push_back(unknowns[u]/*"All"*/);
-            ml_sol_single_level.GetWriter()->Write(unknowns[u], files.GetOutputPath(), "biquadratic", variablesToBePrinted, i);  
+            variablesToBePrinted.push_back(unknowns[u]._name/*"All"*/);
+            ml_sol_single_level.GetWriter()->Write(unknowns[u]._name, files.GetOutputPath(), "biquadratic", variablesToBePrinted, i);  
      
 
          }
