@@ -156,12 +156,7 @@ int main(int argc, char** args) {
              // ======= store the last computed solution ========================
             const unsigned level_index_current = 0;
             
-           for (unsigned int u = 0; u < unknowns.size(); u++) {
-                 *(ml_sol_all_levels.GetLevel(i)->_Sol[u]) = *(ml_sol_single_level.GetSolutionLevel(level_index_current)->_Sol[u]);
-            //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
-                
-            } //unk
-
+            ml_sol_all_levels.fill_at_level_from_level(i, level_index_current, ml_sol_single_level);
 
    }   //end h refinement
  

@@ -105,6 +105,11 @@ public:
     };
 
     /** To be Added */
+    const unsigned GetSolutionSize() const {
+        return _solType.size();
+    };
+    
+    /** To be Added */
     vector <char*>  GetSolName() {
         return _solName;
     };
@@ -246,8 +251,11 @@ public:
     };
     
     
+    
     void UpdateSolution(const char name[], InitFunc func, const double& time);
     
+    void fill_at_level_from_level(const unsigned lev_out, const unsigned lev_in, const MultiLevelSolution & ml_sol_in);
+        
     void CopySolutionToOldSolution();
     
     void SetIfFSI(const bool &FSI = true){

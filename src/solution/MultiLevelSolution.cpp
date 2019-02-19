@@ -744,6 +744,19 @@ namespace femus
         
     }
   
+  /** Copies from another MLSol object from a given level to some other level.
+      One should also check that they belong to the same underlying mesh structure */
+  void MultiLevelSolution::fill_at_level_from_level(const unsigned lev_out, const unsigned lev_in, const MultiLevelSolution & ml_sol_in)  {
+      
+      assert(_solType.size() == ml_sol_in.GetSolutionSize());
+      
+          for(unsigned k = 0; k < _solType.size(); k++) {
+              *(_solution[lev_out]->_Sol[k]) = *(ml_sol_in.GetSolutionLevel(lev_in)->_Sol[k]);
+          }
+          
+  }
+
+  
   
   void MultiLevelSolution::CopySolutionToOldSolution()
   {
