@@ -43,7 +43,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown);
 
 
-std::pair < double, double > GetErrorNorm(const MultiLevelSolution* ml_sol, const MultiLevelSolution* ml_sol_all_levels, const std::string & unknown, const unsigned current_level); 
+  std::vector< double > GetErrorNorm(const MultiLevelSolution* ml_sol, const MultiLevelSolution* ml_sol_all_levels, const std::string & unknown, const unsigned current_level); 
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
@@ -52,8 +52,11 @@ void output_convergence_rate(const std::vector < double > &  norm, const unsigne
 
 const MultiLevelSolution  main_single_level(const std::vector< std::string > & unknown, const std::vector< FEFamily > feFamily, const std::vector< FEOrder > feOrder,  const Files & files, MultiLevelMesh & ml_mesh, const unsigned i);
   
+const MultiLevelSolution  prepare_convergence_study( const std::vector< std::string > unknowns,  const std::vector< FEFamily > feFamily, const std::vector< FEOrder > feOrder, MultiLevelMesh & ml_mesh_all_levels, const unsigned maxNumberOfMeshes);
   
   
+
+
 int main(int argc, char** args) {
 
   // ======= Init ==========================
@@ -81,9 +84,9 @@ int main(int argc, char** args) {
   ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 //   ml_mesh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
+
   
-  
-  
+   //Mesh all levels ==================
   unsigned maxNumberOfMeshes;
 
   if (nsub[2] == 0) {
@@ -91,6 +94,10 @@ int main(int argc, char** args) {
   } else {
     maxNumberOfMeshes = 4;
   }
+
+  MultiLevelMesh ml_mesh_all_levels;
+  ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   ml_mesh_all_levels.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
   
  //Unknown definition  ==================
@@ -105,73 +112,45 @@ int main(int argc, char** args) {
      }
  //Unknown definition  ==================
 
-     
-
- //Error norm definition  ==================
-  vector < vector < double > > l2Norm( unknowns.size() );
-  vector < vector < double > >  semiNorm( unknowns.size() );
-  
-     for (unsigned int u = 0; u < unknowns.size(); u++) {
-              l2Norm[u].resize(maxNumberOfMeshes);
-            semiNorm[u].resize(maxNumberOfMeshes);
-        }   
-        
+     //Error norm definition  ==================
     const std::vector< std::string > norm_names = {"L2-NORM","SEMINORM"};
+   vector < vector < vector < double > > > norms( norm_names.size() );
+  
+       for (int n = 0; n < norm_names.size(); n++) {
+              norms[n].resize( unknowns.size() );
+           for (unsigned int u = 0; u < unknowns.size(); u++) {
+               norms[n][u].resize(maxNumberOfMeshes);
+         }   
+       }
  //Error norm definition  ==================
 
  
-  
-   //Mesh  ==================
-  MultiLevelMesh ml_mesh_all_levels;
-  ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//   ml_mesh_all_levels.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
-
-        unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
-        ml_mesh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
-//      ml_mesh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
-   //Mesh  ==================
-
- 
- //Solution ==================
-//         std::vector < MultiLevelSolution * >   ml_sol_all_levels(unknowns.size());
-//                ml_sol_all_levels[u] = new MultiLevelSolution (& ml_mesh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-               MultiLevelSolution ml_sol_all_levels(& ml_mesh_all_levels);
-               
-     for (unsigned int u = 0; u < unknowns.size(); u++) {
-               ml_sol_all_levels.AddSolution(unknowns[u].c_str(), feFamily[u], feOrder[u]);  //We have to do so to avoid buildup of AddSolution with different FE families
-               ml_sol_all_levels.Initialize("All");
-               ml_sol_all_levels.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-               ml_sol_all_levels.GenerateBdc("All");
-                }
- //Solution  ==================
-           
-            
-            
+     MultiLevelSolution  ml_sol_all_levels =  prepare_convergence_study(unknowns, feFamily, feOrder, ml_mesh_all_levels, maxNumberOfMeshes);
+    
             
        for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
-
-            
                   
              
             const MultiLevelSolution ml_sol_single_level  =   main_single_level(unknowns, feFamily, feOrder, files, ml_mesh, i);
 
             
-            for (unsigned int u = 0; u < unknowns.size(); u++) {
             
             if ( i > 0 ) {
         
             // ======= prolongation of coarser ========================
             ml_sol_all_levels.RefineSolution(i);
-            // ======= error norm computation ========================
-            std::pair< double , double > norm = GetErrorNorm( & ml_sol_single_level, & ml_sol_all_levels, unknowns[u], i);
-
-              l2Norm[u][i-1] = norm.first;
-            semiNorm[u][i-1] = norm.second;
             
-              }
+            // ======= error norm computation ========================
+            for (unsigned int u = 0; u < unknowns.size(); u++) {
+                
+            const std::vector< double > norm_out = GetErrorNorm( & ml_sol_single_level, & ml_sol_all_levels, unknowns[u], i);
+
+              for (int n = 0; n < norm_names.size(); n++)      norms[n][u][i-1] = norm_out[n];
+                                       
+                  }
               
-            }
+              }
             
 
              // ======= store the last computed solution ========================
@@ -193,8 +172,7 @@ int main(int argc, char** args) {
        for (int n = 0; n < norm_names.size(); n++) {
             std::cout << norm_names[n] << " ERROR and ORDER OF CONVERGENCE: " << unknowns[u] << "\n\n";
          for (int i = 0; i < maxNumberOfMeshes; i++) {
-        if (n == 0)   output_convergence_rate(l2Norm[u], i );
-   else if (n == 1)   output_convergence_rate(semiNorm[u], i );
+                output_convergence_rate(norms[n][u], i );
             }
          }
       }
@@ -204,6 +182,37 @@ int main(int argc, char** args) {
   return 0;
 }
 
+
+
+  const MultiLevelSolution  prepare_convergence_study( const std::vector< std::string > unknowns, const std::vector< FEFamily > feFamily, const std::vector< FEOrder > feOrder,  MultiLevelMesh & ml_mesh_all_levels, const unsigned maxNumberOfMeshes)  {
+
+    
+ 
+ 
+  
+
+
+        unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
+        ml_mesh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
+//      ml_mesh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
+   //Mesh  ==================
+
+ 
+ //Solution ==================
+//         std::vector < MultiLevelSolution * >   ml_sol_all_levels(unknowns.size());
+//                ml_sol_all_levels[u] = new MultiLevelSolution (& ml_mesh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+               MultiLevelSolution ml_sol_all_levels(& ml_mesh_all_levels);
+               
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+               ml_sol_all_levels.AddSolution(unknowns[u].c_str(), feFamily[u], feOrder[u]);  //We have to do so to avoid buildup of AddSolution with different FE families
+               ml_sol_all_levels.Initialize("All");
+               ml_sol_all_levels.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+               ml_sol_all_levels.GenerateBdc("All");
+                }
+ //Solution  ==================
+
+ return ml_sol_all_levels;
+}
 
 
 
@@ -730,8 +739,15 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
 
 
 
-std::pair < double, double > GetErrorNorm(const MultiLevelSolution* ml_sol, const MultiLevelSolution* ml_sol_all_levels, const std::string & unknown, const unsigned current_level) {
+  std::vector< double > GetErrorNorm(const MultiLevelSolution* ml_sol, const MultiLevelSolution* ml_sol_all_levels, const std::string & unknown, const unsigned current_level) {
     
+  //norms that we are computing here //first L2, then H1 ============
+  std::vector< double > norms = {0.,0.};  
+  std::vector< double > norms_exact_dofs = {0.,0.};
+  std::vector< double > norms_inexact_dofs = {0.,0.};
+  //norms that we are computing here //first L2, then H1 ============
+  
+  
   unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*     msh = ml_sol->_mlMesh->GetLevel(level);
@@ -745,9 +761,15 @@ std::pair < double, double > GetErrorNorm(const MultiLevelSolution* ml_sol, cons
   unsigned soluIndex = ml_sol->GetIndex(unknown.c_str()); // ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
   unsigned soluType = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
-
-  vector < vector < double > > x(dim);    // local coordinates
+  
+  // ======================================
+  // reserve memory for the local standar vectors
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  
+  
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+  vector < vector < double > > x(dim);    // local coordinates
+  for (unsigned i = 0; i < dim; i++)   x[i].reserve(maxSize);
 
   vector <double> phi;
   vector <double> phi_x;
@@ -755,28 +777,19 @@ std::pair < double, double > GetErrorNorm(const MultiLevelSolution* ml_sol, cons
   
   double weight; // gauss point weight
 
-  // reserve memory for the local standar vectors
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   vector < double >  solu;                               solu.reserve(maxSize);
   vector < double >  solu_exact_at_dofs;   solu_exact_at_dofs.reserve(maxSize);
   vector < double >  solu_coarser_prol;     solu_coarser_prol.reserve(maxSize);
 
-  for (unsigned i = 0; i < dim; i++)
-    x[i].reserve(maxSize);
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   phi_xx.reserve(maxSize * dim2);
 
-  double seminorm = 0.;
-  double l2norm = 0.;
-  double seminorm_exact_dofs = 0.;
-  double l2norm_exact_dofs = 0.;
-  double seminorm_inexact = 0.;
-  double l2norm_inexact = 0.;
 
+  
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -846,67 +859,60 @@ std::pair < double, double > GetErrorNorm(const MultiLevelSolution* ml_sol, cons
       vector <double> exactGradSol(dim);    GetExactSolutionGradient(x_gss, exactGradSol);
 
       for (unsigned j = 0; j < dim ; j++) {
-        seminorm            += ((gradSolu_gss[j] - exactGradSol[j])               * (gradSolu_gss[j]  - exactGradSol[j])) * weight;
-        seminorm_exact_dofs += ((gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j]) * (gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j])) * weight;
-        seminorm_inexact    += ((gradSolu_gss[j] - gradSolu_coarser_prol_gss[j])  * (gradSolu_gss[j] - gradSolu_coarser_prol_gss[j]))  * weight;
+        norms[1]               += ((gradSolu_gss[j] - exactGradSol[j])               * (gradSolu_gss[j]  - exactGradSol[j])) * weight;
+        norms_exact_dofs[1]    += ((gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j]) * (gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j])) * weight;
+        norms_inexact_dofs[1]  += ((gradSolu_gss[j] - gradSolu_coarser_prol_gss[j])  * (gradSolu_gss[j] - gradSolu_coarser_prol_gss[j]))  * weight;
       }
 
       double exactSol = GetExactSolutionValue(x_gss);
-      l2norm              += (solu_gss - exactSol)                * (solu_gss - exactSol)       * weight;
-      l2norm_exact_dofs   += (solu_gss - exactSol_from_dofs_gss)  * (solu_gss - exactSol_from_dofs_gss) * weight;
-      l2norm_inexact      += (solu_gss - solu_coarser_prol_gss)   * (solu_gss - solu_coarser_prol_gss)  * weight;
+      norms[0]               += (solu_gss - exactSol)                * (solu_gss - exactSol)       * weight;
+      norms_exact_dofs[0]    += (solu_gss - exactSol_from_dofs_gss)  * (solu_gss - exactSol_from_dofs_gss) * weight;
+      norms_inexact_dofs[0]  += (solu_gss - solu_coarser_prol_gss)   * (solu_gss - solu_coarser_prol_gss)  * weight;
+      
    } // end gauss point loop
+   
   } //end element loop for each process
 
   // add the norms of all processes
   NumericVector* norm_vec;
-  norm_vec = NumericVector::build().release();
-  norm_vec->init(msh->n_processors(), 1 , false, AUTOMATIC);
+                 norm_vec = NumericVector::build().release();
+                 norm_vec->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-  norm_vec->set(iproc, l2norm);
-  norm_vec->close();
-  l2norm = norm_vec->l1_norm();
+                 norm_vec->set(iproc, norms[0]);  norm_vec->close();  norms[0] = norm_vec->l1_norm();
+                 norm_vec->set(iproc, norms[1]);  norm_vec->close();  norms[1] = norm_vec->l1_norm();
 
-  norm_vec->set(iproc, seminorm);
-  norm_vec->close();
-  seminorm = norm_vec->l1_norm();
-
-  delete norm_vec;
+          delete norm_vec;
 
    // add the norms of all processes
   NumericVector* norm_vec_exact_dofs;
-  norm_vec_exact_dofs = NumericVector::build().release();
-  norm_vec_exact_dofs->init(msh->n_processors(), 1 , false, AUTOMATIC);
+                 norm_vec_exact_dofs = NumericVector::build().release();
+                 norm_vec_exact_dofs->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-  norm_vec_exact_dofs->set(iproc, l2norm_exact_dofs);
-  norm_vec_exact_dofs->close();
-  l2norm_exact_dofs = norm_vec_exact_dofs->l1_norm();
+                 norm_vec_exact_dofs->set(iproc, norms_exact_dofs[0]);  norm_vec_exact_dofs->close();  norms_exact_dofs[0] = norm_vec_exact_dofs->l1_norm();
+                 norm_vec_exact_dofs->set(iproc, norms_exact_dofs[1]);  norm_vec_exact_dofs->close();  norms_exact_dofs[1] = norm_vec_exact_dofs->l1_norm();
 
-  norm_vec_exact_dofs->set(iproc, seminorm_exact_dofs);
-  norm_vec_exact_dofs->close();
-  seminorm_exact_dofs = norm_vec_exact_dofs->l1_norm();
-
-  delete norm_vec_exact_dofs;
+          delete norm_vec_exact_dofs;
 
   // add the norms of all processes
   NumericVector* norm_vec_inexact;
-  norm_vec_inexact = NumericVector::build().release();
-  norm_vec_inexact->init(msh->n_processors(), 1 , false, AUTOMATIC);
+                 norm_vec_inexact = NumericVector::build().release();
+                 norm_vec_inexact->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-  norm_vec_inexact->set(iproc, l2norm_inexact);
-  norm_vec_inexact->close();
-  l2norm_inexact = norm_vec_inexact->l1_norm();
+                 norm_vec_inexact->set(iproc, norms_inexact_dofs[0]);  norm_vec_inexact->close();  norms_inexact_dofs[0] = norm_vec_inexact->l1_norm();
+                 norm_vec_inexact->set(iproc, norms_inexact_dofs[1]);  norm_vec_inexact->close();  norms_inexact_dofs[1] = norm_vec_inexact->l1_norm();
 
-  norm_vec_inexact->set(iproc, seminorm_inexact);
-  norm_vec_inexact->close();
-  seminorm_inexact = norm_vec_inexact->l1_norm();
-
-  delete norm_vec_inexact;
-
-  std::pair < double, double > inexact_pair(sqrt(l2norm_inexact), sqrt(seminorm_inexact));
+          delete norm_vec_inexact;
   
-//   return std::pair < double, double > (sqrt(l2norm), sqrt(seminorm));
-//   return std::pair < double, double > (sqrt(l2norm_exact_dofs), sqrt(seminorm_exact_dofs));
-  return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
+    for (int n = 0; n < norms.size(); n++) { 
+                  norms[n] = sqrt(norms[n]);                                            
+       norms_exact_dofs[n] = sqrt(norms_exact_dofs[n]);                                            
+     norms_inexact_dofs[n] = sqrt(norms_inexact_dofs[n]);
+    }
+    
+    
+//   return norms;
+//   return norms_exact_dofs;
+  return norms_inexact_dofs;
 
+ 
 }
