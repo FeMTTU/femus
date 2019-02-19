@@ -43,7 +43,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown);
 
 
-  std::vector< double > GetErrorNorm(const MultiLevelSolution* ml_sol, const MultiLevelSolution* ml_sol_all_levels, const std::string & unknown, const unsigned current_level); 
+  std::vector< double > GetErrorNorm(const MultiLevelSolution* ml_sol, const MultiLevelSolution* ml_sol_all_levels, const std::string & unknown, const unsigned current_level, const unsigned norm_flag); 
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
@@ -113,10 +113,10 @@ int main(int argc, char** args) {
  //Unknown definition  ==================
 
      //Error norm definition  ==================
-    const std::vector< std::string > norm_names = {"L2-NORM","SEMINORM"};
-   vector < vector < vector < double > > > norms( norm_names.size() );
+    const unsigned norm_flag = 0; //0 only L2: //1 L2+H1
+   vector < vector < vector < double > > > norms(norm_flag + 1);
   
-       for (int n = 0; n < norm_names.size(); n++) {
+       for (int n = 0; n < norms.size(); n++) {
               norms[n].resize( unknowns.size() );
            for (unsigned int u = 0; u < unknowns.size(); u++) {
                norms[n][u].resize(maxNumberOfMeshes);
@@ -143,10 +143,9 @@ int main(int argc, char** args) {
             
             // ======= error norm computation ========================
             for (unsigned int u = 0; u < unknowns.size(); u++) {
-                
-            const std::vector< double > norm_out = GetErrorNorm( & ml_sol_single_level, & ml_sol_all_levels, unknowns[u], i);
+            const std::vector< double > norm_out = GetErrorNorm( & ml_sol_single_level, & ml_sol_all_levels, unknowns[u], i, norm_flag);
 
-              for (int n = 0; n < norm_names.size(); n++)      norms[n][u][i-1] = norm_out[n];
+              for (int n = 0; n < norms.size(); n++)      norms[n][u][i-1] = norm_out[n];
                                        
                   }
               
@@ -154,17 +153,18 @@ int main(int argc, char** args) {
             
 
              // ======= store the last computed solution ========================
-            const unsigned level_index_current = 0;
+//             const unsigned level_index_current = 0;
             
-            ml_sol_all_levels.fill_at_level_from_level(i, level_index_current, ml_sol_single_level);
+            ml_sol_all_levels.fill_at_level_from_level(i, ml_mesh.GetNumberOfLevels() - 1, ml_sol_single_level);
 
    }   //end h refinement
  
   
   
   // ======= Error computation ========================
+    const std::vector< std::string > norm_names = {"L2-NORM","H1-SEMINORM"};
      for (unsigned int u = 0; u < unknowns.size(); u++) {
-       for (int n = 0; n < norm_names.size(); n++) {
+       for (int n = 0; n < norms.size(); n++) {
             std::cout << norm_names[n] << " ERROR and ORDER OF CONVERGENCE: " << unknowns[u] << "\n\n";
          for (int i = 0; i < maxNumberOfMeshes; i++) {
                 output_convergence_rate(norms[n][u], i );
@@ -293,7 +293,7 @@ void output_convergence_rate(const std::vector < double > &  norm, const unsigne
     std::cout << i + 1 << "\t\t";
     std::cout.precision(14);
 
-                 std::cout << norm[i] << "\t";
+    std::cout << norm[i] << "\t";
 
     std::cout << std::endl;
   
@@ -417,11 +417,8 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
       x[i].resize(nDofx);
     }
 
-    Res.resize(nDofu);    //resize
-    std::fill(Res.begin(), Res.end(), 0);    //set Res to zero
-
-    Jac.resize(nDofu * nDofu);    //resize
-    std::fill(Jac.begin(), Jac.end(), 0);    //set Jac to zero
+    Res.resize(nDofu);          std::fill(Res.begin(), Res.end(), 0.); 
+    Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.);
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
@@ -734,12 +731,13 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
 
 
 
-  std::vector< double > GetErrorNorm(const MultiLevelSolution* ml_sol, const MultiLevelSolution* ml_sol_all_levels, const std::string & unknown, const unsigned current_level) {
+  std::vector< double > GetErrorNorm(const MultiLevelSolution* ml_sol, const MultiLevelSolution* ml_sol_all_levels, const std::string & unknown, const unsigned current_level, const unsigned norm_flag) {
     
+  const unsigned num_norms = norm_flag + 1;
   //norms that we are computing here //first L2, then H1 ============
-  std::vector< double > norms = {0.,0.};  
-  std::vector< double > norms_exact_dofs = {0.,0.};
-  std::vector< double > norms_inexact_dofs = {0.,0.};
+  std::vector< double > norms(num_norms);                  std::fill(norms.begin(), norms.end(), 0.);   
+  std::vector< double > norms_exact_dofs(num_norms);       std::fill(norms_exact_dofs.begin(), norms_exact_dofs.end(), 0.);
+  std::vector< double > norms_inexact_dofs(num_norms);     std::fill(norms_inexact_dofs.begin(), norms_inexact_dofs.end(), 0.);
   //norms that we are computing here //first L2, then H1 ============
   
   
@@ -851,6 +849,16 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
         }
       }
 
+// H^0 ==============      
+//     if (norm_flag == 0) {
+      double exactSol = GetExactSolutionValue(x_gss);
+      norms[0]               += (solu_gss - exactSol)                * (solu_gss - exactSol)       * weight;
+      norms_exact_dofs[0]    += (solu_gss - exactSol_from_dofs_gss)  * (solu_gss - exactSol_from_dofs_gss) * weight;
+      norms_inexact_dofs[0]  += (solu_gss - solu_coarser_prol_gss)   * (solu_gss - solu_coarser_prol_gss)  * weight;
+//     }
+    
+// H^1 ==============      
+    /*else*/ if (norm_flag == 1) {
       vector <double> exactGradSol(dim);    GetExactSolutionGradient(x_gss, exactGradSol);
 
       for (unsigned j = 0; j < dim ; j++) {
@@ -858,11 +866,7 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
         norms_exact_dofs[1]    += ((gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j]) * (gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j])) * weight;
         norms_inexact_dofs[1]  += ((gradSolu_gss[j] - gradSolu_coarser_prol_gss[j])  * (gradSolu_gss[j] - gradSolu_coarser_prol_gss[j]))  * weight;
       }
-
-      double exactSol = GetExactSolutionValue(x_gss);
-      norms[0]               += (solu_gss - exactSol)                * (solu_gss - exactSol)       * weight;
-      norms_exact_dofs[0]    += (solu_gss - exactSol_from_dofs_gss)  * (solu_gss - exactSol_from_dofs_gss) * weight;
-      norms_inexact_dofs[0]  += (solu_gss - solu_coarser_prol_gss)   * (solu_gss - solu_coarser_prol_gss)  * weight;
+   }
       
    } // end gauss point loop
    
@@ -873,8 +877,8 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
                  norm_vec = NumericVector::build().release();
                  norm_vec->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-                 norm_vec->set(iproc, norms[0]);  norm_vec->close();  norms[0] = norm_vec->l1_norm();
-                 norm_vec->set(iproc, norms[1]);  norm_vec->close();  norms[1] = norm_vec->l1_norm();
+         /*if (norm_flag == 0) {*/ norm_vec->set(iproc, norms[0]);  norm_vec->close();  norms[0] = norm_vec->l1_norm(); /*}*/
+    /*else*/ if (norm_flag == 1) { norm_vec->set(iproc, norms[1]);  norm_vec->close();  norms[1] = norm_vec->l1_norm(); }
 
           delete norm_vec;
 
@@ -883,8 +887,8 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
                  norm_vec_exact_dofs = NumericVector::build().release();
                  norm_vec_exact_dofs->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-                 norm_vec_exact_dofs->set(iproc, norms_exact_dofs[0]);  norm_vec_exact_dofs->close();  norms_exact_dofs[0] = norm_vec_exact_dofs->l1_norm();
-                 norm_vec_exact_dofs->set(iproc, norms_exact_dofs[1]);  norm_vec_exact_dofs->close();  norms_exact_dofs[1] = norm_vec_exact_dofs->l1_norm();
+         /*if (norm_flag == 0) {*/ norm_vec_exact_dofs->set(iproc, norms_exact_dofs[0]);  norm_vec_exact_dofs->close();  norms_exact_dofs[0] = norm_vec_exact_dofs->l1_norm(); /*}*/
+    /*else*/ if (norm_flag == 1) { norm_vec_exact_dofs->set(iproc, norms_exact_dofs[1]);  norm_vec_exact_dofs->close();  norms_exact_dofs[1] = norm_vec_exact_dofs->l1_norm(); }
 
           delete norm_vec_exact_dofs;
 
@@ -893,11 +897,12 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
                  norm_vec_inexact = NumericVector::build().release();
                  norm_vec_inexact->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-                 norm_vec_inexact->set(iproc, norms_inexact_dofs[0]);  norm_vec_inexact->close();  norms_inexact_dofs[0] = norm_vec_inexact->l1_norm();
-                 norm_vec_inexact->set(iproc, norms_inexact_dofs[1]);  norm_vec_inexact->close();  norms_inexact_dofs[1] = norm_vec_inexact->l1_norm();
+         /*if (norm_flag == 0) {*/ norm_vec_inexact->set(iproc, norms_inexact_dofs[0]);  norm_vec_inexact->close();  norms_inexact_dofs[0] = norm_vec_inexact->l1_norm(); /*}*/
+    /*else*/ if (norm_flag == 1) { norm_vec_inexact->set(iproc, norms_inexact_dofs[1]);  norm_vec_inexact->close();  norms_inexact_dofs[1] = norm_vec_inexact->l1_norm(); }
 
           delete norm_vec_inexact;
-  
+
+          
     for (int n = 0; n < norms.size(); n++) { 
                   norms[n] = sqrt(norms[n]);                                            
        norms_exact_dofs[n] = sqrt(norms_exact_dofs[n]);                                            
