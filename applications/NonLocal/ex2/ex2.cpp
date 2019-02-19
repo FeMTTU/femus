@@ -24,8 +24,9 @@ using namespace femus;
 double InitalValueU ( const std::vector < double >& x )
 {
 //     return x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
-    return x[0];
+//     return x[0];
 //     return x[0] * x[0];
+    return x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 }
 
 void GetL2Norm ( MultiLevelProblem& ml_prob );
@@ -35,8 +36,9 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 
     bool dirichlet = true;
 //     value = 0.;
-    value = x[0];
+//     value = x[0];
 //     value = x[0] * x[0];
+    value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 
     if ( facename == 2 ) {
       dirichlet = false; //Neumann at the interface boundaries
@@ -46,7 +48,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 4;
+unsigned numberOfUniformLevels = 2;
 
 int main ( int argc, char** argv )
 {
@@ -60,8 +62,9 @@ int main ( int argc, char** argv )
     unsigned numberOfSelectiveLevels = 0;
 //     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
-    mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
+        mlMsh.ReadCoarseMesh ( "../input/maxTest3.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
@@ -206,24 +209,28 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
             // *** get gauss point weight, test function and test function partial derivatives ***
             msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight, phi, phi_x );
             double soluNonLoc_gss = 0.;
-            double exactSol_gss = 0.;
+            double exactSol_gss_x = 0.;
+            double exactSol_gss_y = 0.;
             
             
             for ( unsigned i = 0; i < nDofu; i++ ) {
                 soluNonLoc_gss += phi[i] * soluNonLoc[i];
-                exactSol_gss += phi[i] * x1[0][i]; //TODO this is if the exact sol is u = x
+                exactSol_gss_x += phi[i] * x1[0][i]; // this is x at the Gauss point
+                exactSol_gss_y += phi[i] * x1[1][i]; // this is y at the Gauss point
             }
 
-//             exactSol_gss *= exactSol_gss; //TODO this is if the exact sol is u = x^2
+            exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^3
+            exactSol_gss_y = exactSol_gss_y * exactSol_gss_y * exactSol_gss_y; // this is y^3
+            
             
 //             std::cout<<" soluNonLoc_gss = " << soluNonLoc_gss << " , " << "exactSol_gss = " << exactSol_gss << std::endl;
 
 
-            local_norm2 += (soluNonLoc_gss -  exactSol_gss) * (soluNonLoc_gss - exactSol_gss) * weight;
+            local_norm2 += (soluNonLoc_gss -  (exactSol_gss_x + exactSol_gss_y)) * (soluNonLoc_gss -  (exactSol_gss_x + exactSol_gss_y)) * weight;
             
             sol_norm2 += soluNonLoc_gss * soluNonLoc_gss * weight;
             
-            sol_exact_norm2 += exactSol_gss * exactSol_gss * weight;
+            sol_exact_norm2 += (exactSol_gss_x + exactSol_gss_y) * (exactSol_gss_x + exactSol_gss_y) * weight; //L2 norm of x^3 + y^3
         }
     }
 
