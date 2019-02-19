@@ -62,6 +62,9 @@ public:
     /** Destructor */
     ~MultiLevelSolution();
 
+    /** this is the destructor that can be called explicitly, instead of the automatic destructor */
+    void clear();
+ 
     /** To be Added */
     void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order, unsigned tmorder=0, const bool &Pde_type=1);
 

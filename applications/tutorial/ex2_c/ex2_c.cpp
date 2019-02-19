@@ -133,13 +133,14 @@ int main(int argc, char** args) {
  
  //Solution ==================
         std::vector < MultiLevelSolution * >   mlSol_all_levels(unknowns.size());
-        
      for (unsigned int u = 0; u < unknowns.size(); u++) {
                mlSol_all_levels[u] = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+            // ======= Reference sol ========================
                mlSol_all_levels[u]->AddSolution(unknowns[u].c_str(), feFamily[u], feOrder[u]);  //We have to do so to avoid buildup of AddSolution with different FE families
                mlSol_all_levels[u]->Initialize("All");
                mlSol_all_levels[u]->AttachSetBoundaryConditionFunction(SetBoundaryCondition);
                mlSol_all_levels[u]->GenerateBdc("All");
+            // ======= Reference sol ========================
                 }
  //Solution  ==================
            
@@ -149,7 +150,6 @@ int main(int argc, char** args) {
        for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
             
-         for (unsigned int u = 0; u < unknowns.size(); u++) {
                   
              //Mesh  ==================
             unsigned numberOfUniformLevels = i + 1;
@@ -159,9 +159,12 @@ int main(int argc, char** args) {
 
             mlMsh.PrintInfo();
                   
-             const MultiLevelSolution mlSol  =   main_single_level(unknowns[u], feFamily[u], feOrder[u], files, mlMsh, i);
-      
-      
+         for (unsigned int u = 0; u < unknowns.size(); u++) {
+             
+             const MultiLevelSolution ml_sol_single_level  =   main_single_level(unknowns[u], feFamily[u], feOrder[u], files, mlMsh, i);
+         
+         
+         
             if ( i > 0 ) {
         
             // ======= prolongation of coarser ========================
@@ -169,7 +172,7 @@ int main(int argc, char** args) {
             const Solution* sol_coarser_prolongated = mlSol_all_levels[u]->GetSolutionLevel(i);
   
             // ======= error norm computation ========================
-            std::pair< double , double > norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
+            std::pair< double , double > norm = GetErrorNorm(&ml_sol_single_level,sol_coarser_prolongated);
 
               l2Norm[u][i-1] = norm.first;
             semiNorm[u][i-1] = norm.second;
@@ -180,13 +183,17 @@ int main(int argc, char** args) {
             // ======= store the last computed solution ========================
             const unsigned level_index_current = 0;
             //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
-            const unsigned n_vars = mlSol.GetSolutionLevel(level_index_current)->_Sol.size();
+            const unsigned n_vars_mlsol     = ml_sol_single_level.GetSolutionLevel(level_index_current)->_Sol.size();
+            const unsigned n_vars_mlsol_all = mlSol_all_levels[u]->GetSolutionLevel(level_index_current)->_Sol.size();
        
-            for(unsigned short j = 0; j < n_vars; j++) {  
-                 *(mlSol_all_levels[u]->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
+            for(unsigned short j = 0; j < n_vars_mlsol; j++) {  
+                 *(mlSol_all_levels[u]->GetLevel(i)->_Sol[j]) = *(ml_sol_single_level.GetSolutionLevel(level_index_current)->_Sol[j]);
             }
         
-
+            // ======= Clear Reference sol ========================
+//             mlSol_all_levels->ResizeSolution_par(0);
+//             mlSol_all_levels->clear();
+        
       } //end unknowns
       
         

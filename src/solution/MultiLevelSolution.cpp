@@ -40,22 +40,11 @@ namespace femus
   using std::endl;
 
 //---------------------------------------------------------------------------------------------------
-  MultiLevelSolution::~MultiLevelSolution()
-  {
+  MultiLevelSolution::~MultiLevelSolution()  {
 
-    for(unsigned i = 0; i < _gridn; i++) {
-      _solution[i]->FreeSolutionVectors();
-      delete _solution[i];
-    }
+    clear();
 
-    for(unsigned i = 0; i < _solName.size(); i++) delete [] _solName[i];
-
-    for(unsigned i = 0; i < _solName.size(); i++) delete [] _bdcType[i];
-    
-    if(_writer != NULL) delete _writer;
-
-
-  };
+  }
 
 //---------------------------------------------------------------------------------------------------
   MultiLevelSolution::MultiLevelSolution(MultiLevelMesh* ml_msh) :
@@ -79,6 +68,31 @@ namespace femus
     _writer = NULL;
 
   }
+  
+  
+//---------------------------------------------------------------------------------------------------
+// this is the destructor that can be called explicitly, instead of the automatic destructor
+ void MultiLevelSolution::clear() {
+      
+    for(unsigned i = 0; i < _gridn; i++) {
+      _solution[i]->FreeSolutionVectors();
+      delete _solution[i];
+    }
+
+    for(unsigned i = 0; i < _solName.size(); i++) delete [] _solName[i];
+
+    for(unsigned i = 0; i < _solName.size(); i++) delete [] _bdcType[i];
+    
+    if(_writer != NULL) delete _writer;
+ 
+      
+      
+  }
+  
+  
+  
+  
+  
 
   void MultiLevelSolution::AddSolutionLevel()
   {
