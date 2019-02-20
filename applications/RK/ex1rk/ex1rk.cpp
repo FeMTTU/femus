@@ -1,7 +1,6 @@
 
 /** tutorial/Ex14
  * This example shows how to set and solve the weak form of the Bistable Equation
->>>>>>> 137150e40fff16af420ad8fc7bb9d8ebac4df18f
  *          $$ \dfrac{\partial u}{ \partial t}-\epsilon \nabla \cdot u=u-u^3  \text{in} \Omega $$
  *          $$ \nabla u.n=0 \text{ on} \partial \Omega $$
  *          $$ u= u_{0} in \Omega x {t=0} $$
