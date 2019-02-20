@@ -94,7 +94,7 @@ int main (int argc, char** args) {
   mlMsh.RefineMesh (numberOfUniformLevels, numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 2);
+  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -143,7 +143,7 @@ int main (int argc, char** args) {
   // add system Poisson in mlProb as a Linear Implicit System
   ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("NS");
 
-  system.SetImplicitRungeKuttaScheme (DIRK3);
+  system.SetImplicitRungeKuttaScheme (CROUZEIX2);
 
   std::vector < std::string > solVName (3), solDName (3);
   solVName[0] = "U";
@@ -191,14 +191,14 @@ int main (int argc, char** args) {
   
   FieldSplitTree VDP0(PREONLY, MLU_PRECOND, fieldVDP[0], solutionTypeVDP[0], "VDP0");
   FieldSplitTree VDP1(PREONLY, MLU_PRECOND, fieldVDP[1], solutionTypeVDP[1], "VDP1");
-  FieldSplitTree VDP2(PREONLY, MLU_PRECOND, fieldVDP[2], solutionTypeVDP[2], "VDP2");
+  //FieldSplitTree VDP2(PREONLY, MLU_PRECOND, fieldVDP[2], solutionTypeVDP[2], "VDP2");
   
   std::vector < FieldSplitTree *> FSi;
   FSi.reserve(RK);
   
   FSi.push_back(&VDP0);  //displacement first
   FSi.push_back(&VDP1);  // velocity second
-  FSi.push_back(&VDP2);  // velocity second
+  //FSi.push_back(&VDP2);  // velocity second
   
   FieldSplitTree FS(RICHARDSON, FIELDSPLIT_PRECOND, FSi, "RK");
   
@@ -207,10 +207,14 @@ int main (int argc, char** args) {
   
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleBoussinesqAppoximation_AD);
-
+ 
   // initilaize and solve the system
   system.init();
 
+//   system.SetSolverCoarseGrid(GMRES);
+//   system.SetPreconditionerCoarseGrid(MLU_PRECOND);
+//   system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 1, 1); //GMRES tolerances
+  
   system.AttachGetTimeIntervalFunction (GetTimeStep);
   const unsigned int n_timesteps = 100;
 

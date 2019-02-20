@@ -218,12 +218,17 @@ namespace femus
     const unsigned& npre, const unsigned& npost)
   {
 
+    
+    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAA\n"<<std::flush;
+    
     unsigned level = _msh->GetLevel();
 
     // ***************** NODE/ELEMENT SEARCH *******************
     if(_bdcIndexIsInitialized == 0) BuildBdcIndex(variable_to_be_solved);
     // ***************** END NODE/ELEMENT SEARCH *******************
 
+    
+    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAA\n"<<std::flush;
     KSP* kspMG = LinSolver->GetKSP();
     PC pcMG;
     KSPGetPC(*kspMG, &pcMG);
@@ -238,6 +243,8 @@ namespace femus
       KSPSetTolerances(subksp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npre);
     }
 
+    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAA\n"<<std::flush;
+    
     this->SetPetscSolverType(subksp);
     std::ostringstream levelName;
     levelName << "level-" << level;
@@ -256,6 +263,8 @@ namespace femus
     PC subpc;
     KSPGetPC(subksp, &subpc);
     SetPreconditioner(subksp, subpc);
+    
+    
 
     if(level < levelMax) {
       PCMGSetX(pcMG, level, (static_cast< PetscVector* >(_EPS))->vec());

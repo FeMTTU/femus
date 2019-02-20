@@ -96,9 +96,11 @@ namespace femus {
 
     _LinSolver.resize(_gridn);
 
-    _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], GMRES_SMOOTHER).release();
+//     _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], GMRES_SMOOTHER).release();
 
-    for(unsigned i = 1; i < _gridn; i++) {
+    _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], _SmootherType).release();
+    
+    for(unsigned i = 0; i < _gridn; i++) {
       _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _SmootherType).release();
     }
 
@@ -957,7 +959,12 @@ restart:
 
   // ********************************************
 
-  void LinearImplicitSystem::SetSolverFineGrids(const SolverType finegridsolvertype) {
+  void LinearImplicitSystem::SetSolverCoarseGrid(const SolverType &finegridsolvertype) {
+    _LinSolver[0]->set_solver_type(finegridsolvertype);
+  }
+  
+  
+  void LinearImplicitSystem::SetSolverFineGrids(const SolverType &finegridsolvertype) {
     _finegridsolvertype = finegridsolvertype;
 
     for(unsigned i = 1; i < _gridn; i++) {
@@ -967,7 +974,15 @@ restart:
 
   // ********************************************
 
-  void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType finegridpreconditioner) {
+  
+  
+  
+  void LinearImplicitSystem::SetPreconditionerCoarseGrid(const PreconditionerType &finegridpreconditioner) {
+    _LinSolver[0]->set_preconditioner_type(finegridpreconditioner);
+  }
+  
+  
+  void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType &finegridpreconditioner) {
     _finegridpreconditioner = finegridpreconditioner;
 
     for(unsigned i = 1; i < _gridn; i++) {
@@ -1004,7 +1019,7 @@ restart:
   // ********************************************
 
   void LinearImplicitSystem::SetFieldSplitTree(FieldSplitTree *fieldSplitTree) {
-    for(unsigned i = 1; i < _gridn; i++) {
+    for(unsigned i = 0; i < _gridn; i++) {
       _LinSolver[i]->SetFieldSplitTree(fieldSplitTree);
     }
   };
