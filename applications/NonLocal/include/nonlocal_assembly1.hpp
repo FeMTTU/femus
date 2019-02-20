@@ -25,16 +25,20 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, martaTest4: 0.5, maxTest1: both 0.4, maxTest2: both 0.1, maxTest3: both 0.53, maxTest4: both 2.5
-double delta1 = 2.5; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 2.5;
+double delta1 = 0.4; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.4;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
+//     if ( x[0] < 0. )  value = 0.;
+//
+//     else value = x[0] * x[0] + 2.;
+
 //     value = 0.;
-//   value = x[0];
-    value = x[0] * x[0];
-//     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
+//     value = x[0];
+//     value = x[0] * x[0];
+    value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 
 }
 
@@ -85,6 +89,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
     vector < vector < double > > x1 ( dim );
     vector < vector < double > > x2 ( dim );
+    std::vector <double> fourPointLobattoQuadrature ( dim );
 
     for ( unsigned k = 0; k < dim; k++ ) {
         x1[k].reserve ( maxSize );
@@ -205,6 +210,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                 for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
+                    bool interfaceElement = false;
+
                     short unsigned ielGeom = msh->GetElementType ( iel );
                     short unsigned ielGroup = msh->GetElementGroup ( iel );
                     unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType );
@@ -230,23 +237,65 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         }
                     }
 
+
                     ReorderElement ( l2GMap1, solu1, x1 );
 
-                    unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
+                    double sideLength = fabs ( x1[0][0] - x1[0][1] );
+
+                    double leftBoundInterface = - sideLength;
+                    double rightBoundInterface = sideLength;
+
+                    if ( leftBoundInterface <= x1[0][0] && x1[0][1] <= rightBoundInterface ) interfaceElement = true; //this assumes the interface to be located at x = 0
+
+                    unsigned igNumber = ( interfaceElement ) ? 4 : msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
                     vector < vector < double > > xg1 ( igNumber );
                     vector <double> weight1 ( igNumber );
                     vector < vector <double> > phi1x ( igNumber );
 
-                    for ( unsigned ig = 0; ig < igNumber; ig++ ) {
-                        msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight1[ig], phi1x[ig], phi_x );
 
-                        xg1[ig].assign ( dim, 0. );
+                    if ( interfaceElement ) {
 
-                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                        for ( unsigned ig = 0; ig < igNumber; ig++ ) {
+
+                            std::vector <double> xg1Local ( dim );
+
+                            weight1[ig] = 0.25 * sideLength * sideLength;
+
+                            xg1[ig].assign ( dim, 0. );
+
+                            unsigned midpointDof = ig + 4;
+                            unsigned xDof  = msh->GetSolutionDof ( midpointDof, iel, xType );
+
                             for ( unsigned k = 0; k < dim; k++ ) {
-                                xg1[ig][k] += x1[k][i] * phi1x[ig][i];
+                                xg1[ig][k] = ( *msh->_topology->_Sol[k] ) ( xDof );
+//                                 std::cout<< xg1[ig][k] << std::endl;
+                            }
+
+                            for ( unsigned k = 0; k < dim; k++ ) {
+                                xg1Local[k] = - 1. + 2. * ( xg1[ig][k] - x1[k][k] ) / ( x1[k][k + 1] - x1[k][k] );
+                            }
+
+                            double weightTemp;
+                            msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, xg1Local, weightTemp, phi1x[ig], phi_x );
+
+                        }
+
+                    }
+
+                    else {
+
+                        for ( unsigned ig = 0; ig < igNumber; ig++ ) {
+                            msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight1[ig], phi1x[ig], phi_x );
+
+                            xg1[ig].assign ( dim, 0. );
+
+                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                for ( unsigned k = 0; k < dim; k++ ) {
+                                    xg1[ig][k] += x1[k][i] * phi1x[ig][i];
+                                }
                             }
                         }
+
                     }
 
                     double radius;
@@ -411,18 +460,18 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                 // up to here Res only contains A_ij*u_j, now we take out f
                 for ( unsigned i = 0; i < nDof1; i++ ) {
-//           Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
-//           Res[i] -=  - 1. * weight * phi[i]; //Ax - f (so f = - 1)
-//                     Res[i] -=  - 3. * ( xg1[0] + xg1[1] ) * weight * phi[i]; //Ax - f (so f = - 3 (x + y))
-                    
-                    if(ielGroup == 5 || ielGroup == 7){
-                        Res[i] -=  - 0. * weight * phi[i]; //Ax - f (so f = - 0)
-                    }
-                    
-                    else if(ielGroup == 6 || ielGroup == 8){
-                        Res[i] -=  - 1. * weight * phi[i]; //Ax - f (so f = - 1)
-                    }
-                    
+//                     Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
+//                     Res[i] -=  - 1. * weight * phi[i]; //Ax - f (so f = - 1)
+                    Res[i] -=  - 3. * ( xg1[0] + xg1[1] ) * weight * phi[i]; //Ax - f (so f = - 3 (x + y))
+
+//                     if ( ielGroup == 5 || ielGroup == 7 ) {
+//                         Res[i] -=  - 0. * weight * phi[i]; //Ax - f (so f = - 0)
+//                     }
+//
+//                     else if ( ielGroup == 6 || ielGroup == 8 ) {
+//                         Res[i] -=  - 100. * weight * phi[i]; //Ax - f (so f = - 1)
+//                     }
+
                 }
             }
 
@@ -753,10 +802,10 @@ void ReorderElement ( std::vector < int > &dofs, std::vector < double > & sol, s
     }
 
     else {
-        type = 1;
+        type = 3;
 
         if ( x[1][0] > x[1][1] ) {
-            type = 3;
+            type = 1;
         }
     }
 
@@ -776,5 +825,8 @@ void ReorderElement ( std::vector < int > &dofs, std::vector < double > & sol, s
     }
 
 }
+
+
+
 
 
