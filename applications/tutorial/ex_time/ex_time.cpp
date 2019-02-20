@@ -27,6 +27,9 @@
  * 
  **/
 
+// exp(-2 pi^2 t) sin(PI x) sin(PI y) 
+//  sin(acos(-1.) * coordsX) * sin( acos(-1.) * coordsY) * exp(-2. * acos(-1.)^2 * t)
+
 #include "MultiLevelProblem.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
@@ -82,6 +85,9 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
              if(!strcmp(name,"u")) {
                  value = sin(M_PI * x[0]) * sin(M_PI * x[1]);
              }
+             if(!strcmp(name,"time")) {
+                 value = ml_prob->get_system<TransientNonlinearImplicitSystem>("Timedep").GetTime();
+             }
 
            
       return value;   
@@ -105,8 +111,8 @@ int main(int argc,char **args) {
   //Nondimensional quantity (Lref,Uref)
   double Lref = 1.;
   double Uref = 1.;
-  const unsigned int nsub_x = 40;
-  const unsigned int nsub_y = 40;
+  const unsigned int nsub_x = 16;
+  const unsigned int nsub_y = 16;
   const unsigned int nsub_z = 0;
   const std::vector<double> xyz_min = {0.,0.,0.};
   const std::vector<double> xyz_max = {1.,1.,0.};
@@ -124,6 +130,7 @@ int main(int argc,char **args) {
   MultiLevelSolution ml_sol(&ml_msh);  // define the multilevel solution and attach the mlMsh object to it
   const unsigned int time_dep_flag = 2;
   ml_sol.AddSolution("u", LAGRANGE, FIRST, time_dep_flag);
+  ml_sol.AddSolution("time", DISCONTINOUS_POLYNOMIAL, ZERO, time_dep_flag);
 
   // ======= Problem ========================
   MultiLevelProblem ml_prob(&ml_sol);  // define the multilevel problem attach the ml_sol object to it
@@ -160,12 +167,13 @@ int main(int argc,char **args) {
   
   // time loop parameter
   system.SetIntervalTime(0.001);
-  const unsigned int n_timesteps = 100;
+  const unsigned int n_timesteps = 20;
   const unsigned int write_interval = 1;
 
   // ======= Time Loop ========================
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
+     
   // ======= Final Print ========================
     if ( !(time_step%write_interval) ) {
 
@@ -179,10 +187,13 @@ int main(int argc,char **args) {
     std::cout << std::endl;
     std::cout << " *********** Timedep ************ " << std::endl;
     ml_prob.get_system("Timedep").MLsolve();
+    
+     ml_sol.Initialize("time", SetInitialCondition, &ml_prob);
 
     //update Solution
     ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep").CopySolutionToOldSolution();
 
+      
 
   } //end loop timestep
 
@@ -417,7 +428,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 	        Lap_mat += phi_x_fe_qp[SolFEType[0]][i * dim + d] * phi_x_fe_qp[SolFEType[0]][j * dim + d];
 	      }
 
-		B[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * (Lap_mat + Mass);
+		B[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * Lap_mat + Mass);
 	      
   	    }    //end phij loop
 	  }      // endif assemble_matrix
