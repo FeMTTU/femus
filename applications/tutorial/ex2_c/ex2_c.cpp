@@ -34,8 +34,8 @@ using namespace femus;
  const std::vector< FE_convergence::Unknowns_definition >  provide_list_of_unknowns() {
      
      
-  std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE,  LAGRANGE/*, DISCONTINOUS_POLYNOMIAL*//*, DISCONTINOUS_POLYNOMIAL*/};
-  std::vector< FEOrder > feOrder = {FIRST, SERENDIPITY ,SECOND/*,ZERO, FIRST*/};
+  std::vector< FEFamily > feFamily = {/*LAGRANGE,*/ LAGRANGE,  LAGRANGE/*, DISCONTINOUS_POLYNOMIAL*//*, DISCONTINOUS_POLYNOMIAL*/};
+  std::vector< FEOrder >   feOrder = {/*FIRST,*/ SERENDIPITY ,SECOND/*,ZERO, FIRST*/};
 
   assert( feFamily.size() == feOrder.size() );
  
@@ -67,19 +67,39 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   return dirichlet;
 }
 
-void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
 
+void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
 void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown);
+
+
+
 
 
   std::vector< double > GetErrorNorm(const MultiLevelSolution* ml_sol, const MultiLevelSolution* ml_sol_all_levels, const std::string & unknown, const unsigned current_level, const unsigned norm_flag); 
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
-void output_convergence_rate(const std::vector < double > &  norm, const unsigned int i );
+void output_convergence_rate(const std::vector < std::vector < std::vector < double > > > &  norm, const unsigned int u, const unsigned int i, const unsigned int n);
 
-
+void output_convergence_rate_all(const std::vector< FE_convergence::Unknowns_definition > &  unknowns, const std::vector < std::vector < std::vector < double > > > &  norms, const unsigned norm_flag, const unsigned maxNumberOfMeshes) {
+    
+    assert(unknowns.size() == norms.size());
+    
+    const std::vector< std::string > norm_names = {"L2-NORM","H1-SEMINORM"};
+  
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+       for (int n = 0; n < norm_flag + 1; n++) {
+            std::cout << norm_names[n] << " ERROR and ORDER OF CONVERGENCE: " << unknowns[u]._name << "\n\n";
+         for (int i = 0; i < maxNumberOfMeshes; i++) {
+                output_convergence_rate(norms,u,i,n);
+            }
+         }
+      }
+      
+ }
+ 
+ 
 const MultiLevelSolution  main_single_level(const std::vector< FE_convergence::Unknowns_definition > & unknowns,  const Files & files, MultiLevelMesh & ml_mesh, const unsigned i);
   
 const MultiLevelSolution  prepare_convergence_study(const std::vector< FE_convergence::Unknowns_definition > &  unknowns, MultiLevelMesh & ml_mesh_all_levels, const unsigned maxNumberOfMeshes);
@@ -136,13 +156,13 @@ int main(int argc, char** args) {
 
      //Error norm definition  ==================
     const unsigned norm_flag = 1; //0 only L2: //1 L2+H1
-   vector < vector < vector < double > > > norms(norm_flag + 1);
+   vector < vector < vector < double > > > norms( unknowns.size() );
   
-       for (int n = 0; n < norms.size(); n++) {
-              norms[n].resize( unknowns.size() );
-           for (unsigned int u = 0; u < unknowns.size(); u++) {
-               norms[n][u].resize(maxNumberOfMeshes);
-         }   
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+              norms[u].resize( maxNumberOfMeshes );
+       for (int i = 0; i < norms[u].size(); i++) {   // loop on the mesh level
+               norms[u][i].resize(norm_flag + 1);
+           }   
        }
  //Error norm definition  ==================
 
@@ -165,9 +185,10 @@ int main(int argc, char** args) {
             
             // ======= error norm computation ========================
             for (unsigned int u = 0; u < unknowns.size(); u++) {
+                
             const std::vector< double > norm_out = GetErrorNorm( & ml_sol_single_level, & ml_sol_all_levels, unknowns[u]._name, i, norm_flag);
 
-              for (int n = 0; n < norms.size(); n++)      norms[n][u][i-1] = norm_out[n];
+              for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];
                                        
                   }
               
@@ -177,21 +198,11 @@ int main(int argc, char** args) {
             ml_sol_all_levels.fill_at_level_from_level(i, ml_mesh.GetNumberOfLevels() - 1, ml_sol_single_level);
 
    }   //end h refinement
+   
  
   
-  
-  // ======= Error computation ========================
-    const std::vector< std::string > norm_names = {"L2-NORM","H1-SEMINORM"};
-     for (unsigned int u = 0; u < unknowns.size(); u++) {
-       for (int n = 0; n < norms.size(); n++) {
-            std::cout << norm_names[n] << " ERROR and ORDER OF CONVERGENCE: " << unknowns[u]._name << "\n\n";
-         for (int i = 0; i < maxNumberOfMeshes; i++) {
-                output_convergence_rate(norms[n][u], i );
-            }
-         }
-      }
-  // ======= Error computation - end ========================
-  
+   output_convergence_rate_all(unknowns, norms, norm_flag, maxNumberOfMeshes);
+   
 
   return 0;
 }
@@ -300,22 +311,22 @@ int main(int argc, char** args) {
 
 
 //   print the error and the order of convergence between different levels
-void output_convergence_rate(const std::vector < double > &  norm, const unsigned int i ) {
+void output_convergence_rate(const std::vector < std::vector < std::vector < double > > > &  norm, const unsigned int u, const unsigned int i, const unsigned int n) {
 
-   if(i < norm.size() - 2)  {
+   if(i < norm[u].size() - 2)  {
 //   std::cout << norm_name << " ERROR and ORDER OF CONVERGENCE: " << fam << " " << ord << "\n\n";
 
     std::cout << i + 1 << "\t\t";
     std::cout.precision(14);
 
-    std::cout << norm[i] << "\t";
+    std::cout << norm[u][i][n] << "\t";
 
     std::cout << std::endl;
   
       std::cout.precision(3);
       std::cout << "\t\t";
 
-        std::cout << log( norm[i] / norm[i + 1] ) / log(2.) << "  \t\t\t\t";
+        std::cout << log( norm[u][i][n] / norm[u][i + 1][n] ) / log(2.) << "  \t\t\t\t";
 
       std::cout << std::endl;
     }
