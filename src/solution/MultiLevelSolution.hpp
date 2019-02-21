@@ -48,13 +48,15 @@ private:
     /** duplicate */
     typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]);
 
-    /** Boundary condition function pointer typedef */
-    typedef bool (*BoundaryFunc) (const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
 
-    /** duplicate */
-    typedef bool (*BoundaryFuncMLProb) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
 
 public:
+    
+    /** Boundary condition function pointer typedef */
+    typedef bool (*BoundaryFunc) (const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
+    
+    /** duplicate */
+    typedef bool (*BoundaryFuncMLProb) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
 
     /** Constructor */
     MultiLevelSolution(MultiLevelMesh *ml_msh);
