@@ -54,8 +54,8 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
  const std::vector< FE_convergence::Unknowns_definition >  provide_list_of_unknowns() {
      
      
-  std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE,  LAGRANGE/*, DISCONTINOUS_POLYNOMIAL*//*, DISCONTINOUS_POLYNOMIAL*/};
-  std::vector< FEOrder >   feOrder = {FIRST, SERENDIPITY ,SECOND/*,ZERO, FIRST*/};
+  std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE,  LAGRANGE/*DISCONTINOUS_POLYNOMIAL*//*, DISCONTINOUS_POLYNOMIAL*/};
+  std::vector< FEOrder >   feOrder = {FIRST, SERENDIPITY ,SECOND/*ZERO*//*FIRST*/};
 
   assert( feFamily.size() == feOrder.size() );
  
@@ -92,61 +92,56 @@ int main(int argc, char** args) {
  
   // ======= Quad Rule ========================
   std::string fe_quad_rule("seventh");
- /* "seventh" is the order of accuracy that is used in the gauss integration scheme
+ /* this is the order of accuracy that is used in the gauss integration scheme
     In the future it is not going to be an argument of the mesh function   */
 
 
-  
+   // ======= Mesh ========================
   const ElemType geom_elem_type = QUAD9;
   const std::vector< unsigned int > nsub = {2,2,0};
   const std::vector< double >      xyz_min = {-0.5,-0.5,0.};
   const std::vector< double >      xyz_max = { 0.5, 0.5,0.};
 
-   // ======= Mesh ========================
   MultiLevelMesh ml_mesh;
   ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//   ml_mesh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
 
-  
-   //Mesh all levels ==================
+// set total number of levels ================  
   unsigned max_number_of_meshes;
 
-  if (nsub[2] == 0) {
-    max_number_of_meshes = 6;
-  } else {
-    max_number_of_meshes = 4;
-  }
+  if (nsub[2] == 0)   max_number_of_meshes = 6;
+  else                max_number_of_meshes = 4;
+  
 
+ //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
   MultiLevelMesh ml_mesh_all_levels;
   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//   ml_mesh_all_levels.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
-  
-  
+ 
+  //provide list of unknowns ==============
     std::vector< FE_convergence::Unknowns_definition > unknowns = provide_list_of_unknowns();
   
-    const unsigned norm_flag = 1; //0 only L2: //1 L2+H1
-    vector < vector < vector < double > > > norms = FE_convergence::initialize_vector_of_norms( unknowns.size(), max_number_of_meshes,  norm_flag );
-
-     MultiLevelSolution         ml_sol_all_levels = FE_convergence::prepare_convergence_study(unknowns, ml_mesh_all_levels, max_number_of_meshes, SetBoundaryCondition);
+  //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
+    const unsigned norm_flag = 1; 
+    
+    vector < vector < vector < double > > > norms = FE_convergence::initialize_vector_of_norms( unknowns.size(), max_number_of_meshes, norm_flag);
+    
+     MultiLevelSolution         ml_sol_all_levels = FE_convergence::initialize_convergence_study(unknowns, ml_mesh_all_levels, max_number_of_meshes, SetBoundaryCondition);
     
             
-       for (int i = 0; i < max_number_of_meshes; i++) {   // loop on the mesh level
+       for (int i = 0; i < max_number_of_meshes; i++) {
                   
             const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level(unknowns, files, ml_mesh, i);
 
-        FE_convergence::prolongate_coarser_and_compute_error_norm_on_level( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms);
-
+                                              FE_convergence::compute_error_norms_on_level( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms);
         
-      }   //end h refinement
+      }
    
- 
-  
        FE_convergence::output_convergence_rate_all(unknowns, norms, norm_flag, max_number_of_meshes);
    
 
   return 0;
+  
 }
 
 
@@ -156,7 +151,10 @@ int main(int argc, char** args) {
 
 
 
-  const MultiLevelSolution  run_main_on_single_level(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,  const Files & files, MultiLevelMesh & ml_mesh, const unsigned i)  {
+  const MultiLevelSolution  run_main_on_single_level(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,  
+                                                     const Files & files, 
+                                                     MultiLevelMesh & ml_mesh,
+                                                     const unsigned i)  {
       
       
             //Mesh  ==================
@@ -448,17 +446,17 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> (system_name);   // pointer to the linear implicit system 
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
-  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*                     el = msh->el;  // pointer to the elem object in msh (level)
+  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
+  elem*                     el = msh->el;
 
-  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  
+  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
-  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix*             KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
-  NumericVector*           RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
+  SparseMatrix*             KK = pdeSys->_KK;
+  NumericVector*           RES = pdeSys->_RES;
 
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  const unsigned  dim = msh->GetDimension(); 
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
@@ -467,62 +465,64 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
   //solution variable
   unsigned soluIndex = /*0;*/ml_sol->GetIndex(unknown.c_str());    // get the position of "u" in the ml_sol object
   unsigned soluType  = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
-
   unsigned soluPdeIndex = mlPdeSys->GetSolPdeIndex(unknown.c_str());    // get the position of "u" in the pdeSys object
   if (soluPdeIndex > 0) { std::cout << "Only scalar variable now"; abort(); }
-      
-      
-  vector < adept::adouble >  solu; // local solution
-  solu.reserve(maxSize);
+
   
-  vector < adept::adouble >  solu_exact_at_dofs; // local solution
-  solu_exact_at_dofs.reserve(maxSize);
+  adept::adouble weight; // gauss point weight
 
-  vector < vector < double > > x(dim);    // local coordinates
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+      
+  vector < adept::adouble >  solu;  solu.reserve(maxSize);
+  vector < adept::adouble >  solu_exact_at_dofs;  solu_exact_at_dofs.reserve(maxSize);
 
-  for (unsigned i = 0; i < dim; i++) {
-    x[i].reserve(maxSize);
-  }
+  vector < vector < adept::adouble > > x(dim);  unsigned xType = BIQUADR_FE;
 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
-  double weight; // gauss point weight
+  for (unsigned i = 0; i < dim; i++)  x[i].reserve(maxSize);
+
+//-----------------  
+  vector < double > phi_coords;
+  vector < adept::adouble > phi_coords_x;
+  vector < adept::adouble > phi_coords_xx;
+
+  phi_coords.reserve(maxSize);
+  phi_coords_x.reserve(maxSize * dim);
+  phi_coords_xx.reserve(maxSize * dim2);
+
+//-----------------  
+  vector < double > phi;
+  vector < adept::adouble > phi_x;
+  vector < adept::adouble > phi_xx;
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   phi_xx.reserve(maxSize * dim2);
 
-  vector< adept::adouble > aRes; // local redidual vector
-  aRes.reserve(maxSize);
+  
+  vector< adept::adouble > aRes;  aRes.reserve(maxSize);
 
-  vector< int > l2GMap; // local to global mapping
-  l2GMap.reserve(maxSize);
-  vector< double > Res; // local redidual vector
-  Res.reserve(maxSize);
-  vector < double > Jac;
-  Jac.reserve(maxSize * maxSize);
+  vector < int > l2GMap;  l2GMap.reserve(maxSize);
+  vector < double > Res;     Res.reserve(maxSize);
+  vector < double > Jac;     Jac.reserve(maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
+
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);
+    unsigned nDofx = msh->GetElementDofNumber(iel, xType);
 
     // resize local arrays
     l2GMap.resize(nDofu);
     solu.resize(nDofu);
     solu_exact_at_dofs.resize(nDofu);
 
-    for (int i = 0; i < dim; i++) {
-      x[i].resize(nDofx);
-    }
+    for (int i = 0; i < dim; i++)    x[i].resize(nDofx);
 
-    aRes.resize(nDofu);    //resize
-    std::fill(aRes.begin(), aRes.end(), 0);    //set aRes to zero
+
+    aRes.resize(nDofu);
+    std::fill(aRes.begin(), aRes.end(), 0);
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
@@ -536,12 +536,12 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
      
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
-        std::vector<double> x_at_node(dim,0.);
-        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
+        std::vector< double > x_at_node(dim,0.);
+        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i].value();
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
                     solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
       solu_exact_at_dofs[i] = FE_convergence::GetExactSolutionValue(x_at_node);
-      l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+                  l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
 
@@ -549,16 +549,21 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
 
+    
+    if (dim != 2) abort(); //only implemented in 2D now
+
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+        
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+      static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][soluType] )
+                                         ->Jacobian_type_non_isoparametric< adept::adouble >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
+      msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      adept::adouble solu_gss = 0;
+               adept::adouble solu_gss = 0.;
       vector < adept::adouble > gradSolu_gss(dim, 0.);
       vector < adept::adouble > gradSolu_exact_gss(dim, 0.);
-      vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];
@@ -566,11 +571,18 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
         for (unsigned jdim = 0; jdim < dim; jdim++) {
                 gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
           gradSolu_exact_gss[jdim] += phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
-          x_gss[jdim] += x[jdim][i] * phi[i];
         }
       }
 
-      // *** phi_i loop ***
+      
+      vector < double > x_gss(dim, 0.);
+      for (unsigned i = 0; i < nDofx; i++) {
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          x_gss[jdim] += x[jdim][i].value() * phi_coords[i];
+        }          
+      }
+      
+      
       for (unsigned i = 0; i < nDofu; i++) {
 
         adept::adouble laplace = 0.;
@@ -582,9 +594,10 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
         }
         
 
-//         double srcTerm = - GetExactSolutionLaplace(x_gss);
+//         double srcTerm = - FE_convergence::GetExactSolutionLaplace(x_gss);
 //         aRes[i] += (srcTerm * phi[i] - laplace) * weight;        //strong form of RHS nad weak form of LHS
-        aRes[i] += (laplace_weak_exact - laplace) * weight;         //weak form of RHS nad weak form of LHS
+        aRes[i] += (laplace_weak_exact  - laplace) * weight;         //weak form of RHS nad weak form of LHS
+//         aRes[i] += (laplace_weak_exact  - laplace + phi[i]*solu_gss) * weight;         //equation needed for DISCONTINOUS_POLYNOMIAL, due to zero gradient
 
       } // end phi_i loop
     } // end gauss point loop
@@ -593,7 +606,7 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
     // Add the local Matrix/Vector into the global Matrix/Vector
 
     //copy the value of the adept::adoube aRes in double Res and store
-    Res.resize(nDofu);    //resize
+    Res.resize(nDofu);
 
     for (int i = 0; i < nDofu; i++) {
       Res[i] = - aRes[i].value();
@@ -603,14 +616,12 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
 
 
 
-    // define the dependent variables
-    s.dependent(&aRes[0], nDofu);
+    s.dependent(&aRes[0], nDofu);      // define the dependent variables
+    s.independent(&solu[0], nDofu);    // define the independent variables
 
-    // define the independent variables
-    s.independent(&solu[0], nDofu);
 
     // get the jacobian matrix (ordered by row major )
-    Jac.resize(nDofu * nDofu);    //resize
+    Jac.resize(nDofu * nDofu);
     s.jacobian(&Jac[0], true);
 
     //store K in the global matrix KK
@@ -622,7 +633,8 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
   } //end element loop for each process
 
   RES->close();
-
+//   RES->print();
+  
   KK->close();
 
   // ***************** END ASSEMBLY *******************

@@ -1478,7 +1478,7 @@ namespace femus {
                                    boost::optional< vector < type > & > nablaphi) const
   {
 
-//     bool hermitianMatrix = true;
+//     bool hermitianMatrix = true;phi_x
 //     if( &nablaphi == NULL ) {
 //       hermitianMatrix = false;
 //     }
@@ -1874,6 +1874,12 @@ std::cout << std::endl;
     
   }
   
+  
+  
+
+  
+
+
   
 //---------------------------------------------------------------------------------------------------------
   template <class type>

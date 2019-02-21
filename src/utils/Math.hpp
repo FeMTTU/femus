@@ -207,7 +207,8 @@ inline double GetExactSolutionLaplace(const std::vector < double >& x) {
 
 
 
- //this is based on the AddSolution function in MLSol
+
+//this is based on the AddSolution function in MLSol
  class Unknowns_definition {
      
  public:
@@ -219,14 +220,16 @@ inline double GetExactSolutionLaplace(const std::vector < double >& x) {
  };
     
  
- inline   std::vector < std::vector < std::vector < double > > >  initialize_vector_of_norms(const unsigned unknowns_size, const unsigned maxNumberOfMeshes, const unsigned norm_flag) {
+ inline   std::vector < std::vector < std::vector < double > > >  initialize_vector_of_norms(const unsigned unknowns_size, 
+                                                                                             const unsigned max_number_of_meshes, 
+                                                                                             const unsigned norm_flag) {
    
        //how many Unknowns, how many mesh levels, how many norms
        
    std::vector < std::vector < std::vector < double > > > norms( unknowns_size );
   
      for (unsigned int u = 0; u < unknowns_size; u++) {
-              norms[u].resize( maxNumberOfMeshes );
+              norms[u].resize( max_number_of_meshes );
        for (int i = 0; i < norms[u].size(); i++) {   // loop on the mesh level
                norms[u][i].resize(norm_flag + 1);
            }   
@@ -239,13 +242,15 @@ inline double GetExactSolutionLaplace(const std::vector < double >& x) {
 
     
    
-  inline const MultiLevelSolution  prepare_convergence_study(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,  MultiLevelMesh & ml_mesh_all_levels, const unsigned maxNumberOfMeshes, const MultiLevelSolution::BoundaryFunc SetBoundaryCondition)  {
+  inline const MultiLevelSolution  initialize_convergence_study(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,  
+                                                                MultiLevelMesh & ml_mesh_all_levels, 
+                                                                const unsigned max_number_of_meshes, 
+                                                                const MultiLevelSolution::BoundaryFunc SetBoundaryCondition)  {
 
-
-        unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
+   //Mesh: construct all levels  ==================
+        unsigned numberOfUniformLevels_finest = max_number_of_meshes;
         ml_mesh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
 //      ml_mesh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
-   //Mesh  ==================
 
  
  //Solution ==================
@@ -267,7 +272,10 @@ inline double GetExactSolutionLaplace(const std::vector < double >& x) {
 
 
 //   print the error and the order of convergence between different levels
-inline void output_convergence_rate(const std::vector < std::vector < std::vector < double > > > &  norm, const unsigned int u, const unsigned int i, const unsigned int n) {
+inline void output_convergence_rate(const std::vector < std::vector < std::vector < double > > > &  norm,
+                                    const unsigned int u,
+                                    const unsigned int i,
+                                    const unsigned int n) {
 
    if(i < norm[u].size() - 2)  {
 //   std::cout << norm_name << " ERROR and ORDER OF CONVERGENCE: " << fam << " " << ord << "\n\n";
@@ -292,16 +300,19 @@ inline void output_convergence_rate(const std::vector < std::vector < std::vecto
 }
 
 
-inline void output_convergence_rate_all(const std::vector< FE_convergence::Unknowns_definition > &  unknowns, const std::vector < std::vector < std::vector < double > > > &  norms, const unsigned norm_flag, const unsigned maxNumberOfMeshes) {
+inline void output_convergence_rate_all(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,
+                                        const std::vector < std::vector < std::vector < double > > > &  norms, 
+                                        const unsigned norm_flag, 
+                                        const unsigned max_number_of_meshes) {
     
-    assert(unknowns.size() == norms.size());
+    assert( unknowns.size() == norms.size() );
     
     const std::vector< std::string > norm_names = {"L2-NORM","H1-SEMINORM"};
   
      for (unsigned int u = 0; u < unknowns.size(); u++) {
        for (int n = 0; n < norm_flag + 1; n++) {
             std::cout << unknowns[u]._name << " : " << norm_names[n] << " ERROR and ORDER OF CONVERGENCE"  << std::endl;
-         for (int i = 0; i < maxNumberOfMeshes; i++) {
+         for (int i = 0; i < max_number_of_meshes; i++) {
                 output_convergence_rate(norms,u,i,n);
             }
             std::cout << std::endl;
@@ -315,7 +326,13 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
  
  
 
- inline std::vector< double > get_error_norms(const MultiLevelSolution* ml_sol, const MultiLevelSolution* ml_sol_all_levels, const std::string & unknown, const unsigned current_level, const unsigned norm_flag) {
+ inline std::vector< double > get_error_norms(const MultiLevelSolution* ml_sol, 
+                                              const MultiLevelSolution* ml_sol_all_levels,
+                                              const std::string & unknown,
+                                              const unsigned current_level,
+                                              const unsigned norm_flag) {
+     
+  // (//0 = only L2: //1 = L2 + H1)
   
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
@@ -510,12 +527,17 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
  
 
      
- inline void prolongate_coarser_and_compute_error_norm_on_level(const MultiLevelSolution* ml_sol_single_level, MultiLevelSolution* ml_sol_all_levels, const std::vector< FE_convergence::Unknowns_definition > &  unknowns, const unsigned i, const unsigned norm_flag, std::vector < std::vector < std::vector < double > > > &  norms) {
+ inline void compute_error_norms_on_level(const MultiLevelSolution* ml_sol_single_level, 
+                                          MultiLevelSolution* ml_sol_all_levels, 
+                                          const std::vector< FE_convergence::Unknowns_definition > &  unknowns, 
+                                          const unsigned i,
+                                          const unsigned norm_flag, 
+                                          std::vector < std::vector < std::vector < double > > > &  norms) {
      
      
-                 if ( i > 0 ) {
+        if ( i > 0 ) {
 
-              // ======= prolongate to the current level (i) from the coarser level (i-1) (so that you can compare the two) ========================
+            // ======= prolongate to the current level (i) from the coarser level (i-1) (so that you can compare the two) ========================
             ml_sol_all_levels->RefineSolution(i);
             
             // =======  compute the error norm at the current level (i) ========================
@@ -527,20 +549,16 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
                                        
                    }
                    
-                   
-                 }
+        }
                 
                  
-              // ======= store the last computed solution (the current level i is now overwritten) ========================
+              // ======= store the last computed solution to prepare the next iteration (the current level i is now overwritten) ========================
             ml_sol_all_levels->fill_at_level_from_level(i, ml_sol_single_level->_mlMesh->GetNumberOfLevels() - 1, *ml_sol_single_level);
         
                  
                  
                  
  } 
- 
-
- 
  
 
 
