@@ -24,8 +24,8 @@ using namespace femus;
 double InitalValueU ( const std::vector < double >& x )
 {
 //     return x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
-//     return x[0];
-    return x[0] * x[0];
+    return x[0];
+//     return x[0] * x[0];
 //     return x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 //     return x[0] * x[0] * x[0] * x[0] + 0.4 * x[0] * x[0]; //this is if delta = 0.4
 }
@@ -37,8 +37,8 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 
     bool dirichlet = true;
 //     value = 0.;
-//     value = x[0];
-    value = x[0] * x[0];
+    value = x[0];
+//     value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 //     value = x[0] * x[0] * x[0] * x[0] + 0.4 * x[0] * x[0];
 
@@ -50,7 +50,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 3;
+unsigned numberOfUniformLevels = 2;
 
 int main ( int argc, char** argv )
 {
@@ -70,9 +70,10 @@ int main ( int argc, char** argv )
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest3.neu", "second", scalingFactor );
-       mlMsh.ReadCoarseMesh ( "../input/martaTest4.neu", "second", scalingFactor );
+//        mlMsh.ReadCoarseMesh ( "../input/martaTest4.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/martaTest4Coarser.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial2.neu", "second", scalingFactor );
     mlMsh.RefineMesh ( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL );
@@ -224,7 +225,7 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
 
 //             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x + 0.4 * exactSol_gss_x * exactSol_gss_x; // this is x^4 + 0.4 * x^2
 
-            exactSol_gss_x = exactSol_gss_x * exactSol_gss_x; // this is x^2
+//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x; // this is x^2
 
 //             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^3
 //             exactSol_gss_y = exactSol_gss_y * exactSol_gss_y * exactSol_gss_y; // this is y^3

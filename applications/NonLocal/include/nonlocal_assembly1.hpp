@@ -25,8 +25,8 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.007, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest5: 0.045
-double delta1 = 0.007; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.007;
+double delta1 = 0.01; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.01;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
@@ -36,8 +36,8 @@ void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 //     else value = x[0] * x[0] + 2.;
 
 //     value = 0.;
-//     value = x[0];
-    value = x[0] * x[0];
+    value = x[0];
+//     value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 //        value = x[0] * x[0] * x[0] * x[0] + 0.4 * x[0] * x[0];
 
@@ -211,7 +211,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                 for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
-                    bool interfaceElement = true;
+                    bool interfaceElement = false;
 
                     short unsigned ielGeom = msh->GetElementType ( iel );
                     short unsigned ielGroup = msh->GetElementGroup ( iel );
@@ -400,6 +400,37 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                         if ( ifAnyIntersection ) {
 
+//                             if ( iel == 0 || iel == 1 || iel == 3 || iel == 4 ) {
+// 
+//                                 std::cout << " iel = " << iel << " " << std::endl;
+// 
+//                                 std::cout << " ------------------------------------ Jac1 ------------------------------------ " << std::endl;
+// 
+//                                 for ( unsigned ii = 0; ii < nDof1; ii++ ) {
+//                                     for ( unsigned jj = 0; jj < nDof1; jj++ ) {
+// 
+//                                         std::cout << "Jac1[" << l2GMap1[ii] << "][" << l2GMap1[jj] << "] = " << Jac1[ii * nDof1 + jj] << " ";
+// 
+//                                     }
+// 
+//                                     std::cout << std::endl;
+// 
+//                                 }
+// 
+//                                 std::cout << " ------------------------------------ Jac2 ------------------------------------ " << std::endl;
+// 
+//                                 for ( unsigned ii = 0; ii < nDof1; ii++ ) {
+//                                     for ( unsigned jj = 0; jj < nDof2; jj++ ) {
+// 
+//                                         std::cout << "Jac2[" << l2GMap1[ii] << "][" << l2GMap2[jj] << "] = " << Jac2[ii * nDof1 + jj] << " ";
+// 
+//                                     }
+// 
+//                                     std::cout << std::endl;
+// 
+//                                 }
+//                             }
+
                             KK->add_matrix_blocked ( Jac1, l2GMap1, l2GMap1 );
                             KK->add_matrix_blocked ( Jac2, l2GMap1, l2GMap2 );
 
@@ -461,10 +492,10 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                 // up to here Res only contains A_ij*u_j, now we take out f
                 for ( unsigned i = 0; i < nDof1; i++ ) {
-//                     Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
-                    Res[i] -=  - 1. * weight * phi[i]; //Ax - f (so f = - 1)
+                    Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
+//                     Res[i] -=  - 1. * weight * phi[i]; //Ax - f (so f = - 1)
 //                     Res[i] -=  - 3. * ( xg1[0] + xg1[1] ) * weight * phi[i]; //Ax - f (so f = - 3 (x + y))
-//                     Res[i] -=  0.5 * (- 12. * xg1[0] * xg1[0] - 6. / 5. * 0.4 * 0.4 - 2. * 0.4 ) * weight * phi[i]; //Ax - f (so f = - 3 (x + y))
+//                     Res[i] -=  0.5 * (- 12. * xg1[0] * xg1[0] - 6. / 5. * 0.4 * 0.4 - 2. * 0.4 ) * weight * phi[i]; //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
                 }
             }
 
@@ -733,7 +764,7 @@ void RectangleAndBallRelation ( bool & theyIntersect, const std::vector<double> 
     //top right corner of ball (north east)
     ballVerticesCoordinates[0][2] = ballCenter[0] + ballRadius;
     ballVerticesCoordinates[1][2] = ballCenter[1] + ballRadius;
-    
+
     newCoordinates[0][0] = ( ballVerticesCoordinates[0][0] >= xMinElem ) ? ballVerticesCoordinates[0][0] : xMinElem;
     newCoordinates[1][0] = ( ballVerticesCoordinates[1][0] >= yMinElem ) ? ballVerticesCoordinates[1][0] : yMinElem;
 
