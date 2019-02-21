@@ -97,18 +97,18 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
 double  nonlin_term_function(const double& v) {
     
 //    return 0.;
-//    return 1000.*1./( (1. - v) );
-//    return 0.01*1./( (1. - v)*(1. - v) );
-    return exp(v);
+   return -3.*1./( (1. - v) );
+//    return -0.01*1./( (1. - v)*(1. - v) );
+//     return -exp(v);
  }
 
 
 double  nonlin_term_derivative(const double& v) {
     
 //     return 0.;
-//    return 1000.* +2. * 1./( (1. - v)*(1. - v) ); 
-//    return 0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
-    return exp(v);
+   return -3.* +2. * 1./( (1. - v)*(1. - v) ); 
+//    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
+//     return -exp(v);
  }
 
 
@@ -187,8 +187,8 @@ int main(int argc,char **args) {
   //**************
   
   // time loop parameter
-  system.SetIntervalTime(0.1);
-  const unsigned int n_timesteps = 40;
+  system.SetIntervalTime(0.001);
+  const unsigned int n_timesteps = 100;
   const unsigned int write_interval = 1;
 
   // ======= Time Loop ========================
