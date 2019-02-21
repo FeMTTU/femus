@@ -366,7 +366,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                     for ( unsigned i = 0; i < nDof1; i++ ) {
 
-                                        //BEGIN evaluate phi_i at xg2[jg] (called it ph1y)
+                                        //BEGIN evaluate phi_i at xg2[jg] (called it phi1y)
                                         double phi1y = 0.;
 
                                         for ( unsigned j = 0; j < nDof2; j++ ) {
@@ -376,7 +376,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                             }
                                         }
 
-                                        //END evaluate phi_i at xg2[jg] (called it ph1y)
+                                        //END evaluate phi_i at xg2[jg] (called it phi1y)
 
                                         for ( unsigned j = 0; j < nDof1; j++ ) {
                                             double jacValue1 = weight1[ig] * weight2 * 3. / 4. * ( 1. / pow ( radius, 4 ) ) * ( phi1x[ig][i] - phi1y ) * phi1x[ig][j];
