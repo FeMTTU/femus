@@ -187,25 +187,18 @@ double myval_g = pt2func(time,xyz._val_g);
 
 
 namespace FE_convergence {
-    
-         
-inline double GetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
-};
+ 
+ 
+  class Function {  
+ 
+  public:
+      
+ virtual double value(const std::vector < double >& x) const = 0;
 
-inline void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
-};
+ virtual vector < double >  gradient(const std::vector < double >& x) const = 0;
 
-inline double GetExactSolutionLaplace(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
-};
-
-
+  };
+  
 
 
 //this is based on the AddSolution function in MLSol
@@ -330,7 +323,9 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
                                               const MultiLevelSolution* ml_sol_all_levels,
                                               const std::string & unknown,
                                               const unsigned current_level,
-                                              const unsigned norm_flag) {
+                                              const unsigned norm_flag,
+                                              const Function & ex_sol_in
+                                             ) {
      
   // (//0 = only L2: //1 = L2 + H1)
   
@@ -424,7 +419,7 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);
                    solu[i]  =                                        (*sol->_Sol[soluIndex])(solDof);
       solu_coarser_prol[i]  = (*ml_sol_all_levels->GetSolutionLevel(current_level)->_Sol[soluIndex])(solDof);
-      solu_exact_at_dofs[i] = FE_convergence::GetExactSolutionValue(x_at_node);
+      solu_exact_at_dofs[i] = ex_sol_in.value(x_at_node);
     }
 
 
@@ -457,7 +452,7 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
 
 // H^0 ==============      
 //     if (norm_flag == 0) {
-      double exactSol = FE_convergence::GetExactSolutionValue(x_gss);
+      double exactSol = ex_sol_in.value(x_gss);
       norms[0]               += (solu_gss - exactSol)                * (solu_gss - exactSol)       * weight;
       norms_exact_dofs[0]    += (solu_gss - exactSol_from_dofs_gss)  * (solu_gss - exactSol_from_dofs_gss) * weight;
       norms_inexact_dofs[0]  += (solu_gss - solu_coarser_prol_gss)   * (solu_gss - solu_coarser_prol_gss)  * weight;
@@ -465,7 +460,7 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
     
 // H^1 ==============      
     /*else*/ if (norm_flag == 1) {
-      vector <double> exactGradSol(dim);    FE_convergence::GetExactSolutionGradient(x_gss, exactGradSol);
+      vector <double> exactGradSol(dim);    exactGradSol = ex_sol_in.gradient(x_gss);
 
       for (unsigned j = 0; j < dim ; j++) {
         norms[1]               += ((gradSolu_gss[j] - exactGradSol[j])               * (gradSolu_gss[j]  - exactGradSol[j])) * weight;
@@ -532,7 +527,9 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
                                           const std::vector< FE_convergence::Unknowns_definition > &  unknowns, 
                                           const unsigned i,
                                           const unsigned norm_flag, 
-                                          std::vector < std::vector < std::vector < double > > > &  norms) {
+                                          std::vector < std::vector < std::vector < double > > > &  norms, 
+                                          const Function & ex_sol_in
+                                         ) {
      
      
         if ( i > 0 ) {
@@ -543,7 +540,7 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
             // =======  compute the error norm at the current level (i) ========================
             for (unsigned int u = 0; u < unknowns.size(); u++) {  //this loop could be inside the below function
                 
-            const std::vector< double > norm_out = FE_convergence::get_error_norms(ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag);
+            const std::vector< double > norm_out = FE_convergence::get_error_norms(ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, ex_sol_in);
 
               for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];
                                        

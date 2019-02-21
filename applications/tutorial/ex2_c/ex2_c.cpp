@@ -46,7 +46,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
 void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
 void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
-void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown);
+void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const FE_convergence::Function & exact_sol);
 
  
 
@@ -78,6 +78,38 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
 
 const MultiLevelSolution  run_main_on_single_level(const std::vector< FE_convergence::Unknowns_definition > & unknowns,  const Files & files, MultiLevelMesh & ml_mesh, const unsigned i);
   
+
+
+ 
+  class My_exact_solution : public FE_convergence::Function {  
+ 
+  public:
+      
+  double value(const std::vector < double >& x) const {
+  double pi = acos(-1.);
+  return cos(pi * x[0]) * cos(pi * x[1]);
+}
+
+ vector < double >  gradient(const std::vector < double >& x) const {
+    
+    vector < double > solGrad(x.size());
+    
+  double pi = acos(-1.);
+  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
+  solGrad[1]  = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+  
+  return solGrad;
+}
+
+static double laplacian(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+}
+
+  };
+  
+
+
 
 
 int main(int argc, char** args) {
@@ -118,7 +150,9 @@ int main(int argc, char** args) {
   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 
  
-  //provide list of unknowns ==============
+   My_exact_solution exact_sol;
+ 
+   //provide list of unknowns ==============
     std::vector< FE_convergence::Unknowns_definition > unknowns = provide_list_of_unknowns();
   
   //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
@@ -133,7 +167,7 @@ int main(int argc, char** args) {
                   
             const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level(unknowns, files, ml_mesh, i);
 
-                                              FE_convergence::compute_error_norms_on_level( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms);
+                                              FE_convergence::compute_error_norms_on_level( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, exact_sol);
         
       }
    
@@ -242,6 +276,10 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
+    
+   My_exact_solution exact_sol;
+    
+    
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
@@ -334,7 +372,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-      solu_exact_at_dofs[i] = FE_convergence::GetExactSolutionValue(x_at_node);
+      solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
       l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
@@ -412,8 +450,10 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
 void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     
-    
-    AssemblePoissonProblem_AD_flexible(ml_prob,"Poisson", ml_prob.get_current_unknown_assembly());
+       My_exact_solution exact_sol;
+
+    AssemblePoissonProblem_AD_flexible(ml_prob,"Poisson", ml_prob.get_current_unknown_assembly(), exact_sol);
+//     AssemblePoissonProblem_flexible(ml_prob,"Poisson", ml_prob.get_current_unknown_assembly(), exact_sol);
 
 }
 
@@ -430,7 +470,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
  * thus
  *                  J w = f(x) - J u0
  **/
-void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown) {
+void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const FE_convergence::Function & exact_sol) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -540,7 +580,7 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i].value();
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
                     solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-      solu_exact_at_dofs[i] = FE_convergence::GetExactSolutionValue(x_at_node);
+      solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
                   l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
@@ -558,6 +598,7 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
       // *** get gauss point weight, test function and test function partial derivatives ***
       static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][soluType] )
                                          ->Jacobian_type_non_isoparametric< adept::adouble >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
+//       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
       msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
@@ -594,7 +635,7 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
         }
         
 
-//         double srcTerm = - FE_convergence::GetExactSolutionLaplace(x_gss);
+//         double srcTerm = - exact_sol.laplacian(x_gss);
 //         aRes[i] += (srcTerm * phi[i] - laplace) * weight;        //strong form of RHS nad weak form of LHS
         aRes[i] += (laplace_weak_exact  - laplace) * weight;         //weak form of RHS nad weak form of LHS
 //         aRes[i] += (laplace_weak_exact  - laplace + phi[i]*solu_gss) * weight;         //equation needed for DISCONTINOUS_POLYNOMIAL, due to zero gradient
