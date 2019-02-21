@@ -24,9 +24,9 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-//DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.5, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest5: 0.045
-double delta1 = 0.01; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.01;
+//DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.007, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest5: 0.045
+double delta1 = 0.007; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.007;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
@@ -36,9 +36,10 @@ void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 //     else value = x[0] * x[0] + 2.;
 
 //     value = 0.;
-    value = x[0];
-//     value = x[0] * x[0];
+//     value = x[0];
+    value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
+//        value = x[0] * x[0] * x[0] * x[0] + 0.4 * x[0] * x[0];
 
 }
 
@@ -210,7 +211,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                 for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
-                    bool interfaceElement = false;
+                    bool interfaceElement = true;
 
                     short unsigned ielGeom = msh->GetElementType ( iel );
                     short unsigned ielGroup = msh->GetElementGroup ( iel );
@@ -245,7 +246,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     double leftBoundInterface = - sideLength;
                     double rightBoundInterface = sideLength;
 
-                    if ( leftBoundInterface <= x1[0][0] && x1[0][1] <= rightBoundInterface ) interfaceElement = true; //this assumes the interface to be located at x = 0
+//                     if ( leftBoundInterface <= x1[0][0] && x1[0][1] <= rightBoundInterface ) interfaceElement = true; //this assumes the interface to be located at x = 0
 
                     unsigned igNumber = ( interfaceElement ) ? 4 : msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
                     vector < vector < double > > xg1 ( igNumber );
@@ -460,9 +461,10 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                 // up to here Res only contains A_ij*u_j, now we take out f
                 for ( unsigned i = 0; i < nDof1; i++ ) {
-                    Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
-//                     Res[i] -=  - 1. * weight * phi[i]; //Ax - f (so f = - 1)
+//                     Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
+                    Res[i] -=  - 1. * weight * phi[i]; //Ax - f (so f = - 1)
 //                     Res[i] -=  - 3. * ( xg1[0] + xg1[1] ) * weight * phi[i]; //Ax - f (so f = - 3 (x + y))
+//                     Res[i] -=  0.5 * (- 12. * xg1[0] * xg1[0] - 6. / 5. * 0.4 * 0.4 - 2. * 0.4 ) * weight * phi[i]; //Ax - f (so f = - 3 (x + y))
                 }
             }
 
