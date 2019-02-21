@@ -83,7 +83,7 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
            double value = 0.;
 
              if(!strcmp(name,"u")) {
-                 value = sin(M_PI * x[0]) * sin(M_PI * x[1]);
+                 value = 0.; // sin(M_PI * x[0]) * sin(M_PI * x[1]);
              }
              if(!strcmp(name,"time")) {
                  value = ml_prob->get_system<TransientNonlinearImplicitSystem>("Timedep").GetTime();
@@ -92,6 +92,27 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
            
       return value;   
 }
+
+
+double  nonlin_term_function(const double& v) {
+    
+//    return 0.;
+//    return 1000.*1./( (1. - v) );
+//    return 0.01*1./( (1. - v)*(1. - v) );
+    return exp(v);
+ }
+
+
+double  nonlin_term_derivative(const double& v) {
+    
+//     return 0.;
+//    return 1000.* +2. * 1./( (1. - v)*(1. - v) ); 
+//    return 0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
+    return exp(v);
+ }
+
+
+
 
 int main(int argc,char **args) {
 
@@ -166,8 +187,8 @@ int main(int argc,char **args) {
   //**************
   
   // time loop parameter
-  system.SetIntervalTime(0.001);
-  const unsigned int n_timesteps = 20;
+  system.SetIntervalTime(0.1);
+  const unsigned int n_timesteps = 40;
   const unsigned int write_interval = 1;
 
   // ======= Time Loop ========================
@@ -411,8 +432,8 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 	      Lap_old_rhs += phi_x_fe_qp[SolFEType[0]][i * dim + d] * sol_old_grad_qp[0][d];
 	    }
 	    F[SolPdeIndex[0]][i] += weight_qp * ( 
-                    -       theta  * dt * Lap_rhs                                       // Laplacian
-					- (1. - theta) * dt * Lap_old_rhs                                   // Laplacian
+                    -       theta  * dt * ( Lap_rhs +  nonlin_term_function(sol_qp[0]) )           // Laplacian + nonlinear term
+					- (1. - theta) * dt * ( Lap_old_rhs +  nonlin_term_function(sol_old_qp[0]) )   // Laplacian + nonlinear term
 					- (sol_qp[0] - sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i]        // acceleration
             );
     //END RESIDUALS A block ===========================
@@ -428,7 +449,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 	        Lap_mat += phi_x_fe_qp[SolFEType[0]][i * dim + d] * phi_x_fe_qp[SolFEType[0]][j * dim + d];
 	      }
 
-		B[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * Lap_mat + Mass);
+		B[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * ( Lap_mat +  nonlin_term_derivative(phi_fe_qp[SolFEType[0]][j]) ) + Mass);
 	      
   	    }    //end phij loop
 	  }      // endif assemble_matrix
