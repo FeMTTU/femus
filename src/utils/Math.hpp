@@ -197,6 +197,8 @@ namespace FE_convergence {
 
  virtual vector < double >  gradient(const std::vector < double >& x) const = 0;
 
+ virtual double laplacian(const std::vector < double >& x) const = 0;
+ 
   };
   
 
@@ -265,7 +267,7 @@ namespace FE_convergence {
 
 
 //   print the error and the order of convergence between different levels
-inline void output_convergence_rate(const std::vector < std::vector < std::vector < double > > > &  norm,
+inline void output_convergence_order(const std::vector < std::vector < std::vector < double > > > &  norm,
                                     const unsigned int u,
                                     const unsigned int i,
                                     const unsigned int n) {
@@ -293,7 +295,7 @@ inline void output_convergence_rate(const std::vector < std::vector < std::vecto
 }
 
 
-inline void output_convergence_rate_all(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,
+inline void output_convergence_order_all(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,
                                         const std::vector < std::vector < std::vector < double > > > &  norms, 
                                         const unsigned norm_flag, 
                                         const unsigned max_number_of_meshes) {
@@ -306,7 +308,7 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
        for (int n = 0; n < norm_flag + 1; n++) {
             std::cout << unknowns[u]._name << " : " << norm_names[n] << " ERROR and ORDER OF CONVERGENCE"  << std::endl;
          for (int i = 0; i < max_number_of_meshes; i++) {
-                output_convergence_rate(norms,u,i,n);
+                output_convergence_order(norms,u,i,n);
             }
             std::cout << std::endl;
          }
@@ -324,7 +326,8 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
                                               const std::string & unknown,
                                               const unsigned current_level,
                                               const unsigned norm_flag,
-                                              const Function & ex_sol_in
+                                              const unsigned conv_order_flag,
+                                              const Function * ex_sol_in = NULL
                                              ) {
      
   // (//0 = only L2: //1 = L2 + H1)
@@ -332,6 +335,7 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
+   if (conv_order_flag == 1 && ex_sol_in == NULL) { std::cout << "Please provide analytical solution" << std::endl; abort(); }
    
     
   const unsigned num_norms = norm_flag + 1;
@@ -419,7 +423,7 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);
                    solu[i]  =                                        (*sol->_Sol[soluIndex])(solDof);
       solu_coarser_prol[i]  = (*ml_sol_all_levels->GetSolutionLevel(current_level)->_Sol[soluIndex])(solDof);
-      solu_exact_at_dofs[i] = ex_sol_in.value(x_at_node);
+      if (ex_sol_in != NULL) solu_exact_at_dofs[i] = ex_sol_in->value(x_at_node);
     }
 
 
@@ -452,7 +456,7 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
 
 // H^0 ==============      
 //     if (norm_flag == 0) {
-      double exactSol = ex_sol_in.value(x_gss);
+      double exactSol = 0.; if (ex_sol_in != NULL) exactSol = ex_sol_in->value(x_gss);
       norms[0]               += (solu_gss - exactSol)                * (solu_gss - exactSol)       * weight;
       norms_exact_dofs[0]    += (solu_gss - exactSol_from_dofs_gss)  * (solu_gss - exactSol_from_dofs_gss) * weight;
       norms_inexact_dofs[0]  += (solu_gss - solu_coarser_prol_gss)   * (solu_gss - solu_coarser_prol_gss)  * weight;
@@ -460,7 +464,7 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
     
 // H^1 ==============      
     /*else*/ if (norm_flag == 1) {
-      vector <double> exactGradSol(dim);    exactGradSol = ex_sol_in.gradient(x_gss);
+      vector <double> exactGradSol(dim,0.);    if (ex_sol_in != NULL) exactGradSol = ex_sol_in->gradient(x_gss);
 
       for (unsigned j = 0; j < dim ; j++) {
         norms[1]               += ((gradSolu_gss[j] - exactGradSol[j])               * (gradSolu_gss[j]  - exactGradSol[j])) * weight;
@@ -511,9 +515,9 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
     }
     
     
-//   return norms;
-//   return norms_exact_dofs;
-  return norms_inexact_dofs;
+if (conv_order_flag == 0)  return norms_inexact_dofs;
+if (conv_order_flag == 1)  return norms;
+ //   return norms_exact_dofs;
 
  
 } 
@@ -527,8 +531,9 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
                                           const std::vector< FE_convergence::Unknowns_definition > &  unknowns, 
                                           const unsigned i,
                                           const unsigned norm_flag, 
-                                          std::vector < std::vector < std::vector < double > > > &  norms, 
-                                          const Function & ex_sol_in
+                                          std::vector < std::vector < std::vector < double > > > &  norms,
+                                          const unsigned conv_order_flag,
+                                          const Function * ex_sol_in = NULL
                                          ) {
      
      
@@ -540,7 +545,7 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
             // =======  compute the error norm at the current level (i) ========================
             for (unsigned int u = 0; u < unknowns.size(); u++) {  //this loop could be inside the below function
                 
-            const std::vector< double > norm_out = FE_convergence::get_error_norms(ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, ex_sol_in);
+            const std::vector< double > norm_out = FE_convergence::get_error_norms(ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, ex_sol_in);
 
               for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];
                                        
