@@ -300,10 +300,11 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
   
      for (unsigned int u = 0; u < unknowns.size(); u++) {
        for (int n = 0; n < norm_flag + 1; n++) {
-            std::cout << unknowns[u]._name << " : " << norm_names[n] << " ERROR and ORDER OF CONVERGENCE" <<  "\n\n";
+            std::cout << unknowns[u]._name << " : " << norm_names[n] << " ERROR and ORDER OF CONVERGENCE"  << std::endl;
          for (int i = 0; i < maxNumberOfMeshes; i++) {
                 output_convergence_rate(norms,u,i,n);
             }
+            std::cout << std::endl;
          }
       }
       
@@ -514,11 +515,11 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
      
                  if ( i > 0 ) {
 
-              // ======= prolongation of coarser ========================
+              // ======= prolongate to the current level (i) from the coarser level (i-1) (so that you can compare the two) ========================
             ml_sol_all_levels->RefineSolution(i);
             
-            // ======= error norm computation ========================
-            for (unsigned int u = 0; u < unknowns.size(); u++) {
+            // =======  compute the error norm at the current level (i) ========================
+            for (unsigned int u = 0; u < unknowns.size(); u++) {  //this loop could be inside the below function
                 
             const std::vector< double > norm_out = FE_convergence::get_error_norms(ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag);
 
@@ -528,8 +529,9 @@ inline void output_convergence_rate_all(const std::vector< FE_convergence::Unkno
                    
                    
                  }
+                
                  
-                      // ======= store the last computed solution ========================
+              // ======= store the last computed solution (the current level i is now overwritten) ========================
             ml_sol_all_levels->fill_at_level_from_level(i, ml_sol_single_level->_mlMesh->GetNumberOfLevels() - 1, *ml_sol_single_level);
         
                  
