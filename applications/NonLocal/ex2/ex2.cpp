@@ -24,9 +24,9 @@ using namespace femus;
 double InitalValueU ( const std::vector < double >& x )
 {
 //     return x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
-//     return x[0];
+    return x[0];
 //     return x[0] * x[0];
-    return x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
+//     return x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 }
 
 void GetL2Norm ( MultiLevelProblem& ml_prob );
@@ -36,9 +36,9 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 
     bool dirichlet = true;
 //     value = 0.;
-//     value = x[0];
+    value = x[0];
 //     value = x[0] * x[0];
-    value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
+//     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 
     if ( facename == 2 ) {
         dirichlet = false; //Neumann at the interface boundaries
@@ -48,7 +48,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 3;
+unsigned numberOfUniformLevels = 1;
 
 int main ( int argc, char** argv )
 {
@@ -217,24 +217,24 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
             for ( unsigned i = 0; i < nDofu; i++ ) {
                 soluNonLoc_gss += phi[i] * soluNonLoc[i];
                 exactSol_gss_x += phi[i] * x1[0][i]; // this is x at the Gauss point
-                exactSol_gss_y += phi[i] * x1[1][i]; // this is y at the Gauss point
+//                 exactSol_gss_y += phi[i] * x1[1][i]; // this is y at the Gauss point
             }
 
 //             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x; // this is x^2
 
-            exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^3
-            exactSol_gss_y = exactSol_gss_y * exactSol_gss_y * exactSol_gss_y; // this is y^3
+//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^3
+//             exactSol_gss_y = exactSol_gss_y * exactSol_gss_y * exactSol_gss_y; // this is y^3
 
 
-//             local_norm2 += ( soluNonLoc_gss - exactSol_gss_x ) * ( soluNonLoc_gss - exactSol_gss_x ) * weight;
+            local_norm2 += ( soluNonLoc_gss - exactSol_gss_x ) * ( soluNonLoc_gss - exactSol_gss_x ) * weight;
 
-            local_norm2 += (soluNonLoc_gss -  (exactSol_gss_x + exactSol_gss_y)) * (soluNonLoc_gss -  (exactSol_gss_x + exactSol_gss_y)) * weight; //error L2 norm of x^3 + y^3
+//             local_norm2 += (soluNonLoc_gss -  (exactSol_gss_x + exactSol_gss_y)) * (soluNonLoc_gss -  (exactSol_gss_x + exactSol_gss_y)) * weight; //error L2 norm of x^3 + y^3
 
             sol_norm2 += soluNonLoc_gss * soluNonLoc_gss * weight;
 
-            sol_exact_norm2 += (exactSol_gss_x + exactSol_gss_y) * (exactSol_gss_x + exactSol_gss_y) * weight; //L2 norm of x^3 + y^3
+//             sol_exact_norm2 += (exactSol_gss_x + exactSol_gss_y) * (exactSol_gss_x + exactSol_gss_y) * weight; //L2 norm of x^3 + y^3
 
-//             sol_exact_norm2 += exactSol_gss_x * exactSol_gss_x * weight; 
+            sol_exact_norm2 += exactSol_gss_x * exactSol_gss_x * weight; 
         }
     }
 
