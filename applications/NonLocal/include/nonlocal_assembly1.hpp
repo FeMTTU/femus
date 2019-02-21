@@ -24,9 +24,9 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-//DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, martaTest4: 0.5, maxTest1: both 0.4, maxTest2: both 0.1, maxTest3: both 0.53, maxTest4: 0.055, maxTest5: 0.045
-double delta1 = 0.53; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.53;
+//DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.5, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: 0.055, maxTest5: 0.045
+double delta1 = 0.01; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.01;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
@@ -245,7 +245,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     double leftBoundInterface = - sideLength;
                     double rightBoundInterface = sideLength;
 
-                    if ( leftBoundInterface <= x1[0][0] && x1[0][1] <= rightBoundInterface ) interfaceElement = true; //this assumes the interface to be located at x = 0
+//                     if ( leftBoundInterface <= x1[0][0] && x1[0][1] <= rightBoundInterface ) interfaceElement = true; //this assumes the interface to be located at x = 0
 
                     unsigned igNumber = ( interfaceElement ) ? 4 : msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
                     vector < vector < double > > xg1 ( igNumber );
