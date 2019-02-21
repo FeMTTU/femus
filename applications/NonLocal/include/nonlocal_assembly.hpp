@@ -706,12 +706,12 @@ void RectangleAndBallRelation ( bool & theyIntersect, const std::vector<double> 
             newCoordinates[1][6] = newCoordinates[1][2];
 
             newCoordinates[0][7] = newCoordinates[0][0];
-            newCoordinates[1][7] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][3] );
+            newCoordinates[1][7] = 0.5 * ( newCoordinates[1][0] + newCoordinates[1][3] );
 
             if ( nDofs > 8 ) {
 
                 newCoordinates[0][8] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][1] );
-                newCoordinates[1][8] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][3] );
+                newCoordinates[1][8] = 0.5 * ( newCoordinates[1][0] + newCoordinates[1][3] );
 
             }
 
