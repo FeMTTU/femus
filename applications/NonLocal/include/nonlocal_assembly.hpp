@@ -24,8 +24,8 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-//DELTA sizes: martaTest1: 0.01, martaTest2: 0.05, martaTest3: 0.001, martaTes4: 0.5, maxTest1: both 0.4, maxTest2: both 0.1.
-double delta1 = 0.5; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+//DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.007, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest5: 0.045
+double delta1 = 0.4; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
 double delta2 = 0.4;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
@@ -338,39 +338,19 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                                     //END evaluate phi_i at xg2[jg] (called it ph1y)
 
+                                    for ( unsigned j = 0; j < nDof1; j++ ) {
+
+                                        double jacValue1 = weight1[ig] * weight2[jg] * 3. / 4. * ( 1. / pow ( radius, 4 ) ) * ( phi1x[ig][i] -   phi1y ) * phi1x[ig][j];
+                                        Jac1[i * nDof1 + j] -= jacValue1;
+                                        Res[i] +=  jacValue1 * solu1[j];
+                                    }//endl j loop on iel's dofs
+
                                     for ( unsigned j = 0; j < nDof2; j++ ) {
-
-                                        unsigned iiJac1;
-                                        bool assembleJac1 = false;
-
-                                        //BEGIN evaluate phi_j at xg1[ig] (called it phi2x)
-                                        double phi2x = 0.;
-
-                                        unsigned jDof  = l2GMap2[j];
-
-                                        for ( unsigned ii = 0; ii < nDof1; ii++ ) {
-                                            unsigned iiDof  = l2GMap1[ii];
-
-                                            if ( jDof == iiDof ) {
-                                                phi2x = phi1x[ig][ii];
-                                                iiJac1 = ii;
-                                                assembleJac1 = true;
-                                                break;
-                                            }
-                                        }
-
-                                        //END evaluate phi_j at xg1[ig] (called it phi2x)
-
-                                        if ( assembleJac1 ) {
-                                            double jacValue1 = weight1[ig] * weight2[jg] * 3. / 4. * ( 1. / pow ( radius, 4 ) ) * ( phi1x[ig][i] -   phi1y ) * phi2x;
-                                            Jac1[i * nDof1 + iiJac1] -= jacValue1;
-                                            Res[i] +=  jacValue1 * solu1[iiJac1];
-                                        }
 
                                         double jacValue2 = - weight1[ig] * weight2[jg] * 3. / 4. * ( 1. / pow ( radius, 4 ) ) * ( phi1x[ig][i] -   phi1y ) * phi2y[jg][j];
                                         Jac2[i * nDof2 + j] -= jacValue2;
                                         Res[i] +=  jacValue2 * solu2[j];
-                                    }//endl j loop
+                                    }//endl j loop on jel's dofs
                                 } //endl i loop
                             }//end jg loop
                         }
@@ -429,7 +409,6 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                 for ( unsigned i = 0; i < nDof1; i++ ) {
 //                  Res[i] -= - 1. * weight * phi[i]; //Ax - f (so f = - 1)
                     Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
-//                         Res[i] -=  - 2. * weight * phi[i]; //Ax - f (so f = - 2)
                 }
             }
 
@@ -727,12 +706,12 @@ void RectangleAndBallRelation ( bool & theyIntersect, const std::vector<double> 
             newCoordinates[1][6] = newCoordinates[1][2];
 
             newCoordinates[0][7] = newCoordinates[0][0];
-            newCoordinates[1][7] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][3] );
+            newCoordinates[1][7] = 0.5 * ( newCoordinates[1][0] + newCoordinates[1][3] );
 
             if ( nDofs > 8 ) {
 
                 newCoordinates[0][8] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][1] );
-                newCoordinates[1][8] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][3] );
+                newCoordinates[1][8] = 0.5 * ( newCoordinates[1][0] + newCoordinates[1][3] );
 
             }
 
@@ -741,6 +720,7 @@ void RectangleAndBallRelation ( bool & theyIntersect, const std::vector<double> 
     }
 
 }
+
 
 
 

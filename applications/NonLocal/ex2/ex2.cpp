@@ -17,7 +17,7 @@
 #include "../include/nonlocal_assembly1.hpp"
 
 
-//SECOND NONLOCAL EX IN FEMUS: nonlocal diffusion for a body with different material properties
+//SECOND NONLOCAL EX IN FEMUS: nonlocal diffusion for a body with different material properties (this works with a different assembly than ex1)
 
 using namespace femus;
 
@@ -26,6 +26,8 @@ double InitalValueU ( const std::vector < double >& x )
 //     return x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
     return x[0];
 //     return x[0] * x[0];
+//     return x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
+//     return x[0] * x[0] * x[0] * x[0] + 0.4 * x[0] * x[0]; //this is if delta = 0.4
 }
 
 void GetL2Norm ( MultiLevelProblem& ml_prob );
@@ -37,16 +39,18 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 //     value = 0.;
     value = x[0];
 //     value = x[0] * x[0];
+//     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
+//     value = x[0] * x[0] * x[0] * x[0] + 0.4 * x[0] * x[0];
 
     if ( facename == 2 ) {
-      dirichlet = false; //Neumann at the interface boundaries
-      value = 0.;
+        dirichlet = false; //Neumann at the interface boundaries
+        value = 0.;
     }
 
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 4;
+unsigned numberOfUniformLevels = 2;
 
 int main ( int argc, char** argv )
 {
@@ -60,13 +64,16 @@ int main ( int argc, char** argv )
     unsigned numberOfSelectiveLevels = 0;
 //     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
-    mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
+//         mlMsh.ReadCoarseMesh ( "../input/maxTest3.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest3.neu", "second", scalingFactor );
 //        mlMsh.ReadCoarseMesh ( "../input/martaTest4.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/martaTest4Coarser.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial2.neu", "second", scalingFactor );
     mlMsh.RefineMesh ( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL );
@@ -82,7 +89,7 @@ int main ( int argc, char** argv )
     mlSol.AddSolution ( "u", LAGRANGE, FIRST, 2 );
 
     mlSol.Initialize ( "All" );
-    
+
 //     mlSol.Initialize("u", InitalValueU);
 
     mlSol.AttachSetBoundaryConditionFunction ( SetBoundaryCondition );
@@ -112,7 +119,7 @@ int main ( int argc, char** argv )
     // ******* Set Preconditioner *******
     system.SetMgSmoother ( GMRES_SMOOTHER );
 
-    system.SetSparsityPatternMultiplyingFactor ( 500u ); //TODO tune 
+    system.SetSparsityPatternMultiplyingFactor ( 500u ); //TODO tune
 
     system.init();
 
@@ -160,9 +167,9 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
     double local_norm2 = 0.;
 
     double sol_norm2 = 0.;
-    
+
     double sol_exact_norm2 = 0.;
-    
+
     unsigned soluIndex;
     soluIndex = mlSol->GetIndex ( "u" );
     unsigned soluType = mlSol->GetSolutionType ( soluIndex );
@@ -206,45 +213,54 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
             // *** get gauss point weight, test function and test function partial derivatives ***
             msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight, phi, phi_x );
             double soluNonLoc_gss = 0.;
-            double exactSol_gss = 0.;
-            
-            
+            double exactSol_gss_x = 0.;
+            double exactSol_gss_y = 0.;
+
+
             for ( unsigned i = 0; i < nDofu; i++ ) {
                 soluNonLoc_gss += phi[i] * soluNonLoc[i];
-                exactSol_gss += phi[i] * x1[0][i]; //TODO this is if the exact sol is u = x
+                exactSol_gss_x += phi[i] * x1[0][i]; // this is x at the Gauss point
+//                 exactSol_gss_y += phi[i] * x1[1][i]; // this is y at the Gauss point
             }
 
-//             exactSol_gss *= exactSol_gss; //TODO this is if the exact sol is u = x^2
-            
-//             std::cout<<" soluNonLoc_gss = " << soluNonLoc_gss << " , " << "exactSol_gss = " << exactSol_gss << std::endl;
+//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x + 0.4 * exactSol_gss_x * exactSol_gss_x; // this is x^4 + 0.4 * x^2
+
+//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x; // this is x^2
+
+//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^3
+//             exactSol_gss_y = exactSol_gss_y * exactSol_gss_y * exactSol_gss_y; // this is y^3
 
 
-            local_norm2 += (soluNonLoc_gss -  exactSol_gss) * (soluNonLoc_gss - exactSol_gss) * weight;
-            
+            local_norm2 += ( soluNonLoc_gss - exactSol_gss_x ) * ( soluNonLoc_gss - exactSol_gss_x ) * weight;
+
+//             local_norm2 += (soluNonLoc_gss -  (exactSol_gss_x + exactSol_gss_y)) * (soluNonLoc_gss -  (exactSol_gss_x + exactSol_gss_y)) * weight; //error L2 norm of x^3 + y^3
+
             sol_norm2 += soluNonLoc_gss * soluNonLoc_gss * weight;
-            
-            sol_exact_norm2 += exactSol_gss * exactSol_gss * weight;
+
+//             sol_exact_norm2 += (exactSol_gss_x + exactSol_gss_y) * (exactSol_gss_x + exactSol_gss_y) * weight; //L2 norm of x^3 + y^3
+
+            sol_exact_norm2 += exactSol_gss_x * exactSol_gss_x * weight;
         }
     }
 
     double norm2 = 0.;
     MPI_Allreduce ( &local_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     double norm = sqrt ( norm2 );
-    std::cout.precision(14);
+    std::cout.precision ( 14 );
     std::cout << "Error L2 norm = " << norm << std::endl;
-    
+
     norm2 = 0.;
     MPI_Allreduce ( &sol_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     norm = sqrt ( norm2 );
-    std::cout.precision(14);
+    std::cout.precision ( 14 );
     std::cout << "Sol L2 norm = " << norm << std::endl;
-    
+
     norm2 = 0.;
     MPI_Allreduce ( &sol_exact_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     norm = sqrt ( norm2 );
-    std::cout.precision(14);
+    std::cout.precision ( 14 );
     std::cout << "Sol Exact L2 norm = " << norm << std::endl;
-    
+
 
 }
 
