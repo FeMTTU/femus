@@ -26,12 +26,12 @@ bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName
   bool dirichlet = true;
   value = 0.;
   
-// TOP ==========================  
-      if (facename == 3) {
-       if (!strcmp(SolName, "U"))    { value = 70.; } //lid - driven
-  else if (!strcmp(SolName, "V"))    { value = 0.; } 
-  	
-      }
+// // TOP ==========================  
+//       if (facename == 3) {
+//        if (!strcmp(SolName, "U"))    { value = 70.; } //lid - driven
+//   else if (!strcmp(SolName, "V"))    { value = 0.; } 
+//   	
+//       }
       
   return dirichlet;
 }
@@ -90,7 +90,7 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 3;
+    maxNumberOfMeshes = 4;
   } else {
     maxNumberOfMeshes = 4;
   }
@@ -244,6 +244,41 @@ void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_n
     }
   
 }
+
+
+void value_Vel(const std::vector < double >& x, vector < double >& val_Vel) {
+  double pi = acos(-1.);
+  val_Vel[0] =   0.5 * sin(pi* x[0]) * sin(pi* x[0]) *  sin(2. * pi * x[1]); //u
+  val_Vel[1] = - 0.5 * sin(2. * pi * x[0]) * sin(pi* x[1]) * sin(pi* x[1]); //v
+ };
+ 
+double value_Press(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return sin(2. * pi * x[0]) * sin(2. * pi * x[1]); //p
+ };
+ 
+ 
+void gradient_Vel(const std::vector < double >& x, vector < vector < double > >& grad_Vel) {
+  double pi = acos(-1.);
+  grad_Vel[0][0]  =   0.5 * pi * sin(2. * pi * x[0]) * sin(2. * pi * x[1]); 
+  grad_Vel[0][1]  =   pi * sin(pi* x[0]) * sin(pi* x[0]) *  cos(2. * pi * x[1]);
+  grad_Vel[1][0]  = - pi * cos(2. * pi * x[0]) * sin(pi * x[1]) * sin(pi * x[1]); 
+  grad_Vel[1][1]  = - 0.5 * pi * sin(2. * pi * x[0]) * sin(2. * pi * x[1]);
+ };
+
+ void gradient_Press(const std::vector < double >& x, vector < double >& grad_Press) {
+  double pi = acos(-1.);
+  grad_Press[0]  =   2. * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]); 
+  grad_Press[1]  =   2. * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
+ };
+ 
+ 
+double laplace_Vel(const std::vector < double >& x, vector < double >& lap_Vel) {
+  double pi = acos(-1.);
+  lap_Vel[0] = pi * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]) - 2. * pi * pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(2. * pi * x[1]);
+  lap_Vel[1] = 2. * pi * pi * sin(2. * pi * x[0]) * sin(pi* x[1]) * sin(pi* x[1]) - pi * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
+};
+
 
 void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
@@ -472,6 +507,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       
       vector < adept::adouble > solV_gss(dim, 0);
       vector < vector < adept::adouble > > gradSolV_gss(dim);
+      vector < double > coordX_gss(dim, 0.);
 
       for (unsigned  k = 0; k < dim; k++) {
         gradSolV_gss[k].resize(dim);
@@ -481,6 +517,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofsV; i++) {
         for (unsigned  k = 0; k < dim; k++) {
           solV_gss[k] += phiV[i] * solV[k][i];    
+          coordX_gss[k] += coordX[k][i] * phiV[i];
         }
 
         for (unsigned j = 0; j < dim; j++) {
@@ -497,6 +534,15 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       }
 // #endif
 
+vector <double>  anal_lap_vel(dim);
+laplace_Vel(coordX_gss, anal_lap_vel);
+vector <double> anal_grad_p(dim);
+gradient_Press(coordX_gss, anal_grad_p);
+
+vector <double> analRHS(dim,0.);
+for (unsigned k = 0; k < dim; k++){
+    analRHS[k] = anal_lap_vel[k] - anal_grad_p[k];
+}
       // *** phiV_i loop ***
       for (unsigned i = 0; i < nDofsV; i++) {
         vector < adept::adouble > NSV(dim, 0.);
@@ -515,7 +561,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 // #endif
 
         for (unsigned  k = 0; k < dim; k++) {
-          aResV[k][i] += ( + NSV[k] - force[k] * phiV[i]  ) * weight;
+          aResV[k][i] += ( + NSV[k] - analRHS[k] * phiV[i]  ) * weight;
         }
       } // end phiV_i loop
 
