@@ -7,8 +7,8 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             3  //we do control on the right (=2) face
-#define AXIS_DIRECTION_CONTROL_SIDE  0 //change this accordingly to the other variable above
+#define FACE_FOR_CONTROL             2  //we do control on the right (=2) face
+#define AXIS_DIRECTION_CONTROL_SIDE  1 //change this accordingly to the other variable above
 
 #include "../elliptic_param.hpp"
 
@@ -210,20 +210,36 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
- //*************************************************** 
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+ //*****************integration ********************************** 
+  double weight = 0.; // gauss point weight
+  double weight_bdry = 0.; // gauss point weight on the boundary
+
+
+ //**************** geometry *********************************** 
+  unsigned solType_coords = 0; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
   vector < vector < double > > x(dim);
   vector < vector < double> >  x_bdry(dim);
   for (unsigned i = 0; i < dim; i++) {
          x[i].reserve(maxSize);
 	 x_bdry[i].reserve(maxSize);
   }
- //*************************************************** 
+  
+  vector < double > coord_at_qp_bdry(dim);
+  
+  vector <double> phi_coords;  // local test function
+  vector <double> phi_coords_x; // local test function first order partial derivatives
+  vector <double> phi_coords_xx; // local test function second order partial derivatives
 
- //*************************************************** 
-  double weight = 0.; // gauss point weight
-  double weight_bdry = 0.; // gauss point weight on the boundary
+  phi_coords.reserve(maxSize);
+  phi_coords_x.reserve(maxSize * dim);
+  phi_coords_xx.reserve(maxSize * dim2);
+  
+  vector <double> phi_coords_bdry;  
+  vector <double> phi_coords_x_bdry; 
 
+  phi_coords_bdry.reserve(maxSize);
+  phi_coords_x_bdry.reserve(maxSize * dim);
+ //*************************************************** 
 
  //********************* state *********************** 
  //*************************************************** 
@@ -288,7 +304,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
   unsigned solIndex_ctrl = mlSol->GetIndex("control");
   unsigned solType_ctrl = mlSol->GetSolutionType(solIndex_ctrl);
-
   unsigned solPdeIndex_ctrl = mlPdeSys->GetSolPdeIndex("control");
 
   std::string ctrl_name = "control";
@@ -303,10 +318,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   unsigned solIndex_mu;
   solIndex_mu = mlSol->GetIndex("mu");    // get the position of "mu" in the ml_sol object
    
-  unsigned solPdeIndex_mu;
-  solPdeIndex_mu = mlPdeSys->GetSolPdeIndex("mu");
-  
+  unsigned solPdeIndex_mu = mlPdeSys->GetSolPdeIndex("mu");
   unsigned solType_mu = mlSol->GetSolutionType(solIndex_mu);    // get the finite element type for "mu"
+
   vector < double >  sol_mu;   sol_mu.reserve(maxSize);
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
@@ -363,11 +377,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
 
  //********************* GEOMETRY *********************
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+    unsigned nDofx = msh->GetElementDofNumber(iel, solType_coords);    // number of coordinate element dofs
     for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
     
     for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
+      unsigned xDof  = msh->GetSolutionDof(i, iel, solType_coords);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
@@ -489,27 +503,28 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
             std::vector < double > xyz_bdc(3,0.);  //not being used, because the boundaries are identified by the face numbers
 	    // look for boundary faces
-	    if(el->GetFaceElementIndex(iel,jface) < 0) {
-	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
-	      
+            const int bdry_index = el->GetFaceElementIndex(iel,jface);
+            
+	    if( bdry_index <  0) {
+	      unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
-	      if(  face == FACE_FOR_CONTROL) { //control face
+	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
               
  //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-	      bool  dir_bool = mlSol->GetBdcFunction()(xyz_bdc,ctrl_name.c_str(),tau,face,0.);
+	      bool  dir_bool = mlSol->GetBdcFunction()(xyz_bdc,ctrl_name.c_str(),tau,face_in_rectangle_domain,0.);
 
  //=================================================== 
 
 		
  //========= compute coordinates of boundary nodes on each element ========================================== 
-		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
+		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
 	        for (unsigned idim = 0; idim < dim; idim++) {  x_bdry[idim].resize(nve_bdry); }
 		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
 		for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-                  unsigned iDof = msh->GetSolutionDof(i_vol, iel, xType);
+                  unsigned iDof = msh->GetSolutionDof(i_vol, iel, solType_coords);
 		  for(unsigned idim=0; idim<dim; idim++) {
 		      x_bdry[idim][i_bdry]=(*msh->_topology->_Sol[idim])(iDof);
 		  }
@@ -613,19 +628,67 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 //========= initialize gauss quantities on the boundary ============================================
 		
-		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
-		  
+        const unsigned n_gauss_bdry = msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber();
+        
+        //show the coordinate of the current ig_bdry point    
+    const double* pt_one_dim[1] = {msh->_finiteElement[kelGeom][solType_ctrl]->GetGaussRule_bdry()->GetGaussWeightsPointer() + 1*n_gauss_bdry };
+    
+		for(unsigned ig_bdry=0; ig_bdry < n_gauss_bdry; ig_bdry++) {
+    
+      double xi_one_dim[1];
+      for (unsigned j = 0; j < 1; j++) {
+        xi_one_dim[j] = *pt_one_dim[j];
+        pt_one_dim[j]++;
+      }
+
+std::cout << "Outside ig = " << ig_bdry << " ";
+      for (unsigned d = 0; d < 1; d++) std::cout << xi_one_dim[d] << " ";
+            
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
-		  msh->_finiteElement[kelGeom][solType_adj]->VolumeShapeAtBoundary(x,x_bdry,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+		  msh->_finiteElement[felt_bdry][solType_coords]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_coords_bdry,phi_coords_x_bdry,normal);
+      
+ //========= fill gauss value xyz ==================   
+   // it is the JacobianSur function that defines the mapping between real quadrature points and reference quadrature points 
+   // and that is the result of how the element is oriented (how the nodes are listed)
+   // the fact is that you don't know where this boundary gauss point is located with respect to the reference VOLUME...
+   //it could be on xi = -1, xi=1, eta=-1, eta=1...
+   //what I know is that all that matters eventually is to find the corresponding REFERENCE position, because that's where I will evaluate my derivatives at the boundary,
+   // to compute the normal derivative and so on
+   //so, I propose once and for all to make a JACOBIAN FUNCTION that depends on the REAL coordinate, and yields the CANONICAL ONE.
+    
+   // The alternative to this approach, which is the most general one, is to do like I did with the cosines and so on to switch between X and Y axis,
+   // but as soon as you'll have an inclined boundary you'll be stuck. So let's go general
+      
+   //The problem with the general approach is that the Gauss evaluation is done INSIDE this Gauss loop, instead of being done once and for all OUTSIDE
+   //One should build a map that says: 
+   // "if this is the face(top/bottome/left/right) in the reference element AND if the real face is oriented concordantly/discordantly with respect to the reference face, then    
+   // use this point or the other point..." Not very convenient
+      
+   //Another problem with the general approach is that it is the INVERSION of the JACOBIAN MAPPING, and that can only be done when the mapping is a LINEAR FUNCTION...
+      
+   std::fill(coord_at_qp_bdry.begin(), coord_at_qp_bdry.end(), 0.);
+    for (unsigned  d = 0; d < dim; d++) {
+        	for (unsigned i = 0; i < x_bdry[d].size(); i++) {
+               coord_at_qp_bdry[d] += x_bdry[d][i] * phi_coords_bdry[i];
+            }
+std::cout <<  " qp_" << d << " " << coord_at_qp_bdry[d];
+    }
+    
+  //========= fill gauss value xyz ==================   
+  
+          if (kelGeom != QUAD) { std::cout << "VolumeShapeAtBoundary not implemented" << std::endl; abort(); } 
+		  msh->_finiteElement[kelGeom][solType_adj]->VolumeShapeAtBoundary(x,x_bdry,jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
-          std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
-		      for (int iv = 0; iv < nDof_adj; iv++)  {
-                  for (int d = 0; d < dim; d++) {
-                       std::cout << " " <<   phi_adj_x_vol_at_bdry[iv * dim + d];
-                }
-              }
-          
+//           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
+// 		      for (int iv = 0; iv < nDof_adj; iv++)  {
+//                   for (int d = 0; d < dim; d++) {
+//                        std::cout << " " <<   phi_adj_x_vol_at_bdry[iv * dim + d];
+//                 }
+//               }
+
+      
+      
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
           const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
 		  double dx_dcurv_abscissa = 0.;
@@ -862,6 +925,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         // *** get gauss point weight, test function and test function partial derivatives ***
 	msh->_finiteElement[kelGeom][solType_u]  ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
     msh->_finiteElement[kelGeom][solType_adj]->Jacobian(x, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
+    msh->_finiteElement[kelGeom][solType_coords]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
           
 	sol_u_gss = 0.;
 	sol_adj_gss = 0.;
@@ -1069,7 +1133,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
  //***************************************************
-   const int xType = 2;
+   const int solType_coords = 0;
   vector < vector < double > > x(dim);
   vector < vector < double> >  x_bdry(dim);
   for (unsigned i = 0; i < dim; i++) {
@@ -1164,11 +1228,11 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
     short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
     
  //********* GEOMETRY ********************************* 
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+    unsigned nDofx = msh->GetElementDofNumber(iel, solType_coords);    // number of coordinate element dofs
     for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);
+      unsigned xDof  = msh->GetSolutionDof(i, iel, solType_coords);
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
@@ -1266,12 +1330,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 	      if(  face == FACE_FOR_CONTROL) { //control face
 
  //========= compute coordinates of boundary nodes on each element ========================================== 
-		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
+		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
 	        for (unsigned idim = 0; idim < dim; idim++) {  x_bdry[idim].resize(nve_bdry); }
 		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
 		for(unsigned i=0; i < nve_bdry; i++) {
 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
-                  unsigned iDof = msh->GetSolutionDof(i_vol, iel, xType);
+                  unsigned iDof = msh->GetSolutionDof(i_vol, iel, solType_coords);
 		  for(unsigned idim=0; idim<dim; idim++) {
 		      x_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
 		  }
@@ -1337,10 +1401,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-        //  ==== state 
 	msh->_finiteElement[kelGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
-        //  ==== adjoint
-        msh->_finiteElement[kelGeom][solType_u/*solTypeTdes*/]->Jacobian(x, ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
+    msh->_finiteElement[kelGeom][solType_u/*solTypeTdes*/]->Jacobian(x, ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
 
 	u_gss = 0.;  for (unsigned i = 0; i < nDof_u; i++) u_gss += sol_u[i] * phi_u[i];		
 	udes_gss  = 0.; for (unsigned i = 0; i < nDof_udes; i++)  udes_gss  += sol_udes[i]  * phi_udes[i];  

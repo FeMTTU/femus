@@ -33,7 +33,7 @@ namespace femus {
   using std::endl;
 
   /**
-   *  Contructor
+   *  Constructor
    **/
 // ------------------------------------------------------------------
   Solution::Solution(Mesh *other_msh) {
@@ -106,6 +106,73 @@ namespace femus {
 
   }
 
+
+  
+  void Solution::AddSolution_par(const int n_sols, const char name[], const FEFamily fefamily, const FEOrder order,
+                             const unsigned& tmorder, const bool &Pde_type) {
+
+   const unsigned old_size = _Sol.size();
+   const int      new_size = old_size + n_sols;
+    
+    ResizeSolution_par(new_size);
+    
+    //initialize
+    if ( n_sols > 0 ) {
+        
+   for(int s = 0; s < n_sols; s++) {
+       
+       _Sol[old_size + s] = NULL;
+    _SolOld[old_size + s] = NULL;
+       _Res[old_size + s] = NULL;
+       _Eps[old_size + s] = NULL; 
+       _Bdc[old_size + s] = NULL;       
+       
+     _GradVec[old_size + s].resize(_msh->GetDimension());
+         for(int i = 0; i < _msh->GetDimension(); i++) {     _GradVec[old_size + s][i] = NULL; }  
+         
+  _ResEpsBdcFlag[old_size + s] = Pde_type;       
+         _family[old_size + s] = fefamily;
+          _order[old_size + s] = order;
+        _SolType[old_size + s] = order - ((fefamily == LAGRANGE) ? 1 : 0) + fefamily * 3;
+     _SolTmOrder[old_size + s] = tmorder;
+        _SolName[old_size + s] = new char [DEFAULT_SOL_NCHARS];
+ strcpy(_SolName[old_size + s], name);
+_removeNullSpace[old_size + s] = false;
+    
+      }
+
+    }   
+   
+   
+  }  
+  
+
+
+  void Solution::ResizeSolution_par(const int new_size) {
+      
+// it seems that the destructors of the NumericVectors are not called after a shrink...      
+      
+         _SolType.resize(new_size);
+         _SolName.resize(new_size);
+      _SolTmOrder.resize(new_size);
+          _family.resize(new_size);
+           _order.resize(new_size);
+   _ResEpsBdcFlag.resize(new_size);        
+ _removeNullSpace.resize(new_size);
+           
+// NumericVector objects
+             _Sol.resize(new_size); 
+          _SolOld.resize(new_size); 
+         _GradVec.resize(new_size); 
+             _Res.resize(new_size); 
+             _Eps.resize(new_size); 
+             _Bdc.resize(new_size);
+
+      
+  }
+  
+
+  
   /**
    * Get the solution index for the variable called name
    **/

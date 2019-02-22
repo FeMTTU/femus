@@ -48,13 +48,15 @@ private:
     /** duplicate */
     typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]);
 
-    /** Boundary condition function pointer typedef */
-    typedef bool (*BoundaryFunc) (const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
 
-    /** duplicate */
-    typedef bool (*BoundaryFuncMLProb) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
 
 public:
+    
+    /** Boundary condition function pointer typedef */
+    typedef bool (*BoundaryFunc) (const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
+    
+    /** duplicate */
+    typedef bool (*BoundaryFuncMLProb) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
 
     /** Constructor */
     MultiLevelSolution(MultiLevelMesh *ml_msh);
@@ -62,8 +64,11 @@ public:
     /** Destructor */
     ~MultiLevelSolution();
 
+    /** this is the destructor that can be called explicitly, instead of the automatic destructor */
+    void clear();
+ 
     /** To be Added */
-    void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order, unsigned tmorder=0, const bool &Pde_type=1);
+    void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order, unsigned tmorder = 0, const bool &Pde_type = 1);
 
     /** If you want to add a vector whose components are treated the same way */
     void AddSolutionVector(const unsigned n_components, const std::string name, const FEFamily fefamily, const FEOrder order, unsigned tmorder=0, const bool &Pde_type=1);
@@ -71,6 +76,9 @@ public:
     /** To be Added */
     void AddSolutionLevel();
 
+    /** To be Added */
+    void ResizeSolution_par(const unsigned new_size);
+    
     /** To be Added */
     void AssociatePropertyToSolution(const char solution_name[], const char solution_property[], const bool &bool_property = true);
 
@@ -99,6 +107,11 @@ public:
     };
 
     /** To be Added */
+    const unsigned GetSolutionSize() const {
+        return _solType.size();
+    };
+    
+    /** To be Added */
     vector <char*>  GetSolName() {
         return _solName;
     };
@@ -110,7 +123,9 @@ public:
 
     /** To be Added */
     void AttachSetBoundaryConditionFunction( BoundaryFunc SetBoundaryConditionFunction );
+    
     void AttachSetBoundaryConditionFunction( BoundaryFuncMLProb SetBoundaryConditionFunction );
+    
     void FixSolutionAtOnePoint( const char sol[] ){
       _fixSolutionAtOnePoint[GetIndex(sol)] = true ;
       for(unsigned ig = 1; ig < _gridn; ig++){
@@ -150,6 +165,11 @@ public:
     };
 
     /** To be Added */
+    const Solution* GetSolutionLevel(const unsigned i) const {
+        return _solution[i];
+    };
+    
+    /** To be Added */
     char* GetSolutionName(unsigned i) {
         return _solName[i];
     };
@@ -159,6 +179,11 @@ public:
         return _solType[i];
     };
 
+    /** To be Added */
+    const int GetSolutionType(unsigned i) const {
+        return _solType[i];
+    };
+    
     /** To be Added */
     unsigned GetSolutionType(const char name[]);
 
@@ -228,8 +253,11 @@ public:
     };
     
     
+    
     void UpdateSolution(const char name[], InitFunc func, const double& time);
     
+    void fill_at_level_from_level(const unsigned lev_out, const unsigned lev_in, const MultiLevelSolution & ml_sol_in);
+        
     void CopySolutionToOldSolution();
     
     void SetIfFSI(const bool &FSI = true){
@@ -245,6 +273,7 @@ public:
     
     
 private:
+    
     /** boundary condition function pointer */
 
     BoundaryFunc _SetBoundaryConditionFunction;
@@ -264,28 +293,26 @@ private:
 
     /** Array of solution, dimension number of levels */
     vector < Solution* >  _solution;
-
-
+    unsigned short  _gridn;
+    
 
     /** This group of vectors has the size of the number of added solutions */
-    vector< vector <BDCType> > _boundaryConditions;
-    vector< vector <bool> > _isHomogeneous;
-    vector< vector <FunctionBase *> > _nonHomogeneousBCFunction;
+    vector < vector <BDCType> >         _boundaryConditions;
+    vector < vector <bool> >            _isHomogeneous;
+    vector < vector <FunctionBase *> >  _nonHomogeneousBCFunction;
+    vector < int >                      _solType;    /* Tells the FE index */
+    vector < FEFamily >                 _family;
+    vector < FEOrder >                  _order;
+    vector < char* >                    _solName;
+    vector < char* >                    _bdcType;
+    vector < int >                      _solTimeOrder;
+    vector < bool >                     _pdeType;    /*Tells whether the Solution is an unknown of a PDE or not*/
+    vector < bool >                     _testIfPressure;
+    vector < bool >                     _addAMRPressureStability;
+    vector < bool >                     _fixSolutionAtOnePoint;
 
-    unsigned short  _gridn;
-    vector < int >    _solType;    /* Tells the FE index */
-    vector < FEFamily > _family;
-    vector < FEOrder > _order;
-    vector < char* >  _solName;
-    vector < char* >  _bdcType;
-    vector < int >    _solTimeOrder;
-    vector < bool >   _pdeType;    /*Tells whether the Solution is an unknown of a PDE or not*/
-    vector < bool >   _testIfPressure;
-    vector < bool >   _addAMRPressureStability;
-    vector < bool >   _fixSolutionAtOnePoint;
-
-    vector <unsigned> _solPairIndex;
-    vector <unsigned> _solPairInverseIndex;
+    vector <unsigned>                   _solPairIndex;
+    vector <unsigned>                   _solPairInverseIndex;
 
     /** Multilevel solution writer */
     Writer* _writer;

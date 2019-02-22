@@ -470,7 +470,7 @@ vector < double >  sol_adj; // local solution
 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
 		  
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
-		  msh->_finiteElement[kelGeom][solType_ctrl]->VolumeShapeAtBoundary(x,x_bdry,ig_bdry,phi_ctrl_vol_at_bdry,phi_ctrl_x_vol_at_bdry);
+		  msh->_finiteElement[kelGeom][solType_ctrl]->VolumeShapeAtBoundary(x,x_bdry,jface,ig_bdry,phi_ctrl_vol_at_bdry,phi_ctrl_x_vol_at_bdry);
 		  
 		      
 //=============== grad dot n for residual ========================================= 

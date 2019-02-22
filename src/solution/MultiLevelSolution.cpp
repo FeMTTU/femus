@@ -40,22 +40,11 @@ namespace femus
   using std::endl;
 
 //---------------------------------------------------------------------------------------------------
-  MultiLevelSolution::~MultiLevelSolution()
-  {
+  MultiLevelSolution::~MultiLevelSolution()  {
 
-    for(unsigned i = 0; i < _gridn; i++) {
-      _solution[i]->FreeSolutionVectors();
-      delete _solution[i];
-    }
+    clear();
 
-    for(unsigned i = 0; i < _solName.size(); i++) delete [] _solName[i];
-
-    for(unsigned i = 0; i < _solName.size(); i++) delete [] _bdcType[i];
-    
-    if(_writer != NULL) delete _writer;
-
-
-  };
+  }
 
 //---------------------------------------------------------------------------------------------------
   MultiLevelSolution::MultiLevelSolution(MultiLevelMesh* ml_msh) :
@@ -79,6 +68,31 @@ namespace femus
     _writer = NULL;
 
   }
+  
+  
+//---------------------------------------------------------------------------------------------------
+// this is the destructor that can be called explicitly, instead of the automatic destructor
+ void MultiLevelSolution::clear() {
+      
+    for(unsigned i = 0; i < _gridn; i++) {
+      _solution[i]->FreeSolutionVectors();
+      delete _solution[i];
+    }
+
+    for(unsigned i = 0; i < _solName.size(); i++) delete [] _solName[i];
+
+    for(unsigned i = 0; i < _solName.size(); i++) delete [] _bdcType[i];
+    
+    if(_writer != NULL) delete _writer;
+ 
+      
+      
+  }
+  
+  
+  
+  
+  
 
   void MultiLevelSolution::AddSolutionLevel()
   {
@@ -169,7 +183,21 @@ namespace femus
   }
 
 
+  void MultiLevelSolution::ResizeSolution_par(const unsigned new_size)  {
 
+      for(unsigned ig = 0; ig < _solution.size(); ig++) {
+
+    for(unsigned s = 0; s < _solType.size(); s++) {
+
+     _solution[ig]->ResizeSolution_par(new_size);
+
+    }
+  }
+
+      
+}
+  
+  
 //---------------------------------------------------------------------------------------------------
   void MultiLevelSolution::AssociatePropertyToSolution(const char solution_name[], const char solution_property[],
       const bool& bool_property)
@@ -434,7 +462,7 @@ namespace femus
       cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine"
            << endl;
 
-      exit(1);
+      abort();
     }
 
     if(_bdcFuncSetMLProb == true && ml_prob != NULL) {
@@ -715,6 +743,19 @@ namespace femus
         //set the _Sol in the coarse dofs to the fine dofs
         
     }
+  
+  /** Copies from another MLSol object from a given level to some other level.
+      One should also check that they belong to the same underlying mesh structure */
+  void MultiLevelSolution::fill_at_level_from_level(const unsigned lev_out, const unsigned lev_in, const MultiLevelSolution & ml_sol_in)  {
+      
+      assert(_solType.size() == ml_sol_in.GetSolutionSize());
+      
+          for(unsigned k = 0; k < _solType.size(); k++) {
+              *(_solution[lev_out]->_Sol[k]) = *(ml_sol_in.GetSolutionLevel(lev_in)->_Sol[k]);
+          }
+          
+  }
+
   
   
   void MultiLevelSolution::CopySolutionToOldSolution()

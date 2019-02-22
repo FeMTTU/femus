@@ -1,7 +1,6 @@
 #ifndef ELLIPTIC_PARAMETERS
 #define ELLIPTIC_PARAMETERS
 
-//#include </elliptic_lift_restr_bdd_ctrl_ext/input/ext_box.neu>
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
@@ -47,8 +46,15 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ******
   int target_flag = 0; //set 0 to 1 to get the entire domain
   
-   if (   elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] > 0.5  - 1.e-5 ) {    target_flag = 1;  }
-//    if (   elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] < 0.5  + 1.e-5 ) {    target_flag = 1;  }
+  double target_line_sign;
+  
+        if (FACE_FOR_CONTROL == 3 || FACE_FOR_CONTROL == 2) { target_line_sign = -1; }
+   else if (FACE_FOR_CONTROL == 1 || FACE_FOR_CONTROL == 4) { target_line_sign = 1;  }
+   
+   const double offset_to_include_line = 1.e-5;
+   const double target_line = 0.5 + target_line_sign * offset_to_include_line; 
+   
+      if (  target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] < target_line_sign * target_line ) {  target_flag = 1;  }
   
      return target_flag;
 
@@ -69,11 +75,18 @@ double DesiredTarget()
 
 int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
- //***** set control domain flag ***** 
-  double mesh_size = 1./NSUB_Y;
+  const double mesh_size = 1./NSUB_X;
+   
   int control_el_flag = 0;
-   if ( elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] >  1. - mesh_size ) { control_el_flag = 1; }
-//    if ( elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] <       mesh_size ) { control_el_flag = 1; }
+
+  double target_line_sign;
+  double extreme_pos;
+  
+        if (FACE_FOR_CONTROL == 3 || FACE_FOR_CONTROL == 2) { target_line_sign = -1; extreme_pos = 1.; }
+   else if (FACE_FOR_CONTROL == 1 || FACE_FOR_CONTROL == 4) { target_line_sign = 1;  extreme_pos = 0.; }
+
+  
+   if (  target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] <   target_line_sign * (  extreme_pos  + target_line_sign * mesh_size) ) { control_el_flag = 1; }
 
      return control_el_flag;
 }
@@ -86,7 +99,7 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
 
  //***** set target domain flag ******
  // flag = 1: we are in the lifting nonzero domain
-  int control_el_flag = 0.;
+  int control_el_flag = 1.;
    if ( elem_center[0] >  0.7) { control_el_flag = 1; }
 
      return control_el_flag;

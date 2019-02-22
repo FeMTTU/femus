@@ -140,6 +140,11 @@ namespace femus
       };
 
       /** To be Added */
+      inline const Gauss* GetGaussRule_bdry() const {
+        return _gauss_bdry;
+      };
+
+      /** To be Added */
       inline double  GetGaussWeight(const unsigned ig) const {
         return _gauss.GetGaussWeightsPointer()[ig];
       };
@@ -190,9 +195,9 @@ namespace femus
  
       static const int _fe_new_to_old[NFE_FAMS];
   
-      virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const {
+      virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const {
            std::cout << "Implemented only for quad4 now" << std::endl; abort(); 
-      };
+      }
 
       
       basis* GetBasis() const {
@@ -441,7 +446,83 @@ namespace femus
         return _dphideta[ig];
       }
 
-  void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+     void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+
+     template <class type>
+     void Jacobian_at_point(const vector < vector < double > >& vt, const vector < double >& pos_in, vector < double >& pos_out) const;
+
+     template <class type>
+     void Jacobian_type_non_isoparametric(const elem_type_2D * fe_elem_coords,
+                                                const vector < vector < type > > & vt,
+                                                const unsigned & ig,
+                                                type & Weight,
+                                                vector < double > & phi, 
+                                                vector < type >   & gradphi,
+                                                boost::optional< vector < type > & > nablaphi) const {
+                                                    
+// geometry part ==============
+
+    type Jac[2][2] = {{0, 0}, {0, 0}};
+    type JacI[2][2];
+    const double* dxi_coords  = fe_elem_coords->_dphidxi[ig];
+    const double* deta_coords = fe_elem_coords->_dphideta[ig];
+
+    for(int inode = 0; inode < fe_elem_coords->_nc; inode++, dxi_coords++, deta_coords++) {
+      Jac[0][0] += (*dxi_coords) * vt[0][inode];
+      Jac[0][1] += (*dxi_coords) * vt[1][inode];
+      Jac[1][0] += (*deta_coords) * vt[0][inode];
+      Jac[1][1] += (*deta_coords) * vt[1][inode];
+    }
+
+    type det = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
+
+    JacI[0][0] =  Jac[1][1] / det;
+    JacI[0][1] = -Jac[0][1] / det;
+    JacI[1][0] = -Jac[1][0] / det;
+    JacI[1][1] =  Jac[0][0] / det;
+
+    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+
+    
+// function part ================
+    
+    const double* dxi  = _dphidxi[ig];
+    const double* deta = _dphideta[ig];
+
+    const double* dxi2 = _d2phidxi2[ig];
+    const double* deta2 = _d2phideta2[ig];
+    const double* dxideta = _d2phidxideta[ig];
+
+
+    phi.resize(_nc);
+    gradphi.resize(_nc * 2);
+    if(nablaphi) nablaphi->resize(_nc * 3);
+
+    
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
+
+      phi[inode] = _phi[ig][inode];
+
+      gradphi[2 * inode + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1];
+      gradphi[2 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1];
+
+      if(nablaphi) {
+        (*nablaphi)[3 * inode + 0] =
+          ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[0][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[0][1];
+        (*nablaphi)[3 * inode + 1] =
+          ((*dxi2)   * JacI[1][0] + (*dxideta) * JacI[1][1]) * JacI[1][0] +
+          ((*dxideta) * JacI[1][0] + (*deta2)  * JacI[1][1]) * JacI[1][1];
+        (*nablaphi)[3 * inode + 2] =
+          ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[1][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[1][1];
+      }
+    }
+
+
+
+}
+
 
   private:
       double** _phi;
