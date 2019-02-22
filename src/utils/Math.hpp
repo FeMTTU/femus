@@ -193,13 +193,15 @@ namespace FE_convergence {
  
   public:
       
- virtual double value(const std::vector < double >& x) const = 0;
+ virtual double value(const std::vector < double >& x) const { abort(); };
 
- virtual vector < double >  gradient(const std::vector < double >& x) const = 0;
+ virtual vector < double >  gradient(const std::vector < double >& x) const { abort(); };
 
- virtual double laplacian(const std::vector < double >& x) const = 0;
+ virtual double laplacian(const std::vector < double >& x) const { abort(); };
  
-  };
+ virtual double helmholtz(const std::vector < double >& x) const { return ( - laplacian(x) + value(x) ); };
+
+};
   
 
 
@@ -321,7 +323,7 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
  
  
 
- inline std::vector< double > get_error_norms(const MultiLevelSolution* ml_sol, 
+ inline std::vector< double > compute_error_norms(const MultiLevelSolution* ml_sol, 
                                               const MultiLevelSolution* ml_sol_all_levels,
                                               const std::string & unknown,
                                               const unsigned current_level,
@@ -353,7 +355,9 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
   const Solution* sol = ml_sol->GetSolutionLevel(level);
 
   const unsigned  dim = msh->GetDimension();
-  unsigned iproc = msh->processor_id();
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+
+ unsigned iproc = msh->processor_id();
 
   //solution variable
   unsigned soluIndex = ml_sol->GetIndex(unknown.c_str()); // ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
@@ -369,9 +373,18 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
   vector < vector < double > > x(dim);    // local coordinates
   for (unsigned i = 0; i < dim; i++)   x[i].reserve(maxSize);
 
-  vector <double> phi;
-  vector <double> phi_x;
-  vector <double> phi_xx;
+//-----------------  
+  vector < double > phi_coords;
+  vector < double > phi_coords_x;
+  vector < double > phi_coords_xx;
+
+  phi_coords.reserve(maxSize);
+  phi_coords_x.reserve(maxSize * dim);
+  phi_coords_xx.reserve(maxSize * dim2);
+
+  vector < double > phi;
+  vector < double > phi_x;
+  vector < double > phi_xx;
   
   double weight; // gauss point weight
 
@@ -383,7 +396,6 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   phi_xx.reserve(maxSize * dim2);
 
 
@@ -393,8 +405,8 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
 
     
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);
+    unsigned nDofx = msh->GetElementDofNumber(iel, xType);
 
     // resize local arrays
     solu.resize(nDofu);
@@ -429,8 +441,12 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+        
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+     static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][soluType] )
+                                         ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
+//       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+      msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       double solu_gss = 0.;
@@ -450,7 +466,7 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
           gradSolu_gss[jdim]                += phi_x[i * dim + jdim] * solu[i];
           gradSolu_exact_at_dofs_gss[jdim]  += phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
           gradSolu_coarser_prol_gss[jdim]   += phi_x[i * dim + jdim] * solu_coarser_prol[i];
-          x_gss[jdim] += x[jdim][i] * phi[i];
+          x_gss[jdim] += x[jdim][i] * phi_coords[i];
         }
       }
 
@@ -526,7 +542,7 @@ if (conv_order_flag == 1)  return norms;
  
 
      
- inline void compute_error_norms_on_level(const MultiLevelSolution* ml_sol_single_level, 
+ inline void compute_error_norms_per_unknown_per_level(const MultiLevelSolution* ml_sol_single_level, 
                                           MultiLevelSolution* ml_sol_all_levels, 
                                           const std::vector< FE_convergence::Unknowns_definition > &  unknowns, 
                                           const unsigned i,
@@ -545,7 +561,7 @@ if (conv_order_flag == 1)  return norms;
             // =======  compute the error norm at the current level (i) ========================
             for (unsigned int u = 0; u < unknowns.size(); u++) {  //this loop could be inside the below function
                 
-            const std::vector< double > norm_out = FE_convergence::get_error_norms(ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, ex_sol_in);
+            const std::vector< double > norm_out = FE_convergence::compute_error_norms(ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, ex_sol_in);
 
               for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];
                                        

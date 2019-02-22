@@ -33,7 +33,8 @@ using namespace femus;
   class My_exact_solution : public FE_convergence::Function {  
  
   public:
-      
+
+// manufactured Laplacian =============      
   double value(const std::vector < double >& x) const {
   double pi = acos(-1.);
   return cos(pi * x[0]) * cos(pi * x[1]);
@@ -56,6 +57,7 @@ using namespace femus;
 }
 
 
+// constant =============      
 //   double value(const std::vector < double >& x) const {  return 1.; }
 // 
 //   
@@ -88,9 +90,9 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 }
 
 
-void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
-void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
-void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const FE_convergence::Function & exact_sol);
+void AssembleProblem(MultiLevelProblem& ml_prob);
+void AssembleProblem_AD(MultiLevelProblem& ml_prob);
+void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const FE_convergence::Function & exact_sol);
 
  
 
@@ -98,8 +100,8 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
  const std::vector< FE_convergence::Unknowns_definition >  provide_list_of_unknowns() {
      
      
-  std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE,  LAGRANGE/*DISCONTINOUS_POLYNOMIAL*//*, DISCONTINOUS_POLYNOMIAL*/};
-  std::vector< FEOrder >   feOrder = {FIRST, SERENDIPITY ,SECOND/*ZERO*//*FIRST*/};
+  std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE,  LAGRANGE, DISCONTINOUS_POLYNOMIAL, DISCONTINOUS_POLYNOMIAL};
+  std::vector< FEOrder >   feOrder = {FIRST, SERENDIPITY ,SECOND,ZERO,FIRST};
 
   assert( feFamily.size() == feOrder.size() );
  
@@ -120,7 +122,10 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
 }
 
 
-const MultiLevelSolution  run_main_on_single_level(const Files & files, const std::vector< FE_convergence::Unknowns_definition > & unknowns,  MultiLevelMesh & ml_mesh, const unsigned i);
+const MultiLevelSolution  run_main_on_single_level(const Files & files, 
+                                                   const std::vector< FE_convergence::Unknowns_definition > & unknowns,  
+                                                   MultiLevelMesh & ml_mesh, 
+                                                   const unsigned i);
   
 
 
@@ -172,7 +177,7 @@ int main(int argc, char** args) {
    My_exact_solution exact_sol;
  
   //Choose how to compute the convergence order ==============
-    const unsigned conv_order_flag = 1;  //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
+    const unsigned conv_order_flag = 0;  //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
     
    //provide list of unknowns ==============
     std::vector< FE_convergence::Unknowns_definition > unknowns = provide_list_of_unknowns();
@@ -192,7 +197,7 @@ int main(int argc, char** args) {
                   
             const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level(files, unknowns, ml_mesh, i);
 
-                                              FE_convergence::compute_error_norms_on_level( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag/*, & exact_sol*/);
+                                              FE_convergence::compute_error_norms_per_unknown_per_level( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag, & exact_sol);
         
       }
    
@@ -254,7 +259,7 @@ int main(int argc, char** args) {
             mlProb.set_current_unknown_assembly(unknowns[u]._name); //way to communicate to the assemble function, which doesn't belong to any class
             
             // attach the assembling function to system
-            system.SetAssembleFunction(AssemblePoissonProblem_AD);
+            system.SetAssembleFunction(AssembleProblem_AD);
 
             // initialize and solve the system
             system.init();
@@ -267,7 +272,7 @@ int main(int argc, char** args) {
 //             system.SetDebugLinear(true);
 //             system.SetMaxNumberOfLinearIterations(6);
 //             system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
-
+            
             system.MLsolve();
       
             // ======= Print ========================
@@ -284,12 +289,12 @@ int main(int argc, char** args) {
 
 
 
-void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
+void AssembleProblem_AD(MultiLevelProblem& ml_prob) {
     
        My_exact_solution exact_sol;
 
-    AssemblePoissonProblem_AD_flexible(ml_prob,"Poisson", ml_prob.get_current_unknown_assembly(), exact_sol);
-//     AssemblePoissonProblem_flexible(ml_prob,"Poisson", ml_prob.get_current_unknown_assembly(), exact_sol);
+    AssembleProblem_AD_flexible(ml_prob,"Poisson", ml_prob.get_current_unknown_assembly(), exact_sol);
+//     AssembleProblem_flexible(ml_prob,"Poisson", ml_prob.get_current_unknown_assembly(), exact_sol);
 
 }
 
@@ -301,7 +306,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
  * and consequently
  *        u = u0 + w satisfies Jac u = F
  **/
-void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
+void AssembleProblem(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
 
   //  level is the level of the PDE system to be assembled
@@ -317,21 +322,21 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
-  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*                     el = msh->el;  // pointer to the elem object in msh (level)
+  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
+  elem*                     el = msh->el; 
 
-  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  
+  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
   SparseMatrix*             KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*           RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  const unsigned  dim = msh->GetDimension();
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));
 
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  unsigned    iproc = msh->processor_id();
 
   //solution variable
   unsigned soluIndex = 0; // ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
@@ -495,15 +500,16 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
  * thus
  *                  J w = f(x) - J u0
  **/
-void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const FE_convergence::Function & exact_sol) {
+void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const FE_convergence::Function & exact_sol) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
-  //  levelMax is the Maximum level of the MultiLevelProblem
+  //  levelMax , SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECONDis the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
+
+  const unsigned mass_flag = 1;
+    
   // call the adept stack object
-
-
   adept::Stack& s = FemusInit::_adeptStack;
 
   //  extract pointers to the several objects that we are going to use
@@ -660,16 +666,22 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
         }
         
 
-//         double source_term = exact_sol.value(x_gss);
-//         aRes[i] += (source_term * phi[i] - laplace) * weight;
+// arbitrary rhs
+//               double source_term = exact_sol.value(x_gss);
+//         aRes[i] += ( source_term * phi[i] - mass_flag * phi[i] * solu_gss - laplace ) * weight;
         
-        double laplace_strong_exact = - exact_sol.laplacian(x_gss);
-        aRes[i] += (laplace_strong_exact * phi[i] - laplace) * weight;        //strong form of RHS nad weak form of LHS
+// manufactured Helmholtz - strong
+             double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
+        aRes[i] += (helmholtz_strong_exact * phi[i] - mass_flag * phi[i] * solu_gss - laplace) * weight;
 
-//            aRes[i] += (laplace_weak_exact  - laplace) * weight;                  //weak form of RHS nad weak form of LHS
+// manufactured Laplacian - strong
+//                double laplace_strong_exact = exact_sol.laplacian(x_gss);
+//         aRes[i] += (- laplace_strong_exact * phi[i] - mass_flag * phi[i] * solu_gss - laplace) * weight;        //strong form of RHS and weak form of LHS
+
+// manufactured Laplacian - weak
+//            aRes[i] += (laplace_weak_exact - mass_flag * phi[i] * solu_gss - laplace) * weight;                  //weak form of RHS and weak form of LHS
+
         
-//         aRes[i] += (laplace_weak_exact  - laplace + phi[i]*solu_gss) * weight;         //equation needed for DISCONTINOUS_POLYNOMIAL, due to zero gradient
-
       } // end phi_i loop
     } // end gauss point loop
 
@@ -704,7 +716,7 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
   } //end element loop for each process
 
   RES->close();
-//   RES->print();
+  RES->print();
   
   KK->close();
 
@@ -712,6 +724,10 @@ void AssemblePoissonProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::s
 }
 
 
-
-
-
+///@todo: check print for discontinuous FE
+///@todo: compute error in L-\infty norm
+///@todo: compute nonlinear convergence rate
+///@todo: compute time convergence rate, pointwise and then in norms
+///@todo: uncouple Gauss from Mesh
+///@todo: make non-isoparametric Jacobian routines (abstract Jacobian)
+///@todo: check solver and prec choices
