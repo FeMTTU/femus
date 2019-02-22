@@ -80,11 +80,9 @@ using namespace femus;
 
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
+    
   bool dirichlet = true; //dirichlet
   value = 0;
-
-//   if (faceName == 2)
-//     dirichlet = false;
 
   return dirichlet;
 }
@@ -250,7 +248,7 @@ int main(int argc, char** args) {
       
       
             // add system Poisson in mlProb as a Linear Implicit System
-            LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Poisson");
+            LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Equation");
 
             // add solution "u" to system
             system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
@@ -277,7 +275,7 @@ int main(int argc, char** args) {
       
             // ======= Print ========================
             std::vector < std::string > variablesToBePrinted;
-            variablesToBePrinted.push_back(unknowns[u]._name/*"All"*/);
+            variablesToBePrinted.push_back(unknowns[u]._name);
             ml_sol_single_level.GetWriter()->Write(unknowns[u]._name, files.GetOutputPath(), "biquadratic", variablesToBePrinted, i);  
      
 
@@ -292,10 +290,10 @@ int main(int argc, char** args) {
 void AssembleProblem_interface(MultiLevelProblem& ml_prob) {
     
        My_exact_solution exact_sol;
-const std::string system_name = "Poisson";
+const std::string system_name = "Equation";
 
-    AssembleProblem_AD_flexible(ml_prob,system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
-//     AssembleProblem_flexible(ml_prob,system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+//     AssembleProblem_AD_flexible(ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+    AssembleProblem_flexible(ml_prob,system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
 
 }
 
@@ -317,7 +315,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
   //  extract pointers to the several objects that we are going to use
 
     
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> (system_name);   // pointer to the linear implicit system named "Poisson"
+  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> (system_name);   // pointer to the linear implicit system named "Equation"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
@@ -370,8 +368,8 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
   phi_x.reserve(maxSize * dim);
   phi_xx.reserve(maxSize * dim2);
 
-  vector< double > Res;     Res.reserve(maxSize);
   vector< int > l2GMap;  l2GMap.reserve(maxSize);
+  vector< double > Res;     Res.reserve(maxSize);
   vector < double > Jac;    Jac.reserve(maxSize * maxSize);
 
   KK->zero();
@@ -380,8 +378,8 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);
+    unsigned nDofx = msh->GetElementDofNumber(iel, xType);
 
     // resize local arrays
     l2GMap.resize(nDofu);
@@ -392,7 +390,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
     Res.resize(nDofu);          std::fill(Res.begin(), Res.end(), 0.); 
     
-    Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.);
+    Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.); ///DIFF
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
@@ -413,6 +411,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
                   l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
     
+    if (dim != 2) abort(); //only implemented in 2D now
 
 
     // *** Gauss point loop ***
@@ -467,7 +466,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
         
 // manufactured Helmholtz - strong
              double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
-         Res[i] += (helmholtz_strong_exact * phi[i] - phi[i] * solu_gss - laplace) * weight;
+         Res[i] += (helmholtz_strong_exact * phi[i] - solu_gss * phi[i]  - laplace) * weight;
 
 // manufactured Laplacian - strong
 //                double laplace_strong_exact = exact_sol.laplacian(x_gss);
@@ -478,14 +477,14 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
         
 
         // *** phi_j loop ***
-        for (unsigned j = 0; j < nDofu; j++) {
+        for (unsigned j = 0; j < nDofu; j++) {///DIFF
           double laplace_jac = 0.;
 
           for (unsigned kdim = 0; kdim < dim; kdim++) {
-            laplace_jac += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
+            laplace_jac += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]);
           }
 
-          Jac[i * nDofu + j] += laplace_jac + phi[i] * phi[j];
+          Jac[i * nDofu + j] += (laplace_jac + phi[i] * phi[j]) * weight;
         } // end phi_j loop
         
 
@@ -557,7 +556,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
 
 
   // call the adept stack object
-  adept::Stack& s = FemusInit::_adeptStack;
+  adept::Stack& s = FemusInit::_adeptStack;  ///DIFF
   
   
   
@@ -636,7 +635,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
         std::vector< double > x_at_node(dim,0.);
-        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i].value();
+        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i].value(); ///DIFF
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
                     solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
       solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
@@ -646,7 +645,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
 
 
     // start a new recording of all the operations involving adept::adouble variables
-    s.new_recording();
+    s.new_recording();  ///DIFF
 
     
     if (dim != 2) abort(); //only implemented in 2D now
@@ -678,7 +677,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
       vector < double > x_gss(dim, 0.);
       for (unsigned i = 0; i < nDofx; i++) {
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          x_gss[jdim] += x[jdim][i].value() * phi_coords[i];
+          x_gss[jdim] += x[jdim][i].value() * phi_coords[i];///DIFF
         }          
       }
       
@@ -701,7 +700,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
         
 // manufactured Helmholtz - strong
              double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
-        aRes[i] += (helmholtz_strong_exact * phi[i] - phi[i] * solu_gss - laplace) * weight;
+        aRes[i] += (helmholtz_strong_exact * phi[i] - solu_gss * phi[i] - laplace) * weight;
 
 // manufactured Laplacian - strong
 //                double laplace_strong_exact = exact_sol.laplacian(x_gss);
@@ -752,7 +751,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
 }
 
 
-///@todo: check print for discontinuous FE
+///@todo: check bc for discontinuous FE
 ///@todo: compute error in L-\infty norm
 ///@todo: compute nonlinear convergence rate
 ///@todo: compute time convergence rate, pointwise and then in norms
