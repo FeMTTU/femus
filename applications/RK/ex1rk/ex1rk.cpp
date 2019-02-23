@@ -191,17 +191,17 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
   soluIndex = mlSol->GetIndex ("u");   // get the position of "u" in the ml_sol object
 
 
-  const std::vector < std::ostringstream > & uk = mlPdeSys->GetSolkiNames ("u");
+  const std::vector < std::string > & uk = mlPdeSys->GetSolkiNames ("u");
 
   std::vector < unsigned > solkIndex (RK);
   for (unsigned i = 0; i < RK; i++) {
-    solkIndex[i] = mlSol->GetIndex (uk[i].str().c_str());
+    solkIndex[i] = mlSol->GetIndex (uk[i].c_str());
   }
   unsigned soluType = mlSol->GetSolutionType (soluIndex);   // get the finite element type for "u"
 
   std::vector < unsigned > solkPdeIndex (RK);
   for (unsigned i = 0; i < RK; i++) {
-    solkPdeIndex[i] = mlPdeSys->GetSolPdeIndex (uk[i].str().c_str());
+    solkPdeIndex[i] = mlPdeSys->GetSolPdeIndex (uk[i].c_str());
   }
 
   std::vector < std::vector < adept::adouble > >  solk (RK); // local solution
@@ -293,7 +293,7 @@ void AssembleAllanChanProblem_AD (MultiLevelProblem& ml_prob) {
       }
     }
 
-    mlPdeSys->GetIntermediateSolutions (soluOld, solk, x, "u", solu);
+    mlPdeSys->GetIntermediateSolutions (soluOld, solk, solu);
 
 //     const std::vector<double> & itime = mlPdeSys->GetIntermediateTimes();
 //     for (unsigned i = 0; i < nDofu; i++) {

@@ -183,8 +183,7 @@ int main (int argc, char** argv) {
   for (unsigned m = 0u; m < M; m++) {
     for (unsigned k = 0u; k < N; k++) {
       iiL[k][Lm1] = static_cast < unsigned > (floor ( (samples[m][k] - xmin) * nLdH));
-      if (iiL[k][Lm1] < 0.) iiL[k][Lm1] = 0u;
-      else if (iiL[k][Lm1] >= nL) iiL[k][Lm1] = nL - 1u;
+      if (iiL[k][Lm1] >= nL) iiL[k][Lm1] = nL - 1u;
       for (unsigned j = Lm1; j > 1u; j--) {
         iiL[k][j - 1] = (iiL[k][j] >> 1);
       }
@@ -303,7 +302,8 @@ unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector <unsi
 
 unsigned GetBaseIndex (const std::vector <unsigned> &IL, const std::vector < std::vector <unsigned> > &iiL) {
   unsigned i = iiL[0u][IL[0u]];
-  for (unsigned k = 1u; k < IL.size(); k++) {
+  unsigned N = IL.size();
+  for (unsigned k = 1u; k < N; k++) {
     i = (i << IL[k]) + iiL[k][IL[k]];
   }
   return i;
