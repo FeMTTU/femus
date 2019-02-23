@@ -100,7 +100,7 @@ int main (int argc, char** args) {
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
 
   // print mesh info
-  mlMsh.PrintInfo();
+  //mlMsh.PrintInfo();
 
 
   for (unsigned simulation = 0; simulation < 25; simulation++) {

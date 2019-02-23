@@ -465,6 +465,8 @@ namespace femus {
     else{
       restriction.resize(3);
     }
+    
+    _mesh.PrintInfo();
   }
 
 
