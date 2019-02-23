@@ -35,7 +35,7 @@ double pi = acos (-1.);
 //double k_h = 1. / ( 10 * pi );
 double k_h = 0.0001 ;
 
-const unsigned NumberOfLayers = 4;
+const unsigned NumberOfLayers = 40;
 
 unsigned counter = 0;
 unsigned counter2 = 0;
@@ -43,19 +43,19 @@ unsigned counter2 = 0;
 clock_t start_time = clock();
 
 bool wave = false;
-bool twostage = false;
+bool twostage = true;
 bool assembly = true; //assembly must be left always true
 bool slepc = false;
 
 
-const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
+// const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
 
 // const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
 
-// const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
-//                           0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
-//                          };
+const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
+                          0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
+                         };
 
 // const double hRest[80] = {0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
 //                           0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
@@ -476,10 +476,10 @@ int main (int argc, char** args)
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = static_cast<unsigned> (floor (pow (2., 2) + 0.5));
-  //unsigned nx = static_cast<unsigned> (floor (pow (2.,/*5*/3) + 0.5));       //Grid cell size = 3.90625 m
+  //unsigned nx = static_cast<unsigned> (floor (pow (2., 2) + 0.5));
+  unsigned nx = static_cast<unsigned> (floor (pow (2.,/*5*/3) + 0.5));       //Grid cell size = 3.90625 m
   //nx += 8;
-  //nx += 2;
+  nx += 2;
 
   double length = 10.; //2 * 1465700.;
 
@@ -514,43 +514,43 @@ int main (int argc, char** args)
   mlSol.Initialize ("v1", InitalValueV1);
   mlSol.Initialize ("v2", InitalValueV2);
   mlSol.Initialize ("v3", InitalValueV3);
-//   mlSol.Initialize ("v4", InitalValueV4);
-//   mlSol.Initialize ("v5", InitalValueV5);
-//   mlSol.Initialize ("v6", InitalValueV6);
-//   mlSol.Initialize ("v7", InitalValueV7);
-//   mlSol.Initialize ("v8", InitalValueV8);
-//   mlSol.Initialize ("v9", InitalValueV9);
-//   mlSol.Initialize ("v10", InitalValueV10);
-//   mlSol.Initialize ("v11", InitalValueV11);
-//   mlSol.Initialize ("v12", InitalValueV12);
-//   mlSol.Initialize ("v13", InitalValueV13);
-//   mlSol.Initialize ("v14", InitalValueV14);
-//   mlSol.Initialize ("v15", InitalValueV15);
-//   mlSol.Initialize ("v16", InitalValueV16);
-//   mlSol.Initialize ("v17", InitalValueV17);
-//   mlSol.Initialize ("v18", InitalValueV18);
-//   mlSol.Initialize ("v19", InitalValueV19);
-//   if (NumberOfLayers > 39) {
-//     mlSol.Initialize ("v20", InitalValueV20);
-//     mlSol.Initialize ("v21", InitalValueV21);
-//     mlSol.Initialize ("v22", InitalValueV22);
-//     mlSol.Initialize ("v23", InitalValueV23);
-//     mlSol.Initialize ("v24", InitalValueV24);
-//     mlSol.Initialize ("v25", InitalValueV25);
-//     mlSol.Initialize ("v26", InitalValueV26);
-//     mlSol.Initialize ("v27", InitalValueV27);
-//     mlSol.Initialize ("v28", InitalValueV28);
-//     mlSol.Initialize ("v29", InitalValueV29);
-//     mlSol.Initialize ("v30", InitalValueV30);
-//     mlSol.Initialize ("v31", InitalValueV31);
-//     mlSol.Initialize ("v32", InitalValueV32);
-//     mlSol.Initialize ("v33", InitalValueV33);
-//     mlSol.Initialize ("v34", InitalValueV34);
-//     mlSol.Initialize ("v35", InitalValueV35);
-//     mlSol.Initialize ("v36", InitalValueV36);
-//     mlSol.Initialize ("v37", InitalValueV37);
-//     mlSol.Initialize ("v38", InitalValueV38);
-//     mlSol.Initialize ("v39", InitalValueV39);
+  mlSol.Initialize ("v4", InitalValueV4);
+  mlSol.Initialize ("v5", InitalValueV5);
+  mlSol.Initialize ("v6", InitalValueV6);
+  mlSol.Initialize ("v7", InitalValueV7);
+  mlSol.Initialize ("v8", InitalValueV8);
+  mlSol.Initialize ("v9", InitalValueV9);
+  mlSol.Initialize ("v10", InitalValueV10);
+  mlSol.Initialize ("v11", InitalValueV11);
+  mlSol.Initialize ("v12", InitalValueV12);
+  mlSol.Initialize ("v13", InitalValueV13);
+  mlSol.Initialize ("v14", InitalValueV14);
+  mlSol.Initialize ("v15", InitalValueV15);
+  mlSol.Initialize ("v16", InitalValueV16);
+  mlSol.Initialize ("v17", InitalValueV17);
+  mlSol.Initialize ("v18", InitalValueV18);
+  mlSol.Initialize ("v19", InitalValueV19);
+  if (NumberOfLayers > 39) {
+    mlSol.Initialize ("v20", InitalValueV20);
+    mlSol.Initialize ("v21", InitalValueV21);
+    mlSol.Initialize ("v22", InitalValueV22);
+    mlSol.Initialize ("v23", InitalValueV23);
+    mlSol.Initialize ("v24", InitalValueV24);
+    mlSol.Initialize ("v25", InitalValueV25);
+    mlSol.Initialize ("v26", InitalValueV26);
+    mlSol.Initialize ("v27", InitalValueV27);
+    mlSol.Initialize ("v28", InitalValueV28);
+    mlSol.Initialize ("v29", InitalValueV29);
+    mlSol.Initialize ("v30", InitalValueV30);
+    mlSol.Initialize ("v31", InitalValueV31);
+    mlSol.Initialize ("v32", InitalValueV32);
+    mlSol.Initialize ("v33", InitalValueV33);
+    mlSol.Initialize ("v34", InitalValueV34);
+    mlSol.Initialize ("v35", InitalValueV35);
+    mlSol.Initialize ("v36", InitalValueV36);
+    mlSol.Initialize ("v37", InitalValueV37);
+    mlSol.Initialize ("v38", InitalValueV38);
+    mlSol.Initialize ("v39", InitalValueV39);
 //       if(NumberOfLayers>79){
 //         mlSol.Initialize ( "v40", InitalValueV40 );
 //         mlSol.Initialize ( "v41", InitalValueV41 );
@@ -593,7 +593,7 @@ int main (int argc, char** args)
 //         mlSol.Initialize ( "v78", InitalValueV78 );
 //         mlSol.Initialize ( "v79", InitalValueV79 );
 //       }
-//  }
+  }
 
   for (unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
@@ -632,7 +632,7 @@ int main (int argc, char** args)
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
   unsigned numberOfTimeSteps = 2500; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 1.;
+  dt = 3.;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {
@@ -1140,9 +1140,9 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         //std::cout << "norm 1 of (dt/2^CFL_pow A) = " << norm1 << std::endl;
 
         build_phi1Av (CFL_pow, Jac[i], Res, y);
-        
+
         VecScale (y, dt);
-        
+
       }
 
       std::vector<double> EPS_local (NLayers);
@@ -2000,14 +2000,14 @@ void RK4 (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigned
           MatSetValues (triDiagA, 1, &k, 1, &j, &sysMatrix[k][k + 1], INSERT_VALUES);
         }
       }
-      
-      ierr = VecAssemblyBegin(b);
-      ierr = VecAssemblyEnd(b);
+
+      ierr = VecAssemblyBegin (b);
+      ierr = VecAssemblyEnd (b);
 
       ierr = MatAssemblyBegin (triDiagA, MAT_FINAL_ASSEMBLY);
       ierr = MatAssemblyEnd (triDiagA, MAT_FINAL_ASSEMBLY);
 
-      
+
 
 //       PetscViewer    viewer;
 //       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
@@ -2115,16 +2115,17 @@ void build_phi1Av (const unsigned &CFL_pow, const std::vector < double > &NodeJa
     }
   }
 
-
-  std::cout << "A ------------------- " << std::endl;
-
-  for (unsigned k1 = 0; k1 < NumberOfLayers; k1++) {
-    for (unsigned k2 = 0; k2 < NumberOfLayers; k2++) {
-      std::cout << A[k1][k2] << " ";
-    }
-
-    std::cout << std::endl;
-  }
+  
+//   std::cout << "A ------------------- " << std::endl;
+// 
+//   for (unsigned k1 = 0; k1 < NumberOfLayers; k1++) {
+//     for (unsigned k2 = 0; k2 < NumberOfLayers; k2++) {
+//       std::cout.precision(16);
+//       std::cout << A[k1][k2] << " ";
+//     }
+// 
+//     std::cout << std::endl;
+//   }
 
   for (unsigned k1 = 0; k1 < NumberOfLayers; k1++) {
     for (unsigned k2 = 0; k2 < NumberOfLayers; k2++) {
@@ -2175,8 +2176,12 @@ void build_phi1Av (const unsigned &CFL_pow, const std::vector < double > &NodeJa
     }
 
     double power = 0.5;
+
     if (i == 1) power = 1.;
+
     else if (i > 1) power = pow (2, i - 1);
+    
+//     else if (i == 2) power = 2.;
 
     for (unsigned ii = 0; ii < NumberOfLayers; ii++) {
       for (unsigned jj = 0; jj < NumberOfLayers; jj++) {
@@ -2185,29 +2190,32 @@ void build_phi1Av (const unsigned &CFL_pow, const std::vector < double > &NodeJa
     }
 
   }
-  
+
   for (int ii = 0; ii < NumberOfLayers; ii++) {
     double value = 0.;
-      for (unsigned kk = 0; kk < NumberOfLayers; kk++) {
-        value += phi1A[ii][kk] * Res[kk];
-      }
-      VecSetValues (y, 1, &ii, &value, INSERT_VALUES);
-  }
-  VecAssemblyBegin(y);
-  VecAssemblyEnd(y);
-  
-  VecView(y,PETSC_VIEWER_STDOUT_WORLD);
 
-  std::cout.precision(14);
-  std::cout << "phi1A  ------------------- " << std::endl;
-
-  for (unsigned i = 0; i < NumberOfLayers; i++) {
-    for (unsigned j = 0; j < NumberOfLayers; j++) {
-      std::cout << phi1A[i][j] << " ";
+    for (unsigned kk = 0; kk < NumberOfLayers; kk++) {
+      value += phi1A[ii][kk] * Res[kk];
     }
 
-    std::cout << std::endl;
+    VecSetValues (y, 1, &ii, &value, INSERT_VALUES);
   }
+
+  VecAssemblyBegin (y);
+  VecAssemblyEnd (y);
+
+//   VecView (y, PETSC_VIEWER_STDOUT_WORLD);
+
+//   std::cout.precision(16);
+//   std::cout << "phi1A  ------------------- " << std::endl;
+// 
+//   for (unsigned i = 0; i < NumberOfLayers; i++) {
+//     for (unsigned j = 0; j < NumberOfLayers; j++) {
+//       std::cout << phi1A[i][j] << " ";
+//     }
+// 
+//     std::cout << std::endl;
+//   }
 
   //BEGIN PETSC
 //   Mat AA;
