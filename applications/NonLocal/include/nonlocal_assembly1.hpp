@@ -25,8 +25,8 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.007, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05
-double delta1 = 0.8; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.8;
+double delta1 = 0.2; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.2;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
@@ -39,7 +39,7 @@ void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 //     value = x[0];
 //     value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
-    value = x[0] * x[0] * x[0] * x[0] + 0.8 * x[0] * x[0];
+    value = x[0] * x[0] * x[0] * x[0] + 0.2 * x[0] * x[0];
 //     value = x[0] * x[0] * x[0] * x[0];
     
 
@@ -497,8 +497,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 //              Res[i] -= 0. * weight * phi[i]; //Ax - f (so f = 0)
 //              Res[i] -=  - 1. * weight * phi[i]; //Ax - f (so f = - 1)
 //              Res[i] -=  - 3. * ( xg1[0] + xg1[1] ) * weight * phi[i]; //Ax - f (so f = - 3 (x + y))
-             Res[i] -=  0.5 * (- 12. * xg1[0] * xg1[0] - 6. / 5. * 0.8 * 0.8 - 2. * 0.8 ) * weight * phi[i]; //Ax - f (so f = 0.5(- 12x^2 - 6/5 * delta^2 - 2 delta))
-//                 Res[i] -=  0.5 * (- 12. * xg1[0] * xg1[0]) * weight * phi[i]; //Ax - f (so f = 0.5(- 12x^2) )
+             Res[i] -=  0.5 * (- 12. * xg1[0] * xg1[0] - 6. / 5. * 0.2 * 0.2 - 2. * 0.2 ) * weight * phi[i]; //Ax - f (so f = 0.5(- 12x^2 - 6/5 * delta^2 - 2 delta))
+//              Res[i] -=  0.5 * (- 12. * xg1[0] * xg1[0]) * weight * phi[i]; //Ax - f (so f = 0.5(- 12x^2) )
                 }
             }
 
