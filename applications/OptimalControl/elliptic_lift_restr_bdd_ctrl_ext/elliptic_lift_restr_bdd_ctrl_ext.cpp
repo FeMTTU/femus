@@ -4,8 +4,8 @@
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
-#define FACE_FOR_CONTROL 3  //we do control on the right (=2) face
-#define AXIS_DIRECTION_CONTROL_SIDE  0  //change this accordingly to the other variable above
+#define FACE_FOR_CONTROL 2  //we do control on the right (=2) face
+#define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
 #include "../elliptic_param.hpp"
 
 using namespace femus;
@@ -86,7 +86,7 @@ int main(int argc, char** args) {
   //mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.PrintInfo();
@@ -170,7 +170,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -750,14 +750,10 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 	  }
       // THIRD ROW
       if (i < nDof_adj) {
-         if ( interface_flag[i] == 1 )      Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_u_i + laplace_rhs_dadj_ctrl_i - 0.) ;
-             
-         else {
-               if ( group_flag == 12 )      Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_u_i    - 0.) ;
+         if ( group_flag == 12 )      Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_u_i    - 0.) ;
 	     
-               else if ( group_flag == 13 ) Res[nDof_u + nDof_ctrl + i] += - weight *  ( laplace_rhs_dadj_ctrl_i - 0.) ;
-              }
-	  }
+         if ( group_flag == 13 )      Res[nDof_u + nDof_ctrl + i] += - weight *  ( - laplace_rhs_dadj_ctrl_i - 0.) ;
+      }
     // FOURTH ROW
      if (i < nDof_mu)     
         if ( group_flag == 12 )           
@@ -848,7 +844,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
           // BLOCK delta_adjoint - control   
           if ( i < nDof_adj && j < nDof_ctrl )  
 		     Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
-		          (nDof_u  + j)                      ]  += weight * (1) * laplace_mat_dadj_ctrl; 
+		          (nDof_u  + j)                      ]  += weight * (-1) * laplace_mat_dadj_ctrl; 
        }
                   
        //============= delta_mu row ===============================
@@ -937,7 +933,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   
-  const NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level         = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);            // pointer to the mesh (level) object

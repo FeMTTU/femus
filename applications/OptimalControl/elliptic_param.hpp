@@ -25,7 +25,7 @@
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper = 0.3; //0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
+     double constr_value_upper = 5.e-12;//0.3; //0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
      double constr_value_lower = -1000; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      
