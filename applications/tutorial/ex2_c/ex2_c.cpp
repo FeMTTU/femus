@@ -59,8 +59,6 @@ template < class type >
 }
 
 
- type helmholtz(const std::vector < type >& x) const { return ( - laplacian(x) + value(x) ); };
-
 
 // constant =============      
 //   double value(const std::vector < double >& x) const {  return 1.; }
@@ -94,8 +92,16 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
 
 template <class type> void AssembleProblem_interface(MultiLevelProblem& ml_prob);
-template <class type> void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const My_exact_solution< type > & exact_sol);
-template <class type> void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const My_exact_solution< type > & exact_sol);
+
+template <class type> void AssembleProblem_flexible(MultiLevelProblem& ml_prob,
+                                                    const std::string system_name,
+                                                    const std::string unknown,
+                                                    const FE_convergence::Function< type > & exact_sol);
+
+template <class type> void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, 
+                                                       const std::string system_name, 
+                                                       const std::string unknown,
+                                                       const FE_convergence::Function< type > & exact_sol);
 
  
 
@@ -315,7 +321,7 @@ const std::string system_name = "Equation"; //I cannot get this from the system 
  *        u = u0 + w satisfies Jac u = F
  **/
 template <class type>
-void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown,  const My_exact_solution< type > & exact_sol) {
+void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown,  const FE_convergence::Function< type > & exact_sol) {
   //  ml_prob is the global object from/to where get/set all the data
 
   //  level is the level of the PDE system to be assembled
@@ -537,7 +543,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
  *                  J w = f(x) - J u0
  **/
 template <class type>
-void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const My_exact_solution< type > & exact_sol) {
+void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const FE_convergence::Function< type > & exact_sol) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax , SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECONDis the Maximum level of the MultiLevelProblem
