@@ -36,7 +36,7 @@ void AssemblePWillmore (MultiLevelProblem&);
 void AssembleInit (MultiLevelProblem&);
 
 double GetTimeStep (const double time) {
-  return 0.00005;
+  return 0.005;
 }
 
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -360,7 +360,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       aResW[K].assign (nWDofs, 0.);  //resize and zet to zero
     }
     aResLambda.assign (nLambdaDofs, 0.);
-    aResLambda0 = 0;
+    aResLambda0 = 0.;
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nxDofs; i++) {
@@ -490,9 +490,9 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
 
       double normal[DIM];
-      normal[0] = - (solxOld_uv[1][0] * solxOld_uv[2][1] - solxOld_uv[2][0] * solxOld_uv[1][1]) / sqrt (detg);
-      normal[1] = - (solxOld_uv[2][0] * solxOld_uv[0][1] - solxOld_uv[0][0] * solxOld_uv[2][1]) / sqrt (detg);;
-      normal[2] = - (solxOld_uv[0][0] * solxOld_uv[1][1] - solxOld_uv[1][0] * solxOld_uv[0][1]) / sqrt (detg);;
+      normal[0] = (solxOld_uv[1][0] * solxOld_uv[2][1] - solxOld_uv[2][0] * solxOld_uv[1][1]) / sqrt (detg);
+      normal[1] = (solxOld_uv[2][0] * solxOld_uv[0][1] - solxOld_uv[0][0] * solxOld_uv[2][1]) / sqrt (detg);;
+      normal[2] = (solxOld_uv[0][0] * solxOld_uv[1][1] - solxOld_uv[1][0] * solxOld_uv[0][1]) / sqrt (detg);;
 
       double gi[dim][dim];
       gi[0][0] =  g[1][1] / detg;
@@ -603,7 +603,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         }
       }
       for (unsigned K = 0; K < DIM; K++) {
-        if (volumeConstraint)  aResLambda0 += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
+        if (volumeConstraint) {
+          if (iel != 0)aResLambda0 += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
+          else aResLambda[0] += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
+        }
 
         volume += (solxg[K].value()  * normal[K]) * Area;
       }
@@ -887,10 +890,10 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
       }
       double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
 
-      double normal[DIM];
-      normal[0] = - (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
-      normal[1] = - (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);;
-      normal[2] = - (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);;
+//       double normal[DIM];
+//       normal[0] = - (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
+//       normal[1] = - (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);;
+//       normal[2] = - (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);;
 
       double gi[dim][dim];
       gi[0][0] =  g[1][1] / detg;
