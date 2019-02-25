@@ -195,10 +195,10 @@ namespace femus {
 
     _KK = SparseMatrix::build().release();
 
-    if (_iproc == 0 && KKIndex.size() == 8) {
-      d_nnz[ KKoffset[KKIndex.size() - 2][_iproc] ] = KK_local_size;
+    if (_iproc == 0 && ( KKIndex.size() == 8 || KKIndex.size() == 11) ) {
+      d_nnz[ KKoffset[0][_iproc] ] = KK_local_size;
       if (_nprocs > 0) {
-        o_nnz[KKoffset[KKIndex.size() - 2][_iproc] ] =  KK_size;
+        o_nnz[KKoffset[0][_iproc] ] =  KK_size;
       }
     }
 
