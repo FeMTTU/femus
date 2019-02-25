@@ -217,18 +217,13 @@ namespace femus
     const vector <unsigned>& variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR,
     const unsigned& npre, const unsigned& npost)
   {
-
-    
-    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAA\n"<<std::flush;
-    
+       
     unsigned level = _msh->GetLevel();
 
     // ***************** NODE/ELEMENT SEARCH *******************
     if(_bdcIndexIsInitialized == 0) BuildBdcIndex(variable_to_be_solved);
     // ***************** END NODE/ELEMENT SEARCH *******************
 
-    
-    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAA\n"<<std::flush;
     KSP* kspMG = LinSolver->GetKSP();
     PC pcMG;
     KSPGetPC(*kspMG, &pcMG);
@@ -237,14 +232,13 @@ namespace femus
 
     if(level == 0) {
       PCMGGetCoarseSolve(pcMG, &subksp);
+      KSPSetTolerances(subksp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
     }
     else {
       PCMGGetSmoother(pcMG, level , &subksp);
       KSPSetTolerances(subksp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npre);
     }
 
-    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAA\n"<<std::flush;
-    
     this->SetPetscSolverType(subksp);
     std::ostringstream levelName;
     levelName << "level-" << level;

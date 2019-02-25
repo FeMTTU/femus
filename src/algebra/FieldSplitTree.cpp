@@ -215,9 +215,6 @@ namespace femus {
   void FieldSplitTree::BuildIndexSet(const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc,
                                      const unsigned& nprocs, const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver) {
 
-    std::cout<<"AAAAAAAAAAAAAAAAAAA\n"<<std::flush;
-    
-    std::cout<<_MatrixOffset.size()<< " "<< "AAAAAAAAAAAAAAAAAAA\n"<<std::flush;
     
     if(_MatrixOffset.size() < level + 1) _MatrixOffset.resize(level + 1);
 
@@ -234,8 +231,7 @@ namespace femus {
 
       return;
     }
-
-    std::cout<<"AAAAAAAAAAAAAAAAAAA\n"<<std::flush;
+ 
     
     if(_isSplit.size() < level + 1) _isSplit.resize(level + 1);
 
@@ -345,7 +341,7 @@ namespace femus {
     PC pc;
     KSPGetPC(ksp, &pc);
 
-    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAA\n"<<std::flush;
+    //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAA\n"<<std::flush;
     
     //BEGIN from here
     if(_preconditioner == FIELDSPLIT_PRECOND) {

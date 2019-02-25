@@ -33,18 +33,18 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
   return dirichlet;
 }
 
-double InitalValueU2D (const std::vector < double >& x) {
-  double r = sqrt (x[0] * x[0] + x[1] * x[1]);
-  double r2 = r * r;
-  double R = 1.;
-  double R2 = R * R;
-  //double Vb = 1.268112; // exp( (( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
-  double Vb = 0.265048;  // exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
-  double V0 = 1. / 12.; // fraction of injection vs tumor
-  return V0 * exp ( (10.* (1. - R2 / (R2 - r2)))) / Vb; // IC vanishing near the boundary.
-}
+// double InitalValueU2D (const std::vector < double >& x) {
+//   double r = sqrt (x[0] * x[0] + x[1] * x[1]);
+//   double r2 = r * r;
+//   double R = 1.;
+//   double R2 = R * R;
+//   //double Vb = 1.268112; // exp( (( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
+//   double Vb = 0.265048;  // exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
+//   double V0 = 1. / 12.; // fraction of injection vs tumor
+//   return V0 * exp ( (10.* (1. - R2 / (R2 - r2)))) / Vb; // IC vanishing near the boundary.
+// }
 
-
+double V0;
 double InitalValueU3D (const std::vector < double >& x) {
   double r = sqrt (x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
   double r2 = r * r;
@@ -53,9 +53,8 @@ double InitalValueU3D (const std::vector < double >& x) {
 
   double R3 = R2 * R;
   double Vb = 1.1990039070212866;
-  double V0 = 0.25 * M_PI * 4. / 3.; // fraction of injection vs tumor
-
-  return V0 / Vb * exp ( (1. - R2 / (R2 - r2)));
+  
+  return (V0 * M_PI * 4. / 3. ) / Vb * exp ( (1. - R2 / (R2 - r2)));
 }
 
 double InitalValueD (const std::vector < double >& x) {
@@ -104,89 +103,94 @@ int main (int argc, char** args) {
   mlMsh.PrintInfo();
 
 
-  // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
+  for (unsigned simulation = 0; simulation < 25; simulation++) {
 
-  // add variables to mlSol
-  mlSol.AddSolution ("u", LAGRANGE, SECOND, 2); // We may have more than one, add each of them as u,v,w with their apprx type.
+    V0 = 0.01 * ( simulation + 1 ) ; // fraction of injection vs tumor
+    
+    // define the multilevel solution and attach the mlMsh object to it
+    MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
+
+    // add variables to mlSol
+    mlSol.AddSolution ("u", LAGRANGE, SECOND, 2); // We may have more than one, add each of them as u,v,w with their apprx type.
 
 
-  mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false); // We may have more than one, add each of them as u,v,w with their apprx type.
+    mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false); // We may have more than one, add each of them as u,v,w with their apprx type.
 
-  mlSol.Initialize ("All");
-  if (dim == 2)
-    mlSol.Initialize ("u", InitalValueU2D);
-  else
+    mlSol.Initialize ("All");
+//     if (dim == 2)
+//       mlSol.Initialize ("u", InitalValueU2D);
+//     else
     mlSol.Initialize ("u", InitalValueU3D);
-  mlSol.Initialize ("d", InitalValueD);
+    mlSol.Initialize ("d", InitalValueD);
 
-  // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
-
-
-  mlSol.GenerateBdc ("u", "Steady");
+    // attach the boundary condition function and generate boundary data
+    mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
 
 
-
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb (&mlSol); //
-
-  // add system Poisson in mlProb as a Non Linear Implicit System
-  TransientNonlinearImplicitSystem & system = mlProb.add_system < TransientNonlinearImplicitSystem > ("Poisson");
-
-  // add solution "u" to system
-  system.AddSolutionToSystemPDE ("u");
-
-
-  // attach the assembling function to system
-  system.SetAssembleFunction (AssemblePoissonProblem_AD);
-
-  // time loop parameter
-  system.AttachGetTimeIntervalFunction (GetTimeStep);
-  const unsigned int n_timesteps = 300;
-
-
-  system.SetMaxNumberOfNonLinearIterations (1);
-  system.SetMaxNumberOfLinearIterations (10);
-  system.SetAbsoluteLinearConvergenceTolerance (1.e-8);
+    mlSol.GenerateBdc ("u", "Steady");
 
 
 
+    // define the multilevel problem attach the mlSol object to it
+    MultiLevelProblem mlProb (&mlSol); //
 
-  system.init();
+    // add system Poisson in mlProb as a Non Linear Implicit System
+    TransientNonlinearImplicitSystem & system = mlProb.add_system < TransientNonlinearImplicitSystem > ("Poisson");
 
-  system.SetPreconditionerFineGrids (JACOBI_PRECOND);
-  system.SetMgType (V_CYCLE);
-
-  // ******* Print solution *******
-  mlSol.SetWriter (VTK);
-  //mlSol.GetWriter()->SetGraphVariable ("u");
-  mlSol.GetWriter()->SetDebugOutput (false);
-
-  std::vector<std::string> print_vars;
-  print_vars.push_back ("All");
+    // add solution "u" to system
+    system.AddSolutionToSystemPDE ("u");
 
 
-  double time = system.GetTime();
-  GetDeadCells (time, mlSol);
+    // attach the assembling function to system
+    system.SetAssembleFunction (AssemblePoissonProblem_AD);
 
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+    // time loop parameter
+    system.AttachGetTimeIntervalFunction (GetTimeStep);
+    const unsigned int n_timesteps = 300;
 
 
-  for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+    system.SetMaxNumberOfNonLinearIterations (1);
+    system.SetMaxNumberOfLinearIterations (10);
+    system.SetAbsoluteLinearConvergenceTolerance (1.e-8);
 
-    system.CopySolutionToOldSolution();
 
-    system.MGsolve();
+
+
+    system.init();
+
+    system.SetPreconditionerFineGrids (JACOBI_PRECOND);
+    system.SetMgType (V_CYCLE);
+
+    // ******* Print solution *******
+    mlSol.SetWriter (VTK);
+    //mlSol.GetWriter()->SetGraphVariable ("u");
+    mlSol.GetWriter()->SetDebugOutput (false);
+
+    std::vector<std::string> print_vars;
+    print_vars.push_back ("All");
+
 
     double time = system.GetTime();
-    bool stop = GetDeadCells (time, mlSol);
-    mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
-    
-    if(stop) break;
-  }
+    GetDeadCells (time, mlSol);
 
-  mlProb.clear();
+    mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+
+
+    for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+
+      system.CopySolutionToOldSolution();
+
+      system.MGsolve();
+
+      double time = system.GetTime();
+      bool stop = GetDeadCells (time, mlSol);
+      mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+
+      if (stop) break;
+    }
+
+    mlProb.clear();
+  }
 
   return 0;
 }
@@ -481,86 +485,97 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
     }
   }
   sol->_Sol[soldIndex]->close();
-  
+
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  
+
   std::vector<double> sold;
-  std::vector < std::vector<double> >  x(dim);
+  std::vector < std::vector<double> >  x (dim);
 
   unsigned soldType = mlSol.GetSolutionType (soldIndex);   // get the finite element type for "u"
   unsigned xType = 2;
-  
+
   double weight;
   std::vector<double> phi;
   std::vector<double> phi_x;
-  
+
   double volume = 0;
-  double volumeUT[3]={ 0., 0.,0.};
-   
+  double volumeUT[3] = { 0., 0., 0.};
+
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    
+
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofd  = msh->GetElementDofNumber (iel, soldType); // number of solution element dofs
-        
-    
+
+
     sold.resize (nDofd);
-       
+
     for (int k = 0; k < dim; k++) {
       x[k].resize (nDofd); // Now we
     }
-         
+
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofd; i++) {
       unsigned solDof = msh->GetSolutionDof (i, iel, soldType);   // global to global mapping between solution node and solution dof
       sold[i] = (*sol->_Sol[soldIndex]) (solDof);                 // global extraction and local storage for the solution
     }
-    
+
     // local storage of coordinates
     for (unsigned i = 0; i < nDofd; i++) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
-      
+
       for (unsigned k = 0; k < dim; k++) {
         x[k][i] = (*msh->_topology->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
-    
-   
+
+
     // *** Element Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soldType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soldType]->Jacobian (x, ig, weight, phi, phi_x);
-      
+
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       double sold_gss = 0;
-           
+
       for (unsigned i = 0; i < nDofd; i++) {
         sold_gss += phi[i] * sold[i];
       }
-      
+
       volume += weight;
-      
-      if(sold_gss <= 24) volumeUT[0] += weight;
-      if(sold_gss <= 48) volumeUT[1] += weight;
-      if(sold_gss <= 72) volumeUT[2] += weight;
-     
+
+      if (sold_gss <= 24) volumeUT[0] += weight;
+      if (sold_gss <= 48) volumeUT[1] += weight;
+      if (sold_gss <= 72) volumeUT[2] += weight;
+
     } // end gauss point loop
-    
-  } 
-  
+
+  }
+
   double volumeAll = 0.;
   MPI_Reduce (&volume, &volumeAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  
-  double volumeUTAll[3]={ 0., 0.,0.};
+
+  double volumeUTAll[3] = { 0., 0., 0.};
   MPI_Reduce (volumeUT, volumeUTAll, 3, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  
-  std::cout << "VOLUME FRACTIONS = \n";  
-  std::cout << volumeUTAll[0]/volumeAll <<" "<<volumeUTAll[1]/volumeAll <<" "<<volumeUTAll[2]/volumeAll <<" "<<std::endl;
-  
-  
+
+  std::cout << "VOLUME FRACTIONS = \n";
+  std::cout << volumeUTAll[0] / volumeAll << " " << volumeUTAll[1] / volumeAll << " " << volumeUTAll[2] / volumeAll << " " << std::endl;
+
+
   double lInfinityNorm    = sol->_Sol[soluIndex]->linfty_norm();
-  
-  std::cout << lInfinityNorm <<" "<< uT[2].second<<std::endl;
-  
-  bool stop = (lInfinityNorm < uT[2].second )? true : false;
+
+  std::cout << lInfinityNorm << " " << uT[2].second << std::endl;
+
+  bool stop = (lInfinityNorm < uT[2].second) ? true : false;
+      
+  if(stop && iproc == 0){
+    std::ofstream fout;
+    fout.open("DoseResponseCurve.csv",std::ofstream::app);
+    fout <<V0<<","<< volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+    fout.close();
+    
+    fout.open("DoseResponseCurve.txt",std::ofstream::app);
+    fout <<V0<<" "<< volumeUTAll[0] / volumeAll << " " << volumeUTAll[1] / volumeAll << " " << volumeUTAll[2] / volumeAll << " " << std::endl;
+    fout.close();
+  }
   return stop;
 }
