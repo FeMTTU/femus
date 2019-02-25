@@ -88,7 +88,7 @@ int main (int argc, char** args) {
   // Domain dimension of the problem.
   unsigned maxNumberOfMeshes; // The number of mesh levels.
 
-  unsigned numberOfUniformLevels = 3; //We apply uniform refinement.
+  unsigned numberOfUniformLevels = 4; //We apply uniform refinement.
   unsigned numberOfSelectiveLevels = 0; // We may want to see the solution on some levels.
   //mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -103,9 +103,9 @@ int main (int argc, char** args) {
   mlMsh.PrintInfo();
 
 
-  for (unsigned simulation = 0; simulation < 25; simulation++) {
+  for (unsigned simulation = 0; simulation < 50; simulation++) {
 
-    V0 = 0.01 * ( simulation + 1 ) ; // fraction of injection vs tumor
+    V0 = 0.005 * ( simulation + 1 ) ; // fraction of injection vs tumor
     
     // define the multilevel solution and attach the mlMsh object to it
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
