@@ -34,7 +34,7 @@ double pi = acos (-1.);
 //double k_h = 1. / ( 10 * pi );
 double k_h = 0.0001 ;
 
-const unsigned NumberOfLayers = 40;
+const unsigned NumberOfLayers = 4;
 unsigned RK_order = 4;
 
 unsigned counter = 0;
@@ -48,13 +48,13 @@ bool splitting = false;
 bool assembly = true; //assembly must be left always true
 bool block_diag = false;
 
-// const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
+const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
 
 // const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
-const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
-                          0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
-                         };
+// const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
+//                           0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
+//                          };
 
 // const double hRest[80] = {0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
 //                           0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
@@ -64,8 +64,8 @@ const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 
 
 double InitalValueVi (const std::vector < double >& x , const unsigned &i)
 {
-  //double psi1 = 1. - (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) / (5.*5.*5.*5.); //10x10 box test
-  double psi1 = 1. - (pow ( (x[0] - 20.), 16) / pow (20., 16));  //40x10 rectangle test
+  double psi1 = 1. - (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) * (x[0] - 5.) / (5.*5.*5.*5.); //10x10 box test
+  //double psi1 = 1. - (pow ( (x[0] - 20.), 16) / pow (20., 16));  //40x10 rectangle test
   //double psi1 = 1. - ( pow(( x[0] - 10. ), 16) / pow(10., 16) );
   double z = -10. + hRest[0] / 2. + hRest[0] * (NumberOfLayers - i);
   double d_psi2 = (- (2.*z + 10.)) / (5 * 5);
@@ -415,10 +415,9 @@ double InitalValueT (const std::vector < double >& x)
 {
   double pi = acos (-1.);
 
-  if (x[0] < 20.) {
+  if (x[0] < 5.) {
     return 5.;
   }
-
   else {
     return 30.;
   }
@@ -488,12 +487,13 @@ int main (int argc, char** args)
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = static_cast<unsigned> (floor (pow (2.,/*3*/ 5) + 0.5));       //Grid cell size = 3.90625 m
+  unsigned nx = static_cast<unsigned> (floor (pow (2.,2) + 0.5));       //Grid cell size = 3.90625 m
+  //unsigned nx = static_cast<unsigned> (floor (pow (2.,/*3*/ 5) + 0.5));       //Grid cell size = 3.90625 m
   //nx += 2;
-  nx += 8;
+  //nx += 8;
   //std::cout <<" nx = " << nx << std::endl;
 
-  double length = 40.; //2 * 1465700.;
+  double length = 10.; //40.;
 
   //mlMsh.GenerateCoarseBoxMesh ( nx, 0, 0, -length / 2, length / 2, 0., 0., 0., 0., EDGE3, "seventh" );
   mlMsh.GenerateCoarseBoxMesh (nx, 0, 0, 0, length, 0., 0., 0., 0., EDGE3, "seventh");
@@ -531,43 +531,43 @@ int main (int argc, char** args)
   mlSol.Initialize ("v1", InitalValueV1);
   mlSol.Initialize ("v2", InitalValueV2);
   mlSol.Initialize ("v3", InitalValueV3);
-  mlSol.Initialize ("v4", InitalValueV4);
-  mlSol.Initialize ("v5", InitalValueV5);
-  mlSol.Initialize ("v6", InitalValueV6);
-  mlSol.Initialize ("v7", InitalValueV7);
-  mlSol.Initialize ("v8", InitalValueV8);
-  mlSol.Initialize ("v9", InitalValueV9);
-  mlSol.Initialize ("v10", InitalValueV10);
-  mlSol.Initialize ("v11", InitalValueV11);
-  mlSol.Initialize ("v12", InitalValueV12);
-  mlSol.Initialize ("v13", InitalValueV13);
-  mlSol.Initialize ("v14", InitalValueV14);
-  mlSol.Initialize ("v15", InitalValueV15);
-  mlSol.Initialize ("v16", InitalValueV16);
-  mlSol.Initialize ("v17", InitalValueV17);
-  mlSol.Initialize ("v18", InitalValueV18);
-  mlSol.Initialize ("v19", InitalValueV19);
-  if (NumberOfLayers > 39) {
-    mlSol.Initialize ("v20", InitalValueV20);
-    mlSol.Initialize ("v21", InitalValueV21);
-    mlSol.Initialize ("v22", InitalValueV22);
-    mlSol.Initialize ("v23", InitalValueV23);
-    mlSol.Initialize ("v24", InitalValueV24);
-    mlSol.Initialize ("v25", InitalValueV25);
-    mlSol.Initialize ("v26", InitalValueV26);
-    mlSol.Initialize ("v27", InitalValueV27);
-    mlSol.Initialize ("v28", InitalValueV28);
-    mlSol.Initialize ("v29", InitalValueV29);
-    mlSol.Initialize ("v30", InitalValueV30);
-    mlSol.Initialize ("v31", InitalValueV31);
-    mlSol.Initialize ("v32", InitalValueV32);
-    mlSol.Initialize ("v33", InitalValueV33);
-    mlSol.Initialize ("v34", InitalValueV34);
-    mlSol.Initialize ("v35", InitalValueV35);
-    mlSol.Initialize ("v36", InitalValueV36);
-    mlSol.Initialize ("v37", InitalValueV37);
-    mlSol.Initialize ("v38", InitalValueV38);
-    mlSol.Initialize ("v39", InitalValueV39);
+//   mlSol.Initialize ("v4", InitalValueV4);
+//   mlSol.Initialize ("v5", InitalValueV5);
+//   mlSol.Initialize ("v6", InitalValueV6);
+//   mlSol.Initialize ("v7", InitalValueV7);
+//   mlSol.Initialize ("v8", InitalValueV8);
+//   mlSol.Initialize ("v9", InitalValueV9);
+//   mlSol.Initialize ("v10", InitalValueV10);
+//   mlSol.Initialize ("v11", InitalValueV11);
+//   mlSol.Initialize ("v12", InitalValueV12);
+//   mlSol.Initialize ("v13", InitalValueV13);
+//   mlSol.Initialize ("v14", InitalValueV14);
+//   mlSol.Initialize ("v15", InitalValueV15);
+//   mlSol.Initialize ("v16", InitalValueV16);
+//   mlSol.Initialize ("v17", InitalValueV17);
+//   mlSol.Initialize ("v18", InitalValueV18);
+//   mlSol.Initialize ("v19", InitalValueV19);
+//   if (NumberOfLayers > 39) {
+//     mlSol.Initialize ("v20", InitalValueV20);
+//     mlSol.Initialize ("v21", InitalValueV21);
+//     mlSol.Initialize ("v22", InitalValueV22);
+//     mlSol.Initialize ("v23", InitalValueV23);
+//     mlSol.Initialize ("v24", InitalValueV24);
+//     mlSol.Initialize ("v25", InitalValueV25);
+//     mlSol.Initialize ("v26", InitalValueV26);
+//     mlSol.Initialize ("v27", InitalValueV27);
+//     mlSol.Initialize ("v28", InitalValueV28);
+//     mlSol.Initialize ("v29", InitalValueV29);
+//     mlSol.Initialize ("v30", InitalValueV30);
+//     mlSol.Initialize ("v31", InitalValueV31);
+//     mlSol.Initialize ("v32", InitalValueV32);
+//     mlSol.Initialize ("v33", InitalValueV33);
+//     mlSol.Initialize ("v34", InitalValueV34);
+//     mlSol.Initialize ("v35", InitalValueV35);
+//     mlSol.Initialize ("v36", InitalValueV36);
+//     mlSol.Initialize ("v37", InitalValueV37);
+//     mlSol.Initialize ("v38", InitalValueV38);
+//     mlSol.Initialize ("v39", InitalValueV39);
 //         if ( NumberOfLayers>79 ) {
 //             mlSol.Initialize ( "v40", InitalValueV40 );
 //             mlSol.Initialize ( "v41", InitalValueV41 );
@@ -610,7 +610,7 @@ int main (int argc, char** args)
 //             mlSol.Initialize ( "v78", InitalValueV78 );
 //             mlSol.Initialize ( "v79", InitalValueV79 );
 //         }
-  }
+//  }
 
 
   for (unsigned i = 0; i < NumberOfLayers; i++) {
@@ -649,8 +649,8 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 28000; //RK4: dt=0.5, numberOfTimeSteps = 16001
-  dt = 0.5;
+  unsigned numberOfTimeSteps = 2500; //RK4: dt=0.5, numberOfTimeSteps = 16001
+  dt = 3.;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {
@@ -660,9 +660,9 @@ int main (int argc, char** args)
 
     system.CopySolutionToOldSolution();
     counter = i;
-    //ETD (ml_prob, numberOfTimeSteps);
+    ETD (ml_prob, numberOfTimeSteps);
     //Assembly ( ml_prob, numberOfTimeSteps );
-    RK_HT (ml_prob, implicitEuler, numberOfTimeSteps);
+    //RK_HT (ml_prob, implicitEuler, numberOfTimeSteps);
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1) / 1);
 
     counter2++;
@@ -893,8 +893,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
     double xmid = 0.5 * (x[1] + x[0]);
 
     for (unsigned k = NLayers; k > 1; k--) {
-      //w[k - 1] = - (-4. / 625.* (xmid - 5) * (xmid - 5) * (xmid - 5)) * psi2[k - 1]; //10x10 box test
-      w[k - 1] = - (- 16. / (pow (20., 16)) * pow ( (xmid - 20.), 15)) * psi2[k - 1]; //40x10 rectangle test
+      w[k - 1] = - (-4. / 625.* (xmid - 5) * (xmid - 5) * (xmid - 5)) * psi2[k - 1]; //10x10 box test
+      //w[k - 1] = - (- 16. / (pow (20., 16)) * pow ( (xmid - 20.), 15)) * psi2[k - 1]; //40x10 rectangle test
       //w[k - 1] = - ( - 16./(pow(10.,16)) * pow((xmid - 10.), 15) ) * psi2[k - 1];
       //std::cout << w[k-1] << " ";
 
@@ -1046,22 +1046,22 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
       aResHT[k] += solh[k] * k_v * (deltaZt - deltaZb) / ( (ht + hb) / 2.);      // vertical diffusion
 
-//       if (splitting){
-//         if(i > start){
-//           aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k].value() / solhm[k] - solHT[k].value() / solh[k])/(dx*dx); // horizontal diffusion
-//         }
-//         if(i < end-1){
-//           aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k].value() / solhp[k] - solHT[k].value() / solh[k])/(dx*dx); // horizontal diffusion
-//         }
-//       }
-//       else{
-//         if(i > start){
-//           aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
-//         }
-//         if(i < end-1){
-//           aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
-//         }
-//       }
+      if (splitting){
+        if(i > start){
+          aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k].value() / solhm[k] - solHT[k].value() / solh[k])/(dx*dx); // horizontal diffusion
+        }
+        if(i < end-1){
+          aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k].value() / solhp[k] - solHT[k].value() / solh[k])/(dx*dx); // horizontal diffusion
+        }
+      }
+      else{
+        if(i > start){
+          aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+        }
+        if(i < end-1){
+          aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+        }
+      }
 
     }
 
@@ -1431,8 +1431,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       double xmid = 0.5 * (x[1] + x[0]);
 
       for (unsigned k = NLayers; k > 1; k--) {
-        //w[k - 1] = - (-4. / 625.* (xmid - 5.) * (xmid - 5.) * (xmid - 5.)) * psi2[k - 1]; //10x10 box test
-        w[k - 1] = - (- 16. / (pow (20., 16)) * pow ( (xmid - 20.), 15)) * psi2[k - 1]; //40x10 rectangle test
+        w[k - 1] = - (-4. / 625.* (xmid - 5.) * (xmid - 5.) * (xmid - 5.)) * psi2[k - 1]; //10x10 box test
+        //w[k - 1] = - (- 16. / (pow (20., 16)) * pow ( (xmid - 20.), 15)) * psi2[k - 1]; //40x10 rectangle test
 
         //w[k - 1] = - ( - 16./(pow(10.,16)) * pow((xmid - 10.), 15) ) * psi2[k - 1];
         //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];

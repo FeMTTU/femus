@@ -35,7 +35,7 @@ double pi = acos (-1.);
 //double k_h = 1. / ( 10 * pi );
 double k_h = 0.0001 ;
 
-const unsigned NumberOfLayers = 40;
+const unsigned NumberOfLayers = 4;
 
 unsigned counter = 0;
 unsigned counter2 = 0;
@@ -48,14 +48,14 @@ bool assembly = true; //assembly must be left always true
 bool slepc = false;
 
 
-// const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
+const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
 
 // const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
 
-const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
-                          0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
-                         };
+// const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
+//                           0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
+//                          };
 
 // const double hRest[80] = {0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
 //                           0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
@@ -414,8 +414,7 @@ double InitalValueT (const std::vector < double >& x)
   double pi = acos (-1.);
 
   if (x[0] < 5.) {
-    return 5.;
-  }
+    return 5.;  }
 
   else {
     return 30.;
@@ -476,10 +475,10 @@ int main (int argc, char** args)
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  //unsigned nx = static_cast<unsigned> (floor (pow (2., 2) + 0.5));
-  unsigned nx = static_cast<unsigned> (floor (pow (2.,/*5*/3) + 0.5));       //Grid cell size = 3.90625 m
+  unsigned nx = static_cast<unsigned> (floor (pow (2., 2) + 0.5));
+  //unsigned nx = static_cast<unsigned> (floor (pow (2.,/*5*/3) + 0.5));       //Grid cell size = 3.90625 m
   //nx += 8;
-  nx += 2;
+  //nx += 2;
 
   double length = 10.; //2 * 1465700.;
 
@@ -514,43 +513,43 @@ int main (int argc, char** args)
   mlSol.Initialize ("v1", InitalValueV1);
   mlSol.Initialize ("v2", InitalValueV2);
   mlSol.Initialize ("v3", InitalValueV3);
-  mlSol.Initialize ("v4", InitalValueV4);
-  mlSol.Initialize ("v5", InitalValueV5);
-  mlSol.Initialize ("v6", InitalValueV6);
-  mlSol.Initialize ("v7", InitalValueV7);
-  mlSol.Initialize ("v8", InitalValueV8);
-  mlSol.Initialize ("v9", InitalValueV9);
-  mlSol.Initialize ("v10", InitalValueV10);
-  mlSol.Initialize ("v11", InitalValueV11);
-  mlSol.Initialize ("v12", InitalValueV12);
-  mlSol.Initialize ("v13", InitalValueV13);
-  mlSol.Initialize ("v14", InitalValueV14);
-  mlSol.Initialize ("v15", InitalValueV15);
-  mlSol.Initialize ("v16", InitalValueV16);
-  mlSol.Initialize ("v17", InitalValueV17);
-  mlSol.Initialize ("v18", InitalValueV18);
-  mlSol.Initialize ("v19", InitalValueV19);
-  if (NumberOfLayers > 39) {
-    mlSol.Initialize ("v20", InitalValueV20);
-    mlSol.Initialize ("v21", InitalValueV21);
-    mlSol.Initialize ("v22", InitalValueV22);
-    mlSol.Initialize ("v23", InitalValueV23);
-    mlSol.Initialize ("v24", InitalValueV24);
-    mlSol.Initialize ("v25", InitalValueV25);
-    mlSol.Initialize ("v26", InitalValueV26);
-    mlSol.Initialize ("v27", InitalValueV27);
-    mlSol.Initialize ("v28", InitalValueV28);
-    mlSol.Initialize ("v29", InitalValueV29);
-    mlSol.Initialize ("v30", InitalValueV30);
-    mlSol.Initialize ("v31", InitalValueV31);
-    mlSol.Initialize ("v32", InitalValueV32);
-    mlSol.Initialize ("v33", InitalValueV33);
-    mlSol.Initialize ("v34", InitalValueV34);
-    mlSol.Initialize ("v35", InitalValueV35);
-    mlSol.Initialize ("v36", InitalValueV36);
-    mlSol.Initialize ("v37", InitalValueV37);
-    mlSol.Initialize ("v38", InitalValueV38);
-    mlSol.Initialize ("v39", InitalValueV39);
+//   mlSol.Initialize ("v4", InitalValueV4);
+//   mlSol.Initialize ("v5", InitalValueV5);
+//   mlSol.Initialize ("v6", InitalValueV6);
+//   mlSol.Initialize ("v7", InitalValueV7);
+//   mlSol.Initialize ("v8", InitalValueV8);
+//   mlSol.Initialize ("v9", InitalValueV9);
+//   mlSol.Initialize ("v10", InitalValueV10);
+//   mlSol.Initialize ("v11", InitalValueV11);
+//   mlSol.Initialize ("v12", InitalValueV12);
+//   mlSol.Initialize ("v13", InitalValueV13);
+//   mlSol.Initialize ("v14", InitalValueV14);
+//   mlSol.Initialize ("v15", InitalValueV15);
+//   mlSol.Initialize ("v16", InitalValueV16);
+//   mlSol.Initialize ("v17", InitalValueV17);
+//   mlSol.Initialize ("v18", InitalValueV18);
+//   mlSol.Initialize ("v19", InitalValueV19);
+//   if (NumberOfLayers > 39) {
+//     mlSol.Initialize ("v20", InitalValueV20);
+//     mlSol.Initialize ("v21", InitalValueV21);
+//     mlSol.Initialize ("v22", InitalValueV22);
+//     mlSol.Initialize ("v23", InitalValueV23);
+//     mlSol.Initialize ("v24", InitalValueV24);
+//     mlSol.Initialize ("v25", InitalValueV25);
+//     mlSol.Initialize ("v26", InitalValueV26);
+//     mlSol.Initialize ("v27", InitalValueV27);
+//     mlSol.Initialize ("v28", InitalValueV28);
+//     mlSol.Initialize ("v29", InitalValueV29);
+//     mlSol.Initialize ("v30", InitalValueV30);
+//     mlSol.Initialize ("v31", InitalValueV31);
+//     mlSol.Initialize ("v32", InitalValueV32);
+//     mlSol.Initialize ("v33", InitalValueV33);
+//     mlSol.Initialize ("v34", InitalValueV34);
+//     mlSol.Initialize ("v35", InitalValueV35);
+//     mlSol.Initialize ("v36", InitalValueV36);
+//     mlSol.Initialize ("v37", InitalValueV37);
+//     mlSol.Initialize ("v38", InitalValueV38);
+//     mlSol.Initialize ("v39", InitalValueV39);
 //       if(NumberOfLayers>79){
 //         mlSol.Initialize ( "v40", InitalValueV40 );
 //         mlSol.Initialize ( "v41", InitalValueV41 );
@@ -593,7 +592,7 @@ int main (int argc, char** args)
 //         mlSol.Initialize ( "v78", InitalValueV78 );
 //         mlSol.Initialize ( "v79", InitalValueV79 );
 //       }
-  }
+//  }
 
   for (unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
@@ -631,8 +630,8 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 2500; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 3.;
+  unsigned numberOfTimeSteps = 400; //17h=1020 with dt=60, 17h=10200 with dt=6
+  dt = 0.5;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {
@@ -995,30 +994,32 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       //vector < double > Jac (NLayers * NLayers);
       Jac[i].resize (NLayers * NLayers);
       s.jacobian (&Jac[i][0], true);
-
+      
       //building objects for computing ∆tφ1(∆tJn)F(Tn)
-      Mat A;
-      Vec v, y;
-
-      MatCreate (MPI_COMM_SELF, &A);
-      MatSetSizes (A, NLayers, NLayers, NLayers, NLayers);
-      MatSetType (A, MATSEQDENSE);
-      MatSeqDenseSetPreallocation (A, &Jac[i][0]);
-      MatAssemblyBegin (A, MAT_FINAL_ASSEMBLY);
-      MatAssemblyEnd (A, MAT_FINAL_ASSEMBLY);
-      MatTranspose (A, MAT_INPLACE_MATRIX, &A);
-      //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
-
-      VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &Res[0], &v);
-      VecAssemblyBegin (v);
-      VecAssemblyEnd (v);
-      //VecView(v,PETSC_VIEWER_STDOUT_WORLD);
+      Vec y;
 
       VecCreate (PETSC_COMM_WORLD, &y);
       VecSetSizes (y, PETSC_DECIDE, NLayers);
       VecSetFromOptions (y);
 
       if (slepc) {
+        Mat A;
+        Vec v;
+
+        MatCreate (MPI_COMM_SELF, &A);
+        MatSetSizes (A, NLayers, NLayers, NLayers, NLayers);
+        MatSetType (A, MATSEQDENSE);
+        MatSeqDenseSetPreallocation (A, &Jac[i][0]);
+        MatAssemblyBegin (A, MAT_FINAL_ASSEMBLY);
+        MatAssemblyEnd (A, MAT_FINAL_ASSEMBLY);
+        MatTranspose (A, MAT_INPLACE_MATRIX, &A);
+        //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
+        
+        VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &Res[0], &v);
+        VecAssemblyBegin (v);
+        VecAssemblyEnd (v);
+        //VecView(v,PETSC_VIEWER_STDOUT_WORLD);
+        
         MFN mfn;
         FN f;
         MFNConvergedReason reason;
@@ -1075,7 +1076,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
         FNPhiSetIndex (f, 1);
         FNSetType (f, FNPHI);
-        // FNView(f,PETSC_VIEWER_STDOUT_WORLD);
+        //FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
         FNSetScale (f, dt, dt);
 
@@ -1101,9 +1102,31 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 //                 }
         }
 
+        //BEGIN phi1A print
+//         PetscInt j;
+//         for (j=0; j<NLayers; j++) {
+//           Vec a, a1;          
+//           VecCreate(PETSC_COMM_WORLD,&a); 
+//           VecSetSizes(a,PETSC_DECIDE,NLayers);
+//           VecSetFromOptions(a);
+//           VecSet(a,0.0);
+//           PetscScalar one=1.0;
+//           VecSetValues(a,1,&j,&one,INSERT_VALUES);
+//           VecAssemblyBegin(a);
+//           VecAssemblyEnd(a);
+//           VecView(a,PETSC_VIEWER_STDOUT_WORLD);
+//           VecDuplicate (a, &a1);
+//           MFNSolve (mfn, a, a1);
+//           VecScale (a1, 1./dt);
+//           VecView(a1,PETSC_VIEWER_STDOUT_WORLD);
+//           
+//           VecDestroy (&a);
+//           VecDestroy (&a1);
+//         }
+        //END
+        
         MFNSolve (mfn, v, y);
         MFNGetConvergedReason (mfn, &reason);
-
         //VecView(y,PETSC_VIEWER_STDOUT_WORLD);
 
         if (reason < 0) std::cout << "Solver did not converge" << std::endl;
@@ -1129,6 +1152,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         //END
 
         MFNDestroy (&mfn);
+        MatDestroy (&A);
+        VecDestroy (&v);
 
       }
 
@@ -1155,8 +1180,6 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
       EPS->add_vector_blocked (EPS_local, l2GMapRow);
 
-      MatDestroy (&A);
-      VecDestroy (&v);
       VecDestroy (&y); //TODO
 
       s.clear_independents();
@@ -1322,29 +1345,30 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       }
 
       //END
-
-      Mat A;
-      Vec v, y;
-
-      MatCreate (MPI_COMM_SELF, &A);
-      MatSetSizes (A, NLayers, NLayers, NLayers, NLayers);
-      MatSetType (A, MATSEQDENSE);
-      MatSeqDenseSetPreallocation (A, &Jac[i][0]);
-      MatAssemblyBegin (A, MAT_FINAL_ASSEMBLY);
-      MatAssemblyEnd (A, MAT_FINAL_ASSEMBLY);
-      MatTranspose (A, MAT_INPLACE_MATRIX, &A);
-      //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
-
-      VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &aResHT[0], &v);
-      VecAssemblyBegin (v);
-      VecAssemblyEnd (v);
-      //VecView(v,PETSC_VIEWER_STDOUT_WORLD);
+      
+      Vec y;
 
       VecCreate (PETSC_COMM_WORLD, &y);
       VecSetSizes (y, PETSC_DECIDE, NLayers);
       VecSetFromOptions (y);
 
       if (slepc) {
+        Mat A;
+        Vec v; 
+
+        MatCreate (MPI_COMM_SELF, &A);
+        MatSetSizes (A, NLayers, NLayers, NLayers, NLayers);
+        MatSetType (A, MATSEQDENSE);
+        MatSeqDenseSetPreallocation (A, &Jac[i][0]);
+        MatAssemblyBegin (A, MAT_FINAL_ASSEMBLY);
+        MatAssemblyEnd (A, MAT_FINAL_ASSEMBLY);
+        //MatTranspose (A, MAT_INPLACE_MATRIX, &A);
+        //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
+        
+        VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &aResHT[0], &v);
+        VecAssemblyBegin (v);
+        VecAssemblyEnd (v);
+        //VecView(v,PETSC_VIEWER_STDOUT_WORLD);
 
         MFN mfn;
         FN f;
@@ -1427,6 +1451,29 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 //                     std::cout<< valueHT << std::endl;
 //                 }
         }
+        
+        //BEGIN phi1A print
+//         PetscInt j;
+//         for (j=0; j<NLayers; j++) {
+//           Vec a, a1;          
+//           VecCreate(PETSC_COMM_WORLD,&a); 
+//           VecSetSizes(a,PETSC_DECIDE,NLayers);
+//           VecSetFromOptions(a);
+//           VecSet(a,0.0);
+//           PetscScalar one=1.0;
+//           VecSetValues(a,1,&j,&one,INSERT_VALUES);
+//           VecAssemblyBegin(a);
+//           VecAssemblyEnd(a);
+//           VecView(a,PETSC_VIEWER_STDOUT_WORLD);
+//           VecDuplicate (a, &a1);
+//           MFNSolve (mfn, a, a1);
+//           VecScale (a1, 2./dt);
+//           VecView(a1,PETSC_VIEWER_STDOUT_WORLD);
+//           
+//           VecDestroy (&a);
+//           VecDestroy (&a1);
+//         }
+        //END
 
         MFNSolve (mfn, v, y);
         MFNGetConvergedReason (mfn, &reason);
@@ -1457,6 +1504,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         //END
 
         MFNDestroy (&mfn);
+        MatDestroy (&A);
+        VecDestroy (&v);
 
       }
 
@@ -1480,9 +1529,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       }
 
       EPS->add_vector_blocked (EPS_local, l2GMapRow);
-
-      MatDestroy (&A);
-      VecDestroy (&v);
+      
       VecDestroy (&y); //TODO
 
     }
@@ -2109,7 +2156,7 @@ void build_phi1Av (const unsigned &CFL_pow, const std::vector < double > &NodeJa
 
   for (unsigned k2 = 0; k2 < NumberOfLayers; k2++) {
     for (unsigned k1 = 0; k1 < NumberOfLayers; k1++) {
-      A[k1][k2] = (dt / pow (2, CFL_pow)) * NodeJac[k2 * NumberOfLayers + k1]; //save the scaled jac in A
+      A[k1][k2] = (dt / pow (2, CFL_pow)) * NodeJac[k1 * NumberOfLayers + k2]; //save the scaled jac in A
 
       if (k1 == k2) phi1A[k1][k2] = 1.; //initialize phi1A to the identity
     }
@@ -2121,7 +2168,7 @@ void build_phi1Av (const unsigned &CFL_pow, const std::vector < double > &NodeJa
 //   for (unsigned k1 = 0; k1 < NumberOfLayers; k1++) {
 //     for (unsigned k2 = 0; k2 < NumberOfLayers; k2++) {
 //       std::cout.precision(16);
-//       std::cout << A[k1][k2] << " ";
+//       std::cout << A[k1][k2] * pow (2, CFL_pow) / dt << " ";
 //     }
 // 
 //     std::cout << std::endl;
@@ -2176,12 +2223,8 @@ void build_phi1Av (const unsigned &CFL_pow, const std::vector < double > &NodeJa
     }
 
     double power = 0.5;
-
     if (i == 1) power = 1.;
-
     else if (i > 1) power = pow (2, i - 1);
-    
-//     else if (i == 2) power = 2.;
 
     for (unsigned ii = 0; ii < NumberOfLayers; ii++) {
       for (unsigned jj = 0; jj < NumberOfLayers; jj++) {
@@ -2190,6 +2233,17 @@ void build_phi1Av (const unsigned &CFL_pow, const std::vector < double > &NodeJa
     }
 
   }
+  
+//   std::cout << "phi1A ------------------- " << std::endl;
+// 
+//   for (unsigned k1 = 0; k1 < NumberOfLayers; k1++) {
+//     for (unsigned k2 = 0; k2 < NumberOfLayers; k2++) {
+//       std::cout.precision(16);
+//       std::cout << phi1A[k1][k2] << " ";
+//     }
+// 
+//     std::cout << std::endl;
+//   }
 
   for (int ii = 0; ii < NumberOfLayers; ii++) {
     double value = 0.;
