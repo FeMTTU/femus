@@ -184,7 +184,7 @@ int main(int argc, char** args) {
 
  
    //provide exact solution, if available ==============
-   My_exact_solution< /*adept::a*/double > exact_sol;
+   My_exact_solution< double > exact_sol;
  
   //Choose how to compute the convergence order ==============
     const unsigned conv_order_flag = 0;  //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
@@ -198,7 +198,7 @@ int main(int argc, char** args) {
 
     
   // Convergence study ==============
-    vector < vector < vector < /*adept::a*/double > > > norms = FE_convergence::initialize_vector_of_norms < /*adept::a*/double >( unknowns.size(), max_number_of_meshes, norm_flag);
+    vector < vector < vector < double > > > norms = FE_convergence::initialize_vector_of_norms < double >( unknowns.size(), max_number_of_meshes, norm_flag);
     
      MultiLevelSolution         ml_sol_all_levels = FE_convergence::initialize_convergence_study(unknowns, ml_mesh_all_levels, max_number_of_meshes, SetBoundaryCondition);
     
@@ -207,7 +207,7 @@ int main(int argc, char** args) {
                   
             const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level< /*adept::a*/double >(files, unknowns, ml_mesh, i);
 
-                                              FE_convergence::compute_error_norms_per_unknown_per_level < /*adept::a*/double >( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag, & exact_sol);
+                                              FE_convergence::compute_error_norms_per_unknown_per_level < double >( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag, & exact_sol);
         
       }
    
@@ -307,8 +307,8 @@ void AssembleProblem_interface(MultiLevelProblem& ml_prob) {
    My_exact_solution< type > exact_sol;
 const std::string system_name = "Equation"; //I cannot get this from the system because there may be more than one
 
-//     AssembleProblem_AD_flexible < type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
-    AssembleProblem_flexible< type >(ml_prob,system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+//          if (std::is_same<type,adept::adouble>::value == true)  AssembleProblem_AD_flexible < type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+    /*else if (std::is_same<type,double>::value == true) */             AssembleProblem_flexible< type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
 
 }
 
@@ -377,17 +377,17 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
   phi_coords_xx.reserve(maxSize * dim2);
 
 //-----------------  
-  vector < double > phi;
-  vector < double > phi_x;
-  vector < double > phi_xx;
+  vector < type > phi;
+  vector < type > phi_x;
+  vector < type > phi_xx;
   
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   phi_xx.reserve(maxSize * dim2);
 
   vector< int > l2GMap;  l2GMap.reserve(maxSize);
-  vector< double > Res;     Res.reserve(maxSize);
-  vector < double > Jac;    Jac.reserve(maxSize * maxSize);
+  vector< double > Res;     Res.reserve(maxSize);             //this has to be double, not type
+  vector < double > Jac;    Jac.reserve(maxSize * maxSize);   //this has to be double, not type
 
   KK->zero();
 
@@ -407,7 +407,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
     Res.resize(nDofu);          std::fill(Res.begin(), Res.end(), 0.); 
     
-    Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.); ///DIFF
+    Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.);
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
@@ -420,7 +420,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
     
       
     for (unsigned i = 0; i < nDofu; i++) {
-        std::vector< double > x_at_node(dim,0.);
+        std::vector< type > x_at_node(dim,0.);
         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
                     solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
@@ -437,15 +437,15 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
         // *** get gauss point weight, test function and test function partial derivatives ***
       static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][soluType] )
-                                         ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
+                                         ->Jacobian_type_non_isoparametric< type >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
 //       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
       msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
 
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      double solu_gss = 0.;
-      vector < double > gradSolu_gss(dim, 0.);
-      vector < double > gradSolu_exact_gss(dim, 0.);
+      type solu_gss = 0.;
+      vector < type > gradSolu_gss(dim, 0.);
+      vector < type > gradSolu_exact_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];
@@ -456,7 +456,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
         }
       }
       
-            vector < double > x_gss(dim, 0.);
+            vector < type > x_gss(dim, 0.);
       for (unsigned i = 0; i < nDofx; i++) {
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           x_gss[jdim] += x[jdim][i] * phi_coords[i];
@@ -468,8 +468,8 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofu; i++) {
 
-        double laplace = 0.;
-        double laplace_weak_exact = 0.;
+        type laplace = 0.;
+        type laplace_weak_exact = 0.;
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
@@ -482,7 +482,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 //         Res[i] += ( source_term * phi[i] - phi[i] * solu_gss - laplace ) * weight;
         
 // manufactured Helmholtz - strong
-             double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
+             type helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
          Res[i] += (helmholtz_strong_exact * phi[i] - solu_gss * phi[i]  - laplace) * weight;
 
 // manufactured Laplacian - strong
@@ -495,7 +495,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
         // *** phi_j loop ***
         for (unsigned j = 0; j < nDofu; j++) {///DIFF
-          double laplace_jac = 0.;
+          type laplace_jac = 0.;
 
           for (unsigned kdim = 0; kdim < dim; kdim++) {
             laplace_jac += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]);
@@ -513,16 +513,12 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
-    //copy the value of the adept::adoube aRes in double Res and store
     RES->add_vector_blocked(Res, l2GMap);
-
-    //store K in the global matrix KK
     KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
 
   } //end element loop for each process
 
   RES->close();
-
   KK->close();
 
   // ***************** END ASSEMBLY *******************
@@ -600,21 +596,25 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
   phi_coords_xx.reserve(maxSize * dim2);
 
 //-----------------  
-  vector < adept::adouble > phi;
-  vector < adept::adouble > phi_x;
-  vector < adept::adouble > phi_xx;
+  vector < type > phi;
+  vector < type > phi_x;
+  vector < type > phi_xx;
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   phi_xx.reserve(maxSize * dim2);
 
   
-  vector< adept::adouble > aRes;  aRes.reserve(maxSize);
 
   vector < int > l2GMap;  l2GMap.reserve(maxSize);
-  vector < double > Res;     Res.reserve(maxSize);
-  vector < double > Jac;     Jac.reserve(maxSize * maxSize);
+  vector < double > Jac;     Jac.reserve(maxSize * maxSize);  //this has to be double, not type
+  vector < double > Res;     Res.reserve(maxSize);            //this has to be double, not type
+  
+  
+  vector < type >  aRes;    aRes.reserve(maxSize);  //DIFF
+  adept::Stack& s = FemusInit::_adeptStack;  // call the adept stack object
 
+  
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
 
@@ -632,7 +632,9 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
     for (int i = 0; i < dim; i++)    x[i].resize(nDofx);
 
 
-    aRes.resize(nDofu);    std::fill(aRes.begin(), aRes.end(), 0);
+    aRes.resize(nDofu);         std::fill(aRes.begin(), aRes.end(), 0);
+    Res.resize(nDofu);
+    Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.);
 
     
     // local storage of coordinates
@@ -647,8 +649,8 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
      
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
-        std::vector< adept::adouble > x_at_node(dim,0.);
-        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i].value(); ///DIFF
+        std::vector< type > x_at_node(dim,0.);
+        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
                     solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
       solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
@@ -656,11 +658,9 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
     }
 
 
+ ///DIFF
+  s.new_recording();    // start a new recording of all the operations involving adept variables
 
- // call the adept stack object
-  adept::Stack& s = FemusInit::_adeptStack;  ///DIFF
-    // start a new recording of all the operations involving adept::adouble variables
-    s.new_recording();
 
     
     if (dim != 2) abort(); //only implemented in 2D now
@@ -670,14 +670,14 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
         
       // *** get gauss point weight, test function and test function partial derivatives ***
       static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][soluType] )
-                                         ->Jacobian_type_non_isoparametric< adept::adouble >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
+                                         ->Jacobian_type_non_isoparametric< type >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
 //       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
       msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-               adept::adouble solu_gss = 0.;
-      vector < adept::adouble > gradSolu_gss(dim, 0.);
-      vector < adept::adouble > gradSolu_exact_gss(dim, 0.);
+               type solu_gss = 0.;
+      vector < type > gradSolu_gss(dim, 0.);
+      vector < type > gradSolu_exact_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];
@@ -700,8 +700,8 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
       
       for (unsigned i = 0; i < nDofu; i++) {
 
-        adept::adouble laplace = 0.;
-        adept::adouble laplace_weak_exact = 0.;
+        type laplace = 0.;
+        type laplace_weak_exact = 0.;
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           laplace            +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
@@ -726,14 +726,16 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
 
         
       } // end phi_i loop
+      
+      
     } // end gauss point loop
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
     //copy the value of the adept::adoube aRes in double Res and store
-    Res.resize(nDofu);
 
+ ///DIFF
     for (int i = 0; i < nDofu; i++) {
       Res[i] = - aRes[i].value();
     }
@@ -741,17 +743,14 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
     RES->add_vector_blocked(Res, l2GMap);
 
 
-
     s.dependent(&aRes[0], nDofu);      // define the dependent variables
     s.independent(&solu[0], nDofu);    // define the independent variables
+    s.jacobian(&Jac[0], true);    // get the jacobian matrix (ordered by row major )
 
-
-    // get the jacobian matrix (ordered by row major )
-    Jac.resize(nDofu * nDofu);
-    s.jacobian(&Jac[0], true);
 
     //store K in the global matrix KK
     KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
+
 
     s.clear_independents();
     s.clear_dependents();
@@ -759,7 +758,6 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
   } //end element loop for each process
 
   RES->close();
-  
   KK->close();
 
   // ***************** END ASSEMBLY *******************

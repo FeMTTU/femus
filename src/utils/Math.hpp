@@ -503,8 +503,8 @@ inline std::vector< type > compute_error_norms(const MultiLevelSolution* ml_sol,
                  norm_vec = NumericVector::build().release();
                  norm_vec->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-         /*if (norm_flag == 0) {*/ norm_vec->set(iproc, norms[0]/*.value()*/);  norm_vec->close();  norms[0] = norm_vec->l1_norm(); /*}*/
-    /*else*/ if (norm_flag == 1) { norm_vec->set(iproc, norms[1]/*.value()*/);  norm_vec->close();  norms[1] = norm_vec->l1_norm(); }
+         /*if (norm_flag == 0) {*/ norm_vec->set(iproc, norms[0]);  norm_vec->close();  norms[0] = norm_vec->l1_norm(); /*}*/
+    /*else*/ if (norm_flag == 1) { norm_vec->set(iproc, norms[1]);  norm_vec->close();  norms[1] = norm_vec->l1_norm(); }
 
           delete norm_vec;
 
@@ -513,8 +513,8 @@ inline std::vector< type > compute_error_norms(const MultiLevelSolution* ml_sol,
                  norm_vec_exact_dofs = NumericVector::build().release();
                  norm_vec_exact_dofs->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-         /*if (norm_flag == 0) {*/ norm_vec_exact_dofs->set(iproc, norms_exact_dofs[0]/*.value()*/);  norm_vec_exact_dofs->close();  norms_exact_dofs[0] = norm_vec_exact_dofs->l1_norm(); /*}*/
-    /*else*/ if (norm_flag == 1) { norm_vec_exact_dofs->set(iproc, norms_exact_dofs[1]/*.value()*/);  norm_vec_exact_dofs->close();  norms_exact_dofs[1] = norm_vec_exact_dofs->l1_norm(); }
+         /*if (norm_flag == 0) {*/ norm_vec_exact_dofs->set(iproc, norms_exact_dofs[0]);  norm_vec_exact_dofs->close();  norms_exact_dofs[0] = norm_vec_exact_dofs->l1_norm(); /*}*/
+    /*else*/ if (norm_flag == 1) { norm_vec_exact_dofs->set(iproc, norms_exact_dofs[1]);  norm_vec_exact_dofs->close();  norms_exact_dofs[1] = norm_vec_exact_dofs->l1_norm(); }
 
           delete norm_vec_exact_dofs;
 
@@ -523,8 +523,8 @@ inline std::vector< type > compute_error_norms(const MultiLevelSolution* ml_sol,
                  norm_vec_inexact = NumericVector::build().release();
                  norm_vec_inexact->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-         /*if (norm_flag == 0) {*/ norm_vec_inexact->set(iproc, norms_inexact_dofs[0]/*.value()*/);  norm_vec_inexact->close();  norms_inexact_dofs[0] = norm_vec_inexact->l1_norm(); /*}*/
-    /*else*/ if (norm_flag == 1) { norm_vec_inexact->set(iproc, norms_inexact_dofs[1]/*.value()*/);  norm_vec_inexact->close();  norms_inexact_dofs[1] = norm_vec_inexact->l1_norm(); }
+         /*if (norm_flag == 0) {*/ norm_vec_inexact->set(iproc, norms_inexact_dofs[0]);  norm_vec_inexact->close();  norms_inexact_dofs[0] = norm_vec_inexact->l1_norm(); /*}*/
+    /*else*/ if (norm_flag == 1) { norm_vec_inexact->set(iproc, norms_inexact_dofs[1]);  norm_vec_inexact->close();  norms_inexact_dofs[1] = norm_vec_inexact->l1_norm(); }
 
           delete norm_vec_inexact;
 
