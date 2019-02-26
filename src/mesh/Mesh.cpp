@@ -93,6 +93,7 @@ namespace femus {
     std::cout << " Number of linear nodes      : " << _dofOffset[0][_nprocs] << std::endl;
     std::cout << " Number of quadratic nodes   : " << _dofOffset[1][_nprocs] << std::endl;
     std::cout << " Number of biquadratic nodes : " << _dofOffset[2][_nprocs] << std::endl;
+    std::cout << std::endl;
 
   }
 
@@ -194,7 +195,8 @@ namespace femus {
     el->ScatterElementNearFace();
 
     _amrRestriction.resize (3);
-
+   
+    PrintInfo();
   };
 
   /**
@@ -269,6 +271,7 @@ namespace femus {
 
     _amrRestriction.resize (3);
 
+    PrintInfo();
   }
 
   /** This function stores the element adiacent to the element face (iel,iface)
@@ -528,7 +531,7 @@ namespace femus {
     }
 
 
-    std::cout << std::endl;
+    
 
     partition.resize (0);
 

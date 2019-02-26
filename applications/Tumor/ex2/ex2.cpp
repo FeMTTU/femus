@@ -53,12 +53,74 @@ double InitalValueU3D (const std::vector < double >& x) {
 
   double R3 = R2 * R;
   double Vb = 1.1990039070212866;
-  
-  return (V0 * M_PI * 4. / 3. ) / Vb * exp ( (1. - R2 / (R2 - r2)));
+
+  return (V0 * M_PI * 4. / 3.) / Vb * exp ( (1. - R2 / (R2 - r2)));
 }
 
 double InitalValueD (const std::vector < double >& x) {
   return 100.;
+}
+
+double GetSmootK (const double & kmin, const double & kmax, const double & h, const double & r0, const std::vector < double >& x) {
+  double value = kmin;
+  double r = sqrt (x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
+  if (r <= r0 - h) {
+    value = kmax;
+  }
+  else if (r <= r0 + h) {
+    value = kmin + (kmax - kmin) * 0.5 * (1. - atan ( (r - r0) / h) / atan (1.));
+  }
+  return value;
+}
+
+double InitalValueK11 (const std::vector < double >& x) {
+  double kmin = 0.01;
+  double kmax = 1.;
+  double h = 0.1;
+  double r0 = 1.;
+  
+  return GetSmootK (kmin,kmax,h,r0,x);
+
+}
+double InitalValueK12 (const std::vector < double >& x) {
+  double kmin = 0.;
+  double kmax = 0.;
+  double h = 0.1;
+  double r0 = 1.;
+  
+  return GetSmootK (kmin,kmax,h,r0,x);
+}
+double InitalValueK13 (const std::vector < double >& x) {
+  double kmin = 0.;
+  double kmax = 0.;
+  double h = 0.1;
+  double r0 = 1.;
+  
+  return GetSmootK (kmin,kmax,h,r0,x);
+}
+double InitalValueK22 (const std::vector < double >& x) {
+  double kmin = 0.01;
+  double kmax = 2.;
+  double h = 0.1;
+  double r0 = 1.;
+  
+  return GetSmootK (kmin,kmax,h,r0,x);
+}
+double InitalValueK23 (const std::vector < double >& x) {
+  double kmin = 0.;
+  double kmax = 0.;
+  double h = 0.1;
+  double r0 = 1.;
+  
+  return GetSmootK (kmin,kmax,h,r0,x);
+}
+double InitalValueK33 (const std::vector < double >& x) {
+  double kmin = 0.01;
+  double kmax = 3.;
+  double h = 0.1;
+  double r0 = 1.;
+  
+  return GetSmootK (kmin,kmax,h,r0,x);
 }
 
 
@@ -81,6 +143,30 @@ int main (int argc, char** args) {
 
 
 
+  MultiLevelMesh mlMshCube (3, 3, "./input/cube.neu", "fifth", 1., NULL);
+  MultiLevelSolution mlSolCube (&mlMshCube); // Here we provide the mesh info to the problem.
+  mlSolCube.AddSolution ("K11", LAGRANGE, SECOND, 0, false);
+  mlSolCube.AddSolution ("K12", LAGRANGE, SECOND, 0, false);
+  mlSolCube.AddSolution ("K13", LAGRANGE, SECOND, 0, false);
+  mlSolCube.AddSolution ("K22", LAGRANGE, SECOND, 0, false);
+  mlSolCube.AddSolution ("K23", LAGRANGE, SECOND, 0, false);
+  mlSolCube.AddSolution ("K33", LAGRANGE, SECOND, 0, false);
+
+  mlSolCube.Initialize ("K11", InitalValueK11);
+  mlSolCube.Initialize ("K12", InitalValueK12);
+  mlSolCube.Initialize ("K13", InitalValueK13);
+  mlSolCube.Initialize ("K22", InitalValueK22);
+  mlSolCube.Initialize ("K23", InitalValueK23);
+  mlSolCube.Initialize ("K33", InitalValueK33);
+
+  mlSolCube.SetWriter (VTK);
+  //mlSol.GetWriter()->SetGraphVariable ("u");
+  mlSolCube.GetWriter()->SetDebugOutput (false);
+
+  std::vector<std::string> print_vars;
+  print_vars.push_back ("All");
+
+  mlSolCube.GetWriter()->Write ("outputCube", "biquadratic", print_vars);
 
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -105,8 +191,8 @@ int main (int argc, char** args) {
 
   for (unsigned simulation = 9; simulation < 10; simulation++) {
 
-    V0 = 0.005 * ( simulation + 1 ) ; // fraction of injection vs tumor
-    
+    V0 = 0.005 * (simulation + 1) ;   // fraction of injection vs tumor
+
     // define the multilevel solution and attach the mlMsh object to it
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
 
@@ -541,9 +627,9 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
         sold_gss += phi[i] * sold[i];
       }
 
-      volume += weight; // We just want to compute the volume so f(x,y)=1.
+      volume += weight;
 
-      if (sold_gss <= 24) volumeUT[0] += weight; 
+      if (sold_gss <= 24) volumeUT[0] += weight;
       if (sold_gss <= 48) volumeUT[1] += weight;
       if (sold_gss <= 72) volumeUT[2] += weight;
 
@@ -565,16 +651,16 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
 
   std::cout << lInfinityNorm << " " << uT[2].second << std::endl;
 
-  bool stop = (lInfinityNorm < uT[2].second) ? true : false; // If the concentration is below uT[72], we dont need to evaluate anything, we stop.
-      
-  if(stop && iproc == 0){
+  bool stop = (lInfinityNorm < uT[2].second) ? true : false;
+
+  if (stop && iproc == 0) {
     std::ofstream fout;
-    fout.open("DoseResponseCurve.csv",std::ofstream::app);
-    fout <<V0<<","<< volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+    fout.open ("DoseResponseCurve.csv", std::ofstream::app);
+    fout << V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
     fout.close();
-    
-    fout.open("DoseResponseCurve.txt",std::ofstream::app);
-    fout <<V0<<" "<< volumeUTAll[0] / volumeAll << " " << volumeUTAll[1] / volumeAll << " " << volumeUTAll[2] / volumeAll << " " << std::endl;
+
+    fout.open ("DoseResponseCurve.txt", std::ofstream::app);
+    fout << V0 << " " << volumeUTAll[0] / volumeAll << " " << volumeUTAll[1] / volumeAll << " " << volumeUTAll[2] / volumeAll << " " << std::endl;
     fout.close();
   }
   return stop;
