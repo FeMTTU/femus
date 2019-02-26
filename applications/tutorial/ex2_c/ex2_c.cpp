@@ -28,6 +28,28 @@
 
 using namespace femus;
 
+
+// template function: definition 
+template < class type >
+void prepare_before_integration_loop(adept::Stack& stack) { }
+ 
+
+// template function: specialization
+template <>
+void prepare_before_integration_loop< adept::adouble  > (adept::Stack & stack) { 
+    
+  stack.new_recording();    // start a new recording of all the operations involving adept variables
+
+}
+
+// 
+// //********************************
+// template function: explicit instantiations: not even needed because the specialization is above
+// template void prepare_before_integration_loop< adept::adouble >(adept::Stack& stack);
+// // template class prepare_before_elem_loop< double >;
+
+
+
  
 template < class type >
   class My_exact_solution : public FE_convergence::Function< type > {  
@@ -205,7 +227,7 @@ int main(int argc, char** args) {
             
        for (int i = 0; i < max_number_of_meshes; i++) {
                   
-            const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level< /*adept::a*/double >(files, unknowns, ml_mesh, i);
+            const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level< /*only type to change*//*adept::a*/double >(files, unknowns, ml_mesh, i);
 
                                               FE_convergence::compute_error_norms_per_unknown_per_level < double >( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag, & exact_sol);
         
@@ -307,7 +329,7 @@ void AssembleProblem_interface(MultiLevelProblem& ml_prob) {
    My_exact_solution< type > exact_sol;
 const std::string system_name = "Equation"; //I cannot get this from the system because there may be more than one
 
-//          if (std::is_same<type,adept::adouble>::value == true)  AssembleProblem_AD_flexible < type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+//          /*if (std::is_same<type,adept::adouble>::value == true)*/  AssembleProblem_AD_flexible < type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
     /*else if (std::is_same<type,double>::value == true) */             AssembleProblem_flexible< type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
 
 }
@@ -346,7 +368,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
   const unsigned  dim = msh->GetDimension();
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));
+  const unsigned max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));
 
   unsigned    iproc = msh->processor_id();
 
@@ -360,36 +382,39 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
   type weight; // gauss point weight
 
   
-  vector < type >  solu;  solu.reserve(maxSize);
-  vector < type >  solu_exact_at_dofs;   solu_exact_at_dofs.reserve(maxSize);
+  vector < type >  solu;  solu.reserve(max_size_elem_dofs);
+  vector < type >  solu_exact_at_dofs;   solu_exact_at_dofs.reserve(max_size_elem_dofs);
 
   vector < vector < type > > x(dim);  unsigned xType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  for (unsigned i = 0; i < dim; i++)   x[i].reserve(maxSize);
+  for (unsigned i = 0; i < dim; i++)   x[i].reserve(max_size_elem_dofs);
 
 //-----------------  
   vector < type > phi_coords;
   vector < type > phi_coords_x;
   vector < type > phi_coords_xx;
 
-  phi_coords.reserve(maxSize);
-  phi_coords_x.reserve(maxSize * dim);
-  phi_coords_xx.reserve(maxSize * dim2);
+  phi_coords.reserve(max_size_elem_dofs);
+  phi_coords_x.reserve(max_size_elem_dofs * dim);
+  phi_coords_xx.reserve(max_size_elem_dofs * dim2);
 
 //-----------------  
   vector < type > phi;
   vector < type > phi_x;
   vector < type > phi_xx;
   
-  phi.reserve(maxSize);
-  phi_x.reserve(maxSize * dim);
-  phi_xx.reserve(maxSize * dim2);
+  phi.reserve(max_size_elem_dofs);
+  phi_x.reserve(max_size_elem_dofs * dim);
+  phi_xx.reserve(max_size_elem_dofs * dim2);
 
-  vector< int > l2GMap;  l2GMap.reserve(maxSize);
-  vector< double > Res;     Res.reserve(maxSize);             //this has to be double, not type
-  vector < double > Jac;    Jac.reserve(maxSize * maxSize);   //this has to be double, not type
+  vector< int > l2GMap;  l2GMap.reserve(max_size_elem_dofs);
+  vector< double > Res;     Res.reserve(max_size_elem_dofs);             //this has to be double, not type
+  vector < double > Jac;    Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);   //this has to be double, not type
 
-  KK->zero();
+   adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object//DIFF
+
+   KK->zero();
+   
 
   // element loop: each process loops only on the elements that it owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -428,9 +453,14 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
                   l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
     
+
+     prepare_before_integration_loop < type >(stack);
+
+     
     if (dim != 2) abort(); //only implemented in 2D now
 
-
+    
+    
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
 
@@ -564,7 +594,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
 
   const unsigned  dim = msh->GetDimension(); 
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  const unsigned max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
@@ -579,43 +609,42 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
   type weight; // gauss point weight
 
       
-  vector < type >  solu;  solu.reserve(maxSize);
-  vector < type >  solu_exact_at_dofs;  solu_exact_at_dofs.reserve(maxSize);
+  vector < type >  solu;  solu.reserve(max_size_elem_dofs);
+  vector < type >  solu_exact_at_dofs;  solu_exact_at_dofs.reserve(max_size_elem_dofs);
 
   vector < vector < type > > x(dim);  unsigned xType = BIQUADR_FE;
 
-  for (unsigned i = 0; i < dim; i++)  x[i].reserve(maxSize);
+  for (unsigned i = 0; i < dim; i++)  x[i].reserve(max_size_elem_dofs);
 
 //-----------------  
   vector < type > phi_coords;
   vector < type > phi_coords_x;
   vector < type > phi_coords_xx;
 
-  phi_coords.reserve(maxSize);
-  phi_coords_x.reserve(maxSize * dim);
-  phi_coords_xx.reserve(maxSize * dim2);
+  phi_coords.reserve(max_size_elem_dofs);
+  phi_coords_x.reserve(max_size_elem_dofs * dim);
+  phi_coords_xx.reserve(max_size_elem_dofs * dim2);
 
 //-----------------  
   vector < type > phi;
   vector < type > phi_x;
   vector < type > phi_xx;
 
-  phi.reserve(maxSize);
-  phi_x.reserve(maxSize * dim);
-  phi_xx.reserve(maxSize * dim2);
+  phi.reserve(max_size_elem_dofs);
+  phi_x.reserve(max_size_elem_dofs * dim);
+  phi_xx.reserve(max_size_elem_dofs * dim2);
 
   
 
-  vector < int > l2GMap;  l2GMap.reserve(maxSize);
-  vector < double > Jac;     Jac.reserve(maxSize * maxSize);  //this has to be double, not type
-  vector < double > Res;     Res.reserve(maxSize);            //this has to be double, not type
+  vector < int > l2GMap;  l2GMap.reserve(max_size_elem_dofs);
+  vector < double > Jac;     Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);  //this has to be double, not type
+  vector < type >  Res;    Res.reserve(max_size_elem_dofs);  
   
-  
-  vector < type >  aRes;    aRes.reserve(maxSize);  //DIFF
-  adept::Stack& s = FemusInit::_adeptStack;  // call the adept stack object
+
+  adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object//DIFF
 
   
-  KK->zero(); // Set to zero all the entries of the Global Matrix
+  KK->zero();
 
 
   // element loop: each process loops only on the elements that owns
@@ -632,8 +661,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
     for (int i = 0; i < dim; i++)    x[i].resize(nDofx);
 
 
-    aRes.resize(nDofu);         std::fill(aRes.begin(), aRes.end(), 0);
-    Res.resize(nDofu);
+    Res.resize(nDofu);         std::fill(Res.begin(), Res.end(), 0);
     Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.);
 
     
@@ -658,9 +686,8 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
     }
 
 
- ///DIFF
-  s.new_recording();    // start a new recording of all the operations involving adept variables
 
+    prepare_before_integration_loop< type >(stack);
 
     
     if (dim != 2) abort(); //only implemented in 2D now
@@ -711,18 +738,18 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
 
 // arbitrary rhs
 //               double source_term = exact_sol.value(x_gss);
-//         aRes[i] += ( source_term * phi[i] - phi[i] * solu_gss - laplace ) * weight;
+//         Res[i] += ( source_term * phi[i] - phi[i] * solu_gss - laplace ) * weight;
         
 // manufactured Helmholtz - strong
              type helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
-        aRes[i] += (helmholtz_strong_exact * phi[i] - solu_gss * phi[i] - laplace) * weight;
+        Res[i] += (helmholtz_strong_exact * phi[i] - solu_gss * phi[i] - laplace) * weight;
 
 // manufactured Laplacian - strong
 //                double laplace_strong_exact = exact_sol.laplacian(x_gss);
-//         aRes[i] += (- laplace_strong_exact * phi[i] - phi[i] * solu_gss - laplace) * weight;        //strong form of RHS and weak form of LHS
+//         Res[i] += (- laplace_strong_exact * phi[i] - phi[i] * solu_gss - laplace) * weight;        //strong form of RHS and weak form of LHS
 
 // manufactured Laplacian - weak
-//            aRes[i] += (laplace_weak_exact - phi[i] * solu_gss - laplace) * weight;                  //weak form of RHS and weak form of LHS
+//            Res[i] += (laplace_weak_exact - phi[i] * solu_gss - laplace) * weight;                  //weak form of RHS and weak form of LHS
 
         
       } // end phi_i loop
@@ -733,27 +760,31 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
-    //copy the value of the adept::adoube aRes in double Res and store
-
+    //copy the value of the adept::adoube Res in double Res and store
+    //all the calculations were done with adept variables
+    
+    
  ///DIFF
+  vector < double > Res_double(nDofu);
+  
     for (int i = 0; i < nDofu; i++) {
-      Res[i] = - aRes[i].value();
+      Res_double[i] = - Res[i].value();
     }
 
-    RES->add_vector_blocked(Res, l2GMap);
+    RES->add_vector_blocked(Res_double, l2GMap);
 
 
-    s.dependent(&aRes[0], nDofu);      // define the dependent variables
-    s.independent(&solu[0], nDofu);    // define the independent variables
-    s.jacobian(&Jac[0], true);    // get the jacobian matrix (ordered by row major )
+    stack.dependent(&Res[0], nDofu);      // define the dependent variables
+    stack.independent(&solu[0], nDofu);    // define the independent variables
+    stack.jacobian(&Jac[0], true);    // get the jacobian matrix (ordered by row major )
 
 
     //store K in the global matrix KK
     KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
 
 
-    s.clear_independents();
-    s.clear_dependents();
+    stack.clear_independents();
+    stack.clear_dependents();
 
   } //end element loop for each process
 
