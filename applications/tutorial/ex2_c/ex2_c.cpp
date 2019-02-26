@@ -35,7 +35,7 @@ void prepare_before_integration_loop(adept::Stack& stack) { }
  
 
 // template function: specialization
-template <>
+template < >
 void prepare_before_integration_loop< adept::adouble  > (adept::Stack & stack) { 
     
   stack.new_recording();    // start a new recording of all the operations involving adept variables
@@ -48,6 +48,42 @@ void prepare_before_integration_loop< adept::adouble  > (adept::Stack & stack) {
 // template void prepare_before_integration_loop< adept::adouble >(adept::Stack& stack);
 // // template class prepare_before_elem_loop< double >;
 
+
+template < class type >
+void  compute_jacobian_inside_integration_loop(const unsigned i,
+                                               const unsigned dim,
+                                               const unsigned nDofu,
+                                               const std::vector< type > & phi,
+                                               const std::vector< type > &  phi_x, 
+                                               const type weight,
+                                               std::vector< double > & Jac) { };
+  
+
+template < >
+void  compute_jacobian_inside_integration_loop< double >(const unsigned i,
+                                                         const unsigned dim, 
+                                                         const unsigned nDofu, 
+                                                         const std::vector< double > &  phi,
+                                                         const std::vector< double > &  phi_x, 
+                                                         const double weight, 
+                                                         std::vector< double > & Jac) { 
+
+// *** phi_j loop ***
+        for (unsigned j = 0; j < nDofu; j++) {///DIFF
+          /*type*/double laplace_jac = 0.;
+
+          for (unsigned kdim = 0; kdim < dim; kdim++) {
+            laplace_jac += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]);
+          }
+
+          Jac[i * nDofu + j] += (laplace_jac + phi[i] * phi[j]) * weight;
+        } // end phi_j loop
+
+        
+}
+
+
+// //********************************
 
 
  
@@ -227,7 +263,7 @@ int main(int argc, char** args) {
             
        for (int i = 0; i < max_number_of_meshes; i++) {
                   
-            const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level< /*only type to change*//*adept::a*/double >(files, unknowns, ml_mesh, i);
+            const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level< /*only type to change*/adept::adouble >(files, unknowns, ml_mesh, i);
 
                                               FE_convergence::compute_error_norms_per_unknown_per_level < double >( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag, & exact_sol);
         
@@ -329,8 +365,8 @@ void AssembleProblem_interface(MultiLevelProblem& ml_prob) {
    My_exact_solution< type > exact_sol;
 const std::string system_name = "Equation"; //I cannot get this from the system because there may be more than one
 
-//          /*if (std::is_same<type,adept::adouble>::value == true)*/  AssembleProblem_AD_flexible < type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
-    /*else if (std::is_same<type,double>::value == true) */             AssembleProblem_flexible< type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+   AssembleProblem_AD_flexible < type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+//       AssembleProblem_flexible< type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
 
 }
 
@@ -411,7 +447,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
   vector< double > Res;     Res.reserve(max_size_elem_dofs);             //this has to be double, not type
   vector < double > Jac;    Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);   //this has to be double, not type
 
-   adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object//DIFF
+   adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
 
    KK->zero();
    
@@ -523,18 +559,9 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 //             Res[i] += (laplace_weak_exact - phi[i] * solu_gss - laplace) * weight;                  //weak form of RHS and weak form of LHS
         
 
-        // *** phi_j loop ***
-        for (unsigned j = 0; j < nDofu; j++) {///DIFF
-          type laplace_jac = 0.;
-
-          for (unsigned kdim = 0; kdim < dim; kdim++) {
-            laplace_jac += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]);
-          }
-
-          Jac[i * nDofu + j] += (laplace_jac + phi[i] * phi[j]) * weight;
-        } // end phi_j loop
-        
-
+         compute_jacobian_inside_integration_loop< type > (i,dim,nDofu,phi, phi_x,weight,Jac);
+         
+  
       } // end phi_i loop
       
     } // end gauss point loop
@@ -641,7 +668,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
   vector < type >  Res;    Res.reserve(max_size_elem_dofs);  
   
 
-  adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object//DIFF
+  adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
 
   
   KK->zero();
@@ -751,6 +778,10 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
 // manufactured Laplacian - weak
 //            Res[i] += (laplace_weak_exact - phi[i] * solu_gss - laplace) * weight;                  //weak form of RHS and weak form of LHS
 
+
+        
+        compute_jacobian_inside_integration_loop< type > (i, dim, nDofu, phi, phi_x, weight, Jac);
+        
         
       } // end phi_i loop
       
@@ -771,20 +802,20 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
       Res_double[i] = - Res[i].value();
     }
 
-    RES->add_vector_blocked(Res_double, l2GMap);
-
 
     stack.dependent(&Res[0], nDofu);      // define the dependent variables
     stack.independent(&solu[0], nDofu);    // define the independent variables
+    
     stack.jacobian(&Jac[0], true);    // get the jacobian matrix (ordered by row major )
-
-
-    //store K in the global matrix KK
-    KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
-
 
     stack.clear_independents();
     stack.clear_dependents();
+
+    
+    RES->add_vector_blocked(Res_double, l2GMap);
+    KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
+
+
 
   } //end element loop for each process
 
