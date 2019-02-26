@@ -182,13 +182,6 @@ double myval_g = pt2func(time,xyz._val_g);
 
 
 
-} //end namespace Math
-
-
-
-namespace FE_convergence {
- 
- 
 template < class type >
   class Function {
  
@@ -203,7 +196,6 @@ template < class type >
   type helmholtz(const std::vector < type >& x) const { return ( - laplacian(x) + value(x) ); };
 
 };
-  
 
 
 //this is based on the AddSolution function in MLSol
@@ -216,10 +208,22 @@ template < class type >
      FEOrder  _fe_order;     
      
  };
-    
+
  
+} //end namespace Math
+
+
+
+class FE_convergence {
+ 
+    
+    
+public: 
+    
+    
+
 template < class type >
- inline   std::vector < std::vector < std::vector < type > > >  initialize_vector_of_norms(const unsigned unknowns_size, 
+static inline  std::vector < std::vector < std::vector < type > > >  initialize_vector_of_norms(const unsigned unknowns_size, 
                                                                                              const unsigned max_number_of_meshes, 
                                                                                              const unsigned norm_flag) {
    
@@ -241,7 +245,7 @@ template < class type >
 
     
    
-  inline const MultiLevelSolution  initialize_convergence_study(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,  
+static  inline const MultiLevelSolution  initialize_convergence_study(const std::vector< Math::Unknowns_definition > &  unknowns,  
                                                                 MultiLevelMesh & ml_mesh_all_levels, 
                                                                 const unsigned max_number_of_meshes, 
                                                                 const MultiLevelSolution::BoundaryFunc SetBoundaryCondition)  {
@@ -272,7 +276,7 @@ template < class type >
 
 //   print the error and the order of convergence between different levels
  template <class type>
-inline void output_convergence_order(const std::vector < std::vector < std::vector < type > > > &  norm,
+static inline void output_convergence_order(const std::vector < std::vector < std::vector < type > > > &  norm,
                                     const unsigned int u,
                                     const unsigned int i,
                                     const unsigned int n) {
@@ -301,7 +305,7 @@ inline void output_convergence_order(const std::vector < std::vector < std::vect
 
 
  template <class type>
-inline void output_convergence_order_all(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,
+static inline void output_convergence_order_all(const std::vector< Math::Unknowns_definition > &  unknowns,
                                         const std::vector < std::vector < std::vector < type > > > &  norms, 
                                         const unsigned norm_flag, 
                                         const unsigned max_number_of_meshes) {
@@ -328,13 +332,13 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
  
 
  template <class type>
-inline std::vector< type > compute_error_norms(const MultiLevelSolution* ml_sol, 
+static inline std::vector< type > compute_error_norms(const MultiLevelSolution* ml_sol, 
                                               const MultiLevelSolution* ml_sol_all_levels,
                                               const std::string & unknown,
                                               const unsigned current_level,
                                               const unsigned norm_flag,
                                               const unsigned conv_order_flag,
-                                              const Function< type > * ex_sol_in = NULL
+                                              const Math::Function< type > * ex_sol_in = NULL
                                              ) {
      
   // (//0 = only L2: //1 = L2 + H1)
@@ -548,14 +552,14 @@ if (conv_order_flag == 1)  return norms;
 
      
 template <class type>
- inline void compute_error_norms_per_unknown_per_level(const MultiLevelSolution* ml_sol_single_level, 
+static inline void compute_error_norms_per_unknown_per_level(const MultiLevelSolution* ml_sol_single_level, 
                                           MultiLevelSolution* ml_sol_all_levels, 
-                                          const std::vector< FE_convergence::Unknowns_definition > &  unknowns, 
+                                          const std::vector< Math::Unknowns_definition > &  unknowns, 
                                           const unsigned i,
                                           const unsigned norm_flag, 
                                           std::vector < std::vector < std::vector < type > > > &  norms,
                                           const unsigned conv_order_flag,
-                                          const Function< type > * ex_sol_in = NULL
+                                          const Math::Function< type > * ex_sol_in = NULL
                                          ) {
      
      
@@ -588,7 +592,7 @@ template <class type>
 
  
     
-} //end FE_convergence
+};
 
 
 

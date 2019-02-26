@@ -97,12 +97,12 @@ void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
                                                
 template < >
 void  compute_jacobian_outside_integration_loop < adept::adouble > (adept::Stack & stack,
-                                               const std::vector< adept::adouble > & solu,
-                                               const std::vector< adept::adouble > & Res,
-                                               std::vector< double > & Jac,
-                                               const std::vector< int > & loc_to_glob_map,
-                                               NumericVector*           RES,
-                                               SparseMatrix*             KK
+                                                                    const std::vector< adept::adouble > & solu,
+                                                                    const std::vector< adept::adouble > & Res,
+                                                                    std::vector< double > & Jac,
+                                                                    const std::vector< int > & loc_to_glob_map,
+                                                                    NumericVector*           RES,
+                                                                    SparseMatrix*             KK
                                                                    ) {
     
     //copy the value of the adept::adoube Res in double Res and store
@@ -152,7 +152,7 @@ void  compute_jacobian_outside_integration_loop < double > (adept::Stack & stack
 
  
 template < class type >
-  class My_exact_solution : public FE_convergence::Function< type > {  
+  class My_exact_solution : public Math::Function< type > {  
  
   public:
 
@@ -218,17 +218,11 @@ template <class type> void AssembleProblem_interface(MultiLevelProblem& ml_prob)
 template <class type> void AssembleProblem_flexible(MultiLevelProblem& ml_prob,
                                                     const std::string system_name,
                                                     const std::string unknown,
-                                                    const FE_convergence::Function< type > & exact_sol);
+                                                    const Math::Function< type > & exact_sol);
 
-template <class type> void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, 
-                                                       const std::string system_name, 
-                                                       const std::string unknown,
-                                                       const FE_convergence::Function< type > & exact_sol);
-
- 
 
  //Unknown definition  ==================
- const std::vector< FE_convergence::Unknowns_definition >  provide_list_of_unknowns() {
+ const std::vector< Math::Unknowns_definition >  provide_list_of_unknowns() {
      
      
   std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE,  LAGRANGE, DISCONTINOUS_POLYNOMIAL, DISCONTINOUS_POLYNOMIAL};
@@ -236,7 +230,7 @@ template <class type> void AssembleProblem_AD_flexible(MultiLevelProblem& ml_pro
 
   assert( feFamily.size() == feOrder.size() );
  
- std::vector< FE_convergence::Unknowns_definition >  unknowns(feFamily.size());
+ std::vector< Math::Unknowns_definition >  unknowns(feFamily.size());
  
      for (unsigned int fe = 0; fe < unknowns.size(); fe++) {
          
@@ -255,7 +249,7 @@ template <class type> void AssembleProblem_AD_flexible(MultiLevelProblem& ml_pro
 
 template <class type>
 const MultiLevelSolution  run_main_on_single_level(const Files & files, 
-                                                   const std::vector< FE_convergence::Unknowns_definition > & unknowns,  
+                                                   const std::vector< Math::Unknowns_definition > & unknowns,  
                                                    MultiLevelMesh & ml_mesh, 
                                                    const unsigned i);
   
@@ -311,13 +305,13 @@ int main(int argc, char** args) {
   //Choose how to compute the convergence order ==============
     const unsigned conv_order_flag = 0;  //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
     
-   //provide list of unknowns ==============
-    std::vector< FE_convergence::Unknowns_definition > unknowns = provide_list_of_unknowns();
-  
   //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
     const unsigned norm_flag = 1; 
 
 
+   //provide list of unknowns ==============
+    std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();
+  
     
   // Convergence study ==============
     vector < vector < vector < double > > > norms = FE_convergence::initialize_vector_of_norms < double >( unknowns.size(), max_number_of_meshes, norm_flag);
@@ -327,7 +321,7 @@ int main(int argc, char** args) {
             
        for (int i = 0; i < max_number_of_meshes; i++) {
                   
-            const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level< /*only type to change*/adept::adouble >(files, unknowns, ml_mesh, i);
+            const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level< /*only type to change*//*adept::a*/double >(files, unknowns, ml_mesh, i);
 
                                               FE_convergence::compute_error_norms_per_unknown_per_level < double >( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag, & exact_sol);
         
@@ -349,7 +343,7 @@ int main(int argc, char** args) {
 
 template <class type>
   const MultiLevelSolution  run_main_on_single_level(const Files & files,
-                                                     const std::vector< FE_convergence::Unknowns_definition > &  unknowns,  
+                                                     const std::vector< Math::Unknowns_definition > &  unknowns,  
                                                      MultiLevelMesh & ml_mesh,
                                                      const unsigned i)  {
       
@@ -455,10 +449,10 @@ const std::string system_name = "Equation"; //I cannot get this from the system 
  *                  J w = f(x) - J u0
  **/
 template <class type>
-void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const FE_convergence::Function< type > & exact_sol) {
+void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const Math::Function< type > & exact_sol) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
-  //  levelMax , SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECOND, SERENDIPITY ,SECONDis the Maximum level of the MultiLevelProblem
+  //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
     
