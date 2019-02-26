@@ -576,8 +576,12 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           adept::adouble term2 = 0.;
           adept::adouble term3 = 0.;
          
+          adept::adouble term5 = 0.;
+          
           for (unsigned J = 0; J < DIM; J++) {
 
+            
+            
             term0 +=  solW_Xtan[K][J] * phiW_Xtan[J][i];
 
             term1 +=  solx_Xtan[K][J] * phiW_Xtan[J][i];
@@ -585,9 +589,12 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             term2 +=  solW_Xtan[J][J];
 
             adept::adouble term4 = 0.;
+            
+            term5 += phiW_Xtan[J][i] * solW_Xtan[J][K];
 
             for (unsigned L = 0; L < DIM; L++) {
-              term4 += solx_Xtan[J][L] * solWOld_Xtan[K][L] + solx_Xtan[K][L] * solWOld_Xtan[J][L];
+              term5 -= normal[K] * normal[J] * phiW_Xtan[L][i] * solW_Xtan[J][L];
+              term4 += solx_Xtan[J][L] * solW_Xtan[K][L] + solx_Xtan[K][L] * solW_Xtan[J][L];
             }
 
             term3 += phiW_Xtan[J][i] * term4;
@@ -599,8 +606,14 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
                           - P * term0
                           + (1. - P) * pow (normY , P) * term1
                           - P * term2 * phiW_Xtan[K][i]
-                          + P * term3) * Area;
+                          + 0.5 * P * term3
+                          //+ P * term5
+                         ) * Area;
+                         
+          //std::cout << term5 << " " << -term0 + 0.5 * term3 << "\t";              
         }
+        
+        
       }
       for (unsigned K = 0; K < DIM; K++) {
         if (volumeConstraint) {
