@@ -541,9 +541,9 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
         sold_gss += phi[i] * sold[i];
       }
 
-      volume += weight;
+      volume += weight; // We just want to compute the volume so f(x,y)=1.
 
-      if (sold_gss <= 24) volumeUT[0] += weight;
+      if (sold_gss <= 24) volumeUT[0] += weight; 
       if (sold_gss <= 48) volumeUT[1] += weight;
       if (sold_gss <= 72) volumeUT[2] += weight;
 
@@ -565,7 +565,7 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
 
   std::cout << lInfinityNorm << " " << uT[2].second << std::endl;
 
-  bool stop = (lInfinityNorm < uT[2].second) ? true : false;
+  bool stop = (lInfinityNorm < uT[2].second) ? true : false; // If the concentration is below uT[72], we dont need to evaluate anything, we stop.
       
   if(stop && iproc == 0){
     std::ofstream fout;
