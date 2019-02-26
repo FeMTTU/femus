@@ -44,7 +44,7 @@ void prepare_before_integration_loop< adept::adouble  > (adept::Stack & stack) {
 
 // 
 // //********************************
-// template function: explicit instantiations: not even needed because the specialization is above
+// template function: explicit instantiations: not even needed because the specialization above acts also as explicit instantiation
 // template void prepare_before_integration_loop< adept::adouble >(adept::Stack& stack);
 // // template class prepare_before_elem_loop< double >;
 
@@ -69,7 +69,7 @@ void  compute_jacobian_inside_integration_loop< double >(const unsigned i,
                                                          std::vector< double > & Jac) { 
 
 // *** phi_j loop ***
-        for (unsigned j = 0; j < nDofu; j++) {///DIFF
+        for (unsigned j = 0; j < nDofu; j++) {
           /*type*/double laplace_jac = 0.;
 
           for (unsigned kdim = 0; kdim < dim; kdim++) {
@@ -84,6 +84,70 @@ void  compute_jacobian_inside_integration_loop< double >(const unsigned i,
 
 
 // //********************************
+template < class type >
+void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
+                                               const std::vector< type > & solu,
+                                               const std::vector< type > & Res,
+                                               std::vector< double > & Jac, 
+                                               const std::vector< int > & loc_to_glob_map,
+                                               NumericVector*           RES,
+                                               SparseMatrix*             KK
+                                                                   ) { }
+                                               
+                                               
+template < >
+void  compute_jacobian_outside_integration_loop < adept::adouble > (adept::Stack & stack,
+                                               const std::vector< adept::adouble > & solu,
+                                               const std::vector< adept::adouble > & Res,
+                                               std::vector< double > & Jac,
+                                               const std::vector< int > & loc_to_glob_map,
+                                               NumericVector*           RES,
+                                               SparseMatrix*             KK
+                                                                   ) {
+    
+    //copy the value of the adept::adoube Res in double Res and store
+    //all the calculations were done with adept variables
+    
+ ///convert to vector of double to send to the global matrix
+  std::vector < double > Res_double(Res.size());
+
+  for (int i = 0; i < Res_double.size(); i++) {
+      Res_double[i] = - Res[i].value();
+    }
+
+
+    stack.dependent(  & Res[0], Res_double.size());      // define the dependent variables
+    stack.independent(&solu[0],       solu.size());    // define the independent variables
+    
+    stack.jacobian(&Jac[0], true);    // get the jacobian matrix (ordered by row major)
+
+    stack.clear_independents();
+    stack.clear_dependents();    
+    
+    RES->add_vector_blocked(Res_double, loc_to_glob_map);
+    KK->add_matrix_blocked(Jac, loc_to_glob_map, loc_to_glob_map);
+
+}
+
+
+template < >
+void  compute_jacobian_outside_integration_loop < double > (adept::Stack & stack,
+                                               const std::vector< double > & solu,
+                                               const std::vector< double > & Res,
+                                               std::vector< double > & Jac,
+                                               const std::vector< int > & loc_to_glob_map,
+                                               NumericVector*           RES,
+                                               SparseMatrix*             KK
+                                                                   ) {
+    
+    RES->add_vector_blocked(Res, loc_to_glob_map);
+    KK->add_matrix_blocked(Jac, loc_to_glob_map, loc_to_glob_map);
+    
+}
+
+
+
+
 
 
  
@@ -263,7 +327,7 @@ int main(int argc, char** args) {
             
        for (int i = 0; i < max_number_of_meshes; i++) {
                   
-            const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level< /*only type to change*/adept::adouble >(files, unknowns, ml_mesh, i);
+            const MultiLevelSolution ml_sol_single_level  =   run_main_on_single_level< /*only type to change*//*adept::a*/double >(files, unknowns, ml_mesh, i);
 
                                               FE_convergence::compute_error_norms_per_unknown_per_level < double >( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag, & exact_sol);
         
@@ -365,8 +429,8 @@ void AssembleProblem_interface(MultiLevelProblem& ml_prob) {
    My_exact_solution< type > exact_sol;
 const std::string system_name = "Equation"; //I cannot get this from the system because there may be more than one
 
-   AssembleProblem_AD_flexible < type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
-//       AssembleProblem_flexible< type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+//    AssembleProblem_AD_flexible < type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+      AssembleProblem_flexible< type > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
 
 }
 
@@ -443,7 +507,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
   phi_x.reserve(max_size_elem_dofs * dim);
   phi_xx.reserve(max_size_elem_dofs * dim2);
 
-  vector< int > l2GMap;  l2GMap.reserve(max_size_elem_dofs);
+  vector< int > loc_to_glob_map;  loc_to_glob_map.reserve(max_size_elem_dofs);
   vector< double > Res;     Res.reserve(max_size_elem_dofs);             //this has to be double, not type
   vector < double > Jac;    Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);   //this has to be double, not type
 
@@ -460,7 +524,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);
 
     // resize local arrays
-    l2GMap.resize(nDofu);
+    loc_to_glob_map.resize(nDofu);
     solu.resize(nDofu);
     solu_exact_at_dofs.resize(nDofu);
 
@@ -486,7 +550,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
                     solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
       solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
-                  l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+                  loc_to_glob_map[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
     
 
@@ -567,12 +631,9 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
     } // end gauss point loop
 
 
-    //--------------------------------------------------------------------------------------------------------
-    // Add the local Matrix/Vector into the global Matrix/Vector
+   compute_jacobian_outside_integration_loop < type > (stack, solu, Res, Jac, loc_to_glob_map, RES, KK);
 
-    RES->add_vector_blocked(Res, l2GMap);
-    KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
-
+   
   } //end element loop for each process
 
   RES->close();
@@ -663,7 +724,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
 
   
 
-  vector < int > l2GMap;  l2GMap.reserve(max_size_elem_dofs);
+  vector < int > loc_to_glob_map;  loc_to_glob_map.reserve(max_size_elem_dofs);
   vector < double > Jac;     Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);  //this has to be double, not type
   vector < type >  Res;    Res.reserve(max_size_elem_dofs);  
   
@@ -681,7 +742,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);
 
     // resize local arrays
-    l2GMap.resize(nDofu);
+    loc_to_glob_map.resize(nDofu);
     solu.resize(nDofu);
     solu_exact_at_dofs.resize(nDofu);
 
@@ -709,7 +770,7 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
                     solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
       solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
-                  l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+                  loc_to_glob_map[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
 
@@ -782,43 +843,20 @@ void AssembleProblem_AD_flexible(MultiLevelProblem& ml_prob, const std::string s
         
         compute_jacobian_inside_integration_loop< type > (i, dim, nDofu, phi, phi_x, weight, Jac);
         
+      
         
       } // end phi_i loop
       
       
     } // end gauss point loop
 
-    //--------------------------------------------------------------------------------------------------------
-    // Add the local Matrix/Vector into the global Matrix/Vector
-
-    //copy the value of the adept::adoube Res in double Res and store
-    //all the calculations were done with adept variables
     
+ compute_jacobian_outside_integration_loop < type > (stack, solu, Res, Jac, loc_to_glob_map, RES, KK);
+ 
     
- ///DIFF
-  vector < double > Res_double(nDofu);
-  
-    for (int i = 0; i < nDofu; i++) {
-      Res_double[i] = - Res[i].value();
-    }
-
-
-    stack.dependent(&Res[0], nDofu);      // define the dependent variables
-    stack.independent(&solu[0], nDofu);    // define the independent variables
-    
-    stack.jacobian(&Jac[0], true);    // get the jacobian matrix (ordered by row major )
-
-    stack.clear_independents();
-    stack.clear_dependents();
-
-    
-    RES->add_vector_blocked(Res_double, l2GMap);
-    KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
-
-
-
   } //end element loop for each process
 
+  
   RES->close();
   KK->close();
 
