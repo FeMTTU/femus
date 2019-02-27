@@ -694,7 +694,7 @@ void RectangleAndBallRelation ( bool & theyIntersect, const std::vector<double> 
         newCoordinates[0][3] = newCoordinates[0][0];
         newCoordinates[1][3] = newCoordinates[1][2];
 
-        if ( nDofs > 4 ) {
+        if ( nDofs > 4 ) { //TODO the quadratic case has not yet been debugged
 
             newCoordinates[0][4] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][1] );
             newCoordinates[1][4] = newCoordinates[1][0];
@@ -702,16 +702,16 @@ void RectangleAndBallRelation ( bool & theyIntersect, const std::vector<double> 
             newCoordinates[0][5] = newCoordinates[0][1];
             newCoordinates[1][5] = 0.5 * ( newCoordinates[1][1] + newCoordinates[1][2] );
 
-            newCoordinates[0][6] = 0.5 * ( newCoordinates[0][3] + newCoordinates[0][2] );
+            newCoordinates[0][6] = newCoordinates[0][4];
             newCoordinates[1][6] = newCoordinates[1][2];
 
             newCoordinates[0][7] = newCoordinates[0][0];
-            newCoordinates[1][7] = 0.5 * ( newCoordinates[1][0] + newCoordinates[1][3] );
+            newCoordinates[1][7] = newCoordinates[1][5];
 
             if ( nDofs > 8 ) {
 
-                newCoordinates[0][8] = 0.5 * ( newCoordinates[0][0] + newCoordinates[0][1] );
-                newCoordinates[1][8] = 0.5 * ( newCoordinates[1][0] + newCoordinates[1][3] );
+                newCoordinates[0][8] = newCoordinates[0][4];
+                newCoordinates[1][8] = newCoordinates[1][5];
 
             }
 
