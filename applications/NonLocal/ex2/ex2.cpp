@@ -68,7 +68,7 @@ int main ( int argc, char** argv )
     unsigned numberOfSelectiveLevels = 0;
 //     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
-    mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
 //         mlMsh.ReadCoarseMesh ( "../input/maxTest3.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "second", scalingFactor );
@@ -77,7 +77,7 @@ int main ( int argc, char** argv )
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest3.neu", "second", scalingFactor );
 //        mlMsh.ReadCoarseMesh ( "../input/martaTest4.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest4Coarser.neu", "second", scalingFactor );
