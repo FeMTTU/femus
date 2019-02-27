@@ -78,51 +78,51 @@ double GetSmootK (const double & kmin, const double & kmax, const double & h, co
 double InitalValueK11 (const std::vector < double >& x) {
   double kmin = 0.01;
   double kmax = 1.;
-  double h = 0.01;
+  double h = 0.1;
   double r0 = 1.;
-  
-  return GetSmootK (kmin,kmax,h,r0,x);
+
+  return GetSmootK (kmin, kmax, h, r0, x);
 
 }
 double InitalValueK12 (const std::vector < double >& x) {
   double kmin = 0.;
   double kmax = 0.;
-  double h = 0.01;
+  double h = 0.1;
   double r0 = 1.;
-  
-  return GetSmootK (kmin,kmax,h,r0,x);
+
+  return GetSmootK (kmin, kmax, h, r0, x);
 }
 double InitalValueK13 (const std::vector < double >& x) {
   double kmin = 0.;
   double kmax = 0.;
-  double h = 0.01;
+  double h = 0.1;
   double r0 = 1.;
-  
-  return GetSmootK (kmin,kmax,h,r0,x);
+
+  return GetSmootK (kmin, kmax, h, r0, x);
 }
 double InitalValueK22 (const std::vector < double >& x) {
   double kmin = 0.01;
   double kmax = 2.;
-  double h = 0.01;
+  double h = 0.1;
   double r0 = 1.;
-  
-  return GetSmootK (kmin,kmax,h,r0,x);
+
+  return GetSmootK (kmin, kmax, h, r0, x);
 }
 double InitalValueK23 (const std::vector < double >& x) {
   double kmin = 0.;
   double kmax = 0.;
-  double h = 0.01;
+  double h = 0.1;
   double r0 = 1.;
-  
-  return GetSmootK (kmin,kmax,h,r0,x);
+
+  return GetSmootK (kmin, kmax, h, r0, x);
 }
 double InitalValueK33 (const std::vector < double >& x) {
   double kmin = 0.01;
   double kmax = 3.;
-  double h = 0.01;
+  double h = 0.1;
   double r0 = 1.;
-  
-  return GetSmootK (kmin,kmax,h,r0,x);
+
+  return GetSmootK (kmin, kmax, h, r0, x);
 }
 
 
@@ -204,32 +204,32 @@ int main (int argc, char** args) {
 
     mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false); // We may have more than one, add each of them as u,v,w with their apprx type.
 
-    
+
     mlSol.AddSolution ("K11", LAGRANGE, SECOND, 0, false);
     mlSol.AddSolution ("K12", LAGRANGE, SECOND, 0, false);
     mlSol.AddSolution ("K13", LAGRANGE, SECOND, 0, false);
     mlSol.AddSolution ("K22", LAGRANGE, SECOND, 0, false);
     mlSol.AddSolution ("K23", LAGRANGE, SECOND, 0, false);
     mlSol.AddSolution ("K33", LAGRANGE, SECOND, 0, false);
-    
-    
-    
+
+
+
     mlSol.Initialize ("All");
 //     if (dim == 2)
 //       mlSol.Initialize ("u", InitalValueU2D);
 //     else
     mlSol.Initialize ("u", InitalValueU3D);
     mlSol.Initialize ("d", InitalValueD);
-    
-    ProjectK(mlSolCube, mlSol);
+
+    ProjectK (mlSolCube, mlSol);
 
     // attach the boundary condition function and generate boundary data
     mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
 
 
     mlSol.GenerateBdc ("u", "Steady");
-    
-    
+
+
 
 
 
@@ -684,78 +684,88 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
 
 
 void ProjectK (MultiLevelSolution &mlCubeSol, MultiLevelSolution &mlSphereSol) {
-  
-  
+
+
   unsigned cLevel = mlCubeSol._mlMesh->GetNumberOfLevels() - 1;
   unsigned sLevel = mlSphereSol._mlMesh->GetNumberOfLevels() - 1;
-  
+
   Solution *cSol  = mlCubeSol.GetSolutionLevel (cLevel);
   Mesh     *cMsh   = mlCubeSol._mlMesh->GetLevel (cLevel);
-  
+
   Solution *sSol  = mlSphereSol.GetSolutionLevel (sLevel);
   Mesh     *sMsh   = mlSphereSol._mlMesh->GetLevel (sLevel);
-    
+
   unsigned iproc  = cMsh->processor_id();
   unsigned nprocs  = cMsh->n_processors();
-  
-  unsigned cK11Index = mlCubeSol.GetIndex ("K11");
-  unsigned sK11Index = mlSphereSol.GetIndex ("K11");
-  
-  unsigned cK11Type = mlCubeSol.GetSolutionType (cK11Index);
-  unsigned sK11Type = mlSphereSol.GetSolutionType (sK11Index);
+
+  std::string kname[6] = {"K11", "K12", "K13", "K22", "K23", "K33"};
+
+  unsigned cKIndex[6];
+  unsigned sKIndex[6];
+  for (unsigned i = 0; i < 6; i++) {
+    cKIndex[i] = mlCubeSol.GetIndex (kname[i].c_str());
+    sKIndex[i] = mlSphereSol.GetIndex (kname[i].c_str());
+  }
+
+  unsigned cKType = mlCubeSol.GetSolutionType (cKIndex[0]);
+  unsigned sKType = mlSphereSol.GetSolutionType (sKIndex[0]);
 
   const unsigned  dim = sMsh->GetDimension(); // get the domain dimension of the problem
 
-  std::vector<double> x(dim);
-  
-  for (unsigned inode = 0; inode < sMsh->_dofOffset[sK11Type][nprocs]; inode++) {
-   
-    unsigned kproc = 0;
-    while(inode > sMsh->_dofOffset[sK11Type][kproc + 1]){
-      kproc++;
+  std::vector<double> x (dim);
+  std::vector<double> phi (dim);
+
+  for (unsigned inode = 0; inode < sMsh->_dofOffset[sKType][nprocs]; inode++) {
+
+    unsigned sProc = 0;
+    while (inode > sMsh->_dofOffset[sKType][sProc + 1]) {
+      sProc++;
     }
-    
-    if(kproc == iproc) {
+
+    if (sProc == iproc) {
       for (unsigned k = 0; k < dim; k++) {
         x[k] = (*sMsh->_topology->_Sol[k]) (inode);     // global extraction and local storage for the element coordinates
       }
     }
-    MPI_Bcast (&x[0], dim, MPI_DOUBLE, iproc, MPI_COMM_WORLD);
-    
-    
-    Marker i = Marker(x, 1., VOLUME , cSol, cK11Type);
-      
-    std::cout<<"A";
-    
-    //std::cout << i.GetMarkerElement() << " ";
-      
-    
-    
+    MPI_Bcast (&x[0], dim, MPI_DOUBLE, sProc, MPI_COMM_WORLD);
+
+    Marker i = Marker (x, 1., VOLUME , cSol, cKType);
+
+    unsigned cProc = i.GetMarkerProc (cSol);
+
+    if (cProc == iproc) {
+      unsigned iel = i.GetMarkerElement();
+      short unsigned ielGeom = cMsh->GetElementType (iel);
+      unsigned nDofK  = cMsh->GetElementDofNumber (iel, cKType); // number of solution element dofs
+
+
+      std::vector <double> xi = i.GetMarkerLocalCoordinates();
+      basis* base = cMsh->GetBasis (ielGeom, cKType);
+
+      phi.resize (nDofK);
+      for (unsigned i = 0; i < nDofK; i++) {
+        phi[i] = base->eval_phi (i, xi);
+      }
+      double value[6] = {0., 0., 0., 0., 0., 0.};
+      for (unsigned i = 0; i < nDofK; i++) {
+        unsigned solDof = cMsh->GetSolutionDof (i, iel, cKType);   // global to global mapping between solution node and solution dof
+        for (unsigned j = 0; j < 6; j++) {
+          value[j] += phi[i] * (*cSol->_Sol[cKIndex[j]]) (solDof);                 // global extraction and local storage for the solution
+        }
+      }
+
+      MPI_Send (value, 6, MPI_DOUBLE, sProc, 1, MPI_COMM_WORLD);
+
+    }
+    if (iproc == sProc) {
+      double value[6];
+      MPI_Recv (value, 6, MPI_DOUBLE, cProc, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      for (unsigned j = 0; j < 6; j++) {
+        sSol->_Sol[sKIndex[j]]->set (inode, value[j]);
+      }
+    }
+  }
+  for (unsigned j = 0; j < 6; j++) {
+    sSol->_Sol[sKIndex[j]]->close();
   }
 }
-//     double d = (*sol->_Sol[soldIndex]) (inode);
-//     double u = (*sol->_Sol[soluIndex]) (inode);
-//     
-//     for (unsigned i = 0; i < 3; i++) {
-//       if (d > uT[i].first && u > uT[i].second) {
-//         sol->_Sol[soldIndex]->set (inode, uT[i].first);
-//         break;
-//       }
-//     }
-//   }
-//   sol->_Sol[soldIndex]->close();
-//   
-//   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-//   
-//   std::vector<double> sold;
-//   std::vector < std::vector<double> >  x (dim);
-//   
-//   unsigned soldType = mlSol.GetSolutionType (soldIndex);   // get the finite element type for "u"
-//   unsigned xType = 2;
-//   
-//   double weight;
-//   std::vector<double> phi;
-//   std::vector<double> phi_x;
-//   
-//   double volume = 0;
-//   double volumeUT[3] = { 0., 0., 0.};
