@@ -16,10 +16,12 @@
 #include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
-
+#include "Marker.hpp"
 
 using namespace femus;
 
+
+void ProjectK (MultiLevelSolution &mlCubeSol, MultiLevelSolution &mlSphereSol);
 
 double GetTimeStep (const double time) {
   double dt = .01;
@@ -76,7 +78,7 @@ double GetSmootK (const double & kmin, const double & kmax, const double & h, co
 double InitalValueK11 (const std::vector < double >& x) {
   double kmin = 0.01;
   double kmax = 1.;
-  double h = 0.1;
+  double h = 0.01;
   double r0 = 1.;
   
   return GetSmootK (kmin,kmax,h,r0,x);
@@ -85,7 +87,7 @@ double InitalValueK11 (const std::vector < double >& x) {
 double InitalValueK12 (const std::vector < double >& x) {
   double kmin = 0.;
   double kmax = 0.;
-  double h = 0.1;
+  double h = 0.01;
   double r0 = 1.;
   
   return GetSmootK (kmin,kmax,h,r0,x);
@@ -93,7 +95,7 @@ double InitalValueK12 (const std::vector < double >& x) {
 double InitalValueK13 (const std::vector < double >& x) {
   double kmin = 0.;
   double kmax = 0.;
-  double h = 0.1;
+  double h = 0.01;
   double r0 = 1.;
   
   return GetSmootK (kmin,kmax,h,r0,x);
@@ -101,7 +103,7 @@ double InitalValueK13 (const std::vector < double >& x) {
 double InitalValueK22 (const std::vector < double >& x) {
   double kmin = 0.01;
   double kmax = 2.;
-  double h = 0.1;
+  double h = 0.01;
   double r0 = 1.;
   
   return GetSmootK (kmin,kmax,h,r0,x);
@@ -109,7 +111,7 @@ double InitalValueK22 (const std::vector < double >& x) {
 double InitalValueK23 (const std::vector < double >& x) {
   double kmin = 0.;
   double kmax = 0.;
-  double h = 0.1;
+  double h = 0.01;
   double r0 = 1.;
   
   return GetSmootK (kmin,kmax,h,r0,x);
@@ -117,7 +119,7 @@ double InitalValueK23 (const std::vector < double >& x) {
 double InitalValueK33 (const std::vector < double >& x) {
   double kmin = 0.01;
   double kmax = 3.;
-  double h = 0.1;
+  double h = 0.01;
   double r0 = 1.;
   
   return GetSmootK (kmin,kmax,h,r0,x);
@@ -143,7 +145,7 @@ int main (int argc, char** args) {
 
 
 
-  MultiLevelMesh mlMshCube (3, 3, "./input/cube.neu", "fifth", 1., NULL);
+  MultiLevelMesh mlMshCube (3, 3, "./input/cubeScaled.neu", "fifth", 1., NULL);
   MultiLevelSolution mlSolCube (&mlMshCube); // Here we provide the mesh info to the problem.
   mlSolCube.AddSolution ("K11", LAGRANGE, SECOND, 0, false);
   mlSolCube.AddSolution ("K12", LAGRANGE, SECOND, 0, false);
@@ -202,18 +204,32 @@ int main (int argc, char** args) {
 
     mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false); // We may have more than one, add each of them as u,v,w with their apprx type.
 
+    
+    mlSol.AddSolution ("K11", LAGRANGE, SECOND, 0, false);
+    mlSol.AddSolution ("K12", LAGRANGE, SECOND, 0, false);
+    mlSol.AddSolution ("K13", LAGRANGE, SECOND, 0, false);
+    mlSol.AddSolution ("K22", LAGRANGE, SECOND, 0, false);
+    mlSol.AddSolution ("K23", LAGRANGE, SECOND, 0, false);
+    mlSol.AddSolution ("K33", LAGRANGE, SECOND, 0, false);
+    
+    
+    
     mlSol.Initialize ("All");
 //     if (dim == 2)
 //       mlSol.Initialize ("u", InitalValueU2D);
 //     else
     mlSol.Initialize ("u", InitalValueU3D);
     mlSol.Initialize ("d", InitalValueD);
+    
+    ProjectK(mlSolCube, mlSol);
 
     // attach the boundary condition function and generate boundary data
     mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
 
 
     mlSol.GenerateBdc ("u", "Steady");
+    
+    
 
 
 
@@ -665,3 +681,81 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
   }
   return stop;
 }
+
+
+void ProjectK (MultiLevelSolution &mlCubeSol, MultiLevelSolution &mlSphereSol) {
+  
+  
+  unsigned cLevel = mlCubeSol._mlMesh->GetNumberOfLevels() - 1;
+  unsigned sLevel = mlSphereSol._mlMesh->GetNumberOfLevels() - 1;
+  
+  Solution *cSol  = mlCubeSol.GetSolutionLevel (cLevel);
+  Mesh     *cMsh   = mlCubeSol._mlMesh->GetLevel (cLevel);
+  
+  Solution *sSol  = mlSphereSol.GetSolutionLevel (sLevel);
+  Mesh     *sMsh   = mlSphereSol._mlMesh->GetLevel (sLevel);
+    
+  unsigned iproc  = cMsh->processor_id();
+  unsigned nprocs  = cMsh->n_processors();
+  
+  unsigned cK11Index = mlCubeSol.GetIndex ("K11");
+  unsigned sK11Index = mlSphereSol.GetIndex ("K11");
+  
+  unsigned cK11Type = mlCubeSol.GetSolutionType (cK11Index);
+  unsigned sK11Type = mlSphereSol.GetSolutionType (sK11Index);
+
+  const unsigned  dim = sMsh->GetDimension(); // get the domain dimension of the problem
+
+  std::vector<double> x(dim);
+  
+  for (unsigned inode = 0; inode < sMsh->_dofOffset[sK11Type][nprocs]; inode++) {
+   
+    unsigned kproc = 0;
+    while(inode > sMsh->_dofOffset[sK11Type][kproc + 1]){
+      kproc++;
+    }
+    
+    if(kproc == iproc) {
+      for (unsigned k = 0; k < dim; k++) {
+        x[k] = (*sMsh->_topology->_Sol[k]) (inode);     // global extraction and local storage for the element coordinates
+      }
+    }
+    MPI_Bcast (&x[0], dim, MPI_DOUBLE, iproc, MPI_COMM_WORLD);
+    
+    
+    Marker i = Marker(x, 1., VOLUME , cSol, cK11Type);
+      
+    std::cout<<"A";
+    
+    //std::cout << i.GetMarkerElement() << " ";
+      
+    
+    
+  }
+}
+//     double d = (*sol->_Sol[soldIndex]) (inode);
+//     double u = (*sol->_Sol[soluIndex]) (inode);
+//     
+//     for (unsigned i = 0; i < 3; i++) {
+//       if (d > uT[i].first && u > uT[i].second) {
+//         sol->_Sol[soldIndex]->set (inode, uT[i].first);
+//         break;
+//       }
+//     }
+//   }
+//   sol->_Sol[soldIndex]->close();
+//   
+//   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+//   
+//   std::vector<double> sold;
+//   std::vector < std::vector<double> >  x (dim);
+//   
+//   unsigned soldType = mlSol.GetSolutionType (soldIndex);   // get the finite element type for "u"
+//   unsigned xType = 2;
+//   
+//   double weight;
+//   std::vector<double> phi;
+//   std::vector<double> phi_x;
+//   
+//   double volume = 0;
+//   double volumeUT[3] = { 0., 0., 0.};
