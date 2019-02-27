@@ -24,10 +24,12 @@ using namespace femus;
 double InitalValueU ( const std::vector < double >& x )
 {
 //     return x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
-    return x[0];
+//     return x[0];
 //     return x[0] * x[0];
 //     return x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
-//     return x[0] * x[0] * x[0] * x[0] + 0.4 * x[0] * x[0]; //this is if delta = 0.4
+//     return x[0] * x[0] * x[0] * x[0] + 0.8 * x[0] * x[0]; //this is if delta = 0.2
+//     return x[0] * x[0] * x[0] * x[0]; //this is x^4
+       return 2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 }
 
 void GetL2Norm ( MultiLevelProblem& ml_prob );
@@ -37,10 +39,12 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 
     bool dirichlet = true;
 //     value = 0.;
-    value = x[0];
+//     value = x[0];
 //     value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
-//     value = x[0] * x[0] * x[0] * x[0] + 0.4 * x[0] * x[0];
+//     value = x[0] * x[0] * x[0] * x[0] + 0.8 * x[0] * x[0]; //this is if delta = 0.2
+//     value = x[0] * x[0] * x[0] * x[0];
+       value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 
     if ( facename == 2 ) {
         dirichlet = false; //Neumann at the interface boundaries
@@ -50,7 +54,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 2;
+unsigned numberOfUniformLevels = 3;
 
 int main ( int argc, char** argv )
 {
@@ -64,13 +68,16 @@ int main ( int argc, char** argv )
     unsigned numberOfSelectiveLevels = 0;
 //     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
 //         mlMsh.ReadCoarseMesh ( "../input/maxTest3.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "second", scalingFactor );
+//         mlMsh.ReadCoarseMesh ( "../input/maxTest5.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest6.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
-    mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest3.neu", "second", scalingFactor );
 //        mlMsh.ReadCoarseMesh ( "../input/martaTest4.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest4Coarser.neu", "second", scalingFactor );
@@ -87,10 +94,12 @@ int main ( int argc, char** argv )
 
     // add variables to mlSol
     mlSol.AddSolution ( "u", LAGRANGE, FIRST, 2 );
+    
+    mlSol.AddSolution ( "u_exact", LAGRANGE, FIRST, 2 );
 
     mlSol.Initialize ( "All" );
 
-//     mlSol.Initialize("u", InitalValueU);
+    mlSol.Initialize("u_exact", InitalValueU);
 
     mlSol.AttachSetBoundaryConditionFunction ( SetBoundaryCondition );
 
@@ -223,13 +232,17 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
 //                 exactSol_gss_y += phi[i] * x1[1][i]; // this is y at the Gauss point
             }
 
-//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x + 0.4 * exactSol_gss_x * exactSol_gss_x; // this is x^4 + 0.4 * x^2
+//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x + 0.8 * exactSol_gss_x * exactSol_gss_x; // this is x^4 + 0.4 * x^2
 
 //             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x; // this is x^2
 
 //             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^3
 //             exactSol_gss_y = exactSol_gss_y * exactSol_gss_y * exactSol_gss_y; // this is y^3
 
+//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^4
+
+            exactSol_gss_x = 2 * exactSol_gss_x  + exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x ; // this is 2x + x^5
+            
 
             local_norm2 += ( soluNonLoc_gss - exactSol_gss_x ) * ( soluNonLoc_gss - exactSol_gss_x ) * weight;
 
