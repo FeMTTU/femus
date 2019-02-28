@@ -150,7 +150,10 @@ int main(int argc,char **args) {
   // ======= Solution ========================
   MultiLevelSolution ml_sol(&ml_msh);  // define the multilevel solution and attach the mlMsh object to it
   const unsigned int time_dep_flag = 2;
-  ml_sol.AddSolution("u", LAGRANGE, FIRST, time_dep_flag);
+  
+  // ======= Unknowns and Fields ========================
+  std::string unknown = "u";
+  ml_sol.AddSolution(unknown.c_str(), LAGRANGE, FIRST, time_dep_flag);
   ml_sol.AddSolution("time", DISCONTINOUS_POLYNOMIAL, ZERO, time_dep_flag);
 
   // ======= Problem ========================
@@ -160,26 +163,31 @@ int main(int argc,char **args) {
   
   // ======= Initial values ========================
   ml_sol.Initialize("All");    // initialize all variables to zero
-  ml_sol.Initialize("u",   SetInitialCondition, &ml_prob);
+  ml_sol.Initialize(unknown.c_str(),   SetInitialCondition, &ml_prob);
 
   // ======= Boundary Conditions ========================
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);  // attach the boundary condition function and generate boundary data
-  ml_sol.GenerateBdc("u"); //"Time_dependent");
+  ml_sol.GenerateBdc(unknown.c_str()); //"Time_dependent");
 
   // ======= Parameters ========================
   Parameter parameter(Lref,Uref);
 
   // ======= System ========================
   TransientNonlinearImplicitSystem & system = ml_prob.add_system<TransientNonlinearImplicitSystem> ("Timedep");
-  system.AddSolutionToSystemPDE("u");
+  system.AddSolutionToSystemPDE(unknown.c_str());
 
   system.init();  // does it have to stay here or later?
 
   system.SetAssembleFunction(AssembleMatrixRes);
-  system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-8);
-  system.SetMgType(V_CYCLE);
-  system.SetMaxNumberOfNonLinearIterations(15);
+
+  system.SetSolverFineGrids(PREONLY);
+  system.SetPreconditionerFineGrids(LU_PRECOND);
+  
+//   system.SetMaxNumberOfLinearIterations(1);
+//   system.SetAbsoluteLinearConvergenceTolerance(1.e-8);
+//   system.SetMgType(V_CYCLE);
+//   system.SetMaxNumberOfNonLinearIterations(15);
+  system.SetNonLinearConvergenceTolerance(1.e-3);
 
   //**************
   ml_sol.SetWriter(VTK);   //need to move this here for the DebugNonlinear function
@@ -195,7 +203,7 @@ int main(int argc,char **args) {
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
      
-  // ======= Final Print ========================
+  // ======= Print ========================
     if ( !(time_step%write_interval) ) {
 
         std::vector < std::string > variablesToBePrinted;
@@ -204,17 +212,20 @@ int main(int argc,char **args) {
 
     }
     
+    // ======= Check for quenching ==========
+      const unsigned fine_lev = ml_sol._mlMesh->GetNumberOfLevels() - 1;
+     if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= 0.99 ) { std::cout << "Detected quenching" << std::endl; exit(0); }
+
+    
     // ======= Solve ========================
     std::cout << std::endl;
     std::cout << " *********** Timedep ************ " << std::endl;
     ml_prob.get_system("Timedep").MLsolve();
     
-     ml_sol.Initialize("time", SetInitialCondition, &ml_prob);
-
-    //update Solution
-    ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep").CopySolutionToOldSolution();
-
+      ml_sol.Set("time", SetInitialCondition, &ml_prob);
       
+    // ======= Update Solution ===============
+    ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep").CopySolutionToOldSolution();
 
   } //end loop timestep
 

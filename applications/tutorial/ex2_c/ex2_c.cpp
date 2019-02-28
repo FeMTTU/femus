@@ -298,13 +298,13 @@ int main(int argc, char** args) {
   
 
  //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
-  MultiLevelMesh ml_mesh_all_levels;
-  ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+  MultiLevelMesh ml_mesh_all_levels = ml_mesh;
+//   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 
  
    My_exact_solution< double > exact_sol;                                            //provide exact solution, if available ==============
    const unsigned conv_order_flag = 0;                                               //Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
-   const unsigned norm_flag = 0;                                                     //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
+   const unsigned norm_flag = 1;                                                     //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
    std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();   //provide list of unknowns ==============
 
     
