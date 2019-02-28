@@ -55,24 +55,24 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
   bool test = 1; //Dirichlet
   value = 0.;
 
-  if(!strcmp(name,"u")) {
-    if (1==FaceName) { //inflow
-      test=1;
-     value=0.;
-    }
-    else if(2==FaceName ){  //outflow
-     test=1;
-     value=0.;
-    }
-    else if(3==FaceName ){  // no-slip fluid wall
-      test=1;
-      value=0.;
-    }
-    else if(4==FaceName ){  // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
+//   if(!strcmp(name,"u")) {
+//     if (1==FaceName) { //inflow
+//       test=1;
+//      value=0.;
+//     }
+//     else if(2==FaceName ){  //outflow
+//      test=1;
+//      value=0.;
+//     }
+//     else if(3==FaceName ){  // no-slip fluid wall
+//       test=1;
+//       value=0.;
+//     }
+//     else if(4==FaceName ){  // no-slip solid wall
+//       test=1;
+//       value=0.;
+//     }
+//   }
 
 
   return test;
@@ -97,7 +97,7 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
 double  nonlin_term_function(const double& v) {
     
 //    return 0.;
-   return -3.*1./( (1. - v) );
+   return -5.*1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
 //     return -exp(v);
  }
@@ -106,7 +106,7 @@ double  nonlin_term_function(const double& v) {
 double  nonlin_term_derivative(const double& v) {
     
 //     return 0.;
-   return -3.* +2. * 1./( (1. - v)*(1. - v) ); 
+   return -5.* +2. * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
 //     return -exp(v);
  }
@@ -139,8 +139,14 @@ int main(int argc,char **args) {
   const std::vector<double> xyz_max = {1.,1.,0.};
   const ElemType geom_elem_type = QUAD9;
 
+   std::string input_file = "Lshape_longer_y.med";
+//    std::string input_file = "Lshape.med";
+   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+  const std::string infile = mystream.str();
+  
   MultiLevelMesh ml_msh;
-  ml_msh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+  //   ml_msh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
 
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -196,7 +202,7 @@ int main(int argc,char **args) {
   
   // time loop parameter
   system.SetIntervalTime(0.001);
-  const unsigned int n_timesteps = 100;
+  const unsigned int n_timesteps = 200;
   const unsigned int write_interval = 1;
 
   // ======= Time Loop ========================
