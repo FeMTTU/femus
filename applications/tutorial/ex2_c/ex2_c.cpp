@@ -286,20 +286,27 @@ int main(int argc, char** args) {
   const std::vector< double >      xyz_min = {-0.5,-0.5,0.};
   const std::vector< double >      xyz_max = { 0.5, 0.5,0.};
 
-  MultiLevelMesh ml_mesh;
-  ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+   std::string input_file = "Lshape_4.med";
+//    std::string input_file = "Lshape.med";
+   MultiLevelMesh ml_mesh;
+//   ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+  const std::string infile = mystream.str();
+  
+  ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
 
 // set total number of levels ================  
   unsigned max_number_of_meshes;
 
-  if (nsub[2] == 0)   max_number_of_meshes = 6;
+  if (nsub[2] == 0)   max_number_of_meshes = 3;
   else                max_number_of_meshes = 4;
   
 
  //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
-  MultiLevelMesh ml_mesh_all_levels = ml_mesh;
+  MultiLevelMesh ml_mesh_all_levels;
 //   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+  ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
  
    My_exact_solution< double > exact_sol;                                            //provide exact solution, if available ==============
