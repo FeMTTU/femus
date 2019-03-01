@@ -25,8 +25,8 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.007, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05
-double delta1 = 0.01; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.01;
+double delta1 = 0.04; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.04;
 double epsilon = (delta1 > delta2) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
@@ -381,13 +381,14 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                     //END evaluate phi_i at xg2[jg] (called it phi1y)
 
-                    double dist = sqrt( (xg1[ig][0]-xg2[0])*(xg1[ig][0]-xg2[0]) + (xg1[ig][1]-xg2[1])*(xg1[ig][1]-xg2[1]));
+                    double dist = sqrt( pow(xg1[ig][0] - xg2[0], 2.)  + pow(xg1[ig][1] - xg2[1], 2.) );
+                    //if( dist > radius) std::cout<< "ERROR " << (dist - radius)/radius << std::endl;
                     
                     for (unsigned j = 0; j < nDof1; j++) {
                       double jacValue1 = weight1[ig] * weight2 * 3. / 4. * (1. / pow (radius, 4.)) * (phi1x[ig][i] - phi1y) * phi1x[ig][j];
                       Jac1[i * nDof1 + j] -= jacValue1;
 
-                      Res[i] +=  jacValue1 * (solu1[j] /*- xg1[ig][0]*xg1[ig][0]*/);
+                      Res[i] +=  jacValue1 * (solu1[j] /*- xg1[ig][0] * xg1[ig][0]*/);
                     }
 
 
@@ -395,7 +396,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                       double jacValue2 = - weight1[ig] * weight2 * 3. / 4. * (1. / pow (radius, 4.)) * (phi1x[ig][i] - phi1y) * phi2y[j];
                       Jac2[i * nDof2 + j] -= jacValue2;
 
-                      Res[i] +=  jacValue2 * (solu2[j] /*- xg2[0]*xg2[0]*/);
+                      Res[i] +=  jacValue2 * (solu2[j] /*- xg2[0] * xg2[0]*/);
                     }//endl j loop
                   } //endl i loop
                 }//end jg loop
