@@ -12,8 +12,10 @@
 #include "Parameter.hpp"
 #include "Files.hpp"
 
-
 #include   "../nsopt_params.hpp"
+
+#define exact_sol_flag 1
+#define compute_conv_flag 1
 
 #define NO_OF_NORMS 4
 
@@ -22,16 +24,31 @@ using namespace femus;
 
 bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
-  
+ 
   bool dirichlet = true;
   value = 0.;
-  
+
+#if exact_sol_flag == 0
+// b.c. for lid-driven cavity problem, wall u_top = 1 = shear_force, v_top = 0 and u=v=0 on other 3 walls ; rhs_f = body_force = {0,0}
 // TOP ==========================  
       if (facename == 3) {
-       if (!strcmp(SolName, "U"))    { value = 70.; } //lid - driven
-  else if (!strcmp(SolName, "V"))    { value = 0.; } 
+       if (!strcmp(SolName, "U"))    { value =  1.; } //lid - driven
+  else if (!strcmp(SolName, "V"))    { value =  0.;} 
   	
       }
+#endif
+
+#if exact_sol_flag == 1
+  //b.c. for manufactured lid driven cavity
+// TOP ==========================  
+   double pi = acos(-1.);
+      if (facename == 3) {
+       if (!strcmp(SolName, "U"))    { value =  sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]); } //lid - driven
+  else if (!strcmp(SolName, "V"))    { value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);} 
+  	
+      }
+#endif
+  
       
   return dirichlet;
 }
@@ -219,7 +236,8 @@ int main(int argc, char** args) {
 
 //   delete mlSol_all_levels; 
 
-   std::vector< std::string > norm_names = {"L2-NORM of U","L2-NORM of V", "L2-NORM of P" , "L2-Norm of div U"};
+#if compute_conv_flag == 1
+std::vector< std::string > norm_names = {"L2-NORM of U","L2-NORM of V", "L2-NORM of P" , "L2-Norm of div U"};
 
    for(int j = 0; j <  NO_OF_NORMS; j++)  {
   std::cout << std::endl;
@@ -230,6 +248,7 @@ int main(int argc, char** args) {
        output_convergence_rate(comp_conv[i][j], comp_conv[i + 1][j], norm_names[j], maxNumberOfMeshes , i );
     }
   }
+#endif
   
   return 0;
 }
@@ -244,6 +263,45 @@ void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_n
     }
   
 }
+
+
+
+//control---------------------------------------------
+void value_ctrlVel(const std::vector < double >& x, vector < double >& val_ctrlVel) {
+  double pi = acos(-1.);
+  val_ctrlVel[0] =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);
+  val_ctrlVel[1] = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);
+ };
+ 
+ 
+void gradient_ctrlVel(const std::vector < double >& x, vector < vector < double > >& grad_ctrlVel) {
+  double pi = acos(-1.);
+  grad_ctrlVel[0][0]  =   pi * sin(2. * pi * x[0]) * cos(pi* x[1]) - pi * sin(2. * pi * x[0]);
+  grad_ctrlVel[0][1]  = - pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(pi * x[1]); 
+  grad_ctrlVel[1][0]  = - 2. * pi * cos(2. * pi * x[0]) * sin(pi* x[1]) + 2. * pi * pi * x[1] * cos(2. * pi * x[0]);   
+  grad_ctrlVel[1][1]  = - pi * sin(2. * pi * x[0]) * cos(pi * x[1]) + pi * sin(2. * pi * x[0]); 
+ };
+
+  
+void laplace_ctrlVel(const std::vector < double >& x, vector < double >& lap_ctrlVel) {
+  double pi = acos(-1.);
+  lap_ctrlVel[0] = - 2. * pi * pi * cos(2. * pi * x[0]) - 0.5 * pi * pi * cos(pi * x[1]) + 2.5 * pi * pi * cos(2. * pi* x[0]) * cos(pi* x[1]);
+  lap_ctrlVel[1] = - 4. * pi * pi * pi * x[1] * sin(2. * pi * x[0]) + 5. * pi * pi * sin(2. * pi * x[0]) * sin(pi * x[1]);
+};
+
+double value_ctrlPress(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return sin(2. * pi * x[0]) * sin(2. * pi * x[1]); //p
+ };
+
+ void gradient_ctrlPress(const std::vector < double >& x, vector < double >& grad_statePress) {
+  double pi = acos(-1.);
+  grad_statePress[0]  =   2. * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]); 
+  grad_statePress[1]  =   2. * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
+ };
+
+//control---------------------------------------------
+
 
 void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
@@ -472,6 +530,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       
       vector < adept::adouble > solV_gss(dim, 0);
       vector < vector < adept::adouble > > gradSolV_gss(dim);
+      vector < double > coordX_gss(dim, 0.);
 
       for (unsigned  k = 0; k < dim; k++) {
         gradSolV_gss[k].resize(dim);
@@ -481,6 +540,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofsV; i++) {
         for (unsigned  k = 0; k < dim; k++) {
           solV_gss[k] += phiV[i] * solV[k][i];    
+          coordX_gss[k] += coordX[k][i] * phiV[i];
         }
 
         for (unsigned j = 0; j < dim; j++) {
@@ -497,7 +557,38 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       }
 // #endif
 
-      // *** phiV_i loop ***
+
+
+//computation of RHS force using MMS=============================================== 
+vector <double>  exact_ctrlVel(dim,0.);
+value_ctrlVel(coordX_gss,exact_ctrlVel);
+vector < vector < double > > exact_grad_ctrlVel(dim);
+for (unsigned k = 0; k < dim; k++){ 
+    exact_grad_ctrlVel[k].resize(dim);
+    std::fill(exact_grad_ctrlVel[k].begin(), exact_grad_ctrlVel[k].end(), 0.);
+}
+gradient_ctrlVel(coordX_gss,exact_grad_ctrlVel);
+vector <double>  exact_lap_ctrlVel(dim,0.);
+laplace_ctrlVel(coordX_gss, exact_lap_ctrlVel);
+vector <double>  exact_conv_ctrlVel(dim,0.);
+vector <double> exact_grad_ctrlPress(dim,0.);
+gradient_ctrlPress(coordX_gss, exact_grad_ctrlPress);
+
+for (unsigned k = 0; k < dim; k++){
+    for (unsigned i = 0; i < dim; i++){
+    exact_conv_ctrlVel[k] += exact_grad_ctrlVel[k][i] * exact_ctrlVel[i] ; 
+    }
+}
+
+
+vector <double> exactForce(dim,0.);
+for (unsigned k = 0; k < dim; k++){
+    exactForce[k] =  - IRe * exact_lap_ctrlVel[k] + advection_flag * exact_conv_ctrlVel[k] + exact_grad_ctrlPress[k] ;
+}
+//computation of RHS force using MMS=============================================== 
+
+
+        // *** phiV_i loop ***
       for (unsigned i = 0; i < nDofsV; i++) {
         vector < adept::adouble > NSV(dim, 0.);
 
@@ -515,8 +606,13 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 // #endif
 
         for (unsigned  k = 0; k < dim; k++) {
-          aResV[k][i] += ( + NSV[k] - force[k] * phiV[i]  ) * weight;
-        }
+#if exact_sol_flag == 0
+           aResV[k][i] += ( + NSV[k] - force[k] * phiV[i]  ) * weight;
+#endif
+#if exact_sol_flag == 1
+          aResV[k][i] += ( + NSV[k] - exactForce[k] * phiV[i]  ) * weight;
+#endif
+       }
       } // end phiV_i loop
 
 // #if PRESS == 1
@@ -824,7 +920,15 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
   	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
 
- //begin unknowns eval at gauss points ********************************
+      vector < double > coordX_gss(dim, 0.);
+ 	for(unsigned k = 0; k <  dim; k++) {
+	  for(unsigned i = 0; i < Sol_n_el_dofs[k]; i++) {
+         coordX_gss[k] += coordX[k][i] * phi_gss_fe[ SolFEType[k] ][i];
+      }
+    }
+
+    
+    //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk < /*n_vars*/ n_unknowns; unk++) {
 	  SolVAR_qp[unk] = 0.;
 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
@@ -907,6 +1011,36 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
 // // //     } // end i loop
 // // // } // end i_unk loop
 
+
+
+//computation of RHS force using MMS=============================================== 
+vector <double>  exact_ctrlVel(dim,0.);
+value_ctrlVel(coordX_gss,exact_ctrlVel);
+vector < vector < double > > exact_grad_ctrlVel(dim);
+for (unsigned k = 0; k < dim; k++){ 
+    exact_grad_ctrlVel[k].resize(dim);
+    std::fill(exact_grad_ctrlVel[k].begin(), exact_grad_ctrlVel[k].end(), 0.);
+}
+gradient_ctrlVel(coordX_gss,exact_grad_ctrlVel);
+vector <double>  exact_lap_ctrlVel(dim,0.);
+laplace_ctrlVel(coordX_gss, exact_lap_ctrlVel);
+vector <double>  exact_conv_ctrlVel(dim,0.);
+vector <double> exact_grad_ctrlPress(dim,0.);
+gradient_ctrlPress(coordX_gss, exact_grad_ctrlPress);
+
+for (unsigned k = 0; k < dim; k++){
+    for (unsigned i = 0; i < dim; i++){
+    exact_conv_ctrlVel[k] += exact_grad_ctrlVel[k][i] * exact_ctrlVel[i] ; 
+    }
+}
+
+
+vector <double> exactForce(dim,0.);
+for (unsigned k = 0; k < dim; k++){
+    exactForce[k] =  - IRe * exact_lap_ctrlVel[k] + advection_flag * exact_conv_ctrlVel[k] + exact_grad_ctrlPress[k] ;
+}
+//computation of RHS force using MMS=============================================== 
+
  
 //good old method for filling residuals and Jac  
 //============ delta_state row ============================================================================================
@@ -920,8 +1054,14 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
 		    lap_res_du_u += gradSolVAR_qp[SolPdeIndex[kdim]][jdim]*phi_x_gss_fe[ SolFEType[kdim] ][i * dim + jdim];
 			adv_res	+= SolVAR_qp[jdim] * gradSolVAR_qp[kdim][jdim];
 	      }      
-	      Res[kdim][i]   +=  (         + force[kdim] * phi_gss_fe[ SolFEType[kdim] ][i]
-                                           - IRe*lap_res_du_u 
+	      Res[kdim][i]   +=  (         
+#if exact_sol_flag == 0
+                                         + force[kdim] * phi_gss_fe[ SolFEType[kdim] ][i]
+ #endif                                      
+ #if exact_sol_flag == 1
+                                       + exactForce[kdim] * phi_gss_fe[ SolFEType[kdim] ][i]
+ #endif
+                                          - IRe*lap_res_du_u 
                                            - advection_flag * adv_res * phi_gss_fe[ SolFEType[kdim] ][i]
 					    + SolVAR_qp[SolPdeIndex[press_type_pos]] * phi_x_gss_fe[ SolFEType[kdim] ][i * dim + kdim]) * weight; 
 	}	    
@@ -1088,7 +1228,7 @@ double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongat
   // quadratures ********************************
   double weight;
   
-  
+ 
   //----------- dofs ------------------------------
   vector < vector < double > > SolVAR_eldofs(n_unknowns);
   vector < vector < double > > gradSolVAR_eldofs(n_unknowns);
@@ -1201,6 +1341,12 @@ double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongat
 	  }
     }
 	  
+      vector < double > coordX_gss(dim, 0.);
+ 	for(unsigned k = 0; k <  dim; k++) {
+	  for(unsigned i = 0; i < Sol_n_el_dofs[k]; i++) {
+         coordX_gss[k] += coordX[k][i] * phi_gss_fe[ SolFEType[k] ][i];
+      }
+    }
 	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
 	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
 	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i] * SolVAR_eldofs[unk][i];
@@ -1214,15 +1360,25 @@ double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongat
 	}  
  //end unknowns eval at gauss points ********************************
 
+//exact solution error norm ========================================================
+// vector <double>  exact_ctrlVel(dim,0.);
+// value_ctrlVel(coordX_gss,exact_ctrlVel);
+// double exact_ctrlPress = value_ctrlPress(coordX_gss);
+// 
+//     for(unsigned unk = 0; unk <  dim; unk++) {
+//         l2norm[unk] += ( SolVAR_qp[unk] - exact_ctrlVel[unk] ) * ( SolVAR_qp[unk] - exact_ctrlVel[unk] ) * weight ; 
+//     }
+//          l2norm[dim] += ( SolVAR_qp[dim] - exact_ctrlPress ) * ( SolVAR_qp[dim] - exact_ctrlPress ) * weight ; 
+//exact solution error norm ========================================================
+   
 
-	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
+    for(unsigned unk = 0; unk <  n_unknowns; unk++) {
         l2norm[unk] += ( SolVAR_qp[unk] - SolVAR_coarser_prol_qp[unk] ) * ( SolVAR_qp[unk] - SolVAR_coarser_prol_qp[unk] ) * weight ; 
-        
-     } 
+     } //l2norm
      
   for(int k = 0; k < dim; k++){
     l2norm[n_unknowns] += (gradSolVAR_qp[k][k] - gradSolVAR_coarser_prol_qp[k][k] ) * ( gradSolVAR_qp[k][k] - gradSolVAR_coarser_prol_qp[k][k] ) * weight ;
- }
+ } //seminorm
      
     } // end gauss point loop
   } //end element loop for each process
