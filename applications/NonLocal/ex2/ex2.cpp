@@ -54,11 +54,10 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 1;
+unsigned numberOfUniformLevels = 3;
 
 int main ( int argc, char** argv )
 {
-
 
     // init Petsc-MPI communicator
     FemusInit mpinit ( argc, argv, MPI_COMM_WORLD );
@@ -76,6 +75,7 @@ int main ( int argc, char** argv )
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest6.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
+     //mlMsh.ReadCoarseMesh ( "../input/martaTest0.neu", "second", scalingFactor );
      mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
 //    mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest3.neu", "second", scalingFactor );
@@ -151,12 +151,10 @@ int main ( int argc, char** argv )
     print_vars.push_back ( "All" );
     mlSol.GetWriter()->SetDebugOutput ( true );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0 );
-
+    
     return 0;
 
 } //end main
-
-
 
 
 void GetL2Norm ( MultiLevelProblem& ml_prob )
