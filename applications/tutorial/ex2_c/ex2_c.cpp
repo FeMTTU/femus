@@ -20,6 +20,7 @@
 #include "LinearImplicitSystem.hpp"
 #include "Files.hpp"
 #include "Math.hpp"
+
 #include "adept.h"
 
 // command to view matrices
@@ -29,38 +30,8 @@
 using namespace femus;
 
 
-// template function: definition 
-template < class real_num >
-void prepare_before_integration_loop(adept::Stack& stack) { }
- 
-
-// template function: specialization
 template < >
-void prepare_before_integration_loop< adept::adouble  > (adept::Stack & stack) { 
-    
-  stack.new_recording();    // start a new recording of all the operations involving adept variables
-
-}
-
-// 
-// //********************************
-// template function: explicit instantiations: not even needed because the specialization above acts also as explicit instantiation
-// template void prepare_before_integration_loop< adept::adouble >(adept::Stack& stack);
-// // template class prepare_before_elem_loop< double >;
-
-
-template < class real_num >
-void  compute_jacobian_inside_integration_loop(const unsigned i,
-                                               const unsigned dim,
-                                               const unsigned nDofu,
-                                               const std::vector< real_num > & phi,
-                                               const std::vector< real_num > &  phi_x, 
-                                               const real_num weight,
-                                               std::vector< double > & Jac) { };
-  
-
-template < >
-void  compute_jacobian_inside_integration_loop< double >(const unsigned i,
+void  assemble_jacobian::compute_jacobian_inside_integration_loop< double >(const unsigned i,
                                                          const unsigned dim, 
                                                          const unsigned nDofu, 
                                                          const std::vector< double > &  phi,
@@ -82,74 +53,13 @@ void  compute_jacobian_inside_integration_loop< double >(const unsigned i,
         
 }
 
-
-// //********************************
-template < class real_num >
-void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
-                                               const std::vector< real_num > & solu,
-                                               const std::vector< real_num > & Res,
-                                               std::vector< double > & Jac, 
-                                               const std::vector< int > & loc_to_glob_map,
-                                               NumericVector*           RES,
-                                               SparseMatrix*             KK
-                                                                   ) { }
-                                               
-                                               
-template < >
-void  compute_jacobian_outside_integration_loop < adept::adouble > (adept::Stack & stack,
-                                                                    const std::vector< adept::adouble > & solu,
-                                                                    const std::vector< adept::adouble > & Res,
-                                                                    std::vector< double > & Jac,
-                                                                    const std::vector< int > & loc_to_glob_map,
-                                                                    NumericVector*           RES,
-                                                                    SparseMatrix*             KK
-                                                                   ) {
-    
-    //copy the value of the adept::adoube Res in double Res and store
-    //all the calculations were done with adept variables
-    
- ///convert to vector of double to send to the global matrix
-  std::vector < double > Res_double(Res.size());
-
-  for (int i = 0; i < Res_double.size(); i++) {
-      Res_double[i] = - Res[i].value();
-    }
-
-
-    stack.dependent(  & Res[0], Res_double.size());      // define the dependent variables
-    stack.independent(&solu[0],       solu.size());    // define the independent variables
-    
-    stack.jacobian(&Jac[0], true);    // get the jacobian matrix (ordered by row major)
-
-    stack.clear_independents();
-    stack.clear_dependents();    
-    
-    RES->add_vector_blocked(Res_double, loc_to_glob_map);
-    KK->add_matrix_blocked(Jac, loc_to_glob_map, loc_to_glob_map);
-
-}
-
-
-template < >
-void  compute_jacobian_outside_integration_loop < double > (adept::Stack & stack,
-                                               const std::vector< double > & solu,
-                                               const std::vector< double > & Res,
-                                               std::vector< double > & Jac,
-                                               const std::vector< int > & loc_to_glob_map,
-                                               NumericVector*           RES,
-                                               SparseMatrix*             KK
-                                                                   ) {
-    
-    RES->add_vector_blocked(Res, loc_to_glob_map);
-    KK->add_matrix_blocked(Jac, loc_to_glob_map, loc_to_glob_map);
-    
-}
-
-
-
-
-
-
+template void assemble_jacobian::compute_jacobian_inside_integration_loop< double >(const unsigned i,
+                                                         const unsigned dim, 
+                                                         const unsigned nDofu, 
+                                                         const std::vector< double > &  phi,
+                                                         const std::vector< double > &  phi_x, 
+                                                         const double weight, 
+                                                         std::vector< double > & Jac);
  
 template < class type >
   class My_exact_solution : public Math::Function< type > {  
@@ -289,24 +199,23 @@ int main(int argc, char** args) {
    std::string input_file = "Lshape_4.med";
 //    std::string input_file = "Lshape.med";
    MultiLevelMesh ml_mesh;
-//   ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
-  const std::string infile = mystream.str();
-  
-  ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
+  ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+//   const std::string infile = mystream.str();
+//   ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
 
 // set total number of levels ================  
   unsigned max_number_of_meshes;
 
-  if (nsub[2] == 0)   max_number_of_meshes = 3;
+  if (nsub[2] == 0)   max_number_of_meshes = 6;
   else                max_number_of_meshes = 4;
   
 
  //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
   MultiLevelMesh ml_mesh_all_levels;
-//   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-  ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
+  ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
  
    My_exact_solution< double > exact_sol;                                            //provide exact solution, if available ==============
@@ -558,7 +467,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
 
 
-    prepare_before_integration_loop< real_num >(stack);
+    assemble_jacobian::prepare_before_integration_loop< real_num >(stack);
 
     
     if (dim != 2) abort(); //only implemented in 2D now
@@ -624,7 +533,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
 
         
-        compute_jacobian_inside_integration_loop< real_num > (i, dim, nDofu, phi, phi_x, weight, Jac);
+        assemble_jacobian::compute_jacobian_inside_integration_loop< real_num > (i, dim, nDofu, phi, phi_x, weight, Jac);
         
       
         
@@ -634,7 +543,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
     } // end gauss point loop
 
     
- compute_jacobian_outside_integration_loop < real_num > (stack, solu, Res, Jac, loc_to_glob_map, RES, KK);
+ assemble_jacobian::compute_jacobian_outside_integration_loop < real_num > (stack, solu, Res, Jac, loc_to_glob_map, RES, KK);
  
     
   } //end element loop for each process
