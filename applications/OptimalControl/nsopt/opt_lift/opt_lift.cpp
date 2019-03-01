@@ -29,18 +29,25 @@ using namespace femus;
  
 bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
+  double pi = acos(-1.);
   
   bool dirichlet = true;
    value = 0.;
 
-  //lid-driven problem----------------------------------------------------------------------
 // TOP ==========================  
       if (facename == 3) {
-       if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
-  else if (!strcmp(SolName, "VCTRL"))    { dirichlet = false;} 
-	
-      }   
-   //lid-driven problem----------------------------------------------------------------------
+       if (!strcmp(SolName, "UCTRL"))    { value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);} //lid - driven
+  else if (!strcmp(SolName, "VCTRL"))    { value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);} 
+  	
+      }
+
+// // TOP ==========================  
+//       if (facename == 3) {
+//        if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
+//   else if (!strcmp(SolName, "VCTRL"))    { dirichlet = false;} 
+// 	
+//       }   
+//    //lid-driven problem----------------------------------------------------------------------
  
 
 //    //Poiseuille problem---------------------------------------------------------------
@@ -143,7 +150,7 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 4;
+    maxNumberOfMeshes = 3;
   } else {
     maxNumberOfMeshes = 4;
   }
@@ -251,8 +258,8 @@ int main(int argc, char** args) {
   
   
   // attach the assembling function to system
-//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
-  system_opt.SetAssembleFunction(AssembleNavierStokesOpt_nonAD);
+  system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
+//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_nonAD);
     
   // initilaize and solve the system
   system_opt.init();
@@ -333,6 +340,71 @@ void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_n
     }
   
 }
+
+
+
+//state---------------------------------------------
+void value_stateVel(const std::vector < double >& x, vector < double >& val_stateVel) {
+  double pi = acos(-1.);
+  val_stateVel[0] =   0.5 * sin(pi* x[0]) * sin(pi* x[0]) *  sin(2. * pi * x[1]); //u
+  val_stateVel[1] = - 0.5 * sin(2. * pi * x[0]) * sin(pi* x[1]) * sin(pi* x[1]); //v
+ };
+ 
+double value_statePress(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return sin(2. * pi * x[0]) * sin(2. * pi * x[1]); //p
+ };
+ 
+ 
+void gradient_stateVel(const std::vector < double >& x, vector < vector < double > >& grad_stateVel) {
+  double pi = acos(-1.);
+  grad_stateVel[0][0]  =   0.5 * pi * sin(2. * pi * x[0]) * sin(2. * pi * x[1]); 
+  grad_stateVel[0][1]  =   pi * sin(pi* x[0]) * sin(pi* x[0]) *  cos(2. * pi * x[1]);
+  grad_stateVel[1][0]  = - pi * cos(2. * pi * x[0]) * sin(pi * x[1]) * sin(pi * x[1]); 
+  grad_stateVel[1][1]  = - 0.5 * pi * sin(2. * pi * x[0]) * sin(2. * pi * x[1]);
+ };
+
+ void gradient_statePress(const std::vector < double >& x, vector < double >& grad_statePress) {
+  double pi = acos(-1.);
+  grad_statePress[0]  =   2. * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]); 
+  grad_statePress[1]  =   2. * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
+ };
+ 
+ 
+void laplace_stateVel(const std::vector < double >& x, vector < double >& lap_stateVel) {
+  double pi = acos(-1.);
+  lap_stateVel[0] = pi * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]) - 2. * pi * pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(2. * pi * x[1]);
+  lap_stateVel[1] = 2. * pi * pi * sin(2. * pi * x[0]) * sin(pi* x[1]) * sin(pi* x[1]) - pi * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
+};
+//state---------------------------------------------
+
+
+//control---------------------------------------------
+void value_ctrlVel(const std::vector < double >& x, vector < double >& val_ctrlVel) {
+  double pi = acos(-1.);
+  val_ctrlVel[0] =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);
+  val_ctrlVel[1] = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);
+ };
+ 
+ 
+void gradient_ctrlVel(const std::vector < double >& x, vector < vector < double > >& grad_ctrlVel) {
+  double pi = acos(-1.);
+  grad_ctrlVel[0][0]  =   pi * sin(2. * pi * x[0]) * cos(pi* x[1]) - pi * sin(2. * pi * x[0]);
+  grad_ctrlVel[0][1]  = - pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(pi * x[1]); 
+  grad_ctrlVel[1][0]  = - 2. * pi * cos(2. * pi * x[0]) * sin(pi* x[1]) + 2. * pi * pi * x[1] * cos(2. * pi * x[0]);   
+  grad_ctrlVel[1][1]  = - pi * sin(2. * pi * x[0]) * cos(pi * x[1]) + pi * sin(2. * pi * x[0]); 
+ };
+
+  
+void laplace_ctrlVel(const std::vector < double >& x, vector < double >& lap_ctrlVel) {
+  double pi = acos(-1.);
+  lap_ctrlVel[0] = - 2. * pi * pi * cos(2. * pi * x[0]) - 0.5 * pi * pi * cos(pi * x[1]) + 2.5 * pi * pi * cos(2. * pi* x[0]) * cos(pi* x[1]);
+  lap_ctrlVel[1] = - 4. * pi * pi * pi * x[1] * sin(2. * pi * x[0]) + 5. * pi * pi * sin(2. * pi * x[0]) * sin(pi * x[1]);
+};
+//control---------------------------------------------
+
+
+
 
 void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
@@ -720,6 +792,7 @@ std::cout << " ********************************  AD SYSTEM *********************
 	
         vector < adept::adouble > solV_gss(dim, 0);
         vector < vector < adept::adouble > > gradSolV_gss(dim);
+        vector < double > coordX_gss(dim, 0.);
 
         for (unsigned  k = 0; k < dim; k++) {
           gradSolV_gss[k].resize(dim);
@@ -729,7 +802,8 @@ std::cout << " ********************************  AD SYSTEM *********************
         for (unsigned i = 0; i < nDofsV; i++) {
           for (unsigned  k = 0; k < dim; k++) {
             solV_gss[k] += phiV_gss[i] * solV[k][i];
-          }
+            coordX_gss[k] += coordX[k][i] * phiV_gss[i];
+        }
 
           for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
@@ -743,6 +817,20 @@ std::cout << " ********************************  AD SYSTEM *********************
         for (unsigned i = 0; i < nDofsP; i++) {
           solP_gss += phiP_gss[i] * solP[i];
         }
+
+vector <double>  anal_stateVel(dim, 0.);
+value_stateVel(coordX_gss, anal_stateVel);
+vector < vector < double > > anal_grad_stateVel(dim);
+for (unsigned k = 0; k < dim; k++){ 
+    anal_grad_stateVel[k].resize(dim);
+    std::fill(anal_grad_stateVel[k].begin(), anal_grad_stateVel[k].end(), 0.);
+}
+gradient_stateVel(coordX_gss,anal_grad_stateVel);
+vector <double>  anal_lap_stateVel(dim, 0.);
+laplace_stateVel(coordX_gss, anal_lap_stateVel);
+vector <double> anal_grad_statePress(dim, 0.);
+gradient_statePress(coordX_gss, anal_grad_statePress);
+
 
 //STATE###############################################################################
 
@@ -813,8 +901,40 @@ std::cout << " ********************************  AD SYSTEM *********************
         for (unsigned i = 0; i < nDofsPctrl; i++) {
           solPctrl_gss += phiPctrl_gss[i] * solPctrl[i];
         }
-
+vector <double>  anal_ctrlVel(dim);
+value_ctrlVel(coordX_gss, anal_ctrlVel);
+vector < vector < double > > anal_grad_ctrlVel(dim);
+for (unsigned k = 0; k < dim; k++){ 
+    anal_grad_ctrlVel[k].resize(dim);
+    std::fill(anal_grad_ctrlVel[k].begin(), anal_grad_ctrlVel[k].end(), 0.);
+}
+gradient_ctrlVel(coordX_gss,anal_grad_ctrlVel);
+vector <double>  anal_lap_ctrlVel(dim);
+laplace_ctrlVel(coordX_gss, anal_lap_ctrlVel);
 //CONTROL###############################################################################
+
+vector <double>  anal_conv_u_nabla_u(dim,0.);
+vector <double>  anal_conv_u_nabla_uctrl(dim,0.);
+vector <double>  anal_conv_uctrl_nabla_u(dim,0.);
+vector <double>  anal_conv_uctrl_nabla_uctrl(dim,0.);
+
+for (unsigned k = 0; k < dim; k++){
+    for (unsigned i = 0; i < dim; i++){
+    anal_conv_u_nabla_u[k] += anal_grad_stateVel[k][i] * anal_stateVel[i] ; 
+    anal_conv_u_nabla_uctrl[k] += anal_grad_ctrlVel[k][i] * anal_stateVel[i] ; 
+    anal_conv_uctrl_nabla_u[k] += anal_grad_stateVel[k][i] * anal_ctrlVel[i] ; 
+    anal_conv_uctrl_nabla_uctrl[k] += anal_grad_ctrlVel[k][i] * anal_ctrlVel[i] ; 
+    }
+}
+
+vector <double> analForce(dim,0.);
+vector <double> analVel_d(dim,0.);
+for (unsigned k = 0; k < dim; k++){
+    analForce[k] = - IRe * anal_lap_stateVel[k] - IRe * anal_lap_ctrlVel[k] 
+                    + advection_flag * (anal_conv_u_nabla_u[k] + anal_conv_u_nabla_uctrl[k] + anal_conv_uctrl_nabla_u[k] + anal_conv_uctrl_nabla_uctrl[k]) 
+                    + anal_grad_statePress[k];
+    analVel_d[k] =   anal_stateVel[k] + anal_ctrlVel[k] + (1./alpha_val) * anal_lap_stateVel[k] - (1./alpha_val) * anal_grad_statePress[k];
+}
 
         // *** phiV_i loop ***
         for (unsigned i = 0; i < nDofsV; i++) {
@@ -851,15 +971,18 @@ std::cout << " ********************************  AD SYSTEM *********************
 						  
 	  }  //jdim loop
 	  
-              NSV_gss[kdim]             += - force[kdim] * phiV_gss[i];
-          
+              NSV_gss[kdim]             += - analForce[kdim] * phiV_gss[i];
+//               NSV_gss[kdim]             += - force[kdim] * phiV_gss[i];
+         
               NSVadj_gss[kdim]		+=  - alpha_val * target_flag * solV_gss[kdim]*phiVadj_gss[i]; //delta_adjoint-state
 	      NSVadj_gss[kdim] 		+=  - alpha_val * target_flag * solVctrl_gss[kdim]*phiVadj_gss[i]; //delta_adjoint-control
-	      NSVadj_gss[kdim] 		+=  + alpha_val* target_flag * Vel_desired[kdim] * phiVadj_gss[i];
+	      NSVadj_gss[kdim] 		+=  + alpha_val* target_flag * analVel_d[kdim] * phiVadj_gss[i];
+// 	      NSVadj_gss[kdim] 		+=  + alpha_val* target_flag * Vel_desired[kdim] * phiVadj_gss[i];
 	      NSVctrl_gss[kdim] 	+=    alpha_val * target_flag             * solV_gss[kdim]*phiVctrl_gss[i]; //delta_control-state
 	      NSVctrl_gss[kdim]   	+=   (alpha_val * target_flag + beta_val) * solVctrl_gss[kdim] * phiVctrl_gss[i] ;
-	      NSVctrl_gss[kdim]   	+=  - alpha_val* target_flag * Vel_desired[kdim] * phiVctrl_gss[i];
-            
+	      NSVctrl_gss[kdim]   	+=  - alpha_val* target_flag * analVel_d[kdim] * phiVctrl_gss[i];
+//  	      NSVctrl_gss[kdim]   	+=  - alpha_val* target_flag * Vel_desired[kdim] * phiVctrl_gss[i];
+           
             //velocity-pressure block
           NSV_gss[kdim] 	+= - solP_gss * phiV_x_gss[i * dim + kdim];
 	  NSVadj_gss[kdim] 	+= - solPadj_gss * phiVadj_x_gss[i * dim + kdim];
@@ -2084,7 +2207,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
         
      }
     
-    	for(int  i = 0; i < dim; i++) {
+    	for(int  i = 0; i < 1/*dim*/; i++) {
 
     l2norm[n_unknowns] += ( ( SolVAR_qp[vel_type_pos + i] /*+ SolVAR_qp[adj_pos_begin + i] */+ SolVAR_qp[ctrl_pos_begin + i] ) - ( SolVAR_coarser_prol_qp[vel_type_pos + i] /*+ SolVAR_coarser_prol_qp[adj_pos_begin + i]*/ + SolVAR_coarser_prol_qp[ctrl_pos_begin + i] ) ) * ( ( SolVAR_qp[vel_type_pos + i]/* + SolVAR_qp[adj_pos_begin + i] */+ SolVAR_qp[ctrl_pos_begin + i] ) - ( SolVAR_coarser_prol_qp[vel_type_pos + i]/* + SolVAR_coarser_prol_qp[adj_pos_begin + i] */+ SolVAR_coarser_prol_qp[ctrl_pos_begin + i] ) )  * weight ;
     
