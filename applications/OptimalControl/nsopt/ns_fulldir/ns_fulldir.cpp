@@ -14,10 +14,10 @@
 
 #include   "../nsopt_params.hpp"
 
-#define exact_sol_flag 1
-#define compute_conv_flag 1
+#define exact_sol_flag 1 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
+#define compute_conv_flag 1 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
 
-#define NO_OF_NORMS 4
+#define NO_OF_NORMS 5 // for L2 norm of U,V,P and H1 norm of U,V
 
 using namespace femus;
 
@@ -237,7 +237,7 @@ int main(int argc, char** args) {
 //   delete mlSol_all_levels; 
 
 #if compute_conv_flag == 1
-std::vector< std::string > norm_names = {"L2-NORM of U","L2-NORM of V", "L2-NORM of P" , "L2-Norm of div U"};
+std::vector< std::string > norm_names = {"L2-NORM of U","L2-NORM of V", "L2-NORM of P" , "H1-Norm of U" , "H1-Norm of V"};
 
    for(int j = 0; j <  NO_OF_NORMS; j++)  {
   std::cout << std::endl;
@@ -266,41 +266,42 @@ void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_n
 
 
 
-//control---------------------------------------------
-void value_ctrlVel(const std::vector < double >& x, vector < double >& val_ctrlVel) {
+//manufactured solution for lid-driven---------------------------------------------
+void value_Vel(const std::vector < double >& x, vector < double >& val_Vel) {
   double pi = acos(-1.);
-  val_ctrlVel[0] =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);
-  val_ctrlVel[1] = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);
+  val_Vel[0] =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);
+  val_Vel[1] = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);
  };
  
  
-void gradient_ctrlVel(const std::vector < double >& x, vector < vector < double > >& grad_ctrlVel) {
+void gradient_Vel(const std::vector < double >& x, vector < vector < double > >& grad_Vel) {
   double pi = acos(-1.);
-  grad_ctrlVel[0][0]  =   pi * sin(2. * pi * x[0]) * cos(pi* x[1]) - pi * sin(2. * pi * x[0]);
-  grad_ctrlVel[0][1]  = - pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(pi * x[1]); 
-  grad_ctrlVel[1][0]  = - 2. * pi * cos(2. * pi * x[0]) * sin(pi* x[1]) + 2. * pi * pi * x[1] * cos(2. * pi * x[0]);   
-  grad_ctrlVel[1][1]  = - pi * sin(2. * pi * x[0]) * cos(pi * x[1]) + pi * sin(2. * pi * x[0]); 
+  grad_Vel[0][0]  =   pi * sin(2. * pi * x[0]) * cos(pi* x[1]) - pi * sin(2. * pi * x[0]);
+  grad_Vel[0][1]  = - pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(pi * x[1]); 
+  grad_Vel[1][0]  = - 2. * pi * cos(2. * pi * x[0]) * sin(pi* x[1]) + 2. * pi * pi * x[1] * cos(2. * pi * x[0]);   
+  grad_Vel[1][1]  = - pi * sin(2. * pi * x[0]) * cos(pi * x[1]) + pi * sin(2. * pi * x[0]); 
  };
 
   
-void laplace_ctrlVel(const std::vector < double >& x, vector < double >& lap_ctrlVel) {
+void laplace_Vel(const std::vector < double >& x, vector < double >& lap_Vel) {
   double pi = acos(-1.);
-  lap_ctrlVel[0] = - 2. * pi * pi * cos(2. * pi * x[0]) - 0.5 * pi * pi * cos(pi * x[1]) + 2.5 * pi * pi * cos(2. * pi* x[0]) * cos(pi* x[1]);
-  lap_ctrlVel[1] = - 4. * pi * pi * pi * x[1] * sin(2. * pi * x[0]) + 5. * pi * pi * sin(2. * pi * x[0]) * sin(pi * x[1]);
+  lap_Vel[0] = - 2. * pi * pi * cos(2. * pi * x[0]) - 0.5 * pi * pi * cos(pi * x[1]) + 2.5 * pi * pi * cos(2. * pi* x[0]) * cos(pi* x[1]);
+  lap_Vel[1] = - 4. * pi * pi * pi * x[1] * sin(2. * pi * x[0]) + 5. * pi * pi * sin(2. * pi * x[0]) * sin(pi * x[1]);
 };
 
-double value_ctrlPress(const std::vector < double >& x) {
+double value_Press(const std::vector < double >& x) {
   double pi = acos(-1.);
   return sin(2. * pi * x[0]) * sin(2. * pi * x[1]); //p
  };
 
- void gradient_ctrlPress(const std::vector < double >& x, vector < double >& grad_statePress) {
+ void gradient_Press(const std::vector < double >& x, vector < double >& grad_statePress) {
   double pi = acos(-1.);
   grad_statePress[0]  =   2. * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]); 
   grad_statePress[1]  =   2. * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
  };
 
-//control---------------------------------------------
+//manufactured solution for lid-driven---------------------------------------------
+
 
 
 void AssembleNS_AD(MultiLevelProblem& ml_prob) {
@@ -560,30 +561,30 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
 
 //computation of RHS force using MMS=============================================== 
-vector <double>  exact_ctrlVel(dim,0.);
-value_ctrlVel(coordX_gss,exact_ctrlVel);
-vector < vector < double > > exact_grad_ctrlVel(dim);
+vector <double>  exact_Vel(dim,0.);
+value_Vel(coordX_gss,exact_Vel);
+vector < vector < double > > exact_grad_Vel(dim);
 for (unsigned k = 0; k < dim; k++){ 
-    exact_grad_ctrlVel[k].resize(dim);
-    std::fill(exact_grad_ctrlVel[k].begin(), exact_grad_ctrlVel[k].end(), 0.);
+    exact_grad_Vel[k].resize(dim);
+    std::fill(exact_grad_Vel[k].begin(), exact_grad_Vel[k].end(), 0.);
 }
-gradient_ctrlVel(coordX_gss,exact_grad_ctrlVel);
-vector <double>  exact_lap_ctrlVel(dim,0.);
-laplace_ctrlVel(coordX_gss, exact_lap_ctrlVel);
-vector <double>  exact_conv_ctrlVel(dim,0.);
-vector <double> exact_grad_ctrlPress(dim,0.);
-gradient_ctrlPress(coordX_gss, exact_grad_ctrlPress);
+gradient_Vel(coordX_gss,exact_grad_Vel);
+vector <double>  exact_lap_Vel(dim,0.);
+laplace_Vel(coordX_gss, exact_lap_Vel);
+vector <double>  exact_conv_Vel(dim,0.);
+vector <double> exact_grad_Press(dim,0.);
+gradient_Press(coordX_gss, exact_grad_Press);
 
 for (unsigned k = 0; k < dim; k++){
     for (unsigned i = 0; i < dim; i++){
-    exact_conv_ctrlVel[k] += exact_grad_ctrlVel[k][i] * exact_ctrlVel[i] ; 
+    exact_conv_Vel[k] += exact_grad_Vel[k][i] * exact_Vel[i] ; 
     }
 }
 
 
 vector <double> exactForce(dim,0.);
 for (unsigned k = 0; k < dim; k++){
-    exactForce[k] =  - IRe * exact_lap_ctrlVel[k] + advection_flag * exact_conv_ctrlVel[k] + exact_grad_ctrlPress[k] ;
+    exactForce[k] =  - IRe * exact_lap_Vel[k] + advection_flag * exact_conv_Vel[k] + exact_grad_Press[k] ;
 }
 //computation of RHS force using MMS=============================================== 
 
@@ -1014,30 +1015,30 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
 
 
 //computation of RHS force using MMS=============================================== 
-vector <double>  exact_ctrlVel(dim,0.);
-value_ctrlVel(coordX_gss,exact_ctrlVel);
-vector < vector < double > > exact_grad_ctrlVel(dim);
+vector <double>  exact_Vel(dim,0.);
+value_Vel(coordX_gss,exact_Vel);
+vector < vector < double > > exact_grad_Vel(dim);
 for (unsigned k = 0; k < dim; k++){ 
-    exact_grad_ctrlVel[k].resize(dim);
-    std::fill(exact_grad_ctrlVel[k].begin(), exact_grad_ctrlVel[k].end(), 0.);
+    exact_grad_Vel[k].resize(dim);
+    std::fill(exact_grad_Vel[k].begin(), exact_grad_Vel[k].end(), 0.);
 }
-gradient_ctrlVel(coordX_gss,exact_grad_ctrlVel);
-vector <double>  exact_lap_ctrlVel(dim,0.);
-laplace_ctrlVel(coordX_gss, exact_lap_ctrlVel);
-vector <double>  exact_conv_ctrlVel(dim,0.);
-vector <double> exact_grad_ctrlPress(dim,0.);
-gradient_ctrlPress(coordX_gss, exact_grad_ctrlPress);
+gradient_Vel(coordX_gss,exact_grad_Vel);
+vector <double>  exact_lap_Vel(dim,0.);
+laplace_Vel(coordX_gss, exact_lap_Vel);
+vector <double>  exact_conv_Vel(dim,0.);
+vector <double> exact_grad_Press(dim,0.);
+gradient_Press(coordX_gss, exact_grad_Press);
 
 for (unsigned k = 0; k < dim; k++){
     for (unsigned i = 0; i < dim; i++){
-    exact_conv_ctrlVel[k] += exact_grad_ctrlVel[k][i] * exact_ctrlVel[i] ; 
+    exact_conv_Vel[k] += exact_grad_Vel[k][i] * exact_Vel[i] ; 
     }
 }
 
 
 vector <double> exactForce(dim,0.);
 for (unsigned k = 0; k < dim; k++){
-    exactForce[k] =  - IRe * exact_lap_ctrlVel[k] + advection_flag * exact_conv_ctrlVel[k] + exact_grad_ctrlPress[k] ;
+    exactForce[k] =  - IRe * exact_lap_Vel[k] + advection_flag * exact_conv_Vel[k] + exact_grad_Press[k] ;
 }
 //computation of RHS force using MMS=============================================== 
 
@@ -1361,14 +1362,14 @@ double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongat
  //end unknowns eval at gauss points ********************************
 
 //exact solution error norm ========================================================
-// vector <double>  exact_ctrlVel(dim,0.);
-// value_ctrlVel(coordX_gss,exact_ctrlVel);
-// double exact_ctrlPress = value_ctrlPress(coordX_gss);
+// vector <double>  exact_Vel(dim,0.);
+// value_Vel(coordX_gss,exact_Vel);
+// double exact_Press = value_Press(coordX_gss);
 // 
 //     for(unsigned unk = 0; unk <  dim; unk++) {
-//         l2norm[unk] += ( SolVAR_qp[unk] - exact_ctrlVel[unk] ) * ( SolVAR_qp[unk] - exact_ctrlVel[unk] ) * weight ; 
+//         l2norm[unk] += ( SolVAR_qp[unk] - exact_Vel[unk] ) * ( SolVAR_qp[unk] - exact_Vel[unk] ) * weight ; 
 //     }
-//          l2norm[dim] += ( SolVAR_qp[dim] - exact_ctrlPress ) * ( SolVAR_qp[dim] - exact_ctrlPress ) * weight ; 
+//          l2norm[dim] += ( SolVAR_qp[dim] - exact_Press ) * ( SolVAR_qp[dim] - exact_Press ) * weight ; 
 //exact solution error norm ========================================================
    
 
@@ -1376,8 +1377,10 @@ double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongat
         l2norm[unk] += ( SolVAR_qp[unk] - SolVAR_coarser_prol_qp[unk] ) * ( SolVAR_qp[unk] - SolVAR_coarser_prol_qp[unk] ) * weight ; 
      } //l2norm
      
-  for(int k = 0; k < dim; k++){
-    l2norm[n_unknowns] += (gradSolVAR_qp[k][k] - gradSolVAR_coarser_prol_qp[k][k] ) * ( gradSolVAR_qp[k][k] - gradSolVAR_coarser_prol_qp[k][k] ) * weight ;
+     for(unsigned unk = 0; unk <  dim; unk++) {
+        for(int j = 0; j < dim; j++){
+    l2norm[n_unknowns + unk] += (gradSolVAR_qp[unk][j] - gradSolVAR_coarser_prol_qp[unk][j] ) * ( gradSolVAR_qp[unk][j] - gradSolVAR_coarser_prol_qp[unk][j] ) * weight ;
+        }
  } //seminorm
      
     } // end gauss point loop
