@@ -30,14 +30,16 @@
 using namespace femus;
 
 
+
+
 template < >
-void  assemble_jacobian::compute_jacobian_inside_integration_loop< double >(const unsigned i,
+ void  assemble_jacobian< double >::compute_jacobian_inside_integration_loop(const unsigned i,
                                                          const unsigned dim, 
                                                          const unsigned nDofu, 
                                                          const std::vector< double > &  phi,
                                                          const std::vector< double > &  phi_x, 
                                                          const double weight, 
-                                                         std::vector< double > & Jac) { 
+                                                         std::vector< double > & Jac)  const { 
 
 // *** phi_j loop ***
         for (unsigned j = 0; j < nDofu; j++) {
@@ -53,13 +55,6 @@ void  assemble_jacobian::compute_jacobian_inside_integration_loop< double >(cons
         
 }
 
-template void assemble_jacobian::compute_jacobian_inside_integration_loop< double >(const unsigned i,
-                                                         const unsigned dim, 
-                                                         const unsigned nDofu, 
-                                                         const std::vector< double > &  phi,
-                                                         const std::vector< double > &  phi_x, 
-                                                         const double weight, 
-                                                         std::vector< double > & Jac);
  
 template < class type >
   class My_exact_solution : public Math::Function< type > {  
@@ -224,7 +219,7 @@ int main(int argc, char** args) {
    std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();   //provide list of unknowns ==============
 
     
-    Main_single_level< /*adept::a*/double >  fe_convergence;
+    Main_single_level< adept::adouble >  fe_convergence;
     
     fe_convergence.convergence_study(files, unknowns, SetBoundaryCondition, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag);
     
@@ -329,25 +324,13 @@ const std::string system_name = "Equation"; //I cannot get this from the system 
 
 
 /**
- * This function assemble the stiffnes matrix Jac and the residual vector Res
- * such that
- *                  Jac w = RES = F - Jac u0,
- * and consequently
- *        u = u0 + w satisfies Jac u = F
- **/
-
-
-/**
- * This function assemble the stiffnes matrix KK and the residual vector Res
- * Using automatic differentiation for Newton iterative scheme
- *                  J(u0) w =  - F(u0)  ,
+ * This function assemble the stiffness matrix KK and the residual vector Res
+ * for the Newton iterative scheme
+ *                  J(u0) w = Res(u_0) = f(x) - J u_0  ,
  *                  with u = u0 + w
- *                  - F = f(x) - J u = Res
  *                  J = \grad_u F
- *
- * thus
- *                  J w = f(x) - J u0
  **/
+
 template <class real_num>
 void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const Math::Function< real_num > & exact_sol) {
   //  ml_prob is the global object from/to where get/set all the data
@@ -355,7 +338,6 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
-    
 
   //  extract pointers to the several objects that we are going to use
 
@@ -423,6 +405,8 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
   adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
 
+  const assemble_jacobian< real_num > assemble_jac;
+
   
   KK->zero();
 
@@ -467,7 +451,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
 
 
-    assemble_jacobian::prepare_before_integration_loop< real_num >(stack);
+    assemble_jac.prepare_before_integration_loop(stack);
 
     
     if (dim != 2) abort(); //only implemented in 2D now
@@ -533,7 +517,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
 
         
-        assemble_jacobian::compute_jacobian_inside_integration_loop< real_num > (i, dim, nDofu, phi, phi_x, weight, Jac);
+        assemble_jac.compute_jacobian_inside_integration_loop(i, dim, nDofu, phi, phi_x, weight, Jac);
         
       
         
@@ -543,7 +527,7 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
     } // end gauss point loop
 
     
- assemble_jacobian::compute_jacobian_outside_integration_loop < real_num > (stack, solu, Res, Jac, loc_to_glob_map, RES, KK);
+ assemble_jac.compute_jacobian_outside_integration_loop(stack, solu, Res, Jac, loc_to_glob_map, RES, KK);
  
     
   } //end element loop for each process

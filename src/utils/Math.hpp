@@ -634,48 +634,36 @@ static  void compute_error_norms_per_unknown_per_level(const MultiLevelSolution*
 
 
 
-namespace assemble_jacobian {
-    
-    
-// template function: definition 
 template < class real_num >
-void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
+class assemble_jacobian {
+ 
+    
+ public:
+    
+                                               
+ void prepare_before_integration_loop(adept::Stack& stack) const;
+
+ 
+ void  compute_jacobian_inside_integration_loop(const unsigned i,
+                                               const unsigned dim,
+                                               const unsigned nDofu,
+                                               const std::vector< real_num > & phi,
+                                               const std::vector< real_num > &  phi_x, 
+                                               const real_num weight,
+                                               std::vector< double > & Jac) const;
+  
+                                               
+ void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
                                                const std::vector< real_num > & solu,
                                                const std::vector< real_num > & Res,
                                                std::vector< double > & Jac, 
                                                const std::vector< int > & loc_to_glob_map,
                                                NumericVector*           RES,
                                                SparseMatrix*             KK
-                                                                   ); /*{ }*/
-                                               
-
-
-
-// template function: definition 
-template < class real_num >
-void prepare_before_integration_loop(adept::Stack& stack); /*{ }*/
-
-
-
-// template function: definition 
-template < class real_num >
-void  compute_jacobian_inside_integration_loop(const unsigned i,
-                                               const unsigned dim,
-                                               const unsigned nDofu,
-                                               const std::vector< real_num > & phi,
-                                               const std::vector< real_num > &  phi_x, 
-                                               const real_num weight,
-                                               std::vector< double > & Jac);/* { }*/
-  
-
-
-
-  
-  
-  
-
+                                                                   ) const;
+                                                                   
     
-} //end namespace jacobian
+};
 
 
 
