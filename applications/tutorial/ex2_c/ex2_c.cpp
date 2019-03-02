@@ -32,6 +32,7 @@ using namespace femus;
 
 
 
+ // this is where you fill the jacobian in traditional (much faster) way
 template < >
  void  assemble_jacobian< double >::compute_jacobian_inside_integration_loop(const unsigned i,
                                                          const unsigned dim, 
@@ -123,7 +124,7 @@ template < class real_num > void AssembleProblem_interface(MultiLevelProblem & m
 template < class real_num > void AssembleProblem_flexible(MultiLevelProblem & ml_prob,
                                                     const std::string system_name,
                                                     const std::string unknown,
-                                                    const Math::Function< real_num/*type*/ > & exact_sol);
+                                                    const Math::Function< real_num > & exact_sol);
 
 
  //Unknown definition  ==================
@@ -153,14 +154,17 @@ template < class real_num > void AssembleProblem_flexible(MultiLevelProblem & ml
 
 
 
+// this is the class that I pass to the FE_convergence functions. Basically I pass a class, instead of passing a function pointer.
+// notice that this is a class template, not a class with a function template
 template < class real_num > 
-class Main_single_level : public FE_convergence< real_num, double > {
+class My_main_single_level : public Main_single_level {
     
-
-const MultiLevelSolution  run_main_on_single_level(const Files & files, 
+public:
+    
+const MultiLevelSolution  run_on_single_level(const Files & files, 
                                                    const std::vector< Math::Unknowns_definition > & unknowns,  
                                                    MultiLevelMesh & ml_mesh, 
-                                                   const unsigned i);
+                                                   const unsigned i) const;
   
 };
  
@@ -191,10 +195,11 @@ int main(int argc, char** args) {
   const std::vector< double >      xyz_min = {-0.5,-0.5,0.};
   const std::vector< double >      xyz_max = { 0.5, 0.5,0.};
 
-   std::string input_file = "Lshape_4.med";
-//    std::string input_file = "Lshape.med";
+
    MultiLevelMesh ml_mesh;
   ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//    std::string input_file = "Lshape_4.med";
+//    std::string input_file = "Lshape.med";
 //   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
 //   const std::string infile = mystream.str();
 //   ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
@@ -218,10 +223,12 @@ int main(int argc, char** args) {
    const unsigned norm_flag = 1;                                                     //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
    std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();   //provide list of unknowns ==============
 
+    My_main_single_level< /*adept::a*/double > my_main;
+//  my_main.run_main_on_single_level(files, unknowns, ml_mesh, 3); if you don't want the convergence study
     
-    Main_single_level< adept::adouble >  fe_convergence;
+    FE_convergence< double >  fe_convergence;
     
-    fe_convergence.convergence_study(files, unknowns, SetBoundaryCondition, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag);
+    fe_convergence.convergence_study(files, unknowns, SetBoundaryCondition, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
     
 
   return 0;
@@ -237,10 +244,10 @@ int main(int argc, char** args) {
 
 
 template < class real_num > 
-const MultiLevelSolution  Main_single_level< real_num >::run_main_on_single_level(const Files & files,
+const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
                                                                                 const std::vector< Math::Unknowns_definition > &  unknowns,  
                                                                                 MultiLevelMesh & ml_mesh,
-                                                                                const unsigned i)  {
+                                                                                const unsigned i) const {
       
       
             //Mesh  ==================
