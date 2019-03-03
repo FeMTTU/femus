@@ -853,7 +853,7 @@ void ETD(MultiLevelProblem& ml_prob, const double & numberOfTimeSteps)
       zMidp[k] = -bp + solhp[k]/2;
       for(unsigned i = k+1; i < NLayers; i++) {
         zMidm[k] += solhm[i];
-	zMidp[k] += solhp[i];
+	      zMidp[k] += solhp[i];
       }
       
       Pm[k] += rhokm * 9.81 * zMidm[k];
@@ -861,8 +861,8 @@ void ETD(MultiLevelProblem& ml_prob, const double & numberOfTimeSteps)
       //Pm[k] = - rhokm * 9.81 * bm; // bottom topography
       //Pp[k] = - rhokp * 9.81 * bp; // bottom topography
       for( unsigned j = 0; j < k; j++){
-	 adept::adouble rhojm = rho1[j] - beta * (solHTm[j]/solhm[j] - TRef);
-	 adept::adouble rhojp = rho1[j] - beta * (solHTp[j]/solhp[j] - TRef);
+	      adept::adouble rhojm = rho1[j] - beta * (solHTm[j]/solhm[j] - TRef);
+	      adept::adouble rhojp = rho1[j] - beta * (solHTp[j]/solhp[j] - TRef);
       //for( unsigned j = 0; j < NLayers; j++){
 	 //BEGIN Isopycnal Pressure
 	 //adept::adouble rhojm = (j <= k) ? (rho1[j] - beta * (solHTm[j]/solhm[j] - TRef)) : rhokm;
@@ -884,8 +884,8 @@ void ETD(MultiLevelProblem& ml_prob, const double & numberOfTimeSteps)
 // 	   rhojp = (rho1[j] - beta * solHTp[j]/solhp[j] - TRef) * rhokp/1024 * (rhokm+rhokp)/2;   
 // 	 }
 	 //END
-	 Pm[k] += rhojm * 9.81 * solhm[j];
-	 Pp[k] += rhojp * 9.81 * solhp[j];
+	      Pm[k] += rhojm * 9.81 * solhm[j];
+	      Pp[k] += rhojp * 9.81 * solhp[j];
 	 //std::cout<<"HHHHHHHHHHHHHHHHHHH "<<j<<std::endl;
 	 //std::cout<<"AAAAAAAAAAAAAAAAAAA "<<rhojm<<" , "<<rhojp<<std::endl;
       }
@@ -938,22 +938,22 @@ void ETD(MultiLevelProblem& ml_prob, const double & numberOfTimeSteps)
       adept::adouble ht = 0.;
       adept::adouble hb = 0.;
       if ( k > 0 ){
-	ht = (solhm[k-1] + solhm[k] + solhp[k-1] + solhp[k]) / 4.;
-	deltaZt = ( solv[k-1] - solv[k] ) / ht;
-	aResv[k] -= 0.5 * w[k] * deltaZt;
+        ht = (solhm[k-1] + solhm[k] + solhp[k-1] + solhp[k]) / 4.;
+	      deltaZt = ( solv[k-1] - solv[k] ) / ht;
+        aResv[k] -= 0.5 * w[k] * deltaZt;
       }
       else{
-	ht = 0.5 * (solhm[k] + solhp[k]);
-	deltaZt = 0.*( 0. - solv[k] ) / ht;
+	      ht = 0.5 * (solhm[k] + solhp[k]);
+	      deltaZt = 0.*( 0. - solv[k] ) / ht;
       }
       if (k < NLayers - 1) {
-	hb = (solhm[k] + solhm[k+1] + solhp[k] + solhp[k+1] ) / 4.;
-	deltaZb = (solv[k] - solv[k+1]) / hb;
-	aResv[k] -= 0.5 * w[k+1] * deltaZb; 
+	      hb = (solhm[k] + solhm[k+1] + solhp[k] + solhp[k+1] ) / 4.;
+	      deltaZb = (solv[k] - solv[k+1]) / hb;
+        aResv[k] -= 0.5 * w[k+1] * deltaZb; 
       }
       else{
-	hb = 0.5 * (solhm[k] + solhp[k]);
-	deltaZb = 0.*(solv[k] - 0.) / hb;
+	      hb = 0.5 * (solhm[k] + solhp[k]);
+	      deltaZb = 0.*(solv[k] - 0.) / hb;
       }
       
       aResv[k] += ni_h*(solvm[k] - solv[k])/(dxm * 0.5 * (dxm+dxp) ); // horizontal diffusion
