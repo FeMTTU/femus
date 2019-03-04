@@ -32,30 +32,6 @@ using namespace femus;
 
 
 
- // this is where you fill the jacobian in traditional (much faster) way
-template < >
- void  assemble_jacobian< double >::compute_jacobian_inside_integration_loop(const unsigned i,
-                                                         const unsigned dim, 
-                                                         const unsigned nDofu, 
-                                                         const std::vector< double > &  phi,
-                                                         const std::vector< double > &  phi_x, 
-                                                         const double weight, 
-                                                         std::vector< double > & Jac)  const { 
-
-// *** phi_j loop ***
-        for (unsigned j = 0; j < nDofu; j++) {
-          /*real_num*/double laplace_jac = 0.;
-
-          for (unsigned kdim = 0; kdim < dim; kdim++) {
-            laplace_jac += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]);
-          }
-
-          Jac[i * nDofu + j] += (laplace_jac + phi[i] * phi[j]) * weight;
-        } // end phi_j loop
-
-        
-}
-
  
 template < class type >
   class My_exact_solution : public Math::Function< type > {  
@@ -545,6 +521,57 @@ void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
   // ***************** END ASSEMBLY *******************
 }
+
+
+// here, the peculiarity of the application is not dealt with using virtuality, but with template specialization --------------------------------- 
+                                                   
+ // template specialization for double
+template < > 
+ void assemble_jacobian< double >::prepare_before_integration_loop(adept::Stack& stack) const { }
+
+
+ // template specialization for double
+template < >
+ void  assemble_jacobian < double > ::compute_jacobian_outside_integration_loop (adept::Stack & stack,
+                                               const std::vector< double > & solu,
+                                               const std::vector< double > & Res,
+                                               std::vector< double > & Jac,
+                                               const std::vector< int > & loc_to_glob_map,
+                                               NumericVector*           RES,
+                                               SparseMatrix*             KK
+                                                                   )  const {
+    
+    RES->add_vector_blocked(Res, loc_to_glob_map);
+    KK->add_matrix_blocked(Jac, loc_to_glob_map, loc_to_glob_map);
+    
+}
+
+ // template specialization for double
+ // this is where you fill the jacobian in traditional (much faster) way
+template < >
+ void  assemble_jacobian< double >::compute_jacobian_inside_integration_loop(const unsigned i,
+                                                         const unsigned dim, 
+                                                         const unsigned nDofu, 
+                                                         const std::vector< double > &  phi,
+                                                         const std::vector< double > &  phi_x, 
+                                                         const double weight, 
+                                                         std::vector< double > & Jac)  const { 
+
+// *** phi_j loop ***
+        for (unsigned j = 0; j < nDofu; j++) {
+          /*real_num*/double laplace_jac = 0.;
+
+          for (unsigned kdim = 0; kdim < dim; kdim++) {
+            laplace_jac += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]);
+          }
+
+          Jac[i * nDofu + j] += (laplace_jac + phi[i] * phi[j]) * weight;
+        } // end phi_j loop
+
+        
+}
+
+//------------------------------------------------------------- 
 
 
 ///@todo: check bc for discontinuous FE

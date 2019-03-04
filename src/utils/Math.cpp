@@ -5,11 +5,6 @@
 namespace femus {
 
 
- // template specialization for double
-template < > 
- void assemble_jacobian< double >::prepare_before_integration_loop(adept::Stack& stack) const { }
-
-
  // template specialization for adept::adouble
 template < >
  void assemble_jacobian< adept::adouble  > ::prepare_before_integration_loop(adept::Stack & stack)  const { 
@@ -18,22 +13,6 @@ template < >
 
 }   
   
-
-
-//  // template specialization for double
-// template < >
-// void  assemble_jacobian< double >::compute_jacobian_inside_integration_loop(const unsigned i,
-//                                                          const unsigned dim, 
-//                                                          const unsigned nDofu, 
-//                                                          const std::vector< double > &  phi,
-//                                                          const std::vector< double > &  phi_x, 
-//                                                          const double weight, 
-//                                                          std::vector< double > & Jac) const { 
-//     
-//     std::cout << "Please implement this template specialization in your application" << std::endl; abort();
-// 
-// }
-
 
 
  // template specialization for adept::adouble
@@ -46,27 +25,8 @@ template < >
                                                const adept::adouble weight,
                                                std::vector< double > & Jac)  const { }
 
-  
- 
-                                                   
 
-
-
- // template specialization for double
-template < >
- void  assemble_jacobian < double > ::compute_jacobian_outside_integration_loop (adept::Stack & stack,
-                                               const std::vector< double > & solu,
-                                               const std::vector< double > & Res,
-                                               std::vector< double > & Jac,
-                                               const std::vector< int > & loc_to_glob_map,
-                                               NumericVector*           RES,
-                                               SparseMatrix*             KK
-                                                                   )  const {
-    
-    RES->add_vector_blocked(Res, loc_to_glob_map);
-    KK->add_matrix_blocked(Jac, loc_to_glob_map, loc_to_glob_map);
-    
-}
+                                               
 
     
  // template specialization for adept::adouble
@@ -106,12 +66,13 @@ template < >
   
 
 
+  
+
     
     
- //***************************************
-//explicit instantiations for double and adept::adouble
+//***************************************
+//explicit instantiations
 //****************************************
-template class assemble_jacobian< double >; 
 template class assemble_jacobian< adept::adouble >; 
 
 
