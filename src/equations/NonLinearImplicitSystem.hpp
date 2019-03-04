@@ -103,9 +103,10 @@ public:
       _linearAbsoluteConvergenceTolerance = tolerance;
     }
     
+    void compute_convergence_rate() const;
+    
 protected:
 
-    
     /** The final residual for the nonlinear system R(x) */
     double _final_nonlinear_residual;
 
@@ -117,6 +118,9 @@ protected:
 
     unsigned _maxNumberOfResidualUpdateIterations;
     
+    /** Vector of all nonlinear iterations for convergence rate */
+    std::vector< NumericVector* >  _eps_fine;
+    
     /** Flag for printing fields at each nonlinear iteration */
     bool _debug_nonlinear;
     
@@ -126,6 +130,9 @@ protected:
     /**  */
     bool _debug_function_is_initialized;
 
+    /** Current nonlinear iteration index */
+    unsigned _last_nonliniteration;
+    
     /** Current nonlinear iteration index */
     unsigned _nonliniteration;
     

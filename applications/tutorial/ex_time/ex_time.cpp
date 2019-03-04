@@ -97,18 +97,20 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
 double  nonlin_term_function(const double& v) {
     
 //    return 0.;
-   return -5.*1./( (1. - v) );
+//    return -0.5 * 1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
-//     return -exp(v);
+    return -exp(v);
+//     return - v * v * v;
  }
 
 
 double  nonlin_term_derivative(const double& v) {
     
 //     return 0.;
-   return -5.* +2. * 1./( (1. - v)*(1. - v) ); 
+//    return -0.5 * +2. * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
-//     return -exp(v);
+    return -exp(v);
+//     return -3. * v * v;
  }
 
 
@@ -186,23 +188,24 @@ int main(int argc,char **args) {
 
   system.SetAssembleFunction(AssembleMatrixRes);
 
-  system.SetSolverFineGrids(PREONLY);
-  system.SetPreconditionerFineGrids(LU_PRECOND);
+//   system.SetSolverFineGrids(PREONLY);
+//   system.SetPreconditionerFineGrids(LU_PRECOND);
   
 //   system.SetMaxNumberOfLinearIterations(1);
 //   system.SetAbsoluteLinearConvergenceTolerance(1.e-8);
 //   system.SetMgType(V_CYCLE);
-//   system.SetMaxNumberOfNonLinearIterations(15);
-  system.SetNonLinearConvergenceTolerance(1.e-3);
+  system.SetMaxNumberOfNonLinearIterations(30);
+  system.SetNonLinearConvergenceTolerance(1.e-8);
 
   //**************
   ml_sol.SetWriter(VTK);   //need to move this here for the DebugNonlinear function
-  //ml_sol.GetWriter()->SetDebugOutput(true);
+  ml_sol.GetWriter()->SetDebugOutput(true);
+  system.SetDebugNonlinear(true);
   //**************
   
   // time loop parameter
   system.SetIntervalTime(0.001);
-  const unsigned int n_timesteps = 200;
+  const unsigned int n_timesteps = 2;
   const unsigned int write_interval = 1;
 
   // ======= Time Loop ========================
@@ -229,6 +232,8 @@ int main(int argc,char **args) {
     ml_prob.get_system("Timedep").MLsolve();
     
       ml_sol.Set("time", SetInitialCondition, &ml_prob);
+      
+      system.compute_convergence_rate();
       
     // ======= Update Solution ===============
     ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep").CopySolutionToOldSolution();

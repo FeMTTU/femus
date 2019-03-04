@@ -100,26 +100,27 @@ public:
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
   SparseMatrix *_KK;
   SparseMatrix *_KKamr;
-  vector < vector <unsigned> > KKoffset;
-  vector < unsigned > KKghostsize;
-  vector < vector < int> > KKghost_nd;
-  vector <int> KKIndex;
+  
+  
+  vector < vector <unsigned> > KKoffset;     // size [_SolPdeIndex.size() + 1][_nprocs]
+  vector < unsigned > KKghostsize;           // size [_nprocs]
+  vector < vector < int> > KKghost_nd;       // size [_nprocs][KKghostsize[i]]
+  vector <int> KKIndex;                      // size [_SolPdeIndex.size() + 1]
   unsigned _gridn;
 
-  vector < int > d_nnz;
-  vector < int > o_nnz;
+  vector < int > d_nnz;                      // size [owned_dofs]
+  vector < int > o_nnz;                      // size [owned_dofs]
 
 protected:
 
   /** To be Added */
   unsigned GetIndex(const char name[]);
 
-  // member data
-  vector <unsigned> _SolPdeIndex;
-  vector <int> _SolType;
-  vector <char*> _SolName;
-  const vector <NumericVector*> *_Bdc;
-  vector <bool> _SparsityPattern;
+  vector <unsigned> _SolPdeIndex;            // size [SolPdeIndex]
+  vector <int> _SolType;                     // size [SolPdeIndex]
+  vector <char*> _SolName;                   // size [SolPdeIndex]
+  const vector <NumericVector*> *_Bdc;       // size [SolPdeIndex]
+  vector <bool> _SparsityPattern;            // size [SolPdeIndex]
 
 };
 
