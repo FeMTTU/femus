@@ -42,10 +42,11 @@ unsigned counter2 = 0;
 
 clock_t start_time = clock();
 
+bool phi_once = true;
 bool constant_jac = false;
 bool twostage = true;
 bool assembly = true; //assembly must be left always true
-bool slepc = true;
+bool slepc = false;
 
 std::vector < std::vector < std::vector < double > > > phi1A;
 
@@ -653,8 +654,8 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 1600; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 0.5;
+  unsigned numberOfTimeSteps = 2000; //17h=1020 with dt=60, 17h=10200 with dt=6
+  dt = 3.;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {
@@ -791,8 +792,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
   if (constant_jac) {
     if (counter == 0) phi1A.resize (end - start);
-    //phi1A.resize (end - start);
   }
+  else if (phi_once) phi1A.resize (end - start);
   
   std::vector <double> EPS_HS ( (end - start) * NLayers , 0.);
 
@@ -1270,7 +1271,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       VecDestroy (&v2);
 
     }
-
+  
     else {
       
       unsigned CFL_pow = 2;
@@ -1278,7 +1279,6 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
       if (constant_jac){
         if (counter==0) create_phi1A(CFL_pow, Jac[i], phi1A[i]);
-        //create_phi1A(CFL_pow, Jac[i], phi1A[i]);
         for (int ii = 0; ii < NumberOfLayers; ii++) {
           double value1 = 0.; //tracer 1
           double value2 = 0.; //tracer 2
@@ -1298,20 +1298,28 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         VecAssemblyEnd (y2);
         VecScale (y2, dt);
       }
-      else{ 
-        
-//         std::cout<<"Res -------------------------" <<std::endl;
-//         
-//          for (unsigned kk = 0; kk < NumberOfLayers; kk++) {
-//           std::cout<<Res[kk]<<std::endl;  
-//         }
-//         
-//         std::cout<<"aResHS -------------------------" <<std::endl;
-//         
-//          for (unsigned kk = 0; kk < NumberOfLayers; kk++) {
-//           std::cout<<aResHS[kk]<<std::endl; 
-//         }
-        
+      else if (phi_once){
+        create_phi1A(CFL_pow, Jac[i], phi1A[i]);
+        for (int ii = 0; ii < NumberOfLayers; ii++) {
+          double value1 = 0.; //tracer 1
+          double value2 = 0.; //tracer 2
+          for (unsigned kk = 0; kk < NumberOfLayers; kk++) {
+            value1 += phi1A[i][ii][kk] * Res[kk];
+            value2 += phi1A[i][ii][kk] * aResHS[kk];
+          }
+          VecSetValues (y1, 1, &ii, &value1, INSERT_VALUES); //tracer 1
+          VecSetValues (y2, 1, &ii, &value2, INSERT_VALUES); //tracer 2
+        }
+        //tracer 1
+        VecAssemblyBegin (y1);
+        VecAssemblyEnd (y1);
+        VecScale (y1, dt);
+        //tracer 2
+        VecAssemblyBegin (y2);
+        VecAssemblyEnd (y2);
+        VecScale (y2, dt);
+      }
+      else{         
         //tracer 1
         build_phi1Av (CFL_pow, Jac[i], Res, y1);
         VecScale (y1, dt);
@@ -1714,7 +1722,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         unsigned CFL_pow = 2;
         //MatScale (A, dt / pow (2, CFL_pow));
 
-        if(constant_jac){
+        if(constant_jac || phi_once){
           for (int ii = 0; ii < NumberOfLayers; ii++) {
             double value1 = 0.;
             double value2 = 0.;
