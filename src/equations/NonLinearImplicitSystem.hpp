@@ -93,7 +93,7 @@ public:
     };
 
     /** Checks for the non the linear convergence */
-    bool IsNonLinearConverged(const unsigned gridn, double &nonLinearEps);
+    bool HasNonLinearConverged(const unsigned gridn, double &nonLinearEps);
 
     void SetMaxNumberOfResidualUpdatesForNonlinearIteration( const unsigned & maxNumberOfIterations){
       _n_max_linear_iterations = 1;
