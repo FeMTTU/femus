@@ -71,6 +71,12 @@ restart:
       for(unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++) {
 
         _nonliniteration = nonLinearIterator;
+        
+         if (_debug_nonlinear)  {
+                   _eps_fine.push_back(NumericVector::build().release());
+                   _eps_fine[_eps_fine.size()-1]->init(*_LinSolver[_gridn-1]->_EPS);
+         }
+            
         std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
         clock_t start_preparation_time = clock();
