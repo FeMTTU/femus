@@ -133,18 +133,15 @@ restart:
       if(ThisIsAMR) _solution[igridn]->InitAMREps();
 
       
-       if (_debug_nonlinear)  {
-           _eps_fine.resize(_n_max_nonlinear_iterations);   
-               for(unsigned n = 0; n < _n_max_nonlinear_iterations; n++) {
-                   _eps_fine[n] = NumericVector::build().release();
-                   _eps_fine[n]->init(*_LinSolver[_gridn-1]->_EPS);
-               }
-            }
-      
-      
       for(unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++) {
 
         _nonliniteration = nonLinearIterator;
+        
+       if (_debug_nonlinear)  {
+                   _eps_fine.push_back(NumericVector::build().release());
+                   _eps_fine[_eps_fine.size()-1]->init(*_LinSolver[_gridn-1]->_EPS);
+            }
+      
         std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
         clock_t start_preparation_time = clock();
@@ -325,23 +322,24 @@ restart:
   void NonLinearImplicitSystem::compute_convergence_rate() const {
       
       
-           const unsigned index_upper = _last_nonliniteration - 1;
+           const unsigned index_upper = _last_nonliniteration;
 
     for(unsigned nonLinearIterator = 0; nonLinearIterator < index_upper; nonLinearIterator++) {
          
           
             NumericVector*    eps_fine_temp = NumericVector::build().release();
                    eps_fine_temp->init(*_LinSolver[_gridn-1]->_EPS);
+                   
                    eps_fine_temp->close();
                    eps_fine_temp->zero();
          
            const unsigned index_lower = nonLinearIterator + 1;
          
-               for(unsigned n = index_upper; n > index_lower; n--)  *(eps_fine_temp) += *(_eps_fine[n]);
+               for(unsigned n = index_upper; n >= index_lower; n--)  *(eps_fine_temp) += *(_eps_fine[n]);
                
-          const double  numerator = eps_fine_temp->linfty_norm();
+          const double  numerator = eps_fine_temp->/*linfty_norm*/l2_norm();
           *(eps_fine_temp) += *(_eps_fine[index_lower - 1]);
-          const double denominator = eps_fine_temp->linfty_norm();
+          const double denominator = eps_fine_temp->/*linfty_norm*/l2_norm();
 
          std::cout <<  std::setw(16) << std::setprecision(12) << nonLinearIterator << " " <<  numerator / (denominator * denominator)  << std::endl;
          

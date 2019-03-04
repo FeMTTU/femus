@@ -97,20 +97,22 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
 double  nonlin_term_function(const double& v) {
     
 //    return 0.;
-//    return -0.5 * 1./( (1. - v) );
+   return -0.5 * 1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
-    return -exp(v);
+//     return -exp(v);
 //     return - v * v * v;
+//     return - v * v;
  }
 
 
 double  nonlin_term_derivative(const double& v) {
     
 //     return 0.;
-//    return -0.5 * +2. * 1./( (1. - v)*(1. - v) ); 
+   return -0.5 * +2. * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
-    return -exp(v);
+//     return -exp(v);
 //     return -3. * v * v;
+//     return -2. * v;
  }
 
 
