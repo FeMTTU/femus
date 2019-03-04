@@ -45,7 +45,7 @@ clock_t start_time = clock();
 bool constant_jac = false;
 bool twostage = true;
 bool assembly = true; //assembly must be left always true
-bool slepc = false;
+bool slepc = true;
 
 std::vector < std::vector < std::vector < double > > > phi1A;
 
@@ -626,7 +626,7 @@ int main (int argc, char** args)
     sprintf (name, "S%d", i);
     mlSol.Initialize (name, InitalValueS);
   }
-
+  
   mlSol.Initialize ("b", InitalValueB);
 
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
@@ -702,6 +702,10 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
 
   NumericVector* EPS = pdeSys->_EPS; // pointer to the global residual vector object in pdeSys (level)
+  
+  NumericVector* EPS2;
+  EPS2 = NumericVector::build().release();
+  EPS2->init ( *EPS );
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
 
@@ -763,7 +767,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
       double valueHT = valueT * valueH;
       double valueHS = valueS * valueH;
-
+      
       sol->_Sol[solIndexHT[k]]->set (i, valueHT);
       sol->_Sol[solIndexHS[k]]->set (i, valueHS);
     }
@@ -776,6 +780,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
   maxW[0] = 0.;
 
   EPS->zero();
+  EPS2->zero();
   unsigned start = msh->_dofOffset[solTypeHT][iproc];
   unsigned end = msh->_dofOffset[solTypeHT][iproc + 1];
 
@@ -786,7 +791,10 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
   if (constant_jac) {
     if (counter == 0) phi1A.resize (end - start);
+    //phi1A.resize (end - start);
   }
+  
+  std::vector <double> EPS_HS ( (end - start) * NLayers , 0.);
 
   for (unsigned i =  start; i <  end; i++) {
 
@@ -806,7 +814,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
     vector < adept::adouble > solHTpp (NLayers);   // local coordinates
 
     vector< adept::adouble > aResHT (NLayers);
-    vector< double > aResHS (NLayers);
+    vector< double > aResHS (NLayers, 0.);
     vector< double > aResHTLili (NLayers, 0.);
     vector< double > aResHSLili (NLayers, 0.);
 
@@ -819,7 +827,6 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
     l2GMapRow.resize (NLayers);
 
     std::fill (aResHT.begin(), aResHT.end(), 0);   //set aResHT to zero
-    std::fill (aResHS.begin(), aResHS.end(), 0);   //set aResHS to zero
 
     for (unsigned j = 0; j < NLayers; j++) {
 
@@ -827,6 +834,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       solHT[j] = (*sol->_Sol[solIndexHT[j]]) (i);
       l2GMapRow[/*NLayers +*/ j] = pdeSys->GetSystemDof (solIndexHT[j], solPdeIndexHT[j], 0, i);
       solHS[j] = (*sol->_Sol[solIndexHS[j]]) (i);
+      //l2GMapRow[/*NLayers +*/ j] = pdeSys->GetSystemDof (solIndexHS[j], solPdeIndexHS[j], 0, i);
 
       solvm[j] = (*sol->_Sol[solIndexv[j]]) (i);
       solvp[j] = (*sol->_Sol[solIndexv[j]]) (i + 1);
@@ -940,7 +948,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
           aResHSLili[k] -= solHSp[k] * solvp[k] / dx;
         }
       }
-
+      
       //END FIRST ORDER HORIZONTAL ADVECTION
 
       //BEGIN THIRD ORDER HORIZONTAL ADVECTION
@@ -1005,45 +1013,39 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       double deltaZb_S = 0.;
       adept::adouble ht = 0.;
       adept::adouble hb = 0.;
-      double ht_double = 0.;
-      double hb_double = 0.;
 
       if (k > 0) {
         //ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
         ht = (solh[k - 1] + solh[k]) / 2.;
-        ht_double = (solh[k - 1] + solh[k]) / 2.;
         deltaZt_T = (solHT[k - 1] / solh[k - 1] - solHT[k] / solh[k]) / ht;
-        deltaZt_S = (solHS[k - 1] / solh[k - 1] - solHS[k] / solh[k]) / ht_double;
+        deltaZt_S = (solHS[k - 1] / solh[k - 1] - solHS[k] / solh[k]) / ht.value();
       }
 
       else {
         //ht = 0.5 * ( solhm[k] + solhp[k] );
         ht = solh[k];
-        ht_double = solh[k];
         deltaZt_T = 0.* (0. - solHT[k]) / ht;
-        deltaZt_S = 0.* (0. - solHS[k]) / ht_double;
+        deltaZt_S = 0.* (0. - solHS[k]) / ht.value();
       }
 
       if (k < NLayers - 1) {
         //hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
         hb = (solh[k] + solh[k + 1]) / 2.;
-        hb_double = (solh[k] + solh[k + 1]) / 2.;
         deltaZb_T = (solHT[k] / solh[k] - solHT[k + 1] / solh[k + 1]) / hb;
-        deltaZb_S = (solHS[k] / solh[k] - solHS[k + 1] / solh[k + 1]) / hb_double;
+        deltaZb_S = (solHS[k] / solh[k] - solHS[k + 1] / solh[k + 1]) / hb.value();
       }
 
       else {
         //hb = 0.5 * ( solhm[k] + solhp[k] );
         hb = solh[k];
-        hb_double = solh[k];
         deltaZb_T = 0.* (solHT[k] - 0.) / hb;
-        deltaZb_S = 0.* (solHS[k] - 0.) / hb_double;
+        deltaZb_S = 0.* (solHS[k] - 0.) / hb.value();
       }
 
       //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAA"<<deltaZt - deltaZb<<std::endl;
 
       aResHT[k] += solh[k] * k_v * (deltaZt_T - deltaZb_T) / ( (ht + hb) / 2.); // vertical diffusion tracer 1
-      aResHS[k] += solh[k] * k_v * (deltaZt_S - deltaZb_S) / ( (ht_double + hb_double) / 2.); // vertical diffusion tracer 2
+      aResHS[k] += solh[k] * k_v * (deltaZt_S - deltaZb_S) / ( (ht.value() + hb.value()) / 2.); // vertical diffusion tracer 2
 
       //BEGIN HORIZONTAL DIFFUSION
       if (i > start) {
@@ -1079,8 +1081,6 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       }
     }
 
-    //FINO A QUI TODO
-
     if (assembly) {
       s.dependent (&aResHT[0], NLayers);
 
@@ -1096,15 +1096,20 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
     }
 
     //building objects for computing ∆tφ1(∆tJn)F(Tn)
-    Vec y;
+    Vec y1, y2;
 
-    VecCreate (PETSC_COMM_WORLD, &y);
-    VecSetSizes (y, PETSC_DECIDE, NLayers);
-    VecSetFromOptions (y);
+    //tracer 1
+    VecCreate (PETSC_COMM_WORLD, &y1);
+    VecSetSizes (y1, PETSC_DECIDE, NLayers);
+    VecSetFromOptions (y1);
+    //tracer 2
+    VecCreate (PETSC_COMM_WORLD, &y2);
+    VecSetSizes (y2, PETSC_DECIDE, NLayers);
+    VecSetFromOptions (y2);
 
     if (slepc) {
       Mat A;
-      Vec v;
+      Vec v1, v2;
 
       MatCreate (MPI_COMM_SELF, &A);
       MatSetSizes (A, NLayers, NLayers, NLayers, NLayers);
@@ -1115,10 +1120,16 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       MatTranspose (A, MAT_INPLACE_MATRIX, &A);
       //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
 
-      VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &Res[0], &v);
-      VecAssemblyBegin (v);
-      VecAssemblyEnd (v);
-      //VecView(v,PETSC_VIEWER_STDOUT_WORLD);
+      //tracer 1
+      VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &Res[0], &v1);
+      VecAssemblyBegin (v1);
+      VecAssemblyEnd (v1);
+      //VecView(v1,PETSC_VIEWER_STDOUT_WORLD);
+      //tracer 2
+      VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &aResHS[0], &v2);
+      VecAssemblyBegin (v2);
+      VecAssemblyEnd (v2);
+      //VecView(v2,PETSC_VIEWER_STDOUT_WORLD);
 
       MFN mfn;
       FN f;
@@ -1225,9 +1236,11 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 //         }
       //END
 
-      MFNSolve (mfn, v, y);
+      MFNSolve (mfn, v1, y1);
+      MFNSolve (mfn, v2, y2);
       MFNGetConvergedReason (mfn, &reason);
-      //VecView(y,PETSC_VIEWER_STDOUT_WORLD);
+      //VecView(y1,PETSC_VIEWER_STDOUT_WORLD);
+      //VecView(y2,PETSC_VIEWER_STDOUT_WORLD);
 
       if (reason < 0) std::cout << "Solver did not converge" << std::endl;
 
@@ -1253,7 +1266,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
       MFNDestroy (&mfn);
       MatDestroy (&A);
-      VecDestroy (&v);
+      VecDestroy (&v1);
+      VecDestroy (&v2);
 
     }
 
@@ -1264,40 +1278,87 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
       if (constant_jac){
         if (counter==0) create_phi1A(CFL_pow, Jac[i], phi1A[i]);
+        //create_phi1A(CFL_pow, Jac[i], phi1A[i]);
         for (int ii = 0; ii < NumberOfLayers; ii++) {
-          double value = 0.;
+          double value1 = 0.; //tracer 1
+          double value2 = 0.; //tracer 2
           for (unsigned kk = 0; kk < NumberOfLayers; kk++) {
-            value += phi1A[i][ii][kk] * Res[kk];
+            value1 += phi1A[i][ii][kk] * Res[kk];
+            value2 += phi1A[i][ii][kk] * aResHS[kk];
           }
-          VecSetValues (y, 1, &ii, &value, INSERT_VALUES);
+          VecSetValues (y1, 1, &ii, &value1, INSERT_VALUES); //tracer 1
+          VecSetValues (y2, 1, &ii, &value2, INSERT_VALUES); //tracer 2
         }
-        VecAssemblyBegin (y);
-        VecAssemblyEnd (y);
-        VecScale (y, dt);
+        //tracer 1
+        VecAssemblyBegin (y1);
+        VecAssemblyEnd (y1);
+        VecScale (y1, dt);
+        //tracer 2
+        VecAssemblyBegin (y2);
+        VecAssemblyEnd (y2);
+        VecScale (y2, dt);
       }
-      else{
-        build_phi1Av (CFL_pow, Jac[i], Res, y);
-        VecScale (y, dt);
+      else{ 
+        
+//         std::cout<<"Res -------------------------" <<std::endl;
+//         
+//          for (unsigned kk = 0; kk < NumberOfLayers; kk++) {
+//           std::cout<<Res[kk]<<std::endl;  
+//         }
+//         
+//         std::cout<<"aResHS -------------------------" <<std::endl;
+//         
+//          for (unsigned kk = 0; kk < NumberOfLayers; kk++) {
+//           std::cout<<aResHS[kk]<<std::endl; 
+//         }
+        
+        //tracer 1
+        build_phi1Av (CFL_pow, Jac[i], Res, y1);
+        VecScale (y1, dt);
+        //tracer 2
+        build_phi1Av (CFL_pow, Jac[i], aResHS, y2);
+        VecScale (y2, dt);
       }
-      //VecView (y, PETSC_VIEWER_STDOUT_WORLD);
+//       std::cout<<" ------------- y1 ------------- " << std::endl;
+//       VecView (y1, PETSC_VIEWER_STDOUT_WORLD);
+//       std::cout<<" ------------- y2 ------------- " << std::endl;
+//       VecView (y2, PETSC_VIEWER_STDOUT_WORLD);
 
     }
 
     std::vector<double> EPS_local (NLayers);
-
+    
     for (int k = 0; k < NLayers; k++) {
+      //tracer 1
       PetscScalar valueHT = 0.;
-      VecGetValues (y, 1, &k, &valueHT);
+      VecGetValues (y1, 1, &k, &valueHT);
       EPS_local[k] = valueHT;
+      //tracer 2
+      PetscScalar valueHS = 0.;
+      VecGetValues (y2, 1, &k, &valueHS);
+      EPS_HS[i*NLayers + k] = valueHS;
     }
+    
+    EPS->add_vector_blocked (EPS_local, l2GMapRow); //tracer 1
 
-    EPS->add_vector_blocked (EPS_local, l2GMapRow);
-
-    VecDestroy (&y); //TODO
+    VecDestroy (&y1);
+    VecDestroy (&y2);
 
   }
-
+  
   sol->UpdateSol (mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset);
+  //sol->UpdateSol (mlPdeSys->GetSolPdeIndex(), EPS2, pdeSys->KKoffset);
+  
+  for (unsigned k = 0; k < NumberOfLayers; k++) {
+    for (unsigned i =  start; i <  end; i++) {
+      
+      sol->_Sol[solIndexHS[k]]->add(i, EPS_HS[i*NLayers + k]);
+      
+    }
+
+    sol->_Sol[solIndexHS[k]]->close();
+
+  }
 
 // printing of the max value of w in every layer
 //   for ( unsigned k = 0; k < NLayers; k++ ) {
@@ -1321,6 +1382,7 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
     //std::cout << "second stage " << std::endl;
 
     EPS->zero();
+    EPS2->zero();
 
     for (unsigned i =  start; i <  end; i++) {
 
@@ -1332,11 +1394,15 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       vector < double > solHTm (NLayers);   // local coordinates
       vector < double > solHT (NLayers);   // local coordinates
       vector < double > solHTp (NLayers);   // local coordinates
+      vector < double > solHSm (NLayers);   // local coordinates
+      vector < double > solHS (NLayers);   // local coordinates
+      vector < double > solHSp (NLayers);   // local coordinates
 
       vector < double > solHTmm (NLayers);   // local coordinates
       vector < double > solHTpp (NLayers);   // local coordinates
 
       vector< double > aResHT (NLayers, 0.);
+      vector< double > aResHS (NLayers, 0.);
 
       unsigned bc1 = (i == start) ? 0 : 1;
       unsigned bc2 = (i == end - 1) ? 0 : 1;
@@ -1349,6 +1415,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         solh[j] = (*sol->_Sol[solIndexh[j]]) (i);
         solHT[j] = (*sol->_Sol[solIndexHT[j]]) (i);
         l2GMapRow[/*NLayers +*/ j] = pdeSys->GetSystemDof (solIndexHT[j], solPdeIndexHT[j], 0, i);
+        solHS[j] = (*sol->_Sol[solIndexHS[j]]) (i);
+        //l2GMapRow[/*NLayers +*/ j] = pdeSys->GetSystemDof (solIndexHS[j], solPdeIndexHS[j], 0, i);
 
         solvm[j] = (*sol->_Sol[solIndexv[j]]) (i);
         solvp[j] = (*sol->_Sol[solIndexv[j]]) (i + 1);
@@ -1357,11 +1425,13 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         if (i > start) {
           solhm[j] = (*sol->_Sol[solIndexh[j]]) (i - 1);
           solHTm[j] = (*sol->_Sol[solIndexHT[j]]) (i - 1);
+          solHSm[j] = (*sol->_Sol[solIndexHS[j]]) (i - 1);
         }
 
         if (i < end - 1) {
           solhp[j] = (*sol->_Sol[solIndexh[j]]) (i + 1);
           solHTp[j] = (*sol->_Sol[solIndexHT[j]]) (i + 1);
+          solHSp[j] = (*sol->_Sol[solIndexHS[j]]) (i + 1);
         }
 
 //       if ( i > start + 1 ) {
@@ -1390,19 +1460,23 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
           //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
           if (solvm[k] > 0) {
             aResHT[k] += solHTm[k] * solvm[k] / dx;
+            aResHS[k] += solHSm[k] * solvm[k] / dx;
           }
           else {
             aResHT[k] += solHT[k] * solvm[k] / dx;
+            aResHS[k] += solHS[k] * solvm[k] / dx;
           }
         }
 
         if (i < end - 1) {
           //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
           if (solvp[k] > 0) {
-            aResHT[k] -= solHT[k] * solvp[k] / dx; //first order upwind
+            aResHT[k] -= solHT[k] * solvp[k] / dx; 
+            aResHS[k] -= solHS[k] * solvp[k] / dx; 
           }
           else {
-            aResHT[k] -= solHTp[k] * solvp[k] / dx; //first order upwind
+            aResHT[k] -= solHTp[k] * solvp[k] / dx; 
+            aResHS[k] -= solHSp[k] * solvp[k] / dx;
           }
         }
 
@@ -1437,32 +1511,41 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 //       }
         //END THIRD ORDER HORIZONTAL ADVECTION
 
+        //BEGIN HORIZONTAL DIFFUSION
         if (i > start) {
-          aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k]) / (dx * dx); // horizontal diffusion
+          aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k]) / (dx * dx); 
+          aResHS[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHSm[k] / solhm[k] - solHS[k] / solh[k]) / (dx * dx); 
         }
 
         if (i < end - 1) {
-          aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k]) / (dx * dx); // horizontal diffusion
+          aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k]) / (dx * dx); 
+          aResHS[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHSp[k] / solhp[k] - solHS[k] / solh[k]) / (dx * dx);
         }
+        //END HORIZONTAL DIFFUSION
 
       }
 
       //BEGIN Nstar - N
       for (unsigned k = 0; k < NLayers; k++) {
         aResHT[k] -= N[i * NLayers + k];
+        aResHS[k] -= N_S[i * NLayers + k];
       }
-
       //END
 
-      Vec y;
+      Vec y1, y2;
 
-      VecCreate (PETSC_COMM_WORLD, &y);
-      VecSetSizes (y, PETSC_DECIDE, NLayers);
-      VecSetFromOptions (y);
+      //tracer 1
+      VecCreate (PETSC_COMM_WORLD, &y1);
+      VecSetSizes (y1, PETSC_DECIDE, NLayers);
+      VecSetFromOptions (y1);
+      //tracer 2
+      VecCreate (PETSC_COMM_WORLD, &y2);
+      VecSetSizes (y2, PETSC_DECIDE, NLayers);
+      VecSetFromOptions (y2);
 
       if (slepc) {
         Mat A;
-        Vec v;
+        Vec v1, v2;
 
         MatCreate (MPI_COMM_SELF, &A);
         MatSetSizes (A, NLayers, NLayers, NLayers, NLayers);
@@ -1473,10 +1556,16 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
         //MatTranspose (A, MAT_INPLACE_MATRIX, &A);
         //MatView ( A,PETSC_VIEWER_STDOUT_WORLD );
 
-        VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &aResHT[0], &v);
-        VecAssemblyBegin (v);
-        VecAssemblyEnd (v);
-        //VecView(v,PETSC_VIEWER_STDOUT_WORLD);
+        //tracer 1     
+        VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &aResHT[0], &v1);
+        VecAssemblyBegin (v1);
+        VecAssemblyEnd (v1);
+        //VecView(v1,PETSC_VIEWER_STDOUT_WORLD);
+        //tracer 2
+        VecCreateSeqWithArray (MPI_COMM_SELF, 1, NLayers, &aResHS[0], &v2);
+        VecAssemblyBegin (v2);
+        VecAssemblyEnd (v2);
+        //VecView(v2,PETSC_VIEWER_STDOUT_WORLD);
 
         MFN mfn;
         FN f;
@@ -1583,10 +1672,12 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 //         }
         //END
 
-        MFNSolve (mfn, v, y);
+        MFNSolve (mfn, v1, y1); //tracer 1
+        MFNSolve (mfn, v2, y2); //tracer 2
         MFNGetConvergedReason (mfn, &reason);
 
-        //VecView(y,PETSC_VIEWER_STDOUT_WORLD);
+        //VecView(y1,PETSC_VIEWER_STDOUT_WORLD);
+        //VecView(y2,PETSC_VIEWER_STDOUT_WORLD);
 
         if (reason < 0) std::cout << "Solver did not converge" << std::endl;
 
@@ -1613,7 +1704,8 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
         MFNDestroy (&mfn);
         MatDestroy (&A);
-        VecDestroy (&v);
+        VecDestroy (&v1);
+        VecDestroy (&v2);
 
       }
 
@@ -1624,41 +1716,71 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
 
         if(constant_jac){
           for (int ii = 0; ii < NumberOfLayers; ii++) {
-            double value = 0.;
+            double value1 = 0.;
+            double value2 = 0.;
             for (unsigned kk = 0; kk < NumberOfLayers; kk++) {
-              value += phi1A[i][ii][kk] * aResHT[kk];
+              value1 += phi1A[i][ii][kk] * aResHT[kk];
+              value2 += phi1A[i][ii][kk] * aResHS[kk];
             }
-            VecSetValues (y, 1, &ii, &value, INSERT_VALUES);
+            VecSetValues (y1, 1, &ii, &value1, INSERT_VALUES);
+            VecSetValues (y2, 1, &ii, &value2, INSERT_VALUES);
           }
-          VecAssemblyBegin (y);
-          VecAssemblyEnd (y);
-          VecScale (y, 0.5 * dt);
+          //tracer 1
+          VecAssemblyBegin (y1);
+          VecAssemblyEnd (y1);
+          VecScale (y1, 0.5 * dt);
+          //tracer 2
+          VecAssemblyBegin (y2);
+          VecAssemblyEnd (y2);
+          VecScale (y2, 0.5 * dt);
         }
         else{
-          build_phi1Av (CFL_pow, Jac[i], aResHT, y);
-          VecScale (y, 0.5 * dt);
+          //tracer 1
+          build_phi1Av (CFL_pow, Jac[i], aResHT, y1);
+          VecScale (y1, 0.5 * dt);
+          //tracer 2
+          build_phi1Av (CFL_pow, Jac[i], aResHS, y2);
+          VecScale (y2, 0.5 * dt);
         }
-        //VecView (y, PETSC_VIEWER_STDOUT_WORLD);
+//         std::cout<<" ------------- y1 ------------- " << std::endl;
+//         VecView (y1, PETSC_VIEWER_STDOUT_WORLD);
+//         std::cout<<" ------------- y2 ------------- " << std::endl;
+//         VecView (y2, PETSC_VIEWER_STDOUT_WORLD);
 
       }
 
       std::vector<double> EPS_local (NLayers);
 
       for (int k = 0; k < NLayers; k++) {
+        //tracer 1
         PetscScalar valueHT = 0.;
-        VecGetValues (y, 1, &k, &valueHT);
+        VecGetValues (y1, 1, &k, &valueHT);
         EPS_local[k] = valueHT;
+        //tracer 2
+        PetscScalar valueHS = 0.;
+        VecGetValues (y2, 1, &k, &valueHS);
+        EPS_HS[i*NLayers + k] = valueHS;
       }
 
       EPS->add_vector_blocked (EPS_local, l2GMapRow);
 
-      VecDestroy (&y); //TODO
+      VecDestroy (&y1);
+      VecDestroy (&y2);
 
     }
 
   }
 
   sol->UpdateSol (mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset);
+  //sol->UpdateSol (mlPdeSys->GetSolPdeIndex(), EPS2, pdeSys->KKoffset);
+  
+  for (unsigned k = 0; k < NumberOfLayers; k++) {
+    for (unsigned i =  start; i <  end; i++) {      
+      sol->_Sol[solIndexHS[k]]->add(i, EPS_HS[i*NLayers + k]);      
+    }
+
+    sol->_Sol[solIndexHS[k]]->close();
+  }
 
   //PARAVIEW
   unsigned solIndexeta = mlSol->GetIndex ("eta");
@@ -1676,9 +1798,11 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
     //if(counter == numberOfTimeSteps-1) std::cout << "T" << k << "  ----------------------------------------------------" << std::endl;
     for (unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++) {
       double valueHT = (*sol->_Sol[solIndexHT[k]]) (i);
+      double valueHS = (*sol->_Sol[solIndexHS[k]]) (i);
       double valueH = (*sol->_Sol[solIndexh[k]]) (i);
 
-      double valueT = valueHT / valueH;
+      double valueT = valueHT / valueH;      
+      double valueS = valueHS / valueH;
 
       if (counter == numberOfTimeSteps - 1) {
         std::cout.precision (14);
@@ -1689,9 +1813,11 @@ void ETD (MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps)
       //if (i == 0) valueT = 15.;
       //if (i == msh->_dofOffset[solTypeHT][iproc + 1] - 1 ) valueT = 15.;
       sol->_Sol[solIndexT[k]]->set (i, valueT);
+      sol->_Sol[solIndexS[k]]->set (i, valueS);
     }
 
     sol->_Sol[solIndexT[k]]->close();
+    sol->_Sol[solIndexS[k]]->close();
 
   }
 
