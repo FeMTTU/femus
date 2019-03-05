@@ -35,9 +35,16 @@ void AssemblePWillmore (MultiLevelProblem&);
 
 void AssembleInit (MultiLevelProblem&);
 
-double GetTimeStep (const double time) {
+double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
-  return 0.0001;
+  //return 0.0001;
+  
+  double dt0 = 0.0001;
+  double s = 1.;
+  double n = 0.3;
+  return dt0 * pow(1. + t/pow(dt0,s),n);
+  
+  
 }
 
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -105,7 +112,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
   
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   
