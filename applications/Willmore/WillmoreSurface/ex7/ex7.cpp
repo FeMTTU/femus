@@ -37,7 +37,7 @@ void AssembleInit (MultiLevelProblem&);
 
 double GetTimeStep (const double time) {
   //if(time==0) return 1.0e-10;
-  return 0.001;
+  return 0.0001;
 }
 
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -100,11 +100,12 @@ int main (int argc, char** args) {
   
   //mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
+//   mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
   
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   
@@ -1096,15 +1097,18 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
+          adept::adouble term2 = 0.;
           for (unsigned J = 0; J < DIM; J++) {
             term1 +=  solx_Xtan[K][J] * phiW_Xtan[J][i];
+            term2 +=  solW_Xtan[K][J] * phiW_Xtan[J][i];
           }
           if (fabs (term1 - phix_Xtan[K][i]) > 1.0e-10) {
             std::cout << " error " << term1 << " " << phiW_Xtan[K][i];
             //abort();
           }
+          double eps = 0.001;
           //           std::cout << A <<" ";
-          aResW[K][i] += (solWg[K] * pow (normY.value(), 2. - P) * phiW[i] + term1) * Area;
+          aResW[K][i] += (solWg[K] * pow (normY.value(), 2. - P) * phiW[i] + eps * term2 + term1) * Area;
         }
       }
     } // end gauss point loop
