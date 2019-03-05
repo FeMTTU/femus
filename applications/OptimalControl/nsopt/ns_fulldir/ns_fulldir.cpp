@@ -14,8 +14,8 @@
 
 #include   "../nsopt_params.hpp"
 
-#define exact_sol_flag 1 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
-#define compute_conv_flag 1 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
+#define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
+#define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
 
 #define NO_OF_NORMS 5 // for L2 norm of U,V,P and H1 norm of U,V
 
@@ -32,8 +32,8 @@ bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName
 // b.c. for lid-driven cavity problem, wall u_top = 1 = shear_force, v_top = 0 and u=v=0 on other 3 walls ; rhs_f = body_force = {0,0}
 // TOP ==========================  
       if (facename == 3) {
-       if (!strcmp(SolName, "U"))    { value =  1.; } //lid - driven
-  else if (!strcmp(SolName, "V"))    { value =  0.;} 
+       if (!strcmp(SolName, "U"))    { dirichlet = false; /*value =  1.;*/ } //lid - driven
+  else if (!strcmp(SolName, "V"))    { dirichlet = false; /*value =  0.;*/} 
   	
       }
 #endif
@@ -107,7 +107,7 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 3;
+    maxNumberOfMeshes = 1;
   } else {
     maxNumberOfMeshes = 4;
   }
@@ -1361,27 +1361,41 @@ double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongat
 	}  
  //end unknowns eval at gauss points ********************************
 
-//exact solution error norm ========================================================
-// vector <double>  exact_Vel(dim,0.);
-// value_Vel(coordX_gss,exact_Vel);
-// double exact_Press = value_Press(coordX_gss);
-// 
-//     for(unsigned unk = 0; unk <  dim; unk++) {
-//         l2norm[unk] += ( SolVAR_qp[unk] - exact_Vel[unk] ) * ( SolVAR_qp[unk] - exact_Vel[unk] ) * weight ; 
-//     }
-//          l2norm[dim] += ( SolVAR_qp[dim] - exact_Press ) * ( SolVAR_qp[dim] - exact_Press ) * weight ; 
-//exact solution error norm ========================================================
-   
+#if exact_sol_flag == 1
+// exact solution error norm ========================================================
+vector <double>  exact_Vel(dim,0.);
+value_Vel(coordX_gss,exact_Vel);
+double exact_Press = value_Press(coordX_gss);
+vector < vector < double > > exact_grad_Vel(dim);
+for (unsigned k = 0; k < dim; k++){ 
+    exact_grad_Vel[k].resize(dim);
+    std::fill(exact_grad_Vel[k].begin(), exact_grad_Vel[k].end(), 0.);
+}
+gradient_Vel(coordX_gss,exact_grad_Vel);
 
+        for(unsigned unk = 0; unk <  dim; unk++) {
+                l2norm[unk] += ( SolVAR_qp[unk] - exact_Vel[unk] ) * ( SolVAR_qp[unk] - exact_Vel[unk] ) * weight ; 
+        }
+                l2norm[dim] += ( SolVAR_qp[dim] - exact_Press ) * ( SolVAR_qp[dim] - exact_Press ) * weight ; 
+        for(unsigned unk = 0; unk <  dim; unk++) {
+            for(int j = 0; j < dim; j++){
+                l2norm[n_unknowns + unk] += (gradSolVAR_qp[unk][j] - exact_grad_Vel[unk][j] ) * ( gradSolVAR_qp[unk][j] - exact_grad_Vel[unk][j] ) * weight ;
+        }
+ } //seminorm
+// exact solution error norm ========================================================
+#endif   
+
+#if exact_sol_flag == 0
     for(unsigned unk = 0; unk <  n_unknowns; unk++) {
         l2norm[unk] += ( SolVAR_qp[unk] - SolVAR_coarser_prol_qp[unk] ) * ( SolVAR_qp[unk] - SolVAR_coarser_prol_qp[unk] ) * weight ; 
-     } //l2norm
+    } //l2norm
      
-     for(unsigned unk = 0; unk <  dim; unk++) {
+    for(unsigned unk = 0; unk <  dim; unk++) {
         for(int j = 0; j < dim; j++){
     l2norm[n_unknowns + unk] += (gradSolVAR_qp[unk][j] - gradSolVAR_coarser_prol_qp[unk][j] ) * ( gradSolVAR_qp[unk][j] - gradSolVAR_coarser_prol_qp[unk][j] ) * weight ;
         }
- } //seminorm
+    } //seminorm
+#endif   
      
     } // end gauss point loop
   } //end element loop for each process
