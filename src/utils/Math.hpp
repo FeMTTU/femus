@@ -182,27 +182,20 @@ double myval_g = pt2func(time,xyz._val_g);
 
 
 
-} //end namespace Math
-
-
-
-namespace FE_convergence {
- 
- 
-  class Function {  
+template < class type >
+  class Function {
  
   public:
       
- virtual double value(const std::vector < double >& x) const { abort(); };
+ virtual type value(const std::vector < type >& x) const = 0;
 
- virtual vector < double >  gradient(const std::vector < double >& x) const { abort(); };
+ virtual vector < type >  gradient(const std::vector < type >& x) const  = 0;
 
- virtual double laplacian(const std::vector < double >& x) const { abort(); };
+ virtual type laplacian(const std::vector < type >& x) const = 0;
  
- virtual double helmholtz(const std::vector < double >& x) const { return ( - laplacian(x) + value(x) ); };
+  type helmholtz(const std::vector < type >& x) const { return ( - laplacian(x) + value(x) ); };
 
 };
-  
 
 
 //this is based on the AddSolution function in MLSol
@@ -215,15 +208,72 @@ namespace FE_convergence {
      FEOrder  _fe_order;     
      
  };
-    
+
  
- inline   std::vector < std::vector < std::vector < double > > >  initialize_vector_of_norms(const unsigned unknowns_size, 
+} //end namespace Math
+
+
+class Main_single_level {
+    
+public: 
+
+virtual const MultiLevelSolution  run_on_single_level(const Files & files, 
+                                                   const std::vector< Math::Unknowns_definition > & unknowns,  
+                                                   MultiLevelMesh & ml_mesh, 
+                                                   const unsigned i) const = 0;
+  
+};
+
+
+template < class type >
+class FE_convergence {
+ 
+    
+    
+public: 
+ 
+
+  void  convergence_study(const Files & files, 
+                                           const std::vector< Math::Unknowns_definition > & unknowns,
+                                           const MultiLevelSolution::BoundaryFunc SetBoundaryCondition,
+                                           MultiLevelMesh & ml_mesh, 
+                                           MultiLevelMesh & ml_mesh_all_levels, 
+                                           const unsigned max_number_of_meshes, 
+                                           const unsigned norm_flag,
+                                           const unsigned conv_order_flag,
+                                           const Main_single_level & main_in,
+                                           const Math::Function< double > * exact_sol = NULL) {
+
+
+  
+    
+  // Convergence study ==============
+    vector < vector < vector < double > > > norms = FE_convergence::initialize_vector_of_norms ( unknowns.size(), max_number_of_meshes, norm_flag);
+    
+     MultiLevelSolution         ml_sol_all_levels = FE_convergence::initialize_convergence_study(unknowns, ml_mesh_all_levels, max_number_of_meshes, SetBoundaryCondition);
+    
+            
+       for (int i = 0; i < max_number_of_meshes; i++) {
+                  
+            const MultiLevelSolution ml_sol_single_level = main_in.run_on_single_level(files, unknowns, ml_mesh, i);
+
+                                              FE_convergence::compute_error_norms_per_unknown_per_level ( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag, exact_sol);
+        
+      }
+   
+       FE_convergence::output_convergence_order_all(unknowns, norms, norm_flag, max_number_of_meshes);
+   
+}
+
+    
+    
+static   std::vector < std::vector < std::vector < type > > >  initialize_vector_of_norms(const unsigned unknowns_size, 
                                                                                              const unsigned max_number_of_meshes, 
                                                                                              const unsigned norm_flag) {
    
        //how many Unknowns, how many mesh levels, how many norms
        
-   std::vector < std::vector < std::vector < double > > > norms( unknowns_size );
+   std::vector < std::vector < std::vector < type > > > norms( unknowns_size );
   
      for (unsigned int u = 0; u < unknowns_size; u++) {
               norms[u].resize( max_number_of_meshes );
@@ -239,7 +289,7 @@ namespace FE_convergence {
 
     
    
-  inline const MultiLevelSolution  initialize_convergence_study(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,  
+static   const MultiLevelSolution  initialize_convergence_study(const std::vector< Math::Unknowns_definition > &  unknowns,  
                                                                 MultiLevelMesh & ml_mesh_all_levels, 
                                                                 const unsigned max_number_of_meshes, 
                                                                 const MultiLevelSolution::BoundaryFunc SetBoundaryCondition)  {
@@ -269,7 +319,7 @@ namespace FE_convergence {
 
 
 //   print the error and the order of convergence between different levels
-inline void output_convergence_order(const std::vector < std::vector < std::vector < double > > > &  norm,
+static  void output_convergence_order(const std::vector < std::vector < std::vector < type > > > &  norm,
                                     const unsigned int u,
                                     const unsigned int i,
                                     const unsigned int n) {
@@ -297,8 +347,8 @@ inline void output_convergence_order(const std::vector < std::vector < std::vect
 }
 
 
-inline void output_convergence_order_all(const std::vector< FE_convergence::Unknowns_definition > &  unknowns,
-                                        const std::vector < std::vector < std::vector < double > > > &  norms, 
+static  void output_convergence_order_all(const std::vector< Math::Unknowns_definition > &  unknowns,
+                                        const std::vector < std::vector < std::vector < type > > > &  norms, 
                                         const unsigned norm_flag, 
                                         const unsigned max_number_of_meshes) {
     
@@ -323,13 +373,13 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
  
  
 
- inline std::vector< double > compute_error_norms(const MultiLevelSolution* ml_sol, 
+static  std::vector< type > compute_error_norms(const MultiLevelSolution* ml_sol, 
                                               const MultiLevelSolution* ml_sol_all_levels,
                                               const std::string & unknown,
                                               const unsigned current_level,
                                               const unsigned norm_flag,
                                               const unsigned conv_order_flag,
-                                              const Function * ex_sol_in = NULL
+                                              const Math::Function< type > * ex_sol_in = NULL
                                              ) {
      
   // (//0 = only L2: //1 = L2 + H1)
@@ -342,9 +392,9 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
     
   const unsigned num_norms = norm_flag + 1;
   //norms that we are computing here //first L2, then H1 ============
-  std::vector< double > norms(num_norms);                  std::fill(norms.begin(), norms.end(), 0.);   
-  std::vector< double > norms_exact_dofs(num_norms);       std::fill(norms_exact_dofs.begin(), norms_exact_dofs.end(), 0.);
-  std::vector< double > norms_inexact_dofs(num_norms);     std::fill(norms_inexact_dofs.begin(), norms_inexact_dofs.end(), 0.);
+  std::vector< type > norms(num_norms);                  std::fill(norms.begin(), norms.end(), 0.);   
+  std::vector< type > norms_exact_dofs(num_norms);       std::fill(norms_exact_dofs.begin(), norms_exact_dofs.end(), 0.);
+  std::vector< type > norms_inexact_dofs(num_norms);     std::fill(norms_inexact_dofs.begin(), norms_inexact_dofs.end(), 0.);
   //norms that we are computing here //first L2, then H1 ============
   
   
@@ -370,28 +420,28 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
   
   
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-  vector < vector < double > > x(dim);    // local coordinates
+  vector < vector < type > > x(dim);    // local coordinates
   for (unsigned i = 0; i < dim; i++)   x[i].reserve(maxSize);
 
 //-----------------  
-  vector < double > phi_coords;
-  vector < double > phi_coords_x;
-  vector < double > phi_coords_xx;
+  vector < type > phi_coords;
+  vector < type > phi_coords_x;
+  vector < type > phi_coords_xx;
 
   phi_coords.reserve(maxSize);
   phi_coords_x.reserve(maxSize * dim);
   phi_coords_xx.reserve(maxSize * dim2);
 
-  vector < double > phi;
-  vector < double > phi_x;
-  vector < double > phi_xx;
+  vector < type > phi;
+  vector < type > phi_x;
+  vector < type > phi_xx;
   
-  double weight; // gauss point weight
+  type weight; // gauss point weight
 
 
-  vector < double >  solu;                               solu.reserve(maxSize);
-  vector < double >  solu_exact_at_dofs;   solu_exact_at_dofs.reserve(maxSize);
-  vector < double >  solu_coarser_prol;     solu_coarser_prol.reserve(maxSize);
+  vector < type >  solu;                               solu.reserve(maxSize);
+  vector < type >  solu_exact_at_dofs;   solu_exact_at_dofs.reserve(maxSize);
+  vector < type >  solu_coarser_prol;     solu_coarser_prol.reserve(maxSize);
 
 
   phi.reserve(maxSize);
@@ -430,7 +480,7 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
-        std::vector<double> x_at_node(dim,0.);
+        std::vector< type > x_at_node(dim,0.);
         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);
                    solu[i]  =                                        (*sol->_Sol[soluIndex])(solDof);
@@ -444,18 +494,18 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
         
       // *** get gauss point weight, test function and test function partial derivatives ***
      static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][soluType] )
-                                         ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
+                                         ->Jacobian_type_non_isoparametric< type >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
 //       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
       msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      double solu_gss = 0.;
-      double exactSol_from_dofs_gss = 0.;
-      double solu_coarser_prol_gss = 0.;
-      vector < double > gradSolu_gss(dim, 0.);
-      vector < double > gradSolu_exact_at_dofs_gss(dim, 0.);
-      vector < double > gradSolu_coarser_prol_gss(dim, 0.);
-      vector < double > x_gss(dim, 0.);
+      type solu_gss = 0.;
+      type exactSol_from_dofs_gss = 0.;
+      type solu_coarser_prol_gss = 0.;
+      vector < type > gradSolu_gss(dim, 0.);
+      vector < type > gradSolu_exact_at_dofs_gss(dim, 0.);
+      vector < type > gradSolu_coarser_prol_gss(dim, 0.);
+      vector < type > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss                += phi[i] * solu[i];
@@ -472,7 +522,7 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
 
 // H^0 ==============      
 //     if (norm_flag == 0) {
-      double exactSol = 0.; if (ex_sol_in != NULL) exactSol = ex_sol_in->value(x_gss);
+      type exactSol = 0.; if (ex_sol_in != NULL) exactSol = ex_sol_in->value(x_gss);
       norms[0]               += (solu_gss - exactSol)                * (solu_gss - exactSol)       * weight;
       norms_exact_dofs[0]    += (solu_gss - exactSol_from_dofs_gss)  * (solu_gss - exactSol_from_dofs_gss) * weight;
       norms_inexact_dofs[0]  += (solu_gss - solu_coarser_prol_gss)   * (solu_gss - solu_coarser_prol_gss)  * weight;
@@ -480,7 +530,7 @@ inline void output_convergence_order_all(const std::vector< FE_convergence::Unkn
     
 // H^1 ==============      
     /*else*/ if (norm_flag == 1) {
-      vector <double> exactGradSol(dim,0.);    if (ex_sol_in != NULL) exactGradSol = ex_sol_in->gradient(x_gss);
+      vector < type > exactGradSol(dim,0.);    if (ex_sol_in != NULL) exactGradSol = ex_sol_in->gradient(x_gss);
 
       for (unsigned j = 0; j < dim ; j++) {
         norms[1]               += ((gradSolu_gss[j] - exactGradSol[j])               * (gradSolu_gss[j]  - exactGradSol[j])) * weight;
@@ -542,14 +592,14 @@ if (conv_order_flag == 1)  return norms;
  
 
      
- inline void compute_error_norms_per_unknown_per_level(const MultiLevelSolution* ml_sol_single_level, 
+static  void compute_error_norms_per_unknown_per_level(const MultiLevelSolution* ml_sol_single_level, 
                                           MultiLevelSolution* ml_sol_all_levels, 
-                                          const std::vector< FE_convergence::Unknowns_definition > &  unknowns, 
+                                          const std::vector< Math::Unknowns_definition > &  unknowns, 
                                           const unsigned i,
                                           const unsigned norm_flag, 
-                                          std::vector < std::vector < std::vector < double > > > &  norms,
+                                          std::vector < std::vector < std::vector < type > > > &  norms,
                                           const unsigned conv_order_flag,
-                                          const Function * ex_sol_in = NULL
+                                          const Math::Function< type > * ex_sol_in = NULL
                                          ) {
      
      
@@ -561,7 +611,7 @@ if (conv_order_flag == 1)  return norms;
             // =======  compute the error norm at the current level (i) ========================
             for (unsigned int u = 0; u < unknowns.size(); u++) {  //this loop could be inside the below function
                 
-            const std::vector< double > norm_out = FE_convergence::compute_error_norms(ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, ex_sol_in);
+            const std::vector< type > norm_out = FE_convergence::compute_error_norms (ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, ex_sol_in);
 
               for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];
                                        
@@ -582,7 +632,43 @@ if (conv_order_flag == 1)  return norms;
 
  
     
-} //end FE_convergence
+};
+
+
+
+
+
+
+template < class real_num >
+class assemble_jacobian {
+ 
+    
+ public:
+    
+                                               
+ void prepare_before_integration_loop(adept::Stack& stack) const;
+
+ 
+ void  compute_jacobian_inside_integration_loop(const unsigned i,
+                                               const unsigned dim,
+                                               const unsigned nDofu,
+                                               const std::vector< real_num > & phi,
+                                               const std::vector< real_num > &  phi_x, 
+                                               const real_num weight,
+                                               std::vector< double > & Jac) const;
+  
+                                               
+ void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
+                                               const std::vector< real_num > & solu,
+                                               const std::vector< real_num > & Res,
+                                               std::vector< double > & Jac, 
+                                               const std::vector< int > & loc_to_glob_map,
+                                               NumericVector*           RES,
+                                               SparseMatrix*             KK
+                                                                   ) const;
+                                                                   
+    
+};
 
 
 

@@ -199,6 +199,9 @@ int main(int argc, char** args) {
   system.MLsolve();
 //   system.MGsolve();
 
+  system.compute_convergence_rate();
+
+  
     if ( i > 0 ) {
         
 //prolongation of coarser  

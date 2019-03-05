@@ -257,6 +257,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   vector < double >  sol_u;     sol_u.reserve(maxSize);
   vector< int > l2GMap_u;    l2GMap_u.reserve(maxSize);
+  
+  //boundary state shape functions
+  vector <double> phi_u_bdry;  
+  vector <double> phi_u_x_bdry; 
+
+  phi_u_bdry.reserve(maxSize);
+  phi_u_x_bdry.reserve(maxSize * dim);
+  
  //***************************************************  
  //***************************************************  
 
@@ -313,6 +321,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //*************************************************** 
  //*************************************************** 
  
+
  //****************** mu ******************************  
  //***************************************************  
   unsigned solIndex_mu;
@@ -645,6 +654,7 @@ std::cout << "Outside ig = " << ig_bdry << " ";
       for (unsigned d = 0; d < 1; d++) std::cout << xi_one_dim[d] << " ";
             
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
+          msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_u_bdry,phi_u_x_bdry,normal);
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
 		  msh->_finiteElement[felt_bdry][solType_coords]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_coords_bdry,phi_coords_x_bdry,normal);
       
@@ -761,7 +771,8 @@ std::cout <<  " qp_" << d << " " << coord_at_qp_bdry[d];
 
 		 
 //============ Bdry Residuals ==================	
-                if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
+                if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_u[i_vol] - sol_ctrl[i_vol] )
+                    - control_node_flag[i_vol] *  weight_bdry * (grad_adj_dot_n_res * phi_u_bdry[i_bdry]);   // u = q
 //                                      Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_ctrl[i_vol] - sol_adj[i_vol] );   // q = lambda for testing
 		
                 if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] *  weight_bdry *
@@ -877,7 +888,15 @@ std::cout <<  " qp_" << d << " " << coord_at_qp_bdry[d];
 		        (
 			  weight_bdry * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry]
 			);    		      
-		      
+
+//==========block delta_state/adjoint ========
+		   if ( i_vol < nDof_u    && j < nDof_adj)   
+		     Jac[ 
+			(0 + i_vol) * nDof_AllVars  +
+		        (nDof_u + nDof_ctrl + j)             ]  += control_node_flag[i_vol] * (1) *
+		        (
+			  weight_bdry * grad_adj_dot_n_mat * phi_u_bdry[i_bdry]
+			);  
 		      
 		      
 		    }   //end loop i_bdry // j_vol
@@ -1117,7 +1136,7 @@ std::cout <<  " qp_" << d << " " << coord_at_qp_bdry[d];
 void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   
-  const NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object

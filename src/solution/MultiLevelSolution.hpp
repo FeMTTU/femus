@@ -91,10 +91,12 @@ public:
     /** To be Added */
     void Initialize(const char name[], InitFunc func = NULL);
 
+    void Initialize(const char * name, InitFuncMLProb func, const MultiLevelProblem * ml_prob);
+    
     void Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
 
-    void Initialize(const char * name, InitFuncMLProb func, const MultiLevelProblem * ml_prob);
-
+    inline void Set(const char name[], InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
+    
     /** To be Added */
     unsigned GetIndex(const char name[]) const;
 
@@ -354,6 +356,11 @@ inline
 FunctionBase* MultiLevelSolution::GetBdcFunction(const std::string varname, const unsigned int facename) const {
     unsigned int var = GetIndex(varname.c_str());
     return _nonHomogeneousBCFunction[var][facename];
+}
+
+inline 
+void MultiLevelSolution::Set(const char * name, InitFuncMLProb funcMLProb, const MultiLevelProblem * ml_prob) {
+    Initialize(name, funcMLProb, ml_prob);
 }
 
 
