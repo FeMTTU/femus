@@ -86,7 +86,7 @@ template < class type >
   
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
     
   bool dirichlet = true; //dirichlet
   value = 0;
@@ -95,9 +95,9 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 }
 
 
-template < class real_num > void AssembleProblem_interface(MultiLevelProblem & ml_prob);
+template < class real_num, class other_real_num > void System_assemble_interface(MultiLevelProblem & ml_prob);
 
-template < class real_num > void AssembleProblem_flexible(MultiLevelProblem & ml_prob,
+template < class real_num, class other_real_num > void System_assemble_flexible(MultiLevelProblem & ml_prob,
                                                     const std::string system_name,
                                                     const std::string unknown,
                                                     const Math::Function< real_num > & exact_sol);
@@ -199,12 +199,12 @@ int main(int argc, char** args) {
    const unsigned norm_flag = 1;                                                     //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
    std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();   //provide list of unknowns ==============
 
-    My_main_single_level< /*adept::a*/double > my_main;
-//  my_main.run_main_on_single_level(files, unknowns, ml_mesh, 3); if you don't want the convergence study
+    My_main_single_level< adept::adouble > my_main;
+//  my_main.run_on_single_level(files, unknowns, ml_mesh, 3); if you don't want the convergence study
     
     FE_convergence< double >  fe_convergence;
     
-    fe_convergence.convergence_study(files, unknowns, SetBoundaryCondition, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
+    fe_convergence.convergence_study(files, unknowns, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
     
 
   return 0;
@@ -242,7 +242,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
              
             ml_sol_single_level.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);
             ml_sol_single_level.Initialize(unknowns[u]._name.c_str());
-            ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+            ml_sol_single_level.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
             ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str());
       
             
@@ -264,7 +264,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             mlProb.set_current_unknown_assembly(unknowns[u]._name); //way to communicate to the assemble function, which doesn't belong to any class
             
             // attach the assembling function to system
-            system.SetAssembleFunction(AssembleProblem_interface< real_num >);
+            system.SetAssembleFunction(System_assemble_interface< real_num, double >);
 
             // initialize and solve the system
             system.init();
@@ -294,14 +294,14 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
 
 
-template <class real_num >
-void AssembleProblem_interface(MultiLevelProblem& ml_prob) {
+template <class real_num, class other_real_num >
+void System_assemble_interface(MultiLevelProblem& ml_prob) {
 // this is meant to be like a tiny addition to the main function, because we cannot pass these arguments through the function pointer
     
    My_exact_solution< real_num > exact_sol;
 const std::string system_name = "Equation"; //I cannot get this from the system because there may be more than one
 
-      AssembleProblem_flexible< real_num > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+      System_assemble_flexible< real_num, other_real_num > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
 
 }
 
@@ -314,8 +314,8 @@ const std::string system_name = "Equation"; //I cannot get this from the system 
  *                  J = \grad_u F
  **/
 
-template <class real_num>
-void AssembleProblem_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const Math::Function< real_num > & exact_sol) {
+template < class real_num, class other_real_num >
+void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const Math::Function< real_num > & exact_sol) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
