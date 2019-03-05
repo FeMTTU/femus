@@ -37,7 +37,7 @@ void PlotStochasticData();
 //BEGIN stochastic data
 
 double domainMeasure = 1.; //measure of the domain
-unsigned totMoments = 7;
+unsigned totMoments = 6;
 std::vector <double> moments ( totMoments, 0. ); //initialization
 std::vector <double> momentsStandardized ( totMoments, 0. ); //initialization
 std::vector <double> cumulants ( totMoments, 0. ); //initialization
@@ -1114,11 +1114,11 @@ void GetStochasticData ( std::vector <double>& alphas )
         double stdDeviationMonteCarlo = sqrt ( varianceMonteCarlo );
 
         std::cout.precision ( 14 );
-        
+
         std::cout << "the standard deviation is " << stdDeviationMonteCarlo << std::endl;
-        
+
         std::cout << "the variance is " << varianceMonteCarlo << std::endl;
-        
+
         std::cout << "Standardized Monte Carlo Moments" << std::endl;
 
         for ( unsigned p = 0; p < totMoments; p++ ) {
@@ -1361,7 +1361,7 @@ void PlotStochasticData()
                                                   + 45. * pow ( ( cumulantsStandardized[1] - 1. ), 2 ) * pow ( cumulantsStandardized[0], 2 ) + 15. * ( cumulantsStandardized[1] - 1. ) * pow ( cumulantsStandardized[0], 4 )
                                                   +  pow ( cumulantsStandardized[0], 6 ) ) * d6gaussian;
 
-                            std::cout << generalizedGC6Terms << " ";
+                            std::cout << generalizedGC6Terms << " \n ";
 
                             if ( totMoments > 6 ) {
 
