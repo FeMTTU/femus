@@ -25,8 +25,8 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.007, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05
-double delta1 = 0.2; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.2;
+double delta1 = 0.01; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.01;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
@@ -35,9 +35,9 @@ void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 //     value = x[0];
 //     value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
-//     value = x[0] * x[0] * x[0] * x[0] + 0.01 * x[0] * x[0];
+    value = x[0] * x[0] * x[0] * x[0] + 0.01 * x[0] * x[0];
 //     value = x[0] * x[0] * x[0] * x[0];
-    value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
+//     value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 
 
 }
@@ -218,7 +218,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                 for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
-                    bool interfaceElement = false;
+                    bool midpointQuadrature = false;
 
                     short unsigned ielGeom = msh->GetElementType ( iel );
                     short unsigned ielGroup = msh->GetElementGroup ( iel );
@@ -256,12 +256,12 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     double leftBoundInterface = - sideLength;
                     double rightBoundInterface = sideLength;
 
-                    unsigned igNumber = ( interfaceElement ) ? 4 : msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
+                    unsigned igNumber = ( midpointQuadrature ) ? 4 : msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
                     vector < vector < double > > xg1 ( igNumber );
                     vector <double> weight1 ( igNumber );
                     vector < vector <double> > phi1x ( igNumber );
 
-                    if ( interfaceElement ) {
+                    if ( midpointQuadrature ) {
 
                         for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
@@ -289,6 +289,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                     }
 
                     else {
+                        
 
                         for ( unsigned ig = 0; ig < igNumber; ig++ ) {
                             msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight1[ig], phi1x[ig], phi_x );
@@ -340,8 +341,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 //                                 Res1[i] -= 0. * weight[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
 //                                  Res1[i] -=  - 2. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = - 1)
                                     //  Res1[i] -=  - 6. * ( xg1[ig][0] + xg1[ig][1] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 (x + y))
-//                                     Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
-                                     Res1[i] -=  - 20. * ( xg1[ig][0] * xg1[ig][0] * xg1[ig][0] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 20 x^3 )
+                                    Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
+//                                      Res1[i] -=  - 20. * ( xg1[ig][0] * xg1[ig][0] * xg1[ig][0] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 20 x^3 )
                                 }
                             }
 
