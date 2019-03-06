@@ -37,7 +37,7 @@ void AssembleInit (MultiLevelProblem&);
 
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
-  //return 0.0001;
+  return 0.0001;
 
   double dt0 = 0.0001;
   double s = 1.;
@@ -82,8 +82,9 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
 //   mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
