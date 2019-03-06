@@ -44,6 +44,7 @@ namespace femus {
     _RESC = NULL;
     _KK = NULL;
     _KKamr = NULL;
+    _numberOfGlobalVariables = 0u;
   }
 
 //--------------------------------------------------------------------------------
@@ -195,10 +196,12 @@ namespace femus {
 
     _KK = SparseMatrix::build().release();
 
-    if (_iproc == 0 && ( KKIndex.size() == 8 || KKIndex.size() == 11) ) {
-      d_nnz[ KKoffset[0][_iproc] ] = KK_local_size;
-      if (_nprocs > 0) {
-        o_nnz[KKoffset[0][_iproc] ] =  KK_size;
+    if(_iproc == 0){
+      for(unsigned k = 0; k<_numberOfGlobalVariables;k++){
+        d_nnz[k] = KK_local_size;
+        if (_nprocs > 0) {
+          o_nnz[k] =  KK_size - KK_local_size;
+        }
       }
     }
 
@@ -380,9 +383,9 @@ namespace femus {
     int o_max = KKIndex[KKIndex.size() - 1u] - owned_dofs + 1;
 
     for (int i = 0; i < owned_dofs; i++) {
-      d_nnz[i] = static_cast <int> ( (*sizeDnBM_d) (IndexStart + i)) + BlgToMe_d[i].size() + 1;
+      d_nnz[i] = static_cast <int> ( (*sizeDnBM_d) (IndexStart + i)) + BlgToMe_d[i].size() + _numberOfGlobalVariables;
       if (d_nnz[i] > d_max) d_nnz[i] = d_max;
-      o_nnz[i] = static_cast <int> ( (*sizeDnBM_o) (IndexStart + i)) + BlgToMe_o[i].size() + 1;
+      o_nnz[i] = static_cast <int> ( (*sizeDnBM_o) (IndexStart + i)) + BlgToMe_o[i].size() + _numberOfGlobalVariables;
       if (o_nnz[i] > o_max) o_nnz[i] = o_max;
     }
 

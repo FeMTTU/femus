@@ -81,6 +81,10 @@ namespace femus {
       * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
       */
       vector < LinearEquationSolver*> _LinSolver;
+      
+      void SetNumberOfGlobalVariables(const unsigned &numberOfGlobalVariables){
+        _numberOfGlobalVariables = numberOfGlobalVariables;
+      }
 
       /** Set the max number of linear iterationsfor solving Ax=b */
       void SetMaxNumberOfLinearIterations(unsigned int max_lin_it) {
@@ -314,6 +318,8 @@ namespace femus {
       
       bool _bitFlipOccurred;
       unsigned _bitFlipCounter;
+      
+      unsigned _numberOfGlobalVariables;
       
   };
 

@@ -94,6 +94,10 @@ public:
     _KKamr = Temp;
   }
   
+  void SetNumberOfGlobalVariables(const unsigned &numberOfGlobalVariables){
+    _numberOfGlobalVariables = numberOfGlobalVariables;
+  }
+  
   // member data
   Mesh *_msh;
   Solution *_solution;
@@ -120,6 +124,7 @@ protected:
   vector <char*> _SolName;
   const vector <NumericVector*> *_Bdc;
   vector <bool> _SparsityPattern;
+  unsigned _numberOfGlobalVariables;
 
 };
 

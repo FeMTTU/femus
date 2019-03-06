@@ -530,7 +530,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             adept::adouble term4 = 0.;
                         
             for(unsigned L = 0; L < DIM; L++){
-              term4 += solxOld_Xtan[J][L] * solY_Xtan[K][L] + solxOld_Xtan[K][L] * solY_Xtan[J][L];
+              term4 += solxOld_Xtan[L][J] * solY_Xtan[L][K] + solxOld_Xtan[L][K] * solY_Xtan[L][J];
             }
             
             term3 += P * phiY_Xtan[J][i] * term4;

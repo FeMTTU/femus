@@ -25,7 +25,7 @@
 #include "petscmat.h"
 #include "PetscMatrix.hpp"
 
-const double P = 2;
+const double P = 3;
 using namespace femus;
 
 const bool volumeConstraint = true;
@@ -35,25 +35,21 @@ void AssemblePWillmore (MultiLevelProblem&);
 
 void AssembleInit (MultiLevelProblem&);
 
-double GetTimeStep (const double time) {
-  return 0.005;
+double GetTimeStep (const double t) {
+  //if(time==0) return 1.0e-10;
+  //return 0.0001;
+
+  double dt0 = 0.0001;
+  double s = 1.;
+  double n = 0.3;
+  return dt0 * pow (1. + t / pow (dt0, s), n);
+
+
 }
 
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  bool dirichlet = true;
-
-  if (!strcmp ("Dx1", SolName) || !strcmp ("Dx2", SolName) || !strcmp ("Dx3", SolName)) {
-    value = 0.;
-  }
-  else if (!strcmp ("W1", SolName)) {
-    value = -2. * x[0];
-  }
-  else if (!strcmp ("W2", SolName)) {
-    value = -2. * x[1];
-  }
-  else if (!strcmp ("W3", SolName)) {
-    value = 0.;
-  }
+  bool dirichlet = false;
+  value = 0.;
   return dirichlet;
 }
 
@@ -69,19 +65,6 @@ double InitalValueW3 (const std::vector < double >& x) {
   return -2. * pow (2., P - 2) * x[2];
 }
 
-
-double InitalValueX1 (const std::vector < double >& x) {
-  return x[0];
-}
-
-double InitalValueX2 (const std::vector < double >& x) {
-  return x[1];
-}
-
-double InitalValueX3 (const std::vector < double >& x) {
-  return x[2];
-}
-
 int main (int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -89,7 +72,6 @@ int main (int argc, char** args) {
 
 
   // define multilevel mesh
-
 
   unsigned maxNumberOfMeshes;
 
@@ -99,7 +81,9 @@ int main (int argc, char** args) {
 
   //mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
+//   mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
@@ -117,23 +101,23 @@ int main (int argc, char** args) {
   MultiLevelSolution mlSol (&mlMsh);
 
   // add variables to mlSol
-//   mlSol.AddSolution ("Dx1", LAGRANGE, SECOND, 2);
-//   mlSol.AddSolution ("Dx2", LAGRANGE, SECOND, 2);
-//   mlSol.AddSolution ("Dx3", LAGRANGE, SECOND, 2);
+  //   mlSol.AddSolution ("Dx1", LAGRANGE, SECOND, 2);
+  //   mlSol.AddSolution ("Dx2", LAGRANGE, SECOND, 2);
+  //   mlSol.AddSolution ("Dx3", LAGRANGE, SECOND, 2);
 
-  mlSol.AddSolution("Dx1", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution("Dx2", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution("Dx3", LAGRANGE, FIRST, 2);
-//
-//   mlSol.AddSolution ("W1", LAGRANGE, SECOND, 2);
-//   mlSol.AddSolution ("W2", LAGRANGE, SECOND, 2);
-//   mlSol.AddSolution ("W3", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution ("Dx1", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("Dx2", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("Dx3", LAGRANGE, FIRST, 2);
+  //
+  //   mlSol.AddSolution ("W1", LAGRANGE, SECOND, 2);
+  //   mlSol.AddSolution ("W2", LAGRANGE, SECOND, 2);
+  //   mlSol.AddSolution ("W3", LAGRANGE, SECOND, 2);
 
   mlSol.AddSolution ("Lambda", DISCONTINOUS_POLYNOMIAL, ZERO, 0);
 
-  mlSol.AddSolution("W1", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution("W2", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution("W3", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("W1", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("W2", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("W3", LAGRANGE, FIRST, 2);
 
 
   mlSol.Initialize ("All");
@@ -141,24 +125,10 @@ int main (int argc, char** args) {
   mlSol.Initialize ("W2", InitalValueW2);
   mlSol.Initialize ("W3", InitalValueW3);
 
-//   mlSol.Initialize("Dx1", InitalValueX1);
-//   mlSol.Initialize("Dx2", InitalValueX2);
-//   mlSol.Initialize("Dx3", InitalValueX3);
-
-
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
   mlSol.GenerateBdc ("All");
 
-//   mlSol.FixSolutionAtOnePoint("Dx1");
-//   mlSol.FixSolutionAtOnePoint("Dx2");
-//   mlSol.FixSolutionAtOnePoint("Dx3");
-//   mlSol.FixSolutionAtOnePoint("W1");
-//   mlSol.FixSolutionAtOnePoint("W2");
-//   mlSol.FixSolutionAtOnePoint("W3");
-
-
   MultiLevelProblem mlProb (&mlSol);
-
 
   //BEGIN Get initial curbvature data
   NonLinearImplicitSystem& system0 = mlProb.add_system < NonLinearImplicitSystem > ("Init");
@@ -178,9 +148,20 @@ int main (int argc, char** args) {
   system0.init();
 
   system0.MGsolve();
+
+  mlSol.SetWriter (VTK);
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back ("Dx1");
+  mov_vars.push_back ("Dx2");
+  mov_vars.push_back ("Dx3");
+  mlSol.GetWriter()->SetMovingMesh (mov_vars);
+
+  std::vector < std::string > variablesToBePrinted;
+  variablesToBePrinted.push_back ("All");
+
+  mlSol.GetWriter()->SetDebugOutput (true);
+  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
   //END Get initial curbvature data
-
-
 
   // add system Wilmore in mlProb as a Linear Implicit System
   TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("PWillmore");
@@ -203,30 +184,18 @@ int main (int argc, char** args) {
   system.AttachGetTimeIntervalFunction (GetTimeStep);
 
   // initilaize and solve the system
+  system.SetNumberOfGlobalVariables(1u);
+  
   system.init();
 
-  mlSol.SetWriter (VTK);
-  std::vector<std::string> mov_vars;
-  mov_vars.push_back ("Dx1");
-  mov_vars.push_back ("Dx2");
-  mov_vars.push_back ("Dx3");
-  mlSol.GetWriter()->SetMovingMesh (mov_vars);
-
-  std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back ("All");
-
-  mlSol.GetWriter()->SetDebugOutput (true);
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
-
-  unsigned numberOfTimeSteps = 100000;
+  unsigned numberOfTimeSteps = 1000u;
+  unsigned printInterval = 1u;
   for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
-
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    if ( (time_step + 1) % 1 == 0)
-      mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, (time_step + 1) / 1);
+    if ( (time_step + 1) % printInterval == 0)
+      mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, (time_step + 1) / printInterval);
   }
-
   return 0;
 }
 
@@ -242,7 +211,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   //  extract pointers to the several objects that we are going to use
   TransientNonlinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<TransientNonlinearImplicitSystem> ("PWillmore");   // pointer to the linear implicit system named "Poisson"
 
-  double dt = GetTimeStep (0);
+  double dt = mlPdeSys->GetIntervalTime();
 
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
@@ -466,18 +435,18 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         }
       }
 
-//       double solXOldnormPm2 = 0.;
-//       for (unsigned K = 0; K < DIM; K++) {
-//         solXOldnormPm2 += solxOldg[K] * solxOldg[K];
-//       }
-//       solXOldnormPm2 =  pow (solXOldnormPm2 , (P - 2.) / 2.);
-//       solXOldnormPm2 = 1.;
+      //       double solXOldnormPm2 = 0.;
+      //       for (unsigned K = 0; K < DIM; K++) {
+      //         solXOldnormPm2 += solxOldg[K] * solxOldg[K];
+      //       }
+      //       solXOldnormPm2 =  pow (solXOldnormPm2 , (P - 2.) / 2.);
+      //       solXOldnormPm2 = 1.;
 
-      double normY = 0.;
+      adept::adouble normY = 0.;
       for (unsigned K = 0; K < DIM; K++) {
-        normY += solWOldg[K] * solWOldg[K];
+        normY += solWg[K] * solWg[K];
       }
-      normY = pow (normY , 1. / ( 2. * ( P - 1.) ) );
+      normY = pow (normY , 1. / (2. * (P - 1.)));
       //normY =  pow (normY , 1. / (2.* P));
       //std::cout << normY << " ";
 
@@ -495,7 +464,9 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       normal[0] = (solxOld_uv[1][0] * solxOld_uv[2][1] - solxOld_uv[2][0] * solxOld_uv[1][1]) / sqrt (detg);
       normal[1] = (solxOld_uv[2][0] * solxOld_uv[0][1] - solxOld_uv[0][0] * solxOld_uv[2][1]) / sqrt (detg);;
       normal[2] = (solxOld_uv[0][0] * solxOld_uv[1][1] - solxOld_uv[1][0] * solxOld_uv[0][1]) / sqrt (detg);;
-
+//       std::cout.precision(14);
+//       std::cout << "NN={{"<<normal[0] <<", "<<normal[1]<<", " <<normal[2]<<"}};"<<std::endl<<std::endl;
+//
       double gi[dim][dim];
       gi[0][0] =  g[1][1] / detg;
       gi[0][1] = -g[0][1] / detg;
@@ -508,8 +479,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           for (unsigned j2 = 0; j2 < dim; j2++) {
             id +=  g[i][j2] * gi[j2][j];
           }
-//           if(i == j && fabs(id-1.) > 1.0e-10) std::cout<<id << " error0 ";
-//           else if (i != j && fabs(id) > 1.0e-10) std::cout<< id <<" error0 ";
+          //           if(i == j && fabs(id-1.) > 1.0e-10) std::cout<<id << " error0 ";
+          //           else if (i != j && fabs(id) > 1.0e-10) std::cout<< id <<" error0 ";
         }
       }
 
@@ -542,7 +513,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         }
       }
 
-
       std::vector < double > phiW_Xtan[DIM];
       std::vector < double > phix_Xtan[DIM];
 
@@ -562,6 +532,127 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         }
       }
 
+      double D[3][3];
+      double Pr[3][3];
+      for (unsigned I = 0; I < DIM; I++) {
+        for (unsigned J = 0; J < DIM; J++) {
+          D[I][J] = phiW_Xtan[I][0] + phiW_Xtan[J][0];
+          double deltaij = (I == J) ? 1. : 0.;
+          Pr[I][J] = deltaij - normal[I] * normal[J];
+        }
+      }
+      double D1[3][3];
+      for (unsigned I = 0; I < DIM; I++) {
+        for (unsigned J = 0; J < DIM; J++) {
+          D1[I][J] = 0.;
+          for (unsigned K = 0; K < DIM; K++) {
+            D1[I][J] += solxOld_Xtan[I][K] * D[K][J];
+          }
+        }
+      }
+      double D2[3][3];
+      for (unsigned I = 0; I < DIM; I++) {
+        for (unsigned J = 0; J < DIM; J++) {
+          D2[I][J] = 0.;
+          for (unsigned K = 0; K < DIM; K++) {
+            D2[I][J] += D1[I][K] * solxOld_Xtan[K][J];
+          }
+          //std::cout << D[I][J]<< " ";
+        }
+        //std::cout << std::endl;
+      }
+      //std::cout << std::endl;
+
+
+      double DX[3][3];
+      double DX2[3][3];
+      for (unsigned I = 0; I < DIM; I++) {
+        for (unsigned J = 0; J < DIM; J++) {
+          DX[I][J] = 0.;
+          DX2[I][J] = 0.;
+          for (unsigned K = 0; K < DIM; K++) {
+            DX[I][J] += D[I][K] * solWOld_Xtan[K][J];
+            DX2[I][J] += D2[I][K] * solWOld_Xtan[K][J];
+          }
+        }
+      }
+      double DXW = 0;
+      double DXW2 = 0;
+      for (unsigned I = 0; I < DIM; I++) {
+        for (unsigned J = 0; J < DIM; J++) {
+          DXW += DX[I][J] * solxOld_Xtan[I][J];
+          DXW2 += DX2[I][J] * solxOld_Xtan[I][J];
+          //std::cout << solxOld_Xtan[I][J] -Pr[I][J] << " ";
+        }
+        //std::cout << std::endl;
+      }
+      //std::cout << std::endl;
+
+      //std::cout << DXW << " " << DXW2 << "\t";
+
+
+//       std::cout<<"gradW={";
+//       for (unsigned I = 0; I < DIM; I++) {
+//         std::cout<<"{";
+//         for (unsigned J = 0; J < DIM; J++) {
+//
+//           std::cout << solWOld_Xtan[I][J] ;
+//           if(J < DIM-1) std::cout<<",";
+//         }
+//         std::cout<<"}";
+//         if(I < DIM-1) std::cout<<",";
+//         std::cout<<std::endl;
+//       }
+//       std::cout<<"};";
+//       std::cout<<std::endl<<std::endl;
+//
+//       std::cout<<"P={";
+//       for (unsigned I = 0; I < DIM; I++) {
+//         std::cout<<"{";
+//         for (unsigned J = 0; J < DIM; J++) {
+//
+//           std::cout << Pr[I][J] ;
+//           if(J < DIM-1) std::cout<<",";
+//         }
+//         std::cout<<"}";
+//         if(I < DIM-1) std::cout<<",";
+//         std::cout<<std::endl;
+//       }
+//       std::cout<<"};";
+//       std::cout<<std::endl<<std::endl;
+//
+//       std::cout<<"gradX={";
+//       for (unsigned I = 0; I < DIM; I++) {
+//         std::cout<<"{";
+//         for (unsigned J = 0; J < DIM; J++) {
+//
+//           std::cout << solxOld_Xtan[I][J] ;
+//           if(J < DIM-1) std::cout<<",";
+//         }
+//         std::cout<<"}";
+//         if(I < DIM-1) std::cout<<",";
+//         std::cout<<std::endl;
+//       }
+//       std::cout<<"};";
+//       std::cout<<std::endl<<std::endl;
+//
+//       std::cout<<"gradPhi={";
+//       for (unsigned I = 0; I < DIM; I++) {
+//         std::cout<<"{";
+//         for (unsigned J = 0; J < DIM; J++) {
+//
+//           std::cout << phiW_Xtan[J][0] ;
+//           if(J < DIM-1) std::cout<<",";
+//         }
+//         std::cout<<"}";
+//         if(I < DIM-1) std::cout<<",";
+//         std::cout<<std::endl;
+//       }
+//       std::cout<<"};";
+//       std::cout<<std::endl<<std::endl;
+
+      //    exit(0);
+
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
@@ -575,13 +666,13 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           adept::adouble term1 = 0.;
           adept::adouble term2 = 0.;
           adept::adouble term3 = 0.;
-         
+
           adept::adouble term5 = 0.;
-          
+
           for (unsigned J = 0; J < DIM; J++) {
 
-            
-            
+
+
             term0 +=  solW_Xtan[K][J] * phiW_Xtan[J][i];
 
             term1 +=  solx_Xtan[K][J] * phiW_Xtan[J][i];
@@ -589,42 +680,43 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             term2 +=  solW_Xtan[J][J];
 
             adept::adouble term4 = 0.;
-            
+
             term5 += phiW_Xtan[J][i] * solW_Xtan[J][K];
 
             for (unsigned L = 0; L < DIM; L++) {
               term5 -= normal[K] * normal[J] * phiW_Xtan[L][i] * solW_Xtan[J][L];
-              term4 += solx_Xtan[J][L] * solW_Xtan[K][L] + solx_Xtan[K][L] * solW_Xtan[J][L];
+              //term4 += solx_Xtan[J][L] * solW_Xtan[K][L] + solx_Xtan[K][L] * solW_Xtan[J][L];
+              term4 += solxOld_Xtan[L][J] * solWOld_Xtan[L][K] + solxOld_Xtan[L][K] * solWOld_Xtan[L][J];
             }
 
             term3 += phiW_Xtan[J][i] * term4;
 
           }
           aResx[K][i] += (P * (volumeConstraint * lambda0 * normal[K] +
-                              (solxg[K] - solxOldg[K])  / dt) * phiW[i]
+                               (solxg[K] - solxOldg[K])  / dt) * phiW[i]
                           //pow (normY, P - 2.) * (solxg[K] - solxOldg[K])  / dt) * phiW[i]
                           - P * term0
                           + (1. - P) * pow (normY , P) * term1
                           - P * term2 * phiW_Xtan[K][i]
-                          + 0.5 * P * term3
+                          + P * term3
                           //+ P * term5
                          ) * Area;
-                         
-          //std::cout << term5 << " " << -term0 + 0.5 * term3 << "\t";              
+
+          //std::cout << term5 << " " << -term0 + term3 << "\t";
         }
-        
-        
+
+
       }
       for (unsigned K = 0; K < DIM; K++) {
         if (volumeConstraint) {
-          if (iel != 0)aResLambda0 += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
+          if (iel != 0) aResLambda0 += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
           else aResLambda[0] += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
         }
 
         volume += (solxg[K].value()  * normal[K]) * Area;
       }
 
-      energy += pow (normY, P) * Area;
+      energy += pow (normY.value(), P) * Area;
 
     } // end gauss point loop
 
@@ -702,13 +794,13 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   //VecView ( (static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_SELF);
   //MatView ( (static_cast<PetscMatrix*> (KK))->mat(), PETSC_VIEWER_STDOUT_SELF);
 
-//   PetscViewer    viewer;
-//   PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
-//   PetscObjectSetName ( (PetscObject) viewer, "PWilmore matrix");
-//   PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
-//   MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
-//   double a;
-//   std::cin >> a;
+  //   PetscViewer    viewer;
+  //   PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+  //   PetscObjectSetName ( (PetscObject) viewer, "PWilmore matrix");
+  //   PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
+  //   MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
+  //   double a;
+  //   std::cin >> a;
 
 
   // ***************** END ASSEMBLY *******************
@@ -903,10 +995,10 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
       }
       double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
 
-//       double normal[DIM];
-//       normal[0] = - (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
-//       normal[1] = - (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);;
-//       normal[2] = - (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);;
+      //       double normal[DIM];
+      //       normal[0] = - (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
+      //       normal[1] = - (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);;
+      //       normal[2] = - (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);;
 
       double gi[dim][dim];
       gi[0][0] =  g[1][1] / detg;
@@ -972,15 +1064,18 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
+          adept::adouble term2 = 0.;
           for (unsigned J = 0; J < DIM; J++) {
             term1 +=  solx_Xtan[K][J] * phiW_Xtan[J][i];
+            term2 +=  solW_Xtan[K][J] * phiW_Xtan[J][i];
           }
           if (fabs (term1 - phix_Xtan[K][i]) > 1.0e-10) {
             std::cout << " error " << term1 << " " << phiW_Xtan[K][i];
             //abort();
           }
-//           std::cout << A <<" ";
-          aResW[K][i] += (solWg[K] * pow (normY.value(), 2. - P) * phiW[i] + term1) * Area;
+          double eps = 0.001;
+          //           std::cout << A <<" ";
+          aResW[K][i] += (solWg[K] * pow (normY.value(), 2. - P) * phiW[i] + eps * term2 + term1) * Area;
         }
       }
     } // end gauss point loop

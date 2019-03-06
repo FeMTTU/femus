@@ -44,7 +44,8 @@ namespace femus {
     _MGmatrixFineReuse(false),
     _MGmatrixCoarseReuse(false),
     _printSolverInfo(false),
-    _assembleMatrix(true) {
+    _assembleMatrix(true),
+    _numberOfGlobalVariables(0u){
     _SparsityPattern.resize(0);
     _outer_ksp_solver = "gmres";
     _totalAssemblyTime = 0.;
@@ -73,6 +74,7 @@ namespace femus {
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
+    _numberOfGlobalVariables = 0;
   }
 
   // ********************************************
@@ -103,6 +105,7 @@ namespace femus {
     }
 
     for(unsigned i = 0; i < _gridn; i++) {
+      _LinSolver[i]->SetNumberOfGlobalVariables(_numberOfGlobalVariables);
       _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
                              _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridn, _SparsityPattern);
     }
