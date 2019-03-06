@@ -84,11 +84,11 @@ int main (int argc, char** args) {
 //   mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -188,7 +188,7 @@ int main (int argc, char** args) {
   system.SetNumberOfGlobalVariables(1u);
   
   system.init();
-
+  system.SetMgType(V_CYCLE);
   unsigned numberOfTimeSteps = 1000u;
   unsigned printInterval = 1u;
   for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
