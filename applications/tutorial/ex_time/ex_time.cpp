@@ -201,12 +201,17 @@ int main(int argc,char **args) {
 //   system.SetDebugNonlinear(true);
   //**************
   
+  
+  const unsigned fine_lev = ml_sol._mlMesh->GetNumberOfLevels() - 1;
 
   
   const double total_time = 1.;  
   
-  std::vector< unsigned int > n_steps =  {10, 100, 1000};
+  std::vector< unsigned int > n_steps =  {/*2, */4, 8, 16};
  
+//   std::vector< MultiLevelSolution >  last_sol(n_steps.size(),  & ml_msh);  
+//   std::vector< Solution >  last_sol(n_steps.size(),  ml_msh.GetLevel(fine_lev) );  
+  std::vector< NumericVector* >  last_sol(n_steps.size());
   
   
   for (unsigned i = 0; i < n_steps.size(); i++) {
@@ -215,7 +220,7 @@ int main(int argc,char **args) {
   
   system.SetIntervalTime(interval_time);
   
-  const unsigned int write_interval = n_steps[i]/10;
+  const unsigned int write_interval = n_steps[i]/2;
   
 
   for (unsigned time_step = 0; time_step < n_steps[i]; time_step++) {
@@ -232,7 +237,6 @@ int main(int argc,char **args) {
     }
     
     // ======= Check for quenching ==========
-      const unsigned fine_lev = ml_sol._mlMesh->GetNumberOfLevels() - 1;
      if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= 0.99 ) { std::cout << "Detected quenching" << std::endl; exit(0); }
 
     
@@ -249,11 +253,16 @@ int main(int argc,char **args) {
     ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep").CopySolutionToOldSolution();
 
      } //end loop timestep
+     
+     //here is where we store the ends of the simulations
+//      last_sol[i] =  ml_sol;
+//      last_sol[i] = *( ml_sol.GetSolutionLevel( fine_lev ) )/*->GetSolutionName( unknown.c_str() )*/;
+     last_sol[i] =  &( ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() );
   
   }
 
-  // Destroy all the new systems
-  ml_prob.clear();
+//   last_sol[0]->add(-1., *(last_sol[1]));    const double numerator   = last_sol[0]->linfty_norm();
+//   last_sol[2]->add(-1., *(last_sol[1]));   const double denominator = last_sol[2]->linfty_norm();
 
   return 0;
 }
