@@ -203,7 +203,7 @@ namespace femus {
       for( unsigned ii = 0; ii < nvtOwned; ii++ ) {
         var_coord[ ii * 3 + i] = ( *mysol )( ii +  dofOffset );
       }
-      if( _ml_sol != NULL && _moving_mesh  && _ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
+      if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i){//_ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
         unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
         mysol->matrix_mult( *solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
@@ -236,7 +236,7 @@ namespace femus {
     }
 
     for( int i = 0; i < 3; i++ ) { // if moving mesh
-      if( _ml_sol != NULL && _moving_mesh  && mesh->GetDimension() > i )  {
+      if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i ){ //&& mesh->GetDimension() > i )  {
         unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
         mysol->matrix_mult( *solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );

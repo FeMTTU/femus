@@ -45,7 +45,8 @@ namespace femus {
     _MGmatrixCoarseReuse(false),
     _printSolverInfo(false),
     _assembleMatrix(true),
-    _sparsityPatternMultiplyingFactor(1u){
+    _sparsityPatternMinimumSize(1u),
+    _numberOfGlobalVariables(0u){
     _SparsityPattern.resize(0);
     _outer_ksp_solver = "gmres";
     _totalAssemblyTime = 0.;
@@ -75,6 +76,7 @@ namespace femus {
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
+    _numberOfGlobalVariables = 0;
   }
 
   // ********************************************
@@ -94,8 +96,8 @@ namespace femus {
 
   // ********************************************
   
-  void LinearImplicitSystem::SetSparsityPatternMultiplyingFactor(const unsigned &multyplyingFactor){
-    _sparsityPatternMultiplyingFactor=(multyplyingFactor < 2u) ? 1u : multyplyingFactor;
+  void LinearImplicitSystem::SetSparsityPatternMinimumSize(const unsigned &minimumSize){
+    _sparsityPatternMinimumSize = (minimumSize < 2u) ? 1u : minimumSize;
   }
   
   // ******************************************
@@ -105,16 +107,17 @@ namespace femus {
     _LinSolver.resize(_gridn);
 
     _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], GMRES_SMOOTHER).release();
-    _LinSolver[0]->SetSparsityPatternMultiplyingFactor(_sparsityPatternMultiplyingFactor);
+    _LinSolver[0]->SetSparsityPatternMinimumSize(_sparsityPatternMinimumSize);
     
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _SmootherType).release();
-      if(_sparsityPatternMultiplyingFactor != 1u){
-        _LinSolver[i]->SetSparsityPatternMultiplyingFactor(_sparsityPatternMultiplyingFactor);
+      if(_sparsityPatternMinimumSize != 1u){
+        _LinSolver[i]->SetSparsityPatternMinimumSize(_sparsityPatternMinimumSize);
       }
     }
 
     for(unsigned i = 0; i < _gridn; i++) {
+      _LinSolver[i]->SetNumberOfGlobalVariables(_numberOfGlobalVariables);
       _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
                              _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridn, _SparsityPattern);
     }

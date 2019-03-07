@@ -128,7 +128,7 @@ int main ( int argc, char** argv )
     // ******* Set Preconditioner *******
     system.SetMgSmoother ( GMRES_SMOOTHER );
 
-    system.SetSparsityPatternMultiplyingFactor ( 500u ); //TODO tune
+    system.SetSparsityPatternMinimumSize ( 500u ); //TODO tune
 
     system.init();
 
