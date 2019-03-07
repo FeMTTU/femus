@@ -24,9 +24,9 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-//DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.007, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05
-double delta1 = 0.1; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.1;
+//DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.007, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05, maxTest8: both 0.025, maxTest9: both 0.0125
+double delta1 = 0.0125; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.0125;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
@@ -35,7 +35,7 @@ void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 //     value = x[0];
 //     value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
-//     value = x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0];
+//     value = x[0] * x[0] * x[0] * x[0] + 0.025 * x[0] * x[0];
     value = x[0] * x[0] * x[0] * x[0];
 //     value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 
@@ -509,6 +509,36 @@ void AssembleLocalSys ( MultiLevelProblem& ml_prob )
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
     //BEGIN local assembly
+    
+        for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+
+        short unsigned ielGroup = msh->GetElementGroup ( iel );
+
+        if ( ielGroup == 5 || ielGroup == 6 ) { //5 and 6 are the boundary surfaces
+
+            unsigned nDofu  = msh->GetElementDofNumber ( iel, soluType );
+            std::vector <double> dofCoordinates ( dim );
+
+            for ( unsigned i = 0; i < nDofu; i++ ) {
+                unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
+                unsigned xDof = msh->GetSolutionDof ( i, iel, xType );
+                sol->_Bdc[soluIndex]->set ( solDof, 0. );
+
+                for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                    dofCoordinates[jdim] = ( *msh->_topology->_Sol[jdim] ) ( xDof );
+                }
+
+                double bdFunctionValue;
+                GetBoundaryFunctionValue ( bdFunctionValue, dofCoordinates );
+                sol->_Sol[soluIndex]->set ( solDof, bdFunctionValue );
+
+            }
+
+        }
+
+    }
+    
+    
     // element loop: each process loops only on the elements that owns
     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 

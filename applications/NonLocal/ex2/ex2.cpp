@@ -54,7 +54,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 1;
+unsigned numberOfUniformLevels = 2;
 
 int main ( int argc, char** argv )
 {
@@ -67,13 +67,15 @@ int main ( int argc, char** argv )
     unsigned numberOfSelectiveLevels = 0;
 //     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "fifth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
 //         mlMsh.ReadCoarseMesh ( "../input/maxTest3.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "second", scalingFactor );
-    mlMsh.ReadCoarseMesh ( "../input/maxTest5.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest5.neu", "fifth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest6.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest8.neu", "fifth", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/maxTest9.neu", "fifth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
     //mlMsh.ReadCoarseMesh ( "../input/martaTest0.neu", "second", scalingFactor );
 //      mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
@@ -218,6 +220,8 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
 
     double error_solExact_norm2 = 0.;
 
+    double error_solExact_local_norm2 = 0.;
+
     double error_solLocal_norm2 = 0.;
 
     double solNonlocal_norm2 = 0.;
@@ -234,6 +238,7 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
     soluIndexLocal = mlSol->GetIndex ( "u_local" );
 
     unsigned    iproc = msh->processor_id();
+    unsigned    nprocs = msh->n_processors();
 
     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
@@ -285,21 +290,22 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
 //                 exactSol_gss_y += phi[i] * x1[1][i]; // this is y at the Gauss point
             }
 
-            exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x + 0.1 * exactSol_gss_x * exactSol_gss_x; // this is x^4 + delta * x^2
+//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x + 0.1 * exactSol_gss_x * exactSol_gss_x; // this is x^4 + delta * x^2
 
 //             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x; // this is x^2
 
 //             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^3
 //             exactSol_gss_y = exactSol_gss_y * exactSol_gss_y * exactSol_gss_y; // this is y^3
 
-//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^4
+            exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^4
 
 //             exactSol_gss_x = 2 * exactSol_gss_x  + exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x ; // this is 2x + x^5
-
 
             error_solExact_norm2 += ( soluNonLoc_gss - exactSol_gss_x ) * ( soluNonLoc_gss - exactSol_gss_x ) * weight;
 
             //             error_solExact_norm2 += (soluNonLoc_gss -  (exactSol_gss_x + exactSol_gss_y)) * (soluNonLoc_gss -  (exactSol_gss_x + exactSol_gss_y)) * weight; //error L2 norm of x^3 + y^3
+
+            error_solExact_local_norm2 += ( soluLoc_gss - exactSol_gss_x ) * ( soluLoc_gss - exactSol_gss_x ) * weight;
 
             error_solLocal_norm2 += ( soluNonLoc_gss - soluLoc_gss ) * ( soluNonLoc_gss - soluLoc_gss ) * weight;
 
@@ -317,13 +323,19 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
     MPI_Allreduce ( &error_solExact_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     double norm = sqrt ( norm2 );
     std::cout.precision ( 14 );
-    std::cout << "L2 norm of ERROR wrt EXACT soln = " << norm << std::endl;
+    std::cout << "L2 norm of ERROR: Nonlocal - exact = " << norm << std::endl;
+
+    norm2 = 0.;
+    MPI_Allreduce ( &error_solExact_local_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    norm = sqrt ( norm2 );
+    std::cout.precision ( 14 );
+    std::cout << "L2 norm of ERROR: Local - exact = " << norm << std::endl;
 
     norm2 = 0.;
     MPI_Allreduce ( &error_solLocal_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     norm = sqrt ( norm2 );
     std::cout.precision ( 14 );
-    std::cout << "L2 norm of ERROR wrt LOCAL soln = " << norm << std::endl;
+    std::cout << "L2 norm of ERROR: Nonlocal - local = " << norm << std::endl;
 
     norm2 = 0.;
     MPI_Allreduce ( &solNonlocal_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
@@ -342,6 +354,42 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
     norm = sqrt ( norm2 );
     std::cout.precision ( 14 );
     std::cout << "L2 norm of EXACT soln = " << norm << std::endl;
+
+
+    double littleL2norm = 0.;
+    std::vector<double> littleLInfinitynorm ( nprocs, 0. );
+
+    for ( unsigned i =  msh->_dofOffset[soluType][iproc]; i <  msh->_dofOffset[soluType][iproc + 1]; i++ ) {
+
+        double nonLocalNodalValue = ( *sol->_Sol[soluIndex] ) ( i );
+        double LocalNodalValue = ( *sol->_Sol[soluIndexLocal] ) ( i );
+
+        double difference = fabs ( nonLocalNodalValue - LocalNodalValue );
+
+        if ( difference > littleLInfinitynorm[iproc] ) littleLInfinitynorm[iproc] = difference;
+
+        littleL2norm += difference * difference;
+
+    }
+
+    norm2 = 0.;
+    MPI_Allreduce ( &littleL2norm, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    norm = sqrt ( norm2 );
+    std::cout.precision ( 14 );
+    std::cout << "l2 norm of ERROR: Nonlocal - local = " << norm << std::endl;
+
+    for ( int kproc = 0; kproc < nprocs; kproc++ ) {
+        MPI_Bcast ( &littleLInfinitynorm[iproc], 1, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+    }
+
+    double littleLInfinityNorm = littleLInfinitynorm[0];
+
+    for ( unsigned kproc = 0; kproc < nprocs; kproc++ ) {
+        if ( littleLInfinitynorm[kproc] > littleLInfinityNorm ) littleLInfinityNorm = littleLInfinitynorm[kproc];
+    }
+
+    std::cout.precision ( 14 );
+    std::cout << "linfinity norm of ERROR: Nonlocal - local = " << littleLInfinityNorm << std::endl;
 
 
 }
