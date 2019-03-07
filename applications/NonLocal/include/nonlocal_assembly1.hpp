@@ -52,6 +52,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 {
     adept::Stack& s = FemusInit::_adeptStack;
 
+    const elem_type *fem = new const elem_type_2D ("quad","linear","second");
+    
     LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ( "NonLocal" );
     const unsigned level = mlPdeSys->GetLevelToAssemble();
 
@@ -218,6 +220,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                 for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
+                    unsigned i = fem->GetGaussPointNumber();
+                    
                     bool midpointQuadrature = false;
 
                     short unsigned ielGeom = msh->GetElementType ( iel );
@@ -537,6 +541,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
     RES->close();
 
     KK->close();
+    
+    //delete fem;
 
 //     Mat A = ( static_cast<PetscMatrix*> ( KK ) )->mat();
 //     MatAssemblyBegin ( A, MAT_FINAL_ASSEMBLY );
