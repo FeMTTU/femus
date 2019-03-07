@@ -54,7 +54,8 @@ namespace femus {
 
   // ************************MG********************
 
-  bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn, double &nonLinearEps) {
+  bool NonLinearImplicitSystem::HasNonLinearConverged(const unsigned igridn, double &nonLinearEps) {
+      
     bool conv = true;
     double L2normEps;
     double L2normSol;
@@ -66,7 +67,11 @@ namespace femus {
     const double absMinNormSol = 1.e-15;
     const double mindeltaNormSol = 1.e-50;
 
+// we need to store the global vector here
+     if (_debug_nonlinear)  {           _eps_fine[_nonliniteration] = _LinSolver[_gridn-1]->_EPS;    }
+    
     for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
+        
       unsigned indexSol = _SolSystemPdeIndex[k];
       L2normRes    = _solution[igridn]->_Res[indexSol]->l2_norm();
       L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
@@ -84,7 +89,9 @@ namespace femus {
       else {
         conv = false;
       }
+      
     }
+    
 
     return conv;
   }
@@ -121,6 +128,7 @@ namespace femus {
       clock_t start_nl_time = clock();
 
       bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn - 1u) ? 1 : 0;
+      
 restart:
       if(ThisIsAMR) _solution[igridn]->InitAMREps();
 
@@ -128,6 +136,12 @@ restart:
       for(unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++) {
 
         _nonliniteration = nonLinearIterator;
+        
+       if (_debug_nonlinear)  {
+                   _eps_fine.push_back(NumericVector::build().release());
+                   _eps_fine[_eps_fine.size()-1]->init(*_LinSolver[_gridn-1]->_EPS);
+            }
+      
         std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
         clock_t start_preparation_time = clock();
@@ -206,6 +220,7 @@ restart:
           std::cout << "   ********* Level Max " << igridn + 1 << " MGINIT TIME:\t" \
                     << static_cast<double>((clock() - mg_init_time)) / CLOCKS_PER_SEC << std::endl;
         }
+        
         totalAssembyTime += static_cast<double>((clock() - start_assembly_time)) / CLOCKS_PER_SEC;
         std::cout << "   ********* Level Max " << igridn + 1 << " PREPARATION TIME:\t" << \
                   static_cast<double>((clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
@@ -215,12 +230,12 @@ restart:
 
           std::cout << "     ********* Linear Cycle + Residual Update iteration " << updateResidualIterator + 1 << std::endl;
 
-          bool thisIsConverged;
+          bool thisHasConverged;
 
-          if(_MGsolver) thisIsConverged = MGVcycle(igridn, mgSmootherType);
-          else thisIsConverged = MLVcycle(igridn);
+          if(_MGsolver) thisHasConverged = MGVcycle(igridn, mgSmootherType);
+          else thisHasConverged = MLVcycle(igridn);
 
-          if(thisIsConverged || updateResidualIterator == _maxNumberOfResidualUpdateIterations - 1) break;
+          if(thisHasConverged || updateResidualIterator == _maxNumberOfResidualUpdateIterations - 1) break;
 
           _LinSolver[igridn]->SetResZero();
           _assembleMatrix = false;
@@ -247,7 +262,7 @@ restart:
         }
 
         double nonLinearEps;
-        bool nonLinearIsConverged = IsNonLinearConverged(igridn, nonLinearEps);
+        bool nonLinearIsConverged = HasNonLinearConverged(igridn, nonLinearEps);
 
         std::cout << "     ********* Linear Cycle + Residual Update-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
                   << static_cast<double>((clock() - startUpdateResidualTime)) / CLOCKS_PER_SEC << std::endl;
@@ -273,7 +288,9 @@ restart:
     
         if(nonLinearIsConverged || _bitFlipOccurred) break;
 
-      }
+      }  //end nonlinear iterations
+      
+      _last_nonliniteration = _nonliniteration;
       
       
       if(_bitFlipOccurred && _bitFlipCounter == 1){
@@ -300,6 +317,37 @@ restart:
     _totalSolverTime += totalSolverTime - totalAssembyTime;
   }
 
+  
+  
+  void NonLinearImplicitSystem::compute_convergence_rate() const {
+      
+      
+           const unsigned index_upper = _last_nonliniteration;
+
+    for(unsigned nonLinearIterator = 0; nonLinearIterator < index_upper; nonLinearIterator++) {
+         
+          
+            NumericVector*    eps_fine_temp = NumericVector::build().release();
+                   eps_fine_temp->init(*_LinSolver[_gridn-1]->_EPS);
+                   
+                   eps_fine_temp->close();
+                   eps_fine_temp->zero();
+         
+           const unsigned index_lower = nonLinearIterator + 1;
+         
+               for(unsigned n = index_upper; n >= index_lower; n--)  *(eps_fine_temp) += *(_eps_fine[n]);
+               
+          const double  numerator = eps_fine_temp->/*linfty_norm*/l2_norm();
+          *(eps_fine_temp) += *(_eps_fine[index_lower - 1]);
+          const double denominator = eps_fine_temp->/*linfty_norm*/l2_norm();
+
+         std::cout <<  std::setw(16) << std::setprecision(12) << nonLinearIterator << " " <<  numerator / (denominator * denominator)  << std::endl;
+         
+     }
+      
+      
+  }
+  
 
 
 } //end namespace femus

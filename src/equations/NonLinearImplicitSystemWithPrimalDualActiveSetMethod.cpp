@@ -71,6 +71,12 @@ restart:
       for(unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++) {
 
         _nonliniteration = nonLinearIterator;
+        
+         if (_debug_nonlinear)  {
+                   _eps_fine.push_back(NumericVector::build().release());
+                   _eps_fine[_eps_fine.size()-1]->init(*_LinSolver[_gridn-1]->_EPS);
+         }
+            
         std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
         clock_t start_preparation_time = clock();
@@ -158,12 +164,12 @@ restart:
 
           std::cout << "     ********* Linear Cycle + Residual Update iteration " << updateResidualIterator + 1 << std::endl;
 
-          bool thisIsConverged;
+          bool thisHasConverged;
 
-          if(_MGsolver) thisIsConverged = MGVcycle(igridn, mgSmootherType);
-          else thisIsConverged = MLVcycle(igridn);
+          if(_MGsolver) thisHasConverged = MGVcycle(igridn, mgSmootherType);
+          else thisHasConverged = MLVcycle(igridn);
 
-          if(thisIsConverged || updateResidualIterator == _maxNumberOfResidualUpdateIterations - 1) break;
+          if(thisHasConverged || updateResidualIterator == _maxNumberOfResidualUpdateIterations - 1) break;
 
           _LinSolver[igridn]->SetResZero();
           _assembleMatrix = false;
@@ -190,7 +196,7 @@ restart:
         }
 
         double nonLinearEps;
-        bool nonLinearIsConverged = IsNonLinearConverged(igridn, nonLinearEps);
+        bool nonLinearIsConverged = HasNonLinearConverged(igridn, nonLinearEps);
 
         std::cout << "     ********* Linear Cycle + Residual Update-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
                   << static_cast<double>((clock() - startUpdateResidualTime)) / CLOCKS_PER_SEC << std::endl;

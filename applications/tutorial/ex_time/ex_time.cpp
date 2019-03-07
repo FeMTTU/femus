@@ -55,24 +55,24 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
   bool test = 1; //Dirichlet
   value = 0.;
 
-  if(!strcmp(name,"u")) {
-    if (1==FaceName) { //inflow
-      test=1;
-     value=0.;
-    }
-    else if(2==FaceName ){  //outflow
-     test=1;
-     value=0.;
-    }
-    else if(3==FaceName ){  // no-slip fluid wall
-      test=1;
-      value=0.;
-    }
-    else if(4==FaceName ){  // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
+//   if(!strcmp(name,"u")) {
+//     if (1==FaceName) { //inflow
+//       test=1;
+//      value=0.;
+//     }
+//     else if(2==FaceName ){  //outflow
+//      test=1;
+//      value=0.;
+//     }
+//     else if(3==FaceName ){  // no-slip fluid wall
+//       test=1;
+//       value=0.;
+//     }
+//     else if(4==FaceName ){  // no-slip solid wall
+//       test=1;
+//       value=0.;
+//     }
+//   }
 
 
   return test;
@@ -97,18 +97,22 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
 double  nonlin_term_function(const double& v) {
     
 //    return 0.;
-   return -3.*1./( (1. - v) );
+//    return -0.5 * 1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
 //     return -exp(v);
+    return -  v * v * v - 1.;
+//     return - v * v;
  }
 
 
 double  nonlin_term_derivative(const double& v) {
     
 //     return 0.;
-   return -3.* +2. * 1./( (1. - v)*(1. - v) ); 
+//    return -0.5 * +2. * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
 //     return -exp(v);
+    return -3. * v * v;
+//     return -2. * v;
  }
 
 
@@ -129,9 +133,8 @@ int main(int argc,char **args) {
   std::string fe_quad_rule("seventh");
 
   // ======= Mesh ========================
-  //Nondimensional quantity (Lref,Uref)
+  //Nondimensional quantity (Lref)
   double Lref = 1.;
-  double Uref = 1.;
   const unsigned int nsub_x = 16;
   const unsigned int nsub_y = 16;
   const unsigned int nsub_z = 0;
@@ -139,8 +142,14 @@ int main(int argc,char **args) {
   const std::vector<double> xyz_max = {1.,1.,0.};
   const ElemType geom_elem_type = QUAD9;
 
+   std::string input_file = "Lshape_longer_y.med";
+//    std::string input_file = "Lshape.med";
+   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+  const std::string infile = mystream.str();
+  
   MultiLevelMesh ml_msh;
-  ml_msh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+  //   ml_msh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
 
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -150,7 +159,10 @@ int main(int argc,char **args) {
   // ======= Solution ========================
   MultiLevelSolution ml_sol(&ml_msh);  // define the multilevel solution and attach the mlMsh object to it
   const unsigned int time_dep_flag = 2;
-  ml_sol.AddSolution("u", LAGRANGE, FIRST, time_dep_flag);
+  
+  // ======= Unknowns and Fields ========================
+  std::string unknown = "u";
+  ml_sol.AddSolution(unknown.c_str(), LAGRANGE, FIRST, time_dep_flag);
   ml_sol.AddSolution("time", DISCONTINOUS_POLYNOMIAL, ZERO, time_dep_flag);
 
   // ======= Problem ========================
@@ -160,67 +172,97 @@ int main(int argc,char **args) {
   
   // ======= Initial values ========================
   ml_sol.Initialize("All");    // initialize all variables to zero
-  ml_sol.Initialize("u",   SetInitialCondition, &ml_prob);
+  ml_sol.Initialize(unknown.c_str(),   SetInitialCondition, &ml_prob);
 
   // ======= Boundary Conditions ========================
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);  // attach the boundary condition function and generate boundary data
-  ml_sol.GenerateBdc("u"); //"Time_dependent");
-
-  // ======= Parameters ========================
-  Parameter parameter(Lref,Uref);
+  ml_sol.GenerateBdc(unknown.c_str()); //"Time_dependent");
 
   // ======= System ========================
   TransientNonlinearImplicitSystem & system = ml_prob.add_system<TransientNonlinearImplicitSystem> ("Timedep");
-  system.AddSolutionToSystemPDE("u");
+  system.AddSolutionToSystemPDE(unknown.c_str());
 
   system.init();  // does it have to stay here or later?
 
   system.SetAssembleFunction(AssembleMatrixRes);
-  system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-8);
-  system.SetMgType(V_CYCLE);
-  system.SetMaxNumberOfNonLinearIterations(15);
+
+//   system.SetSolverFineGrids(PREONLY);
+//   system.SetPreconditionerFineGrids(LU_PRECOND);
+  
+//   system.SetMaxNumberOfLinearIterations(1);
+//   system.SetAbsoluteLinearConvergenceTolerance(1.e-8);
+//   system.SetMgType(V_CYCLE);
+  system.SetMaxNumberOfNonLinearIterations(30);
+  system.SetNonLinearConvergenceTolerance(1.e-8);
 
   //**************
   ml_sol.SetWriter(VTK);   //need to move this here for the DebugNonlinear function
-  //ml_sol.GetWriter()->SetDebugOutput(true);
+  ml_sol.GetWriter()->SetDebugOutput(true);
+//   system.SetDebugNonlinear(true);
   //**************
   
-  // time loop parameter
-  system.SetIntervalTime(0.001);
-  const unsigned int n_timesteps = 100;
-  const unsigned int write_interval = 1;
+  
+  const unsigned fine_lev = ml_sol._mlMesh->GetNumberOfLevels() - 1;
 
-  // ======= Time Loop ========================
-  for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+  
+  const double total_time = 1.;  
+  
+  std::vector< unsigned int > n_steps =  {/*2, */4, 8, 16};
+ 
+//   std::vector< MultiLevelSolution >  last_sol(n_steps.size(),  & ml_msh);  
+//   std::vector< Solution >  last_sol(n_steps.size(),  ml_msh.GetLevel(fine_lev) );  
+  std::vector< NumericVector* >  last_sol(n_steps.size());
+  
+  
+  for (unsigned i = 0; i < n_steps.size(); i++) {
+      
+  const double interval_time = total_time/n_steps[i];
+  
+  system.SetIntervalTime(interval_time);
+  
+  const unsigned int write_interval = n_steps[i]/2;
+  
+
+  for (unsigned time_step = 0; time_step < n_steps[i]; time_step++) {
 
      
-  // ======= Final Print ========================
+  // ======= Print ========================
     if ( !(time_step%write_interval) ) {
 
         std::vector < std::string > variablesToBePrinted;
         variablesToBePrinted.push_back("all");
-        ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted,time_step);    // print solutions
+        std::string run_prefix = "n_steps_" + std::to_string(n_steps[i]);
+        ml_sol.GetWriter()->Write(run_prefix, files.GetOutputPath(), "biquadratic", variablesToBePrinted, time_step);    // print solutions
 
     }
+    
+    // ======= Check for quenching ==========
+     if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= 0.99 ) { std::cout << "Detected quenching" << std::endl; exit(0); }
+
     
     // ======= Solve ========================
     std::cout << std::endl;
     std::cout << " *********** Timedep ************ " << std::endl;
     ml_prob.get_system("Timedep").MLsolve();
     
-     ml_sol.Initialize("time", SetInitialCondition, &ml_prob);
-
-    //update Solution
+      ml_sol.Set("time", SetInitialCondition, &ml_prob);
+      
+//       system.compute_convergence_rate();
+      
+    // ======= Update Solution ===============
     ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep").CopySolutionToOldSolution();
 
-      
+     } //end loop timestep
+     
+     //here is where we store the ends of the simulations
+//      last_sol[i] =  ml_sol;
+//      last_sol[i] = *( ml_sol.GetSolutionLevel( fine_lev ) )/*->GetSolutionName( unknown.c_str() )*/;
+     last_sol[i] =  &( ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() );
+  
+  }
 
-  } //end loop timestep
-
-
-  // Destroy all the new systems
-  ml_prob.clear();
+//   last_sol[0]->add(-1., *(last_sol[1]));    const double numerator   = last_sol[0]->linfty_norm();
+//   last_sol[2]->add(-1., *(last_sol[1]));   const double denominator = last_sol[2]->linfty_norm();
 
   return 0;
 }
@@ -238,7 +280,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 
   Mesh*		 msh    	   = ml_prob._ml_msh->GetLevel(level);
   elem*		 myel		   = msh->el;
-  SparseMatrix*	 KK	 	   = pdeSys->_KK;
+  SparseMatrix*	 JAC	 	   = pdeSys->_KK;
   NumericVector* RES 	   = pdeSys->_RES;
 
   // data
@@ -320,21 +362,21 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
   vector < vector < int > > L2G_dofmap(n_unknowns);     for(int i = 0; i < n_unknowns; i++) { L2G_dofmap[i].reserve(max_size); }
             vector< int >   L2G_dofmap_AllVars; L2G_dofmap_AllVars.reserve( n_unknowns*max_size );
           
-  vector< vector< double > > F(n_unknowns);
-  vector< vector< vector< double > > > B(n_unknowns);
+  vector< vector< double > > Res_el(n_unknowns);
+  vector< vector< vector< double > > > Jac_el(n_unknowns);
 
-   for(int i = 0; i < n_unknowns; i++) F[i].reserve(max_size);
+   for(int i = 0; i < n_unknowns; i++) Res_el[i].reserve(max_size);
 
    for(int i = 0; i < n_unknowns; i++) {
-     B[i].resize(n_unknowns);
+     Jac_el[i].resize(n_unknowns);
      for(int j = 0; j < n_unknowns; j++) {
-        B[i][j].reserve(max_size*max_size);
+        Jac_el[i][j].reserve(max_size*max_size);
      }
    }
   
   // Set to zero all the entries of the matrix
   RES->zero();
-  KK->zero();
+  JAC->zero();
 
   // *** element loop ***
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc+1]; iel++) {
@@ -382,12 +424,12 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
       for(int k = 0; k < n_unknowns; k++) {
       L2G_dofmap[k].resize(Sol_n_el_dofs[k]);
 
-      F[SolPdeIndex[k]].resize(Sol_n_el_dofs[k]);
-      memset(&F[SolPdeIndex[k]][0], 0., Sol_n_el_dofs[k]*sizeof(double));
+      Res_el[SolPdeIndex[k]].resize(Sol_n_el_dofs[k]);
+      memset(& Res_el[SolPdeIndex[k]][0], 0., Sol_n_el_dofs[k] * sizeof(double) );
 
 
-      B[SolPdeIndex[k]][SolPdeIndex[k]].resize(Sol_n_el_dofs[k] * Sol_n_el_dofs[k]);
-      memset(&B[SolPdeIndex[k]][SolPdeIndex[k]][0], 0., Sol_n_el_dofs[k] * Sol_n_el_dofs[k] * sizeof(double));
+      Jac_el[SolPdeIndex[k]][SolPdeIndex[k]].resize(Sol_n_el_dofs[k] * Sol_n_el_dofs[k]);
+      memset(& Jac_el[SolPdeIndex[k]][SolPdeIndex[k]][0], 0., Sol_n_el_dofs[k] * Sol_n_el_dofs[k] * sizeof(double));
     }
 
   //all vars###################################################################    
@@ -422,7 +464,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
   //========= fill gauss value quantities ==================
          
 	// *** phi_i loop ***
-	for(unsigned i=0; i<nDof_max; i++){
+	for(unsigned i = 0; i < nDof_max; i++) {
 
     //BEGIN RESIDUALS A block ===========================
 	    double Lap_rhs = 0.;
@@ -431,41 +473,44 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 	      Lap_rhs 	  += phi_x_fe_qp[SolFEType[0]][i * dim + d] *     sol_grad_qp[0][d];
 	      Lap_old_rhs += phi_x_fe_qp[SolFEType[0]][i * dim + d] * sol_old_grad_qp[0][d];
 	    }
-	    F[SolPdeIndex[0]][i] += weight_qp * ( 
-                    -       theta  * dt * ( Lap_rhs +  nonlin_term_function(sol_qp[0]) )           // Laplacian + nonlinear term
-					- (1. - theta) * dt * ( Lap_old_rhs +  nonlin_term_function(sol_old_qp[0]) )   // Laplacian + nonlinear term
-					- (sol_qp[0] - sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i]        // acceleration
+	    Res_el[SolPdeIndex[0]][i] +=  - weight_qp * ( 
+                dt * (
+                     +       theta  * ( Lap_rhs     +  nonlin_term_function(sol_qp[0]) )     // Laplacian + nonlinear term
+					 + (1. - theta) * ( Lap_old_rhs +  nonlin_term_function(sol_old_qp[0]) ) // Laplacian + nonlinear term
+                     ) 
+					+ (sol_qp[0] - sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i]        // acceleration
             );
     //END RESIDUALS A block ===========================
 
-	  {
+
 	    // *** phi_j loop ***
-	    for(unsigned j=0; j<nDof_max; j++) {
+	    for(unsigned j = 0; j<nDof_max; j++) {
             
-          double Mass = phi_fe_qp[ SolFEType[0] ][i]*phi_fe_qp[ SolFEType[0] ][j];
-
           double Lap_mat = 0.;
-          for(unsigned d = 0; d < dim; d++) {
-	        Lap_mat += phi_x_fe_qp[SolFEType[0]][i * dim + d] * phi_x_fe_qp[SolFEType[0]][j * dim + d];
-	      }
+          for(unsigned d = 0; d < dim; d++) Lap_mat += phi_x_fe_qp[SolFEType[0]][i * dim + d] *
+                                                       phi_x_fe_qp[SolFEType[0]][j * dim + d];
 
-		B[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * ( Lap_mat +  nonlin_term_derivative(phi_fe_qp[SolFEType[0]][j]) ) + Mass);
+
+          Jac_el[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * ( Lap_mat +  nonlin_term_derivative(  phi_fe_qp[ SolFEType[0] ][j] )  )
+                                                                                                      + phi_fe_qp[ SolFEType[0] ][i] * phi_fe_qp[ SolFEType[0] ][j] );
 	      
   	    }    //end phij loop
-	  }      // endif assemble_matrix
-	}        //end phii loop
+
+        
+    }        //end phii loop
+    
   }          // end gauss point loop
 
 //--------------------------------------------------------------------------------------------------------
     //Sum the local matrices/vectors into the Global Matrix/Vector
     for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-      RES->add_vector_blocked(F[SolPdeIndex[ivar]],L2G_dofmap[ivar]);
-      KK->add_matrix_blocked(B[SolPdeIndex[ivar]][SolPdeIndex[ivar]],L2G_dofmap[ivar],L2G_dofmap[ivar]);
+      RES->add_vector_blocked(Res_el[SolPdeIndex[ivar]],L2G_dofmap[ivar]);
+      JAC->add_matrix_blocked(Jac_el[SolPdeIndex[ivar]][SolPdeIndex[ivar]],L2G_dofmap[ivar],L2G_dofmap[ivar]);
     }
     //--------------------------------------------------------------------------------------------------------
   } //end list of elements loop for each subdomain
 
-  KK->close();
+  JAC->close();
   RES->close();
   // ***************** END ASSEMBLY *******************
 }

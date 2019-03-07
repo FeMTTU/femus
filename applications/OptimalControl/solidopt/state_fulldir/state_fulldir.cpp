@@ -14,10 +14,10 @@
 #include "PetscMatrix.hpp"
 #include <stdio.h>
 
-#define NSUB_X  32
-#define NSUB_Y  32
+#define NSUB_X  2
+#define NSUB_Y  2
 
-#define MODEL "Mooney-Rivlin" /*"Linear_elastic"*/ /*"Neo-Hookean"*/
+#define MODEL /*"Mooney-Rivlin"*/ "Linear_elastic" /*"Neo-Hookean"*/
 
 using namespace femus;
 
@@ -163,15 +163,20 @@ int main(int argc, char** args) {
   // initilaize and solve the system
   system.init();
   
+  // Solver and preconditioner
+  system.SetOuterKSPSolver("preonly");
+  system.SetSolverFineGrids(PREONLY);
+  system.SetPreconditionerFineGrids(LU_PRECOND);
+
+  //for Vanka   
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
 
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);
+  system.SetDebugNonlinear(true);
 
-  
-//   system.SetDebugNonlinear(true);
-  system.SetMaxNumberOfNonLinearIterations(2);
+//   system.SetMaxNumberOfNonLinearIterations(2);
 //   system.SetNonLinearConvergenceTolerance(1.e-30);
 //   system.SetDebugLinear(true);
 //   system.SetMaxNumberOfLinearIterations(4);
@@ -193,7 +198,7 @@ int main(int argc, char** args) {
  
   //Destroy all the new systems
   mlProb.clear();
-  
+    
   return 0;
 }
 
@@ -226,9 +231,6 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   SparseMatrix*    		JAC    		= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*   		RES          	= pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
-//   MatSetOption(static_cast< PetscMatrix* >(JAC)->mat(),MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
-    if( assembleMatrix ) s.continue_recording();
-    else s.pause_recording();
 
   const unsigned 	 dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned 		dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
@@ -720,6 +722,23 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   RES->close();
   
   // ***************** END ASSEMBLY *******************
+  
+  
+    // ***************** END ASSEMBLY *******************
+
+    //print JAC and RES to files
+    if (assembleMatrix) JAC->close();
+    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys.GetNonlinearIt()  << ".txt";
+    JAC->print_matlab(mat_out.str(),"ascii"); //  KK->print();
+
+    RES->close();
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << mlPdeSys.GetNonlinearIt()  << ".txt";
+    std::filebuf res_fb;
+    res_fb.open (res_out.str().c_str(),std::ios::out);
+    std::ostream  res_file_stream(&res_fb);
+    RES->print(res_file_stream);
+  
+  
 }
 
 

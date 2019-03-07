@@ -213,21 +213,25 @@ template < class type >
 } //end namespace Math
 
 
+class Main_single_level {
+    
+public: 
 
-template < class real_num, class type >
+virtual const MultiLevelSolution  run_on_single_level(const Files & files, 
+                                                   const std::vector< Math::Unknowns_definition > & unknowns,  
+                                                   MultiLevelMesh & ml_mesh, 
+                                                   const unsigned i) const = 0;
+  
+};
+
+
+template < class type >
 class FE_convergence {
  
     
     
 public: 
  
-    
-virtual const MultiLevelSolution  run_main_on_single_level(const Files & files, 
-                                                   const std::vector< Math::Unknowns_definition > & unknowns,  
-                                                   MultiLevelMesh & ml_mesh, 
-                                                   const unsigned i) = 0;
-   
-                                                  
 
   void  convergence_study(const Files & files, 
                                            const std::vector< Math::Unknowns_definition > & unknowns,
@@ -237,6 +241,7 @@ virtual const MultiLevelSolution  run_main_on_single_level(const Files & files,
                                            const unsigned max_number_of_meshes, 
                                            const unsigned norm_flag,
                                            const unsigned conv_order_flag,
+                                           const Main_single_level & main_in,
                                            const Math::Function< double > * exact_sol = NULL) {
 
 
@@ -250,7 +255,7 @@ virtual const MultiLevelSolution  run_main_on_single_level(const Files & files,
             
        for (int i = 0; i < max_number_of_meshes; i++) {
                   
-            const MultiLevelSolution ml_sol_single_level = run_main_on_single_level(files, unknowns, ml_mesh, i);
+            const MultiLevelSolution ml_sol_single_level = main_in.run_on_single_level(files, unknowns, ml_mesh, i);
 
                                               FE_convergence::compute_error_norms_per_unknown_per_level ( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag, exact_sol);
         
@@ -626,6 +631,42 @@ static  void compute_error_norms_per_unknown_per_level(const MultiLevelSolution*
 
 
  
+    
+};
+
+
+
+
+
+
+template < class real_num, class other_real_num >
+class assemble_jacobian {
+ 
+    
+ public:
+    
+                                               
+ void prepare_before_integration_loop(adept::Stack& stack) const;
+
+ 
+ void  compute_jacobian_inside_integration_loop(const unsigned i,
+                                               const unsigned dim,
+                                               const unsigned nDofu,
+                                               const std::vector< other_real_num > & phi,
+                                               const std::vector< other_real_num > &  phi_x, 
+                                               const other_real_num weight,
+                                               std::vector< other_real_num > & Jac) const;
+  
+                                               
+ void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
+                                               const std::vector< real_num > & solu,
+                                               const std::vector< real_num > & Res,
+                                               std::vector< other_real_num > & Jac, 
+                                               const std::vector< int > & loc_to_glob_map,
+                                               NumericVector*           RES,
+                                               SparseMatrix*             KK
+                                                                   ) const;
+                                                                   
     
 };
 
