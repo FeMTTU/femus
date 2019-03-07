@@ -96,22 +96,24 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
 
 double  nonlin_term_function(const double& v) {
     
-//    return 0.;
+   return 1.;
+//    return v + 1.;
 //    return -0.5 * 1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
 //     return -exp(v);
-    return -  v * v * v - 1.;
+//     return -  v * v * v - 1.;
 //     return - v * v;
  }
 
 
 double  nonlin_term_derivative(const double& v) {
     
-//     return 0.;
+   return 0.;
+//    return 1.;
 //    return -0.5 * +2. * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
 //     return -exp(v);
-    return -3. * v * v;
+//     return -3. * v * v;
 //     return -2. * v;
  }
 
@@ -192,8 +194,8 @@ int main(int argc,char **args) {
 //   system.SetMaxNumberOfLinearIterations(1);
 //   system.SetAbsoluteLinearConvergenceTolerance(1.e-8);
 //   system.SetMgType(V_CYCLE);
-  system.SetMaxNumberOfNonLinearIterations(30);
-  system.SetNonLinearConvergenceTolerance(1.e-8);
+//   system.SetMaxNumberOfNonLinearIterations(30);
+//   system.SetNonLinearConvergenceTolerance(1.e-8);
 
   //**************
   ml_sol.SetWriter(VTK);   //need to move this here for the DebugNonlinear function
@@ -207,7 +209,7 @@ int main(int argc,char **args) {
   
   const double total_time = 1.;  
   
-  std::vector< unsigned int > n_steps =  {/*2, */4, 8, 16};
+  std::vector< unsigned int > n_steps =  {10/*6*//*2, *//*4, 8, 16*/};
  
 //   std::vector< MultiLevelSolution >  last_sol(n_steps.size(),  & ml_msh);  
 //   std::vector< Solution >  last_sol(n_steps.size(),  ml_msh.GetLevel(fine_lev) );  
@@ -220,14 +222,14 @@ int main(int argc,char **args) {
   
   system.SetIntervalTime(interval_time);
   
-  const unsigned int write_interval = n_steps[i]/2;
+  const unsigned int write_interval = 1.; //n_steps[i];
   
 
   for (unsigned time_step = 0; time_step < n_steps[i]; time_step++) {
 
      
   // ======= Print ========================
-    if ( !(time_step%write_interval) ) {
+    if ( !(time_step % write_interval) ) {
 
         std::vector < std::string > variablesToBePrinted;
         variablesToBePrinted.push_back("all");
@@ -267,6 +269,8 @@ int main(int argc,char **args) {
   return 0;
 }
 
+
+
 //------------------------------------------------------------------------------------------------------------
 void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 
@@ -280,7 +284,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 
   Mesh*		 msh    	   = ml_prob._ml_msh->GetLevel(level);
   elem*		 myel		   = msh->el;
-  SparseMatrix*	 JAC	 	   = pdeSys->_KK;
+  SparseMatrix*	 JAC	   = pdeSys->_KK;
   NumericVector* RES 	   = pdeSys->_RES;
 
   // data
@@ -407,7 +411,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
             unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);                    // global to global mapping between solution node and solution dof 
                                                                                             // via local to global solution node
            sol_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);                            // global extraction and local storage for the solution
-       sol_old_eldofs[k][i] = (*sol->_SolOld[SolIndex[k]])(solDof);                         // global extraction and local storage for the solution
+       sol_old_eldofs[k][i] = (*sol->_SolOld[SolIndex[k]])(solDof);                         // This is OLD in TIME, not in nonlinear loop
            L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
@@ -467,16 +471,16 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 	for(unsigned i = 0; i < nDof_max; i++) {
 
     //BEGIN RESIDUALS A block ===========================
-	    double Lap_rhs = 0.;
-	    double Lap_old_rhs = 0.;
+	    double Lap_rhs_i = 0.;
+	    double Lap_old_rhs_i = 0.;
 	    for(unsigned d = 0;  d < dim;  d++) {
-	      Lap_rhs 	  += phi_x_fe_qp[SolFEType[0]][i * dim + d] *     sol_grad_qp[0][d];
-	      Lap_old_rhs += phi_x_fe_qp[SolFEType[0]][i * dim + d] * sol_old_grad_qp[0][d];
+	      Lap_rhs_i     += phi_x_fe_qp[SolFEType[0]][i * dim + d] *     sol_grad_qp[0][d];
+	      Lap_old_rhs_i += phi_x_fe_qp[SolFEType[0]][i * dim + d] * sol_old_grad_qp[0][d];
 	    }
 	    Res_el[SolPdeIndex[0]][i] +=  - weight_qp * ( 
                 dt * (
-                     +       theta  * ( Lap_rhs     +  nonlin_term_function(sol_qp[0]) )     // Laplacian + nonlinear term
-					 + (1. - theta) * ( Lap_old_rhs +  nonlin_term_function(sol_old_qp[0]) ) // Laplacian + nonlinear term
+                     +       theta  * ( Lap_rhs_i     +  nonlin_term_function(sol_qp[0])     * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
+					 + (1. - theta) * ( Lap_old_rhs_i +  nonlin_term_function(sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
                      ) 
 					+ (sol_qp[0] - sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i]        // acceleration
             );
@@ -486,13 +490,13 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
 	    // *** phi_j loop ***
 	    for(unsigned j = 0; j<nDof_max; j++) {
             
-          double Lap_mat = 0.;
-          for(unsigned d = 0; d < dim; d++) Lap_mat += phi_x_fe_qp[SolFEType[0]][i * dim + d] *
-                                                       phi_x_fe_qp[SolFEType[0]][j * dim + d];
+          double Lap_mat_i_j = 0.;
+          for(unsigned d = 0; d < dim; d++) Lap_mat_i_j += phi_x_fe_qp[SolFEType[0]][i * dim + d] *
+                                                           phi_x_fe_qp[SolFEType[0]][j * dim + d];
 
 
-          Jac_el[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * ( Lap_mat +  nonlin_term_derivative(  phi_fe_qp[ SolFEType[0] ][j] )  )
-                                                                                                      + phi_fe_qp[ SolFEType[0] ][i] * phi_fe_qp[ SolFEType[0] ][j] );
+          Jac_el[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * ( Lap_mat_i_j  + phi_fe_qp[ SolFEType[0] ][i] * nonlin_term_derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] )
+                                                                                                                + phi_fe_qp[ SolFEType[0] ][i] * phi_fe_qp[ SolFEType[0] ][j] );
 	      
   	    }    //end phij loop
 
