@@ -96,9 +96,9 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
 
 double  nonlin_term_function(const double& v) {
     
-   return 1.;
+//    return 1.;
 //    return v + 1.;
-//    return -0.5 * 1./( (1. - v) );
+   return - 3. * 1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
 //     return -exp(v);
 //     return -  v * v * v - 1.;
@@ -108,9 +108,9 @@ double  nonlin_term_function(const double& v) {
 
 double  nonlin_term_derivative(const double& v) {
     
-   return 0.;
+//    return 0.;
 //    return 1.;
-//    return -0.5 * +2. * 1./( (1. - v)*(1. - v) ); 
+   return - 3. * 2. * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
 //     return -exp(v);
 //     return -3. * v * v;
@@ -194,8 +194,8 @@ int main(int argc,char **args) {
 //   system.SetMaxNumberOfLinearIterations(1);
 //   system.SetAbsoluteLinearConvergenceTolerance(1.e-8);
 //   system.SetMgType(V_CYCLE);
-//   system.SetMaxNumberOfNonLinearIterations(30);
-//   system.SetNonLinearConvergenceTolerance(1.e-8);
+  system.SetMaxNumberOfNonLinearIterations(30);
+  system.SetNonLinearConvergenceTolerance(1.e-8);
 
   //**************
   ml_sol.SetWriter(VTK);   //need to move this here for the DebugNonlinear function
@@ -209,7 +209,7 @@ int main(int argc,char **args) {
   
   const double total_time = 1.;  
   
-  std::vector< unsigned int > n_steps =  {10/*6*//*2, *//*4, 8, 16*/};
+  std::vector< unsigned int > n_steps =  {100/*6*//*2, *//*4, 8, 16*/};
  
 //   std::vector< MultiLevelSolution >  last_sol(n_steps.size(),  & ml_msh);  
 //   std::vector< Solution >  last_sol(n_steps.size(),  ml_msh.GetLevel(fine_lev) );  
@@ -253,6 +253,24 @@ int main(int argc,char **args) {
       
     // ======= Update Solution ===============
     ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep").CopySolutionToOldSolution();
+    
+     
+     bool adapt_flag = 1; // Set to 0 for no adaptation and 1 for adaptation (which starts at a specified solution magnitude)
+     
+     if ( adapt_flag == 1 ) {
+     
+       double AdaptStarter = 0.85; // Value of ||u||_\infty at which to start adaptation
+       if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= AdaptStarter ) {
+    
+           double NonlinearityTracker = 0.01 * nonlin_term_derivative( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() ) ;
+           double NewTime = std::min( system.GetIntervalTime(), NonlinearityTracker );
+           double minTimeStep = 0.000001; // Minimum step-size controller
+           double NewTimeFixed = std::max( NewTime , minTimeStep );
+           system.SetIntervalTime(NewTimeFixed);
+         }    
+    
+       }
+       
 
      } //end loop timestep
      
