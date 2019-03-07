@@ -22,6 +22,13 @@
 
 #define CTRL_FACE_IDX  3
 
+#define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
+#define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
+#define no_of_ref 1     //mesh refinements
+
+#define NO_OF_L2_NORMS 9   //U,V,P,UADJ,VADJ,PADJ,GX,GY,THETA
+#define NO_OF_H1_NORMS 6    //U,V,UADJ,VADJ,GX, GY
+
 
 using namespace femus;
 
@@ -42,10 +49,19 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
                 if (!strcmp(SolName, "GZ"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
                 if (!strcmp(SolName, "THETA"))    { dirichlet = false; }
       
+#if exact_sol_flag == 0
                 if (!strcmp(SolName, "U"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
                 if (!strcmp(SolName, "V"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
+#endif
                 if (!strcmp(SolName, "W"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
-                
+     
+#if exact_sol_flag == 1
+  //b.c. for manufactured lid driven cavity
+  double pi = acos(-1.);
+                if (!strcmp(SolName, "U"))       { if (facename == CTRL_FACE_IDX) value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]); }
+                if (!strcmp(SolName, "V"))       { if (facename == CTRL_FACE_IDX) value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]); }
+ #endif
+               
   return dirichlet;
 
 }
@@ -71,7 +87,11 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob);
 
 void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_from_restriction);
+double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated);
+// ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
+//i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
+
+void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes, int loop_i );
 
 int main(int argc, char** args) {
   
@@ -84,7 +104,7 @@ int main(int argc, char** args) {
         files.RedirectCout();
   
   MultiLevelMesh mlMsh;			// define multilevel mesh
-  MultiLevelMesh mlMsh_finest;
+  MultiLevelMesh mlMsh_all_levels;
   double scalingFactor = 1.;		// read coarse level mesh and generate finers level meshes
 
    //Adimensional quantity (Lref,Uref)
@@ -104,7 +124,7 @@ int main(int argc, char** args) {
 //   MultiLevelMesh mlMsh;
 //  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
     mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-    mlMsh_finest.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+    mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
     
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
@@ -112,18 +132,43 @@ int main(int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 6;
+    maxNumberOfMeshes = no_of_ref;
   } else {
     maxNumberOfMeshes = 4;
   }
 
-  vector < double >  l2Norm(maxNumberOfMeshes);
-  vector < double >  semiNorm(maxNumberOfMeshes);
 
+     double comp_conv[maxNumberOfMeshes][NO_OF_L2_NORMS+NO_OF_H1_NORMS];
+ 
   
-  MultiLevelSolution * mlSol_finest;
-  
-  for (int i = maxNumberOfMeshes - 1; i >= 0; i--) {   // loop on the mesh level
+        unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
+        mlMsh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
+//      mlMsh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
+        
+        //store the fine solution  ==================
+            MultiLevelSolution * mlSol_all_levels;
+            mlSol_all_levels = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+         // add variables to mlSol_all_levels
+        // state =====================  
+            mlSol_all_levels->AddSolution("U", LAGRANGE, SECOND);
+            mlSol_all_levels->AddSolution("V", LAGRANGE, SECOND);
+            if (dim == 3) mlSol_all_levels->AddSolution("W", LAGRANGE, SECOND);
+            mlSol_all_levels->AddSolution("P", LAGRANGE, FIRST);
+        // adjoint =====================  
+            mlSol_all_levels->AddSolution("UADJ", LAGRANGE, SECOND);
+            mlSol_all_levels->AddSolution("VADJ", LAGRANGE, SECOND);
+            if (dim == 3) mlSol_all_levels->AddSolution("WADJ", LAGRANGE, SECOND);
+            mlSol_all_levels->AddSolution("PADJ", LAGRANGE, FIRST);
+        // boundary condition =====================
+            mlSol_all_levels->AddSolution("GX", LAGRANGE, SECOND);
+            mlSol_all_levels->AddSolution("GY", LAGRANGE, SECOND);
+            if (dim == 3) mlSol_all_levels->AddSolution("GZ", LAGRANGE, SECOND);
+            mlSol_all_levels->AddSolution("THETA", DISCONTINOUS_POLYNOMIAL, ZERO);
+            mlSol_all_levels->Initialize("All");
+            mlSol_all_levels->AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
+            mlSol_all_levels->GenerateBdc("All");
+
+         for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
   unsigned numberOfUniformLevels = i + 1; 
   unsigned numberOfSelectiveLevels = 0;
@@ -132,12 +177,6 @@ int main(int argc, char** args) {
   // erase all the coarse mesh levels
   mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
-    if (i == maxNumberOfMeshes - 1) {
-        unsigned numberOfUniformLevels_finest = numberOfUniformLevels;
-        mlMsh_finest.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest + numberOfSelectiveLevels, NULL);
-//         mlMsh_finest.EraseCoarseLevels(numberOfUniformLevels_finest - 1 - 1); //I need to keep the structures at all levels here so I can restrict every time
-    }
- 
   // print mesh info
   mlMsh.PrintInfo();
 
@@ -215,106 +254,152 @@ int main(int argc, char** args) {
     system_opt.SetDebugFunction(ComputeIntegral);
 //   system_opt.SetMaxNumberOfNonLinearIterations(30);
 //   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
-    system_opt.SetMaxNumberOfLinearIterations(6);
-    system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
+//     system_opt.SetMaxNumberOfLinearIterations(6);
+//     system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
     system_opt.MLsolve();
 
- 
-      if (i < maxNumberOfMeshes - 1) {
-       
-        //restrict the fine solution at the current level  ==================
-       for(unsigned k = 0; k < mlSol_finest->GetSolutionSize(); k++) {
-            unsigned SolIndex = k;
-            unsigned SolFEType = mlSol_finest->GetSolutionType(SolIndex);
-//     for(unsigned short j = 0; j < mlSol._mlMesh->GetNumberOfLevels(); j++) { //all levels
-            const unsigned coarse = i;
-            const unsigned fine   = coarse + 1;
-                mlSol_finest->GetSolutionLevel(coarse)->_Sol[SolIndex]->matrix_mult_transpose( *(mlSol_finest->GetSolutionLevel(fine)->_Sol[SolIndex]), *(mlMsh_finest.GetLevel(fine)->GetCoarseToFineProjection(SolFEType)) );
-                Solution* sol_coarse = mlSol_finest->GetSolutionLevel(coarse);      sol_coarse->_Sol[SolIndex]->close();
-                Solution*   sol_fine = mlSol_finest->GetSolutionLevel(fine);          sol_fine->_Sol[SolIndex]->close();
-//        }
-        }
-
-        //pass the restriction of the fine solution to the function that computes the error  ==================
-      Solution* sol = mlSol_finest->GetSolutionLevel(i);    // pointer to the solution (level) object
-      std::pair< double , double > norm = GetErrorNorm(&mlSol,sol);
-
-      l2Norm[i]  = norm.first;
-      semiNorm[i] = norm.second;
+    if ( i > 0 ) {
         
-    }
+//prolongation of coarser  
+      mlSol_all_levels->RefineSolution(i);
+      Solution* sol_coarser_prolongated = mlSol_all_levels->GetSolutionLevel(i);
+  
+      double* norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
+    
+      for(int j = 0; j < NO_OF_L2_NORMS+NO_OF_H1_NORMS; j++)       comp_conv[i-1][j] = norm[j];
+  
+     }
 
-     else if (i == maxNumberOfMeshes - 1) {
-
-         //store the fine solution  ==================
-            mlSol_finest = new MultiLevelSolution (&mlMsh_finest);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-        // add variables to mlSol_finest
-        // state =====================  
-            mlSol_finest->AddSolution("U", LAGRANGE, SECOND);
-            mlSol_finest->AddSolution("V", LAGRANGE, SECOND);
-            if (dim == 3) mlSol_finest->AddSolution("W", LAGRANGE, SECOND);
-            mlSol_finest->AddSolution("P", LAGRANGE, FIRST);
-        // adjoint =====================  
-            mlSol_finest->AddSolution("UADJ", LAGRANGE, SECOND);
-            mlSol_finest->AddSolution("VADJ", LAGRANGE, SECOND);
-            if (dim == 3) mlSol_finest->AddSolution("WADJ", LAGRANGE, SECOND);
-            mlSol_finest->AddSolution("PADJ", LAGRANGE, FIRST);
-        // boundary condition =====================
-            mlSol_finest->AddSolution("GX", LAGRANGE, SECOND);
-            mlSol_finest->AddSolution("GY", LAGRANGE, SECOND);
-            if (dim == 3) mlSol_finest->AddSolution("GZ", LAGRANGE, SECOND);
-            mlSol_finest->AddSolution("THETA", DISCONTINOUS_POLYNOMIAL, ZERO);
-            mlSol_finest->Initialize("All");
-            mlSol_finest->AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
-            mlSol_finest->GenerateBdc("All");
-              
-//       assert( mlSol._mlMesh->GetNumberOfLevels() == mlSol_finest->_mlMesh->GetNumberOfLevels() - 1 );
-
- //     for(unsigned short k = 0; k < mlSol._mlMesh->GetNumberOfLevels(); k++) { //all levels (only one)
-    //       _solution[k]->CopySolutionToOldSolution();  //started from here
-             
-            const unsigned level_index_current = 0;
-       //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
-            for(unsigned short j = 0; j <   mlSol.GetSolutionLevel(level_index_current)->_Sol.size(); j++) {    //all variables
-                *(mlSol_finest->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
-            }
-  //        }
-    }
+    
+//store the last computed solution
+// 
+       const unsigned level_index_current = 0;
+      //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
+       const unsigned n_vars = mlSol.GetSolutionLevel(level_index_current)->_Sol.size();
+       
+        for(unsigned short j = 0; j < n_vars; j++) {  
+               *(mlSol_all_levels->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
+        }
+        
  
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
-  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,"biquadratic", variablesToBePrinted);
+  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,"biquadratic", variablesToBePrinted, i);
  
   //Destroy all the new systems
-  mlProb.clear();
+//   mlProb.clear();
   }
 
-  delete mlSol_finest; 
+//  delete mlSol_all_levels; 
 
-  // print the seminorm of the error and the order of convergence between different levels
+#if compute_conv_flag == 1
+  std::cout << "=======================================================================" << std::endl;
+   std::cout << " L2-NORM ERROR and ORDER OF CONVERGENCE:\n\n";
+  std::vector< std::string > norm_names_L2 = {"U","V", "P", "UADJ","VADJ", "PADJ", "GX","GY", "THETA"};
+
+   for(int j = 0; j <  norm_names_L2.size(); j++)  {
   std::cout << std::endl;
   std::cout << std::endl;
-  std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\t\tl2_error\t\t\t\torder of convergence\n"; 
-    
-  for (int i = maxNumberOfMeshes - 1; i >= 0; i--) {   // loop on the mesh level
-    std::cout << i + 1 << "\t\t"<< std::setw(11) << std::setprecision(10) << l2Norm[i] <<"\t\t\t\t" << std::setprecision(3) << log(l2Norm[i] / l2Norm[i + 1]) / log(2.) << std::endl;
+  std::cout << "LEVEL\t\t" << norm_names_L2[j] << "\t\t\t\torder of convergence\n"; 
+   for(int i = 0; i <  maxNumberOfMeshes - 1; i++){
+       output_convergence_rate(comp_conv[i][j], comp_conv[i + 1][j], norm_names_L2[j], maxNumberOfMeshes , i );
+    }
   }
+  std::cout << std::endl;
+  std::cout << "=======================================================================" << std::endl;
+  std::cout << " H1-NORM ERROR and ORDER OF CONVERGENCE:" << std::endl;
+  std::vector< std::string > norm_names_H1 = {"U","V", "UADJ","VADJ", "GX","GY"};
 
+   for(int j = 0; j <  norm_names_H1.size(); j++)  {
   std::cout << std::endl;
   std::cout << std::endl;
-  std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\t\tseminorm_error\t\t\t\torder of convergence\n"; 
-
-  for (int i = maxNumberOfMeshes - 1; i >= 0; i--) {   // loop on the mesh level
-    std::cout << i + 1 << "\t\t"<< std::setw(11) << std::setprecision(10) << semiNorm[i] <<"\t\t\t\t" << std::setprecision(3) << log(semiNorm[i] / semiNorm[i + 1]) / log(2.) << std::endl;
+  std::cout << "LEVEL\t\t" << norm_names_H1[j] << "\t\t\t\torder of convergence\n"; 
+   for(int i = 0; i <  maxNumberOfMeshes - 1; i++){
+       output_convergence_rate(comp_conv[i][NO_OF_L2_NORMS + j], comp_conv[i + 1][NO_OF_L2_NORMS + j], norm_names_H1[j], maxNumberOfMeshes , i );
+    }
   }
-
+  std::cout << std::endl;
+  std::cout << "=======================================================================" << std::endl;
+#endif
+  
   return 0;
 }
  
+
+void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes , int loop_i) {
+
+    std::cout << loop_i + 1 << "\t\t" <<  std::setw(11) << std::setprecision(10) << norm_i << "\t\t\t\t" ;
+  
+    if (loop_i < maxNumberOfMeshes/*norm.size()*/ - 2) {
+      std::cout << std::setprecision(3) << log( norm_i/ norm_ip1 ) / log(2.) << std::endl;
+    }
+  
+}
+
+
+
+//adj---------------------------------------------
+void value_adjVel(const std::vector < double >& x, vector < double >& val_adjVel) {
+  double pi = acos(-1.);
+  val_adjVel[0] =   0.5 * sin(pi* x[0]) * sin(pi* x[0]) *  sin(2. * pi * x[1]); //u
+  val_adjVel[1] = - 0.5 * sin(2. * pi * x[0]) * sin(pi* x[1]) * sin(pi* x[1]); //v
+ };
+ 
+double value_adjPress(const std::vector < double >& x) { 
+  double pi = acos(-1.);
+  return sin(2. * pi * x[0]) * sin(2. * pi * x[1]); //p
+ };
+ 
+ 
+void gradient_adjVel(const std::vector < double >& x, vector < vector < double > >& grad_adjVel) {
+  double pi = acos(-1.);
+  grad_adjVel[0][0]  =   0.5 * pi * sin(2. * pi * x[0]) * sin(2. * pi * x[1]); 
+  grad_adjVel[0][1]  =   pi * sin(pi* x[0]) * sin(pi* x[0]) *  cos(2. * pi * x[1]);
+  grad_adjVel[1][0]  = - pi * cos(2. * pi * x[0]) * sin(pi * x[1]) * sin(pi * x[1]); 
+  grad_adjVel[1][1]  = - 0.5 * pi * sin(2. * pi * x[0]) * sin(2. * pi * x[1]);
+ };
+
+ void gradient_adjPress(const std::vector < double >& x, vector < double >& grad_adjPress) {
+  double pi = acos(-1.);
+  grad_adjPress[0]  =   2. * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]); 
+  grad_adjPress[1]  =   2. * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
+ };
+ 
+ 
+void laplace_adjVel(const std::vector < double >& x, vector < double >& lap_adjVel) {
+  double pi = acos(-1.);
+  lap_adjVel[0] = pi * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]) - 2. * pi * pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(2. * pi * x[1]);
+  lap_adjVel[1] = 2. * pi * pi * sin(2. * pi * x[0]) * sin(pi* x[1]) * sin(pi* x[1]) - pi * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
+};
+//adj---------------------------------------------
+
+//state---------------------------------------------
+void value_stateVel(const std::vector < double >& x, vector < double >& val_stateVel) {
+  double pi = acos(-1.);
+  val_stateVel[0] =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);
+  val_stateVel[1] = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);
+ };
+ 
+ 
+void gradient_stateVel(const std::vector < double >& x, vector < vector < double > >& grad_stateVel) {
+  double pi = acos(-1.);
+  grad_stateVel[0][0]  =   pi * sin(2. * pi * x[0]) * cos(pi* x[1]) - pi * sin(2. * pi * x[0]);
+  grad_stateVel[0][1]  = - pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(pi * x[1]); 
+  grad_stateVel[1][0]  = - 2. * pi * cos(2. * pi * x[0]) * sin(pi* x[1]) + 2. * pi * pi * x[1] * cos(2. * pi * x[0]);   
+  grad_stateVel[1][1]  = - pi * sin(2. * pi * x[0]) * cos(pi * x[1]) + pi * sin(2. * pi * x[0]); 
+ };
+
+  
+void laplace_stateVel(const std::vector < double >& x, vector < double >& lap_stateVel) {
+  double pi = acos(-1.);
+  lap_stateVel[0] = - 2. * pi * pi * cos(2. * pi * x[0]) - 0.5 * pi * pi * cos(pi * x[1]) + 2.5 * pi * pi * cos(2. * pi* x[0]) * cos(pi* x[1]);
+  lap_stateVel[1] = - 4. * pi * pi * pi * x[1] * sin(2. * pi * x[0]) + 5. * pi * pi * sin(2. * pi * x[0]) * sin(pi * x[1]);
+};
+//state---------------------------------------------
+
+
  
 
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
@@ -873,7 +958,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
 
 
- //begin unknowns eval at gauss points ********************************
+       vector < double > coordX_gss(dim, 0.);
+ 	for(unsigned k = 0; k <  dim; k++) {
+	  for(unsigned i = 0; i < Sol_n_el_dofs[k]; i++) {
+         coordX_gss[k] += coordX[k][i] * phi_gss_fe[ SolFEType[k] ][i];
+      }
+    }
+//begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk < /*n_vars*/ n_unknowns; unk++) {
 	    SolVAR_qp[unk] = 0.;
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
@@ -890,6 +981,62 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	} //unk 
  //end unknowns eval at gauss points ********************************
 	
+//computation of RHS (force and desired velocity) using MMS=============================================== 
+//state values-------------------- //non-hom bdry
+vector <double>  exact_stateVel(dim);
+value_stateVel(coordX_gss, exact_stateVel);
+vector <double>  exact_lap_stateVel(dim);
+laplace_stateVel(coordX_gss, exact_lap_stateVel);
+vector < vector < double > > exact_grad_stateVel(dim);
+for (unsigned k = 0; k < dim; k++){ 
+    exact_grad_stateVel[k].resize(dim);
+    std::fill(exact_grad_stateVel[k].begin(), exact_grad_stateVel[k].end(), 0.);
+}
+gradient_stateVel(coordX_gss,exact_grad_stateVel);
+
+//adjoint values--------------------//hom bdry
+vector <double>  exact_adjVel(dim);
+value_adjVel(coordX_gss, exact_adjVel);
+vector <double>  exact_lap_adjVel(dim);
+laplace_adjVel(coordX_gss, exact_lap_adjVel);
+vector < vector < double > > exact_grad_adjVel(dim);
+for (unsigned k = 0; k < dim; k++){ 
+    exact_grad_adjVel[k].resize(dim);
+    std::fill(exact_grad_adjVel[k].begin(), exact_grad_adjVel[k].end(), 0.);
+}
+gradient_adjVel(coordX_gss,exact_grad_adjVel);
+vector <double> exact_grad_adjPress(dim);
+gradient_adjPress(coordX_gss, exact_grad_adjPress);
+
+//convection terms from delta_state-------------------------------------
+vector <double>  exact_conv_u_nabla_u(dim,0.);
+
+for (unsigned k = 0; k < dim; k++){
+    for (unsigned i = 0; i < dim; i++){
+    exact_conv_u_nabla_u[k] += exact_grad_stateVel[k][i] * exact_stateVel[i] ; 
+    }
+}
+
+//convection terms from delta_adjoint-------------------------
+vector <double>  exact_conv_u_nabla_uadj(dim,0.);
+vector <double>  exact_conv_nabla_uT_uadj(dim,0.);
+
+for (unsigned k = 0; k < dim; k++){
+    for (unsigned i = 0; i < dim; i++){
+    exact_conv_u_nabla_uadj[k] += exact_grad_adjVel[k][i] * exact_stateVel[i] ; 
+    exact_conv_nabla_uT_uadj[k] += exact_grad_stateVel[i][k] * exact_adjVel[i];
+    }
+}
+
+//force and desired velocity ---------------------------------------------
+vector <double> exactForce(dim,0.);
+vector <double> exactVel_d(dim,0.);
+for (unsigned k = 0; k < dim; k++){
+    exactForce[k] = - IRe * exact_lap_stateVel[k]  + advection_flag * exact_conv_u_nabla_u[k] + exact_grad_adjPress[k];
+    exactVel_d[k] =   exact_stateVel[k] + (1./alpha_val) * (IRe * exact_lap_adjVel[k] - exact_grad_adjPress[k]) 
+                    + (1./alpha_val) * advection_flag * (exact_conv_u_nabla_uadj[k] - exact_conv_nabla_uT_uadj[k]);
+}
+//computation of RHS (force and desired velocity) using MMS=============================================== 
  
 //============ delta_state row ============================================================================================
 
@@ -902,7 +1049,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		    lap_res_du_u 	       += gradSolVAR_qp[SolPdeIndex[kdim]][jdim] * phi_x_gss_fe[SolFEType[kdim]][i * dim + jdim];
 		   adv_res_uold_nablauold  += SolVAR_qp[SolPdeIndex[jdim]]  * gradSolVAR_qp[SolPdeIndex[kdim]][jdim] * phi_gss_fe[ SolFEType[kdim] ][i];
 	      }      
-	      Res[kdim][i]   +=  (           force[kdim] * phi_gss_fe[SolFEType[kdim]][i]
+	      Res[kdim][i]   +=  (           
+#if exact_sol_flag == 0
+                                         + force[kdim] * phi_gss_fe[ SolFEType[kdim] ][i]
+ #endif                                      
+ #if exact_sol_flag == 1
+                                       + exactForce[kdim] * phi_gss_fe[ SolFEType[kdim] ][i]
+ #endif
                                        - IRe*lap_res_du_u 
                                        - advection_flag * adv_res_uold_nablauold 
                                        + SolVAR_qp[SolPdeIndex[press_type_pos]] * phi_x_gss_fe[SolFEType[kdim]][i * dim + kdim]) * weight; 
@@ -966,7 +1119,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		adv_res_phiadj_nablauold_uadjold     += phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] * gradSolVAR_qp[SolPdeIndex[jdim]][kdim] 			* SolVAR_qp[SolPdeIndex[jdim + adj_pos_begin]];
 		adv_res_uold_nablaphiadj_uadjold     += SolVAR_qp[SolPdeIndex[jdim]]		       * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + jdim]  * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]];
 	   }
-	  Res[kdim + adj_pos_begin][i] += ( - alpha_val * target_flag *  Vel_desired[kdim] 	     * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+	  Res[kdim + adj_pos_begin][i] += ( 
+#if exact_sol_flag == 0
+                            - alpha_val * target_flag * Vel_desired[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+ #endif                                      
+ #if exact_sol_flag == 1
+                            - alpha_val * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+ #endif
                                         + alpha_val * target_flag * SolVAR_qp[SolPdeIndex[kdim]] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
                                         - IRe*lap_res_dadj_adj
                                         - advection_flag * adv_res_phiadj_nablauold_uadjold
@@ -1510,7 +1669,10 @@ double integral_g_dot_n = 0.;
   
 }
 
-std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_finer) {
+
+double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated) {
+  
+    static double ErrorNormArray[NO_OF_L2_NORMS+NO_OF_H1_NORMS];
     
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
@@ -1534,64 +1696,105 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
   for (unsigned  k = 0; k < dim; k++) { 
     coordX[k].reserve(maxSize);
   }
+   
+  //geometry *******************************
+
+ // solution variables *******************************************
+  const int n_vars = dim+1;
+  const int n_unknowns = 3*n_vars; //(2.*dim)+1; //state , adjoint of velocity terms and one pressure term
+  const int vel_type_pos = 0;
+  const int press_type_pos = dim;
+  const int adj_vel_type_pos = vel_type_pos;
+  const int state_pos_begin = 0;
+  const int adj_pos_begin   = dim+1;
+  const int ctrl_pos_begin   = 2*(dim+1);
+  const int theta_index = press_type_pos + ctrl_pos_begin;
   
+  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
+  Solname              [state_pos_begin+0] =                "U";
+  Solname              [state_pos_begin+1] =                "V";
+  if (dim == 3) Solname[state_pos_begin+2] =                "W";
+  Solname              [state_pos_begin + press_type_pos] = "P";
+  
+  Solname              [adj_pos_begin + 0] =              "UADJ";
+  Solname              [adj_pos_begin + 1] =              "VADJ";
+  if (dim == 3) Solname[adj_pos_begin + 2] =              "WADJ";
+  Solname              [adj_pos_begin + press_type_pos] = "PADJ";
+
+  Solname              [ctrl_pos_begin + 0] =              "GX";
+  Solname              [ctrl_pos_begin + 1] =              "GY";
+  if (dim == 3) Solname[ctrl_pos_begin + 2] =              "GZ";
+  Solname              [ctrl_pos_begin + press_type_pos] = "THETA";
+  
+  vector < unsigned > SolIndex(n_unknowns);  
+  vector < unsigned > SolFEType(n_unknowns);  
+
+
+  for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
+    SolIndex[ivar]	= mlSol->GetIndex        (Solname[ivar].c_str());
+    SolFEType[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
+  }
+
+  vector < double > Sol_n_el_dofs(n_unknowns);
+  
+  //==========================================================================================
+  // velocity ************************************
+  vector < vector < double > > phi_gss_fe(NFE_FAMS);
+  vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
+  vector < vector < double > > phi_xx_gss_fe(NFE_FAMS);
+ 
+  for(int fe=0; fe < NFE_FAMS; fe++) {  
+        phi_gss_fe[fe].reserve(maxSize);
+      phi_x_gss_fe[fe].reserve(maxSize*dim);
+     phi_xx_gss_fe[fe].reserve(maxSize*(3*(dim-1)));
+   }
+  
+  //=================================================================================================
+  
+  // quadratures ********************************
   double weight;
   
   
-  //geometry *******************************
-
-//STATE######################################################################
-  vector < unsigned > solVIndex(dim);
-  solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
-  solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
-
-  if (dim == 3) solVIndex[2] = mlSol->GetIndex("W");      // get the position of "V" in the ml_sol object
-
-  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+  //----------- dofs ------------------------------
+  vector < vector < double > > SolVAR_eldofs(n_unknowns);
+  vector < vector < double > > gradSolVAR_eldofs(n_unknowns);
   
-  vector < vector < double > >  solV(dim);    // local solution
-  vector <double >  V_gss(dim, 0.);    //  solution
-   
- for (unsigned  k = 0; k < dim; k++) {
-    solV[k].reserve(maxSize);
+  vector < vector < double > > SolVAR_coarser_prol_eldofs(n_unknowns);
+  vector < vector < double > > gradSolVAR_coarser_prol_eldofs(n_unknowns);
+
+
+  for(int k = 0; k < n_unknowns; k++) {
+    SolVAR_eldofs[k].reserve(maxSize);
+    gradSolVAR_eldofs[k].reserve(maxSize*dim); 
+    
+    SolVAR_coarser_prol_eldofs[k].reserve(maxSize);
+    gradSolVAR_coarser_prol_eldofs[k].reserve(maxSize*dim);    
   }
 
-  
-  vector <double> phiV_gss;  // local test function
-  vector <double> phiV_x_gss; // local test function first order partial derivatives
-  vector <double> phiV_xx_gss; // local test function second order partial derivatives
-
-  phiV_gss.reserve(maxSize);
-  phiV_x_gss.reserve(maxSize * dim);
-  phiV_xx_gss.reserve(maxSize * dim2);
-  
-//STATE######################################################################
-  
-   vector < vector < double > >  solV_finer(dim);    // finer solution
-  vector <double >  V_finer_gss(dim, 0.);    //  solution
- for (unsigned  k = 0; k < dim; k++) {
-    solV_finer[k].reserve(maxSize);
+  //------------ at quadrature points ---------------------
+  vector < double > SolVAR_qp(n_unknowns);
+  vector < double > SolVAR_coarser_prol_qp(n_unknowns);
+  vector < vector < double > > gradSolVAR_qp(n_unknowns);
+  vector < vector < double > > gradSolVAR_coarser_prol_qp(n_unknowns);
+  for(int k = 0; k < n_unknowns; k++) {
+      gradSolVAR_qp[k].reserve(maxSize);  
+      gradSolVAR_coarser_prol_qp[k].reserve(maxSize);  
   }
-  
-  double seminorm_inexact = 0.;
-  double l2norm_inexact = 0.;
+      
+   vector  < double > l2norm (NO_OF_L2_NORMS,0.);
+  vector  < double > seminorm (NO_OF_H1_NORMS,0.);
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     
+  // geometry *****************************
     short unsigned ielGeom = msh->GetElementType(iel);
+    
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
-    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
 
     for (unsigned  k = 0; k < dim; k++) {       coordX[k].resize(nDofsX);    }
-   // resize local arrays
-    for (unsigned  k = 0; k < dim; k++)  {
-      solV[k].resize(nDofsV);
-      solV_finer[k].resize(nDofsV);
-    }
-   
-     // geometry ************
+  
     for (unsigned i = 0; i < nDofsX; i++) {
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
 
@@ -1612,71 +1815,91 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
    for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofsX; }
   //*************************************** 
   
-  //***** set target domain flag ********************************** 
-   int target_flag = 0;
-   target_flag = ElementTargetFlag(elem_center);
-//***************************************       
-   
-   const double weird_multigrid_factor = 0.5;
-    // local storage of global mapping and solution
- //STATE###################################################################  
-    // velocity ************
-    for (unsigned i = 0; i < nDofsV; i++) {
-      unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
-
-      for (unsigned  k = 0; k < dim; k++) {
-        solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
-        solV_finer[k][i] = weird_multigrid_factor * (*sol_finer->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
-      }
-    }
-//STATE###################################################################
- 
-    // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
-      // *** get gauss point weight, test function and test function partial derivatives ***
-       msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV_gss, phiV_x_gss, phiV_xx_gss);
-
-      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
- 	
-    for (unsigned  k = 0; k < dim; k++) {
-      V_gss[k]       = 0.;
-      V_finer_gss[k]    = 0.;
-    }
+  // geometry end *****************************
+  
+  
+ // equation *****************************
+    unsigned nDofsV = msh->GetElementDofNumber(iel, SolFEType[vel_type_pos]);    // number of solution element dofs
+    unsigned nDofsP = msh->GetElementDofNumber(iel, SolFEType[state_pos_begin + press_type_pos]);    // number of solution element dofs
     
- 	  vector < vector < double > > gradV_gss(dim);
-  	  vector < vector < double > > gradV_finer_gss(dim);
-     for (unsigned  k = 0; k < dim; k++) {
-          gradV_gss[k].resize(dim);
-          gradV_finer_gss[k].resize(dim);
-         std::fill(gradV_gss[k].begin(), gradV_gss[k].end(), 0);
-         std::fill(gradV_finer_gss[k].begin(), gradV_finer_gss[k].end(), 0);
-       }
-     for (unsigned i = 0; i < nDofsV; i++) {
-        for (unsigned  k = 0; k < dim; k++) {
-            V_gss[k]        += solV[k][i]        * phiV_gss[i];
-            V_finer_gss[k]  += solV_finer[k][i]  * phiV_gss[i];
-		}
+    unsigned nDofsVadj = msh->GetElementDofNumber(iel,SolFEType[adj_pos_begin]);    // number of solution element dofs
+    unsigned nDofsPadj = msh->GetElementDofNumber(iel,SolFEType[adj_pos_begin + press_type_pos]);    // number of solution element dofs
+
+   unsigned nDofsGctrl = msh->GetElementDofNumber(iel,SolFEType[ctrl_pos_begin]);
+    unsigned nDofsThetactrl = msh->GetElementDofNumber(iel,SolFEType[theta_index] );
+
+    unsigned nDofsVP = dim * nDofsV + nDofsP; //same for state and adjoint
+    unsigned nDofsVPctrl = dim * nDofsGctrl + nDofsThetactrl; //control
+   
+    unsigned nDofsVP_tot = 2*nDofsVP + (nDofsVPctrl);
+  // equation end *****************************
+
+
+   //STATE###################################################################  
+  for (unsigned  k = 0; k < n_unknowns; k++) {
+    unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+	Sol_n_el_dofs[k]=ndofs_unk;
+       SolVAR_eldofs[k].resize(ndofs_unk);
+       SolVAR_coarser_prol_eldofs[k].resize(ndofs_unk);
+    for (unsigned i = 0; i < ndofs_unk; i++) {
+       unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);    // global to global mapping between solution node and solution dof // via local to global solution node
+       SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);      // global extraction and local storage for the solution
+       SolVAR_coarser_prol_eldofs[k][i] = (*sol_coarser_prolongated->_Sol[SolIndex[k]])(solDof);      // global extraction and local storage for the solution
       }
+    }
+  //CTRL###################################################################
+
+ 
+      // ********************** Gauss point loop *******************************
+      for(unsigned ig=0;ig < msh->_finiteElement[ielGeom][SolFEType[vel_type_pos]]->GetGaussPointNumber(); ig++) {
 	
-      for (unsigned i = 0; i < nDofsV; i++) {
-        for (unsigned j = 0; j < dim; j++) {
-            for (unsigned  k = 0; k < dim; k++) {
-              gradV_gss[k][j] += phiV_x_gss[i * dim + j] * solV[k][i];
-              gradV_finer_gss[k][j] += phiV_x_gss[i * dim + j] * solV_finer[k][i];
-           }
-          }
+ 
+      for(int fe=0; fe < NFE_FAMS; fe++) {
+	msh->_finiteElement[ielGeom][fe]->Jacobian(coordX,ig,weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
       }
+         //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
+  	msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
 
-        for (unsigned  k = 0; k < dim; k++) {
-            for (unsigned j = 0; j < dim ; j++) {
-                seminorm_inexact   += ((gradV_gss[k][j] - gradV_finer_gss[k][j]) * (gradV_gss[k][j] - gradV_finer_gss[k][j])) * weight;
-            }
-        }
+ //begin unknowns eval at gauss points ********************************
+	for(unsigned unk = 0; unk < n_unknowns; unk++) {
+	  SolVAR_qp[unk] = 0.;
+	  SolVAR_coarser_prol_qp[unk] = 0.;
+	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
+	    gradSolVAR_qp[unk][ivar2] = 0.; 
+	    gradSolVAR_coarser_prol_qp[unk][ivar2] = 0.; 
+	  }
+    }
+	  
+	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
+	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
+	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i] * SolVAR_eldofs[unk][i];
+	    SolVAR_coarser_prol_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i] * SolVAR_coarser_prol_eldofs[unk][i];
+	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
+	      gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
+	      gradSolVAR_coarser_prol_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_coarser_prol_eldofs[unk][i]; 
+	    }
+	  }
+	  
+	}  
+ //end unknowns eval at gauss points ********************************
 
-        for (unsigned  k = 0; k < dim; k++) {
-            l2norm_inexact += (V_gss[k] - V_finer_gss[k]) * (V_gss[k] - V_finer_gss[k]) * weight;
+
+	for(unsigned unk = 0; unk < n_unknowns; unk++) {
+        l2norm[unk] += ( SolVAR_qp[unk] - SolVAR_coarser_prol_qp[unk] ) * ( SolVAR_qp[unk] - SolVAR_coarser_prol_qp[unk] ) * weight ; 
+        
+     }
+    
+    
+	for(unsigned unk = 0; unk < dim; unk++) {
+        for(int j = 0; j < dim; j++){
+        seminorm[unk] += (gradSolVAR_qp[unk][j] - gradSolVAR_coarser_prol_qp[unk][j] ) * ( gradSolVAR_qp[unk][j] - gradSolVAR_coarser_prol_qp[unk][j] ) * weight ;
+        seminorm[unk + dim] += (gradSolVAR_qp[unk + adj_pos_begin][j] - gradSolVAR_coarser_prol_qp[unk + adj_pos_begin][j] ) * ( gradSolVAR_qp[unk + adj_pos_begin][j] - gradSolVAR_coarser_prol_qp[unk + adj_pos_begin][j] ) * weight ;
+        seminorm[unk + 2*dim] += (gradSolVAR_qp[unk + ctrl_pos_begin][j] - gradSolVAR_coarser_prol_qp[unk + ctrl_pos_begin][j] ) * ( gradSolVAR_qp[unk + ctrl_pos_begin][j] - gradSolVAR_coarser_prol_qp[unk + ctrl_pos_begin][j] ) * weight ;
+        
         }
-   } // end gauss point loop
+     }
+    
+    } // end gauss point loop
   } //end element loop for each process
 
 
@@ -1685,18 +1908,30 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol, Solution* s
   norm_vec_inexact = NumericVector::build().release();
   norm_vec_inexact->init(msh->n_processors(), 1 , false, AUTOMATIC);
 
-  norm_vec_inexact->set(iproc, l2norm_inexact);
-  norm_vec_inexact->close();
-  l2norm_inexact = norm_vec_inexact->l1_norm();
+	for(unsigned unk = 0; unk < NO_OF_L2_NORMS; unk++) {
+        norm_vec_inexact->set(iproc, l2norm[unk]);
+        norm_vec_inexact->close();
+        l2norm[unk] = norm_vec_inexact->l1_norm();
+    }
 
-  norm_vec_inexact->set(iproc, seminorm_inexact);
-  norm_vec_inexact->close();
-  seminorm_inexact = norm_vec_inexact->l1_norm();
+	for(unsigned unk = 0; unk < NO_OF_H1_NORMS; unk++) {
+        norm_vec_inexact->set(iproc, seminorm[unk]);
+        norm_vec_inexact->close();
+        seminorm[unk] = norm_vec_inexact->l1_norm();
+    }
+
 
   delete norm_vec_inexact;
-
-//   std::pair < double, double > inexact_pair(sqrt(l2norm_inexact), sqrt(seminorm_inexact));
   
-  return std::pair < double, double > (sqrt(l2norm_inexact), sqrt(seminorm_inexact));
-
+ 
+	for(unsigned unk = 0; unk < NO_OF_L2_NORMS; unk++) {
+        ErrorNormArray[unk] = sqrt(l2norm[unk]);
+    }
+ 	for(unsigned unk = 0; unk < NO_OF_H1_NORMS; unk++) {
+        ErrorNormArray[unk + NO_OF_L2_NORMS] = sqrt(seminorm[unk]);
+    }
+  
+   return ErrorNormArray;
+  
+  
 }

@@ -4,10 +4,10 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  32
-#define NSUB_Y  32
+#define NSUB_X  2
+#define NSUB_Y  2
 
-#define FLUID_DENSITY  100
+#define FLUID_DENSITY  1
 //******************************************* Desired Target  and RHS function*******************************************************
 
  double force[3] = {0.,0.,0.};
@@ -16,14 +16,14 @@
 //*********************** Sets the regularization parameters *******************************************************
 
  double alpha_val = 1.;
- double beta_val  = 1.e-2;
- double gamma_val = 1.e-2;
+ double beta_val  = 1.e-3;
+ double gamma_val = 1.e-3;
  
  
 //******************************** switch between stokes and navier stokes *********************************************
  
  int advection_flag = 1;
- int advection_Picard = 1;
+ int advection_Picard = 0;
  
 //  Newton: advection_flag = 1; advection_Picard = 0;
 //  Picard: advection_flag = 1; advection_Picard = 1;
