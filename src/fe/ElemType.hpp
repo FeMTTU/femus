@@ -429,7 +429,7 @@ namespace femus
                          vector < type2 >& phi, vector < type1 >& gradphi,
                          boost::optional< vector < type1 > & > nablaphi) const;
 
-      /* all type - a double */
+      /* Gauss index-based */
       template <class type>
       void Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
                          vector < double >& phi, vector < type >& gradphi,
@@ -455,11 +455,14 @@ namespace femus
                          vector < double >& phi, vector < type >& gradphi,
                          boost::optional < vector < type > & > nablaphi) const;
 
+      /* mixed adept-double */
       void Jacobian(const vector < vector < adept::adouble > >& vt, const vector < double >& xi, adept::adouble& Weight,
                     vector < double >& phi, vector < adept::adouble >& gradphi,
                     boost::optional < vector < adept::adouble > & > nablaphi = boost::none) const {
         Jacobian_type(vt, xi, Weight, phi, gradphi, nablaphi);
       }
+      
+      /* all double */
       void Jacobian(const vector < vector < double > >& vt, const vector < double >& xi, double& Weight,
                     vector < double >& phi, vector < double >& gradphi,
                     boost::optional < vector < double > & > nablaphi = boost::none) const {

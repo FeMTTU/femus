@@ -7,7 +7,7 @@ namespace femus {
 
  // template specialization for adept::adouble
 template < >
- void assemble_jacobian< adept::adouble  > ::prepare_before_integration_loop(adept::Stack & stack)  const { 
+ void assemble_jacobian< adept::adouble, double > ::prepare_before_integration_loop(adept::Stack & stack)  const { 
     
   stack.new_recording();    // start a new recording of all the operations involving adept variables
 
@@ -17,12 +17,12 @@ template < >
 
  // template specialization for adept::adouble
 template < > 
- void  assemble_jacobian< adept::adouble >::compute_jacobian_inside_integration_loop(const unsigned i,
+ void  assemble_jacobian< adept::adouble, double >::compute_jacobian_inside_integration_loop(const unsigned i,
                                                const unsigned dim,
                                                const unsigned nDofu,
-                                               const std::vector< adept::adouble > & phi,
-                                               const std::vector< adept::adouble > &  phi_x, 
-                                               const adept::adouble weight,
+                                               const std::vector< double > & phi,
+                                               const std::vector< double > &  phi_x, 
+                                               const double weight,
                                                std::vector< double > & Jac)  const { }
 
 
@@ -31,7 +31,7 @@ template < >
     
  // template specialization for adept::adouble
 template < >
- void  assemble_jacobian< adept::adouble >::compute_jacobian_outside_integration_loop (adept::Stack & stack,
+ void  assemble_jacobian< adept::adouble, double >::compute_jacobian_outside_integration_loop (adept::Stack & stack,
                                                                     const std::vector< adept::adouble > & solu,
                                                                     const std::vector< adept::adouble > & Res,
                                                                     std::vector< double > & Jac,
@@ -73,7 +73,7 @@ template < >
 //***************************************
 //explicit instantiations
 //****************************************
-template class assemble_jacobian< adept::adouble >; 
+template class assemble_jacobian< adept::adouble, double >; 
 
 
 }  //end namespace
