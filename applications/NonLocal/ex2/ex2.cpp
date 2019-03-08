@@ -32,7 +32,7 @@ double InitalValueU ( const std::vector < double >& x )
 //        return 2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 }
 
-void GetL2Norm ( MultiLevelProblem& ml_prob );
+void GetL2Norm ( MultiLevelProblem& ml_prob, MultiLevelProblem& ml_prob2 );
 
 bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time )
 {
@@ -189,7 +189,7 @@ int main ( int argc, char** argv )
 
 
     //BEGIN compute errors
-    GetL2Norm ( ml_prob );
+    GetL2Norm ( ml_prob, ml_prob2 );
     //END compute errors
 
     // ******* Print solution *******
@@ -204,7 +204,7 @@ int main ( int argc, char** argv )
 } //end main
 
 
-void GetL2Norm ( MultiLevelProblem& ml_prob )
+void GetL2Norm ( MultiLevelProblem& ml_prob, MultiLevelProblem& ml_prob2 )
 {
 
     LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ( "NonLocal" );
@@ -213,6 +213,10 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
     elem*                     el = msh->el;
     MultiLevelSolution*    mlSol = ml_prob._ml_sol;
     Solution*                sol = ml_prob._ml_sol->GetSolutionLevel ( level );
+    
+        LinearImplicitSystem* mlPdeSys2  = &ml_prob2.get_system<LinearImplicitSystem> ( "Local" );
+    MultiLevelSolution*    mlSol2 = ml_prob2._ml_sol;
+    Solution*                sol2 = ml_prob2._ml_sol->GetSolutionLevel ( level );
 
     const unsigned  dim = msh->GetDimension();
 
@@ -235,7 +239,7 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
     unsigned soluType = mlSol->GetSolutionType ( soluIndex );
 
     unsigned soluIndexLocal;
-    soluIndexLocal = mlSol->GetIndex ( "u_local" );
+    soluIndexLocal = mlSol2->GetIndex ( "u_local" );
 
     unsigned    iproc = msh->processor_id();
     unsigned    nprocs = msh->n_processors();
@@ -258,7 +262,7 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
         for ( unsigned i = 0; i < nDofu; i++ ) {
             unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
             soluNonLoc[i] = ( *sol->_Sol[soluIndex] ) ( solDof );
-            soluLoc[i] = ( *sol->_Sol[soluIndexLocal] ) ( solDof );
+            soluLoc[i] = ( *sol2->_Sol[soluIndexLocal] ) ( solDof );
         }
 
         for ( unsigned i = 0; i < nDofx; i++ ) {
