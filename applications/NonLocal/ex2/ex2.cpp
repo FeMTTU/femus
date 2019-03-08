@@ -366,7 +366,7 @@ void GetL2Norm ( MultiLevelProblem& ml_prob, MultiLevelProblem& ml_prob2 )
     for ( unsigned i =  msh->_dofOffset[soluType][iproc]; i <  msh->_dofOffset[soluType][iproc + 1]; i++ ) {
 
         double nonLocalNodalValue = ( *sol->_Sol[soluIndex] ) ( i );
-        double LocalNodalValue = ( *sol->_Sol[soluIndexLocal] ) ( i );
+        double LocalNodalValue = ( *sol2->_Sol[soluIndexLocal] ) ( i );
 
         double difference = fabs ( nonLocalNodalValue - LocalNodalValue );
 
