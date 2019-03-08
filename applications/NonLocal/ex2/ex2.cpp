@@ -27,8 +27,8 @@ double InitalValueU ( const std::vector < double >& x )
 //     return x[0];
 //     return x[0] * x[0];
 //     return x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
-//     return x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
-    return x[0] * x[0] * x[0] * x[0]; //this is x^4
+    return x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
+//     return x[0] * x[0] * x[0] * x[0]; //this is x^4
 //        return 2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 }
 
@@ -54,7 +54,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 2;
+unsigned numberOfUniformLevels = 1;
 
 int main ( int argc, char** argv )
 {
@@ -71,11 +71,11 @@ int main ( int argc, char** argv )
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
 //         mlMsh.ReadCoarseMesh ( "../input/maxTest3.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "fifth", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest5.neu", "fifth", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/maxTest5.neu", "fifth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest6.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "fifth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest8.neu", "fifth", scalingFactor );
-    mlMsh.ReadCoarseMesh ( "../input/maxTest9.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest9.neu", "fifth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
     //mlMsh.ReadCoarseMesh ( "../input/martaTest0.neu", "second", scalingFactor );
 //      mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
@@ -294,14 +294,14 @@ void GetL2Norm ( MultiLevelProblem& ml_prob, MultiLevelProblem& ml_prob2 )
 //                 exactSol_gss_y += phi[i] * x1[1][i]; // this is y at the Gauss point
             }
 
-//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x + 0.1 * exactSol_gss_x * exactSol_gss_x; // this is x^4 + delta * x^2
+            exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x + 0.1 * exactSol_gss_x * exactSol_gss_x; // this is x^4 + delta * x^2
 
 //             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x; // this is x^2
 
 //             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^3
 //             exactSol_gss_y = exactSol_gss_y * exactSol_gss_y * exactSol_gss_y; // this is y^3
 
-            exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^4
+//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^4
 
 //             exactSol_gss_x = 2 * exactSol_gss_x  + exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x ; // this is 2x + x^5
 
