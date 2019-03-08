@@ -48,12 +48,12 @@ void RectangleAndBallRelation ( bool &theyIntersect, const std::vector<double> &
 
 void RectangleAndBallRelation2 ( bool & theyIntersect, const std::vector<double> &ballCenter, const double & ballRadius, const std::vector < std::vector < double> > &elementCoordinates, std::vector < std::vector < double> > &newCoordinates );
 
-const elem_type *fem = new const elem_type_2D ("quad","linear","second");
+const elem_type *fem = new const elem_type_2D ( "quad", "linear", "second" );
 
 void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 {
     adept::Stack& s = FemusInit::_adeptStack;
-      
+
     LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ( "NonLocal" );
     const unsigned level = mlPdeSys->GetLevelToAssemble();
 
@@ -217,7 +217,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
             }
 
             for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-                
+
                 unsigned i = fem->GetGaussPointNumber();
                 bool midpointQuadrature = false;
 
@@ -512,8 +512,8 @@ void AssembleLocalSys ( MultiLevelProblem& ml_prob )
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
     //BEGIN local assembly
-    
-        for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+
+    for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
         short unsigned ielGroup = msh->GetElementGroup ( iel );
 
@@ -540,8 +540,11 @@ void AssembleLocalSys ( MultiLevelProblem& ml_prob )
         }
 
     }
-    
-    
+
+    sol->_Bdc[soluIndex]->close();
+    sol->_Sol[soluIndex]->close();
+
+
     // element loop: each process loops only on the elements that owns
     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
@@ -651,7 +654,7 @@ void AssembleLocalSys ( MultiLevelProblem& ml_prob )
     RES->close();
 
     KK->close();
-    
+
     //delete fem;
 
 //     Mat A = ( static_cast<PetscMatrix*> ( KK ) )->mat();
