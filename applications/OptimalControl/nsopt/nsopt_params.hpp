@@ -4,8 +4,8 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  4
-#define NSUB_Y  4
+#define NSUB_X  2
+#define NSUB_Y  2
 
 #define FLUID_DENSITY  1
 //******************************************* Desired Target  and RHS function*******************************************************
