@@ -218,7 +218,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
             for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
-//                 unsigned i = fem->GetGaussPointNumber();
+                unsigned femObjectForInnerIntegral = fem->GetGaussPointNumber(); //in place of Jacobian to use a different quadrature rule than what's declared in main
                 bool midpointQuadrature = false;
 
                 short unsigned ielGeom = msh->GetElementType ( iel );
