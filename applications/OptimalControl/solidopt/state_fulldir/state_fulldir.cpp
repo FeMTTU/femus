@@ -14,8 +14,8 @@
 #include "PetscMatrix.hpp"
 #include <stdio.h>
 
-#define NSUB_X  2
-#define NSUB_Y  2
+#define NSUB_X  4
+#define NSUB_Y  4
 
 #define MODEL /*"Mooney-Rivlin"*/ "Linear_elastic" /*"Neo-Hookean"*/
 
@@ -49,8 +49,8 @@ bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName
    value = 0.;
   
 // TOP ==========================  
-      if (facename == 3) {
-       if (!strcmp(SolName, "DX"))    { value = 70.; } //lid - driven
+      if (facename == 4) {
+       if (!strcmp(SolName, "DX"))    { value = 0.1; }
   else if (!strcmp(SolName, "DY"))    { value = 0.; } 
   	
       }
@@ -61,9 +61,9 @@ bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName
 
 
 
+template < class real_num >
 void AssembleSolidMech_AD(MultiLevelProblem& ml_prob);
 
-void AssembleSolidMech_nonAD(MultiLevelProblem& ml_prob);  //to double check in the future
 
 
 
@@ -158,7 +158,7 @@ int main(int argc, char** args) {
 
 
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleSolidMech_AD);
+  system.SetAssembleFunction( AssembleSolidMech_AD< adept::adouble >);
 
   // initilaize and solve the system
   system.init();
@@ -204,7 +204,7 @@ int main(int argc, char** args) {
 
 
 
-
+template < class real_num >
 void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
@@ -243,7 +243,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
  
   // geometry *******************************************
-  vector< vector < adept::adouble> > coordX(dim);	//local coordinates
+  vector< vector < real_num> > coordX(dim);	//local coordinates
   vector  < vector  < double > > coordX_hat(dim);
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
   for(int i=0;i<dim;i++) {   
@@ -286,9 +286,9 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //-----------state------------------------------
   vector < vector < double > > phi_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_hat_gss_fe(NFE_FAMS);
-  vector < vector < adept::adouble > > phi_x_gss_fe(NFE_FAMS);
+  vector < vector < real_num > > phi_x_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_x_hat_gss_fe(NFE_FAMS);
-  vector < vector < adept::adouble > > phi_xx_gss_fe(NFE_FAMS);
+  vector < vector < real_num > > phi_xx_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_xx_hat_gss_fe(NFE_FAMS);
 
   for(int fe=0; fe < NFE_FAMS; fe++) {  
@@ -303,7 +303,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //=================================================================================================
   
   // quadratures ********************************
-  adept::adouble weight = 0.;
+  real_num weight = 0.;
   double weight_hat = 0.;
  
   // equation ***********************************
@@ -316,10 +316,10 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   Jac.reserve( n_unknowns *maxSize * n_unknowns *maxSize);
 
   //----------- dofs ------------------------------
-  vector < vector < adept::adouble > > SolVAR_eldofs(n_unknowns);//solD,solP
-  vector < vector < adept::adouble > > gradSolVAR_eldofs(n_unknowns);
+  vector < vector < real_num > > SolVAR_eldofs(n_unknowns);//solD,solP
+  vector < vector < real_num > > gradSolVAR_eldofs(n_unknowns);
    
-  vector< vector < adept::adouble > > aResVAR(n_unknowns);    // local redidual vector
+  vector< vector < real_num > > aResVAR(n_unknowns);    // local redidual vector
 
   for(int k=0; k<n_unknowns; k++) {
     SolVAR_eldofs[k].reserve(maxSize);
@@ -328,10 +328,10 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   }
 
   //------------ at quadrature points ---------------------
-    vector < adept::adouble > SolVAR_qp(n_unknowns);
-//     vector < adept::adouble > SolVAR_hat_qp(n_unknowns);
-    vector < vector < adept::adouble > > gradSolVAR_qp(n_unknowns);
-    vector < vector < adept::adouble > > gradSolVAR_hat_qp(n_unknowns);
+    vector < real_num > SolVAR_qp(n_unknowns);
+//     vector < real_num > SolVAR_hat_qp(n_unknowns);
+    vector < vector < real_num > > gradSolVAR_qp(n_unknowns);
+    vector < vector < real_num > > gradSolVAR_hat_qp(n_unknowns);
     for(int k=0; k<n_unknowns; k++) { 
 	gradSolVAR_qp[k].resize(dim); 
  	gradSolVAR_hat_qp[k].resize(dim); 
@@ -414,7 +414,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //STATE###################################################################
   
 
-    // start a new recording of all the operations involving adept::adouble variables
+    // start a new recording of all the operations involving real_num variables
    if( assembleMatrix ) s.new_recording();
     
     //Moving coordinates (Moving frame)
@@ -485,16 +485,16 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
           //BEGIN build Cauchy Stress in moving domain
           //physical quantity
-          adept::adouble J_hat;  //Jacobian wrt fixed domain
-          adept::adouble trace_e/*_hat*/;    //trace of deformation tensor
-          adept::adouble Cauchy[3][3];
-          adept::adouble Identity[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
+          real_num J_hat;  //Jacobian wrt fixed domain
+          real_num trace_e/*_hat*/;    //trace of deformation tensor
+          real_num Cauchy[3][3];
+          real_num Identity[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
 
-          adept::adouble I1_B = 0.;
-          adept::adouble I2_B = 0.;
+          real_num I1_B = 0.;
+          real_num I2_B = 0.;
 
           if (solid_model == 0) { // Saint-Venant
-            adept::adouble e[3][3];
+            real_num e[3][3];
 
             //computation of the stress tensor
             for (int i = 0; i < dim; i++) {
@@ -509,15 +509,15 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
                 //incompressible
-                Cauchy[i][j] = 2. * mus*  e[i][j] - 2. * mus* trace_e* SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[i][j];
+                Cauchy[i][j] = 2. * mus*  e[i][j] - 2. * mus* trace_e * SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[i][j];
                 //+(penalty)*lambda*trace_e*Identity[i][j];
               }
             }
           }
 
           else { // hyperelastic non linear material
-            adept::adouble F[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
-            adept::adouble B[3][3];
+            real_num F[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
+            real_num B[3][3];
 
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
@@ -557,11 +557,11 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
               }
             }
             else if (5  ==  solid_model) {  //Mooney-Rivlin
-              adept::adouble detB =   	B[0][0] * (B[1][1] * B[2][2] - B[2][1] * B[1][2])
+              real_num detB =   	B[0][0] * (B[1][1] * B[2][2] - B[2][1] * B[1][2])
                                       - B[0][1] * (B[2][2] * B[1][0] - B[1][2] * B[2][0])
                                       + B[0][2] * (B[1][0] * B[2][1] - B[2][0] * B[1][1]);
-              adept::adouble invdetB = 1. / detB;
-              adept::adouble invB[3][3];
+              real_num invdetB = 1. / detB;
+              real_num invB[3][3];
 
               invB[0][0] =  (B[1][1] * B[2][2] - B[2][1] * B[1][2]) * invdetB;
               invB[1][0] = -(B[0][1] * B[2][2] - B[0][2] * B[2][1]) * invdetB;
@@ -598,7 +598,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
           for (unsigned i = 0; i < nDofsD; i++) {
 
               //BEGIN residual Solid Momentum in moving domain
-              adept::adouble CauchyDIR[3] = {0., 0., 0.};
+              real_num CauchyDIR[3] = {0., 0., 0.};
 
               for (int idim = 0.; idim < dim; idim++) {
                 for (int jdim = 0.; jdim < dim; jdim++) {
@@ -607,7 +607,8 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
               }
 
               for (int idim = 0; idim < dim; idim++) {
-                aResVAR[SolPdeIndex[idim]][i] += (phi_gss_fe[SolFEType[idim]][i] * _gravity[idim] - CauchyDIR[idim]) * weight;
+                aResVAR[SolPdeIndex[idim]][i] += ( phi_gss_fe[SolFEType[idim]][i] * SolVAR_qp[SolPdeIndex[idim]]   -  phi_gss_fe[SolFEType[idim]][i] * _gravity[idim]  
+                                                  -  phi_x_gss_fe[SolFEType[idim]][i * dim + idim] * SolVAR_qp[ SolPdeIndex[press_type_pos] ] /*- CauchyDIR[idim]*/) * weight;
               }
 
               //END residual Solid Momentum in moving domain
@@ -616,9 +617,15 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
           //BEGIN continuity block
             for (unsigned i = 0; i < nDofsP; i++) {
+                
+                real_num div_displ = 0.;
+                              for (int idim = 0; idim < dim; idim++) {
+                                   div_displ += gradSolVAR_qp[SolPdeIndex[idim]][idim];
+                              }
+                
               if (!penalty) {
                 if (0  ==  solid_model) {
-                  aResVAR[SolPdeIndex[press_type_pos]][i] += -(-phi_gss_fe[SolFEType[press_type_pos]][i] * (trace_e + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
+                  aResVAR[SolPdeIndex[press_type_pos]][i] += - ( - phi_gss_fe[SolFEType[press_type_pos]][i] * ( div_displ /*trace_e*/  /* + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]]*/ ) ) * weight;
                 }
                 else if (1  ==  solid_model || 5  ==  solid_model) {
                   aResVAR[SolPdeIndex[press_type_pos]][i] += phi_gss_fe[SolFEType[press_type_pos]][i] * (J_hat - 1. + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]]) * weight_hat;
@@ -639,7 +646,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
  
 // // //  // *** phi_i loop ***
 // // //       for (unsigned i = 0; i < nDofsD; i++) {
-// // //         vector < adept::adouble > NSD(dim, 0.);
+// // //         vector < real_num > NSD(dim, 0.);
 // // // 
 // // //         for (unsigned  k = 0; k < dim; k++) {
 // // //          for (unsigned j = 0; j < dim; j++) {
@@ -724,8 +731,6 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
   
   
-    // ***************** END ASSEMBLY *******************
-
     //print JAC and RES to files
     if (assembleMatrix) JAC->close();
     std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys.GetNonlinearIt()  << ".txt";
