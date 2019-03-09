@@ -54,7 +54,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 1;
+unsigned numberOfUniformLevels = 4;
 
 int main ( int argc, char** argv )
 {
@@ -67,18 +67,19 @@ int main ( int argc, char** argv )
     unsigned numberOfSelectiveLevels = 0;
 //     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "eighth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
 //         mlMsh.ReadCoarseMesh ( "../input/maxTest3.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "fifth", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest5.neu", "fifth", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest6.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "fifth", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest8.neu", "fifth", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest9.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "eighth", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/maxTest5.neu", "eighth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest6.neu", "eighth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "eighth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest8.neu", "eighth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest9.neu", "eighth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest10.neu", "eighth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
     //mlMsh.ReadCoarseMesh ( "../input/martaTest0.neu", "second", scalingFactor );
-     mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
+//      mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
 //    mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest3.neu", "second", scalingFactor );
 //        mlMsh.ReadCoarseMesh ( "../input/martaTest4.neu", "second", scalingFactor );
