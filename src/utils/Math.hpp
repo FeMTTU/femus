@@ -677,14 +677,9 @@ static void print_element_jacobian(const unsigned int iel,
     
     const unsigned int n_unknowns = Sol_n_el_dofs.size();
     
-    unsigned int nDofsDP = 0;
-    for(unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) nDofsDP += Sol_n_el_dofs[i_unk];
+    unsigned int nDof_AllVars = 0;
+    for(unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) nDof_AllVars += Sol_n_el_dofs[i_unk];
     
-    
-    std::vector<int> dof_offset(n_unknowns);
-		  dof_offset[0] = 0;
-	for(unsigned i_unk = 1; i_unk < n_unknowns; i_unk++) dof_offset[i_unk] += dof_offset[i_unk-1] + Sol_n_el_dofs[i_unk];
-  
  std::cout << "++++++++++ iel " << iel << " ++++++++++" << std::endl;
  
     for(unsigned i_block = 0; i_block < n_unknowns; i_block++) {
@@ -692,7 +687,7 @@ static void print_element_jacobian(const unsigned int iel,
 	  for(unsigned j_block=0; j_block< n_unknowns; j_block++) {
                for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
  std::cout << std::right << std::setw(col_width_visualization) << std::setprecision(precision)  /*<< std::scientific*/ << 
- Jac[ (dof_offset[i_block] + i_dof) * nDofsDP + (dof_offset[j_block] + j_dof )] << " " ;
+ Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, i_block, j_block, i_dof, j_dof) ] << " " ;
                  }
            } 
      std::cout << std::endl;
@@ -711,17 +706,13 @@ static void print_element_residual(const unsigned int iel,
     
     const unsigned int n_unknowns = Sol_n_el_dofs.size();
 
-    std::vector<int> dof_offset(n_unknowns);
-		  dof_offset[0] = 0;
-	for(unsigned i_unk = 1; i_unk < n_unknowns; i_unk++) dof_offset[i_unk] += dof_offset[i_unk-1] + Sol_n_el_dofs[i_unk];
-  
  std::cout << "++++++++++ iel " << iel << " ++++++++++" << std::endl;
  
     for(unsigned i_block = 0; i_block < n_unknowns; i_block++) {
       for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
           
  std::cout << std::right << std::setw(col_width_visualization) << std::setprecision(precision)  /*<< std::scientific*/ << 
- Res[ dof_offset[i_block] + i_dof ] << " " ;
+ Res[  res_row_index(Sol_n_el_dofs, i_block, i_dof) ] << " " ;
 
           
      std::cout << std::endl;
