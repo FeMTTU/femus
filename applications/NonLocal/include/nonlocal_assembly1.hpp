@@ -24,18 +24,18 @@ using namespace femus;
 // };
 
 bool nonLocalAssembly = true;
-//DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.007, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05, maxTest8: both 0.025, maxTest9: both 0.0125
-double delta1 = 0.1; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.1;
+//DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.2, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05, maxTest8: both 0.025, maxTest9: both 0.0125
+double delta1 = 0.4; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.4;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
-//     value = 0.;
+    value = 0.;
 //     value = x[0];
 //     value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
-    value = x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0];
+//     value = x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0];
 //     value = x[0] * x[0] * x[0] * x[0];
 //     value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 
@@ -338,9 +338,9 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                         if ( iel == jel ) {
                             for ( unsigned i = 0; i < nDof1; i++ ) {
 //                                 Res1[i] -= 0. * weight[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
-//                                  Res1[i] -=  - 2. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = - 1)
+                                 Res1[i] -=  1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
                                 //  Res1[i] -=  - 6. * ( xg1[ig][0] + xg1[ig][1] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 (x + y))
-                                Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
+//                                 Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
 //                                      Res1[i] -=  - 20. * ( xg1[ig][0] * xg1[ig][0] * xg1[ig][0] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 20 x^3 )
 //                                 Res1[i] -=  - 12. * ( xg1[ig][0] * xg1[ig][0] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 12 x^2 )
                             }
@@ -354,16 +354,16 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                             ifAnyIntersection = true;
 
-//                          unsigned jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
-                            unsigned jgNumber = fem->GetGaussPointNumber();
+                            unsigned jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
+//                             unsigned jgNumber = fem->GetGaussPointNumber();
 
                             for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
                                 vector <double>  phi2y;
                                 double weight2;
 
-//                              msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
-                                fem->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+//                                 fem->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
 
                                 std::vector< double > xg2 ( dim, 0. );
 
@@ -380,8 +380,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
                                 }
 
                                 double weightTemp;
-//                              msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
-                                fem->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+                                msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+//                                 fem->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
 
                                 for ( unsigned i = 0; i < nDof1; i++ ) {
                                     for ( unsigned j = 0; j < nDof1; j++ ) {
@@ -612,8 +612,9 @@ void AssembleLocalSys ( MultiLevelProblem& ml_prob )
                     laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
                 }
 
-                double srcTerm =  12. * x_gss[0] * x_gss[0] ; // so f = - 12 x^2
+//                 double srcTerm =  12. * x_gss[0] * x_gss[0] ; // so f = - 12 x^2
                 //double srcTerm =  2. ; // so f = - 2
+                double srcTerm =  - 1. ; // so f = 1
                 //double srcTerm =  0./*- GetExactSolutionLaplace(x_gss)*/ ;
                 aRes[i] += ( srcTerm * phi[i] + laplace ) * weight;
 
