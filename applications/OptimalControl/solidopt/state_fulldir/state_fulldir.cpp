@@ -81,10 +81,41 @@ template < class real_num >
 void AssembleSolidMech_AD(MultiLevelProblem& ml_prob);
 
 
-void print_element_jacobian(const unsigned int iel, const  vector < double > & Jac, const vector < unsigned int > & Sol_n_el_dofs)  {
+void print_element_residual(const unsigned int iel, 
+                            const  vector < double > & Res, 
+                            const vector < unsigned int > & Sol_n_el_dofs,
+                            const unsigned int col_width_visualization,     
+                            const unsigned int precision)  {
+    
+    const unsigned int n_unknowns = Sol_n_el_dofs.size();
 
-    const unsigned int col_width_visualization = 12;
-    const unsigned int precision = 5;
+    std::vector<int> dof_offset(n_unknowns);
+		  dof_offset[0] = 0;
+	for(unsigned i_unk = 1; i_unk < n_unknowns; i_unk++) dof_offset[i_unk] += dof_offset[i_unk-1] + Sol_n_el_dofs[i_unk];
+  
+ std::cout << "++++++++++ iel " << iel << " ++++++++++" << std::endl;
+ 
+    for(unsigned i_block = 0; i_block < n_unknowns; i_block++) {
+      for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
+          
+ std::cout << std::right << std::setw(col_width_visualization) << std::setprecision(precision)  /*<< std::scientific*/ << 
+ Res[ dof_offset[i_block] + i_dof ] << " " ;
+
+          
+     std::cout << std::endl;
+        }
+    }
+    
+
+    }
+
+
+void print_element_jacobian(const unsigned int iel,
+                            const  vector < double > & Jac, 
+                            const vector < unsigned int > & Sol_n_el_dofs, 
+                            const unsigned int col_width_visualization,     
+                            const unsigned int precision)  {
+
     
     const unsigned int n_unknowns = Sol_n_el_dofs.size();
     
@@ -740,8 +771,8 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
     // get the and store jacobian matrix (row-major)
     s.jacobian(&Jac[0] , true);
 
-    
-    print_element_jacobian(iel,Jac,Sol_n_el_dofs);
+    print_element_residual(iel,Res,Sol_n_el_dofs,12,5);
+    print_element_jacobian(iel,Jac,Sol_n_el_dofs,12,5);
 
 
    JAC->add_matrix_blocked(Jac, JACDof, JACDof);
