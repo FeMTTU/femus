@@ -359,7 +359,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
   double penalty_strong_ctrl = 1.e30;
-  double penalty_strong_u = 1.e20;
+  double penalty_strong_u = 1.e30;
   double penalty_interface = 1.e10;         //penalty for u=q
  //***************************************************  
 
@@ -606,31 +606,34 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 //=============== grad dot n  for residual =========================================      
 		    
 //============ Bdry Residuals ==================	
-        if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  -  penalty_interface * interface_flag[i_vol] * ( sol_u[i_vol] - sol_ctrl[i_vol] )   // u = q
-                                                                                              -  interface_flag[i_vol] * weight_bdry * (1) * ( grad_dot_n_adj_res * phi_u_bdry[i_bdry] );
-		if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=  -  interface_flag[i_vol] * weight_bdry * (-1) * ( grad_dot_n_adj_res * phi_ctrl_bdry[i_bdry] );  //boundary optimality condition
+        if (i_vol < nDof_u)   
+             if ( group_flag == 12 ) Res[ (0 + i_vol) ]                    +=  -  interface_flag[i_vol] * weight_bdry * (1) * ( grad_dot_n_adj_res * phi_u_bdry[i_bdry] );  //boundary optimality condition of state equation
+        if (i_vol < nDof_ctrl)  
+             if ( group_flag == 13 ) Res[ (nDof_u + i_vol) ]               +=  -  interface_flag[i_vol] * weight_bdry * (-1) * ( grad_dot_n_adj_res * phi_ctrl_bdry[i_bdry] );  //boundary optimality condition of control equation
+        if (i_vol < nDof_adj)
+                                     Res[ (nDof_u + nDof_ctrl + i_vol) ]   +=  -  penalty_interface * interface_flag[i_vol] * ( sol_u[i_vol] - sol_ctrl[i_vol] ) ;  // u = q
 //============ Bdry Residuals ==================	
 		    for(unsigned j_bdry=0; j_bdry < nDofu_bdry; j_bdry ++) {
 		         unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
 //============ Bdry Jacobians ==================	
 
 
-// FIRST BLOCK ROW
-//============ u = q ===========================	    
-// block delta_state/state =====================
-    if (i_vol < nDof_u && j_vol < nDof_u && i_vol == j_vol)  {
+// THIRD BLOCK ROW
+//============ u = q =============================	    
+// block delta_adjoint/state =====================
+    if (i_vol < nDof_adj && j_vol < nDof_u && i_vol == j_vol)  {
        Jac[    
-          (0 + i_vol) * nDof_AllVars  +
+          (nDof_u + nDof_ctrl + i_vol) * nDof_AllVars  +
           (0 + j_vol)                                ]  += penalty_interface * interface_flag[i_vol] * ( 1.);
        }
 
-// block delta_state/control ===================
-    if (i_vol < nDof_u && j_vol < nDof_ctrl && i_vol == j_vol) {
+// block delta_adjoint/control ===================
+    if (i_vol < nDof_adj && j_vol < nDof_ctrl && i_vol == j_vol) {
        Jac[    
-		  (0     + i_vol) * nDof_AllVars  +
+		  (nDof_u + nDof_ctrl + i_vol) * nDof_AllVars  +
 		  (nDof_u + j_vol)                           ]  += penalty_interface  * interface_flag[i_vol] * (-1.);
        }
-//============ u = q ===========================		    
+//============ u = q =============================		    
 		    
      } //end j_vol 
 		    
@@ -646,19 +649,21 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
   //std::cout << " gradadjdotn " << grad_adj_dot_n_mat << std::endl;
   
-		      
+ if ( group_flag == 13 ) {		      
 //==========block delta_control/adjoint ========
     if ( i_vol < nDof_ctrl    && j < nDof_adj)   
        Jac[ 
           (nDof_u + i_vol) * nDof_AllVars  +
           (nDof_u + nDof_ctrl + j)                 ]  += interface_flag[i_vol] * (-1) * weight_bdry * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry];    
-          
-          
+  }         
+ 
+  if ( group_flag == 12 ) {	
 //==========block delta_state/adjoint ========
     if ( i_vol < nDof_u    && j < nDof_adj)   
         Jac[ 
            (0 + i_vol) * nDof_AllVars  +
            (nDof_u + nDof_ctrl + j)                ]  += interface_flag[i_vol] * (1) * weight_bdry * grad_adj_dot_n_mat * phi_u_bdry[i_bdry];
+  }
            
 		  }   //end loop i_bdry
        }  //end ig_bdry loop
@@ -716,12 +721,12 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
           }
 	
 	for (unsigned i = 0; i < nDof_adj; i++) {
-	                                                sol_adj_gss      += sol_adj[i] * phi_adj[i];
+	                                                sol_adj_gss     += sol_adj[i] * phi_adj[i];
                    for (unsigned d = 0; d < dim; d++)   sol_adj_x_gss[d] += sol_adj[i] * phi_adj_x[i * dim + d];
         }
 	
 	for (unsigned i = 0; i < nDof_ctrl; i++) {
-	                                                sol_ctrl_gss      += sol_ctrl[i] * phi_ctrl[i];
+	                                                sol_ctrl_gss    += sol_ctrl[i] * phi_ctrl[i];
                    for (unsigned d = 0; d < dim; d++)   sol_ctrl_x_gss[d] += sol_ctrl[i] * phi_ctrl_x[i * dim + d];
         }
         
@@ -763,7 +768,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
       // SECOND ROW
 	  if (i < nDof_ctrl)  {
 	     if ( group_flag == 13 )            Res[nDof_u + i] +=  - weight * ( alpha * phi_ctrl[i] * sol_ctrl_gss
-                                                                            + laplace_rhs_dctrl_adj_i 
+                                                                            - laplace_rhs_dctrl_adj_i 
                                                                             + beta * laplace_rhs_dctrl_ctrl_i - 0.);
          
 	     else if ( group_flag == 12 )       Res[nDof_u + i] +=  (1-interface_flag[i]) * (- penalty_strong_ctrl) * (sol_ctrl[i] - 0.);
@@ -777,7 +782,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     // FOURTH ROW
      if (i < nDof_mu)     
         if ( group_flag == 12 )           
-              Res[nDof_u + nDof_ctrl + nDof_adj + i] += - penalty_strong_ctrl * ( (1 - interface_flag[i]) * (  sol_mu[i] - 0.)  );
+                           Res[nDof_u + nDof_ctrl + nDof_adj + i] += - penalty_strong_ctrl * ( (1 - interface_flag[i]) * (  sol_mu[i] - 0.)  );
 //======================Volume Residuals=======================
 	      
           if (assembleMatrix) {
@@ -835,7 +840,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 	       //BLOCK delta_control - adjoint
            if ( i < nDof_ctrl   && j < nDof_adj  ) 
 		      Jac[ (nDof_u + i) * nDof_AllVars  + 
-		           (nDof_u + nDof_ctrl + j)          ]  += weight * (1) * laplace_mat_dctrl_adj;
+		           (nDof_u + nDof_ctrl + j)          ]  += weight * (-1) * laplace_mat_dctrl_adj;
 	      	      
         }
 	      
@@ -870,8 +875,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
        //============= delta_mu row ===============================
         if ( group_flag == 12 ) {
           if ( i < nDof_mu && j < nDof_mu && i==j )   
-		    Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-		       (nDof_u + nDof_ctrl + nDof_adj + j)]  += penalty_strong_ctrl * ( (1 - interface_flag[i]));
+		     Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+		          (nDof_u + nDof_ctrl + nDof_adj + j)]  += penalty_strong_ctrl * ( (1 - interface_flag[i]));
           }
 		          
           } // end phi_j loop
