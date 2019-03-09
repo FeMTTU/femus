@@ -3,6 +3,8 @@
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
+#include "Math.hpp"
+
 
 #include "./elliptic_nonlin_param.hpp"
 
@@ -31,29 +33,6 @@ double  nonlin_term_derivative(const double& v) {
  }
 
 
- inline unsigned int res_row_index(const std::vector<unsigned int>& _Sol_n_el_dofs, const int my_row_pos, const int i) {
-
-    assert(i < _Sol_n_el_dofs[my_row_pos]); 
-    
-    unsigned int pos_previous = 0;
-    for (unsigned k = 0; k < my_row_pos; k++) pos_previous += _Sol_n_el_dofs[k];
-
-    return pos_previous + i;
-  }
-  
-
- inline unsigned int jac_row_col_index(const std::vector<unsigned int>& _Sol_n_el_dofs, const int nDof_AllVars, const int my_row_pos, const int my_col_pos, const int i, const int j) {
-
-     assert(i < _Sol_n_el_dofs[my_row_pos]); 
-     assert(j < _Sol_n_el_dofs[my_col_pos]); 
-     
-    unsigned int pos_previous_row = 0;
-    unsigned int pos_previous_col = 0;
-    for (unsigned k = 0; k < my_row_pos; k++) pos_previous_row += _Sol_n_el_dofs[k];
-    for (unsigned k = 0; k < my_col_pos; k++) pos_previous_col += _Sol_n_el_dofs[k];
-
-    return (pos_previous_row + i) * nDof_AllVars + (pos_previous_col + j);
-  }
 
   
  inline double laplacian_row(const vector < unsigned > & SolFEType, const vector < vector < double > > & phi_x_fe_qp, const vector < vector < double > > & sol_grad_qp, const int my_row_pos, const int my_col_pos, const int i, const unsigned dim_in) {
@@ -547,7 +526,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	  
 //======================Residuals=======================
           // ===============
-        Res[ res_row_index(Sol_n_el_dofs,pos_state,i) ] += - weight_qp * (target_flag * phi_fe_qp[SolFEType[pos_state]][i] * (
+        Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ] += - weight_qp * (target_flag * phi_fe_qp[SolFEType[pos_state]][i] * (
                                                                                               m_b_f[pos_state][pos_state] * sol_qp[pos_state] 
                                                                                             - DesiredTarget(coord_at_qp) ) 
                                                                                           + m_b_f[pos_state][pos_adj]   * ( laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_state, pos_adj, i, dim)  
@@ -556,15 +535,15 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
           
 
           // ==============
-	     if ( control_el_flag == 1)        Res[ res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(control_node_flag[i]) **/ - weight_qp * (
+	     if ( control_el_flag == 1)        Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(control_node_flag[i]) **/ - weight_qp * (
                                                                                   + m_b_f[pos_ctrl][pos_ctrl] * alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_ctrl]
 		                                                                          + m_b_f[pos_ctrl][pos_ctrl] *  beta * laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_ctrl, pos_ctrl, i, dim) 
 		                                                                          - m_b_f[pos_ctrl][pos_adj]  *         phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_adj] * nonlin_term_function(sol_qp[pos_state])
                                                                                                                          );
-	      else if ( control_el_flag == 0)  Res[ res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(1 - control_node_flag[i]) **/ m_b_f[pos_ctrl][pos_ctrl] * (- penalty_strong) * (sol_eldofs[pos_ctrl][i]);
+	      else if ( control_el_flag == 0)  Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(1 - control_node_flag[i]) **/ m_b_f[pos_ctrl][pos_ctrl] * (- penalty_strong) * (sol_eldofs[pos_ctrl][i]);
 
           // =============
-        Res[ res_row_index(Sol_n_el_dofs,pos_adj,i) ] += - weight_qp *  ( + m_b_f[pos_adj][pos_state] * laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_adj, pos_state, i, dim) 
+        Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i) ] += - weight_qp *  ( + m_b_f[pos_adj][pos_state] * laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_adj, pos_state, i, dim) 
                                                                           - m_b_f[pos_adj][pos_ctrl]  * phi_fe_qp[SolFEType[pos_adj]][i] * sol_qp[pos_ctrl] * nonlin_term_function(sol_qp[pos_state]) 
                                                                         );
 
@@ -576,10 +555,10 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
             for (unsigned j = 0; j < nDof_max; j++) {
                 
               //============ delta_state row ============================
-		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_state, i, j) ]  += 
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_state, i, j) ]  += 
                                                       m_b_f[pos_state][pos_state] * weight_qp * target_flag * phi_fe_qp[SolFEType[pos_state]][j] *  phi_fe_qp[SolFEType[pos_state]][i];
               
-		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_adj, i, j)  ]  +=
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_adj, i, j)  ]  +=
 		                                              m_b_f[pos_state][pos_adj] * weight_qp * (
                                                                           laplacian_row_col(SolFEType, phi_x_fe_qp, pos_state, pos_adj, i, j, dim)
                                                                                                        - phi_fe_qp[SolFEType[pos_adj]][j] *
@@ -589,13 +568,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
               
 	      //=========== delta_control row ===========================     
 	      if ( control_el_flag == 1)  {
-		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += 
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += 
 		                                              m_b_f[pos_ctrl][pos_ctrl] * ( control_node_flag[i]) * weight_qp * (
                                                                                   beta * control_el_flag  * laplacian_row_col(SolFEType, phi_x_fe_qp, pos_ctrl, pos_ctrl, i, j, dim) 
                                                                                + alpha * control_el_flag  * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] 
 		                                                                                    );
               
-		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_adj, i, j) ]  += m_b_f[pos_ctrl][pos_adj] * control_node_flag[i] * weight_qp * (
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_adj, i, j) ]  += m_b_f[pos_ctrl][pos_adj] * control_node_flag[i] * weight_qp * (
                                                                                                                                       - phi_fe_qp[SolFEType[pos_ctrl]][i] * 
                                                                                                                                         phi_fe_qp[SolFEType[pos_adj]][j] * 
                                                                                                                                         nonlin_term_function(sol_qp[pos_state])
@@ -603,18 +582,18 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	        }
 	      
 	      else if ( control_el_flag == 0 && i == j)  {  
-        Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += m_b_f[pos_ctrl][pos_ctrl] * (1 - control_node_flag[i]) * penalty_strong;
+        Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += m_b_f[pos_ctrl][pos_ctrl] * (1 - control_node_flag[i]) * penalty_strong;
 	      }
 	      
 	      //=========== delta_adjoint row ===========================
-		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_state, i, j) ]  += m_b_f[pos_adj][pos_state] * weight_qp * (
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_state, i, j) ]  += m_b_f[pos_adj][pos_state] * weight_qp * (
                                                                                                                                       laplacian_row_col(SolFEType, phi_x_fe_qp, pos_adj, pos_state, i, j, dim)
                                                                                                                                       - phi_fe_qp[SolFEType[pos_adj]][i] *
                                                                                                                                         nonlin_term_derivative(phi_fe_qp[SolFEType[pos_state]][j]) * 
                                                                                                                                         sol_qp[pos_ctrl]
                                                                                                                                     );
 
-        Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_ctrl, i, j)  ]  += m_b_f[pos_adj][pos_ctrl] * weight_qp * ( 
+        Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_ctrl, i, j)  ]  += m_b_f[pos_adj][pos_ctrl] * weight_qp * ( 
                                                                                                                                       - phi_fe_qp[SolFEType[pos_adj]][i] * 
                                                                                                                                         phi_fe_qp[SolFEType[pos_ctrl]][j] * 
                                                                                                                                         nonlin_term_function(sol_qp[pos_state])

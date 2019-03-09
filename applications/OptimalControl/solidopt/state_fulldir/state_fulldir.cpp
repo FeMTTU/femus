@@ -10,6 +10,7 @@
 #include "Fluid.hpp"
 #include "Solid.hpp"
 #include "Files.hpp"
+#include "Math.hpp"
 
 #include "PetscMatrix.hpp"
 #include <stdio.h>
@@ -17,7 +18,7 @@
 #define NSUB_X  2
 #define NSUB_Y  2
 
-#define MODEL /*"Mooney-Rivlin"*/ "Linear_elastic" /*"Neo-Hookean"*/
+#define MODEL "Linear_elastic" /*"Mooney-Rivlin"*/ /*"Neo-Hookean"*/
 
 using namespace femus;
 
@@ -48,8 +49,8 @@ bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName
   bool dirichlet; 
   
       if (facename == 1) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = true; value = 0.; } 
+       if (!strcmp(SolName, "DX"))    { dirichlet = false/*true*/; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = false/*true*/; value = 0.; } 
   	
       }
 
@@ -60,13 +61,13 @@ bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName
       }
 
       if (facename == 3) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = true; value = 0.; } 
+       if (!strcmp(SolName, "DX"))    { dirichlet = false/*true*/; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = false/*true*/; value = 0.; } 
   	
       }
 
       if (facename == 4) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.001; }
+       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.; }
   else if (!strcmp(SolName, "DY"))    { dirichlet = true; value = 0.; } 
   	
       }
@@ -81,68 +82,10 @@ template < class real_num >
 void AssembleSolidMech_AD(MultiLevelProblem& ml_prob);
 
 
-void print_element_residual(const unsigned int iel, 
-                            const  vector < double > & Res, 
-                            const vector < unsigned int > & Sol_n_el_dofs,
-                            const unsigned int col_width_visualization,     
-                            const unsigned int precision)  {
-    
-    const unsigned int n_unknowns = Sol_n_el_dofs.size();
-
-    std::vector<int> dof_offset(n_unknowns);
-		  dof_offset[0] = 0;
-	for(unsigned i_unk = 1; i_unk < n_unknowns; i_unk++) dof_offset[i_unk] += dof_offset[i_unk-1] + Sol_n_el_dofs[i_unk];
-  
- std::cout << "++++++++++ iel " << iel << " ++++++++++" << std::endl;
- 
-    for(unsigned i_block = 0; i_block < n_unknowns; i_block++) {
-      for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
-          
- std::cout << std::right << std::setw(col_width_visualization) << std::setprecision(precision)  /*<< std::scientific*/ << 
- Res[ dof_offset[i_block] + i_dof ] << " " ;
-
-          
-     std::cout << std::endl;
-        }
-    }
-    
-
-    }
 
 
-void print_element_jacobian(const unsigned int iel,
-                            const  vector < double > & Jac, 
-                            const vector < unsigned int > & Sol_n_el_dofs, 
-                            const unsigned int col_width_visualization,     
-                            const unsigned int precision)  {
 
-    
-    const unsigned int n_unknowns = Sol_n_el_dofs.size();
-    
-    unsigned int nDofsDP = 0;
-    for(unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) nDofsDP += Sol_n_el_dofs[i_unk];
-    
-    
-    std::vector<int> dof_offset(n_unknowns);
-		  dof_offset[0] = 0;
-	for(unsigned i_unk = 1; i_unk < n_unknowns; i_unk++) dof_offset[i_unk] += dof_offset[i_unk-1] + Sol_n_el_dofs[i_unk];
-  
- std::cout << "++++++++++ iel " << iel << " ++++++++++" << std::endl;
- 
-    for(unsigned i_block = 0; i_block < n_unknowns; i_block++) {
-      for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
-	  for(unsigned j_block=0; j_block< n_unknowns; j_block++) {
-               for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
- std::cout << std::right << std::setw(col_width_visualization) << std::setprecision(precision)  /*<< std::scientific*/ << 
- Jac[ (dof_offset[i_block] + i_dof) * nDofsDP + (dof_offset[j_block] + j_dof )] << " " ;
-                 }
-           } 
-     std::cout << std::endl;
-        }
-    }
 
-    
-}
 
 
 
@@ -771,8 +714,8 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
     // get the and store jacobian matrix (row-major)
     s.jacobian(&Jac[0] , true);
 
-    print_element_residual(iel,Res,Sol_n_el_dofs,12,5);
-    print_element_jacobian(iel,Jac,Sol_n_el_dofs,12,5);
+    assemble_jacobian<real_num,double>::print_element_residual(iel,Res,Sol_n_el_dofs,12,5);
+    assemble_jacobian<real_num,double>::print_element_jacobian(iel,Jac,Sol_n_el_dofs,12,5);
 
 
    JAC->add_matrix_blocked(Jac, JACDof, JACDof);

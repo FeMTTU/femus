@@ -668,6 +668,96 @@ class assemble_jacobian {
                                                                    ) const;
                                                                    
     
+static void print_element_jacobian(const unsigned int iel,
+                            const  vector < double > & Jac, 
+                            const vector < unsigned int > & Sol_n_el_dofs, 
+                            const unsigned int col_width_visualization,     
+                            const unsigned int precision)  {
+
+    
+    const unsigned int n_unknowns = Sol_n_el_dofs.size();
+    
+    unsigned int nDofsDP = 0;
+    for(unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) nDofsDP += Sol_n_el_dofs[i_unk];
+    
+    
+    std::vector<int> dof_offset(n_unknowns);
+		  dof_offset[0] = 0;
+	for(unsigned i_unk = 1; i_unk < n_unknowns; i_unk++) dof_offset[i_unk] += dof_offset[i_unk-1] + Sol_n_el_dofs[i_unk];
+  
+ std::cout << "++++++++++ iel " << iel << " ++++++++++" << std::endl;
+ 
+    for(unsigned i_block = 0; i_block < n_unknowns; i_block++) {
+      for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
+	  for(unsigned j_block=0; j_block< n_unknowns; j_block++) {
+               for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
+ std::cout << std::right << std::setw(col_width_visualization) << std::setprecision(precision)  /*<< std::scientific*/ << 
+ Jac[ (dof_offset[i_block] + i_dof) * nDofsDP + (dof_offset[j_block] + j_dof )] << " " ;
+                 }
+           } 
+     std::cout << std::endl;
+        }
+    }
+
+    
+}
+
+
+static void print_element_residual(const unsigned int iel, 
+                            const  vector < double > & Res, 
+                            const vector < unsigned int > & Sol_n_el_dofs,
+                            const unsigned int col_width_visualization,     
+                            const unsigned int precision)  {
+    
+    const unsigned int n_unknowns = Sol_n_el_dofs.size();
+
+    std::vector<int> dof_offset(n_unknowns);
+		  dof_offset[0] = 0;
+	for(unsigned i_unk = 1; i_unk < n_unknowns; i_unk++) dof_offset[i_unk] += dof_offset[i_unk-1] + Sol_n_el_dofs[i_unk];
+  
+ std::cout << "++++++++++ iel " << iel << " ++++++++++" << std::endl;
+ 
+    for(unsigned i_block = 0; i_block < n_unknowns; i_block++) {
+      for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
+          
+ std::cout << std::right << std::setw(col_width_visualization) << std::setprecision(precision)  /*<< std::scientific*/ << 
+ Res[ dof_offset[i_block] + i_dof ] << " " ;
+
+          
+     std::cout << std::endl;
+        }
+    }
+    
+
+    }
+    
+    
+static inline unsigned int res_row_index(const std::vector<unsigned int>& _Sol_n_el_dofs, const int my_row_pos, const int i) {
+
+    assert(i < _Sol_n_el_dofs[my_row_pos]); 
+    
+    unsigned int pos_previous = 0;
+    for (unsigned k = 0; k < my_row_pos; k++) pos_previous += _Sol_n_el_dofs[k];
+
+    return pos_previous + i;
+  }
+  
+
+static  inline unsigned int jac_row_col_index(const std::vector<unsigned int>& _Sol_n_el_dofs, const int nDof_AllVars, const int my_row_pos, const int my_col_pos, const int i, const int j) {
+
+     assert(i < _Sol_n_el_dofs[my_row_pos]); 
+     assert(j < _Sol_n_el_dofs[my_col_pos]); 
+     
+    unsigned int pos_previous_row = 0;
+    unsigned int pos_previous_col = 0;
+    for (unsigned k = 0; k < my_row_pos; k++) pos_previous_row += _Sol_n_el_dofs[k];
+    for (unsigned k = 0; k < my_col_pos; k++) pos_previous_col += _Sol_n_el_dofs[k];
+
+    return (pos_previous_row + i) * nDof_AllVars + (pos_previous_col + j);
+  }
+    
+
+                                                                   
 };
 
 
