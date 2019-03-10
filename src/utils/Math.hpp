@@ -182,7 +182,7 @@ double myval_g = pt2func(time,xyz._val_g);
 
 
 
-template < class type >
+template < class type = double >
   class Function {
  
   public:
@@ -225,7 +225,7 @@ virtual const MultiLevelSolution  run_on_single_level(const Files & files,
 };
 
 
-template < class type >
+template < class type = double >
 class FE_convergence {
  
     
