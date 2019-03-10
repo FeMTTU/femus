@@ -15,8 +15,8 @@
 #include "PetscMatrix.hpp"
 #include <stdio.h>
 
-#define NSUB_X  2
-#define NSUB_Y  2
+#define NSUB_X  16
+#define NSUB_Y  16
 
 #define MODEL "Linear_elastic" /*"Mooney-Rivlin"*/ /*"Neo-Hookean"*/
 
@@ -101,8 +101,8 @@ vector < vector < real_num > >  get_tensor(const MultiLevelProblem& ml_prob,
                   const vector < vector < real_num > > & gradSolVAR_hat_qp,
                   const          vector < real_num >   & SolVAR_qp,
                   const          vector < unsigned int >   & SolPdeIndex,
-                  real_num J_hat,
-                  real_num trace_e
+                  real_num & J_hat,
+                  real_num & trace_e
 ) {
     
     
@@ -133,7 +133,7 @@ vector < vector < real_num > >  get_tensor(const MultiLevelProblem& ml_prob,
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
                 //incompressible
-                Cauchy[i][j] = 2. * mus *  ( e[i][j] -  trace_e *  SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[i][j] );
+                Cauchy[i][j] = 2. * mus *  ( e[i][j] -  SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[i][j] );
                 //+(penalty)*lambda*trace_e*Identity[i][j];
               }
             }
@@ -149,8 +149,8 @@ vector < vector < real_num > >  get_tensor(const MultiLevelProblem& ml_prob,
               }
             }
 
-          const real_num J_hat  = F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
-                                - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];  //Jacobian wrt fixed domain
+            J_hat  = F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
+                   - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];  //Jacobian wrt fixed domain
                                 
 
             for (int I = 0; I < 3; ++I) {
@@ -441,9 +441,9 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //-----------state------------------------------
   vector < vector < double > > phi_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_hat_gss_fe(NFE_FAMS);
-  vector < vector < real_num > > phi_x_gss_fe(NFE_FAMS);
+  vector < vector < real_num > > phi_x_gss_fe(NFE_FAMS);   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
   vector < vector < double > > phi_x_hat_gss_fe(NFE_FAMS);
-  vector < vector < real_num > > phi_xx_gss_fe(NFE_FAMS);
+  vector < vector < real_num > > phi_xx_gss_fe(NFE_FAMS);  //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
   vector < vector < double > > phi_xx_hat_gss_fe(NFE_FAMS);
 
   for(int fe=0; fe < NFE_FAMS; fe++) {  
@@ -471,7 +471,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   Jac.reserve( n_unknowns *maxSize * n_unknowns *maxSize);
 
   //----------- dofs ------------------------------
-  vector < vector < real_num > > SolVAR_eldofs(n_unknowns);//solD,solP
+  vector < vector < real_num > > SolVAR_eldofs(n_unknowns);
   vector < vector < real_num > > gradSolVAR_eldofs(n_unknowns);
    
   vector< vector < real_num > > aResVAR(n_unknowns);    // local redidual vector
@@ -506,7 +506,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
     const bool penalty = ml_prob.parameters.get < Solid>("Solid").get_if_penalty();
 
     // gravity
-    double _gravity[3] = {0., 0.1, 0.};
+    double _gravity[3] = {0., 1., 0.};
     // -----------------------------------------------------------------
  
     RES->zero(); // Set to zero all the entries of the Global Matrix
@@ -682,7 +682,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
                 }
               }
               else if (3  ==  solid_model || 4  ==  solid_model) { // pressure = 0 in the solid
-                aResVAR[SolPdeIndex[press_type_pos]][i] += -(-phi_gss_fe[SolFEType[press_type_pos]][i] * (SolVAR_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
+                  aResVAR[SolPdeIndex[press_type_pos]][i] += -(-phi_gss_fe[SolFEType[press_type_pos]][i] * (SolVAR_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
               }
             }
 
@@ -714,8 +714,8 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
     // get the and store jacobian matrix (row-major)
     s.jacobian(&Jac[0] , true);
 
-    assemble_jacobian<real_num,double>::print_element_residual(iel,Res,Sol_n_el_dofs,12,5);
-    assemble_jacobian<real_num,double>::print_element_jacobian(iel,Jac,Sol_n_el_dofs,12,5);
+    assemble_jacobian<real_num,double>::print_element_residual(iel,Res,Sol_n_el_dofs,9,5);
+    assemble_jacobian<real_num,double>::print_element_jacobian(iel,Jac,Sol_n_el_dofs,9,5);
 
 
    JAC->add_matrix_blocked(Jac, JACDof, JACDof);
