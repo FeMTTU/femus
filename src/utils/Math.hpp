@@ -9,6 +9,8 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 
+
+
 namespace femus {
 
 // remember that you have to declare all these functions "inline", otherwise you get "multiple definition" in linking
@@ -748,9 +750,41 @@ static  inline unsigned int jac_row_col_index(const std::vector<unsigned int>& _
   }
     
 
+
+
+
+static void print_global_jacobian(const bool assemble_matrix,
+                                         const MultiLevelProblem & ml_prob,
+                                         const SparseMatrix* JAC,
+                                         const unsigned int nonlin_iteration) {
+    
+  if (assemble_matrix) {
+        
+    JAC->close();
+    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << nonlin_iteration  << ".txt";
+    JAC->print_matlab(mat_out.str(),"ascii"); //  KK->print();
+
+   }
+    
+  }
+  
+  
+  
+static void print_global_residual(const MultiLevelProblem & ml_prob,
+                                  NumericVector* RES,
+                                  const unsigned int nonlin_iteration) {
+    
+    RES->close();  ///@todo why does this close need to be non-const? 
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << nonlin_iteration  << ".txt";
+    std::filebuf res_fb;
+    res_fb.open (res_out.str().c_str(),std::ios::out);
+    std::ostream  res_file_stream(&res_fb);
+    RES->print(res_file_stream);
+
+  }  
+    
                                                                    
 };
-
 
 
 

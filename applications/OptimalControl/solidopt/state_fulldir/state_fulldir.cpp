@@ -91,7 +91,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob);
 
 
 template < class real_num >
-vector < vector < real_num > >  get_tensor(const MultiLevelProblem& ml_prob,
+vector < vector < real_num > >  get_Cauchy_stress_tensor(const MultiLevelProblem& ml_prob,
                                            const unsigned int dim,
                                            const unsigned int press_type_pos,
                                            const double & mus,
@@ -640,7 +640,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
    real_num J_hat;
    real_num trace_e;
 
-    Cauchy = get_tensor< real_num >(ml_prob, dim, press_type_pos,  mus, lambda, solid_model, gradSolVAR_qp, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat,trace_e);
+    Cauchy = get_Cauchy_stress_tensor< real_num >(ml_prob, dim, press_type_pos,  mus, lambda, solid_model, gradSolVAR_qp, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat,trace_e);
 
     
 
@@ -738,17 +738,10 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   
   
     //print JAC and RES to files
-    if (assembleMatrix) JAC->close();
-    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys.GetNonlinearIt()  << ".txt";
-    JAC->print_matlab(mat_out.str(),"ascii"); //  KK->print();
+    const unsigned nonlin_iter = mlPdeSys.GetNonlinearIt();
+    assemble_jacobian< real_num,double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
+    assemble_jacobian< real_num,double >::print_global_residual(ml_prob, RES, nonlin_iter);
 
-    RES->close();
-    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << mlPdeSys.GetNonlinearIt()  << ".txt";
-    std::filebuf res_fb;
-    res_fb.open (res_out.str().c_str(),std::ios::out);
-    std::ostream  res_file_stream(&res_fb);
-    RES->print(res_file_stream);
-  
   
 }
 
