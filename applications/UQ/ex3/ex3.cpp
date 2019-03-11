@@ -1164,6 +1164,8 @@ void GetStochasticData ( std::vector <double>& alphas )
 
         std::cout << " BEGIN KDE PRINT ------------------------------------------- " << std::endl;
         
+        clock_t KDE_time = clock();
+        
         for ( unsigned i = 0; i < pdfHistogramSize; i++ ) {
             double point = ( startPoint + i * deltat + startPoint + ( i + 1 ) * deltat ) * 0.5;
             double KDEvalue = 0.;
@@ -1174,6 +1176,9 @@ void GetStochasticData ( std::vector <double>& alphas )
             KDEvalue = KDEvalue / (numberOfSamples * deltat);
             std::cout << point << "  " << KDEvalue  << std::endl;
         }
+        
+        std::cout << std::endl << " Builds KDE in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+                  << static_cast<double> ( ( clock() - KDE_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
         
         std::cout << " END KDE PRINT ------------------------------------------- " << std::endl;
 

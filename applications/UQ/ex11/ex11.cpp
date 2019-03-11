@@ -1090,7 +1090,7 @@ void GetStochasticData ( std::vector <double>& alphas )
 
         myuq.ClearPolynomialHistogram();
 
-          //BEGIN computation of the moments via Monte Carlo integration
+        //BEGIN computation of the moments via Monte Carlo integration
         std::vector <double> momentsMonteCarlo ( numberOfSamples );
         std::vector <double> momentsStandardizedMonteCarlo ( numberOfSamples );
 
@@ -1126,11 +1126,11 @@ void GetStochasticData ( std::vector <double>& alphas )
         double stdDeviationMonteCarlo = sqrt ( varianceMonteCarlo );
 
         std::cout.precision ( 14 );
-        
+
         std::cout << "the standard deviation is " << stdDeviationMonteCarlo << std::endl;
-        
+
         std::cout << "the variance is " << varianceMonteCarlo << std::endl;
-        
+
         std::cout << "Standardized Monte Carlo Moments" << std::endl;
 
         for ( unsigned p = 0; p < totMoments; p++ ) {
@@ -1157,7 +1157,7 @@ void GetStochasticData ( std::vector <double>& alphas )
         }
 
 
-        //BEGIN histogram check
+        //BEGIN histogram clock_t KDE_time = clock();check
         double checkHistogram = 0;
 
         for ( unsigned i = 0; i < pdfHistogramSize; i++ ) {
@@ -1171,22 +1171,29 @@ void GetStochasticData ( std::vector <double>& alphas )
 
         std::cout << "checkHistogram = " << checkHistogram << std::endl;
         //END
-        
-                //BEGIN KDE PRINT
+
+        //BEGIN KDE PRINT
+
+        clock_t KDE_time = clock();
 
         std::cout << " BEGIN KDE PRINT ------------------------------------------- " << std::endl;
-        
+
         for ( unsigned i = 0; i < pdfHistogramSize; i++ ) {
             double point = ( startPoint + i * deltat + startPoint + ( i + 1 ) * deltat ) * 0.5;
             double KDEvalue = 0.;
+
             for ( unsigned m = 0; m < numberOfSamples; m++ ) {
-                double xValue = (point - sgmQoIStandardized[m]) / deltat;
+                double xValue = ( point - sgmQoIStandardized[m] ) / deltat;
                 KDEvalue += 1. / ( sqrt ( 2 * acos ( - 1. ) ) ) * exp ( - 0.5 * ( xValue * xValue ) ) ;
             }
-            KDEvalue = KDEvalue / (numberOfSamples * deltat);
+
+            KDEvalue = KDEvalue / ( numberOfSamples * deltat );
             std::cout << point << "  " << KDEvalue  << std::endl;
         }
-        
+
+        std::cout << std::endl << " Builds KDE in: " << std::setw ( 11 ) << std::setprecision ( 6 ) << std::fixed
+                  << static_cast<double> ( ( clock() - KDE_time ) ) / CLOCKS_PER_SEC << " s" << std::endl;
+
         std::cout << " END KDE PRINT ------------------------------------------- " << std::endl;
 
         //END KDE PRINT
