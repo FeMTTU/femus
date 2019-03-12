@@ -41,4 +41,6 @@ IF(SLEPC_FOUND)
   ADD_SUBDIRECTORY(tracer_and_velocity/)
   
   ADD_SUBDIRECTORY(tracer_multiple/)
+  
+  ADD_SUBDIRECTORY(tracer_6multiple/)
 ENDIF(SLEPC_FOUND)
