@@ -95,10 +95,10 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
 }
 
 
-template < class real_num >
-  void System_assemble_interface(MultiLevelProblem & ml_prob);
+template < class real_num, class real_num_mov = double >
+void System_assemble_interface(MultiLevelProblem & ml_prob);
 
-template < class real_num > 
+template < class real_num, class real_num_mov = double > 
 void System_assemble_flexible(MultiLevelProblem & ml_prob,
                             const std::string system_name,
                             const std::string unknown,
@@ -201,7 +201,7 @@ int main(int argc, char** args) {
    const unsigned norm_flag = 1;                                                     //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
    std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();   //provide list of unknowns ==============
 
-    My_main_single_level< /*adept::a*/double > my_main;
+    My_main_single_level< adept::adouble > my_main;
 //  my_main.run_on_single_level(files, unknowns, ml_mesh, 3); if you don't want the convergence study
     
     FE_convergence<>  fe_convergence;
@@ -296,7 +296,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
 
 
-template <class real_num >
+template <class real_num, class real_num_mov = double >
 void System_assemble_interface(MultiLevelProblem& ml_prob) {
 // this is meant to be like a tiny addition to the main function, because we cannot pass these arguments through the function pointer
     
@@ -316,7 +316,7 @@ const std::string system_name = "Equation"; //I cannot get this from the system 
  *                  J = \grad_u F
  **/
 
-template < class real_num >
+template < class real_num, class real_num_mov = double >
 void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const Math::Function< double > & exact_sol) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
@@ -353,20 +353,20 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
   if (soluPdeIndex > 0) { std::cout << "Only scalar variable now, haven't checked with vector PDE"; abort(); }
 
   
-  double weight; // gauss point weight
-
-      
-  vector < real_num >  solu;  solu.reserve(max_size_elem_dofs);
-  vector < double >  solu_exact_at_dofs;  solu_exact_at_dofs.reserve(max_size_elem_dofs);
-
-  vector < vector < double > > x(dim);  unsigned xType = BIQUADR_FE;
-
+  //----------- at dofs ------------------------------
+  vector < vector < real_num_mov > > x(dim);  unsigned xType = BIQUADR_FE;     // must be adept if the domain is moving, otherwise double
   for (unsigned i = 0; i < dim; i++)  x[i].reserve(max_size_elem_dofs);
 
+  vector < real_num >  solu;                              solu.reserve(max_size_elem_dofs);
+  vector < double >    solu_exact_at_dofs;  solu_exact_at_dofs.reserve(max_size_elem_dofs);
+
+
+  //------------ at quadrature points ---------------------
+  real_num_mov weight;    // must be adept if the domain is moving
 //-----------------  
   vector < double > phi_coords;
-  vector < double > phi_coords_x;
-  vector < double > phi_coords_xx;
+  vector < real_num_mov > phi_coords_x;   // must be adept if the domain is moving
+  vector < real_num_mov > phi_coords_xx;  // must be adept if the domain is moving
 
   phi_coords.reserve(max_size_elem_dofs);
   phi_coords_x.reserve(max_size_elem_dofs * dim);
@@ -383,9 +383,9 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
   
 
-  vector < int > loc_to_glob_map;  loc_to_glob_map.reserve(max_size_elem_dofs);
-  vector < real_num >  Res;    Res.reserve(max_size_elem_dofs);  
-  vector < double > Jac;     Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);
+  vector < int >       loc_to_glob_map;  loc_to_glob_map.reserve(max_size_elem_dofs);
+  vector < real_num >  Res;                          Res.reserve(max_size_elem_dofs);  
+  vector < double >    Jac;                          Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);
   
 
   adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
