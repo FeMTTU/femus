@@ -20,9 +20,9 @@
 
 using namespace femus;
 
-void getKFromFile (MultiLevelSolution &mlCubeSol);
+bool CheckIfPositiveDefinite(double K[6]);
 
-void ProjectK (MultiLevelSolution &mlCubeSol, MultiLevelSolution &mlSphereSol);
+void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split);
 
 double GetTimeStep (const double time) {
   double dt = .01;
@@ -36,24 +36,12 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
   return dirichlet;
 }
 
-// double InitalValueU2D (const std::vector < double >& x) {
-//   double r = sqrt (x[0] * x[0] + x[1] * x[1]);
-//   double r2 = r * r;
-//   double R = 1.;
-//   double R2 = R * R;
-//   //double Vb = 1.268112; // exp( (( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
-//   double Vb = 0.265048;  // exp( (10.*( 1. - R2 / ( R2 - r2 )) ))/Vb is such that its volume integral is 1
-//   double V0 = 1. / 12.; // fraction of injection vs tumor
-//   return V0 * exp ( (10.* (1. - R2 / (R2 - r2)))) / Vb; // IC vanishing near the boundary.
-// }
-
 double V0;
 double InitalValueU3D (const std::vector < double >& x) {
   double r = sqrt (x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
   double r2 = r * r;
   double R = 1.80001;
   double R2 = R * R;
-
   double R3 = R2 * R;
   double Vb = 1.1990039070212866;
 
@@ -76,57 +64,6 @@ double GetSmootK (const double & kmin, const double & kmax, const double & h, co
   return value;
 }
 
-double InitalValueK11 (const std::vector < double >& x) {
-  double kmin = 0.01;
-  double kmax = 1.;
-  double h = 0.1;
-  double r0 = 1.;
-
-  return GetSmootK (kmin, kmax, h, r0, x);
-
-}
-double InitalValueK12 (const std::vector < double >& x) {
-  double kmin = 0.;
-  double kmax = 0.;
-  double h = 0.1;
-  double r0 = 1.;
-
-  return GetSmootK (kmin, kmax, h, r0, x);
-}
-double InitalValueK13 (const std::vector < double >& x) {
-  double kmin = 0.;
-  double kmax = 0.;
-  double h = 0.1;
-  double r0 = 1.;
-
-  return GetSmootK (kmin, kmax, h, r0, x);
-}
-double InitalValueK22 (const std::vector < double >& x) {
-  double kmin = 0.01;
-  double kmax = 2.;
-  double h = 0.1;
-  double r0 = 1.;
-
-  return GetSmootK (kmin, kmax, h, r0, x);
-}
-double InitalValueK23 (const std::vector < double >& x) {
-  double kmin = 0.;
-  double kmax = 0.;
-  double h = 0.1;
-  double r0 = 1.;
-
-  return GetSmootK (kmin, kmax, h, r0, x);
-}
-double InitalValueK33 (const std::vector < double >& x) {
-  double kmin = 0.01;
-  double kmax = 3.;
-  double h = 0.1;
-  double r0 = 1.;
-
-  return GetSmootK (kmin, kmax, h, r0, x);
-}
-
-
 bool GetDeadCells (const double &time, MultiLevelSolution &mlSol);
 
 void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob);
@@ -138,58 +75,19 @@ int main (int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
-  // define MultiLevel object "mlMsh".
-  //MultiLevelMesh mlMsh;
-  // read coarse level mesh and generate finers level meshes
+  const unsigned split[4] = {8,4,2,1};
+
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/ball.neu", "seventh", scalingFactor);
-
-/*
-
-  MultiLevelMesh mlMshCube (4, 4, "./input/cube6x6x6.neu", "fifth", 1., NULL);
-  MultiLevelSolution mlSolCube (&mlMshCube); // Here we provide the mesh info to the problem.
-  mlSolCube.AddSolution ("K11", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSolCube.AddSolution ("K12", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSolCube.AddSolution ("K13", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSolCube.AddSolution ("K22", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSolCube.AddSolution ("K23", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSolCube.AddSolution ("K33", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-
-  mlSolCube.Initialize ("All");
-
-  
-  getKFromFile (mlSolCube);
-  
-  mlSolCube.SetWriter (VTK);
-  //mlSol.GetWriter()->SetGraphVariable ("u");
-  mlSolCube.GetWriter()->SetDebugOutput (false);
-
-  std::vector<std::string> print_vars;
-  print_vars.push_back ("All");
-
-  mlSolCube.GetWriter()->Write ("outputCube", "biquadratic", print_vars);
-
-  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
-  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-    probably in future it is not going to be an argument of this function   */
-  // Domain dimension of the problem.
-  unsigned maxNumberOfMeshes; // The number of mesh levels.*/
-
-  unsigned numberOfUniformLevels = 4; //We apply uniform refinement.
+  unsigned numberOfUniformLevels = 3; //We apply uniform refinement.
   unsigned numberOfSelectiveLevels = 0; // We may want to see the solution on some levels.
-  //mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-
+  
   MultiLevelMesh mlMsh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels,
                         "./input/cube6x6x6.neu", "fifth", 1., NULL);
 
   unsigned dim = mlMsh.GetDimension();
   // erase all the coarse mesh levels
- // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
-
-  // print mesh info
-  //mlMsh.PrintInfo();
-
-
+  // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
+  
   for (unsigned simulation = 9; simulation < 10; simulation++) {
 
     V0 = 0.005 * (simulation + 1) ;   // fraction of injection vs tumor
@@ -198,39 +96,24 @@ int main (int argc, char** args) {
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
 
     // add variables to mlSol
-    mlSol.AddSolution ("u", LAGRANGE, SECOND, 2); // We may have more than one, add each of them as u,v,w with their apprx type.
-
-
-    mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false); // We may have more than one, add each of them as u,v,w with their apprx type.
-
-
-    mlSol.AddSolution ("K11", LAGRANGE, SECOND, 0, false);
-    mlSol.AddSolution ("K12", LAGRANGE, SECOND, 0, false);
-    mlSol.AddSolution ("K13", LAGRANGE, SECOND, 0, false);
-    mlSol.AddSolution ("K22", LAGRANGE, SECOND, 0, false);
-    mlSol.AddSolution ("K23", LAGRANGE, SECOND, 0, false);
-    mlSol.AddSolution ("K33", LAGRANGE, SECOND, 0, false);
-
-
+    mlSol.AddSolution ("u", LAGRANGE, SECOND, 2); 
+    mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false); 
+    
+    mlSol.AddSolution ("K11", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution ("K12", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution ("K13", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution ("K22", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution ("K23", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution ("K33", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
     mlSol.Initialize ("All");
-//     if (dim == 2)
-//       mlSol.Initialize ("u", InitalValueU2D);
-//     else
     mlSol.Initialize ("u", InitalValueU3D);
     mlSol.Initialize ("d", InitalValueD);
-
-    getKFromFile (mlSol);
+    GetKFromFile (mlSol, split[numberOfUniformLevels - 1]);
 
     // attach the boundary condition function and generate boundary data
     mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
-
-
     mlSol.GenerateBdc ("u", "Steady");
-
-
-
-
 
     // define the multilevel problem attach the mlSol object to it
     MultiLevelProblem mlProb (&mlSol); //
@@ -241,41 +124,34 @@ int main (int argc, char** args) {
     // add solution "u" to system
     system.AddSolutionToSystemPDE ("u");
 
-
     // attach the assembling function to system
     system.SetAssembleFunction (AssemblePoissonProblem_AD);
 
     // time loop parameter
     system.AttachGetTimeIntervalFunction (GetTimeStep);
-    const unsigned int n_timesteps = 20;
-
+    const unsigned int n_timesteps = 40;
 
     system.SetMaxNumberOfNonLinearIterations (1);
-    system.SetMaxNumberOfLinearIterations (10);
-    system.SetAbsoluteLinearConvergenceTolerance (1.e-8);
-
-
-
-
+    system.SetMaxNumberOfLinearIterations (1);
+    
     system.init();
+    system.SetTolerances (1.e-10, 1.e-20, 1.e+50, 200, 40);
 
-    system.SetPreconditionerFineGrids (ILU_PRECOND);
+    system.SetSolverFineGrids (RICHARDSON);
+    system.SetPreconditionerFineGrids (JACOBI_PRECOND);
     system.SetMgType (V_CYCLE);
 
     // ******* Print solution *******
     mlSol.SetWriter (VTK);
-    //mlSol.GetWriter()->SetGraphVariable ("u");
-    mlSol.GetWriter()->SetDebugOutput (false);
+    mlSol.GetWriter()->SetDebugOutput (true);
 
     std::vector<std::string> print_vars;
     print_vars.push_back ("All");
-
 
     double time = system.GetTime();
     GetDeadCells (time, mlSol);
 
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
-
 
     for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
@@ -287,7 +163,7 @@ int main (int argc, char** args) {
       bool stop = GetDeadCells (time, mlSol);
       mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
 
-      //if (stop) break;
+      if (stop) break;
     }
 
     mlProb.clear();
@@ -357,14 +233,14 @@ void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob) {
 
 
   std::string kname[6] = {"K11", "K12", "K13", "K22", "K23", "K33"};
-  
+
   unsigned kIndex[6];
   for (unsigned i = 0; i < 6; i++) {
     kIndex[i] = mlSol->GetIndex (kname[i].c_str());
   }
   unsigned kType = mlSol->GetSolutionType (kIndex[0]);
   double kT[3][3];
-  
+
   vector < vector < double > > x (dim);   // local coordinates. x is now dim x m matrix.
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
@@ -432,16 +308,16 @@ void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob) {
       }
     }
 
-    kT[0][0] = (*sol->_Sol[kIndex[0]])(iel);
-    kT[0][1] = (*sol->_Sol[kIndex[1]])(iel);
-    kT[0][2] = (*sol->_Sol[kIndex[2]])(iel);
+    kT[0][0] = (*sol->_Sol[kIndex[0]]) (iel);
+    kT[0][1] = (*sol->_Sol[kIndex[1]]) (iel);
+    kT[0][2] = (*sol->_Sol[kIndex[2]]) (iel);
     kT[1][0] = kT[0][1];
-    kT[1][1] = (*sol->_Sol[kIndex[3]])(iel);
-    kT[1][2] = (*sol->_Sol[kIndex[4]])(iel);
+    kT[1][1] = (*sol->_Sol[kIndex[3]]) (iel);
+    kT[1][2] = (*sol->_Sol[kIndex[4]]) (iel);
     kT[2][0] = kT[0][2];
     kT[2][1] = kT[1][2];
-    kT[2][2] = (*sol->_Sol[kIndex[5]])(iel);
-        
+    kT[2][2] = (*sol->_Sol[kIndex[5]]) (iel);
+
 
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
@@ -520,10 +396,10 @@ void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob) {
         double graduOldGradphi = 0.;
 
         for (unsigned k = 0; k < dim; k++) {
-          //for (unsigned l = 0; l < dim; l++) {
-            graduGradphi     +=   kT[k][k] * gradSolu_gss[k] * phi_x[i * dim + k] ;
+          for (unsigned l = 0; l < dim; l++) {
+            graduGradphi     +=   kT[k][l] * gradSolu_gss[l] * phi_x[i * dim + k] ;
             //graduOldGradphi  +=   kT[k][l] * gradSoluOld_gss[l] * phi_x[i * dim + k];
-          //}
+          }
         }
 
         aRes[i] += ( (solu_gss - soluOld_gss) * phi[i] / dt + (1. * graduGradphi + 0. * graduOldGradphi)) * weight;
@@ -703,105 +579,122 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
 }
 
 
+bool CheckIfPositiveDefinite(double K[6]){
+  bool pDefinite = true;
+  double det1 = K[0];
+  double det2 = K[0] * K[3] - K[1] * K[1];
+  double det3 =   K[0] * (K[3] * K[5] - K[4] * K[4]) 
+                - K[1] * (K[1] * K[5] - K[4] * K[2]) 
+                + K[2] * (K[1] * K[4] - K[3] * K[2]);
+  if(det1 <= 0. || det2 <= 0. || det3 <= 0.) {
+    pDefinite = false;
+  }          
+  return pDefinite;
+};  
 
 
+void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split) {
 
-void getKFromFile (MultiLevelSolution &mlSol){
-  
   unsigned Level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-    
+
   Solution *sol  = mlSol.GetSolutionLevel (Level);
   Mesh     *msh   = mlSol._mlMesh->GetLevel (Level);
-  
+
   std::ifstream fin;
-  
-  fin.open( "./input/CroppedTensorData.txt" );
-  if( !fin.is_open() ) {
+
+  fin.open ("./input/CroppedTensorData.txt");
+  if (!fin.is_open()) {
     std::cout << std::endl << " The output file " << "./input/tensor.txt" << " cannot be opened.\n";
     abort();
   }
-  
-  unsigned n1,n2,n3;
-  fin >> n1; 
+
+  unsigned n1, n2, n3;
+  fin >> n1;
   fin >> n2;
   fin >> n3;
-  
-  double h1,h2,h3;
-  
-  h1 = 2./n1;
-  h2 = 2./n2;
-  h3 = 2./n3;
-  
+
+  double h1, h2, h3;
+
+  h1 = 2. / (n1 / split);
+  h2 = 2. / (n2 / split);
+  h3 = 2. / (n3 / split);
+
   std::string kname[6] = {"K11", "K12", "K13", "K22", "K23", "K33"};
-  
+
   unsigned kIndex[6];
   for (unsigned i = 0; i < 6; i++) {
     kIndex[i] = mlSol.GetIndex (kname[i].c_str());
   }
-  
+
   unsigned kType = mlSol.GetSolutionType (kIndex[0]);
-  
+
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   std::vector<double> x (dim);
-   
+
   unsigned iproc  = msh->processor_id();
   unsigned nprocs  = msh->n_processors();
-  
-  for(unsigned i = 0;i < n1; i++){
-    for(unsigned j = 0; j < n2; j++){
-      for(unsigned k = 0; k < n3; k++){
-        x[0] = -1. + h1 * i + 0.5 * h1;
-        x[1] = -1. + h2 * j + 0.5 * h2;
-        x[2] = -1  + h3 * k + 0.5 * h3;
-                
-        double value[6];
-        for (unsigned l = 0; l < 6; l++) {
-          fin >> value[l];
-        }
-        
-        Marker i = Marker (x, 1., VOLUME , sol, 0);
-        unsigned mproc = i.GetMarkerProc (sol);
-        
-        if (mproc == iproc) {
-          unsigned iel = i.GetMarkerElement();
-          for (unsigned l = 0; l < 6; l++) {       
-            sol->_Sol[kIndex[l]]->set (iel, value[l]);
+
+  for (unsigned i = 0; i < n1; i++) {
+    for (unsigned j = 0; j < n2; j++) {
+      for (unsigned k = 0; k < n3; k++) {
+
+        if (i < n1 / split && j < n2 / split & k < n3 / split) {
+          x[0] = -1. + h1 * i + 0.5 * h1;
+          x[1] = -1. + h2 * j + 0.5 * h2;
+          x[2] = -1. + h3 * k + 0.5 * h3;
+
+          double K[6];
+          for (unsigned l = 0; l < 6; l++) {
+            fin >> K[l];
+          }
+
+          Marker center = Marker (x, 1., VOLUME , sol, 0);
+          unsigned mproc = center.GetMarkerProc (sol);
+
+          if (mproc == iproc) {
+            unsigned iel = center.GetMarkerElement();
+            while ( !CheckIfPositiveDefinite(K)){
+              std::cout << " warning k[" << iel << "] is not positive definite\n";   
+              K[0] += fabs(K[0]) + fabs(K[1]) + fabs(K[2]);
+              K[3] += fabs(K[1]) + fabs(K[3]) + fabs(K[4]);
+              K[5] += fabs(K[2]) + fabs(K[4]) + fabs(K[5]);
+            }  
+            for (unsigned l = 0; l < 6; l++) {
+              sol->_Sol[kIndex[l]]->set (iel, K[l]);
+            }
           }
         }
-        
       }
     }
   }
-  
+
   fin.close();
   for (unsigned l = 0; l < 6; l++) {
     sol->_Sol[kIndex[l]]->close();
   }
-  
+
   double trace = 0.;
   for (int iel = msh->_dofOffset[kType][iproc]; iel < msh->_dofOffset[kType][iproc + 1]; iel++) {
-    trace += ( (*sol->_Sol[kIndex[0]])(iel) + (*sol->_Sol[kIndex[3]])(iel) 
-             + (*sol->_Sol[kIndex[5]])(iel) )/3.;
+    trace += ( (*sol->_Sol[kIndex[0]]) (iel) + (*sol->_Sol[kIndex[3]]) (iel)
+               + (*sol->_Sol[kIndex[5]]) (iel)) / 3.;
   }
   double traceAll = 0.;
-  MPI_Allreduce(&trace, &traceAll, 1, MPI_DOUBLE, MPI_SUM,MPI_COMM_WORLD);
-  
+  MPI_Allreduce (&trace, &traceAll, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
   traceAll /= msh->_dofOffset[kType][nprocs];
-  
-  
+
+
   for (int iel = msh->_dofOffset[kType][iproc]; iel < msh->_dofOffset[kType][iproc + 1]; iel++) {
-    
+
     for (unsigned j = 0; j < 6; j++) {
       double value = (*sol->_Sol[kIndex[j]]) (iel) / traceAll;
-      
-      if( (j==0 || j==3 || j==5) && value < 1.0e-4) value = 1.0e-4;
       sol->_Sol[kIndex[j]]->set (iel, value);
     }
   }
   for (unsigned l = 0; l < 6; l++) {
     sol->_Sol[kIndex[l]]->close();
   }
-  
-  
-  
+
+
+
 }
