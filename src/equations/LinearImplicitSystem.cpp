@@ -40,7 +40,8 @@ namespace femus {
     _AMRnorm(0),
     _AMRthreshold(0.01),
     _AMReighborThresholdValue(0.),
-    _SmootherType(smoother_type),
+    _smootherType(smoother_type),
+    _includeCoarseLevelSmoother(false),
     _MGmatrixFineReuse(false),
     _MGmatrixCoarseReuse(false),
     _printSolverInfo(false),
@@ -96,12 +97,15 @@ namespace femus {
 
     _LinSolver.resize(_gridn);
 
-//     _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], GMRES_SMOOTHER).release();
-
-    _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], _SmootherType).release();
+    if(_includeCoarseLevelSmoother){
+      _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], _smootherType).release();
+    }
+    else{
+      _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], GMRES_SMOOTHER).release();  
+    }
     
-    for(unsigned i = 0; i < _gridn; i++) {
-      _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _SmootherType).release();
+    for(unsigned i = 1; i < _gridn; i++) {
+      _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();
     }
 
     for(unsigned i = 0; i < _gridn; i++) {
@@ -500,7 +504,7 @@ restart:
 
     _LinSolver.resize(_gridn + 1);
 
-    _LinSolver[_gridn] = LinearEquationSolver::build(_gridn, _solution[_gridn], _SmootherType).release();
+    _LinSolver[_gridn] = LinearEquationSolver::build(_gridn, _solution[_gridn], _smootherType).release();
 
     _LinSolver[_gridn]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
                                 _ml_sol->GetSolName(), &_solution[_gridn]->_Bdc,  _gridn + 1, _SparsityPattern);
@@ -917,8 +921,9 @@ restart:
 
   // ********************************************
 
-  void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
-    _SmootherType = mgsmoother;
+  void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother, const bool &includeCoarseLevelSmoother) {
+    _includeCoarseLevelSmoother = includeCoarseLevelSmoother;
+    _smootherType = mgsmoother;
   }
 
 
@@ -959,13 +964,13 @@ restart:
 
   // ********************************************
 
-  void LinearImplicitSystem::SetSolverCoarseGrid(const SolverType &finegridsolvertype) {
-    _LinSolver[0]->set_solver_type(finegridsolvertype);
+  void LinearImplicitSystem::SetSolverCoarseGrid(const SolverType &coarseGridSolver) {
+    _LinSolver[0]->set_solver_type(coarseGridSolver);
   }
   
   
-  void LinearImplicitSystem::SetSolverFineGrids(const SolverType &finegridsolvertype) {
-    _finegridsolvertype = finegridsolvertype;
+  void LinearImplicitSystem::SetSolverFineGrids(const SolverType &fineGridSolver) {
+    _finegridsolvertype = fineGridSolver;
 
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i]->set_solver_type(_finegridsolvertype);
@@ -977,13 +982,13 @@ restart:
   
   
   
-  void LinearImplicitSystem::SetPreconditionerCoarseGrid(const PreconditionerType &finegridpreconditioner) {
-    _LinSolver[0]->set_preconditioner_type(finegridpreconditioner);
+  void LinearImplicitSystem::SetPreconditionerCoarseGrid(const PreconditionerType &coarseGridPreconditioner) {
+    _LinSolver[0]->set_preconditioner_type(coarseGridPreconditioner);
   }
   
   
-  void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType &finegridpreconditioner) {
-    _finegridpreconditioner = finegridpreconditioner;
+  void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType &fineGridPreconditioner) {
+    _finegridpreconditioner = fineGridPreconditioner;
 
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i]->set_preconditioner_type(_finegridpreconditioner);
@@ -1034,7 +1039,7 @@ restart:
     _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], GMRES_SMOOTHER).release();
 
     for(unsigned i = 1; i < _gridn; i++) {
-      _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _SmootherType).release();
+      _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();
     }
 
 //     for (unsigned i=0; i<_gridn; i++) {

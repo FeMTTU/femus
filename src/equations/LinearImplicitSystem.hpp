@@ -120,7 +120,7 @@ namespace femus {
       void ClearVariablesToBeSolved();
 
       /** Set the multigrid smoother, gmres or Vanka (in future AMS (additive schwartz preconditioner))*/
-      void SetMgSmoother(const MgSmoother mgsmoother);
+      void SetMgSmoother(const MgSmoother mgsmoother, const bool &includeCoarseLevelSmoother = false);
 
       /** Set the PCFIELDSPLIT structure in linear solver */
       void SetFieldSplitTree(FieldSplitTree *fieldSplitTree);
@@ -281,7 +281,8 @@ namespace femus {
       int _npost;
 
       /** To be Added */
-      MgSmoother _SmootherType;
+      MgSmoother _smootherType;
+      bool _includeCoarseLevelSmoother;
       bool _MGmatrixFineReuse;
       bool _MGmatrixCoarseReuse;
 

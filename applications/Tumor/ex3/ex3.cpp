@@ -561,7 +561,7 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
 
   double lInfinityNorm    = sol->_Sol[soluIndex]->linfty_norm();
 
-  std::cout << lInfinityNorm << " " << uT[2].second << std::endl;
+  std::cout << "Max = " << lInfinityNorm << " Treshold = " << uT[2].second << std::endl;
 
   bool stop = (lInfinityNorm < uT[2].second) ? true : false;
 

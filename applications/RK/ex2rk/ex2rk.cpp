@@ -89,7 +89,7 @@ int main (int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels, numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -172,9 +172,15 @@ int main (int argc, char** args) {
   const std::vector < std::string > solPkName = system.GetSolkiNames ("P");
   
   unsigned RK = system.GetRungeKuttaStages();
+    
+  FieldSplitTree **VDP;
+  VDP = new FieldSplitTree * [RK];
+  std::vector < FieldSplitTree *> FSi;
+  FSi.reserve(RK);
   
   std::vector < std::vector < unsigned > > fieldVDP(RK);
   std::vector < std::vector < unsigned > > solutionTypeVDP(RK);
+ 
   for(unsigned i = 0; i < RK; i++){
     fieldVDP[i].resize(2 * dim + 1);
     solutionTypeVDP[i].resize(2 * dim + 1);
@@ -188,23 +194,16 @@ int main (int argc, char** args) {
     }
     fieldVDP[i][2 * dim] = system.GetSolPdeIndex(solPkName[i].c_str());
     solutionTypeVDP[i][2 * dim ] = mlSol.GetSolutionType(solPkName[i].c_str());
+
+    char name[10];
+    sprintf (name, "VDPi%d", i);
+    VDP[i]= new FieldSplitTree (PREONLY, MLU_PRECOND, fieldVDP[i], solutionTypeVDP[i], name);  
+    FSi.push_back(VDP[i]);  
   }
   
-  FieldSplitTree VDP0(PREONLY, MLU_PRECOND, fieldVDP[0], solutionTypeVDP[0], "VDP0");
-  FieldSplitTree VDP1(PREONLY, MLU_PRECOND, fieldVDP[1], solutionTypeVDP[1], "VDP1");
-  FieldSplitTree VDP2(PREONLY, MLU_PRECOND, fieldVDP[2], solutionTypeVDP[2], "VDP2");
-  
-  std::vector < FieldSplitTree *> FSi;
-  FSi.reserve(RK);
-  
-  FSi.push_back(&VDP0);  //displacement first
-  FSi.push_back(&VDP1);  // velocity second
-  FSi.push_back(&VDP2);  // velocity second
-  
   FieldSplitTree FS(RICHARDSON, FIELDSPLIT_PRECOND, FSi, "RK");
-  
 
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER,true);   // Field-Split preconditioned
   
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleBoussinesqAppoximation_AD);
@@ -212,6 +211,7 @@ int main (int argc, char** args) {
   // initilaize and solve the system
   system.init();
 
+  //system.SetOuterKSPSolver("richardson");
   system.SetSolverCoarseGrid(RICHARDSON);
   system.SetRichardsonScaleFactor(1.);
 //   system.SetPreconditionerCoarseGrid(MLU_PRECOND);
@@ -249,6 +249,11 @@ int main (int argc, char** args) {
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
 
+  for (unsigned i = 0; i < RK; i++) {
+    delete VDP[i];
+  }
+  delete [] VDP;
+  
   return 0;
 }
 
