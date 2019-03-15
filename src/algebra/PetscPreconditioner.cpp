@@ -177,15 +177,35 @@ namespace femus {
         break;
 
       case ASM_PRECOND:
-        ierr = PCSetType(pc, (char*) PCASM);
-        CHKERRABORT(MPI_COMM_WORLD, ierr);
+      case ASM_MULTIPLICATIVE_PRECOND:
+        PCSetType(pc, (char*) PCASM);
+        PCASMSetType (pc,  PC_ASM_BASIC);
+        PCASMSetLocalType (pc, PC_COMPOSITE_MULTIPLICATIVE);
         break;
+      case ASM_ADDITIVE_PRECOND:
+        PCSetType(pc, (char*) PCASM);
+        PCASMSetType (pc,  PC_ASM_BASIC);
+        PCASMSetLocalType (pc, PC_COMPOSITE_ADDITIVE);
+        break;  
 
       case FIELDSPLIT_PRECOND:
-        ierr = PCSetType(pc, (char*) PCFIELDSPLIT);
-        CHKERRABORT(MPI_COMM_WORLD, ierr);
+      case FIELDSPLIT_ADDITIVE_PRECOND:
+        PCSetType(pc, (char*) PCFIELDSPLIT);
+        PCFieldSplitSetType (pc, PC_COMPOSITE_ADDITIVE);
         break;
-
+      case FIELDSPLIT_MULTIPLICATIVE_PRECOND:
+        PCSetType(pc, (char*) PCFIELDSPLIT);
+        PCFieldSplitSetType (pc, PC_COMPOSITE_MULTIPLICATIVE);
+        break;
+      case FIELDSPLIT_SYMMETRIC_MULTIPLICATIVE_PRECOND:
+        PCSetType(pc, (char*) PCFIELDSPLIT);
+        PCFieldSplitSetType (pc, PC_COMPOSITE_SYMMETRIC_MULTIPLICATIVE);
+        break;
+      case FIELDSPLIT_SCHUR_PRECOND:
+        PCSetType(pc, (char*) PCFIELDSPLIT);
+        PCFieldSplitSetType (pc, PC_COMPOSITE_SCHUR);
+        break;  
+        
       case JACOBI_PRECOND:
         ierr = PCSetType(pc, (char*) PCJACOBI);
         CHKERRABORT(MPI_COMM_WORLD, ierr);

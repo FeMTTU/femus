@@ -149,7 +149,7 @@ int main(int argc, char** args) {
   FS1.reserve(2);
   FS1.push_back(&FS_UV);
   FS1.push_back(&FS_P);
-  FieldSplitTree FS_NS(PREONLY, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
+  FieldSplitTree FS_NS(PREONLY, FIELDSPLIT_SCHUR_PRECOND, FS1, "Navier-Stokes");
 
 
   //system.SetMgSmoother(GMRES_SMOOTHER);

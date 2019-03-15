@@ -175,8 +175,8 @@ int main (int argc, char** args) {
     
   FieldSplitTree **VDP;
   VDP = new FieldSplitTree * [RK];
-  std::vector < FieldSplitTree *> FSi;
-  FSi.reserve(RK);
+  std::vector < FieldSplitTree *> VDPAll;
+  VDPAll.reserve(RK);
   
   std::vector < std::vector < unsigned > > fieldVDP(RK);
   std::vector < std::vector < unsigned > > solutionTypeVDP(RK);
@@ -198,24 +198,23 @@ int main (int argc, char** args) {
     char name[10];
     sprintf (name, "VDPi%d", i);
     VDP[i]= new FieldSplitTree (PREONLY, MLU_PRECOND, fieldVDP[i], solutionTypeVDP[i], name);  
-    FSi.push_back(VDP[i]);  
+    VDPAll.push_back(VDP[i]);  
   }
   
-  FieldSplitTree FS(RICHARDSON, FIELDSPLIT_PRECOND, FSi, "RK");
+  FieldSplitTree FS(RICHARDSON, FIELDSPLIT_PRECOND, VDPAll, "RK");
 
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER,true);   // Field-Split preconditioned
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER, true);   // Field-Split preconditioned
   
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleBoussinesqAppoximation_AD);
  
   // initilaize and solve the system
   system.init();
-
-  //system.SetOuterKSPSolver("richardson");
+ 
   system.SetSolverCoarseGrid(RICHARDSON);
   system.SetRichardsonScaleFactor(1.);
-//   system.SetPreconditionerCoarseGrid(MLU_PRECOND);
-//   system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 1, 1); //GMRES tolerances
+
+  system.SetTolerances(1.e-10, 1.e-10, 1.e+50, 10, 10); //GMRES tolerances
   
   system.AttachGetTimeIntervalFunction (GetTimeStep);
   const unsigned int n_timesteps = 100;

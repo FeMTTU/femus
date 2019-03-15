@@ -269,16 +269,13 @@ namespace femus {
 
   void AsmPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc) {
     
-    PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, subpc);
+    PetscPreconditioner::set_petsc_preconditioner_type(ASM_MULTIPLICATIVE_PRECOND, subpc);
 
     if(!_standardASM) {
       PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
     }
-
-    //PCASMSetOverlap(subpc, _overlap);
-    PCASMSetType(subpc,  PC_ASM_BASIC );
-    PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
-
+    PCASMSetOverlap(subpc, _overlap);
+    
     KSPSetUp(subksp);
 
     KSP* subksps;

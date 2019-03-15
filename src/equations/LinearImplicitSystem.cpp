@@ -45,11 +45,14 @@ namespace femus {
     _MGmatrixFineReuse(false),
     _MGmatrixCoarseReuse(false),
     _printSolverInfo(false),
-    _assembleMatrix(true) {
+    _assembleMatrix(true),
+    _sparsityPatternMinimumSize(1u),
+    _numberOfGlobalVariables(0u){
     _SparsityPattern.resize(0);
     _outer_ksp_solver = "gmres";
     _totalAssemblyTime = 0.;
     _totalSolverTime =0.;
+    
   }
 
   // ********************************************
@@ -74,6 +77,7 @@ namespace femus {
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
+    _numberOfGlobalVariables = 0;
   }
 
   // ********************************************
@@ -92,10 +96,17 @@ namespace femus {
   }
 
   // ********************************************
+  
+  void LinearImplicitSystem::SetSparsityPatternMinimumSize(const unsigned &minimumSize){
+    _sparsityPatternMinimumSize = (minimumSize < 2u) ? 1u : minimumSize;
+  }
+  
+  // ******************************************
 
   void LinearImplicitSystem::init() {
 
     _LinSolver.resize(_gridn);
+
 
     if(_includeCoarseLevelSmoother){
       _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], _smootherType).release();
@@ -107,8 +118,15 @@ namespace femus {
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();
     }
+    
+    if(_sparsityPatternMinimumSize != 1u){
+      for(unsigned i = 0; i < _gridn; i++) {
+        _LinSolver[i]->SetSparsityPatternMinimumSize(_sparsityPatternMinimumSize);
+      }
+    }
 
     for(unsigned i = 0; i < _gridn; i++) {
+      _LinSolver[i]->SetNumberOfGlobalVariables(_numberOfGlobalVariables);
       _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
                              _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridn, _SparsityPattern);
     }

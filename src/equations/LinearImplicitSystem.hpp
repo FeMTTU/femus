@@ -81,6 +81,10 @@ namespace femus {
       * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
       */
       vector < LinearEquationSolver*> _LinSolver;
+      
+      void SetNumberOfGlobalVariables(const unsigned &numberOfGlobalVariables){
+        _numberOfGlobalVariables = numberOfGlobalVariables;
+      }
 
       /** Set the max number of linear iterationsfor solving Ax=b */
       void SetMaxNumberOfLinearIterations(unsigned int max_lin_it) {
@@ -214,7 +218,7 @@ namespace femus {
       /** enforce sparcity pattern for setting uncoupled variables and save on memory allocation **/
       void SetSparsityPattern(vector < bool > other_sparcity_pattern);
 
-
+      void SetSparsityPatternMinimumSize(const unsigned & minimumSize);
 
       bool GetAssembleMatrix() {
         return _assembleMatrix;
@@ -307,6 +311,8 @@ namespace femus {
       short _AMRnorm;
       double _AMReighborThresholdValue;
       std::vector <double> _AMRthreshold;
+      
+      
 
       vector <bool> _SparsityPattern;
 
@@ -322,6 +328,9 @@ namespace femus {
       
       bool _bitFlipOccurred;
       unsigned _bitFlipCounter;
+      
+      unsigned _numberOfGlobalVariables;
+      unsigned _sparsityPatternMinimumSize;
       
   };
 
