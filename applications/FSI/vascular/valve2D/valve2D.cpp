@@ -43,6 +43,7 @@ int main(int argc, char **args)
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 
   //std::string infile = "./../input/valve/2D/valve2.neu";
+  //std::string infile = "./../input/valve/2D/novalve.neu";
   std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
 
   // ******* Set physics parameters *******
@@ -221,10 +222,13 @@ int main(int argc, char **args)
   mov_vars.push_back("DY");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
+  
+  std::ostringstream outputFolder;
+  outputFolder << "output";
 
   //mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step_start - 1);
+  ml_sol.GetWriter()->Write(outputFolder.str(), "biquadratic", print_vars, time_step_start - 1);
   
 
   // ******* Solve *******
@@ -290,7 +294,7 @@ int main(int argc, char **args)
     }
     
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+    ml_sol.GetWriter()->Write(outputFolder.str(), "biquadratic", print_vars, time_step);
     
 
     if ( time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);

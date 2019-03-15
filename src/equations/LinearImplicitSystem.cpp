@@ -66,7 +66,7 @@ namespace femus {
   void LinearImplicitSystem::clear() {
     for(unsigned ig = 0; ig < _LinSolver.size(); ig++) {
       _LinSolver[ig]->DeletePde();
-      delete _LinSolver[ig];
+      //delete _LinSolver[ig];
 
       if(_PP[ig]) delete _PP[ig];
       if(_RR[ig]) delete _RR[ig];
