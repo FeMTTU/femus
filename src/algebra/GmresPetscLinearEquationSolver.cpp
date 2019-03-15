@@ -232,7 +232,7 @@ namespace femus
 
     if(level == 0) {
       PCMGGetCoarseSolve(pcMG, &subksp);
-      KSPSetTolerances(subksp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+      KSPSetTolerances(subksp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npre);
     }
     else {
       PCMGGetSmoother(pcMG, level , &subksp);
@@ -258,8 +258,6 @@ namespace femus
     KSPGetPC(subksp, &subpc);
     SetPreconditioner(subksp, subpc);
     
-    
-
     if(level < levelMax) {
       PCMGSetX(pcMG, level, (static_cast< PetscVector* >(_EPS))->vec());
       PCMGSetRhs(pcMG, level, (static_cast< PetscVector* >(_RES))->vec());

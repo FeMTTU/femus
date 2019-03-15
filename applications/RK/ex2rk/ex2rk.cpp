@@ -214,6 +214,8 @@ int main (int argc, char** args) {
   system.SetSolverCoarseGrid(RICHARDSON);
   system.SetRichardsonScaleFactor(1.);
 
+  //system.SetNumberSmoothingStepCoarseGrid(3);
+  
   system.SetTolerances(1.e-10, 1.e-10, 1.e+50, 10, 10); //GMRES tolerances
   
   system.AttachGetTimeIntervalFunction (GetTimeStep);

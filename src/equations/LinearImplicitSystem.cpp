@@ -33,8 +33,9 @@ namespace femus {
     _final_linear_residual(1.e20),
     _linearAbsoluteConvergenceTolerance(1.e-08),
     _mg_type(F_CYCLE),
-    _npre(1),
-    _npost(1),
+    _npre(1u),
+    _npre0(1u),
+    _npost(1u),
     _AMRtest(0),
     _maxAMRlevels(0),
     _AMRnorm(0),
@@ -265,10 +266,12 @@ restart:
         _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _outer_ksp_solver.c_str());
 
         for(unsigned i = 0; i < igridn + 1; i++) {
+          unsigned npre = (i == 0)? _npre0 : _npre;  
+          unsigned npost = (i == 0)? 0 : _npost;  
           if(_RR[i])
-            _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost);
+            _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _RR[i], npre, npost);
           else
-            _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost);
+            _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], npre, npost);
         }
 
         MGVcycle(igridn, mgSmootherType);
@@ -411,7 +414,9 @@ restart:
       }
 
       // ============== Direct Solver ==============
-      _LinSolver[0]->Solve(_VariablesToBeSolvedIndex, ksp_clean);
+      for(unsigned k = 0; k < _npre0; k++){
+        _LinSolver[0]->Solve(_VariablesToBeSolvedIndex, ksp_clean * (!k));
+      }
 
       for(unsigned ig = 1; ig <= level; ig++) {
         // ============== Prolongation ==============

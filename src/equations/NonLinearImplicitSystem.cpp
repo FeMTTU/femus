@@ -189,10 +189,12 @@ restart:
             _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _outer_ksp_solver.c_str());
 
             for(unsigned i = 0; i <= igridn; i++) {
+              unsigned npre = (i == 0)? _npre0 : _npre;  
+              unsigned npost = (i == 0)? 0 : _npost;  
               if(_RR[i])
-                _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost);
+                _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _RR[i], npre, npost);
               else
-                _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost);
+                _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], npre, npost);
             }
           }
           std::cout << "   ********* Level Max " << igridn + 1 << " MGINIT TIME:\t" \
