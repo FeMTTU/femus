@@ -17,33 +17,33 @@
 #include "../include/nonlocal_assembly1.hpp"
 
 
-//SECOND NONLOCAL EX IN FEMUS: nonlocal diffusion for a body with different material properties (this works with a different assembly than ex1)
+//2D NONLOCAL EX : nonlocal diffusion for a body with different material properties
 
 using namespace femus;
 
 double InitalValueU ( const std::vector < double >& x )
 {
 //     return x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
-//     return x[0];
+    return x[0];
 //     return x[0] * x[0];
 //     return x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 //     return x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
-    return x[0] * x[0] * x[0] * x[0]; //this is x^4
+//     return x[0] * x[0] * x[0] * x[0]; //this is x^4
 //        return 2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 }
 
-void GetL2Norm ( MultiLevelProblem& ml_prob );
+void GetL2Norm ( MultiLevelProblem& ml_prob, MultiLevelProblem& ml_prob2 );
 
 bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time )
 {
 
     bool dirichlet = true;
-//     value = 0.;
+    value = 0.;
 //     value = x[0];
 //     value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 //     value = x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
-    value = x[0] * x[0] * x[0] * x[0];
+//     value = x[0] * x[0] * x[0] * x[0];
 //        value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 
     if ( facename == 2 ) {
@@ -54,7 +54,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 2;
+unsigned numberOfUniformLevels = 1;
 
 int main ( int argc, char** argv )
 {
@@ -67,21 +67,26 @@ int main ( int argc, char** argv )
     unsigned numberOfSelectiveLevels = 0;
 //     mlMsh.ReadCoarseMesh ( "../input/nonlocal_boundary_test.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/interface.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest1.neu", "eighth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2.neu", "second", scalingFactor );
 //         mlMsh.ReadCoarseMesh ( "../input/maxTest3.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "fifth", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest5.neu", "fifth", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest6.neu", "second", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "fifth", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest8.neu", "fifth", scalingFactor );
-    mlMsh.ReadCoarseMesh ( "../input/maxTest9.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "eighth", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/maxTest5.neu", "eighth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest6.neu", "eighth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "eighth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest8.neu", "eighth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest9.neu", "eighth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest10.neu", "eighth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
     //mlMsh.ReadCoarseMesh ( "../input/martaTest0.neu", "second", scalingFactor );
 //      mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
 //    mlMsh.ReadCoarseMesh ( "../input/martaTest2.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest3.neu", "second", scalingFactor );
 //        mlMsh.ReadCoarseMesh ( "../input/martaTest4.neu", "second", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/martaTest5.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/martaTest7.neu", "fifth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/martaTest8.neu", "fifth", scalingFactor );
+//            mlMsh.ReadCoarseMesh ( "../input/martaTest9.neu", "fifth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest4Coarser.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial2.neu", "second", scalingFactor );
@@ -189,7 +194,7 @@ int main ( int argc, char** argv )
 
 
     //BEGIN compute errors
-    GetL2Norm ( ml_prob );
+    GetL2Norm ( ml_prob, ml_prob2 );
     //END compute errors
 
     // ******* Print solution *******
@@ -204,7 +209,7 @@ int main ( int argc, char** argv )
 } //end main
 
 
-void GetL2Norm ( MultiLevelProblem& ml_prob )
+void GetL2Norm ( MultiLevelProblem& ml_prob, MultiLevelProblem& ml_prob2 )
 {
 
     LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ( "NonLocal" );
@@ -213,6 +218,10 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
     elem*                     el = msh->el;
     MultiLevelSolution*    mlSol = ml_prob._ml_sol;
     Solution*                sol = ml_prob._ml_sol->GetSolutionLevel ( level );
+    
+        LinearImplicitSystem* mlPdeSys2  = &ml_prob2.get_system<LinearImplicitSystem> ( "Local" );
+    MultiLevelSolution*    mlSol2 = ml_prob2._ml_sol;
+    Solution*                sol2 = ml_prob2._ml_sol->GetSolutionLevel ( level );
 
     const unsigned  dim = msh->GetDimension();
 
@@ -235,7 +244,7 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
     unsigned soluType = mlSol->GetSolutionType ( soluIndex );
 
     unsigned soluIndexLocal;
-    soluIndexLocal = mlSol->GetIndex ( "u_local" );
+    soluIndexLocal = mlSol2->GetIndex ( "u_local" );
 
     unsigned    iproc = msh->processor_id();
     unsigned    nprocs = msh->n_processors();
@@ -258,7 +267,7 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
         for ( unsigned i = 0; i < nDofu; i++ ) {
             unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
             soluNonLoc[i] = ( *sol->_Sol[soluIndex] ) ( solDof );
-            soluLoc[i] = ( *sol->_Sol[soluIndexLocal] ) ( solDof );
+            soluLoc[i] = ( *sol2->_Sol[soluIndexLocal] ) ( solDof );
         }
 
         for ( unsigned i = 0; i < nDofx; i++ ) {
@@ -290,14 +299,14 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
 //                 exactSol_gss_y += phi[i] * x1[1][i]; // this is y at the Gauss point
             }
 
-//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x + 0.1 * exactSol_gss_x * exactSol_gss_x; // this is x^4 + delta * x^2
+            exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x + 0.1 * exactSol_gss_x * exactSol_gss_x; // this is x^4 + delta * x^2
 
 //             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x; // this is x^2
 
 //             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^3
 //             exactSol_gss_y = exactSol_gss_y * exactSol_gss_y * exactSol_gss_y; // this is y^3
 
-            exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^4
+//             exactSol_gss_x = exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x; // this is x^4
 
 //             exactSol_gss_x = 2 * exactSol_gss_x  + exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x * exactSol_gss_x ; // this is 2x + x^5
 
@@ -362,7 +371,7 @@ void GetL2Norm ( MultiLevelProblem& ml_prob )
     for ( unsigned i =  msh->_dofOffset[soluType][iproc]; i <  msh->_dofOffset[soluType][iproc + 1]; i++ ) {
 
         double nonLocalNodalValue = ( *sol->_Sol[soluIndex] ) ( i );
-        double LocalNodalValue = ( *sol->_Sol[soluIndexLocal] ) ( i );
+        double LocalNodalValue = ( *sol2->_Sol[soluIndexLocal] ) ( i );
 
         double difference = fabs ( nonLocalNodalValue - LocalNodalValue );
 
