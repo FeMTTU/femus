@@ -311,7 +311,7 @@ namespace femus
             double leftBoundOfSupport = _nodes[n][l][i] - _hs[n][l]; // this is xi - h
             double rightBoundOfSupport = _nodes[n][l][i] + _hs[n][l]; // this is xi + h
 
-            if ( x > leftBoundOfSupport && x < rightBoundOfSupport ) maybeThere = 1;
+            if ( x >= leftBoundOfSupport && x < rightBoundOfSupport ) maybeThere = 1;
 
             else maybeThere = 0;
         }
@@ -352,30 +352,43 @@ namespace femus
     void sparseGrid::EvaluateNodalValuesPDF ( std::vector < std::vector < double > >  &samples )
     {
 
-        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+        double supportMeasureLowest = 1.;
+
+        for ( unsigned n = 0; n < _N; n++ ) {
+            supportMeasureLowest *=  2. * _hs[n][_dofIdentifier[0][0][n][1]];
+        }
+
+        _nodalValuesPDF[0][0] = 1. / ( supportMeasureLowest );
+
+
+        for ( unsigned w = 1; w < _numberOfWs; w++ ) {
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 _nodalValuesPDF[w][i] = 0.;
             }
         }
 
-        for ( unsigned w = 0; w < _numberOfWs; w++ ) {
+        for ( unsigned w = 1; w < _numberOfWs; w++ ) {
             unsigned dofsOfW =  _nodalValuesPDF[w].size();
 
-            double scaling = pow ( 4, dofsOfW / 2 );
-
             for ( unsigned i = 0; i < dofsOfW; i++ ) {
+
+                double supportMeasure = 1.;
+
+                for ( unsigned n = 0; n < _N; n++ ) {
+                    supportMeasure *=  2. * _hs[n][_dofIdentifier[w][i][n][1]];
+                }
+
                 for ( unsigned m = 0; m < _M; m++ ) {
 
                     double valuePhi;
-                    EvaluatePhi ( valuePhi, samples[m], _dofIdentifier[w][i], false );
-                    _nodalValuesPDF[w][i] += valuePhi / ( scaling * _M );
+                    PiecewiseConstPhi ( valuePhi, samples[m], _dofIdentifier[w][i] );
+                    _nodalValuesPDF[w][i] += valuePhi / ( supportMeasure * _M );
 
                 }
 
 
                 for ( unsigned w1 = 0; w1 < w; w1++ ) {
                     unsigned dofsOfWLower = _nodalValuesPDF[w1].size();
-                    double scalingLower = pow ( 6, dofsOfW / 2 );
 
                     for ( unsigned i1 = 0; i1 < dofsOfWLower; i1++ ) {
 
@@ -388,19 +401,7 @@ namespace femus
 
                         if ( isThere == 1 && dofsOfWLower < dofsOfW && doThey == true ) {
 
-                            double halfSupportMeasureLower = 1.;
-                            double halfSupportMeasure = 1.;
-
-                            for ( unsigned n = 0; n < _N; n++ ) {
-                                halfSupportMeasureLower *=  _hs[n][_dofIdentifier[w1][i1][n][1]];
-                            }
-
-                            for ( unsigned n = 0; n < _N; n++ ) {
-                                halfSupportMeasure *=  _hs[n][_dofIdentifier[w][i][n][1]];
-                            }
-
-
-                            _nodalValuesPDF[w][i] -=  halfSupportMeasure * _nodalValuesPDF[w1][i1] / halfSupportMeasureLower ;
+                            _nodalValuesPDF[w][i] -=  _nodalValuesPDF[w1][i1];
 
                         }
 
@@ -470,12 +471,12 @@ namespace femus
         std::vector<std::vector<double>> phiFncts ( _numberOfWs );
 
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-            phiFncts[w].resize ( _nodalValuesPDF[w].size() );
+//             phiFncts[w].resize ( _nodalValuesPDF[w].size() );
 
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 double valuePhi;
-//                 PiecewiseConstPhi ( valuePhi, x, _dofIdentifier[w][i] );
-                EvaluatePhi ( valuePhi, x, _dofIdentifier[w][i], false );
+                PiecewiseConstPhi ( valuePhi, x, _dofIdentifier[w][i] );
+//                 EvaluatePhi ( valuePhi, x, _dofIdentifier[w][i], false );
                 pdfValue += _nodalValuesPDF[w][i] * valuePhi;
 //                 phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
 
@@ -542,7 +543,7 @@ namespace femus
                     supportMeasure *= 2 * _hs[n][_dofIdentifier[w][i][n][1]];
                 }
 
-                integral += 0.5 * _nodalValuesPDF[w][i] * supportMeasure;
+                integral += _nodalValuesPDF[w][i] * supportMeasure;
 
             }
         }
