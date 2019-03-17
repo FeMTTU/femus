@@ -78,7 +78,11 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
+<<<<<<< HEAD
 unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
+=======
+unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
+>>>>>>> b4d406c5a3c7467e31f79271a7a443efd16895c4
 
 int main (int argc, char** argv) {
 
