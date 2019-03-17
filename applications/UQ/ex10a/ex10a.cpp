@@ -216,7 +216,8 @@ int main (int argc, char** argv) {
   systemSG.init();
 
   // ******* Set Smoother *******
-  // systemSG.SetSolverFineGrids (GMRES);
+  systemSG.SetSolverFineGrids (RICHARDSON);
+  
   systemSG.SetFieldSplitTree (&uSG);
 
   systemSG.SetPreconditionerFineGrids (ILU_PRECOND);

@@ -152,8 +152,7 @@ int main (int argc, char** argv) {
   system.init();
 
   // ******* Set Smoother *******
-  // system.SetSolverFineGrids (GMRES);
-  system.SetSolverFineGrids (PREONLY);
+  system.SetSolverFineGrids (GMRES);
 
   system.SetPreconditionerFineGrids (ILU_PRECOND);
 
@@ -185,7 +184,7 @@ int main (int argc, char** argv) {
   systemSG.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  systemSG.SetMgSmoother (GMRES_SMOOTHER);
+ // systemSG.SetMgSmoother (GMRES_SMOOTHER);
   
   systemSG.SetOuterKSPSolver("richardson");
 
