@@ -43,10 +43,10 @@ unsigned counter2 = 0;
 clock_t start_time = clock();
 
 bool wave = false;
-bool twostage = true;
-bool splitting = true;
+bool twostage = false;
+bool splitting = false;
 bool assembly = true; //assembly must be left always true
-bool block_diag = true;
+bool block_diag = false;
 
 // const double hRest[4] = {2.5, 2.5, 2.5, 2.5};
 
@@ -647,8 +647,8 @@ int main (int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 400; //RK4: dt=0.5, numberOfTimeSteps = 16001
-  dt = 2.;
+  unsigned numberOfTimeSteps = 2000; //RK4: dt=0.5, numberOfTimeSteps = 16001
+  dt = 3.;
   bool implicitEuler = true;
 
   for (unsigned i = 0; i < numberOfTimeSteps; i++) {
@@ -1893,8 +1893,8 @@ void RK_HT (MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsign
       double xmid = 0.5 * (x[1] + x[0]);
 
       for (unsigned k = NLayers; k > 1; k--) {
-        //w[k - 1] = - (-4. / 625.* (xmid - 5) * (xmid - 5) * (xmid - 5)) * psi2[k - 1]; //10x10 box test
-        w[k - 1] = - (- 16. / (pow (20., 16)) * pow ( (xmid - 20.), 15)) * psi2[k - 1]; //40x10 rectangle test
+        w[k - 1] = - (-4. / 625.* (xmid - 5) * (xmid - 5) * (xmid - 5)) * psi2[k - 1]; //10x10 box test
+        //w[k - 1] = - (- 16. / (pow (20., 16)) * pow ( (xmid - 20.), 15)) * psi2[k - 1]; //40x10 rectangle test
 
         //w[k - 1] = - ( - 16./(pow(10.,16)) * pow((xmid - 10.), 15) ) * psi2[k - 1];
         //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];
