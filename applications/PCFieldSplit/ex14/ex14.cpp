@@ -123,7 +123,7 @@ int main(int argc, char** args) {
   FS_NS.SetupSchurFactorizationType(SCHUR_FACT_UPPER); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL; how to use if FS_SCHUR_PRECOND? Guoyike
   FS_NS.SetupSchurPreType(SCHUR_PRE_SELFP);// SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11,SCHUR_PRE_FULL;
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
+  //system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
 
   //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method

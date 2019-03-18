@@ -392,7 +392,7 @@ int main(int argc, char** argv)
   system2.SetNumberPostSmoothingStep(npostmoothing);
 
   //Set Smoother Options
-  if (Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
+  if (Gmres) 		system2.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
   else if (Asm) 	system2.SetMgSmoother(ASM_SMOOTHER);
 
   system2.init();

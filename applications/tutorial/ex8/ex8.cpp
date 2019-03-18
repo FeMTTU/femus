@@ -105,7 +105,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("P");
 
   //system.SetMgSmoother(ASM_SMOOTHER); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
-  system.SetMgSmoother(GMRES_SMOOTHER); // GMRES
+  system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER); // GMRES
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 

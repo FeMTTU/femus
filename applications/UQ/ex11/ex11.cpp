@@ -119,7 +119,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (GMRES_SMOOTHER);
+  system.SetMgSmoother (FEMuS_DEFAULT_SMOOTHER);
 
   system.init();
 
@@ -170,7 +170,7 @@ int main (int argc, char** argv) {
 
   //END buid fieldSplitTree
   systemSG.SetMgSmoother (FIELDSPLIT_SMOOTHER);  // Field-Split preconditioned
-  //systemSG.SetMgSmoother (GMRES_SMOOTHER);
+  //systemSG.SetMgSmoother (FEMuS_DEFAULT_SMOOTHER);
 
   // ******* System FEM Assembly *******
   systemSG.SetAssembleFunction (AssembleSysSG);

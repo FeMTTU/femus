@@ -45,7 +45,7 @@ namespace femus
                 std::unique_ptr<LinearEquationSolver> ap(new AsmPetscLinearEquationSolver(igrid, other_solution));
                 return ap;
               }
-            case GMRES_SMOOTHER: {
+            case FEMuS_DEFAULT_SMOOTHER: {
                 std::unique_ptr<LinearEquationSolver> ap(new GmresPetscLinearEquationSolver(igrid, other_solution));
                 return ap;
               }

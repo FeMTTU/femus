@@ -121,7 +121,7 @@ int main ( int argc, char** argv )
     system.SetNumberPostSmoothingStep ( 1 );
 
     // ******* Set Preconditioner *******
-    system.SetMgSmoother ( GMRES_SMOOTHER );
+    system.SetMgSmoother ( FEMuS_DEFAULT_SMOOTHER );
 
     system.init();
 
@@ -157,7 +157,7 @@ int main ( int argc, char** argv )
     systemSG.SetNumberPostSmoothingStep ( 1 );
 
     // ******* Set Preconditioner *******
-    systemSG.SetMgSmoother ( GMRES_SMOOTHER );
+    systemSG.SetMgSmoother ( FEMuS_DEFAULT_SMOOTHER );
 
     systemSG.init();
 

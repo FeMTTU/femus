@@ -42,7 +42,7 @@ namespace femus {
     _AMRthreshold(0.01),
     _AMReighborThresholdValue(0.),
     _smootherType(smoother_type),
-    _includeCoarseLevelSmoother(false),
+    _includeCoarseLevelSmoother(INCLUDE_COARSE_LEVEL_FALSE),
     _MGmatrixFineReuse(false),
     _MGmatrixCoarseReuse(false),
     _printSolverInfo(false),
@@ -109,13 +109,12 @@ namespace femus {
     _LinSolver.resize(_gridn);
 
 
-    if(_includeCoarseLevelSmoother){
+    if(_includeCoarseLevelSmoother = INCLUDE_COARSE_LEVEL_TRUE){
       _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], _smootherType).release();
     }
     else{
-      _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], GMRES_SMOOTHER).release();  
+      _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], FEMuS_DEFAULT_SMOOTHER).release();  
     }
-    
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();
     }
@@ -944,7 +943,7 @@ restart:
 
   // ********************************************
 
-  void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother, const bool &includeCoarseLevelSmoother) {
+  void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother, const CoarseLevelInclude &includeCoarseLevelSmoother) {
     _includeCoarseLevelSmoother = includeCoarseLevelSmoother;
     _smootherType = mgsmoother;
   }
@@ -1059,7 +1058,7 @@ restart:
 
     _LinSolver.resize(_gridn);
 
-    _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], GMRES_SMOOTHER).release();
+    _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], FEMuS_DEFAULT_SMOOTHER).release();
 
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();

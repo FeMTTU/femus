@@ -194,7 +194,7 @@ int main(int argc, char** args) {
 //   FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
 
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
+  //system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz preconditioner
   //system.SetMgSmoother(ASM_SMOOTHER); // Field-Split preconditioned
 

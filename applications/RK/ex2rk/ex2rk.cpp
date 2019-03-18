@@ -204,7 +204,7 @@ int main (int argc, char** args) {
   FieldSplitTree FS(PREONLY, FIELDSPLIT_MULTIPLICATIVE_PRECOND, VDPAll, "RK");
   FS.SetRichardsonScaleFactor(1.);
 
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER, true);   // Field-Split preconditioned
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER, INCLUDE_COARSE_LEVEL_TRUE);   // Field-Split preconditioned
   
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleBoussinesqAppoximation_AD);

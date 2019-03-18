@@ -134,7 +134,7 @@ int main(int argc,char **args) {
   system1.SetNumberPostSmoothingStep(1);
 
   //Set Smoother Options
-  if(Gmres) 		system1.SetMgSmoother(GMRES_SMOOTHER);
+  if(Gmres) 		system1.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
   else if(Asm) 		system1.SetMgSmoother(ASM_SMOOTHER);
 
   system1.init();
@@ -184,7 +184,7 @@ int main(int argc,char **args) {
 //   system2.SetNumberPostSmoothingStep(1);
 //
 //   //Set Smoother Options
-//   if(Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
+//   if(Gmres) 		system2.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
 //   else if(Asm) 		system2.SetMgSmoother(ASM_SMOOTHER);
 //   else if(Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
 //

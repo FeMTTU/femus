@@ -137,7 +137,7 @@ int main(int argc,char **args) {
   system1.SetNumberPostSmoothingStep(1);
 
   //Set Smoother Options
-  if(Gmres) 		system1.SetMgSmoother(GMRES_SMOOTHER);
+  if(Gmres) 		system1.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
   else if(Asm) 		system1.SetMgSmoother(ASM_SMOOTHER);
 
   system1.init();

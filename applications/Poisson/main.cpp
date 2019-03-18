@@ -226,7 +226,7 @@ int main(int argc, char** argv) {
   system2.SetNumberPostSmoothingStep(npostmoothing);
 
   if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "gmres")) {
-    system2.SetMgSmoother(GMRES_SMOOTHER);
+    system2.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
   }
   else if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "asm")) {
     system2.SetMgSmoother(ASM_SMOOTHER);

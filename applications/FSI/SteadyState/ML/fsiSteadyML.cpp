@@ -280,7 +280,7 @@ int main(int argc,char **args) {
   }
 
   // ******* Set Preconditioner *******
-  if(Gmres) 		system.SetMgSmoother(GMRES_SMOOTHER);
+  if(Gmres) 		system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
   else if(Asm) 		system.SetMgSmoother(ASM_SMOOTHER);
   system.init();
 

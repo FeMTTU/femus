@@ -249,7 +249,7 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("T");
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
+  //system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
   system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleTemperature_AD);

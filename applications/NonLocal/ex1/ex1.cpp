@@ -119,7 +119,7 @@ int main ( int argc, char** argv )
     system.SetNumberPostSmoothingStep ( 1 );
 
     // ******* Set Preconditioner *******
-    system.SetMgSmoother ( GMRES_SMOOTHER );
+    system.SetMgSmoother ( FEMuS_DEFAULT_SMOOTHER );
 
     system.SetSparsityPatternMinimumSize ( 100u ); //TODO tune
 
@@ -157,7 +157,7 @@ int main ( int argc, char** argv )
     system2.SetNumberPostSmoothingStep ( 1 );
 
     // ******* Set Preconditioner *******
-    system2.SetMgSmoother ( GMRES_SMOOTHER );
+    system2.SetMgSmoother ( FEMuS_DEFAULT_SMOOTHER );
 
     system2.init();
 
