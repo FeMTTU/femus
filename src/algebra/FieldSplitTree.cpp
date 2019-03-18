@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program: FEMUS
-  Module: FieldSplitPetscLinearEquationSolver
+  Module: LinearEquationSolverPetscFieldSplit
   Authors: Eugenio Aulisa, Guoyi Ke
 
   Copyright (c) FEMTTU
@@ -17,7 +17,7 @@
 #include <algorithm>
 
 #include "FieldSplitTree.hpp"
-#include "FieldSplitPetscLinearEquationSolver.hpp"
+#include "LinearEquationSolverPetscFieldSplit.hpp"
 #include "MeshASMPartitioning.hpp"
 
 namespace femus {
@@ -218,7 +218,7 @@ namespace femus {
 
 
   void FieldSplitTree::BuildIndexSet (const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc,
-                                      const unsigned& nprocs, const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver) {
+                                      const unsigned& nprocs, const unsigned& level, const LinearEquationSolverPetscFieldSplit *solver) {
 
 
     if (_MatrixOffset.size() < level + 1) _MatrixOffset.resize (level + 1);
@@ -475,7 +475,7 @@ namespace femus {
   }
 
   void FieldSplitTree::SetSolver (KSP &ksp, const SolverType &solver) {
-    GmresPetscLinearEquationSolver::SetPetscSolverType(ksp, solver , &_richardsonScaleFactor);
+    LinearEquationSolverPetsc::SetPetscSolverType(ksp, solver , &_richardsonScaleFactor);
   }
   
   void FieldSplitTree::SetSchurFactorizationType (PC &pc) {
@@ -560,7 +560,7 @@ namespace femus {
 
 
 
-  void FieldSplitTree::BuildASMIndexSet (const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver) {
+  void FieldSplitTree::BuildASMIndexSet (const unsigned& level, const LinearEquationSolverPetscFieldSplit *solver) {
 
 
     Mesh* msh = solver->_msh;

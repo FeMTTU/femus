@@ -13,8 +13,8 @@
 
   =========================================================================*/
 
-#ifndef __femus_algebra_GmresPetscLinearEquationSolver_hpp__
-#define __femus_algebra_GmresPetscLinearEquationSolver_hpp__
+#ifndef __femus_algebra_LinearEquationSolverPetsc_hpp__
+#define __femus_algebra_LinearEquationSolverPetsc_hpp__
 
 #include "FemusConfig.hpp"
 
@@ -35,15 +35,15 @@ namespace femus {
    * This class inherits the abstract class LinearEquationSolver. In this class the solver is implemented using the PETSc package
    */
 
-  class GmresPetscLinearEquationSolver : public LinearEquationSolver {
+  class LinearEquationSolverPetsc : public LinearEquationSolver {
 
     public:
 
       /**  Constructor. Initializes Petsc data structures */
-      GmresPetscLinearEquationSolver (const unsigned &igrid, Solution *other_solution);
+      LinearEquationSolverPetsc (const unsigned &igrid, Solution *other_solution);
 
       /// Destructor.
-      ~GmresPetscLinearEquationSolver();
+      ~LinearEquationSolverPetsc();
       
       /// Set PETSC solver 
       static void SetPetscSolverType (KSP &ksp, const SolverType &solver_type, const double *parameter);
@@ -123,7 +123,7 @@ namespace femus {
 
   // =============================================
 
-  inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver (const unsigned &igrid, Solution *other_solution)
+  inline LinearEquationSolverPetsc::LinearEquationSolverPetsc (const unsigned &igrid, Solution *other_solution)
     : LinearEquationSolver (igrid, other_solution) {
 
     if (igrid == 0) {
@@ -150,13 +150,13 @@ namespace femus {
 
   // =============================================
 
-  inline GmresPetscLinearEquationSolver::~GmresPetscLinearEquationSolver() {
+  inline LinearEquationSolverPetsc::~LinearEquationSolverPetsc() {
     this->Clear();
   }
 
   // ================================================
 
-  inline void GmresPetscLinearEquationSolver::Clear() {
+  inline void LinearEquationSolverPetsc::Clear() {
 
 //
 

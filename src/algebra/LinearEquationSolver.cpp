@@ -24,9 +24,9 @@
 #include "petscvec.h"
 
 // Local Includes
-#include "AsmPetscLinearEquationSolver.hpp"
-#include "GmresPetscLinearEquationSolver.hpp"
-#include "FieldSplitPetscLinearEquationSolver.hpp"
+#include "LinearEquationSolverPetscAsm.hpp"
+#include "LinearEquationSolverPetsc.hpp"
+#include "LinearEquationSolverPetscFieldSplit.hpp"
 #include "Preconditioner.hpp"
 
 namespace femus
@@ -42,15 +42,15 @@ namespace femus
       case PETSC_SOLVERS:  {
           switch(smoother_type) {
             case ASM_SMOOTHER: {
-                std::unique_ptr<LinearEquationSolver> ap(new AsmPetscLinearEquationSolver(igrid, other_solution));
+                std::unique_ptr<LinearEquationSolver> ap(new LinearEquationSolverPetscAsm(igrid, other_solution));
                 return ap;
               }
             case FEMuS_DEFAULT_SMOOTHER: {
-                std::unique_ptr<LinearEquationSolver> ap(new GmresPetscLinearEquationSolver(igrid, other_solution));
+                std::unique_ptr<LinearEquationSolver> ap(new LinearEquationSolverPetsc(igrid, other_solution));
                 return ap;
               }
             case FIELDSPLIT_SMOOTHER: {
-                std::unique_ptr<LinearEquationSolver> ap(new FieldSplitPetscLinearEquationSolver(igrid, other_solution));
+                std::unique_ptr<LinearEquationSolver> ap(new LinearEquationSolverPetscFieldSplit(igrid, other_solution));
                 return ap;
               }
           }

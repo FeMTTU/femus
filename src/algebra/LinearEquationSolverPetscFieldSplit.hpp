@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program: FEMUS
-  Module: FieldSplitPetscLinearEquationSolver
+  Module: LinearEquationSolverPetscFieldSplit
   Authors: Eugenio Aulisa, Guoyi Ke
 
   Copyright (c) FEMTTU
@@ -13,8 +13,8 @@
 
   =========================================================================*/
 
-#ifndef __femus_algebra_FieldSplitPetscLinearEquationSolver_hpp__
-#define __femus_algebra_FieldSplitPetscLinearEquationSolver_hpp__
+#ifndef __femus_algebra_LinearEquationSolverPetscFieldSplit_hpp__
+#define __femus_algebra_LinearEquationSolverPetscFieldSplit_hpp__
 
 #include "FemusConfig.hpp"
 
@@ -23,24 +23,24 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "GmresPetscLinearEquationSolver.hpp"
+#include "LinearEquationSolverPetsc.hpp"
 #include "FieldSplitTree.hpp"
 
 namespace femus {
 
   /**
-   * This class inherits the class GmresPetscLinearEquationSolver. In this class the solver is implemented using the PETSc package
+   * This class inherits the class LinearEquationSolverPetsc. In this class the solver is implemented using the PETSc package
    **/
 
-  class FieldSplitPetscLinearEquationSolver : public GmresPetscLinearEquationSolver {
+  class LinearEquationSolverPetscFieldSplit : public LinearEquationSolverPetsc {
 
     public:
 
       /**  Constructor. Initializes Petsc data structures */
-      FieldSplitPetscLinearEquationSolver(const unsigned& igrid, Solution *other_solution);
+      LinearEquationSolverPetscFieldSplit(const unsigned& igrid, Solution *other_solution);
 
       /** Destructor */
-      ~FieldSplitPetscLinearEquationSolver() {};
+      ~LinearEquationSolverPetscFieldSplit() {};
 
     private:
 
@@ -59,8 +59,8 @@ namespace femus {
 
 // =================================================
 
-  inline FieldSplitPetscLinearEquationSolver::FieldSplitPetscLinearEquationSolver(const unsigned& igrid, Solution *other_solution)
-    : GmresPetscLinearEquationSolver(igrid, other_solution),
+  inline LinearEquationSolverPetscFieldSplit::LinearEquationSolverPetscFieldSplit(const unsigned& igrid, Solution *other_solution)
+    : LinearEquationSolverPetsc(igrid, other_solution),
     _fieldSplitTree(NULL){
   }
 

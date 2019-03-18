@@ -21,7 +21,7 @@
 #ifdef HAVE_PETSC
 
 // Local Includes
-#include "AsmPetscLinearEquationSolver.hpp"
+#include "LinearEquationSolverPetscAsm.hpp"
 #include "MeshASMPartitioning.hpp"
 #include "PetscPreconditioner.hpp"
 #include "PetscMatrix.hpp"
@@ -38,7 +38,7 @@ namespace femus {
 
   // ==============================================
 
-  void AsmPetscLinearEquationSolver::SetElementBlockNumber(const char all[], const unsigned& overlap) {
+  void LinearEquationSolverPetscAsm::SetElementBlockNumber(const char all[], const unsigned& overlap) {
     _elementBlockNumber[0] = _msh->GetNumberOfElements();
     _elementBlockNumber[1] = _msh->GetNumberOfElements();
     _elementBlockNumber[2] = _msh->GetNumberOfElements();
@@ -48,7 +48,7 @@ namespace femus {
 
   // =================================================
 
-  void AsmPetscLinearEquationSolver::SetElementBlockNumber(const unsigned& block_elemet_number) {
+  void LinearEquationSolverPetscAsm::SetElementBlockNumber(const unsigned& block_elemet_number) {
     _elementBlockNumber[0] = block_elemet_number;
     _elementBlockNumber[1] = block_elemet_number;
     _elementBlockNumber[2] = block_elemet_number;
@@ -58,7 +58,7 @@ namespace femus {
 
   // =================================================
 
-  void AsmPetscLinearEquationSolver::SetElementBlockNumberSolid(const unsigned& block_elemet_number, const unsigned& overlap) {
+  void LinearEquationSolverPetscAsm::SetElementBlockNumberSolid(const unsigned& block_elemet_number, const unsigned& overlap) {
     _elementBlockNumber[0] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
@@ -67,14 +67,14 @@ namespace femus {
 
   // =================================================
 
-  void AsmPetscLinearEquationSolver::SetElementBlockNumberFluid(const unsigned& block_elemet_number, const unsigned& overlap) {
+  void LinearEquationSolverPetscAsm::SetElementBlockNumberFluid(const unsigned& block_elemet_number, const unsigned& overlap) {
     _elementBlockNumber[2] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
     _overlap = overlap;
   }
   
-  void AsmPetscLinearEquationSolver::SetElementBlockNumberPorous(const unsigned& block_elemet_number, const unsigned& overlap) {
+  void LinearEquationSolverPetscAsm::SetElementBlockNumberPorous(const unsigned& block_elemet_number, const unsigned& overlap) {
     _elementBlockNumber[1] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
@@ -83,7 +83,7 @@ namespace femus {
 
   // ==============================================
 
-  void AsmPetscLinearEquationSolver::BuildAMSIndex(const vector <unsigned>& variable_to_be_solved) {
+  void LinearEquationSolverPetscAsm::BuildAMSIndex(const vector <unsigned>& variable_to_be_solved) {
 
     unsigned nel = _msh->GetNumberOfElements();
 
@@ -267,7 +267,7 @@ namespace femus {
 
   // =================================================
 
-  void AsmPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc) {
+  void LinearEquationSolverPetscAsm::SetPreconditioner(KSP& subksp, PC& subpc) {
     
     PetscPreconditioner::set_petsc_preconditioner_type(ASM_MULTIPLICATIVE_PRECOND, subpc);
 

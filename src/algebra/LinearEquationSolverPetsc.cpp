@@ -22,7 +22,7 @@
 
 // Local Includes
 #include "PetscMacro.hpp"
-#include "GmresPetscLinearEquationSolver.hpp"
+#include "LinearEquationSolverPetsc.hpp"
 #include "PetscPreconditioner.hpp"
 #include "PetscVector.hpp"
 #include "PetscMatrix.hpp"
@@ -37,7 +37,7 @@ namespace femus {
 // ----------------------- functions ------
 // ==============================================
 
-  void GmresPetscLinearEquationSolver::SetTolerances (const double& rtol, const double& atol, const double& divtol,
+  void LinearEquationSolverPetsc::SetTolerances (const double& rtol, const double& atol, const double& divtol,
                                                       const unsigned& maxits, const unsigned& restart) {
     _rtol    = static_cast<PetscReal> (rtol);
     _abstol  = static_cast<PetscReal> (atol);
@@ -48,7 +48,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::BuildBdcIndex (const vector <unsigned>& variable_to_be_solved) {
+  void LinearEquationSolverPetsc::BuildBdcIndex (const vector <unsigned>& variable_to_be_solved) {
 
     _bdcIndexIsInitialized = 1;
 
@@ -89,7 +89,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::Solve (const vector <unsigned>& variable_to_be_solved, const bool& ksp_clean) {
+  void LinearEquationSolverPetsc::Solve (const vector <unsigned>& variable_to_be_solved, const bool& ksp_clean) {
 
     PetscLogDouble t1;
     PetscTime (&t1);
@@ -148,7 +148,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::Init (Mat& Amat, Mat& Pmat) {
+  void LinearEquationSolverPetsc::Init (Mat& Amat, Mat& Pmat) {
 
     if (!this->initialized())    {
       this->_is_initialized = true;
@@ -180,7 +180,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::MGInit (const MgSmootherType& mg_smoother_type, const unsigned& levelMax, const SolverType & mgSolverType) {
+  void LinearEquationSolverPetsc::MGInit (const MgSmootherType& mg_smoother_type, const unsigned& levelMax, const SolverType & mgSolverType) {
 
     KSPCreate (PETSC_COMM_WORLD, &_ksp);
 
@@ -211,7 +211,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::MGSetLevel (
+  void LinearEquationSolverPetsc::MGSetLevel (
     LinearEquationSolver* LinSolver, const unsigned& levelMax,
     const vector <unsigned>& variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR,
     const unsigned& npre, const unsigned& npost) {
@@ -286,7 +286,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::MGSolve (const bool ksp_clean) {
+  void LinearEquationSolverPetsc::MGSolve (const bool ksp_clean) {
 
     PetscLogDouble t1;
     PetscLogDouble t2;
@@ -349,7 +349,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::RemoveNullSpace() {
+  void LinearEquationSolverPetsc::RemoveNullSpace() {
 
     if (_msh->GetLevel() != 0) {
       std::vector < Vec > nullspBase;
@@ -376,7 +376,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::GetNullSpaceBase (std::vector < Vec >& nullspBase) {
+  void LinearEquationSolverPetsc::GetNullSpaceBase (std::vector < Vec >& nullspBase) {
     for (int k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
 
@@ -406,7 +406,7 @@ namespace femus {
   }
   // =================================================
 
-  void GmresPetscLinearEquationSolver::ZerosBoundaryResiduals() {
+  void LinearEquationSolverPetsc::ZerosBoundaryResiduals() {
     std::vector< PetscScalar > value (_bdcIndex.size(), 0.);
     Vec RES = (static_cast< PetscVector* > (_RES))->vec();
     VecSetValues (RES, _bdcIndex.size(), &_bdcIndex[0], &value[0],  INSERT_VALUES);
@@ -417,7 +417,7 @@ namespace femus {
 
   // =================================================
 
-  void GmresPetscLinearEquationSolver::SetPenalty() {
+  void LinearEquationSolverPetsc::SetPenalty() {
 
     Mat KK = (static_cast< PetscMatrix* > (_KK))->mat();
 
@@ -429,7 +429,7 @@ namespace femus {
 
   // =================================================
 
-  void GmresPetscLinearEquationSolver::SetPreconditioner (KSP& subksp, PC& subpc) {
+  void LinearEquationSolverPetsc::SetPreconditioner (KSP& subksp, PC& subpc) {
 
     int parallelOverlapping = (_msh->GetIfHomogeneous()) ? 0 : 0;
     PetscPreconditioner::set_petsc_preconditioner_type (this->_preconditioner_type, subpc, parallelOverlapping);
@@ -441,7 +441,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::SetPetscSolverType (KSP &ksp, const SolverType &solverType , const double *parameter) {
+  void LinearEquationSolverPetsc::SetPetscSolverType (KSP &ksp, const SolverType &solverType , const double *parameter) {
     int ierr = 0;
 
     switch (solverType) {
@@ -532,7 +532,7 @@ namespace femus {
 
   /** @deprecated, remove soon */
 
-  std::pair<unsigned int, double> GmresPetscLinearEquationSolver::solve (SparseMatrix&  matrix_in,
+  std::pair<unsigned int, double> LinearEquationSolverPetsc::solve (SparseMatrix&  matrix_in,
                                                                          SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
                                                                          const double tol,   const unsigned int m_its) {
 
@@ -629,7 +629,7 @@ namespace femus {
 
 
 // @deprecated ========================================================
-  void GmresPetscLinearEquationSolver::init (SparseMatrix* matrix) {
+  void LinearEquationSolverPetsc::init (SparseMatrix* matrix) {
 
     PetscMatrix* matrix_two   = libmeshM_cast_ptr<PetscMatrix*> (matrix);
 

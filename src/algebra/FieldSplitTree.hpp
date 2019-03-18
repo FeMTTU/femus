@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program: FEMUS
-  Module: FieldSplitPetscLinearEquationSolver
+  Module: LinearEquationSolverPetscFieldSplit
   Authors: Eugenio Aulisa, Guoyi Ke
 
   Copyright (c) FEMTTU
@@ -35,7 +35,7 @@
 
 namespace femus {
 
-  class FieldSplitPetscLinearEquationSolver;
+  class LinearEquationSolverPetscFieldSplit;
 
   class FieldSplitTree {
     public:
@@ -53,9 +53,9 @@ namespace femus {
       void PrintFieldSplitTree (const unsigned& counter = 0);
 
       void BuildIndexSet (const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc,
-                          const unsigned& nprocs, const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver);
+                          const unsigned& nprocs, const unsigned& level, const LinearEquationSolverPetscFieldSplit *solver);
 
-      void BuildASMIndexSet (const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver);
+      void BuildASMIndexSet (const unsigned& level, const LinearEquationSolverPetscFieldSplit *solver);
 
       void SetPC (KSP& ksp, const unsigned& level) ;
 
