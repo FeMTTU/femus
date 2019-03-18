@@ -1,7 +1,7 @@
-#ifndef __femus_enums_MgSmootherEnum_hpp__
-#define __femus_enums_MgSmootherEnum_hpp__
+#ifndef __femus_enums_LinearEquationSolverEnum_hpp__
+#define __femus_enums_LinearEquationSolverEnum_hpp__
 
-enum MgSmoother {
+enum LinearEquationSolverType {
     FEMuS_DEFAULT = 0,
     FEMuS_ASM,
     FEMuS_FIELDSPLIT,

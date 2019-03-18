@@ -230,7 +230,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
   sys->SetMaxNumberOfNonLinearIterations(15); //10
 
   // ******* Set Preconditioner *******
-  sys->SetMgSmoother(FEMuS_DEFAULT);//FEMuS_ASM,VANKA_SMOOTHER
+  sys->SetLinearEquationSolverType(FEMuS_DEFAULT);//FEMuS_ASM,VANKA_SMOOTHER
 
   // ******* init *******
   sys->init();

@@ -83,7 +83,7 @@ int main(int argc, char** args) {
 
   MultiLevelSolution mlSol(&mlMsh);
   
-  mlSol.AddSolution("Error",  DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSol.AddSolution("Error",  DISCONTINUOUS_POLYNOMIAL, ZERO);
 
   mlSol.AddSolution("U", LAGRANGE, SECOND);
 
@@ -132,8 +132,8 @@ int main(int argc, char** args) {
     // add solution "u" to system
     system.AddSolutionToSystemPDE("U");
 
-    //system.SetMgSmoother(FEMuS_DEFAULT);
-    system.SetMgSmoother(FEMuS_ASM);  // Additive Swartz Method
+    //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+    system.SetLinearEquationSolverType(FEMuS_ASM);  // Additive Swartz Method
     // attach the assembling function to system
     system.SetAssembleFunction(AssemblePoisson_AD);
 

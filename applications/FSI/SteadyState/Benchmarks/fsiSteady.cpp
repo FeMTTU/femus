@@ -222,7 +222,7 @@ int main(int argc,char **args) {
   if (dimension==3) ml_sol.PairSolution("W","DZ"); // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
+  ml_sol.AddSolution("P",DISCONTINUOUS_POLYNOMIAL,FIRST,1);
   ml_sol.AssociatePropertyToSolution("P","Pressure",false); // Add this line
 
   // ******* Initialize solution *******
@@ -285,7 +285,7 @@ int main(int argc,char **args) {
 
   // ******* Set Smoother *******
   // Set Preconditioner of the smoother (name to be changed)
-  system.SetMgSmoother(FEMuS_ASM);
+  system.SetLinearEquationSolverType(FEMuS_ASM);
 
   if(mem_infos) {
     PetscMemoryGetCurrentUsage(&memory_current_usage);

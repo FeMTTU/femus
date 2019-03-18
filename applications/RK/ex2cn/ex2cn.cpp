@@ -109,7 +109,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("DY", LAGRANGE, SECOND,  2);
   if (dim == 3) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
     
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   
   //  Taylor-hood
   //  mlSol.AddSolution("U", LAGRANGE, SERENDIPITY);

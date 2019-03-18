@@ -53,7 +53,7 @@ public:
 //=======================================================================
 // CONSTRUCTOR / DESTRUCTOR
 //=======================================================================
-  SystemTwo(MultiLevelProblem & equations_map, const std::string & eq_name_in, const unsigned int number, const MgSmoother & smoother_type);   //System//
+  SystemTwo(MultiLevelProblem & equations_map, const std::string & eq_name_in, const unsigned int number, const LinearEquationSolverType & smoother_type);   //System//
   
   DofMap  _dofmap;  //// LinearEquation (each level)
   

@@ -249,8 +249,8 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("T");
 
-  //system.SetMgSmoother(FEMuS_DEFAULT);
-  system.SetMgSmoother(FEMuS_ASM); // Additive Swartz Method
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType(FEMuS_ASM); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleTemperature_AD);
 

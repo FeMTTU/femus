@@ -123,8 +123,8 @@ int main (int argc, char** args) {
   system.AddSolutionToSystemPDE ("U");
   system.AddSolutionToSystemPDE ("V");
 
-  //system.SetMgSmoother(FEMuS_DEFAULT);
-  system.SetMgSmoother (FEMuS_ASM); // Additive Swartz Method
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType (FEMuS_ASM); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction (AssemblePoisson_AD);
 

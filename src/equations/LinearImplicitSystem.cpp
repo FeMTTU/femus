@@ -27,7 +27,7 @@ namespace femus {
 
   LinearImplicitSystem::LinearImplicitSystem(MultiLevelProblem& ml_probl,
       const std::string& name_in,
-      const unsigned int number_in, const MgSmoother& smoother_type) :
+      const unsigned int number_in, const LinearEquationSolverType& smoother_type) :
     ImplicitSystem(ml_probl, name_in, number_in, smoother_type),
     _n_max_linear_iterations(3),
     _final_linear_residual(1.e20),
@@ -175,7 +175,7 @@ namespace femus {
 
   // ********************************************
 
-  void LinearImplicitSystem::solve(const MgSmootherType& mgSmootherType) {
+  void LinearImplicitSystem::solve(const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
 
     _bitFlipCounter = 0;
     
@@ -262,7 +262,7 @@ restart:
       std::cout << std::endl << " ****** Level Max " << igridn + 1 << " PREPARATION TIME:\t" << static_cast<double>((clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
 
       if(_MGsolver) {
-        _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _mgOuterSolver);
+        _LinSolver[igridn]->MGInit(LinearEquationSolverTypeType, igridn + 1, _mgOuterSolver);
 
         for(unsigned i = 0; i < igridn + 1; i++) {
           unsigned npre = (i == 0)? _npre0 : _npre;  
@@ -273,7 +273,7 @@ restart:
             _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], npre, npost);
         }
 
-        MGVcycle(igridn, mgSmootherType);
+        MGVcycle(igridn, LinearEquationSolverTypeType);
 
         _LinSolver[igridn]->MGClear();
       }
@@ -356,7 +356,7 @@ restart:
 
   // ********************************************
 
-  bool LinearImplicitSystem::MGVcycle(const unsigned& level, const MgSmootherType& mgSmootherType) {
+  bool LinearImplicitSystem::MGVcycle(const unsigned& level, const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
 
     clock_t start_mg_time = clock();
 
@@ -943,9 +943,9 @@ restart:
 
   // ********************************************
 
-  void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother, const CoarseLevelInclude &includeCoarseLevelSmoother) {
+  void LinearImplicitSystem::SetLinearEquationSolverType(const LinearEquationSolverType LinearEquationSolverType, const CoarseLevelInclude &includeCoarseLevelSmoother) {
     _includeCoarseLevelSmoother = includeCoarseLevelSmoother;
-    _smootherType = mgsmoother;
+    _smootherType = LinearEquationSolverType;
   }
 
 

@@ -136,7 +136,7 @@ int main(int argc, char** args) {
 
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
   mlSol.Initialize("T", InitalValueT);
@@ -157,7 +157,7 @@ int main(int argc, char** args) {
   if(dim == 3) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("P");
   system.AddSolutionToSystemPDE("T");
-  system.SetMgSmoother(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT);
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);

@@ -119,7 +119,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   system.init();
 
@@ -169,8 +169,8 @@ int main (int argc, char** argv) {
   FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_PRECOND, FSAll, "uSG");
 
   //END buid fieldSplitTree
-  systemSG.SetMgSmoother (FEMuS_FIELDSPLIT);  // Field-Split preconditioned
-  //systemSG.SetMgSmoother (FEMuS_DEFAULT);
+  systemSG.SetLinearEquationSolverType (FEMuS_FIELDSPLIT);  // Field-Split preconditioned
+  //systemSG.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   // ******* System FEM Assembly *******
   systemSG.SetAssembleFunction (AssembleSysSG);

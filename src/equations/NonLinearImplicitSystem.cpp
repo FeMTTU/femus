@@ -26,7 +26,7 @@ namespace femus {
 // NonLinearImplicitSystem implementation
   NonLinearImplicitSystem::NonLinearImplicitSystem(MultiLevelProblem& ml_probl,
       const std::string& name_in,
-      const unsigned int number_in, const MgSmoother& smoother_type) :
+      const unsigned int number_in, const LinearEquationSolverType& smoother_type) :
     LinearImplicitSystem(ml_probl, name_in, number_in, smoother_type),
     _n_max_nonlinear_iterations(15),
     _final_nonlinear_residual(1.e20),
@@ -85,7 +85,7 @@ namespace femus {
 
   // ********************************************
 
-  void NonLinearImplicitSystem::solve(const MgSmootherType& mgSmootherType) {
+  void NonLinearImplicitSystem::solve(const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
 
     _bitFlipCounter = 0;
     
@@ -186,7 +186,7 @@ restart:
 
           clock_t mg_init_time = clock();
           if(_MGsolver) {
-            _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _mgOuterSolver);
+            _LinSolver[igridn]->MGInit(LinearEquationSolverTypeType, igridn + 1, _mgOuterSolver);
 
             for(unsigned i = 0; i <= igridn; i++) {
               unsigned npre = (i == 0)? _npre0 : _npre;  
@@ -211,7 +211,7 @@ restart:
 
           bool thisIsConverged;
 
-          if(_MGsolver) thisIsConverged = MGVcycle(igridn, mgSmootherType);
+          if(_MGsolver) thisIsConverged = MGVcycle(igridn, LinearEquationSolverTypeType);
           else thisIsConverged = MLVcycle(igridn);
 
           if(thisIsConverged || updateResidualIterator == _maxNumberOfResidualUpdateIterations - 1) break;

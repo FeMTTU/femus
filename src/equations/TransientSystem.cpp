@@ -30,7 +30,7 @@ TransientSystem<Base>::TransientSystem (
                     MultiLevelProblem& ml_probl,
 					const std::string& name_in,
 					const unsigned int number_in,
-                    const MgSmoother & smoother_type) :
+                    const LinearEquationSolverType & smoother_type) :
   Base (ml_probl, name_in, number_in,smoother_type),
   _is_selective_timestep(false),
   _time(0.),
@@ -121,14 +121,14 @@ void TransientSystem<Base>::MLsolve() {
 
 // ------------------------------------------------------------
 template <class Base>
-void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
+void TransientSystem<Base>::MGsolve( const LinearEquationSolverTypeType& LinearEquationSolverTypeType ) {
 
   SetUpForSolve();  
   // call the parent MGsolver
   Base::_MLsolver = false;
   Base::_MGsolver = true;
 
-  Base::solve( mgSmootherType );
+  Base::solve( LinearEquationSolverTypeType );
 
 }
 

@@ -27,7 +27,7 @@
 
 #include "FemusDefault.hpp"
 
-#include "MgSmootherEnum.hpp"
+#include "LinearEquationSolverEnum.hpp"
 #include "NormTangEnum.hpp"
 #include "XDMFWriter.hpp"
 #include "MultiLevelMeshTwo.hpp"
@@ -50,7 +50,7 @@ namespace femus {
 //the number of variables
 //the names
 //other stuff but let us stop here now
-SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in, const unsigned int number, const MgSmoother & smoother_type):
+SystemTwo::SystemTwo(MultiLevelProblem& e_map_in, const std::string & eqname_in, const unsigned int number, const LinearEquationSolverType & smoother_type):
         _dofmap(this,e_map_in.GetMeshTwo()),
         _bcond(&_dofmap),
         NonLinearImplicitSystem(e_map_in,eqname_in,number,smoother_type) { }

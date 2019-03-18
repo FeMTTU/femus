@@ -147,7 +147,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   system.init();
 
@@ -184,7 +184,7 @@ int main (int argc, char** argv) {
   systemSG.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  systemSG.SetMgSmoother (FEMuS_DEFAULT);
+  systemSG.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   systemSG.init();
 
@@ -260,10 +260,10 @@ int main (int argc, char** argv) {
   MultiLevelSolution mlSolHisto (&mlMshHisto);
   MultiLevelSolution mlSolHistoFinest (&mlMshHistoFinest);
 
-  mlSolHisto.AddSolution ("HISTO", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSolHisto.AddSolution ("HISTO", DISCONTINUOUS_POLYNOMIAL, ZERO);
   mlSolHisto.AddSolution ("PROPOSED", LAGRANGE, FIRST);
 
-  mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINUOUS_POLYNOMIAL, ZERO);
 
   mlSolHisto.Initialize ("All");
 

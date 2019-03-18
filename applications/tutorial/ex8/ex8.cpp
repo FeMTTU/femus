@@ -79,7 +79,7 @@ int main(int argc, char** args) {
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
@@ -104,8 +104,8 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  //system.SetMgSmoother(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
-  system.SetMgSmoother(FEMuS_DEFAULT); // GMRES
+  //system.SetLinearEquationSolverType(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT); // GMRES
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 

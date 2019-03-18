@@ -53,8 +53,8 @@ int main(int argc, char** args) {
   mlSol.AddSolution("U", LAGRANGE, FIRST);
   mlSol.AddSolution("V", LAGRANGE, SERENDIPITY);
   mlSol.AddSolution("W", LAGRANGE, SECOND);
-  mlSol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, ZERO);
-  mlSol.AddSolution("T", DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P", DISCONTINUOUS_POLYNOMIAL, ZERO);
+  mlSol.AddSolution("T", DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   mlSol.Initialize("All");    // initialize all varaibles to zero
 

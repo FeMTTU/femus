@@ -106,18 +106,18 @@ int main ( int argc, char** args ) {
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "h%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO, 2);
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO, 2);
     sprintf ( name, "v%d", i );
     mlSol.AddSolution ( name, LAGRANGE, FIRST, 2 );
     sprintf ( name, "T%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO, 2);
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO, 2);
     sprintf ( name, "HT%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO, 2);
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO, 2);
   }
 
-  mlSol.AddSolution ( "b", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false );
+  mlSol.AddSolution ( "b", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, false );
 
-  mlSol.AddSolution ( "eta", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false );
+  mlSol.AddSolution ( "eta", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, false );
 
   mlSol.Initialize ( "All" );
 

@@ -196,7 +196,7 @@ int main( int argc, char** args ) {
   if( dim == 3 ) mlSol.AddSolution( "W", LAGRANGE, SECOND );
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution( "P",  DISCONTINOUS_POLYNOMIAL, FIRST );
+  mlSol.AddSolution( "P",  DISCONTINUOUS_POLYNOMIAL, FIRST );
 
   mlSol.AssociatePropertyToSolution( "P", "Pressure", false );
   mlSol.Initialize( "All" );
@@ -218,8 +218,8 @@ int main( int argc, char** args ) {
 
   system.AddSolutionToSystemPDE( "P" );
 
-  //system.SetMgSmoother(FEMuS_DEFAULT);
-  system.SetMgSmoother( FEMuS_ASM ); // Additive Swartz Method
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType( FEMuS_ASM ); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction( AssembleIncompressibleNavierStokes );
 

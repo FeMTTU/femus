@@ -78,7 +78,7 @@ int main(int argc, char** args) {
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
@@ -123,10 +123,10 @@ int main(int argc, char** args) {
   FS_NS.SetupSchurFactorizationType(SCHUR_FACT_UPPER); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL; how to use if FS_SCHUR_PRECOND? Guoyike
   FS_NS.SetupSchurPreType(SCHUR_PRE_SELFP);// SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11,SCHUR_PRE_FULL;
 
-  //system.SetMgSmoother(FEMuS_DEFAULT);
-  system.SetMgSmoother(FEMuS_FIELDSPLIT); // Additive Swartz Method
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT); // Additive Swartz Method
 
-  //system.SetMgSmoother(FEMuS_ASM); // Additive Swartz Method
+  //system.SetLinearEquationSolverType(FEMuS_ASM); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 

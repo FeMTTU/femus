@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "MgSmootherEnum.hpp"
+#include "LinearEquationSolverEnum.hpp"
 #include "MgTypeEnum.hpp"
 
 namespace femus {
@@ -52,7 +52,7 @@ public:
     TransientSystem (MultiLevelProblem& ml_probl,
                      const std::string& name,
                      const unsigned int number, 
-                     const MgSmoother & smoother_type);
+                     const LinearEquationSolverType & smoother_type);
 
     /** Destructor. */
     virtual ~TransientSystem ();
@@ -86,7 +86,7 @@ public:
     virtual void MLsolve();
 
     /** calling the parent solve */
-    virtual void MGsolve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE );
+    virtual void MGsolve( const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE );
 
 
     /** update the Newmark variables */

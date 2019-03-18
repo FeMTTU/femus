@@ -140,12 +140,12 @@ int main(int argc, char** args) {
   mlSol.AddSolution("B1", LAGRANGE, SECOND);
   mlSol.AddSolution("B2", LAGRANGE, SECOND);
   //mlSol.AddSolution("R",  LAGRANGE, FIRST);
-  mlSol.AddSolution("R",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("R",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("R", "Pressure");
 
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
   
@@ -212,8 +212,8 @@ int main(int argc, char** args) {
   
 
   //END buid fieldSplitTree
-  system.SetMgSmoother(FEMuS_FIELDSPLIT); // Field-Split preconditioner
-  // system.SetMgSmoother(FEMuS_ASM);  // Additive Swartz preconditioner
+  system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT); // Field-Split preconditioner
+  // system.SetLinearEquationSolverType(FEMuS_ASM);  // Additive Swartz preconditioner
   // ILU preconditioner 
 
   // attach the assembling function to system

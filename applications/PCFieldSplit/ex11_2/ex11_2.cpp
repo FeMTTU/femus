@@ -142,7 +142,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("V0", LAGRANGE, SECOND);
   if(dim == 3) mlSol.AddSolution("W0", LAGRANGE, SECOND);
 
-  mlSol.AddSolution("P0",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P0",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("P0", "Pressure");
   
   mlSol.AddSolution("T", LAGRANGE, SECOND);
@@ -150,7 +150,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("V", LAGRANGE, SECOND);
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
   //mlSol.Initialize("T0",InitalValueT0);
@@ -213,9 +213,9 @@ int main(int argc, char** args) {
   FS_NST0.SetRichardsonScaleFactor(.6);
 
   //END buid fieldSplitTree
-  if(precType == FS_VTp || precType == FS_TVp) system0.SetMgSmoother(FEMuS_FIELDSPLIT);    // Field-Split preconditioned
-  else if(precType == ASM_VTp || precType == ASM_TVp) system0.SetMgSmoother(FEMuS_ASM);  // Additive Swartz preconditioner
-  else if(precType == ILU_VTp || precType == ILU_TVp) system0.SetMgSmoother(FEMuS_DEFAULT);
+  if(precType == FS_VTp || precType == FS_TVp) system0.SetLinearEquationSolverType(FEMuS_FIELDSPLIT);    // Field-Split preconditioned
+  else if(precType == ASM_VTp || precType == ASM_TVp) system0.SetLinearEquationSolverType(FEMuS_ASM);  // Additive Swartz preconditioner
+  else if(precType == ILU_VTp || precType == ILU_TVp) system0.SetLinearEquationSolverType(FEMuS_DEFAULT);
   // attach the assembling function to system
   system0.SetAssembleFunction(AssembleBoussinesqAppoximation0);
 
@@ -307,9 +307,9 @@ int main(int argc, char** args) {
   FS_NST.SetRichardsonScaleFactor(.6);
 
   //END buid fieldSplitTree
-  if(precType == FS_VTp || precType == FS_TVp) system.SetMgSmoother(FEMuS_FIELDSPLIT);    // Field-Split preconditioned
-  else if(precType == ASM_VTp || precType == ASM_TVp) system.SetMgSmoother(FEMuS_ASM);  // Additive Swartz preconditioner
-  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(FEMuS_DEFAULT);
+  if(precType == FS_VTp || precType == FS_TVp) system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT);    // Field-Split preconditioned
+  else if(precType == ASM_VTp || precType == ASM_TVp) system.SetLinearEquationSolverType(FEMuS_ASM);  // Additive Swartz preconditioner
+  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetLinearEquationSolverType(FEMuS_DEFAULT);
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);

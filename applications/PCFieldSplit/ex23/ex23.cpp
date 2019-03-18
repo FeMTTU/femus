@@ -89,7 +89,7 @@ int main(int argc, char** args) {
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND, 2);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST, 2);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
@@ -203,9 +203,9 @@ int main(int argc, char** args) {
 
 
 
-  //system.SetMgSmoother(FEMuS_DEFAULT);
-  system.SetMgSmoother(FEMuS_FIELDSPLIT); // Additive Swartz preconditioner
-  //system.SetMgSmoother(FEMuS_ASM); // Field-Split preconditioned
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT); // Additive Swartz preconditioner
+  //system.SetLinearEquationSolverType(FEMuS_ASM); // Field-Split preconditioned
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);

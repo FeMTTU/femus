@@ -114,7 +114,7 @@ int main (int argc, char** args) {
   //   mlSol.AddSolution ("W2", LAGRANGE, SECOND, 2);
   //   mlSol.AddSolution ("W3", LAGRANGE, SECOND, 2);
 
-  mlSol.AddSolution ("Lambda", DISCONTINOUS_POLYNOMIAL, ZERO, 0);
+  mlSol.AddSolution ("Lambda", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
 
   mlSol.AddSolution ("W1", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("W2", LAGRANGE, FIRST, 2);

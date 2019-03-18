@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
   system.SetNumberPostSmoothingStep(1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT);
 
   system.init();
 

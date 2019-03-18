@@ -180,7 +180,7 @@ namespace femus {
 
   // ================================================
 
-  void LinearEquationSolverPetsc::MGInit (const MgSmootherType& mg_smoother_type, const unsigned& levelMax, const SolverType & mgSolverType) {
+  void LinearEquationSolverPetsc::MGInit (const LinearEquationSolverTypeType& mg_smoother_type, const unsigned& levelMax, const SolverType & mgSolverType) {
 
     KSPCreate (PETSC_COMM_WORLD, &_ksp);
 

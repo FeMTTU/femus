@@ -37,7 +37,7 @@ class MonolithicFSINonLinearImplicitSystem : public NonLinearImplicitSystem {
 public:
 
     /** Constructor.  Optionally initializes required data structures. */
-    MonolithicFSINonLinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number, const MgSmoother & smoother_type);
+    MonolithicFSINonLinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number, const LinearEquationSolverType & smoother_type);
 
     /** Destructor */
     virtual ~MonolithicFSINonLinearImplicitSystem();

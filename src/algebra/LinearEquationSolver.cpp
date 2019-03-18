@@ -33,7 +33,7 @@ namespace femus
 {
 
   // =============================================================
-  std::unique_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned& igrid, Solution* other_solution, const MgSmoother& smoother_type, const SolverPackage solver_package)
+  std::unique_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned& igrid, Solution* other_solution, const LinearEquationSolverType& smoother_type, const SolverPackage solver_package)
   {
     // Build the appropriate solver
 

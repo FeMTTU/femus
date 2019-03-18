@@ -60,7 +60,7 @@ namespace femus {
 
       void Solve (const vector <unsigned>& variable_to_be_solved, const bool &ksp_clean);
 
-      void MGInit (const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const SolverType & mgSolverType);
+      void MGInit (const LinearEquationSolverTypeType & mg_smoother_type, const unsigned &levelMax, const SolverType & mgSolverType);
 
       void MGSetLevel (LinearEquationSolver *LinSolver, const unsigned &maxlevel,
                        const vector <unsigned> &variable_to_be_solved,

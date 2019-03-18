@@ -110,7 +110,7 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("DY", LAGRANGE, SECOND,  2);
   if (dim == 3) mlSol.AddSolution ("DZ", LAGRANGE, SECOND, 2);
 
-  mlSol.AddSolution ("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution ("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   //  Taylor-hood
   //  mlSol.AddSolution("U", LAGRANGE, SERENDIPITY);
@@ -204,7 +204,7 @@ int main (int argc, char** args) {
   FieldSplitTree FS(PREONLY, FIELDSPLIT_MULTIPLICATIVE_PRECOND, VDPAll, "RK");
   FS.SetRichardsonScaleFactor(1.);
 
-  system.SetMgSmoother(FEMuS_FIELDSPLIT, INCLUDE_COARSE_LEVEL_TRUE);   // Field-Split preconditioned
+  system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT, INCLUDE_COARSE_LEVEL_TRUE);   // Field-Split preconditioned
   
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleBoussinesqAppoximation_AD);

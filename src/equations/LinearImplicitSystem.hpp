@@ -23,7 +23,7 @@
 #include "LinearEquationSolver.hpp"
 #include "MgTypeEnum.hpp"
 #include "DirichletBCTypeEnum.hpp"
-#include "MgSmootherEnum.hpp"
+#include "LinearEquationSolverEnum.hpp"
 #include "FemusDefault.hpp"
 
 #include <petscksp.h>
@@ -40,7 +40,7 @@ namespace femus {
     public:
 
       /** Constructor.  Optionally initializes required data structures. */
-      LinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number, const MgSmoother & smoother_type);
+      LinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number, const LinearEquationSolverType & smoother_type);
 
       /** Destructor */
       virtual ~LinearImplicitSystem();
@@ -124,7 +124,7 @@ namespace femus {
       void ClearVariablesToBeSolved();
 
       /** Set the multigrid smoother, gmres or Vanka (in future AMS (additive schwartz preconditioner))*/
-      void SetMgSmoother (const MgSmoother mgsmoother, const CoarseLevelInclude &includeCoarseLevel = INCLUDE_COARSE_LEVEL_FALSE);      /** Set the PCFIELDSPLIT structure in linear solver */
+      void SetLinearEquationSolverType (const LinearEquationSolverType LinearEquationSolverType, const CoarseLevelInclude &includeCoarseLevel = INCLUDE_COARSE_LEVEL_FALSE);      /** Set the PCFIELDSPLIT structure in linear solver */
       void SetFieldSplitTree (FieldSplitTree *fieldSplitTree);
 
       /** Set if the solver has to output convergence information **/
@@ -244,7 +244,7 @@ namespace femus {
       void AddAMRLevel (unsigned &AMRCounter);
 
       bool MLVcycle (const unsigned &gridn);
-      bool MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
+      bool MGVcycle (const unsigned & gridn, const LinearEquationSolverTypeType& LinearEquationSolverTypeType);
 
 
       /** Create the Prolongator matrix for the Multigrid solver */
@@ -286,7 +286,7 @@ namespace femus {
       unsigned _npost;
 
       /** To be Added */
-      MgSmoother _smootherType;
+      LinearEquationSolverType _smootherType;
       CoarseLevelInclude _includeCoarseLevelSmoother;
       bool _MGmatrixFineReuse;
       bool _MGmatrixCoarseReuse;
@@ -318,7 +318,7 @@ namespace femus {
       vector <bool> _SparsityPattern;
 
       /** Solves the system. */
-      virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
+      virtual void solve (const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE);
 
       double _richardsonScaleFactor;
       double _richardsonScaleFactorDecrease;

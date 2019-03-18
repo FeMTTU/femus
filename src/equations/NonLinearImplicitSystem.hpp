@@ -37,7 +37,7 @@ class NonLinearImplicitSystem : public LinearImplicitSystem {
 public:
 
     /** Constructor.  Optionally initializes required data structures. */
-    NonLinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number, const MgSmoother & smoother_type );
+    NonLinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number, const LinearEquationSolverType & smoother_type );
 
     /** destructor */
     virtual ~NonLinearImplicitSystem();
@@ -99,7 +99,7 @@ protected:
     unsigned _maxNumberOfResidualUpdateIterations;
 
     /** Solves the system. */
-    virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
+    virtual void solve (const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE);
 
 private:
 

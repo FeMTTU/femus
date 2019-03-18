@@ -99,12 +99,12 @@ int main (int argc, char** args) {
     mlSol.AddSolution ("u", LAGRANGE, SECOND, 2); 
     mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false); 
     
-    mlSol.AddSolution ("K11", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-    mlSol.AddSolution ("K12", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-    mlSol.AddSolution ("K13", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-    mlSol.AddSolution ("K22", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-    mlSol.AddSolution ("K23", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-    mlSol.AddSolution ("K33", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution ("K11", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution ("K12", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution ("K13", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution ("K22", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution ("K23", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution ("K33", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
     mlSol.Initialize ("All");
     mlSol.Initialize ("u", InitalValueU3D);

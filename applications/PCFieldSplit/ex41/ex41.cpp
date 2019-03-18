@@ -120,8 +120,8 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
 
-  //system.SetMgSmoother(FEMuS_DEFAULT);
-  system.SetMgSmoother(FEMuS_ASM);
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
   

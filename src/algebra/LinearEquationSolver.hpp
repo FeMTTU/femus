@@ -28,7 +28,7 @@
 #include "PrecondtypeEnum.hpp"
 #include "SolvertypeEnum.hpp"
 #include "LinearEquation.hpp"
-#include "MgSmootherEnum.hpp"
+#include "LinearEquationSolverEnum.hpp"
 #include "MgTypeEnum.hpp"
 #include "FieldSplitTree.hpp"
 
@@ -67,7 +67,7 @@ namespace femus {
 
       /** Builds a \p LinearEquationSolver using the linear solver in \p solver_package */
       static std::unique_ptr<LinearEquationSolver> build(const unsigned &igrid, Solution* other_solution,
-          const MgSmoother & smoother_type, const SolverPackage solver_package = LSOLVER);
+          const LinearEquationSolverType & smoother_type, const SolverPackage solver_package = LSOLVER);
 
       /** Set the tolerance for the solver */
       virtual void SetTolerances(const double& rtol, const double& atol,
@@ -79,7 +79,7 @@ namespace femus {
         abort();
       }
 
-      virtual void MGInit(const MgSmootherType &mg_smoother_type, const unsigned &levelMax, const SolverType & mgSolverType) {
+      virtual void MGInit(const LinearEquationSolverTypeType &mg_smoother_type, const unsigned &levelMax, const SolverType & mgSolverType) {
         std::cout << "Warning InitMG(...) is not available for this smoother\n";
         abort();
       }
