@@ -195,8 +195,8 @@ int main (int argc, char** argv) {
     FSAll.push_back (FielduSGi[i]);
   }
 
-  FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_PRECOND, FSAll, "uSG");
-  
+  FieldSplitTree uSG (PREONLY, FIELDSPLIT_PRECOND, FSAll, "uSG");
+  //uSG.SetRichardsonScaleFactor(1.);
   //END buid fieldSplitTree
    systemSG.SetMgSmoother (FIELDSPLIT_SMOOTHER);
   // ******* System FEM Assembly *******

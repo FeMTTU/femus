@@ -186,8 +186,8 @@ namespace femus {
         std::cout << "Total Computational Time = " << _totalAssemblyTime + _totalSolverTime << std::endl;
       }
 
-      void SetOuterKSPSolver (const std::string outer_ksp_solver) {
-        _outer_ksp_solver = outer_ksp_solver;
+      void SetMgOuterSolver (const SolverType & mgOuterSolver) {
+        _mgOuterSolver = mgOuterSolver;
       };
 
       /** Set AMR options */
@@ -277,7 +277,7 @@ namespace femus {
       unsigned int _n_max_linear_iterations;
 
       /** The ksp outer solver*/
-      std::string _outer_ksp_solver;
+      SolverType _mgOuterSolver;
 
       /** The type of multigrid, F-cyle, V-cycle, M-cycle */
       MgType _mg_type;

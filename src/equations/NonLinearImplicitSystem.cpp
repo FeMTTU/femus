@@ -186,7 +186,7 @@ restart:
 
           clock_t mg_init_time = clock();
           if(_MGsolver) {
-            _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _outer_ksp_solver.c_str());
+            _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _mgOuterSolver);
 
             for(unsigned i = 0; i <= igridn; i++) {
               unsigned npre = (i == 0)? _npre0 : _npre;  

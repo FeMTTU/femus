@@ -159,7 +159,7 @@ int main(int argc, char** args) {
   FS2.reserve(2);
   FS2.push_back(&FS_NS);
   FS2.push_back(&FS_T);
-  FieldSplitTree FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
+  FieldSplitTree FS_NST( RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
   //FieldSplitTree FS_NST( GMRES, FS_SCHUR_PRECOND, FS2, "Benard");
 
 //   std::vector < unsigned > fieldUV(2);

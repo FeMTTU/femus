@@ -40,62 +40,67 @@ namespace femus {
     public:
 
       /**  Constructor. Initializes Petsc data structures */
-      GmresPetscLinearEquationSolver(const unsigned &igrid, Solution *other_solution);
+      GmresPetscLinearEquationSolver (const unsigned &igrid, Solution *other_solution);
 
       /// Destructor.
       ~GmresPetscLinearEquationSolver();
-
+      
+      /// Set PETSC solver 
+      static void SetPetscSolverType (KSP &ksp, const SolverType &solver_type, const double *parameter);
+      
     protected:
 
       /// Release all memory and clear data structures.
       void Clear();
 
-      void SetTolerances(const double &rtol, const double &atol, const double &divtol,
-                         const unsigned &maxits, const unsigned &restart);
+      void SetTolerances (const double &rtol, const double &atol, const double &divtol,
+                          const unsigned &maxits, const unsigned &restart);
 
-      void Init(Mat& Amat, Mat &Pmat);
+      void Init (Mat& Amat, Mat &Pmat);
 
-      void Solve(const vector <unsigned>& variable_to_be_solved, const bool &ksp_clean);
+      void Solve (const vector <unsigned>& variable_to_be_solved, const bool &ksp_clean);
 
-      void MGInit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver = KSPGMRES);
+      void MGInit (const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const SolverType & mgSolverType);
 
-      void MGSetLevel(LinearEquationSolver *LinSolver, const unsigned &maxlevel,
-                      const vector <unsigned> &variable_to_be_solved,
-                      SparseMatrix* PP, SparseMatrix* RR,
-                      const unsigned &npre, const unsigned &npost);
+      void MGSetLevel (LinearEquationSolver *LinSolver, const unsigned &maxlevel,
+                       const vector <unsigned> &variable_to_be_solved,
+                       SparseMatrix* PP, SparseMatrix* RR,
+                       const unsigned &npre, const unsigned &npost);
 
       void RemoveNullSpace();
-      void GetNullSpaceBase( std::vector < Vec > &nullspBase);
+      void GetNullSpaceBase (std::vector < Vec > &nullspBase);
       void ZerosBoundaryResiduals();
       void SetPenalty();
-      
-      void SetRichardsonScaleFactor(const double & richardsonScaleFactor){
-	_richardsonScaleFactor = richardsonScaleFactor;
+
+      void SetRichardsonScaleFactor (const double & richardsonScaleFactor) {
+        _richardsonScaleFactor = richardsonScaleFactor;
       }
 
-      virtual void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved);
-      virtual void SetPreconditioner(KSP& subksp, PC& subpc);
+      virtual void BuildBdcIndex (const vector <unsigned> &variable_to_be_solved);
+      virtual void SetPreconditioner (KSP& subksp, PC& subpc);
 
-      void MGSolve(const bool ksp_clean);
+      void MGSolve (const bool ksp_clean);
 
       inline void MGClear() {
-        KSPDestroy(&_ksp);
+        KSPDestroy (&_ksp);
       }
 
       inline KSP* GetKSP() {
         return &_ksp;
       };
 
-      ///  Set the user-specified solver stored in \p _solver_type
-      void SetPetscSolverType(KSP &ksp);
+      void SetSolver (KSP &ksp, const SolverType &solver_type) {
+        SetPetscSolverType (ksp, solver_type , &_richardsonScaleFactor);
+      };
+      
 
       /** @deprecated, remove soon */
-      std::pair<unsigned int, double> solve(SparseMatrix&  matrix_in,
-                                            SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
-                                            const double tol,   const unsigned int m_its);
+      std::pair<unsigned int, double> solve (SparseMatrix&  matrix_in,
+                                             SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
+                                             const double tol,   const unsigned int m_its);
 
       /** @deprecated, remove soon */
-      void init(SparseMatrix* matrix);
+      void init (SparseMatrix* matrix);
 
     protected:
 
@@ -111,23 +116,23 @@ namespace femus {
 
       vector <PetscInt> _bdcIndex;
       bool _bdcIndexIsInitialized;
-      
+
       double _richardsonScaleFactor;
 
   };
 
   // =============================================
 
-  inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver(const unsigned &igrid, Solution *other_solution)
-    : LinearEquationSolver(igrid, other_solution) {
+  inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver (const unsigned &igrid, Solution *other_solution)
+    : LinearEquationSolver (igrid, other_solution) {
 
-    if(igrid == 0) {
+    if (igrid == 0) {
       this->_preconditioner_type = MLU_PRECOND;
-      this->_solver_type         = PREONLY;
+      this->_levelSolverType         = PREONLY;
     }
     else {
       this->_preconditioner_type = ILU_PRECOND;
-      this->_solver_type         = GMRES;
+      this->_levelSolverType         = GMRES;
     }
 
     _rtol   = 1.e-5;
@@ -138,9 +143,9 @@ namespace femus {
     _richardsonScaleFactor = 0.5;
 
     _bdcIndexIsInitialized = 0;
-    
+
     _printSolverInfo = false;
- 
+
   }
 
   // =============================================
@@ -153,11 +158,11 @@ namespace femus {
 
   inline void GmresPetscLinearEquationSolver::Clear() {
 
-//     
+//
 
-    if(this->initialized()) {
+    if (this->initialized()) {
       this->_is_initialized = false;
-      KSPDestroy(&_ksp);
+      KSPDestroy (&_ksp);
     }
 
 

@@ -210,6 +210,7 @@ int main(int argc, char** args) {
   if(precType == FS_TVp) FS20.push_back(&FS_NS0);   //Navier-Stokes block last
 
   FieldSplitTree FS_NST0(RICHARDSON, FIELDSPLIT_PRECOND, FS20, "Benard");
+  FS_NST0.SetRichardsonScaleFactor(.6);
 
   //END buid fieldSplitTree
   if(precType == FS_VTp || precType == FS_TVp) system0.SetMgSmoother(FIELDSPLIT_SMOOTHER);    // Field-Split preconditioned
@@ -303,6 +304,7 @@ int main(int argc, char** args) {
   if(precType == FS_TVp) FS2.push_back(&FS_NS);   //Navier-Stokes block last
 
   FieldSplitTree FS_NST(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
+  FS_NST.SetRichardsonScaleFactor(.6);
 
   //END buid fieldSplitTree
   if(precType == FS_VTp || precType == FS_TVp) system.SetMgSmoother(FIELDSPLIT_SMOOTHER);    // Field-Split preconditioned

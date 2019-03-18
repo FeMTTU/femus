@@ -201,7 +201,8 @@ int main (int argc, char** args) {
     VDPAll.push_back(VDP[i]);  
   }
   
-  FieldSplitTree FS(RICHARDSON, FIELDSPLIT_PRECOND, VDPAll, "RK");
+  FieldSplitTree FS(PREONLY, FIELDSPLIT_MULTIPLICATIVE_PRECOND, VDPAll, "RK");
+  FS.SetRichardsonScaleFactor(1.);
 
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER, true);   // Field-Split preconditioned
   
@@ -214,7 +215,9 @@ int main (int argc, char** args) {
   system.SetSolverCoarseGrid(RICHARDSON);
   system.SetRichardsonScaleFactor(1.);
 
-  //system.SetNumberSmoothingStepCoarseGrid(3);
+  //system.SetSolverCoarseGrid(PREONLY);
+  
+  system.SetMgOuterSolver(PREONLY);
   
   system.SetTolerances(1.e-10, 1.e-10, 1.e+50, 10, 10); //GMRES tolerances
   

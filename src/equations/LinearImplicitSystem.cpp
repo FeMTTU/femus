@@ -50,7 +50,7 @@ namespace femus {
     _sparsityPatternMinimumSize(1u),
     _numberOfGlobalVariables(0u){
     _SparsityPattern.resize(0);
-    _outer_ksp_solver = "gmres";
+    _mgOuterSolver = GMRES;
     _totalAssemblyTime = 0.;
     _totalSolverTime =0.;
     
@@ -263,7 +263,7 @@ restart:
       std::cout << std::endl << " ****** Level Max " << igridn + 1 << " PREPARATION TIME:\t" << static_cast<double>((clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
 
       if(_MGsolver) {
-        _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _outer_ksp_solver.c_str());
+        _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _mgOuterSolver);
 
         for(unsigned i = 0; i < igridn + 1; i++) {
           unsigned npre = (i == 0)? _npre0 : _npre;  

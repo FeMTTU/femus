@@ -51,6 +51,7 @@ namespace femus {
 
       void SetPreconditioner(KSP& subksp, PC& subpc);
 
+      void FielSlipTreeIsNotDefined();
       // member data
       FieldSplitTree* _fieldSplitTree;
 
@@ -59,7 +60,8 @@ namespace femus {
 // =================================================
 
   inline FieldSplitPetscLinearEquationSolver::FieldSplitPetscLinearEquationSolver(const unsigned& igrid, Solution *other_solution)
-    : GmresPetscLinearEquationSolver(igrid, other_solution) {
+    : GmresPetscLinearEquationSolver(igrid, other_solution),
+    _fieldSplitTree(NULL){
   }
 
 } //end namespace femus

@@ -195,6 +195,7 @@ int main(int argc, char** args)
   FS2.push_back(&FS_NS); // Navier-stokes block Second
 
   FieldSplitTree FS_MHD(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "MHD");
+  FS_MHD.SetRichardsonScaleFactor(.6);
 
   //END buid fieldSplitTree
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Field-Split preconditioner

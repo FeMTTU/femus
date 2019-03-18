@@ -236,11 +236,12 @@ int main(int argc, char** args)
   FS2.push_back(&VelPf);  // velocity second
 
   FieldSplitTree FSI(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "FSI");
-
+  FSI.SetRichardsonScaleFactor(.4);
+  
   //END buid fieldSplitTree
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
   
-  system.SetOuterKSPSolver("lgmres");
+  system.SetMgOuterSolver(LGMRES); //system.SetOuterKSPSolver("lgmres");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);

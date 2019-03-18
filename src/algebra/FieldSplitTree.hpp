@@ -59,11 +59,15 @@ namespace femus {
 
       void SetPC (KSP& ksp, const unsigned& level) ;
 
+      void SetSolver (KSP &ksp, const SolverType &solver);      
 
       void SetupKSPTolerances (const double& rtol, const double& abstol, const double& dtol, const unsigned& maxits);
       void SetupSchurFactorizationType (const SchurFactType& schurFactType);
       void SetupSchurPreType (const SchurPreType& schurPreType);
 
+      void SetRichardsonScaleFactor (const double & richardsonScaleFactor) {
+        _richardsonScaleFactor = richardsonScaleFactor;
+      }
 
       const unsigned& GetNumberOfSplits() {
         return _numberOfSplits;
@@ -95,7 +99,7 @@ namespace femus {
 
     private:
 
-      void SetPetscSolverType (KSP& ksp);
+      //void SetPetscSolverType (KSP& ksp);
       void SetSchurFactorizationType (PC &pc);
       void SetSchurPreType (PC &pc);
 
@@ -114,7 +118,8 @@ namespace femus {
       double _abstol;
       double _dtol;
       unsigned _maxits;
-
+      double _richardsonScaleFactor;
+      
       SchurFactType _schurFactType;
       SchurPreType _schurPreType;
 
@@ -127,7 +132,7 @@ namespace femus {
       void SetAsmStandard (const bool &standard) {
         _asmStandard = standard;
         if (standard) _asmOverlapping = 1;
-        else _asmOverlapping = 0;;
+        else _asmOverlapping = 0;
       };
 
       void SetAsmBlockSize (const unsigned &BlockSize) {

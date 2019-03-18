@@ -9,7 +9,7 @@
 
   This software is distributed WITHOUT ANY WARRANTY; without even
   the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-  PURPOSE.  See the above copyright notice for more information.
+  PURPOSE. See the above copyright notice for more information.
 
   =========================================================================*/
 
@@ -69,6 +69,7 @@ namespace femus {
     _abstol = 1.e-20;
     _dtol = 1.e+50;
     _maxits = 1;
+    _richardsonScaleFactor = 0.5;
     _schurFactType = SCHUR_FACT_AUTOMATIC;
     _schurPreType = SCHUR_PRE_AUTOMATIC;
 
@@ -143,6 +144,7 @@ namespace femus {
     _abstol = 1.e-20;
     _dtol = 1.e+50;
     _maxits = 1;
+    _richardsonScaleFactor = 0.5;
     _schurFactType = SCHUR_FACT_AUTOMATIC;
     _schurPreType = SCHUR_PRE_AUTOMATIC;
 
@@ -326,6 +328,7 @@ namespace femus {
     _dtol = dtol;
     _maxits = maxits;
   }
+  
   void FieldSplitTree::SetupSchurFactorizationType (const SchurFactType& schurFactType) {
     _schurFactType = schurFactType;
   }
@@ -345,6 +348,14 @@ namespace femus {
         _preconditioner == FIELDSPLIT_SYMMETRIC_MULTIPLICATIVE_PRECOND ||
         _preconditioner == FIELDSPLIT_SCHUR_PRECOND) {
 
+      if (level != 0u && _father == NULL && _solver == PREONLY) {
+        _solver = RICHARDSON;
+        _richardsonScaleFactor = 1.;
+      }  
+        
+      SetSolver (ksp, _solver);
+      KSPSetUp (ksp);
+        
       PetscPreconditioner::set_petsc_preconditioner_type (_preconditioner, pc);
       if (_preconditioner == FIELDSPLIT_SCHUR_PRECOND) {
         SetSchurFactorizationType (pc);
@@ -369,7 +380,7 @@ namespace femus {
     else if (_preconditioner == ASM_PRECOND ||
              _preconditioner == ASM_MULTIPLICATIVE_PRECOND ||
              _preconditioner == ASM_ADDITIVE_PRECOND) {
-      SetPetscSolverType (ksp);
+      SetSolver (ksp, _solver);
       KSPSetTolerances (ksp, _rtol, _abstol, _dtol, _maxits);
 
       PetscPreconditioner::set_petsc_preconditioner_type (_preconditioner, pc);
@@ -429,7 +440,7 @@ namespace femus {
         }
       }
 
-      SetPetscSolverType (ksp);
+      SetSolver(ksp,_solver);
       PC pc;
       KSPGetPC (ksp, &pc);
       KSPSetTolerances (ksp, _rtol, _abstol, _dtol, _maxits);
@@ -461,88 +472,12 @@ namespace femus {
       std::cout << "Number of Splits = " << _numberOfSplits << std::endl;
       abort();
     }
-
   }
 
-  void FieldSplitTree::SetPetscSolverType (KSP& ksp) {
-    int ierr = 0;
-
-    switch (_solver) {
-      case CG:
-        ierr = KSPSetType (ksp, (char*) KSPCG);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      case CR:
-        ierr = KSPSetType (ksp, (char*) KSPCR);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      case CGS:
-        ierr = KSPSetType (ksp, (char*) KSPCGS);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      case BICG:
-        ierr = KSPSetType (ksp, (char*) KSPBICG);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      case TCQMR:
-        ierr = KSPSetType (ksp, (char*) KSPTCQMR);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      case TFQMR:
-        ierr = KSPSetType (ksp, (char*) KSPTFQMR);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      case LSQR:
-        ierr = KSPSetType (ksp, (char*) KSPLSQR);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      case BICGSTAB:
-        ierr = KSPSetType (ksp, (char*) KSPBCGS);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      case MINRES:
-        ierr = KSPSetType (ksp, (char*) KSPMINRES);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      case GMRES:
-        ierr = KSPSetType (ksp, (char*) KSPGMRES);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      case RICHARDSON:
-        ierr = KSPSetType (ksp, (char*) KSPRICHARDSON);
-        ierr =  KSPRichardsonSetScale (ksp, 0.7);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        KSPRichardsonSetScale (ksp, 0.7);
-        return;
-
-      case CHEBYSHEV:
-        ierr = KSPSetType (ksp, (char*) KSPCHEBYSHEV);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      case PREONLY:
-        ierr = KSPSetType (ksp, (char*) KSPPREONLY);
-        CHKERRABORT (MPI_COMM_WORLD, ierr);
-        return;
-
-      default:
-        std::cerr << "ERROR:  Unsupported PETSC Solver: "
-                  << _solver               << std::endl
-                  << "Continuing with PETSC defaults" << std::endl;
-    }
+  void FieldSplitTree::SetSolver (KSP &ksp, const SolverType &solver) {
+    GmresPetscLinearEquationSolver::SetPetscSolverType(ksp, solver , &_richardsonScaleFactor);
   }
-
-
+  
   void FieldSplitTree::SetSchurFactorizationType (PC &pc) {
 
     switch (_schurFactType) {

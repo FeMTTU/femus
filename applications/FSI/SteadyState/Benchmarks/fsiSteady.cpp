@@ -309,7 +309,7 @@ int main(int argc,char **args) {
 
   // set the tolerances for the GMRES outer solver
   system.SetTolerances(lin_tol,alin_tol,div_tol,max_outer_solver_iter,ksp_restart);
-  system.SetOuterKSPSolver(outer_ksp_solver);
+  system.SetMgOuterSolver(GMRES);//system.SetOuterKSPSolver(outer_ksp_solver);
 
 
   // ******* Add variables to be solved *******
