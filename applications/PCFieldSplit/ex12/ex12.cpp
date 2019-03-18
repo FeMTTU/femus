@@ -116,10 +116,10 @@ int main(int argc, char** args) {
   
 
 
-//   system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
-  //system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
+//   system.SetMgSmoother(FEMuS_DEFAULT);
+  //system.SetMgSmoother(FEMuS_FIELDSPLIT); // Additive Swartz Method
 
-  system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
+  system.SetMgSmoother(FEMuS_ASM); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 

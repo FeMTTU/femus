@@ -134,7 +134,7 @@ int main(int argc, char** args)
   system.SetNumberPostSmoothingStep(1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
+  system.SetMgSmoother(FEMuS_DEFAULT);
 
   system.init();
 

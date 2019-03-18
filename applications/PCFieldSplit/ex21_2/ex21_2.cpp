@@ -208,9 +208,9 @@ int main(int argc, char** args) {
   FieldSplitTree FS_NST(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
   
   //END buid fieldSplitTree
-  if(precType == FS_VTp || precType == FS_TVp) system.SetMgSmoother(FIELDSPLIT_SMOOTHER);    // Field-Split preconditioned
-  else if(precType == ASM_VTp || precType == ASM_TVp) system.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz preconditioner
-  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
+  if(precType == FS_VTp || precType == FS_TVp) system.SetMgSmoother(FEMuS_FIELDSPLIT);    // Field-Split preconditioned
+  else if(precType == ASM_VTp || precType == ASM_TVp) system.SetMgSmoother(FEMuS_ASM);  // Additive Swartz preconditioner
+  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(FEMuS_DEFAULT);
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);

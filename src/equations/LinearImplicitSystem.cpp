@@ -113,7 +113,7 @@ namespace femus {
       _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], _smootherType).release();
     }
     else{
-      _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], FEMuS_DEFAULT_SMOOTHER).release();  
+      _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], FEMuS_DEFAULT).release();  
     }
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();
@@ -1058,7 +1058,7 @@ restart:
 
     _LinSolver.resize(_gridn);
 
-    _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], FEMuS_DEFAULT_SMOOTHER).release();
+    _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], FEMuS_DEFAULT).release();
 
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();

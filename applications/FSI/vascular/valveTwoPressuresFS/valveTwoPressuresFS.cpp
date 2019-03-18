@@ -239,7 +239,7 @@ int main(int argc, char** args)
   FSI.SetRichardsonScaleFactor(.4);
   
   //END buid fieldSplitTree
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
+  system.SetMgSmoother(FEMuS_FIELDSPLIT);   // Field-Split preconditioned
   
   system.SetMgOuterSolver(LGMRES); //system.SetOuterKSPSolver("lgmres");
 

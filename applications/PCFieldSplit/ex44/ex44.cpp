@@ -158,8 +158,8 @@ int main(int argc, char** args)
   system.AddSolutionToSystemPDE("V");
   if (dim == 3) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("P");
-  //system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
-  system.SetMgSmoother(ASM_SMOOTHER);
+  //system.SetMgSmoother(FEMuS_DEFAULT);
+  system.SetMgSmoother(FEMuS_ASM);
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);

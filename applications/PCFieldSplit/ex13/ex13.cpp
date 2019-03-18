@@ -152,9 +152,9 @@ int main(int argc, char** args) {
   FieldSplitTree FS_NS(RICHARDSON, FIELDSPLIT_SCHUR_PRECOND, FS1, "Navier-Stokes");
 
 
-  //system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
-  //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
+  //system.SetMgSmoother(FEMuS_DEFAULT);
+  //system.SetMgSmoother(FEMuS_ASM); // Additive Swartz Method
+  system.SetMgSmoother(FEMuS_FIELDSPLIT); // Additive Swartz Method
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);

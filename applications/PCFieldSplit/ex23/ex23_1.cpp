@@ -194,9 +194,9 @@ int main(int argc, char** args) {
   FS2.push_back(&FS_T);
   FieldSplitTree FS_NST(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
 
-  //system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz preconditioner
-  //system.SetMgSmoother(ASM_SMOOTHER); // Field-Split preconditioned
+  //system.SetMgSmoother(FEMuS_DEFAULT);
+  system.SetMgSmoother(FEMuS_FIELDSPLIT); // Additive Swartz preconditioner
+  //system.SetMgSmoother(FEMuS_ASM); // Field-Split preconditioned
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);

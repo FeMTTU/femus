@@ -324,7 +324,7 @@ int main(int argc, char **args)
 
   // ******* Set Preconditioner *******
 
-  system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetMgSmoother(FEMuS_ASM);
 
   system.init();
 

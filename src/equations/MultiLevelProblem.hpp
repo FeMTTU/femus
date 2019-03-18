@@ -84,7 +84,7 @@ public:
     virtual System & add_system (const std::string& system_type, const std::string& name);
 
     /** Add the system named \p name to the systems array. */
-    template <typename T_sys> T_sys & add_system (const std::string& name, const MgSmoother & smoother_type = FEMuS_DEFAULT_SMOOTHER);
+    template <typename T_sys> T_sys & add_system (const std::string& name, const MgSmoother & smoother_type = FEMuS_DEFAULT);
 
     /**
      * @returns a constant reference to the system named \p name.

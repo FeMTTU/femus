@@ -317,7 +317,7 @@ int main(int argc,char **args) {
 
   // ******* Set Smoother *******
   // Set Preconditioner of the smoother (name to be changed)
-  system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetMgSmoother(FEMuS_ASM);
 
   if(mem_infos) {
     PetscMemoryGetCurrentUsage(&memory_current_usage);

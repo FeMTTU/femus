@@ -104,8 +104,8 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  //system.SetMgSmoother(ASM_SMOOTHER); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
-  system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER); // GMRES
+  //system.SetMgSmoother(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
+  system.SetMgSmoother(FEMuS_DEFAULT); // GMRES
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
@@ -123,15 +123,15 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(GMRES);// do not touch
   //system.SetSolverFineGrids(MINRES);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);// for ASM_SMOOTHER you can use MLU_PRECOND
+  system.SetPreconditionerFineGrids(ILU_PRECOND);// for FEMuS_ASM you can use MLU_PRECOND
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40); //PETSC GMRES tolerances
   //system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
 
-  system.SetNumberOfSchurVariables(1); // option for ASM_SMOOTHER fot "P"
-  system.SetElementBlockNumber(4); // option for ASM_SMOOTHER
+  system.SetNumberOfSchurVariables(1); // option for FEMuS_ASM fot "P"
+  system.SetElementBlockNumber(4); // option for FEMuS_ASM
 
   system.MLsolve();
 

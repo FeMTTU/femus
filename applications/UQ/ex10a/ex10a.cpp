@@ -147,7 +147,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (FEMuS_DEFAULT_SMOOTHER);
+  system.SetMgSmoother (FEMuS_DEFAULT);
 
   system.init();
 
@@ -198,7 +198,7 @@ int main (int argc, char** argv) {
   FieldSplitTree uSG (PREONLY, FIELDSPLIT_PRECOND, FSAll, "uSG");
   //uSG.SetRichardsonScaleFactor(1.);
   //END buid fieldSplitTree
-   systemSG.SetMgSmoother (FIELDSPLIT_SMOOTHER);
+   systemSG.SetMgSmoother (FEMuS_FIELDSPLIT);
   // ******* System FEM Assembly *******
   systemSG.SetAssembleFunction (AssembleSysSG);
   systemSG.SetMaxNumberOfLinearIterations (1);
@@ -211,7 +211,7 @@ int main (int argc, char** argv) {
   systemSG.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  // systemSG.SetMgSmoother (FEMuS_DEFAULT_SMOOTHER);
+  // systemSG.SetMgSmoother (FEMuS_DEFAULT);
 
   systemSG.init();
 

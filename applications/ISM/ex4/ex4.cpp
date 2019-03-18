@@ -170,8 +170,8 @@ int main(int argc, char** args)
 
   system.AddSolutionToSystemPDE("P");
 
-  //system.SetMgSmoother(FEMuS_DEFAULT_SMOOTHER);
-  system.SetMgSmoother(ASM_SMOOTHER);   // Additive Swartz Method
+  //system.SetMgSmoother(FEMuS_DEFAULT);
+  system.SetMgSmoother(FEMuS_ASM);   // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleIncompressibleNavierStokes);
 

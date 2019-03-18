@@ -212,8 +212,8 @@ int main(int argc, char** args) {
   
 
   //END buid fieldSplitTree
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Field-Split preconditioner
-  // system.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz preconditioner
+  system.SetMgSmoother(FEMuS_FIELDSPLIT); // Field-Split preconditioner
+  // system.SetMgSmoother(FEMuS_ASM);  // Additive Swartz preconditioner
   // ILU preconditioner 
 
   // attach the assembling function to system

@@ -41,8 +41,8 @@ namespace femus {
   }
   
   void LinearEquationSolverPetscFieldSplit::FielSlipTreeIsNotDefined(){
-    std::cout << "Error! No FieldSplitTree object has been passed to the FIELDSPLIT_SMOOTHER system"<<std::endl;
-    std::cout << "Define a FieldSplitTree object FS and pass it to the FIELDSPLIT_SMOOTHER system with"<<std::endl;
+    std::cout << "Error! No FieldSplitTree object has been passed to the FEMuS_FIELDSPLIT system"<<std::endl;
+    std::cout << "Define a FieldSplitTree object FS and pass it to the FEMuS_FIELDSPLIT system with"<<std::endl;
     std::cout << "system.SetFieldSplitTree(&FS);"<<std::endl;
     abort();
   }
