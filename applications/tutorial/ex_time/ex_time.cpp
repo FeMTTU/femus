@@ -98,7 +98,7 @@ double  nonlin_term_function(const double& v) {
     
 //    return 1.;
 //    return v + 1.;
-   return - 3. * 1./( (1. - v) );
+   return - 5. * 1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
 //     return -exp(v);
 //     return -  v * v * v - 1.;
@@ -110,7 +110,7 @@ double  nonlin_term_derivative(const double& v) {
     
 //    return 0.;
 //    return 1.;
-   return - 3. * 2. * 1./( (1. - v)*(1. - v) ); 
+   return - 5. * 2. * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
 //     return -exp(v);
 //     return -3. * v * v;
@@ -144,14 +144,14 @@ int main(int argc,char **args) {
   const std::vector<double> xyz_max = {1.,1.,0.};
   const ElemType geom_elem_type = QUAD9;
 
-   std::string input_file = "Lshape_longer_y.med";
+//    std::string input_file = "Lshape_longer_y.med";
 //    std::string input_file = "Lshape.med";
-   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
-  const std::string infile = mystream.str();
+//    std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+//   const std::string infile = mystream.str();
   
   MultiLevelMesh ml_msh;
-  //   ml_msh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+    ml_msh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
 
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -188,8 +188,9 @@ int main(int argc,char **args) {
 
   system.SetAssembleFunction(AssembleMatrixRes);
 
+//   system.SetOuterKSPSolver("preonly");
 //   system.SetSolverFineGrids(PREONLY);
-//   system.SetPreconditionerFineGrids(LU_PRECOND);
+//   system.SetPreconditionerFineGrids(MLU_PRECOND);
   
 //   system.SetMaxNumberOfLinearIterations(1);
 //   system.SetAbsoluteLinearConvergenceTolerance(1.e-8);
@@ -209,7 +210,7 @@ int main(int argc,char **args) {
   
   const double total_time = 1.;  
   
-  std::vector< unsigned int > n_steps =  {100/*6*//*2, *//*4, 8, 16*/};
+  std::vector< unsigned int > n_steps =  {500/*6*//*2, *//*4, 8, 16*/};
  
 //   std::vector< MultiLevelSolution >  last_sol(n_steps.size(),  & ml_msh);  
 //   std::vector< Solution >  last_sol(n_steps.size(),  ml_msh.GetLevel(fine_lev) );  
@@ -239,13 +240,13 @@ int main(int argc,char **args) {
     }
     
     // ======= Check for quenching ==========
-     if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= 0.99 ) { std::cout << "Detected quenching" << std::endl; exit(0); }
+//      if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= 0.99 ) { std::cout << "Detected quenching" << std::endl; exit(0); }
 
     
     // ======= Solve ========================
     std::cout << std::endl;
     std::cout << " *********** Timedep ************ " << std::endl;
-    ml_prob.get_system("Timedep").MLsolve();
+    ml_prob.get_system("Timedep").MGsolve();
     
       ml_sol.Set("time", SetInitialCondition, &ml_prob);
       
@@ -257,19 +258,19 @@ int main(int argc,char **args) {
      
      bool adapt_flag = 1; // Set to 0 for no adaptation and 1 for adaptation (which starts at a specified solution magnitude)
      
-     if ( adapt_flag == 1 ) {
-     
-       double AdaptStarter = 0.85; // Value of ||u||_\infty at which to start adaptation
-       if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= AdaptStarter ) {
-    
-           double NonlinearityTracker = 0.01 * nonlin_term_derivative( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() ) ;
-           double NewTime = std::min( system.GetIntervalTime(), NonlinearityTracker );
-           double minTimeStep = 0.000001; // Minimum step-size controller
-           double NewTimeFixed = std::max( NewTime , minTimeStep );
-           system.SetIntervalTime(NewTimeFixed);
-         }    
-    
-       }
+//      if ( adapt_flag == 1 ) {
+//      
+//        double AdaptStarter = 0.85; // Value of ||u||_\infty at which to start adaptation
+//        if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= AdaptStarter ) {
+//     
+//            double NonlinearityTracker = 0.01 * nonlin_term_derivative( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() ) ;
+//            double NewTime = std::min( system.GetIntervalTime(), NonlinearityTracker );
+//            double minTimeStep = 0.000001; // Minimum step-size controller
+//            double NewTimeFixed = std::max( NewTime , minTimeStep );
+//            system.SetIntervalTime(NewTimeFixed);
+//          }    
+//     
+//        }
        
 
      } //end loop timestep
