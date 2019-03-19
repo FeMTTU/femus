@@ -725,8 +725,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
    
  //*************************************************** 
-  unsigned int n_unknowns = 4/*mlPdeSys->GetSolPdeIndex().size()*/; ///AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA @todo this should be a const variable
-  enum Sol_pos{pos_state=0,pos_ctrl,pos_adj,pos_mu};  //these are known at compile-time 
+  const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
+  enum Sol_pos{pos_state = 0, pos_ctrl, pos_adj, pos_mu};  //these are known at compile-time 
   vector < std::string > Solname(n_unknowns);
   Solname[pos_state] = "state";
   Solname[pos_ctrl]  = "control";

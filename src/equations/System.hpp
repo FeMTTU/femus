@@ -105,7 +105,11 @@ public:
     /** Get the index of the Solution "solname" for this system */
     unsigned GetSolPdeIndex(const char solname[]);
     
-    vector <unsigned> & GetSolPdeIndex(){
+    vector <unsigned> & GetSolPdeIndex() {
+      return _SolSystemPdeIndex;
+    }
+
+    const vector <unsigned> & GetSolPdeIndex() const {
       return _SolSystemPdeIndex;
     }
 

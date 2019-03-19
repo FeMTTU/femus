@@ -18,7 +18,9 @@
 #define NSUB_X  16
 #define NSUB_Y  16
 
-#define MODEL "Linear_elastic" /*"Mooney-Rivlin"*/ /*"Neo-Hookean"*/
+// #define MODEL "Linear_elastic"
+// #define MODEL "Mooney-Rivlin" 
+#define MODEL "Neo-Hookean"
 
 using namespace femus;
 
@@ -95,18 +97,17 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob);
 
 
 template < class real_num_mov >
-vector < vector < real_num_mov > >  get_Cauchy_stress_tensor(const MultiLevelProblem& ml_prob,
-                                           const unsigned int dim,
-                                           const unsigned int press_type_pos,
-                                           const double & mus,
-                                           const double & lambda,
-                                           const unsigned int solid_model, 
-                  const vector < vector < real_num_mov > > & gradSolVAR_qp,
-                  const vector < vector < real_num_mov > > & gradSolVAR_hat_qp,
-                  const          vector < real_num_mov >   & SolVAR_qp,
-                  const          vector < unsigned int >   & SolPdeIndex,
-                  real_num_mov & J_hat,
-                  real_num_mov & trace_e
+vector < vector < real_num_mov > >  get_Cauchy_stress_tensor(const unsigned int solid_model,
+                                                             const double & mus,
+                                                             const double & lambda,
+                                                             const unsigned int dim,
+                                                             const unsigned int press_type_pos,
+                                                             const vector < vector < real_num_mov > > & gradSolVAR_qp,
+                                                             const vector < vector < real_num_mov > > & gradSolVAR_hat_qp,
+                                                             const          vector < real_num_mov >   & SolVAR_qp,
+                                                             const          vector < unsigned int >   & SolPdeIndex,
+                                                             real_num_mov & J_hat,
+                                                             real_num_mov & trace_e
 ) {
     
     
@@ -226,6 +227,36 @@ vector < vector < real_num_mov > >  get_Cauchy_stress_tensor(const MultiLevelPro
 
 
 
+template < class real_num_mov >
+real_num_mov   get_mass_balance(const unsigned int solid_model, 
+                                const bool penalty,
+                                const bool incompressible,
+                                const double & lambda,
+                                const real_num_mov & weight,
+                                const double & weight_hat,
+                                const real_num_mov & div_displ,
+                                const real_num_mov & J_hat,
+                                const vector < real_num_mov >   & SolVAR_qp,
+                                const vector < unsigned int >   & SolPdeIndex,
+                                const unsigned int press_type_pos) {
+    
+// aResVAR[SolPdeIndex[press_type_pos]][i] += phi_gss_fe[SolFEType[press_type_pos]][i] * 
+  real_num_mov  mass_balance = 0.;
+  
+              if (!penalty) {
+                     if (0  ==  solid_model)                           mass_balance = weight *     ( div_displ /*trace_e*/);
+                else if (1  ==  solid_model || 5  ==  solid_model)     mass_balance = weight_hat * ( J_hat - 1.         + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]]);
+                else if (2  ==  solid_model)                           mass_balance = weight_hat * ( log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]]);
+              }
+                else if (3  ==  solid_model || 4  ==  solid_model)     mass_balance = weight_hat * ( SolVAR_qp[SolPdeIndex[press_type_pos]] ); // pressure = 0 in the solid
+              
+ return mass_balance;              
+              
+}
+
+
+
+
 int main(int argc, char** args) {
 
 
@@ -307,11 +338,11 @@ int main(int argc, char** args) {
   NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("SolidMech");
 
   // add solution "u" to system
-  system.AddSolutionToSystemPDE("DX");
-  system.AddSolutionToSystemPDE("DY");
+                      system.AddSolutionToSystemPDE("DX");
+                      system.AddSolutionToSystemPDE("DY");
   if (dimension == 3) system.AddSolutionToSystemPDE("DZ");
-  system.AddSolutionToSystemPDE("P");
-
+                      system.AddSolutionToSystemPDE("P");
+ 
 
   // attach the assembling function to system
   system.SetAssembleFunction( AssembleSolidMech_AD< adept::adouble >);
@@ -367,31 +398,29 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   // call the adept stack object
   adept::Stack& s = FemusInit::_adeptStack;
 
-  //  extract pointers to the several objects that we are going to use
-  NonLinearImplicitSystem& 	mlPdeSys   	= ml_prob.get_system<NonLinearImplicitSystem> ("SolidMech");   // pointer to the linear implicit system named "Poisson"
-  const unsigned 		level 		= mlPdeSys.GetLevelToAssemble();
-  bool 			assembleMatrix 		= mlPdeSys.GetAssembleMatrix(); 
+  NonLinearImplicitSystem& 	mlPdeSys   	= ml_prob.get_system<NonLinearImplicitSystem> ("SolidMech");
+  const unsigned 		level 		    = mlPdeSys.GetLevelToAssemble();
+  bool 			assembleMatrix 		    = mlPdeSys.GetAssembleMatrix(); 
   const char* 			pdename         = mlPdeSys.name().c_str();
 
-  Mesh*          		msh    		= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*          		el     		= msh->el;  // pointer to the elem object in msh (level)
+  Mesh*          		msh    		= ml_prob._ml_msh->GetLevel(level);
+  elem*          		el     		= msh->el;
 
-  MultiLevelSolution*  		ml_sol   	= ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*    			sol      	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
-
-
-  LinearEquationSolver* 	pdeSys     	= mlPdeSys._LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix*    		JAC    		= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
-  NumericVector*   		RES          	= pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  MultiLevelSolution*  		ml_sol  = ml_prob._ml_sol;
+  Solution*    			sol      	= ml_prob._ml_sol->GetSolutionLevel(level); 
 
 
-  const unsigned 	 dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned 		dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  unsigned nel		= msh->GetNumberOfElements();
-  unsigned igrid	= msh->GetLevel();
-  unsigned    		iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  LinearEquationSolver* 	pdeSys  = mlPdeSys._LinSolver[level];
+  SparseMatrix*    		JAC    		= pdeSys->_KK;
+  NumericVector*   		RES         = pdeSys->_RES;
 
-  // reserve memory for the local standar vectors
+
+  const unsigned 	 dim = msh->GetDimension();
+  const unsigned    dim2 = (3 * (dim - 1) + !(dim - 1));
+  const unsigned   nel   = msh->GetNumberOfElements();
+  const unsigned igrid   = msh->GetLevel();
+  const unsigned  iproc  = msh->processor_id();
+  // reserve memory for the local standard vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
  
@@ -407,13 +436,20 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
   
  // solution variables *******************************************
-  const int n_unknowns = dim + 1;
-  const int disp_type_pos = 0;
-  const int press_type_pos = dim;
-  const int state_pos_begin = 0;
+   const unsigned int n_unknowns = mlPdeSys.GetSolPdeIndex().size();
+//      enum Sol_pos {pos_dx = 0, pos_dy, pos_p};  //these are known at compile-time
+//      enum Sol_pos {pos_dx = 0, pos_dy, pos_dz, pos_p};
+//   constexpr unsigned int pos_dx = 0;  
+//   constexpr unsigned int pos_dy = 1;  
+//   constexpr unsigned int pos_dp = 2;  
+//   if (dim == 3) {std::cout << "Uncomment the 3d enum and recompile"; abort(); }
+   
+  constexpr int disp_type_pos = 0;     //known at compile time
+  const     int press_type_pos = dim;      //known at run time
+  constexpr int state_pos_begin = 0;   //known at compile time
 
 
-  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"DX","DY","DZ","P"};
+  vector < std::string > Solname(n_unknowns);
   Solname              [state_pos_begin+0] =                "DX";
   Solname              [state_pos_begin+1] =                "DY";
   if (dim == 3) Solname[state_pos_begin+2] =                "DZ";
@@ -430,12 +466,9 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
-  
-
    vector < unsigned int > Sol_n_el_dofs(n_unknowns);
   
   //==========================================================================================
-  // displacement ************************************
   //-----------state------------------------------
   vector < vector < double > > phi_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_hat_gss_fe(NFE_FAMS);
@@ -460,16 +493,12 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
     double weight_hat = 0.;
  
   // equation ***********************************
-  vector < int > JACDof; 
-  vector < double > Res; 
-  vector < double > Jac; 
- 
-  JACDof.reserve( n_unknowns *maxSize);
-  Res.reserve( n_unknowns *maxSize);
-  Jac.reserve( n_unknowns *maxSize * n_unknowns *maxSize);
+  vector < int > JACDof;   JACDof.reserve( n_unknowns *maxSize);
+  vector < double > Res;   Res.reserve( n_unknowns *maxSize);
+  vector < double > Jac;   Jac.reserve( n_unknowns *maxSize * n_unknowns *maxSize);
 
   //----------- at dofs ------------------------------
-  vector < vector < real_num_mov > > aResVAR(n_unknowns);    // local redidual vector
+  vector < vector < real_num_mov > > aResVAR(n_unknowns);
   vector < vector < real_num_mov > > SolVAR_eldofs(n_unknowns);
   vector < vector < real_num_mov > > gradSolVAR_eldofs(n_unknowns);
    
@@ -493,22 +522,22 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
    // ------------------------------------------------------------------------
     // Physical parameters
-    double rhof	 	= ml_prob.parameters.get < Fluid>("Fluid").get_density();
-    double mu_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_shear_modulus();
-    double lambda_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_lambda();
-    double mus		= mu_lame / rhof;
-    double lambda	= lambda_lame / rhof;
-    int    solid_model	= ml_prob.parameters.get < Solid>("Solid").get_physical_model();
+    const double rhof	 	= ml_prob.parameters.get < Fluid>("Fluid").get_density();
+    const double mu_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_shear_modulus();
+    const double lambda_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_lambda();
+    const double mus		= mu_lame / rhof;
+    const double lambda	= lambda_lame / rhof;
+    const int    solid_model	= ml_prob.parameters.get < Solid>("Solid").get_physical_model();
 
-    bool incompressible = (0.5  ==  ml_prob.parameters.get < Solid>("Solid").get_poisson_coeff()) ? 1 : 0;
+    const bool incompressible = (0.5  ==  ml_prob.parameters.get < Solid>("Solid").get_poisson_coeff()) ? 1 : 0;
     const bool penalty = ml_prob.parameters.get < Solid>("Solid").get_if_penalty();
 
     // gravity
     double _gravity[3] = {0., 1., 0.};
     // -----------------------------------------------------------------
  
-    RES->zero(); // Set to zero all the entries of the Global Matrix
-  if (assembleMatrix) JAC->zero(); // Set to zero all the entries of the Global Matrix
+    RES->zero();
+  if (assembleMatrix) JAC->zero();
 
 
   // element loop: each process loops only on the elements that owns
@@ -637,51 +666,39 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
    real_num_mov J_hat;
    real_num_mov trace_e;
 
-    Cauchy = get_Cauchy_stress_tensor< real_num_mov >(ml_prob, dim, press_type_pos,  mus, lambda, solid_model, gradSolVAR_qp, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat,trace_e);
+    Cauchy = get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda, dim, press_type_pos, gradSolVAR_qp, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e);
 
     
 
+              //BEGIN residual Solid Momentum in moving domain
           for (unsigned i = 0; i < nDofsD; i++) {
 
-              //BEGIN residual Solid Momentum in moving domain
-              real_num_mov CauchyDIR[3] = {0., 0., 0.};
+              real_num_mov Cauchy_direction[3] = {0., 0., 0.};
 
               for (int idim = 0.; idim < dim; idim++) {
                 for (int jdim = 0.; jdim < dim; jdim++) {
-                  CauchyDIR[idim] += phi_x_gss_fe[SolFEType[idim]][i * dim + jdim] * Cauchy[idim][jdim];
+                  Cauchy_direction[idim] += phi_x_gss_fe[SolFEType[idim]][i * dim + jdim] * Cauchy[idim][jdim];
                 }
               }
 
               for (int idim = 0; idim < dim; idim++) {
-                aResVAR[SolPdeIndex[idim]][i] += ( /*phi_gss_fe[SolFEType[idim]][i] * SolVAR_qp[SolPdeIndex[idim]]*/   +  phi_gss_fe[SolFEType[idim]][i] * _gravity[idim]  
-                                                  /*-  phi_x_gss_fe[SolFEType[idim]][i * dim + idim] * SolVAR_qp[ SolPdeIndex[press_type_pos] ]*/ - CauchyDIR[idim]) * weight;
+                aResVAR[SolPdeIndex[idim]][i] += ( +  phi_gss_fe[SolFEType[idim]][i] * _gravity[idim] - Cauchy_direction[idim]) * weight;
               }
 
-              //END residual Solid Momentum in moving domain
             }
+              //END residual Solid Momentum in moving domain
+              
 
+              //BEGIN residual solid mass balance
             for (unsigned i = 0; i < nDofsP; i++) {
                 
                 real_num_mov div_displ = 0.;
-                              for (int idim = 0; idim < dim; idim++) {
-                                   div_displ += gradSolVAR_qp[SolPdeIndex[idim]][idim];
-                              }
+                 for (int idim = 0; idim < dim; idim++) div_displ += gradSolVAR_qp[SolPdeIndex[idim]][idim];
+                              
+              aResVAR[SolPdeIndex[press_type_pos]][i] += phi_gss_fe[SolFEType[press_type_pos]][i] * get_mass_balance< real_num_mov >(solid_model, penalty, incompressible, lambda, weight, weight_hat, div_displ, J_hat, SolVAR_qp, SolPdeIndex, press_type_pos);
                 
-              if (!penalty) {
-                if (0  ==  solid_model) {
-                  aResVAR[SolPdeIndex[press_type_pos]][i] += - ( - phi_gss_fe[SolFEType[press_type_pos]][i] * ( div_displ /*trace_e*/  /* + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]]*/ ) ) * weight;
-                }
-                else if (1  ==  solid_model || 5  ==  solid_model) {
-                  aResVAR[SolPdeIndex[press_type_pos]][i] += phi_gss_fe[SolFEType[press_type_pos]][i] * (J_hat - 1. + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]]) * weight_hat;
-                }
-                else if (2  ==  solid_model) {
-                  aResVAR[SolPdeIndex[press_type_pos]][i] +=  -(-phi_gss_fe[SolFEType[press_type_pos]][i] * (log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
-                }
-              }
-              else if (3  ==  solid_model || 4  ==  solid_model) { // pressure = 0 in the solid
-                  aResVAR[SolPdeIndex[press_type_pos]][i] += -(-phi_gss_fe[SolFEType[press_type_pos]][i] * (SolVAR_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
-              }
             }
+              //END residual solid mass balance
 
 
     } // end gauss point loop
@@ -725,19 +742,15 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   } //end element loop for each process
 
 
- if (assembleMatrix){   //Extract and store the Jacobian
-  JAC->close();
-//   JAC->print();
-  }
- 
-  RES->close();
+ if (assembleMatrix) JAC->close();
+                     RES->close();
   
   
   
     //print JAC and RES to files
-    const unsigned nonlin_iter = mlPdeSys.GetNonlinearIt();
-    assemble_jacobian< real_num_mov,double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
-    assemble_jacobian< real_num_mov,double >::print_global_residual(ml_prob, RES, nonlin_iter);
+//     const unsigned nonlin_iter = mlPdeSys.GetNonlinearIt();
+//     assemble_jacobian< real_num_mov,double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
+//     assemble_jacobian< real_num_mov,double >::print_global_residual(ml_prob, RES, nonlin_iter);
 
   
 }
