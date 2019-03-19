@@ -1,15 +1,20 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "LinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
 #include "ElemType.hpp"
 
+#define FACE_FOR_CONTROL 3  //we do control on the right (=2) face
+#define AXIS_DIRECTION_CONTROL_SIDE  0  //change this accordingly to the other variable above
 #include "../elliptic_param.hpp"
 
 using namespace femus;
 
+double InitialValueActFlag(const std::vector < double >& x) {
+  return 0.;
+}
 
 double InitialValueContReg(const std::vector < double >& x) {
   return ControlDomainFlag_bdry(x);
@@ -24,6 +29,10 @@ double InitialValueState(const std::vector < double >& x) {
 }
 
 double InitialValueAdjoint(const std::vector < double >& x) {
+  return 0.;
+}
+
+double InitialValueMu(const std::vector < double >& x) {
   return 0.;
 }
 
@@ -51,7 +60,11 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
     dirichlet = false;
   }
 
-  
+  if(!strcmp(name,"mu")) {
+//       value = 0.;
+//   if (faceName == 3)
+    dirichlet = false;
+  }  
   
 //     if(!strcmp(name,"adjoint")) {  //"adjoint" corresponds to the third block row
 //   if (faceName == 3)    value = 1.;
@@ -62,7 +75,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 }
 
 
-double ComputeIntegral(MultiLevelProblem& ml_prob);
+void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 void AssembleOptSys(MultiLevelProblem& ml_prob);
 
@@ -71,6 +84,11 @@ int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
+  // ======= Files ========================
+  Files files; 
+  files.CheckIODirectories();
+  files.RedirectCout();
 
   // define multilevel mesh
   MultiLevelMesh mlMsh;
@@ -93,54 +111,63 @@ int main(int argc, char** args) {
   mlSol.AddSolution("state", LAGRANGE, FIRST);
   mlSol.AddSolution("control", LAGRANGE, FIRST);
   mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
+  mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-
+  const unsigned int fake_time_dep_flag = 2;
+  const std::string act_set_flag_name = "act_flag";
+  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
   mlSol.Initialize("state", InitialValueState);
   mlSol.Initialize("control", InitialValueControl);
   mlSol.Initialize("adjoint", InitialValueAdjoint);
+  mlSol.Initialize("mu", InitialValueMu);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
+  mlSol.Initialize(act_set_flag_name.c_str(), InitialValueActFlag);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("state");
   mlSol.GenerateBdc("control");
   mlSol.GenerateBdc("adjoint");
+  mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work...
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
   
+  mlProb.SetFilesHandler(&files);
+
  // add system  in mlProb as a Linear Implicit System
-  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("LiftRestr");
- 
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = mlProb.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+  
+  system.SetActiveSetFlagName(act_set_flag_name);
+//   system.SetMaxNumberOfNonLinearIterations(50);
+
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
   system.AddSolutionToSystemPDE("adjoint");  
+  system.AddSolutionToSystemPDE("mu");  
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleOptSys);
+  
+  mlSol.SetWriter(VTK);
+  mlSol.GetWriter()->SetDebugOutput(true);
 
+  system.SetDebugNonlinear(true);
+  system.SetDebugFunction(ComputeIntegral);  //weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
+   
   // initialize and solve the system
   system.init();
   system.MGsolve();
-  
-  ComputeIntegral(mlProb);
  
   // print solutions
   std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("state");
-  variablesToBePrinted.push_back("control");
-  variablesToBePrinted.push_back("adjoint");
-  variablesToBePrinted.push_back("TargReg");
-  variablesToBePrinted.push_back("ContReg");
-
-  mlSol.SetWriter(VTK);
-  mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  variablesToBePrinted.push_back("all");
+  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
 
   return 0;
 }
@@ -155,7 +182,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -259,22 +286,51 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //*************************************************** 
  //*************************************************** 
   
+ //****************** mu ******************************  
+ //***************************************************  
+  unsigned solIndex_mu;
+  solIndex_mu = mlSol->GetIndex("mu");    // get the position of "mu" in the ml_sol object
+   
+  unsigned solPdeIndex_mu;
+  solPdeIndex_mu = mlPdeSys->GetSolPdeIndex("mu");
+  
+  unsigned solType_mu = mlSol->GetSolutionType(solIndex_mu);    // get the finite element type for "mu"
+  vector < double >  sol_mu;   sol_mu.reserve(maxSize);
+  vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
+  
+  //************** act flag **************************** 
+  std::string act_flag_name = "act_flag";
+  unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
+  unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
+     if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
+       *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
+     }
+  
+  //********* variables for ineq constraints *****************
+  const int ineq_flag = INEQ_FLAG;
+  const double c_compl = C_COMPL;
+  vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
+  vector < double >  ctrl_lower;   ctrl_lower.reserve(maxSize);
+  vector < double >  ctrl_upper;   ctrl_upper.reserve(maxSize);
+  //***************************************************  
+
+ 
  //***************************************************  
   //********* WHOLE SET OF VARIABLES *****************
   const int solType_max = 2;  //biquadratic
 
-  const int n_vars = 3;
+  const int n_unknowns = 4;
  
   vector< int > l2GMap_AllVars; // local to global mapping
-  l2GMap_AllVars.reserve(n_vars*maxSize);
+  l2GMap_AllVars.reserve(n_unknowns*maxSize);
   
   vector< double > Res; // local redidual vector
-  Res.reserve(n_vars*maxSize);
+  Res.reserve(n_unknowns*maxSize);
 
   vector < double > Jac;
-  Jac.reserve( n_vars*maxSize * n_vars*maxSize);
- //***************************************************  
+  Jac.reserve( n_unknowns*maxSize * n_unknowns*maxSize);
+ //*************************************************** 
 
   
  //********************* DATA ************************ 
@@ -365,9 +421,18 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     } 
  //*************** adjoint **************************** 
 
+ //*************** mu ********************************* 
+    unsigned nDof_mu  = msh->GetElementDofNumber(iel, solType_mu);    // number of solution element dofs
+    sol_mu   .resize(nDof_mu);
+    l2GMap_mu.resize(nDof_mu);
+    for (unsigned i = 0; i < sol_mu.size(); i++) {
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solType_mu);   // global to global mapping between solution node and solution dof
+      sol_mu[i] = (*sol->_Sol[solIndex_mu])(solDof_mu);      // global extraction and local storage for the solution 
+      l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
+    }
  
  //********************* ALL VARS ********************* 
-    unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj; 
+    unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
     int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
     if(nDof_adj > nDof_max) 
@@ -391,7 +456,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_u.begin(),l2GMap_u.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_ctrl.begin(),l2GMap_ctrl.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_adj.begin(),l2GMap_adj.end());
- //*************************************************** 
+    l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_mu.begin(),l2GMap_mu.end());
+ //***************************************************
 
     
  //===================================================   
@@ -422,6 +488,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 		
 		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
+            for (unsigned idim = 0; idim < dim; idim++) {  x_bdry[idim].resize(nve_bdry); }
 		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
 		for(unsigned i=0; i < nve_bdry; i++) {
 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
@@ -430,12 +497,104 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		      x_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
 		  }
 		}
+
+//========================================================================================================== 
+
+         //************** update active set flag for current nonlinear iteration **************************** 
+         // 0: inactive; 1: active_a; 2: active_b
+            assert(nDof_mu == nDof_ctrl);
+            sol_actflag.resize(nve_bdry/*nDof_mu*/);
+            ctrl_lower.resize(nve_bdry/*nDof_mu*/);
+            ctrl_upper.resize(nve_bdry/*nDof_mu*/);
+           std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+           std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
+           std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
+   
+		      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+//             for (unsigned i = 0; i < sol_actflag.size(); i++) {
+        std::vector<double> node_coords_i(dim,0.);
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x_bdry[d][i_bdry];
+        ctrl_lower[i_bdry] = InequalityConstraint(node_coords_i,false);
+        ctrl_upper[i_bdry] = InequalityConstraint(node_coords_i,true);
+
+        if      ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_lower[i_bdry] )) < 0 )  sol_actflag[i_bdry] = 1;
+        else if ( (sol_mu[i_vol] + c_compl * (sol_ctrl[i_vol] - ctrl_upper[i_bdry] )) > 0 )  sol_actflag[i_bdry] = 2;
+            }
+            
+        //************** act flag **************************** 
+      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+      unsigned solDof_actflag = msh->GetSolutionDof(i_vol, iel, solFEType_act_flag); 
+      (sol->_Sol[solIndex_act_flag])->set(solDof_actflag,sol_actflag[i_bdry]);     
+    }
+    
+
+ // ===================================================
+ //node-based insertion on the boundary ===============
+ // ===================================================
+    
+ //============= delta_mu row ===============================
+      std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
+      
+      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+//     for (unsigned i = 0; i < sol_actflag.size(); i++) {
+      if (sol_actflag[i_bdry] == 0){  //inactive
+         Res_mu [i_vol] = - ineq_flag * ( 1. * sol_mu[i_vol] - 0. ); 
+// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+      }
+      else if (sol_actflag[i_bdry] == 1){  //active_a 
+	 Res_mu [i_vol] = - ineq_flag * ( c_compl *  sol_ctrl[i_vol] - c_compl * ctrl_lower[i_bdry]);
+      }
+      else if (sol_actflag[i_bdry] == 2){  //active_b 
+	Res_mu [i_vol]  =  - ineq_flag * ( c_compl *  sol_ctrl[i_vol] - c_compl * ctrl_upper[i_bdry]);
+      }
+    }
+
+    
+    RES->insert(Res_mu, l2GMap_mu);    
+ //============= delta_mu row - end ===============================
+    
+ //============= delta_mu-delta_ctrl row ===============================
+ //auxiliary volume vector for act flag
+ unsigned nDof_actflag_vol  = msh->GetElementDofNumber(iel, solFEType_act_flag);
+ std::vector<double> sol_actflag_vol(nDof_actflag_vol); 
+
+
+ for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) if (sol_actflag[i_bdry] != 0 ) sol_actflag[i_bdry] = ineq_flag * c_compl;    
+ 
+ std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+    }
+ 
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag_vol);
+ //============= delta_mu-delta_ctrl row - end ===============================
+
+ //============= delta_mu-delta_mu row ===============================
+  for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) sol_actflag[i_bdry] =  ineq_flag * (1 - sol_actflag[i_bdry]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
+
+ std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+    }
+  
+  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag_vol );
+ //============= delta_mu-delta_mu row - end ===============================
+    
+ // =========================================================
+ //node-based insertion on the boundary - end ===============
+ // =========================================================
 		
 //========= initialize gauss quantities on the boundary =============================================
                 double sol_ctrl_bdry_gss = 0.;
                 double sol_adj_bdry_gss = 0.;
-                std::vector<double> sol_ctrl_x_bdry_gss;  sol_ctrl_x_bdry_gss.reserve(dim);
-//========= initialize gauss quantities on the boundary =============================================
+                std::vector<double> sol_ctrl_x_bdry_gss(dim);   std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
+
+//========= initialize gauss quantities on the boundary ============================================
 		
 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
 		  
@@ -496,15 +655,15 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 //============ Bdry Residuals ==================	
 
-                 Res[ (0 + i_vol) ]                    += 0.;
+        if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    += 0.;
 
-		 Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] *  weight_bdry *
+        if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] *  weight_bdry *
                                                               (     alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							         +  beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							         +  phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss
 							        );  //boundary optimality condition
 
-                 Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += - control_node_flag[i_vol] *  weight_bdry * phi_adj_bdry[i_bdry]*sol_ctrl_bdry_gss; 
+        if (i_vol < nDof_adj)   Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += - control_node_flag[i_vol] *  weight_bdry * phi_adj_bdry[i_bdry]*sol_ctrl_bdry_gss; 
 //============ Bdry Residuals ==================    
 		    
 		    for(unsigned j_bdry=0; j_bdry < nve_bdry; j_bdry ++) {
@@ -604,11 +763,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      }
 	      
 //============ Volume residuals ==================	    
-          if (i < nDof_u)     Res[0                  + i] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)
+        if (i < nDof_u)     Res[0                  + i] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)
 	                                                                  - laplace_rhs_du_adj_i); 
-          if (i < nDof_ctrl)  Res[nDof_u             + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_ctrl[i] - 0.)  );
+        if (i < nDof_ctrl)  Res[nDof_u             + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_ctrl[i] - 0.)  );
 	      
-	  if (i < nDof_adj)   Res[nDof_u + nDof_ctrl + i] += - weight * (-1) * (laplace_rhs_dadj_u_i);
+        if (i < nDof_adj)   Res[nDof_u + nDof_ctrl + i] += - weight * (-1) * (laplace_rhs_dadj_u_i);
+            
+        if (i < nDof_mu)    Res[nDof_u + nDof_ctrl + nDof_adj + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_mu[i] - 0.)  );
 //============  Volume Residuals ==================	    
 	      
 	      
@@ -651,6 +812,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		Jac[    
 		   (nDof_u + nDof_ctrl + i) * nDof_AllVars  +
 		   (0 + j)                                ]  += weight * (-1) * laplace_mat_dadj_u;
+           
+           //============= delta_mu row ===============================
+	        if ( i < nDof_mu && j < nDof_mu && i==j )   
+		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+		       (nDof_u + nDof_ctrl + nDof_adj + j)]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));  
 
 	      }
 	    
@@ -662,7 +828,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         
       } // end gauss point loop
 
-	if (control_el_flag == 1) {
+/*	if (control_el_flag == 1) {
 	  
          for (unsigned i = 0; i < nDof_max; i++) {
             for (unsigned j = 0; j < nDof_max; j++) {
@@ -683,7 +849,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	 
 	 
 	}
-    std::cout << " ========== " << iel << " ================== " << std::endl;      
+    std::cout << " ========== " << iel << " ================== " << std::endl;   */   
     
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
@@ -695,22 +861,58 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       //store K in the global matrix KK
       KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
     }
+    
+    
+    //========== dof-based part, without summation
+ 
+
+
+    
+ //============= delta_ctrl-delta_mu row ===============================
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, ineq_flag * 1.);//------------------------------->>>>>>
+  
+  
   } //end element loop for each process
+  
 
-  RES->close();
+  
+  unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
+  unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
 
-  if (assembleMatrix) KK->close();
+  unsigned int global_ctrl_size = pdeSys->KKoffset[ctrl_index+1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
+  
+  std::vector<double>  one_times_mu(global_ctrl_size, 0.);
+  std::vector<int>    positions(global_ctrl_size);
 
+  for (unsigned i = 0; i < positions.size(); i++) {
+    positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
+    one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[solIndex_mu])(i/*position_mu_i*/) ;
+  }
+    RES->add_vector_blocked(one_times_mu, positions);
+    
   // ***************** END ASSEMBLY *******************
+
+    if (assembleMatrix) KK->close();
+    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
+
+    RES->close();
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    std::filebuf res_fb;
+    res_fb.open (res_out.str().c_str(),std::ios::out);
+    std::ostream  res_file_stream(&res_fb);
+    RES->print(res_file_stream);
 
   return;
 }
 
 
-double ComputeIntegral(MultiLevelProblem& ml_prob)    {
+ 
+  
+void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  const NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -805,14 +1007,6 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //*************************************************** 
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
-
-  const int n_vars = 3;
- 
-  vector< double > Res; // local redidual vector
-  Res.reserve(n_vars*maxSize);
-
-  vector < double > Jac;
-  Jac.reserve( n_vars*maxSize * n_vars*maxSize);
  //***************************************************
 
   
@@ -933,6 +1127,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 	      if(  face == 3) { //control face
 
 		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
+	        for (unsigned idim = 0; idim < dim; idim++) {  x_bdry[idim].resize(nve_bdry); }
 		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
 		for(unsigned i=0; i < nve_bdry; i++) {
 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
@@ -978,8 +1173,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 		      }  
 
                  //========= compute gauss quantities on the boundary ================================================
-                  integral_alpha += alpha * weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
-                  integral_beta  += beta * weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
+                  integral_alpha +=  weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
+                  integral_beta  +=  weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
                  
 		}
 	      } //end face == 3
@@ -1013,14 +1208,14 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
       
   } //end element loop
 
+  double total_integral = 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta;
+  
   std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
   std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << integral_target + integral_alpha + integral_beta << std::endl;
-//   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
-//   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
  
-return /*integral*/ integral_target + integral_alpha + integral_beta ;
+return;
   
 }
   

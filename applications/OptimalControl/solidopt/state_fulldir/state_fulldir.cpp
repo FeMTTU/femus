@@ -7,16 +7,18 @@
 #include "adept.h"
 #include "LinearImplicitSystem.hpp"
 #include "Parameter.hpp"
+#include "Fluid.hpp"
 #include "Solid.hpp"
 #include "Files.hpp"
-// #include "Fluid.hpp"
+#include "Math.hpp"
 
 #include "PetscMatrix.hpp"
+#include <stdio.h>
 
-#define NSUB_X  32
-#define NSUB_Y  32
+#define NSUB_X  16
+#define NSUB_Y  16
 
-#define MODEL /*"Mooney-Rivlin"*/ "Linear_elastic" /*"Neo-Hookean"*/
+#define MODEL "Linear_elastic" /*"Mooney-Rivlin"*/ /*"Neo-Hookean"*/
 
 using namespace femus;
 
@@ -44,13 +46,29 @@ double InitialValueP(const std::vector < double >& x) {
 bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
   
-  bool dirichlet = true;
-   value = 0.;
+  bool dirichlet; 
   
-// TOP ==========================  
+      if (facename == 1) {
+       if (!strcmp(SolName, "DX"))    { dirichlet = false/*true*/; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = false/*true*/; value = 0.; } 
+  	
+      }
+
+      if (facename == 2) {
+       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = true; value = 0.; } 
+  	
+      }
+
       if (facename == 3) {
-       if (!strcmp(SolName, "DX"))    { value = 70.; } //lid - driven
-  else if (!strcmp(SolName, "DY"))    { value = 0.; } 
+       if (!strcmp(SolName, "DX"))    { dirichlet = false/*true*/; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = false/*true*/; value = 0.; } 
+  	
+      }
+
+      if (facename == 4) {
+       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = true; value = 0.; } 
   	
       }
       
@@ -60,9 +78,147 @@ bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName
 
 
 
+template < class real_num_mov >
 void AssembleSolidMech_AD(MultiLevelProblem& ml_prob);
 
-void AssembleSolidMech_nonAD(MultiLevelProblem& ml_prob);  //to double check in the future
+
+
+
+
+
+
+
+
+
+template < class real_num_mov >
+vector < vector < real_num_mov > >  get_Cauchy_stress_tensor(const MultiLevelProblem& ml_prob,
+                                           const unsigned int dim,
+                                           const unsigned int press_type_pos,
+                                           const double & mus,
+                                           const double & lambda,
+                                           const unsigned int solid_model, 
+                  const vector < vector < real_num_mov > > & gradSolVAR_qp,
+                  const vector < vector < real_num_mov > > & gradSolVAR_hat_qp,
+                  const          vector < real_num_mov >   & SolVAR_qp,
+                  const          vector < unsigned int >   & SolPdeIndex,
+                  real_num_mov & J_hat,
+                  real_num_mov & trace_e
+) {
+    
+    
+    
+          
+          
+          vector < vector < real_num_mov > > Cauchy(3);    for (int i = 0; i < Cauchy.size(); i++) Cauchy[i].resize(3);
+          
+          real_num_mov Identity[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
+
+          real_num_mov I1_B = 0.;
+          real_num_mov I2_B = 0.;
+
+          if (solid_model == 0) { // Saint-Venant
+            real_num_mov e[3][3];
+
+            //computation of the stress tensor
+            for (int i = 0; i < dim; i++) {
+              for (int j = 0; j < dim; j++) {
+                e[i][j] = 0.5 * (gradSolVAR_hat_qp[SolPdeIndex[i]][j] + gradSolVAR_hat_qp[SolPdeIndex[j]][i]);
+              }
+            }
+
+          /*real_num_mov*/ trace_e/*_hat*/= 0.;    //trace of deformation tensor
+          
+            for (int i = 0; i < dim; i++) {  trace_e += e[i][i];   }
+
+            for (int i = 0; i < dim; i++) {
+              for (int j = 0; j < dim; j++) {
+                //incompressible
+                Cauchy[i][j] = 2. * mus *  ( e[i][j] -  SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[i][j] );
+                //+(penalty)*lambda*trace_e*Identity[i][j];
+              }
+            }
+          }
+
+          else { // hyperelastic non linear material
+            real_num_mov F[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
+            real_num_mov B[3][3];
+
+            for (int i = 0; i < dim; i++) {
+              for (int j = 0; j < dim; j++) {
+                F[i][j] += gradSolVAR_hat_qp[SolPdeIndex[i]][j];
+              }
+            }
+
+            J_hat  = F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
+                   - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];  //Jacobian wrt fixed domain
+                                
+
+            for (int I = 0; I < 3; ++I) {
+              for (int J = 0; J < 3; ++J) {
+                B[I][J] = 0.;
+
+                for (int K = 0; K < 3; ++K) {
+                  //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
+                  B[I][J] += F[I][K] * F[J][K];
+                }
+              }
+            }
+
+            if (solid_model <= 4) { // Neo-Hookean
+              I1_B = B[0][0] + B[1][1] + B[2][2];
+
+              for (int I = 0; I < 3; ++I) {
+                for (int J = 0; J < 3; ++J) {
+                  if (1  ==  solid_model) 
+			Cauchy[I][J] = mus * B[I][J] - mus * I1_B * SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[I][J]; 	//Wood-Bonet J_hat  =1;
+                  else if (2  ==  solid_model) 
+			Cauchy[I][J] = mus / J_hat * B[I][J] - mus / J_hat * SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[I][J]; //Wood-Bonet J_hat !=1;
+                  else if (3  ==  solid_model) 
+			Cauchy[I][J] = mus * (B[I][J] - Identity[I][J]) / J_hat + lambda / J_hat * log(J_hat) * Identity[I][J]; 	//Wood-Bonet penalty
+                  else if (4  ==  solid_model) 
+			Cauchy[I][J] = mus * (B[I][J] - I1_B * Identity[I][J] / 3.) / pow(J_hat, 5. / 3.) + lambda * (J_hat - 1.) * Identity[I][J];  	 //Allan-Bower
+
+                }
+              }
+            }
+            else if (5  ==  solid_model) {  //Mooney-Rivlin
+              real_num_mov detB =   	B[0][0] * (B[1][1] * B[2][2] - B[2][1] * B[1][2])
+                                      - B[0][1] * (B[2][2] * B[1][0] - B[1][2] * B[2][0])
+                                      + B[0][2] * (B[1][0] * B[2][1] - B[2][0] * B[1][1]);
+              real_num_mov invdetB = 1. / detB;
+              real_num_mov invB[3][3];
+
+              invB[0][0] =  (B[1][1] * B[2][2] - B[2][1] * B[1][2]) * invdetB;
+              invB[1][0] = -(B[0][1] * B[2][2] - B[0][2] * B[2][1]) * invdetB;
+              invB[2][0] =  (B[0][1] * B[1][2] - B[0][2] * B[1][1]) * invdetB;
+              invB[0][1] = -(B[1][0] * B[2][2] - B[1][2] * B[2][0]) * invdetB;
+              invB[1][1] =  (B[0][0] * B[2][2] - B[0][2] * B[2][0]) * invdetB;
+              invB[2][1] = -(B[0][0] * B[1][2] - B[1][0] * B[0][2]) * invdetB;
+              invB[0][2] =  (B[1][0] * B[2][1] - B[2][0] * B[1][1]) * invdetB;
+              invB[1][2] = -(B[0][0] * B[2][1] - B[2][0] * B[0][1]) * invdetB;
+              invB[2][2] =  (B[0][0] * B[1][1] - B[1][0] * B[0][1]) * invdetB;
+
+              I1_B = 	B[0][0] + B[1][1] + B[2][2];
+              I2_B = 	B[0][0] * B[1][1] + B[1][1] * B[2][2] + B[2][2] * B[0][0]
+                      - B[0][1] * B[1][0] - B[1][2] * B[2][1] - B[2][0] * B[0][2];
+
+              double C1 = mus / 3.;
+              double C2 = C1 / 2.;
+
+              for (int I = 0; I < 3; ++I) {
+                for (int J = 0; J < 3; ++J) {
+                  Cauchy[I][J] =  2.*(C1 * B[I][J] - C2 * invB[I][J])
+                                  //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[I][J];
+                                  - SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[I][J];
+               }
+              }
+
+            }
+          }
+
+          
+          return Cauchy;
+}
 
 
 
@@ -88,10 +244,11 @@ int main(int argc, char** args) {
   // add fluid material
   Parameter par(Lref,Uref);
   
-//  // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-//   Fluid fluid(par,1,1,"Newtonian");
-//   std::cout << "Fluid properties: " << std::endl;
-//   std::cout << fluid << std::endl;
+ // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
+  double rhof = 1000;
+  Fluid fluid(par,1,rhof,"Newtonian");
+  std::cout << "Fluid properties: " << std::endl;
+  std::cout << fluid << std::endl;
 
   
   // Generate Solid Object
@@ -123,10 +280,10 @@ int main(int argc, char** args) {
   MultiLevelSolution ml_sol(&mlMsh);
 
   // add variables to ml_sol
-  ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
-  ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
-  if ( dimension == 3 ) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
-  ml_sol.AddSolution("P",LAGRANGE/*DISCONTINUOUS_POLYNOMIAL*/,FIRST,1);
+  ml_sol.AddSolution("DX",LAGRANGE,SECOND);
+  ml_sol.AddSolution("DY",LAGRANGE,SECOND);
+  if ( dimension == 3 ) ml_sol.AddSolution("DZ",LAGRANGE,SECOND);
+  ml_sol.AddSolution("P",LAGRANGE/*DISCONTINUOUS_POLYNOMIAL*/,FIRST);
 
   ml_sol.Initialize("All");
   ml_sol.Initialize("DX", InitialValueDX);
@@ -141,7 +298,7 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the ml_sol object to it
   MultiLevelProblem mlProb(&ml_sol);
 
-//   mlProb.parameters.set<Fluid>("Fluid") = fluid;
+  mlProb.parameters.set<Fluid>("Fluid") = fluid;
   mlProb.parameters.set<Solid>("Solid") = solid;
  mlProb.SetFilesHandler(&files);
 
@@ -156,19 +313,25 @@ int main(int argc, char** args) {
 
 
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleSolidMech_AD);
+  system.SetAssembleFunction( AssembleSolidMech_AD< adept::adouble >);
 
   // initilaize and solve the system
   system.init();
   
+  // Solver and preconditioner
+  system.SetMgOuterSolver(PREONLY);
+  system.SetSolverFineGrids(PREONLY);
+  system.SetPreconditionerFineGrids(MLU_PRECOND);
+
+  //for Vanka   
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
 
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);
-  
-//   system.SetDebugNonlinear(true);
-//   system.SetMaxNumberOfNonLinearIterations(5);
+  system.SetDebugNonlinear(true);
+
+//   system.SetMaxNumberOfNonLinearIterations(2);
 //   system.SetNonLinearConvergenceTolerance(1.e-30);
 //   system.SetDebugLinear(true);
 //   system.SetMaxNumberOfLinearIterations(4);
@@ -177,21 +340,26 @@ int main(int argc, char** args) {
   system.MLsolve();
 //   system.MGsolve();
 
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back("DX");
+  mov_vars.push_back("DY");
+  if ( dimension == 3 ) mov_vars.push_back("DZ");
+  ml_sol.GetWriter()->SetMovingMesh(mov_vars);
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
-  ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic", variablesToBePrinted);
+ ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic", variablesToBePrinted);
  
   //Destroy all the new systems
   mlProb.clear();
-  
+    
   return 0;
 }
 
 
 
-
+template < class real_num_mov >
 void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
@@ -218,18 +386,19 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   SparseMatrix*    		JAC    		= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*   		RES          	= pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
-//   MatSetOption(static_cast< PetscMatrix* >(JAC)->mat(),MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
 
   const unsigned 	 dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned 		dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  unsigned nel		= msh->GetNumberOfElements();
+  unsigned igrid	= msh->GetLevel();
   unsigned    		iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
  
-  // geometry *******************************************
-  vector< vector < adept::adouble> > coordX(dim);	//local coordinates
+  // geometry (at dofs) *******************************************
+  vector< vector < real_num_mov > >   coordX(dim);	//local coordinates
   vector  < vector  < double > > coordX_hat(dim);
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
   for(int i=0;i<dim;i++) {   
@@ -265,16 +434,16 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
   
 
-   vector < double > Sol_n_el_dofs(n_unknowns);
+   vector < unsigned int > Sol_n_el_dofs(n_unknowns);
   
   //==========================================================================================
   // displacement ************************************
   //-----------state------------------------------
   vector < vector < double > > phi_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_hat_gss_fe(NFE_FAMS);
-  vector < vector < adept::adouble > > phi_x_gss_fe(NFE_FAMS);
+  vector < vector < real_num_mov > > phi_x_gss_fe(NFE_FAMS);   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
+  vector < vector < real_num_mov > > phi_xx_gss_fe(NFE_FAMS);  //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
   vector < vector < double > > phi_x_hat_gss_fe(NFE_FAMS);
-  vector < vector < adept::adouble > > phi_xx_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_xx_hat_gss_fe(NFE_FAMS);
 
   for(int fe=0; fe < NFE_FAMS; fe++) {  
@@ -289,8 +458,8 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //=================================================================================================
   
   // quadratures ********************************
-  adept::adouble weight = 0.;
-  double weight_hat = 0.;
+  real_num_mov weight = 0.;
+    double weight_hat = 0.;
  
   // equation ***********************************
   vector < int > JACDof; 
@@ -301,11 +470,11 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   Res.reserve( n_unknowns *maxSize);
   Jac.reserve( n_unknowns *maxSize * n_unknowns *maxSize);
 
-  //----------- dofs ------------------------------
-  vector < vector < adept::adouble > > SolVAR_eldofs(n_unknowns);//solD,solP
-  vector < vector < adept::adouble > > gradSolVAR_eldofs(n_unknowns);
+  //----------- at dofs ------------------------------
+  vector < vector < real_num_mov > > aResVAR(n_unknowns);    // local redidual vector
+  vector < vector < real_num_mov > > SolVAR_eldofs(n_unknowns);
+  vector < vector < real_num_mov > > gradSolVAR_eldofs(n_unknowns);
    
-  vector< vector < adept::adouble > > aResVAR(n_unknowns);    // local redidual vector
 
   for(int k=0; k<n_unknowns; k++) {
     SolVAR_eldofs[k].reserve(maxSize);
@@ -314,34 +483,35 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   }
 
   //------------ at quadrature points ---------------------
-    vector < adept::adouble > SolVAR_qp(n_unknowns);
-    vector < adept::adouble > SolVAR_hat_qp(n_unknowns);
-    vector < vector < adept::adouble > > gradSolVAR_qp(n_unknowns);
-    vector < vector < adept::adouble > > gradSolVAR_hat_qp(n_unknowns);
+    vector < real_num_mov > SolVAR_qp(n_unknowns);
+    vector < vector < real_num_mov > > gradSolVAR_qp(n_unknowns);
+    
+    vector < vector < real_num_mov > > gradSolVAR_hat_qp(n_unknowns);
     for(int k=0; k<n_unknowns; k++) { 
 	gradSolVAR_qp[k].resize(dim); 
  	gradSolVAR_hat_qp[k].resize(dim); 
     }
       
 
-  RES->zero(); // Set to zero all the entries of the Global Matrix
-  if (assembleMatrix) JAC->zero(); // Set to zero all the entries of the Global Matrix
-
-  // ------------------------------------------------------------------------
+   // ------------------------------------------------------------------------
     // Physical parameters
-   double rhos	 	= ml_prob.parameters.get < Solid>("Solid").get_density();
+    double rhof	 	= ml_prob.parameters.get < Fluid>("Fluid").get_density();
     double mu_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_shear_modulus();
     double lambda_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_lambda();
-    double mus		= mu_lame / rhos;
-    double lambda	= lambda_lame / rhos;
+    double mus		= mu_lame / rhof;
+    double lambda	= lambda_lame / rhof;
     int    solid_model	= ml_prob.parameters.get < Solid>("Solid").get_physical_model();
 
     bool incompressible = (0.5  ==  ml_prob.parameters.get < Solid>("Solid").get_poisson_coeff()) ? 1 : 0;
     const bool penalty = ml_prob.parameters.get < Solid>("Solid").get_if_penalty();
 
     // gravity
-    double _gravity[3] = {0., 0., 0.};
+    double _gravity[3] = {0., 1., 0.};
     // -----------------------------------------------------------------
+ 
+    RES->zero(); // Set to zero all the entries of the Global Matrix
+  if (assembleMatrix) JAC->zero(); // Set to zero all the entries of the Global Matrix
+
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -399,8 +569,8 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //STATE###################################################################
   
 
-    // start a new recording of all the operations involving adept::adouble variables
-    s.new_recording();
+    // start a new recording of all the operations involving real_num_mov variables
+   if( assembleMatrix ) s.new_recording();
     
     //Moving coordinates (Moving frame)
       for (unsigned idim = 0; idim < dim; idim++) {
@@ -426,15 +596,14 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
 	  SolVAR_qp[unk] = 0.;
-	  SolVAR_hat_qp[unk] = 0.;
+
 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
 	    gradSolVAR_qp[unk][ivar2] = 0.; 
 	    gradSolVAR_hat_qp[unk][ivar2] = 0.; 
 	  }
 	  
 	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
-	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i] * SolVAR_eldofs[unk][i];
-	    SolVAR_hat_qp[unk] += phi_hat_gss_fe[ SolFEType[unk] ][i] * SolVAR_eldofs[unk][i];
+	    SolVAR_qp[unk]    += phi_gss_fe[ SolFEType[unk] ][i] * SolVAR_eldofs[unk][i];
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
 	      gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
 	      gradSolVAR_hat_qp[unk][ivar2] += phi_x_hat_gss_fe[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
@@ -466,126 +635,18 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
  
 
  //*******************************************************************************************************
-        //BEGIN SOLID ASSEMBLY
+   vector < vector < real_num_mov > > Cauchy(3); for (int i = 0; i < Cauchy.size(); i++) Cauchy[i].resize(3);
+   real_num_mov J_hat;
+   real_num_mov trace_e;
 
-          //BEGIN build Cauchy Stress in moving domain
-          //physical quantity
-          adept::adouble J_hat;  //Jacobian wrt fixed domain
-          adept::adouble trace_e_hat;    //trace of deformation tensor
-          adept::adouble Cauchy[3][3];
-          adept::adouble Identity[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
+    Cauchy = get_Cauchy_stress_tensor< real_num_mov >(ml_prob, dim, press_type_pos,  mus, lambda, solid_model, gradSolVAR_qp, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat,trace_e);
 
-          adept::adouble I1_B = 0.;
-          adept::adouble I2_B = 0.;
-
-          if (solid_model == 0) { // Saint-Venant
-            adept::adouble e_hat[3][3];
-            adept::adouble e[3][3];
-
-            //computation of the stress tensor
-            for (int i = 0; i < dim; i++) {
-              for (int j = 0; j < dim; j++) {
-                e_hat[i][j] = 0.5 * (gradSolVAR_hat_qp[SolPdeIndex[i]][j] + gradSolVAR_hat_qp[SolPdeIndex[j]][i]);
-                e[i][j] = 0.5 * (gradSolVAR_qp[SolPdeIndex[i]][j] + gradSolVAR_qp[SolPdeIndex[j]][i]);
-              }
-            }
-
-            trace_e_hat = 0.;
-            for (int i = 0; i < dim; i++) {  trace_e_hat += e_hat[i][i];   }
-
-            for (int i = 0; i < dim; i++) {
-              for (int j = 0; j < dim; j++) {
-                //incompressible
-                Cauchy[i][j] = 2. * /*mus* */ e[i][j] -  SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[i][j];
-                //+(penalty)*lambda*trace_e*Identity[i][j];
-              }
-            }
-          }
-
-          else { // hyperelastic non linear material
-            adept::adouble F[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
-            adept::adouble B[3][3];
-
-            for (int i = 0; i < dim; i++) {
-              for (int j = 0; j < dim; j++) {
-                F[i][j] += gradSolVAR_hat_qp[SolPdeIndex[i]][j];
-              }
-            }
-
-            J_hat =   	F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
-                      - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
-
-            for (int I = 0; I < 3; ++I) {
-              for (int J = 0; J < 3; ++J) {
-                B[I][J] = 0.;
-
-                for (int K = 0; K < 3; ++K) {
-                  //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
-                  B[I][J] += F[I][K] * F[J][K];
-                }
-              }
-            }
-
-            if (solid_model <= 4) { // Neo-Hookean
-              I1_B = B[0][0] + B[1][1] + B[2][2];
-
-              for (int I = 0; I < 3; ++I) {
-                for (int J = 0; J < 3; ++J) {
-                  if (1  ==  solid_model) 
-			Cauchy[I][J] = mus * B[I][J] - mus * I1_B * SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[I][J]; 	//Wood-Bonet J_hat  =1;
-                  else if (2  ==  solid_model) 
-			Cauchy[I][J] = mus / J_hat * B[I][J] - mus / J_hat * SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[I][J]; //Wood-Bonet J_hat !=1;
-                  else if (3  ==  solid_model) 
-			Cauchy[I][J] = mus * (B[I][J] - Identity[I][J]) / J_hat + lambda / J_hat * log(J_hat) * Identity[I][J]; 	//Wood-Bonet penalty
-                  else if (4  ==  solid_model) 
-			Cauchy[I][J] = mus * (B[I][J] - I1_B * Identity[I][J] / 3.) / pow(J_hat, 5. / 3.) + lambda * (J_hat - 1.) * Identity[I][J];  	 //Allan-Bower
-
-                }
-              }
-            }
-            else if (5  ==  solid_model) {  //Mooney-Rivlin
-              adept::adouble detB =   	B[0][0] * (B[1][1] * B[2][2] - B[2][1] * B[1][2])
-                                      - B[0][1] * (B[2][2] * B[1][0] - B[1][2] * B[2][0])
-                                      + B[0][2] * (B[1][0] * B[2][1] - B[2][0] * B[1][1]);
-              adept::adouble invdetB = 1. / detB;
-              adept::adouble invB[3][3];
-
-              invB[0][0] =  (B[1][1] * B[2][2] - B[2][1] * B[1][2]) * invdetB;
-              invB[1][0] = -(B[0][1] * B[2][2] - B[0][2] * B[2][1]) * invdetB;
-              invB[2][0] =  (B[0][1] * B[1][2] - B[0][2] * B[1][1]) * invdetB;
-              invB[0][1] = -(B[1][0] * B[2][2] - B[1][2] * B[2][0]) * invdetB;
-              invB[1][1] =  (B[0][0] * B[2][2] - B[0][2] * B[2][0]) * invdetB;
-              invB[2][1] = -(B[0][0] * B[1][2] - B[1][0] * B[0][2]) * invdetB;
-              invB[0][2] =  (B[1][0] * B[2][1] - B[2][0] * B[1][1]) * invdetB;
-              invB[1][2] = -(B[0][0] * B[2][1] - B[2][0] * B[0][1]) * invdetB;
-              invB[2][2] =  (B[0][0] * B[1][1] - B[1][0] * B[0][1]) * invdetB;
-
-              I1_B = 	B[0][0] + B[1][1] + B[2][2];
-              I2_B = 	B[0][0] * B[1][1] + B[1][1] * B[2][2] + B[2][2] * B[0][0]
-		      - B[0][1] * B[1][0] - B[1][2] * B[2][1] - B[2][0] * B[0][2];
-
-              double C1 = mus / 3.;
-              double C2 = C1 / 2.;
-
-              for (int I = 0; I < 3; ++I) {
-                for (int J = 0; J < 3; ++J) {
-                  Cauchy[I][J] =  2.*(C1 * B[I][J] - C2 * invB[I][J])
-                                  //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR[2 * dim] * Identity[I][J];
-                                  - SolVAR_hat_qp[SolPdeIndex[press_type_pos]] * Identity[I][J];
-               }
-              }
-
-            }
-          }
-
-          //END build Cauchy Stress in moving domain
-
-          //BEGIN Momentum (Solid)
+    
 
           for (unsigned i = 0; i < nDofsD; i++) {
 
-              //BEGIN redidual Solid Momentum in moving domain
-              adept::adouble CauchyDIR[3] = {0., 0., 0.};
+              //BEGIN residual Solid Momentum in moving domain
+              real_num_mov CauchyDIR[3] = {0., 0., 0.};
 
               for (int idim = 0.; idim < dim; idim++) {
                 for (int jdim = 0.; jdim < dim; jdim++) {
@@ -594,100 +655,68 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
               }
 
               for (int idim = 0; idim < dim; idim++) {
-                aResVAR[SolPdeIndex[idim]][i] += (phi_gss_fe[SolFEType[idim]][i] * _gravity[idim] - CauchyDIR[idim]) * weight;
+                aResVAR[SolPdeIndex[idim]][i] += ( /*phi_gss_fe[SolFEType[idim]][i] * SolVAR_qp[SolPdeIndex[idim]]*/   +  phi_gss_fe[SolFEType[idim]][i] * _gravity[idim]  
+                                                  /*-  phi_x_gss_fe[SolFEType[idim]][i * dim + idim] * SolVAR_qp[ SolPdeIndex[press_type_pos] ]*/ - CauchyDIR[idim]) * weight;
               }
 
-              //END redidual Solid Momentum in moving domain
+              //END residual Solid Momentum in moving domain
             }
-          //END  Momentum (Solid)
 
-          //BEGIN continuity block
             for (unsigned i = 0; i < nDofsP; i++) {
+                
+                real_num_mov div_displ = 0.;
+                              for (int idim = 0; idim < dim; idim++) {
+                                   div_displ += gradSolVAR_qp[SolPdeIndex[idim]][idim];
+                              }
+                
               if (!penalty) {
                 if (0  ==  solid_model) {
-                  aResVAR[SolPdeIndex[press_type_pos]][i] += -(-phi_hat_gss_fe[SolFEType[press_type_pos]][i] * (trace_e_hat + (!incompressible) / lambda * SolVAR_hat_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
+                  aResVAR[SolPdeIndex[press_type_pos]][i] += - ( - phi_gss_fe[SolFEType[press_type_pos]][i] * ( div_displ /*trace_e*/  /* + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]]*/ ) ) * weight;
                 }
                 else if (1  ==  solid_model || 5  ==  solid_model) {
-                  aResVAR[SolPdeIndex[press_type_pos]][i] += phi_hat_gss_fe[SolFEType[press_type_pos]][i] * (J_hat - 1. + (!incompressible) / lambda * SolVAR_hat_qp[SolPdeIndex[press_type_pos]]) * weight_hat;
+                  aResVAR[SolPdeIndex[press_type_pos]][i] += phi_gss_fe[SolFEType[press_type_pos]][i] * (J_hat - 1. + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]]) * weight_hat;
                 }
                 else if (2  ==  solid_model) {
-                  aResVAR[SolPdeIndex[press_type_pos]][i] +=  -(-phi_hat_gss_fe[SolFEType[press_type_pos]][i] * (log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_hat_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
+                  aResVAR[SolPdeIndex[press_type_pos]][i] +=  -(-phi_gss_fe[SolFEType[press_type_pos]][i] * (log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
                 }
               }
               else if (3  ==  solid_model || 4  ==  solid_model) { // pressure = 0 in the solid
-                aResVAR[SolPdeIndex[press_type_pos]][i] += -(-phi_hat_gss_fe[SolFEType[press_type_pos]][i] * (SolVAR_hat_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
+                  aResVAR[SolPdeIndex[press_type_pos]][i] += -(-phi_gss_fe[SolFEType[press_type_pos]][i] * (SolVAR_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
               }
             }
-          //END continuity block
 
-        //********************************************************************************************************
- 
- 
-// // //  // *** phi_i loop ***
-// // //       for (unsigned i = 0; i < nDofsD; i++) {
-// // //         vector < adept::adouble > NSD(dim, 0.);
-// // // 
-// // //         for (unsigned  k = 0; k < dim; k++) {
-// // //          for (unsigned j = 0; j < dim; j++) {
-// // //            NSD[k]   += /* nu*/  /*IRe **/  phi_x_hat_gss_fe[SolFEType[k]][i * dim + j] * (gradSolVAR_hat_qp[SolPdeIndex[k]][j] + gradSolVAR_hat_qp[SolPdeIndex[j]][k] );
-// // // //             NSV[k]   +=  phiD[i] * (solD_gss[j] * gradSolD_gss[k][j]);
-// // //           }
-// // //         }
-// // // 
-// // //         for (unsigned  k = 0; k < dim; k++) {
-// // //           NSD[k] += -SolVAR_hat_qp[SolPdeIndex[press_type_pos]]* phi_x_hat_gss_fe[SolFEType[k]][i * dim + k];
-// // //         }
-// // // 
-// // //         for (unsigned  k = 0; k < dim; k++) {
-// // //           aResVAR[k][i] += ( _gravity[k] * phi_hat_gss_fe[SolFEType[k]][i] - NSD[k] ) * weight_hat;
-// // //         }
-// // //       } // end phi_i loop
-// // // 
-// // //       // *** phiP_i loop ***
-// // //       for (unsigned i = 0; i < nDofsP; i++) {
-// // //         for (int k = 0; k < dim; k++) {
-// // //           aResVAR[dim][i] +=  (gradSolVAR_hat_qp[SolPdeIndex[k]][k]) * phi_hat_gss_fe[SolFEType[press_type_pos]][i]  * weight_hat;
-// // //         }
-// // //       } // end phiP_i loop
 
     } // end gauss point loop
 
     //--------------------------------------------------------------------------------------------------------
-       //BEGIN local to global assembly
-   // Add the local Matrix/Vector into the global Matrix/Vector
 
     //copy the value of the adept::adoube aRes in double Res and store them in RES
 
-    for (unsigned  k = 0; k < n_unknowns; k++)  {
+     Res.resize(nDofsDP);    //resize
+   for (unsigned  k = 0; k < n_unknowns; k++)  {
        for (int i = 0; i < Sol_n_el_dofs[k]; i++) Res[ i +  k * nDofsD ] = - aResVAR[k][i].value();
     }
     
     RES->add_vector_blocked(Res, JACDof);
 
  if (assembleMatrix) {   //Extract and store the Jacobian
-    // define the dependent, independent variables
+     Jac.resize(nDofsDP * nDofsDP);
+   // define the dependent, independent variables
     for (unsigned  k = 0; k < n_unknowns; k++) {   
-	s.dependent(&aResVAR[k][0], Sol_n_el_dofs[k]); // define the dependent variables
-	s.independent(&SolVAR_eldofs[k][0], Sol_n_el_dofs[k]); // define the independent variables
+	s.dependent(&aResVAR[k][0], Sol_n_el_dofs[k]);
     }
     
+    for (unsigned  k = 0; k < n_unknowns; k++) {   
+	s.independent(&SolVAR_eldofs[k][0], Sol_n_el_dofs[k]); 
+    }
+   
     // get the and store jacobian matrix (row-major)
     s.jacobian(&Jac[0] , true);
 
-    std::vector<int> dof_offset(n_unknowns);
-// 		  dof_offset[0] = 0;
-// 	for(unsigned i_unk=1; i_unk<n_unknowns; i_unk++) dof_offset[i_unk] += dof_offset[i_unk-1] + Sol_n_el_dofs[i_unk];
-//   
-//     for(unsigned i_unk=0; i_unk< n_unknowns; i_unk++) {
-//       for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
-// 	  for(unsigned j_unk=0; j_unk< n_unknowns; j_unk++) {
-//                for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_unk]; j_dof++) {
-//  std::cout << Jac[ (dof_offset[i_unk] + i_dof) * nDofsDP + (dof_offset[j_unk] + j_dof )] << "----" << std::endl;
-// 	       }
-//            } 
-//       }
-//     }
-    
+    assemble_jacobian<real_num_mov,double>::print_element_residual(iel,Res,Sol_n_el_dofs,9,5);
+    assemble_jacobian<real_num_mov,double>::print_element_jacobian(iel,Jac,Sol_n_el_dofs,9,5);
+
+
    JAC->add_matrix_blocked(Jac, JACDof, JACDof);
 
     s.clear_independents();
@@ -705,7 +734,14 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
  
   RES->close();
   
-  // ***************** END ASSEMBLY *******************
+  
+  
+    //print JAC and RES to files
+    const unsigned nonlin_iter = mlPdeSys.GetNonlinearIt();
+    assemble_jacobian< real_num_mov,double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
+    assemble_jacobian< real_num_mov,double >::print_global_residual(ml_prob, RES, nonlin_iter);
+
+  
 }
 
 

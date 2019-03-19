@@ -98,7 +98,9 @@ namespace femus {
 
       /** Flag to print fields to file after each linear iteration */
       void SetDebugLinear(const bool my_value) {
-         _debug_linear = my_value;
+        if ( this->GetMLProb()._ml_sol->GetWriter() != NULL)        _debug_linear = my_value;
+        else {std::cout << "SetWriter first" << std::endl; abort(); }
+
       };
 
       /** Get the absolute convergence tolerance for the linear problem Ax=b*/
@@ -249,7 +251,7 @@ namespace femus {
       void AddAMRLevel (unsigned &AMRCounter);
 
       bool MLVcycle (const unsigned &gridn);
-      bool MGVcycle (const unsigned & gridn, const LinearEquationSolverTypeType& LinearEquationSolverTypeType);
+      bool MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
 
 
       /** Create the Prolongator matrix for the Multigrid solver */
@@ -326,7 +328,7 @@ namespace femus {
       vector <bool> _SparsityPattern;
 
       /** Solves the system. */
-      virtual void solve (const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE);
+      virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 
       double _richardsonScaleFactor;
       double _richardsonScaleFactorDecrease;

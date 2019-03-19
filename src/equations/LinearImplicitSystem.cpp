@@ -176,7 +176,7 @@ namespace femus {
 
   // ********************************************
 
-  void LinearImplicitSystem::solve(const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
+  void LinearImplicitSystem::solve(const MgSmootherType& mgSmootherType) {
 
     _bitFlipCounter = 0;
     
@@ -263,7 +263,7 @@ restart:
       std::cout << std::endl << " ****** Level Max " << igridn + 1 << " PREPARATION TIME:\t" << static_cast<double>((clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
 
       if(_MGsolver) {
-        _LinSolver[igridn]->MGInit(LinearEquationSolverTypeType, igridn + 1, _mgOuterSolver);
+        _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _mgOuterSolver);
 
         for(unsigned i = 0; i < igridn + 1; i++) {
           unsigned npre = (i == 0)? _npre0 : _npre;  
@@ -274,7 +274,7 @@ restart:
             _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], npre, npost);
         }
 
-        MGVcycle(igridn, LinearEquationSolverTypeType);
+        MGVcycle(igridn, mgSmootherType);
 
         _LinSolver[igridn]->MGClear();
       }
@@ -357,7 +357,7 @@ restart:
 
   // ********************************************
 
-  bool LinearImplicitSystem::MGVcycle(const unsigned& level, const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
+  bool LinearImplicitSystem::MGVcycle(const unsigned& level, const MgSmootherType& mgSmootherType) {
 
     clock_t start_mg_time = clock();
 

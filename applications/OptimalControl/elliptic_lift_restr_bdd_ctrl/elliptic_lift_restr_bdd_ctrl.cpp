@@ -1,12 +1,18 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
+#define FACE_FOR_CONTROL 2  //we do control on the right (=2) face
+#define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
 #include "../elliptic_param.hpp"
 
 using namespace femus;
+
+double InitialValueActFlag(const std::vector < double >& x) {
+  return 0.;
+}
 
 double InitialValueContReg(const std::vector < double >& x) {
   return ControlDomainFlag_internal_restriction(x);
@@ -29,7 +35,7 @@ double InitialValueMu(const std::vector < double >& x) {
 }
 
 double InitialValueControl(const std::vector < double >& x) {
-  return .0;
+  return 0.;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
@@ -39,14 +45,14 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   if(!strcmp(name,"control")) {
       value = 0.;
-  if (faceName == 3)
+  if (faceName == FACE_FOR_CONTROL)
     dirichlet = false;
   
   }
   
   if(!strcmp(name,"mu")) {
 //       value = 0.;
-//   if (faceName == 3)
+//   if (faceName == FACE_FOR_CONTROL)
     dirichlet = false;
   }
   
@@ -54,7 +60,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 }
 
 
-double ComputeIntegral(MultiLevelProblem& ml_prob);
+void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob);
 
@@ -92,7 +98,9 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-
+  const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
+  const std::string act_set_flag_name = "act_flag";
+  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
@@ -102,6 +110,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("mu", InitialValueMu);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
+  mlSol.Initialize(act_set_flag_name.c_str(), InitialValueActFlag);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -116,7 +125,9 @@ int main(int argc, char** args) {
   mlProb.SetFilesHandler(&files);
 
  // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = mlProb.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+  
+  system.SetActiveSetFlagName(act_set_flag_name);
 
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
@@ -129,20 +140,17 @@ int main(int argc, char** args) {
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
   
-  system.SetDebugNonlinear(true);//   system.SetDebuglinear(true);
-  system.SetMaxNumberOfNonLinearIterations(3);
+  system.SetDebugNonlinear(true);
+  system.SetDebugFunction(ComputeIntegral);
+//   system.SetMaxNumberOfNonLinearIterations(2);
 
-  // initilaize and solve the system
+  // initialize and solve the system
   system.init();
   system.MGsolve();
   
-  ComputeIntegral(mlProb);
- 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
-     variablesToBePrinted.push_back("all");
-
-    // ******* Print solution *******
+  variablesToBePrinted.push_back("all");
   mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
 
   return 0;
@@ -151,16 +159,11 @@ int main(int argc, char** args) {
 
 void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
-  unsigned int ineq_flag = 1;
-  //  ml_prob is the global object from/to where get/set all the data
-
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
-  //  extract pointers to the several objects that we are going to use
-
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -288,12 +291,23 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < double >  sol_mu;   sol_mu.reserve(maxSize);
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
+  
+ //************** act flag **************************** 
+   std::string act_flag_name = "act_flag";
+   unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
+   unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
+      if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
+        *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
+      }
+  
+  
+  
   //********* variables for ineq constraints *****************
-  double ctrl_lower =  CTRL_BOX_LOWER;
-  double ctrl_upper =  CTRL_BOX_UPPER;
-  assert(ctrl_lower < ctrl_upper);
-  double c_compl = 1.;
+  const int ineq_flag = INEQ_FLAG;
+  const double c_compl = C_COMPL;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
+  vector < double >  ctrl_lower;   ctrl_lower.reserve(maxSize);
+  vector < double >  ctrl_upper;   ctrl_upper.reserve(maxSize);
   //***************************************************  
 
  //***************************************************  
@@ -424,18 +438,36 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
     }
     
-    
  //************** update active set flag for current nonlinear iteration **************************** 
  // 0: inactive; 1: active_a; 2: active_b
    assert(nDof_mu == nDof_ctrl);
    sol_actflag.resize(nDof_mu);
+   ctrl_lower.resize(nDof_mu);
+   ctrl_upper.resize(nDof_mu);
      std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+     std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
+     std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
    
-    for (unsigned i = 0; i < sol_actflag.size(); i++) {  
-    if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
-    else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
+    for (unsigned i = 0; i < sol_actflag.size(); i++) {
+        std::vector<double> node_coords_i(dim,0.);
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x[d][i];
+        ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
+        ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
+
+        if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
+        else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
     }
- 
+
+ //************** act flag **************************** 
+    unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag);    // number of solution element dofs
+    
+    for (unsigned i = 0; i < nDof_act_flag; i++) {
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag); 
+      (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);     
+    }    
+    
+    
+    
  //******************** ALL VARS ********************* 
     unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
     int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
@@ -496,7 +528,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
         msh->_finiteElement[kelGeom][solType_ctrl]->Jacobian(x, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
         msh->_finiteElement[kelGeom][solType_adj] ->Jacobian(x, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
 	msh->_finiteElement[kelGeom][solType_mu]  ->Jacobian(x, ig, weight, phi_mu, phi_mu_x, phi_mu_xx);
+
 	
+    sol_u_gss = 0.;
+	sol_adj_gss = 0.;
+	sol_ctrl_gss = 0.;
+	sol_mu_gss = 0.;
+    
 	std::fill(sol_u_x_gss.begin(),sol_u_x_gss.end(), 0.);
 	std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
 	std::fill(sol_ctrl_x_gss.begin(), sol_ctrl_x_gss.end(), 0.);
@@ -714,7 +752,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < sol_ctrl.size(); i++){
        unsigned n_els_that_node = 1;
      if ( control_el_flag == 1) {
-	Res[nDof_u + i] += - ( + n_els_that_node * ineq_flag * sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
+// 	Res[nDof_u + i] += - ( + n_els_that_node * ineq_flag * sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
 // 	Res_ctrl[i] =  Res[nDof_u + i];
       }
     }//------------------------------->>>>>>
@@ -750,13 +788,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 // 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
       else if (sol_actflag[i] == 1){  //active_a 
-	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
+	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower[i]);
       }
       else if (sol_actflag[i] == 2){  //active_b 
-	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
+	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper[i]);
       }
     }
-//          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
+//          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower[i] - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper[i] - sol_ctrl[i])  ) ;
 //          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
 
     
@@ -792,44 +830,49 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
- std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->_nonliniteration  << ".txt";
+ std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->GetNonlinearIt()  << ".txt";
   KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
   
   // ***************** END ASSEMBLY *******************
   unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
+  unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
 
   unsigned int global_ctrl_size = pdeSys->KKoffset[ctrl_index+1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
   
-  std::vector<double>  all_ones(global_ctrl_size, ineq_flag * 1.);
+  std::vector<double>  one_times_mu(global_ctrl_size, 0.);
   std::vector<int>    positions(global_ctrl_size);
-  for (unsigned i = 0; i < positions.size(); i++)  positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
-   
-    RES->add_vector_blocked(all_ones, positions);
+//  double position_mu_i;
+  for (unsigned i = 0; i < positions.size(); i++) {
+    positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
+//     position_mu_i = pdeSys->KKoffset[mu_index][iproc] + i;
+//     std::cout << position_mu_i << std::endl;
+    one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[solIndex_mu])(i/*position_mu_i*/) ;
+  }
+    RES->add_vector_blocked(one_times_mu, positions);
     RES->print();
     
+
   return;
 }
 
 
 
-double ComputeIntegral(MultiLevelProblem& ml_prob)    {
+void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
-  const unsigned level = mlPdeSys->GetLevelToAssemble();
+  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");
+  const unsigned          level      = mlPdeSys->GetLevelToAssemble();
 
-  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh*                          msh = ml_prob._ml_msh->GetLevel(level);
 
-  MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution*          mlSol = ml_prob._ml_sol;
+  Solution*                      sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
-  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  const unsigned     dim = msh->GetDimension();                                 // get the domain dimension of the problem
+  const unsigned    dim2 = (3 * (dim - 1) + !(dim - 1));                        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  const unsigned   iproc = msh->processor_id(); 
 
  //*************************************************** 
   vector < vector < double > > x(dim);    // local coordinates
@@ -848,9 +891,9 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
  //******************** state ************************ 
  //*************************************************** 
-  vector <double> phi_u;  // local test function
-  vector <double> phi_u_x; // local test function first order partial derivatives
-  vector <double> phi_u_xx; // local test function second order partial derivatives
+  vector <double> phi_u;
+  vector <double> phi_u_x;
+  vector <double> phi_u_xx;
 
   phi_u.reserve(maxSize);
   phi_u_x.reserve(maxSize * dim);
@@ -858,8 +901,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
  
   unsigned solIndex_u;
-  solIndex_u = mlSol->GetIndex("state");    // get the position of "state" in the ml_sol object
-  unsigned solType_u = mlSol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
+  solIndex_u = mlSol->GetIndex("state");
+  unsigned solType_u = mlSol->GetSolutionType(solIndex_u);
 
   vector < double >  sol_u; // local solution
   sol_u.reserve(maxSize);
@@ -870,9 +913,9 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
  //******************** control ********************** 
  //*************************************************** 
-  vector <double> phi_ctrl;  // local test function
-  vector <double> phi_ctrl_x; // local test function first order partial derivatives
-  vector <double> phi_ctrl_xx; // local test function second order partial derivatives
+  vector <double> phi_ctrl;
+  vector <double> phi_ctrl_x;
+  vector <double> phi_ctrl_xx;
 
   phi_ctrl.reserve(maxSize);
   phi_ctrl_x.reserve(maxSize * dim);
@@ -884,8 +927,6 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
   vector < double >  sol_ctrl; // local solution
   sol_ctrl.reserve(maxSize);
-//   vector< int > l2GMap_ctrl;
-//   l2GMap_ctrl.reserve(maxSize);
   
   double ctrl_gss = 0.;
   double ctrl_x_gss = 0.;
@@ -895,13 +936,13 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
  //********************* desired ********************* 
  //*************************************************** 
-  vector <double> phi_udes;  // local test function
-  vector <double> phi_udes_x; // local test function first order partial derivatives
-  vector <double> phi_udes_xx; // local test function second order partial derivatives
+  vector <double> phi_udes;
+  vector <double> phi_udes_x;
+  vector <double> phi_udes_xx;
 
-    phi_udes.reserve(maxSize);
-    phi_udes_x.reserve(maxSize * dim);
-    phi_udes_xx.reserve(maxSize * dim2);
+  phi_udes.reserve(maxSize);
+  phi_udes_x.reserve(maxSize * dim);
+  phi_udes_xx.reserve(maxSize * dim2);
  
   
 //  unsigned solIndex_udes;
@@ -910,9 +951,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
   vector < double >  sol_udes; // local solution
   sol_udes.reserve(maxSize);
-//   vector< int > l2GMap_udes;
-//   l2GMap_udes.reserve(maxSize);
-   double udes_gss = 0.;
+
+  double udes_gss = 0.;
  //*************************************************** 
  //*************************************************** 
 
@@ -920,17 +960,6 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //*************************************************** 
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
-
-  const int n_unknowns = 4;
- 
-  vector< int > l2GMap_AllVars; // local to global mapping
-  l2GMap_AllVars.reserve(n_unknowns*maxSize);
-  
-  vector< double > Res; // local redidual vector
-  Res.reserve(n_unknowns*maxSize);
-
-  vector < double > Jac;
-  Jac.reserve( n_unknowns*maxSize * n_unknowns*maxSize);
  //*************************************************** 
 
   
@@ -977,30 +1006,34 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
    target_flag = ElementTargetFlag(elem_center);
  //*************************************************** 
 
+ //***** set control flag ****************************
+  int control_el_flag = 0;
+  control_el_flag = ControlDomainFlag_internal_restriction(elem_center);
+ //*************************************************** 
    
  //**************** state **************************** 
-    unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);    // number of solution element dofs
+    unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);
         sol_u    .resize(nDof_u);
    // local storage of global mapping and solution
     for (unsigned i = 0; i < sol_u.size(); i++) {
-     unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);  // global to global mapping between solution node and solution dof
-            sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);            // global extraction and local storage for the solution
+     unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);
+            sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
     }
  //*************************************************** 
 
 
  //************** control **************************** 
-    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);    // number of solution element dofs
+    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);
     sol_ctrl    .resize(nDof_ctrl);
     for (unsigned i = 0; i < sol_ctrl.size(); i++) {
-      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);    // global to global mapping between solution node and solution dof
-      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);      // global extraction and local storage for the solution
+      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);
+      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);
     } 
  //***************************************************  
  
  
  //**************** u_des **************************** 
-    unsigned nDof_udes  = msh->GetElementDofNumber(iel, solType_u);    // number of solution element dofs
+    unsigned nDof_udes  = msh->GetElementDofNumber(iel, solType_u);
     sol_udes    .resize(nDof_udes);
     for (unsigned i = 0; i < sol_udes.size(); i++) {
       sol_udes[i] = u_des;  //dof value
@@ -1027,11 +1060,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-        //  ==== State 
-	msh->_finiteElement[kelGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
-        //  ==== Adjoint 
-        msh->_finiteElement[kelGeom][solType_u/*solTypeTdes*/]->Jacobian(x, ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
-        //  ==== Control 
+	    msh->_finiteElement[kelGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
+        msh->_finiteElement[kelGeom][solType_u/*solTypeudes*/]->Jacobian(x, ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
         msh->_finiteElement[kelGeom][solType_ctrl]  ->Jacobian(x, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
 
 	u_gss = 0.;  for (unsigned i = 0; i < nDof_u; i++) u_gss += sol_u[i] * phi_u[i];		
@@ -1043,8 +1073,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
         }
 
                integral_target += target_flag * weight * (u_gss +  ctrl_gss - udes_gss) * (u_gss +  ctrl_gss - udes_gss);
-               integral_alpha  += target_flag * alpha * weight * ctrl_gss * ctrl_gss;
-               integral_beta   += target_flag * beta * weight * ctrl_x_gss * ctrl_x_gss;
+               integral_alpha  += control_el_flag * weight * ctrl_gss * ctrl_gss;
+               integral_beta   += control_el_flag * weight * ctrl_x_gss * ctrl_x_gss;
 	  
       } // end gauss point loop
   } //end element loop
@@ -1052,9 +1082,9 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
   std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << integral_target + integral_alpha + integral_beta << std::endl;
-  
-return integral_target + integral_alpha + integral_beta;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta << std::endl;
+
+return;
   
 }
   

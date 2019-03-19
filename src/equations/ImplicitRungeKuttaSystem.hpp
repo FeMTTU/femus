@@ -72,7 +72,7 @@ namespace femus {
       void MLsolve();
 
       /** calling the parent solve */
-      void MGsolve (const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE);
+      void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 
       const std::vector < std::string > & GetSolkiNames (const char name[]);
 
@@ -222,7 +222,7 @@ namespace femus {
   }
 
   template <class Base>
-  void ImplicitRungeKuttaSystem<Base>::MGsolve (const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
+  void ImplicitRungeKuttaSystem<Base>::MGsolve (const MgSmootherType& mgSmootherType) {
     TransientSystem<Base>::SetUpForSolve();
 
     SetIntermediateTimes();
@@ -238,7 +238,7 @@ namespace femus {
     Base::_MLsolver = false;
     Base::_MGsolver = true;
 
-    Base::solve (LinearEquationSolverTypeType);
+    Base::solve (mgSmootherType);
 
     UpdateSolution();
   }

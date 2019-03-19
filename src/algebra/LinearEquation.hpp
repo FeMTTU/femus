@@ -104,12 +104,13 @@ public:
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
   SparseMatrix *_KK;
   SparseMatrix *_KKamr;
-  vector < vector <unsigned> > KKoffset;
-  vector < unsigned > KKghostsize;
-  vector < vector < int> > KKghost_nd;
-  vector <int> KKIndex;
-  unsigned _gridn;
   
+  
+  vector < vector <unsigned> > KKoffset;     // size [_SolPdeIndex.size() + 1][_nprocs]
+  vector < unsigned > KKghostsize;           // size [_nprocs]
+  vector < vector < int> > KKghost_nd;       // size [_nprocs][KKghostsize[i]]
+  vector <int> KKIndex;                      // size [_SolPdeIndex.size() + 1]
+  unsigned _gridn;  
   vector < int > d_nnz;
   vector < int > o_nnz;
   

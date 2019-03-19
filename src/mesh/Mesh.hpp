@@ -210,6 +210,9 @@ public:
     /** Get the projection matrix between Lagrange FEM at the same level mesh*/
     SparseMatrix* GetQitoQjProjection(const unsigned& itype, const unsigned& jtype);
 
+    /** Get the coarse to the fine projection matrix and use it to restrict only on coarse nodes i.e. projection*/
+    SparseMatrix* GetCoarseToFineProjectionRestrictionOnCoarse(const unsigned& solType);
+
     /** Get the coarse to the fine projection matrix*/
     SparseMatrix* GetCoarseToFineProjection(const unsigned& solType);
 
@@ -246,7 +249,7 @@ private:
     void BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype);
 
     /** Build the coarse to the fine projection matrix */
-    void BuildCoarseToFineProjection(const unsigned& solType);
+    void BuildCoarseToFineProjection(const unsigned& solType, const char el_dofs[]);
 
     /** Weights used to build the baricentric coordinate **/
     static const double _baricentricWeight[6][5][18];

@@ -24,6 +24,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <vector>
+#include <cassert>
 
 namespace femus {
 
@@ -65,6 +66,20 @@ namespace femus {
       double eval_dphidz(const unsigned &j, const std::vector < double > &x) const {
         return eval_dphidz(this->GetIND(j), &x[0]);
       };
+      
+      /** Evaluate the derivatives either in the x, y or z direction **/
+      double eval_dphidxyz(const unsigned int dim, const int* j, const double* x) const {
+          
+        assert(dim < 3); //0, 1, 2
+
+        switch(dim) {
+            case(0): { return eval_dphidx(j, x); }
+            case(1): { return eval_dphidy(j, x); }
+            case(2): { return eval_dphidz(j, x); }
+            default: {std::cout << "Only up to dim 3" << std::endl; abort(); }
+        }
+        
+    };
       
       double eval_d2phidx2(const unsigned &j, const std::vector < double > &x) const {
         return eval_d2phidx2(this->GetIND(j), &x[0]);
@@ -1338,7 +1353,7 @@ namespace femus {
       };
 
     protected:
-      double X[5][2];
+      double X[5][2];  ///@todo why does this have 2 in the second component instead of 1?
       static const double Xc[3][1];
       static const int IND[3][1];
       static const int KVERT_IND[5][2];

@@ -86,7 +86,7 @@ public:
     virtual void MLsolve();
 
     /** calling the parent solve */
-    virtual void MGsolve( const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE );
+    virtual void MGsolve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE );
 
 
     /** update the Newmark variables */

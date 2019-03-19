@@ -121,14 +121,14 @@ void TransientSystem<Base>::MLsolve() {
 
 // ------------------------------------------------------------
 template <class Base>
-void TransientSystem<Base>::MGsolve( const LinearEquationSolverTypeType& LinearEquationSolverTypeType ) {
+void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
 
   SetUpForSolve();  
   // call the parent MGsolver
   Base::_MLsolver = false;
   Base::_MGsolver = true;
 
-  Base::solve( LinearEquationSolverTypeType );
+  Base::solve( mgSmootherType );
 
 }
 
