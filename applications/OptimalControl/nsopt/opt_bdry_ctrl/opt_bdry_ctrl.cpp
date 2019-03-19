@@ -135,7 +135,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("GX", LAGRANGE, SECOND);
   mlSol.AddSolution("GY", LAGRANGE, SECOND);
   if (dim == 3) mlSol.AddSolution("GZ", LAGRANGE, SECOND);
-  mlSol.AddSolution("THETA", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSol.AddSolution("THETA", DISCONTINUOUS_POLYNOMIAL, ZERO);
   // control ===================== 
   
   

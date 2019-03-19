@@ -1,6 +1,6 @@
 /** tutorial/Ex3
  * This example shows how to set and solve the weak form of the nonlinear problem
- *                     -\Delta u + < u,u,u > \cdot \nabla u = f(x) \text{ on }\Omega,
+ *           -\Delta u + < u,u,u > \cdot \nabla u = f(x) \text{ on }\Omega,
  *            u=0 \text{ on } \Gamma,
  * on a box domain $\Omega$ with boundary $\Gamma$;
  * all the coarse-level meshes are removed;
@@ -22,6 +22,7 @@ using namespace femus;
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0;
+  return dirichlet;
 }
 
 void AssembleU_AD(MultiLevelProblem& ml_prob);

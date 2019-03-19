@@ -26,7 +26,7 @@ int simulation = 1; // =1 sphere (default) = 2 torus
 
 //Sphere
 
-double thetaSphere = acos(-1.) / 3;
+double thetaSphere = acos(-1.) / 6;
 
 bool SetBoundaryConditionSphere(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet

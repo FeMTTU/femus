@@ -77,8 +77,8 @@ int main(int argc, char** args) {
   mlSol.AddSolution("state", LAGRANGE, FIRST);
   mlSol.AddSolution("control", LAGRANGE, FIRST);
   mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
-  mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  mlSol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  mlSol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
   
   mlSol.Initialize("All");    // initialize all varaibles to zero

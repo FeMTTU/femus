@@ -240,22 +240,22 @@ int main(int argc, char** argv) {
 
 #ifdef HAVE_FPARSER
 
-  function = root["variable"].get("func_source4", "0.").asString();
+  function = root["variable"].get("func_source1", "0.").asString();
   fpsource.SetExpression(function);
   fpsource.SetIndependentVariables(variables);
   fpsource.Parse();
 
-  function = root["func_sol4"].get("sol", "0.").asString();
+  function = root["func_sol1"].get("sol", "0.").asString();
   fp_sol.SetExpression(function);
   fp_sol.SetIndependentVariables(variables);
   fp_sol.Parse();
 
-  function = root["func_sol4"].get("dsoldx", "0.").asString();
+  function = root["func_sol1"].get("dsoldx", "0.").asString();
   fp_dsoldx.SetExpression(function);
   fp_dsoldx.SetIndependentVariables(variables);
   fp_dsoldx.Parse();
 
-  function = root["func_sol4"].get("dsoldy", "0.").asString();
+  function = root["func_sol1"].get("dsoldy", "0.").asString();
   fp_dsoldy.SetExpression(function);
   fp_dsoldy.SetIndependentVariables(variables);
   fp_dsoldy.Parse();
@@ -391,8 +391,8 @@ int main(int argc, char** argv) {
   system2.SetNumberPostSmoothingStep(npostmoothing);
 
   //Set Smoother Options
-  if (Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
-  else if (Asm) 	system2.SetMgSmoother(ASM_SMOOTHER);
+  if (Gmres) 		system2.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  else if (Asm) 	system2.SetLinearEquationSolverType(FEMuS_ASM);
 
   system2.init();
 

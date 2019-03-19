@@ -99,9 +99,9 @@ int main(int argc, char** args) {
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
-  system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetOuterKSPSolver("cg"); 
- // system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetMgOuterSolver(CG); 
+ // system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
   

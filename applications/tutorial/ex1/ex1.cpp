@@ -6,7 +6,7 @@
  * add in mlMsh uniform refined level-meshes;
  * define the multilevel-solution object mlSol associated to mlMsh;
  * add in mlSol different types of finite element solution variables;
- * initialize the solution varables;
+ * initialize the solution variables;
  * define vtk and gmv writer objects associated to mlSol;
  * print vtk and gmv binary-format files in ./output directory.
  **/
@@ -36,26 +36,25 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
   // define multilevel mesh
-  MultiLevelMesh mlMsh;
+  MultiLevelMesh mlMsh; // Consider the "mlMsh" object of "MultiLevel" class.
   double scalingFactor = 1.;
-  // read coarse level mesh and generate finers level meshes
-  mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
+  // read coarse level mesh and generate finers level meshes 
+  mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor); // Let mlMsh read the coarse mesh.
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 3;
-  unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  unsigned numberOfUniformLevels = 3; // We apply uniform refinement.
+  unsigned numberOfSelectiveLevels = 0; // we may want to see solutions on different level of meshes. 
+  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL); // Add those refined meshed in mlMsh object. 
   mlMsh.PrintInfo();
 
   // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution mlSol(&mlMsh);
-
+  MultiLevelSolution mlSol(&mlMsh); // Define "mlSol" object with argument mlMsh of "MultiLevelSolution" class. 
   // add variables to mlSol
   mlSol.AddSolution("U", LAGRANGE, FIRST);
   mlSol.AddSolution("V", LAGRANGE, SERENDIPITY);
   mlSol.AddSolution("W", LAGRANGE, SECOND);
-  mlSol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, ZERO);
-  mlSol.AddSolution("T", DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P", DISCONTINUOUS_POLYNOMIAL, ZERO);
+  mlSol.AddSolution("T", DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   mlSol.Initialize("All");    // initialize all varaibles to zero
 

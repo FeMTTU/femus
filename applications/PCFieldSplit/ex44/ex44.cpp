@@ -85,7 +85,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //     refine = true;
 //   }
 
-
   double pi = acos(-1.);
   double radius = pi / 32.0 * (level - level0 - 2.0);
   double radius2 = radius * radius;
@@ -138,7 +137,7 @@ int main(int argc, char** args)
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
 //   mlSol.Initialize("U", InitalValueU);
@@ -159,8 +158,8 @@ int main(int argc, char** args)
   system.AddSolutionToSystemPDE("V");
   if (dim == 3) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("P");
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(ASM_SMOOTHER);
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType(FEMuS_ASM);
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);

@@ -46,7 +46,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
   
   double pi = acos(-1.);
   double radius = pi / 8.0 /(level - level0);
- double radius2 = radius * radius;
+  double radius2 = radius * radius;
   
  std::cout << radius << " "<< level << " ";
  
@@ -105,8 +105,8 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
 
-  system.SetMgSmoother(GMRES_SMOOTHER);
-  //system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  //system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
   

@@ -24,9 +24,11 @@ using std::endl;
 
 using namespace femus;
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
+{
   bool dirichlet = true; //dirichlet
-  value = pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],1./3);
+//  value = pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],1./3);
+  value = pow(x[0] * x[0] + x[1] * x[1] + x[2] * x[2], -1. / 8);
   return dirichlet;
 }
 
@@ -69,32 +71,29 @@ ParsedFunction fp_dsoldx;
 ParsedFunction fp_dsoldy;
 ParsedFunction fp_dsoldz;
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 
   std::string path;
 
-  if (argc < 2)
-  {
+  if (argc < 2) {
     std::cout << "Error: no input file specified!" << std::endl;
     show_usage();
     return 1;
   }
 
-  for (int count = 1; count < argc; ++count)
-  {
+  for (int count = 1; count < argc; ++count) {
     std::string arg = argv[count];
 
     if ((arg == "-h") || (arg == "--help")) {
       show_usage();
       return 0;
     }
-    else if ((arg == "-i") || (arg == "--inputfile"))
-    {
+    else if ((arg == "-i") || (arg == "--inputfile")) {
       if (count + 1 < argc) {
         path = argv[++count];
       }
-      else
-      {
+      else {
         std::cerr << "--input file option requires one argument." << std::endl;
         return 1;
       }
@@ -106,8 +105,7 @@ int main(int argc, char** argv) {
 
   std::string input = readInputTestFile(path.c_str());
 
-  if (input.empty())
-  {
+  if (input.empty()) {
     printf("Failed to read input or empty input: %s\n", path.c_str());
     return 1;
   }
@@ -116,8 +114,7 @@ int main(int argc, char** argv) {
   Json::Reader reader;
   bool parsingSuccessful = reader.parse(input, root);
 
-  if (!parsingSuccessful)
-  {
+  if (!parsingSuccessful) {
     // report to the user the failure and their locations in the document.
     std::cout  << "Failed to parse configuration\n" << reader.getFormatedErrorMessages();
     return 1;
@@ -145,27 +142,22 @@ int main(int argc, char** argv) {
     zb = root["mesh"].get("box", "").get("zb", 1.).asDouble();
     std::string elemtypestr = root["mesh"].get("box", "").get("elem_type", "Quad9").asString();
 
-    if (elemtypestr == "Quad9")
-    {
+    if (elemtypestr == "Quad9") {
       elemtype = QUAD9;
     }
-    else if (elemtypestr == "Tri6")
-    {
+    else if (elemtypestr == "Tri6") {
       elemtype = TRI6;
     }
-    else if (elemtypestr == "Edge3")
-    {
+    else if (elemtypestr == "Edge3") {
       elemtype = EDGE3;
     }
-    else if (elemtypestr == "Hex27")
-    {
+    else if (elemtypestr == "Hex27") {
       elemtype = HEX27;
     }
-    else
-    {
+    else {
       elemtype = INVALID_ELEM;
     }
-    
+
   }
 
   std::string variableName = root["variable"].get("name", "Q").asString();
@@ -173,20 +165,16 @@ int main(int argc, char** argv) {
   FEOrder fe_order;
   std::string fe_order_str = root["variable"].get("fe_order", "first").asString();
 
-  if (!strcmp(fe_order_str.c_str(), "first"))
-  {
+  if (!strcmp(fe_order_str.c_str(), "first")) {
     fe_order = FIRST;
   }
-  else if (!strcmp(fe_order_str.c_str(), "serendipity"))
-  {
+  else if (!strcmp(fe_order_str.c_str(), "serendipity")) {
     fe_order = SERENDIPITY;
   }
-  else if (!strcmp(fe_order_str.c_str(), "second"))
-  {
+  else if (!strcmp(fe_order_str.c_str(), "second")) {
     fe_order = SECOND;
   }
-  else
-  {
+  else {
     std::cerr << " Error: Lagrange finite element order not supported!" << std::endl;
     exit(1);
   }
@@ -207,16 +195,13 @@ int main(int argc, char** argv) {
 
   MgType mgtype;
 
-  if (!strcmp("V_cycle", mg_type.c_str()))
-  {
+  if (!strcmp("V_cycle", mg_type.c_str())) {
     mgtype = V_CYCLE;
   }
-  else if (!strcmp("F_cycle", mg_type.c_str()))
-  {
+  else if (!strcmp("F_cycle", mg_type.c_str())) {
     mgtype = F_CYCLE;
   }
-  else if (!strcmp("F_cycle", mg_type.c_str()))
-  {
+  else if (!strcmp("F_cycle", mg_type.c_str())) {
     mgtype = F_CYCLE;
   }
   else {
@@ -246,27 +231,52 @@ int main(int argc, char** argv) {
 
 #ifdef HAVE_FPARSER
 
-  function = root["variable"].get("func_source5", "0.").asString();
+//   function = root["variable"].get("func_source5", "0.").asString();
+//   fpsource.SetExpression(function);
+//   fpsource.SetIndependentVariables(variables);
+//   fpsource.Parse();
+// 
+//   function = root["func_sol5"].get("sol", "0.").asString();
+//   fp_sol.SetExpression(function);
+//   fp_sol.SetIndependentVariables(variables);
+//   fp_sol.Parse();
+// 
+//   function = root["func_sol5"].get("dsoldx", "0.").asString();
+//   fp_dsoldx.SetExpression(function);
+//   fp_dsoldx.SetIndependentVariables(variables);
+//   fp_dsoldx.Parse();
+// 
+//   function = root["func_sol5"].get("dsoldy", "0.").asString();
+//   fp_dsoldy.SetExpression(function);
+//   fp_dsoldy.SetIndependentVariables(variables);
+//   fp_dsoldy.Parse();
+// 
+//   function = root["func_sol5"].get("dsoldz", "0.").asString();
+//   fp_dsoldz.SetExpression(function);
+//   fp_dsoldz.SetIndependentVariables(variables);
+//   fp_dsoldz.Parse();
+
+  function = root["variable"].get("func_source7", "0.").asString();
   fpsource.SetExpression(function);
   fpsource.SetIndependentVariables(variables);
   fpsource.Parse();
 
-  function = root["func_sol5"].get("sol", "0.").asString();
+  function = root["func_sol7"].get("sol", "0.").asString();
   fp_sol.SetExpression(function);
   fp_sol.SetIndependentVariables(variables);
   fp_sol.Parse();
 
-  function = root["func_sol5"].get("dsoldx", "0.").asString();
+  function = root["func_sol7"].get("dsoldx", "0.").asString();
   fp_dsoldx.SetExpression(function);
   fp_dsoldx.SetIndependentVariables(variables);
   fp_dsoldx.Parse();
 
-  function = root["func_sol5"].get("dsoldy", "0.").asString();
+  function = root["func_sol7"].get("dsoldy", "0.").asString();
   fp_dsoldy.SetExpression(function);
   fp_dsoldy.SetIndependentVariables(variables);
   fp_dsoldy.Parse();
-  
-  function = root["func_sol5"].get("dsoldz", "0.").asString();
+
+  function = root["func_sol7"].get("dsoldz", "0.").asString();
   fp_dsoldz.SetExpression(function);
   fp_dsoldz.SetIndependentVariables(variables);
   fp_dsoldz.Parse();
@@ -279,15 +289,15 @@ int main(int argc, char** argv) {
   std::vector<BDCType> bdctypearray;
 
 //   const Json::Value boundary_conditions = root["boundary_conditions"];
-// 
+//
 //   for (unsigned int index = 0; index < boundary_conditions.size(); ++index) {
-// 
+//
 //     std::string facename = boundary_conditions[index].get("facename", "to").asString();
 //     facenamearray.push_back(facename);
-// 
+//
 //     std::string bdctypestr = boundary_conditions[index].get("bdc_type", "to").asString();
 //     BDCType bdctype = DIRICHLET;
-// 
+//
 //     if (bdctypestr.compare("dirichlet") == 0) {
 //       bdctype = DIRICHLET;
 //     }
@@ -297,9 +307,9 @@ int main(int argc, char** argv) {
 //     else {
 //       std::cout << "Boundary condition not implemented! Default one (Dirichlet) is set." << std::endl;
 //     }
-// 
+//
 //     bdctypearray.push_back(bdctype);
-// 
+//
 //     std::string bdcfuncstr = boundary_conditions[index].get("bdc_func", "0.").asString();
 //     ParsedFunction pfunc(bdcfuncstr, "x,y,z,t");
 //     parsedfunctionarray.push_back(pfunc);
@@ -333,13 +343,11 @@ int main(int argc, char** argv) {
   //Steadystate NonLinearMultiLevelProblem
   MultiLevelMesh ml_msh;
 
-  if (filename != "")
-  {
-    ml_msh.ReadCoarseMesh(filename.c_str(), "seventh", Lref);
+  if (filename != "") {
+    ml_msh.ReadCoarseMesh(filename.c_str(), "ninth", Lref);
   }
-  else
-  {
-    ml_msh.GenerateCoarseBoxMesh(numelemx, numelemy, numelemz, xa, xb, ya, yb, za, zb, elemtype, "seventh");
+  else {
+    ml_msh.GenerateCoarseBoxMesh(numelemx, numelemy, numelemz, xa, xb, ya, yb, za, zb, elemtype, "ninth");
   }
 
   //ml_msh.RefineMesh(nm,nr, SetRefinementFlag);
@@ -356,7 +364,7 @@ int main(int argc, char** argv) {
   ml_sol.Initialize("Sol");
 
   //Set Boundary (update Dirichlet(...) function)
- // ml_sol.InitializeBdc();
+// ml_sol.InitializeBdc();
 
 //     ml_sol.SetBoundaryCondition("Sol","right", NEUMANN, false, false, &bdcfunc);
 //     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
@@ -364,7 +372,7 @@ int main(int argc, char** argv) {
 //   for (int i = 0; i < boundary_conditions.size(); ++i) {
 //     ml_sol.SetBoundaryCondition_new("Sol", facenamearray[i], bdctypearray[i], false, &parsedfunctionarray[i]);
 //   }
-// 
+//
 //   ml_sol.GenerateBdc("All");
 
 
@@ -402,8 +410,8 @@ int main(int argc, char** argv) {
   system2.SetNumberPostSmoothingStep(npostmoothing);
 
   //Set Smoother Options
-  if (Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
-  else if (Asm) 	system2.SetMgSmoother(ASM_SMOOTHER);
+  if (Gmres) 		system2.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  else if (Asm) 	system2.SetLinearEquationSolverType(FEMuS_ASM);
 
   system2.init();
 
@@ -419,8 +427,7 @@ int main(int argc, char** argv) {
   system2.ClearVariablesToBeSolved();
   system2.AddVariableToBeSolved("All");
 
-  if (Asm )
-  {
+  if (Asm ) {
     system2.SetNumberOfSchurVariables(0);
     system2.SetElementBlockNumber(4);
   }
@@ -475,7 +482,8 @@ int main(int argc, char** argv) {
 
 
 //------------------------------------------------------------------------------------------------------------
-void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
+void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob)
+{
 
   //pointers and references
   LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Poisson");
@@ -617,7 +625,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 #ifdef HAVE_FPARSER
         //src_term = fpsource.Eval(xyzt);
         src_term = fpsource(&xyzt[0]);
-	//std::cout << xyzt[0]<<" "<<xyzt[1]<<" "<< xyzt[2] <<" "<< src_term<<std::endl;
+        //std::cout << xyzt[0]<<" "<<xyzt[1]<<" "<< xyzt[2] <<" "<< src_term<<std::endl;
 #endif
 
         F[i] += (-Lap_rhs + src_term * phi[i]) * weight;
@@ -642,43 +650,43 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
     //number of faces for each type of element
     //number of faces for each type of element
 //     unsigned nfaces = mymsh->GetElementFaceNumber(iel);
-// 
+//
 //     // loop on faces
 //     for (unsigned jface = 0; jface < nfaces; jface++) {
-// 
+//
 //       // look for boundary faces
 //       if (myel->GetBoundaryIndex(iel, jface) > 0) {
-// 
+//
 //         unsigned int faceIndex =  myel->GetBoundaryIndex(iel, jface) - 1u;
-// 
+//
 //         if (ml_sol->GetBoundaryCondition("Sol", faceIndex) == NEUMANN && !ml_sol->Ishomogeneous("Sol", faceIndex)) {
-// 
+//
 //           bdcfunc = (ParsedFunction*)(ml_sol->GetBdcFunction("Sol", faceIndex));
 //           unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, order_ind);
 //           const unsigned felt = mymsh->GetElementFaceType(iel, jface);
-// 
+//
 //           for (unsigned i = 0; i < nve; i++) {
 //             unsigned ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
 //             unsigned inode_coord_metis = mymsh->GetSolutionDof(ilocal, iel, 2);
-// 
+//
 //             for (unsigned ivar = 0; ivar < dim; ivar++) {
 //               coordinates[ivar][i] = (*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
 //             }
 //           }
-// 
+//
 //           if (felt != 6)
 //           {
 //             for (unsigned igs = 0; igs < ml_prob._ml_msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
 //               ml_prob._ml_msh->_finiteElement[felt][order_ind]->JacobianSur(coordinates, igs, weight, phi, gradphi, normal);
-// 
+//
 //               xyzt.assign(4, 0.);
-// 
+//
 //               for (unsigned i = 0; i < nve; i++) {
 //                 for (unsigned ivar = 0; ivar < dim; ivar++) {
 //                   xyzt[ivar] += coordinates[ivar][i] * phi[i];
 //                 }
 //               }
-// 
+//
 //               // *** phi_i loop ***
 //               for (unsigned i = 0; i < nve; i++) {
 //                 double surfterm_g = (*bdcfunc)(&xyzt[0]);
@@ -695,7 +703,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 //             xyzt[1] = 0.;
 //             xyzt[2] = 0.;
 //             xyzt[3] = 0.;
-// 
+//
 //             double bdintegral = (*bdcfunc)(&xyzt[0]);
 //             unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, 0);
 //             F[ilocalnode] += bdintegral;
@@ -721,7 +729,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
 // ***********************************************
 
-double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
+double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1)
+{
 
   int  iproc, nprocs;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -842,7 +851,7 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
         dSolExactdy = fp_dsoldy(x);
         dSolExactdz = fp_dsoldz(x);
 #endif
-	
+
 // 	std::cout <<SolExact - SolT<<std::endl;
 // 	std::cout <<dSolExactdx - gradSolT[0]<<std::endl;
 // 	std::cout <<dSolExactdy - gradSolT[1]<<std::endl;

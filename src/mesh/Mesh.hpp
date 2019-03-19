@@ -175,7 +175,7 @@ public:
                                const ElemType type, std::vector<bool> &type_elem_flag);
 
     /** To be added */
-    void FillISvector(vector < int > &epart);
+    void FillISvector(vector < unsigned > &partition);
 
     /** To be added */
     void Buildkel();

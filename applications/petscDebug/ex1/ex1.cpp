@@ -82,7 +82,7 @@ int main(int argc, char** args)
 
   // ******* Set Preconditioner *******
 
-  system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetLinearEquationSolverType(FEMuS_ASM);
   
   system.init();
 

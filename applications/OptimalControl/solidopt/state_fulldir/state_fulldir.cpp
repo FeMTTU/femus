@@ -126,7 +126,7 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
   if ( dimension == 3 ) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
-  ml_sol.AddSolution("P",LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/,FIRST,1);
+  ml_sol.AddSolution("P",LAGRANGE/*DISCONTINUOUS_POLYNOMIAL*/,FIRST,1);
 
   ml_sol.Initialize("All");
   ml_sol.Initialize("DX", InitialValueDX);

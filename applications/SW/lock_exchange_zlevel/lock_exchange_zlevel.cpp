@@ -29,7 +29,7 @@ double rho1[20] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1
 
 double dt = 60.; //= dx / maxWaveSpeed * 0.85;
 
-double ni_h = 100.; // 0.1, 1, 10, 100, 200
+double ni_h = 1.; // 0.1, 1, 10, 100, 200
 
 double ni_v = 0.0001;
 
@@ -50,55 +50,12 @@ double InitalValueH ( const std::vector < double >& x ) {
   return hRest[0];
 }
 
-// double InitalValueH0(const std::vector < double >& x)
-// {
-//   return hRest[0];
-//   //if (x[0]<0) return 0.01;
-//   //else return hRest[0]+hRest[1] - 0.01;
-// }
-
-// double InitalValueH1(const std::vector < double >& x)
-// {
-//   return hRest[1];
-//   //if (x[0]<0) return hRest[0]+hRest[1] - 0.01;
-//   //else return 0.01;
-// }
-
-// double InitalValueH2(const std::vector < double >& x)
-// {
-//   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
-//   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
-//   double hh = 1 - dd * dd / (bb * bb);
-//   double b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
-//   return b - hRest[2];
-// }
-
 double InitalValueT ( const std::vector < double >& x ) {
   double pi = acos ( -1. );
   //return 17.5 + 25/pi * atan(x[0]/100.);
   if ( x[0] < 0 ) return 5;
   else return 30;
 }
-
-// double InitalValueT0(const std::vector < double >& x)
-// {
-//   if (x[0]<0) return 5;
-//   else return 30;
-//   //return 30;
-// }
-
-// double InitalValueT1(const std::vector < double >& x)
-// {
-//   if (x[0]<0) return 5;
-//   else return 30;
-//   //return 5;
-// }
-
-// double InitalValueT2(const std::vector < double >& x)
-// {
-//   return 5;
-// }
-
 
 double InitalValueB ( const std::vector < double >& x ) {
   return 20; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
@@ -145,32 +102,20 @@ int main ( int argc, char** args ) {
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "h%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO );
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO );
     sprintf ( name, "v%d", i );
     mlSol.AddSolution ( name, LAGRANGE, FIRST );
     sprintf ( name, "T%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO );
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO );
     sprintf ( name, "HT%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO );
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO );
   }
 
-  mlSol.AddSolution ( "b", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false );
+  mlSol.AddSolution ( "b", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, false );
 
-  mlSol.AddSolution ( "eta", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false );
+  mlSol.AddSolution ( "eta", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, false );
 
   mlSol.Initialize ( "All" );
-
-
-//   mlSol.Initialize("h0",InitalValueH0);
-//   mlSol.Initialize("T0",InitalValueT0);
-//   if(NumberOfLayers > 1){
-//     mlSol.Initialize("h1",InitalValueH1);
-//     mlSol.Initialize("T1",InitalValueT1);
-//     if(NumberOfLayers > 2){
-//       mlSol.Initialize("h2",InitalValueH2);
-//       mlSol.Initialize("T2",InitalValueT2);
-//     }
-//   }
 
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
@@ -459,60 +404,60 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       //END
       
       //BEGIN THIRD ORDER
-//       if ( i > start ) {
-//         aResHT[k] += 0.5 * ( solHTm[k] + solHT[k] ) * solvm[k] / dx;
-//         if ( solvm[k] > 0 ) {
-//           if ( i > start + 1 ) {
-//             aResHT[k] += - 1. / 6. * ( solHT[k] - 2.*solHTm[k] + solHTmm[k] ) * solvm[k]  / dx;
-//           }
-//         }
-//         else {
-//           if ( i < end - 1 ) {
-//             aResHT[k] += - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvm[k]  / dx;
-//           }
-//         }
-//       }
-//       if ( i < end - 1 ) {
-//         aResHT[k] -= 0.5 * ( solHTp[k] + solHT[k] ) * solvp[k] / dx;
-//         if ( solvp[k] > 0 ) {
-//           if (i > start) {
-//             aResHT[k] -= - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvp[k]  / dx;
-//           }
-//         }
-//         else {
-//           if ( i < end - 2 ) {
-//             aResHT[k] -= - 1. / 6. * ( solHTpp[k] - 2.*solHTp[k] + solHT[k] ) * solvp[k]  / dx;
-//           }
-//         }
-//       }
-      //END
-      
-      double numb = 0.5;
-      //BEGIN GENERAL THIRD ORDER
-      if ( i > start ) {
+       if ( i > start ) {
         aResHT[k] += 0.5 * ( solHTm[k] + solHT[k] ) * solvm[k] / dx;
-	if ( i > start + 1 ) {
-	  aResHT[k] += - 1./12. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] + solHT[k] - 2.*solHTm[k] + solHTmm[k] ) * solvm[k] / dx;
-	  if (solvm[k] > 0){
-	    aResHT[k] += numb/12. * (solHTp[k] - 2.*solHT[k] + solHTm[k] - (solHT[k] - 2.*solHTm[k] + solHTmm[k])) * solvm[k] / dx;
-	  }
-	  else{
-	    aResHT[k] += - numb/12. * (solHTp[k] - 2.*solHT[k] + solHTm[k] - (solHT[k] - 2.*solHTm[k] + solHTmm[k])) * solvm[k] / dx;
-	  }
+        if ( solvm[k] > 0 ) {
+          if ( i > start + 1 ) {
+            aResHT[k] += - 1. / 6. * ( solHT[k] - 2.*solHTm[k] + solHTmm[k] ) * solvm[k]  / dx;
+          }
+        }
+        else {
+          if ( i < end - 1 ) {
+            aResHT[k] += - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvm[k]  / dx;
+          }
         }
       }
       if ( i < end - 1 ) {
         aResHT[k] -= 0.5 * ( solHTp[k] + solHT[k] ) * solvp[k] / dx;
-	if (i < end - 2){
-	  aResHT[k] -= - 1./12. * (solHTpp[k] - 2.*solHTp[k] + solHT[k] + solHTp[k] - 2.*solHT[k] + solHTm[k]) * solvp[k] / dx;
-	  if (solvm[k] > 0){
-	    aResHT[k] -= numb/12. * (solHTpp[k] - 2.*solHTp[k] + solHT[k] - (solHTp[k] - 2.*solHT[k] + solHTm[k])) * solvp[k] / dx;
-	  }
-	  else{
-	    aResHT[k] -= - numb/12. * (solHTpp[k] - 2.*solHTp[k] + solHT[k] - (solHTp[k] - 2.*solHT[k] + solHTm[k])) * solvp[k] / dx;
-	  }
+        if ( solvp[k] > 0 ) {
+          if (i > start) {
+            aResHT[k] -= - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvp[k]  / dx;
+          }
+        }
+        else {
+          if ( i < end - 2 ) {
+            aResHT[k] -= - 1. / 6. * ( solHTpp[k] - 2.*solHTp[k] + solHT[k] ) * solvp[k]  / dx;
+          }
         }
       }
+      //END
+      
+      //double numb = 0.5;
+      //BEGIN GENERAL THIRD ORDER
+//       if ( i > start ) {
+//         aResHT[k] += 0.5 * ( solHTm[k] + solHT[k] ) * solvm[k] / dx;
+// 	if ( i > start + 1 ) {
+// 	  aResHT[k] += - 1./12. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] + solHT[k] - 2.*solHTm[k] + solHTmm[k] ) * solvm[k] / dx;
+// 	  if (solvm[k] > 0){
+// 	    aResHT[k] += numb/12. * (solHTp[k] - 2.*solHT[k] + solHTm[k] - (solHT[k] - 2.*solHTm[k] + solHTmm[k])) * solvm[k] / dx;
+// 	  }
+// 	  else{
+// 	    aResHT[k] += - numb/12. * (solHTp[k] - 2.*solHT[k] + solHTm[k] - (solHT[k] - 2.*solHTm[k] + solHTmm[k])) * solvm[k] / dx;
+// 	  }
+//         }
+//       }
+//       if ( i < end - 1 ) {
+//         aResHT[k] -= 0.5 * ( solHTp[k] + solHT[k] ) * solvp[k] / dx;
+// 	if (i < end - 2){
+// 	  aResHT[k] -= - 1./12. * (solHTpp[k] - 2.*solHTp[k] + solHT[k] + solHTp[k] - 2.*solHT[k] + solHTm[k]) * solvp[k] / dx;
+// 	  if (solvm[k] > 0){
+// 	    aResHT[k] -= numb/12. * (solHTpp[k] - 2.*solHTp[k] + solHT[k] - (solHTp[k] - 2.*solHT[k] + solHTm[k])) * solvp[k] / dx;
+// 	  }
+// 	  else{
+// 	    aResHT[k] -= - numb/12. * (solHTpp[k] - 2.*solHTp[k] + solHT[k] - (solHTp[k] - 2.*solHT[k] + solHTm[k])) * solvp[k] / dx;
+// 	  }
+//         }
+//       }
       //END
 
       if ( k < NLayers - 1 ) {

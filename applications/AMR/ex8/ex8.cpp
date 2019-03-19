@@ -60,7 +60,7 @@ readInputTestFile(const char* path)
 static void show_usage()
 {
   std::cout << "Use --inputfile variable to set the input file" << endl;
-  std::cout << "e.g.: ./AMR_ex7 --inputfile ./input/input.json" << std::endl;
+  std::cout << "e.g.: ./AMR_ex8 --inputfile ./input/input.json" << std::endl;
 }
 
 ParsedFunction fpsource;
@@ -246,22 +246,22 @@ int main(int argc, char** argv) {
 
 #ifdef HAVE_FPARSER
 
-  function = root["variable"].get("func_source4", "0.").asString();
+  function = root["variable"].get("func_source2", "0.").asString();
   fpsource.SetExpression(function);
   fpsource.SetIndependentVariables(variables);
   fpsource.Parse();
 
-  function = root["func_sol4"].get("sol", "0.").asString();
+  function = root["func_sol2"].get("sol", "0.").asString();
   fp_sol.SetExpression(function);
   fp_sol.SetIndependentVariables(variables);
   fp_sol.Parse();
 
-  function = root["func_sol4"].get("dsoldx", "0.").asString();
+  function = root["func_sol2"].get("dsoldx", "0.").asString();
   fp_dsoldx.SetExpression(function);
   fp_dsoldx.SetIndependentVariables(variables);
   fp_dsoldx.Parse();
 
-  function = root["func_sol4"].get("dsoldy", "0.").asString();
+  function = root["func_sol2"].get("dsoldy", "0.").asString();
   fp_dsoldy.SetExpression(function);
   fp_dsoldy.SetIndependentVariables(variables);
   fp_dsoldy.Parse();
@@ -397,8 +397,8 @@ int main(int argc, char** argv) {
   system2.SetNumberPostSmoothingStep(npostmoothing);
 
   //Set Smoother Options
-  if (Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
-  else if (Asm) 	system2.SetMgSmoother(ASM_SMOOTHER);
+  if (Gmres) 		system2.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  else if (Asm) 	system2.SetLinearEquationSolverType(FEMuS_ASM);
 
   system2.init();
 
@@ -450,17 +450,20 @@ int main(int argc, char** argv) {
 
   int  iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  bool H1 = false;
-  double l2error = GetRelativeError(ml_sol, H1);
+  if(AMRnorm == "l2") {
+  double l2error = GetRelativeError(ml_sol, false);
 
   if (iproc == 0) printf("\n||Sol_h-Sol||_L2 / ||Sol||_L2  = %g \n", l2error);
-
-  H1 = true;
-  double H1error = GetRelativeError(ml_sol, H1);
+   ml_msh.PrintInfo();
+  }
+  else if(AMRnorm == "H1") {
+  double H1error = GetRelativeError(ml_sol, true);
 
   if (iproc == 0) printf("\n||Sol_h-Sol||_H1 / ||Sol||_H1  = %g \n", H1error);
-
-  ml_msh.PrintInfo();
+   ml_msh.PrintInfo();
+      
+ }
+ else {std::cout << std::endl<< std::endl << " *********AMRnorm use 'H1' or 'l2'************" << std::endl;}
 
   //Destroy all the new systems
   ml_prob.clear();

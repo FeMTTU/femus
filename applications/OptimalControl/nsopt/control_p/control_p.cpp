@@ -181,17 +181,17 @@ int main(int argc, char** args) {
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
-  mlSol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSol.AddSolution("P", DISCONTINUOUS_POLYNOMIAL, ZERO);
   // adjoint =====================  
   mlSol.AddSolution("UADJ", LAGRANGE, SECOND);
   mlSol.AddSolution("VADJ", LAGRANGE, SECOND);
   if (dim == 3) mlSol.AddSolution("WADJ", LAGRANGE, SECOND);
-  mlSol.AddSolution("PADJ", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSol.AddSolution("PADJ", DISCONTINUOUS_POLYNOMIAL, ZERO);
   // control =====================  
   mlSol.AddSolution("UCTRL", LAGRANGE, SECOND);
   mlSol.AddSolution("VCTRL", LAGRANGE, SECOND);
   if (dim == 3) mlSol.AddSolution("WCTRL", LAGRANGE, SECOND);
-  mlSol.AddSolution("PCTRL", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSol.AddSolution("PCTRL", DISCONTINUOUS_POLYNOMIAL, ZERO);
   // control ===================== 
   
   

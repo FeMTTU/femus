@@ -24,6 +24,8 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
                                    double& value, const int facename, const double time);
 
 void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes);
+
+void PrintConvergenceInfo(char *stdOutfile, const unsigned &numberOfUniformRefinedMeshes, const int &nprocs);
 //------------------------------------------------------------------------------------------------------------------
 
 
@@ -47,12 +49,12 @@ int main(int argc, char** args)
 
   //std::string infile = "./../input/valve/2D/valve2.neu";
   //std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
-  //std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
+  std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
   //std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
-  std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
+  //std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
 
   // ******* Set physics parameters *******
-  double Lref, Uref, rhof, muf, rhos, ni, E, E1;
+  double Lref, Uref, rhof, muf, rhos, ni, E, E1, ni1;
 
   Lref = 1.;
   Uref = 1.;
@@ -64,6 +66,7 @@ int main(int argc, char** args)
   E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
   E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
+  ni1 = 0.5; //0.49
 
   Parameter par(Lref, Uref);
 
@@ -72,7 +75,7 @@ int main(int argc, char** args)
   solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
 
   Solid solid1;
-  solid1 = Solid(par, E1, ni, rhos, "Mooney-Rivlin");
+  solid1 = Solid(par, E1, ni1, rhos, "Mooney-Rivlin");
 
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -85,7 +88,9 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
+
   numberOfUniformRefinedMeshes = 2;
+
   numberOfAMRLevels = 0;
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
@@ -114,14 +119,14 @@ int main(int argc, char** args)
   ml_sol.PairSolution("V", "DY");    // Add this line
   if (dim == 3) ml_sol.PairSolution("W", "DZ");   // Add this line
 
-  ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AddSolution("PS", DISCONTINUOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PS", "Pressure", false);    // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("PF", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AddSolution("PF", DISCONTINUOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PF", "Pressure", false);    // Add this line
 
-  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+  ml_sol.AddSolution("lmbd", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
   ml_sol.AddSolution("Um", LAGRANGE, SECOND, 0, false);
   ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
@@ -231,11 +236,12 @@ int main(int argc, char** args)
   FS2.push_back(&VelPf);  // velocity second
 
   FieldSplitTree FSI(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "FSI");
-
-  //END buid fieldSplitTree
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
+  FSI.SetRichardsonScaleFactor(.4);
   
-  system.SetOuterKSPSolver("lgmres");
+  //END buid fieldSplitTree
+  system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT);   // Field-Split preconditioned
+  
+  system.SetMgOuterSolver(LGMRES); //system.SetOuterKSPSolver("lgmres");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
@@ -274,7 +280,7 @@ int main(int argc, char** args)
 
   //system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 100, 10);
   if(dim==2){
-    system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
+    system.SetTolerances(1.e-10, 1.e-12, 1.e+50, 40, 40);
   }
   else{
     system.SetTolerances(1.e-10, 1.e-12, 1.e+50, 40, 40);
@@ -335,17 +341,17 @@ int main(int argc, char** args)
   int  iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
 
-  std::ofstream outf;
-  if (iproc == 0) {
-    outf.open("fluxes.txt");
-    if (!outf) {
-      std::cout << "Error in opening file DataPrint.txt";
-      return 1;
-    }
-  }
+//   std::ofstream outf;
+//   if (iproc == 0) {
+//     outf.open("fluxes.txt");
+//     if (!outf) {
+//       std::cout << "Error in opening file DataPrint.txt";
+//       return 1;
+//     }
+//   }
 
-  std::vector < double > Qtot(3, 0.);
-  std::vector<double> fluxes(2, 0.);
+//   std::vector < double > Qtot(3, 0.);
+//   std::vector<double> fluxes(2, 0.);
 
   system.ResetComputationalTime();
   
@@ -366,24 +372,25 @@ int main(int argc, char** args)
 
     StoreMeshVelocity(ml_prob);
 
-    double dt = system.GetIntervalTime();
-
-    Qtot[0] += 0.5 * dt * fluxes[0];
-    Qtot[1] += 0.5 * dt * fluxes[1];
-
-    GetSolutionFluxes(ml_sol, fluxes);
-
-    Qtot[0] += 0.5 * dt * fluxes[0];
-    Qtot[1] += 0.5 * dt * fluxes[1];
-    Qtot[2] = Qtot[0] + Qtot[1];
-
-
-    std::cout << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
-
-
-    if (iproc == 0) {
-      outf << time_step << " " << system.GetTime() << " " << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
-    }
+    //fluxes
+//     double dt = system.GetIntervalTime();
+// 
+//     Qtot[0] += 0.5 * dt * fluxes[0];
+//     Qtot[1] += 0.5 * dt * fluxes[1];
+// 
+//     GetSolutionFluxes(ml_sol, fluxes);
+// 
+//     Qtot[0] += 0.5 * dt * fluxes[0];
+//     Qtot[1] += 0.5 * dt * fluxes[1];
+//     Qtot[2] = Qtot[0] + Qtot[1];
+// 
+// 
+//     std::cout << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
+// 
+// 
+//     if (iproc == 0) {
+//       outf << time_step << " " << system.GetTime() << " " << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
+//     }
 
     //ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
@@ -392,17 +399,28 @@ int main(int argc, char** args)
 
   }
 
-  if (iproc == 0) {
-    outf.close();
-  }
+//   if (iproc == 0) {
+//     outf.close();
+//   }
   
 
   //******* Clear all systems *******
   ml_prob.clear();
   std::cout << " TOTAL TIME:\t" << \
             static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
+	    
+/*  int  nprocs;	    
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  if(iproc == 0){
+    char stdOutputName[100];
+    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_stiffness5FS.txt",numberOfUniformRefinedMeshes, nprocs);
+    PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
+  }*/	    
+	    
   return 0;
 }
+
+//-------------------------------------------------------------------------------------------------------------
 
 double SetVariableTimeStep(const double time)
 {
@@ -496,6 +514,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 
 }
 
+//---------------------------------------------------------------------------------------------------------------------
 
 void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
 {
@@ -596,6 +615,90 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
     qBottom.clearBroadcast();
     qTop.clearBroadcast();
   }
+  
 }
+  
+//---------------------------------------------------------------------------------------------------------------------
+
+void PrintConvergenceInfo(char *stdOutfile, const unsigned &level, const int &nprocs){
+
+  std::cout<<"END_COMPUTATION\n"<<std::flush;
+
+  std::ifstream inf;
+  inf.open(stdOutfile);
+  if (!inf) {
+    std::cout<<"Redirected standard output file not found\n";
+    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+    return;
+  }
+
+  std::ofstream outf;
+  char outFileName[100];
+  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d_stiffness5FS.txt",level, nprocs);
+
+  outf.open(outFileName, std::ofstream::app);
+  outf << std::endl << std::endl;
+  outf << "Number_of_refinements="<<level<<std::endl;
+  outf << "Simulation_Time,Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
+
+  std::string str1;
+  inf >> str1;
+  double simulationTime=0.;
+  while (str1.compare("END_COMPUTATION") != 0) {
+
+    if (str1.compare("Simulation") == 0){
+      inf >> str1;
+      if (str1.compare("Time:") == 0){
+        inf >> simulationTime;
+      }
+    }
+    else if (str1.compare("Nonlinear") == 0) {
+      inf >> str1;
+      if (str1.compare("iteration") == 0) {
+        inf >> str1;
+        outf << std::endl << simulationTime<<","<<str1;
+      }
+    }
+    else if (str1.compare("KSP") == 0){
+      inf >> str1;
+      if (str1.compare("preconditioned") == 0){
+        inf >> str1;
+        if (str1.compare("resid") == 0){
+          inf >> str1;
+          if (str1.compare("norm") == 0){
+            double norm0 = 1.;
+            double normN = 1.;
+            unsigned counter = 0;
+            inf >> norm0;
+            outf <<","<< norm0;
+            for (unsigned i = 0; i < 11; i++){
+              inf >> str1;
+            }
+            while(str1.compare("norm") == 0){
+              inf >> normN;
+              counter++;
+              for (unsigned i = 0; i < 11; i++){
+                inf >> str1;
+              }
+            }
+            outf <<","<< normN;
+            if(counter != 0){
+              outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
+            }
+            else{
+              outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
+            }
+          }
+        }
+      }
+    }
+    inf >> str1;
+  }
+
+  outf.close();
+  inf.close();
+
+}
+
 
 

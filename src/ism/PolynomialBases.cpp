@@ -1370,23 +1370,24 @@ namespace femus {
 
   bool CheckIfPointIsInsideReferenceDomain(std::vector<double> &xi, const short unsigned &ielType, const double &eps) {
     if(ielType == 0) {
-      CheckIfPointIsInsideReferenceDomainHex(xi, eps);
+      return CheckIfPointIsInsideReferenceDomainHex(xi, eps);
     }
     else if(ielType == 1) {
-      CheckIfPointIsInsideReferenceDomainTet(xi, eps);
+      return CheckIfPointIsInsideReferenceDomainTet(xi, eps);
     }
     else if(ielType == 2) {
-      CheckIfPointIsInsideReferenceDomainWedge(xi, eps);
+      return CheckIfPointIsInsideReferenceDomainWedge(xi, eps);
     }
     else if(ielType == 3) {
-      CheckIfPointIsInsideReferenceDomainQuad(xi, eps);
+      return CheckIfPointIsInsideReferenceDomainQuad(xi, eps);
     }
     else if(ielType == 4) {
-      CheckIfPointIsInsideReferenceDomainTri(xi, eps);
+      return CheckIfPointIsInsideReferenceDomainTri(xi, eps);
     }
-    else if(ielType == 5) {
-      CheckIfPointIsInsideReferenceDomainLine(xi, eps);
+    else{// if(ielType == 5) {
+      return CheckIfPointIsInsideReferenceDomainLine(xi, eps);
     }
+    
   }
   bool CheckIfPointIsInsideReferenceDomainHex(std::vector<double> &xi, const double &eps) {
     double threshold = 1. + eps;
@@ -1853,10 +1854,10 @@ namespace femus {
       nel += xn[l].size() - 1;
     }
 
-    const unsigned dim_array_coord [] = { nvt * 3 * sizeof(float) };
-    const unsigned dim_array_conn[]   = { nel * 2 * sizeof(int) };
-    const unsigned dim_array_off []   = { nel * sizeof(int) };
-    const unsigned dim_array_type []  = { nel * sizeof(short unsigned) };
+    const unsigned dim_array_coord [] = { nvt * 3 * static_cast< unsigned int >( sizeof(float) )};
+    const unsigned dim_array_conn[]   = { nel * 2 * static_cast< unsigned int >( sizeof(int) ) };
+    const unsigned dim_array_off []   = { nel * static_cast< unsigned int >( sizeof(int) ) };
+    const unsigned dim_array_type []  = { nel * static_cast< unsigned int >( sizeof(short unsigned) ) };
 
     unsigned buffer_size = (dim_array_coord[0] > dim_array_conn[0]) ? dim_array_coord[0] : dim_array_conn[0];
     void* buffer_void = new char [buffer_size];

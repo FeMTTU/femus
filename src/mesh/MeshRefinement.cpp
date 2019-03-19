@@ -311,8 +311,8 @@ namespace femus {
     
     
     std::vector<unsigned> MaterialElementCounter = _mesh.el->GetMaterialElementCounter();
-    std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA\n";
-    std::cout << MaterialElementCounter[0]<<" "<< MaterialElementCounter[1]<<" "<< MaterialElementCounter[2]<<" \n";
+    //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+    //std::cout << MaterialElementCounter[0]<<" "<< MaterialElementCounter[1]<<" "<< MaterialElementCounter[2]<<" \n";
    
     coarseLocalizedAmrVector.resize(0);
     //coarseLocalizedElementType.resize(0);
@@ -392,7 +392,7 @@ namespace femus {
 
     Buildkmid();
 
-    std::vector < int > partition;
+    std::vector < unsigned > partition;
     partition.reserve(_mesh.GetNumberOfNodes());
     partition.resize(_mesh.GetNumberOfElements());
 
@@ -425,7 +425,7 @@ namespace femus {
     _mesh._topology->ResizeSolutionVector("Y");
     _mesh._topology->ResizeSolutionVector("Z");
 
-    _mesh._topology->AddSolution("AMR", DISCONTINOUS_POLYNOMIAL, ZERO, 1, 0);
+    _mesh._topology->AddSolution("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
     _mesh._topology->ResizeSolutionVector("AMR");
 
     unsigned solType = 2;
@@ -465,6 +465,8 @@ namespace femus {
     else{
       restriction.resize(3);
     }
+    
+    _mesh.PrintInfo();
   }
 
 

@@ -26,7 +26,7 @@ namespace femus {
 // NonLinearImplicitSystem implementation
   NonLinearImplicitSystem::NonLinearImplicitSystem(MultiLevelProblem& ml_probl,
       const std::string& name_in,
-      const unsigned int number_in, const MgSmoother& smoother_type) :
+      const unsigned int number_in, const LinearEquationSolverType& smoother_type) :
     LinearImplicitSystem(ml_probl, name_in, number_in, smoother_type),
     _debug_nonlinear(false),
     _n_max_nonlinear_iterations(15),
@@ -42,6 +42,7 @@ namespace femus {
   }
 
   void NonLinearImplicitSystem::clear() {
+    LinearImplicitSystem::clear();
   }
 
   // ********************************************
@@ -58,8 +59,8 @@ namespace femus {
     double L2normRes;
 
     nonLinearEps = 0.;
-    const double absMinNonlinearEps = 1.e-50;
-    const double absMinNormSol = 1.e-15;
+    const double absMinNonlinearEps = 1.e-12;
+    const double absMinNormSol = 1.e-12;
     const double mindeltaNormSol = 1.e-50;
 
     for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
@@ -74,7 +75,7 @@ namespace femus {
                 "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << "  ** Res_l2norm= " << L2normRes << std::endl;
       nonLinearEps = (nonLinearEps > L2normEpsDividedSol) ? nonLinearEps : L2normEpsDividedSol;
       
-      if((L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol || ( (k+1) % 3 == 0 )) && conv == true) {
+      if((L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol ) && conv == true) {
         conv = true;
       }
       else {
@@ -87,7 +88,7 @@ namespace femus {
 
   // ********************************************
 
-  void NonLinearImplicitSystem::solve(const MgSmootherType& mgSmootherType) {
+  void NonLinearImplicitSystem::solve(const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
 
     _bitFlipCounter = 0;
     
@@ -190,13 +191,15 @@ restart:
 
           clock_t mg_init_time = clock();
           if(_MGsolver) {
-            _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _outer_ksp_solver.c_str());
+            _LinSolver[igridn]->MGInit(LinearEquationSolverTypeType, igridn + 1, _mgOuterSolver);
 
             for(unsigned i = 0; i <= igridn; i++) {
+              unsigned npre = (i == 0)? _npre0 : _npre;  
+              unsigned npost = (i == 0)? 0 : _npost;  
               if(_RR[i])
-                _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost);
+                _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _RR[i], npre, npost);
               else
-                _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost);
+                _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], npre, npost);
             }
           }
           std::cout << "   ********* Level Max " << igridn + 1 << " MGINIT TIME:\t" \
@@ -213,7 +216,7 @@ restart:
 
           bool thisIsConverged;
 
-          if(_MGsolver) thisIsConverged = MGVcycle(igridn, mgSmootherType);
+          if(_MGsolver) thisIsConverged = MGVcycle(igridn, LinearEquationSolverTypeType);
           else thisIsConverged = MLVcycle(igridn);
 
           if(thisIsConverged || updateResidualIterator == _maxNumberOfResidualUpdateIterations - 1) break;

@@ -30,7 +30,7 @@ namespace femus {
 // NonLinearImplicitSystem implementation
   MonolithicFSINonLinearImplicitSystem::MonolithicFSINonLinearImplicitSystem(MultiLevelProblem& ml_probl,
       const std::string& name_in,
-      const unsigned int number_in, const MgSmoother & smoother_type) :
+      const unsigned int number_in, const LinearEquationSolverType & smoother_type) :
     NonLinearImplicitSystem(ml_probl, name_in, number_in, smoother_type) {
   }
 

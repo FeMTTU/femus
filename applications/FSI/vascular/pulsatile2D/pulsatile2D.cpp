@@ -35,6 +35,8 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
                                    double &value, const int facename, const double time);
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
+
+void PrintConvergenceInfo(char *stdOutfile, const unsigned &numberOfUniformRefinedMeshes, const int &nprocs);
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, char **args)
@@ -165,7 +167,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 4;
   
   numberOfAMRLevels = 0;
 
@@ -197,19 +199,19 @@ int main(int argc, char **args)
   ml_sol.PairSolution("V", "DY");    // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AddSolution("PS", DISCONTINUOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PS", "Pressure", false);    // Add this line
   
-  ml_sol.AddSolution("PF", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AddSolution("PF", DISCONTINUOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PF", "Pressure", false);    // Add this line
 
-  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+  ml_sol.AddSolution("lmbd", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
   ml_sol.AddSolution("Um", LAGRANGE, SECOND, 0, false);
   ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
   
-  ml_sol.AddSolution("AX", LAGRANGE, SECOND, 2);
-  ml_sol.AddSolution("AY", LAGRANGE, SECOND, 2);
+//   ml_sol.AddSolution("AX", LAGRANGE, SECOND, 2);
+//   ml_sol.AddSolution("AY", LAGRANGE, SECOND, 2);
     
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -308,7 +310,7 @@ int main(int argc, char **args)
 
   // ******* Set Preconditioner *******
 
-  system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetLinearEquationSolverType(FEMuS_ASM);
 
   system.init();
 
@@ -366,7 +368,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 256;
+  const unsigned int n_timesteps = 128;
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -388,54 +390,54 @@ int main(int argc, char **args)
     
     //data[time_step][0] = time_step / 16.;
     //data[time_step][0] = time_step / 20.;
-    data[time_step][0] = time_step / 32.;
+    //data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / ( 64 * 1.4 );
-    if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
-      GetSolutionNorm(ml_sol, 9, data[time_step]);
-    }
-    else if(simulation == 4) {    //AAA_thrombus, 15=thrombus
-      GetSolutionNorm(ml_sol, 7, data[time_step]);
-    }
-    else if(simulation == 6) {    //AAA_thrombus_porous, 15=thrombus
-      GetSolutionNorm(ml_sol, 7, data[time_step]);
-    }
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+//     if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
+//       GetSolutionNorm(ml_sol, 9, data[time_step]);
+//     }
+//     else if(simulation == 4) {    //AAA_thrombus, 15=thrombus
+//       GetSolutionNorm(ml_sol, 7, data[time_step]);
+//     }
+//     else if(simulation == 6) {    //AAA_thrombus_porous, 15=thrombus
+//       GetSolutionNorm(ml_sol, 7, data[time_step]);
+//     }
+    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
 
 
   int  iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  if(iproc == 0) {
-    std::ofstream outf;
-    if(simulation == 0) {
-      outf.open("DataPrint_Turek.txt");
-    }
-    else if(simulation == 1) {
-      outf.open("DataPrint_TurekPorous.txt");
-    }
-    else if(simulation == 2) {
-      outf.open("DataPrint_TurekStents.txt");
-    }
-    else if(simulation == 3) {
-      outf.open("DataPrint_Turek11Stents.txt");
-    }
-    else if(simulation == 4) {
-      outf.open("DataPrint_AAA_thrombus_2D.txt");
-    }
-    else if(simulation == 6) {
-      outf.open("DataPrint_AAA_thrombus_2D_porous.txt");
-    }
+//   if(iproc == 0) {
+//     std::ofstream outf;
+//     if(simulation == 0) {
+//       outf.open("DataPrint_Turek.txt");
+//     }
+//     else if(simulation == 1) {
+//       outf.open("DataPrint_TurekPorous.txt");
+//     }
+//     else if(simulation == 2) {
+//       outf.open("DataPrint_TurekStents.txt");
+//     }
+//     else if(simulation == 3) {
+//       outf.open("DataPrint_Turek11Stents.txt");
+//     }
+//     else if(simulation == 4) {
+//       outf.open("DataPrint_AAA_thrombus_2D.txt");
+//     }
+//     else if(simulation == 6) {
+//       outf.open("DataPrint_AAA_thrombus_2D_porous.txt");
+//     }
 
 
-    if(!outf) {
-      std::cout << "Error in opening file DataPrint.txt";
-      return 1;
-    }
-    for(unsigned k = 0; k < n_timesteps; k++) {
-      outf << data[k][0] << "\t" << data[k][1] << "\t" << data[k][2] << "\t" << data[k][3] << "\t" << data[k][4] << std::endl;
-    }
-    outf.close();
-  }
+//     if(!outf) {
+//       std::cout << "Error in opening file DataPrint.txt";
+//       return 1;
+//     }
+//     for(unsigned k = 0; k < n_timesteps; k++) {
+//       outf << data[k][0] << "\t" << data[k][1] << "\t" << data[k][2] << "\t" << data[k][3] << "\t" << data[k][4] << std::endl;
+//     }
+//     outf.close();
+//   }
 
  
 
@@ -443,8 +445,19 @@ int main(int argc, char **args)
   ml_prob.clear();
   std::cout << " TOTAL TIME:\t" << \
           static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
+	  
+//   int  nprocs;	    
+//   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+//   if(iproc == 0){
+//     char stdOutputName[100];
+//     sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_turek2D.txt",numberOfUniformRefinedMeshes, nprocs);
+//     PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
+//   } 
+	  
   return 0;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
 
 double SetVariableTimeStep(const double time)
 {
@@ -567,6 +580,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 
 }
 
+//---------------------------------------------------------------------------------------------------------------------
 
 bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
 {
@@ -622,6 +636,7 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
   return test;
 }
 
+//---------------------------------------------------------------------------------------------------------------------
 
 bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
 {
@@ -673,6 +688,8 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
   return test;
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+
 bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
 {
   bool test = 1; //dirichlet
@@ -723,6 +740,8 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   return test;
 
 }
+
+//---------------------------------------------------------------------------------------------------------------------
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
 {
@@ -913,6 +932,88 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   delete p2;
   delete v2;
   delete vol;
+
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void PrintConvergenceInfo(char *stdOutfile, const unsigned &level, const int &nprocs){
+
+  std::cout<<"END_COMPUTATION\n"<<std::flush;
+
+  std::ifstream inf;
+  inf.open(stdOutfile);
+  if (!inf) {
+    std::cout<<"Redirected standard output file not found\n";
+    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+    return;
+  }
+
+  std::ofstream outf;
+  char outFileName[100];
+  sprintf(outFileName, "turek2D_convergence_level%d_nprocs%d.txt",level, nprocs);
+
+  outf.open(outFileName, std::ofstream::app);
+  outf << std::endl << std::endl;
+  outf << "Number_of_refinements="<<level<<std::endl;
+  outf << "Simulation_Time,Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
+
+  std::string str1;
+  inf >> str1;
+  double simulationTime=0.;
+  while (str1.compare("END_COMPUTATION") != 0) {
+
+    if (str1.compare("Simulation") == 0){
+      inf >> str1;
+      if (str1.compare("Time:") == 0){
+        inf >> simulationTime;
+      }
+    }
+    else if (str1.compare("Nonlinear") == 0) {
+      inf >> str1;
+      if (str1.compare("iteration") == 0) {
+        inf >> str1;
+        outf << std::endl << simulationTime<<","<<str1;
+      }
+    }
+    else if (str1.compare("KSP") == 0){
+      inf >> str1;
+      if (str1.compare("preconditioned") == 0){
+        inf >> str1;
+        if (str1.compare("resid") == 0){
+          inf >> str1;
+          if (str1.compare("norm") == 0){
+            double norm0 = 1.;
+            double normN = 1.;
+            unsigned counter = 0;
+            inf >> norm0;
+            outf <<","<< norm0;
+            for (unsigned i = 0; i < 11; i++){
+              inf >> str1;
+            }
+            while(str1.compare("norm") == 0){
+              inf >> normN;
+              counter++;
+              for (unsigned i = 0; i < 11; i++){
+                inf >> str1;
+              }
+            }
+            outf <<","<< normN;
+            if(counter != 0){
+              outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
+            }
+            else{
+              outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
+            }
+          }
+        }
+      }
+    }
+    inf >> str1;
+  }
+
+  outf.close();
+  inf.close();
 
 }
 

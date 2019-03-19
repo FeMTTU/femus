@@ -47,7 +47,7 @@ protected:
 public:
 
     /** Constructor.  Optionally initializes required data structures. */
-    System (MultiLevelProblem& ml_prob, const std::string& name, const unsigned int number, const MgSmoother & smoother_type);
+    System (MultiLevelProblem& ml_prob, const std::string& name, const unsigned int number, const LinearEquationSolverType & smoother_type);
 
     /** destructor */
     virtual ~System();
@@ -71,7 +71,7 @@ public:
     void AddSolutionToSystemPDEVector(const unsigned n_components,  const std::string name);
 
     /** Associate the solution variables to the system PDE */
-    void AddSolutionToSystemPDE(const char solname[]);
+    virtual void AddSolutionToSystemPDE(const char solname[]);
 
     /** Register a user function to use in assembling the system matrix and RHS. */
     void SetAssembleFunction (AssembleFunctionType );
@@ -79,11 +79,11 @@ public:
     AssembleFunctionType  GetAssembleFunction();
 
 
-    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE){
+    virtual void MGsolve (const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE){
       _solverType = "MultiGrid";
       _MLsolver = false;
       _MGsolver = true;
-      solve(mgSmootherType);
+      solve(LinearEquationSolverTypeType);
     };
 
     virtual void MLsolve (){
@@ -120,7 +120,7 @@ public:
 
     inline unsigned GetLevelToAssemble(){ return _levelToAssemble; }
 
-    inline unsigned SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
+    inline void SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
 
 protected:
 
@@ -150,7 +150,7 @@ protected:
     bool _MGsolver, _MLsolver;
     std::string _solverType;
 
-    virtual void solve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE ){};
+    virtual void solve( const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE ){};
 
     /** Function that assembles the system. */
     AssembleFunctionType _assemble_system_function;

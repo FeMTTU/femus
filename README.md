@@ -1,4 +1,104 @@
-FEMuS
+MyFEMuS
+======
+
+Welcome to the MyFEMuS project! MyFEMuS is a fork of the FEMuS project administered mainly by Eugenio Aulisa.
+The manual intallation, will also work with the FEMuS project.
+
+For the FEMuS project automatic installation see below.
+
+
+<!-- ![alt tag](https://github.com/FeMTTU/femus/blob/master/doc/images/logo.jpg?raw=true) -->
+<!-- ![alt tag](https://github.com/FeMTTU/femus/blob/master/doc/images/FSI.jpg?raw=true) -->
+
+Step by step MyFEMuS manual setup  (largely tested on OpenSuse)
+======
+
+Install PETSC
+
+From the directory $INSTALLATION_DIR clone petsc
+
+    git clone -b maint https://bitbucket.org/petsc/petsc petsc
+    
+    cd petsc
+    
+Configure, compile, test PETSC with the following options
+    
+    ./configure --with-debugging=0 --with-x=1 COPTFLAGS="-O3 -march=native -mtune=native" CXXOPTFLAGS="-O3 -march=native -mtune=native" FOPTFLAGS="-O3 -march=native -mtune=native" --download-openmpi=1 --download-fblaslapack=1 --download-hdf5=1 --download-metis=1 --download-parmetis=1 --with-shared-libraries=1 --download-blacs=1 --download-scalapack=1 --download-mumps=1 --download-suitesparse
+
+    make PETSC_DIR=$INSTALLATION_DIR/petsc PETSC_ARCH=arch-linux2-c-opt all
+
+    make PETSC_DIR=$INSTALLATION_DIR/petsc PETSC_ARCH=arch-linux2-c-opt test
+ 
+======
+
+Install SLEPC
+
+From the directory $INSTALLATION_DIR clone slepc
+
+    git clone -b maint https://bitbucket.org/slepc/slepc slepc
+
+    cd slepc
+    
+Configure, compile, test SLEPC with the following options
+    
+    export PETSC_DIR=$INSTALLATION_DIR/petsc 
+    
+    export PETSC_ARCH=arch-linux2-c-opt
+    
+    ./configure
+    
+    make SLEPC_DIR=$PWD all
+    
+    make SLEPC_DIR=$PWD test
+
+======
+
+Install MyFEMuS 
+
+Be sure you have installed al least gcc 7, cmake, cmake-gui. Fparser may be handy for some applications but it is not required. 
+
+Clone the MyFEMuS source code from the github repository
+
+From the directory $INSTALLATION_DIR clone MyFEMuS
+
+    https://github.com/eaulisa/MyFEMuS.git
+    
+    cd MyFEMuS
+    
+I generally export the following variables in the ./bashrc file in my user home, so that are available everywhere, otherwise you will need to export them all the times. 
+    
+    export PETSC_DIR=$INSTALLATION_DIR/petsc 
+    
+    export PETSC_ARCH=arch-linux2-c-opt
+    
+    export SLEPC_DIR=$INSTALLATION_DIR/slepc 
+    
+Configure MyFEMuS using cmake-gui. 
+
+    cmake-gui 
+
+    Where is the source code: $INSTALLATION_DIR/MyFEMuS
+    
+    Where to build the binaries: $INSTALLATION_DIR/feumsbin
+    
+    CMAKE_BUILD_TYPE choose between release (default) or debug
+    
+    Press Configure button
+    
+    Press Generate button
+
+Compile
+    
+    cd $INSTALLATION_DIR/femusbin
+    
+    make
+    
+Run. All applications are built in the folder $INSTALLATION_DIR/femusbin/applications/..
+    
+======
+    
+
+FEMuS automatic configuration, contact Giorgio Bornia for support.
 ======
 
 Welcome to the FEMuS project! FEMuS is an open-source Finite Element C++ library 

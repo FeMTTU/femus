@@ -24,7 +24,7 @@
 #include "Solution.hpp"
 #include "Parameters.hpp"
 #include "ParallelObject.hpp"
-#include "MgSmootherEnum.hpp"
+#include "LinearEquationSolverEnum.hpp"
 #include <vector>
 #include <map>
 #include "GaussPoints.hpp"
@@ -86,7 +86,7 @@ public:
     virtual System & add_system (const std::string& system_type, const std::string& name);
 
     /** Add the system named \p name to the systems array. */
-    template <typename T_sys> T_sys & add_system (const std::string& name, const MgSmoother & smoother_type = GMRES_SMOOTHER);
+    template <typename T_sys> T_sys & add_system (const std::string& name, const LinearEquationSolverType & smoother_type = FEMuS_DEFAULT);
 
     /**
      * @returns a constant reference to the system named \p name.
@@ -222,7 +222,7 @@ private:
 
 template <typename T_sys>
 inline
-T_sys & MultiLevelProblem::add_system (const std::string& name,const MgSmoother & smoother_type )
+T_sys & MultiLevelProblem::add_system (const std::string& name,const LinearEquationSolverType & smoother_type )
 {
     T_sys* ptr = NULL;
 

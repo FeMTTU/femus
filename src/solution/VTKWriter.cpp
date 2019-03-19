@@ -53,6 +53,7 @@ namespace femus {
 
     std::string dirnamePVTK = "VTKParallelFiles/";
     Files files;
+    files.CheckDir( output_path, "" );
     files.CheckDir( output_path, dirnamePVTK );
 
     int icount;
@@ -139,13 +140,13 @@ namespace femus {
     unsigned nvtOwned = nvt;
     nvt += ghostMap.size(); // total node dofs (own + ghost)
 
-    const unsigned dim_array_coord [] = { nvt * 3 * sizeof( float ) };
-    const unsigned dim_array_conn[]   = { counter * sizeof( int ) };
-    const unsigned dim_array_off []   = { nel * sizeof( int ) };
-    const unsigned dim_array_type []  = { nel * sizeof( short unsigned ) };
-    const unsigned dim_array_reg []   = { nel * sizeof( short unsigned ) };
-    const unsigned dim_array_elvar [] = { nel * sizeof( float ) };
-    const unsigned dim_array_ndvar [] = { nvt * sizeof( float ) };
+    const unsigned dim_array_coord [] = { nvt * 3 * static_cast<unsigned>(sizeof( float )) };
+    const unsigned dim_array_conn[]   = { counter * static_cast<unsigned>(sizeof( int )) };
+    const unsigned dim_array_off []   = { nel * static_cast<unsigned>(sizeof( int )) };
+    const unsigned dim_array_type []  = { nel * static_cast<unsigned>(sizeof( short unsigned )) };
+    const unsigned dim_array_reg []   = { nel * static_cast<unsigned>(sizeof( short unsigned )) };
+    const unsigned dim_array_elvar [] = { nel * static_cast<unsigned>(sizeof( float )) };
+    const unsigned dim_array_ndvar [] = { nvt * static_cast<unsigned>(sizeof( float )) };
 
     // initialize common buffer_void memory
     unsigned buffer_size = ( dim_array_coord[0] > dim_array_conn[0] ) ? dim_array_coord[0] : dim_array_conn[0];
@@ -202,7 +203,7 @@ namespace femus {
       for( unsigned ii = 0; ii < nvtOwned; ii++ ) {
         var_coord[ ii * 3 + i] = ( *mysol )( ii +  dofOffset );
       }
-      if( _ml_sol != NULL && _moving_mesh  && _ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
+      if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i){//_ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
         unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
         mysol->matrix_mult( *solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
@@ -235,7 +236,7 @@ namespace femus {
     }
 
     for( int i = 0; i < 3; i++ ) { // if moving mesh
-      if( _ml_sol != NULL && _moving_mesh  && mesh->GetDimension() > i )  {
+      if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i ){ //&& mesh->GetDimension() > i )  {
         unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
         mysol->matrix_mult( *solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );

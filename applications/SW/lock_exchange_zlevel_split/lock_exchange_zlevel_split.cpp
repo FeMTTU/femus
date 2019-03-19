@@ -29,7 +29,7 @@ double rho1[20] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1
 
 double dt = 60.; //= dx / maxWaveSpeed * 0.85;
 
-double ni_h = 100.; // 0.1, 1, 10, 100, 200
+double ni_h = 1.; // 0.1, 1, 10, 100, 200
 
 double ni_v = 0.0001;
 
@@ -50,54 +50,12 @@ double InitalValueH ( const std::vector < double >& x ) {
   return hRest[0];
 }
 
-// double InitalValueH0(const std::vector < double >& x)
-// {
-//   return hRest[0];
-//   //if (x[0]<0) return 0.01;
-//   //else return hRest[0]+hRest[1] - 0.01;
-// }
-
-// double InitalValueH1(const std::vector < double >& x)
-// {
-//   return hRest[1];
-//   //if (x[0]<0) return hRest[0]+hRest[1] - 0.01;
-//   //else return 0.01;
-// }
-
-// double InitalValueH2(const std::vector < double >& x)
-// {
-//   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
-//   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
-//   double hh = 1 - dd * dd / (bb * bb);
-//   double b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
-//   return b - hRest[2];
-// }
-
 double InitalValueT ( const std::vector < double >& x ) {
   double pi = acos ( -1. );
   //return 17.5 + 25/pi * atan(x[0]/100.);
   if ( x[0] < 0 ) return 5;
   else return 30;
 }
-
-// double InitalValueT0(const std::vector < double >& x)
-// {
-//   if (x[0]<0) return 5;
-//   else return 30;
-//   //return 30;
-// }
-
-// double InitalValueT1(const std::vector < double >& x)
-// {
-//   if (x[0]<0) return 5;
-//   else return 30;
-//   //return 5;
-// }
-
-// double InitalValueT2(const std::vector < double >& x)
-// {
-//   return 5;
-// }
 
 
 double InitalValueB ( const std::vector < double >& x ) {
@@ -145,18 +103,18 @@ int main ( int argc, char** args ) {
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "h%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO );
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO );
     sprintf ( name, "v%d", i );
     mlSol.AddSolution ( name, LAGRANGE, FIRST );
     sprintf ( name, "T%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO );
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO );
     sprintf ( name, "HT%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO );
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO );
   }
 
-  mlSol.AddSolution ( "b", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false );
+  mlSol.AddSolution ( "b", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, false );
 
-  mlSol.AddSolution ( "eta", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false );
+  mlSol.AddSolution ( "eta", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, false );
 
   mlSol.Initialize ( "All" );
 

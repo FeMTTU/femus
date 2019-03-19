@@ -42,14 +42,13 @@ namespace femus
 
 
 //------------------------------------------------------------------------------------------------------
-  void MeshMetisPartitioning::DoPartition(std::vector <int>& epart, const bool& AMR)
+  void MeshMetisPartitioning::DoPartition(std::vector <unsigned>& partition, const bool& AMR)
   {
-
 
     int nnodes = _mesh.GetNumberOfNodes();
     int nelem = _mesh.GetNumberOfElements();
 
-    epart.resize(nelem);
+    std::vector <int> epart(nelem);
 
     if(_nprocs == 1) {
       //serial computation
@@ -136,26 +135,30 @@ namespace femus
         }
         
         std::vector<unsigned> MaterialElementCounter = _mesh.el->GetMaterialElementCounter();
-	std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA\n";
-	std::cout << MaterialElementCounter[0]<<" "<< MaterialElementCounter[1]<<" "<< MaterialElementCounter[2]<<" \n";
+        //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+        //std::cout << MaterialElementCounter[0]<<" "<< MaterialElementCounter[1]<<" "<< MaterialElementCounter[2]<<" \n";
       }
       else{
       
       }
     }
     
+    partition.resize(epart.size());
+    for(unsigned i = 0; i < epart.size(); i++){
+      partition[i] = epart[i];
+    }
     
     return;
   }
 
-  void MeshMetisPartitioning::DoPartition(std::vector <int>& epart, const Mesh& meshc)
+  void MeshMetisPartitioning::DoPartition(std::vector <unsigned>& partition, const Mesh& meshc)
   {
-    epart.resize(_mesh.GetNumberOfElements());
+    partition.resize(_mesh.GetNumberOfElements());
     unsigned refIndex = _mesh.GetRefIndex();
     for(int isdom = 0; isdom < _nprocs; isdom++) {
       for(unsigned iel = meshc._elementOffset[isdom]; iel < meshc._elementOffset[isdom + 1]; iel++) {
         for(unsigned j = 0; j < refIndex; j++) {
-          epart[ iel * refIndex + j ] = isdom;
+          partition[ iel * refIndex + j ] = isdom;
         }
       }
     }

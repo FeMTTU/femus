@@ -608,6 +608,167 @@ namespace femus
 
 
   }
+  
+   bool PRINT = false;
+   void MultiLevelSolution::GenerateRKBdc(
+       const unsigned int &solIndex, const std::vector<unsigned> &solKiIndex, 
+       const unsigned int &grid0, const std::vector < double> & itime, const double &time0, const double &dt,const double *AI)
+  {
+    
+    for(unsigned k = 0; k < solKiIndex.size(); k++){  
+      strcpy(_bdcType[solKiIndex[k]], "RKbdc");
+    }
+    // 2 Default Neumann
+    // 1 AMR artificial Dirichlet = 0 BC
+    // 0 Dirichlet
+    for(unsigned igridn = grid0; igridn < _gridn; igridn++) {
+      if(_solution[igridn]->_ResEpsBdcFlag[solIndex]) {
+        Mesh* msh = _mlMesh->GetLevel(igridn);
+
+        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &amrRestriction = msh->GetAmrRestrictionMap();
+
+        // default Neumann
+        for(unsigned j = msh->_dofOffset[_solType[solIndex]][_iproc]; j < msh->_dofOffset[_solType[solIndex]][_iproc + 1]; j++) {
+          for(unsigned k = 0; k < solKiIndex.size(); k++){
+            _solution[igridn]->_Bdc[solKiIndex[k]]->set(j, 2.);
+          }
+        }
+
+        if(_solType[solIndex] < 3) {  // boundary condition for lagrangian elements
+          for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
+            for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+              if(msh->el->GetBoundaryIndex(iel, jface) == 0) {   // interior boundary (AMR) u = 0
+                short unsigned ielt = msh->GetElementType(iel);
+                unsigned nv1 = msh->GetElementFaceDofNumber(iel, jface, _solType[solIndex]);  // only the face dofs
+                for(unsigned iv = 0; iv < nv1; iv++) {
+                  unsigned i = msh->GetLocalFaceVertexIndex(iel, jface, iv);
+                  unsigned idof = msh->GetSolutionDof(i, iel, _solType[solIndex]);
+                  if(amrRestriction[_solType[solIndex]].find(idof) != amrRestriction[_solType[solIndex]].end() &&
+                     amrRestriction[_solType[solIndex]][idof][idof] == 0) {
+                    for(unsigned k = 0; k < solKiIndex.size(); k++){
+                     _solution[igridn]->_Bdc[solKiIndex[k]]->set(idof, 1.);
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
+            for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+              if(msh->el->GetBoundaryIndex(iel, jface) > 0) {   // exterior boundary u = value
+                short unsigned ielt = msh->GetElementType(iel);
+                unsigned nv1 = msh->GetElementFaceDofNumber(iel, jface, _solType[solIndex]);
+
+                for(unsigned iv = 0; iv < nv1; iv++) {
+                  unsigned i = msh->GetLocalFaceVertexIndex(iel, jface, iv);
+                  unsigned inode_coord_Metis = msh->GetSolutionDof(i, iel, 2);
+
+                  if(_useParsedBCFunction) {
+                    unsigned int faceIndex = msh->el->GetBoundaryIndex(iel, jface);
+
+                    if(GetBoundaryCondition(solIndex, faceIndex - 1u) == DIRICHLET) {
+                      unsigned inode_Metis = msh->GetSolutionDof(i, iel, _solType[solIndex]);
+                      for(unsigned k = 0; k < solKiIndex.size(); k++){
+                        _solution[igridn]->_Bdc[solKiIndex[k]]->set(inode_Metis, 0.);
+                      }
+                      std::vector < double > ivalue(solKiIndex.size(),0.);
+
+                      if(!Ishomogeneous(solIndex, faceIndex - 1u)) {
+                        ParsedFunction* bdcfunc = (ParsedFunction*)(GetBdcFunction(solIndex, faceIndex - 1u));
+                        double xyzt[4];
+                        xyzt[0] = (*msh->_topology->_Sol[0])(inode_coord_Metis);
+                        xyzt[1] = (*msh->_topology->_Sol[1])(inode_coord_Metis);
+                        xyzt[2] = (*msh->_topology->_Sol[2])(inode_coord_Metis);
+                        xyzt[3] = time0;
+                        double value0 = (*bdcfunc)(xyzt);
+                                                
+                        for(unsigned k = 0; k < solKiIndex.size(); k++){
+                          xyzt[3] = itime[k];
+                          ivalue[k] = (*bdcfunc)(xyzt) - value0;
+                        }
+                        if(_solTimeOrder[solIndex]==2){
+                          _solution[igridn]->_SolOld[solIndex]->set(inode_Metis, value0);
+                        }
+                        for(unsigned k1 = 0; k1 < solKiIndex.size(); k1++){
+                          double value = 0.;  
+                          for(unsigned k2 = 0; k2 < solKiIndex.size(); k2++){
+                            value += AI[k1 * solKiIndex.size() + k2] * ivalue[k2];
+                          }
+                          _solution[igridn]->_Sol[solKiIndex[k1]]->set(inode_Metis, value / dt);
+                        }
+                      }
+                    }
+                  }
+                  else {
+                    double value0;
+                    std::vector < double > xx(3);
+                    xx[0] = (*msh->_topology->_Sol[0])(inode_coord_Metis);
+                    xx[1] = (*msh->_topology->_Sol[1])(inode_coord_Metis);
+                    xx[2] = (*msh->_topology->_Sol[2])(inode_coord_Metis);
+                    bool test = (_bdcFuncSetMLProb) ?
+                                _SetBoundaryConditionFunctionMLProb(_mlBCProblem, xx, _solName[solIndex], value0, msh->el->GetBoundaryIndex(iel, jface), time0) :
+                                _SetBoundaryConditionFunction(xx, _solName[solIndex], value0, msh->el->GetBoundaryIndex(iel, jface), time0);
+
+                    if(test) {
+                        
+                      if(PRINT) std::cout << inode_coord_Metis << " "<< value0 << "\n" ;
+                                 
+                      std::vector < double > ivalue(solKiIndex.size(),0.);   
+                      for(unsigned k = 0; k < solKiIndex.size(); k++){
+                        if (_bdcFuncSetMLProb){
+                          _SetBoundaryConditionFunctionMLProb(_mlBCProblem, xx, _solName[solIndex], ivalue[k], msh->el->GetBoundaryIndex(iel, jface), itime[k]);
+                        }
+                        else{
+                          _SetBoundaryConditionFunction(xx, _solName[solIndex], ivalue[k], msh->el->GetBoundaryIndex(iel, jface), itime[k]);
+                        }
+                        if(PRINT) std::cout << inode_coord_Metis << " "<< ivalue[k] << std::endl;
+                        ivalue[k] -= value0;
+                      }  
+                        
+                      unsigned idof = msh->GetSolutionDof(i, iel, _solType[solIndex]);
+                      
+                      if(_solTimeOrder[solIndex]==2){
+                        _solution[igridn]->_SolOld[solIndex]->set(idof, value0);
+                      }
+                      for(unsigned k1 = 0; k1 < solKiIndex.size(); k1++){
+                        double value = 0.;  
+                        for(unsigned k2 = 0; k2 < solKiIndex.size(); k2++){
+                          value += AI[k1*solKiIndex.size() + k2] * ivalue[k2];
+                        }
+                        _solution[igridn]->_Bdc[solKiIndex[k1]]->set(idof, 0.);
+                        _solution[igridn]->_Sol[solKiIndex[k1]]->set(idof, value / dt);
+                      }                      
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        if(_fixSolutionAtOnePoint[solIndex] == true  && igridn == 0 && _iproc == 0) {
+          for(unsigned k = 0; k < solKiIndex.size(); k++){ 
+            
+            _solution[igridn]->_Bdc[solKiIndex[k]]->set(0, 0.);
+            _solution[igridn]->_Sol[solKiIndex[k]]->set(0, 0.);
+            
+          }
+        }
+        if(_solTimeOrder[solIndex]==2){
+          _solution[igridn]->_SolOld[solIndex]->close();
+        }
+        for(unsigned k = 0; k < solKiIndex.size(); k++){  
+          _solution[igridn]->_Sol[solKiIndex[k]]->close();
+          _solution[igridn]->_Bdc[solKiIndex[k]]->close();
+          
+        }
+      }
+    }
+
+  PRINT = false;
+  }
+  
+  
 
   void MultiLevelSolution::SaveSolution(const char* filename, const double &time)
   {
