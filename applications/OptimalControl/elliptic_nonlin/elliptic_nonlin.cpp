@@ -246,11 +246,12 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   const unsigned   iproc = msh->processor_id(); 
 
 
- //************** geometry (at dofs and quadrature points) *************************************  
+ //************** geometry (at dofs) *************************************  
   vector < vector < double > > coords_at_dofs(dim);
   unsigned coords_fe_type = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
   for (unsigned i = 0; i < coords_at_dofs.size(); i++)    coords_at_dofs[i].reserve(max_size);
 
+ //************** geometry (at quadrature points) *************************************  
   vector < double > coord_at_qp(dim);
   
 

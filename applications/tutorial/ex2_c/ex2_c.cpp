@@ -33,7 +33,7 @@ using namespace femus;
 
 
  
-template < class type >
+template < class type = double >
   class My_exact_solution : public Math::Function< type > {  
  
   public:
@@ -95,14 +95,14 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
 }
 
 
-template < class real_num, class other_real_num >
-  void System_assemble_interface(MultiLevelProblem & ml_prob);
+template < class real_num, class real_num_mov = double >
+void System_assemble_interface(MultiLevelProblem & ml_prob);
 
-template < class real_num, class other_real_num > 
+template < class real_num, class real_num_mov = double > 
 void System_assemble_flexible(MultiLevelProblem & ml_prob,
                             const std::string system_name,
                             const std::string unknown,
-                            const Math::Function< other_real_num > & exact_sol);
+                            const Math::Function< double > & exact_sol);
 
 
  //Unknown definition  ==================
@@ -196,15 +196,15 @@ int main(int argc, char** args) {
 //   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
  
-   My_exact_solution< double > exact_sol;                                            //provide exact solution, if available ==============
+   My_exact_solution<> exact_sol;                                            //provide exact solution, if available ==============
    const unsigned conv_order_flag = 0;                                               //Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
    const unsigned norm_flag = 1;                                                     //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
    std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();   //provide list of unknowns ==============
 
-    My_main_single_level< /*adept::a*/double > my_main;
+    My_main_single_level< adept::adouble > my_main;
 //  my_main.run_on_single_level(files, unknowns, ml_mesh, 3); if you don't want the convergence study
     
-    FE_convergence< double >  fe_convergence;
+    FE_convergence<>  fe_convergence;
     
     fe_convergence.convergence_study(files, unknowns, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
     
@@ -266,7 +266,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             mlProb.set_current_unknown_assembly(unknowns[u]._name); //way to communicate to the assemble function, which doesn't belong to any class
             
             // attach the assembling function to system
-            system.SetAssembleFunction(System_assemble_interface< real_num, double >);
+            system.SetAssembleFunction(System_assemble_interface< real_num >);
 
             // initialize and solve the system
             system.init();
@@ -296,14 +296,14 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
 
 
-template <class real_num, class other_real_num >
+template <class real_num, class real_num_mov = double >
 void System_assemble_interface(MultiLevelProblem& ml_prob) {
 // this is meant to be like a tiny addition to the main function, because we cannot pass these arguments through the function pointer
     
-   My_exact_solution< other_real_num > exact_sol;
+   My_exact_solution< double > exact_sol;
 const std::string system_name = "Equation"; //I cannot get this from the system because there may be more than one
 
-      System_assemble_flexible< real_num, other_real_num > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+      System_assemble_flexible< real_num > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
 
 }
 
@@ -316,8 +316,8 @@ const std::string system_name = "Equation"; //I cannot get this from the system 
  *                  J = \grad_u F
  **/
 
-template < class real_num, class other_real_num >
-void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const Math::Function< other_real_num > & exact_sol) {
+template < class real_num, class real_num_mov = double >
+void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const Math::Function< double > & exact_sol) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -353,29 +353,29 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
   if (soluPdeIndex > 0) { std::cout << "Only scalar variable now, haven't checked with vector PDE"; abort(); }
 
   
-  other_real_num weight; // gauss point weight
-
-      
-  vector < real_num >  solu;  solu.reserve(max_size_elem_dofs);
-  vector < other_real_num >  solu_exact_at_dofs;  solu_exact_at_dofs.reserve(max_size_elem_dofs);
-
-  vector < vector < other_real_num > > x(dim);  unsigned xType = BIQUADR_FE;
-
+  //----------- at dofs ------------------------------
+  vector < vector < real_num_mov > > x(dim);  unsigned xType = BIQUADR_FE;     // must be adept if the domain is moving, otherwise double
   for (unsigned i = 0; i < dim; i++)  x[i].reserve(max_size_elem_dofs);
 
+  vector < real_num >  solu;                              solu.reserve(max_size_elem_dofs);
+  vector < double >    solu_exact_at_dofs;  solu_exact_at_dofs.reserve(max_size_elem_dofs);
+
+
+  //------------ at quadrature points ---------------------
+  real_num_mov weight;    // must be adept if the domain is moving
 //-----------------  
-  vector < other_real_num > phi_coords;
-  vector < other_real_num > phi_coords_x;
-  vector < other_real_num > phi_coords_xx;
+  vector < double > phi_coords;
+  vector < real_num_mov > phi_coords_x;   // must be adept if the domain is moving
+  vector < real_num_mov > phi_coords_xx;  // must be adept if the domain is moving
 
   phi_coords.reserve(max_size_elem_dofs);
   phi_coords_x.reserve(max_size_elem_dofs * dim);
   phi_coords_xx.reserve(max_size_elem_dofs * dim2);
 
 //-----------------  
-  vector < other_real_num > phi;
-  vector < other_real_num > phi_x;
-  vector < other_real_num > phi_xx;
+  vector < double > phi;
+  vector < double > phi_x;
+  vector < double > phi_xx;
 
   phi.reserve(max_size_elem_dofs);
   phi_x.reserve(max_size_elem_dofs * dim);
@@ -383,14 +383,14 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
   
 
-  vector < int > loc_to_glob_map;  loc_to_glob_map.reserve(max_size_elem_dofs);
-  vector < real_num >  Res;    Res.reserve(max_size_elem_dofs);  
-  vector < other_real_num > Jac;     Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);
+  vector < int >       loc_to_glob_map;  loc_to_glob_map.reserve(max_size_elem_dofs);
+  vector < real_num >  Res;                          Res.reserve(max_size_elem_dofs);  
+  vector < double >    Jac;                          Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);
   
 
   adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
 
-  const assemble_jacobian< real_num, other_real_num > assemble_jac;
+  const assemble_jacobian< real_num, double > assemble_jac;
 
   
   KK->zero();
@@ -426,7 +426,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
      
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
-        std::vector< other_real_num > x_at_node(dim,0.);
+        std::vector< double > x_at_node(dim,0.);
         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
                     solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
@@ -446,14 +446,14 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
         
       // *** get gauss point weight, test function and test function partial derivatives ***
       static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][soluType] )
-                                         ->Jacobian_type_non_isoparametric< other_real_num >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
+                                         ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
 //       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
       msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
                real_num solu_gss = 0.;
       vector < real_num > gradSolu_gss(dim, 0.);
-      vector < other_real_num > gradSolu_exact_gss(dim, 0.);
+      vector < double > gradSolu_exact_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];
@@ -465,7 +465,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
       }
 
       
-      vector < other_real_num > x_gss(dim, 0.);
+      vector < double > x_gss(dim, 0.);
       for (unsigned i = 0; i < nDofx; i++) {
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           x_gss[jdim] += x[jdim][i] * phi_coords[i];
@@ -490,7 +490,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
 //         Res[i] += ( source_term * phi[i] - phi[i] * solu_gss - laplace ) * weight;
         
 // manufactured Helmholtz - strong
-             other_real_num helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
+             double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
         Res[i] += (helmholtz_strong_exact * phi[i] - solu_gss * phi[i] - laplace) * weight;
 
 // manufactured Laplacian - strong
