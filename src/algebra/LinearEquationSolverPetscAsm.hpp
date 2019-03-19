@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __femus_algebra_AsmPetscLinearEquationSolver_hpp__
-#define __femus_algebra_AsmPetscLinearEquationSolver_hpp__
+#ifndef __femus_algebra_LinearEquationSolverPetscAsm_hpp__
+#define __femus_algebra_LinearEquationSolverPetscAsm_hpp__
 
 #include "FemusConfig.hpp"
 
@@ -27,7 +27,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "GmresPetscLinearEquationSolver.hpp"
+#include "LinearEquationSolverPetsc.hpp"
 #include "PetscVector.hpp"
 
 namespace femus {
@@ -36,15 +36,15 @@ namespace femus {
    * This class inherits the abstract class LinearEquationSolver. In this class the solver is implemented using the PETSc package
    **/
 
-  class AsmPetscLinearEquationSolver : public GmresPetscLinearEquationSolver {
+  class LinearEquationSolverPetscAsm : public LinearEquationSolverPetsc {
 
     public:
 
       /**  Constructor. Initializes Petsc data structures */
-      AsmPetscLinearEquationSolver(const unsigned &igrid, Solution *other_solution);
+      LinearEquationSolverPetscAsm(const unsigned &igrid, Solution *other_solution);
 
       /** Destructor */
-      ~AsmPetscLinearEquationSolver();
+      ~LinearEquationSolverPetscAsm();
 
     private:
 
@@ -69,7 +69,7 @@ namespace femus {
         if(!_standardASM){
           BuildAMSIndex(variable_to_be_solved);
         }
-        GmresPetscLinearEquationSolver::BuildBdcIndex(variable_to_be_solved);
+        LinearEquationSolverPetsc::BuildBdcIndex(variable_to_be_solved);
       }
       
       void SetPreconditioner(KSP& subksp, PC& subpc);
@@ -94,8 +94,8 @@ namespace femus {
 
 // =================================================
 
-  inline AsmPetscLinearEquationSolver::AsmPetscLinearEquationSolver(const unsigned &igrid, Solution *other_solution)
-    : GmresPetscLinearEquationSolver(igrid, other_solution) {
+  inline LinearEquationSolverPetscAsm::LinearEquationSolverPetscAsm(const unsigned &igrid, Solution *other_solution)
+    : LinearEquationSolverPetsc(igrid, other_solution) {
 
     unsigned dim = _msh->GetDimension();
     unsigned base = pow(2, dim);
@@ -110,7 +110,7 @@ namespace femus {
 
 // =============================================
 
-  inline AsmPetscLinearEquationSolver::~AsmPetscLinearEquationSolver() {
+  inline LinearEquationSolverPetscAsm::~LinearEquationSolverPetscAsm() {
 
     for(unsigned i = 0; i < _localIs.size(); i++) {
       ISDestroy(&_localIs[i]);

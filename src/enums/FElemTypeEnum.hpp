@@ -3,7 +3,7 @@
 
 enum  FEFamily {
     LAGRANGE = 0,
-    DISCONTINOUS_POLYNOMIAL
+    DISCONTINUOUS_POLYNOMIAL
 };
 
 enum FEOrder {

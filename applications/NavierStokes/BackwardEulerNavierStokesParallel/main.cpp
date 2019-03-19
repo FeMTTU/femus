@@ -55,7 +55,7 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("U",LAGRANGE,SECOND,2);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,2);
   // the pressure variable should be the last for the Schur decomposition
-  ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
+  ml_sol.AddSolution("P",DISCONTINUOUS_POLYNOMIAL,FIRST,1);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
 
   //Initialize (update Init(...) function)

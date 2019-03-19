@@ -226,10 +226,10 @@ int main(int argc, char **args)
 //   if (!dimension2D) ml_sol.PairSolution("W", "DZ"); // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AddSolution("P", DISCONTINUOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("P", "Pressure", false); // Add this line
 
-  //ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+  //ml_sol.AddSolution("lmbd", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -324,7 +324,7 @@ int main(int argc, char **args)
 
   // ******* Set Preconditioner *******
 
-  system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetLinearEquationSolverType(FEMuS_ASM);
 
   system.init();
 

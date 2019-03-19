@@ -52,8 +52,8 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
-unsigned kOrder = 5; //for order tests
-unsigned numberOfSamples = 1000000; //for MC sampling of the QoI
+unsigned kOrder = 7; //for order tests
+unsigned numberOfSamples = 1000; //for MC sampling of the QoI
 unsigned nxCoarseBox;
 double xMinCoarseBox = - 5.; //-5.5 for Gaussian, -5. for SGM (average) with Gaussian KL, -3. for SGM (integral),  -1.5 for uniform, not KL: -0.6 for avg and int
 double xMaxCoarseBox = 3.;  //5.5 for Gaussian, 3. for SGM (average) with Gaussian KL,  5.5 for SGM (integral), 1.5 for uniform, not KL: 0.6 for avg and 0.8 for int
@@ -64,11 +64,11 @@ unsigned nzCoarseBox;
 double zMinCoarseBox = - 5.;
 double zMaxCoarseBox = 3.;
 
-unsigned numberOfSamplesFinest = 1000000; //10^6 for spatial average, 10^7 for "integral" of the square, 10^7 for SGM with random variable (not KL)
-unsigned kOrderFinest = 6;
-unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamplesFinest ) ) ); //for spatial average
+unsigned numberOfSamplesFinest = 100000000; //10^6 for spatial average, 10^7 for "integral" of the square, 10^7 for SGM with random variable (not KL)
+unsigned kOrderFinest = 8;
+// unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamplesFinest ) ) ); //for spatial average
 // unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamplesFinest ) ) ); //for integral of the square
-// unsigned nxCoarseBoxFinest = static_cast<unsigned> ( pow(2,kOrderFinest) );
+unsigned nxCoarseBoxFinest = static_cast<unsigned> ( pow(2,kOrderFinest) );
 unsigned nyCoarseBoxFinest = nxCoarseBoxFinest;
 unsigned nzCoarseBoxFinest = nxCoarseBoxFinest;
 
@@ -78,7 +78,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -147,7 +147,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (GMRES_SMOOTHER);
+  system.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   system.init();
 
@@ -184,7 +184,7 @@ int main (int argc, char** argv) {
   systemSG.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  systemSG.SetMgSmoother (GMRES_SMOOTHER);
+  systemSG.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   systemSG.init();
 
@@ -229,23 +229,23 @@ int main (int argc, char** argv) {
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
   //END
 
-
+/*
   //BEGIN Define the instances of the problem for HISTOGRAM and KDE
   MultiLevelMesh mlMshHisto;
   MultiLevelMesh mlMshHistoFinest;
 
-    nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamples ) ) );
+//     nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamples ) ) );
 //     nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamples ) ) );
-//     nxCoarseBox = static_cast<unsigned> ( pow(2,kOrder) );
+    nxCoarseBox = static_cast<unsigned> ( pow(2,kOrder) );
     nyCoarseBox = nxCoarseBox;
     nzCoarseBox = nxCoarseBox;
 
-//     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
-    mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
+    mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
+//     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
 //     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, nzCoarseBox, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh" ); //for 3D
 
-//     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
-    mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
+    mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
+//     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
 //     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, nzCoarseBoxFinest, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh" ); //for 3D
 
   mlMshHisto.PrintInfo();
@@ -260,10 +260,10 @@ int main (int argc, char** argv) {
   MultiLevelSolution mlSolHisto (&mlMshHisto);
   MultiLevelSolution mlSolHistoFinest (&mlMshHistoFinest);
 
-  mlSolHisto.AddSolution ("HISTO", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSolHisto.AddSolution ("HISTO", DISCONTINUOUS_POLYNOMIAL, ZERO);
   mlSolHisto.AddSolution ("PROPOSED", LAGRANGE, FIRST);
 
-  mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINUOUS_POLYNOMIAL, ZERO);
 
   mlSolHisto.Initialize ("All");
 
@@ -298,6 +298,7 @@ int main (int argc, char** argv) {
   mlSolHistoFinest.GetWriter()->Write (DEFAULT_OUTPUTDIR, "histo_finer", print_vars_3, 0);
   //END
 
+ */ 
   return 0;
 
 } //end main

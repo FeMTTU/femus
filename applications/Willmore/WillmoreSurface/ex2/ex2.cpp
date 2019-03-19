@@ -437,7 +437,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             //term2 +=  P * solY_Xtan[K][J] * phiY_Xtan[J][i]; 
             adept::adouble term4 = 0.;
             for(unsigned L = 0; L < DIM; L++){
-              term4 += solx_Xtan[J][L] * solY_Xtan[K][L] + solx_Xtan[K][L] * solY_Xtan[J][L];
+              term4 += solx_Xtan[L][J] * solY_Xtan[L][K] + solx_Xtan[L][K] * solY_Xtan[L][J];
             }
             term3 += P * phiY_Xtan[J][i] * term4;
           }
@@ -505,9 +505,9 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   RES->close();
   KK->close();
   
-  VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
+ // VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
   
-  abort();
+ // abort();
  // MatView((static_cast<PetscMatrix*>(KK))->mat(), PETSC_VIEWER_STDOUT_SELF );
   
 //     PetscViewer    viewer;

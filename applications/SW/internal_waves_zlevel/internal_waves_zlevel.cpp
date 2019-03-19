@@ -30,7 +30,8 @@ double rho1[20]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,100
 double ni_h = 0.01; 
 double ni_v = 0.0001;
 
-double dt = 300.; 
+double dt = 1.; 
+unsigned counter = 0.;
 
 const unsigned NumberOfLayers = 20; 
 
@@ -333,7 +334,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 
-void ETD(MultiLevelProblem& ml_prob);
+void ETD(MultiLevelProblem& ml_prob, const double & numberOfTimeSteps);
 
 
 int main(int argc, char** args)
@@ -367,18 +368,18 @@ int main(int argc, char** args)
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf(name, "h%d", i);
-    mlSol.AddSolution(name, DISCONTINOUS_POLYNOMIAL, ZERO);
+    mlSol.AddSolution(name, DISCONTINUOUS_POLYNOMIAL, ZERO);
     sprintf(name, "v%d", i);
     mlSol.AddSolution(name, LAGRANGE, FIRST);
     sprintf(name, "T%d", i);
-    mlSol.AddSolution(name, DISCONTINOUS_POLYNOMIAL, ZERO);
+    mlSol.AddSolution(name, DISCONTINUOUS_POLYNOMIAL, ZERO);
     sprintf(name, "HT%d", i);
-    mlSol.AddSolution(name, DISCONTINOUS_POLYNOMIAL, ZERO);
+    mlSol.AddSolution(name, DISCONTINUOUS_POLYNOMIAL, ZERO);
   }
   
-  mlSol.AddSolution("b", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false);
+  mlSol.AddSolution("b", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, false);
 
-  mlSol.AddSolution("eta", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false);
+  mlSol.AddSolution("eta", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, false);
 
   mlSol.Initialize("All");
   
@@ -441,16 +442,17 @@ int main(int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 58000; //200days = 57600 with dt=300s
+  unsigned numberOfTimeSteps = 3601; //58000; //200days = 57600 with dt=300s
   for(unsigned i = 0; i < numberOfTimeSteps; i++) {    
-    ETD(ml_prob);
+    ETD(ml_prob, numberOfTimeSteps);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1)/1);
+    counter = i;
   }
   return 0;
 }
 
 
-void ETD(MultiLevelProblem& ml_prob)
+void ETD(MultiLevelProblem& ml_prob, const double & numberOfTimeSteps)
 {
 
   const unsigned& NLayers = NumberOfLayers;
@@ -1084,7 +1086,9 @@ void ETD(MultiLevelProblem& ml_prob)
       double valueH = (*sol->_Sol[solIndexh[k]])(i);
             
       double valueT = valueHT/valueH;
-    
+      std::cout.precision(14);
+      if(counter==numberOfTimeSteps-2) std::cout << valueT << std::endl;
+      
       sol->_Sol[solIndexT[k]]->set(i, valueT);
     }
     

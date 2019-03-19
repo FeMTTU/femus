@@ -62,7 +62,7 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("V", LAGRANGE, SECOND, 1);
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 1);
+  ml_sol.AddSolution("P", DISCONTINUOUS_POLYNOMIAL, FIRST, 1);
   ml_sol.AssociatePropertyToSolution("P", "Pressure"); // Add this line
 
   //Initialize (update Init(...) function)

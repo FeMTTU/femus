@@ -7,18 +7,18 @@ PROJECT(femus)
 #############################################################################################
 
 SET(femus_src 
-algebra/AsmPetscLinearEquationSolver.cpp
 algebra/DenseMatrixBase.cpp
 algebra/DenseMatrix.cpp
 algebra/DenseSubmatrix.cpp
 algebra/DenseVectorBase.cpp
-algebra/FieldSplitPetscLinearEquationSolver.cpp
 algebra/FieldSplitTree.cpp
 algebra/Graph.cpp
 algebra/LinearEquation.cpp
 algebra/LinearEquationSolver.cpp
 algebra/NumericVector.cpp
-algebra/GmresPetscLinearEquationSolver.cpp
+algebra/LinearEquationSolverPetsc.cpp
+algebra/LinearEquationSolverPetscAsm.cpp
+algebra/LinearEquationSolverPetscFieldSplit.cpp
 algebra/PetscMatrix.cpp
 algebra/PetscPreconditioner.cpp
 algebra/PetscVector.cpp

@@ -148,12 +148,12 @@ int main (int argc, char** args) {
 
   MultiLevelMesh mlMshCube (5, 5, "./input/box.neu", "fifth", 1., NULL);
   MultiLevelSolution mlSolCube (&mlMshCube); // Here we provide the mesh info to the problem.
-  mlSolCube.AddSolution ("K11", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSolCube.AddSolution ("K12", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSolCube.AddSolution ("K13", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSolCube.AddSolution ("K22", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSolCube.AddSolution ("K23", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSolCube.AddSolution ("K33", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+  mlSolCube.AddSolution ("K11", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+  mlSolCube.AddSolution ("K12", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+  mlSolCube.AddSolution ("K13", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+  mlSolCube.AddSolution ("K22", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+  mlSolCube.AddSolution ("K23", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+  mlSolCube.AddSolution ("K33", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
   mlSolCube.Initialize ("All");
 

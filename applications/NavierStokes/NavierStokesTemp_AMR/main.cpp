@@ -85,7 +85,7 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("U",LAGRANGE,SECOND);
   ml_sol.AddSolution("V",LAGRANGE,SECOND);
   // the pressure variable should be the last for the Schur decomposition
-  ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
+  ml_sol.AddSolution("P",DISCONTINUOUS_POLYNOMIAL,FIRST);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
 
   //Initialize (update Init(...) function)
@@ -134,8 +134,8 @@ int main(int argc,char **args) {
   system1.SetNumberPostSmoothingStep(1);
 
   //Set Smoother Options
-  if(Gmres) 		system1.SetMgSmoother(GMRES_SMOOTHER);
-  else if(Asm) 		system1.SetMgSmoother(ASM_SMOOTHER);
+  if(Gmres) 		system1.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  else if(Asm) 		system1.SetLinearEquationSolverType(FEMuS_ASM);
 
   system1.init();
 
@@ -184,9 +184,9 @@ int main(int argc,char **args) {
 //   system2.SetNumberPostSmoothingStep(1);
 //
 //   //Set Smoother Options
-//   if(Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
-//   else if(Asm) 		system2.SetMgSmoother(ASM_SMOOTHER);
-//   else if(Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
+//   if(Gmres) 		system2.SetLinearEquationSolverType(FEMuS_DEFAULT);
+//   else if(Asm) 		system2.SetLinearEquationSolverType(FEMuS_ASM);
+//   else if(Vanka)	system2.SetLinearEquationSolverType(VANKA_SMOOTHER);
 //
 //   system2.init();
 //   //common smoother option

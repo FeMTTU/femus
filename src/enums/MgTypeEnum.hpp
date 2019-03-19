@@ -7,7 +7,7 @@ enum MgType {
     M_CYCLE
 };
 
-enum MgSmootherType{
+enum LinearEquationSolverTypeType{
     FULL=0,
     MULTIPLICATIVE,
     ADDITIVE,

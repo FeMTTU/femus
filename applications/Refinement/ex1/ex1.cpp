@@ -95,7 +95,7 @@ int main(int argc, char** args) {
 //   // add variables to mlSol
 //
 //   mlSol.AddSolution("V", LAGRANGE, SECOND);
-//   mlSol.AddSolution("W", DISCONTINOUS_POLYNOMIAL, FIRST);
+//   mlSol.AddSolution("W", DISCONTINUOUS_POLYNOMIAL, FIRST);
 //
 //   mlSol.Initialize("All");
 //

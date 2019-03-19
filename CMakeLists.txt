@@ -154,9 +154,6 @@ OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
 OPTION(BUILD_WILLMORE "Build the Willmore problem" ON)
 
 # --
-OPTION(BUILD_WILLMORE_SURFACE "Build the Generalized Willmore problem" ON)
-
-# --
 OPTION(BUILD_TUTORIAL "Build the tutorial problems" ON)
 
 # --
@@ -176,6 +173,8 @@ OPTION(BUILD_REFINEMENT "Build the Refiniment apps" ON)
 OPTION(BUILD_PETSC_DEBUG "Build the PETSC debug apps" ON)
 
 OPTION(BUILD_UQ "Build the UQ apps" ON)
+
+OPTION(BUILD_NONLOCAL "Build the NONLOCAL apps" ON)
 
 OPTION(BUILD_SW "Build the Shallow Water apps" ON)
 

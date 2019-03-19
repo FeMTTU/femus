@@ -181,7 +181,7 @@ namespace femus {
     _topology->GetSolutionName ("Z") = _coords[2];
 
 
-    _topology->AddSolution ("AMR", DISCONTINOUS_POLYNOMIAL, ZERO, 1, 0);
+    _topology->AddSolution ("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
 
     _topology->ResizeSolutionVector ("AMR");
 
@@ -255,7 +255,7 @@ namespace femus {
     _topology->GetSolutionName ("Y") = _coords[1];
     _topology->GetSolutionName ("Z") = _coords[2];
 
-    _topology->AddSolution ("AMR", DISCONTINOUS_POLYNOMIAL, ZERO, 1, 0);
+    _topology->AddSolution ("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
 
     _topology->ResizeSolutionVector ("AMR");
 

@@ -27,28 +27,33 @@ namespace femus {
 
   LinearImplicitSystem::LinearImplicitSystem(MultiLevelProblem& ml_probl,
       const std::string& name_in,
-      const unsigned int number_in, const MgSmoother& smoother_type) :
+      const unsigned int number_in, const LinearEquationSolverType& smoother_type) :
     ImplicitSystem(ml_probl, name_in, number_in, smoother_type),
     _n_max_linear_iterations(3),
     _final_linear_residual(1.e20),
     _linearAbsoluteConvergenceTolerance(1.e-08),
     _mg_type(F_CYCLE),
-    _npre(1),
-    _npost(1),
+    _npre(1u),
+    _npre0(1u),
+    _npost(1u),
     _AMRtest(0),
     _maxAMRlevels(0),
     _AMRnorm(0),
     _AMRthreshold(0.01),
     _AMReighborThresholdValue(0.),
-    _SmootherType(smoother_type),
+    _smootherType(smoother_type),
+    _includeCoarseLevelSmoother(INCLUDE_COARSE_LEVEL_FALSE),
     _MGmatrixFineReuse(false),
     _MGmatrixCoarseReuse(false),
     _printSolverInfo(false),
-    _assembleMatrix(true) {
+    _assembleMatrix(true),
+    _sparsityPatternMinimumSize(1u),
+    _numberOfGlobalVariables(0u){
     _SparsityPattern.resize(0);
-    _outer_ksp_solver = "gmres";
+    _mgOuterSolver = GMRES;
     _totalAssemblyTime = 0.;
     _totalSolverTime =0.;
+    
   }
 
   // ********************************************
@@ -62,7 +67,7 @@ namespace femus {
   void LinearImplicitSystem::clear() {
     for(unsigned ig = 0; ig < _LinSolver.size(); ig++) {
       _LinSolver[ig]->DeletePde();
-      delete _LinSolver[ig];
+      //delete _LinSolver[ig];
 
       if(_PP[ig]) delete _PP[ig];
       if(_RR[ig]) delete _RR[ig];
@@ -73,6 +78,7 @@ namespace femus {
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
+    _numberOfGlobalVariables = 0;
   }
 
   // ********************************************
@@ -91,20 +97,36 @@ namespace femus {
   }
 
   // ********************************************
+  
+  void LinearImplicitSystem::SetSparsityPatternMinimumSize(const unsigned &minimumSize){
+    _sparsityPatternMinimumSize = (minimumSize < 2u) ? 1u : minimumSize;
+  }
+  
+  // ******************************************
 
   void LinearImplicitSystem::init() {
 
     _LinSolver.resize(_gridn);
 
-//     _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], GMRES_SMOOTHER).release();
 
-    _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], _SmootherType).release();
+    if(_includeCoarseLevelSmoother = INCLUDE_COARSE_LEVEL_TRUE){
+      _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], _smootherType).release();
+    }
+    else{
+      _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], FEMuS_DEFAULT).release();  
+    }
+    for(unsigned i = 1; i < _gridn; i++) {
+      _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();
+    }
     
-    for(unsigned i = 0; i < _gridn; i++) {
-      _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _SmootherType).release();
+    if(_sparsityPatternMinimumSize != 1u){
+      for(unsigned i = 0; i < _gridn; i++) {
+        _LinSolver[i]->SetSparsityPatternMinimumSize(_sparsityPatternMinimumSize);
+      }
     }
 
     for(unsigned i = 0; i < _gridn; i++) {
+      _LinSolver[i]->SetNumberOfGlobalVariables(_numberOfGlobalVariables);
       _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
                              _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridn, _SparsityPattern);
     }
@@ -153,7 +175,7 @@ namespace femus {
 
   // ********************************************
 
-  void LinearImplicitSystem::solve(const MgSmootherType& mgSmootherType) {
+  void LinearImplicitSystem::solve(const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
 
     _bitFlipCounter = 0;
     
@@ -240,16 +262,18 @@ restart:
       std::cout << std::endl << " ****** Level Max " << igridn + 1 << " PREPARATION TIME:\t" << static_cast<double>((clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
 
       if(_MGsolver) {
-        _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _outer_ksp_solver.c_str());
+        _LinSolver[igridn]->MGInit(LinearEquationSolverTypeType, igridn + 1, _mgOuterSolver);
 
         for(unsigned i = 0; i < igridn + 1; i++) {
+          unsigned npre = (i == 0)? _npre0 : _npre;  
+          unsigned npost = (i == 0)? 0 : _npost;  
           if(_RR[i])
-            _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost);
+            _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _RR[i], npre, npost);
           else
-            _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost);
+            _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], npre, npost);
         }
 
-        MGVcycle(igridn, mgSmootherType);
+        MGVcycle(igridn, LinearEquationSolverTypeType);
 
         _LinSolver[igridn]->MGClear();
       }
@@ -332,7 +356,7 @@ restart:
 
   // ********************************************
 
-  bool LinearImplicitSystem::MGVcycle(const unsigned& level, const MgSmootherType& mgSmootherType) {
+  bool LinearImplicitSystem::MGVcycle(const unsigned& level, const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
 
     clock_t start_mg_time = clock();
 
@@ -389,7 +413,9 @@ restart:
       }
 
       // ============== Direct Solver ==============
-      _LinSolver[0]->Solve(_VariablesToBeSolvedIndex, ksp_clean);
+      for(unsigned k = 0; k < _npre0; k++){
+        _LinSolver[0]->Solve(_VariablesToBeSolvedIndex, ksp_clean * (!k));
+      }
 
       for(unsigned ig = 1; ig <= level; ig++) {
         // ============== Prolongation ==============
@@ -500,7 +526,7 @@ restart:
 
     _LinSolver.resize(_gridn + 1);
 
-    _LinSolver[_gridn] = LinearEquationSolver::build(_gridn, _solution[_gridn], _SmootherType).release();
+    _LinSolver[_gridn] = LinearEquationSolver::build(_gridn, _solution[_gridn], _smootherType).release();
 
     _LinSolver[_gridn]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
                                 _ml_sol->GetSolName(), &_solution[_gridn]->_Bdc,  _gridn + 1, _SparsityPattern);
@@ -917,8 +943,9 @@ restart:
 
   // ********************************************
 
-  void LinearImplicitSystem::SetMgSmoother(const MgSmoother mgsmoother) {
-    _SmootherType = mgsmoother;
+  void LinearImplicitSystem::SetLinearEquationSolverType(const LinearEquationSolverType LinearEquationSolverType, const CoarseLevelInclude &includeCoarseLevelSmoother) {
+    _includeCoarseLevelSmoother = includeCoarseLevelSmoother;
+    _smootherType = LinearEquationSolverType;
   }
 
 
@@ -959,13 +986,13 @@ restart:
 
   // ********************************************
 
-  void LinearImplicitSystem::SetSolverCoarseGrid(const SolverType &finegridsolvertype) {
-    _LinSolver[0]->set_solver_type(finegridsolvertype);
+  void LinearImplicitSystem::SetSolverCoarseGrid(const SolverType &coarseGridSolver) {
+    _LinSolver[0]->set_solver_type(coarseGridSolver);
   }
   
   
-  void LinearImplicitSystem::SetSolverFineGrids(const SolverType &finegridsolvertype) {
-    _finegridsolvertype = finegridsolvertype;
+  void LinearImplicitSystem::SetSolverFineGrids(const SolverType &fineGridSolver) {
+    _finegridsolvertype = fineGridSolver;
 
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i]->set_solver_type(_finegridsolvertype);
@@ -977,13 +1004,13 @@ restart:
   
   
   
-  void LinearImplicitSystem::SetPreconditionerCoarseGrid(const PreconditionerType &finegridpreconditioner) {
-    _LinSolver[0]->set_preconditioner_type(finegridpreconditioner);
+  void LinearImplicitSystem::SetPreconditionerCoarseGrid(const PreconditionerType &coarseGridPreconditioner) {
+    _LinSolver[0]->set_preconditioner_type(coarseGridPreconditioner);
   }
   
   
-  void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType &finegridpreconditioner) {
-    _finegridpreconditioner = finegridpreconditioner;
+  void LinearImplicitSystem::SetPreconditionerFineGrids(const PreconditionerType &fineGridPreconditioner) {
+    _finegridpreconditioner = fineGridPreconditioner;
 
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i]->set_preconditioner_type(_finegridpreconditioner);
@@ -1031,10 +1058,10 @@ restart:
 
     _LinSolver.resize(_gridn);
 
-    _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], GMRES_SMOOTHER).release();
+    _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], FEMuS_DEFAULT).release();
 
     for(unsigned i = 1; i < _gridn; i++) {
-      _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _SmootherType).release();
+      _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();
     }
 
 //     for (unsigned i=0; i<_gridn; i++) {
