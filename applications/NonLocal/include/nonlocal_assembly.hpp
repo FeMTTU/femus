@@ -545,11 +545,11 @@ void AssembleLocalSys ( MultiLevelProblem& ml_prob )
 
         if ( xMax <= leftBound && xMin >= leftBound - delta1 )  elementGroups[iel] = 5;
 
-        else if ( xMax <= 0. && xMin > leftBound )  elementGroups[iel] = 6;
+        else if ( xMax <= 0. && xMin >= leftBound )  elementGroups[iel] = 7;
 
-        else if ( xMax < rightBound && xMin >= 0. )  elementGroups[iel] = 7;
+        else if ( xMax <= rightBound && xMin >= 0. )  elementGroups[iel] = 8;
 
-        else if ( xMax <= rightBound + delta2 && xMin >= rightBound )  elementGroups[iel] = 8;
+        else if ( xMax <= rightBound + delta2 && xMin >= rightBound )  elementGroups[iel] = 6;
 
     }
 
