@@ -54,7 +54,9 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
    const double offset_to_include_line = 1.e-5;
    const double target_line = 0.5 + target_line_sign * offset_to_include_line; 
    
-      if (  target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] < target_line_sign * target_line ) {  target_flag = 1;  }
+      if ((  target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] < target_line_sign * target_line ) && 
+          (  target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] > - 0.5 + target_line_sign * (0.5 - target_line_sign * offset_to_include_line)))
+          {  target_flag = 1;  }
   
      return target_flag;
 
