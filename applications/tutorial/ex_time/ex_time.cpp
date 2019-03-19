@@ -98,7 +98,7 @@ double  nonlin_term_function(const double& v) {
     
 //    return 1.;
 //    return v + 1.;
-   return - 1.5 * 1./( (1. - v) );
+   return - 2. * 1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
 //     return -exp(v);
 //     return -  v * v * v - 1.;
@@ -110,7 +110,7 @@ double  nonlin_term_derivative(const double& v) {
     
 //    return 0.;
 //    return 1.;
-   return - 1.5 * 2. * 1./( (1. - v)*(1. - v) ); 
+   return - 2. * 2. * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
 //     return -exp(v);
 //     return -3. * v * v;
@@ -146,7 +146,9 @@ int main(int argc,char **args) {
 
 //    std::string input_file = "Lshape_longer_y.med";
 //    std::string input_file = "Lshape.med";
-   std::string input_file = "ellipse_tri6.med";
+//    std::string input_file = "circle_tri6.med";
+//    std::string input_file = "ellipse_tri6.med";
+   std::string input_file = "ellipse_with_hole_tri6.med";
    std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   
@@ -189,9 +191,9 @@ int main(int argc,char **args) {
 
   system.SetAssembleFunction(AssembleMatrixRes);
 
-//   system.SetOuterKSPSolver("preonly");
-//   system.SetSolverFineGrids(PREONLY);
-//   system.SetPreconditionerFineGrids(MLU_PRECOND);
+  system.SetOuterKSPSolver("preonly");
+  system.SetSolverFineGrids(PREONLY);
+  system.SetPreconditionerFineGrids(MLU_PRECOND);
   
 //   system.SetMaxNumberOfLinearIterations(1);
 //   system.SetAbsoluteLinearConvergenceTolerance(1.e-8);
