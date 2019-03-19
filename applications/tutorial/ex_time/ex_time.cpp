@@ -146,7 +146,7 @@ int main(int argc,char **args) {
 
 //    std::string input_file = "Lshape_longer_y.med";
 //    std::string input_file = "Lshape.med";
-   std::string input_file = "circle_tri6.med";
+   std::string input_file = "ellipse_tri6.med";
    std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   
