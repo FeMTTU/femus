@@ -641,7 +641,7 @@ static  void compute_error_norms_per_unknown_per_level(const MultiLevelSolution*
 
 
 
-template < class real_num, class other_real_num >
+template < class real_num, class real_num_mov = double >
 class assemble_jacobian {
  
     
@@ -654,16 +654,16 @@ class assemble_jacobian {
  void  compute_jacobian_inside_integration_loop(const unsigned i,
                                                const unsigned dim,
                                                const unsigned nDofu,
-                                               const std::vector< other_real_num > & phi,
-                                               const std::vector< other_real_num > &  phi_x, 
-                                               const other_real_num weight,
-                                               std::vector< other_real_num > & Jac) const;
+                                               const std::vector< real_num_mov > & phi,
+                                               const std::vector< real_num_mov > &  phi_x, 
+                                               const real_num_mov weight,
+                                               std::vector< real_num_mov > & Jac) const;
   
                                                
  void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
                                                const std::vector< real_num > & solu,
                                                const std::vector< real_num > & Res,
-                                               std::vector< other_real_num > & Jac, 
+                                               std::vector< real_num_mov > & Jac, 
                                                const std::vector< int > & loc_to_glob_map,
                                                NumericVector*           RES,
                                                SparseMatrix*             KK

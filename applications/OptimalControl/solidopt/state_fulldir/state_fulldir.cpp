@@ -84,7 +84,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 
 
 
-template < class real_num_mov >
+template <  class real_num, class real_num_mov >
 void AssembleSolidMech_AD(MultiLevelProblem& ml_prob);
 
 
@@ -179,7 +179,7 @@ int main(int argc, char** args) {
  
 
   // attach the assembling function to system
-  system.SetAssembleFunction( AssembleSolidMech_AD< adept::adouble >);
+  system.SetAssembleFunction( AssembleSolidMech_AD< adept::adouble, adept::adouble >);
 
   // initilaize and solve the system
   system.init();
@@ -222,15 +222,13 @@ int main(int argc, char** args) {
 
 
 
-template < class real_num_mov >
+template < class real_num, class real_num_mov >
 void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
-  // call the adept stack object
-  adept::Stack& s = FemusInit::_adeptStack;
 
   NonLinearImplicitSystem& 	mlPdeSys   	= ml_prob.get_system<NonLinearImplicitSystem> ("SolidMech");
   const unsigned 		level 		    = mlPdeSys.GetLevelToAssemble();
@@ -259,12 +257,12 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
  
   // geometry (at dofs) *******************************************
-  vector< vector < real_num_mov > >   coordX(dim);	//local coordinates
-  vector  < vector  < double > > coordX_hat(dim);
-  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+  vector< vector < real_num_mov > >   coords(dim);
+  vector  < vector  < double > > coords_hat(dim);
+  unsigned coordsType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
   for(int i=0;i<dim;i++) {   
-       coordX[i].reserve(maxSize); 
-       coordX_hat[i].reserve(maxSize); 
+       coords[i].reserve(maxSize); 
+       coords_hat[i].reserve(maxSize); 
  }
   // geometry *******************************************
 
@@ -303,10 +301,9 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
    vector < unsigned int > Sol_n_el_dofs(n_unknowns);
   
   //==========================================================================================
-  //-----------state------------------------------
   vector < vector < double > > phi_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_hat_gss_fe(NFE_FAMS);
-  vector < vector < real_num_mov > > phi_x_gss_fe(NFE_FAMS);   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
+  vector < vector < real_num_mov > > phi_x_gss_fe(NFE_FAMS);   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here  //some of these should be real_num, some real_num_mov...
   vector < vector < real_num_mov > > phi_xx_gss_fe(NFE_FAMS);  //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
   vector < vector < double > > phi_x_hat_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_xx_hat_gss_fe(NFE_FAMS);
@@ -326,15 +323,15 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   real_num_mov weight = 0.;
     double weight_hat = 0.;
  
+  //----------- at dofs ------------------------------
   // equation ***********************************
   vector < int > JACDof;   JACDof.reserve( n_unknowns *maxSize);
   vector < double > Res;   Res.reserve( n_unknowns *maxSize);
   vector < double > Jac;   Jac.reserve( n_unknowns *maxSize * n_unknowns *maxSize);
 
-  //----------- at dofs ------------------------------
-  vector < vector < real_num_mov > > aResVAR(n_unknowns);
-  vector < vector < real_num_mov > > SolVAR_eldofs(n_unknowns);
-  vector < vector < real_num_mov > > gradSolVAR_eldofs(n_unknowns);
+  vector < vector < real_num > > aResVAR(n_unknowns);   //real num are those that are adept despite of the moving domain
+  vector < vector < real_num > > SolVAR_eldofs(n_unknowns);
+  vector < vector < real_num > > gradSolVAR_eldofs(n_unknowns);
    
 
   for(int k=0; k<n_unknowns; k++) {
@@ -344,10 +341,10 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   }
 
   //------------ at quadrature points ---------------------
-    vector < real_num_mov > SolVAR_qp(n_unknowns);
-    vector < vector < real_num_mov > > gradSolVAR_qp(n_unknowns);
+    vector < real_num > SolVAR_qp(n_unknowns);
+    vector < vector < real_num > > gradSolVAR_qp(n_unknowns);
     
-    vector < vector < real_num_mov > > gradSolVAR_hat_qp(n_unknowns);
+    vector < vector < real_num > > gradSolVAR_hat_qp(n_unknowns);
     for(int k=0; k<n_unknowns; k++) { 
 	gradSolVAR_qp[k].resize(dim); 
  	gradSolVAR_hat_qp[k].resize(dim); 
@@ -372,6 +369,9 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
  
     RES->zero();
   if (assembleMatrix) JAC->zero();
+  
+  adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
+  const assemble_jacobian< real_num, real_num_mov > assemble_jac;
 
 
   // element loop: each process loops only on the elements that owns
@@ -380,18 +380,18 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   // geometry *****************************
     short unsigned ielGeom = msh->GetElementType(iel);
 
-      unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
+      unsigned nDofsX = msh->GetElementDofNumber(iel, coordsType);    // number of coordinate element dofs
     
     for(int ivar=0; ivar<dim; ivar++) {
-      coordX[ivar].resize(nDofsX);
-      coordX_hat[ivar].resize(nDofsX);
+      coords[ivar].resize(nDofsX);
+      coords_hat[ivar].resize(nDofsX);
     }
     
    for( unsigned i=0;i<nDofsX;i++) {
-      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
+      unsigned coordsDof  = msh->GetSolutionDof(i, iel, coordsType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
       for(unsigned ivar = 0; ivar < dim; ivar++) {
           //Fixed coordinates (Reference frame)
-	coordX_hat[ivar][i] = (*msh->_topology->_Sol[ivar])(coordXDof);
+	coords_hat[ivar][i] = (*msh->_topology->_Sol[ivar])(coordsDof);
       }
     }
 
@@ -408,11 +408,9 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
   //resize ###################################################################
     JACDof.resize(nDofsDP);
-       Res.resize(nDofsDP);
-       Jac.resize(nDofsDP * nDofsDP);
+       Res.resize(nDofsDP);            std::fill(Res.begin(), Res.end(), 0.);
+       Jac.resize(nDofsDP * nDofsDP);  std::fill(Jac.begin(), Jac.end(), 0.);
   //resize ###################################################################
-      std::fill(Jac.begin(), Jac.end(), 0.);
-      std::fill(Res.begin(), Res.end(), 0.);
 
    //STATE###################################################################  
   for (unsigned  k = 0; k < n_unknowns; k++) {
@@ -430,28 +428,28 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //STATE###################################################################
   
 
-    // start a new recording of all the operations involving real_num_mov variables
-   if( assembleMatrix ) s.new_recording();
     
     //Moving coordinates (Moving frame)
       for (unsigned idim = 0; idim < dim; idim++) {
         for (int j = 0; j < nDofsD; j++) {
-          coordX[idim][j] = coordX_hat[idim][j] + SolVAR_eldofs[SolIndex[idim]][j];
+          coords[idim][j] = coords_hat[idim][j] + SolVAR_eldofs[SolIndex[idim]][j];
         }
       }
 
-   
+     // start a new recording of all the operations involving real_num_mov variables
+   if( assembleMatrix ) stack.new_recording();
+  
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][SolFEType[disp_type_pos]/*solDType*/]->GetGaussPointNumber(); ig++) {
 
 	// *** get Jacobian and test function and test function derivatives ***
       for(int fe=0; fe < NFE_FAMS; fe++) {
-	ml_prob._ml_msh->_finiteElement[ielGeom][fe]->Jacobian(coordX,    ig,weight,    phi_gss_fe[fe],    phi_x_gss_fe[fe],    phi_xx_gss_fe[fe]);
-	ml_prob._ml_msh->_finiteElement[ielGeom][fe]->Jacobian(coordX_hat,ig,weight_hat,phi_hat_gss_fe[fe],phi_x_hat_gss_fe[fe],phi_xx_hat_gss_fe[fe]);
+	ml_prob._ml_msh->_finiteElement[ielGeom][fe]->Jacobian(coords,    ig,weight,    phi_gss_fe[fe],    phi_x_gss_fe[fe],    phi_xx_gss_fe[fe]);
+	ml_prob._ml_msh->_finiteElement[ielGeom][fe]->Jacobian(coords_hat,ig,weight_hat,phi_hat_gss_fe[fe],phi_x_hat_gss_fe[fe],phi_xx_hat_gss_fe[fe]);
       }
          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
-  	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
-  	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX_hat,ig,weight_hat,phi_hat_gss_fe[BIQUADR_FE],phi_x_hat_gss_fe[BIQUADR_FE],phi_xx_hat_gss_fe[BIQUADR_FE]);
+  	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coords,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+  	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coords_hat,ig,weight_hat,phi_hat_gss_fe[BIQUADR_FE],phi_x_hat_gss_fe[BIQUADR_FE],phi_xx_hat_gss_fe[BIQUADR_FE]);
 
 
   //begin unknowns eval at gauss points ********************************
@@ -552,24 +550,24 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
      Jac.resize(nDofsDP * nDofsDP);
    // define the dependent, independent variables
     for (unsigned  k = 0; k < n_unknowns; k++) {   
-	s.dependent(&aResVAR[k][0], Sol_n_el_dofs[k]);
+	stack.dependent(&aResVAR[k][0], Sol_n_el_dofs[k]);
     }
     
     for (unsigned  k = 0; k < n_unknowns; k++) {   
-	s.independent(&SolVAR_eldofs[k][0], Sol_n_el_dofs[k]); 
+	stack.independent(&SolVAR_eldofs[k][0], Sol_n_el_dofs[k]); 
     }
    
     // get the and store jacobian matrix (row-major)
-    s.jacobian(&Jac[0] , true);
+    stack.jacobian(&Jac[0] , true);
 
-    assemble_jacobian<real_num_mov,double>::print_element_residual(iel,Res,Sol_n_el_dofs,9,5);
-    assemble_jacobian<real_num_mov,double>::print_element_jacobian(iel,Jac,Sol_n_el_dofs,9,5);
+    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel,Res,Sol_n_el_dofs,9,5);
+    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel,Jac,Sol_n_el_dofs,9,5);
 
 
    JAC->add_matrix_blocked(Jac, JACDof, JACDof);
 
-    s.clear_independents();
-    s.clear_dependents();
+    stack.clear_independents();
+    stack.clear_dependents();
  }  //end assemble matrix
     
     

@@ -392,7 +392,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
   const assemble_jacobian< real_num, double > assemble_jac;
 
-  
+  RES->zero();
   KK->zero();
 
 
