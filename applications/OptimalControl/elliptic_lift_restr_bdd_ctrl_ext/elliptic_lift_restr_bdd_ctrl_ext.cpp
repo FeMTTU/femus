@@ -338,7 +338,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 //    std::cout << " ======= grp_flag === " << group_flag << " ================== " << std::endl; 
 //     int face_no         = msh->GetElementFaceNumber(iel);
 //     std::cout << " ======= face# === " << face_no << " ================== " << std::endl; 
- //******************** GEOMETRY ********************* 
+
+//******************** GEOMETRY ********************* 
     unsigned nDofx = msh->GetElementDofNumber(iel, coords_fe_type);    // number of coordinate element dofs
     for (int i = 0; i < dim; i++)  coords_at_dofs[i].resize(nDofx);
     // local storage of coordinates
@@ -428,16 +429,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     L2G_dofmap_AllVars.resize(0);
       for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_AllVars.insert(L2G_dofmap_AllVars.end(),L2G_dofmap[k].begin(),L2G_dofmap[k].end());
  //*************************************************** 
-    
-    
-    Res.resize(nDof_AllVars);                   std::fill(Res.begin(), Res.end(), 0.);
-    Jac.resize(nDof_AllVars * nDof_AllVars);    std::fill(Jac.begin(), Jac.end(), 0.);
-    
-    
-  for (unsigned  k = 0; k < n_unknowns; k++) {
-    unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-	Sol_n_el_dofs[k] = ndofs_unk;
-  }
+
   
    vector <double> interface_flag;   interface_flag.reserve(Sol_n_el_dofs[pos_state]); //flag for boundary interface
    std::fill(interface_flag.begin(), interface_flag.end(), 0.);
