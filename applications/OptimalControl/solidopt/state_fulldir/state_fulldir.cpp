@@ -23,27 +23,31 @@
 using namespace femus;
 
   
-  
-double InitialValueDX(const std::vector < double >& x) {
-  return 0.;
-}
+double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+         
+           double value = 0.;
 
-double InitialValueDY(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueDZ(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueP(const std::vector < double >& x) {
-  return 0.;
+             if(!strcmp(name,"DX")) {
+                 value = 0.;
+             }
+             else if(!strcmp(name,"DY")) {
+                 value = 0.;
+             }
+             else if(!strcmp(name,"DZ")) {
+                 value = 0.;
+             }
+             else if(!strcmp(name,"DP")) {
+                 value = 0.;
+             }
+           
+    
+      return value;   
 }  
   
-
+  
   
 
-bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
   
   bool dirichlet; 
@@ -234,7 +238,7 @@ int main(int argc, char** args) {
         files.RedirectCout();
 
 
-  MultiLevelMesh mlMsh;  // define multilevel mesh
+  MultiLevelMesh ml_mesh;  // define multilevel mesh
   double scalingFactor = 1.;  // read coarse level mesh and generate finers level meshes
   
     //Adimensional quantity (Lref,Uref)
@@ -262,22 +266,18 @@ int main(int argc, char** args) {
   std::cout << solid << std::endl;
 
   
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+  ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
 //   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
 //      probably in the furure it is not going to be an argument of this function   */
-  unsigned dimension = mlMsh.GetDimension();
+  unsigned dimension = ml_mesh.GetDimension();
 
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  ml_mesh.PrintInfo();
 
-  // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
-
-  // print mesh info
-  mlMsh.PrintInfo();
-
-  MultiLevelSolution ml_sol(&mlMsh);
+  MultiLevelSolution ml_sol(&ml_mesh);
 
   // add variables to ml_sol
   ml_sol.AddSolution("DX",LAGRANGE,SECOND);
@@ -285,25 +285,26 @@ int main(int argc, char** args) {
   if ( dimension == 3 ) ml_sol.AddSolution("DZ",LAGRANGE,SECOND);
   ml_sol.AddSolution("P",LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/,FIRST);
 
+    // ======= Problem ========================
+  MultiLevelProblem ml_prob(&ml_sol);  // define the multilevel problem attach the ml_sol object to it
+
+  ml_prob.SetFilesHandler(&files);
+
   ml_sol.Initialize("All");
-  ml_sol.Initialize("DX", InitialValueDX);
-  ml_sol.Initialize("DY", InitialValueDY);
-  if ( dimension == 3 ) ml_sol.Initialize("DZ", InitialValueDZ);
-  ml_sol.Initialize("P", InitialValueP);
+                        ml_sol.Initialize("DX", SetInitialCondition, &ml_prob);
+                        ml_sol.Initialize("DY", SetInitialCondition, &ml_prob);
+  if ( dimension == 3 ) ml_sol.Initialize("DZ", SetInitialCondition, &ml_prob);
+                        ml_sol.Initialize("P",  SetInitialCondition, &ml_prob);
 
   // attach the boundary condition function and generate boundary data
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBox);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   ml_sol.GenerateBdc("All");
 
-  // define the multilevel problem attach the ml_sol object to it
-  MultiLevelProblem mlProb(&ml_sol);
 
-  mlProb.parameters.set<Fluid>("Fluid") = fluid;
-  mlProb.parameters.set<Solid>("Solid") = solid;
- mlProb.SetFilesHandler(&files);
+  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+  ml_prob.parameters.set<Solid>("Solid") = solid;
 
-  // add system Poisson in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("SolidMech");
+  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("SolidMech");
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("DX");
@@ -337,8 +338,7 @@ int main(int argc, char** args) {
 //   system.SetMaxNumberOfLinearIterations(4);
 //   system.SetAbsoluteLinearConvergenceTolerance(1.e-10);
  
-  system.MLsolve();
-//   system.MGsolve();
+  system.MGsolve();
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -351,8 +351,6 @@ int main(int argc, char** args) {
 
  ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic", variablesToBePrinted);
  
-  //Destroy all the new systems
-  mlProb.clear();
     
   return 0;
 }
