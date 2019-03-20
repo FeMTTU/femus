@@ -702,7 +702,7 @@ static void print_element_jacobian(const unsigned int iel,
 
 
 static void print_element_residual(const unsigned int iel, 
-                            const  vector < double > & Res, 
+                            const  vector < real_num > & Res, 
                             const vector < unsigned int > & Sol_n_el_dofs,
                             const unsigned int col_width_visualization,     
                             const unsigned int precision)  {

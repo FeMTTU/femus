@@ -325,11 +325,9 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
  
   //----------- at dofs ------------------------------
   // equation ***********************************
-  vector < int > JACDof;   JACDof.reserve( n_unknowns *maxSize);
+  vector < int > L2G_dofmap_AllVars;   L2G_dofmap_AllVars.reserve( n_unknowns *maxSize);
   vector < double > Jac;   Jac.reserve( n_unknowns *maxSize * n_unknowns *maxSize);
-
-  vector < double >       Res;     Res.reserve( n_unknowns * maxSize);
-  vector < real_num > aResVAR; aResVAR.reserve( n_unknowns * maxSize);
+  vector < real_num > Res; Res.reserve( n_unknowns * maxSize);
 
   vector < vector < real_num > > SolVAR_eldofs(n_unknowns);
   for(int k = 0; k < n_unknowns; k++) {    SolVAR_eldofs[k].reserve(maxSize);  }
@@ -365,7 +363,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   if (assembleMatrix) JAC->zero();
   
   adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
-  const assemble_jacobian< real_num, real_num_mov > assemble_jac;
+  const assemble_jacobian< real_num, double/*real_num_mov*/ > assemble_jac;
 
 
   // element loop: each process loops only on the elements that owns
@@ -401,10 +399,9 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   // equation end *****************************      
 
   //resize ###################################################################
-    JACDof.resize(nDofsDP);
+    L2G_dofmap_AllVars.resize(nDofsDP);
        Jac.resize(nDofsDP * nDofsDP);  std::fill(Jac.begin(), Jac.end(), 0.);
-       Res.resize(nDofsDP);            std::fill(Res.begin(), Res.end(), 0.);
-   aResVAR.resize(nDofsDP);            std::fill(aResVAR.begin(), aResVAR.end(), 0.);
+   Res.resize(nDofsDP);            std::fill(Res.begin(), Res.end(), 0.);
   //resize ###################################################################
 
    //STATE###################################################################  
@@ -415,7 +412,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < ndofs_unk; i++) {
        unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
        SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
-       JACDof[i + k *nDofsD]/*[k][i]*/ = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
+       L2G_dofmap_AllVars[i + k *nDofsD]/*[k][i]*/ = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
       }
     }
   //STATE###################################################################
@@ -429,8 +426,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
         }
       }
 
-     // start a new recording of all the operations involving real_num_mov variables
-   if( assembleMatrix ) stack.new_recording();
+     assemble_jac.prepare_before_integration_loop(stack);
   
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][SolFEType[disp_type_pos]/*solDType*/]->GetGaussPointNumber(); ig++) {
@@ -468,8 +464,8 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 // // //   // I x = 5 test ********************************
 // // // 	for(unsigned i_unk=0; i_unk<n_unknowns; i_unk++) { 
 // // // 	    for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
-// // // 		/*Res[ i_dof +  i_unk * nDofsD ]*/aResVAR[i_unk][i_dof] +=  (   5.* phi_gss_fe[SolFEType[i_unk]][i_dof] - SolVAR_qp[i_unk]*phi_gss_fe[SolFEType[i_unk]][i_dof] )*weight;
-// // // // std::cout << aResVAR[i_unk][i_dof] << "----" << std::endl;
+// // // 		/*Res[ i_dof +  i_unk * nDofsD ]*/Res[i_unk][i_dof] +=  (   5.* phi_gss_fe[SolFEType[i_unk]][i_dof] - SolVAR_qp[i_unk]*phi_gss_fe[SolFEType[i_unk]][i_dof] )*weight;
+// // // // std::cout << Res[i_unk][i_dof] << "----" << std::endl;
 // // // 		// 		  for(unsigned j_unk=dim; j_unk<n_unknowns; j_unk++) {
 // // // // 		  	for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_unk]; j_dof++) {
 // // // // 			  
@@ -507,7 +503,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
               }
 
               for (int idim = 0; idim < dim; idim++) {
-                aResVAR[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( +  phi_gss_fe[SolFEType[idim]][i] * _gravity[idim] - Cauchy_direction[idim]) * weight;
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( +  phi_gss_fe[SolFEType[idim]][i] * _gravity[idim] - Cauchy_direction[idim]) * weight;
               }
 
             }
@@ -520,7 +516,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
                 real_num_mov div_displ = 0.;
                  for (int idim = 0; idim < dim; idim++) div_displ += gradSolVAR_qp[SolPdeIndex[idim]][idim];
                               
-              aResVAR[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[press_type_pos], i) ] += phi_gss_fe[SolFEType[press_type_pos]][i] * Solid::get_mass_balance< real_num_mov >(solid_model, penalty, incompressible, lambda, weight, weight_hat, div_displ, J_hat, SolVAR_qp, SolPdeIndex, press_type_pos);
+              Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[press_type_pos], i) ] += phi_gss_fe[SolFEType[press_type_pos]][i] * Solid::get_mass_balance< real_num_mov >(solid_model, penalty, incompressible, lambda, weight, weight_hat, div_displ, J_hat, SolVAR_qp, SolPdeIndex, press_type_pos);
                 
             }
               //END residual solid mass balance
@@ -530,33 +526,11 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
     //--------------------------------------------------------------------------------------------------------
 
-    //copy the value of the adept::adoube aRes in double Res and store them in RES
 
-     Res.resize(nDofsDP);    //resize
-       for (int i = 0; i < Res.size(); i++) Res[ i ] = - aResVAR[ i ].value();
-    
-    RES->add_vector_blocked(Res, JACDof);
+    if (assembleMatrix) assemble_jac.compute_jacobian_outside_integration_loop(stack, SolVAR_eldofs, Res, Jac, L2G_dofmap_AllVars, RES, JAC);
 
- if (assembleMatrix) {   //Extract and store the Jacobian
-     Jac.resize(nDofsDP * nDofsDP);
-   // define the dependent, independent variables
-	stack.dependent(&aResVAR[0], aResVAR.size());
-    
-    for (unsigned  k = 0; k < n_unknowns; k++) {   
-	stack.independent(&SolVAR_eldofs[k][0], Sol_n_el_dofs[k]); 
-    }
-   
-    // get the and store jacobian matrix (row-major)
-    stack.jacobian(&Jac[0] , true);
-
-   JAC->add_matrix_blocked(Jac, JACDof, JACDof);
-
-    stack.clear_independents();
-    stack.clear_dependents();
- }  //end assemble matrix
-    
-    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel,Res,Sol_n_el_dofs,9,5);
-    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel,Jac,Sol_n_el_dofs,9,5);
+    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 5);
+    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 9, 5);
     
   } //end element loop for each process
 
