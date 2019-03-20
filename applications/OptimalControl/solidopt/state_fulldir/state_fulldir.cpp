@@ -257,7 +257,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
  
   
-  //----------- unkowns ------------------------------
+  //----------- unknowns ------------------------------
    const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
 //      enum Sol_pos {pos_dx = 0, pos_dy, pos_p};  //these are known at compile-time
 //      enum Sol_pos {pos_dx = 0, pos_dy, pos_dz, pos_p};
@@ -266,25 +266,25 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 //   constexpr unsigned int pos_dp = 2;  
 //   if (dim == 3) {std::cout << "Uncomment the 3d enum and recompile"; abort(); }
    
-  constexpr int disp_type_pos = 0;     //known at compile time
-  const     int press_type_pos = dim;      //known at run time
-  constexpr int state_pos_begin = 0;   //known at compile time
+  constexpr int sol_index_displ = 0;     //known at compile time
+  const     int sol_index_press = dim;      //known at run time
+  constexpr int state_pos_begin = sol_index_displ;   //known at compile time
 
 
   vector < std::string > Solname(n_unknowns);
   Solname              [state_pos_begin+0] =                "DX";
   Solname              [state_pos_begin+1] =                "DY";
   if (dim == 3) Solname[state_pos_begin+2] =                "DZ";
-  Solname              [state_pos_begin + press_type_pos] = "P";
+  Solname              [state_pos_begin + sol_index_press] = "P";
   
-  vector < unsigned int > SolPdeIndex(n_unknowns);
   vector < unsigned int > SolIndex(n_unknowns);  
+  vector < unsigned int > SolPdeIndex(n_unknowns);
   vector < unsigned int > SolFEType(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-    SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
     SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
+    SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
@@ -309,7 +309,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
    
   //----------- at dofs ------------------------------
   vector < double >   Jac;   Jac.reserve( n_unknowns * max_size_elem_dofs * n_unknowns * max_size_elem_dofs);
-  vector < real_num > Res; Res.reserve( n_unknowns * max_size_elem_dofs);
+  vector < real_num > Res;   Res.reserve( n_unknowns * max_size_elem_dofs);
            vector < int >       L2G_dofmap_AllVars;   L2G_dofmap_AllVars.reserve( n_unknowns *max_size_elem_dofs);
   vector < vector < int > >         L2G_dofmap(n_unknowns);  for(int i = 0; i < n_unknowns; i++) {    L2G_dofmap[i].reserve(max_size_elem_dofs); }
   vector < vector < real_num > > SolVAR_eldofs(n_unknowns);  for(int k = 0; k < n_unknowns; k++) { SolVAR_eldofs[k].reserve(max_size_elem_dofs); }
@@ -363,32 +363,6 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-  // geometry *****************************
-    short unsigned ielGeom = msh->GetElementType(iel);
-
-      unsigned nDofsX = msh->GetElementDofNumber(iel, coordsType);    // number of coordinate element dofs
-    
-    for(int ivar=0; ivar<dim; ivar++) {
-      coords[ivar].resize(nDofsX);
-      coords_hat[ivar].resize(nDofsX);
-    }
-    
-   for( unsigned i=0;i<nDofsX;i++) {
-      unsigned coordsDof  = msh->GetSolutionDof(i, iel, coordsType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
-      for(unsigned ivar = 0; ivar < dim; ivar++) {
-          //Fixed coordinates (Reference frame)
-	coords_hat[ivar][i] = (*msh->_topology->_Sol[ivar])(coordsDof);
-      }
-    }
-
-  //***************************************  
-  
-  // geometry end *****************************
-
-  // equation *****************************
-    unsigned nDofsD = msh->GetElementDofNumber(iel, SolFEType[disp_type_pos]);    // number of solution element dofs
-    unsigned nDofsP = msh->GetElementDofNumber(iel, SolFEType[state_pos_begin + press_type_pos]);    // number of solution element dofs
-  // equation end *****************************      
 
    //all vars ###################################################################  
   for (unsigned  k = 0; k < n_unknowns; k++) {
@@ -410,23 +384,45 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
     for (unsigned  k = 0; k < n_unknowns; k++) { sum_Sol_n_el_dofs += Sol_n_el_dofs[k]; }
     
     Jac.resize(sum_Sol_n_el_dofs * sum_Sol_n_el_dofs);  std::fill(Jac.begin(), Jac.end(), 0.);
-    Res.resize(sum_Sol_n_el_dofs);            std::fill(Res.begin(), Res.end(), 0.);
+    Res.resize(sum_Sol_n_el_dofs);                      std::fill(Res.begin(), Res.end(), 0.);
   //all vars ###################################################################
   
     
+  // geometry *****************************
+    short unsigned ielGeom = msh->GetElementType(iel);
+
+      unsigned nDofsX = msh->GetElementDofNumber(iel, coordsType);    // number of coordinate element dofs
+    
+    for(int ivar=0; ivar<dim; ivar++) {
+      coords[ivar].resize(nDofsX);
+      coords_hat[ivar].resize(nDofsX);
+    }
+    
+   for( unsigned i = 0; i < nDofsX; i++) {
+      unsigned coordsDof  = msh->GetSolutionDof(i, iel, coordsType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
+      for(unsigned ivar = 0; ivar < dim; ivar++) {
+          //Fixed coordinates (Reference frame)
+	coords_hat[ivar][i] = (*msh->_topology->_Sol[ivar])(coordsDof);
+      }
+    }
+
+  //***************************************  
+    assert(nDofsX == Sol_n_el_dofs[sol_index_displ]);
     //Moving coordinates (Moving frame)
       for (unsigned idim = 0; idim < dim; idim++) {
-        for (int j = 0; j < nDofsD; j++) {
+        for (int j = 0; j < nDofsX; j++) {
           coords[idim][j] = coords_hat[idim][j] + SolVAR_eldofs[SolIndex[idim]][j];
         }
       }
+  
+  // geometry end *****************************
 
       
      assemble_jac.prepare_before_integration_loop(stack);
      
   
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][SolFEType[disp_type_pos]/*solDType*/]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][SolFEType[sol_index_displ]]->GetGaussPointNumber(); ig++) {
 
 	// *** get Jacobian and test function and test function derivatives ***
       for(int fe=0; fe < NFE_FAMS; fe++) {
@@ -461,13 +457,13 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 // // //   // I x = 5 test ********************************
 // // // 	for(unsigned i_unk=0; i_unk<n_unknowns; i_unk++) { 
 // // // 	    for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
-// // // 		/*Res[ i_dof +  i_unk * nDofsD ]*/Res[i_unk][i_dof] +=  (   5.* phi_dof_qp[SolFEType[i_unk]][i_dof] - SolVAR_qp[i_unk]*phi_dof_qp[SolFEType[i_unk]][i_dof] )*weight_qp;
+// // // 		/*Res[ i_dof +  i_unk * Sol_n_el_dofs[sol_index_displ] ]*/Res[i_unk][i_dof] +=  (   5.* phi_dof_qp[SolFEType[i_unk]][i_dof] - SolVAR_qp[i_unk]*phi_dof_qp[SolFEType[i_unk]][i_dof] )*weight_qp;
 // // // // std::cout << Res[i_unk][i_dof] << "----" << std::endl;
 // // // 		// 		  for(unsigned j_unk=dim; j_unk<n_unknowns; j_unk++) {
 // // // // 		  	for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_unk]; j_dof++) {
 // // // // 			  
 // // // // 		              if (i_unk == j_unk )   {
-// // // // 				Jac[i_dof*Sol_n_el_dofs[i_unk] + j_dof i +  k * nDofsD][ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i_dof*Sol_n_el_dofs[i_unk] + j_dof ] += 
+// // // // 				Jac[i_dof*Sol_n_el_dofs[i_unk] + j_dof i +  k * Sol_n_el_dofs[sol_index_displ]][ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i_dof*Sol_n_el_dofs[i_unk] + j_dof ] += 
 // // // // 				        ( phi_dof_qp[SolFEType[i_unk]][i_dof]*phi_dof_qp[SolFEType[j_unk]][j_dof] )*weight_qp;
 // // // // 			      }
 // // // // 			  
@@ -484,12 +480,12 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
    real_num_mov J_hat;
    real_num_mov trace_e;
 
-    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda, dim, press_type_pos, gradSolVAR_qp, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e);
+    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda, dim, sol_index_press, gradSolVAR_qp, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e);
 
     
 
               //BEGIN residual Solid Momentum in moving domain
-          for (unsigned i = 0; i < nDofsD; i++) {
+          for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_displ]; i++) {
 
               real_num_mov Cauchy_direction[3] = {0., 0., 0.};
 
@@ -508,12 +504,12 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
               
 
               //BEGIN residual solid mass balance
-            for (unsigned i = 0; i < nDofsP; i++) {
+            for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press]; i++) {
                 
                 real_num_mov div_displ = 0.;
                  for (int idim = 0; idim < dim; idim++) div_displ += gradSolVAR_qp[SolPdeIndex[idim]][idim];
                               
-              Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[press_type_pos], i) ] += phi_dof_qp[SolFEType[press_type_pos]][i] * Solid::get_mass_balance< real_num_mov >(solid_model, penalty, incompressible, lambda, weight_qp, weight_hat_qp, div_displ, J_hat, SolVAR_qp, SolPdeIndex, press_type_pos);
+              Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance< real_num_mov >(solid_model, penalty, incompressible, lambda, weight_qp, weight_hat_qp, div_displ, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
                 
             }
               //END residual solid mass balance
