@@ -93,7 +93,7 @@ static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(co
                                                              const          std::vector < real_num_mov >   & SolVAR_qp,
                                                              const          std::vector < unsigned int >   & SolPdeIndex,
                                                              real_num_mov & J_hat,
-                                                             real_num_mov & trace_e
+                                                             real_num_mov & trace_e_hat
 ) {
     
     
@@ -117,9 +117,9 @@ static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(co
               }
             }
 
-          /*real_num_mov*/ trace_e/*_hat*/= 0.;    //trace of deformation tensor
+          trace_e_hat = 0.;    //trace of deformation tensor
           
-            for (int i = 0; i < dim; i++) {  trace_e += e[i][i];   }
+            for (int i = 0; i < dim; i++) {  trace_e_hat += e[i][i];   }
 
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
@@ -214,30 +214,43 @@ static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(co
 
 
 template < class real_num_mov >
-static real_num_mov   get_mass_balance(const unsigned int solid_model, 
+static real_num_mov   get_mass_balance_reference_domain(const unsigned int solid_model, 
                                 const bool penalty,
                                 const bool incompressible,
                                 const double & lambda,
-                                const real_num_mov & weight,
-                                const double & weight_hat,
-                                const real_num_mov & div_displ,
+                                const real_num_mov & trace_e_hat,
                                 const real_num_mov & J_hat,
                                 const std::vector < real_num_mov >   & SolVAR_qp,
                                 const std::vector < unsigned int >   & SolPdeIndex,
                                 const unsigned int press_type_pos) {
     
-// aResVAR[SolPdeIndex[press_type_pos]][i] += phi_gss_fe[SolFEType[press_type_pos]][i] * 
   real_num_mov  mass_balance = 0.;
   
               if (!penalty) {
-                     if (0  ==  solid_model)                           mass_balance = weight *     ( div_displ /*trace_e*/);
-                else if (1  ==  solid_model || 5  ==  solid_model)     mass_balance = weight_hat * ( J_hat - 1.         + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]]);
-                else if (2  ==  solid_model)                           mass_balance = weight_hat * ( log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]]);
+                     if (0  ==  solid_model)                           mass_balance = trace_e_hat;
+                else if (1  ==  solid_model || 5  ==  solid_model)     mass_balance = J_hat - 1.         + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]];
+                else if (2  ==  solid_model)                           mass_balance = log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]];
               }
-                else if (3  ==  solid_model || 4  ==  solid_model)     mass_balance = weight_hat * ( SolVAR_qp[SolPdeIndex[press_type_pos]] ); // pressure = 0 in the solid
+                else if (3  ==  solid_model || 4  ==  solid_model)     mass_balance = SolVAR_qp[SolPdeIndex[press_type_pos]] ; // pressure = 0 in the solid
               
  return mass_balance;              
               
+}
+
+
+template < class real_num_mov >
+static real_num_mov   get_mass_balance_moving_domain(const std::vector < std::vector < real_num_mov > > & gradSolVAR_qp,
+                                                     const std::vector < unsigned int >   & SolPdeIndex) {
+    
+ real_num_mov  mass_balance = 0.;
+ 
+ real_num_mov div_displ = 0.;  for (int idim = 0; idim < gradSolVAR_qp[SolPdeIndex[idim]].size(); idim++) div_displ += gradSolVAR_qp[SolPdeIndex[idim]][idim];
+
+ mass_balance = div_displ;
+ 
+ 
+ return mass_balance;              
+    
 }
 
     

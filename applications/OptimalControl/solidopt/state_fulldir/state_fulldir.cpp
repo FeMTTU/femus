@@ -15,8 +15,8 @@
 #include "PetscMatrix.hpp"
 #include <stdio.h>
 
-#define NSUB_X  16
-#define NSUB_Y  16
+#define NSUB_X  4
+#define NSUB_Y  4
 
 // #define MODEL "Linear_elastic"
 // #define MODEL "Mooney-Rivlin" 
@@ -478,9 +478,9 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
  //*******************************************************************************************************
    vector < vector < real_num_mov > > Cauchy(3); for (int i = 0; i < Cauchy.size(); i++) Cauchy[i].resize(3);
    real_num_mov J_hat;
-   real_num_mov trace_e;
+   real_num_mov trace_e_hat;
 
-    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda, dim, sol_index_press, gradSolVAR_qp, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e);
+    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda, dim, sol_index_press, gradSolVAR_qp, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
 
     
 
@@ -503,16 +503,15 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
               //END residual Solid Momentum in moving domain
               
 
-              //BEGIN residual solid mass balance
+              //BEGIN residual solid mass balance in reference domain
             for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press]; i++) {
                 
-                real_num_mov div_displ = 0.;
-                 for (int idim = 0; idim < dim; idim++) div_displ += gradSolVAR_qp[SolPdeIndex[idim]][idim];
-                              
-              Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance< real_num_mov >(solid_model, penalty, incompressible, lambda, weight_qp, weight_hat_qp, div_displ, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
+              Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += 
+              weight_hat_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
+//               weight_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
                 
             }
-              //END residual solid mass balance
+              //END residual solid mass balance in reference domain
 
 
     } // end gauss point loop
