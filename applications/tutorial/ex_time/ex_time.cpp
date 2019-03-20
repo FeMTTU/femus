@@ -143,7 +143,7 @@ int main(int argc,char **args) {
 //    std::string input_file = "Lshape.med";
 //    std::string input_file = "circle_tri6.med";
 //    std::string input_file = "ellipse_tri6.med";
-  std::string input_file = "ellipse_with_hole_tri6.med";
+    std::string input_file = "ellipse_with_hole_tri6.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   
@@ -258,7 +258,7 @@ int main(int argc,char **args) {
      
             double NonlinearityTracker = 0.1 * nonlin_term_derivative( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() ) ;
             double NewTime = std::min( system.GetIntervalTime(), NonlinearityTracker );
-            double minTimeStep = 0.0001; // Minimum step-size controller
+            double minTimeStep = 0.001; // Minimum step-size controller
             double NewTimeFixed = std::max( NewTime , minTimeStep );
             system.SetIntervalTime(NewTimeFixed);
           }    
