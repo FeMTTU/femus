@@ -652,16 +652,17 @@ class assemble_jacobian {
 
  
  void  compute_jacobian_inside_integration_loop(const unsigned i,
-                                               const unsigned dim,
-                                               const unsigned nDofu,
-                                               const std::vector< real_num_mov > & phi,
-                                               const std::vector< real_num_mov > &  phi_x, 
-                                               const real_num_mov weight,
-                                               std::vector< real_num_mov > & Jac) const;
+                                                const unsigned dim,
+                                                const std::vector < unsigned int > Sol_n_el_dofs,
+                                                unsigned int sum_Sol_n_el_dofs,
+                                                const std::vector< double > &  phi,
+                                                const std::vector< double > &  phi_x,
+                                                const double weight,
+                                                std::vector< double > & Jac) const;
   
                                                
  void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
-                                               const std::vector< real_num > & solu,
+                                               const std::vector< std::vector< real_num > > & solu,
                                                const std::vector< real_num > & Res,
                                                std::vector< real_num_mov > & Jac, 
                                                const std::vector< int > & loc_to_glob_map,

@@ -230,10 +230,10 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
 
-  NonLinearImplicitSystem& 	mlPdeSys   	= ml_prob.get_system<NonLinearImplicitSystem> ("SolidMech");
-  const unsigned 		level 		    = mlPdeSys.GetLevelToAssemble();
-  bool 			assembleMatrix 		    = mlPdeSys.GetAssembleMatrix(); 
-  const char* 			pdename         = mlPdeSys.name().c_str();
+  NonLinearImplicitSystem* 	mlPdeSys   	= & ml_prob.get_system<NonLinearImplicitSystem> ("SolidMech");
+  const unsigned 		level 		    = mlPdeSys->GetLevelToAssemble();
+  bool 			assembleMatrix 		    = mlPdeSys->GetAssembleMatrix(); 
+  const char* 			pdename         = mlPdeSys->name().c_str();
 
   Mesh*          		msh    		= ml_prob._ml_msh->GetLevel(level);
   elem*          		el     		= msh->el;
@@ -242,7 +242,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   Solution*    			sol      	= ml_prob._ml_sol->GetSolutionLevel(level); 
 
 
-  LinearEquationSolver* 	pdeSys  = mlPdeSys._LinSolver[level];
+  LinearEquationSolver* 	pdeSys  = mlPdeSys->_LinSolver[level];
   SparseMatrix*    		JAC    		= pdeSys->_KK;
   NumericVector*   		RES         = pdeSys->_RES;
 
@@ -268,7 +268,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
   
  // solution variables *******************************************
-   const unsigned int n_unknowns = mlPdeSys.GetSolPdeIndex().size();
+   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
 //      enum Sol_pos {pos_dx = 0, pos_dy, pos_p};  //these are known at compile-time
 //      enum Sol_pos {pos_dx = 0, pos_dy, pos_dz, pos_p};
 //   constexpr unsigned int pos_dx = 0;  
@@ -287,13 +287,13 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   if (dim == 3) Solname[state_pos_begin+2] =                "DZ";
   Solname              [state_pos_begin + press_type_pos] = "P";
   
-  vector < unsigned > SolPdeIndex(n_unknowns);
-  vector < unsigned > SolIndex(n_unknowns);  
-  vector < unsigned > SolFEType(n_unknowns);  
+  vector < unsigned int > SolPdeIndex(n_unknowns);
+  vector < unsigned int > SolIndex(n_unknowns);  
+  vector < unsigned int > SolFEType(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-    SolPdeIndex[ivar]	= mlPdeSys.GetSolPdeIndex(Solname[ivar].c_str());
+    SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
     SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
@@ -332,12 +332,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   vector < real_num > aResVAR; aResVAR.reserve( n_unknowns * maxSize);
 
   vector < vector < real_num > > SolVAR_eldofs(n_unknowns);
-  vector < vector < real_num > > gradSolVAR_eldofs(n_unknowns);
-   
-  for(int k=0; k<n_unknowns; k++) {
-    SolVAR_eldofs[k].reserve(maxSize);
-    gradSolVAR_eldofs[k].reserve(maxSize*dim);
-  }
+  for(int k = 0; k < n_unknowns; k++) {    SolVAR_eldofs[k].reserve(maxSize);  }
 
   //------------ at quadrature points ---------------------
     vector < real_num > SolVAR_qp(n_unknowns);
@@ -554,16 +549,14 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
     // get the and store jacobian matrix (row-major)
     stack.jacobian(&Jac[0] , true);
 
-    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel,Res,Sol_n_el_dofs,9,5);
-    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel,Jac,Sol_n_el_dofs,9,5);
-
-
    JAC->add_matrix_blocked(Jac, JACDof, JACDof);
 
     stack.clear_independents();
     stack.clear_dependents();
  }  //end assemble matrix
     
+    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel,Res,Sol_n_el_dofs,9,5);
+    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel,Jac,Sol_n_el_dofs,9,5);
     
   } //end element loop for each process
 
@@ -574,7 +567,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   
   
     //print JAC and RES to files
-//     const unsigned nonlin_iter = mlPdeSys.GetNonlinearIt();
+//     const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
 //     assemble_jacobian< real_num_mov,double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
 //     assemble_jacobian< real_num_mov,double >::print_global_residual(ml_prob, RES, nonlin_iter);
 
