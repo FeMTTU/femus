@@ -183,27 +183,38 @@ int main(int argc, char** args) {
 //   ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
 
-// set total number of levels ================  
-  unsigned max_number_of_meshes;
+   // ======= Unknowns ========================
+   std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();
+   
 
-  if (nsub[2] == 0)   max_number_of_meshes = 6;
-  else                max_number_of_meshes = 4;
+   // ======= Normal run ========================
+    My_main_single_level< adept::adouble > my_main;
+//  const unsigned int n_levels = 3;
+//  my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); if you don't want the convergence study
+    
+    
+   // ======= Convergence study ========================
+    
+   // set total number of levels ================  
+   unsigned max_number_of_meshes;
+
+   if (nsub[2] == 0)   max_number_of_meshes = 6;
+   else                max_number_of_meshes = 4;
   
 
- //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
-  MultiLevelMesh ml_mesh_all_levels;
-  ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
+   //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
+   MultiLevelMesh ml_mesh_all_levels;
+   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+   //   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
  
+   // convergence choices ================  
    My_exact_solution<> exact_sol;                                            //provide exact solution, if available ==============
    const unsigned conv_order_flag = 0;                                               //Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
    const unsigned norm_flag = 1;                                                     //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
-   std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();   //provide list of unknowns ==============
 
-    My_main_single_level< adept::adouble > my_main;
-//  my_main.run_on_single_level(files, unknowns, ml_mesh, 3); if you don't want the convergence study
-    
+   
+   // object ================  
     FE_convergence<>  fe_convergence;
     
     fe_convergence.convergence_study(files, unknowns, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
@@ -250,21 +261,18 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             
            // ======= Problem ========================
             MultiLevelProblem mlProb(&ml_sol_single_level);
-
             
             mlProb.SetFilesHandler(&files);
       
       
-            // add system Poisson in mlProb as a Linear Implicit System
+           // ======= System ========================
             LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Equation");
 
-            // add solution "u" to system
             system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
 
             
             mlProb.set_current_unknown_assembly(unknowns[u]._name); //way to communicate to the assemble function, which doesn't belong to any class
             
-            // attach the assembling function to system
             system.SetAssembleFunction(System_assemble_interface< real_num >);
 
             // initialize and solve the system
