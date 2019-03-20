@@ -248,8 +248,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str());
       
             
-            
-            // define the multilevel problem attach the ml_sol_single_level object to it
+           // ======= Problem ========================
             MultiLevelProblem mlProb(&ml_sol_single_level);
 
             
@@ -280,7 +279,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 //             system.SetMaxNumberOfLinearIterations(6);
 //             system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
             
-            system.MLsolve();
+            system.MGsolve();
       
             // ======= Print ========================
             std::vector < std::string > variablesToBePrinted;

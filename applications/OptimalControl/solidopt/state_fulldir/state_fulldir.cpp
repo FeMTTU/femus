@@ -85,7 +85,57 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 
 
 template <  class real_num, class real_num_mov >
-void AssembleSolidMech_AD(MultiLevelProblem& ml_prob);
+void AssembleSolidMech(MultiLevelProblem& ml_prob);
+
+
+
+
+ //Unknown definition  ==================
+ const std::vector< Math::Unknowns_definition >  provide_list_of_unknowns() {
+     
+     
+  std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE, /*LAGRANGE,*/ LAGRANGE /*DISCONTINOUS_POLYNOMIAL*/};
+  std::vector< FEOrder >   feOrder = {  SECOND,   SECOND,   /*SECOND,*/ FIRST};
+
+  assert( feFamily.size() == feOrder.size() );
+ 
+ std::vector< Math::Unknowns_definition >  unknowns(feFamily.size());
+
+              unknowns[0]._name      = "DX";
+              unknowns[1]._name      = "DY";
+              unknowns[2]._name      = "P";
+//               unknowns[3]._name      = unk.str();
+ 
+     for (unsigned int fe = 0; fe < unknowns.size(); fe++) {
+         
+//             std::ostringstream unk; unk << "u" << "_" << feFamily[fe] << "_" << feOrder[fe];
+//               unknowns[fe]._name      = unk.str();
+              unknowns[fe]._fe_family = feFamily[fe];
+              unknowns[fe]._fe_order  = feOrder[fe];
+              
+     }
+ 
+ 
+   return unknowns;
+     
+}
+
+
+
+
+template < class real_num > 
+class My_main_single_level : public Main_single_level {
+    
+public:
+    
+const MultiLevelSolution  run_on_single_level(const Files & files, 
+                                                   const std::vector< Math::Unknowns_definition > & unknowns,  
+                                                   MultiLevelMesh & ml_mesh, 
+                                                   const unsigned i) const;
+  
+};
+ 
+
 
 
 
@@ -103,119 +153,23 @@ int main(int argc, char** args) {
         files.RedirectCout();
 
 
-  MultiLevelMesh ml_mesh;  // define multilevel mesh
-  double scalingFactor = 1.;  // read coarse level mesh and generate finers level meshes
+  MultiLevelMesh ml_mesh;
   
-    //Adimensional quantity (Lref,Uref)
-  double Lref = 1.;
-  double Uref = 1.;
- // *** apparently needed by non-AD assemble only **********************
-  // add fluid material
-  Parameter par(Lref,Uref);
-  
- // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  double rhof = 1000;
-  Fluid fluid(par,1,rhof,"Newtonian");
-  std::cout << "Fluid properties: " << std::endl;
-  std::cout << fluid << std::endl;
 
-  
-  // Generate Solid Object
-  double E = 1500000;
-  double ni = 0.5;
-  double rhos = 1000;
-  Solid solid;
-  solid = Solid(par,E,ni,rhos,MODEL);
-
-  std::cout << "Solid properties: " << std::endl;
-  std::cout << solid << std::endl;
 
   
   ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-//   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-//      probably in the furure it is not going to be an argument of this function   */
-  unsigned dimension = ml_mesh.GetDimension();
 
-  unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 0;
-  ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-  ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
-  ml_mesh.PrintInfo();
-
-  MultiLevelSolution ml_sol(&ml_mesh);
-
-  // add variables to ml_sol
-  ml_sol.AddSolution("DX",LAGRANGE,SECOND);
-  ml_sol.AddSolution("DY",LAGRANGE,SECOND);
-  if ( dimension == 3 ) ml_sol.AddSolution("DZ",LAGRANGE,SECOND);
-  ml_sol.AddSolution("P",LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/,FIRST);
-
-    // ======= Problem ========================
-  MultiLevelProblem ml_prob(&ml_sol);  // define the multilevel problem attach the ml_sol object to it
-
-  ml_prob.SetFilesHandler(&files);
-
-  ml_sol.Initialize("All");
-                        ml_sol.Initialize("DX", SetInitialCondition, &ml_prob);
-                        ml_sol.Initialize("DY", SetInitialCondition, &ml_prob);
-  if ( dimension == 3 ) ml_sol.Initialize("DZ", SetInitialCondition, &ml_prob);
-                        ml_sol.Initialize("P",  SetInitialCondition, &ml_prob);
-
-  // attach the boundary condition function and generate boundary data
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  ml_sol.GenerateBdc("All");
-
-
-  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
-  ml_prob.parameters.set<Solid>("Solid") = solid;
-
-  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("SolidMech");
-
-  // add solution "u" to system
-                      system.AddSolutionToSystemPDE("DX");
-                      system.AddSolutionToSystemPDE("DY");
-  if (dimension == 3) system.AddSolutionToSystemPDE("DZ");
-                      system.AddSolutionToSystemPDE("P");
- 
-
-  // attach the assembling function to system
-  system.SetAssembleFunction( AssembleSolidMech_AD< adept::adouble, adept::adouble >);
-
-  // initilaize and solve the system
-  system.init();
   
-  // Solver and preconditioner
-  system.SetOuterKSPSolver("preonly");
-  system.SetSolverFineGrids(PREONLY);
-  system.SetPreconditionerFineGrids(LU_PRECOND);
-
-  //for Vanka   
-  system.ClearVariablesToBeSolved();
-  system.AddVariableToBeSolved("All");
-
-  ml_sol.SetWriter(VTK);
-  ml_sol.GetWriter()->SetDebugOutput(true);
-  system.SetDebugNonlinear(true);
-
-//   system.SetMaxNumberOfNonLinearIterations(2);
-//   system.SetNonLinearConvergenceTolerance(1.e-30);
-//   system.SetDebugLinear(true);
-//   system.SetMaxNumberOfLinearIterations(4);
-//   system.SetAbsoluteLinearConvergenceTolerance(1.e-10);
- 
-  system.MGsolve();
-
-  std::vector<std::string> mov_vars;
-  mov_vars.push_back("DX");
-  mov_vars.push_back("DY");
-  if ( dimension == 3 ) mov_vars.push_back("DZ");
-  ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-  // print solutions
-  std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("All");
-
- ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic", variablesToBePrinted);
- 
+   const unsigned conv_order_flag = 0;                                               //Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
+   const unsigned norm_flag = 1;                                                     //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
+   std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();   //provide list of unknowns ==============
+  
+    My_main_single_level< adept::adouble > my_main;
+    my_main.run_on_single_level(files, unknowns, ml_mesh, 3); //if you don't want the convergence study
+  
+  
+  
     
   return 0;
 }
@@ -223,7 +177,7 @@ int main(int argc, char** args) {
 
 
 template < class real_num, class real_num_mov >
-void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
+void AssembleSolidMech(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -541,3 +495,127 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 }
 
 
+
+
+template < class real_num > 
+const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
+                                                                                const std::vector< Math::Unknowns_definition > &  unknowns,  
+                                                                                MultiLevelMesh & ml_mesh,
+                                                                                const unsigned i) const {
+                                                                                    
+                                                                                    
+  //Material  ==================
+    //Adimensional quantity (Lref,Uref)
+  double Lref = 1.;
+  double Uref = 1.;
+ // *** apparently needed by non-AD assemble only **********************
+  // add fluid material
+  Parameter par(Lref,Uref);
+  
+ // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
+  double rhof = 1000;
+  Fluid fluid(par,1,rhof,"Newtonian");
+  std::cout << "Fluid properties: " << std::endl;
+  std::cout << fluid << std::endl;
+
+  
+  // Generate Solid Object
+  double E = 1500000;
+  double ni = 0.5;
+  double rhos = 1000;
+  Solid solid;
+  solid = Solid(par,E,ni,rhos,MODEL);
+
+  std::cout << "Solid properties: " << std::endl;
+  std::cout << solid << std::endl;
+  
+  
+  //Mesh  ==================
+            unsigned numberOfUniformLevels = i + 1;
+            unsigned numberOfSelectiveLevels = 0;
+            ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+            ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
+
+            ml_mesh.PrintInfo();
+                                                                                    
+  //Solution  ==================
+  MultiLevelSolution ml_sol(&ml_mesh);
+
+  // add variables to ml_sol
+  ml_sol.AddSolution("DX",LAGRANGE,SECOND);
+  ml_sol.AddSolution("DY",LAGRANGE,SECOND);
+  if ( ml_mesh.GetDimension() == 3 ) ml_sol.AddSolution("DZ",LAGRANGE,SECOND);
+  ml_sol.AddSolution("P",LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/,FIRST);
+  
+  
+    // ======= Problem ========================
+  MultiLevelProblem ml_prob(&ml_sol);  // define the multilevel problem attach the ml_sol object to it
+
+  ml_prob.SetFilesHandler(&files);
+
+  ml_sol.Initialize("All");
+                        ml_sol.Initialize("DX", SetInitialCondition, &ml_prob);
+                        ml_sol.Initialize("DY", SetInitialCondition, &ml_prob);
+  if ( ml_mesh.GetDimension() == 3 ) ml_sol.Initialize("DZ", SetInitialCondition, &ml_prob);
+                        ml_sol.Initialize("P",  SetInitialCondition, &ml_prob);
+
+  // attach the boundary condition function and generate boundary data
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.GenerateBdc("All");
+
+
+  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+  ml_prob.parameters.set<Solid>("Solid") = solid;
+
+  // ======= System ========================
+  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("SolidMech");
+
+  // add solution "u" to system
+                      system.AddSolutionToSystemPDE("DX");
+                      system.AddSolutionToSystemPDE("DY");
+  if (ml_mesh.GetDimension() == 3) system.AddSolutionToSystemPDE("DZ");
+                      system.AddSolutionToSystemPDE("P");
+ 
+
+  // attach the assembling function to system
+  system.SetAssembleFunction( AssembleSolidMech< adept::adouble, adept::adouble >);
+
+  // initialize and solve the system
+  system.init();
+  
+  // Solver and preconditioner
+  system.SetOuterKSPSolver("preonly");
+  system.SetSolverFineGrids(PREONLY);
+  system.SetPreconditionerFineGrids(LU_PRECOND);
+
+  //for Vanka   
+  system.ClearVariablesToBeSolved();
+  system.AddVariableToBeSolved("All");
+
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
+  system.SetDebugNonlinear(true);
+
+//   system.SetMaxNumberOfNonLinearIterations(2);
+//   system.SetNonLinearConvergenceTolerance(1.e-30);
+//   system.SetDebugLinear(true);
+//   system.SetMaxNumberOfLinearIterations(4);
+//   system.SetAbsoluteLinearConvergenceTolerance(1.e-10);
+ 
+  system.MGsolve();
+
+  // ======= Print ========================
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back("DX");
+  mov_vars.push_back("DY");
+  if ( ml_mesh.GetDimension() == 3 ) mov_vars.push_back("DZ");
+  ml_sol.GetWriter()->SetMovingMesh(mov_vars);
+  // print solutions
+  std::vector < std::string > variablesToBePrinted;
+  variablesToBePrinted.push_back("All");
+
+ ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic", variablesToBePrinted);
+ 
+ return ml_sol;
+
+}
