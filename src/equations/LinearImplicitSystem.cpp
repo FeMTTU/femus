@@ -318,7 +318,8 @@ restart:
       L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
       std::cout << "       *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normRes << std::endl;
       if(isnan(L2normRes)){
-         std::cout << "Warning a bit flip is probably occurred, lets try to restart the solver!" << std::endl;
+         std::cout << "Warning the linear solver did not converge.\n";
+         std::cout << "A bit flip may have occurred, let's try to restart the solver!" << std::endl;
 	    _bitFlipOccurred = true;
       }
       if(L2normRes < _linearAbsoluteConvergenceTolerance && conv == true) {
