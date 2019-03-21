@@ -9,6 +9,8 @@
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelSolution.hpp"
 
+
+
 namespace femus {
 
 // remember that you have to declare all these functions "inline", otherwise you get "multiple definition" in linking
@@ -182,7 +184,7 @@ double myval_g = pt2func(time,xyz._val_g);
 
 
 
-template < class type >
+template < class type = double >
   class Function {
  
   public:
@@ -225,7 +227,7 @@ virtual const MultiLevelSolution  run_on_single_level(const Files & files,
 };
 
 
-template < class type >
+template < class type = double >
 class FE_convergence {
  
     
@@ -639,7 +641,7 @@ static  void compute_error_norms_per_unknown_per_level(const MultiLevelSolution*
 
 
 
-template < class real_num, class other_real_num >
+template < class real_num, class real_num_mov = double >
 class assemble_jacobian {
  
     
@@ -650,26 +652,140 @@ class assemble_jacobian {
 
  
  void  compute_jacobian_inside_integration_loop(const unsigned i,
-                                               const unsigned dim,
-                                               const unsigned nDofu,
-                                               const std::vector< other_real_num > & phi,
-                                               const std::vector< other_real_num > &  phi_x, 
-                                               const other_real_num weight,
-                                               std::vector< other_real_num > & Jac) const;
+                                                const unsigned dim,
+                                                const std::vector < unsigned int > Sol_n_el_dofs,
+                                                unsigned int sum_Sol_n_el_dofs,
+                                                const std::vector< double > &  phi,
+                                                const std::vector< double > &  phi_x,
+                                                const double weight,
+                                                std::vector< double > & Jac) const;
   
                                                
  void  compute_jacobian_outside_integration_loop(adept::Stack & stack,
-                                               const std::vector< real_num > & solu,
+                                               const std::vector< std::vector< real_num > > & solu,
                                                const std::vector< real_num > & Res,
-                                               std::vector< other_real_num > & Jac, 
+                                               std::vector< real_num_mov > & Jac, 
                                                const std::vector< int > & loc_to_glob_map,
                                                NumericVector*           RES,
                                                SparseMatrix*             KK
                                                                    ) const;
                                                                    
     
-};
+static void print_element_jacobian(const unsigned int iel,
+                            const  vector < double > & Jac, 
+                            const vector < unsigned int > & Sol_n_el_dofs, 
+                            const unsigned int col_width_visualization,     
+                            const unsigned int precision)  {
 
+    
+    const unsigned int n_unknowns = Sol_n_el_dofs.size();
+    
+    unsigned int nDof_AllVars = 0;
+    for(unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) nDof_AllVars += Sol_n_el_dofs[i_unk];
+    
+ std::cout << "++++++++++ iel " << iel << " ++++++++++" << std::endl;
+ 
+    for(unsigned i_block = 0; i_block < n_unknowns; i_block++) {
+      for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
+	  for(unsigned j_block=0; j_block< n_unknowns; j_block++) {
+               for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
+ std::cout << std::right << std::setw(col_width_visualization) << std::setprecision(precision)  /*<< std::scientific*/ << 
+ Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, i_block, j_block, i_dof, j_dof) ] << " " ;
+                 }
+           } 
+     std::cout << std::endl;
+        }
+    }
+
+    
+}
+
+
+static void print_element_residual(const unsigned int iel, 
+                            const  vector < real_num > & Res, 
+                            const vector < unsigned int > & Sol_n_el_dofs,
+                            const unsigned int col_width_visualization,     
+                            const unsigned int precision)  {
+    
+    const unsigned int n_unknowns = Sol_n_el_dofs.size();
+
+ std::cout << "++++++++++ iel " << iel << " ++++++++++" << std::endl;
+ 
+    for(unsigned i_block = 0; i_block < n_unknowns; i_block++) {
+      for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
+          
+ std::cout << std::right << std::setw(col_width_visualization) << std::setprecision(precision)  /*<< std::scientific*/ << 
+ Res[  res_row_index(Sol_n_el_dofs, i_block, i_dof) ] << " " ;
+
+          
+     std::cout << std::endl;
+        }
+    }
+    
+
+    }
+    
+    
+static inline unsigned int res_row_index(const std::vector<unsigned int>& _Sol_n_el_dofs, const int my_row_pos, const int i) {
+
+    assert(i < _Sol_n_el_dofs[my_row_pos]); 
+    
+    unsigned int pos_previous = 0;
+    for (unsigned k = 0; k < my_row_pos; k++) pos_previous += _Sol_n_el_dofs[k];
+
+    return pos_previous + i;
+  }
+  
+
+static  inline unsigned int jac_row_col_index(const std::vector<unsigned int>& _Sol_n_el_dofs, const int nDof_AllVars, const int my_row_pos, const int my_col_pos, const int i, const int j) {
+
+     assert(i < _Sol_n_el_dofs[my_row_pos]); 
+     assert(j < _Sol_n_el_dofs[my_col_pos]); 
+     
+    unsigned int pos_previous_row = 0;
+    unsigned int pos_previous_col = 0;
+    for (unsigned k = 0; k < my_row_pos; k++) pos_previous_row += _Sol_n_el_dofs[k];
+    for (unsigned k = 0; k < my_col_pos; k++) pos_previous_col += _Sol_n_el_dofs[k];
+
+    return (pos_previous_row + i) * nDof_AllVars + (pos_previous_col + j);
+  }
+    
+
+
+
+
+static void print_global_jacobian(const bool assemble_matrix,
+                                         const MultiLevelProblem & ml_prob,
+                                         const SparseMatrix* JAC,
+                                         const unsigned int nonlin_iteration) {
+    
+  if (assemble_matrix) {
+        
+    JAC->close();
+    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << nonlin_iteration  << ".txt";
+    JAC->print_matlab(mat_out.str(),"ascii"); //  KK->print();
+
+   }
+    
+  }
+  
+  
+  
+static void print_global_residual(const MultiLevelProblem & ml_prob,
+                                  NumericVector* RES,
+                                  const unsigned int nonlin_iteration) {
+    
+    RES->close();  ///@todo why does this close need to be non-const? 
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << nonlin_iteration  << ".txt";
+    std::filebuf res_fb;
+    res_fb.open (res_out.str().c_str(),std::ios::out);
+    std::ostream  res_file_stream(&res_fb);
+    RES->print(res_file_stream);
+
+  }  
+    
+                                                                   
+};
 
 
 

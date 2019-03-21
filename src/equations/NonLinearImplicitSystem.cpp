@@ -68,7 +68,7 @@ namespace femus {
     const double mindeltaNormSol = 1.e-50;
 
 // we need to store the global vector here
-     if (_debug_nonlinear)  {           _eps_fine[_nonliniteration] = _LinSolver[_gridn-1]->_EPS;    }
+     if (_debug_nonlinear)  {           *(_eps_fine[_nonliniteration]) = *(_LinSolver[_gridn-1]->_EPS);    }
     
     for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
         
@@ -139,7 +139,8 @@ restart:
         
        if (_debug_nonlinear)  {
                    _eps_fine.push_back(NumericVector::build().release());
-                   _eps_fine[_eps_fine.size()-1]->init(*_LinSolver[_gridn-1]->_EPS);
+                   _eps_fine.back()->init(*_LinSolver[_gridn-1]->_EPS);  //I'd say init also fills the vector
+                   *(_eps_fine.back()) = *(_LinSolver[_gridn-1]->_EPS);
             }
       
         std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
@@ -341,7 +342,7 @@ restart:
           *(eps_fine_temp) += *(_eps_fine[index_lower - 1]);
           const double denominator = eps_fine_temp->/*linfty_norm*/l2_norm();
 
-         std::cout <<  std::setw(16) << std::setprecision(12) << nonLinearIterator << " " <<  numerator / (denominator * denominator)  << std::endl;
+         std::cout <<  std::setw(16) << std::setprecision(16) << std::scientific << nonLinearIterator << " " <<  numerator / (denominator * denominator)  << std::endl;
          
      }
       
