@@ -15,39 +15,42 @@
 
 using namespace femus;
 
-double InitialValueActFlag(const std::vector < double >& x) {
-  return 0.;
-}
 
-double InitialValueContReg(const std::vector < double >& x) {
-  return ControlDomainFlag_external_restriction(x);
-}
+double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+         
+           double value = 0.;
 
-double InitialValueTargReg(const std::vector < double >& x) {
-  return ElementTargetFlag(x);
-}
+             if(!strcmp(name,"state")) {
+                 value = 0.;
+             }
+             else if(!strcmp(name,"control")) {
+                 value = 0.;
+             }
+             else if(!strcmp(name,"adjoint")) {
+                 value = 0.;
+             }
+             else if(!strcmp(name,"adjoint_ext")) {
+                 value = 0.;
+             }
+             else if(!strcmp(name,"mu")) {
+                 value = 0.;
+             }
+             else if(!strcmp(name,"TargReg")) {
+                 value = ElementTargetFlag(x);
+             }
+             else if(!strcmp(name,"ContReg")) {
+                 value = ControlDomainFlag_external_restriction(x);
+             }
+             else if(!strcmp(name,"act_flag")) {
+                 value = 0.;
+             }
+           
+    
+      return value;   
+} 
 
-double InitialValueState(const std::vector < double >& x) {
-  return 0.;
-}
 
-double InitialValueAdjoint(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueAdjoint2(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueMu(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueControl(const std::vector < double >& x) {
-  return 0.;
-}
-
-bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
   bool dirichlet = true; //dirichlet
   value = 0.;
@@ -84,64 +87,64 @@ int main(int argc, char** args) {
   files.CheckIODirectories();
   files.RedirectCout();
 
-  // define multilevel mesh
-  MultiLevelMesh mlMsh;
+  // ======= Mesh  ==================
+  MultiLevelMesh ml_mesh;
   
   double scalingFactor = 1.;
   
   // read coarse level mesh and generate finers level meshes
-  mlMsh.ReadCoarseMesh("./input/ext_box.neu", "seventh", scalingFactor);
+  ml_mesh.ReadCoarseMesh("./input/ext_box.neu", "seventh", scalingFactor);
 
-  //mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+  //ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-  mlMsh.PrintInfo();
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  ml_mesh.PrintInfo();
+  ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
-  // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution mlSol(&mlMsh);
+  // ======= Solution  ==================
+  MultiLevelSolution ml_sol(&ml_mesh);
 
-  // add variables to mlSol
-  mlSol.AddSolution("state", LAGRANGE, FIRST);
-  mlSol.AddSolution("control", LAGRANGE, FIRST);
-  mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
-  mlSol.AddSolution("adjoint_ext", LAGRANGE, FIRST);
-  mlSol.AddSolution("mu", LAGRANGE, FIRST);  
-  mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  // add variables to ml_sol
+  ml_sol.AddSolution("state", LAGRANGE, FIRST);
+  ml_sol.AddSolution("control", LAGRANGE, FIRST);
+  ml_sol.AddSolution("adjoint", LAGRANGE, FIRST);
+  ml_sol.AddSolution("adjoint_ext", LAGRANGE, FIRST);
+  ml_sol.AddSolution("mu", LAGRANGE, FIRST);  
+  ml_sol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
   const std::string act_set_flag_name = "act_flag";
-  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   
-  mlSol.Initialize("All");    // initialize all varaibles to zero
+  // ======= Problem ========================
+  MultiLevelProblem ml_prob(&ml_sol);
+  
+  ml_prob.SetFilesHandler(&files);
+  
+  ml_sol.Initialize("All");    // initialize all varaibles to zero
 
-  mlSol.Initialize("state", InitialValueState);
-  mlSol.Initialize("control", InitialValueControl);
-  mlSol.Initialize("adjoint", InitialValueAdjoint);
-  mlSol.Initialize("adjoint_ext", InitialValueAdjoint2);
-  mlSol.Initialize("mu", InitialValueMu);
-  mlSol.Initialize("TargReg", InitialValueTargReg);
-  mlSol.Initialize("ContReg", InitialValueContReg);
-  mlSol.Initialize(act_set_flag_name.c_str(), InitialValueActFlag);
+  ml_sol.Initialize("state",       Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("control",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("adjoint",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("adjoint_ext", Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("mu",          Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, &ml_prob);
   
   // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.GenerateBdc("state");
-  mlSol.GenerateBdc("control");
-  mlSol.GenerateBdc("adjoint");
-  mlSol.GenerateBdc("adjoint_ext");
-  mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work...
+  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+  ml_sol.GenerateBdc("state");
+  ml_sol.GenerateBdc("control");
+  ml_sol.GenerateBdc("adjoint");
+  ml_sol.GenerateBdc("adjoint_ext");
+  ml_sol.GenerateBdc("mu");  //we need add this to make the matrix iterations work...
 
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
-  
-  mlProb.SetFilesHandler(&files);
-
- // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = mlProb.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+  // ======= System ========================
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
     
   system.SetActiveSetFlagName(act_set_flag_name);
 
@@ -154,8 +157,8 @@ int main(int argc, char** args) {
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleLiftExternalProblem);
   
-  mlSol.SetWriter(VTK);
-  mlSol.GetWriter()->SetDebugOutput(true);
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
   
   system.SetDebugNonlinear(true);
   system.SetDebugFunction(ComputeIntegral);
@@ -165,10 +168,10 @@ int main(int argc, char** args) {
   system.init();
   system.MGsolve();
   
-  // print solutions
+  // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
-  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
+  ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
 
   return 0;
 }
@@ -189,7 +192,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
 
-  MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
@@ -250,8 +253,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   
   //************** act flag **************************** 
   std::string act_flag_name = "act_flag";
-  unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
-  unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
+  unsigned int solIndex_act_flag = ml_sol->GetIndex(act_flag_name.c_str());
+  unsigned int solFEType_act_flag = ml_sol->GetSolutionType(solIndex_act_flag); 
       if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
         *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
       }
@@ -291,8 +294,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
     SolPdeIndex[ivar] = mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
-    SolIndex[ivar]    = mlSol->GetIndex        (Solname[ivar].c_str());
-    SolFEType[ivar]   = mlSol->GetSolutionType(SolIndex[ivar]);
+    SolIndex[ivar]    = ml_sol->GetIndex        (Solname[ivar].c_str());
+    SolFEType[ivar]   = ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
     vector < unsigned > Sol_n_el_dofs(n_unknowns);
@@ -803,7 +806,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);            // pointer to the mesh (level) object
    
-  MultiLevelSolution*    mlSol = ml_prob._ml_sol;                             // pointer to the multilevel solution object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;                             // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   const unsigned           dim = msh->GetDimension();                         // get the domain dimension of the problem
@@ -839,8 +842,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
  
   unsigned solIndex_u;
-  solIndex_u = mlSol->GetIndex("state");                    // get the position of "state" in the ml_sol object
-  unsigned solType_u = mlSol->GetSolutionType(solIndex_u);  // get the finite element type for "state"
+  solIndex_u = ml_sol->GetIndex("state");                    // get the position of "state" in the ml_sol object
+  unsigned solType_u = ml_sol->GetSolutionType(solIndex_u);  // get the finite element type for "state"
 
   vector < double >  sol_u; // local solution
   sol_u.reserve(max_size);
@@ -860,8 +863,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   phi_ctrl_xx.reserve(max_size * dim2);
   
   unsigned solIndex_ctrl;
-  solIndex_ctrl = mlSol->GetIndex("control");
-  unsigned solType_ctrl = mlSol->GetSolutionType(solIndex_ctrl);
+  solIndex_ctrl = ml_sol->GetIndex("control");
+  unsigned solType_ctrl = ml_sol->GetSolutionType(solIndex_ctrl);
 
   vector < double >  sol_ctrl; // local solution
   sol_ctrl.reserve(max_size);
