@@ -133,7 +133,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize("mu",          Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, &ml_prob);
+  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   
   // attach the boundary condition function and generate boundary data
   ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
@@ -190,29 +190,28 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
-  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
 
-  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
+  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
-  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix*             KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
-  NumericVector*           RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; 
+  SparseMatrix*             KK = pdeSys->_KK;
+  NumericVector*           RES = pdeSys->_RES; 
 
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  const unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  const unsigned  dim = msh->GetDimension(); 
+  const unsigned dim2 = (3 * (dim - 1) + !(dim - 1));
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
-  const unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  const unsigned    iproc = msh->processor_id();
 
-  
  //***************************************************  
  
   const int coords_fe_type = BIQUADR_FE;  //biquadratic
 
  //************** geometry (at dofs) *************************************  
-  vector < vector < double > > coords_at_dofs(dim);         // local coordinates
-  vector < vector < double > > coords_at_dofs_bdry(dim);    // local coordinates
+  vector < vector < double > > coords_at_dofs(dim);
+  vector < vector < double > > coords_at_dofs_bdry(dim);
   for (unsigned idim = 0; idim < dim; idim++) {
     coords_at_dofs[idim].reserve(max_size);
     coords_at_dofs_bdry[idim].reserve(max_size);
@@ -434,11 +433,10 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
  //*************************************************** 
 
   
-   vector <double> interface_flag;   interface_flag.reserve(Sol_n_el_dofs[pos_state]); //flag for boundary interface
-   std::fill(interface_flag.begin(), interface_flag.end(), 0.);
+   vector <double> interface_node_flag;   interface_node_flag.reserve(Sol_n_el_dofs[pos_state]); //flag for boundary interface
+   std::fill(interface_node_flag.begin(), interface_node_flag.end(), 0.);
    
   //************ Boundary loops *************************************** 
-  	  double tau=0.;
 	  vector<double> normal(dim,0);
 
   	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
@@ -471,19 +469,18 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
  //===================================================   
     
     
- //============ find interface nodes (now we do with coordinates, later we can do also with flag in gambit) ======================================= 
+ //============ find interface boundary elements (now we do with coordinates, later we can do also with flag in gambit) ======================================= 
  double my_eps = 1.e-6;
     if (elem_center_bdry[0] > 1. - my_eps   && elem_center_bdry[0] < 1.   + my_eps  && 
         elem_center_bdry[1] > 0.25 - my_eps && elem_center_bdry[1] < 0.75 + my_eps
     ) {
-       std::cout << " bdry_interface " <<"("<<elem_center_bdry[0]<<","<< elem_center_bdry[1]<<")"<< std::endl; 
-      		      for (int i_bdry = 0; i_bdry < nDofu_bdry; i_bdry++)  {
-		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-		    interface_flag[i_vol] = 1.;
-		    
+       std::cout << " bdry elem on interface with center " << "(" << elem_center_bdry[0] << "," << elem_center_bdry[1] << ")" << std::endl; 
+       
+       
+ 		    
 //========= initialize gauss quantities on the boundary ============================================
 		
- 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]]->GetGaussPointNumber(); ig_bdry++) { 
+ 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]]->GetGaussPointNumber(); ig_bdry++) {
 		  
       // *** get gauss point weight, test function and test function partial derivatives ***
       for(int fe=0; fe < NFE_FAMS; fe++) {
@@ -510,14 +507,19 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         double grad_adj_dot_n_res = 0.;
         for(unsigned d=0; d<dim; d++) {	  grad_adj_dot_n_res += sol_adj_x_vol_at_bdry_gss[d] * normal[d];  }
 //=============== grad dot n  for residual =========================================      
-		    
+
+
+         for (int i_bdry = 0; i_bdry < nDofu_bdry; i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+		    interface_node_flag[i_vol] = 1.;
+
 //============ Bdry Residuals ==================	
 
- /*if ( group_flag == GROUP_INTERNAL )*/ Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i_vol) ]  +=  -  interface_flag[i_vol] * weight_qp_bdry * (1.) * ( grad_adj_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_state]][i_bdry] );  //boundary optimality condition of state equation
+ /*if ( group_flag == GROUP_INTERNAL )*/ Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i_vol) ]  +=  -  interface_node_flag[i_vol] * weight_qp_bdry * (1.) * ( grad_adj_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_state]][i_bdry] );
 
- /*if ( group_flag == GROUP_EXTERNAL )*/ Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i_vol)  ]  +=  -  interface_flag[i_vol] * weight_qp_bdry * (-1.) * ( grad_adj_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry] );  //boundary optimality condition of control equation
+ /*if ( group_flag == GROUP_EXTERNAL )*/ Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i_vol)  ]  +=  -  interface_node_flag[i_vol] * weight_qp_bdry * (-1.) * ( grad_adj_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry] );
 
-                             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i_vol)   ]  +=  -  penalty_interface * interface_flag[i_vol] * ( sol_eldofs[pos_state][i_vol] - sol_eldofs[pos_ctrl][i_vol] ) ;  // u = q
+                             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i_vol)   ]  +=  -  penalty_interface * interface_node_flag[i_vol] * ( sol_eldofs[pos_state][i_vol] - sol_eldofs[pos_ctrl][i_vol] ) ;  // u = q
 //============ Bdry Residuals ==================	
 
 		    for(unsigned j_bdry=0; j_bdry < nDofu_bdry; j_bdry ++) {
@@ -528,12 +530,12 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 // THIRD BLOCK ROW
 //============ u = q =============================	    
     if (i_vol == j_vol)  {
-       Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_adj, pos_state, i_vol, j_vol) ]  += penalty_interface * interface_flag[i_vol] * ( 1.);
-       Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_adj, pos_ctrl, i_vol, j_vol) ]   += penalty_interface * interface_flag[i_vol] * (-1.);
+       Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_adj, pos_state, i_vol, j_vol) ]  += penalty_interface * interface_node_flag[i_vol] * ( 1.);
+       Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_adj, pos_ctrl, i_vol, j_vol) ]   += penalty_interface * interface_node_flag[i_vol] * (-1.);
        }
 //============ u = q =============================		    
 		    
-     } //end j_vol 
+     } //end j_bdry 
 		    
 //===================loop over j in the VOLUME (while i is in the boundary)	      
     for(unsigned j=0; j < nDof_max; j ++) {
@@ -548,39 +550,28 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   //std::cout << " gradadjdotn " << grad_adj_dot_n_mat << std::endl;
   
 //   if ( group_flag == GROUP_INTERNAL ) {	
-        Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_state, pos_adj, i_vol, j) ]  += interface_flag[i_vol] * (1.) * weight_qp_bdry * grad_adj_dot_n_mat * phi_fe_qp_bdry[SolFEType[pos_state]][i_bdry];
+        Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_state, pos_adj, i_vol, j) ]  += interface_node_flag[i_vol] * (1.) * weight_qp_bdry * grad_adj_dot_n_mat * phi_fe_qp_bdry[SolFEType[pos_state]][i_bdry];
 //   }
   
 /* if ( group_flag == GROUP_EXTERNAL ) {*/		      
-       Jac[  assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_ctrl, pos_adj, i_vol, j) ]  += interface_flag[i_vol] * (-1.) * weight_qp_bdry * grad_adj_dot_n_mat * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry];    
+       Jac[  assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_ctrl, pos_adj, i_vol, j) ]  += interface_node_flag[i_vol] * (-1.) * weight_qp_bdry * grad_adj_dot_n_mat * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry];    
 /*  }*/         
  
-		  }   //end loop i_bdry
+		  } //end j
+		  
+		        } //end i_bdry
+		  
        }  //end ig_bdry loop
-      }
+       
+
       
-    }
-  }  //end face loop
+    }  //bdry interface elements
+
+  }  //end boundary face loop
 	  
   //************ Boundary loops *************************************** 
 	    
- //*************************************************** 
     
-//  //***** set control flag *************************
-//   int control_el_flag = 0;
-//   control_el_flag = ControlDomainFlag(elem_center);
-//   std::vector<int> control_node_flag(nDof_ctrl,0);
-//   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
-//  //************************************************
-//   
-//  //***** set state flag ***************************
-//   int state_el_flag = 0;
-//   state_el_flag = StateDomainFlag(elem_center);
-//   std::vector<int> state_node_flag(nDof_ctrl,0);
-//   if (state_el_flag == 1) std::fill(state_node_flag.begin(), state_node_flag.end(), 1);
-//  //*************************************************
-  
-
  // *** Gauss point loop ***
  for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][coords_fe_type]->GetGaussPointNumber(); ig++) {
 	
@@ -638,18 +629,18 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
       // FIRST ROW
          if ( group_flag == GROUP_INTERNAL )     {       
              Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ]  += - weight_qp * (target_flag * phi_fe_qp[SolFEType[pos_state]][i] * ( sol_qp[pos_state] - u_des) - laplace_rhs_du_adj_i - 0.);
-             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i)]    +=  (1 - interface_flag[i]) * (- penalty_strong_ctrl) * (sol_eldofs[pos_ctrl][i] - 0.);
+             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i)]    +=  (1 - interface_node_flag[i]) * (- penalty_strong_ctrl) * (sol_eldofs[pos_ctrl][i] - 0.);
              Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i)]     += - weight_qp *  ( - laplace_rhs_dadj_u_i    - 0.) ;
-             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj_ext,i)] += - penalty_strong_ctrl * ( (1 - interface_flag[i]) * (  sol_eldofs[pos_adj_ext][i] - 0.)  );         
-             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mu,i)]      += - penalty_strong_ctrl * ( (1 - interface_flag[i]) * (  sol_eldofs[pos_mu][i] - 0.)  );
+             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj_ext,i)] += - penalty_strong_ctrl * ( (1 - interface_node_flag[i]) * (  sol_eldofs[pos_adj_ext][i] - 0.)  );         
+             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mu,i)]      += - penalty_strong_ctrl * ( (1 - interface_node_flag[i]) * (  sol_eldofs[pos_mu][i] - 0.)  );
         }
          
          else if ( group_flag == GROUP_EXTERNAL )  {
-             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ] +=  (1-interface_flag[i]) * (- penalty_strong_u) * (sol_eldofs[pos_state][i] - 0.);
+             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ] +=  (1-interface_node_flag[i]) * (- penalty_strong_u) * (sol_eldofs[pos_state][i] - 0.);
              Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i) ]  +=  - weight_qp * ( alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_ctrl]
                                                                                                                   - laplace_rhs_dctrl_adj_ext_i 
                                                                                                                   + beta * laplace_rhs_dctrl_ctrl_i - 0.);
-             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i)]     += - penalty_strong_u * ( (1 - interface_flag[i]) * (  sol_eldofs[pos_adj][i] - 0.)  );
+             Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i)]     += - penalty_strong_u * ( (1 - interface_node_flag[i]) * (  sol_eldofs[pos_adj][i] - 0.)  );
              Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj_ext,i)] += - weight_qp *  ( - laplace_rhs_dadj_ext_ctrl_i - 0.) ;         
         }
 //======================Volume Residuals=======================
@@ -686,17 +677,17 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                Jac[  assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_state, pos_adj, i, j) ]  += weight_qp * (-1.) * laplace_mat_du_adj;
         
            if ( i==j ) {
-		      Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i, j) ]  += (1-interface_flag[i]) * penalty_strong_ctrl;
+		      Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i, j) ]  += (1-interface_node_flag[i]) * penalty_strong_ctrl;
 		   }
 		   
 		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_adj, pos_state, i, j) ]  += weight_qp * (-1.) * laplace_mat_dadj_u;   
              
            if ( i==j ) {
-		      Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_adj_ext, pos_adj_ext, i, j)]  += (1 - interface_flag[i]) * penalty_strong_ctrl;
+		      Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_adj_ext, pos_adj_ext, i, j)]  += (1 - interface_node_flag[i]) * penalty_strong_ctrl;
 		   }
 		   
           if ( i==j ) {  
-		     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mu, pos_mu, i, j) ]            += (1 - interface_flag[i]) * penalty_strong_ctrl;
+		     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mu, pos_mu, i, j) ]            += (1 - interface_node_flag[i]) * penalty_strong_ctrl;
           }
 		   
         }
@@ -704,7 +695,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         else if ( group_flag == GROUP_EXTERNAL ) {  
 		
             if (  i==j ) {
-              Jac[  assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_state, pos_state, i, j) ]  += (1 - interface_flag[i]) * 1. * penalty_strong_u;
+              Jac[  assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_state, pos_state, i, j) ]  += (1 - interface_node_flag[i]) * 1. * penalty_strong_u;
 	        }
 		      Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i, j) ]     += weight_qp * ( beta * laplace_mat_dctrl_ctrl 
 		                                                            + alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] );
@@ -712,7 +703,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 		      Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_ctrl, pos_adj_ext, i, j) ]  += weight_qp * (-1) * laplace_mat_dctrl_adj_ext;
               
            if ( i==j ) {
-		      Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_adj, pos_adj, i, j) ]       += (1 - interface_flag[i]) * 1. * penalty_strong_u;
+		      Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_adj, pos_adj, i, j) ]       += (1 - interface_node_flag[i]) * 1. * penalty_strong_u;
 		   }
 		   
 		      Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_adj_ext, pos_ctrl, i, j) ]  += weight_qp * (-1) * laplace_mat_dadj_ext_ctrl; 
