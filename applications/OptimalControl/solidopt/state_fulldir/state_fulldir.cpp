@@ -23,7 +23,7 @@
 using namespace femus;
 
   
-double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
          
            double value = 0.;
 
@@ -47,7 +47,7 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
   
   
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool Solution_set_boundary_conditions(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=)  (in 2D)
   //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=) //5: (z=z_min)  //6:  (z=z_max) (in 3D, I guess...)
   
@@ -192,9 +192,33 @@ int main(int argc, char** args) {
   
   // ======= Normal run ========================   //if you don't want the convergence study
   My_main_single_level< adept::adouble > my_main;
-  const unsigned int n_levels = 1;
-  my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); 
+//   const unsigned int n_levels = 1;
+//   my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); 
  
+  
+  
+  // ======= Convergence study ========================
+    
+   //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
+   MultiLevelMesh ml_mesh_all_levels;
+   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+   //   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
+ 
+   // convergence choices ================  
+   unsigned int max_number_of_meshes;               // set total number of levels ================  
+
+   if (nsub[2] == 0)   max_number_of_meshes = 6;
+   else                max_number_of_meshes = 4;
+  
+//    My_exact_solution<> exact_sol;                //provide exact solution, if available ==============
+   const unsigned conv_order_flag = 0;              //Choose how to compute the convergence order ========= //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
+   const unsigned norm_flag = 1;                    //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
+
+   
+   // object ================  
+    FE_convergence<>  fe_convergence;
+    
+    fe_convergence.convergence_study(files, unknowns, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
   
     
   return 0;
@@ -531,7 +555,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
                                                                                     
                                                                                     
   // ======= Mesh  ==================
-            unsigned numberOfUniformLevels = lev;
+            unsigned numberOfUniformLevels = lev + 1;  //this has to have a + 1 for the convergence study
             unsigned numberOfSelectiveLevels = 0;
             ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
             ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -582,10 +606,10 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
   //initial conditions
   ml_sol.Initialize("All");
-  for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.Initialize(unknowns[u]._name.c_str(), SetInitialCondition, &ml_prob);
+  for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, &ml_prob);
   
   //boundary conditions
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
   ml_sol.GenerateBdc("All");
 
 
@@ -630,7 +654,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;  variablesToBePrinted.push_back("All");
-  ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic", variablesToBePrinted);
+  ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic", variablesToBePrinted, lev);
  
  return ml_sol;
 

@@ -236,11 +236,11 @@ template < class real_num >
 const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
                                                                                 const std::vector< Math::Unknowns_definition > &  unknowns,  
                                                                                 MultiLevelMesh & ml_mesh,
-                                                                                const unsigned i) const {
+                                                                                const unsigned lev) const {
       
       
             //Mesh  ==================
-            unsigned numberOfUniformLevels = i + 1;
+            unsigned numberOfUniformLevels = lev + 1;
             unsigned numberOfSelectiveLevels = 0;
             ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
             ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -292,7 +292,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             // ======= Print ========================
             std::vector < std::string > variablesToBePrinted;
             variablesToBePrinted.push_back(unknowns[u]._name);
-            ml_sol_single_level.GetWriter()->Write(unknowns[u]._name, files.GetOutputPath(), "biquadratic", variablesToBePrinted, i);  
+            ml_sol_single_level.GetWriter()->Write(unknowns[u]._name, files.GetOutputPath(), "biquadratic", variablesToBePrinted, lev);  
      
 
          }
