@@ -479,7 +479,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
       // *** get gauss point weight, test function and test function partial derivatives ***
       static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][SolFEType[0]] )
                                          ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
-//       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+//       msh->_finiteElement[ielGeom][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
       msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
@@ -519,7 +519,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
 // arbitrary rhs
 //               double source_term = exact_sol.value(x_gss);
-//         Res[i] += ( source_term * phi[i] - phi[i] * solu_gss - laplace ) * weight;
+//         Res[i] += ( source_term * phi[i] - solu_gss * phi[i] - laplace ) * weight;
         
 // manufactured Helmholtz - strong
              double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
@@ -616,6 +616,9 @@ template < >
 ///@todo: compute nonlinear convergence rate
 ///@todo: compute time convergence rate, pointwise and then in norms
 ///@todo: uncouple Gauss from Mesh
-///@todo: make non-isoparametric Jacobian routines (abstract Jacobian)
+///@todo: make non-isoparametric Jacobian routines (abstract Jacobian) for all dims
 ///@todo: check solver and prec choices
 ///@todo: create a copy constructor/operator=() for the Mesh
+///@todo: check FE convergence in 3D for various operators
+///@todo: check face names in 3D
+///@todo: test with linear compressible solid first
