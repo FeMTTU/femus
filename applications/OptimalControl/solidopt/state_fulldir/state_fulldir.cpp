@@ -16,9 +16,9 @@
 #include <stdio.h>
 
 
-// #define MODEL "Linear_elastic"
+#define MODEL "Linear_elastic"
 // #define MODEL "Mooney-Rivlin" 
-#define MODEL "Neo-Hookean"
+// #define MODEL "Neo-Hookean"
 
 using namespace femus;
 
@@ -48,32 +48,49 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
   
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  //1: bottom  //2: right  //3: top  //4: left
+  //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=)  (in 2D)
+  //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=) //5: (z=z_min)  //6:  (z=z_max) (in 3D, I guess...)
   
   bool dirichlet; 
   
       if (facename == 1) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = false/*true*/; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = false/*true*/; value = 0.; } 
+       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
   	
       }
 
       if (facename == 2) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = true; value = 0.; } 
+       if (!strcmp(SolName, "DX"))    { dirichlet = false/*true*/; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = false/*true*/; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
   	
       }
 
       if (facename == 3) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = false/*true*/; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = false/*true*/; value = 0.; } 
+       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
   	
       }
 
       if (facename == 4) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = true; value = 0.; } 
+       if (!strcmp(SolName, "DX"))    { dirichlet = false/*true*/; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = false/*true*/; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
   	
+      }
+      
+      if (facename == 5) {
+       if (!strcmp(SolName, "DX"))    { dirichlet = false; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = false; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
+      }
+      
+      if (facename == 6) {
+       if (!strcmp(SolName, "DX"))    { dirichlet = false; value = 0.; }
+  else if (!strcmp(SolName, "DY"))    { dirichlet = false; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
       }
       
   return dirichlet;
@@ -314,7 +331,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob) {
     const bool penalty = ml_prob.parameters.get < Solid>("Solid").get_if_penalty();
 
     // gravity
-    double _gravity[3] = {0., 1., 0.};
+    double _gravity[3] = {1., 0., 0.};
     // -----------------------------------------------------------------
  
     RES->zero();
@@ -563,10 +580,11 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
   for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);
 
+  //initial conditions
   ml_sol.Initialize("All");
   for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.Initialize(unknowns[u]._name.c_str(), SetInitialCondition, &ml_prob);
   
-  // attach the boundary condition function and generate boundary data
+  //boundary conditions
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   ml_sol.GenerateBdc("All");
 
@@ -574,11 +592,8 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   // ======= System ========================
   NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("SolidMech");
 
-  // add solution "u" to system
   for (unsigned int u = 0; u < unknowns.size(); u++)   system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
  
-
-  // attach the assembling function to system
   system.SetAssembleFunction( AssembleSolidMech< adept::adouble, adept::adouble >);
 
   // initialize and solve the system
