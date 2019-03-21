@@ -41,12 +41,6 @@ namespace femus {
 
   NonLinearImplicitSystem::~NonLinearImplicitSystem() {
     std::cout<<"I am in 0\n";    
-    //this->clear();
-  }
-
-  void NonLinearImplicitSystem::clear() {
-    std::cout<<"I am in 4\n";    
-    //LinearImplicitSystem::clear();
   }
 
   // ********************************************

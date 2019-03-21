@@ -51,8 +51,6 @@ namespace femus {
       /** Destructor. */
       virtual ~ImplicitRungeKuttaSystem ();
 
-      virtual void clear ();
-
       void AddSolutionToSystemPDE (const char solname[]);
 
       void SetImplicitRungeKuttaScheme(const ImplicitRKScheme & RKtype);
@@ -131,18 +129,6 @@ namespace femus {
     _solKiIndex.resize (0);
     _solRKType.resize(0);
     
-    //this->clear();
-  }
-
-  template <class Base>
-  void ImplicitRungeKuttaSystem<Base>::clear() {
-//     _RK = 1;
-//     _solName.resize (0);
-//     _solKiName.resize (0);
-//     _solIndex.resize (0);
-//     _solKiIndex.resize (0);
-//     _solRKType.resize(0);
-//     TransientSystem<Base>::clear();
   }
 
   template <class Base>

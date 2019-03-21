@@ -65,9 +65,6 @@ public:
         return *this;
     }
 
-    /** Clear all the data structures associated with the system. */
-    virtual void clear ();
-
     /**
      * @returns \p "Transient" prepended to T::system_type().
      * Helps in identifying the system type in an equation

@@ -129,7 +129,7 @@ int main (int argc, char** args) {
 
     // time loop parameter
     system.AttachGetTimeIntervalFunction (GetTimeStep);
-    const unsigned int n_timesteps = 4;
+    const unsigned int n_timesteps = 40;
 
     system.SetMaxNumberOfNonLinearIterations (1);
     system.SetMaxNumberOfLinearIterations (1);
@@ -153,18 +153,18 @@ int main (int argc, char** args) {
 
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
-//     for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-// 
-//       system.CopySolutionToOldSolution();
-// 
-//       system.MGsolve();
-// 
-//       double time = system.GetTime();
-//       bool stop = GetDeadCells (time, mlSol);
-//       mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
-//       if (stop) break;
-//     }
-    mlProb.clear();
+    for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+
+      system.CopySolutionToOldSolution();
+
+      system.MGsolve();
+
+      double time = system.GetTime();
+      bool stop = GetDeadCells (time, mlSol);
+      mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+      if (stop) break;
+    }
+   // mlProb.clear();
     
   }
 

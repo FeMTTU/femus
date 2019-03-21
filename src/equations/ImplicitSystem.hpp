@@ -45,9 +45,6 @@ public:
     /** The type of the parent. */
     typedef ExplicitSystem Parent;
 
-    /** Clear all the data structures associated with the system. */
-    virtual void clear();
-
     /** Init the system PDE structures */
     virtual void init();
 

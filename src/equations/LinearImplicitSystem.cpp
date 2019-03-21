@@ -60,32 +60,15 @@ namespace femus {
   // ********************************************
 
   LinearImplicitSystem::~LinearImplicitSystem() {
-    std::cout<<"I am in 1 \n";    
-    //this->clear();
+    std::cout<<"I am in 1 \n"; 
       
     for(unsigned ig = 0; ig < _LinSolver.size(); ig++) {
       _LinSolver[ig]->DeletePde();
-//       if(_LinSolver[ig]){
-//         delete _LinSolver[ig];
-//         _LinSolver[ig] = NULL;
-//       }
-
-      if(_PP[ig]) {
-        delete _PP[ig]; 
-        _PP[ig] = NULL;
-      }
-      if(_RR[ig]) {
-        delete _RR[ig];
-        _RR[ig] = NULL;
-      }
-      if(_PPamr[ig]){ 
-        delete _PPamr[ig];
-        _PPamr[ig] = NULL;
-      }
-      if(_RRamr[ig]){ 
-        delete _RRamr[ig];
-        _RRamr[ig] = NULL;
-      }
+      delete _LinSolver[ig];
+      delete _PP[ig]; 
+      delete _RR[ig];
+      delete _PPamr[ig];
+      delete _RRamr[ig];
     }
 
     _NSchurVar_test = 0;
@@ -94,42 +77,6 @@ namespace femus {
     _numberOfGlobalVariables = 0;
     
     
-  }
-
-  // ********************************************
-
-  void LinearImplicitSystem::clear() {
-     std::cout<<"I am in 2 \n";  
-//       
-//     for(unsigned ig = 0; ig < _LinSolver.size(); ig++) {
-//       _LinSolver[ig]->DeletePde();
-// //       if(_LinSolver[ig]){
-// //         delete _LinSolver[ig];
-// //         _LinSolver[ig] = NULL;
-// //       }
-// 
-//       if(_PP[ig]) {
-//         delete _PP[ig]; 
-//         _PP[ig] = NULL;
-//       }
-//       if(_RR[ig]) {
-//         delete _RR[ig];
-//         _RR[ig] = NULL;
-//       }
-//       if(_PPamr[ig]){ 
-//         delete _PPamr[ig];
-//         _PPamr[ig] = NULL;
-//       }
-//       if(_RRamr[ig]){ 
-//         delete _RRamr[ig];
-//         _RRamr[ig] = NULL;
-//       }
-//     }
-// 
-//     _NSchurVar_test = 0;
-//     _numblock_test = 0;
-//     _numblock_all_test = 0;
-//     _numberOfGlobalVariables = 0;
   }
 
   // ********************************************

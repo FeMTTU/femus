@@ -35,11 +35,6 @@ ImplicitSystem::ImplicitSystem (MultiLevelProblem& ml_probl,
 }
 
 ImplicitSystem::~ImplicitSystem() {
- // this->clear(); 
-}
-
-void ImplicitSystem::clear() {
-  
 }
 
 void ImplicitSystem::init() {

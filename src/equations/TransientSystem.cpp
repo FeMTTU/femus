@@ -50,21 +50,7 @@ TransientSystem<Base>::~TransientSystem ()
   _time = 0.;
   _time_step = 0;
   _dt = 0.1;
-  _assembleCounter= 0;    
-  //this->clear();
-}
-
-// ------------------------------------------------------------
-template <class Base>
-void TransientSystem<Base>::clear ()
-{
- /* // clear the parent data
-  _is_selective_timestep = false;
-  _time = 0.;
-  _time_step = 0;
-  _dt = 0.1;
-  _assembleCounter= 0;  */   
-  //Base::clear();
+  _assembleCounter= 0;   
 }
 
 // ------------------------------------------------------------

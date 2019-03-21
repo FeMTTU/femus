@@ -48,9 +48,6 @@ namespace femus {
       /** The type of the parent. */
       typedef ImplicitSystem Parent;
 
-      /** Clear all the data structures associated with the system. */
-      virtual void clear();
-
       /** Init the system PDE structures */
       virtual void init();
 

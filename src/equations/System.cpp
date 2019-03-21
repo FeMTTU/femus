@@ -42,11 +42,6 @@ namespace femus {
 
 
 System::~System() {
-  //this->clear();
-}
-
-void System::clear() {
-
 }
 
 void System::init() {
