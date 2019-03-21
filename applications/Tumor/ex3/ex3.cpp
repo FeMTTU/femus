@@ -78,7 +78,7 @@ int main (int argc, char** args) {
   const unsigned split[4] = {8,4,2,1};
 
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 2; //We apply uniform refinement.
+  unsigned numberOfUniformLevels = 4; //We apply uniform refinement.
   unsigned numberOfSelectiveLevels = 0; // We may want to see the solution on some levels.
   
   MultiLevelMesh mlMsh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels,

@@ -60,7 +60,6 @@ namespace femus {
   // ********************************************
 
   LinearImplicitSystem::~LinearImplicitSystem() {
-    std::cout<<"I am in 1 \n"; 
       
     for(unsigned ig = 0; ig < _LinSolver.size(); ig++) {
       _LinSolver[ig]->DeletePde();

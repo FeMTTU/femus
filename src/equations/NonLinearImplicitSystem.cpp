@@ -40,7 +40,6 @@ namespace femus {
   }
 
   NonLinearImplicitSystem::~NonLinearImplicitSystem() {
-    std::cout<<"I am in 0\n";    
   }
 
   // ********************************************
@@ -77,7 +76,7 @@ namespace femus {
 
       std::cout << "     ********* Level Max " << igridn + 1 << " Nonlinear Eps_l2norm/Sol_l2norm " << \
                 std::scientific << _ml_sol->GetSolutionName(indexSol) << "= " << L2normEpsDividedSol << \
-                "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << "  ** Res_l2norm= " << L2normRes << std::endl;
+                "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << std::endl;
       nonLinearEps = (nonLinearEps > L2normEpsDividedSol) ? nonLinearEps : L2normEpsDividedSol;
 
       if((L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol ) && conv == true) {
