@@ -35,7 +35,7 @@ namespace femus {
   }
 
   MonolithicFSINonLinearImplicitSystem::~MonolithicFSINonLinearImplicitSystem() {
-    this->clear();
+    //this->clear();
   }
 
   void MonolithicFSINonLinearImplicitSystem::clear() {

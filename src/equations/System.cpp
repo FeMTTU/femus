@@ -42,7 +42,7 @@ namespace femus {
 
 
 System::~System() {
-  this->clear();
+  //this->clear();
 }
 
 void System::clear() {

@@ -40,11 +40,13 @@ namespace femus {
   }
 
   NonLinearImplicitSystem::~NonLinearImplicitSystem() {
-    this->clear();
+    std::cout<<"I am in 0\n";    
+    //this->clear();
   }
 
   void NonLinearImplicitSystem::clear() {
-    LinearImplicitSystem::clear();
+    std::cout<<"I am in 4\n";    
+    //LinearImplicitSystem::clear();
   }
 
   // ********************************************

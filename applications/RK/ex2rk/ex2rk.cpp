@@ -222,7 +222,7 @@ int main (int argc, char** args) {
   system.SetTolerances(1.e-10, 1.e-10, 1.e+50, 10, 10); //GMRES tolerances
   
   system.AttachGetTimeIntervalFunction (GetTimeStep);
-  const unsigned int n_timesteps = 100;
+  const unsigned int n_timesteps = 2;
 
   system.SetFieldSplitTree(&FS);
   

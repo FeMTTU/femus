@@ -78,7 +78,7 @@ int main (int argc, char** args) {
   const unsigned split[4] = {8,4,2,1};
 
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 3; //We apply uniform refinement.
+  unsigned numberOfUniformLevels = 2; //We apply uniform refinement.
   unsigned numberOfSelectiveLevels = 0; // We may want to see the solution on some levels.
   
   MultiLevelMesh mlMsh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels,
@@ -88,7 +88,7 @@ int main (int argc, char** args) {
   // erase all the coarse mesh levels
   // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
   
-  for (unsigned simulation = 9; simulation < 10; simulation++) {
+  for (unsigned simulation = 9; simulation < 11; simulation++) {
 
     V0 = 0.005 * (simulation + 1) ;   // fraction of injection vs tumor
 
@@ -129,7 +129,7 @@ int main (int argc, char** args) {
 
     // time loop parameter
     system.AttachGetTimeIntervalFunction (GetTimeStep);
-    const unsigned int n_timesteps = 40;
+    const unsigned int n_timesteps = 4;
 
     system.SetMaxNumberOfNonLinearIterations (1);
     system.SetMaxNumberOfLinearIterations (1);
@@ -153,20 +153,19 @@ int main (int argc, char** args) {
 
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
-    for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-
-      system.CopySolutionToOldSolution();
-
-      system.MGsolve();
-
-      double time = system.GetTime();
-      bool stop = GetDeadCells (time, mlSol);
-      mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
-
-      if (stop) break;
-    }
-
+//     for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+// 
+//       system.CopySolutionToOldSolution();
+// 
+//       system.MGsolve();
+// 
+//       double time = system.GetTime();
+//       bool stop = GetDeadCells (time, mlSol);
+//       mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+//       if (stop) break;
+//     }
     mlProb.clear();
+    
   }
 
   return 0;
