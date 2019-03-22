@@ -86,18 +86,21 @@ int main(int argc, char** args) {
     files.CheckIODirectories();
     files.RedirectCout();
 
+    // ======= Quad Rule ========================
+    std::string fe_quad_rule("seventh");
+    /* "seventh" is the order of accuracy that is used in the gauss integration scheme
+         probably in the furure it is not going to be an argument of this function   */
+
     // ======= Mesh  ==================
     MultiLevelMesh ml_mesh;
 
     double scalingFactor = 1.;
 
     // read coarse level mesh and generate finers level meshes
-    ml_mesh.ReadCoarseMesh("./input/ext_box.neu", "seventh", scalingFactor);
+    ml_mesh.ReadCoarseMesh("./input/ext_box.neu", fe_quad_rule.c_str(), scalingFactor);
 
     //ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-    /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-         probably in the furure it is not going to be an argument of this function   */
-    unsigned numberOfUniformLevels = 4;
+    unsigned numberOfUniformLevels = 1;
     unsigned numberOfSelectiveLevels = 0;
     ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
     ml_mesh.PrintInfo();
@@ -333,12 +336,12 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 
 //********************* DATA ************************
-    double u_des = DesiredTarget();
-    double alpha = ALPHA_CTRL_VOL;
-    double beta  = BETA_CTRL_VOL;
-    double penalty_strong_ctrl = 1.e30;
-    double penalty_strong_u = 1.e30;
-    double penalty_interface = 1.e10;         //penalty for u=q
+    const double u_des = DesiredTarget();
+    const double alpha = ALPHA_CTRL_VOL;
+    const double beta  = BETA_CTRL_VOL;
+    const double penalty_strong_ctrl = 1.e30;
+    const double penalty_strong_u = 1.e30;
+    const double penalty_interface = 1.e10;         //penalty for u=q
 //***************************************************
 
     RES->zero();
@@ -667,7 +670,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ]  += - (1 - interface_node_flag[i]) * penalty_strong_u * (sol_eldofs[pos_state][i] - 0.);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i) ]   += - weight_qp * ( alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_ctrl]
                             + beta * laplace_rhs_dctrl_ctrl_i
-                            - laplace_rhs_dctrl_adj_ext_i);
+                            - laplace_rhs_dctrl_adj_ext_i /*+ 7000. * phi_fe_qp[SolFEType[pos_ctrl]][i]*/);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i)]     += - (1 - interface_node_flag[i]) * penalty_strong_u * (  sol_eldofs[pos_adj][i] - 0.);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj_ext,i)] += - weight_qp *  ( - laplace_rhs_dadj_ext_ctrl_i - 0.) ;
                 }
@@ -778,8 +781,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 
     // ***************** END ASSEMBLY *******************
+    //this part is to put a bunch of 1's in the residual, so it is not based on the element loop
     unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
-    unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
 
     unsigned int global_ctrl_size = pdeSys->KKoffset[ctrl_index+1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
 
