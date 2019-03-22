@@ -1,6 +1,5 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
-#include "VTKWriter.hpp"
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 #include "Math.hpp"
@@ -249,8 +248,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     phi_adj_vol_at_bdry.reserve(max_size);
     vector <double> phi_adj_x_vol_at_bdry;
     phi_adj_x_vol_at_bdry.reserve(max_size * dim);
-    vector <double> sol_adj_x_vol_at_bdry_gss;
-    sol_adj_x_vol_at_bdry_gss.reserve(dim);
+    vector <double> sol_adj_x_vol_at_bdry_gss(dim);
 //***************************************************
 
     //************** act flag ****************************
@@ -456,8 +454,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 //***************************************************
 
 
-        vector <double> interface_node_flag;
-        interface_node_flag.reserve(Sol_n_el_dofs[pos_state]); //flag for boundary interface
+        std::vector <double> interface_node_flag(Sol_n_el_dofs[pos_state]); //flag for boundary interface
         std::fill(interface_node_flag.begin(), interface_node_flag.end(), 0.);
 
         //************ Boundary loops ***************************************
@@ -529,8 +526,9 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                         std::cout << "VolumeShapeAtBoundary not implemented" << std::endl;
                         abort();
                     }
-                    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->VolumeShapeAtBoundary(coords_at_dofs,coords_at_dofs_bdry,jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+                    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->VolumeShapeAtBoundary(coords_at_dofs, coords_at_dofs_bdry, jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
 
+                    
 //=============== grad dot n for residual =========================================
 //     compute gauss quantities on the boundary through VOLUME interpolation
                     std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
@@ -544,7 +542,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                     }
 
                     double grad_adj_dot_n_res = 0.;
-                    for(unsigned d=0; d<dim; d++) {
+                    for (unsigned d = 0; d < dim; d++) {
                         grad_adj_dot_n_res += sol_adj_x_vol_at_bdry_gss[d] * normal[d];
                     }
 //=============== grad dot n  for residual =========================================
@@ -555,7 +553,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 //============ Bdry Residuals ==================
 
-                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i_vol)  ]  +=  -  weight_qp_bdry * (-1.) * ( grad_adj_dot_n_res * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry] );
+                        if ( group_flag == GROUP_EXTERNAL ) Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i_vol)  ]  +=  -  weight_qp_bdry * (-1.) * ( (grad_adj_dot_n_res) * phi_fe_qp_bdry[SolFEType[pos_ctrl]][i_bdry] );
 
                         Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i_vol)   ]  +=  -  penalty_interface * ( sol_eldofs[pos_state][i_vol] - sol_eldofs[pos_ctrl][i_vol] ) ;  // u = q
 //============ Bdry Residuals ==================
@@ -657,7 +655,6 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                 }
 
 //======================Volume Residuals=======================
-                // FIRST ROW
                 if ( group_flag == GROUP_INTERNAL )     {
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ]  += - weight_qp * (target_flag * phi_fe_qp[SolFEType[pos_state]][i] * ( sol_qp[pos_state] - u_des) - laplace_rhs_du_adj_i);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i)]    += - (1 - interface_node_flag[i]) * penalty_strong_ctrl * (sol_eldofs[pos_ctrl][i] - 0.);
@@ -670,8 +667,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ]  += - (1 - interface_node_flag[i]) * penalty_strong_u * (sol_eldofs[pos_state][i] - 0.);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i) ]   += - weight_qp * ( alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_ctrl]
                             + beta * laplace_rhs_dctrl_ctrl_i
-                            - laplace_rhs_dctrl_adj_ext_i
-                            - 0.);
+                            - laplace_rhs_dctrl_adj_ext_i);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i)]     += - (1 - interface_node_flag[i]) * penalty_strong_u * (  sol_eldofs[pos_adj][i] - 0.);
                     Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj_ext,i)] += - weight_qp *  ( - laplace_rhs_dadj_ext_ctrl_i - 0.) ;
                 }
@@ -775,6 +771,9 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
         KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag );
 
+    assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 5);
+    assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 9, 5);
+    
     } //end element loop for each process
 
 
@@ -797,10 +796,10 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     RES->close();
     KK->close();
 
-//      //print JAC and RES to files
-//     const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
-//     assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
-//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
+     //print JAC and RES to files
+    const unsigned nonlin_iter = mlPdeSys->GetNonlinearIt();
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
+    assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
 
     return;
 }
