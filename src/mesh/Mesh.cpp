@@ -20,7 +20,7 @@
 #include "MeshGeneration.hpp"
 #include "MeshMetisPartitioning.hpp"
 #include "GambitIO.hpp"
-#include "SalomeIO.hpp"
+#include "MED_IO.hpp"
 #include "NumericVector.hpp"
 
 // C++ includes
@@ -134,7 +134,7 @@ namespace femus {
       GambitIO (*this).read (name, _coords, Lref, type_elem_flag);
     }
     else if (name.rfind (".med") < name.size()) {
-      SalomeIO (*this).read (name, _coords, Lref, type_elem_flag);
+      MED_IO (*this).read (name, _coords, Lref, type_elem_flag);
     }
     else {
       std::cerr << " ERROR: Unrecognized file extension: " << name
@@ -195,7 +195,7 @@ namespace femus {
     el->ScatterElementNearFace();
 
     _amrRestriction.resize (3);
-   
+
     PrintInfo();
   };
 
@@ -407,7 +407,7 @@ namespace femus {
     for (unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
       imapping[iel] = iel;
     }
-   // std::cout << "AAAAAAAAAAAAAAAAAAAA\n";
+    // std::cout << "AAAAAAAAAAAAAAAAAAAA\n";
     for (int isdom = 0; isdom < _nprocs; isdom++) {
 //       for (unsigned i = _elementOffset[isdom]; i < _elementOffset[isdom + 1] - 1; i++) {
 //         unsigned iel = imapping[i];
@@ -427,8 +427,8 @@ namespace femus {
 //         }
 //       }
       unsigned jel, iel;
-      short unsigned jelMat, jelGroup, ielMat, ielGroup;  
-     
+      short unsigned jelMat, jelGroup, ielMat, ielGroup;
+
       unsigned n = _elementOffset[isdom + 1u] - _elementOffset[isdom];
       while (n > 1) {
         unsigned newN = 0u;
@@ -441,7 +441,7 @@ namespace femus {
           ielMat = el->GetElementMaterial (iel);
           ielGroup = el->GetElementGroup (iel);
 
-          if (jelMat < ielMat || (jelMat == ielMat && ( jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel) ) ) ) {
+          if (jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
             imapping[j - 1] = jel;
             imapping[j] = iel;
             newN = j;
@@ -531,7 +531,7 @@ namespace femus {
     }
 
 
-    
+
 
     partition.resize (0);
 
@@ -862,6 +862,20 @@ namespace femus {
   }
 
 
+  SparseMatrix* Mesh::GetCoarseToFineProjectionRestrictionOnCoarse (const unsigned& solType) {
+
+    if (solType >= 5) {
+      std::cout << "Wrong argument range in function \"GetCoarseToFineProjection\": "
+                << "solType is greater then SolTypeMax" << std::endl;
+      abort();
+    }
+
+    if (_ProjCoarseToFine[solType])
+      BuildCoarseToFineProjection (solType, "coarse");
+
+    return _ProjCoarseToFine[solType];
+  }
+
 
   SparseMatrix* Mesh::GetCoarseToFineProjection (const unsigned& solType) {
 
@@ -872,14 +886,14 @@ namespace femus {
     }
 
     if (!_ProjCoarseToFine[solType])
-      BuildCoarseToFineProjection (solType);
+      BuildCoarseToFineProjection (solType, "fine");
 
     return _ProjCoarseToFine[solType];
   }
 
 
 
-  void Mesh::BuildCoarseToFineProjection (const unsigned& solType) {
+  void Mesh::BuildCoarseToFineProjection (const unsigned& solType, const char el_dofs[]) {
 
     if (!_coarseMsh) {
       std::cout << "Error! In function \"BuildCoarseToFineProjection\": the coarse mesh has not been set" << std::endl;
@@ -917,7 +931,7 @@ namespace femus {
       for (int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for (int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = _coarseMsh->GetElementType (iel);
-          _finiteElement[ielt][solType]->GetSparsityPatternSize (*this, *_coarseMsh, iel, NNZ_d, NNZ_o);
+          _finiteElement[ielt][solType]->GetSparsityPatternSize (*this, *_coarseMsh, iel, NNZ_d, NNZ_o, el_dofs);
         }
       }
 
@@ -944,12 +958,13 @@ namespace femus {
       for (int isdom = _iproc; isdom < _iproc + 1; isdom++) {
         for (int iel = _coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom + 1]; iel++) {
           short unsigned ielt = _coarseMsh->GetElementType (iel);
-          _finiteElement[ielt][solType]->BuildProlongation (*this, *_coarseMsh, iel, _ProjCoarseToFine[solType]);
+          _finiteElement[ielt][solType]->BuildProlongation (*this, *_coarseMsh, iel, _ProjCoarseToFine[solType], el_dofs);
         }
       }
 
       _ProjCoarseToFine[solType]->close();
     }
+
   }
 
 

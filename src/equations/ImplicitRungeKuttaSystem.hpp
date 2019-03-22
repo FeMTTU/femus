@@ -51,8 +51,6 @@ namespace femus {
       /** Destructor. */
       virtual ~ImplicitRungeKuttaSystem ();
 
-      virtual void clear ();
-
       void AddSolutionToSystemPDE (const char solname[]);
 
       void SetImplicitRungeKuttaScheme(const ImplicitRKScheme & RKtype);
@@ -72,7 +70,7 @@ namespace femus {
       void MLsolve();
 
       /** calling the parent solve */
-      void MGsolve (const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE);
+      void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 
       const std::vector < std::string > & GetSolkiNames (const char name[]);
 
@@ -124,18 +122,13 @@ namespace femus {
   /** Destructor. */
   template <class Base>
   ImplicitRungeKuttaSystem<Base>::~ImplicitRungeKuttaSystem() {
-    this->clear();
-  }
-
-  template <class Base>
-  void ImplicitRungeKuttaSystem<Base>::clear() {
     _RK = 1;
     _solName.resize (0);
     _solKiName.resize (0);
     _solIndex.resize (0);
     _solKiIndex.resize (0);
     _solRKType.resize(0);
-    TransientSystem<Base>::clear();
+    
   }
 
   template <class Base>
@@ -222,7 +215,7 @@ namespace femus {
   }
 
   template <class Base>
-  void ImplicitRungeKuttaSystem<Base>::MGsolve (const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
+  void ImplicitRungeKuttaSystem<Base>::MGsolve (const MgSmootherType& mgSmootherType) {
     TransientSystem<Base>::SetUpForSolve();
 
     SetIntermediateTimes();
@@ -238,7 +231,7 @@ namespace femus {
     Base::_MLsolver = false;
     Base::_MGsolver = true;
 
-    Base::solve (LinearEquationSolverTypeType);
+    Base::solve (mgSmootherType);
 
     UpdateSolution();
   }

@@ -45,20 +45,12 @@ TransientSystem<Base>::TransientSystem (
 template <class Base>
 TransientSystem<Base>::~TransientSystem ()
 {
-  this->clear();
-}
-
-// ------------------------------------------------------------
-template <class Base>
-void TransientSystem<Base>::clear ()
-{
-  // clear the parent data
+   // clear the parent data
   _is_selective_timestep = false;
   _time = 0.;
   _time_step = 0;
   _dt = 0.1;
-  _assembleCounter= 0;     
-  Base::clear();
+  _assembleCounter= 0;   
 }
 
 // ------------------------------------------------------------
@@ -121,14 +113,14 @@ void TransientSystem<Base>::MLsolve() {
 
 // ------------------------------------------------------------
 template <class Base>
-void TransientSystem<Base>::MGsolve( const LinearEquationSolverTypeType& LinearEquationSolverTypeType ) {
+void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
 
   SetUpForSolve();  
   // call the parent MGsolver
   Base::_MLsolver = false;
   Base::_MGsolver = true;
 
-  Base::solve( LinearEquationSolverTypeType );
+  Base::solve( mgSmootherType );
 
 }
 

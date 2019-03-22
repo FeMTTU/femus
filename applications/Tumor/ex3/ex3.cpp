@@ -91,7 +91,7 @@ int main (int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
   // erase all the coarse mesh levels
   // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
-
+  
   for (unsigned simulation = 9; simulation < 10; simulation++) {
 
     V0 = 0.005 * (simulation + 1) ;   // fraction of injection vs tumor
@@ -166,11 +166,10 @@ int main (int argc, char** args) {
       double time = system.GetTime();
       bool stop = GetDeadCells (time, mlSol);
       mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
-
       if (stop) break;
     }
-
-    mlProb.clear();
+   // mlProb.clear();
+    
   }
 
   return 0;

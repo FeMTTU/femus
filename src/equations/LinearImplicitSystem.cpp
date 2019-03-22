@@ -29,6 +29,7 @@ namespace femus {
       const std::string& name_in,
       const unsigned int number_in, const LinearEquationSolverType& smoother_type) :
     ImplicitSystem(ml_probl, name_in, number_in, smoother_type),
+    _debug_linear(false),
     _n_max_linear_iterations(3),
     _final_linear_residual(1.e20),
     _linearAbsoluteConvergenceTolerance(1.e-08),
@@ -59,26 +60,22 @@ namespace femus {
   // ********************************************
 
   LinearImplicitSystem::~LinearImplicitSystem() {
-    this->clear();
-  }
-
-  // ********************************************
-
-  void LinearImplicitSystem::clear() {
+      
     for(unsigned ig = 0; ig < _LinSolver.size(); ig++) {
       _LinSolver[ig]->DeletePde();
-      //delete _LinSolver[ig];
-
-      if(_PP[ig]) delete _PP[ig];
-      if(_RR[ig]) delete _RR[ig];
-      if(_PPamr[ig]) delete _PPamr[ig];
-      if(_RRamr[ig]) delete _RRamr[ig];
+      delete _LinSolver[ig];
+      delete _PP[ig]; 
+      delete _RR[ig];
+      delete _PPamr[ig];
+      delete _RRamr[ig];
     }
 
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
     _numberOfGlobalVariables = 0;
+    
+    
   }
 
   // ********************************************
@@ -175,7 +172,7 @@ namespace femus {
 
   // ********************************************
 
-  void LinearImplicitSystem::solve(const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
+  void LinearImplicitSystem::solve(const MgSmootherType& mgSmootherType) {
 
     _bitFlipCounter = 0;
     
@@ -262,7 +259,7 @@ restart:
       std::cout << std::endl << " ****** Level Max " << igridn + 1 << " PREPARATION TIME:\t" << static_cast<double>((clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
 
       if(_MGsolver) {
-        _LinSolver[igridn]->MGInit(LinearEquationSolverTypeType, igridn + 1, _mgOuterSolver);
+        _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _mgOuterSolver);
 
         for(unsigned i = 0; i < igridn + 1; i++) {
           unsigned npre = (i == 0)? _npre0 : _npre;  
@@ -273,7 +270,7 @@ restart:
             _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], npre, npost);
         }
 
-        MGVcycle(igridn, LinearEquationSolverTypeType);
+        MGVcycle(igridn, mgSmootherType);
 
         _LinSolver[igridn]->MGClear();
       }
@@ -317,8 +314,9 @@ restart:
       L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
       std::cout << "       *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normRes << std::endl;
       if(isnan(L2normRes)){
-	std::cout << "Warning a bit flip is probably occurred, lets try to restart the solver!" << std::endl;
-	_bitFlipOccurred = true;
+         std::cout << "Warning the linear solver did not converge.\n";
+         std::cout << "A bit flip may have occurred, let's try to restart the solver!" << std::endl;
+	    _bitFlipOccurred = true;
       }
       if(L2normRes < _linearAbsoluteConvergenceTolerance && conv == true) {
         conv = true;
@@ -356,7 +354,7 @@ restart:
 
   // ********************************************
 
-  bool LinearImplicitSystem::MGVcycle(const unsigned& level, const LinearEquationSolverTypeType& LinearEquationSolverTypeType) {
+  bool LinearImplicitSystem::MGVcycle(const unsigned& level, const MgSmootherType& mgSmootherType) {
 
     clock_t start_mg_time = clock();
 
@@ -430,8 +428,23 @@ restart:
       // ============== Update Fine Residual ==============
       _solution[level]->UpdateRes(_SolSystemPdeIndex, _LinSolver[level]->_RES, _LinSolver[level]->KKoffset);
       linearIsConverged = IsLinearConverged(level);
+      
+        if (_debug_linear)  {
+        std::vector < std::string > variablesToBePrinted;
+        variablesToBePrinted.push_back("All");
+        std::ostringstream output_file_name_stream; output_file_name_stream << "biquadratic" << "." << std::setfill('0') << std::setw(2)   << linearIterator; // the "." after biquadratic is needed to see the sequence of files in Paraview as "time steps"
+        if (this->GetMLProb().GetFilesHandler() != NULL) {
+           this->GetMLProb()._ml_sol->GetWriter()->Write(this->GetMLProb().GetFilesHandler()->GetOutputPath(),output_file_name_stream.str().c_str(),variablesToBePrinted);
+	     }
+	    else {
+           this->GetMLProb()._ml_sol->GetWriter()->Write(DEFAULT_OUTPUTDIR,output_file_name_stream.str().c_str(),variablesToBePrinted);
+         }
+       }
+
+      
       if(linearIsConverged || _bitFlipOccurred) break;
     }
+
 
     // ============== Update Fine Solution ==============
     if(!_bitFlipOccurred){

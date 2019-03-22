@@ -17,7 +17,7 @@
 #define __femus_equations_MonolithicFSINonLinearImplicitSystem_hpp__
 
 //----------------------------------------------------------------------------
-// includes :
+// inclarudes :
 //----------------------------------------------------------------------------
 #include "NonLinearImplicitSystem.hpp"
 
@@ -44,9 +44,6 @@ public:
 
     /** The type of the parent. */
     typedef NonLinearImplicitSystem Parent;
-
-    /** Clear all the data structures associated with the system. */
-    virtual void clear();
 
     /** Init the system PDE structures */
     virtual void init();

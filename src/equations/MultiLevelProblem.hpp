@@ -29,6 +29,8 @@
 #include <map>
 #include "GaussPoints.hpp"
 #include "FemusInputParser.hpp"
+#include "Files.hpp"
+
 
 namespace femus {
 
@@ -197,6 +199,13 @@ public:
 
   void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
 
+    /** Files Handler */
+  void SetFilesHandler(const Files * files_in) { _files = files_in; return; }
+  inline const Files * GetFilesHandler() const { return  _files; }
+
+    /** Flexible assembly */
+                      void set_current_unknown_assembly( std::string unknown_in ) { _current_unknown_assembly = unknown_in; return; }
+  inline const std::string get_current_unknown_assembly() const { return  _current_unknown_assembly; }
 
 private:
 
@@ -209,6 +218,9 @@ private:
     const FemusInputParser<double>        * _phys;
     const QuantityMap                     * _qtymap;
     const MultiLevelMeshTwo               * _mesh;
+
+    const Files                           * _files;
+    std::string  _current_unknown_assembly;
 
 
 };

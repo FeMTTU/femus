@@ -14,7 +14,7 @@
 =========================================================================*/
 
 /**
- * This class is useful to handle multilevel variables. It's going to be splitted
+ * This class is useful to handle multilevel variables. It's going to be split
  * into meshvariables and solutionvariables
 */
 
@@ -57,6 +57,11 @@ namespace femus {
       /** Add a new variable called 'name' */
       void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order, const unsigned& tmorder = 0, const bool &Pde_type = 1);
 
+      /** Add a number of solutions */
+      void AddSolution_par(const int n_sols, const char name[], const FEFamily fefamily, const FEOrder order, const unsigned& tmorder = 0, const bool &Pde_type = 1);
+      
+      void ResizeSolution_par(const int new_size);
+  
       /** Resize the solution vector */
       void ResizeSolutionVector(const char name[]);
 
@@ -150,14 +155,19 @@ namespace femus {
       }
       
     private:
+        
       //member data
-      vector <int> _SolType;
-      vector <char*> _SolName;
+        
+      /** This group of vectors has the size of the number of added solutions */
+      vector <int>      _SolType;
+      vector <char*>    _SolName;
       vector <unsigned> _SolTmOrder;
       vector <FEFamily> _family;
-      vector <FEOrder> _order;
+      vector <FEOrder>  _order;
+      vector <bool>     _removeNullSpace;
+      
       Mesh *_msh;
-      vector <bool> _removeNullSpace;
+      
       bool _FSI;
 
   };

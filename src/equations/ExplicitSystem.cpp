@@ -35,12 +35,8 @@ ExplicitSystem::ExplicitSystem (MultiLevelProblem& ml_probl,
 }
 
 ExplicitSystem::~ExplicitSystem() {
-  this->clear(); 
 }
   
-void ExplicitSystem::clear() {
-  
-}
 
 void ExplicitSystem::init() {
   

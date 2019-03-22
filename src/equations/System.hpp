@@ -79,11 +79,11 @@ public:
     AssembleFunctionType  GetAssembleFunction();
 
 
-    virtual void MGsolve (const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE){
+    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE){
       _solverType = "MultiGrid";
       _MLsolver = false;
       _MGsolver = true;
-      solve(LinearEquationSolverTypeType);
+      solve(mgSmootherType);
     };
 
     virtual void MLsolve (){
@@ -92,9 +92,6 @@ public:
       _MGsolver = false;
       solve();
     };
-
-    /** Clear all the data structures associated with the system. */
-    virtual void clear();
 
     /** Init the system PDE structures */
     virtual void init();
@@ -118,7 +115,7 @@ public:
     /** Get Number of Levels */
     inline const unsigned GetGridn() const { return _gridn; }
 
-    inline unsigned GetLevelToAssemble(){ return _levelToAssemble; }
+    inline unsigned GetLevelToAssemble() const { return _levelToAssemble; }
 
     inline void SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
 
@@ -150,7 +147,7 @@ protected:
     bool _MGsolver, _MLsolver;
     std::string _solverType;
 
-    virtual void solve( const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE ){};
+    virtual void solve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE ){};
 
     /** Function that assembles the system. */
     AssembleFunctionType _assemble_system_function;

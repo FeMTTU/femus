@@ -48,9 +48,6 @@ namespace femus {
       /** The type of the parent. */
       typedef ImplicitSystem Parent;
 
-      /** Clear all the data structures associated with the system. */
-      virtual void clear();
-
       /** Init the system PDE structures */
       virtual void init();
 
@@ -94,6 +91,13 @@ namespace femus {
       /** Get the final Linear Residual of the linear problem Ax=b*/
       double GetFinalLinearResidual() const {
         return _final_linear_residual;
+      };
+
+      /** Flag to print fields to file after each linear iteration */
+      void SetDebugLinear(const bool my_value) {
+        if ( this->GetMLProb()._ml_sol->GetWriter() != NULL)        _debug_linear = my_value;
+        else {std::cout << "SetWriter first" << std::endl; abort(); }
+
       };
 
       /** Get the absolute convergence tolerance for the linear problem Ax=b*/
@@ -244,7 +248,7 @@ namespace femus {
       void AddAMRLevel (unsigned &AMRCounter);
 
       bool MLVcycle (const unsigned &gridn);
-      bool MGVcycle (const unsigned & gridn, const LinearEquationSolverTypeType& LinearEquationSolverTypeType);
+      bool MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
 
 
       /** Create the Prolongator matrix for the Multigrid solver */
@@ -264,6 +268,9 @@ namespace femus {
       // member data
       /** The number of linear iterations required to solve the linear system Ax=b. */
       //unsigned int _n_linear_iterations;
+
+      /** Flag for printing fields at each linear iteration */
+      bool _debug_linear;
 
       /** The final residual for the linear system Ax=b. */
       double _final_linear_residual;
@@ -318,7 +325,7 @@ namespace femus {
       vector <bool> _SparsityPattern;
 
       /** Solves the system. */
-      virtual void solve (const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE);
+      virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 
       double _richardsonScaleFactor;
       double _richardsonScaleFactorDecrease;
