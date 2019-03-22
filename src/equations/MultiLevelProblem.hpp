@@ -30,6 +30,7 @@
 #include "GaussPoints.hpp"
 #include "FemusInputParser.hpp"
 #include "Files.hpp"
+#include "Math.hpp"
 
 
 namespace femus {
@@ -204,8 +205,8 @@ public:
   inline const Files * GetFilesHandler() const { return  _files; }
 
     /** Flexible assembly */
-                      void set_current_unknown_assembly( std::string unknown_in ) { _current_unknown_assembly = unknown_in; return; }
-  inline const std::string get_current_unknown_assembly() const { return  _current_unknown_assembly; }
+                      void set_current_unknown_assembly(const std::vector< Math::Unknowns_definition > unknown_in ) { _current_unknown_assembly = unknown_in; }
+  inline const std::vector< Math::Unknowns_definition > get_current_unknown_assembly() const { return  _current_unknown_assembly; }
 
 private:
 
@@ -220,7 +221,7 @@ private:
     const MultiLevelMeshTwo               * _mesh;
 
     const Files                           * _files;
-    std::string  _current_unknown_assembly;
+    std::vector< Math::Unknowns_definition > _current_unknown_assembly;
 
 
 };

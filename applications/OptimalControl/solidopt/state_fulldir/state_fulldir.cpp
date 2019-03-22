@@ -10,10 +10,8 @@
 #include "Fluid.hpp"
 #include "Solid.hpp"
 #include "Files.hpp"
-#include "Math.hpp"
-
-#include "PetscMatrix.hpp"
-#include <stdio.h>
+#include "FE_convergence.hpp"
+#include "Assemble_jacobian.hpp"
 
 
 #define MODEL "Linear_elastic"
@@ -36,7 +34,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
              else if(!strcmp(name,"DZ")) {
                  value = 0.;
              }
-             else if(!strcmp(name,"DP")) {
+             else if(!strcmp(name,"P")) {
                  value = 0.;
              }
            

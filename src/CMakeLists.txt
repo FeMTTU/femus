@@ -99,7 +99,8 @@ utils/FemusInit.cpp
 utils/Files.cpp
 utils/InputParser.cpp
 utils/JsonInputParser.cpp
-utils/Math.cpp
+utils/FE_convergence.cpp
+utils/Assemble_jacobian.cpp
 )
 
 IF (NOT LIBRARY_OUTPUT_PATH)

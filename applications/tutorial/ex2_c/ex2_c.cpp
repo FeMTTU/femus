@@ -19,7 +19,8 @@
 #include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "Files.hpp"
-#include "Math.hpp"
+#include "FE_convergence.hpp"
+#include "Assemble_jacobian.hpp"
 
 #include "adept.h"
 
@@ -101,7 +102,7 @@ void System_assemble_interface(MultiLevelProblem & ml_prob);
 template < class real_num, class real_num_mov = double > 
 void System_assemble_flexible(MultiLevelProblem & ml_prob,
                             const std::string system_name,
-                            const std::string unknown,
+                            const std::vector< Math::Unknowns_definition > &  unknowns,
                             const Math::Function< double > & exact_sol);
 
 
@@ -270,8 +271,9 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
             system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
 
+            std::vector< Math::Unknowns_definition > unknowns_vec(1); unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
             
-            mlProb.set_current_unknown_assembly(unknowns[u]._name); //way to communicate to the assemble function, which doesn't belong to any class
+            mlProb.set_current_unknown_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
             
             system.SetAssembleFunction(System_assemble_interface< real_num >);
 
@@ -324,7 +326,7 @@ const std::string system_name = "Equation"; //I cannot get this from the system 
  **/
 
 template < class real_num, class real_num_mov = double >
-void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string system_name, const std::string unknown, const Math::Function< double > & exact_sol) {
+void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string system_name,  const std::vector< Math::Unknowns_definition > &  unknowns, const Math::Function< double > & exact_sol) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -356,8 +358,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
   if (n_unknowns > 1) { std::cout << "Only scalar variable now, haven't checked with vector PDE"; abort(); }
   
-  vector < std::string > Solname(n_unknowns);         Solname[0] = unknown;
-  
+  vector < std::string >  Solname(n_unknowns);     for(unsigned ivar=0; ivar < n_unknowns; ivar++) { Solname[ivar] = unknowns[ivar]._name; }
   vector < unsigned int > SolPdeIndex(n_unknowns);
   vector < unsigned int > SolIndex(n_unknowns);  
   vector < unsigned int > SolFEType(n_unknowns);  
