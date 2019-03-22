@@ -18,12 +18,13 @@ template < >
  // template specialization for adept::adouble
 template < > 
  void  assemble_jacobian< adept::adouble, double >::compute_jacobian_inside_integration_loop(const unsigned i,
-                                               const unsigned dim,
-                                               const unsigned nDofu,
-                                               const std::vector< double > & phi,
-                                               const std::vector< double > &  phi_x, 
-                                               const double weight,
-                                               std::vector< double > & Jac)  const { }
+                                                const unsigned dim,
+                                                const std::vector < unsigned int > Sol_n_el_dofs,
+                                                unsigned int sum_Sol_n_el_dofs,
+                                                const std::vector< double > &  phi,
+                                                const std::vector< double > &  phi_x,
+                                                const double weight,
+                                                std::vector< double > & Jac) const { }
 
 
                                                
@@ -32,7 +33,7 @@ template < >
  // template specialization for adept::adouble
 template < >
  void  assemble_jacobian< adept::adouble, double >::compute_jacobian_outside_integration_loop (adept::Stack & stack,
-                                                                    const std::vector< adept::adouble > & solu,
+                                                                    const std::vector< std::vector< adept::adouble > > & solu,
                                                                     const std::vector< adept::adouble > & Res,
                                                                     std::vector< double > & Jac,
                                                                     const std::vector< int > & loc_to_glob_map,
@@ -52,7 +53,9 @@ template < >
 
 
     stack.dependent(  & Res[0], Res_double.size());      // define the dependent variables
-    stack.independent(&solu[0],       solu.size());    // define the independent variables
+    for (unsigned  k = 0; k < solu.size(); k++) {   
+    stack.independent(&solu[k][0],       solu[k].size());    // define the independent variables
+    }
     
     stack.jacobian(&Jac[0], true);    // get the jacobian matrix (ordered by row major)
 

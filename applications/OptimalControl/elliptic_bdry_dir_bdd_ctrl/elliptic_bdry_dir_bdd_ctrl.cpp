@@ -742,7 +742,7 @@ std::cout <<  " qp_" << d << " " << coord_at_qp_bdry[d];
 		      
     double grad_adj_dot_n_res = 0.;
         for(unsigned d=0; d<dim; d++) {
-	  grad_adj_dot_n_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
+	  grad_adj_dot_n_res += sol_adj_x_vol_at_bdry_gss[d] * normal[d];  
 	}
 //=============== grad dot n  for residual =========================================       
 

@@ -183,27 +183,38 @@ int main(int argc, char** args) {
 //   ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
 
-// set total number of levels ================  
-  unsigned max_number_of_meshes;
+   // ======= Unknowns ========================
+   std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();
+   
 
-  if (nsub[2] == 0)   max_number_of_meshes = 6;
-  else                max_number_of_meshes = 4;
+   // ======= Normal run ========================
+    My_main_single_level< adept::adouble > my_main;
+//  const unsigned int n_levels = 3;
+//  my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); if you don't want the convergence study
+    
+    
+   // ======= Convergence study ========================
+    
+   // set total number of levels ================  
+   unsigned max_number_of_meshes;
+
+   if (nsub[2] == 0)   max_number_of_meshes = 6;
+   else                max_number_of_meshes = 4;
   
 
- //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
-  MultiLevelMesh ml_mesh_all_levels;
-  ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
+   //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
+   MultiLevelMesh ml_mesh_all_levels;
+   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+   //   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
  
+   // convergence choices ================  
    My_exact_solution<> exact_sol;                                            //provide exact solution, if available ==============
    const unsigned conv_order_flag = 0;                                               //Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
    const unsigned norm_flag = 1;                                                     //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
-   std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();   //provide list of unknowns ==============
 
-    My_main_single_level< adept::adouble > my_main;
-//  my_main.run_on_single_level(files, unknowns, ml_mesh, 3); if you don't want the convergence study
-    
+   
+   // object ================  
     FE_convergence<>  fe_convergence;
     
     fe_convergence.convergence_study(files, unknowns, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
@@ -225,11 +236,11 @@ template < class real_num >
 const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
                                                                                 const std::vector< Math::Unknowns_definition > &  unknowns,  
                                                                                 MultiLevelMesh & ml_mesh,
-                                                                                const unsigned i) const {
+                                                                                const unsigned lev) const {
       
       
             //Mesh  ==================
-            unsigned numberOfUniformLevels = i + 1;
+            unsigned numberOfUniformLevels = lev + 1;
             unsigned numberOfSelectiveLevels = 0;
             ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
             ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -248,24 +259,20 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str());
       
             
-            
-            // define the multilevel problem attach the ml_sol_single_level object to it
+           // ======= Problem ========================
             MultiLevelProblem mlProb(&ml_sol_single_level);
-
             
             mlProb.SetFilesHandler(&files);
       
       
-            // add system Poisson in mlProb as a Linear Implicit System
+           // ======= System ========================
             LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Equation");
 
-            // add solution "u" to system
             system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
 
             
             mlProb.set_current_unknown_assembly(unknowns[u]._name); //way to communicate to the assemble function, which doesn't belong to any class
             
-            // attach the assembling function to system
             system.SetAssembleFunction(System_assemble_interface< real_num >);
 
             // initialize and solve the system
@@ -280,12 +287,12 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 //             system.SetMaxNumberOfLinearIterations(6);
 //             system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
             
-            system.MLsolve();
+            system.MGsolve();
       
             // ======= Print ========================
             std::vector < std::string > variablesToBePrinted;
             variablesToBePrinted.push_back(unknowns[u]._name);
-            ml_sol_single_level.GetWriter()->Write(unknowns[u]._name, files.GetOutputPath(), "biquadratic", variablesToBePrinted, i);  
+            ml_sol_single_level.GetWriter()->Write(unknowns[u]._name, files.GetOutputPath(), "biquadratic", variablesToBePrinted, lev);  
      
 
          }
@@ -326,7 +333,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
   //  extract pointers to the several objects that we are going to use
 
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> (system_name);   // pointer to the linear implicit system 
+  LinearImplicitSystem* mlPdeSys  = & ml_prob.get_system<LinearImplicitSystem> (system_name);   // pointer to the linear implicit system 
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
@@ -346,18 +353,32 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
 
-  //solution variable
-  unsigned soluIndex = ml_sol->GetIndex(unknown.c_str());    // get the position of "u" in the ml_sol object
-  unsigned soluType  = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
-  unsigned soluPdeIndex = mlPdeSys->GetSolPdeIndex(unknown.c_str());    // get the position of "u" in the pdeSys object
-  if (soluPdeIndex > 0) { std::cout << "Only scalar variable now, haven't checked with vector PDE"; abort(); }
+  const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
+  if (n_unknowns > 1) { std::cout << "Only scalar variable now, haven't checked with vector PDE"; abort(); }
+  
+  vector < std::string > Solname(n_unknowns);         Solname[0] = unknown;
+  
+  vector < unsigned int > SolPdeIndex(n_unknowns);
+  vector < unsigned int > SolIndex(n_unknowns);  
+  vector < unsigned int > SolFEType(n_unknowns);  
+
+
+  for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
+    SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
+    SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
+    SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
+  }
+  
+   vector < unsigned int > Sol_n_el_dofs(n_unknowns);
 
   
   //----------- at dofs ------------------------------
   vector < vector < real_num_mov > > x(dim);  unsigned xType = BIQUADR_FE;     // must be adept if the domain is moving, otherwise double
   for (unsigned i = 0; i < dim; i++)  x[i].reserve(max_size_elem_dofs);
 
-  vector < real_num >  solu;                              solu.reserve(max_size_elem_dofs);
+  vector < vector < real_num > > SolVAR_eldofs(n_unknowns);
+  for(int k = 0; k < n_unknowns; k++) {    SolVAR_eldofs[k].reserve(max_size_elem_dofs);  }
+  
   vector < double >    solu_exact_at_dofs;  solu_exact_at_dofs.reserve(max_size_elem_dofs);
 
 
@@ -392,23 +413,22 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
   const assemble_jacobian< real_num, double > assemble_jac;
 
-  
+  RES->zero();
   KK->zero();
 
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);
+    unsigned nDofu  = msh->GetElementDofNumber(iel, SolFEType[0]);
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);
 
     // resize local arrays
     loc_to_glob_map.resize(nDofu);
-    solu.resize(nDofu);
+
     solu_exact_at_dofs.resize(nDofu);
 
     for (int i = 0; i < dim; i++)    x[i].resize(nDofx);
-
 
     Res.resize(nDofu);         std::fill(Res.begin(), Res.end(), 0.);
     Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.);
@@ -428,11 +448,23 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
     for (unsigned i = 0; i < nDofu; i++) {
         std::vector< double > x_at_node(dim,0.);
         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-                    solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
       solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
-                  loc_to_glob_map[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+         loc_to_glob_map[i] = pdeSys->GetSystemDof(SolIndex[0], SolPdeIndex[0], i, iel);
     }
+
+      for (unsigned  k = 0; k < n_unknowns; k++) {
+    unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+       Sol_n_el_dofs[k] = ndofs_unk;
+       SolVAR_eldofs[k].resize(ndofs_unk);
+    for (unsigned i = 0; i < ndofs_unk; i++) {
+       unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
+       SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
+//        JACDof[i + k *nDofsD]/*[k][i]*/ = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
+      }
+    }
+    
+    unsigned sum_Sol_n_el_dofs = 0;
+    for (unsigned  k = 0; k < n_unknowns; k++) { sum_Sol_n_el_dofs += Sol_n_el_dofs[k]; }
 
 
 
@@ -442,12 +474,12 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
     if (dim != 2) abort(); //only implemented in 2D now
 
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][SolFEType[0]]->GetGaussPointNumber(); ig++) {
         
       // *** get gauss point weight, test function and test function partial derivatives ***
-      static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][soluType] )
+      static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][SolFEType[0]] )
                                          ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
-//       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+//       msh->_finiteElement[ielGeom][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
       msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
@@ -456,10 +488,10 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
       vector < double > gradSolu_exact_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
-        solu_gss += phi[i] * solu[i];
+        solu_gss += phi[i] * SolVAR_eldofs[0][i];
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-                gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+                gradSolu_gss[jdim] += phi_x[i * dim + jdim] * SolVAR_eldofs[0][i];
           gradSolu_exact_gss[jdim] += phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
         }
       }
@@ -487,7 +519,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
 // arbitrary rhs
 //               double source_term = exact_sol.value(x_gss);
-//         Res[i] += ( source_term * phi[i] - phi[i] * solu_gss - laplace ) * weight;
+//         Res[i] += ( source_term * phi[i] - solu_gss * phi[i] - laplace ) * weight;
         
 // manufactured Helmholtz - strong
              double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
@@ -502,7 +534,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
 
         
-        assemble_jac.compute_jacobian_inside_integration_loop(i, dim, nDofu, phi, phi_x, weight, Jac);
+        assemble_jac.compute_jacobian_inside_integration_loop(i, dim, Sol_n_el_dofs, sum_Sol_n_el_dofs, phi, phi_x, weight, Jac);  //rethink of these arguments when you have more unknowns
         
       
         
@@ -512,7 +544,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
     } // end gauss point loop
 
     
- assemble_jac.compute_jacobian_outside_integration_loop(stack, solu, Res, Jac, loc_to_glob_map, RES, KK);
+ assemble_jac.compute_jacobian_outside_integration_loop(stack, SolVAR_eldofs, Res, Jac, loc_to_glob_map, RES, KK);
  
     
   } //end element loop for each process
@@ -536,7 +568,7 @@ template < >
 template < >
  void  assemble_jacobian < double, double > ::compute_jacobian_outside_integration_loop (
                                                              adept::Stack & stack,
-                                               const std::vector< double > & solu,
+                                               const std::vector< std::vector< double > > & solu,
                                                const std::vector< double > & Res,
                                                std::vector< double > & Jac,
                                                const std::vector< int > & loc_to_glob_map,
@@ -555,21 +587,22 @@ template < >
  void  assemble_jacobian< double, double >::compute_jacobian_inside_integration_loop (
                                                          const unsigned i,
                                                          const unsigned dim, 
-                                                         const unsigned nDofu, 
+                                                         const std::vector < unsigned int > Sol_n_el_dofs,
+                                                         unsigned int sum_Sol_n_el_dofs,
                                                          const std::vector< double > &  phi,
                                                          const std::vector< double > &  phi_x, 
                                                          const double weight, 
                                                          std::vector< double > & Jac )  const { 
 
 // *** phi_j loop ***
-        for (unsigned j = 0; j < nDofu; j++) {
+        for (unsigned j = 0; j < Sol_n_el_dofs[0]; j++) {
           /*real_num*/double laplace_jac = 0.;
 
           for (unsigned kdim = 0; kdim < dim; kdim++) {
             laplace_jac += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]);
           }
 
-          Jac[i * nDofu + j] += (laplace_jac + phi[i] * phi[j]) * weight;
+          Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, /*SolPdeIndex[0]*/ 0, /*SolPdeIndex[0]*/ 0, i, j) ] += (laplace_jac + phi[i] * phi[j]) * weight;
         } // end phi_j loop
 
         
@@ -583,6 +616,9 @@ template < >
 ///@todo: compute nonlinear convergence rate
 ///@todo: compute time convergence rate, pointwise and then in norms
 ///@todo: uncouple Gauss from Mesh
-///@todo: make non-isoparametric Jacobian routines (abstract Jacobian)
+///@todo: make non-isoparametric Jacobian routines (abstract Jacobian) for all dims
 ///@todo: check solver and prec choices
 ///@todo: create a copy constructor/operator=() for the Mesh
+///@todo: check FE convergence in 3D for various operators
+///@todo: check face names in 3D
+///@todo: test with linear compressible solid first
