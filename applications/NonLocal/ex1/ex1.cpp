@@ -191,7 +191,7 @@ int main ( int argc, char** argv )
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0 );
 
     std::cout << "Mesh size h = " << ( xMaxCoarseBox - xMinCoarseBox ) / ( numberOfElements * pow(2,numberOfUniformLevels)) << std::endl;
-
+    
     return 0;
 
 } //end main
@@ -380,6 +380,21 @@ void GetL2Norm ( MultiLevelProblem& ml_prob, MultiLevelProblem& ml_prob2 )
 
     std::cout.precision ( 14 );
     std::cout << "linfinity norm of ERROR: Nonlocal - local = " << littleLInfinityNorm << std::endl;
+    
+    
+    for (unsigned idof = msh->_dofOffset[0][iproc]; idof < msh->_dofOffset[0][iproc + 1]; idof++) {
+        
+        double x = ( *msh->_topology->_Sol[0] ) ( idof);
+        
+        double u =  ( *sol->_Sol[soluIndex] ) ( idof );
+        
+        double u_local =  ( *sol2->_Sol[soluIndexLocal] ) ( idof );
+        
+        double u_exact =  x * x * x;
+        
+        std::cout<< x << " " << u << " " << u_local << " " << u_exact << std::endl;
+        
+    }
 
 
 }
