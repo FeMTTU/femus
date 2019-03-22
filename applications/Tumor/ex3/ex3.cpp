@@ -20,7 +20,7 @@
 
 using namespace femus;
 
-bool CheckIfPositiveDefinite(double K[6]);
+bool CheckIfPositiveDefinite (double K[6]);
 
 void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split);
 
@@ -38,13 +38,17 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
 
 double V0;
 double InitalValueU3D (const std::vector < double >& x) {
-  double r = sqrt (x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
+  double xc = 0.3;
+  double yc = -0.19;
+  double zc = 0.38;
+  double r = sqrt ( (x[0]-xc) * (x[0]-xc) + (x[1]-yc) * (x[1]-yc) + (x[2] - zc) * (x[2]-zc) );
   double r2 = r * r;
-  double R = 1.80001;
+  double R = 0.5;
   double R2 = R * R;
   double R3 = R2 * R;
   double Vb = 1.1990039070212866;
 
+  if(r2 > R2) return 0.;
   return (V0 * M_PI * 4. / 3.) / Vb * exp ( (1. - R2 / (R2 - r2)));
 }
 
@@ -75,19 +79,19 @@ int main (int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
-  const unsigned split[4] = {8,4,2,1};
+  const unsigned split[4] = {8, 4, 2, 1};
 
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 3; //We apply uniform refinement.
+  unsigned numberOfUniformLevels = 4; //We apply uniform refinement.
   unsigned numberOfSelectiveLevels = 0; // We may want to see the solution on some levels.
-  
+
   MultiLevelMesh mlMsh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels,
-                        "./input/cube6x6x6.neu", "fifth", 1., NULL);
+                        "./input/cube4x4x4.neu", "fifth", 1., NULL);
 
   unsigned dim = mlMsh.GetDimension();
   // erase all the coarse mesh levels
   // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
-  
+
   for (unsigned simulation = 9; simulation < 10; simulation++) {
 
     V0 = 0.005 * (simulation + 1) ;   // fraction of injection vs tumor
@@ -96,9 +100,9 @@ int main (int argc, char** args) {
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
 
     // add variables to mlSol
-    mlSol.AddSolution ("u", LAGRANGE, SECOND, 2); 
-    mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false); 
-    
+    mlSol.AddSolution ("u", LAGRANGE, SECOND, 2);
+    mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false);
+
     mlSol.AddSolution ("K11", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
     mlSol.AddSolution ("K12", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
     mlSol.AddSolution ("K13", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
@@ -133,7 +137,7 @@ int main (int argc, char** args) {
 
     system.SetMaxNumberOfNonLinearIterations (1);
     system.SetMaxNumberOfLinearIterations (1);
-    
+
     system.init();
     system.SetTolerances (1.e-10, 1.e-20, 1.e+50, 200, 40);
 
@@ -579,18 +583,18 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
 }
 
 
-bool CheckIfPositiveDefinite(double K[6]){
+bool CheckIfPositiveDefinite (double K[6]) {
   bool pDefinite = true;
   double det1 = K[0];
   double det2 = K[0] * K[3] - K[1] * K[1];
-  double det3 =   K[0] * (K[3] * K[5] - K[4] * K[4]) 
-                - K[1] * (K[1] * K[5] - K[4] * K[2]) 
-                + K[2] * (K[1] * K[4] - K[3] * K[2]);
-  if(det1 <= 0. || det2 <= 0. || det3 <= 0.) {
+  double det3 =   K[0] * (K[3] * K[5] - K[4] * K[4])
+                  - K[1] * (K[1] * K[5] - K[4] * K[2])
+                  + K[2] * (K[1] * K[4] - K[3] * K[2]);
+  if (det1 <= 0. || det2 <= 0. || det3 <= 0.) {
     pDefinite = false;
-  }          
+  }
   return pDefinite;
-};  
+};
 
 
 void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split) {
@@ -602,9 +606,9 @@ void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split) {
 
   std::ifstream fin;
 
-  fin.open ("./input/CroppedTensorData.txt");
+  fin.open ("./input/MeanDiffData.txt");
   if (!fin.is_open()) {
-    std::cout << std::endl << " The output file " << "./input/tensor.txt" << " cannot be opened.\n";
+    std::cout << std::endl << " The output file " << "./input/MeanDiffData.txt" << " cannot be opened.\n";
     abort();
   }
 
@@ -651,14 +655,21 @@ void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split) {
           Marker center = Marker (x, 1., VOLUME , sol, 0);
           unsigned mproc = center.GetMarkerProc (sol);
 
+          double eps = 1.0e-05;
+
           if (mproc == iproc) {
             unsigned iel = center.GetMarkerElement();
-            while ( !CheckIfPositiveDefinite(K)){
-              std::cout << " warning k[" << iel << "] is not positive definite\n";   
-              K[0] += fabs(K[0]) + fabs(K[1]) + fabs(K[2]);
-              K[3] += fabs(K[1]) + fabs(K[3]) + fabs(K[4]);
-              K[5] += fabs(K[2]) + fabs(K[4]) + fabs(K[5]);
-            }  
+//             while (!CheckIfPositiveDefinite (K)) {
+//               std::cout << " warning k[" << iel << "] is not positive definite\n";
+// 
+//               K[0] += (K[0] < 0.) ? fabs (K[0]) + fabs (K[1]) + fabs (K[2]) : fabs (K[1]) + fabs (K[2]);
+//               K[3] += (K[3] < 0.) ? fabs (K[1]) + fabs (K[3]) + fabs (K[4]) : fabs (K[1]) + fabs (K[4]);
+//               K[5] += (K[5] < 0.) ? fabs (K[2]) + fabs (K[4]) + fabs (K[5]) : fabs (K[2]) + fabs (K[4]);
+//               if (K[0] < eps) K[0] = eps;
+//               if (K[3] < eps) K[3] = eps;
+//               if (K[5] < eps) K[5] = eps;
+// 
+//             }
             for (unsigned l = 0; l < 6; l++) {
               sol->_Sol[kIndex[l]]->set (iel, K[l]);
             }
