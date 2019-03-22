@@ -28,8 +28,15 @@ bool nonLocalAssembly = true;
 double delta1 = 0.1; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
 double delta2 = 0.1;
 double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
-double leftBound = - 1.2;
-double rightBound = 1.2;
+
+//coarse box parameters
+double meshSize;
+double leftBound = - 1.225;
+double rightBound = 1.225;
+unsigned numberOfElements = 53;
+bool doubleIntefaceNode = true;
+unsigned elementToSkip = UINT_MAX;
+std::vector < unsigned > elementGroups;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
@@ -138,12 +145,120 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
     //BEGIN nonlocal assembly
 
-    //create element groups
+    if ( doubleIntefaceNode ) { //this assumes there is an element across the interface with midpoont at zero
 
-    //BEGIN
+
+//         //BEGIN TO REMOVE
+//         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+// 
+//             unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
+//             unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
+//             unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
+// 
+// 
+//             double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
+//             double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
+//             double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
+// 
+//             std::cout << "xMin = " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+// 
+//         }
+// 
+//         //END
+
+        unsigned x0Dof  = msh->GetSolutionDof ( 0, 0, xType );
+        unsigned x1Dof  = msh->GetSolutionDof ( 1, 0, xType );
+
+        double x0 = ( *msh->_topology->_Sol[0] ) ( x0Dof );
+        double x1 = ( *msh->_topology->_Sol[0] ) ( x1Dof );
+
+        meshSize = fabs ( x1 - x0 );
+
+        unsigned numberOfNodes = msh->GetNumberOfNodes();
+
+        std::vector<unsigned> nodeShiftFlags ( numberOfNodes, 0 );
+
+        for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+
+            unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
+            unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
+            unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
+
+            double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
+            double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
+            double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
+
+            if ( xMid == 0 ) elementToSkip = iel;
+
+            if ( nodeShiftFlags[xMinDof] == 0 ) {
+
+                if ( xMin < 0. ) msh->_topology->_Sol[0]->set ( xMinDof, xMin + 0.5 * meshSize );
+
+                else msh->_topology->_Sol[0]->set ( xMinDof, xMin - 0.5 * meshSize );
+
+                nodeShiftFlags[xMinDof] = 1;
+
+            }
+
+            if ( nodeShiftFlags[xMaxDof] == 0 ) {
+
+                if ( xMax < 0. ) msh->_topology->_Sol[0]->set ( xMaxDof, xMax + 0.5 * meshSize );
+
+                else msh->_topology->_Sol[0]->set ( xMaxDof, xMax - 0.5 * meshSize );
+
+                nodeShiftFlags[xMaxDof] = 1;
+
+            }
+
+        }
+        
+        msh->_topology->_Sol[0]->close();
+
+        for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+
+            unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
+            unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
+            unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
+
+
+            double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
+            double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
+
+            msh->_topology->_Sol[0]->set ( xMidDof, 0.5 * ( xMin + xMax ) );
+
+        }
+
+        msh->_topology->_Sol[0]->close();
+        
+        leftBound += 0.5 * meshSize;
+        rightBound -= 0.5 * meshSize;
+
+//         //BEGIN TO REMOVE
+        for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+
+            unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
+            unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
+            unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
+
+
+            double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
+            double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
+            double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
+
+            std::cout << "xMin = " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+
+        }
+// 
+//         //END
+
+    }
+
+//create element groups
+
+//BEGIN
     unsigned numberOfElements = msh->GetNumberOfElements();
 
-    std::vector < unsigned > elementGroups ( numberOfElements ) ;
+    elementGroups.resize(numberOfElements) ;
 
     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
@@ -184,20 +299,14 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
         elementGroups[iel] = group;
     }
 
-//         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-//               for ( int kproc = 0; kproc < nprocs; kproc++ ) {
-//             MPI_Bcast ( &elementGroups[iel], 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
-//         }
+//     for ( unsigned iel = 0; iel < elementGroups.size(); iel++ ) {
+//         std::cout << " iel = " << iel << " , " << "elementGroups[" << iel << "] = " << elementGroups[iel] << std::endl;
 //     }
 
-    for ( unsigned iel = 0; iel < elementGroups.size(); iel++ ) {
-        std::cout << " iel = " << iel << " , " << "elementGroups[" << iel << "] = " << elementGroups[iel] << std::endl;
-    }
+//END
 
-    //END
-
-    //loop to change _Bdc in the boundary elements and assign the BoundaryFunctionValue to their nodes
-    //BEGIN
+//loop to change _Bdc in the boundary elements and assign the BoundaryFunctionValue to their nodes
+//BEGIN
     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
         short unsigned ielGroup = elementGroups[iel];
@@ -228,207 +337,213 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
     sol->_Bdc[soluIndex]->close();
     sol->_Sol[soluIndex]->close();
-    //END
+//END
 
     for ( int kproc = 0; kproc < nprocs; kproc++ ) {
         for ( int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++ ) {
 
-            short unsigned jelGeom;
-            short unsigned jelGroup = elementGroups[jel];
-            unsigned nDof2;
-            //unsigned nDofx2;
+            if ( jel != elementToSkip ) {
 
-            if ( iproc == kproc ) {
-                jelGeom = msh->GetElementType ( jel );
-                nDof2  = msh->GetElementDofNumber ( jel, soluType );
-            }
+                short unsigned jelGeom;
+                short unsigned jelGroup = elementGroups[jel];
+                unsigned nDof2;
+                //unsigned nDofx2;
 
-            MPI_Bcast ( &jelGeom, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD );
-            MPI_Bcast ( &nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
-
-            l2GMap2.resize ( nDof2 );
-            solu2.resize ( nDof2 );
-
-            for ( int k = 0; k < dim; k++ ) {
-                x2[k].resize ( nDof2 );
-            }
-
-            if ( iproc == kproc ) {
-                for ( unsigned j = 0; j < nDof2; j++ ) {
-                    l2GMap2[j] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, j, jel );
-                    unsigned solDof = msh->GetSolutionDof ( j, jel, soluType );
-                    solu2[j] = ( *sol->_Sol[soluIndex] ) ( solDof );
-                    unsigned xDof  = msh->GetSolutionDof ( j, jel, xType );
-
-                    for ( unsigned k = 0; k < dim; k++ ) {
-                        x2[k][j] = ( *msh->_topology->_Sol[k] ) ( xDof );
-                    }
+                if ( iproc == kproc ) {
+                    jelGeom = msh->GetElementType ( jel );
+                    nDof2  = msh->GetElementDofNumber ( jel, soluType );
                 }
 
-//                 ReorderElement ( l2GMap2, solu2, x2 );
-            }
+                MPI_Bcast ( &jelGeom, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD );
+                MPI_Bcast ( &nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
 
-            MPI_Bcast ( &l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
-            MPI_Bcast ( &solu2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-
-            for ( unsigned k = 0; k < dim; k++ ) {
-                MPI_Bcast ( & x2[k][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
-            }
-
-            for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-
-                short unsigned ielGeom = msh->GetElementType ( iel );
-                short unsigned ielGroup = elementGroups[iel];
-                unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType );
-
-                l2GMap1.resize ( nDof1 );
-                solu1.resize ( nDof1 );
-
-                Jac11.assign ( nDof1 * nDof1, 0. );
-                Jac12.assign ( nDof1 * nDof2, 0. );
-                Jac21.assign ( nDof2 * nDof1, 0. );
-                Jac22.assign ( nDof2 * nDof2, 0. );
-                Res1.assign ( nDof1, 0. );
-                Res2.assign ( nDof2, 0. );
+                l2GMap2.resize ( nDof2 );
+                solu2.resize ( nDof2 );
 
                 for ( int k = 0; k < dim; k++ ) {
-                    x1[k].resize ( nDof1 );
+                    x2[k].resize ( nDof2 );
                 }
 
-                for ( unsigned i = 0; i < nDof1; i++ ) {
-                    l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel );
-                    unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
-                    solu1[i] = ( *sol->_Sol[soluIndex] ) ( solDof );
-                    unsigned xDof  = msh->GetSolutionDof ( i, iel, xType );
+                if ( iproc == kproc ) {
+                    for ( unsigned j = 0; j < nDof2; j++ ) {
+                        l2GMap2[j] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, j, jel );
+                        unsigned solDof = msh->GetSolutionDof ( j, jel, soluType );
+                        solu2[j] = ( *sol->_Sol[soluIndex] ) ( solDof );
+                        unsigned xDof  = msh->GetSolutionDof ( j, jel, xType );
 
-                    for ( unsigned k = 0; k < dim; k++ ) {
-                        x1[k][i] = ( *msh->_topology->_Sol[k] ) ( xDof );
+                        for ( unsigned k = 0; k < dim; k++ ) {
+                            x2[k][j] = ( *msh->_topology->_Sol[k] ) ( xDof );
+                        }
                     }
+
+//                 ReorderElement ( l2GMap2, solu2, x2 );
                 }
+
+                MPI_Bcast ( &l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD );
+                MPI_Bcast ( &solu2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+
+                for ( unsigned k = 0; k < dim; k++ ) {
+                    MPI_Bcast ( & x2[k][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD );
+                }
+
+                for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+
+                    if ( iel != elementToSkip ) {
+
+                        short unsigned ielGeom = msh->GetElementType ( iel );
+                        short unsigned ielGroup = elementGroups[iel];
+                        unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType );
+
+                        l2GMap1.resize ( nDof1 );
+                        solu1.resize ( nDof1 );
+
+                        Jac11.assign ( nDof1 * nDof1, 0. );
+                        Jac12.assign ( nDof1 * nDof2, 0. );
+                        Jac21.assign ( nDof2 * nDof1, 0. );
+                        Jac22.assign ( nDof2 * nDof2, 0. );
+                        Res1.assign ( nDof1, 0. );
+                        Res2.assign ( nDof2, 0. );
+
+                        for ( int k = 0; k < dim; k++ ) {
+                            x1[k].resize ( nDof1 );
+                        }
+
+                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                            l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel );
+                            unsigned solDof = msh->GetSolutionDof ( i, iel, soluType );
+                            solu1[i] = ( *sol->_Sol[soluIndex] ) ( solDof );
+                            unsigned xDof  = msh->GetSolutionDof ( i, iel, xType );
+
+                            for ( unsigned k = 0; k < dim; k++ ) {
+                                x1[k][i] = ( *msh->_topology->_Sol[k] ) ( xDof );
+                            }
+                        }
 
 //                 ReorderElement ( l2GMap1, solu1, x1 );
 
-                unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
-                vector < vector < double > > xg1 ( igNumber );
-                vector <double> weight1 ( igNumber );
-                vector < vector <double> > phi1x ( igNumber );
+                        unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
+                        vector < vector < double > > xg1 ( igNumber );
+                        vector <double> weight1 ( igNumber );
+                        vector < vector <double> > phi1x ( igNumber );
 
-                for ( unsigned ig = 0; ig < igNumber; ig++ ) {
-                    msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight1[ig], phi1x[ig], phi_x );
+                        for ( unsigned ig = 0; ig < igNumber; ig++ ) {
+                            msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight1[ig], phi1x[ig], phi_x );
 
-                    xg1[ig].assign ( dim, 0. );
+                            xg1[ig].assign ( dim, 0. );
 
-                    for ( unsigned i = 0; i < nDof1; i++ ) {
-                        for ( unsigned k = 0; k < dim; k++ ) {
-                            xg1[ig][k] += x1[k][i] * phi1x[ig][i];
+                            for ( unsigned i = 0; i < nDof1; i++ ) {
+                                for ( unsigned k = 0; k < dim; k++ ) {
+                                    xg1[ig][k] += x1[k][i] * phi1x[ig][i];
+                                }
+                            }
                         }
-                    }
-                }
 
-                double radius;
+                        double radius;
 
-                if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 5 || jelGroup == 7 ) ) radius = delta1; //both x and y are in Omega_1
+                        if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 5 || jelGroup == 7 ) ) radius = delta1; //both x and y are in Omega_1
 
-                else if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 6 || jelGroup == 8 ) ) radius = epsilon; // x is in Omega_1 and y is in Omega_2
+                        else if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 6 || jelGroup == 8 ) ) radius = epsilon; // x is in Omega_1 and y is in Omega_2
 
-                else if ( ( ielGroup == 6 || ielGroup == 8 ) && ( jelGroup == 5 || jelGroup == 7 ) ) radius = epsilon; // x is in Omega_2 and y is in Omega_1
+                        else if ( ( ielGroup == 6 || ielGroup == 8 ) && ( jelGroup == 5 || jelGroup == 7 ) ) radius = epsilon; // x is in Omega_2 and y is in Omega_1
 
-                else if ( ( ielGroup == 6 || ielGroup == 8 ) && ( jelGroup == 6 || jelGroup == 8 ) ) radius = delta2; // both x and y are in Omega_2
+                        else if ( ( ielGroup == 6 || ielGroup == 8 ) && ( jelGroup == 6 || jelGroup == 8 ) ) radius = delta2; // both x and y are in Omega_2
 
-                bool ifAnyIntersection = false;
+                        bool ifAnyIntersection = false;
 
-                for ( unsigned ig = 0; ig < igNumber; ig++ ) {
+                        for ( unsigned ig = 0; ig < igNumber; ig++ ) {
 
-                    if ( iel == jel ) {
-                        for ( unsigned i = 0; i < nDof1; i++ ) {
+                            if ( iel == jel ) {
+                                for ( unsigned i = 0; i < nDof1; i++ ) {
 //                                 Res1[i] -= 0. * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
 //                             Res1[i] -=  - 2. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = - 2)
-                            Res1[i] -=  - 6. * xg1[ig][0] * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 x )
+                                    Res1[i] -=  - 6. * xg1[ig][0] * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 x )
 //                                 Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
 //                                      Res1[i] -=  - 20. * ( xg1[ig][0] * xg1[ig][0] * xg1[ig][0] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 20 x^3 )
 //                                 Res1[i] -=  - 12. * ( xg1[ig][0] * xg1[ig][0] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 12 x^2 )
-                        }
-                    }
+                                }
+                            }
 
-                    std::vector< std::vector < double > > x2New;
-                    bool theyIntersect;
-                    RectangleAndBallRelation2 ( theyIntersect, xg1[ig], radius, x2, x2New );
+                            std::vector< std::vector < double > > x2New;
+                            bool theyIntersect;
+                            RectangleAndBallRelation2 ( theyIntersect, xg1[ig], radius, x2, x2New );
 
-                    if ( theyIntersect ) {
+                            if ( theyIntersect ) {
 
-                        ifAnyIntersection = true;
+                                ifAnyIntersection = true;
 
-                        unsigned jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
+                                unsigned jgNumber = msh->_finiteElement[jelGeom][soluType]->GetGaussPointNumber();
 
 //                             unsigned jgNumber = fem->GetGaussPointNumber();
 
-                        for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
+                                for ( unsigned jg = 0; jg < jgNumber; jg++ ) {
 
-                            vector <double>  phi2y;
-                            double weight2;
+                                    vector <double>  phi2y;
+                                    double weight2;
 
-                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
+                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
 //                                 fem->Jacobian ( x2New, jg, weight2, phi2y, phi_x );
 
-                            std::vector< double > xg2 ( dim, 0. );
+                                    std::vector< double > xg2 ( dim, 0. );
 
-                            for ( unsigned j = 0; j < nDof2; j++ ) {
-                                for ( unsigned k = 0; k < dim; k++ ) {
-                                    xg2[k] += x2New[k][j] * phi2y[j];
-                                }
-                            }
+                                    for ( unsigned j = 0; j < nDof2; j++ ) {
+                                        for ( unsigned k = 0; k < dim; k++ ) {
+                                            xg2[k] += x2New[k][j] * phi2y[j];
+                                        }
+                                    }
 
-                            std::vector <double> xg2Local ( dim );
+                                    std::vector <double> xg2Local ( dim );
 
-                            for ( unsigned k = 0; k < dim; k++ ) {
-                                xg2Local[k] = - 1. + 2. * ( xg2[k] - x2[k][k] ) / ( x2[k][k + 1] - x2[k][k] );
-                            }
+                                    for ( unsigned k = 0; k < dim; k++ ) {
+                                        xg2Local[k] = - 1. + 2. * ( xg2[k] - x2[k][k] ) / ( x2[k][k + 1] - x2[k][k] );
+                                    }
 
-                            double weightTemp;
-                            msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
+                                    double weightTemp;
+                                    msh->_finiteElement[jelGeom][soluType]->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
 //                                 fem->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
 
-                            for ( unsigned i = 0; i < nDof1; i++ ) {
-                                for ( unsigned j = 0; j < nDof1; j++ ) {
-                                    double jacValue11 = weight1[ig] * weight2 * 3. / 2. * ( 1. / pow ( radius, 3. ) ) * ( phi1x[ig][i] ) * phi1x[ig][j];
-                                    Jac11[i * nDof1 + j] -= jacValue11;
-                                    Res1[i] +=  jacValue11 * solu1[j];
-                                }
+                                    for ( unsigned i = 0; i < nDof1; i++ ) {
+                                        for ( unsigned j = 0; j < nDof1; j++ ) {
+                                            double jacValue11 = weight1[ig] * weight2 * 3. / 2. * ( 1. / pow ( radius, 3. ) ) * ( phi1x[ig][i] ) * phi1x[ig][j];
+                                            Jac11[i * nDof1 + j] -= jacValue11;
+                                            Res1[i] +=  jacValue11 * solu1[j];
+                                        }
 
-                                for ( unsigned j = 0; j < nDof2; j++ ) {
-                                    double jacValue12 = - weight1[ig] * weight2 * 3. / 2. * ( 1. / pow ( radius, 3. ) ) * ( phi1x[ig][i] ) * phi2y[j];
-                                    Jac12[i * nDof2 + j] -= jacValue12;
-                                    Res1[i] +=  jacValue12 * solu2[j];
-                                }//endl j loop
+                                        for ( unsigned j = 0; j < nDof2; j++ ) {
+                                            double jacValue12 = - weight1[ig] * weight2 * 3. / 2. * ( 1. / pow ( radius, 3. ) ) * ( phi1x[ig][i] ) * phi2y[j];
+                                            Jac12[i * nDof2 + j] -= jacValue12;
+                                            Res1[i] +=  jacValue12 * solu2[j];
+                                        }//endl j loop
+                                    }
+
+                                    for ( unsigned i = 0; i < nDof2; i++ ) {
+                                        for ( unsigned j = 0; j < nDof1; j++ ) {
+                                            double jacValue21 = weight1[ig] * weight2 * 3. / 2. * ( 1. / pow ( radius, 3. ) ) * ( - phi2y[i] ) * phi1x[ig][j];
+                                            Jac21[i * nDof1 + j] -= jacValue21;
+                                            Res2[i] +=  jacValue21 * solu1[j];
+                                        }
+
+                                        for ( unsigned j = 0; j < nDof2; j++ ) {
+                                            double jacValue22 = - weight1[ig] * weight2 * 3. / 2. * ( 1. / pow ( radius, 3. ) ) * ( - phi2y[i] ) * phi2y[j];
+                                            Jac22[i * nDof2 + j] -= jacValue22;
+                                            Res2[i] +=  jacValue22 * solu2[j];
+                                        }//endl j loop
+                                    } //endl i loop
+                                }//end jg loop
                             }
+                        }//end ig loop
 
-                            for ( unsigned i = 0; i < nDof2; i++ ) {
-                                for ( unsigned j = 0; j < nDof1; j++ ) {
-                                    double jacValue21 = weight1[ig] * weight2 * 3. / 2. * ( 1. / pow ( radius, 3. ) ) * ( - phi2y[i] ) * phi1x[ig][j];
-                                    Jac21[i * nDof1 + j] -= jacValue21;
-                                    Res2[i] +=  jacValue21 * solu1[j];
-                                }
+                        if ( ifAnyIntersection ) {
+                            KK->add_matrix_blocked ( Jac11, l2GMap1, l2GMap1 );
+                            KK->add_matrix_blocked ( Jac12, l2GMap1, l2GMap2 );
+                            RES->add_vector_blocked ( Res1, l2GMap1 );
 
-                                for ( unsigned j = 0; j < nDof2; j++ ) {
-                                    double jacValue22 = - weight1[ig] * weight2 * 3. / 2. * ( 1. / pow ( radius, 3. ) ) * ( - phi2y[i] ) * phi2y[j];
-                                    Jac22[i * nDof2 + j] -= jacValue22;
-                                    Res2[i] +=  jacValue22 * solu2[j];
-                                }//endl j loop
-                            } //endl i loop
-                        }//end jg loop
-                    }
-                }//end ig loop
-
-                if ( ifAnyIntersection ) {
-                    KK->add_matrix_blocked ( Jac11, l2GMap1, l2GMap1 );
-                    KK->add_matrix_blocked ( Jac12, l2GMap1, l2GMap2 );
-                    RES->add_vector_blocked ( Res1, l2GMap1 );
-
-                    KK->add_matrix_blocked ( Jac21, l2GMap2, l2GMap1 );
-                    KK->add_matrix_blocked ( Jac22, l2GMap2, l2GMap2 );
-                    RES->add_vector_blocked ( Res2, l2GMap2 );
-                }
-            } //end iel loop
+                            KK->add_matrix_blocked ( Jac21, l2GMap2, l2GMap1 );
+                            KK->add_matrix_blocked ( Jac22, l2GMap2, l2GMap2 );
+                            RES->add_vector_blocked ( Res2, l2GMap2 );
+                        }
+                    } // if iel is not equal to elementToSkip
+                } //end iel loop
+            } //if jel is not equal to elementToSkip
         } // end jel loop
     } //end kproc loop
 
@@ -445,7 +560,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 //     Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
 //     VecView(v,PETSC_VIEWER_STDOUT_WORLD);
 
-    // ***************** END ASSEMBLY *******************
+// ***************** END ASSEMBLY *******************
 }
 
 
@@ -518,45 +633,151 @@ void AssembleLocalSys ( MultiLevelProblem& ml_prob )
 
     //BEGIN local assembly
 
+//     if ( doubleIntefaceNode ) { //this assumes there is an element across the interface with midpoont at zero
+// 
+// 
+//         //BEGIN TO REMOVE
+//         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+// 
+//             unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
+//             unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
+//             unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
+// 
+// 
+//             double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
+//             double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
+//             double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
+// 
+//             std::cout << "xMin = " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+// 
+//         }
+// 
+//         //END
+// 
+//         unsigned x0Dof  = msh->GetSolutionDof ( 0, 0, xType );
+//         unsigned x1Dof  = msh->GetSolutionDof ( 1, 0, xType );
+// 
+//         double x0 = ( *msh->_topology->_Sol[0] ) ( x0Dof );
+//         double x1 = ( *msh->_topology->_Sol[0] ) ( x1Dof );
+// 
+//         double meshSize = fabs ( x1 - x0 );
+// 
+//         unsigned numberOfNodes = msh->GetNumberOfNodes();
+// 
+//         std::vector<unsigned> nodeShiftFlags ( numberOfNodes, 0 );
+// 
+//         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+// 
+//             unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
+//             unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
+//             unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
+// 
+//             double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
+//             double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
+//             double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
+// 
+//             if ( xMid == 0 ) elementToSkip = iel;
+// 
+//             if ( nodeShiftFlags[xMinDof] == 0 ) {
+// 
+//                 if ( xMin < 0. ) msh->_topology->_Sol[0]->set ( xMinDof, xMin + 0.5 * meshSize );
+// 
+//                 else msh->_topology->_Sol[0]->set ( xMinDof, xMin - 0.5 * meshSize );
+// 
+//                 nodeShiftFlags[xMinDof] = 1;
+// 
+//             }
+// 
+//             if ( nodeShiftFlags[xMaxDof] == 0 ) {
+// 
+//                 if ( xMax < 0. ) msh->_topology->_Sol[0]->set ( xMaxDof, xMax + 0.5 * meshSize );
+// 
+//                 else msh->_topology->_Sol[0]->set ( xMaxDof, xMax - 0.5 * meshSize );
+// 
+//                 nodeShiftFlags[xMaxDof] = 1;
+// 
+//             }
+// 
+//         }
+// 
+//         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+// 
+//             unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
+//             unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
+//             unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
+// 
+// 
+//             double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
+//             double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
+// 
+//             msh->_topology->_Sol[0]->set ( xMidDof, 0.5 * ( xMin + xMax ) );
+// 
+//         }
+// 
+//         msh->_topology->_Sol[0]->close();
+//         
+//         leftBound += 0.5 * meshSize;
+//         rightBound -= 0.5 * meshSize;
+// 
+//         //BEGIN TO REMOVE
+//         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+// 
+//             unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
+//             unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
+//             unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
+// 
+// 
+//             double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
+//             double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
+//             double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
+// 
+//             std::cout << "xMin = " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+// 
+//         }
+// 
+//         //END
+// 
+//     }
+
     //BEGIN
-    unsigned numberOfElements = msh->GetNumberOfElements();
-
-    std::vector < unsigned > elementGroups ( numberOfElements ) ;
-
-    for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-
-        short unsigned ielGeom = msh->GetElementType ( iel );
-        unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType );
-
-        for ( int k = 0; k < dim; k++ ) {
-            x1[k].resize ( nDof1 );
-        }
-
-        for ( unsigned i = 0; i < nDof1; i++ ) {
-            unsigned xDof  = msh->GetSolutionDof ( i, iel, xType );
-
-            for ( unsigned k = 0; k < dim; k++ ) {
-                x1[k][i] = ( *msh->_topology->_Sol[k] ) ( xDof );
-            }
-        }
-
-        double xMax = x1[0][1];
-        double xMin = x1[0][0];
-
-        if ( xMax <= leftBound && xMin >= leftBound - delta1 )  elementGroups[iel] = 5;
-
-        else if ( xMax <= 0. && xMin >= leftBound )  elementGroups[iel] = 7;
-
-        else if ( xMax <= rightBound && xMin >= 0. )  elementGroups[iel] = 8;
-
-        else if ( xMax <= rightBound + delta2 && xMin >= rightBound )  elementGroups[iel] = 6;
-
-    }
-
-    for ( int kproc = 0; kproc < nprocs; kproc++ ) {
-        unsigned elementsInIproc = msh->_elementOffset[iproc + 1] - msh->_elementOffset[iproc];
-        MPI_Bcast ( &elementGroups[iproc], elementsInIproc, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD );
-    }
+//     unsigned numberOfElements = msh->GetNumberOfElements();
+// 
+//     std::vector < unsigned > elementGroups ( numberOfElements ) ;
+// 
+//     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+// 
+//         short unsigned ielGeom = msh->GetElementType ( iel );
+//         unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType );
+// 
+//         for ( int k = 0; k < dim; k++ ) {
+//             x1[k].resize ( nDof1 );
+//         }
+// 
+//         for ( unsigned i = 0; i < nDof1; i++ ) {
+//             unsigned xDof  = msh->GetSolutionDof ( i, iel, xType );
+// 
+//             for ( unsigned k = 0; k < dim; k++ ) {
+//                 x1[k][i] = ( *msh->_topology->_Sol[k] ) ( xDof );
+//             }
+//         }
+// 
+//         double xMax = x1[0][1];
+//         double xMin = x1[0][0];
+//         
+//         if ( xMax <= leftBound && xMin >= leftBound - delta1 )  elementGroups[iel] = 5;
+// 
+//         else if ( xMax <= 0. && xMin >= leftBound )  elementGroups[iel] = 7;
+// 
+//         else if ( xMax <= rightBound && xMin >= 0. )  elementGroups[iel] = 8;
+// 
+//         else if ( xMax <= rightBound + delta2 && xMin >= rightBound )  elementGroups[iel] = 6;
+// 
+//     }
+// 
+//     for ( int kproc = 0; kproc < nprocs; kproc++ ) {
+//         unsigned elementsInIproc = msh->_elementOffset[iproc + 1] - msh->_elementOffset[iproc];
+//         MPI_Bcast ( &elementGroups[iproc], elementsInIproc, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD );
+//     }
 
     //END
 
@@ -595,106 +816,110 @@ void AssembleLocalSys ( MultiLevelProblem& ml_prob )
     // element loop: each process loops only on the elements that owns
     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
-        short unsigned ielGeom = msh->GetElementType ( iel );
-        unsigned nDofu  = msh->GetElementDofNumber ( iel, soluType ); // number of solution element dofs
-        unsigned nDofx = msh->GetElementDofNumber ( iel, xType ); // number of coordinate element dofs
+        if ( iel != elementToSkip ) {
 
-        // resize local arrays
-        l2GMap1.resize ( nDofu );
-        solu.resize ( nDofu );
+            short unsigned ielGeom = msh->GetElementType ( iel );
+            unsigned nDofu  = msh->GetElementDofNumber ( iel, soluType ); // number of solution element dofs
+            unsigned nDofx = msh->GetElementDofNumber ( iel, xType ); // number of coordinate element dofs
 
-        for ( int i = 0; i < dim; i++ ) {
-            x1[i].resize ( nDofx );
-        }
+            // resize local arrays
+            l2GMap1.resize ( nDofu );
+            solu.resize ( nDofu );
 
-        aRes.resize ( nDofu ); //resize
-        std::fill ( aRes.begin(), aRes.end(), 0 ); //set aRes to zero
-
-        // local storage of global mapping and solution
-        for ( unsigned i = 0; i < nDofu; i++ ) {
-            unsigned solDof = msh->GetSolutionDof ( i, iel, soluType ); // global to global mapping between solution node and solution dof
-            solu[i] = ( *sol->_Sol[soluIndex] ) ( solDof ); // global extraction and local storage for the solution
-            l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
-        }
-
-        // local storage of coordinates
-        for ( unsigned i = 0; i < nDofx; i++ ) {
-            unsigned xDof  = msh->GetSolutionDof ( i, iel, xType ); // global to global mapping between coordinates node and coordinate dof
-
-            for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
-                x1[jdim][i] = ( *msh->_topology->_Sol[jdim] ) ( xDof ); // global extraction and local storage for the element coordinates
+            for ( int i = 0; i < dim; i++ ) {
+                x1[i].resize ( nDofx );
             }
-        }
 
-        // start a new recording of all the operations involving adept::adouble variables
-        s.new_recording();
+            aRes.resize ( nDofu ); //resize
+            std::fill ( aRes.begin(), aRes.end(), 0 ); //set aRes to zero
 
-        // *** Gauss point loop ***
-        for ( unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++ ) {
-            // *** get gauss point weight, test function and test function partial derivatives ***
-            msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight, phi, phi_x, boost::none );
-
-            // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-
-            vector < adept::adouble > gradSolu_gss ( dim, 0. );
-            vector < double > x_gss ( dim, 0. );
-
+            // local storage of global mapping and solution
             for ( unsigned i = 0; i < nDofu; i++ ) {
+                unsigned solDof = msh->GetSolutionDof ( i, iel, soluType ); // global to global mapping between solution node and solution dof
+                solu[i] = ( *sol->_Sol[soluIndex] ) ( solDof ); // global extraction and local storage for the solution
+                l2GMap1[i] = pdeSys->GetSystemDof ( soluIndex, soluPdeIndex, i, iel ); // global to global mapping between solution node and pdeSys dof
+            }
+
+            // local storage of coordinates
+            for ( unsigned i = 0; i < nDofx; i++ ) {
+                unsigned xDof  = msh->GetSolutionDof ( i, iel, xType ); // global to global mapping between coordinates node and coordinate dof
+
                 for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
-                    gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
-                    x_gss[jdim] += x1[jdim][i] * phi[i];
+                    x1[jdim][i] = ( *msh->_topology->_Sol[jdim] ) ( xDof ); // global extraction and local storage for the element coordinates
                 }
             }
 
+            // start a new recording of all the operations involving adept::adouble variables
+            s.new_recording();
 
-            double aCoeff = 1.;
+            // *** Gauss point loop ***
+            for ( unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++ ) {
+                // *** get gauss point weight, test function and test function partial derivatives ***
+                msh->_finiteElement[ielGeom][soluType]->Jacobian ( x1, ig, weight, phi, phi_x, boost::none );
 
-            // *** phi_i loop ***
-            for ( unsigned i = 0; i < nDofu; i++ ) {
+                // evaluate the solution, the solution derivatives and the coordinates in the gauss point
 
-                adept::adouble laplace = 0.;
+                vector < adept::adouble > gradSolu_gss ( dim, 0. );
+                vector < double > x_gss ( dim, 0. );
 
-                for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
-                    laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+                for ( unsigned i = 0; i < nDofu; i++ ) {
+                    for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                        gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+                        x_gss[jdim] += x1[jdim][i] * phi[i];
+                    }
                 }
 
-                double srcTerm =  6. * x_gss[0] ; // so f = - 6 x
+
+                double aCoeff = 1.;
+
+                // *** phi_i loop ***
+                for ( unsigned i = 0; i < nDofu; i++ ) {
+
+                    adept::adouble laplace = 0.;
+
+                    for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
+                        laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+                    }
+
+                    double srcTerm =  6. * x_gss[0] ; // so f = - 6 x
 //                 double srcTerm =  12. * x_gss[0] * x_gss[0] ; // so f = - 12 x^2
 //                 double srcTerm =  2. ; // so f = - 2
 //                 double srcTerm =  - 1. ; // so f = 1
 //                 double srcTerm =  0./*- GetExactSolutionLaplace(x_gss)*/ ;
-                aRes[i] += ( srcTerm * phi[i] + laplace ) * weight;
+                    aRes[i] += ( srcTerm * phi[i] + laplace ) * weight;
 
-            } // end phi_i loop
-        } // end gauss point loop
+                } // end phi_i loop
+            } // end gauss point loop
 
-        //--------------------------------------------------------------------------------------------------------
-        // Add the local Matrix/Vector into the global Matrix/Vector
+            //--------------------------------------------------------------------------------------------------------
+            // Add the local Matrix/Vector into the global Matrix/Vector
 
-        //copy the value of the adept::adoube aRes in double Res and store
-        Res1.resize ( nDofu ); //resize
+            //copy the value of the adept::adoube aRes in double Res and store
+            Res1.resize ( nDofu ); //resize
 
-        for ( int i = 0; i < nDofu; i++ ) {
-            Res1[i] = - aRes[i].value();
-        }
+            for ( int i = 0; i < nDofu; i++ ) {
+                Res1[i] = - aRes[i].value();
+            }
 
-        RES->add_vector_blocked ( Res1, l2GMap1 );
+            RES->add_vector_blocked ( Res1, l2GMap1 );
 
-        // define the dependent variables
-        s.dependent ( &aRes[0], nDofu );
+            // define the dependent variables
+            s.dependent ( &aRes[0], nDofu );
 
-        // define the independent variables
-        s.independent ( &solu[0], nDofu );
+            // define the independent variables
+            s.independent ( &solu[0], nDofu );
 
-        // get the jacobian matrix (ordered by row major )
-        Jac11.resize ( nDofu * nDofu ); //resize
-        s.jacobian ( &Jac11[0], true );
+            // get the jacobian matrix (ordered by row major )
+            Jac11.resize ( nDofu * nDofu ); //resize
+            s.jacobian ( &Jac11[0], true );
 
-        //store K in the global matrix KK
-        KK->add_matrix_blocked ( Jac11, l2GMap1, l2GMap1 );
+            //store K in the global matrix KK
+            KK->add_matrix_blocked ( Jac11, l2GMap1, l2GMap1 );
 
-        s.clear_independents();
-        s.clear_dependents();
+            s.clear_independents();
+            s.clear_dependents();
+
+        } //if iel != elementToSkip
 
     } //end element loop for each process
 

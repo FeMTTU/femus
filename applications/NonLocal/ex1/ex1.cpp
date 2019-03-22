@@ -50,11 +50,16 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 //     value = x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
 //     value = x[0] * x[0] * x[0] * x[0];
 //        value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
+    
+    if(fabs(x[0]) <= 1.e-10) {
+        dirichlet = false;
+        value = 0.;
+    }
 
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 1;
+unsigned numberOfUniformLevels = 1; //keep this = 1
 
 int main ( int argc, char** argv )
 {
@@ -66,7 +71,6 @@ int main ( int argc, char** argv )
     double scalingFactor = 1.;
     unsigned numberOfSelectiveLevels = 0;
 
-    unsigned numberOfElements = 52;
     double xMinCoarseBox = leftBound - delta1;
     double xMaxCoarseBox = rightBound + delta2;
 

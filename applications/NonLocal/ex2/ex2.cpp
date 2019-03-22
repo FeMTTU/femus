@@ -65,7 +65,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
     return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 1;
+unsigned numberOfUniformLevels = 2;
 
 int main ( int argc, char** argv )
 {
@@ -84,10 +84,10 @@ int main ( int argc, char** argv )
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest4.neu", "eighth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest5.neu", "eighth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest6.neu", "eighth", scalingFactor );
-//     mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "eighth", scalingFactor );
+    mlMsh.ReadCoarseMesh ( "../input/maxTest7.neu", "eighth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest8.neu", "eighth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest9.neu", "eighth", scalingFactor );
-    mlMsh.ReadCoarseMesh ( "../input/maxTest10.neu", "eighth", scalingFactor );
+//     mlMsh.ReadCoarseMesh ( "../input/maxTest10.neu", "eighth", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/maxTest2Continuous.neu", "second", scalingFactor );
     //mlMsh.ReadCoarseMesh ( "../input/martaTest0.neu", "second", scalingFactor );
 //      mlMsh.ReadCoarseMesh ( "../input/martaTest1.neu", "second", scalingFactor );
