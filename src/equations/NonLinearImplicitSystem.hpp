@@ -77,10 +77,7 @@ public:
     }
     
     /** Flag to print fields to file after each nonlinear iteration */
-    void SetDebugNonlinear(const bool my_value) {
-        if ( this->GetMLProb()._ml_sol->GetWriter() != NULL)        _debug_nonlinear = my_value;
-        else {std::cout << "SetWriter first" << std::endl; abort(); }
-    };
+    void SetDebugNonlinear(const bool my_value);
     
     /** Set the max number of non-linear iterations for the nonlinear system solve. */
     void SetMaxNumberOfNonLinearIterations(unsigned int max_nonlin_it) {

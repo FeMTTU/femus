@@ -22,8 +22,6 @@
 #include <vector>
 #include <map>
 #include "MultiLevelMesh.hpp"
-#include "MultiLevelSolution.hpp"
-#include "Solution.hpp"
 #include "Parameters.hpp"
 #include "ParallelObject.hpp"
 #include "MgSmootherEnum.hpp"
@@ -41,7 +39,7 @@ using std::map;
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-class System;
+class MultiLevelSolution;
 class MultiLevelMeshTwo;
 class elem_type;
 class QuantityMap;

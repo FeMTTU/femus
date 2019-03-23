@@ -13,6 +13,7 @@
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "ElemType.hpp"

@@ -16,6 +16,7 @@
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "TimeLoop.hpp"
 #include "Typedefs.hpp"
 #include "Quantity.hpp"

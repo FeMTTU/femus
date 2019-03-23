@@ -1,4 +1,5 @@
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"

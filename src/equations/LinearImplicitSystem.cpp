@@ -13,12 +13,17 @@
 
 =========================================================================*/
 
+#include <iomanip>
 #include "LinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
 #include "ElemType.hpp"
-#include <iomanip>
+#include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
+
+
+
 
 namespace femus {
 
@@ -76,6 +81,16 @@ namespace femus {
     _numblock_all_test = 0;
   }
 
+  
+  
+  void LinearImplicitSystem::SetDebugLinear(const bool my_value) {
+      
+        if ( this->GetMLProb()._ml_sol->GetWriter() != NULL)        _debug_linear = my_value;
+        else {std::cout << "SetWriter first" << std::endl; abort(); }
+        
+  }
+  
+  
   // ********************************************
 
   void LinearImplicitSystem::SetSparsityPattern(vector< bool > other_sparcity_pattern) {

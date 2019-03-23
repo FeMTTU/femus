@@ -30,6 +30,7 @@
 // exp(-2 pi^2 t) sin(PI x) sin(PI y) 
 //  sin(acos(-1.) * coordsX) * sin( acos(-1.) * coordsY) * exp(-2. * acos(-1.)^2 * t)
 
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"

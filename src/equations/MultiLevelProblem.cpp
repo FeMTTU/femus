@@ -17,6 +17,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "FemusConfig.hpp"

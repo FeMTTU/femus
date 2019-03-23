@@ -2,12 +2,14 @@
 #define __femus_utils_FE_convergence_hpp__
 
 
+#include "MultiLevelSolution.hpp"
+
+
 namespace femus {
 
 class MultiLevelProblem;
 class MultiLevelSolution;
 class MultiLevelMesh;
-
 class Files;
 
 
