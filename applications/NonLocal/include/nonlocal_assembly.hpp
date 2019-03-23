@@ -34,7 +34,7 @@ double meshSize;
 double leftBound = - 1.225;
 double rightBound = 1.225;
 unsigned numberOfElements = 53;
-bool doubleIntefaceNode = true;
+bool doubleIntefaceNode = false;
 unsigned elementToSkip = UINT_MAX;
 std::vector < unsigned > elementGroups;
 
@@ -166,8 +166,8 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 // 
 //         //END
 
-        unsigned x0Dof  = msh->GetSolutionDof ( 0, 0, xType );
-        unsigned x1Dof  = msh->GetSolutionDof ( 1, 0, xType );
+        unsigned x0Dof  = msh->GetSolutionDof ( 0, msh->_elementOffset[iproc], xType );
+        unsigned x1Dof  = msh->GetSolutionDof ( 1, msh->_elementOffset[iproc], xType );
 
         double x0 = ( *msh->_topology->_Sol[0] ) ( x0Dof );
         double x1 = ( *msh->_topology->_Sol[0] ) ( x1Dof );
@@ -177,6 +177,10 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
         unsigned numberOfNodes = msh->GetNumberOfNodes();
 
         std::vector<unsigned> nodeShiftFlags ( numberOfNodes, 0 );
+        
+        unsigned leftDofsIproc = msh->_dofOffset[xType][iproc];
+        
+        unsigned rightDofsIproc = msh->_dofOffset[xType][iproc + 1];
 
         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
@@ -189,8 +193,11 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
             double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
 
             if ( xMid == 0 ) elementToSkip = iel;
+            
+            bool iprocOwnsXmin = (leftDofsIproc <= xMinDof < rightDofsIproc) ? true : false;
+            bool iprocOwnsXmax = (leftDofsIproc <= xMaxDof < rightDofsIproc) ? true : false;
 
-            if ( nodeShiftFlags[xMinDof] == 0 ) {
+            if ( nodeShiftFlags[xMinDof] == 0 && iprocOwnsXmin) {
 
                 if ( xMin < 0. ) msh->_topology->_Sol[0]->set ( xMinDof, xMin + 0.5 * meshSize );
 
@@ -200,7 +207,7 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
             }
 
-            if ( nodeShiftFlags[xMaxDof] == 0 ) {
+            if ( nodeShiftFlags[xMaxDof] == 0 && iprocOwnsXmax) {
 
                 if ( xMax < 0. ) msh->_topology->_Sol[0]->set ( xMaxDof, xMax + 0.5 * meshSize );
 
