@@ -27,7 +27,8 @@ bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.2, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05, maxTest8: both 0.025, maxTest9: both 0.0125, maxTest10: both 0.00625
 double delta1 = 0.1; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
 double delta2 = 0.1;
-double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
+double delta1Shift = 0.025;
+double delta2Shift = - 0.025;
 
 //coarse box parameters
 double meshSize;
@@ -35,10 +36,13 @@ double leftBound = - 1.225;
 double rightBound = 1.225;
 unsigned numberOfElements = 53;
 bool doubleIntefaceNode = true;
+
 unsigned elementToSkip = UINT_MAX;
 bool elementToSkipFound = false;
 unsigned procWhoFoundIt = UINT_MAX;
 std::vector < unsigned > elementGroups;
+
+bool shiftExternalNodes = true;
 
 void GetBoundaryFunctionValue ( double &value, const std::vector < double >& x )
 {
@@ -262,19 +266,67 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
         }
 
+        //END
+
         if ( elementToSkipFound ) {
             for ( unsigned kproc = 0; kproc < nprocs; kproc++ ) {
                 if ( kproc != iproc ) MPI_Send ( &elementToSkip, 1, MPI_UNSIGNED, kproc, 1 , PETSC_COMM_WORLD );
             }
         }
-        
-        else MPI_Recv(&elementToSkip, 1, MPI_UNSIGNED, procWhoFoundIt, 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        else MPI_Recv ( &elementToSkip, 1, MPI_UNSIGNED, procWhoFoundIt, 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE );
 
 //         END
 
     }
 
-    std::cout << "elementToSkip = " << elementToSkip << std::endl;
+    if ( shiftExternalNodes ) {
+
+        for ( unsigned idof = msh->_dofOffset[xType][iproc]; idof < msh->_dofOffset[xType][iproc + 1]; idof++ ) {
+
+            double x = ( *msh->_topology->_Sol[0] ) ( idof );
+
+            if ( leftBound - delta1 <= x && x < leftBound ) msh->_topology->_Sol[0]->set ( idof, x + delta1Shift );
+
+            if ( rightBound < x && x <= rightBound + delta2 ) msh->_topology->_Sol[0]->set ( idof, x + delta2Shift );
+
+        }
+
+        msh->_topology->_Sol[0]->close();
+
+        for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+
+            unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
+            unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
+            unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
+
+
+            double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
+            double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
+
+            msh->_topology->_Sol[0]->set ( xMidDof, 0.5 * ( xMin + xMax ) );
+
+        }
+
+        msh->_topology->_Sol[0]->close();
+
+        //         //BEGIN TO REMOVE
+        for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+
+            unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
+            unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
+            unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
+
+
+            double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
+            double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
+            double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
+
+            std::cout << "xMin = " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+
+        }
+
+    }
 
 //create element groups
 
@@ -465,9 +517,9 @@ void AssembleNonLocalSys ( MultiLevelProblem& ml_prob )
 
                         if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 5 || jelGroup == 7 ) ) radius = delta1; //both x and y are in Omega_1
 
-                        else if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 6 || jelGroup == 8 ) ) radius = epsilon; // x is in Omega_1 and y is in Omega_2
+                        else if ( ( ielGroup == 5 || ielGroup == 7 ) && ( jelGroup == 6 || jelGroup == 8 ) ) radius = delta1; // x is in Omega_1 and y is in Omega_2
 
-                        else if ( ( ielGroup == 6 || ielGroup == 8 ) && ( jelGroup == 5 || jelGroup == 7 ) ) radius = epsilon; // x is in Omega_2 and y is in Omega_1
+                        else if ( ( ielGroup == 6 || ielGroup == 8 ) && ( jelGroup == 5 || jelGroup == 7 ) ) radius = delta2; // x is in Omega_2 and y is in Omega_1
 
                         else if ( ( ielGroup == 6 || ielGroup == 8 ) && ( jelGroup == 6 || jelGroup == 8 ) ) radius = delta2; // both x and y are in Omega_2
 
@@ -654,157 +706,7 @@ void AssembleLocalSys ( MultiLevelProblem& ml_prob )
 
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
-    std::cout << "elementToSkip = " << elementToSkip << std::endl;
-
     //BEGIN local assembly
-
-//     if ( doubleIntefaceNode ) { //this assumes there is an element across the interface with midpoont at zero
-//
-//
-//         //BEGIN TO REMOVE
-//         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-//
-//             unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
-//             unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
-//             unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
-//
-//
-//             double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
-//             double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
-//             double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
-//
-//             std::cout << "xMin = " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
-//
-//         }
-//
-//         //END
-//
-//         unsigned x0Dof  = msh->GetSolutionDof ( 0, 0, xType );
-//         unsigned x1Dof  = msh->GetSolutionDof ( 1, 0, xType );
-//
-//         double x0 = ( *msh->_topology->_Sol[0] ) ( x0Dof );
-//         double x1 = ( *msh->_topology->_Sol[0] ) ( x1Dof );
-//
-//         double meshSize = fabs ( x1 - x0 );
-//
-//         unsigned numberOfNodes = msh->GetNumberOfNodes();
-//
-//         std::vector<unsigned> nodeShiftFlags ( numberOfNodes, 0 );
-//
-//         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-//
-//             unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
-//             unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
-//             unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
-//
-//             double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
-//             double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
-//             double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
-//
-//             if ( xMid == 0 ) elementToSkip = iel;
-//
-//             if ( nodeShiftFlags[xMinDof] == 0 ) {
-//
-//                 if ( xMin < 0. ) msh->_topology->_Sol[0]->set ( xMinDof, xMin + 0.5 * meshSize );
-//
-//                 else msh->_topology->_Sol[0]->set ( xMinDof, xMin - 0.5 * meshSize );
-//
-//                 nodeShiftFlags[xMinDof] = 1;
-//
-//             }
-//
-//             if ( nodeShiftFlags[xMaxDof] == 0 ) {
-//
-//                 if ( xMax < 0. ) msh->_topology->_Sol[0]->set ( xMaxDof, xMax + 0.5 * meshSize );
-//
-//                 else msh->_topology->_Sol[0]->set ( xMaxDof, xMax - 0.5 * meshSize );
-//
-//                 nodeShiftFlags[xMaxDof] = 1;
-//
-//             }
-//
-//         }
-//
-//         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-//
-//             unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
-//             unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
-//             unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
-//
-//
-//             double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
-//             double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
-//
-//             msh->_topology->_Sol[0]->set ( xMidDof, 0.5 * ( xMin + xMax ) );
-//
-//         }
-//
-//         msh->_topology->_Sol[0]->close();
-//
-//         leftBound += 0.5 * meshSize;
-//         rightBound -= 0.5 * meshSize;
-//
-//         //BEGIN TO REMOVE
-//         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-//
-//             unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
-//             unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
-//             unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
-//
-//
-//             double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
-//             double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
-//             double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
-//
-//             std::cout << "xMin = " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
-//
-//         }
-//
-//         //END
-//
-//     }
-
-    //BEGIN
-//     unsigned numberOfElements = msh->GetNumberOfElements();
-//
-//     std::vector < unsigned > elementGroups ( numberOfElements ) ;
-//
-//     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-//
-//         short unsigned ielGeom = msh->GetElementType ( iel );
-//         unsigned nDof1  = msh->GetElementDofNumber ( iel, soluType );
-//
-//         for ( int k = 0; k < dim; k++ ) {
-//             x1[k].resize ( nDof1 );
-//         }
-//
-//         for ( unsigned i = 0; i < nDof1; i++ ) {
-//             unsigned xDof  = msh->GetSolutionDof ( i, iel, xType );
-//
-//             for ( unsigned k = 0; k < dim; k++ ) {
-//                 x1[k][i] = ( *msh->_topology->_Sol[k] ) ( xDof );
-//             }
-//         }
-//
-//         double xMax = x1[0][1];
-//         double xMin = x1[0][0];
-//
-//         if ( xMax <= leftBound && xMin >= leftBound - delta1 )  elementGroups[iel] = 5;
-//
-//         else if ( xMax <= 0. && xMin >= leftBound )  elementGroups[iel] = 7;
-//
-//         else if ( xMax <= rightBound && xMin >= 0. )  elementGroups[iel] = 8;
-//
-//         else if ( xMax <= rightBound + delta2 && xMin >= rightBound )  elementGroups[iel] = 6;
-//
-//     }
-//
-//     for ( int kproc = 0; kproc < nprocs; kproc++ ) {
-//         unsigned elementsInIproc = msh->_elementOffset[iproc + 1] - msh->_elementOffset[iproc];
-//         MPI_Bcast ( &elementGroups[iproc], elementsInIproc, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD );
-//     }
-
-    //END
 
     for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
 
