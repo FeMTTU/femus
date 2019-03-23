@@ -15,8 +15,6 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
-#include "VTKWriter.hpp"
-#include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "Files.hpp"
 #include "FE_convergence.hpp"
@@ -96,18 +94,18 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
 }
 
 
-template < class real_num, class real_num_mov = double >
+template < class system_type, class real_num, class real_num_mov = double >
 void System_assemble_interface(MultiLevelProblem & ml_prob);
 
-template < class real_num, class real_num_mov = double > 
-void System_assemble_flexible(MultiLevelProblem & ml_prob,
-                            const std::string system_name,
-                            const std::vector< Math::Unknowns_definition > &  unknowns,
-                            const Math::Function< double > & exact_sol);
+template < class system_type, class real_num, class real_num_mov = double >
+void System_assemble_flexible(MultiLevelProblem& ml_prob, 
+                              system_type * mlPdeSys,  
+                              const std::vector< Math::Unknown > &  unknowns, 
+                              const Math::Function< double > & exact_sol);
 
 
  //Unknown definition  ==================
- const std::vector< Math::Unknowns_definition >  provide_list_of_unknowns() {
+ const std::vector< Math::Unknown >  provide_list_of_unknowns() {
      
      
   std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE,  LAGRANGE, DISCONTINOUS_POLYNOMIAL, DISCONTINOUS_POLYNOMIAL};
@@ -115,7 +113,7 @@ void System_assemble_flexible(MultiLevelProblem & ml_prob,
 
   assert( feFamily.size() == feOrder.size() );
  
- std::vector< Math::Unknowns_definition >  unknowns(feFamily.size());
+ std::vector< Math::Unknown >  unknowns(feFamily.size());
  
      for (unsigned int fe = 0; fe < unknowns.size(); fe++) {
          
@@ -141,7 +139,7 @@ class My_main_single_level : public Main_single_level {
 public:
     
 const MultiLevelSolution  run_on_single_level(const Files & files, 
-                                                   const std::vector< Math::Unknowns_definition > & unknowns,  
+                                                   const std::vector< Math::Unknown > & unknowns,  
                                                    MultiLevelMesh & ml_mesh, 
                                                    const unsigned i) const;
   
@@ -185,11 +183,11 @@ int main(int argc, char** args) {
 
 
    // ======= Unknowns ========================
-   std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns();
+   std::vector< Math::Unknown > unknowns = provide_list_of_unknowns();
    
 
    // ======= Normal run ========================
-    My_main_single_level< adept::adouble > my_main;
+    My_main_single_level< /*adept::a*/double > my_main;
 //  const unsigned int n_levels = 3;
 //  my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); if you don't want the convergence study
     
@@ -235,7 +233,7 @@ int main(int argc, char** args) {
 
 template < class real_num > 
 const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
-                                                                                const std::vector< Math::Unknowns_definition > &  unknowns,  
+                                                                                const std::vector< Math::Unknown > &  unknowns,  
                                                                                 MultiLevelMesh & ml_mesh,
                                                                                 const unsigned lev) const {
       
@@ -261,21 +259,20 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
       
             
            // ======= Problem ========================
-            MultiLevelProblem mlProb(&ml_sol_single_level);
+            MultiLevelProblem ml_prob(&ml_sol_single_level);
             
-            mlProb.SetFilesHandler(&files);
+            ml_prob.SetFilesHandler(&files);
       
       
            // ======= System ========================
-            LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Equation");
+            LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("Equation");
 
             system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
 
-            std::vector< Math::Unknowns_definition > unknowns_vec(1); unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
+            std::vector< Math::Unknown > unknowns_vec(1); unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
+            ml_prob.set_unknown_list_for_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
             
-            mlProb.set_current_unknown_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
-            
-            system.SetAssembleFunction(System_assemble_interface< real_num >);
+            system.SetAssembleFunction(System_assemble_interface< LinearImplicitSystem, real_num >);
 
             // initialize and solve the system
             system.init();
@@ -305,14 +302,15 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
 
 
-template <class real_num, class real_num_mov = double >
+template < class system_type, class real_num, class real_num_mov = double >
 void System_assemble_interface(MultiLevelProblem& ml_prob) {
 // this is meant to be like a tiny addition to the main function, because we cannot pass these arguments through the function pointer
     
-   My_exact_solution< double > exact_sol;
-const std::string system_name = "Equation"; //I cannot get this from the system because there may be more than one
+   My_exact_solution< double > exact_sol;  //this one I reproduce it here, otherwise I should pass it in the main to the MultiLevelProblem
 
-      System_assemble_flexible< real_num > (ml_prob, system_name, ml_prob.get_current_unknown_assembly(), exact_sol);
+  if (ml_prob.n_systems() > 1) { std::cout << "Haven't tested it yet" << std::endl; abort(); }
+  
+  System_assemble_flexible< system_type, real_num > (ml_prob, & ml_prob.get_system< system_type >(0), ml_prob.get_unknown_list_for_assembly(), exact_sol);
 
 }
 
@@ -325,8 +323,12 @@ const std::string system_name = "Equation"; //I cannot get this from the system 
  *                  J = \grad_u F
  **/
 
-template < class real_num, class real_num_mov = double >
-void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string system_name,  const std::vector< Math::Unknowns_definition > &  unknowns, const Math::Function< double > & exact_sol) {
+template < class system_type, class real_num, class real_num_mov = double >
+void System_assemble_flexible(MultiLevelProblem& ml_prob, 
+                              system_type * mlPdeSys,
+                              const std::vector< Math::Unknown > &  unknowns, 
+                              const Math::Function< double > & exact_sol) {
+    
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -335,7 +337,6 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob, const std::string syst
 
   //  extract pointers to the several objects that we are going to use
 
-  LinearImplicitSystem* mlPdeSys  = & ml_prob.get_system<LinearImplicitSystem> (system_name);   // pointer to the linear implicit system 
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);

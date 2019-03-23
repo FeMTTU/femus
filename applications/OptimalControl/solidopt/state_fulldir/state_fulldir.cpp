@@ -104,7 +104,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob);
 
 
  //Unknown definition  ==================
- const std::vector< Math::Unknowns_definition >  provide_list_of_unknowns(const unsigned int dimension) {
+ const std::vector< Math::Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
      
      
   std::vector< FEFamily > feFamily;
@@ -122,7 +122,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob);
   
   assert( feFamily.size() == feOrder.size() );
  
- std::vector< Math::Unknowns_definition >  unknowns(feFamily.size());
+ std::vector< Math::Unknown >  unknowns(feFamily.size());
 
                         unknowns[0]._name      = "DX";
                         unknowns[1]._name      = "DY";
@@ -150,7 +150,7 @@ class My_main_single_level : public Main_single_level {
 public:
     
 const MultiLevelSolution  run_on_single_level(const Files & files, 
-                                                   const std::vector< Math::Unknowns_definition > & unknowns,  
+                                                   const std::vector< Math::Unknown > & unknowns,  
                                                    MultiLevelMesh & ml_mesh, 
                                                    const unsigned i) const;
   
@@ -186,7 +186,7 @@ int main(int argc, char** args) {
 
   // ======= Unknowns ========================
   const unsigned int dimension = ml_mesh.GetDimension();  
-  std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns(dimension);
+  std::vector< Math::Unknown > unknowns = provide_list_of_unknowns(dimension);
   
   // ======= Normal run ========================   //if you don't want the convergence study
   My_main_single_level< adept::adouble > my_main;
@@ -547,7 +547,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob) {
 
 template < class real_num > 
 const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
-                                                                                const std::vector< Math::Unknowns_definition > &  unknowns,  
+                                                                                const std::vector< Math::Unknown > &  unknowns,  
                                                                                 MultiLevelMesh & ml_mesh,
                                                                                 const unsigned lev) const {
                                                                                     

@@ -114,7 +114,7 @@ template < class type = double >
 
 
 //this is based on the AddSolution function in MLSol
- class Unknowns_definition {
+ class Unknown {
      
  public:
      

@@ -20,7 +20,7 @@ class Main_single_level {
 public: 
 
 virtual const MultiLevelSolution  run_on_single_level(const Files & files, 
-                                                   const std::vector< Math::Unknowns_definition > & unknowns,  
+                                                   const std::vector< Math::Unknown > & unknowns,  
                                                    MultiLevelMesh & ml_mesh, 
                                                    const unsigned i) const = 0;
   
@@ -35,7 +35,7 @@ public:
  
 
   void  convergence_study(const Files & files, 
-                                           const std::vector< Math::Unknowns_definition > & unknowns,
+                                           const std::vector< Math::Unknown > & unknowns,
                                            const MultiLevelSolution::BoundaryFunc SetBoundaryCondition,
                                            MultiLevelMesh & ml_mesh, 
                                            MultiLevelMesh & ml_mesh_all_levels, 
@@ -53,7 +53,7 @@ static   std::vector < std::vector < std::vector < type > > >  initialize_vector
 
     
    
-static   const MultiLevelSolution  initialize_convergence_study(const std::vector< Math::Unknowns_definition > &  unknowns,  
+static   const MultiLevelSolution  initialize_convergence_study(const std::vector< Math::Unknown > &  unknowns,  
                                                                 MultiLevelMesh & ml_mesh_all_levels, 
                                                                 const unsigned max_number_of_meshes, 
                                                                 const MultiLevelSolution::BoundaryFunc SetBoundaryCondition);  
@@ -65,7 +65,7 @@ static  void output_convergence_order(const std::vector < std::vector < std::vec
                                     const unsigned int i,
                                     const unsigned int n);
 
-static  void output_convergence_order_all(const std::vector< Math::Unknowns_definition > &  unknowns,
+static  void output_convergence_order_all(const std::vector< Math::Unknown > &  unknowns,
                                         const std::vector < std::vector < std::vector < type > > > &  norms, 
                                         const unsigned norm_flag, 
                                         const unsigned max_number_of_meshes);
@@ -87,7 +87,7 @@ static  std::vector< type > compute_error_norms(const MultiLevelSolution* ml_sol
      
 static  void compute_error_norms_per_unknown_per_level(const MultiLevelSolution* ml_sol_single_level, 
                                           MultiLevelSolution* ml_sol_all_levels, 
-                                          const std::vector< Math::Unknowns_definition > &  unknowns, 
+                                          const std::vector< Math::Unknown > &  unknowns, 
                                           const unsigned i,
                                           const unsigned norm_flag, 
                                           std::vector < std::vector < std::vector < type > > > &  norms,
@@ -109,7 +109,7 @@ static  void compute_error_norms_per_unknown_per_level(const MultiLevelSolution*
 
 template < class type>
   void  FE_convergence< type >::convergence_study(const Files & files, 
-                                           const std::vector< Math::Unknowns_definition > & unknowns,
+                                           const std::vector< Math::Unknown > & unknowns,
                                            const MultiLevelSolution::BoundaryFunc SetBoundaryCondition,
                                            MultiLevelMesh & ml_mesh, 
                                            MultiLevelMesh & ml_mesh_all_levels, 
@@ -166,7 +166,7 @@ template < class type>
     
    
 template < class type>
-/*static*/   const MultiLevelSolution  FE_convergence< type >::initialize_convergence_study(const std::vector< Math::Unknowns_definition > &  unknowns,  
+/*static*/   const MultiLevelSolution  FE_convergence< type >::initialize_convergence_study(const std::vector< Math::Unknown > &  unknowns,  
                                                                 MultiLevelMesh & ml_mesh_all_levels, 
                                                                 const unsigned max_number_of_meshes, 
                                                                 const MultiLevelSolution::BoundaryFunc SetBoundaryCondition)  {
@@ -226,7 +226,7 @@ template < class type>
 
 
 template < class type>
-/*static */ void FE_convergence< type >::output_convergence_order_all(const std::vector< Math::Unknowns_definition > &  unknowns,
+/*static */ void FE_convergence< type >::output_convergence_order_all(const std::vector< Math::Unknown > &  unknowns,
                                         const std::vector < std::vector < std::vector < type > > > &  norms, 
                                         const unsigned norm_flag, 
                                         const unsigned max_number_of_meshes) {
@@ -475,7 +475,7 @@ if (conv_order_flag == 1)  return norms;
 template < class type>
 /*static*/  void FE_convergence< type >::compute_error_norms_per_unknown_per_level(const MultiLevelSolution* ml_sol_single_level, 
                                           MultiLevelSolution* ml_sol_all_levels, 
-                                          const std::vector< Math::Unknowns_definition > &  unknowns, 
+                                          const std::vector< Math::Unknown > &  unknowns, 
                                           const unsigned i,
                                           const unsigned norm_flag, 
                                           std::vector < std::vector < std::vector < type > > > &  norms,
