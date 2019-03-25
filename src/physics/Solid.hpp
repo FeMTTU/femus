@@ -88,7 +88,6 @@ static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(co
                                                              const double & lambda,
                                                              const unsigned int dim,
                                                              const unsigned int press_type_pos,
-                                                             const std::vector < std::vector < real_num_mov > > & gradSolVAR_qp,
                                                              const std::vector < std::vector < real_num_mov > > & gradSolVAR_hat_qp,
                                                              const          std::vector < real_num_mov >   & SolVAR_qp,
                                                              const          std::vector < unsigned int >   & SolPdeIndex,

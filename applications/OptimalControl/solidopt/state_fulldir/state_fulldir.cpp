@@ -360,12 +360,12 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
    // ------------------------------------------------------------------------
     // Physical parameters
+    const int    solid_model	= ml_prob.parameters.get < Solid>("Solid").get_physical_model();
     const double rhof	 	= ml_prob.parameters.get < Fluid>("Fluid").get_density();
     const double mu_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_shear_modulus();
     const double lambda_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_lambda();
     const double mus		= mu_lame / rhof;
     const double lambda	= lambda_lame / rhof;
-    const int    solid_model	= ml_prob.parameters.get < Solid>("Solid").get_physical_model();
 
     const bool incompressible = (0.5  ==  ml_prob.parameters.get < Solid>("Solid").get_poisson_coeff()) ? 1 : 0;
     const bool penalty = ml_prob.parameters.get < Solid>("Solid").get_if_penalty();
@@ -500,7 +500,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    real_num_mov J_hat;
    real_num_mov trace_e_hat;
 
-    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda, dim, sol_index_press, gradSolVAR_qp, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
+    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda, dim, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
 
     
 
