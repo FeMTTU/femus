@@ -14,6 +14,8 @@
 =========================================================================*/
 
 #include "System.hpp"
+#include "MultiLevelSolution.hpp"
+#include "MultiLevelProblem.hpp"
 #include "MultiLevelMeshTwo.hpp"
 
 #include <sstream>

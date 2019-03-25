@@ -1,3 +1,4 @@
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "Fluid.hpp"

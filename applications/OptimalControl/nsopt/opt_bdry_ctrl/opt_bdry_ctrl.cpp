@@ -4,9 +4,8 @@
 
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
-#include "VTKWriter.hpp"
-#include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"

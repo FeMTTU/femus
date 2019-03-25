@@ -1,4 +1,7 @@
 
+#include "MultiLevelSolution.hpp"
+
+
 using namespace femus;
 
 double beta = 0.25;

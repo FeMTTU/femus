@@ -19,8 +19,8 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "MultiLevelProblem.hpp"
 #include "MgTypeEnum.hpp"
+#include "MgSmootherEnum.hpp"
 #include "FieldSplitTree.hpp"
 
 
@@ -31,6 +31,7 @@ namespace femus {
 //------------------------------------------------------------------------------
 class System;
 class MultiLevelProblem;
+class MultiLevelMesh;
 class String;
 
 /**

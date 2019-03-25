@@ -19,17 +19,17 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
+#include <vector>
+#include <map>
 #include "MultiLevelMesh.hpp"
-#include "MultiLevelSolution.hpp"
-#include "Solution.hpp"
 #include "Parameters.hpp"
 #include "ParallelObject.hpp"
 #include "MgSmootherEnum.hpp"
-#include <vector>
-#include <map>
 #include "GaussPoints.hpp"
 #include "FemusInputParser.hpp"
 #include "Files.hpp"
+#include "Math.hpp"
+#include "System.hpp"
 
 
 namespace femus {
@@ -39,7 +39,7 @@ using std::map;
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-class System;
+class MultiLevelSolution;
 class MultiLevelMeshTwo;
 class elem_type;
 class QuantityMap;
@@ -204,8 +204,8 @@ public:
   inline const Files * GetFilesHandler() const { return  _files; }
 
     /** Flexible assembly */
-                      void set_current_unknown_assembly( std::string unknown_in ) { _current_unknown_assembly = unknown_in; return; }
-  inline const std::string get_current_unknown_assembly() const { return  _current_unknown_assembly; }
+                      void set_unknown_list_for_assembly(const std::vector< Math::Unknown > unknown_in ) { _unknown_list_for_assembly = unknown_in; }
+  inline const std::vector< Math::Unknown > get_unknown_list_for_assembly() const { return  _unknown_list_for_assembly; }
 
 private:
 
@@ -220,10 +220,59 @@ private:
     const MultiLevelMeshTwo               * _mesh;
 
     const Files                           * _files;
-    std::string  _current_unknown_assembly;
+    std::vector< Math::Unknown > _unknown_list_for_assembly;
 
 
 };
+
+
+template <typename T_sys>
+inline
+const T_sys & MultiLevelProblem::get_system (const unsigned int num) const
+{
+  assert(num < this->n_systems());
+
+  const_system_iterator       pos = _systems.begin();
+  const const_system_iterator end = _systems.end();
+
+  for (; pos != end; ++pos)
+    if (pos->second->number() == num)
+      break;
+
+  // Check for errors
+  if (pos == end)
+  {
+    std::cerr << "ERROR: no system number " << num << " found!" << std::endl;
+  }
+
+  // Attempt dynamic cast
+  return *static_cast<T_sys*>(pos->second);
+}
+
+template <typename T_sys>
+inline
+T_sys & MultiLevelProblem::get_system (const unsigned int num)
+{
+  assert(num < this->n_systems());
+
+  const_system_iterator       pos = _systems.begin();
+  const const_system_iterator end = _systems.end();
+
+  for (; pos != end; ++pos)
+    if (pos->second->number() == num)
+      break;
+
+  // Check for errors
+  if (pos == end)
+  {
+    std::cerr << "ERROR: no system number " << num << " found!" << std::endl;
+  }
+
+  // Attempt dynamic cast
+  return *static_cast<T_sys*>(pos->second);
+}
+
+
 
 template <typename T_sys>
 inline

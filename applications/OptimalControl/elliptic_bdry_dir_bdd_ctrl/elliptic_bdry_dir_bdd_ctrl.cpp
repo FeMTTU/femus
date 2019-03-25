@@ -1,6 +1,6 @@
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
-#include "VTKWriter.hpp"
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 
@@ -190,7 +190,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -699,7 +699,7 @@ std::cout <<  " qp_" << d << " " << coord_at_qp_bdry[d];
 
       
       
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
+//========== temporary soln for surface gradient on a face parallel to the axes ===================
           const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
 		  double dx_dcurv_abscissa = 0.;
 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
@@ -712,7 +712,7 @@ std::cout <<  " qp_" << d << " " << coord_at_qp_bdry[d];
                               else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
                          }
                      }
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
+//========== temporary soln for surface gradient on a face parallel to the axes ===================
 		  
 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_bdry_gss = 0.;
@@ -742,7 +742,7 @@ std::cout <<  " qp_" << d << " " << coord_at_qp_bdry[d];
 		      
     double grad_adj_dot_n_res = 0.;
         for(unsigned d=0; d<dim; d++) {
-	  grad_adj_dot_n_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
+	  grad_adj_dot_n_res += sol_adj_x_vol_at_bdry_gss[d] * normal[d];  
 	}
 //=============== grad dot n  for residual =========================================       
 

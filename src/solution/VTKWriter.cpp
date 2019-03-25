@@ -17,6 +17,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "VTKWriter.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include <b64/b64.h>
