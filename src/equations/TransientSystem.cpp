@@ -100,27 +100,11 @@ void TransientSystem<Base>::SetUpForSolve(){
 
 // ------------------------------------------------------------
 template <class Base>
-void TransientSystem<Base>::MLsolve() {
-  
-  SetUpForSolve(); 
-  // call the parent MLsolver
-  Base::_MLsolver = true;
-  Base::_MGsolver = false;
-
-  Base::solve();
-
-}
-
-// ------------------------------------------------------------
-template <class Base>
 void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
 
   SetUpForSolve();  
-  // call the parent MGsolver
-  Base::_MLsolver = false;
-  Base::_MGsolver = true;
 
-  Base::solve( mgSmootherType );
+  Base::MGsolve( mgSmootherType );
 
 }
 

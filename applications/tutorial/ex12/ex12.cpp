@@ -130,7 +130,8 @@ int main(int argc, char** args) {
 
   // initilaize and solve the system
   system.init();
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

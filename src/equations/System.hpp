@@ -78,19 +78,10 @@ public:
 
     AssembleFunctionType  GetAssembleFunction();
 
-
+    virtual void SetOuterSolver (const SolverType & mgOuterSolver) {};
+    
     virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE){
-      _solverType = "MultiGrid";
-      _MLsolver = false;
-      _MGsolver = true;
-      solve(mgSmootherType);
-    };
-
-    virtual void MLsolve (){
-      _solverType = "MultiLevel";
-      _MLsolver = true;
-      _MGsolver = false;
-      solve();
+      //solve(mgSmootherType);
     };
 
     /** Init the system PDE structures */
@@ -144,10 +135,7 @@ protected:
 
     unsigned _levelToAssemble;
 
-    bool _MGsolver, _MLsolver;
-    std::string _solverType;
-
-    virtual void solve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE ){};
+    //virtual void solve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE ){};
 
     /** Function that assembles the system. */
     AssembleFunctionType _assemble_system_function;

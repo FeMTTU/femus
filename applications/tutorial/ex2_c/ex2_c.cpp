@@ -280,7 +280,8 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 //             system.SetMaxNumberOfLinearIterations(6);
 //             system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
             
-            system.MLsolve();
+            system.SetOuterSolver(PREONLY);
+            system.MGsolve();
       
             // ======= Print ========================
             std::vector < std::string > variablesToBePrinted;

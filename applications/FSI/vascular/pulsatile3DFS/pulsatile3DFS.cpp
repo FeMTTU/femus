@@ -355,7 +355,7 @@ int main ( int argc, char ** args )
   
   system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT);   // Field-Split preconditioned
   
-  system.SetMgOuterSolver(LGMRES); //system.SetOuterKSPSolver("lgmres");
+  system.SetOuterSolver(LGMRES); //system.SetOuterKSPSolver("lgmres");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction ( FSITimeDependentAssemblySupgNew2 );

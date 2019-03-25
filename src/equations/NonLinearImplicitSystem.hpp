@@ -102,6 +102,9 @@ public:
     
     void compute_convergence_rate() const;
     
+    /** Solves the system. */
+    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
+    
 protected:
 
     /** The final residual for the nonlinear system R(x) */
@@ -132,9 +135,6 @@ protected:
     
     /** Current nonlinear iteration index */
     unsigned _nonliniteration;
-    
-    /** Solves the system. */
-    virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 
 private:
 

@@ -163,7 +163,8 @@ int main(int argc, char** args) {
   Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
   
   for(unsigned i = 0; i < sizeU; i++){
-    system.MLsolve();
+    system.SetOuterSolver(PREONLY);  
+    system.MGsolve();
     mlSol.GenerateBdc("All");
 
 

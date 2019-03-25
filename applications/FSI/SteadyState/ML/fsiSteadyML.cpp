@@ -317,7 +317,8 @@ int main(int argc,char **args) {
   // ******* Solve *******
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);

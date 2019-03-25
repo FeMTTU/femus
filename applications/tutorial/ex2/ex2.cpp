@@ -102,7 +102,9 @@ int main(int argc, char** args) {
 
       // initilaize and solve the system
       system.init();
-      system.MLsolve();
+      
+      system.SetOuterSolver(PREONLY);
+      system.MGsolve();
 
       std::pair< double , double > norm = GetErrorNorm(&mlSol);
       l2Norm[i][j]  = norm.first;

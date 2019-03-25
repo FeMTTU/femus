@@ -319,7 +319,7 @@ int main(int argc, char** args) {
   system.init();
   
   // Solver and preconditioner
-  system.SetMgOuterSolver(PREONLY);
+  system.SetOuterSolver(PREONLY);
   system.SetSolverFineGrids(PREONLY);
   system.SetPreconditionerFineGrids(MLU_PRECOND);
 
@@ -337,7 +337,8 @@ int main(int argc, char** args) {
 //   system.SetMaxNumberOfLinearIterations(4);
 //   system.SetAbsoluteLinearConvergenceTolerance(1.e-10);
  
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 //   system.MGsolve();
 
   std::vector<std::string> mov_vars;
