@@ -196,7 +196,8 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
   system.SetDebugNonlinear(true);
 
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 //   system.MGsolve();
 
   system.compute_convergence_rate();

@@ -78,13 +78,9 @@ public:
 
     /** Set up before calling the parent solve */
     void SetUpForSolve();
-    
-    /** calling the parent solve */
-    virtual void MLsolve();
-
+   
     /** calling the parent solve */
     virtual void MGsolve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE );
-
 
     /** update the Newmark variables */
     void NewmarkAccUpdate();

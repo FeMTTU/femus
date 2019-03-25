@@ -402,7 +402,8 @@ int main(int argc,char **args) {
 
     system.CopySolutionToOldSolution();
 
-    system.MLsolve();
+    system.SetOuterSolver(PREONLY);
+    system.MGsolve();
 
 
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);

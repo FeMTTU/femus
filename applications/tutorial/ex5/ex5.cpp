@@ -104,8 +104,10 @@ int main(int argc, char** args) {
       systemU.init();
       systemV.init();
 
-      systemV.MLsolve();
-      systemU.MLsolve();
+      systemV.SetOuterSolver(PREONLY);
+      systemU.SetOuterSolver(PREONLY);
+      systemV.MGsolve();
+      systemU.MGsolve();
 
       std::pair< double , double > norm = GetErrorNorm(&mlSol);
       l2Norm[i][j]  = norm.first;

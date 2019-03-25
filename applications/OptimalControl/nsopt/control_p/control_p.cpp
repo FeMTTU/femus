@@ -235,7 +235,8 @@ int main(int argc, char** args) {
     
   // initilaize and solve the system
   system_opt.init();
-  system_opt.MLsolve();
+  system_opt.SetOuterSolver(PREONLY);
+  system_opt.MGsolve();
 
     ComputeIntegral(mlProb);
   

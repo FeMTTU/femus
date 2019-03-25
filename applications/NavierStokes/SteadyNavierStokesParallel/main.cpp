@@ -179,7 +179,8 @@ int main ( int argc, char **args ) {
   //system1.SetDirichletBCsHandling(ELIMINATION);
 
   // Solve Navier-Stokes system
-  ml_prob.get_system ( "Navier-Stokes" ).MLsolve();
+  ml_prob.get_system("Navier-Stokes").SetOuterSolver(PREONLY);
+  ml_prob.get_system ( "Navier-Stokes" ).MGsolve();
   //END Navier-Stokes Multilevel Problem
 
 
@@ -219,7 +220,8 @@ int main ( int argc, char **args ) {
 
 
   // Solve Temperature system
-  ml_prob.get_system ( "Temperature" ).MLsolve();
+  ml_prob.get_system ( "Temperature" ).SetOuterSolver(PREONLY);
+  ml_prob.get_system ( "Temperature" ).MGsolve();
   //END Temperature Multilevel Problem
 
   /// Print all solutions

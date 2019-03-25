@@ -245,14 +245,15 @@ int main(int argc,char **args) {
     // ======= Solve ========================
     std::cout << std::endl;
     std::cout << " *********** Timedep ************ " << std::endl;
-    ml_prob.get_system("Timedep").MLsolve();
+    system.SetOuterSolver(PREONLY);
+    system.MGsolve();
     
       ml_sol.Set("time", SetInitialCondition, &ml_prob);
       
 //       system.compute_convergence_rate();
       
     // ======= Update Solution ===============
-    ml_prob.get_system<TransientNonlinearImplicitSystem>("Timedep").CopySolutionToOldSolution();
+    system.CopySolutionToOldSolution();
     
      
      bool adapt_flag = 1; // Set to 0 for no adaptation and 1 for adaptation (which starts at a specified solution magnitude)

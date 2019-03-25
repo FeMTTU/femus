@@ -104,7 +104,8 @@ int main(int argc, char** args)
   system.SetElementBlockNumber(1);
 
   system.SetMgType(V_CYCLE);
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

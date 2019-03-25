@@ -218,8 +218,9 @@ int main(int argc, char** args) {
     std::cout << "iteration = " <<i<<std::endl;
     
     //mlSol.Initialize("All");
+    system.SetOuterSolver(PREONLY);
+    system.MGsolve();
     
-    system.MLsolve();
     mlSol.GenerateBdc("All");
     std::ofstream fout;
     if(i==0){

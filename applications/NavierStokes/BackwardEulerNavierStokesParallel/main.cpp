@@ -110,7 +110,8 @@ int main(int argc,char **args) {
     // Solving Navier-Stokes system
     std::cout << std::endl;
     std::cout << " *********** Navier-Stokes ************  " << std::endl;
-    ml_prob.get_system("Navier-Stokes").MLsolve();
+    ml_prob.get_system("Navier-Stokes").SetOuterSolver(PREONLY);
+    ml_prob.get_system("Navier-Stokes").MGsolve();
 
     //update Solution
     ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes").CopySolutionToOldSolution();

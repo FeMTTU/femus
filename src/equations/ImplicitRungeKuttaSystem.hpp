@@ -67,9 +67,6 @@ namespace femus {
       void UpdateSolution();
 
       /** calling the parent solve */
-      void MLsolve();
-
-      /** calling the parent solve */
       void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 
       const std::vector < std::string > & GetSolkiNames (const char name[]);
@@ -189,30 +186,6 @@ namespace femus {
     _solRKType[index] = type;
     
   }
-  
-
-  template <class Base>
-  void ImplicitRungeKuttaSystem<Base>::MLsolve() {
-
-    TransientSystem<Base>::SetUpForSolve();
-
-    SetIntermediateTimes();
-
-
-    for (unsigned i = 0; i < _solIndex.size(); i++) {
-      if (!strcmp (this->_ml_sol->GetBdcType (_solIndex[i]), "Time_dependent")) {
-        this->_ml_sol->GenerateRKBdc (_solIndex[i], _solKiIndex[i], 0, _itime, _time0, this->_dt, _Ai);
-      }
-    }
-
-    // call the parent MLsolver
-    Base::_MLsolver = true;
-    Base::_MGsolver = false;
-
-    Base::solve();
-
-    UpdateSolution();
-  }
 
   template <class Base>
   void ImplicitRungeKuttaSystem<Base>::MGsolve (const MgSmootherType& mgSmootherType) {
@@ -227,11 +200,7 @@ namespace femus {
       }
     }
 
-    // call the parent MLsolver
-    Base::_MLsolver = false;
-    Base::_MGsolver = true;
-
-    Base::solve (mgSmootherType);
+    Base::MGsolve (mgSmootherType);
 
     UpdateSolution();
   }

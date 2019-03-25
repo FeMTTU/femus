@@ -376,7 +376,8 @@ int main(int argc, char** args) {
   Solution* sol = mlSol.GetLevel(numberOfUniformLevels-1);
     
   for(unsigned i=0; i< sizeTUVP; i++){
-    system.MLsolve();
+    system.SetOuterSolver(PREONLY);  
+    system.MGsolve();
     mlSol.GenerateBdc("All");
     
     std::ofstream fout;
