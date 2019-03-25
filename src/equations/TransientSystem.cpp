@@ -17,6 +17,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"

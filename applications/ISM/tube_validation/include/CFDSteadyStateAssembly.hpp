@@ -4,6 +4,7 @@
 
 //#include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "adept.h"
 
 
