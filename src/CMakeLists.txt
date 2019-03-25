@@ -45,6 +45,8 @@ equations/SystemTwo.cpp
 equations/TimeLoop.cpp
 equations/TransientSystem.cpp
 equations/NewmarkTransientSystem.cpp
+equations/FE_convergence.cpp
+equations/Assemble_jacobian.cpp
 fe/ElemType.cpp
 fe/Hexaedron.cpp
 fe/Line.cpp
@@ -99,7 +101,6 @@ utils/FemusInit.cpp
 utils/Files.cpp
 utils/InputParser.cpp
 utils/JsonInputParser.cpp
-utils/Math.cpp
 )
 
 IF (NOT LIBRARY_OUTPUT_PATH)

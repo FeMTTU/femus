@@ -4,6 +4,7 @@
 #include "FemusInit.hpp"
 #include "Marker.hpp"
 #include "MultiLevelMesh.hpp"
+#include "MultiLevelSolution.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "MyVector.hpp"

@@ -124,7 +124,7 @@ static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(co
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
                 //incompressible
-                Cauchy[i][j] = 2. * mus *  ( e[i][j] -  SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[i][j] );
+                Cauchy[i][j] = 2. * mus *  ( e[i][j] -  SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[i][j] );  ///@todo check that mus is multiplying everything or only the deformation tensor
                 //+(penalty)*lambda*trace_e*Identity[i][j];
               }
             }

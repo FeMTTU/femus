@@ -1,8 +1,12 @@
-#include "Math.hpp"
+#include "Assemble_jacobian.hpp"
+
 
 
 
 namespace femus {
+    
+    
+    
 
 
  // template specialization for adept::adouble
@@ -76,7 +80,11 @@ template < >
 //***************************************
 //explicit instantiations
 //****************************************
-template class assemble_jacobian< adept::adouble, double >; 
+template class assemble_jacobian< adept::adouble, double >;
 
 
-}  //end namespace
+
+
+} //end namespace femus
+
+

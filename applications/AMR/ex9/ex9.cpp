@@ -1,3 +1,4 @@
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMesh.hpp"
 #include "TransientSystem.hpp"

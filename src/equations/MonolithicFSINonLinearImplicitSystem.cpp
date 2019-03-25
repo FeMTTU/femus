@@ -18,6 +18,7 @@
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 #include "ElemType.hpp"
+#include "MultiLevelSolution.hpp"
 
 
 namespace femus {

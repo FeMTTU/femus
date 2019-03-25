@@ -10,10 +10,8 @@
 #include "Fluid.hpp"
 #include "Solid.hpp"
 #include "Files.hpp"
-#include "Math.hpp"
-
-#include "PetscMatrix.hpp"
-#include <stdio.h>
+#include "FE_convergence.hpp"
+#include "Assemble_jacobian.hpp"
 
 
 #define MODEL "Linear_elastic"
@@ -36,7 +34,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
              else if(!strcmp(name,"DZ")) {
                  value = 0.;
              }
-             else if(!strcmp(name,"DP")) {
+             else if(!strcmp(name,"P")) {
                  value = 0.;
              }
            
@@ -98,15 +96,23 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
 
 
 
+template < class system_type, class real_num, class real_num_mov >
+void AssembleSolidMech(MultiLevelProblem& ml_prob,
+                       system_type * mlPdeSys,
+                       const std::vector< Math::Unknown > &  unknowns);
 
-template <  class real_num, class real_num_mov >
-void AssembleSolidMech(MultiLevelProblem& ml_prob);
+
+template < class system_type, class real_num, class real_num_mov >
+void AssembleSolidMech(MultiLevelProblem& ml_prob,
+                       system_type * mlPdeSys,
+                       const std::vector< Math::Unknown > &  unknowns);
+
 
 
 
 
  //Unknown definition  ==================
- const std::vector< Math::Unknowns_definition >  provide_list_of_unknowns(const unsigned int dimension) {
+ const std::vector< Math::Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
      
      
   std::vector< FEFamily > feFamily;
@@ -124,7 +130,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob);
   
   assert( feFamily.size() == feOrder.size() );
  
- std::vector< Math::Unknowns_definition >  unknowns(feFamily.size());
+ std::vector< Math::Unknown >  unknowns(feFamily.size());
 
                         unknowns[0]._name      = "DX";
                         unknowns[1]._name      = "DY";
@@ -152,7 +158,7 @@ class My_main_single_level : public Main_single_level {
 public:
     
 const MultiLevelSolution  run_on_single_level(const Files & files, 
-                                                   const std::vector< Math::Unknowns_definition > & unknowns,  
+                                                   const std::vector< Math::Unknown > & unknowns,  
                                                    MultiLevelMesh & ml_mesh, 
                                                    const unsigned i) const;
   
@@ -188,7 +194,7 @@ int main(int argc, char** args) {
 
   // ======= Unknowns ========================
   const unsigned int dimension = ml_mesh.GetDimension();  
-  std::vector< Math::Unknowns_definition > unknowns = provide_list_of_unknowns(dimension);
+  std::vector< Math::Unknown > unknowns = provide_list_of_unknowns(dimension);
   
   // ======= Normal run ========================   //if you don't want the convergence study
   My_main_single_level< adept::adouble > my_main;
@@ -207,7 +213,7 @@ int main(int argc, char** args) {
    // convergence choices ================  
    unsigned int max_number_of_meshes;               // set total number of levels ================  
 
-   if (nsub[2] == 0)   max_number_of_meshes = 6;
+   if (nsub[2] == 0)   max_number_of_meshes = 2;
    else                max_number_of_meshes = 4;
   
 //    My_exact_solution<> exact_sol;                //provide exact solution, if available ==============
@@ -226,15 +232,26 @@ int main(int argc, char** args) {
 
 
 
-template < class real_num, class real_num_mov >
+template < class system_type, class real_num, class real_num_mov = double >
 void AssembleSolidMech(MultiLevelProblem& ml_prob) {
+    
+  AssembleSolidMech< system_type, real_num, real_num_mov > (ml_prob, & ml_prob.get_system< system_type >(0), ml_prob.get_unknown_list_for_assembly());
+
+}
+
+
+
+template < class system_type, class real_num, class real_num_mov = double >
+void AssembleSolidMech(MultiLevelProblem& ml_prob,
+                       system_type * mlPdeSys,
+                       const std::vector< Math::Unknown > &  unknowns) {
+    
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
 
-  NonLinearImplicitSystem* 	mlPdeSys   	= & ml_prob.get_system<NonLinearImplicitSystem> ("SolidMech");
   const unsigned 		level 		    = mlPdeSys->GetLevelToAssemble();
   bool 			assembleMatrix 		    = mlPdeSys->GetAssembleMatrix(); 
   const char* 			pdename         = mlPdeSys->name().c_str();
@@ -275,11 +292,11 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob) {
   constexpr int state_pos_begin = sol_index_displ;   //known at compile time
 
 
-  vector < std::string > Solname(n_unknowns);
-  Solname              [state_pos_begin + 0] =                "DX";
-  Solname              [state_pos_begin + 1] =                "DY";
-  if (dim == 3) Solname[state_pos_begin + 2] =                "DZ";
-  Solname              [state_pos_begin + sol_index_press] = "P";
+  vector < std::string > Solname(n_unknowns);     for(unsigned ivar=0; ivar < n_unknowns; ivar++) { Solname[ivar] = unknowns[ivar]._name; }
+//   Solname              [state_pos_begin + 0] =                "DX";
+//   Solname              [state_pos_begin + 1] =                "DY";
+//   if (dim == 3) Solname[state_pos_begin + 2] =                "DZ";
+//   Solname              [state_pos_begin + sol_index_press] = "P";
   
   vector < unsigned int > SolIndex(n_unknowns);  
   vector < unsigned int > SolPdeIndex(n_unknowns);
@@ -549,7 +566,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob) {
 
 template < class real_num > 
 const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
-                                                                                const std::vector< Math::Unknowns_definition > &  unknowns,  
+                                                                                const std::vector< Math::Unknown > &  unknowns,  
                                                                                 MultiLevelMesh & ml_mesh,
                                                                                 const unsigned lev) const {
                                                                                     
@@ -618,7 +635,9 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
   for (unsigned int u = 0; u < unknowns.size(); u++)   system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
  
-  system.SetAssembleFunction( AssembleSolidMech< adept::adouble, adept::adouble >);
+  ml_prob.set_unknown_list_for_assembly(unknowns); 
+            
+  system.SetAssembleFunction( AssembleSolidMech< NonLinearImplicitSystem, adept::adouble, adept::adouble >);
 
   // initialize and solve the system
   system.init();
