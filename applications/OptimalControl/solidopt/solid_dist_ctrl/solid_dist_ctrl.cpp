@@ -37,6 +37,19 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
              else if(!strcmp(name,"P")) {
                  value = 0.;
              }
+
+             else if(!strcmp(name,"DX_ADJ")) {
+                 value = 0.;
+             }
+             else if(!strcmp(name,"DY_ADJ")) {
+                 value = 0.;
+             }
+             else if(!strcmp(name,"DZ_ADJ")) {
+                 value = 0.;
+             }
+             else if(!strcmp(name,"P_ADJ")) {
+                 value = 0.;
+             }
            
     
       return value;   
@@ -46,60 +59,72 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
   
 
 bool Solution_set_boundary_conditions(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=)  (in 2D)
-  //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=) //5: (z=z_min)  //6:  (z=z_max) (in 3D, I guess...)
+  //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min)  (in 2D)
+  //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min) //5: (z=z_min)  //6:  (z=z_max) (in 3D, I guess...)
   
   bool dirichlet; 
   
       if (facename == 1) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
+       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
   	
       }
 
       if (facename == 2) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = false/*true*/; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = false/*true*/; value = 0.; } 
-  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
+       if (!strcmp(SolName, "DX"))        { dirichlet = false/*true*/; value = 0.; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = false/*true*/; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
   	
       }
 
       if (facename == 3) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
+       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
   	
       }
 
       if (facename == 4) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = false/*true*/; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = false/*true*/; value = 0.; } 
-  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
+       if (!strcmp(SolName, "DX"))        { dirichlet = false/*true*/; value = 0.; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = false/*true*/; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
   	
       }
       
       if (facename == 5) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = false; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = false; value = 0.; } 
-  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
-      }
+       if (!strcmp(SolName, "DX"))        { dirichlet = false; value = 0.; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = false; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
+     }
       
       if (facename == 6) {
-       if (!strcmp(SolName, "DX"))    { dirichlet = false; value = 0.; }
-  else if (!strcmp(SolName, "DY"))    { dirichlet = false; value = 0.; } 
-  else if (!strcmp(SolName, "DZ"))    { dirichlet = true; value = 0.; } 
+       if (!strcmp(SolName, "DX"))        { dirichlet = false; value = 0.; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = false; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
       }
       
   return dirichlet;
 }
 
-
-
-template < class system_type, class real_num, class real_num_mov >
-void AssembleSolidMech(MultiLevelProblem& ml_prob,
-                       system_type * mlPdeSys,
-                       const std::vector< Math::Unknown > &  unknowns);
 
 
 template < class system_type, class real_num, class real_num_mov >
@@ -118,25 +143,40 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   std::vector< FEFamily > feFamily;
   std::vector< FEOrder >   feOrder;
 
-                        feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE);   //state
                         feFamily.push_back(LAGRANGE);
   if (dimension == 3)   feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
-  
+                        feFamily.push_back(LAGRANGE);   //adjoint
+                        feFamily.push_back(LAGRANGE);
+  if (dimension == 3)   feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
+ 
                         feOrder.push_back(SECOND);
                         feOrder.push_back(SECOND);
   if (dimension == 3)   feOrder.push_back(SECOND);
                         feOrder.push_back(FIRST);
-  
+                        feOrder.push_back(SECOND);
+                        feOrder.push_back(SECOND);
+  if (dimension == 3)   feOrder.push_back(SECOND);
+                        feOrder.push_back(FIRST);
+ 
+
   assert( feFamily.size() == feOrder.size() );
  
  std::vector< Math::Unknown >  unknowns(feFamily.size());
-
-                        unknowns[0]._name      = "DX";
-                        unknowns[1]._name      = "DY";
-  if (dimension == 3)   unknowns[2]._name      = "DZ";
-                unknowns[dimension]._name      = "P";
  
+  const int adj_pos_begin   = dimension + 1;
+
+                                        unknowns[0]._name      = "DX";
+                                        unknowns[1]._name      = "DY";
+  if (dimension == 3)                   unknowns[2]._name      = "DZ";
+                                unknowns[dimension]._name      = "P";
+                        unknowns[adj_pos_begin + 0]._name      = "DX_ADJ";
+                        unknowns[adj_pos_begin + 1]._name      = "DY_ADJ";
+  if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "DZ_ADJ";
+                unknowns[adj_pos_begin + dimension]._name      = "P_ADJ";
+
      for (unsigned int u = 0; u < unknowns.size(); u++) {
          
               unknowns[u]._fe_family = feFamily[u];
