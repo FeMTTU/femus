@@ -29,7 +29,7 @@
 using namespace femus;
 
 const double P = 3;
-const bool volumeConstraint = false;
+const bool volumeConstraint = true;
 
 void AssemblePWillmore (MultiLevelProblem&);
 
@@ -169,6 +169,7 @@ int main (int argc, char** args) {
 
   if (volumeConstraint) {
     system.AddSolutionToSystemPDE ("Lambda");
+    system.SetNumberOfGlobalVariables (1u);
   }
 
   system.SetMaxNumberOfNonLinearIterations (20);
@@ -179,8 +180,7 @@ int main (int argc, char** args) {
 
   system.AttachGetTimeIntervalFunction (GetTimeStep);
 
-  // initilaize and solve the system
-  system.SetNumberOfGlobalVariables (1u);
+  
 
   system.init();
   system.SetMgType (V_CYCLE);
