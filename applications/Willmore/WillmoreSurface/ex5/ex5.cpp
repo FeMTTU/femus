@@ -139,7 +139,7 @@ int main (int argc, char** args) {
   system0.AddSolutionToSystemPDE ("W2");
   system0.AddSolutionToSystemPDE ("W3");
 
-  system0.SetMaxNumberOfNonLinearIterations (40);
+  system0.SetMaxNumberOfNonLinearIterations (4);
   system0.SetNonLinearConvergenceTolerance (1.e-9);
 
   // attach the assembling function to system
@@ -168,13 +168,15 @@ int main (int argc, char** args) {
   TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("PWillmore");
 
   // add solution "X", "Y", "Z" and "H" to the system
-  system.AddSolutionToSystemPDE ("Lambda");
+ 
   system.AddSolutionToSystemPDE ("Dx1");
   system.AddSolutionToSystemPDE ("Dx2");
   system.AddSolutionToSystemPDE ("Dx3");
   system.AddSolutionToSystemPDE ("W1");
   system.AddSolutionToSystemPDE ("W2");
   system.AddSolutionToSystemPDE ("W3");
+  
+  system.AddSolutionToSystemPDE ("Lambda");
 
   system.SetMaxNumberOfNonLinearIterations (20);
   system.SetNonLinearConvergenceTolerance (1.e-9);
@@ -292,10 +294,11 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   unsigned lambda0PdeDof;
   if (iproc == 0) {
     solLambda0 = (*sol->_Sol[solLambdaIndex]) (0); // global to local solution
+    lambda0PdeDof = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, 0);
   }
   MPI_Bcast (&solLambda0, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  lambda0PdeDof = 0;
-
+  MPI_Bcast (&lambda0PdeDof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+  
   double volume = 0.;
   double energy = 0.;
 
