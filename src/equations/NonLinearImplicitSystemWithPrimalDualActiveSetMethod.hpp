@@ -51,13 +51,13 @@ public:
     void SetActiveSetFlagName(const std::string & name_in ) {
         _active_flag_name = name_in;
     };
-
+    
+    /** Solves the system. */
+    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 
 protected:
 
-    /** Solves the system. */
-    virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
-    
+        
     std::string _active_flag_name;
 
 };

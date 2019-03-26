@@ -13,6 +13,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -217,12 +218,12 @@ int main (int argc, char** args) {
 
   //system.SetSolverCoarseGrid(PREONLY);
   
-  system.SetMgOuterSolver(PREONLY);
+  system.SetOuterSolver(PREONLY);
   
   system.SetTolerances(1.e-10, 1.e-10, 1.e+50, 10, 10); //GMRES tolerances
   
   system.AttachGetTimeIntervalFunction (GetTimeStep);
-  const unsigned int n_timesteps = 100;
+  const unsigned int n_timesteps = 2;
 
   system.SetFieldSplitTree(&FS);
   

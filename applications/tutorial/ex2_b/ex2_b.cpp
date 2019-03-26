@@ -9,6 +9,7 @@
  **/
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -156,7 +157,8 @@ int main(int argc, char** args) {
 //       system.SetMaxNumberOfLinearIterations(6);
 //       system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
 
-      system.MLsolve();
+      system.SetOuterSolver(PREONLY);
+      system.MGsolve();
       
      
     if (i < maxNumberOfMeshes - gap/*1*/) {

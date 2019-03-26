@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -163,7 +164,8 @@ int main(int argc, char** args) {
   Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
   
   for(unsigned i = 0; i < sizeU; i++){
-    system.MLsolve();
+    system.SetOuterSolver(PREONLY);  
+    system.MGsolve();
     mlSol.GenerateBdc("All");
 
 

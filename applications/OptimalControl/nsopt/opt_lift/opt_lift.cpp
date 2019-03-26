@@ -7,6 +7,7 @@
 #include "adept.h"
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -289,7 +290,8 @@ int main(int argc, char** args) {
 //   system_opt.SetMaxNumberOfLinearIterations(6);
 //   system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
 
-  system_opt.MLsolve();
+  system_opt.SetOuterSolver(PREONLY);
+  system_opt.MGsolve();
 
     if ( i > 0 ) {
         

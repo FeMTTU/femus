@@ -2,9 +2,8 @@
 
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
-#include "VTKWriter.hpp"
-#include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 #include "LinearImplicitSystem.hpp"
@@ -196,7 +195,8 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
   system.SetDebugNonlinear(true);
 
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 //   system.MGsolve();
 
   system.compute_convergence_rate();

@@ -94,11 +94,7 @@ namespace femus {
       };
 
       /** Flag to print fields to file after each linear iteration */
-      void SetDebugLinear(const bool my_value) {
-        if ( this->GetMLProb()._ml_sol->GetWriter() != NULL)        _debug_linear = my_value;
-        else {std::cout << "SetWriter first" << std::endl; abort(); }
-
-      };
+      void SetDebugLinear(const bool my_value); 
 
       /** Get the absolute convergence tolerance for the linear problem Ax=b*/
       double GetAbsoluteConvergenceTolerance() const {
@@ -188,7 +184,7 @@ namespace femus {
         std::cout << "Total Computational Time = " << _totalAssemblyTime + _totalSolverTime << std::endl;
       }
 
-      void SetMgOuterSolver (const SolverType & mgOuterSolver) {
+      void SetOuterSolver (const SolverType & mgOuterSolver) {
         _mgOuterSolver = mgOuterSolver;
       };
 
@@ -238,6 +234,8 @@ namespace femus {
         return _RR;
       }
      
+      /** Solves the system. */
+      virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
     protected:
 
       vector < SparseMatrix* > _PP, _RR;
@@ -247,8 +245,7 @@ namespace femus {
       bool _assembleMatrix;
       void AddAMRLevel (unsigned &AMRCounter);
 
-      bool MLVcycle (const unsigned &gridn);
-      bool MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
+      bool Vcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
 
 
       /** Create the Prolongator matrix for the Multigrid solver */
@@ -320,12 +317,7 @@ namespace femus {
       double _AMReighborThresholdValue;
       std::vector <double> _AMRthreshold;
 
-
-
       vector <bool> _SparsityPattern;
-
-      /** Solves the system. */
-      virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 
       double _richardsonScaleFactor;
       double _richardsonScaleFactorDecrease;

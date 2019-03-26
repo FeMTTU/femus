@@ -13,10 +13,12 @@
 
 =========================================================================*/
 
+#include <iomanip>
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearEquationSolver.hpp"
 #include "NumericVector.hpp"
-#include "iomanip"
+#include "MultiLevelSolution.hpp"
+#include "MultiLevelProblem.hpp"
 
 namespace femus {
 
@@ -47,6 +49,16 @@ namespace femus {
   void NonLinearImplicitSystem::init() {
     Parent::init();
   }
+  
+  
+  // ********************************************
+  void NonLinearImplicitSystem::SetDebugNonlinear(const bool my_value) {
+      
+        if ( this->GetMLProb()._ml_sol->GetWriter() != NULL)        _debug_nonlinear = my_value;
+        else {std::cout << "SetWriter first" << std::endl; abort(); }
+        
+ }
+  
 
   // ************************MG********************
 
@@ -94,7 +106,7 @@ namespace femus {
 
   // ********************************************
 
-  void NonLinearImplicitSystem::solve(const MgSmootherType& mgSmootherType) {
+  void NonLinearImplicitSystem::MGsolve(const MgSmootherType& mgSmootherType) {
 
     _bitFlipCounter = 0;
     
@@ -105,15 +117,15 @@ namespace femus {
     unsigned grid0;
 
     if(_mg_type == F_CYCLE) {
-      std::cout << std::endl << " *** Start Nonlinear " << _solverType << " Full-Cycle ***" << std::endl;
+      std::cout << std::endl << " *** Start Nonlinear Full-Cycle ***" << std::endl;
       grid0 = 0;
     }
     else if(_mg_type == V_CYCLE) {
-      std::cout << std::endl << " *** Start Nonlinear  " << _solverType << " V-Cycle ***" << std::endl;
+      std::cout << std::endl << " *** Start Nonlinear V-Cycle ***" << std::endl;
       grid0 = _gridn - 1;
     }
     else {
-      std::cout << "wrong " << _solverType << " type for this solver " << std::endl;
+      std::cout << "wrong CYCLE type for this solver " << std::endl;
       abort();
     }
 
@@ -204,7 +216,7 @@ restart:
                     << static_cast<double>((clock() - mg_proj_mat_time)) / CLOCKS_PER_SEC << std::endl;
 
           clock_t mg_init_time = clock();
-          if(_MGsolver) {
+          
             _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _mgOuterSolver);
 
             for(unsigned i = 0; i <= igridn; i++) {
@@ -215,7 +227,7 @@ restart:
               else
                 _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], npre, npost);
             }
-          }
+         
           std::cout << "   ********* Level Max " << igridn + 1 << " MGINIT TIME:\t" \
                     << static_cast<double>((clock() - mg_init_time)) / CLOCKS_PER_SEC << std::endl;
         }
@@ -230,10 +242,9 @@ restart:
           std::cout << "     ********* Linear Cycle + Residual Update iteration " << updateResidualIterator + 1 << std::endl;
 
           bool thisHasConverged;
-
-          if(_MGsolver) thisHasConverged = MGVcycle(igridn, mgSmootherType);
-          else thisHasConverged = MLVcycle(igridn);
-
+          
+          thisHasConverged = Vcycle(igridn, mgSmootherType);
+          
           if(thisHasConverged || updateResidualIterator == _maxNumberOfResidualUpdateIterations - 1) break;
 
           _LinSolver[igridn]->SetResZero();
@@ -255,9 +266,7 @@ restart:
           if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
             _LinSolver[igridn]->SwapMatrices();
           }
-          if(_MGsolver) {
-            _LinSolver[igridn]->MGClear();
-          }
+          _LinSolver[igridn]->MGClear();
         }
 
         double nonLinearEps;
@@ -308,7 +317,7 @@ restart:
     }
 
     double totalSolverTime = static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC;
-    std::cout << std::endl << "   *** Nonlinear " << _solverType << " TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
+    std::cout << std::endl << "   *** Nonlinear Solver TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
               << totalSolverTime <<  " = assembly TIME( " << totalAssembyTime << " ) + "
               << " solver TIME( " << totalSolverTime - totalAssembyTime << " ) " << std::endl;
 

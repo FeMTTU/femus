@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -139,7 +140,8 @@ int main(int argc, char** args) {
  /* unsigned nprocs = msh->n_processors();
   unsigned sizeU = msh->_dofOffset[solUType][nprocs];*/ 
   // Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
     
   // print solutions
   std::vector < std::string > variablesToBePrinted;

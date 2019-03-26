@@ -4,9 +4,8 @@
 
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "NumericVector.hpp"
-#include "VTKWriter.hpp"
-#include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "Fluid.hpp"
 #include "Parameter.hpp"
@@ -256,7 +255,8 @@ int main(int argc, char** args) {
 //   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
 //     system_opt.SetMaxNumberOfLinearIterations(6);
 //     system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
-    system_opt.MLsolve();
+    system_opt.SetOuterSolver(PREONLY);
+    system_opt.MGsolve();
 
     if ( i > 0 ) {
         

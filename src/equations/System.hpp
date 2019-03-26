@@ -19,8 +19,8 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "MultiLevelProblem.hpp"
 #include "MgTypeEnum.hpp"
+#include "LinearEquationSolverEnum.hpp"
 #include "FieldSplitTree.hpp"
 
 
@@ -31,6 +31,7 @@ namespace femus {
 //------------------------------------------------------------------------------
 class System;
 class MultiLevelProblem;
+class MultiLevelMesh;
 class String;
 
 /**
@@ -78,19 +79,10 @@ public:
 
     AssembleFunctionType  GetAssembleFunction();
 
-
+    virtual void SetOuterSolver (const SolverType & mgOuterSolver) {};
+    
     virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE){
-      _solverType = "MultiGrid";
-      _MLsolver = false;
-      _MGsolver = true;
-      solve(mgSmootherType);
-    };
-
-    virtual void MLsolve (){
-      _solverType = "MultiLevel";
-      _MLsolver = true;
-      _MGsolver = false;
-      solve();
+      //solve(mgSmootherType);
     };
 
     /** Init the system PDE structures */
@@ -102,7 +94,11 @@ public:
     /** Get the index of the Solution "solname" for this system */
     unsigned GetSolPdeIndex(const char solname[]);
     
-    vector <unsigned> & GetSolPdeIndex(){
+    vector <unsigned> & GetSolPdeIndex() {
+      return _SolSystemPdeIndex;
+    }
+
+    const vector <unsigned> & GetSolPdeIndex() const {
       return _SolSystemPdeIndex;
     }
 
@@ -144,10 +140,7 @@ protected:
 
     unsigned _levelToAssemble;
 
-    bool _MGsolver, _MLsolver;
-    std::string _solverType;
-
-    virtual void solve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE ){};
+    //virtual void solve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE ){};
 
     /** Function that assembles the system. */
     AssembleFunctionType _assemble_system_function;

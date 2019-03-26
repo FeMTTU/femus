@@ -1,6 +1,6 @@
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
-#include "VTKWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
@@ -82,7 +82,7 @@ int main(int argc, char** args) {
 //   system.SetMaxNumberOfLinearIterations(2);
   // initialize and solve the system
   system.SetMgType(F_CYCLE/*F_CYCLE*//*M_CYCLE*/); //it doesn't matter if I use only 1 level
-  system.SetMgOuterSolver(GMRES);
+  system.SetOuterSolver(GMRES);
   system.init();
   system.MGsolve();
   

@@ -22,6 +22,7 @@
 #include "mpi.h"
 
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "SparseMatrix.hpp"
 #include "ElemType.hpp"
 #include "NumericVector.hpp"
