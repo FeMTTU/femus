@@ -554,7 +554,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
               for (int idim = 0; idim < dim; idim++) {
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( Cauchy_direction[idim] -  phi_dof_qp[SolFEType[idim]][i] * _gravity[idim] ) * weight_qp;
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + adj_pos_begin], i) ] += (5. - SolVAR_qp[SolPdeIndex[idim + adj_pos_begin]]) *  phi_dof_qp[SolFEType[idim + adj_pos_begin]][i] * weight_qp;
               }
 
             }
@@ -567,7 +566,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
               Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += 
               weight_hat_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
 //               weight_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press + adj_pos_begin], i) ] += (5. - SolVAR_qp[SolPdeIndex[sol_index_press + adj_pos_begin]]) *  phi_dof_qp[SolFEType[sol_index_press + adj_pos_begin]][i] * weight_qp;
               
             }
               //END residual solid mass balance in reference domain
