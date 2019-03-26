@@ -482,7 +482,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	
       // *** get gauss point weight, test function and test function partial derivatives ***
       for(unsigned int fe = 0; fe < n_unknowns; fe++) {
-         msh->_finiteElement[ielGeom][fe]->Jacobian(coords_at_dofs, ig, weight_qp, phi_fe_qp[fe], phi_x_fe_qp[fe], phi_xx_fe_qp[fe]);
+         msh->_finiteElement[ielGeom][SolFEType[fe]]->Jacobian(coords_at_dofs, ig, weight_qp, phi_fe_qp[fe], phi_x_fe_qp[fe], phi_xx_fe_qp[fe]);
       }
       
    //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
