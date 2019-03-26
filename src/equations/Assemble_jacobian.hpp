@@ -78,7 +78,6 @@ static void mass_residual (std::vector < real_num > & Res,
                            const std::vector < unsigned int > & Sol_n_el_dofs,
                            const unsigned int sum_Sol_n_el_dofs,
                            const std::vector < unsigned int > & SolPdeIndex,
-                           const std::vector < unsigned int > & SolFEType,
                            const std::vector < std::vector < double > > & phi_dof_qp,
                            const std::vector < real_num > & SolVAR_qp,
                            const double & weight_hat_qp);
@@ -150,7 +149,6 @@ template < class real_num, class real_num_mov >
     const std::vector < unsigned int > & Sol_n_el_dofs,
     const unsigned int sum_Sol_n_el_dofs,
     const std::vector < unsigned int > & SolPdeIndex,
-    const std::vector < unsigned int > & SolFEType,
     const std::vector < std::vector < double > > & phi_dof_qp,
     const std::vector < real_num > & SolVAR_qp,
     const double & weight_hat_qp
@@ -166,14 +164,14 @@ template < class real_num, class real_num_mov >
                                                                                   
 	for(unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) { 
 	    for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
-		Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[i_unk], i_dof) ] += ( SolVAR_qp[i_unk] - test_value ) * phi_dof_qp[SolFEType[i_unk]][i_dof] * weight_hat_qp;
+		Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[i_unk], i_dof) ] += ( SolVAR_qp[i_unk] - test_value ) * phi_dof_qp[i_unk][i_dof] * weight_hat_qp;
 
 // 				  for(unsigned j_unk=dim; j_unk<n_unknowns; j_unk++) {
 // 		  	for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_unk]; j_dof++) {
 // 			  
 // // 		              if (i_unk == j_unk )   {
 // 				Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, SolPdeIndex[i_unk], SolPdeIndex[j_unk], i_unk, j_unk) ] += 
-// 				        ( phi_dof_qp[SolFEType[i_unk]][i_dof]*phi_dof_qp[SolFEType[j_unk]][j_dof] )*weight_qp;
+// 				        ( phi_dof_qp[i_unk][i_dof]*phi_dof_qp[j_unk][j_dof] )*weight_qp;
 // // 			      }
 // 			  
 // 			} //j_dof

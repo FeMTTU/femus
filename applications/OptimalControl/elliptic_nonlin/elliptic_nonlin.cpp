@@ -233,6 +233,17 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   vector < double > coord_at_qp(dim);
   
 
+ //************** geometry phi **************************
+  vector < vector < double > > phi_fe_qp_domain(dim);
+  vector < vector < double > > phi_x_fe_qp_domain(dim);
+  vector < vector < double > > phi_xx_fe_qp_domain(dim);
+ 
+  for(int fe = 0; fe < dim; fe++) {
+        phi_fe_qp_domain[fe].reserve(max_size);
+      phi_x_fe_qp_domain[fe].reserve(max_size * dim);
+     phi_xx_fe_qp_domain[fe].reserve(max_size * dim2);
+   }
+
  //***************************************************  
  //********* WHOLE SET OF VARIABLES ****************** 
  //***************************************************  
@@ -260,7 +271,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   assert(pos_mu    == mlPdeSys->GetSolPdeIndex("mu"));
  //***************************************************  
   
-  const int solType_max = BIQUADR_FE;  //biquadratic
+  const int solFEType_max = BIQUADR_FE;  //biquadratic
 
   vector < std::string > Solname(n_unknowns);
   Solname[pos_state] = "state";
@@ -277,8 +288,9 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
     SolPdeIndex[ivar] = mlPdeSys->GetSolPdeIndex(  Solname[ivar].c_str() );
-       SolIndex[ivar] = ml_sol->GetIndex         (  Solname[ivar].c_str() );
-      SolFEType[ivar] = ml_sol->GetSolutionType  ( SolIndex[ivar]);
+    assert(ivar == SolPdeIndex[ivar]); 
+    SolIndex[ivar] = ml_sol->GetIndex         (  Solname[ivar].c_str() );
+    SolFEType[ivar] = ml_sol->GetSolutionType  ( SolIndex[ivar]);
   }
   
  //************* shape functions (at dofs and quadrature points) **************************************  
@@ -301,16 +313,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 }
    
  
-
-  vector < vector < double > > phi_fe_qp_domain(dim);
-  vector < vector < double > > phi_x_fe_qp_domain(dim);
-  vector < vector < double > > phi_xx_fe_qp_domain(dim);
- 
-  for(int fe = 0; fe < dim; fe++) {
-        phi_fe_qp_domain[fe].reserve(max_size);
-      phi_x_fe_qp_domain[fe].reserve(max_size * dim);
-     phi_xx_fe_qp_domain[fe].reserve(max_size * dim2);
-   }
    
   //----------- quantities (at dof objects) ------------------------------
   vector < vector < double > >     sol_eldofs(n_unknowns);
@@ -492,7 +494,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
 
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solFEType_max]->GetGaussPointNumber(); ig++) {
 	
       // *** get gauss point weight, test function and test function partial derivatives ***
       for(unsigned int k = 0; k < n_unknowns; k++) {
@@ -517,7 +519,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
    std::fill(coord_at_qp.begin(), coord_at_qp.end(), 0.);
     for (unsigned  d = 0; d < dim; d++) {
         	for (unsigned i = 0; i < coords_at_dofs[d].size(); i++) {
-               coord_at_qp[d] += coords_at_dofs[d][i] * phi_fe_qp[SolFEType_domain[d]][i];
+               coord_at_qp[d] += coords_at_dofs[d][i] * phi_fe_qp_domain[d][i];
             }
     }
   //========= fill gauss value xyz ==================   
@@ -735,8 +737,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_fe_qp[fe].reserve(max_size);
-      phi_x_fe_qp[fe].reserve(max_size*dim);
-     phi_xx_fe_qp[fe].reserve(max_size*(3*(dim-1)));
+      phi_x_fe_qp[fe].reserve(max_size * dim);
+     phi_xx_fe_qp[fe].reserve(max_size * dim2);
    }
 
    
@@ -839,7 +841,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
  //*************************************************** 
  //********* WHOLE SET OF VARIABLES ****************** 
-  const int solType_max = BIQUADR_FE;  //biquadratic
+  const int solFEType_max = BIQUADR_FE;  //biquadratic
  //*************************************************** 
   
   double integral_target = 0.;
@@ -894,7 +896,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
    
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solFEType_max]->GetGaussPointNumber(); ig++) {
 	
       // *** get gauss point weight, test function and test function partial derivatives ***
       for(int fe=0; fe < NFE_FAMS; fe++) {

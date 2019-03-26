@@ -120,7 +120,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
                         feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE);
   if (dimension == 3)   feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
+                        feFamily.push_back(LAGRANGE/*DISCONTINUOUS_POLYNOMIAL*/);
   
                         feOrder.push_back(SECOND);
                         feOrder.push_back(SECOND);
@@ -212,7 +212,7 @@ int main(int argc, char** args) {
    // convergence choices ================  
    unsigned int max_number_of_meshes;               // set total number of levels ================  
 
-   if (nsub[2] == 0)   max_number_of_meshes = 6;
+   if (nsub[2] == 0)   max_number_of_meshes = 2;
    else                max_number_of_meshes = 4;
   
 //    My_exact_solution<> exact_sol;                //provide exact solution, if available ==============
@@ -277,28 +277,50 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   const unsigned  iproc  = msh->processor_id();
   // reserve memory for the local standard vectors
   const unsigned max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  
+
+  //=============== Integration ========================================
+  real_num_mov weight_qp = 0.;
+    double weight_hat_qp = 0.;
+
+    
+  //=============== Geometry ========================================
+  // at dofs --------------------------------
+  vector< vector < real_num_mov > >   coords(dim);
+  vector  < vector  < double > >  coords_hat(dim);
+  unsigned coordsType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+  for(int i = 0; i < dim; i++) {   
+           coords[i].reserve(max_size_elem_dofs); 
+       coords_hat[i].reserve(max_size_elem_dofs); 
+ }
+ 
+ //************** geometry phi **************************
+  vector < vector < double > > phi_dof_qp_domain(dim);
+  vector < vector < real_num_mov > > phi_x_dof_qp_domain(dim);
+  vector < vector < real_num_mov > > phi_xx_dof_qp_domain(dim);
+  vector < vector < double > > phi_dof_qp_domain_hat(dim);
+  vector < vector < double > > phi_x_dof_qp_domain_hat(dim);
+  vector < vector < double > > phi_xx_dof_qp_domain_hat(dim);
+ 
+  for(int fe = 0; fe < dim; fe++) {
+        phi_dof_qp_domain[fe].reserve(max_size_elem_dofs);
+      phi_x_dof_qp_domain[fe].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp_domain[fe].reserve(max_size_elem_dofs * dim2);
+        phi_dof_qp_domain_hat[fe].reserve(max_size_elem_dofs);
+      phi_x_dof_qp_domain_hat[fe].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp_domain_hat[fe].reserve(max_size_elem_dofs * dim2);
+   }
 
  
-  
-  //----------- unknowns ------------------------------
-   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
-//      enum Sol_pos {pos_dx = 0, pos_dy, pos_p};  //these are known at compile-time
-//      enum Sol_pos {pos_dx = 0, pos_dy, pos_dz, pos_p};
-//   constexpr unsigned int pos_dx = 0;  
-//   constexpr unsigned int pos_dy = 1;  
-//   constexpr unsigned int pos_dp = 2;  
-//   if (dim == 3) {std::cout << "Uncomment the 3d enum and recompile"; abort(); }
+  //=============== Unknowns ========================================
+  const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
    
+  constexpr int solFEType_max = BIQUADR_FE;  //biquadratic
+  
   constexpr int sol_index_displ = 0;     //known at compile time
   const     int sol_index_press = dim;      //known at run time
-  constexpr int state_pos_begin = sol_index_displ;   //known at compile time
-
 
   vector < std::string > Solname(n_unknowns);     for(unsigned ivar=0; ivar < n_unknowns; ivar++) { Solname[ivar] = unknowns[ivar]._name; }
-//   Solname              [state_pos_begin + 0] =                "DX";
-//   Solname              [state_pos_begin + 1] =                "DY";
-//   if (dim == 3) Solname[state_pos_begin + 2] =                "DZ";
-//   Solname              [state_pos_begin + sol_index_press] = "P";
   
   vector < unsigned int > SolIndex(n_unknowns);  
   vector < unsigned int > SolPdeIndex(n_unknowns);
@@ -308,20 +330,21 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
     SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
     SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
+    assert(ivar == SolPdeIndex[ivar]);  //I would like this ivar order to coincide either with SolIndex or with SolPdeIndex, otherwise too many orders... it has to be  with SolPdeIndex, because SolIndex is related to the Solution object which can have more fields... This has to match the order of the unknowns[] argument
     SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
    vector < unsigned int > Sol_n_el_dofs(n_unknowns);
   
   //----------- of dofs and at quadrature points ------------------------------
-  vector < vector < double > > phi_dof_qp(NFE_FAMS);
-  vector < vector < double > > phi_hat_dof_qp(NFE_FAMS);
-  vector < vector < real_num_mov > > phi_x_dof_qp(NFE_FAMS);   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here  //some of these should be real_num, some real_num_mov...
-  vector < vector < real_num_mov > > phi_xx_dof_qp(NFE_FAMS);  //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
-  vector < vector < double > > phi_x_hat_dof_qp(NFE_FAMS);
-  vector < vector < double > > phi_xx_hat_dof_qp(NFE_FAMS);
+  vector < vector < double > > phi_dof_qp(n_unknowns);
+  vector < vector < double > > phi_hat_dof_qp(n_unknowns);
+  vector < vector < real_num_mov > > phi_x_dof_qp(n_unknowns);   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here  //some of these should be real_num, some real_num_mov...
+  vector < vector < real_num_mov > > phi_xx_dof_qp(n_unknowns);  //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
+  vector < vector < double > > phi_x_hat_dof_qp(n_unknowns);
+  vector < vector < double > > phi_xx_hat_dof_qp(n_unknowns);
 
-  for(int fe=0; fe < NFE_FAMS; fe++) {  
+  for(int fe=0; fe < n_unknowns; fe++) {  
         phi_dof_qp[fe].reserve(max_size_elem_dofs);
     phi_hat_dof_qp[fe].reserve(max_size_elem_dofs);
       phi_x_dof_qp[fe].reserve(max_size_elem_dofs * dim);
@@ -338,20 +361,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   vector < vector < real_num > > SolVAR_eldofs(n_unknowns);  for(int k = 0; k < n_unknowns; k++) { SolVAR_eldofs[k].reserve(max_size_elem_dofs); }
   
 
-  // geometry (at dofs) --------------------------------
-  vector< vector < real_num_mov > >   coords(dim);
-  vector  < vector  < double > >  coords_hat(dim);
-  unsigned coordsType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
-  for(int i = 0; i < dim; i++) {   
-           coords[i].reserve(max_size_elem_dofs); 
-       coords_hat[i].reserve(max_size_elem_dofs); 
- }
-  // geometry ------------------------------------------
-  
-
-  //------------ at quadrature points ---------------------
-  real_num_mov weight_qp = 0.;
-    double weight_hat_qp = 0.;
+  //----------- at quadrature points ------------------------------
     vector < real_num > SolVAR_qp(n_unknowns);
     vector < vector < real_num > > gradSolVAR_qp(n_unknowns);
     vector < vector < real_num > > gradSolVAR_hat_qp(n_unknowns);
@@ -361,8 +371,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     }
       
 
-   // ------------------------------------------------------------------------
-    // Physical parameters
+  //=============== Physics ========================================
     const int    solid_model  = solid_in.get_physical_model();
     const double mu_lame 	  = solid_in.get_lame_shear_modulus();
     const double lambda_lame  = solid_in.get_lame_lambda();
@@ -372,8 +381,10 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
     // gravity
     double _gravity[3] = {1000., 0., 0.};
-    // -----------------------------------------------------------------
+    
+    
  
+  //-----------------------------------------
     RES->zero();
   if (assembleMatrix) JAC->zero();
   
@@ -384,7 +395,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
 
-   //all vars ###################################################################  
+  //=============== Unknowns ========================================
   for (unsigned  k = 0; k < n_unknowns; k++) {
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
        Sol_n_el_dofs[k] = ndofs_unk;
@@ -405,13 +416,14 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     
     Jac.resize(sum_Sol_n_el_dofs * sum_Sol_n_el_dofs);  std::fill(Jac.begin(), Jac.end(), 0.);
     Res.resize(sum_Sol_n_el_dofs);                      std::fill(Res.begin(), Res.end(), 0.);
-  //all vars ###################################################################
-  
+  //=============== Unknowns end ========================================
     
-  // geometry *****************************
+    
+  //=============== Geometry (has to come AFTER unknowns here!!!) ========================================
     short unsigned ielGeom = msh->GetElementType(iel);
 
-      unsigned nDofsX = msh->GetElementDofNumber(iel, coordsType);    // number of coordinate element dofs
+    unsigned nDofsX = msh->GetElementDofNumber(iel, coordsType);    // number of coordinate element dofs
+    assert(nDofsX == Sol_n_el_dofs[sol_index_displ]);
     
     for(int ivar=0; ivar<dim; ivar++) {
       coords[ivar].resize(nDofsX);
@@ -427,55 +439,57 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     }
 
   //***************************************  
-    assert(nDofsX == Sol_n_el_dofs[sol_index_displ]);
     //Moving coordinates (Moving frame)
       for (unsigned idim = 0; idim < dim; idim++) {
         for (int j = 0; j < nDofsX; j++) {
           coords[idim][j] = coords_hat[idim][j] + SolVAR_eldofs[SolIndex[idim]][j];
         }
       }
+  //=============== Geometry end ========================================
   
-  // geometry end *****************************
 
       
      assemble_jac.prepare_before_integration_loop(stack);
      
   
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][SolFEType[sol_index_displ]]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solFEType_max]->GetGaussPointNumber(); ig++) {
 
-	// *** get Jacobian and test function and test function derivatives ***
-      for(int fe=0; fe < NFE_FAMS; fe++) {
-	ml_prob._ml_msh->_finiteElement[ielGeom][fe]->Jacobian(coords,    ig,weight_qp,    phi_dof_qp[fe],    phi_x_dof_qp[fe],    phi_xx_dof_qp[fe]);
-	ml_prob._ml_msh->_finiteElement[ielGeom][fe]->Jacobian(coords_hat,ig,weight_hat_qp,phi_hat_dof_qp[fe],phi_x_hat_dof_qp[fe],phi_xx_hat_dof_qp[fe]);
+      // *** get Jacobian and test function and test function derivatives ***
+      for(int fe=0; fe < n_unknowns; fe++) {
+	ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[fe]]->Jacobian(coords,    ig,weight_qp,    phi_dof_qp[fe],    phi_x_dof_qp[fe],    phi_xx_dof_qp[fe]);
+	ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[fe]]->Jacobian(coords_hat,ig,weight_hat_qp,phi_hat_dof_qp[fe],phi_x_hat_dof_qp[fe],phi_xx_hat_dof_qp[fe]);
       }
-         //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
-  	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coords,ig,weight_qp,phi_dof_qp[BIQUADR_FE],phi_x_dof_qp[BIQUADR_FE],phi_xx_dof_qp[BIQUADR_FE]);
-  	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coords_hat,ig,weight_hat_qp,phi_hat_dof_qp[BIQUADR_FE],phi_x_hat_dof_qp[BIQUADR_FE],phi_xx_hat_dof_qp[BIQUADR_FE]);
+      
+  //=============== Integration at qp ========================================
+         //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN...
+    for (unsigned int d = 0; d < dim; d++) {
+         msh->_finiteElement[ielGeom][coordsType]->Jacobian(coords,    ig, weight_qp,    phi_dof_qp_domain[d],     phi_x_dof_qp_domain[d],     phi_xx_dof_qp_domain[d]);
+         msh->_finiteElement[ielGeom][coordsType]->Jacobian(coords_hat,ig, weight_hat_qp,phi_dof_qp_domain_hat[d], phi_x_dof_qp_domain_hat[d], phi_xx_dof_qp_domain_hat[d]);
+      }
 
-
-  //begin unknowns eval at gauss points ********************************
+  //=============== Unknowns at qp ========================================
 	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
 	  SolVAR_qp[unk] = 0.;
 
-	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
+	  for(unsigned ivar2=0; ivar2<dim; ivar2++) { 
 	    gradSolVAR_qp[unk][ivar2] = 0.; 
 	    gradSolVAR_hat_qp[unk][ivar2] = 0.; 
 	  }
 	  
 	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
-	    SolVAR_qp[unk]    += phi_dof_qp[ SolFEType[unk] ][i] * SolVAR_eldofs[unk][i];
-	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
-	      gradSolVAR_qp[unk][ivar2] += phi_x_dof_qp[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
-	      gradSolVAR_hat_qp[unk][ivar2] += phi_x_hat_dof_qp[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
+	    SolVAR_qp[unk]    += phi_dof_qp[unk][i] * SolVAR_eldofs[unk][i];
+	    for(unsigned ivar2=0; ivar2 < dim; ivar2++) {
+	      gradSolVAR_qp[unk][ivar2]     += phi_x_dof_qp[unk][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
+	      gradSolVAR_hat_qp[unk][ivar2] += phi_x_hat_dof_qp[unk][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
 	    }
 	  }
 	  
 	}  
- //end unknowns eval at gauss points ********************************
+  //=============== Unknowns at qp - end ========================================
 
 
-//    assemble_jacobian< real_num, real_num_mov >::mass_residual (Res, Sol_n_el_dofs, sum_Sol_n_el_dofs, SolPdeIndex, SolFEType, phi_dof_qp, SolVAR_qp, weight_hat_qp);
+//     assemble_jacobian< real_num, real_num_mov >::mass_residual (Res, Sol_n_el_dofs, sum_Sol_n_el_dofs, SolPdeIndex, phi_dof_qp, SolVAR_qp, weight_hat_qp);
  
 
  //*******************************************************************************************************
@@ -483,7 +497,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    real_num_mov J_hat;
    real_num_mov trace_e_hat;
 
-    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mu_lame, lambda_lame, dim, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
+    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mu_lame, lambda_lame, dim, sol_index_displ, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
 
     
 
@@ -494,12 +508,12 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
               for (int idim = 0.; idim < dim; idim++) {
                 for (int jdim = 0.; jdim < dim; jdim++) {
-                  Cauchy_direction[idim] += phi_x_dof_qp[SolFEType[idim]][i * dim + jdim] * Cauchy[idim][jdim];
+                  Cauchy_direction[idim] += phi_x_dof_qp[idim][i * dim + jdim] * Cauchy[idim][jdim];
                 }
               }
 
               for (int idim = 0; idim < dim; idim++) {
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( Cauchy_direction[idim] -  phi_dof_qp[SolFEType[idim]][i] * _gravity[idim] ) * weight_qp;
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( Cauchy_direction[idim] -  phi_dof_qp[idim][i] * _gravity[idim] ) * weight_qp;
               }
 
             }
@@ -510,8 +524,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
             for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press]; i++) {
                 
               Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += 
-              weight_hat_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
-//               weight_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
+              weight_hat_qp * phi_dof_qp[sol_index_press][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
+//               weight_qp * phi_dof_qp[sol_index_press][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
                 
             }
               //END residual solid mass balance in reference domain
@@ -567,7 +581,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   // ======= Problem ========================
   MultiLevelProblem ml_prob(&ml_sol);
 
-  //material  ==================
+  //Material  ==================
               //Nondimensional quantity (Lref,Uref)
             const double Lref = 1.;
             const double Uref = 1.;
@@ -583,7 +597,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             std::cout << solid << std::endl;
             
             ml_prob.parameters.set<Solid>("Solid") = solid;
-  //end material  ==================
+  //Material end ==================
 
   ml_prob.SetFilesHandler(&files);
 

@@ -511,7 +511,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
  //end unknowns eval at gauss points ********************************
 
 
-//     assemble_jacobian< real_num, real_num_mov >::mass_residual (Res, Sol_n_el_dofs, sum_Sol_n_el_dofs, SolPdeIndex, SolFEType, phi_dof_qp, SolVAR_qp, weight_hat_qp);
+//  assemble_jacobian< real_num, real_num_mov >::mass_residual (Res, Sol_n_el_dofs, sum_Sol_n_el_dofs, SolPdeIndex, phi_dof_qp, SolVAR_qp, weight_hat_qp);
 
 
  //*******************************************************************************************************
@@ -519,7 +519,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    real_num_mov J_hat;
    real_num_mov trace_e_hat;
 
-    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mu_lame, lambda_lame, dim, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
+    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mu_lame, lambda_lame, dim, sol_index_displ, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
 
     
 
