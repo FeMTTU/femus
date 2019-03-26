@@ -13,6 +13,7 @@
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "GaussPoints.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "ElemType.hpp"
 #include "TimeLoop.hpp"

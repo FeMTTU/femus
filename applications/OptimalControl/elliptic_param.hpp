@@ -13,8 +13,8 @@
 #define BETA_CTRL_BDRY 1.e-2
 
 
-#define ALPHA_CTRL_VOL 1.e-3
-#define BETA_CTRL_VOL 1.e-2
+#define ALPHA_CTRL_VOL 1.e-6
+#define BETA_CTRL_VOL 1.e-5
 
 
 //*********************** Control box constraints *******************************************************
@@ -25,7 +25,7 @@
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper = 1000.;//0.3; //0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
+     double constr_value_upper = 0.5;//0.3; //0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
      double constr_value_lower = -1000.; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      
@@ -54,7 +54,9 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
    const double offset_to_include_line = 1.e-5;
    const double target_line = 0.5 + target_line_sign * offset_to_include_line; 
    
-      if (  target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] < target_line_sign * target_line ) {  target_flag = 1;  }
+      if ((  target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] < target_line_sign * target_line ) && 
+          (  target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] > - 0.5 + target_line_sign * (0.5 - target_line_sign * offset_to_include_line)))
+          {  target_flag = 1;  }
   
      return target_flag;
 

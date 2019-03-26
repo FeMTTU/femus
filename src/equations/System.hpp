@@ -19,8 +19,8 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "MultiLevelProblem.hpp"
 #include "MgTypeEnum.hpp"
+#include "LinearEquationSolverEnum.hpp"
 #include "FieldSplitTree.hpp"
 
 
@@ -31,6 +31,7 @@ namespace femus {
 //------------------------------------------------------------------------------
 class System;
 class MultiLevelProblem;
+class MultiLevelMesh;
 class String;
 
 /**
@@ -93,7 +94,11 @@ public:
     /** Get the index of the Solution "solname" for this system */
     unsigned GetSolPdeIndex(const char solname[]);
     
-    vector <unsigned> & GetSolPdeIndex(){
+    vector <unsigned> & GetSolPdeIndex() {
+      return _SolSystemPdeIndex;
+    }
+
+    const vector <unsigned> & GetSolPdeIndex() const {
       return _SolSystemPdeIndex;
     }
 
