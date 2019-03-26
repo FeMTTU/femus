@@ -164,8 +164,8 @@ namespace femus
       
       }
              
-    
-    find_boundary_faces_and_set_face_flags(file_id, mesh_menus[j], geom_elem_per_dimension[mesh.GetDimension() -1 -1], group_info);
+
+    if (mesh.GetDimension() > 1) find_boundary_faces_and_set_face_flags(file_id, mesh_menus[j], geom_elem_per_dimension[mesh.GetDimension() -1 -1], group_info);
     
     }
     
@@ -403,7 +403,7 @@ namespace femus
     
         for(unsigned gv = 0; gv < group_info.size(); gv++) {
 
-
+            if ( i > 0 )  {
             if ( i == group_info[gv]._geom_el->get_dimension() - 1 ) {
         for(unsigned g = 0; g < fam_map.size()/*group_info[gv]._size*//*number_of_group_elements*/; g++) {
             if (fam_map[g] == group_info[gv]._med_flag)   mesh.el->SetElementGroup(g, /*fam_map[g]*/ group_info[gv]._user_defined_flag /*gr_integer_name*/);  //I think that 1 is set later as the default  group number
@@ -415,6 +415,9 @@ namespace femus
 
                 }
             }  //groups of the current dimension
+          }
+            
+            
         }  //loop over all groups
            
     mesh.el->SetElementGroupNumber(1/*n_groups_of_that_space_dimension*/);
