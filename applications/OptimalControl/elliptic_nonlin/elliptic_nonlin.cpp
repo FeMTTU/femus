@@ -35,29 +35,6 @@ double  nonlin_term_derivative(const double& v) {
 
 
 
-  
- inline double laplacian_row(const vector < unsigned > & SolFEType, const vector < vector < double > > & phi_x_fe_qp, const vector < vector < double > > & sol_grad_qp, const int my_row_pos, const int my_col_pos, const int i, const unsigned dim_in) {
-  
-              double laplace_rhs_i_j = 0.;
-
-              for (unsigned kdim = 0; kdim < dim_in; kdim++) laplace_rhs_i_j  += phi_x_fe_qp[SolFEType[my_row_pos]][i * dim_in + kdim] *
-                                                                                           sol_grad_qp[my_col_pos][kdim];
-
-     return laplace_rhs_i_j;
-}
-  
-  
- inline double laplacian_row_col(const vector < unsigned > & SolFEType, const vector < vector < double > > & phi_x_fe_qp, const int my_row_pos, const int my_col_pos, const int i, const int j, const unsigned dim_in) {
-  
-              double laplace_mat_i_j = 0.;
-
-              for (unsigned kdim = 0; kdim < dim_in; kdim++) laplace_mat_i_j  += phi_x_fe_qp[SolFEType[my_row_pos]][i * dim_in + kdim] *
-                                                                                 phi_x_fe_qp[SolFEType[my_col_pos]][j * dim_in + kdim];
-
-     return laplace_mat_i_j;
-}
-
-
 double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
          
            double value = 0.;
@@ -529,7 +506,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
         Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ] += - weight_qp * (target_flag * phi_fe_qp[SolFEType[pos_state]][i] * (
                                                                                               m_b_f[pos_state][pos_state] * sol_qp[pos_state] 
                                                                                             - DesiredTarget(coord_at_qp) ) 
-                                                                                          + m_b_f[pos_state][pos_adj]   * ( laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_state, pos_adj, i, dim)  
+                                                                                          + m_b_f[pos_state][pos_adj]   * ( assemble_jacobian<double,double>::laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_state, pos_adj, i, dim)  
                                                                                                                             - sol_qp[pos_adj] *  nonlin_term_derivative(phi_fe_qp[SolFEType[pos_state]][i]) *  sol_qp[pos_ctrl]) );
         
           
@@ -537,13 +514,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
           // ==============
 	     if ( control_el_flag == 1)        Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(control_node_flag[i]) **/ - weight_qp * (
                                                                                   + m_b_f[pos_ctrl][pos_ctrl] * alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_ctrl]
-		                                                                          + m_b_f[pos_ctrl][pos_ctrl] *  beta * laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_ctrl, pos_ctrl, i, dim) 
+		                                                                          + m_b_f[pos_ctrl][pos_ctrl] *  beta * assemble_jacobian<double,double>::laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_ctrl, pos_ctrl, i, dim) 
 		                                                                          - m_b_f[pos_ctrl][pos_adj]  *         phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_adj] * nonlin_term_function(sol_qp[pos_state])
                                                                                                                          );
 	      else if ( control_el_flag == 0)  Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(1 - control_node_flag[i]) **/ m_b_f[pos_ctrl][pos_ctrl] * (- penalty_strong) * (sol_eldofs[pos_ctrl][i]);
 
           // =============
-        Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i) ] += - weight_qp *  ( + m_b_f[pos_adj][pos_state] * laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_adj, pos_state, i, dim) 
+        Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i) ] += - weight_qp *  ( + m_b_f[pos_adj][pos_state] * assemble_jacobian<double,double>::laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_adj, pos_state, i, dim) 
                                                                           - m_b_f[pos_adj][pos_ctrl]  * phi_fe_qp[SolFEType[pos_adj]][i] * sol_qp[pos_ctrl] * nonlin_term_function(sol_qp[pos_state]) 
                                                                         );
 
@@ -560,7 +537,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
               
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_adj, i, j)  ]  +=
 		                                              m_b_f[pos_state][pos_adj] * weight_qp * (
-                                                                          laplacian_row_col(SolFEType, phi_x_fe_qp, pos_state, pos_adj, i, j, dim)
+                                                                          assemble_jacobian<double,double>::laplacian_row_col(SolFEType, phi_x_fe_qp, pos_state, pos_adj, i, j, dim)
                                                                                                        - phi_fe_qp[SolFEType[pos_adj]][j] *
                                                                                                          nonlin_term_derivative(phi_fe_qp[SolFEType[pos_state]][i]) * 
                                                                                                          sol_qp[pos_ctrl]
@@ -570,7 +547,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	      if ( control_el_flag == 1)  {
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += 
 		                                              m_b_f[pos_ctrl][pos_ctrl] * ( control_node_flag[i]) * weight_qp * (
-                                                                                  beta * control_el_flag  * laplacian_row_col(SolFEType, phi_x_fe_qp, pos_ctrl, pos_ctrl, i, j, dim) 
+                                                                                  beta * control_el_flag  * assemble_jacobian<double,double>::laplacian_row_col(SolFEType, phi_x_fe_qp, pos_ctrl, pos_ctrl, i, j, dim) 
                                                                                + alpha * control_el_flag  * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] 
 		                                                                                    );
               
@@ -587,7 +564,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	      
 	      //=========== delta_adjoint row ===========================
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_state, i, j) ]  += m_b_f[pos_adj][pos_state] * weight_qp * (
-                                                                                                                                      laplacian_row_col(SolFEType, phi_x_fe_qp, pos_adj, pos_state, i, j, dim)
+                                                                                                                                      assemble_jacobian<double,double>::laplacian_row_col(SolFEType, phi_x_fe_qp, pos_adj, pos_state, i, j, dim)
                                                                                                                                       - phi_fe_qp[SolFEType[pos_adj]][i] *
                                                                                                                                         nonlin_term_derivative(phi_fe_qp[SolFEType[pos_state]][j]) * 
                                                                                                                                         sol_qp[pos_ctrl]
