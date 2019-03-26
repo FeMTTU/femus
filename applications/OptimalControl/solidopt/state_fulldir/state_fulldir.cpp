@@ -97,9 +97,7 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
 
 
 template < class system_type, class real_num, class real_num_mov >
-void AssembleSolidMech(MultiLevelProblem& ml_prob,
-                       system_type * mlPdeSys,
-                       const std::vector< Math::Unknown > &  unknowns);
+void AssembleSolidMech(MultiLevelProblem& ml_prob);
 
 
 template < class system_type, class real_num, class real_num_mov >
@@ -197,7 +195,7 @@ int main(int argc, char** args) {
   std::vector< Math::Unknown > unknowns = provide_list_of_unknowns(dimension);
   
   // ======= Normal run ========================   //if you don't want the convergence study
-  My_main_single_level< adept::adouble > my_main;
+  My_main_single_level< /*adept::a*/double > my_main;
 //   const unsigned int n_levels = 1;
 //   my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); 
  
@@ -213,7 +211,7 @@ int main(int argc, char** args) {
    // convergence choices ================  
    unsigned int max_number_of_meshes;               // set total number of levels ================  
 
-   if (nsub[2] == 0)   max_number_of_meshes = 2;
+   if (nsub[2] == 0)   max_number_of_meshes = 6;
    else                max_number_of_meshes = 4;
   
 //    My_exact_solution<> exact_sol;                //provide exact solution, if available ==============
@@ -360,12 +358,9 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
    // ------------------------------------------------------------------------
     // Physical parameters
-    const int    solid_model	= ml_prob.parameters.get < Solid>("Solid").get_physical_model();
-    const double rhof	 	= ml_prob.parameters.get < Fluid>("Fluid").get_density();
-    const double mu_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_shear_modulus();
-    const double lambda_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_lambda();
-    const double mus		= mu_lame / rhof;
-    const double lambda	= lambda_lame / rhof;
+    const int    solid_model  = ml_prob.parameters.get < Solid>("Solid").get_physical_model();
+    const double mu_lame 	  = ml_prob.parameters.get < Solid>("Solid").get_lame_shear_modulus();
+    const double lambda_lame  = ml_prob.parameters.get < Solid>("Solid").get_lame_lambda();
 
     const bool incompressible = (0.5  ==  ml_prob.parameters.get < Solid>("Solid").get_poisson_coeff()) ? 1 : 0;
     const bool penalty = ml_prob.parameters.get < Solid>("Solid").get_if_penalty();
@@ -474,25 +469,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 	}  
  //end unknowns eval at gauss points ********************************
 
-// // //   // I x = 5 test ********************************
-// // // 	for(unsigned i_unk=0; i_unk<n_unknowns; i_unk++) { 
-// // // 	    for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
-// // // 		/*Res[ i_dof +  i_unk * Sol_n_el_dofs[sol_index_displ] ]*/Res[i_unk][i_dof] +=  (   5.* phi_dof_qp[SolFEType[i_unk]][i_dof] - SolVAR_qp[i_unk]*phi_dof_qp[SolFEType[i_unk]][i_dof] )*weight_qp;
-// // // // std::cout << Res[i_unk][i_dof] << "----" << std::endl;
-// // // 		// 		  for(unsigned j_unk=dim; j_unk<n_unknowns; j_unk++) {
-// // // // 		  	for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_unk]; j_dof++) {
-// // // // 			  
-// // // // 		              if (i_unk == j_unk )   {
-// // // // 				Jac[i_dof*Sol_n_el_dofs[i_unk] + j_dof i +  k * Sol_n_el_dofs[sol_index_displ]][ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i_dof*Sol_n_el_dofs[i_unk] + j_dof ] += 
-// // // // 				        ( phi_dof_qp[SolFEType[i_unk]][i_dof]*phi_dof_qp[SolFEType[j_unk]][j_dof] )*weight_qp;
-// // // // 			      }
-// // // // 			  
-// // // // 			} //j_dof
-// // // // 		  }  //j_unk
-// // // 	    }  //i_dof
-// // // 	}  //i_unk
-// // //  // I x = 5 test ********************************
 
+//    assemble_jacobian< real_num, real_num_mov >::mass_residual (Res, Sol_n_el_dofs, sum_Sol_n_el_dofs, SolPdeIndex, SolFEType, phi_dof_qp, SolVAR_qp, weight_hat_qp);
  
 
  //*******************************************************************************************************
@@ -500,7 +478,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    real_num_mov J_hat;
    real_num_mov trace_e_hat;
 
-    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda, dim, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
+    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mu_lame, lambda_lame, dim, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
 
     
 
@@ -527,7 +505,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
             for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press]; i++) {
                 
               Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += 
-              weight_hat_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
+              weight_hat_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
 //               weight_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
                 
             }
@@ -585,32 +563,20 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   MultiLevelProblem ml_prob(&ml_sol);
 
   //material  ==================
-              //Adimensional quantity (Lref,Uref)
+              //Nondimensional quantity (Lref,Uref)
             double Lref = 1.;
             double Uref = 1.;
-           // *** apparently needed by non-AD assemble only **********************
-            // add fluid material
             Parameter par(Lref,Uref);
             
-           // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-            double rhof = 1000;
-            Fluid fluid(par,1,rhof,"Newtonian");
-            std::cout << "Fluid properties: " << std::endl;
-            std::cout << fluid << std::endl;
-
-            
             // Generate Solid Object
-            double E = 1500000;
-            double ni = 0.5;
-            double rhos = 1000;
-            Solid solid;
-            solid = Solid(par,E,ni,rhos,MODEL);
+            const double E = 1500000;
+            const double ni = 0.5;
+            const double rhos = 1000;
+            const Solid solid(par, E, ni, rhos, MODEL);
 
             std::cout << "Solid properties: " << std::endl;
             std::cout << solid << std::endl;
             
-            
-            ml_prob.parameters.set<Fluid>("Fluid") = fluid;
             ml_prob.parameters.set<Solid>("Solid") = solid;
   //end material  ==================
 

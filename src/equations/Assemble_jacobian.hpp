@@ -24,7 +24,7 @@ class assemble_jacobian {
  void  compute_jacobian_inside_integration_loop(const unsigned i,
                                                 const unsigned dim,
                                                 const std::vector < unsigned int > Sol_n_el_dofs,
-                                                unsigned int sum_Sol_n_el_dofs,
+                                                const unsigned int sum_Sol_n_el_dofs,
                                                 const std::vector< double > &  phi,
                                                 const std::vector< double > &  phi_x,
                                                 const double weight,
@@ -74,13 +74,60 @@ static void print_global_residual(const MultiLevelProblem & ml_prob,
                                   NumericVector* RES,
                                   const unsigned int nonlin_iteration);
     
-                                                                   
+static void mass_residual (std::vector < real_num > & Res,
+                           const std::vector < unsigned int > & Sol_n_el_dofs,
+                           const unsigned int sum_Sol_n_el_dofs,
+                           const std::vector < unsigned int > & SolPdeIndex,
+                           const std::vector < unsigned int > & SolFEType,
+                           const std::vector < std::vector < double > > & phi_dof_qp,
+                           const std::vector < real_num > & SolVAR_qp,
+                           const double & weight_hat_qp);
+
+
 };
 
 
 
+template < class real_num, class real_num_mov >
+/*static*/ void assemble_jacobian<real_num, real_num_mov>::mass_residual ( 
+    std::vector < real_num > & Res,
+    const std::vector < unsigned int > & Sol_n_el_dofs,
+    const unsigned int sum_Sol_n_el_dofs,
+    const std::vector < unsigned int > & SolPdeIndex,
+    const std::vector < unsigned int > & SolFEType,
+    const std::vector < std::vector < double > > & phi_dof_qp,
+    const std::vector < real_num > & SolVAR_qp,
+    const double & weight_hat_qp
+) {
+    
+ // The matrix is then filled with AD
+ std::cout << "Remember to set all boundary conditions to \"dirichlet = false\"" << std::endl;
+    
+    
+    const double test_value = 5.;
+    const unsigned int n_unknowns = Sol_n_el_dofs.size();
+    
+                                                                                  
+	for(unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) { 
+	    for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
+		Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[i_unk], i_dof) ] += ( SolVAR_qp[i_unk] - test_value ) * phi_dof_qp[SolFEType[i_unk]][i_dof] * weight_hat_qp;
 
-                                              
+// 				  for(unsigned j_unk=dim; j_unk<n_unknowns; j_unk++) {
+// 		  	for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_unk]; j_dof++) {
+// 			  
+// // 		              if (i_unk == j_unk )   {
+// 				Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, SolPdeIndex[i_unk], SolPdeIndex[j_unk], i_unk, j_unk) ] += 
+// 				        ( phi_dof_qp[SolFEType[i_unk]][i_dof]*phi_dof_qp[SolFEType[j_unk]][j_dof] )*weight_qp;
+// // 			      }
+// 			  
+// 			} //j_dof
+// 		  }  //j_unk
+	    }  //i_dof
+	}  //i_unk
+
+ 
+}
+ 
     
 template < class real_num, class real_num_mov >
 /*static*/ void assemble_jacobian<real_num, real_num_mov>::print_element_jacobian(const unsigned int iel,

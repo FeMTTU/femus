@@ -24,7 +24,7 @@ template < >
  void  assemble_jacobian< adept::adouble, double >::compute_jacobian_inside_integration_loop(const unsigned i,
                                                 const unsigned dim,
                                                 const std::vector < unsigned int > Sol_n_el_dofs,
-                                                unsigned int sum_Sol_n_el_dofs,
+                                                const unsigned int sum_Sol_n_el_dofs,
                                                 const std::vector< double > &  phi,
                                                 const std::vector< double > &  phi_x,
                                                 const double weight,
