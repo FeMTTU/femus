@@ -11,6 +11,7 @@
  **/
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -130,7 +131,9 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("Y2", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("Y3", LAGRANGE, FIRST, 2);
    
-  mlSol.AddSolution ("Lambda", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
+  if (volumeConstraint) {
+    mlSol.AddSolution ("Lambda", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
+  }
   
   mlSol.Initialize ("All");
   mlSol.Initialize ("W1", InitalValueW1);
@@ -188,7 +191,7 @@ int main (int argc, char** args) {
   TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("PWillmore");
 
   // add solution "X", "Y", "Z" and "H" to the system
-  system.AddSolutionToSystemPDE ("Lambda");
+  
   system.AddSolutionToSystemPDE ("Dx1");
   system.AddSolutionToSystemPDE ("Dx2");
   system.AddSolutionToSystemPDE ("Dx3");
@@ -198,6 +201,11 @@ int main (int argc, char** args) {
   system.AddSolutionToSystemPDE ("W1");
   system.AddSolutionToSystemPDE ("W2");
   system.AddSolutionToSystemPDE ("W3");
+  
+  if (volumeConstraint) {
+    system.AddSolutionToSystemPDE ("Lambda");
+    system.SetNumberOfGlobalVariables (1u);
+  }
 
   system.SetMaxNumberOfNonLinearIterations (20);
   system.SetNonLinearConvergenceTolerance (1.e-9);
@@ -208,7 +216,6 @@ int main (int argc, char** args) {
   system.AttachGetTimeIntervalFunction (GetTimeStep);
 
   // initilaize and solve the system
-  system.SetNumberOfGlobalVariables(1u);
   
   system.init();
   system.SetMgType(V_CYCLE);
@@ -252,13 +259,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   const unsigned  dim = 2;
   const unsigned  DIM = 3;
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
-
-  unsigned solLambdaIndex;
-  solLambdaIndex = mlSol->GetIndex ("Lambda");
-  unsigned solLambdaType = mlSol->GetSolutionType (solLambdaIndex);
-
-  unsigned solLambaPdeIndex;
-  solLambaPdeIndex = mlPdeSys->GetSolPdeIndex ("Lambda");
 
   //solution variable
   unsigned solDxIndex[DIM];
@@ -306,19 +306,15 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   solWPdeIndex[1] = mlPdeSys->GetSolPdeIndex ("W2");   // get the position of "W2" in the pdeSys object
   solWPdeIndex[2] = mlPdeSys->GetSolPdeIndex ("W3");   // get the position of "W3" in the pdeSys object
 
-
-  std::vector < adept::adouble > solLambda; // local lambda solution
   std::vector < adept::adouble > solW[DIM]; // local W solution
   std::vector < double > solWOld[DIM];  // surface coordinates
   std::vector< int > SYSDOF; // local to global pdeSys dofs
 
   vector< double > Res; // local redidual vector
-  std::vector< adept::adouble > aResLambda;
   std::vector< adept::adouble > aResx[3]; // local redidual vector
   std::vector< adept::adouble > aResY[3]; // local redidual vector
   std::vector< adept::adouble > aResW[3]; // local redidual vector
-  adept::adouble aResLambda0;
-
+  
   vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
 
   //MatSetOption ( ( static_cast<PetscMatrix*> ( KK ) )->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE );
@@ -327,13 +323,37 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   RES->zero(); // Set to zero all the entries of the Global Residual
 
   
-  double solLambda0;
-  unsigned lambda0PdeDof;
-  if (iproc == 0) {
-    solLambda0 = (*sol->_Sol[solLambdaIndex]) (0); // global to local solution
+  unsigned solLambdaIndex;
+  unsigned solLambaPdeIndex;
+  adept::adouble solLambda = 0.;
+  adept::adouble aResLambda;
+  unsigned lambdaPdeDof;
+  if (volumeConstraint) {
+    solLambdaIndex = mlSol->GetIndex ("Lambda");
+    solLambaPdeIndex = mlPdeSys->GetSolPdeIndex ("Lambda");
+    double lambda;
+    if (iproc == 0) {
+      lambda = (*sol->_Sol[solLambdaIndex]) (0); // global to local solution
+      lambdaPdeDof = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, 0);
+    }
+    MPI_Bcast (&lambda, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast (&lambdaPdeDof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    solLambda = lambda;
+    
+    std::vector < double > value (2);
+    std::vector < int > row (1);
+    std::vector < int > columns (2);
+    value[0] = 1;
+    value[1] = -1;
+    columns[1] = lambdaPdeDof;    
+    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) { //for equations other than Lagrange multiplier
+      if(iel != 0){
+        row[0] = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, iel);
+        columns[0] = row[0];
+        KK->add_matrix_blocked (value, row, columns);
+      }
+    }
   }
-  MPI_Bcast (&solLambda0, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  lambda0PdeDof = 0;
 
   double volume = 0.;
   double energy = 0.;
@@ -341,14 +361,11 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    bool iel0 = (iel == 0) ? true : false;
-
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nxDofs  = msh->GetElementDofNumber (iel, solxType);   // number of solution element dofs
     unsigned nYDofs  = msh->GetElementDofNumber (iel, solYType);   // number of solution element dofs
     unsigned nWDofs  = msh->GetElementDofNumber (iel, solWType);   // number of solution element dofs
-    unsigned nLambdaDofs  = msh->GetElementDofNumber (iel, solLambdaType);   // number of solution element dofs
-
+    
     for (unsigned K = 0; K < DIM; K++) {
       solx[K].resize (nxDofs);
       solxOld[K].resize (nxDofs);
@@ -356,20 +373,20 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       solW[K].resize (nWDofs);
       solWOld[K].resize (nWDofs);
     }
-    solLambda.resize (nLambdaDofs);
-
+    
+    unsigned sizeAll = DIM * (nxDofs + nYDofs +  nWDofs) + volumeConstraint;
+    
     // resize local arrays
-    SYSDOF.resize (DIM * (nxDofs + nYDofs +  nWDofs) + nLambdaDofs + !iel0);
+    SYSDOF.resize (sizeAll);
 
-    Res.resize (DIM * ( nxDofs + nYDofs +  nWDofs) + nLambdaDofs + !iel0);       //resize
+    Res.resize (sizeAll);       //resize
 
     for (unsigned K = 0; K < DIM; K++) {
       aResx[K].assign (nxDofs, 0.);  //resize and set to zero
       aResY[K].assign (nYDofs, 0.);  //resize and set to zero
       aResW[K].assign (nWDofs, 0.);  //resize and zet to zero
     }
-    aResLambda.assign (nLambdaDofs, 0.);
-    aResLambda0 = 0.;
+    aResLambda = 0.;
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nxDofs; i++) {
@@ -402,15 +419,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       }
     }
 
-    for (unsigned i = 0; i < nLambdaDofs; i++) {
-      unsigned iLambdaDof = msh->GetSolutionDof (i, iel, solLambdaType); // global to local mapping between solution node and solution dof
-      solLambda[i] = (*sol->_Sol[solLambdaIndex]) (iLambdaDof); // global to local solution
-      if (iel != 0 || !volumeConstraint) sol->_Bdc[solLambdaIndex]->set(iLambdaDof, 0.); // global to local solution
-      SYSDOF[DIM * ( nxDofs + nYDofs +nWDofs) + i] = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, i, iel); // global to global mapping between solution node and pdeSys dof
-    }
-
-    adept::adouble lambda0 = solLambda0;
-    if (!iel0) SYSDOF[DIM * (nxDofs + nYDofs +nWDofs) + nLambdaDofs ] = lambda0PdeDof;
+    if (volumeConstraint) SYSDOF[sizeAll - 1u ] = lambdaPdeDof;
 
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
@@ -602,26 +611,19 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             term3 += phiW_Xtan[J][i] * term4;
 
           }
-          aResW[K][i] += ( (volumeConstraint * lambda0 * normal[K] +
-                           (solxg[K] - solxOldg[K])  / dt) * phiW[i]
-          
+          aResW[K][i] += ( (solLambda * normal[K] + (solxg[K] - solxOldg[K])  / dt) * phiW[i]
                           - term0
                           + (1. - P) * pow (solYnorm2 , P/2.) * term1
                           - term2 * phiW_Xtan[K][i]
                           + term3
                          ) * Area;
         }
-      }
-      
-      // Lagrange Multiplier Euquation Dx . N =0
-      for (unsigned K = 0; K < DIM; K++) {
+        // Lagrange Multiplier Euquation Dx . N =0
         if (volumeConstraint) {
-          if (iel != 0) aResLambda0 += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
-          else aResLambda[0] += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
+          aResLambda += ( (solxg[K] - solxOldg[K]) * normal[K]) * Area;
         }
       }
-
-      
+                 
       for (unsigned K = 0; K < DIM; K++) {
         volume += normalSign * (solxg[K].value()  * normal[K]) * Area;
       }
@@ -651,15 +653,11 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         Res[DIM * ( nxDofs + nYDofs) + K * nWDofs + i] = -aResW[K][i].value();
       }
     }
-    for (int i = 0; i < nLambdaDofs; i++) {
-      Res[DIM * (nxDofs + nYDofs + nWDofs) + i] = -aResLambda[i].value();
-    }
-    if (!iel0) Res[DIM * (nxDofs + nYDofs + nWDofs) +  nLambdaDofs ] = - aResLambda0.value();
-
+    if (volumeConstraint) Res[sizeAll - 1u] = - aResLambda.value();
 
     RES->add_vector_blocked (Res, SYSDOF);
 
-    Jac.resize ( (DIM * (nxDofs + nYDofs + nWDofs) + nLambdaDofs + !iel0) * (DIM * (nxDofs + nYDofs + nWDofs) + nLambdaDofs + !iel0));
+    Jac.resize ( sizeAll * sizeAll );
 
     // define the dependent variables
     for (int K = 0; K < DIM; K++) {
@@ -671,10 +669,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
     for (int K = 0; K < DIM; K++) {
       s.dependent (&aResW[K][0], nWDofs);
     }
-    s.dependent (&aResLambda[0], nLambdaDofs);
-
-    if (!iel0) s.dependent (&aResLambda0, 1);
-
+    if (volumeConstraint) s.dependent (&aResLambda, 1);
+    
     // define the dependent variables
     for (int K = 0; K < DIM; K++) {
       s.independent (&solx[K][0], nxDofs);
@@ -685,8 +681,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
     for (int K = 0; K < DIM; K++) {
       s.independent (&solW[K][0], nWDofs);
     }
-    s.independent (&solLambda[0], nLambdaDofs);
-    if (!iel0) s.independent (&lambda0, 1);
+    if (volumeConstraint) s.independent (&solLambda, 1);
 
     // get the jacobian matrix (ordered by row)
     s.jacobian (&Jac[0], true);
@@ -715,16 +710,16 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
   std::cout << "ENERGY = " << energyAll << std::endl;
 
-  //VecView ( (static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_SELF);
-  //MatView ( (static_cast<PetscMatrix*> (KK))->mat(), PETSC_VIEWER_STDOUT_SELF);
+//   VecView ( (static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_SELF);
+//   MatView ( (static_cast<PetscMatrix*> (KK))->mat(), PETSC_VIEWER_STDOUT_SELF);
 
-  //   PetscViewer    viewer;
-  //   PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
-  //   PetscObjectSetName ( (PetscObject) viewer, "PWilmore matrix");
-  //   PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
-  //   MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
-  //   double a;
-  //   std::cin >> a;
+//     PetscViewer    viewer;
+//     PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+//     PetscObjectSetName ( (PetscObject) viewer, "PWilmore matrix");
+//     PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
+//     MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
+//     double a;
+//     std::cin >> a;
 
 
   // ***************** END ASSEMBLY *******************

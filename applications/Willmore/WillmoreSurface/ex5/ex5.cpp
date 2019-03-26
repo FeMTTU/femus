@@ -289,14 +289,16 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
     solLambda = lambda;
     
     std::vector < double > value (2);
-    std::vector < int > dof (2);
+    std::vector < int > row (1);
+    std::vector < int > columns (2);
     value[0] = 1;
     value[1] = -1;
-    dof[1] = lambdaPdeDof;    
+    columns[1] = lambdaPdeDof;    
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) { //for equations other than Lagrange multiplier
-      if(iel != 0){  
-        dof[0] = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, iel);
-        KK->add_matrix_blocked (value, dof, dof);
+      if(iel != 0){
+        row[0] = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, iel);
+        columns[0] = row[0];
+        KK->add_matrix_blocked (value, row, columns);
       }
     }
   }
