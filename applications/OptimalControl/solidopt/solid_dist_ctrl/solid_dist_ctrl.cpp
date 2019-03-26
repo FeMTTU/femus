@@ -328,9 +328,11 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 //   if (dim == 3) {std::cout << "Uncomment the 3d enum and recompile"; abort(); }
    
   constexpr int sol_index_displ = 0;     //known at compile time
-  const     int sol_index_press = dim;      //known at run time
+  const     int sol_index_press = sol_index_displ + dim;      //known at run time
   constexpr int state_pos_begin = sol_index_displ;   //known at compile time
   const int adj_pos_begin = dim + 1;
+  const int sol_index_adj = adj_pos_begin;      //known at run time
+  const int sol_index_press_adj = sol_index_adj + dim;      //known at run time
 
   vector < std::string > Solname(n_unknowns);     for(unsigned ivar=0; ivar < n_unknowns; ivar++) { Solname[ivar] = unknowns[ivar]._name; }
   
@@ -397,12 +399,9 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
    // ------------------------------------------------------------------------
     // Physical parameters
-    const double rhof	 	= ml_prob.parameters.get < Fluid>("Fluid").get_density();
+    const int    solid_model	= ml_prob.parameters.get < Solid>("Solid").get_physical_model();
     const double mu_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_shear_modulus();
     const double lambda_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_lambda();
-    const double mus		= mu_lame / rhof;
-    const double lambda	= lambda_lame / rhof;
-    const int    solid_model	= ml_prob.parameters.get < Solid>("Solid").get_physical_model();
 
     const bool incompressible = (0.5  ==  ml_prob.parameters.get < Solid>("Solid").get_poisson_coeff()) ? 1 : 0;
     const bool penalty = ml_prob.parameters.get < Solid>("Solid").get_if_penalty();
@@ -511,33 +510,16 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 	}  
  //end unknowns eval at gauss points ********************************
 
-// // //   // I x = 5 test ********************************
-// // // 	for(unsigned i_unk=0; i_unk<n_unknowns; i_unk++) { 
-// // // 	    for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
-// // // 		/*Res[ i_dof +  i_unk * Sol_n_el_dofs[sol_index_displ] ]*/Res[i_unk][i_dof] +=  (   5.* phi_dof_qp[SolFEType[i_unk]][i_dof] - SolVAR_qp[i_unk]*phi_dof_qp[SolFEType[i_unk]][i_dof] )*weight_qp;
-// // // // std::cout << Res[i_unk][i_dof] << "----" << std::endl;
-// // // 		// 		  for(unsigned j_unk=dim; j_unk<n_unknowns; j_unk++) {
-// // // // 		  	for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_unk]; j_dof++) {
-// // // // 			  
-// // // // 		              if (i_unk == j_unk )   {
-// // // // 				Jac[i_dof*Sol_n_el_dofs[i_unk] + j_dof i +  k * Sol_n_el_dofs[sol_index_displ]][ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i_dof*Sol_n_el_dofs[i_unk] + j_dof ] += 
-// // // // 				        ( phi_dof_qp[SolFEType[i_unk]][i_dof]*phi_dof_qp[SolFEType[j_unk]][j_dof] )*weight_qp;
-// // // // 			      }
-// // // // 			  
-// // // // 			} //j_dof
-// // // // 		  }  //j_unk
-// // // 	    }  //i_dof
-// // // 	}  //i_unk
-// // //  // I x = 5 test ********************************
 
- 
+//     assemble_jacobian< real_num, real_num_mov >::mass_residual (Res, Sol_n_el_dofs, sum_Sol_n_el_dofs, SolPdeIndex, SolFEType, phi_dof_qp, SolVAR_qp, weight_hat_qp);
+
 
  //*******************************************************************************************************
    vector < vector < real_num_mov > > Cauchy(3); for (int i = 0; i < Cauchy.size(); i++) Cauchy[i].resize(3);
    real_num_mov J_hat;
    real_num_mov trace_e_hat;
 
-    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda, dim, sol_index_press, gradSolVAR_qp, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
+    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mu_lame, lambda_lame, dim, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
 
     
 
@@ -564,29 +546,69 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
             for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press]; i++) {
                 
               Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += 
-              weight_hat_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
+             weight_hat_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
 //               weight_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
               
             }
               //END residual solid mass balance in reference domain
-
- // I x = 5 for adjoint block---------------------------
-  for(unsigned adj_unk = 0 + adj_pos_begin; adj_unk < n_unknowns; adj_unk++) { 
-         for (unsigned i = 0; i < Sol_n_el_dofs[adj_unk]; i++) {
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[adj_unk], i) ] += (5. - SolVAR_qp[SolPdeIndex[adj_unk]]) *  phi_dof_qp[SolFEType[adj_unk]][i] * weight_qp;
-              }
-          }
- // I x = 5 for adjoint block---------------------------
+// 
+//  // I x = 5 for adjoint block---------------------------
+//   for(unsigned adj_unk = 0 + adj_pos_begin; adj_unk < n_unknowns; adj_unk++) { 
+//          for (unsigned i = 0; i < Sol_n_el_dofs[adj_unk]; i++) {
+//                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[adj_unk], i) ] += (5. - SolVAR_qp[SolPdeIndex[adj_unk]]) *  phi_dof_qp[SolFEType[adj_unk]][i] * weight_qp;
+//               }
+//           }
+//  // I x = 5 for adjoint block---------------------------
  
     } // end gauss point loop
 
     //--------------------------------------------------------------------------------------------------------
 
-
+    
     if (assembleMatrix) assemble_jac.compute_jacobian_outside_integration_loop(stack, SolVAR_eldofs, Res, Jac, L2G_dofmap_AllVars, RES, JAC);
 
-//     assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 5);
-//     assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 9, 5);
+
+
+     for (int idim = 0; idim < dim; idim++) {
+          for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_adj]; i++) {
+    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, adj_pos_begin + idim, i) ] =    
+    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, idim, i) ];    
+//              for (unsigned j = 0; j < Sol_n_el_dofs[sol_index_adj]; j++) {
+//     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, adj_pos_begin + idim , adj_pos_begin + idim , i, j) ] =   
+//     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, /*adj_pos_begin +*/ idim , /*adj_pos_begin +*/ idim , i, j) ];
+//           }
+       }      
+    }    
+
+//          for (int idim = 0; idim < dim; idim++) {
+//              for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_displ]; i++) {
+//           for (unsigned j = 0; j < Sol_n_el_dofs[sol_index_press_adj]; j++) {
+//     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_adj + idim, sol_index_press_adj, i, j) ] =   
+//     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_displ + idim, sol_index_press,   i, j) ];
+//             }
+//                        
+//          }
+//        }      
+
+    
+    
+          for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press_adj]; i++) {
+    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, sol_index_press_adj, i) ] =    
+    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, sol_index_press, i) ];
+//                    for (int idim = 0; idim < dim; idim++) {
+//              for (unsigned j = 0; j < Sol_n_el_dofs[sol_index_displ]; j++) {
+//     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_press_adj, sol_index_adj + idim, i, j) ] =   
+//     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_press,     sol_index_displ + idim, i, j) ];
+//             }
+//                        
+//          }
+       }
+       
+       
+    
+    
+    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 5);
+    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 9, 5);
     
   } //end element loop for each process
 
@@ -636,13 +658,6 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             // add fluid material
             Parameter par(Lref,Uref);
             
-           // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-            double rhof = 1000;
-            Fluid fluid(par,1,rhof,"Newtonian");
-            std::cout << "Fluid properties: " << std::endl;
-            std::cout << fluid << std::endl;
-
-            
             // Generate Solid Object
             double E = 1500000;
             double ni = 0.5;
@@ -654,7 +669,6 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             std::cout << solid << std::endl;
             
             
-            ml_prob.parameters.set<Fluid>("Fluid") = fluid;
             ml_prob.parameters.set<Solid>("Solid") = solid;
   //end material  ==================
 
@@ -686,7 +700,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   system.init();
   
   // Solver and preconditioner
-  system.SetOuterKSPSolver("preonly");
+  system.SetOuterSolver(PREONLY);
   system.SetSolverFineGrids(PREONLY);
   system.SetPreconditionerFineGrids(LU_PRECOND);
 
