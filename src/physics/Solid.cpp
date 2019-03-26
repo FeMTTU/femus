@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: Solid
- Authors: Simone Bnà
+ Authors: Simone Bnà, Giorgio Bornia
  
  Copyright (c) FEMTTU
  All rights reserved. 
@@ -16,11 +16,11 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
 #include "Solid.hpp"
 #include "Material.hpp"
-#include "iostream"
-#include "cstdlib"
-#include "cstring"
 #include "Parameter.hpp"
 
 
@@ -164,7 +164,7 @@ std::ostream & operator << (std::ostream & os, const Solid & solid)
 {
   os << "Density: " << solid._density << std::endl;
   os << "Young Module: " << solid._young_module << std::endl;
-  os << "Poisson coeffcient: " << solid._poisson_coeff << std::endl;
+  os << "Poisson coefficient: " << solid._poisson_coeff << std::endl;
   os << "Lambda Lamé: " << solid._lambda_lame << std::endl;
   os << "Mu lamé: " << solid._mu_lame << std::endl;
   os << "Physical Model: " << solid._model << std::endl;

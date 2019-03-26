@@ -1,8 +1,8 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: FemusInit
- Authors: Simone Bnà
+ Module: Solid
+ Authors: Simone Bnà, Giorgio Bornia
 
  Copyright (c) FEMTTU
  All rights reserved.
