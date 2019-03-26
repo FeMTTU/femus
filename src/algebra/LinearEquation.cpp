@@ -209,23 +209,17 @@ namespace femus {
     }
 
     if (_iproc == 0) {
-      //for (unsigned k = 0; k < _numberOfGlobalVariables; k++) {  
       unsigned globalVariableStart = KKoffset[KKIndex.size() - 2][0];
       for (unsigned k = globalVariableStart; k < globalVariableStart + _numberOfGlobalVariables; k++) {  
         d_nnz[k] = KK_local_size;
-        if (_nprocs > 0) {
-          o_nnz[k] =  KK_size - KK_local_size;
-        }
+        o_nnz[k] = KK_size - KK_local_size;
       }
     }
-
 
     _KK = SparseMatrix::build().release();
     _KK->init (KK_size, KK_size, KK_local_size, KK_local_size, d_nnz, o_nnz);
 
     _KKamr = SparseMatrix::build().release();
-
-
 
   }
 
@@ -424,6 +418,8 @@ namespace femus {
     delete sizeDnBM_d;
   }
 }
+
+
 
 
 
