@@ -84,7 +84,7 @@ static void mass_residual (std::vector < real_num > & Res,
                            const double & weight_hat_qp);
 
 
- inline static double laplacian_row(const std::vector < std::vector < double > > & phi_x_fe_qp, 
+ inline static double laplacian_row(const std::vector < std::vector < std::vector < double > > > & phi_x_fe_qp, 
                              const std::vector < std::vector < double > > & sol_grad_qp,
                              const int my_row_pos, 
                              const int my_col_pos, 
@@ -92,7 +92,8 @@ static void mass_residual (std::vector < real_num > & Res,
                              const unsigned dim_in);
   
   
- inline static double laplacian_row_col(const std::vector < std::vector < double > > & phi_x_fe_qp, 
+ inline static double laplacian_row_col(const std::vector < std::vector < std::vector < double > > > & phi_x_fe_qp,
+                                        const std::vector < std::vector < std::vector < double > > > & phi_x_fe_qp_2,
                                  const int my_row_pos, 
                                  const int my_col_pos, 
                                  const int i, 
@@ -105,34 +106,35 @@ static void mass_residual (std::vector < real_num > & Res,
 
 
 template < class real_num, class real_num_mov >
- inline /*static*/ double assemble_jacobian<real_num, real_num_mov>::laplacian_row(const std::vector < std::vector < double > > & phi_x_fe_qp, 
-                             const std::vector < std::vector < double > > & sol_grad_qp,
-                             const int my_row_pos, 
-                             const int my_col_pos, 
-                             const int i,
-                             const unsigned dim_in) {
+ inline /*static*/ double assemble_jacobian<real_num, real_num_mov>::laplacian_row(const std::vector < std::vector < std::vector < double > > > & phi_x_fe_qp,
+                                                                                   const std::vector < std::vector < double > > & sol_grad_qp,
+                                                                                   const int my_row_pos, 
+                                                                                   const int my_col_pos, 
+                                                                                   const int i,
+                                                                                   const unsigned dim_in) {
   
               double laplace_rhs_i = 0.;
 
-              for (unsigned kdim = 0; kdim < dim_in; kdim++) laplace_rhs_i  += phi_x_fe_qp[my_row_pos][i * dim_in + kdim] *
-                                                                                 sol_grad_qp[my_col_pos][kdim];
+              for (unsigned kdim = 0; kdim < dim_in; kdim++) laplace_rhs_i +=   phi_x_fe_qp[my_row_pos][kdim][i] *
+                                                                                sol_grad_qp[my_col_pos][kdim];
 
      return laplace_rhs_i;
 }
   
   
 template < class real_num, class real_num_mov >
- inline /*static*/ double assemble_jacobian<real_num, real_num_mov>::laplacian_row_col(const std::vector < std::vector < double > > & phi_x_fe_qp, 
-                                 const int my_row_pos, 
-                                 const int my_col_pos, 
-                                 const int i, 
-                                 const int j,
-                                 const unsigned dim_in) {
+ inline /*static*/ double assemble_jacobian<real_num, real_num_mov>::laplacian_row_col(const std::vector < std::vector < std::vector < double > > > & phi_x_fe_qp,
+                                                                                       const std::vector < std::vector < std::vector < double > > > & phi_x_fe_qp_2,
+                                                                                       const int my_row_pos,
+                                                                                       const int my_col_pos,
+                                                                                       const int i,
+                                                                                       const int j,
+                                                                                       const unsigned dim_in) {
   
               double laplace_mat_i_j = 0.;
 
-              for (unsigned kdim = 0; kdim < dim_in; kdim++) laplace_mat_i_j  += phi_x_fe_qp[my_row_pos][i * dim_in + kdim] *
-                                                                                 phi_x_fe_qp[my_col_pos][j * dim_in + kdim];
+              for (unsigned kdim = 0; kdim < dim_in; kdim++) laplace_mat_i_j  += phi_x_fe_qp  [my_row_pos][kdim][i] *
+                                                                                 phi_x_fe_qp_2[my_col_pos][kdim][j];
 
      return laplace_mat_i_j;
 }
