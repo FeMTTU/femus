@@ -78,8 +78,8 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
        if (!strcmp(SolName, "DX"))        { dirichlet = false/*true*/; value = 0.; }
   else if (!strcmp(SolName, "DY"))        { dirichlet = false/*true*/; value = 0.; } 
   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = false/*true*/; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = false/*true*/; value = 0.; } 
   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
   	
       }
@@ -98,8 +98,8 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
        if (!strcmp(SolName, "DX"))        { dirichlet = false/*true*/; value = 0.; }
   else if (!strcmp(SolName, "DY"))        { dirichlet = false/*true*/; value = 0.; } 
   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = false/*true*/; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = false/*true*/; value = 0.; } 
   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
   	
       }
@@ -238,33 +238,33 @@ int main(int argc, char** args) {
   
   // ======= Normal run ========================   //if you don't want the convergence study
   My_main_single_level< adept::adouble > my_main;
-//   const unsigned int n_levels = 1;
-//   my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); 
+  const unsigned int n_levels = 1;
+  my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); 
  
   
   
-  // ======= Convergence study ========================
-    
-   //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
-   MultiLevelMesh ml_mesh_all_levels;
-   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-   //   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
- 
-   // convergence choices ================  
-   unsigned int max_number_of_meshes;               // set total number of levels ================  
-
-   if (nsub[2] == 0)   max_number_of_meshes = 3;
-   else                max_number_of_meshes = 4;
-  
-//    My_exact_solution<> exact_sol;                //provide exact solution, if available ==============
-   const unsigned conv_order_flag = 0;              //Choose how to compute the convergence order ========= //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
-   const unsigned norm_flag = 1;                    //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
-
-   
-   // object ================  
-    FE_convergence<>  fe_convergence;
-    
-    fe_convergence.convergence_study(files, unknowns, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
+//   // ======= Convergence study ========================
+//     
+//    //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
+//    MultiLevelMesh ml_mesh_all_levels;
+//    ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//    //   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
+//  
+//    // convergence choices ================  
+//    unsigned int max_number_of_meshes;               // set total number of levels ================  
+// 
+//    if (nsub[2] == 0)   max_number_of_meshes = 3;
+//    else                max_number_of_meshes = 4;
+//   
+// //    My_exact_solution<> exact_sol;                //provide exact solution, if available ==============
+//    const unsigned conv_order_flag = 0;              //Choose how to compute the convergence order ========= //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
+//    const unsigned norm_flag = 1;                    //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
+// 
+//    
+//    // object ================  
+//     FE_convergence<>  fe_convergence;
+//     
+//     fe_convergence.convergence_study(files, unknowns, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
   
     
   return 0;
@@ -330,13 +330,9 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   constexpr int sol_index_displ = 0;     //known at compile time
   const     int sol_index_press = dim;      //known at run time
   constexpr int state_pos_begin = sol_index_displ;   //known at compile time
-
+  const int adj_pos_begin = dim + 1;
 
   vector < std::string > Solname(n_unknowns);     for(unsigned ivar=0; ivar < n_unknowns; ivar++) { Solname[ivar] = unknowns[ivar]._name; }
-//   Solname              [state_pos_begin + 0] =                "DX";
-//   Solname              [state_pos_begin + 1] =                "DY";
-//   if (dim == 3) Solname[state_pos_begin + 2] =                "DZ";
-//   Solname              [state_pos_begin + sol_index_press] = "P";
   
   vector < unsigned int > SolIndex(n_unknowns);  
   vector < unsigned int > SolPdeIndex(n_unknowns);
@@ -558,6 +554,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
               for (int idim = 0; idim < dim; idim++) {
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( Cauchy_direction[idim] -  phi_dof_qp[SolFEType[idim]][i] * _gravity[idim] ) * weight_qp;
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + adj_pos_begin], i) ] += (5. - SolVAR_qp[SolPdeIndex[idim + adj_pos_begin]]) *  phi_dof_qp[SolFEType[idim + adj_pos_begin]][i] * weight_qp;
               }
 
             }
@@ -570,11 +567,19 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
               Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += 
               weight_hat_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
 //               weight_qp * phi_dof_qp[SolFEType[sol_index_press]][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
-                
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press + adj_pos_begin], i) ] += (5. - SolVAR_qp[SolPdeIndex[sol_index_press + adj_pos_begin]]) *  phi_dof_qp[SolFEType[sol_index_press + adj_pos_begin]][i] * weight_qp;
+              
             }
               //END residual solid mass balance in reference domain
 
-
+ // I x = 5 for adjoint block---------------------------
+  for(unsigned adj_unk = 0 + adj_pos_begin; adj_unk < n_unknowns; adj_unk++) { 
+         for (unsigned i = 0; i < Sol_n_el_dofs[adj_unk]; i++) {
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[adj_unk], i) ] += (5. - SolVAR_qp[SolPdeIndex[adj_unk]]) *  phi_dof_qp[SolFEType[adj_unk]][i] * weight_qp;
+              }
+          }
+ // I x = 5 for adjoint block---------------------------
+ 
     } // end gauss point loop
 
     //--------------------------------------------------------------------------------------------------------
