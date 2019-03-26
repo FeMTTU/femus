@@ -99,7 +99,7 @@ double  nonlin_term_function(const double& v) {
     
 //    return 1.;
 //    return v + 1.;
-   return - 2. * 1./( (1. - v) );
+   return - 0.8 * 1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
 //     return -exp(v);
 //     return -  v * v * v - 1.;
@@ -111,7 +111,7 @@ double  nonlin_term_derivative(const double& v) {
     
 //    return 0.;
 //    return 1.;
-   return - 2. * 2. * 1./( (1. - v)*(1. - v) ); 
+   return - 0.8 * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
 //     return -exp(v);
 //     return -3. * v * v;
@@ -138,24 +138,35 @@ int main(int argc,char **args) {
   // ======= Mesh ========================
   //Nondimensional quantity (Lref)
   double Lref = 1.;
+  
+// 2d
+//   const unsigned int nsub_x = 16;
+//   const unsigned int nsub_y = 16;
+//   const unsigned int nsub_z = 0;
+//   const std::vector<double> xyz_min = {0.,0.,0.};
+//   const std::vector<double> xyz_max = {1.,1.,0.};
+//   const ElemType geom_elem_type = QUAD9;
+
+// 1d
   const unsigned int nsub_x = 16;
-  const unsigned int nsub_y = 16;
+  const unsigned int nsub_y = 0;
   const unsigned int nsub_z = 0;
   const std::vector<double> xyz_min = {0.,0.,0.};
-  const std::vector<double> xyz_max = {1.,1.,0.};
-  const ElemType geom_elem_type = QUAD9;
-
+  const std::vector<double> xyz_max = {1.,0.,0.};
+  const ElemType geom_elem_type = EDGE3;
+  
 //    std::string input_file = "Lshape_longer_y.med";
 //    std::string input_file = "Lshape.med";
 //    std::string input_file = "circle_tri6.med";
 //    std::string input_file = "ellipse_tri6.med";
-   std::string input_file = "ellipse_with_hole_tri6.med";
+//    std::string input_file = "ellipse_with_hole_tri6.med";
+   std::string input_file = "interval.med";
    std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   
-  MultiLevelMesh ml_msh;
-//     ml_msh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+   MultiLevelMesh ml_msh;
+     ml_msh.GenerateCoarseBoxMesh(nsub_x,nsub_y,nsub_z,xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
 
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -212,9 +223,9 @@ int main(int argc,char **args) {
   const unsigned fine_lev = ml_sol._mlMesh->GetNumberOfLevels() - 1;
 
   
-  const double total_time = 2.;  
+  const double total_time = 10.;  
   
-  std::vector< unsigned int > n_steps =  {200/*6*//*2, *//*4, 8, 16*/};
+  std::vector< unsigned int > n_steps =  {1000/*6*//*2, *//*4, 8, 16*/};
  
 //   std::vector< MultiLevelSolution >  last_sol(n_steps.size(),  & ml_msh);  
 //   std::vector< Solution >  last_sol(n_steps.size(),  ml_msh.GetLevel(fine_lev) );  

@@ -216,9 +216,9 @@ namespace femus
       std::string elem_types_str(elem_types[j]);
       
        std::string fam_name_dir_i = my_mesh_name_dir + elem_types_str + "/" + group_fam;
-       hid_t dtset_fam = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
-       hid_t filespace_fam = H5Dget_space(dtset_fam);
-       hid_t status_fam  = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
+       hid_t dtset_fam            = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
+       hid_t filespace_fam        = H5Dget_space(dtset_fam);
+       hid_t status_fam           = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
        if(status_fam == 0) {     std::cerr << "MED_IO::read dims not found";  abort();  }
       
         const unsigned n_elements = dims_fam[0];
@@ -258,7 +258,7 @@ namespace femus
 
         hsize_t dims_conn[2];                                   
        std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
-        std::string conn_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + connectivity;        // NOD ***************************
+        std::string   conn_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + connectivity;        // NOD ***************************
         hid_t dtset_conn     = H5Dopen(file_id, conn_name_dir.c_str(), H5P_DEFAULT);
         hid_t filespace_conn = H5Dget_space(dtset_conn);
         hid_t status_conn    = H5Sget_simple_extent_dims(filespace_conn, dims_conn, NULL);
@@ -372,6 +372,7 @@ namespace femus
    
   
   //  we loop over all elements and see which ones are of that group
+  //  
    void MED_IO::set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu,  const int i, const GeomElemBase* geom_elem_per_dimension, const std::vector<GroupInfo> & group_info)  {
        
        Mesh& mesh = GetMesh();
@@ -401,6 +402,8 @@ namespace femus
     //I have to compute the number of elements of each group
     
         for(unsigned gv = 0; gv < group_info.size(); gv++) {
+
+
             if ( i == group_info[gv]._geom_el->get_dimension() - 1 ) {
         for(unsigned g = 0; g < fam_map.size()/*group_info[gv]._size*//*number_of_group_elements*/; g++) {
             if (fam_map[g] == group_info[gv]._med_flag)   mesh.el->SetElementGroup(g, /*fam_map[g]*/ group_info[gv]._user_defined_flag /*gr_integer_name*/);  //I think that 1 is set later as the default  group number
@@ -617,7 +620,12 @@ namespace femus
      // ************** Groups of each Mesh *********************************
  const std::vector< GroupInfo > MED_IO::get_group_vector_flags_per_mesh(const hid_t&  file_id, const std::string & mesh_menu) const {
      
-     std::string group_list = group_ensemble +  "/" + mesh_menu + "/" + group_elements;
+     const Mesh & mesh = GetMesh();
+    
+     std::string group_list;
+     if ( mesh.GetDimension() == 2 || mesh.GetDimension() == 3) group_list = group_ensemble +  "/" + mesh_menu + "/" + group_elements;
+     else if ( mesh.GetDimension() == 1)                        group_list = group_ensemble +  "/" + mesh_menu + "/" + group_nodes;
+     
      hid_t  gid_groups      = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
      
      hsize_t n_groups = 0;

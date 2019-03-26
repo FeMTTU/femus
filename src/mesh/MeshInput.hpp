@@ -75,6 +75,7 @@ class MeshInput
    */
   MT& GetMesh ();
 
+  const MT & GetMesh () const;
 
 private:
 
@@ -138,6 +139,17 @@ MT& MeshInput<MT>::GetMesh ()
   if (_obj == NULL) exit(1);
   return *_obj;
 }
+
+
+template <class MT>
+inline
+const MT & MeshInput<MT>::GetMesh() const 
+{
+  if (_obj == NULL) exit(1);
+  return *_obj;
+}
+
+
 
 } // namespace femus
 
