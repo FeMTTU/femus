@@ -102,6 +102,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob);
 
 template < class system_type, class real_num, class real_num_mov >
 void AssembleSolidMech(MultiLevelProblem& ml_prob,
+                       const Solid & solid_in,
                        system_type * mlPdeSys,
                        const std::vector< Math::Unknown > &  unknowns);
 
@@ -232,7 +233,10 @@ int main(int argc, char** args) {
 template < class system_type, class real_num, class real_num_mov = double >
 void AssembleSolidMech(MultiLevelProblem& ml_prob) {
     
-  AssembleSolidMech< system_type, real_num, real_num_mov > (ml_prob, & ml_prob.get_system< system_type >(0), ml_prob.get_unknown_list_for_assembly());
+  AssembleSolidMech< system_type, real_num, real_num_mov > (  ml_prob, 
+                                                              ml_prob.parameters.get<Solid>("Solid"), 
+                                                            & ml_prob.get_system< system_type >(0), 
+                                                              ml_prob.get_unknown_list_for_assembly());
 
 }
 
@@ -240,6 +244,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob) {
 
 template < class system_type, class real_num, class real_num_mov = double >
 void AssembleSolidMech(MultiLevelProblem& ml_prob,
+                       const Solid & solid_in,
                        system_type * mlPdeSys,
                        const std::vector< Math::Unknown > &  unknowns) {
     
@@ -358,15 +363,15 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
    // ------------------------------------------------------------------------
     // Physical parameters
-    const int    solid_model  = ml_prob.parameters.get < Solid>("Solid").get_physical_model();
-    const double mu_lame 	  = ml_prob.parameters.get < Solid>("Solid").get_lame_shear_modulus();
-    const double lambda_lame  = ml_prob.parameters.get < Solid>("Solid").get_lame_lambda();
+    const int    solid_model  = solid_in.get_physical_model();
+    const double mu_lame 	  = solid_in.get_lame_shear_modulus();
+    const double lambda_lame  = solid_in.get_lame_lambda();
 
-    const bool incompressible = (0.5  ==  ml_prob.parameters.get < Solid>("Solid").get_poisson_coeff()) ? 1 : 0;
-    const bool penalty = ml_prob.parameters.get < Solid>("Solid").get_if_penalty();
+    const bool incompressible = (0.5  ==  solid_in.get_poisson_coeff()) ? 1 : 0;
+    const bool penalty = solid_in.get_if_penalty();
 
     // gravity
-    double _gravity[3] = {1., 0., 0.};
+    double _gravity[3] = {1000., 0., 0.};
     // -----------------------------------------------------------------
  
     RES->zero();
@@ -564,8 +569,8 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
   //material  ==================
               //Nondimensional quantity (Lref,Uref)
-            double Lref = 1.;
-            double Uref = 1.;
+            const double Lref = 1.;
+            const double Uref = 1.;
             Parameter par(Lref,Uref);
             
             // Generate Solid Object
