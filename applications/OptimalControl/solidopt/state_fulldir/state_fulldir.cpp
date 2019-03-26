@@ -117,24 +117,24 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   std::vector< FEFamily > feFamily;
   std::vector< FEOrder >   feOrder;
 
+                        feFamily.push_back(LAGRANGE/*DISCONTINUOUS_POLYNOMIAL*/);
                         feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE);
   if (dimension == 3)   feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE/*DISCONTINUOUS_POLYNOMIAL*/);
   
+                        feOrder.push_back(FIRST);
                         feOrder.push_back(SECOND);
                         feOrder.push_back(SECOND);
   if (dimension == 3)   feOrder.push_back(SECOND);
-                        feOrder.push_back(FIRST);
   
   assert( feFamily.size() == feOrder.size() );
  
  std::vector< Math::Unknown >  unknowns(feFamily.size());
 
-                        unknowns[0]._name      = "DX";
-                        unknowns[1]._name      = "DY";
-  if (dimension == 3)   unknowns[2]._name      = "DZ";
-                unknowns[dimension]._name      = "P";
+                        unknowns[0]._name      = "P";
+                        unknowns[1]._name      = "DX";
+                        unknowns[2]._name      = "DY";
+  if (dimension == 3)   unknowns[3]._name      = "DZ";
  
      for (unsigned int u = 0; u < unknowns.size(); u++) {
          
@@ -315,32 +315,35 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   //=============== Unknowns ========================================
   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
    
-  constexpr int solFEType_max = BIQUADR_FE;  //biquadratic
-  
-  constexpr int sol_index_displ = 0;     //known at compile time
-  const     int sol_index_press = dim;      //known at run time
+//   constexpr int sol_pde_index_displ = 0;     //known at compile time
+//   const     int sol_pde_index_press = dim;      //known at run time
+  constexpr int sol_pde_index_displ = 1;
+  const     int sol_pde_index_press = 0;
 
-  vector < std::string > Solname(n_unknowns);     for(unsigned ivar=0; ivar < n_unknowns; ivar++) { Solname[ivar] = unknowns[ivar]._name; }
-  
-  vector < unsigned int > SolIndex(n_unknowns);  
+  vector < std::string >      Solname(n_unknowns);
+  vector < unsigned int >    SolIndex(n_unknowns);  
   vector < unsigned int > SolPdeIndex(n_unknowns);
-  vector < unsigned int > SolFEType(n_unknowns);  
+  vector < unsigned int >   SolFEType(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-    SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
-    SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
-    assert(ivar == SolPdeIndex[ivar]);  //I would like this ivar order to coincide either with SolIndex or with SolPdeIndex, otherwise too many orders... it has to be  with SolPdeIndex, because SolIndex is related to the Solution object which can have more fields... This has to match the order of the unknowns[] argument
-    SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
+          Solname[ivar] = unknowns[ivar]._name;
+         SolIndex[ivar] = ml_sol->GetIndex        (Solname[ivar].c_str());
+      SolPdeIndex[ivar] = mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
+      assert(ivar == SolPdeIndex[ivar]);  //I would like this ivar order to coincide either with SolIndex or with SolPdeIndex, otherwise too many orders... it has to be  with SolPdeIndex, because SolIndex is related to the Solution object which can have more fields... This has to match the order of the unknowns[] argument
+      SolFEType[ivar] = ml_sol->GetSolutionType(SolIndex[ivar]);
   }
+  
+  constexpr int solFEType_max = BIQUADR_FE;  //biquadratic, this is the highest-order FE 
 
    vector < unsigned int > Sol_n_el_dofs(n_unknowns);
   
   //----------- of dofs and at quadrature points ------------------------------
   vector < vector < double > > phi_dof_qp(n_unknowns);
-  vector < vector < double > > phi_hat_dof_qp(n_unknowns);
   vector < vector < real_num_mov > > phi_x_dof_qp(n_unknowns);   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here  //some of these should be real_num, some real_num_mov...
   vector < vector < real_num_mov > > phi_xx_dof_qp(n_unknowns);  //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
+  
+  vector < vector < double > > phi_hat_dof_qp(n_unknowns);
   vector < vector < double > > phi_x_hat_dof_qp(n_unknowns);
   vector < vector < double > > phi_xx_hat_dof_qp(n_unknowns);
 
@@ -382,7 +385,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     // gravity
     double _gravity[3] = {1000., 0., 0.};
     
-    
  
   //-----------------------------------------
     RES->zero();
@@ -423,7 +425,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     short unsigned ielGeom = msh->GetElementType(iel);
 
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordsType);    // number of coordinate element dofs
-    assert(nDofsX == Sol_n_el_dofs[sol_index_displ]);
+    assert(nDofsX == Sol_n_el_dofs[sol_pde_index_displ]);
     
     for(int ivar=0; ivar<dim; ivar++) {
       coords[ivar].resize(nDofsX);
@@ -497,23 +499,23 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    real_num_mov J_hat;
    real_num_mov trace_e_hat;
 
-    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mu_lame, lambda_lame, dim, sol_index_displ, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
+    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mu_lame, lambda_lame, dim, sol_pde_index_displ, sol_pde_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
 
     
 
               //BEGIN residual Solid Momentum in moving domain
-          for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_displ]; i++) {
+          for (unsigned i = 0; i < Sol_n_el_dofs[sol_pde_index_displ]; i++) {
 
               real_num_mov Cauchy_direction[3] = {0., 0., 0.};
 
               for (int idim = 0.; idim < dim; idim++) {
                 for (int jdim = 0.; jdim < dim; jdim++) {
-                  Cauchy_direction[idim] += phi_x_dof_qp[idim][i * dim + jdim] * Cauchy[idim][jdim];
+                  Cauchy_direction[idim] += phi_x_dof_qp[ SolPdeIndex[sol_pde_index_displ + idim] ][i * dim + jdim] * Cauchy[idim][jdim];
                 }
               }
 
               for (int idim = 0; idim < dim; idim++) {
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( Cauchy_direction[idim] -  phi_dof_qp[idim][i] * _gravity[idim] ) * weight_qp;
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_pde_index_displ + idim], i) ] += ( Cauchy_direction[idim] -  phi_dof_qp[SolPdeIndex[sol_pde_index_displ+idim]][i] * _gravity[idim] ) * weight_qp;
               }
 
             }
@@ -521,11 +523,11 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
               
 
               //BEGIN residual solid mass balance in reference domain
-            for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press]; i++) {
+            for (unsigned i = 0; i < Sol_n_el_dofs[sol_pde_index_press]; i++) {
                 
-              Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += 
-              weight_hat_qp * phi_dof_qp[sol_index_press][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
-//               weight_qp * phi_dof_qp[sol_index_press][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
+              Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_pde_index_press], i) ] += 
+              weight_hat_qp * phi_dof_qp[SolPdeIndex[sol_pde_index_press]][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_pde_index_press);
+//               weight_qp * phi_dof_qp[sol_pde_index_press][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
                 
             }
               //END residual solid mass balance in reference domain

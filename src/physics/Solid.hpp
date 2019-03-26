@@ -88,7 +88,7 @@ static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(co
                                                                               const double & lambda,
                                                                               const unsigned int dim,
                                                                               const unsigned int sol_index_displ,
-                                                                              const unsigned int sol_index_press,
+                                                                              const unsigned int sol_pde_index_press,
                                                                               const std::vector < std::vector < real_num_mov > > & gradSolVAR_hat_qp,
                                                                               const          std::vector < real_num_mov >   & SolVAR_qp,
                                                                               const          std::vector < unsigned int >   & SolPdeIndex,
@@ -106,7 +106,7 @@ static real_num_mov   get_mass_balance_reference_domain(const unsigned int solid
                                                         const real_num_mov & J_hat,
                                                         const std::vector < real_num_mov >   & SolVAR_qp,
                                                         const std::vector < unsigned int >   & SolPdeIndex,
-                                                        const unsigned int sol_index_press);
+                                                        const unsigned int sol_pde_index_press);
 
 
 template < class real_num_mov >
@@ -141,7 +141,7 @@ template < class real_num_mov >
                                                              const double & lambda,
                                                              const unsigned int dim,
                                                              const unsigned int sol_index_displ,
-                                                             const unsigned int sol_index_press,
+                                                             const unsigned int sol_pde_index_press,
                                                              const std::vector < std::vector < real_num_mov > > & gradSolVAR_hat_qp,
                                                              const          std::vector < real_num_mov >   & SolVAR_qp,
                                                              const          std::vector < unsigned int >   & SolPdeIndex,
@@ -177,7 +177,7 @@ template < class real_num_mov >
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
                 //incompressible
-                Cauchy[i][j] = 2. * mus *  ( e[i][j] -  SolVAR_qp[SolPdeIndex[sol_index_press]] * Identity[i][j] );  ///@todo check that mus is multiplying everything or only the deformation tensor
+                Cauchy[i][j] = 2. * mus *  ( e[i][j] -  SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[i][j] );  ///@todo check that mus is multiplying everything or only the deformation tensor
                 //+(penalty)*lambda*trace_e*Identity[i][j];
               }
             }
@@ -214,9 +214,9 @@ template < class real_num_mov >
               for (int I = 0; I < 3; ++I) {
                 for (int J = 0; J < 3; ++J) {
                   if (1  ==  solid_model) 
-			Cauchy[I][J] = mus * B[I][J] - mus * I1_B * SolVAR_qp[SolPdeIndex[sol_index_press]] * Identity[I][J]; 	//Wood-Bonet J_hat  =1;
+			Cauchy[I][J] = mus * B[I][J] - mus * I1_B * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J]; 	//Wood-Bonet J_hat  =1;
                   else if (2  ==  solid_model) 
-			Cauchy[I][J] = mus / J_hat * B[I][J] - mus / J_hat * SolVAR_qp[SolPdeIndex[sol_index_press]] * Identity[I][J]; //Wood-Bonet J_hat !=1;
+			Cauchy[I][J] = mus / J_hat * B[I][J] - mus / J_hat * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J]; //Wood-Bonet J_hat !=1;
                   else if (3  ==  solid_model) 
 			Cauchy[I][J] = mus * (B[I][J] - Identity[I][J]) / J_hat + lambda / J_hat * log(J_hat) * Identity[I][J]; 	//Wood-Bonet penalty
                   else if (4  ==  solid_model) 
@@ -252,8 +252,8 @@ template < class real_num_mov >
               for (int I = 0; I < 3; ++I) {
                 for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.*(C1 * B[I][J] - C2 * invB[I][J])
-                                  //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR_qp[SolPdeIndex[sol_index_press]] * Identity[I][J];
-                                  - SolVAR_qp[SolPdeIndex[sol_index_press]] * Identity[I][J];
+                                  //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J];
+                                  - SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J];
                }
               }
 
@@ -274,16 +274,16 @@ template < class real_num_mov >
                                 const real_num_mov & J_hat,
                                 const std::vector < real_num_mov >   & SolVAR_qp,
                                 const std::vector < unsigned int >   & SolPdeIndex,
-                                const unsigned int sol_index_press) {
+                                const unsigned int sol_pde_index_press) {
     
   real_num_mov  mass_balance = 0.;
   
               if (!penalty) {
                      if (0  ==  solid_model)                           mass_balance = trace_e_hat;
-                else if (1  ==  solid_model || 5  ==  solid_model)     mass_balance = J_hat - 1.         + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[sol_index_press]];
-                else if (2  ==  solid_model)                           mass_balance = log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[sol_index_press]];
+                else if (1  ==  solid_model || 5  ==  solid_model)     mass_balance = J_hat - 1.         + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[sol_pde_index_press]];
+                else if (2  ==  solid_model)                           mass_balance = log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[sol_pde_index_press]];
               }
-                else if (3  ==  solid_model || 4  ==  solid_model)     mass_balance = SolVAR_qp[SolPdeIndex[sol_index_press]] ; // pressure = 0 in the solid
+                else if (3  ==  solid_model || 4  ==  solid_model)     mass_balance = SolVAR_qp[SolPdeIndex[sol_pde_index_press]] ; // pressure = 0 in the solid
               
  return mass_balance;              
               
