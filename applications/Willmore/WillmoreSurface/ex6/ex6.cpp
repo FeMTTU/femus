@@ -26,11 +26,13 @@
 #include "petscmat.h"
 #include "PetscMatrix.hpp"
 
-const double P = 3;
+const double P[3] = {2,3,4};
+const double ap[3] = {1,0.,1};
+
 const double normalSign = -1.;
 using namespace femus;
 
-const bool volumeConstraint = true;
+const bool volumeConstraint = false;
 
 
 void AssemblePWillmore (MultiLevelProblem&);
@@ -70,15 +72,15 @@ double InitalValueY3 (const std::vector < double >& x) {
 
 
 double InitalValueW1 (const std::vector < double >& x) {
-  return -2. * P * pow (2., P - 2) * x[0];
+  return -2. * P[2] * pow (2., P[2] - 2) * x[0];
 }
 
 double InitalValueW2 (const std::vector < double >& x) {
-  return -2. * P * pow (2., P - 2) * x[1];
+  return -2. * P[2] * pow (2., P[2] - 2) * x[1];
 }
 
 double InitalValueW3 (const std::vector < double >& x) {
-  return -2. * P * pow (2., P - 2) * x[2];
+  return -2. * P[2] * pow (2., P[2] - 2) * x[2];
 }
 
 int main (int argc, char** args) {
@@ -308,7 +310,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
   std::vector < adept::adouble > solW[DIM]; // local W solution
   std::vector < double > solWOld[DIM];  // surface coordinates
-  std::vector< int > SYSDOF; // local to global pdeSys dofs
+  std::vector< unsigned > SYSDOF; // local to global pdeSys dofs
 
   vector< double > Res; // local redidual vector
   std::vector< adept::adouble > aResx[3]; // local redidual vector
@@ -323,12 +325,13 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   RES->zero(); // Set to zero all the entries of the Global Residual
 
   
-  unsigned solLambdaIndex;
+  
   unsigned solLambaPdeIndex;
   adept::adouble solLambda = 0.;
   adept::adouble aResLambda;
   unsigned lambdaPdeDof;
   if (volumeConstraint) {
+    unsigned solLambdaIndex;
     solLambdaIndex = mlSol->GetIndex ("Lambda");
     solLambaPdeIndex = mlPdeSys->GetSolPdeIndex ("Lambda");
     double lambda;
@@ -486,11 +489,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           }
         }
       }
-
-      adept::adouble solYnorm2 = 0.;
-      for (unsigned K = 0; K < DIM; K++) {
-        solYnorm2 += solYg[K] * solYg[K];
-      }
       
  
       double g[dim][dim] = {{0., 0.}, {0., 0.}};
@@ -508,6 +506,28 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       normal[1] = normalSign * (solxOld_uv[2][0] * solxOld_uv[0][1] - solxOld_uv[0][0] * solxOld_uv[2][1]) / sqrt (detg);
       normal[2] = normalSign * (solxOld_uv[0][0] * solxOld_uv[1][1] - solxOld_uv[1][0] * solxOld_uv[0][1]) / sqrt (detg);
 
+//       adept::adouble normalN[DIM];
+//       normalN[0] = normalSign * (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
+//       normalN[1] = normalSign * (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
+//       normalN[2] = normalSign * (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
+      
+      adept::adouble YdotN = 0.;
+      for (unsigned K = 0; K < DIM; K++) {
+        YdotN += solYg[K] * normal[K];
+      }
+      
+      adept::adouble sumP1 = 0.;
+      adept::adouble sumP2 = 0.;
+      adept::adouble sumP3 = 0.;
+      for(unsigned p=0;p<3;p++){
+        sumP1 += ap[p] * P[p] * pow(YdotN, P[p] - 2.);
+        sumP2 += ap[p] * (1. - P[p]) * pow ( YdotN , P[p]);
+        sumP3 += ap[p] * pow(YdotN, P[p]);
+      }
+      
+      
+      
+      
       double gi[dim][dim];
       gi[0][0] =  g[1][1] / detg;
       gi[0][1] = -g[0][1] / detg;
@@ -570,8 +590,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           }
         }
       }
-
-      adept::adouble YdotN = (solYg[0] * normal[0] + solYg[1] * normal[1] +solYg[2] * normal[2] );
       
       for (unsigned K = 0; K < DIM; K++) {
         // curvature equation 
@@ -583,8 +601,9 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           aResx[K][i] += (solYg[K] * phix[i] + term1) * Area;
         }
         // W = |Y|^{P-2} Y
+          
         for (unsigned i = 0; i < nWDofs; i++) {
-          aResY[K][i] += (solWg[K] - P * solYg[K] * pow(solYnorm2, (P - 2.)/2.) ) * phiY[i] * Area;
+          aResY[K][i] += (solWg[K] - sumP1 * solYg[K] ) * phiY[i] * Area;
         }
         
         //P-Willmore equation
@@ -613,7 +632,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           }
           aResW[K][i] += ( (solLambda * normal[K] + (solxg[K] - solxOldg[K])  / dt) * phiW[i]
                           - term0
-                          + (1. - P) * pow (solYnorm2 , P/2.) * term1
+                          + sumP2 * term1
                           - term2 * phiW_Xtan[K][i]
                           + term3
                          ) * Area;
@@ -627,7 +646,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       for (unsigned K = 0; K < DIM; K++) {
         volume += normalSign * (solxg[K].value()  * normal[K]) * Area;
       }
-      energy += pow (solYnorm2.value(), P/2.) * Area;
+      energy += sumP3.value() * Area;
 
     } // end gauss point loop
 
@@ -696,7 +715,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   RES->close();
   KK->close();
   
-  sol->_Bdc[solLambdaIndex]->close();
+  
 
 
   double volumeAll;
@@ -922,11 +941,7 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
         }
       }
 
-      adept::adouble solYnorm2 = 0.;
-      for (unsigned K = 0; K < DIM; K++) {
-        solYnorm2 += solYg[K] * solYg[K];
-      }
-      
+          
       double g[dim][dim] = {{0., 0.}, {0., 0.}};
       for (unsigned i = 0; i < dim; i++) {
         for (unsigned j = 0; j < dim; j++) {
@@ -941,7 +956,18 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
       normal[0] = normalSign * (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
       normal[1] = normalSign * (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
       normal[2] = normalSign * (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
-          
+     
+      adept::adouble YdotN = 0.;
+      for (unsigned K = 0; K < DIM; K++) {
+        YdotN += solYg[K] * normal[K];
+      }
+      
+      adept::adouble sumP1 = 0.;
+      for(unsigned p=0;p<3;p++){
+        sumP1 += ap[p] * P[p] * pow(YdotN, P[p] - 2.);
+      }
+      
+      
       double gi[dim][dim];
       gi[0][0] =  g[1][1] / detg;
       gi[0][1] = -g[0][1] / detg;
@@ -1002,8 +1028,6 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
           }
         }
       }
-
-      adept::adouble YdotN = (solYg[0] * normal[0] + solYg[1] * normal[1] +solYg[2] * normal[2]  );
       
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nYDofs; i++) {
@@ -1020,7 +1044,7 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
         }
         
         for (unsigned i = 0; i < nWDofs; i++) {
-          aResW[K][i] += (solWg[K] - P * solYg[K] * pow(solYnorm2, (P - 2.)/2.) ) * phiW[i] * Area;
+          aResW[K][i] += (solWg[K] - sumP1 * solYg[K] ) * phiW[i] * Area;
         }
       }
     } // end gauss point loop
