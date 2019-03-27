@@ -175,12 +175,13 @@ int main(int argc, char** args) {
 
 
    MultiLevelMesh ml_mesh;
-  ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//   ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 //    std::string input_file = "Lshape_4.med";
 //    std::string input_file = "Lshape.med";
-//   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
-//   const std::string infile = mystream.str();
-//   ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
+    std::string input_file = "interval.med";
+    std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+    const std::string infile = mystream.str();
+  ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
 
    // ======= Unknowns ========================
@@ -196,16 +197,14 @@ int main(int argc, char** args) {
    // ======= Convergence study ========================
     
    // set total number of levels ================  
-   unsigned max_number_of_meshes;
-
-   if (nsub[2] == 0)   max_number_of_meshes = 6;
-   else                max_number_of_meshes = 4;
+   unsigned max_number_of_meshes = 6;
+   
+   if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 4;
   
-
-   //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
+   //set coarse storage mesh (///@todo should write the copy constructor or "=" operator to copy the previous mesh) ==================
    MultiLevelMesh ml_mesh_all_levels;
-   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-   //   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
+//    ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+     ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
  
    // convergence choices ================  
