@@ -236,7 +236,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob) {
   AssembleSolidMech< system_type, real_num, real_num_mov > (  ml_prob, 
                                                               ml_prob.parameters.get<Solid>("Solid"), 
                                                             & ml_prob.get_system< system_type >(0), 
-                                                              ml_prob.get_unknown_list_for_assembly());
+                                                              ml_prob.get_system< system_type >(0).get_unknown_list_for_assembly());
 
 }
 
@@ -579,9 +579,14 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
                                                                                     
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
+  
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
 
   // ======= Problem ========================
   MultiLevelProblem ml_prob(&ml_sol);
+
+  ml_prob.SetFilesHandler(&files);
 
   //Material  ==================
               //Nondimensional quantity (Lref,Uref)
@@ -601,8 +606,6 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             ml_prob.parameters.set<Solid>("Solid") = solid;
   //Material end ==================
 
-  ml_prob.SetFilesHandler(&files);
-
   // ======= Solution, II ==================
 
   for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);
@@ -621,7 +624,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
   for (unsigned int u = 0; u < unknowns.size(); u++)   system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
  
-  ml_prob.set_unknown_list_for_assembly(unknowns); 
+  system.set_unknown_list_for_assembly(unknowns); 
             
   system.SetAssembleFunction( AssembleSolidMech< NonLinearImplicitSystem, adept::adouble, adept::adouble >);
 
@@ -637,8 +640,6 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
 
-  ml_sol.SetWriter(VTK);
-  ml_sol.GetWriter()->SetDebugOutput(true);
   system.SetDebugNonlinear(true);
 
 //   system.SetMaxNumberOfNonLinearIterations(2);

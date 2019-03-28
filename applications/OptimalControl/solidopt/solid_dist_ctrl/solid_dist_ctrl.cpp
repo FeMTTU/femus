@@ -275,7 +275,7 @@ int main(int argc, char** args) {
 template < class system_type, class real_num, class real_num_mov = double >
 void AssembleSolidMech(MultiLevelProblem& ml_prob) {
     
-  AssembleSolidMech< system_type, real_num, real_num_mov > (ml_prob, & ml_prob.get_system< system_type >(0), ml_prob.get_unknown_list_for_assembly());
+  AssembleSolidMech< system_type, real_num, real_num_mov > (ml_prob, & ml_prob.get_system< system_type >(0), ml_prob.get_system< system_type >(0).get_unknown_list_for_assembly());
 
 }
 
@@ -692,7 +692,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
   for (unsigned int u = 0; u < unknowns.size(); u++)   system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
  
-  ml_prob.set_unknown_list_for_assembly(unknowns); 
+  system.set_unknown_list_for_assembly(unknowns); 
             
   system.SetAssembleFunction( AssembleSolidMech< NonLinearImplicitSystem, adept::adouble, adept::adouble >);
 

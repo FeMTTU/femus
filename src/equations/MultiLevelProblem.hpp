@@ -203,10 +203,11 @@ public:
   void SetFilesHandler(const Files * files_in) { _files = files_in; return; }
   inline const Files * GetFilesHandler() const { return  _files; }
 
-    /** Flexible assembly */
-                      void set_unknown_list_for_assembly(const std::vector< Math::Unknown > unknown_in ) { _unknown_list_for_assembly = unknown_in; }
-  inline const std::vector< Math::Unknown > get_unknown_list_for_assembly() const { return  _unknown_list_for_assembly; }
+    /** Input Parser */
+  const int get_current_system_number() const { return _current_system_number; }
 
+  void set_current_system_number(const unsigned current_system_number_in) { _current_system_number = current_system_number_in; }
+  
 private:
 
     // member data
@@ -220,8 +221,7 @@ private:
     const MultiLevelMeshTwo               * _mesh;
 
     const Files                           * _files;
-    std::vector< Math::Unknown > _unknown_list_for_assembly;
-
+    unsigned int _current_system_number;
 
 };
 
