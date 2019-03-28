@@ -6,7 +6,7 @@
 
 #define FACE_FOR_CONTROL 2  //we do control on the right (=2) face
 #define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
-#include "../elliptic_param.hpp"
+#include "../../param.hpp"
 
 using namespace femus;
 
