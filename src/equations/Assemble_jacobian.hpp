@@ -53,8 +53,7 @@ class assemble_jacobian {
                                                 const unsigned dim,
                                                 const std::vector < unsigned int > Sol_n_el_dofs,
                                                 const unsigned int sum_Sol_n_el_dofs,
-                                                const std::vector< double > &  phi,
-                                                const std::vector< double > &  phi_x,
+                                                const std::vector< Phi < real_num_mov > > &  phi,
                                                 const double weight,
                                                 std::vector< double > & Jac) const;
   
