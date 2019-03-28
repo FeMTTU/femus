@@ -427,15 +427,8 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
 
 
-//-----------------  
-  vector < double > phi;
-  vector < double > phi_x;
-  vector < double > phi_xx;
-
-  phi.reserve(max_size_elem_dofs);
-  phi_x.reserve(max_size_elem_dofs * dim);
-  phi_xx.reserve(max_size_elem_dofs * dim2);
-
+//----------------- 
+  Phi< real_num_mov > phi_dof_qp(dim);
   
 
   vector < int >       loc_to_glob_map;  loc_to_glob_map.reserve(max_size_elem_dofs);
@@ -509,7 +502,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
         
       // *** get gauss point weight, test function and test function partial derivatives ***
       static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][SolFEType[0]] )
-                                         ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx);
+                                         ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi_dof_qp.phi, phi_dof_qp.phi_x, phi_dof_qp.phi_xx);
 //       msh->_finiteElement[ielGeom][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
       msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
 
@@ -519,11 +512,11 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
       vector < double > gradSolu_exact_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
-        solu_gss += phi[i] * SolVAR_eldofs[0][i];
+        solu_gss += phi_dof_qp.phi[i] * SolVAR_eldofs[0][i];
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-                gradSolu_gss[jdim] += phi_x[i * dim + jdim] * SolVAR_eldofs[0][i];
-          gradSolu_exact_gss[jdim] += phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
+                gradSolu_gss[jdim] += phi_dof_qp.phi_x[i * dim + jdim] * SolVAR_eldofs[0][i];
+          gradSolu_exact_gss[jdim] += phi_dof_qp.phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
         }
       }
 
@@ -543,8 +536,8 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
         real_num laplace_weak_exact = 0.;
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          laplace            +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
-          laplace_weak_exact +=  phi_x[i * dim + jdim] * gradSolu_exact_gss[jdim];
+          laplace            +=  phi_dof_qp.phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+          laplace_weak_exact +=  phi_dof_qp.phi_x[i * dim + jdim] * gradSolu_exact_gss[jdim];
         }
         
 
@@ -554,7 +547,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
         
 // manufactured Helmholtz - strong
              double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
-        Res[i] += (helmholtz_strong_exact * phi[i] - solu_gss * phi[i] - laplace) * weight;
+        Res[i] += (helmholtz_strong_exact * phi_dof_qp.phi[i] - solu_gss * phi_dof_qp.phi[i] - laplace) * weight;
 
 // manufactured Laplacian - strong
 //                double laplace_strong_exact = exact_sol.laplacian(x_gss);
@@ -565,7 +558,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
 
         
-        assemble_jac.compute_jacobian_inside_integration_loop(i, dim, Sol_n_el_dofs, sum_Sol_n_el_dofs, phi, phi_x, weight, Jac);  //rethink of these arguments when you have more unknowns
+        assemble_jac.compute_jacobian_inside_integration_loop(i, dim, Sol_n_el_dofs, sum_Sol_n_el_dofs, phi_dof_qp.phi, phi_dof_qp.phi_x, weight, Jac);  //rethink of these arguments when you have more unknowns
         
       
         

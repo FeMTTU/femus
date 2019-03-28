@@ -5,6 +5,34 @@
 
 
 namespace femus {
+    
+    
+    
+template < class real_num_mov >
+ class Phi {
+     
+ public:
+    
+  Phi(const unsigned int dim) :
+   _dim2( (3 * (dim - 1) + !(dim - 1)) ),
+   _max_size_elem_dofs(static_cast< unsigned >(ceil(pow(3, dim)))) {
+      
+      phi.reserve(_max_size_elem_dofs);
+      phi_x.reserve(_max_size_elem_dofs * dim);
+      phi_xx.reserve(_max_size_elem_dofs * _dim2);
+      
+  }   
+     
+  std::vector < double > phi;
+  std::vector < real_num_mov > phi_x;
+  std::vector < real_num_mov > phi_xx;
+  
+  const unsigned int _dim2;        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  const unsigned int _max_size_elem_dofs;
+
+ };
+    
+    
 
 class NumericVector;
 class SparseMatrix;
