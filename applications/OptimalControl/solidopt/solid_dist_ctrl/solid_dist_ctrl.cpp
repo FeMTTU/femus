@@ -179,8 +179,10 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
      for (unsigned int u = 0; u < unknowns.size(); u++) {
          
-              unknowns[u]._fe_family = feFamily[u];
-              unknowns[u]._fe_order  = feOrder[u];
+              unknowns[u]._fe_family  = feFamily[u];
+              unknowns[u]._fe_order   = feOrder[u];
+              unknowns[u]._time_order = 0;
+              unknowns[u]._is_pde_unknown = true;
               
      }
  
@@ -647,8 +649,13 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
 
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
+  
   // ======= Problem ========================
   MultiLevelProblem ml_prob(&ml_sol);
+
+  ml_prob.SetFilesHandler(&files);
 
   //material  ==================
               //Adimensional quantity (Lref,Uref)
@@ -672,11 +679,9 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             ml_prob.parameters.set<Solid>("Solid") = solid;
   //end material  ==================
 
-  ml_prob.SetFilesHandler(&files);
-
   // ======= Solution, II ==================
 
-  for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);
+  for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
 
   //initial conditions
   ml_sol.Initialize("All");
@@ -708,8 +713,6 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
 
-  ml_sol.SetWriter(VTK);
-  ml_sol.GetWriter()->SetDebugOutput(true);
   system.SetDebugNonlinear(true);
 
 //   system.SetMaxNumberOfNonLinearIterations(2);

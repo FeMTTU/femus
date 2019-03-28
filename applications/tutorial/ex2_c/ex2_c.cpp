@@ -109,19 +109,25 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
  const std::vector< Math::Unknown >  provide_list_of_unknowns() {
      
      
-  std::vector< FEFamily > feFamily = {LAGRANGE, LAGRANGE, LAGRANGE, DISCONTINUOUS_POLYNOMIAL, DISCONTINUOUS_POLYNOMIAL};
-  std::vector< FEOrder >   feOrder = {FIRST, SERENDIPITY, SECOND, ZERO, FIRST};
+  std::vector< FEFamily >     feFamily = {LAGRANGE, LAGRANGE, LAGRANGE, DISCONTINUOUS_POLYNOMIAL, DISCONTINUOUS_POLYNOMIAL};
+  std::vector< FEOrder >       feOrder = {FIRST, SERENDIPITY, SECOND, ZERO, FIRST};
+  std::vector< int >        time_order = {0, 0, 0, 0, 0};  //0 = steady, 2 = time-dependent
+  std::vector< bool >   is_pde_unknown = {true, true, true, true, true};
 
-  assert( feFamily.size() == feOrder.size() );
+  assert( feFamily.size() == feOrder.size());
+  assert( feFamily.size() == is_pde_unknown.size());
+  assert( feFamily.size() == time_order.size());
  
  std::vector< Math::Unknown >  unknowns(feFamily.size());
  
      for (unsigned int fe = 0; fe < unknowns.size(); fe++) {
          
             std::ostringstream unk; unk << "u" << "_" << feFamily[fe] << "_" << feOrder[fe];
-              unknowns[fe]._name      = unk.str();
-              unknowns[fe]._fe_family = feFamily[fe];
-              unknowns[fe]._fe_order  = feOrder[fe];
+              unknowns[fe]._name           = unk.str();
+              unknowns[fe]._fe_family      = feFamily[fe];
+              unknowns[fe]._fe_order       = feOrder[fe];
+              unknowns[fe]._time_order     = time_order[fe];
+              unknowns[fe]._is_pde_unknown = is_pde_unknown[fe];
               
      }
  
@@ -191,8 +197,8 @@ int main(int argc, char** args) {
 
   // ======= Normal run ========================
     My_main_single_level< /*adept::a*/double > my_main;
- const unsigned int n_levels = 3;
-     my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); //if you don't want the convergence study
+//     const unsigned int n_levels = 3;
+//      my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); //if you don't want the convergence study
     
    // ======= Convergence study ========================
     
@@ -266,7 +272,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
         for (unsigned int u = 0; u < unknowns.size(); u++) {
             
             // ======= Solution, II ==================
-            ml_sol_single_level.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);
+            ml_sol_single_level.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
             ml_sol_single_level.Initialize(unknowns[u]._name.c_str());
             ml_sol_single_level.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
             ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str());
@@ -279,8 +285,8 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
             std::vector< Math::Unknown > unknowns_vec(1); unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
             system.set_unknown_list_for_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
+            ml_prob.set_current_system_number(u);               //way to communicate to the assemble function, which doesn't belong to any class
             
-            ml_prob.set_current_system_number(u);
             system.SetAssembleFunction(System_assemble_interface< LinearImplicitSystem, real_num >);
 
             // initialize and solve the system

@@ -322,7 +322,7 @@ private:
     vector < FEOrder >                  _order;
     vector < char* >                    _solName;
     vector < char* >                    _bdcType;
-    vector < int >                      _solTimeOrder;
+    vector < int >                      _solTimeOrder;  //0 = steady, 2 = time-dependent
     vector < bool >                     _pdeType;    /*Tells whether the Solution is an unknown of a PDE or not*/
     vector < bool >                     _testIfPressure;
     vector < bool >                     _addAMRPressureStability;

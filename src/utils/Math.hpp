@@ -120,7 +120,9 @@ template < class type = double >
      
      std::string _name;
      FEFamily _fe_family;     
-     FEOrder  _fe_order;     
+     FEOrder  _fe_order;
+     int _time_order;
+     bool _is_pde_unknown;
      
  };
 

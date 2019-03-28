@@ -140,6 +140,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
          
               unknowns[u]._fe_family = feFamily[u];
               unknowns[u]._fe_order  = feOrder[u];
+              unknowns[u]._time_order = 0;
+              unknowns[u]._is_pde_unknown = true;
               
      }
  
@@ -608,7 +610,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
   // ======= Solution, II ==================
 
-  for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);
+  for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
 
   //initial conditions
   ml_sol.Initialize("All");
