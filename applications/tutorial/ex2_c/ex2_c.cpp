@@ -342,7 +342,7 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
  *                  J = \grad_u F
  **/
 
-template < class system_type, class real_num, class real_num_mov = double >
+template < class system_type, class real_num, class real_num_mov >
 void System_assemble_flexible(MultiLevelProblem& ml_prob, 
                               system_type * mlPdeSys,
                               const std::vector< Math::Unknown > &  unknowns, 
@@ -357,6 +357,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   //  extract pointers to the several objects that we are going to use
 
   const unsigned level = mlPdeSys->GetLevelToAssemble();
+  bool 			assembleMatrix 		    = mlPdeSys->GetAssembleMatrix(); 
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
   elem*                     el = msh->el;
@@ -374,11 +375,30 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
+  
+  
 
   adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
 
   const assemble_jacobian< real_num, double > assemble_jac;
   
+  //=============== Integration ========================================
+  real_num_mov weight;    // must be adept if the domain is moving
+  
+  //=============== Geometry ========================================
+  vector < vector < real_num_mov > > x(dim);  unsigned xType = BIQUADR_FE;     // must be adept if the domain is moving, otherwise double
+  for (unsigned i = 0; i < dim; i++)  x[i].reserve(max_size_elem_dofs);
+  
+//-----------------  
+  vector < double > phi_coords;
+  vector < real_num_mov > phi_coords_x;   // must be adept if the domain is moving
+  vector < real_num_mov > phi_coords_xx;  // must be adept if the domain is moving
+
+  phi_coords.reserve(max_size_elem_dofs);
+  phi_coords_x.reserve(max_size_elem_dofs * dim);
+  phi_coords_xx.reserve(max_size_elem_dofs * dim2);
+  
+  //=============== Unknowns ========================================
   
   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
   if (n_unknowns > 1) { std::cout << "Only scalar variable now, haven't checked with vector PDE"; abort(); }
@@ -399,8 +419,6 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
   
   //----------- at dofs ------------------------------
-  vector < vector < real_num_mov > > x(dim);  unsigned xType = BIQUADR_FE;     // must be adept if the domain is moving, otherwise double
-  for (unsigned i = 0; i < dim; i++)  x[i].reserve(max_size_elem_dofs);
 
   vector < vector < real_num > > SolVAR_eldofs(n_unknowns);
   for(int k = 0; k < n_unknowns; k++) {    SolVAR_eldofs[k].reserve(max_size_elem_dofs);  }
@@ -408,16 +426,6 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   vector < double >    solu_exact_at_dofs;  solu_exact_at_dofs.reserve(max_size_elem_dofs);
 
 
-  //------------ at quadrature points ---------------------
-  real_num_mov weight;    // must be adept if the domain is moving
-//-----------------  
-  vector < double > phi_coords;
-  vector < real_num_mov > phi_coords_x;   // must be adept if the domain is moving
-  vector < real_num_mov > phi_coords_xx;  // must be adept if the domain is moving
-
-  phi_coords.reserve(max_size_elem_dofs);
-  phi_coords_x.reserve(max_size_elem_dofs * dim);
-  phi_coords_xx.reserve(max_size_elem_dofs * dim2);
 
 //-----------------  
   vector < double > phi;
@@ -437,7 +445,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
 
   RES->zero();
-  KK->zero();
+  if (assembleMatrix)   KK->zero();
 
 
   // element loop: each process loops only on the elements that owns

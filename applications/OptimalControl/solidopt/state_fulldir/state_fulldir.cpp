@@ -235,10 +235,12 @@ int main(int argc, char** args) {
 template < class system_type, class real_num, class real_num_mov = double >
 void AssembleSolidMech(MultiLevelProblem& ml_prob) {
     
+  const unsigned current_system_number = 0;  
+    
   AssembleSolidMech< system_type, real_num, real_num_mov > (  ml_prob, 
                                                               ml_prob.parameters.get<Solid>("Solid"), 
-                                                            & ml_prob.get_system< system_type >(0), 
-                                                              ml_prob.get_system< system_type >(0).get_unknown_list_for_assembly());
+                                                            & ml_prob.get_system< system_type >(current_system_number), 
+                                                              ml_prob.get_system< system_type >(current_system_number).get_unknown_list_for_assembly());
 
 }
 
@@ -258,7 +260,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
   const unsigned 		level 		    = mlPdeSys->GetLevelToAssemble();
   bool 			assembleMatrix 		    = mlPdeSys->GetAssembleMatrix(); 
-  const char* 			pdename         = mlPdeSys->name().c_str();
 
   Mesh*          		msh    		= ml_prob._ml_msh->GetLevel(level);
   elem*          		el     		= msh->el;
@@ -274,11 +275,14 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
   const unsigned 	 dim = msh->GetDimension();
   const unsigned    dim2 = (3 * (dim - 1) + !(dim - 1));
-  const unsigned   nel   = msh->GetNumberOfElements();
-  const unsigned igrid   = msh->GetLevel();
   const unsigned  iproc  = msh->processor_id();
   // reserve memory for the local standard vectors
   const unsigned max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  
+
+  //=======================================================
+  adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
+  const assemble_jacobian< real_num, double/*real_num_mov*/ > assemble_jac;
   
 
   //=============== Integration ========================================
@@ -392,8 +396,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     RES->zero();
   if (assembleMatrix) JAC->zero();
   
-  adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
-  const assemble_jacobian< real_num, double/*real_num_mov*/ > assemble_jac;
 
 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
