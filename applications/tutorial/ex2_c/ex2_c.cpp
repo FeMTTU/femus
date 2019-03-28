@@ -175,24 +175,27 @@ int main(int argc, char** args) {
 
 
    MultiLevelMesh ml_mesh;
-//   ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+   ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
 //    std::string input_file = "Lshape_4.med";
 //    std::string input_file = "Lshape.med";
-    std::string input_file = "interval.med";
-    std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
-    const std::string infile = mystream.str();
-  ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
+//     std::string input_file = "interval.med";
+//     std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+//     const std::string infile = mystream.str();
+//   ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
 
    // ======= Unknowns ========================
    std::vector< Math::Unknown > unknowns = provide_list_of_unknowns();
    
 
-   // ======= Normal run ========================
+
+  // ======= Normal run ========================
     My_main_single_level< /*adept::a*/double > my_main;
 //  const unsigned int n_levels = 3;
-//  my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); if you don't want the convergence study
-    
+//  for (unsigned int u = 0; u < unknowns.size(); u++) {
+//      std::vector< Math::Unknown > unknowns_vec(1); unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
+//      my_main.run_on_single_level(files, unknowns_vec, ml_mesh, n_levels); //if you don't want the convergence study
+//  }
     
    // ======= Convergence study ========================
     
@@ -203,21 +206,25 @@ int main(int argc, char** args) {
   
    //set coarse storage mesh (///@todo should write the copy constructor or "=" operator to copy the previous mesh) ==================
    MultiLevelMesh ml_mesh_all_levels;
-//    ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-     ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
+   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+//    ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
 
  
    // convergence choices ================  
-   My_exact_solution<> exact_sol;                                            //provide exact solution, if available ==============
-   const unsigned conv_order_flag = 0;                                               //Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
-   const unsigned norm_flag = 1;                                                     //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
+   My_exact_solution<> exact_sol;         //provide exact solution, if available ==============
+   const unsigned conv_order_flag = 0;    //Choose how to compute the convergence order ============== //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
+   const unsigned norm_flag = 1;          //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
 
    
    // object ================  
     FE_convergence<>  fe_convergence;
     
-    fe_convergence.convergence_study(files, unknowns, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
-    
+         for (unsigned int u = 0; u < unknowns.size(); u++) {
+             std::vector< Math::Unknown > unknowns_vec(1); unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
+
+             fe_convergence.convergence_study(files, unknowns_vec, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
+         }
+         
 
   return 0;
   
@@ -248,29 +255,29 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
                   
       
            //Solution  ==================
-            MultiLevelSolution ml_sol_single_level(&ml_mesh); 
+            MultiLevelSolution ml_sol_single_level(&ml_mesh);
 
-         for (unsigned int u = 0; u < unknowns.size(); u++) {
-             
-            ml_sol_single_level.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);
-            ml_sol_single_level.Initialize(unknowns[u]._name.c_str());
-            ml_sol_single_level.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
-            ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str());
-      
-            
            // ======= Problem ========================
             MultiLevelProblem ml_prob(&ml_sol_single_level);
             
             ml_prob.SetFilesHandler(&files);
-      
-      
+            
+
+            // ======= Solution, II ==================
+        for (unsigned int u = 0; u < unknowns.size(); u++) {
+            ml_sol_single_level.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);
+            ml_sol_single_level.Initialize(unknowns[u]._name.c_str());
+            ml_sol_single_level.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+            ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str());
+            }
+            
+
            // ======= System ========================
             LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("Equation");
 
-            system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
+            for (unsigned int u = 0; u < unknowns.size(); u++) system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
 
-            std::vector< Math::Unknown > unknowns_vec(1); unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
-            ml_prob.set_unknown_list_for_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
+            ml_prob.set_unknown_list_for_assembly(unknowns); //way to communicate to the assemble function, which doesn't belong to any class
             
             system.SetAssembleFunction(System_assemble_interface< LinearImplicitSystem, real_num >);
 
@@ -286,17 +293,16 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 //             system.SetMaxNumberOfLinearIterations(6);
 //             system.SetAbsoluteLinearConvergenceTolerance(1.e-4);
             
-            system.SetOuterSolver(PREONLY);
+            system.SetOuterSolver(GMRES);
             system.MGsolve();
       
             // ======= Print ========================
             std::vector < std::string > variablesToBePrinted;
-            variablesToBePrinted.push_back(unknowns[u]._name);
+            for (unsigned int u = 0; u < unknowns.size(); u++) {
+                variablesToBePrinted.push_back(unknowns[u]._name);
             ml_sol_single_level.GetWriter()->Write(unknowns[u]._name, files.GetOutputPath(), "biquadratic", variablesToBePrinted, lev);  
-     
-
-         }
-         
+            }
+        
 
             return ml_sol_single_level;
 }
@@ -357,6 +363,11 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
 
+  adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
+
+  const assemble_jacobian< real_num, double > assemble_jac;
+  
+  
   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
   if (n_unknowns > 1) { std::cout << "Only scalar variable now, haven't checked with vector PDE"; abort(); }
   
@@ -412,9 +423,6 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   vector < double >    Jac;                          Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);
   
 
-  adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
-
-  const assemble_jacobian< real_num, double > assemble_jac;
 
   RES->zero();
   KK->zero();
