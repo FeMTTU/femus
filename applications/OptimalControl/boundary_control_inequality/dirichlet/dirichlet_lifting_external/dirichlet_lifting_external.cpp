@@ -101,7 +101,7 @@ int main(int argc, char** args) {
     ml_mesh.ReadCoarseMesh("./input/ext_box.neu", fe_quad_rule.c_str(), scalingFactor);
 
     //ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-    unsigned numberOfUniformLevels = 4;
+    unsigned numberOfUniformLevels = 1;
     unsigned numberOfSelectiveLevels = 0;
     ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
     ml_mesh.PrintInfo();
@@ -324,10 +324,10 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     for(int i = 0; i < n_unknowns; i++) {
         L2G_dofmap[i].reserve(max_size);
     }
+    
     vector < vector < double > >  sol_eldofs(n_unknowns);
-    for(int k = 0; k < n_unknowns; k++) {
-        sol_eldofs[k].reserve(max_size);
-    }
+    for(int k = 0; k < n_unknowns; k++) {        sol_eldofs[k].reserve(max_size);    }
+    
     vector< double > Res;
     Res.reserve( n_unknowns * max_size);
     vector < double > Jac;
@@ -414,35 +414,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         }
         //all vars###################################################################
 
-
-//************** update active set flag for current nonlinear iteration ****************************
-// 0: inactive; 1: active_a; 2: active_b
-        assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);
-        sol_actflag.resize(Sol_n_el_dofs[pos_mu]);
-        ctrl_lower.resize(Sol_n_el_dofs[pos_mu]);
-        ctrl_upper.resize(Sol_n_el_dofs[pos_mu]);
-        std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
-        std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
-        std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
-
-        for (unsigned i = 0; i < sol_actflag.size(); i++) {
-            std::vector<double> node_coords_i(dim,0.);
-            for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i];
-            ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
-            ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
-
-            if      ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
-            else if ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
-        }
-
-//************** act flag ****************************
-        unsigned nDof_act_flag  = msh->GetElementDofNumber(iel, solFEType_act_flag);    // number of solution element dofs
-
-        for (unsigned i = 0; i < nDof_act_flag; i++) {
-            unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag);
-            (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);
-        }
-
+  update_active_set_flag_for_current_nonlinear_iteration
+         (msh, sol, iel, coords_at_dofs, sol_eldofs, Sol_n_el_dofs, pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
 
 
 //******************** ALL VARS *********************

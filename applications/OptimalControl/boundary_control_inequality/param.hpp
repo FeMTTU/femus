@@ -2,6 +2,10 @@
 #define ELLIPTIC_PARAMETERS
 
 
+
+#include "Mesh.hpp"
+
+
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
 #define NSUB_X  32
@@ -25,7 +29,7 @@
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper = 0.5;//0.3; //0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
+     double constr_value_upper = 1.;//0.3; //0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
      double constr_value_lower = -1000.; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      
@@ -141,6 +145,51 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 
 }
 
+
+
+ void update_active_set_flag_for_current_nonlinear_iteration(const femus::Mesh* msh,
+                                                             const femus::Solution* sol,
+                                                             const unsigned int iel,
+                                                             const std::vector < std::vector < double > > & coords_at_dofs,
+                                                             const std::vector < std::vector < double > > sol_eldofs,
+                                                             const std::vector < unsigned int > & Sol_n_el_dofs,
+                                                             const unsigned int pos_mu,
+                                                             const unsigned int pos_ctrl,
+                                                             const unsigned int c_compl,
+                                                                   std::vector < double > & ctrl_lower,
+                                                                   std::vector < double > & ctrl_upper,
+                                                                   std::vector < double > & sol_actflag,
+                                                             const unsigned int solFEType_act_flag,
+                                                             const unsigned int solIndex_act_flag) {
+     
+//**************  ****************************
+// 0: inactive; 1: active_a; 2: active_b
+        assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);
+        sol_actflag.resize(Sol_n_el_dofs[pos_mu]);
+        ctrl_lower.resize(Sol_n_el_dofs[pos_mu]);
+        ctrl_upper.resize(Sol_n_el_dofs[pos_mu]);
+        std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+        std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
+        std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
+
+        for (unsigned i = 0; i < sol_actflag.size(); i++) {
+            std::vector<double> node_coords_i(coords_at_dofs.size(),0.);
+            for (unsigned d = 0; d < coords_at_dofs.size(); d++) node_coords_i[d] = coords_at_dofs[d][i];
+            ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
+            ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
+
+            if      ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
+            else if ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
+        }
+
+//************** local to global act flag ***************************
+
+        for (unsigned i = 0; i < sol_actflag.size(); i++) {
+            unsigned solDof_mu = msh->GetSolutionDof(i, iel, solFEType_act_flag);
+            (sol->_Sol[solIndex_act_flag])->set(solDof_mu,sol_actflag[i]);
+        }
+
+}
 
 
 

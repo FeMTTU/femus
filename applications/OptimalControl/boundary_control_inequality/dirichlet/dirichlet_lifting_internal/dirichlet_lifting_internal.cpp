@@ -184,10 +184,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   
  //***************************************************  
-  vector < vector < double > > x(dim);    // local coordinates
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+  vector < vector < double > > coords_at_dofs(dim);    // local coordinates
+  unsigned xType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
   for (unsigned i = 0; i < dim; i++) {
-    x[i].reserve(maxSize);
+    coords_at_dofs[i].reserve(maxSize);
   }
  //***************************************************   
 
@@ -365,13 +365,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
  //******************** GEOMETRY ********************* 
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-    for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
+    for (int i = 0; i < dim; i++)  coords_at_dofs[i].resize(nDofx);
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);  // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        coords_at_dofs[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -380,7 +380,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
     for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofx; i++) {
-         elem_center[j] += x[j][i];
+         elem_center[j] += coords_at_dofs[j][i];
        }
     }
     
@@ -438,6 +438,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
     }
     
+    
+//   update_active_set_flag_for_current_nonlinear_iteration
+//          (msh, sol, iel, coords_at_dofs, sol_eldofs, Sol_n_el_dofs, pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
+    
+    
  //************** update active set flag for current nonlinear iteration **************************** 
  // 0: inactive; 1: active_a; 2: active_b
    assert(nDof_mu == nDof_ctrl);
@@ -450,7 +455,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
    
     for (unsigned i = 0; i < sol_actflag.size(); i++) {
         std::vector<double> node_coords_i(dim,0.);
-        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = x[d][i];
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i];
         ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
         ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
 
@@ -524,10 +529,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	msh->_finiteElement[kelGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
-        msh->_finiteElement[kelGeom][solType_ctrl]->Jacobian(x, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
-        msh->_finiteElement[kelGeom][solType_adj] ->Jacobian(x, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
-	msh->_finiteElement[kelGeom][solType_mu]  ->Jacobian(x, ig, weight, phi_mu, phi_mu_x, phi_mu_xx);
+	msh->_finiteElement[kelGeom][solType_u]   ->Jacobian(coords_at_dofs, ig, weight, phi_u, phi_u_x, phi_u_xx);
+        msh->_finiteElement[kelGeom][solType_ctrl]->Jacobian(coords_at_dofs, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
+        msh->_finiteElement[kelGeom][solType_adj] ->Jacobian(coords_at_dofs, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
+	msh->_finiteElement[kelGeom][solType_mu]  ->Jacobian(coords_at_dofs, ig, weight, phi_mu, phi_mu_x, phi_mu_xx);
 
 	
     sol_u_gss = 0.;
