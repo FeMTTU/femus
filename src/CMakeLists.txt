@@ -100,6 +100,7 @@ utils/FemusInit.cpp
 utils/Files.cpp
 utils/InputParser.cpp
 utils/JsonInputParser.cpp
+utils/Math.cpp
 uq/uq.cpp
 uq/sparseGrid.cpp
 )

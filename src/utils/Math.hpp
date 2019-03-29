@@ -5,7 +5,6 @@
 #include <string>
 #include "Typedefs.hpp"
 #include "ElemType.hpp"
-#include "MultiLevelSolution.hpp"
 
 
 
@@ -113,6 +112,13 @@ template < class type = double >
 };
 
 
+
+
+ 
+} //end namespace Math
+
+
+
 //this is based on the AddSolution function in MLSol
  class Unknown {
      
@@ -127,24 +133,18 @@ template < class type = double >
  };
  
  
+ class System;
+ class MultiLevelSolution;
  
  
-template < class system_type>
 class UnknownLocal {
      
  public:
      
      UnknownLocal() { }
      
-    void initialize( Math::Unknown  unknown, const MultiLevelSolution * ml_sol, system_type * mlPdeSys) {
-   
-   Solname     = unknown._name;
-   SolPdeIndex = mlPdeSys->GetSolPdeIndex(Solname.c_str());
-   SolIndex    = ml_sol->GetIndex        (Solname.c_str());
-   SolFEType   = ml_sol->GetSolutionType(SolIndex);
-  
-  }
-  
+    void initialize(const Unknown & unknown, const MultiLevelSolution * ml_sol, System * mlPdeSys);
+    
 //these do not change with the element
   std::string  Solname;
   unsigned int SolPdeIndex;
@@ -155,13 +155,6 @@ class UnknownLocal {
 //   unsigned int Sol_n_el_dofs;  not yet
    
  }; 
-
- 
-} //end namespace Math
-
-
-
-
 
 } //end namespace femus
 

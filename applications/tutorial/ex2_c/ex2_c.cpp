@@ -101,12 +101,12 @@ void System_assemble_interface(MultiLevelProblem & ml_prob);
 template < class system_type, class real_num, class real_num_mov = double >
 void System_assemble_flexible(MultiLevelProblem& ml_prob, 
                               system_type * mlPdeSys,  
-                              const std::vector< Math::Unknown > &  unknowns, 
+                              const std::vector< Unknown > &  unknowns, 
                               const Math::Function< double > & exact_sol);
 
 
  //Unknown definition  ==================
- const std::vector< Math::Unknown >  provide_list_of_unknowns() {
+ const std::vector< Unknown >  provide_list_of_unknowns() {
      
      
   std::vector< FEFamily >     feFamily = {LAGRANGE, LAGRANGE, LAGRANGE, DISCONTINUOUS_POLYNOMIAL, DISCONTINUOUS_POLYNOMIAL};
@@ -118,7 +118,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   assert( feFamily.size() == is_pde_unknown.size());
   assert( feFamily.size() == time_order.size());
  
- std::vector< Math::Unknown >  unknowns(feFamily.size());
+ std::vector< Unknown >  unknowns(feFamily.size());
  
      for (unsigned int fe = 0; fe < unknowns.size(); fe++) {
          
@@ -146,7 +146,7 @@ class My_main_single_level : public Main_single_level {
 public:
     
 const MultiLevelSolution  run_on_single_level(const Files & files, 
-                                                   const std::vector< Math::Unknown > & unknowns,  
+                                                   const std::vector< Unknown > & unknowns,  
                                                    MultiLevelMesh & ml_mesh, 
                                                    const unsigned i) const;
   
@@ -191,7 +191,7 @@ int main(int argc, char** args) {
 
 
    // ======= Unknowns ========================
-   std::vector< Math::Unknown > unknowns = provide_list_of_unknowns();
+   std::vector< Unknown > unknowns = provide_list_of_unknowns();
    
 
 
@@ -239,7 +239,7 @@ int main(int argc, char** args) {
 
 template < class real_num > 
 const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
-                                                                                const std::vector< Math::Unknown > &  unknowns,  
+                                                                                const std::vector< Unknown > &  unknowns,  
                                                                                 MultiLevelMesh & ml_mesh,
                                                                                 const unsigned lev) const {
       
@@ -283,7 +283,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > (sys_name.str());
 
             system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());
-            std::vector< Math::Unknown > unknowns_vec(1); unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
+            std::vector< Unknown > unknowns_vec(1); unknowns_vec[0] = unknowns[u]; //need to turn this into a vector
             system.set_unknown_list_for_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
             ml_prob.set_current_system_number(u);               //way to communicate to the assemble function, which doesn't belong to any class
             
@@ -345,7 +345,7 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
 template < class system_type, class real_num, class real_num_mov >
 void System_assemble_flexible(MultiLevelProblem& ml_prob, 
                               system_type * mlPdeSys,
-                              const std::vector< Math::Unknown > &  unknowns, 
+                              const std::vector< Unknown > &  unknowns, 
                               const Math::Function< double > & exact_sol) {
     
   //  ml_prob is the global object from/to where get/set all the data
@@ -397,7 +397,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
   if (n_unknowns > 1) { std::cout << "Only scalar variable now, haven't checked with vector PDE"; abort(); }
   
-  std::vector < Math::UnknownLocal < System > > unk_loc(n_unknowns);
+  std::vector < UnknownLocal > unk_loc(n_unknowns);
   for(int u = 0; u < n_unknowns; u++) unk_loc[u].initialize(unknowns[u], ml_sol, mlPdeSys);
         
   vector < unsigned int > Sol_n_el_dofs(n_unknowns);
@@ -432,12 +432,11 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);
 
     // resize local arrays
-    loc_to_glob_map.resize(nDofu);
-
-    solu_exact_at_dofs.resize(nDofu);
-
     for (int i = 0; i < dim; i++)    x[i].resize(nDofx);
 
+    loc_to_glob_map.resize(nDofu);
+    
+    
     Res.resize(nDofu);         std::fill(Res.begin(), Res.end(), 0.);
     Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.);
 
@@ -451,6 +450,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
       }
     } 
     
+    solu_exact_at_dofs.resize(nDofu);
      
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {

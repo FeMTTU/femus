@@ -117,10 +117,10 @@ public:
     inline void SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
 
     /** Set Unknown list for the current System */
-    void set_unknown_list_for_assembly(const std::vector< Math::Unknown > unknown_in ) { _unknown_list_for_assembly = unknown_in; }
+    void set_unknown_list_for_assembly(const std::vector< Unknown > unknown_in ) { _unknown_list_for_assembly = unknown_in; }
     
     /** Get Unknown list for the current System */
-    inline const std::vector< Math::Unknown > get_unknown_list_for_assembly() const { return  _unknown_list_for_assembly; }
+    inline const std::vector< Unknown > get_unknown_list_for_assembly() const { return  _unknown_list_for_assembly; }
 
 protected:
 
@@ -161,7 +161,7 @@ protected:
     bool _buildSolver;
     
     /** List of unknowns for the assembly routine */
-    std::vector< Math::Unknown > _unknown_list_for_assembly;
+    std::vector< Unknown > _unknown_list_for_assembly;
 
 };
 
