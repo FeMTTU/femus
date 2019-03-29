@@ -387,13 +387,11 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   real_num_mov weight;    // must be adept if the domain is moving
   
   //=============== Geometry ========================================
-  CurrentElem element;
+  unsigned xType = BIQUADR_FE;   
+
+  CurrentElem< real_num_mov > element(dim, msh);            // must be adept if the domain is moving, otherwise double
   
-  vector < vector < real_num_mov > > x(dim);  unsigned xType = BIQUADR_FE;     // must be adept if the domain is moving, otherwise double
-  for (unsigned i = 0; i < dim; i++)  x[i].reserve(max_size_elem_dofs);
-  
-//-----------------  
-  Phi< real_num_mov > phi_coords(dim);
+  Phi< real_num_mov > phi_coords(dim);      // must be adept if the domain is moving, otherwise double
   
   //=============== Unknowns ========================================
   
@@ -401,6 +399,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   if (n_unknowns > 1) { std::cout << "Only scalar variable now, haven't checked with vector PDE"; abort(); }
   
   std::vector < UnknownLocal > unk_loc(n_unknowns);
+  
   for(int u = 0; u < n_unknowns; u++) unk_loc[u].initialize(unknowns[u], ml_sol, mlPdeSys);
         
   vector < unsigned int > Sol_n_el_dofs(n_unknowns);
@@ -417,6 +416,8 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 //-- at dofs and quadrature points --------------- 
   vector < Phi< real_num_mov > > phi_dof_qp(n_unknowns, Phi< real_num_mov >(dim));
   
+//-- 
+  ElementJacRes < real_num > element_jacres(dim);
 
   vector < int >       loc_to_glob_map;  loc_to_glob_map.reserve(max_size_elem_dofs);
   vector < real_num >  Res;                          Res.reserve(max_size_elem_dofs);  
@@ -430,35 +431,25 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+      
     short unsigned ielGeom = msh->GetElementType(iel);
+    
     unsigned nDofu  = msh->GetElementDofNumber(iel, unk_loc[0].SolFEType);
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);
-
-    // resize local arrays
-    for (int i = 0; i < dim; i++)    x[i].resize(nDofx);
-
+    
     loc_to_glob_map.resize(nDofu);
-    
-    
     Res.resize(nDofu);         std::fill(Res.begin(), Res.end(), 0.);
     Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.);
 
+    element.set_coords_at_dofs(iel, xType);
     
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
-      }
-    } 
-    
+ 
+   
     solu_exact_at_dofs.resize(nDofu);
      
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
         std::vector< double > x_at_node(dim,0.);
-        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
+        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = element.get_coords_at_dofs(jdim,i);
       solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
          loc_to_glob_map[i] = pdeSys->GetSystemDof(unk_loc[0].SolIndex, unk_loc[0].SolPdeIndex, i, iel);
     }
@@ -490,11 +481,11 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
       // *** get gauss point weight, test function and test function partial derivatives ***
   for (unsigned  u = 0; u < n_unknowns; u++) {
       static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][unk_loc[0].SolFEType] )
-                                         ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi_dof_qp[u].phi, phi_dof_qp[u].phi_x, phi_dof_qp[u].phi_xx);
+                                         ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), element.get_coords_at_dofs(), ig, weight, phi_dof_qp[u].phi, phi_dof_qp[u].phi_x, phi_dof_qp[u].phi_xx);
   }
   
 //       msh->_finiteElement[ielGeom][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
-      msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords.phi, phi_coords.phi_x, phi_coords.phi_xx);
+      msh->_finiteElement[ielGeom][xType]->Jacobian(element.get_coords_at_dofs(), ig, weight, phi_coords.phi, phi_coords.phi_x, phi_coords.phi_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
                real_num solu_gss = 0.;
@@ -514,9 +505,9 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
       
       vector < double > x_gss(dim, 0.);
-      for (unsigned i = 0; i < nDofx; i++) {
+      for (unsigned i = 0; i < element.get_coords_at_dofs()[0].size(); i++) {
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          x_gss[jdim] += x[jdim][i] * phi_coords.phi[i];
+          x_gss[jdim] += element.get_coords_at_dofs(jdim,i) * phi_coords.phi[i];
         }          
       }
       

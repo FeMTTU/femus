@@ -4,6 +4,7 @@
 #include <vector>
 #include "VBTypeEnum.hpp"
 #include "CurrentGaussPoint.hpp"
+#include "CurrentElem.hpp"
 
 
 namespace femus {
@@ -12,7 +13,6 @@ namespace femus {
  class SystemTwo;
  class Quantity;
  class CurrentGaussPointBase;
- class CurrentElem;
 
 
  //Remember that you need to allocate the operators before if you use them
@@ -55,7 +55,7 @@ namespace femus {
     Quantity* _qtyptr;
     SystemTwo*  _eqnptr;
     
-    inline const CurrentElem &  GetCurrentElem() const { 
+    inline const CurrentElem<double> &  GetCurrentElem() const { 
       return _currEl;
     }
     
@@ -76,7 +76,7 @@ namespace femus {
   protected:
         
     const CurrentGaussPointBase & _currGP;
-    const CurrentElem & _currEl;
+    const CurrentElem<double> & _currEl;
     
   };
   

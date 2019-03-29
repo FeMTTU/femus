@@ -26,17 +26,40 @@
 namespace femus {
 
 
+    
+template < typename real_num >
+class ElementJacRes {
+    
+public:
+    
+    ElementJacRes(const unsigned int dim) {
+        
+        const unsigned int max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));
+        loc_to_glob_map.reserve(max_size_elem_dofs);
+        Res.reserve(max_size_elem_dofs);  
+        Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);
+    }
+    
+   vector < int >       loc_to_glob_map;  
+  vector < real_num >  Res;                         
+  vector < double >    Jac;                
+   
+    
+};
+    
+    
 
 class SystemTwo;
 class CurrentQuantity;
 
 
 
-  class CurrentElem {
+template < typename real_num_mov >
+class CurrentElem {
 
   public:
       
-    CurrentElem();
+    CurrentElem(const unsigned dim, const Mesh * msh_in);
 
     CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo*,  const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type, const Mesh * mesh_new);
 
@@ -107,13 +130,26 @@ class CurrentQuantity;
     const uint GetLevel() const {return _Level;}
     
    //TODO make these private
-//========== Equation-related ========================               
+  //========== Equation-related ========================               
   const SystemTwo * _eqn;  //con questo puoi accedere a dati e funzioni DEL PADRE, NON al FIGLIO
   const MultiLevelMeshTwo & _mesh;
-  const Mesh * _mesh_new;
+  
+  // ========= NEW ===============================================================================
+   void set_coords_at_dofs(const unsigned int dim,  const unsigned int xType);
+   
+   const vector < vector < real_num_mov > > & get_coords_at_dofs() const {  return _coords_at_dofs; }
+   
+   const real_num_mov & get_coords_at_dofs(const unsigned int idim,  const unsigned int idof) const {  return _coords_at_dofs[idim][idof]; }
  
   private:
 
+  vector < vector < real_num_mov > >  _coords_at_dofs;      // must be adept if the domain is moving, otherwise double
+  const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
+  /*const */unsigned _max_size_elem_dofs;                   // conservative: based on line3, quad9, hex27
+  const Mesh * _mesh_new;
+
+
+// === OLD =====================================================================================
   const std::vector<const elem_type*>  &  _elem_type;
     
 // ========================================================================================
@@ -131,15 +167,58 @@ class CurrentQuantity;
    std::vector<uint>   _el_conn_new;
    std::vector<double> _xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];  // this must become a vect of vect
    std::vector<double> _el_xm;               /// element center point                                [_spacedimension];
-   const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
    const uint _mesh_vb;     //index for the mesh
 
    const uint _Level;  //the level to which the element belongs
       
    const uint _iel;  //the index of the element (input for the parallel partition)
    const uint _proc;
-  };
+   
   
+  };
+
+
+
+template < typename real_num_mov >
+    CurrentElem<real_num_mov>::CurrentElem(const unsigned dim, const Mesh * msh_in) :
+    _max_size_elem_dofs(static_cast< unsigned >(ceil(pow(3, dim)))),
+    _dim(dim),
+    _mesh_new(msh_in),
+//    rest to be thrown away 
+    _eqn(NULL),
+    _mesh(MultiLevelMeshTwo()),
+    _elem_type(std::vector<const elem_type*>()),
+    _mesh_vb(1u),
+    _Level(1u),
+    _iel(1),
+    _proc(1)  {
+        
+  _coords_at_dofs.resize(dim);
+  for (unsigned i = 0; i < dim; i++)  _coords_at_dofs[i].reserve(_max_size_elem_dofs);
+        
+        
+        
+    }
+    
+    
+template < typename real_num_mov >
+ void    CurrentElem<real_num_mov>::set_coords_at_dofs(const unsigned int iel, const unsigned int xType) {
+         
+  unsigned nDofx = _mesh_new->GetElementDofNumber(iel, xType);
+      
+   for (int idim = 0; idim < _dim; idim++)    _coords_at_dofs[idim].resize(nDofx);
+   
+    // local storage of coordinates
+    for (unsigned i = 0; i < nDofx; i++) {
+      unsigned xDof  = _mesh_new->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+
+      for (unsigned jdim = 0; jdim < _dim; jdim++) {
+        _coords_at_dofs[jdim][i] = (*_mesh_new->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+      }
+    }     
+    
+     }
+    
 
 
 } //end namespace femus

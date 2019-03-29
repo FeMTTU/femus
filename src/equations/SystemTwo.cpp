@@ -236,7 +236,7 @@ void SystemTwo::Initialize() {
 
 	    for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 	  
-                CurrentElem       currelem(iel,myproc,Level,VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType(),mymsh);  
+                CurrentElem<double>       currelem(iel,myproc,Level,VV,this,GetMLProb().GetMeshTwo(),GetMLProb().GetElemType(),mymsh);  
 	
 	        currelem.SetDofobjConnCoords();
 		

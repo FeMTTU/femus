@@ -10,7 +10,6 @@
 namespace femus {
 
 
-class CurrentElem;
 class elem_type;
 class CurrentQuantity;
  
@@ -26,10 +25,10 @@ class CurrentQuantity;
   
   public:
     
-    CurrentGaussPointBase(const CurrentElem & curr_el_in, const Gauss & qrule_in );
+    CurrentGaussPointBase(const CurrentElem<double> & curr_el_in, const Gauss & qrule_in );
    ~CurrentGaussPointBase();
      
-   inline const CurrentElem & GetCurrentElem() const {
+   inline const CurrentElem<double> & GetCurrentElem() const {
      return _current_elem;
    }
    
@@ -48,7 +47,7 @@ inline double Phi(const uint ql,const uint dof) const {
   return _phi_ndsQLVB_g[ql][dof];
 }
 
-  static CurrentGaussPointBase & build(const CurrentElem & elem_in,  const Gauss & qrule_in);
+  static CurrentGaussPointBase & build(const CurrentElem<double> & elem_in,  const Gauss & qrule_in);
 
     double* _dphidxezeta_ndsQLVB_g[QL];  //canonical derivatives
     double*    _dphidxyz_ndsQLVB_g[QL];  //physical derivatives
@@ -58,7 +57,7 @@ inline double Phi(const uint ql,const uint dof) const {
   protected:
     
    uint                   _IntDim[VB];   // = {dimension,dimension-1};  //  the dimension of the domain where you integrate based on vb  //TODO is here the correct place?!?
-   const CurrentElem & _current_elem;
+   const CurrentElem<double> & _current_elem;
    const std::vector<const elem_type*>  &  _elem_type;  //[QL]
    const Gauss & _qrule;
    double**  _InvJac_g;/*[FM_DIM][FM_DIM]*/   //gauss Current Geometric Element //no new is needed here //TODO this is only for VOLUME elements

@@ -37,7 +37,7 @@ void optimization_loop( MultiLevelProblem & e_map_in );
 
  int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMesh* mesh);
 
- void TempDesired(CurrentQuantity& myvect, const CurrentElem & currelem);
+ void TempDesired(CurrentQuantity& myvect, const CurrentElem<double> & currelem);
 
 
  bool  SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <double> &xp, const char name[], double &value, const int facename, const double time);

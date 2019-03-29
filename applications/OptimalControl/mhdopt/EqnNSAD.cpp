@@ -60,7 +60,7 @@ using namespace femus;
     
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
     
-    CurrentElem       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================

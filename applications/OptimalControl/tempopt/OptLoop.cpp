@@ -99,7 +99,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-    CurrentElem       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
 
   //==========
@@ -230,7 +230,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 
     for (int iel=0; iel < (nel_e - nel_b); iel++) {
 
-    CurrentElem       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
 
 //======Functions in the integrand ============
@@ -357,7 +357,7 @@ return el_flagdom;
 }
 
 
- void TempDesired(CurrentQuantity& myvect, const CurrentElem & currelem)  {
+ void TempDesired(CurrentQuantity& myvect, const CurrentElem<double> & currelem)  {
 
    for (uint ivar=0; ivar < myvect._dim; ivar++)
        for (uint d=0; d < myvect._ndof; d++)      myvect._val_dofs[d+ivar*myvect._ndof] =  0.9;

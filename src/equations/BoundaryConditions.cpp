@@ -228,7 +228,7 @@ void BoundaryConditions::GenerateBdc() {
 
             for (uint iel=0; iel < (iel_e - iel_b); iel++) {
 
-                CurrentElem       currelem(iel,isubd,Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType(),mymsh);
+                CurrentElem<double>       currelem(iel,isubd,Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType(),mymsh);
 
 	        currelem.SetDofobjConnCoords();
                 currelem.SetMidpoint();

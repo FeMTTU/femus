@@ -25,21 +25,8 @@
 
 namespace femus {
 
-
-    CurrentElem::CurrentElem() :
-    _eqn(NULL),
-    _mesh(MultiLevelMeshTwo()),
-    _dim(1),
-    _elem_type(std::vector<const elem_type*>()),
-    _mesh_vb(1u),
-    _Level(1u),
-    _iel(1),
-    _proc(1),
-    _mesh_new(NULL) { 
-        
-    }
-
-    CurrentElem::CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type_in, const Mesh * mesh_new ):
+template < typename real_num_mov >
+    CurrentElem<real_num_mov>::CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type_in, const Mesh * mesh_new ):
     _eqn(eqn_in),
     _mesh(mesh),
     _dim(_mesh.get_dim()-vb),
@@ -81,7 +68,8 @@ namespace femus {
 
 
 
-void CurrentElem::SetElDofsBc()  {
+template < typename real_num_mov >
+void CurrentElem<real_num_mov>::SetElDofsBc()  {
 
 /*CHECK*/   if (_vol_iel_DofObj >= _mesh._n_elements_vb_lev[VV][_Level] ) { std::cout << "Out of the node_dof map FE KK range" << std::endl; abort();}
 
@@ -151,7 +139,8 @@ for (uint ivar=0; ivar < _eqn->_dofmap._nvars[fe]; ivar++)    {
 ///This function prints the element orientation
 ///A QUADRATIC MESH VECTOR is passed HERE  
 ///It is for debugging purposes
-void CurrentElem::PrintOrientation() const {
+template < typename real_num_mov >
+void CurrentElem<real_num_mov>::PrintOrientation() const {
   
       const uint mesh_dim = _mesh.get_dim();
       const uint el_nnodes   = _el_conn.size();
@@ -189,7 +178,7 @@ void CurrentElem::PrintOrientation() const {
  
  
 // ========================================================
-//   void CurrentElem::SetDofobjConnCoords(const uint Level,const uint isubd_in,const uint iel,
+//   void CurrentElem<real_num_mov>::SetDofobjConnCoords(const uint Level,const uint isubd_in,const uint iel,
 // 				uint el_conn[], double xx[]) const {///get the global node numbers for that element and their coordinates
 ///this routine does not yield the connectivity
 //is this function called when the class members are already filled?
@@ -219,7 +208,8 @@ void CurrentElem::PrintOrientation() const {
 // ========================================================
 ///Compute the element center
 
-  void CurrentElem::SetMidpoint() {
+template < typename real_num_mov >
+  void CurrentElem<real_num_mov>::SetMidpoint() {
 
     const uint mesh_dim = _mesh.get_dim();
     const uint el_nnodes   = _el_conn.size();
@@ -239,7 +229,8 @@ void CurrentElem::PrintOrientation() const {
   }
 
    // =====================================================================================
-  void CurrentElem::SetDofobjConnCoords() {
+template < typename real_num_mov >
+  void CurrentElem<real_num_mov>::SetDofobjConnCoords() {
 
     const uint mydim = _mesh.get_dim();
     const uint el_nnodes   = _el_conn.size();
@@ -276,7 +267,8 @@ void CurrentElem::PrintOrientation() const {
   //its data to the xyz Vect
   
   
-void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
+template < typename real_num_mov >
+void CurrentElem<real_num_mov>::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 
   
   const uint  elndof = myvect._ndof;
@@ -306,7 +298,8 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 //This function is for NS type equations:
 //it computes the flags for pressure and stress integrals 
 //based on the pressure nodes
- int CurrentElem::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const uint ndof_in, const uint space_dim, const CurrentQuantity& press_in) const {
+template < typename real_num_mov >
+ int CurrentElem<real_num_mov>::Bc_ComputeElementBoundaryFlagsFromNodalFlagsForPressure(const uint ndof_in, const uint space_dim, const CurrentQuantity& press_in) const {
    
    int press_fl = 0;
    
@@ -324,7 +317,7 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
   
 // // // // ========================================================
 // // // //This function transforms the node coordinates into the reference node coordinates
-// // //   void CurrentElem::TransformElemNodesToRef(Domain* mydom, double* refbox_xyz) {
+// // //   void CurrentElem<real_num_mov>::TransformElemNodesToRef(Domain* mydom, double* refbox_xyz) {
 // // //    
 // // //    std::vector<double>   x_in(_dim);
 // // //    std::vector<double>   x_out(_dim);
@@ -345,7 +338,7 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 
  
     // =====================================================================================
-//   void CurrentElem::SetDofobjConn_twoCoordsDof() {
+//   void CurrentElem<real_num_mov>::SetDofobjConn_twoCoordsDof() {
 
 // for each scalar variable involved, you need to define
   // dofsVAR    # of solutions
@@ -395,7 +388,7 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 
  
     // =====================================================================================
-//   void CurrentElem::SetCoords_two() {
+//   void CurrentElem<real_num_mov>::SetCoords_two() {
 // 
 //      for (unsigned i=0;i<nve;i++) {
 //       gambit nodes
@@ -427,7 +420,7 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 //     return;
 //   }   
 
-
+template class CurrentElem<double>;
  
 } //end namespace femus
 

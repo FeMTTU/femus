@@ -501,7 +501,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-    CurrentElem       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
 
 //========= DOMAIN MAPPING
@@ -636,7 +636,7 @@ return el_flagdom;
 
 
 
- void VelDesired(const MultiLevelProblem * ml_prob, CurrentQuantity& myvect, const CurrentElem & currelem, const uint idim)  {
+ void VelDesired(const MultiLevelProblem * ml_prob, CurrentQuantity& myvect, const CurrentElem<double> & currelem, const uint idim)  {
 
   const double Lref = ml_prob->GetInputParser().get("Lref");
   const double Uref = ml_prob->GetInputParser().get("Uref");

@@ -17,7 +17,7 @@ namespace femus {
 // for the geometric element
 //maybe later on i'd just pass the GeomElement(GeomEl) and the MathElement(FE)
 //by the way, with the MultiLevelProblemTwo I reach the Utils, the Mesh, and so the GeomEl, and so on...
-CurrentGaussPointBase::CurrentGaussPointBase(const CurrentElem & curr_el_in, const Gauss & qrule_in ):
+CurrentGaussPointBase::CurrentGaussPointBase(const CurrentElem<double> & curr_el_in, const Gauss & qrule_in ):
  _current_elem(curr_el_in),
     _elem_type(curr_el_in.GetElemTypeVectorFE()),
         _qrule(qrule_in) {
@@ -70,7 +70,7 @@ CurrentGaussPointBase::~CurrentGaussPointBase() {
 
 
 //this is what allows RUNTIME selection of the templates!!!
-   CurrentGaussPointBase& CurrentGaussPointBase::build(const CurrentElem & elem_in, const Gauss & qrule_in) {
+   CurrentGaussPointBase& CurrentGaussPointBase::build(const CurrentElem<double> & elem_in, const Gauss & qrule_in) {
       
       
       switch( elem_in._mesh.get_dim() ) {

@@ -33,7 +33,7 @@ const uint myproc = ml_prob.GetMeshTwo()._iproc;
   
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
       
-    CurrentElem       currelem(iel,myproc,Level,vb,NULL,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh); //element without equation
+    CurrentElem<double>       currelem(iel,myproc,Level,vb,NULL,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh); //element without equation
     CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
 
     const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
