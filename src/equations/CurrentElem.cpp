@@ -26,6 +26,18 @@
 namespace femus {
 
 
+    CurrentElem::CurrentElem() :
+    _eqn(NULL),
+    _mesh(MultiLevelMeshTwo()),
+    _dim(1),
+    _elem_type(std::vector<const elem_type*>()),
+    _mesh_vb(1u),
+    _Level(1u),
+    _iel(1),
+    _proc(1),
+    _mesh_new(NULL) { 
+        
+    }
 
     CurrentElem::CurrentElem(const uint iel_in, const uint iproc_in, const uint level, const uint vb, const SystemTwo * eqn_in, const MultiLevelMeshTwo& mesh, const std::vector< std::vector<const elem_type*> >  & elem_type_in, const Mesh * mesh_new ):
     _eqn(eqn_in),

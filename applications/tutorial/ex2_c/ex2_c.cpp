@@ -20,6 +20,7 @@
 #include "Files.hpp"
 #include "FE_convergence.hpp"
 #include "Assemble_jacobian.hpp"
+#include "CurrentElem.hpp"
 
 #include "adept.h"
 
@@ -386,6 +387,8 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   real_num_mov weight;    // must be adept if the domain is moving
   
   //=============== Geometry ========================================
+  CurrentElem element;
+  
   vector < vector < real_num_mov > > x(dim);  unsigned xType = BIQUADR_FE;     // must be adept if the domain is moving, otherwise double
   for (unsigned i = 0; i < dim; i++)  x[i].reserve(max_size_elem_dofs);
   
