@@ -7,13 +7,23 @@
 namespace femus {
     
 
+
+// class assemble_jacobian_base {
+//     
+//     public:
+//         
+//    assemble_jacobian_base();
+//     
+// }
+
+
 class NumericVector;
 class SparseMatrix;
 
 
     
 template < class real_num, class real_num_mov = double >
-class assemble_jacobian {
+class assemble_jacobian/* : public assemble_jacobian_base*/ {
  
     
  public:

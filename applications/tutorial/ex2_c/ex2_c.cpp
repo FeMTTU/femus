@@ -371,7 +371,6 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   NumericVector*           RES = pdeSys->_RES;
 
   const unsigned  dim = msh->GetDimension(); 
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   const unsigned max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
@@ -381,7 +380,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
   adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
 
-  const assemble_jacobian< real_num, double > assemble_jac;
+  const assemble_jacobian< real_num, double > * assemble_jac/* = assemble_jacobian_base::build(dim)*/;
   
   //=============== Integration ========================================
   real_num_mov weight;    // must be adept if the domain is moving
@@ -400,8 +399,10 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   
   std::vector < UnknownLocal  < real_num > > unk_loc(n_unknowns);
   
-  for(int u = 0; u < n_unknowns; u++) unk_loc[u].initialize(dim, unknowns[u], ml_sol, mlPdeSys);
-
+  for(int u = 0; u < n_unknowns; u++) {
+      unk_loc[u].initialize(dim, unknowns[u], ml_sol, mlPdeSys);
+      assert(u == unk_loc[u].SolPdeIndex);  //I would like this ivar order to coincide either with SolIndex or with SolPdeIndex, otherwise too many orders... it has to be  with SolPdeIndex, because SolIndex is related to the Solution object which can have more fields... This has to match the order of the unknowns[] argument
+  }
   
   vector < unsigned int > Sol_n_el_dofs_interface(n_unknowns);
 
@@ -474,7 +475,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
            Sol_n_el_dofs_interface[u] = unk_loc[u].Sol_n_el_dofs;
     }
 
-    assemble_jac.prepare_before_integration_loop(stack);
+    assemble_jac->prepare_before_integration_loop(stack);
 
     
     if (dim != 2) abort(); //only implemented in 2D now
@@ -545,7 +546,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
 
         
-        assemble_jac.compute_jacobian_inside_integration_loop(i, dim, Sol_n_el_dofs_interface, sum_Sol_n_el_dofs, unk_loc, phi_dof_qp, weight, Jac);  //rethink of these arguments when you have more unknowns
+        assemble_jac->compute_jacobian_inside_integration_loop(i, dim, Sol_n_el_dofs_interface, sum_Sol_n_el_dofs, unk_loc, phi_dof_qp, weight, Jac);  //rethink of these arguments when you have more unknowns
         
       
         
@@ -555,7 +556,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     } // end gauss point loop
 
     
- assemble_jac.compute_jacobian_outside_integration_loop(stack, unk_loc, Res, Jac, loc_to_glob_map_all_vars, RES, KK);
+ assemble_jac->compute_jacobian_outside_integration_loop(stack, unk_loc, Res, Jac, loc_to_glob_map_all_vars, RES, KK);
  
     
   } //end element loop for each process
@@ -622,17 +623,20 @@ template < >
                                                          const std::vector< UnknownLocal < double > > & unk_vec,
                                                          const std::vector< Phi <double> > &  phi,
                                                          const double weight, 
-                                                         std::vector< double > & Jac )  const { 
+                                                         std::vector< double > & Jac )  const {
+                                                             
+                                                             
+     constexpr unsigned int pos_unk = 0/*unk_vec[0].SolPdeIndex*/;                         
 
 // *** phi_j loop ***
-        for (unsigned j = 0; j < Sol_n_el_dofs[0]; j++) {
+        for (unsigned j = 0; j < Sol_n_el_dofs[ pos_unk ]; j++) {
           /*real_num*/double laplace_jac = 0.;
 
           for (unsigned kdim = 0; kdim < dim; kdim++) {
-            laplace_jac += (phi[0].phi_x[i * dim + kdim] * phi[0].phi_x[j * dim + kdim]);
+            laplace_jac += (phi[ pos_unk].phi_x[i * dim + kdim] * phi[ pos_unk ].phi_x[j * dim + kdim]);
           }
 
-          Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, /*SolPdeIndex[0]*/ 0, /*SolPdeIndex[0]*/ 0, i, j) ] += (laplace_jac + phi[0].phi[i] * phi[0].phi[j]) * weight;
+          Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_unk, pos_unk, i, j) ] += (laplace_jac + phi[ pos_unk ].phi[i] * phi[ pos_unk ].phi[j]) * weight;
         } // end phi_j loop
 
         
