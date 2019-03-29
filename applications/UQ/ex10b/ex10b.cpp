@@ -78,7 +78,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -99,7 +99,8 @@ int main (int argc, char** argv) {
   mlMsh.ReadCoarseMesh ("../input/square.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
-//   unsigned dim = mlMsh.GetDimension();
+  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+  numberOfUniformLevels = 1;
 
   MultiLevelSolution mlSol (&mlMsh);
 
@@ -147,7 +148,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (GMRES_SMOOTHER); 
+  system.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   system.init();
 
@@ -172,6 +173,39 @@ int main (int argc, char** argv) {
     systemSG.AddSolutionToSystemPDE (name);
   }
 
+  FieldSplitTree **FielduSGi;
+
+  FielduSGi = new FieldSplitTree * [Jp.size()];
+
+  std::vector < FieldSplitTree *> FSAll;
+  FSAll.reserve (Jp.size());
+
+
+  //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
+  for (unsigned i = 0; i < Jp.size(); i++) {
+    char name[10];
+    sprintf (name, "uSG%d", i);
+    std::vector < unsigned > fielduSGi (1);
+    fielduSGi[0] = systemSG.GetSolPdeIndex (name);
+
+    std::vector < unsigned > solutionTypeuSGi (1);
+    solutionTypeuSGi[0] = mlSol.GetSolutionType (name);
+
+    FielduSGi[i] = new FieldSplitTree (RICHARDSON, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
+
+    FielduSGi[i]->SetupKSPTolerances (1.e-10, 1.e-10, 1.e+50, 5);
+    FielduSGi[i]->SetRichardsonScaleFactor(1.); 
+    
+    
+    FSAll.push_back (FielduSGi[i]);
+  }
+
+  FieldSplitTree uSG (PREONLY, FIELDSPLIT_MULTIPLICATIVE_PRECOND, FSAll, "uSG");
+    
+  systemSG.SetOuterSolver(GMRES);
+  //END buid fieldSplitTree
+  //systemSG.SetLinearEquationSolverType (FEMuS_FIELDSPLIT, INCLUDE_COARSE_LEVEL_TRUE);
+  systemSG.SetLinearEquationSolverType (FEMuS_DEFAULT, INCLUDE_COARSE_LEVEL_TRUE);
   // ******* System FEM Assembly *******
   systemSG.SetAssembleFunction (AssembleSysSG);
   systemSG.SetMaxNumberOfLinearIterations (1);
@@ -184,19 +218,19 @@ int main (int argc, char** argv) {
   systemSG.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  systemSG.SetMgSmoother (GMRES_SMOOTHER);
   
-  systemSG.SetOuterKSPSolver("richardson");
 
   systemSG.init();
 
   // ******* Set Smoother *******
-  // systemSG.SetSolverFineGrids (GMRES);
-  systemSG.SetSolverFineGrids (RICHARDSON);
-
-  systemSG.SetPreconditionerFineGrids (ILU_PRECOND);
-
-  systemSG.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
+  //systemSG.SetSolverFineGrids (GMRES);
+  systemSG.SetSolverCoarseGrid (PREONLY);
+  systemSG.SetPreconditionerCoarseGrid (ILU_PRECOND);
+  
+  systemSG.SetFieldSplitTree (&uSG);
+ 
+  systemSG.SetTolerances (1.e-10, 1.e-10, 1.e+50, 1000);
+  
   //END
 
 
