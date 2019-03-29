@@ -78,7 +78,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -147,7 +147,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (GMRES_SMOOTHER);
+  system.SetMgSmoother (GMRES_SMOOTHER); 
 
   system.init();
 
@@ -172,33 +172,6 @@ int main (int argc, char** argv) {
     systemSG.AddSolutionToSystemPDE (name);
   }
 
-  FieldSplitTree **FielduSGi;
-
-  FielduSGi = new FieldSplitTree * [Jp.size()];
-
-  std::vector < FieldSplitTree *> FSAll;
-  FSAll.reserve (Jp.size());
-
-
-  //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
-  for (unsigned i = 0; i < Jp.size(); i++) {
-    char name[10];
-    sprintf (name, "uSG%d", i);
-    std::vector < unsigned > fielduSGi (1);
-    fielduSGi[0] = systemSG.GetSolPdeIndex (name);
-
-    std::vector < unsigned > solutionTypeuSGi (1);
-    solutionTypeuSGi[0] = mlSol.GetSolutionType (name);
-
-    FielduSGi[i] = new FieldSplitTree (PREONLY, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
-
-    FSAll.push_back (FielduSGi[i]);
-  }
-
-  FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_PRECOND, FSAll, "uSG");
-  
-  //END buid fieldSplitTree
-   systemSG.SetMgSmoother (FIELDSPLIT_SMOOTHER);
   // ******* System FEM Assembly *******
   systemSG.SetAssembleFunction (AssembleSysSG);
   systemSG.SetMaxNumberOfLinearIterations (1);
@@ -211,15 +184,15 @@ int main (int argc, char** argv) {
   systemSG.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  // systemSG.SetMgSmoother (GMRES_SMOOTHER);
+  systemSG.SetMgSmoother (GMRES_SMOOTHER);
+  
+  systemSG.SetOuterKSPSolver("richardson");
 
   systemSG.init();
 
   // ******* Set Smoother *******
-  //systemSG.SetSolverFineGrids (GMRES);
+  // systemSG.SetSolverFineGrids (GMRES);
   systemSG.SetSolverFineGrids (RICHARDSON);
-  
-  systemSG.SetFieldSplitTree (&uSG);
 
   systemSG.SetPreconditionerFineGrids (ILU_PRECOND);
 
@@ -327,13 +300,8 @@ int main (int argc, char** argv) {
   //mlSolHisto.GetWriter()->SetDebugOutput(true);
   mlSolHistoFinest.GetWriter()->Write (DEFAULT_OUTPUTDIR, "histo_finer", print_vars_3, 0);
   //END
-  */
-  
-  for (unsigned i = 0; i < Jp.size(); i++) {
-    delete FielduSGi[i];
-  }
-  delete [] FielduSGi;
 
+ */ 
   return 0;
 
 } //end main
