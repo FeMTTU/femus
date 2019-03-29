@@ -119,42 +119,6 @@ template < class type = double >
 
 
 
-//this is based on the AddSolution function in MLSol
- class Unknown {
-     
- public:
-     
-     std::string _name;
-     FEFamily _fe_family;     
-     FEOrder  _fe_order;
-     int _time_order;
-     bool _is_pde_unknown;
-     
- };
- 
- 
- class System;
- class MultiLevelSolution;
- 
- 
-class UnknownLocal {
-     
- public:
-     
-     UnknownLocal() { }
-     
-    void initialize(const Unknown & unknown, const MultiLevelSolution * ml_sol, System * mlPdeSys);
-    
-//these do not change with the element
-  std::string  Solname;
-  unsigned int SolPdeIndex;
-  unsigned int SolIndex;  
-  unsigned int SolFEType; 
-  
-  //it will change elem by elem
-//   unsigned int Sol_n_el_dofs;  not yet
-   
- }; 
 
 } //end namespace femus
 

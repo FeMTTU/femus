@@ -22,7 +22,6 @@
 #include "MgTypeEnum.hpp"
 #include "LinearEquationSolverEnum.hpp"
 #include "FieldSplitTree.hpp"
-#include "Math.hpp"
 
 
 namespace femus {
@@ -34,6 +33,7 @@ class System;
 class MultiLevelProblem;
 class MultiLevelMesh;
 class String;
+class Unknown;
 
 /**
  * The system abstract class
@@ -117,10 +117,10 @@ public:
     inline void SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
 
     /** Set Unknown list for the current System */
-    void set_unknown_list_for_assembly(const std::vector< Unknown > unknown_in ) { _unknown_list_for_assembly = unknown_in; }
+    void set_unknown_list_for_assembly(const std::vector< Unknown > unknown_in );
     
     /** Get Unknown list for the current System */
-    inline const std::vector< Unknown > get_unknown_list_for_assembly() const { return  _unknown_list_for_assembly; }
+    const std::vector< Unknown > get_unknown_list_for_assembly() const;
 
 protected:
 

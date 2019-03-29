@@ -28,7 +28,6 @@
 #include "GaussPoints.hpp"
 #include "FemusInputParser.hpp"
 #include "Files.hpp"
-#include "Math.hpp"
 #include "System.hpp"
 
 

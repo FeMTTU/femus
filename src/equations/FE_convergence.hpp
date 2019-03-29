@@ -3,6 +3,9 @@
 
 
 #include "MultiLevelSolution.hpp"
+#include "Math.hpp"
+#include "Assemble_unknown.hpp"
+
 
 
 namespace femus {

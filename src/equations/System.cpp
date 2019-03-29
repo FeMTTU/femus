@@ -17,6 +17,7 @@
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMeshTwo.hpp"
+#include "Assemble_unknown.hpp"
 
 #include <sstream>
 
@@ -96,6 +97,14 @@ unsigned System::GetSolPdeIndex(const char solname[]) {
   return index;
 }
 
+
+ void System::set_unknown_list_for_assembly(const std::vector< Unknown > unknown_in ) {
+    _unknown_list_for_assembly = unknown_in; 
+ }
+
+ const std::vector< Unknown > System::get_unknown_list_for_assembly() const {
+        return  _unknown_list_for_assembly; 
+    }
 
 
 } //end namespace femus
