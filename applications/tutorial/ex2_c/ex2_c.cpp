@@ -397,31 +397,21 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
   if (n_unknowns > 1) { std::cout << "Only scalar variable now, haven't checked with vector PDE"; abort(); }
   
-  vector < std::string >  Solname(n_unknowns);     for(unsigned ivar=0; ivar < n_unknowns; ivar++) { Solname[ivar] = unknowns[ivar]._name; }
-  vector < unsigned int > SolPdeIndex(n_unknowns);
-  vector < unsigned int > SolIndex(n_unknowns);  
-  vector < unsigned int > SolFEType(n_unknowns);  
+  std::vector < Math::UnknownLocal < System > > unk_loc(n_unknowns);
+  for(int u = 0; u < n_unknowns; u++) unk_loc[u].initialize(unknowns[u], ml_sol, mlPdeSys);
+        
+  vector < unsigned int > Sol_n_el_dofs(n_unknowns);
 
-
-  for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-    SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
-    SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
-    SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
-  }
-  
-   vector < unsigned int > Sol_n_el_dofs(n_unknowns);
-
-  
   //----------- at dofs ------------------------------
 
   vector < vector < real_num > > SolVAR_eldofs(n_unknowns);
-  for(int k = 0; k < n_unknowns; k++) {    SolVAR_eldofs[k].reserve(max_size_elem_dofs);  }
+  for(int u = 0; u < n_unknowns; u++) {    SolVAR_eldofs[u].reserve(max_size_elem_dofs);  }
   
   vector < double >    solu_exact_at_dofs;  solu_exact_at_dofs.reserve(max_size_elem_dofs);
 
 
 
-//----------------- 
+//-- at dofs and quadrature points --------------- 
   vector < Phi< real_num_mov > > phi_dof_qp(n_unknowns, Phi< real_num_mov >(dim));
   
 
@@ -438,7 +428,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, SolFEType[0]);
+    unsigned nDofu  = msh->GetElementDofNumber(iel, unk_loc[0].SolFEType);
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);
 
     // resize local arrays
@@ -467,16 +457,16 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
         std::vector< double > x_at_node(dim,0.);
         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
       solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
-         loc_to_glob_map[i] = pdeSys->GetSystemDof(SolIndex[0], SolPdeIndex[0], i, iel);
+         loc_to_glob_map[i] = pdeSys->GetSystemDof(unk_loc[0].SolIndex, unk_loc[0].SolPdeIndex, i, iel);
     }
 
       for (unsigned  k = 0; k < n_unknowns; k++) {
-    unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+    unsigned ndofs_unk = msh->GetElementDofNumber(iel, unk_loc[k].SolFEType);
        Sol_n_el_dofs[k] = ndofs_unk;
        SolVAR_eldofs[k].resize(ndofs_unk);
     for (unsigned i = 0; i < ndofs_unk; i++) {
-       unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
-       SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
+       unsigned solDof = msh->GetSolutionDof(i, iel, unk_loc[k].SolFEType);
+       SolVAR_eldofs[k][i] = (*sol->_Sol[unk_loc[k].SolIndex])(solDof);
 //        JACDof[i + k *nDofsD]/*[k][i]*/ = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
       }
     }
@@ -492,11 +482,11 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     if (dim != 2) abort(); //only implemented in 2D now
 
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][SolFEType[0]]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][unk_loc[0].SolFEType]->GetGaussPointNumber(); ig++) {
         
       // *** get gauss point weight, test function and test function partial derivatives ***
   for (unsigned  u = 0; u < n_unknowns; u++) {
-      static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][SolFEType[0]] )
+      static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][unk_loc[0].SolFEType] )
                                          ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi_dof_qp[u].phi, phi_dof_qp[u].phi_x, phi_dof_qp[u].phi_xx);
   }
   

@@ -7,7 +7,7 @@
 namespace femus {
     
     
-    
+ 
 template < class real_num_mov >
  class Phi {
      

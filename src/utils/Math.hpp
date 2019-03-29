@@ -5,7 +5,7 @@
 #include <string>
 #include "Typedefs.hpp"
 #include "ElemType.hpp"
-
+#include "MultiLevelSolution.hpp"
 
 
 
@@ -125,6 +125,36 @@ template < class type = double >
      bool _is_pde_unknown;
      
  };
+ 
+ 
+ 
+ 
+template < class system_type>
+class UnknownLocal {
+     
+ public:
+     
+     UnknownLocal() { }
+     
+    void initialize( Math::Unknown  unknown, const MultiLevelSolution * ml_sol, system_type * mlPdeSys) {
+   
+   Solname     = unknown._name;
+   SolPdeIndex = mlPdeSys->GetSolPdeIndex(Solname.c_str());
+   SolIndex    = ml_sol->GetIndex        (Solname.c_str());
+   SolFEType   = ml_sol->GetSolutionType(SolIndex);
+  
+  }
+  
+//these do not change with the element
+  std::string  Solname;
+  unsigned int SolPdeIndex;
+  unsigned int SolIndex;  
+  unsigned int SolFEType; 
+  
+  //it will change elem by elem
+//   unsigned int Sol_n_el_dofs;  not yet
+   
+ }; 
 
  
 } //end namespace Math
