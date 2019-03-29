@@ -22,6 +22,7 @@
 #include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
 #include "ElemType.hpp"
+#include "Assemble_jacobian.hpp"
 
 namespace femus {
 
@@ -32,18 +33,61 @@ class ElementJacRes {
     
 public:
     
-    ElementJacRes(const unsigned int dim) {
+    ElementJacRes(const unsigned int dim, const std::vector< UnknownLocal > & unknowns_in) : 
+    unknowns(unknowns_in),
+    n_unknowns(unknowns.size()) {
         
         const unsigned int max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));
-        loc_to_glob_map.reserve(max_size_elem_dofs);
-        Res.reserve(max_size_elem_dofs);  
-        Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);
+        
+        const unsigned total_size_1d = n_unknowns * max_size_elem_dofs;
+        Res.reserve( total_size_1d );  
+        Jac.reserve( total_size_1d * total_size_1d);
+
+        loc_to_glob_map_all_vars.reserve( total_size_1d );
+        
+        loc_to_glob_map.resize(n_unknowns);
+        for(int i = 0; i < n_unknowns; i++) {    loc_to_glob_map[i].reserve(max_size_elem_dofs); }
+        
     }
     
-   vector < int >       loc_to_glob_map;  
+inline void set_loc_to_glob_map() { 
+    
+//       for (unsigned  k = 0; k < n_unknowns; k++) {
+//     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+//        Sol_n_el_dofs[k] = ndofs_unk;
+//        SolVAR_eldofs[k].resize(Sol_n_el_dofs[k]);
+//           L2G_dofmap[k].resize(Sol_n_el_dofs[k]); 
+//     for (unsigned i = 0; i < SolVAR_eldofs[k].size(); i++) {
+//        unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
+//        SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
+//           L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+//       }
+//     }
+//     
+//     L2G_dofmap_AllVars.resize(0);
+//       for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_AllVars.insert(L2G_dofmap_AllVars.end(),L2G_dofmap[k].begin(),L2G_dofmap[k].end());
+// 
+//     unsigned sum_Sol_n_el_dofs = 0;
+//     for (unsigned  k = 0; k < n_unknowns; k++) { sum_Sol_n_el_dofs += Sol_n_el_dofs[k]; }
+//     
+//     Jac.resize(sum_Sol_n_el_dofs * sum_Sol_n_el_dofs);  std::fill(Jac.begin(), Jac.end(), 0.);
+//     Res.resize(sum_Sol_n_el_dofs);                      std::fill(Res.begin(), Res.end(), 0.);
+//     
+    
+}
+
+inline void set_jac(const double &   jac_in, const unsigned int pos) { Jac[pos] = jac_in; }
+    
+inline void set_res(const real_num & res_in, const unsigned int pos) { Res[pos] = res_in; }
+    
+private:
+    
+  vector < int >      loc_to_glob_map_all_vars;  
+  vector < vector < int > >     loc_to_glob_map;  
   vector < real_num >  Res;                         
-  vector < double >    Jac;                
-   
+  vector < double >    Jac;
+  const std::vector< UnknownLocal > & unknowns;   
+  const unsigned int n_unknowns;
     
 };
     

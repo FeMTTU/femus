@@ -417,13 +417,11 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   vector < Phi< real_num_mov > > phi_dof_qp(n_unknowns, Phi< real_num_mov >(dim));
   
 //-- 
-  ElementJacRes < real_num > element_jacres(dim);
+  ElementJacRes < real_num > element_jacres(dim, unk_loc);
 
-  vector < int >       loc_to_glob_map;  loc_to_glob_map.reserve(max_size_elem_dofs);
-  vector < real_num >  Res;                          Res.reserve(max_size_elem_dofs);  
-  vector < double >    Jac;                          Jac.reserve(max_size_elem_dofs * max_size_elem_dofs);
-  
-
+  vector < double >   Jac;   Jac.reserve( n_unknowns * max_size_elem_dofs * n_unknowns * max_size_elem_dofs);
+  vector < real_num > Res;   Res.reserve( n_unknowns * max_size_elem_dofs);
+           vector < int >       loc_to_glob_map_all_vars;   loc_to_glob_map_all_vars.reserve( n_unknowns *max_size_elem_dofs);
 
   RES->zero();
   if (assembleMatrix)   KK->zero();
@@ -434,14 +432,15 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
       
     short unsigned ielGeom = msh->GetElementType(iel);
     
-    unsigned nDofu  = msh->GetElementDofNumber(iel, unk_loc[0].SolFEType);
-    
-    loc_to_glob_map.resize(nDofu);
-    Res.resize(nDofu);         std::fill(Res.begin(), Res.end(), 0.);
-    Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.);
-
     element.set_coords_at_dofs(iel, xType);
     
+    
+    
+    unsigned nDofu  = msh->GetElementDofNumber(iel, unk_loc[0].SolFEType);
+    
+    loc_to_glob_map_all_vars.resize(nDofu);
+    Res.resize(nDofu);         std::fill(Res.begin(), Res.end(), 0.);
+    Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.);
  
    
     solu_exact_at_dofs.resize(nDofu);
@@ -451,7 +450,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
         std::vector< double > x_at_node(dim,0.);
         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = element.get_coords_at_dofs(jdim,i);
       solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
-         loc_to_glob_map[i] = pdeSys->GetSystemDof(unk_loc[0].SolIndex, unk_loc[0].SolPdeIndex, i, iel);
+         loc_to_glob_map_all_vars[i] = pdeSys->GetSystemDof(unk_loc[0].SolIndex, unk_loc[0].SolPdeIndex, i, iel);
     }
 
       for (unsigned  k = 0; k < n_unknowns; k++) {
@@ -551,7 +550,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     } // end gauss point loop
 
     
- assemble_jac.compute_jacobian_outside_integration_loop(stack, SolVAR_eldofs, Res, Jac, loc_to_glob_map, RES, KK);
+ assemble_jac.compute_jacobian_outside_integration_loop(stack, SolVAR_eldofs, Res, Jac, loc_to_glob_map_all_vars, RES, KK);
  
     
   } //end element loop for each process
@@ -578,13 +577,13 @@ template < >
                                                const std::vector< std::vector< double > > & solu,
                                                const std::vector< double > & Res,
                                                std::vector< double > & Jac,
-                                               const std::vector< int > & loc_to_glob_map,
+                                               const std::vector< int > & loc_to_glob_map_all_vars,
                                                NumericVector*           RES,
                                                SparseMatrix*             KK
                                                                    )  const {
     
-    RES->add_vector_blocked(Res, loc_to_glob_map);
-    KK->add_matrix_blocked(Jac, loc_to_glob_map, loc_to_glob_map);
+    RES->add_vector_blocked(Res, loc_to_glob_map_all_vars);
+    KK->add_matrix_blocked(Jac, loc_to_glob_map_all_vars, loc_to_glob_map_all_vars);
     
 }
 
