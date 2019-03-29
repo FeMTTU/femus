@@ -172,7 +172,7 @@ int main (int argc, char** argv) {
     systemSG.AddSolutionToSystemPDE (name);
   }
 
-    FieldSplitTree **FielduSGi;
+  FieldSplitTree **FielduSGi;
 
   FielduSGi = new FieldSplitTree * [Jp.size()];
 
@@ -216,7 +216,9 @@ int main (int argc, char** argv) {
   systemSG.init();
 
   // ******* Set Smoother *******
-  // systemSG.SetSolverFineGrids (GMRES);
+  //systemSG.SetSolverFineGrids (GMRES);
+  systemSG.SetSolverFineGrids (RICHARDSON);
+  
   systemSG.SetFieldSplitTree (&uSG);
 
   systemSG.SetPreconditionerFineGrids (ILU_PRECOND);

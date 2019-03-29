@@ -78,7 +78,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -147,7 +147,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetLinearEquationSolverType (FEMuS_DEFAULT);
+  system.SetMgSmoother (GMRES_SMOOTHER); 
 
   system.init();
 
@@ -184,7 +184,9 @@ int main (int argc, char** argv) {
   systemSG.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  systemSG.SetLinearEquationSolverType (FEMuS_DEFAULT);
+  systemSG.SetMgSmoother (GMRES_SMOOTHER);
+  
+  systemSG.SetOuterKSPSolver("richardson");
 
   systemSG.init();
 
@@ -261,10 +263,10 @@ int main (int argc, char** argv) {
   MultiLevelSolution mlSolHisto (&mlMshHisto);
   MultiLevelSolution mlSolHistoFinest (&mlMshHistoFinest);
 
-  mlSolHisto.AddSolution ("HISTO", DISCONTINUOUS_POLYNOMIAL, ZERO);
+  mlSolHisto.AddSolution ("HISTO", DISCONTINOUS_POLYNOMIAL, ZERO);
   mlSolHisto.AddSolution ("PROPOSED", LAGRANGE, FIRST);
 
-  mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINUOUS_POLYNOMIAL, ZERO);
+  mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINOUS_POLYNOMIAL, ZERO);
 
   mlSolHisto.Initialize ("All");
 
