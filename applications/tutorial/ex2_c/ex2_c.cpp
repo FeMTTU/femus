@@ -398,17 +398,13 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
   if (n_unknowns > 1) { std::cout << "Only scalar variable now, haven't checked with vector PDE"; abort(); }
   
-  std::vector < UnknownLocal > unk_loc(n_unknowns);
+  std::vector < UnknownLocal  < real_num > > unk_loc(n_unknowns);
   
-  for(int u = 0; u < n_unknowns; u++) unk_loc[u].initialize(unknowns[u], ml_sol, mlPdeSys);
-        
-  vector < unsigned int > Sol_n_el_dofs(n_unknowns);
+  for(int u = 0; u < n_unknowns; u++) unk_loc[u].initialize(dim, unknowns[u], ml_sol, mlPdeSys);
 
-  //----------- at dofs ------------------------------
-
-  vector < vector < real_num > > SolVAR_eldofs(n_unknowns);
-  for(int u = 0; u < n_unknowns; u++) {    SolVAR_eldofs[u].reserve(max_size_elem_dofs);  }
   
+  vector < unsigned int > Sol_n_el_dofs_interface(n_unknowns);
+
   vector < double >    solu_exact_at_dofs;  solu_exact_at_dofs.reserve(max_size_elem_dofs);
 
 
@@ -442,32 +438,41 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     Res.resize(nDofu);         std::fill(Res.begin(), Res.end(), 0.);
     Jac.resize(nDofu * nDofu);  std::fill(Jac.begin(), Jac.end(), 0.);
  
-   
-    solu_exact_at_dofs.resize(nDofu);
-     
-    // local storage of global mapping and solution
+       // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
-        std::vector< double > x_at_node(dim,0.);
-        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = element.get_coords_at_dofs(jdim,i);
-      solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
          loc_to_glob_map_all_vars[i] = pdeSys->GetSystemDof(unk_loc[0].SolIndex, unk_loc[0].SolPdeIndex, i, iel);
     }
+    
+    
+    
+    solu_exact_at_dofs.resize(nDofu);
+     
+        for (unsigned i = 0; i < nDofu; i++) {
+            std::vector< double > x_at_node(dim,0.);
+        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = element.get_coords_at_dofs(jdim,i);
+      solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
+        }
+    
+
 
       for (unsigned  k = 0; k < n_unknowns; k++) {
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, unk_loc[k].SolFEType);
-       Sol_n_el_dofs[k] = ndofs_unk;
-       SolVAR_eldofs[k].resize(ndofs_unk);
+       unk_loc[k].Sol_n_el_dofs = ndofs_unk;
+       unk_loc[k].Sol_eldofs.resize(ndofs_unk);
     for (unsigned i = 0; i < ndofs_unk; i++) {
        unsigned solDof = msh->GetSolutionDof(i, iel, unk_loc[k].SolFEType);
-       SolVAR_eldofs[k][i] = (*sol->_Sol[unk_loc[k].SolIndex])(solDof);
-//        JACDof[i + k *nDofsD]/*[k][i]*/ = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
+       unk_loc[k].Sol_eldofs[i] = (*sol->_Sol[unk_loc[k].SolIndex])(solDof);
       }
     }
     
+   
     unsigned sum_Sol_n_el_dofs = 0;
-    for (unsigned  k = 0; k < n_unknowns; k++) { sum_Sol_n_el_dofs += Sol_n_el_dofs[k]; }
+    for (unsigned  u = 0; u < n_unknowns; u++) { sum_Sol_n_el_dofs += unk_loc[u].Sol_n_el_dofs; }
 
-
+    
+    for (unsigned  u = 0; u < n_unknowns; u++) {
+           Sol_n_el_dofs_interface[u] = unk_loc[u].Sol_n_el_dofs;
+    }
 
     assemble_jac.prepare_before_integration_loop(stack);
 
@@ -492,11 +497,11 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
       vector < double > gradSolu_exact_gss(dim, 0.);
 
    for (unsigned  u = 0; u < n_unknowns; u++) {
-     for (unsigned i = 0; i < Sol_n_el_dofs[u]; i++) {
-        solu_gss += phi_dof_qp[u].phi[i] * SolVAR_eldofs[u][i];
+     for (unsigned i = 0; i < unk_loc[u].Sol_n_el_dofs; i++) {
+        solu_gss += phi_dof_qp[u].phi[i] * unk_loc[u].Sol_eldofs[i];
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-                gradSolu_gss[jdim] += phi_dof_qp[u].phi_x[i * dim + jdim] * SolVAR_eldofs[0][i];
+                gradSolu_gss[jdim] += phi_dof_qp[u].phi_x[i * dim + jdim] * unk_loc[0].Sol_eldofs[i];
           gradSolu_exact_gss[jdim] += phi_dof_qp[u].phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
         }
       }
@@ -540,7 +545,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
 
         
-        assemble_jac.compute_jacobian_inside_integration_loop(i, dim, Sol_n_el_dofs, sum_Sol_n_el_dofs, phi_dof_qp, weight, Jac);  //rethink of these arguments when you have more unknowns
+        assemble_jac.compute_jacobian_inside_integration_loop(i, dim, Sol_n_el_dofs_interface, sum_Sol_n_el_dofs, unk_loc, phi_dof_qp, weight, Jac);  //rethink of these arguments when you have more unknowns
         
       
         
@@ -550,7 +555,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     } // end gauss point loop
 
     
- assemble_jac.compute_jacobian_outside_integration_loop(stack, SolVAR_eldofs, Res, Jac, loc_to_glob_map_all_vars, RES, KK);
+ assemble_jac.compute_jacobian_outside_integration_loop(stack, unk_loc, Res, Jac, loc_to_glob_map_all_vars, RES, KK);
  
     
   } //end element loop for each process
@@ -587,6 +592,25 @@ template < >
     
 }
 
+
+ // template specialization for double
+template < >
+ void  assemble_jacobian < double, double > ::compute_jacobian_outside_integration_loop (
+                                                             adept::Stack & stack,
+                                               const std::vector< UnknownLocal < double > > & unk_vec,
+                                               const std::vector< double > & Res,
+                                               std::vector< double > & Jac,
+                                               const std::vector< int > & loc_to_glob_map_all_vars,
+                                               NumericVector*           RES,
+                                               SparseMatrix*             KK
+                                                                   )  const {
+    
+    RES->add_vector_blocked(Res, loc_to_glob_map_all_vars);
+    KK->add_matrix_blocked(Jac, loc_to_glob_map_all_vars, loc_to_glob_map_all_vars);
+    
+}
+
+
  // template specialization for double
  // this is where you fill the jacobian in traditional (much faster) way
 template < >
@@ -595,6 +619,7 @@ template < >
                                                          const unsigned dim, 
                                                          const std::vector < unsigned int > Sol_n_el_dofs,
                                                          const unsigned int sum_Sol_n_el_dofs,
+                                                         const std::vector< UnknownLocal < double > > & unk_vec,
                                                          const std::vector< Phi <double> > &  phi,
                                                          const double weight, 
                                                          std::vector< double > & Jac )  const { 

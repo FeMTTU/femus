@@ -6,6 +6,8 @@
 #include <string>
 #include "FElemTypeEnum.hpp"
 
+#include "MultiLevelSolution.hpp"
+#include "System.hpp"
 
 namespace femus {
 
@@ -54,13 +56,14 @@ template < class real_num_mov >
  class MultiLevelSolution;
  
  
+template < class real_num >
 class UnknownLocal {
      
  public:
      
      UnknownLocal() { }
      
-    void initialize(const Unknown & unknown, const MultiLevelSolution * ml_sol, System * mlPdeSys);
+    void initialize(const unsigned int dim, const Unknown & unknown, const MultiLevelSolution * ml_sol, System * mlPdeSys);
     
 //these do not change with the element
   std::string  Solname;
@@ -69,9 +72,28 @@ class UnknownLocal {
   unsigned int SolFEType; 
   
   //it will change elem by elem
-//   unsigned int Sol_n_el_dofs;  not yet
-   
+  unsigned int Sol_n_el_dofs;
+  std::vector < real_num > Sol_eldofs;
+
  };
+ 
+ 
+ 
+ template < class real_num >
+ void UnknownLocal< real_num >::initialize(const unsigned int dim, const Unknown & unknown, const MultiLevelSolution * ml_sol, System * mlPdeSys) {
+   
+     
+   Solname     = unknown._name;
+   SolPdeIndex = mlPdeSys->GetSolPdeIndex(Solname.c_str());
+   SolIndex    = ml_sol->GetIndex        (Solname.c_str());
+   SolFEType   = ml_sol->GetSolutionType(SolIndex);
+   
+   const unsigned int max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));
+   
+   Sol_eldofs.reserve(max_size_elem_dofs);
+  
+  }    
+ 
  
  
 }

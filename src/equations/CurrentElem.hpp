@@ -22,7 +22,7 @@
 #include "DenseVector.hpp"
 #include "DenseMatrix.hpp"
 #include "ElemType.hpp"
-#include "Assemble_jacobian.hpp"
+#include "Assemble_unknown.hpp"
 
 namespace femus {
 
@@ -33,7 +33,7 @@ class ElementJacRes {
     
 public:
     
-    ElementJacRes(const unsigned int dim, const std::vector< UnknownLocal > & unknowns_in) : 
+    ElementJacRes(const unsigned int dim, const std::vector< UnknownLocal < real_num > > & unknowns_in) : 
     unknowns(unknowns_in),
     n_unknowns(unknowns.size()) {
         
@@ -86,7 +86,7 @@ private:
   vector < vector < int > >     loc_to_glob_map;  
   vector < real_num >  Res;                         
   vector < double >    Jac;
-  const std::vector< UnknownLocal > & unknowns;   
+  const std::vector< UnknownLocal < real_num > > & unknowns;   
   const unsigned int n_unknowns;
     
 };
