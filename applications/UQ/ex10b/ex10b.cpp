@@ -193,7 +193,7 @@ int main (int argc, char** argv) {
 
     FielduSGi[i] = new FieldSplitTree (RICHARDSON, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
 
-    FielduSGi[i]->SetupKSPTolerances (1.e-10, 1.e-10, 1.e+50, 5);
+    FielduSGi[i]->SetTolerances (1.e-10, 1.e-10, 1.e+50, 50);
     FielduSGi[i]->SetRichardsonScaleFactor(1.); 
     
     

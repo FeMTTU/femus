@@ -61,9 +61,10 @@ namespace femus {
 
       void SetSolver (KSP &ksp, const SolverType &solver);      
 
-      void SetupKSPTolerances (const double& rtol, const double& abstol, const double& dtol, const unsigned& maxits);
-      void SetupSchurFactorizationType (const SchurFactType& schurFactType);
-      void SetupSchurPreType (const SchurPreType& schurPreType);
+      void SetTolerances (const double& rtol, const double& abstol, const double& dtol, 
+                               const unsigned& maxits, const unsigned &restart = 30);
+      void SetSchurFactorizationType (const SchurFactType& schurFactType);
+      void SetSchurPreType (const SchurPreType& schurPreType);
 
       void SetRichardsonScaleFactor (const double & richardsonScaleFactor) {
         _richardsonScaleFactor = richardsonScaleFactor;
@@ -118,6 +119,7 @@ namespace femus {
       double _abstol;
       double _dtol;
       unsigned _maxits;
+      unsigned _restart;
       double _richardsonScaleFactor;
       
       SchurFactType _schurFactType;
