@@ -114,7 +114,9 @@ class CurrentElem {
   const MultiLevelMeshTwo & _mesh;
   
   // ========= NEW ===============================================================================
-   void set_coords_at_dofs(const unsigned int dim,  const unsigned int xType);
+  inline short unsigned int geom_type() const { return geom_elem_type; }
+  
+   void set_coords_at_dofs_and_geom_type(const unsigned int dim,  const unsigned int xType);
    
    const vector < vector < real_num_mov > > & get_coords_at_dofs() const {  return _coords_at_dofs; }
    
@@ -126,7 +128,7 @@ class CurrentElem {
   const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
   /*const */unsigned _max_size_elem_dofs;                   // conservative: based on line3, quad9, hex27
   const Mesh * _mesh_new;
-
+  short unsigned int geom_elem_type;
 
 // === OLD =====================================================================================
   const std::vector<const elem_type*>  &  _elem_type;
@@ -181,7 +183,7 @@ template < typename real_num_mov >
     
     
 template < typename real_num_mov >
- void    CurrentElem<real_num_mov>::set_coords_at_dofs(const unsigned int iel, const unsigned int xType) {
+ void    CurrentElem<real_num_mov>::set_coords_at_dofs_and_geom_type(const unsigned int iel, const unsigned int xType) {
          
   unsigned nDofx = _mesh_new->GetElementDofNumber(iel, xType);
       
@@ -194,7 +196,10 @@ template < typename real_num_mov >
       for (unsigned jdim = 0; jdim < _dim; jdim++) {
         _coords_at_dofs[jdim][i] = (*_mesh_new->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
-    }     
+    }
+    
+    geom_elem_type = _mesh_new->GetElementType(iel);
+    
     
   }
     

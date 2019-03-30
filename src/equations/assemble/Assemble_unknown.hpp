@@ -85,18 +85,31 @@ class UnknownLocal {
      
      UnknownLocal() { }
      
-    void initialize(const unsigned int dim, const Unknown & unknown, const MultiLevelSolution * ml_sol, System * mlPdeSys);
+    void reserve_max_elem_dofs_memory(const unsigned int dim);
+    
+    void initialize(const unsigned int dim, 
+                    const Unknown & unknown,
+                    const MultiLevelSolution * ml_sol, 
+                    System * mlPdeSys);
     
 //  sort of copy constructor, in case you don't have an Unknown
-    void initialize(const unsigned int dim, const UnknownLocal & unknown);
+    void initialize(const unsigned int dim, 
+                    const std::string  Solname_in, 
+                    const unsigned int SolFEType_in,
+                    const unsigned int SolPdeIndex_in,
+                    const unsigned int SolIndex_in);
     
-    void set_elem_dofs(const unsigned int iel, const Mesh * msh, const Solution * sol);
+    void set_elem_dofs(const unsigned int iel, 
+                       const Mesh * msh,
+                       const Solution * sol);
 
-    void set_elem_dofs(const UnknownLocal & unk_loc,
-                       const CurrentElem < real_num > & geom_element,
+    void set_elem_dofs(const unsigned int ndofs_in, 
+                       const CurrentElem < double/*real_num_mov later*/ > & geom_element,
                        const Math::Function< double > & exact_sol);
  
  
+    inline const std::string & name() const { return Solname; }
+    
     inline const unsigned int & fe_type() const { return SolFEType; }
 
     inline const unsigned int & sol_index() const { return SolIndex; }
@@ -125,6 +138,15 @@ class UnknownLocal {
  };
  
  
+ template < class real_num >
+ void UnknownLocal< real_num >::reserve_max_elem_dofs_memory(const unsigned int dim) {
+     
+   const unsigned int max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));
+   
+   Sol_eldofs.reserve(max_size_elem_dofs);
+     
+     
+ }
  
  template < class real_num >
  void UnknownLocal< real_num >::initialize(const unsigned int dim, const Unknown & unknown, const MultiLevelSolution * ml_sol, System * mlPdeSys) {
@@ -135,26 +157,25 @@ class UnknownLocal {
    SolIndex    = ml_sol->GetIndex        (Solname.c_str());
    SolFEType   = ml_sol->GetSolutionType(SolIndex);
    
-   
-   const unsigned int max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));
-   
-   Sol_eldofs.reserve(max_size_elem_dofs);
+   reserve_max_elem_dofs_memory(dim);
   
   }
   
   
  template < class real_num >
- void UnknownLocal< real_num >::initialize(const unsigned int dim, const UnknownLocal & unknown) {
+ void UnknownLocal< real_num >::initialize(const unsigned int dim,
+                                           const std::string  Solname_in,
+                                           const unsigned int SolFEType_in,
+                                           const unsigned int SolPdeIndex_in,
+                                           const unsigned int SolIndex_in)  {
      
-   Solname     =  unknown.Solname;    
-   SolFEType   =  unknown.SolFEType; 
-   SolPdeIndex =  unknown.SolPdeIndex;    
-   SolIndex    =  unknown.SolIndex;
+   Solname     =  Solname_in     ;    
+   SolFEType   =  SolFEType_in   ; 
+   SolPdeIndex =  SolPdeIndex_in ;    
+   SolIndex    =  SolIndex_in    ;
    
    
-   const unsigned int max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));
-   
-   Sol_eldofs.reserve(max_size_elem_dofs);
+   reserve_max_elem_dofs_memory(dim);
      
 } 
  
@@ -175,11 +196,11 @@ class UnknownLocal {
 
 //this needs the unknown that is tied to it
  template < class real_num >
- void UnknownLocal< real_num >::set_elem_dofs(const UnknownLocal & unk_loc, 
-                                              const CurrentElem < real_num > & geom_element, 
+ void UnknownLocal< real_num >::set_elem_dofs(const unsigned int ndofs_in, 
+                                              const CurrentElem < double/*real_num_mov later*/ > & geom_element, 
                                               const Math::Function< double > & exact_sol) {
  
-         unsigned nDofu  = unk_loc.num_elem_dofs();
+        unsigned nDofu  = ndofs_in;
         Sol_eldofs.resize(nDofu);
         for (unsigned i = 0; i < nDofu; i++) {
             std::vector< double > coords_at_dof_single(geom_element.GetDim(),0.);

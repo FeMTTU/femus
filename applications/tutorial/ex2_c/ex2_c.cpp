@@ -97,10 +97,10 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
 }
 
 
-template < class system_type, class real_num, class real_num_mov = double >
+template < class system_type, class real_num, class real_num_mov >
 void System_assemble_interface(MultiLevelProblem & ml_prob);
 
-template < class system_type, class real_num, class real_num_mov = double >
+template < class system_type, class real_num, class real_num_mov >
 void System_assemble_flexible(MultiLevelProblem& ml_prob,
                               system_type * mlPdeSys,
                               const std::vector< Unknown > &  unknowns,
@@ -199,7 +199,7 @@ int main(int argc, char** args) {
 
 
     // ======= Normal run ========================
-    My_main_single_level< /*adept::a*/double > my_main;
+    My_main_single_level< adept::adouble > my_main;
 //     const unsigned int n_levels = 3;
 //      my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); //if you don't want the convergence study
 
@@ -292,7 +292,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
         system.set_unknown_list_for_assembly(unknowns_vec); //way to communicate to the assemble function, which doesn't belong to any class
         ml_prob.set_current_system_number(u);               //way to communicate to the assemble function, which doesn't belong to any class
 
-        system.SetAssembleFunction(System_assemble_interface< LinearImplicitSystem, real_num >);
+        system.SetAssembleFunction(System_assemble_interface< LinearImplicitSystem, real_num, double >);
 
         // initialize and solve the system
         system.init();
@@ -319,7 +319,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
 
 
-template < class system_type, class real_num, class real_num_mov = double >
+template < class system_type, class real_num, class real_num_mov >
 void System_assemble_interface(MultiLevelProblem& ml_prob) {
 // this is meant to be like a tiny addition to the main function, because we cannot pass these arguments through the function pointer
 //what is funny is that this function is attached to a system, but I cannot retrieve the system to which it is attached unless I know the name or the number of it!
@@ -331,9 +331,9 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
 
     const unsigned current_system_number = ml_prob.get_current_system_number();
 
-    System_assemble_flexible< system_type, real_num > (ml_prob,
+    System_assemble_flexible< system_type, real_num, real_num_mov > (ml_prob,
                                                        & ml_prob.get_system< system_type >(current_system_number),
-                                                       ml_prob.get_system< system_type >(current_system_number).get_unknown_list_for_assembly(),
+                                                         ml_prob.get_system< system_type >(current_system_number).get_unknown_list_for_assembly(),
                                                        exact_sol);
 
 }
@@ -359,7 +359,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
 
     const unsigned level = mlPdeSys->GetLevelToAssemble();
-    bool 			assembleMatrix 		    = mlPdeSys->GetAssembleMatrix();
+    const bool 			assembleMatrix 		    = mlPdeSys->GetAssembleMatrix();
 
     Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
     elem*                     el = msh->el;
@@ -373,8 +373,12 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
     const unsigned  dim = msh->GetDimension();
 
-    unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+    const unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+    
+    
 
+    RES->zero();
+    if (assembleMatrix)   KK->zero();
 
 
 
@@ -389,52 +393,52 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     unsigned xType = BIQUADR_FE;
 
     CurrentElem < real_num_mov > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
-    Phi < real_num_mov > phi_coords(dim);                   // must be adept if the domain is moving, otherwise double
+            Phi < real_num_mov > geom_element_phi(dim);                   // must be adept if the domain is moving, otherwise double
 
     //=============== Unknowns ========================================
 
     const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
 
-    std::vector < UnknownLocal  < real_num > >  unk_loc(n_unknowns);  //-- at dofs
+    std::vector < UnknownLocal < real_num > >       unknowns_local(n_unknowns);                             //-- at dofs
+    std::vector <          Phi < real_num_mov > >   unknowns_phi_dof_qp(n_unknowns, Phi< real_num_mov >(dim));   //-- at dofs and quadrature points ---------------
 
     for(int u = 0; u < n_unknowns; u++) {
-        unk_loc[u].initialize(dim, unknowns[u], ml_sol, mlPdeSys);
-        assert(u == unk_loc[u].pde_index());  //I would like this ivar order to coincide either with SolIndex or with SolPdeIndex, otherwise too many orders... it has to be  with SolPdeIndex, because SolIndex is related to the Solution object which can have more fields... This has to match the order of the unknowns[] argument
+        unknowns_local[u].initialize(dim, unknowns[u], ml_sol, mlPdeSys);
+        assert(u == unknowns_local[u].pde_index());  //I would like this ivar order to coincide either with SolIndex or with SolPdeIndex, otherwise too many orders... it has to be  with SolPdeIndex, because SolIndex is related to the Solution object which can have more fields... This has to match the order of the unknowns[] argument
     }
 
-    std::vector < Phi< real_num_mov > >       phi_dof_qp(n_unknowns, Phi< real_num_mov >(dim));    //-- at dofs and quadrature points ---------------
+
+    //=============== Elem matrix ========================================
+    ElementJacRes < real_num >       unk_element_jac_res(dim, unknowns_local);
+    std::vector < unsigned int > unk_num_elem_dofs_interface(n_unknowns); //to avoid recomputing offsets inside quadrature
+
 
     //=============== Quantities that are not unknowns ========================================
     
      UnknownLocal < double >  sol_exact;
-     sol_exact.initialize(dim,unk_loc[0]);
+     sol_exact.initialize(dim, 
+                          unknowns_local[0].name(), 
+                          unknowns_local[0].fe_type(), 
+                          unknowns_local[0].pde_index(), 
+                          unknowns_local[0].sol_index());
      
 
-    //=============== Elem matrix ========================================
-    ElementJacRes < real_num >       unk_element_jac_res(dim, unk_loc);
-
-    vector < unsigned int > unk_num_elem_dofs_interface(n_unknowns); //to avoid recomputing offsets inside quadrature
     
 
-    RES->zero();
-    if (assembleMatrix)   KK->zero();
-
-    
 
     // element loop: each process loops only on the elements that owns
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
 
-        geom_element.set_coords_at_dofs(iel, xType);
-        short unsigned geom_elem_type = msh->GetElementType(iel);
+        geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
 
         
         for (unsigned  u = 0; u < n_unknowns; u++) {
-            unk_loc[u].set_elem_dofs(iel, msh, sol);
+            unknowns_local[u].set_elem_dofs(iel, msh, sol);
         }
 
         //must be called AFTER the unknowns 
-        sol_exact.set_elem_dofs(unk_loc[0], geom_element, exact_sol);
+        sol_exact.set_elem_dofs(unknowns_local[0].num_elem_dofs(), geom_element, exact_sol);
 
         
 
@@ -447,7 +451,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 //interface to avoid computation inside quadrature
         unsigned sum_unk_num_elem_dofs_interface = 0;
         for (unsigned  u = 0; u < n_unknowns; u++) {
-            unk_num_elem_dofs_interface[u]   = unk_loc[u].num_elem_dofs();
+            unk_num_elem_dofs_interface[u]   = unknowns_local[u].num_elem_dofs();
             sum_unk_num_elem_dofs_interface += unk_num_elem_dofs_interface[u];
         }
 //interface to avoid computation inside quadrature
@@ -457,51 +461,51 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
         if (dim != 2) abort(); //only implemented in 2D now
 
         // *** Gauss point loop ***
-        for (unsigned ig = 0; ig < msh->_finiteElement[geom_elem_type][xType]->GetGaussPointNumber(); ig++) {
+        for (unsigned ig = 0; ig < msh->_finiteElement[geom_element.geom_type()][xType]->GetGaussPointNumber(); ig++) {
 
             // *** get gauss point weight, test function and test function partial derivatives ***
             for (unsigned  u = 0; u < n_unknowns; u++) {
-                static_cast<const elem_type_2D*>( msh->_finiteElement[geom_elem_type][unk_loc[u].fe_type()] )
-                ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[geom_elem_type][xType] ), geom_element.get_coords_at_dofs(), ig, weight_qp, phi_dof_qp[u].phi(), phi_dof_qp[u].phi_grad(), phi_dof_qp[u].phi_hess());
+                static_cast<const elem_type_2D*>( msh->_finiteElement[geom_element.geom_type()][unknowns_local[u].fe_type()] )
+                ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[geom_element.geom_type()][xType] ), geom_element.get_coords_at_dofs(), ig, weight_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess());
             }
 
-//       msh->_finiteElement[geom_elem_type][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
-            msh->_finiteElement[geom_elem_type][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, phi_coords.phi(), phi_coords.phi_grad(), phi_coords.phi_hess());
+//       msh->_finiteElement[geom_element.geom_type()][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+            msh->_finiteElement[geom_element.geom_type()][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, geom_element_phi.phi(), geom_element_phi.phi_grad(), geom_element_phi.phi_hess());
 
             // evaluate the solution, the solution derivatives and the coordinates in the gauss point
             real_num solu_gss = 0.;
-            vector < real_num > gradSolu_gss(dim, 0.);
-            vector < double > gradSolu_exact_gss(dim, 0.);
+            std::vector < real_num > gradSolu_gss(dim, 0.);
+            std::vector < double >   gradSolu_exact_gss(dim, 0.);
 
             for (unsigned  u = 0; u < n_unknowns; u++) {
-                for (unsigned i = 0; i < unk_loc[u].num_elem_dofs(); i++) {
-                    solu_gss += phi_dof_qp[u].phi(i) * unk_loc[u].elem_dofs()[i];
+                for (unsigned i = 0; i < unknowns_local[u].num_elem_dofs(); i++) {
+                    solu_gss += unknowns_phi_dof_qp[u].phi(i) * unknowns_local[u].elem_dofs()[i];
 
                     for (unsigned jdim = 0; jdim < dim; jdim++) {
-                        gradSolu_gss[jdim]       += phi_dof_qp[u].phi_grad(i * dim + jdim) * unk_loc[0].elem_dofs()[i];
-                        gradSolu_exact_gss[jdim] += phi_dof_qp[u].phi_grad(i * dim + jdim) * sol_exact.elem_dofs()[i];
+                        gradSolu_gss[jdim]       += unknowns_phi_dof_qp[u].phi_grad(i * dim + jdim) * unknowns_local[0].elem_dofs()[i];
+                        gradSolu_exact_gss[jdim] += unknowns_phi_dof_qp[u].phi_grad(i * dim + jdim) * sol_exact.elem_dofs()[i];
                     }
                 }
             }
 
 
-            vector < double > x_gss(dim, 0.);
+            std::vector < double > x_gss(dim, 0.);
             for (unsigned i = 0; i < geom_element.get_coords_at_dofs()[0].size(); i++) {
                 for (unsigned jdim = 0; jdim < dim; jdim++) {
-                    x_gss[jdim] += geom_element.get_coords_at_dofs(jdim,i) * phi_coords.phi(i);
+                    x_gss[jdim] += geom_element.get_coords_at_dofs(jdim,i) * geom_element_phi.phi(i);
                 }
             }
 
 
 
-            for (unsigned i = 0; i < unk_loc[0].num_elem_dofs(); i++) {
+            for (unsigned i = 0; i < unknowns_local[0].num_elem_dofs(); i++) {
 
                 real_num laplace = 0.;
                 real_num laplace_weak_exact = 0.;
 
                 for (unsigned jdim = 0; jdim < dim; jdim++) {
-                    laplace            +=  phi_dof_qp[0].phi_grad(i * dim + jdim) * gradSolu_gss[jdim];
-                    laplace_weak_exact +=  phi_dof_qp[0].phi_grad(i * dim + jdim) * gradSolu_exact_gss[jdim];
+                    laplace            +=  unknowns_phi_dof_qp[0].phi_grad(i * dim + jdim) * gradSolu_gss[jdim];
+                    laplace_weak_exact +=  unknowns_phi_dof_qp[0].phi_grad(i * dim + jdim) * gradSolu_exact_gss[jdim];
                 }
 
 
@@ -511,7 +515,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
 // manufactured Helmholtz - strong
                 double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
-                unk_element_jac_res.res()[i] += (helmholtz_strong_exact * phi_dof_qp[0].phi(i) - solu_gss * phi_dof_qp[0].phi(i) - laplace) * weight_qp;
+                unk_element_jac_res.res()[i] += (helmholtz_strong_exact * unknowns_phi_dof_qp[0].phi(i) - solu_gss * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;
 
 // manufactured Laplacian - strong
 //                double laplace_strong_exact = exact_sol.laplacian(x_gss);
@@ -522,7 +526,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
 
 
-                unk_assemble_jac->compute_jacobian_inside_integration_loop(i, dim, unk_num_elem_dofs_interface, sum_unk_num_elem_dofs_interface, unk_loc, phi_dof_qp, weight_qp, unk_element_jac_res.jac());
+                unk_assemble_jac->compute_jacobian_inside_integration_loop(i, dim, unk_num_elem_dofs_interface, sum_unk_num_elem_dofs_interface, unknowns_local, unknowns_phi_dof_qp, weight_qp, unk_element_jac_res.jac());
 
 
 
@@ -532,7 +536,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
         } // end gauss point loop
 
 
-        unk_assemble_jac->compute_jacobian_outside_integration_loop(stack, unk_loc, unk_element_jac_res.res(), unk_element_jac_res.jac(), unk_element_jac_res.dof_map(), RES, KK);
+        unk_assemble_jac->compute_jacobian_outside_integration_loop(stack, unknowns_local, unk_element_jac_res.res(), unk_element_jac_res.jac(), unk_element_jac_res.dof_map(), RES, KK);
 
 
     } //end element loop for each process
