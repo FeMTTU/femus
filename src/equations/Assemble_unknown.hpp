@@ -65,6 +65,9 @@ class UnknownLocal {
      
     void initialize(const unsigned int dim, const Unknown & unknown, const MultiLevelSolution * ml_sol, System * mlPdeSys);
     
+//     sort of copy constructor
+    void initialize(const unsigned int dim, const UnknownLocal & unknown);
+    
     void set_elem(const unsigned int iel, const Mesh * msh, const Solution * sol);
  
 //these do not change with the element
@@ -72,9 +75,10 @@ class UnknownLocal {
   unsigned int SolPdeIndex;
   unsigned int SolIndex;  
   unsigned int SolFEType; 
+//   _is_pde_unknown
   
   //it will change elem by elem
-  unsigned int Sol_n_el_dofs;
+  unsigned int             Sol_n_el_dofs;
   std::vector < real_num > Sol_eldofs;
 
  };
@@ -90,11 +94,28 @@ class UnknownLocal {
    SolIndex    = ml_sol->GetIndex        (Solname.c_str());
    SolFEType   = ml_sol->GetSolutionType(SolIndex);
    
+   
    const unsigned int max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));
    
    Sol_eldofs.reserve(max_size_elem_dofs);
   
-  }    
+  }
+  
+  
+ template < class real_num >
+ void UnknownLocal< real_num >::initialize(const unsigned int dim, const UnknownLocal & unknown) {
+     
+   Solname     =  unknown.Solname;    
+   SolPdeIndex =  unknown.SolPdeIndex;    
+   SolIndex    =  unknown.SolIndex;
+   SolFEType   =  unknown.SolFEType; 
+   
+   
+   const unsigned int max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));
+   
+   Sol_eldofs.reserve(max_size_elem_dofs);
+     
+} 
  
  
  template < class real_num >
