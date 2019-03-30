@@ -54,24 +54,25 @@ inline void set_loc_to_glob_map() {
     
 //       for (unsigned  k = 0; k < n_unknowns; k++) {
 //     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-//        Sol_n_el_dofs[k] = ndofs_unk;
-//        SolVAR_eldofs[k].resize(Sol_n_el_dofs[k]);
+// //        Sol_n_el_dofs[k] = ndofs_unk;
+// //        SolVAR_eldofs[k].resize(Sol_n_el_dofs[k]);
 //           L2G_dofmap[k].resize(Sol_n_el_dofs[k]); 
 //     for (unsigned i = 0; i < SolVAR_eldofs[k].size(); i++) {
 //        unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
-//        SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
+// //        SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
 //           L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
 //       }
 //     }
-//     
-//     L2G_dofmap_AllVars.resize(0);
-//       for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_AllVars.insert(L2G_dofmap_AllVars.end(),L2G_dofmap[k].begin(),L2G_dofmap[k].end());
-// 
+    
 //     unsigned sum_Sol_n_el_dofs = 0;
 //     for (unsigned  k = 0; k < n_unknowns; k++) { sum_Sol_n_el_dofs += Sol_n_el_dofs[k]; }
 //     
 //     Jac.resize(sum_Sol_n_el_dofs * sum_Sol_n_el_dofs);  std::fill(Jac.begin(), Jac.end(), 0.);
 //     Res.resize(sum_Sol_n_el_dofs);                      std::fill(Res.begin(), Res.end(), 0.);
+//     
+//     
+//         loc_to_glob_map_all_vars.resize(0);
+//       for (unsigned  k = 0; k < n_unknowns; k++)     loc_to_glob_map_all_vars.insert(loc_to_glob_map_all_vars.end(),loc_to_glob_map[k].begin(),loc_to_glob_map[k].end());
 //     
     
 }

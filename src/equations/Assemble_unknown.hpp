@@ -65,6 +65,8 @@ class UnknownLocal {
      
     void initialize(const unsigned int dim, const Unknown & unknown, const MultiLevelSolution * ml_sol, System * mlPdeSys);
     
+    void set_elem(const unsigned int iel, const Mesh * msh, const Solution * sol);
+ 
 //these do not change with the element
   std::string  Solname;
   unsigned int SolPdeIndex;
@@ -95,8 +97,23 @@ class UnknownLocal {
   }    
  
  
+ template < class real_num >
+ void UnknownLocal< real_num >::set_elem(const unsigned int iel, const Mesh * msh, const Solution * sol) {
+     
+    unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType);
+       Sol_n_el_dofs = ndofs_unk;
+       Sol_eldofs.resize(ndofs_unk);
+    for (unsigned i = 0; i < ndofs_unk; i++) {
+       unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType);
+       Sol_eldofs[i] = (*sol->_Sol[SolIndex])(solDof);
+      }
+    
+ }
  
-}
+ 
+ 
+    
+}  //end namespace femus
 
 
 

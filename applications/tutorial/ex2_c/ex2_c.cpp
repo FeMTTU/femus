@@ -447,33 +447,23 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     
     
     solu_exact_at_dofs.resize(nDofu);
-     
-        for (unsigned i = 0; i < nDofu; i++) {
+    for (unsigned i = 0; i < nDofu; i++) {
             std::vector< double > x_at_node(dim,0.);
         for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = element.get_coords_at_dofs(jdim,i);
       solu_exact_at_dofs[i] = exact_sol.value(x_at_node);
-        }
-    
-
-
-      for (unsigned  k = 0; k < n_unknowns; k++) {
-    unsigned ndofs_unk = msh->GetElementDofNumber(iel, unk_loc[k].SolFEType);
-       unk_loc[k].Sol_n_el_dofs = ndofs_unk;
-       unk_loc[k].Sol_eldofs.resize(ndofs_unk);
-    for (unsigned i = 0; i < ndofs_unk; i++) {
-       unsigned solDof = msh->GetSolutionDof(i, iel, unk_loc[k].SolFEType);
-       unk_loc[k].Sol_eldofs[i] = (*sol->_Sol[unk_loc[k].SolIndex])(solDof);
-      }
     }
     
-   
-    unsigned sum_Sol_n_el_dofs = 0;
-    for (unsigned  u = 0; u < n_unknowns; u++) { sum_Sol_n_el_dofs += unk_loc[u].Sol_n_el_dofs; }
 
     
+    for (unsigned  u = 0; u < n_unknowns; u++) { unk_loc[u].set_elem(iel, msh, sol); }
+
+    unsigned sum_Sol_n_el_dofs_interface = 0;
     for (unsigned  u = 0; u < n_unknowns; u++) {
-           Sol_n_el_dofs_interface[u] = unk_loc[u].Sol_n_el_dofs;
+        Sol_n_el_dofs_interface[u]   = unk_loc[u].Sol_n_el_dofs;
+        sum_Sol_n_el_dofs_interface += Sol_n_el_dofs_interface[u]; 
+        
     }
+    
 
     assemble_jac->prepare_before_integration_loop(stack);
 
@@ -546,7 +536,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
 
         
-        assemble_jac->compute_jacobian_inside_integration_loop(i, dim, Sol_n_el_dofs_interface, sum_Sol_n_el_dofs, unk_loc, phi_dof_qp, weight, Jac);  //rethink of these arguments when you have more unknowns
+        assemble_jac->compute_jacobian_inside_integration_loop(i, dim, Sol_n_el_dofs_interface, sum_Sol_n_el_dofs_interface, unk_loc, phi_dof_qp, weight, Jac);  //rethink of these arguments when you have more unknowns
         
       
         
