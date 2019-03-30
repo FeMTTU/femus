@@ -21,17 +21,36 @@ template < class real_num_mov >
    _dim2( (3 * (dim - 1) + !(dim - 1)) ),
    _max_size_elem_dofs(static_cast< unsigned >(ceil(pow(3, dim)))) {
       
-      phi.reserve(_max_size_elem_dofs);
+      _phi.reserve(_max_size_elem_dofs);
       phi_x.reserve(_max_size_elem_dofs * dim);
       phi_xx.reserve(_max_size_elem_dofs * _dim2);
       
   }   
-     
-  std::vector < double > phi;
+  
+  inline const double & phi(const unsigned int i) const { return _phi[i]; }
+//   inline const std::vector < double > & phi() const { return _phi; }
+
+  inline std::vector < double > & phi() { return _phi; }
+  
+  inline const real_num_mov & phi_grad(const unsigned int i) const { return phi_x[i]; }
+//   inline const std::vector < real_num_mov > & phi_grad() const { return phi_x; }
+
+  inline std::vector < real_num_mov > & phi_grad() { return phi_x; }
+  
+//   inline const std::vector < real_num_mov > & phi_hess() const { return phi_xx; }
+  inline std::vector < real_num_mov > & phi_hess() { return phi_xx; }
+
+  
+ private: 
+  
+  std::vector < double > _phi;
+  
   std::vector < real_num_mov > phi_x;
+  
   std::vector < real_num_mov > phi_xx;
   
   const unsigned int _dim2;        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+
   const unsigned int _max_size_elem_dofs;
 
  };
@@ -68,7 +87,7 @@ class UnknownLocal {
 //  sort of copy constructor, in case you don't have an Unknown
     void initialize(const unsigned int dim, const UnknownLocal & unknown);
     
-    void set_elem(const unsigned int iel, const Mesh * msh, const Solution * sol);
+    void set_elem_dofs(const unsigned int iel, const Mesh * msh, const Solution * sol);
 
     inline const unsigned int & fe_type() const { return SolFEType; }
 
@@ -133,7 +152,7 @@ class UnknownLocal {
  
  
  template < class real_num >
- void UnknownLocal< real_num >::set_elem(const unsigned int iel, const Mesh * msh, const Solution * sol) {
+ void UnknownLocal< real_num >::set_elem_dofs(const unsigned int iel, const Mesh * msh, const Solution * sol) {
      
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType);
        Sol_n_el_dofs = ndofs_unk;

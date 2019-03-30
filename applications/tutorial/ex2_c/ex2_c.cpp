@@ -430,7 +430,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
         
         for (unsigned  u = 0; u < n_unknowns; u++) {
-            unk_loc[u].set_elem(iel, msh, sol);
+            unk_loc[u].set_elem_dofs(iel, msh, sol);
         }
 
         
@@ -470,11 +470,11 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
             // *** get gauss point weight, test function and test function partial derivatives ***
             for (unsigned  u = 0; u < n_unknowns; u++) {
                 static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][unk_loc[u].fe_type()] )
-                ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), geom_element.get_coords_at_dofs(), ig, weight_qp, phi_dof_qp[u].phi, phi_dof_qp[u].phi_x, phi_dof_qp[u].phi_xx);
+                ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), geom_element.get_coords_at_dofs(), ig, weight_qp, phi_dof_qp[u].phi(), phi_dof_qp[u].phi_grad(), phi_dof_qp[u].phi_hess());
             }
 
 //       msh->_finiteElement[ielGeom][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
-            msh->_finiteElement[ielGeom][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, phi_coords.phi, phi_coords.phi_x, phi_coords.phi_xx);
+            msh->_finiteElement[ielGeom][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, phi_coords.phi(), phi_coords.phi_grad(), phi_coords.phi_hess());
 
             // evaluate the solution, the solution derivatives and the coordinates in the gauss point
             real_num solu_gss = 0.;
@@ -483,11 +483,11 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
             for (unsigned  u = 0; u < n_unknowns; u++) {
                 for (unsigned i = 0; i < unk_loc[u].num_elem_dofs(); i++) {
-                    solu_gss += phi_dof_qp[u].phi[i] * unk_loc[u].elem_dofs()[i];
+                    solu_gss += phi_dof_qp[u].phi(i) * unk_loc[u].elem_dofs()[i];
 
                     for (unsigned jdim = 0; jdim < dim; jdim++) {
-                        gradSolu_gss[jdim] += phi_dof_qp[u].phi_x[i * dim + jdim] * unk_loc[0].elem_dofs()[i];
-                        gradSolu_exact_gss[jdim] += phi_dof_qp[u].phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
+                        gradSolu_gss[jdim]       += phi_dof_qp[u].phi_grad(i * dim + jdim) * unk_loc[0].elem_dofs()[i];
+                        gradSolu_exact_gss[jdim] += phi_dof_qp[u].phi_grad(i * dim + jdim) * solu_exact_at_dofs[i];
                     }
                 }
             }
@@ -496,7 +496,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
             vector < double > x_gss(dim, 0.);
             for (unsigned i = 0; i < geom_element.get_coords_at_dofs()[0].size(); i++) {
                 for (unsigned jdim = 0; jdim < dim; jdim++) {
-                    x_gss[jdim] += geom_element.get_coords_at_dofs(jdim,i) * phi_coords.phi[i];
+                    x_gss[jdim] += geom_element.get_coords_at_dofs(jdim,i) * phi_coords.phi(i);
                 }
             }
 
@@ -508,25 +508,25 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
                 real_num laplace_weak_exact = 0.;
 
                 for (unsigned jdim = 0; jdim < dim; jdim++) {
-                    laplace            +=  phi_dof_qp[0].phi_x[i * dim + jdim] * gradSolu_gss[jdim];
-                    laplace_weak_exact +=  phi_dof_qp[0].phi_x[i * dim + jdim] * gradSolu_exact_gss[jdim];
+                    laplace            +=  phi_dof_qp[0].phi_grad(i * dim + jdim) * gradSolu_gss[jdim];
+                    laplace_weak_exact +=  phi_dof_qp[0].phi_grad(i * dim + jdim) * gradSolu_exact_gss[jdim];
                 }
 
 
 // arbitrary rhs
 //               double source_term = exact_sol.value(x_gss);
-//         element_jacres.res()[i] += ( source_term * phi[i] - solu_gss * phi[i] - laplace ) * weight_qp;
+//         element_jacres.res()[i] += ( source_term * phi()[i] - solu_gss * phi()[i] - laplace ) * weight_qp;
 
 // manufactured Helmholtz - strong
                 double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
-                element_jacres.res()[i] += (helmholtz_strong_exact * phi_dof_qp[0].phi[i] - solu_gss * phi_dof_qp[0].phi[i] - laplace) * weight_qp;
+                element_jacres.res()[i] += (helmholtz_strong_exact * phi_dof_qp[0].phi(i) - solu_gss * phi_dof_qp[0].phi(i) - laplace) * weight_qp;
 
 // manufactured Laplacian - strong
 //                double laplace_strong_exact = exact_sol.laplacian(x_gss);
-//         element_jacres.res()[i] += (- laplace_strong_exact * phi[i] - phi[i] * solu_gss - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
+//         element_jacres.res()[i] += (- laplace_strong_exact * phi()[i] - phi[i] * solu_gss - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
 
 // manufactured Laplacian - weak
-//            element_jacres.res()[i] += (laplace_weak_exact - phi[i] * solu_gss - laplace) * weight_qp;                  //weak form of RHS and weak form of LHS
+//            element_jacres.res()[i] += (laplace_weak_exact - phi()[i] * solu_gss - laplace) * weight_qp;                  //weak form of RHS and weak form of LHS
 
 
 
@@ -617,10 +617,10 @@ void  assemble_jacobian< double, double >::compute_jacobian_inside_integration_l
         /*real_num*/double laplace_jac = 0.;
 
         for (unsigned kdim = 0; kdim < dim; kdim++) {
-            laplace_jac += (phi[ pos_unk].phi_x[i * dim + kdim] * phi[ pos_unk ].phi_x[j * dim + kdim]);
+            laplace_jac += (phi[ pos_unk].phi_grad(i * dim + kdim) * phi[ pos_unk ].phi_grad(j * dim + kdim));
         }
 
-        Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_unk, pos_unk, i, j) ] += (laplace_jac + phi[ pos_unk ].phi[i] * phi[ pos_unk ].phi[j]) * weight_qp;
+        Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_unk, pos_unk, i, j) ] += (laplace_jac + phi[ pos_unk ].phi(i) * phi[ pos_unk ].phi(j)) * weight_qp;
     } // end phi_j loop
 
 
