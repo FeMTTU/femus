@@ -399,9 +399,10 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
     for(int u = 0; u < n_unknowns; u++) {
         unk_loc[u].initialize(dim, unknowns[u], ml_sol, mlPdeSys);
-        assert(u == unk_loc[u].SolPdeIndex);  //I would like this ivar order to coincide either with SolIndex or with SolPdeIndex, otherwise too many orders... it has to be  with SolPdeIndex, because SolIndex is related to the Solution object which can have more fields... This has to match the order of the unknowns[] argument
+        assert(u == unk_loc[u].pde_index());  //I would like this ivar order to coincide either with SolIndex or with SolPdeIndex, otherwise too many orders... it has to be  with SolPdeIndex, because SolIndex is related to the Solution object which can have more fields... This has to match the order of the unknowns[] argument
     }
 
+    std::vector < Phi< real_num_mov > >       phi_dof_qp(n_unknowns, Phi< real_num_mov >(dim));    //-- at dofs and quadrature points ---------------
     //=============== Quantities that are not unknowns ========================================
     
      UnknownLocal < double >  sol_exact;
@@ -410,8 +411,8 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     std::vector < double >    solu_exact_at_dofs;
     solu_exact_at_dofs.reserve(max_size_elem_dofs);
 
-    std::vector < Phi< real_num_mov > >       phi_dof_qp(n_unknowns, Phi< real_num_mov >(dim));    //-- at dofs and quadrature points ---------------
 
+    //=============== Elem matrix ========================================
     ElementJacRes < real_num >       element_jacres(dim, unk_loc);
 
     
@@ -434,7 +435,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
         
         
-        unsigned nDofu  = msh->GetElementDofNumber(iel, unk_loc[0].SolFEType);
+        unsigned nDofu  = msh->GetElementDofNumber(iel, unk_loc[0].fe_type());
         solu_exact_at_dofs.resize(nDofu);
         for (unsigned i = 0; i < nDofu; i++) {
             std::vector< double > coords_at_dof_single(dim,0.);
@@ -453,7 +454,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 //interface to avoid computation inside quadrature
         unsigned sum_Sol_n_el_dofs_interface = 0;
         for (unsigned  u = 0; u < n_unknowns; u++) {
-            Sol_n_el_dofs_interface[u]   = unk_loc[u].Sol_n_el_dofs;
+            Sol_n_el_dofs_interface[u]   = unk_loc[u].num_elem_dofs();
             sum_Sol_n_el_dofs_interface += Sol_n_el_dofs_interface[u];
         }
 //interface to avoid computation inside quadrature
@@ -468,7 +469,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
             // *** get gauss point weight, test function and test function partial derivatives ***
             for (unsigned  u = 0; u < n_unknowns; u++) {
-                static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][unk_loc[u].SolFEType] )
+                static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][unk_loc[u].fe_type()] )
                 ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), geom_element.get_coords_at_dofs(), ig, weight_qp, phi_dof_qp[u].phi, phi_dof_qp[u].phi_x, phi_dof_qp[u].phi_xx);
             }
 
@@ -481,11 +482,11 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
             vector < double > gradSolu_exact_gss(dim, 0.);
 
             for (unsigned  u = 0; u < n_unknowns; u++) {
-                for (unsigned i = 0; i < unk_loc[u].Sol_n_el_dofs; i++) {
-                    solu_gss += phi_dof_qp[u].phi[i] * unk_loc[u].Sol_eldofs[i];
+                for (unsigned i = 0; i < unk_loc[u].num_elem_dofs(); i++) {
+                    solu_gss += phi_dof_qp[u].phi[i] * unk_loc[u].elem_dofs()[i];
 
                     for (unsigned jdim = 0; jdim < dim; jdim++) {
-                        gradSolu_gss[jdim] += phi_dof_qp[u].phi_x[i * dim + jdim] * unk_loc[0].Sol_eldofs[i];
+                        gradSolu_gss[jdim] += phi_dof_qp[u].phi_x[i * dim + jdim] * unk_loc[0].elem_dofs()[i];
                         gradSolu_exact_gss[jdim] += phi_dof_qp[u].phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
                     }
                 }

@@ -65,19 +65,33 @@ class UnknownLocal {
      
     void initialize(const unsigned int dim, const Unknown & unknown, const MultiLevelSolution * ml_sol, System * mlPdeSys);
     
-//     sort of copy constructor
+//  sort of copy constructor, in case you don't have an Unknown
     void initialize(const unsigned int dim, const UnknownLocal & unknown);
     
     void set_elem(const unsigned int iel, const Mesh * msh, const Solution * sol);
- 
+
+    inline const unsigned int & fe_type() const { return SolFEType; }
+
+    inline const unsigned int & sol_index() const { return SolIndex; }
+
+    inline const unsigned int & pde_index() const { return SolPdeIndex; }
+
+    inline const unsigned int & num_elem_dofs() const { return Sol_n_el_dofs; }
+
+    inline const std::vector < real_num > & elem_dofs() const { return Sol_eldofs; }
+    
+ private:
+    
 //these do not change with the element
   std::string  Solname;
+  unsigned int SolFEType; 
   unsigned int SolPdeIndex;
   unsigned int SolIndex;  
-  unsigned int SolFEType; 
 //   _is_pde_unknown
+// time order
+
   
-  //it will change elem by elem
+//it will change elem by elem
   unsigned int             Sol_n_el_dofs;
   std::vector < real_num > Sol_eldofs;
 
@@ -106,9 +120,9 @@ class UnknownLocal {
  void UnknownLocal< real_num >::initialize(const unsigned int dim, const UnknownLocal & unknown) {
      
    Solname     =  unknown.Solname;    
+   SolFEType   =  unknown.SolFEType; 
    SolPdeIndex =  unknown.SolPdeIndex;    
    SolIndex    =  unknown.SolIndex;
-   SolFEType   =  unknown.SolFEType; 
    
    
    const unsigned int max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));

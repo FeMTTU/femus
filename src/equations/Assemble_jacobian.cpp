@@ -97,7 +97,7 @@ template < >
 
     stack.dependent(  & Res[0], Res_double.size());      // define the dependent variables
     for (unsigned  k = 0; k < unk_loc.size(); k++) {   
-    stack.independent(&((unk_loc[k].Sol_eldofs)[0]),       unk_loc[k].Sol_eldofs.size());    // define the independent variables
+    stack.independent(&((unk_loc[k].elem_dofs())[0]),       unk_loc[k].elem_dofs().size());    // define the independent variables
     }
     
     stack.jacobian(&Jac[0], true);    // get the jacobian matrix (ordered by row major)

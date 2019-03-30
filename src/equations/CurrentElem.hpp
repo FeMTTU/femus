@@ -58,14 +58,14 @@ inline void set_loc_to_glob_map(const unsigned int iel, const Mesh * msh,  Linea
    loc_to_glob_map_all_vars.resize(0);
       for (unsigned  u = 0; u < n_unknowns; u++) {
           
-    unsigned ndofs_unk = msh->GetElementDofNumber(iel, unknowns[u].SolFEType);
+    unsigned ndofs_unk = msh->GetElementDofNumber(iel, unknowns[u].fe_type());
 //        Sol_n_el_dofs[u] = ndofs_unk;                              //in unk local
 //        SolVAR_eldofs[u].resize(Sol_n_el_dofs[u]);                 //in unk local 
-          loc_to_glob_map[u].resize(unknowns[u].Sol_n_el_dofs); 
-    for (unsigned i = 0; i < unknowns[u].Sol_eldofs.size(); i++) {
-       unsigned solDof = msh->GetSolutionDof(i, iel, unknowns[u].SolFEType);
+          loc_to_glob_map[u].resize(unknowns[u].num_elem_dofs()); 
+    for (unsigned i = 0; i < unknowns[u].num_elem_dofs(); i++) {
+       unsigned solDof = msh->GetSolutionDof(i, iel, unknowns[u].fe_type());
 //        SolVAR_eldofs[u][i] = (*sol->_Sol[SolIndex[u]])(solDof);   //in unk local
-          loc_to_glob_map[u][i] = pdeSys->GetSystemDof(unknowns[u].SolIndex, unknowns[u].SolPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+          loc_to_glob_map[u][i] = pdeSys->GetSystemDof(unknowns[u].sol_index(), unknowns[u].pde_index(), i, iel);    // global to global mapping between solution node and pdeSys dof
       }
       
    loc_to_glob_map_all_vars.insert(loc_to_glob_map_all_vars.end(),loc_to_glob_map[u].begin(),loc_to_glob_map[u].end());
@@ -73,7 +73,7 @@ inline void set_loc_to_glob_map(const unsigned int iel, const Mesh * msh,  Linea
     }
     
     unsigned sum_Sol_n_el_dofs = 0;
-    for (unsigned  u = 0; u < n_unknowns; u++) { sum_Sol_n_el_dofs += unknowns[u].Sol_n_el_dofs; }
+    for (unsigned  u = 0; u < n_unknowns; u++) { sum_Sol_n_el_dofs += unknowns[u].num_elem_dofs(); }
     
     Jac.resize(sum_Sol_n_el_dofs * sum_Sol_n_el_dofs);  std::fill(Jac.begin(), Jac.end(), 0.);
     Res.resize(sum_Sol_n_el_dofs);                      std::fill(Res.begin(), Res.end(), 0.);
