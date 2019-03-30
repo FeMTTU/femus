@@ -5,9 +5,12 @@
 #include <cmath>
 #include <string>
 #include "FElemTypeEnum.hpp"
+#include "Math.hpp"
 
 #include "MultiLevelSolution.hpp"
 #include "System.hpp"
+#include "CurrentElem.hpp"
+
 
 namespace femus {
 
@@ -89,6 +92,11 @@ class UnknownLocal {
     
     void set_elem_dofs(const unsigned int iel, const Mesh * msh, const Solution * sol);
 
+    void set_elem_dofs(const UnknownLocal & unk_loc,
+                       const CurrentElem < real_num > & geom_element,
+                       const Math::Function< double > & exact_sol);
+ 
+ 
     inline const unsigned int & fe_type() const { return SolFEType; }
 
     inline const unsigned int & sol_index() const { return SolIndex; }
@@ -163,7 +171,22 @@ class UnknownLocal {
       }
     
  }
+
+
+//this needs the unknown that is tied to it
+ template < class real_num >
+ void UnknownLocal< real_num >::set_elem_dofs(const UnknownLocal & unk_loc, 
+                                              const CurrentElem < real_num > & geom_element, 
+                                              const Math::Function< double > & exact_sol) {
  
+         unsigned nDofu  = unk_loc.num_elem_dofs();
+        Sol_eldofs.resize(nDofu);
+        for (unsigned i = 0; i < nDofu; i++) {
+            std::vector< double > coords_at_dof_single(geom_element.GetDim(),0.);
+            for (unsigned jdim = 0; jdim < coords_at_dof_single.size(); jdim++) coords_at_dof_single[jdim] = geom_element.get_coords_at_dofs(jdim,i);
+            Sol_eldofs[i] = exact_sol.value(coords_at_dof_single);
+        }
+ }
  
  
     

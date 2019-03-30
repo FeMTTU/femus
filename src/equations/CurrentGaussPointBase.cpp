@@ -86,7 +86,11 @@ CurrentGaussPointBase::~CurrentGaussPointBase() {
       
     }
 
-
+    const CurrentElem<double> & CurrentGaussPointBase::GetCurrentElem() const {
+     return _current_elem;
+   }
+   
+   
 } //end namespace femus
 
 

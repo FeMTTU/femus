@@ -7,8 +7,8 @@
 #include "GaussPoints.hpp"
 #include "CurrentElem.hpp"
 
-namespace femus {
 
+namespace femus {
 
 class elem_type;
 class CurrentQuantity;
@@ -28,9 +28,8 @@ class CurrentQuantity;
     CurrentGaussPointBase(const CurrentElem<double> & curr_el_in, const Gauss & qrule_in );
    ~CurrentGaussPointBase();
      
-   inline const CurrentElem<double> & GetCurrentElem() const {
-     return _current_elem;
-   }
+    const CurrentElem<double> & GetCurrentElem() const;
+
    
    double**  get_tangent_ptr();   //TODO should be only for BOUNDARY 
    double*   get_normal_ptr();   //TODO should be only for BOUNDARY 

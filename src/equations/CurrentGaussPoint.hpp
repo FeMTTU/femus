@@ -12,7 +12,6 @@ namespace femus {
 
 
 
-
 //TODO maybe this gausspoint needs the CurrentElement also
 //Basically we will have 
 // a Current Element, 

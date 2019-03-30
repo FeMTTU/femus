@@ -20,6 +20,7 @@
 #include "Files.hpp"
 #include "FE_convergence.hpp"
 #include "Assemble_jacobian.hpp"
+#include "Assemble_unknown_jacres.hpp"
 #include "CurrentElem.hpp"
 
 #include "adept.h"
@@ -371,7 +372,6 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     NumericVector*           RES = pdeSys->_RES;
 
     const unsigned  dim = msh->GetDimension();
-    const unsigned max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
     unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
@@ -380,7 +380,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
     adept::Stack & stack = FemusInit::_adeptStack;  // call the adept stack object for potential use of AD
 
-    const assemble_jacobian< real_num, double > * assemble_jac/* = assemble_jacobian_base::build(dim)*/;
+    const assemble_jacobian< real_num, double > * unk_assemble_jac/* = assemble_jacobian_base::build(dim)*/;
 
     //=============== Integration ========================================
     real_num_mov weight_qp;    // must be adept if the domain is moving
@@ -403,78 +403,70 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     }
 
     std::vector < Phi< real_num_mov > >       phi_dof_qp(n_unknowns, Phi< real_num_mov >(dim));    //-- at dofs and quadrature points ---------------
+
     //=============== Quantities that are not unknowns ========================================
     
      UnknownLocal < double >  sol_exact;
      sol_exact.initialize(dim,unk_loc[0]);
      
-    std::vector < double >    solu_exact_at_dofs;
-    solu_exact_at_dofs.reserve(max_size_elem_dofs);
-
 
     //=============== Elem matrix ========================================
-    ElementJacRes < real_num >       element_jacres(dim, unk_loc);
+    ElementJacRes < real_num >       unk_element_jac_res(dim, unk_loc);
 
+    vector < unsigned int > unk_num_elem_dofs_interface(n_unknowns); //to avoid recomputing offsets inside quadrature
     
+
     RES->zero();
     if (assembleMatrix)   KK->zero();
 
     
-    vector < unsigned int > Sol_n_el_dofs_interface(n_unknowns);
 
     // element loop: each process loops only on the elements that owns
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
 
         geom_element.set_coords_at_dofs(iel, xType);
+        short unsigned geom_elem_type = msh->GetElementType(iel);
 
         
         for (unsigned  u = 0; u < n_unknowns; u++) {
             unk_loc[u].set_elem_dofs(iel, msh, sol);
         }
 
-        
-        
-        unsigned nDofu  = msh->GetElementDofNumber(iel, unk_loc[0].fe_type());
-        solu_exact_at_dofs.resize(nDofu);
-        for (unsigned i = 0; i < nDofu; i++) {
-            std::vector< double > coords_at_dof_single(dim,0.);
-            for (unsigned jdim = 0; jdim < dim; jdim++) coords_at_dof_single[jdim] = geom_element.get_coords_at_dofs(jdim,i);
-            solu_exact_at_dofs[i] = exact_sol.value(coords_at_dof_single);
-        }
+        //must be called AFTER the unknowns 
+        sol_exact.set_elem_dofs(unk_loc[0], geom_element, exact_sol);
 
         
 
-        element_jacres.set_loc_to_glob_map(iel, msh, pdeSys);
+        unk_element_jac_res.set_loc_to_glob_map(iel, msh, pdeSys);
 
 
-        assemble_jac->prepare_before_integration_loop(stack);
+        unk_assemble_jac->prepare_before_integration_loop(stack);
 
 
 //interface to avoid computation inside quadrature
-        unsigned sum_Sol_n_el_dofs_interface = 0;
+        unsigned sum_unk_num_elem_dofs_interface = 0;
         for (unsigned  u = 0; u < n_unknowns; u++) {
-            Sol_n_el_dofs_interface[u]   = unk_loc[u].num_elem_dofs();
-            sum_Sol_n_el_dofs_interface += Sol_n_el_dofs_interface[u];
+            unk_num_elem_dofs_interface[u]   = unk_loc[u].num_elem_dofs();
+            sum_unk_num_elem_dofs_interface += unk_num_elem_dofs_interface[u];
         }
 //interface to avoid computation inside quadrature
 
 
-        short unsigned ielGeom = msh->GetElementType(iel);
 
         if (dim != 2) abort(); //only implemented in 2D now
 
         // *** Gauss point loop ***
-        for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][xType]->GetGaussPointNumber(); ig++) {
+        for (unsigned ig = 0; ig < msh->_finiteElement[geom_elem_type][xType]->GetGaussPointNumber(); ig++) {
 
             // *** get gauss point weight, test function and test function partial derivatives ***
             for (unsigned  u = 0; u < n_unknowns; u++) {
-                static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][unk_loc[u].fe_type()] )
-                ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), geom_element.get_coords_at_dofs(), ig, weight_qp, phi_dof_qp[u].phi(), phi_dof_qp[u].phi_grad(), phi_dof_qp[u].phi_hess());
+                static_cast<const elem_type_2D*>( msh->_finiteElement[geom_elem_type][unk_loc[u].fe_type()] )
+                ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[geom_elem_type][xType] ), geom_element.get_coords_at_dofs(), ig, weight_qp, phi_dof_qp[u].phi(), phi_dof_qp[u].phi_grad(), phi_dof_qp[u].phi_hess());
             }
 
-//       msh->_finiteElement[ielGeom][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
-            msh->_finiteElement[ielGeom][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, phi_coords.phi(), phi_coords.phi_grad(), phi_coords.phi_hess());
+//       msh->_finiteElement[geom_elem_type][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+            msh->_finiteElement[geom_elem_type][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, phi_coords.phi(), phi_coords.phi_grad(), phi_coords.phi_hess());
 
             // evaluate the solution, the solution derivatives and the coordinates in the gauss point
             real_num solu_gss = 0.;
@@ -487,7 +479,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
                     for (unsigned jdim = 0; jdim < dim; jdim++) {
                         gradSolu_gss[jdim]       += phi_dof_qp[u].phi_grad(i * dim + jdim) * unk_loc[0].elem_dofs()[i];
-                        gradSolu_exact_gss[jdim] += phi_dof_qp[u].phi_grad(i * dim + jdim) * solu_exact_at_dofs[i];
+                        gradSolu_exact_gss[jdim] += phi_dof_qp[u].phi_grad(i * dim + jdim) * sol_exact.elem_dofs()[i];
                     }
                 }
             }
@@ -502,7 +494,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
 
 
-            for (unsigned i = 0; i < nDofu; i++) {
+            for (unsigned i = 0; i < unk_loc[0].num_elem_dofs(); i++) {
 
                 real_num laplace = 0.;
                 real_num laplace_weak_exact = 0.;
@@ -515,22 +507,22 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
 
 // arbitrary rhs
 //               double source_term = exact_sol.value(x_gss);
-//         element_jacres.res()[i] += ( source_term * phi()[i] - solu_gss * phi()[i] - laplace ) * weight_qp;
+//         unk_element_jac_res.res()[i] += ( source_term * phi()[i] - solu_gss * phi()[i] - laplace ) * weight_qp;
 
 // manufactured Helmholtz - strong
                 double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
-                element_jacres.res()[i] += (helmholtz_strong_exact * phi_dof_qp[0].phi(i) - solu_gss * phi_dof_qp[0].phi(i) - laplace) * weight_qp;
+                unk_element_jac_res.res()[i] += (helmholtz_strong_exact * phi_dof_qp[0].phi(i) - solu_gss * phi_dof_qp[0].phi(i) - laplace) * weight_qp;
 
 // manufactured Laplacian - strong
 //                double laplace_strong_exact = exact_sol.laplacian(x_gss);
-//         element_jacres.res()[i] += (- laplace_strong_exact * phi()[i] - phi[i] * solu_gss - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
+//         unk_element_jac_res.res()[i] += (- laplace_strong_exact * phi()[i] - phi[i] * solu_gss - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
 
 // manufactured Laplacian - weak
-//            element_jacres.res()[i] += (laplace_weak_exact - phi()[i] * solu_gss - laplace) * weight_qp;                  //weak form of RHS and weak form of LHS
+//            unk_element_jac_res.res()[i] += (laplace_weak_exact - phi()[i] * solu_gss - laplace) * weight_qp;                  //weak form of RHS and weak form of LHS
 
 
 
-                assemble_jac->compute_jacobian_inside_integration_loop(i, dim, Sol_n_el_dofs_interface, sum_Sol_n_el_dofs_interface, unk_loc, phi_dof_qp, weight_qp, element_jacres.jac());
+                unk_assemble_jac->compute_jacobian_inside_integration_loop(i, dim, unk_num_elem_dofs_interface, sum_unk_num_elem_dofs_interface, unk_loc, phi_dof_qp, weight_qp, unk_element_jac_res.jac());
 
 
 
@@ -540,7 +532,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
         } // end gauss point loop
 
 
-        assemble_jac->compute_jacobian_outside_integration_loop(stack, unk_loc, element_jacres.res(), element_jacres.jac(), element_jacres.dof_map(), RES, KK);
+        unk_assemble_jac->compute_jacobian_outside_integration_loop(stack, unk_loc, unk_element_jac_res.res(), unk_element_jac_res.jac(), unk_element_jac_res.dof_map(), RES, KK);
 
 
     } //end element loop for each process

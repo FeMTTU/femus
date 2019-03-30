@@ -4,12 +4,12 @@
 #include <vector>
 #include "VBTypeEnum.hpp"
 #include "CurrentGaussPoint.hpp"
-#include "CurrentElem.hpp"
 
 
 namespace femus {
 
  
+//  class CurrentElem<double>; 
  class SystemTwo;
  class Quantity;
  class CurrentGaussPointBase;
@@ -55,9 +55,7 @@ namespace femus {
     Quantity* _qtyptr;
     SystemTwo*  _eqnptr;
     
-    inline const CurrentElem<double> &  GetCurrentElem() const { 
-      return _currEl;
-    }
+    inline const CurrentElem<double> &  GetCurrentElem() const; 
     
     
     std::string _SolName;

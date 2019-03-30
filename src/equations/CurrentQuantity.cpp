@@ -1,11 +1,11 @@
 #include "CurrentQuantity.hpp"
 
 #include "Quantity.hpp"
-#include "CurrentElem.hpp"
 #include "ElemType.hpp"
 #include "MultiLevelProblem.hpp"
 #include "SystemTwo.hpp"
 #include "MultiLevelMeshTwo.hpp"
+#include "CurrentElem.hpp"
 
 
 #include "NumericVector.hpp"  //TODO this is needed for x_old
@@ -60,6 +60,11 @@ namespace femus {
 
 return;
  }
+ 
+ 
+ const CurrentElem<double> &  CurrentQuantity::GetCurrentElem() const { 
+      return _currEl;
+ } 
 
 ///////////////
 //here I should check that the    _grad_g double array has been allocated
