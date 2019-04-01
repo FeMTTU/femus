@@ -16,9 +16,6 @@ class MultiLevelMesh;
 class Files;
 
 
-//=================================================================
-  double FunctionIntegral (const uint vb, MultiLevelProblem & ml_prob, double (*pt2func)(double, const std::vector<double> ) );
-
 
 class Main_single_level {
     
