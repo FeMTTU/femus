@@ -26,8 +26,8 @@
 #include "petscmat.h"
 #include "PetscMatrix.hpp"
 
-const unsigned P[3] = {2, 3, 4};
-const double ap[3] = {0., -1.125, 1.};
+const unsigned P[3] = {2, 4, 6};
+const double ap[3] = {4./27., -25/6., 1.};
 
 const double normalSign = -1.;
 using namespace femus;
@@ -99,7 +99,8 @@ int main (int argc, char** args) {
 
   //mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
@@ -528,12 +529,13 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       double signYdotN = ( YdotN.value() >= 0.)? 1. : -1.;
 
       adept::adouble sumP1 = 0.;
-      adept::adouble sumP2 = 0.;
-      adept::adouble sumP3 = 0.;
+      adept::adouble sumP2 = 5000.;
+      adept::adouble sumP3 = 5000.;
       for (unsigned p = 0; p < 3; p++) {
         double signP = (P[p]%2u == 0) ? 1. : signYdotN;
         sumP1 += signP * ap[p] * P[p] * pow (YdotY, (P[p] - 2.)/2.);
-        sumP2 += signP * ap[p] * (1. - P[p]) * pow (YdotY , P[p]/2.);
+        //sumP2 += signP * ap[p] * (1. - P[p]) * pow (YdotY , P[p]/2.);
+        sumP2 += signP * (ap[p] - ap[p] * P[p]) * pow (YdotY , P[p]/2.);
         sumP3 += signP * ap[p] * pow (YdotY, P[p]/2.);
       }
 
