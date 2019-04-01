@@ -189,10 +189,12 @@ public:
 
   inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
 
-  inline const Gauss & GetQrule(const unsigned dim) const { return _qrule[dim - 1]; }
+  inline const Gauss & GetQuadratureRule(const unsigned geom_elem_type) const { return _qrule[geom_elem_type]; }
 
-  void SetQruleAndElemType(const std::string quadr_order_in);
+  void SetQuadratureRuleAllGeomElems(const std::string quadr_order_in);
 
+  void SetElemTypeAllDims();
+  
     /** Input Parser */
   inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
 
@@ -200,6 +202,7 @@ public:
 
     /** Files Handler */
   void SetFilesHandler(const Files * files_in) { _files = files_in; return; }
+  
   inline const Files * GetFilesHandler() const { return  _files; }
 
     /** Input Parser */

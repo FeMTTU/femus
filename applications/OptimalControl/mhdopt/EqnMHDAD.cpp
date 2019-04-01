@@ -63,7 +63,7 @@ using namespace femus;
   for (uint iel=0; iel < (nel_e - nel_b); iel++) {
   
     CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQuadratureRule(currelem.GetDim()));
    
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity BhomAdjOldX(currgp);
@@ -227,7 +227,7 @@ using namespace femus;
 //=======
 
 
-    const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+    const uint el_ngauss = ml_prob.GetQuadratureRule(currelem.GetDim()).GetGaussPointsNumber();
     
     for (uint qp = 0; qp < el_ngauss; qp++) {
 //=======here starts the "COMMON SHAPE PART"==================
@@ -237,7 +237,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 }  
 	  
 const double      det = currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
-const double dtxJxW_g = det * ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+const double dtxJxW_g = det * ml_prob.GetQuadratureRule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { 

@@ -100,7 +100,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
     CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()));
 
   //==========
     CurrentQuantity Tempold(currgp);
@@ -144,7 +144,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
     TempDesired(Tdes,currelem);
 
-    const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+    const uint el_ngauss = eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
@@ -154,7 +154,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     }
 
    const double  Jac_g = currgp.JacVectVV_g(xyz);
-   const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+   const double  wgt_g = eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()).GetGaussWeight(qp);
 
  Tempold.val_g();
    Tlift.val_g();
@@ -231,7 +231,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
     for (int iel=0; iel < (nel_e - nel_b); iel++) {
 
     CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()));
 
 //======Functions in the integrand ============
 
@@ -256,7 +256,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
 
      Tlift.GetElemDofs();
 
-     const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+     const uint el_ngauss = eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()).GetGaussPointsNumber();
 
   for (uint qp = 0; qp < el_ngauss; qp++) {
 
@@ -266,7 +266,7 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
     }
 
       const double  Jac_g = currgp.JacVectVV_g(xyz);
-      const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+      const double  wgt_g = eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()).GetGaussWeight(qp);
 
   Tlift.val_g();
   Tlift.grad_g();

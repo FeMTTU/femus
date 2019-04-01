@@ -502,7 +502,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
     CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()));
 
 //========= DOMAIN MAPPING
     CurrentQuantity xyz(currgp);
@@ -570,7 +570,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
        VelDesired(&eqn->GetMLProb(),*VelDes_vec[idim],currelem,idim);
     }
 
-      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+      const uint el_ngauss = eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
@@ -580,7 +580,7 @@ for (uint fe = 0; fe < QL; fe++) {
 }
 
    const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!
-   const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+   const double  wgt_g = eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()).GetGaussWeight(qp);
 
 
  for (uint idim=0; idim < space_dim; idim++) {

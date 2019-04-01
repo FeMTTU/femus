@@ -199,7 +199,7 @@ int main(int argc, char** args) {
 
 
     // ======= Normal run ========================
-    My_main_single_level< adept::adouble > my_main;
+    My_main_single_level< /*adept::a*/double > my_main;
 //     const unsigned int n_levels = 3;
 //      my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); //if you don't want the convergence study
 
@@ -265,6 +265,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
     // ======= Problem ========================
     MultiLevelProblem ml_prob(&ml_sol_single_level);
 
+    ml_prob.SetQuadratureRuleAllGeomElems("seventh");
     ml_prob.SetFilesHandler(&files);
 
     //only one Mesh
@@ -461,7 +462,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
         if (dim != 2) abort(); //only implemented in 2D now
 
         // *** Gauss point loop ***
-        for (unsigned ig = 0; ig < msh->_finiteElement[geom_element.geom_type()][xType]->GetGaussPointNumber(); ig++) {
+        for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(geom_element.geom_type()).GetGaussPointsNumber(); ig++) {
 
             // *** get gauss point weight, test function and test function partial derivatives ***
             for (unsigned  u = 0; u < n_unknowns; u++) {

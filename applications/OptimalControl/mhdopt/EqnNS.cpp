@@ -143,7 +143,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
       
     CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);    
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQuadratureRule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
       CurrentQuantity VelOldX(currgp);
@@ -310,7 +310,7 @@ const int NonStatNS = (int) ml_prob.GetInputParser().get("NonStatNS");
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
-   const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = ml_prob.GetQuadratureRule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp = 0; qp < el_ngauss; qp++) {  
 
@@ -334,7 +334,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 }  
 	  
 const double      det = dt*currgp.JacVectVV_g(xyz);   //InvJac: is the same for both QQ and LL!
-const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+const double dtxJxW_g = det*ml_prob.GetQuadratureRule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { 
@@ -543,7 +543,7 @@ for (uint fe = 0; fe < QL; fe++)     {
   for (uint iel=0; iel < (nel_e - nel_b) ; iel++) {
   
     CurrentElem<double>       currelem(iel,myproc,Level,BB,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);    
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
+    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQuadratureRule(currelem.GetDim()));
   
 //=========INTERNAL QUANTITIES (unknowns of the equation) ==================
     CurrentQuantity VelOldX(currgp);
@@ -589,7 +589,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 //==============================================================
 //================== GAUSS LOOP (qp loop) ======================
 //==============================================================
-   const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = ml_prob.GetQuadratureRule(currelem.GetDim()).GetGaussPointsNumber();
    
     for (uint qp=0; qp< el_ngauss; qp++) {
             
@@ -600,7 +600,7 @@ for (uint fe = 0; fe < QL; fe++)     {
 }
 
         const double det   = dt*currgp.JacVectBB_g(xyz);
-	const double dtxJxW_g = det * ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+	const double dtxJxW_g = det * ml_prob.GetQuadratureRule(currelem.GetDim()).GetGaussWeight(qp);
 //=======end "COMMON SHAPE PART"===================================
 
    xyz.val_g(); 
