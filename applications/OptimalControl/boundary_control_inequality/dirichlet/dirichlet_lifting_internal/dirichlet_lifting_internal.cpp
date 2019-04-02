@@ -351,7 +351,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   double u_des = DesiredTarget();
   double alpha = ALPHA_CTRL_VOL;
   double beta  = BETA_CTRL_VOL;
-  double penalty_strong = 10e+14;
+  double penalty_strong = 1.e50;
  //***************************************************  
 
   RES->zero();
