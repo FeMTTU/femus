@@ -54,8 +54,6 @@ class MultiLevelProblem {
 public:
 
     /** Constructor */
-    //MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
-
     MultiLevelProblem();
 
     MultiLevelProblem(MultiLevelSolution *ml_sol);
@@ -187,6 +185,8 @@ public:
 
   inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
 
+  inline const std::vector<Gauss> & GetQuadratureRuleAllGeomElems() const { return _qrule; }
+  
   inline const Gauss & GetQuadratureRule(const unsigned geom_elem_type) const { return _qrule[geom_elem_type]; }
 
   void SetQuadratureRuleAllGeomElems(const std::string quadr_order_in);

@@ -156,7 +156,6 @@ public:
 
     const MultiLevelSolution  run_on_single_level(const Files & files,
                                                   MultiLevelProblem & ml_prob,
-                                                  const std::string quad_rule_order,
                                                   const std::vector< Unknown > & unknowns,
                                                   const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition_in,
                                                   const MultiLevelSolution::InitFuncMLProb      SetInitialCondition_in,
@@ -216,7 +215,7 @@ int main(int argc, char** args) {
     // ======= Normal run (without convergence study) ========================
     My_main_single_level< /*adept::a*/double > my_main;
 //     const unsigned int n_levels = 3;
-//     my_main.run_on_single_level(files, ml_prob, quad_rule_order, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels);
+//     my_main.run_on_single_level(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels);
 
     // ======= Convergence study ========================
 
@@ -240,7 +239,7 @@ int main(int argc, char** args) {
     // object ================
     FE_convergence<>  fe_convergence;
 
-    fe_convergence.convergence_study(files, quad_rule_order, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
+    fe_convergence.convergence_study(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
 
 
     return 0;
@@ -258,7 +257,6 @@ int main(int argc, char** args) {
 template < class real_num >
 const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
                                                                                 MultiLevelProblem & ml_prob,
-                                                                                const std::string quad_rule_order,
                                                                                 const std::vector< Unknown > &  unknowns,
                                                                                 const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
                                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,

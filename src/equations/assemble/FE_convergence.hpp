@@ -24,7 +24,6 @@ public:
   
 virtual const MultiLevelSolution  run_on_single_level(const Files & files,
                                                       MultiLevelProblem & ml_prob,
-                                                      const std::string quad_rule_order,
                                                       const std::vector< Unknown > & unknowns,
                                                       const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition,
                                                       const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
@@ -42,7 +41,6 @@ public:
  
 
   void  convergence_study(const Files & files,
-                          const std::string quad_rule_order,
                           MultiLevelProblem & ml_prob,
                           const std::vector< Unknown > & unknowns,
                           const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
@@ -86,26 +84,28 @@ static  void output_convergence_order_all(const std::vector< Unknown > &  unknow
  
  
 
-static  std::vector< type > compute_error_norms(const MultiLevelSolution* ml_sol, 
-                                              const MultiLevelSolution* ml_sol_all_levels,
-                                              const std::string & unknown,
-                                              const unsigned current_level,
-                                              const unsigned norm_flag,
-                                              const unsigned conv_order_flag,
-                                              const Math::Function< type > * ex_sol_in = NULL
+static  std::vector< type > compute_error_norms(const std::vector<Gauss> & quad_rules,
+                                                const MultiLevelSolution* ml_sol, 
+                                                const MultiLevelSolution* ml_sol_all_levels,
+                                                const std::string & unknown,
+                                                const unsigned current_level,
+                                                const unsigned norm_flag,
+                                                const unsigned conv_order_flag,
+                                                const Math::Function< type > * ex_sol_in = NULL
                                              );
  
  
 
      
-static  void compute_error_norms_per_unknown_per_level(const MultiLevelSolution* ml_sol_single_level, 
-                                          MultiLevelSolution* ml_sol_all_levels, 
-                                          const std::vector< Unknown > &  unknowns, 
-                                          const unsigned i,
-                                          const unsigned norm_flag, 
-                                          std::vector < std::vector < std::vector < type > > > &  norms,
-                                          const unsigned conv_order_flag,
-                                          const Math::Function< type > * ex_sol_in = NULL
+static  void compute_error_norms_per_unknown_per_level(const std::vector<Gauss> & quad_rules,
+                                                       const MultiLevelSolution* ml_sol_single_level,
+                                                       MultiLevelSolution* ml_sol_all_levels,
+                                                       const std::vector< Unknown > &  unknowns,
+                                                       const unsigned i,
+                                                       const unsigned norm_flag,
+                                                       std::vector < std::vector < std::vector < type > > > &  norms,
+                                                       const unsigned conv_order_flag,
+                                                       const Math::Function< type > * ex_sol_in = NULL
                                          );
 
 
@@ -122,7 +122,6 @@ static  void compute_error_norms_per_unknown_per_level(const MultiLevelSolution*
 
 template < class type>
   void  FE_convergence< type >::convergence_study(const Files & files,
-                                                  const std::string quad_rule_order,
                                                   MultiLevelProblem & ml_prob,
                                                   const std::vector< Unknown > & unknowns,
                                                   const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
@@ -154,7 +153,6 @@ template < class type>
                   
             const MultiLevelSolution ml_sol_single_level = main_in.run_on_single_level(files,
                                                                                        ml_prob,
-                                                                                       quad_rule_order,
                                                                                        unknowns,
                                                                                        SetBoundaryCondition,
                                                                                        SetInitialCondition, 
@@ -162,7 +160,8 @@ template < class type>
                                                                                        i);
             
 
-            FE_convergence::compute_error_norms_per_unknown_per_level ( & ml_sol_single_level,
+            FE_convergence::compute_error_norms_per_unknown_per_level ( ml_prob.GetQuadratureRuleAllGeomElems(),
+                                                                        & ml_sol_single_level,
                                                                         & ml_sol_all_levels,
                                                                         unknowns,
                                                                         i,
@@ -288,13 +287,14 @@ template < class type>
  
 
 template < class type>
-/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms(const MultiLevelSolution* ml_sol, 
-                                              const MultiLevelSolution* ml_sol_all_levels,
-                                              const std::string & unknown,
-                                              const unsigned current_level,
-                                              const unsigned norm_flag,
-                                              const unsigned conv_order_flag,
-                                              const Math::Function< type > * ex_sol_in
+/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms(const std::vector<Gauss> & quad_rules,
+                                                                            const MultiLevelSolution* ml_sol,
+                                                                            const MultiLevelSolution* ml_sol_all_levels,
+                                                                            const std::string & unknown,
+                                                                            const unsigned current_level,
+                                                                            const unsigned norm_flag,
+                                                                            const unsigned conv_order_flag,
+                                                                            const Math::Function< type > * ex_sol_in
                                              ) {
      
   // (//0 = only L2: //1 = L2 + H1)
@@ -405,7 +405,7 @@ template < class type>
 
 
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < quad_rules[ielGeom].GetGaussPointsNumber(); ig++) {
         
       // *** get gauss point weight, test function and test function partial derivatives ***
      static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][soluType] )
@@ -508,14 +508,15 @@ if (conv_order_flag == 1)  return norms;
 
      
 template < class type>
-/*static*/  void FE_convergence< type >::compute_error_norms_per_unknown_per_level(const MultiLevelSolution* ml_sol_single_level, 
-                                          MultiLevelSolution* ml_sol_all_levels, 
-                                          const std::vector< Unknown > &  unknowns, 
-                                          const unsigned i,
-                                          const unsigned norm_flag, 
-                                          std::vector < std::vector < std::vector < type > > > &  norms,
-                                          const unsigned conv_order_flag,
-                                          const Math::Function< type > * ex_sol_in
+/*static*/  void FE_convergence< type >::compute_error_norms_per_unknown_per_level(const std::vector<Gauss> & quad_rules,
+                                                                                   const MultiLevelSolution* ml_sol_single_level,
+                                                                                   MultiLevelSolution* ml_sol_all_levels,
+                                                                                   const std::vector< Unknown > &  unknowns,
+                                                                                   const unsigned i,
+                                                                                   const unsigned norm_flag,
+                                                                                   std::vector < std::vector < std::vector < type > > > &  norms,
+                                                                                   const unsigned conv_order_flag,
+                                                                                   const Math::Function< type > * ex_sol_in
                                          ) {
      
      
@@ -527,7 +528,7 @@ template < class type>
             // =======  compute the error norm at the current level (i) ========================
             for (unsigned int u = 0; u < unknowns.size(); u++) {  //this loop could be inside the below function
                 
-            const std::vector< type > norm_out = FE_convergence::compute_error_norms (ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, ex_sol_in);
+            const std::vector< type > norm_out = FE_convergence::compute_error_norms (quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, ex_sol_in);
 
               for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];
                                        
