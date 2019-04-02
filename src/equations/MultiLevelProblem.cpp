@@ -36,6 +36,13 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x,
 				  const int &ElemGroupNumber,const int &level) = NULL;
 
 
+MultiLevelProblem::MultiLevelProblem():
+				      _files(NULL)
+{
+
+}
+
+
 MultiLevelProblem::MultiLevelProblem( MultiLevelSolution *ml_sol):
 				      _ml_sol(ml_sol),
 				      _ml_msh(ml_sol->_mlMesh),
@@ -52,6 +59,17 @@ MultiLevelProblem::~MultiLevelProblem(){
     delete iterator->second;
   }
 }
+
+
+
+ void MultiLevelProblem::SetMultiLevelMeshAndSolution(MultiLevelMesh * ml_mesh, MultiLevelSolution * ml_sol) {
+     
+				      _ml_sol = ml_sol;
+				      _ml_msh = ml_sol->_mlMesh;
+				       _gridn = _ml_msh->GetNumberOfLevels();
+     
+ }
+
 
 System & MultiLevelProblem::add_system (const std::string& sys_type,
 				      const std::string& name)

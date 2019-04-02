@@ -44,7 +44,6 @@ class elem_type;
 class QuantityMap;
 
 
-typedef double (*initfunc) (const double &x, const double &y, const double &z);
 
 /**
 * This class is a black box container to handle multilevel problems.
@@ -56,6 +55,8 @@ public:
 
     /** Constructor */
     //MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
+
+    MultiLevelProblem();
 
     MultiLevelProblem(MultiLevelSolution *ml_sol);
 
@@ -71,9 +72,6 @@ public:
 
     /** Data structure holding arbitrary parameters. */
     Parameters parameters;
-
-    /** Data structure holding the systems. */
-    std::map<std::string, System*> _systems;
 
     /** Typedef for system iterators */
     typedef std::map<std::string, System*>::iterator       system_iterator;
@@ -209,8 +207,18 @@ public:
   const int get_current_system_number() const { return _current_system_number; }
 
   void set_current_system_number(const unsigned current_system_number_in) { _current_system_number = current_system_number_in; }
+
+  void SetMultiLevelMeshAndSolution(MultiLevelMesh * ml_mesh, MultiLevelSolution * ml_sol);
   
+  //   Returns a non-const reference to the map of Systems
+  std::map<std::string, System*> & get_systems_map() { return _systems; }
+  
+ 
 private:
+
+
+    /** Data structure holding the systems. */
+    std::map<std::string, System*> _systems;
 
     // member data
     vector < map <unsigned,bool> > index;

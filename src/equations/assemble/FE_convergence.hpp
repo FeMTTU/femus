@@ -23,9 +23,10 @@ public:
 
   
 virtual const MultiLevelSolution  run_on_single_level(const Files & files,
+                                                      MultiLevelProblem & ml_prob,
                                                       const std::string quad_rule_order,
                                                       const std::vector< Unknown > & unknowns,
-                                                      const MultiLevelSolution::BoundaryFunc  SetBoundaryCondition,
+                                                      const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition,
                                                       const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
                                                       MultiLevelMesh & ml_mesh,
                                                       const unsigned i) const = 0;
@@ -42,8 +43,9 @@ public:
 
   void  convergence_study(const Files & files,
                           const std::string quad_rule_order,
+                          MultiLevelProblem & ml_prob,
                           const std::vector< Unknown > & unknowns,
-                          const MultiLevelSolution::BoundaryFunc SetBoundaryCondition,
+                          const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
                           const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
                           MultiLevelMesh & ml_mesh,
                           MultiLevelMesh & ml_mesh_all_levels,
@@ -61,10 +63,13 @@ static   std::vector < std::vector < std::vector < type > > >  initialize_vector
 
     
    
-static   const MultiLevelSolution  initialize_convergence_study(const std::vector< Unknown > &  unknowns,  
+static   const MultiLevelSolution  initialize_convergence_study(const MultiLevelProblem & ml_prob,
+                                                                const std::vector< Unknown > &  unknowns,  
                                                                 MultiLevelMesh & ml_mesh_all_levels, 
                                                                 const unsigned max_number_of_meshes, 
-                                                                const MultiLevelSolution::BoundaryFunc SetBoundaryCondition);  
+                                                                const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
+                                                                const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in
+                                                               );  
 
 
 //   print the error and the order of convergence between different levels
@@ -118,8 +123,9 @@ static  void compute_error_norms_per_unknown_per_level(const MultiLevelSolution*
 template < class type>
   void  FE_convergence< type >::convergence_study(const Files & files,
                                                   const std::string quad_rule_order,
+                                                  MultiLevelProblem & ml_prob,
                                                   const std::vector< Unknown > & unknowns,
-                                                  const MultiLevelSolution::BoundaryFunc SetBoundaryCondition,
+                                                  const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition,
                                                   const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
                                                   MultiLevelMesh & ml_mesh,
                                                   MultiLevelMesh & ml_mesh_all_levels,
@@ -132,17 +138,35 @@ template < class type>
 
   
     
-  // Convergence study ==============
-    vector < vector < vector < double > > > norms = FE_convergence::initialize_vector_of_norms ( unknowns.size(), max_number_of_meshes, norm_flag);
+    vector < vector < vector < double > > > norms = FE_convergence::initialize_vector_of_norms ( unknowns.size(), 
+                                                                                                 max_number_of_meshes, 
+                                                                                                 norm_flag);
     
-     MultiLevelSolution         ml_sol_all_levels = FE_convergence::initialize_convergence_study(unknowns, ml_mesh_all_levels, max_number_of_meshes, SetBoundaryCondition);
+     MultiLevelSolution         ml_sol_all_levels = FE_convergence::initialize_convergence_study(ml_prob,
+                                                                                                 unknowns,
+                                                                                                 ml_mesh_all_levels, 
+                                                                                                 max_number_of_meshes, 
+                                                                                                 SetBoundaryCondition, 
+                                                                                                 SetInitialCondition);
     
             
        for (int i = 0; i < max_number_of_meshes; i++) {
                   
-            const MultiLevelSolution ml_sol_single_level = main_in.run_on_single_level(files, quad_rule_order, unknowns, SetBoundaryCondition, SetInitialCondition, ml_mesh, i);
+            const MultiLevelSolution ml_sol_single_level = main_in.run_on_single_level(files,
+                                                                                       ml_prob,
+                                                                                       quad_rule_order,
+                                                                                       unknowns,
+                                                                                       SetBoundaryCondition,
+                                                                                       SetInitialCondition, 
+                                                                                       ml_mesh,
+                                                                                       i);
+            
 
-                                              FE_convergence::compute_error_norms_per_unknown_per_level ( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag, exact_sol);
+            FE_convergence::compute_error_norms_per_unknown_per_level ( & ml_sol_single_level,
+                                                                        & ml_sol_all_levels,
+                                                                        unknowns,
+                                                                        i,
+                                                                        norm_flag,                                                                                                          norms,                                                                                                           conv_order_flag,                                                                                                          exact_sol);
         
       }
    
@@ -167,7 +191,6 @@ template < class type>
                norms[u][i].resize(norm_flag + 1);
            }   
        }
- //Error norm definition  ==================
     
     return norms; 
        
@@ -176,10 +199,11 @@ template < class type>
     
    
 template < class type>
-/*static*/   const MultiLevelSolution  FE_convergence< type >::initialize_convergence_study(const std::vector< Unknown > &  unknowns,  
-                                                                MultiLevelMesh & ml_mesh_all_levels, 
-                                                                const unsigned max_number_of_meshes, 
-                                                                const MultiLevelSolution::BoundaryFunc SetBoundaryCondition)  {
+/*static*/   const MultiLevelSolution  FE_convergence< type >::initialize_convergence_study(const MultiLevelProblem & ml_prob, 
+                                                                                            const std::vector< Unknown > &  unknowns,
+                                                                                            MultiLevelMesh & ml_mesh_all_levels,
+                                                                                            const unsigned max_number_of_meshes,
+                                                                                            const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,                                                                const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in)  {
 
    //Mesh: construct all levels  ==================
         unsigned numberOfUniformLevels_finest = max_number_of_meshes;
@@ -191,13 +215,14 @@ template < class type>
 //         std::vector < MultiLevelSolution * >   ml_sol_all_levels(unknowns.size());
 //                ml_sol_all_levels[u] = new MultiLevelSolution (& ml_mesh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
                MultiLevelSolution ml_sol_all_levels(& ml_mesh_all_levels);
+
                
-     for (unsigned int u = 0; u < unknowns.size(); u++) {
+               ml_sol_all_levels.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
+               for (unsigned int u = 0; u < unknowns.size(); u++) {
                ml_sol_all_levels.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order);  //We have to do so to avoid buildup of AddSolution with different FE families
-               ml_sol_all_levels.Initialize("All");
-               ml_sol_all_levels.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-               ml_sol_all_levels.GenerateBdc("All");
-                }
+               ml_sol_all_levels.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, & ml_prob);
+               ml_sol_all_levels.GenerateBdc(unknowns[u]._name.c_str(), "Steady", & ml_prob);
+               }
  //Solution  ==================
 
  return ml_sol_all_levels;

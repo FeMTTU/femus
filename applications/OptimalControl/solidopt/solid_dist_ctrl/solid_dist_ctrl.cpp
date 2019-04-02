@@ -58,7 +58,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
   
   
 
-bool Solution_set_boundary_conditions(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min)  (in 2D)
   //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min) //5: (z=z_min)  //6:  (z=z_max) (in 3D, I guess...)
   
@@ -203,10 +203,11 @@ class My_main_single_level : public Main_single_level {
     
 public:
     
-const MultiLevelSolution  run_on_single_level(const Files & files, 
+const MultiLevelSolution  run_on_single_level(const Files & files,
+                                              MultiLevelProblem & ml_prob,
                                                    const std::string quad_rule_order,
                                                    const std::vector< Unknown > & unknowns,  
-                                                   const MultiLevelSolution::BoundaryFunc SetBoundaryCondition_in,
+                                                   const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
                                                    const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                    MultiLevelMesh & ml_mesh, 
                                                    const unsigned i) const;
@@ -230,8 +231,13 @@ int main(int argc, char** args) {
         files.RedirectCout();
 
   // ======= Quad Rule ========================
-  std::string fe_quad_rule("seventh");
+  std::string quad_rule_order("seventh");
 
+  // ======= Problem ========================
+    MultiLevelProblem ml_prob;
+  ml_prob.SetQuadratureRuleAllGeomElems(quad_rule_order);
+  ml_prob.SetFilesHandler(&files);
+    
   // ======= Mesh ==================
   const ElemType geom_elem_type = QUAD9;
   const std::vector< unsigned int > nsub = {2, 2, 0};
@@ -239,7 +245,7 @@ int main(int argc, char** args) {
   const std::vector< double >      xyz_max = {1., 1., 0.};
 
   MultiLevelMesh ml_mesh;
-  ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+  ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,quad_rule_order.c_str());
 
   // ======= Unknowns ========================
   const unsigned int dimension = ml_mesh.GetDimension();  
@@ -247,33 +253,33 @@ int main(int argc, char** args) {
   
   // ======= Normal run ========================   //if you don't want the convergence study
   My_main_single_level< adept::adouble > my_main;
-  const unsigned int n_levels = 1;
-  my_main.run_on_single_level(files, fe_quad_rule, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels); 
+//   const unsigned int n_levels = 1;
+//   my_main.run_on_single_level(files, ml_prob, quad_rule_order, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels); 
  
   
   
-//   // ======= Convergence study ========================
-//     
-//    //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
-//    MultiLevelMesh ml_mesh_all_levels;
-//    ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//    //   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
-//  
-//    // convergence choices ================  
-//    unsigned int max_number_of_meshes;               // set total number of levels ================  
-// 
-//    if (nsub[2] == 0)   max_number_of_meshes = 3;
-//    else                max_number_of_meshes = 4;
-//   
-// //    My_exact_solution<> exact_sol;                //provide exact solution, if available ==============
-//    const unsigned conv_order_flag = 0;              //Choose how to compute the convergence order ========= //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
-//    const unsigned norm_flag = 1;                    //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
-// 
-//    
-//    // object ================  
-//     FE_convergence<>  fe_convergence;
-//     
-//     fe_convergence.convergence_study(files, fe_quad_rule, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
+  // ======= Convergence study ========================
+    
+   //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
+   MultiLevelMesh ml_mesh_all_levels;
+   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,quad_rule_order.c_str());
+   //   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),quad_rule_order.c_str(),1.);
+ 
+   // convergence choices ================  
+   unsigned int max_number_of_meshes;               // set total number of levels ================  
+
+   if (nsub[2] == 0)   max_number_of_meshes = 3;
+   else                max_number_of_meshes = 4;
+  
+//    My_exact_solution<> exact_sol;                //provide exact solution, if available ==============
+   const unsigned conv_order_flag = 0;              //Choose how to compute the convergence order ========= //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
+   const unsigned norm_flag = 1;                    //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
+
+   
+   // object ================  
+    FE_convergence<>  fe_convergence;
+    
+    fe_convergence.convergence_study(files, quad_rule_order, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
   
     
   return 0;
@@ -725,9 +731,10 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
 template < class real_num > 
 const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
+                                                                                MultiLevelProblem & ml_prob,
                                                                                 const std::string quad_rule_order,
                                                                                 const std::vector< Unknown > &  unknowns,
-                                                                                const MultiLevelSolution::BoundaryFunc SetBoundaryCondition_in,
+                                                                                const MultiLevelSolution::BoundaryFuncMLProb SetBoundaryCondition_in,
                                                                                 const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                                 MultiLevelMesh & ml_mesh,
                                                                                 const unsigned lev) const {
@@ -748,10 +755,9 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   ml_sol.GetWriter()->SetDebugOutput(true);
   
   // ======= Problem ========================
-  MultiLevelProblem ml_prob(&ml_sol);
-
-  ml_prob.SetQuadratureRuleAllGeomElems(quad_rule_order);
-  ml_prob.SetFilesHandler(&files);
+  ml_prob.SetMultiLevelMeshAndSolution(& ml_mesh,& ml_sol);
+  
+  ml_prob.get_systems_map().clear();
 
   //material  ==================
               //Adimensional quantity (Lref,Uref)
@@ -777,17 +783,13 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
   // ======= Solution, II ==================
 
-  for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
-
-  //initial conditions
-  ml_sol.Initialize("All");
-  for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, &ml_prob);
-  
-  //boundary conditions
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
-  ml_sol.GenerateBdc("All");
-
-
+  for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
+      ml_sol.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, &ml_prob);
+      ml_sol.GenerateBdc(unknowns[u]._name.c_str(), "Steady", & ml_prob);
+  }
+  
   // ======= System ========================
   NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("SolidMech");
 
