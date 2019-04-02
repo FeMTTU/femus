@@ -75,96 +75,92 @@ int main (int argc, char** args) {
       }
     }
   }
-  
+
   std::vector < std::vector < std::vector< double> > >MI (N);
-  
+
   for (unsigned i = 0; i < N; i++) {
     MI[i].resize (3);
     for (unsigned k = 0; k < 3; k++) {
       MI[i][k].assign (3, 0.);
     }
   }
-  
+
   for (unsigned i = 0; i < N; i++) {
     double det = (M[i][0][0] * (M[i][1][1] * M[i][2][2] - M[i][1][2] * M[i][2][1]) +
-    M[i][0][1] * (M[i][1][2] * M[i][2][0] - M[i][1][0] * M[i][2][2]) +
-    M[i][0][2] * (M[i][1][0] * M[i][2][1] - M[i][1][1] * M[i][2][0]));
-  
+                  M[i][0][1] * (M[i][1][2] * M[i][2][0] - M[i][1][0] * M[i][2][2]) +
+                  M[i][0][2] * (M[i][1][0] * M[i][2][1] - M[i][1][1] * M[i][2][0]));
+
     MI[i][0][0] = (-M[i][1][2] * M[i][2][1] + M[i][1][1] * M[i][2][2]) / det;
     MI[i][0][1] = (M[i][0][2] * M[i][2][1] - M[i][0][1] * M[i][2][2]) / det;
     MI[i][0][2] = (-M[i][0][2] * M[i][1][1] + M[i][0][1] * M[i][1][2]) / det;
-    MI[i][1][0] = (M[i][1][2] * M[i][2][0] - M[i][1][0] * M[i][2][2]) / det;
-    MI[i][1][1] = (-M[i][0][2] * M[i][2][0] + M[i][0][0] * M[i][2][2]) / det;
-    MI[i][1][2] = (M[i][0][2] * M[i][1][0] - M[i][0][0] * M[i][1][2]) / det;
-    MI[i][2][0] = (-M[i][1][1] * M[i][2][0] + M[i][1][0] * M[i][2][1]) / det;
-    MI[i][2][1] = (M[i][0][1] * M[i][2][0] - M[i][0][0] * M[i][2][1]) / det;
-    MI[i][2][2] = (-M[i][0][1] * M[i][1][0] + M[i][0][0] * M[i][1][1]) / det;
+   // MI[i][1][0] = (M[i][1][2] * M[i][2][0] - M[i][1][0] * M[i][2][2]) / det;
+   // MI[i][1][1] = (-M[i][0][2] * M[i][2][0] + M[i][0][0] * M[i][2][2]) / det;
+   // MI[i][1][2] = (M[i][0][2] * M[i][1][0] - M[i][0][0] * M[i][1][2]) / det;
+   // MI[i][2][0] = (-M[i][1][1] * M[i][2][0] + M[i][1][0] * M[i][2][1]) / det;
+   // MI[i][2][1] = (M[i][0][1] * M[i][2][0] - M[i][0][0] * M[i][2][1]) / det;
+   // MI[i][2][2] = (-M[i][0][1] * M[i][1][0] + M[i][0][0] * M[i][1][1]) / det;
   }
-  
-  
-  std::vector < std::vector < double > > I(3);
-  for (unsigned k = 0; k < 3; k++) {
-    I[k].resize (3);
-  }
-  
-  for (unsigned i = 0; i < N; i++) {
-    
-    for (unsigned j = 0; j < 3; j++) {
-      for (unsigned k = 0; k < 3; k++) {
-        I[j][k] = 0.;
-        for (unsigned l = 0; l < 3; l++) {
-          I[j][k] += M[i][j][l] * MI[i][l][k];
-        }
-      }
-    }
-    for (unsigned j = 0; j < 3; j++) {
-      for (unsigned k = 0; k < 3; k++) {
-        std::cout << I[j][k]<<" ";
-      }
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
-  }
-  
-  std::vector < double > h0(3,0.);
-  h0[0] = 1.;
-  
-  
-  std::vector < double > Ur(N,0.);
-  
-  double ptest = 3;
+
+
+//   std::vector < std::vector < double > > I(3);
+//   for (unsigned k = 0; k < 3; k++) {
+//     I[k].resize (3);
+//   }
+//
+//   for (unsigned i = 0; i < N; i++) {
+//
+//     for (unsigned j = 0; j < 3; j++) {
+//       for (unsigned k = 0; k < 3; k++) {
+//         I[j][k] = 0.;
+//         for (unsigned l = 0; l < 3; l++) {
+//           I[j][k] += M[i][j][l] * MI[i][l][k];
+//         }
+//       }
+//     }
+//     for (unsigned j = 0; j < 3; j++) {
+//       for (unsigned k = 0; k < 3; k++) {
+//         std::cout << I[j][k]<<" ";
+//       }
+//       std::cout << std::endl;
+//     }
+//     std::cout << std::endl;
+//   }
+
+  std::vector < double > Ur (N, 0.);
+
+  double ptest = 2;
   for (unsigned iel = 0; iel < N - 1; iel++) {
     for (unsigned p = 0; p < Np; p++) {
-      
-      std::vector < double > h(3);
+
+      std::vector < double > h (3);
       h[0] = 1;
       h[1] = (Xv[iel] - Xp[iel][p]);
       h[2] = h[1] * h[1];
       double det = 0.;
-      for (unsigned j = 0; j < 3; j++) {
-        for (unsigned k = 0; k < 3; k++) {
-          det += h0[j] * MI[iel][j][k] * h[k];
-        }
+
+      for (unsigned k = 0; k < 3; k++) {
+        det += MI[iel][0][k] * h[k];
       }
-      
-      Ur[iel]     += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * det  * pow(Xp[iel][p], ptest) ;
-      
+
+
+      Ur[iel]     += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * det  * pow (Xp[iel][p], ptest) ;
+
       h[0] = 1;
-      h[1] = (Xv[iel+1] - Xp[iel][p]);
+      h[1] = (Xv[iel + 1] - Xp[iel][p]);
       h[2] = h[1] * h[1];
       det = 0.;
-      for (unsigned j = 0; j < 3; j++) {
-        for (unsigned k = 0; k < 3; k++) {
-          det += h0[j] * MI[iel+1][j][k] * h[k];
-        }
+
+      for (unsigned k = 0; k < 3; k++) {
+        det += MI[iel + 1][0][k] * h[k];
       }
-          
-      Ur[iel + 1] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * det * pow(Xp[iel][p], ptest);
+
+
+      Ur[iel + 1] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * det * pow (Xp[iel][p], ptest);
     }
   }
-  
+
   for (unsigned i = 0; i < N; i++) {
-    std::cout << pow(Xv[i],ptest) << " " << Ur[i] << std::endl;
+    std::cout << pow (Xv[i], ptest) << " " << Ur[i] << std::endl;
   }
   std::cout << std::endl;
 
