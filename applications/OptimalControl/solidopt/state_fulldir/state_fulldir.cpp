@@ -471,8 +471,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
       // *** get Jacobian and test function and test function derivatives ***
       for(int fe=0; fe < n_unknowns; fe++) {
-	ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[fe]]->Jacobian(coords,    ig,weight_qp,    phi_dof_qp[fe],    phi_x_dof_qp[fe],    phi_xx_dof_qp[fe]);
-	ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[fe]]->Jacobian(coords_hat,ig,weight_hat_qp,phi_hat_dof_qp[fe],phi_x_hat_dof_qp[fe],phi_xx_hat_dof_qp[fe]);
+	msh->_finiteElement[ielGeom][SolFEType[fe]]->Jacobian(coords,    ig,weight_qp,    phi_dof_qp[fe],    phi_x_dof_qp[fe],    phi_xx_dof_qp[fe]);
+	msh->_finiteElement[ielGeom][SolFEType[fe]]->Jacobian(coords_hat,ig,weight_hat_qp,phi_hat_dof_qp[fe],phi_x_hat_dof_qp[fe],phi_xx_hat_dof_qp[fe]);
       }
       
   //=============== Integration at qp ========================================

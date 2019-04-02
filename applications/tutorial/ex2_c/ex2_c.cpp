@@ -107,7 +107,9 @@ template < class system_type, class real_num, class real_num_mov >
 void System_assemble_interface(MultiLevelProblem & ml_prob);
 
 template < class system_type, class real_num, class real_num_mov >
-void System_assemble_flexible(MultiLevelProblem& ml_prob,
+void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
+                              MultiLevelMesh * ml_mesh,
+                              MultiLevelSolution * ml_sol,
                               system_type * mlPdeSys,
                               const std::vector< Unknown > &  unknowns,
                               const Math::Function< double > & exact_sol);
@@ -338,7 +340,9 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
 template < class system_type, class real_num, class real_num_mov >
 void System_assemble_interface(MultiLevelProblem& ml_prob) {
-// this is meant to be like a tiny addition to the main function, because we cannot pass these arguments through the function pointer
+    //  ml_prob is the global object from/to where get/set all the data
+
+    // this is meant to be like a tiny addition to the main function, because we cannot pass these arguments through the function pointer
 //what is funny is that this function is attached to a system, but I cannot retrieve the system to which it is attached unless I know the name or the number of it!
 //all I have at hand is the MultiLevelProblem, which contains a Vector of Systems
 // all I can do is put in the MultiLevelProblem a number that tells me what is the current system being solved
@@ -348,10 +352,12 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
 
     const unsigned current_system_number = ml_prob.get_current_system_number();
 
-    System_assemble_flexible< system_type, real_num, real_num_mov > (ml_prob,
-                                                       & ml_prob.get_system< system_type >(current_system_number),
-                                                         ml_prob.get_system< system_type >(current_system_number).get_unknown_list_for_assembly(),
-                                                       exact_sol);
+    System_assemble_flexible< system_type, real_num, real_num_mov > (ml_prob.GetQuadratureRuleAllGeomElems(),
+                                                                     ml_prob._ml_msh,
+                                                                     ml_prob._ml_sol,
+                                                                     & ml_prob.get_system< system_type >(current_system_number),
+                                                                     ml_prob.get_system< system_type >(current_system_number).get_unknown_list_for_assembly(),
+                                                                     exact_sol);
 
 }
 
@@ -365,12 +371,13 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
  **/
 
 template < class system_type, class real_num, class real_num_mov >
-void System_assemble_flexible(MultiLevelProblem& ml_prob,
+void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
+                              MultiLevelMesh * ml_mesh_in,
+                              MultiLevelSolution * ml_sol_in,
                               system_type * mlPdeSys,
                               const std::vector< Unknown > &  unknowns,
                               const Math::Function< double > & exact_sol) {
 
-    //  ml_prob is the global object from/to where get/set all the data
     //  level is the level of the PDE system to be assembled
     //  levelMax is the Maximum level of the MultiLevelProblem
 
@@ -378,11 +385,10 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
     const unsigned level = mlPdeSys->GetLevelToAssemble();
     const bool 			assembleMatrix 		    = mlPdeSys->GetAssembleMatrix();
 
-    Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
-    elem*                     el = msh->el;
+    Mesh*                    msh = ml_mesh_in->GetLevel(level);
 
-    MultiLevelSolution*   ml_sol = ml_prob._ml_sol;
-    Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
+    MultiLevelSolution*   ml_sol = ml_sol_in;
+    Solution*                sol = ml_sol->GetSolutionLevel(level);
 
     LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
     SparseMatrix*             KK = pdeSys->_KK;
@@ -478,7 +484,7 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
         if (dim != 2) abort(); //only implemented in 2D now
 
         // *** Gauss point loop ***
-        for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(geom_element.geom_type()).GetGaussPointsNumber(); ig++) {
+        for (unsigned ig = 0; ig < quad_rules[geom_element.geom_type()].GetGaussPointsNumber(); ig++) {
 
             // *** get gauss point weight, test function and test function partial derivatives ***
             for (unsigned  u = 0; u < n_unknowns; u++) {
