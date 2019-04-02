@@ -27,6 +27,7 @@ algebra/SparseMatrix.cpp
 algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
 algebra/SlepcSVD.cpp
+equations/assemble/Quantity.cpp
 equations/assemble/DofMap.cpp
 equations/assemble/Assemble_jacobian.cpp
 equations/assemble/Assemble_unknown.cpp
@@ -90,7 +91,6 @@ physics/Parameter.cpp
 physics/Solid.cpp
 quadrature/GaussPoints.cpp
 solution/MultiLevelSolution.cpp
-solution/Quantity.cpp
 solution/Solution.cpp
 solution/Writer.cpp
 solution/VTKWriter.cpp
