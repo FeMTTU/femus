@@ -76,11 +76,14 @@ int main(int argc, char** args) {
         files.CheckIODirectories();
 	files.RedirectCout();
 
+  // ======= Quad Rule ========================
+  std::string fe_quad_rule("seventh");
+  
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 1;
@@ -122,6 +125,7 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
   
+  mlProb.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   mlProb.SetFilesHandler(&files);
 
  // add system  in mlProb as a Linear Implicit System
@@ -361,7 +365,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
+    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
 
  //******************** GEOMETRY ********************* 
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
@@ -526,13 +530,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //===================================================   
 
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	msh->_finiteElement[kelGeom][solType_u]   ->Jacobian(coords_at_dofs, ig, weight, phi_u, phi_u_x, phi_u_xx);
-        msh->_finiteElement[kelGeom][solType_ctrl]->Jacobian(coords_at_dofs, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
-        msh->_finiteElement[kelGeom][solType_adj] ->Jacobian(coords_at_dofs, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
-	msh->_finiteElement[kelGeom][solType_mu]  ->Jacobian(coords_at_dofs, ig, weight, phi_mu, phi_mu_x, phi_mu_xx);
+	msh->_finiteElement[ielGeom][solType_u]   ->Jacobian(coords_at_dofs, ig, weight, phi_u, phi_u_x, phi_u_xx);
+        msh->_finiteElement[ielGeom][solType_ctrl]->Jacobian(coords_at_dofs, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
+        msh->_finiteElement[ielGeom][solType_adj] ->Jacobian(coords_at_dofs, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
+	msh->_finiteElement[ielGeom][solType_mu]  ->Jacobian(coords_at_dofs, ig, weight, phi_mu, phi_mu_x, phi_mu_xx);
 
 	
     sol_u_gss = 0.;
@@ -980,7 +984,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
+    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
  
  //***************** GEOMETRY ************************ 
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
@@ -1062,12 +1066,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  //*************************************************** 
    
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	    msh->_finiteElement[kelGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
-        msh->_finiteElement[kelGeom][solType_u/*solTypeudes*/]->Jacobian(x, ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
-        msh->_finiteElement[kelGeom][solType_ctrl]  ->Jacobian(x, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
+	    msh->_finiteElement[ielGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
+        msh->_finiteElement[ielGeom][solType_u/*solTypeudes*/]->Jacobian(x, ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
+        msh->_finiteElement[ielGeom][solType_ctrl]  ->Jacobian(x, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
 
 	u_gss = 0.;  for (unsigned i = 0; i < nDof_u; i++) u_gss += sol_u[i] * phi_u[i];		
 	ctrl_gss = 0.; for (unsigned i = 0; i < nDof_ctrl; i++) ctrl_gss += sol_ctrl[i] * phi_ctrl[i];  

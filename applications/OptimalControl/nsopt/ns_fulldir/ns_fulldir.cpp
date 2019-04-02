@@ -57,7 +57,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const uns
 
 void AssembleNS_nonAD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
-double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated);
+double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated);
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
@@ -74,6 +74,9 @@ int main(int argc, char** args) {
   Files files;
         files.CheckIODirectories();
         files.RedirectCout();
+
+    // ======= Quad Rule ========================
+    std::string fe_quad_rule("seventh");
 
   // define multilevel mesh
   MultiLevelMesh mlMsh;
@@ -96,12 +99,11 @@ int main(int argc, char** args) {
   std::cout << fluid << std::endl;
 
   
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-  mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-//   mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
+  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+  mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+//   mlMsh.ReadCoarseMesh("./input/cube_hex.neu", fe_quad_rule.c_str(), scalingFactor);
 //   //mlMsh.ReadCoarseMesh ( "./input/square_quad.neu", "seventh", scalingFactor );
-//   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-//      probably in the furure it is not going to be an argument of this function   */
+  
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
 
@@ -165,6 +167,7 @@ int main(int argc, char** args) {
   MultiLevelProblem mlProb(&mlSol);
 
   mlProb.parameters.set<Fluid>("Fluid") = fluid;
+  mlProb.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   mlProb.SetFilesHandler(&files);
 
   // add system NS_fulldir in mlProb as a NonLinear Implicit System
@@ -209,7 +212,7 @@ int main(int argc, char** args) {
       Solution* sol_coarser_prolongated = mlSol_all_levels->GetSolutionLevel(i);
   
   
-      double* norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
+      double* norm = GetErrorNorm(mlProb,&mlSol,sol_coarser_prolongated);
     
       for(int j = 0; j < NO_OF_NORMS; j++)       comp_conv[i-1][j] = norm[j];
  
@@ -525,7 +528,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     s.new_recording();
 
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
 // #if PRESS == 1
@@ -915,7 +918,7 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
 
    
       // ********************** Gauss point loop *******************************
-      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[vel_type_pos]]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
  
       for(int fe=0; fe < NFE_FAMS; fe++) {
@@ -1157,7 +1160,7 @@ for (unsigned k = 0; k < dim; k++){
 
 
 
-double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated) {
+double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated) {
   
     static double ErrorNormArray[NO_OF_NORMS];
     
@@ -1324,7 +1327,7 @@ double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongat
 
  
       // ********************** Gauss point loop *******************************
-      for(unsigned ig=0;ig < msh->_finiteElement[ielGeom][SolFEType[vel_type_pos]]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
  
       for(int fe=0; fe < NFE_FAMS; fe++) {

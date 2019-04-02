@@ -125,6 +125,7 @@ int main(int argc, char** args) {
     // ======= Problem ========================
     MultiLevelProblem ml_prob(&ml_sol);
 
+    ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
     ml_prob.SetFilesHandler(&files);
 
     ml_sol.Initialize("All");    // initialize all varaibles to zero
@@ -624,7 +625,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 
 // *** Gauss point loop ***
-        for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][coords_fe_type]->GetGaussPointNumber(); ig++) {
+        for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 
             // *** get gauss point weight, test function and test function partial derivatives ***
             for(int fe=0; fe < NFE_FAMS; fe++) {
@@ -1021,7 +1022,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 //***************************************************
 
         // *** Gauss point loop ***
-        for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][coords_fe_type]->GetGaussPointNumber(); ig++) {
+        for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 
             // *** get gauss point weight, test function and test function partial derivatives ***
             //  ==== State

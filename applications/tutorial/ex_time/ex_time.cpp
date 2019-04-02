@@ -185,6 +185,7 @@ int main(int argc,char **args) {
   // ======= Problem ========================
   MultiLevelProblem ml_prob(&ml_sol);  // define the multilevel problem attach the ml_sol object to it
 
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.SetFilesHandler(&files);
   
   // ======= Initial values ========================
@@ -476,7 +477,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob){
   //all vars###################################################################    
 
       // *** quadrature loop ***
-      for(unsigned ig = 0; ig < ml_prob._ml_msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
           
       // *** get gauss point weight, test function and test function partial derivatives ***
       for(int fe=0; fe < NFE_FAMS; fe++) {

@@ -136,6 +136,7 @@ int main(int argc, char** args) {
     // ======= Problem ========================
   MultiLevelProblem ml_prob(&ml_sol);  // define the multilevel problem attach the ml_sol object to it
 
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.SetFilesHandler(&files);
   
     // ======= Initial values ========================

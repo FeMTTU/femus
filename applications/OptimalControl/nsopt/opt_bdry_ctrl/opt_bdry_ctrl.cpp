@@ -86,7 +86,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob);
 
 void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
-double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated);
+double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated);
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
@@ -102,6 +102,9 @@ int main(int argc, char** args) {
         files.CheckIODirectories();
         files.RedirectCout();
   
+    // ======= Quad Rule ========================
+    std::string fe_quad_rule("seventh");
+    
   MultiLevelMesh mlMsh;			// define multilevel mesh
   MultiLevelMesh mlMsh_all_levels;
   double scalingFactor = 1.;		// read coarse level mesh and generate finers level meshes
@@ -122,11 +125,9 @@ int main(int argc, char** args) {
 	
 //   MultiLevelMesh mlMsh;
 //  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
-    mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-    mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+    mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+    mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
     
-  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-     probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
 
@@ -215,6 +216,7 @@ int main(int argc, char** args) {
   MultiLevelProblem mlProb(&mlSol);
 
     mlProb.parameters.set<Fluid>("Fluid") = fluid;
+    mlProb.SetQuadratureRuleAllGeomElems(fe_quad_rule);
     mlProb.SetFilesHandler(&files);
  
   // add system OptBdryCtrl in mlProb as a NonLinear Implicit System
@@ -264,7 +266,7 @@ int main(int argc, char** args) {
       mlSol_all_levels->RefineSolution(i);
       Solution* sol_coarser_prolongated = mlSol_all_levels->GetSolutionLevel(i);
   
-      double* norm = GetErrorNorm(&mlSol,sol_coarser_prolongated);
+      double* norm = GetErrorNorm(mlProb,&mlSol,sol_coarser_prolongated);
     
       for(int j = 0; j < NO_OF_L2_NORMS+NO_OF_H1_NORMS; j++)       comp_conv[i-1][j] = norm[j];
   
@@ -737,7 +739,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		for(int k=0; k<n_unknowns; k++) {  gradSolVAR_bd_qp[k].resize(dim);  }
 
 //========= gauss_loop boundary===============================================================
-		  for(unsigned ig_bd=0; ig_bd < ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]->GetGaussPointNumber(); ig_bd++) {
+		  for(unsigned ig_bd=0; ig_bd < ml_prob.GetQuadratureRule(felt_bd).GetGaussPointsNumber(); ig_bd++) {
 // // 				for(int fe=0; fe < NFE_FAMS; fe++) {
 // // 		     		ml_prob._ml_msh->_finiteElement[felt_bd][fe]->JacobianSur(coordX_bd,ig_bd,weight_bd,phi_bd_gss_fe[fe],phi_x_bd_gss_fe[fe],normal);
 // // 				}
@@ -948,7 +950,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
  
 //======================= VolumeLoop with Integration (and fake boundary) =====================================================    
 // ********************** Gauss point loop *******************************
- for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[vel_type_pos]]->GetGaussPointNumber(); ig++) {
+ for(unsigned ig=0;ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
 	// *** get Jacobian and test function and test function derivatives ***
       for(int fe=0; fe < NFE_FAMS; fe++) {
@@ -1568,7 +1570,7 @@ double integral_g_dot_n = 0.;
         }
 
 //========= gauss_loop boundary===============================================================
-	    for(unsigned ig_bd=0; ig_bd < msh->_finiteElement[felt_bd][solVctrlType]->GetGaussPointNumber(); ig_bd++) {
+	    for(unsigned ig_bd=0; ig_bd < ml_prob.GetQuadratureRule(felt_bd).GetGaussPointsNumber(); ig_bd++) {
 		ml_prob._ml_msh->_finiteElement[felt_bd][solVctrlType]->JacobianSur(coordX_bd,ig_bd,weight_bd,phiVctrl_gss_bd,phiVctrl_x_gss_bd,normal);
 		  
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
@@ -1623,7 +1625,7 @@ double integral_g_dot_n = 0.;
   } //end if control element flag
 
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 //STATE######## VolumeLoop #####################################################################	
         // *** get gauss point weight, test function and test function partial derivatives ***
         msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV_gss, phiV_x_gss, phiV_xx_gss);
@@ -1670,7 +1672,7 @@ double integral_g_dot_n = 0.;
 }
 
 
-double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated) {
+double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated) {
   
     static double ErrorNormArray[NO_OF_L2_NORMS+NO_OF_H1_NORMS];
     
@@ -1851,7 +1853,7 @@ double*  GetErrorNorm(MultiLevelSolution* mlSol, Solution* sol_coarser_prolongat
 
  
       // ********************** Gauss point loop *******************************
-      for(unsigned ig=0;ig < msh->_finiteElement[ielGeom][SolFEType[vel_type_pos]]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
  
       for(int fe=0; fe < NFE_FAMS; fe++) {

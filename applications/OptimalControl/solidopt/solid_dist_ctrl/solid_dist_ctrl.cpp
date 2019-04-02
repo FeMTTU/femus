@@ -204,7 +204,9 @@ class My_main_single_level : public Main_single_level {
 public:
     
 const MultiLevelSolution  run_on_single_level(const Files & files, 
+                                                   const std::string quad_rule_order,
                                                    const std::vector< Unknown > & unknowns,  
+                                                   const MultiLevelSolution::BoundaryFunc SetBoundaryCondition_in,
                                                    MultiLevelMesh & ml_mesh, 
                                                    const unsigned i) const;
   
@@ -245,7 +247,7 @@ int main(int argc, char** args) {
   // ======= Normal run ========================   //if you don't want the convergence study
   My_main_single_level< adept::adouble > my_main;
   const unsigned int n_levels = 1;
-  my_main.run_on_single_level(files, unknowns, ml_mesh, n_levels); 
+  my_main.run_on_single_level(files, fe_quad_rule, unknowns, Solution_set_boundary_conditions, ml_mesh, n_levels); 
  
   
   
@@ -270,7 +272,7 @@ int main(int argc, char** args) {
 //    // object ================  
 //     FE_convergence<>  fe_convergence;
 //     
-//     fe_convergence.convergence_study(files, unknowns, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
+//     fe_convergence.convergence_study(files, fe_quad_rule, unknowns, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
   
     
   return 0;
@@ -527,7 +529,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
      
   
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solFEType_max]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 
 	// *** get Jacobian and test function and test function derivatives ***
       for(int fe=0; fe < n_unknowns; fe++) {
@@ -722,7 +724,9 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
 template < class real_num > 
 const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(const Files & files,
+                                                   const std::string quad_rule_order,
                                                                                 const std::vector< Unknown > &  unknowns,  
+                                                   const MultiLevelSolution::BoundaryFunc SetBoundaryCondition_in,
                                                                                 MultiLevelMesh & ml_mesh,
                                                                                 const unsigned lev) const {
                                                                                     
@@ -744,6 +748,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   // ======= Problem ========================
   MultiLevelProblem ml_prob(&ml_sol);
 
+  ml_prob.SetQuadratureRuleAllGeomElems(quad_rule_order);
   ml_prob.SetFilesHandler(&files);
 
   //material  ==================
@@ -777,7 +782,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, &ml_prob);
   
   //boundary conditions
-  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
   ml_sol.GenerateBdc("All");
 
 
