@@ -25,9 +25,11 @@ public:
 virtual const MultiLevelSolution  run_on_single_level(const Files & files,
                                                       const std::string quad_rule_order,
                                                       const std::vector< Unknown > & unknowns,
-                                                      const MultiLevelSolution::BoundaryFunc SetBoundaryCondition,
+                                                      const MultiLevelSolution::BoundaryFunc  SetBoundaryCondition,
+                                                      const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
                                                       MultiLevelMesh & ml_mesh,
                                                       const unsigned i) const = 0;
+                                                     
 };
 
 template < class type = double >
@@ -42,6 +44,7 @@ public:
                           const std::string quad_rule_order,
                           const std::vector< Unknown > & unknowns,
                           const MultiLevelSolution::BoundaryFunc SetBoundaryCondition,
+                          const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
                           MultiLevelMesh & ml_mesh,
                           MultiLevelMesh & ml_mesh_all_levels,
                           const unsigned max_number_of_meshes,
@@ -117,6 +120,7 @@ template < class type>
                                                   const std::string quad_rule_order,
                                                   const std::vector< Unknown > & unknowns,
                                                   const MultiLevelSolution::BoundaryFunc SetBoundaryCondition,
+                                                  const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
                                                   MultiLevelMesh & ml_mesh,
                                                   MultiLevelMesh & ml_mesh_all_levels,
                                                   const unsigned max_number_of_meshes,
@@ -136,7 +140,7 @@ template < class type>
             
        for (int i = 0; i < max_number_of_meshes; i++) {
                   
-            const MultiLevelSolution ml_sol_single_level = main_in.run_on_single_level(files, quad_rule_order, unknowns, SetBoundaryCondition, ml_mesh, i);
+            const MultiLevelSolution ml_sol_single_level = main_in.run_on_single_level(files, quad_rule_order, unknowns, SetBoundaryCondition, SetInitialCondition, ml_mesh, i);
 
                                               FE_convergence::compute_error_norms_per_unknown_per_level ( & ml_sol_single_level, & ml_sol_all_levels, unknowns, i, norm_flag, norms, conv_order_flag, exact_sol);
         

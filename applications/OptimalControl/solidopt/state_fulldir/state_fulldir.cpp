@@ -159,11 +159,12 @@ class My_main_single_level : public Main_single_level {
 public:
     
     const MultiLevelSolution  run_on_single_level(const Files & files,
-            const std::string quad_rule_order,
-            const std::vector< Unknown > & unknowns,
-            const MultiLevelSolution::BoundaryFunc SetBoundaryCondition_in,
-            MultiLevelMesh & ml_mesh,
-            const unsigned i) const;
+                                                  const std::string quad_rule_order,
+                                                  const std::vector< Unknown > & unknowns,
+                                                  const MultiLevelSolution::BoundaryFunc SetBoundaryCondition_in,
+                                                  const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
+                                                  MultiLevelMesh & ml_mesh,
+                                                  const unsigned i) const;
   
 };
  
@@ -201,34 +202,34 @@ int main(int argc, char** args) {
   
   // ======= Normal run ========================   //if you don't want the convergence study
   My_main_single_level< /*adept::a*/double > my_main;
-    const unsigned int n_levels = 1;
-     my_main.run_on_single_level(files, fe_quad_rule, unknowns, Solution_set_boundary_conditions, ml_mesh, n_levels); //if you don't want the convergence study
+//     const unsigned int n_levels = 1;
+//      my_main.run_on_single_level(files, fe_quad_rule, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, n_levels); //if you don't want the convergence study
  
   
   
-//   // ======= Convergence study ========================
-//     
-//    //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
-//    MultiLevelMesh ml_mesh_all_levels;
-//    ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
-//    //   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
-//  
-//    // convergence choices ================  
-//    unsigned int max_number_of_meshes;               // set total number of levels ================  
-// 
-//    if (nsub[2] == 0)   max_number_of_meshes = 2;
-//    else                max_number_of_meshes = 4;
-//   
-// //    My_exact_solution<> exact_sol;                //provide exact solution, if available ==============
-//    const unsigned conv_order_flag = 0;              //Choose how to compute the convergence order ========= //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
-//    const unsigned norm_flag = 1;                    //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
-// 
-// 
-//    // object ================  
-//     FE_convergence<>  fe_convergence;
-//     
-//     fe_convergence.convergence_study(files, fe_quad_rule, unknowns, Solution_set_boundary_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
-//   
+  // ======= Convergence study ========================
+    
+   //set coarse storage mesh (should write the copy constructor or "=" operator to copy the previous mesh) ==================
+   MultiLevelMesh ml_mesh_all_levels;
+   ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,fe_quad_rule.c_str());
+   //   ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),1.);
+ 
+   // convergence choices ================  
+   unsigned int max_number_of_meshes;               // set total number of levels ================  
+
+   if (nsub[2] == 0)   max_number_of_meshes = 2;
+   else                max_number_of_meshes = 4;
+  
+//    My_exact_solution<> exact_sol;                //provide exact solution, if available ==============
+   const unsigned conv_order_flag = 0;              //Choose how to compute the convergence order ========= //0: incremental 1: absolute (with analytical sol)  2: absolute (with projection of finest sol)...
+   const unsigned norm_flag = 1;                    //Choose what norms to compute (//0 = only L2: //1 = L2 + H1) ==============
+
+
+   // object ================  
+    FE_convergence<>  fe_convergence;
+    
+    fe_convergence.convergence_study(files, fe_quad_rule, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
+  
   return 0;
 }
 
@@ -573,6 +574,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
                                                                                 const std::string quad_rule_order,
                                                                                 const std::vector< Unknown > &  unknowns,  
                                                                                 const MultiLevelSolution::BoundaryFunc SetBoundaryCondition_in,
+                                                                                const MultiLevelSolution::InitFuncMLProb SetInitialCondition_in,
                                                                                 MultiLevelMesh & ml_mesh,
                                                                                 const unsigned lev) const {
                                                                                     
@@ -620,7 +622,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
   //initial conditions
   ml_sol.Initialize("All");
-  for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, &ml_prob);
+  for (unsigned int u = 0; u < unknowns.size(); u++)  ml_sol.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, &ml_prob);
   
   //boundary conditions
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);

@@ -40,18 +40,15 @@ class MultiLevelProblem;
 
 class MultiLevelSolution : public ParallelObject {
 
-private:
 
+public:
+    
     /** Initial condition function pointer typedef */
     typedef double (*InitFunc) (const std::vector < double >& x);
 
     /** duplicate */
     typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]);
 
-
-
-public:
-    
     /** Boundary condition function pointer typedef */
     typedef bool (*BoundaryFunc) (const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
     
