@@ -241,7 +241,7 @@ int main(int argc, char** args) {
     // object ================
     FE_convergence<>  fe_convergence;
 
-    fe_convergence.convergence_study(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main);
+    fe_convergence.convergence_study(files, ml_prob, unknowns, Solution_set_boundary_conditions, Solution_set_initial_conditions, ml_mesh, ml_mesh_all_levels, max_number_of_meshes, norm_flag, conv_order_flag, my_main/*, & exact_sol*/);
 
 
     return 0;
@@ -416,7 +416,7 @@ void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
     unsigned xType = BIQUADR_FE;
 
     CurrentElem < real_num_mov > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
-            Phi < real_num_mov > geom_element_phi(dim);                   // must be adept if the domain is moving, otherwise double
+            Phi < real_num_mov > geom_element_phi_dof_qp(dim);                   // must be adept if the domain is moving, otherwise double
 
     //=============== Unknowns ========================================
 
@@ -493,7 +493,7 @@ void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
             }
 
 //       msh->_finiteElement[geom_element.geom_type()][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
-            msh->_finiteElement[geom_element.geom_type()][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, geom_element_phi.phi(), geom_element_phi.phi_grad(), geom_element_phi.phi_hess());
+            msh->_finiteElement[geom_element.geom_type()][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, geom_element_phi_dof_qp.phi(), geom_element_phi_dof_qp.phi_grad(), geom_element_phi_dof_qp.phi_hess());
 
             // evaluate the solution, the solution derivatives and the coordinates in the gauss point
             real_num solu_gss = 0.;
@@ -515,7 +515,7 @@ void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
             std::vector < double > x_gss(dim, 0.);
             for (unsigned i = 0; i < geom_element.get_coords_at_dofs()[0].size(); i++) {
                 for (unsigned jdim = 0; jdim < dim; jdim++) {
-                    x_gss[jdim] += geom_element.get_coords_at_dofs(jdim,i) * geom_element_phi.phi(i);
+                    x_gss[jdim] += geom_element.get_coords_at_dofs(jdim,i) * geom_element_phi_dof_qp.phi(i);
                 }
             }
 
@@ -532,19 +532,27 @@ void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
                 }
 
 
-// arbitrary rhs
+// // Mass(u) = 1
+//                 double mass_exact = 1.;
+//                 unk_element_jac_res.res()[i] += ( ( mass_exact - solu_gss ) * unknowns_phi_dof_qp[0].phi(i) ) * weight_qp;
+//                 
+// // Mass(u) = Mass(u_0)
+//                 double mass_exact = exact_sol.value(x_gss);
+//                 unk_element_jac_res.res()[i] += ( ( mass_exact - solu_gss ) * unknowns_phi_dof_qp[0].phi(i) ) * weight_qp;
+
+// Helmholtz(u) = source - strong
 //               double source_term = exact_sol.value(x_gss);
 //         unk_element_jac_res.res()[i] += ( source_term * phi()[i] - solu_gss * phi()[i] - laplace ) * weight_qp;
 
-// manufactured Helmholtz - strong
+// Helmholtz(u) = Helmholtz(u_0) - strong
                 double helmholtz_strong_exact = exact_sol.helmholtz(x_gss);
                 unk_element_jac_res.res()[i] += (helmholtz_strong_exact * unknowns_phi_dof_qp[0].phi(i) - solu_gss * unknowns_phi_dof_qp[0].phi(i) - laplace) * weight_qp;
 
-// manufactured Laplacian - strong
+// Laplace(u) = Laplace(u_0) - strong
 //                double laplace_strong_exact = exact_sol.laplacian(x_gss);
 //         unk_element_jac_res.res()[i] += (- laplace_strong_exact * phi()[i] - phi[i] * solu_gss - laplace) * weight_qp;        //strong form of RHS and weak form of LHS
 
-// manufactured Laplacian - weak
+// grad(u) grad(v) = grad(u_0) grad(v) - weak
 //            unk_element_jac_res.res()[i] += (laplace_weak_exact - phi()[i] * solu_gss - laplace) * weight_qp;                  //weak form of RHS and weak form of LHS
 
 
@@ -659,3 +667,4 @@ void  assemble_jacobian< double, double >::compute_jacobian_inside_integration_l
 ///@todo: check FE convergence in 3D for various operators
 ///@todo: check face names in 3D
 ///@todo: test with linear compressible solid first
+///@todo: check FE convergence with EXACT solution

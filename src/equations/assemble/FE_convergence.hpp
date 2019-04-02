@@ -21,14 +21,14 @@ class Main_single_level {
     
 public: 
 
-  
+// What this function does is to yield a MultiLevelSolution object at each level, to construct a level hierarchy to be used for error analysis 
 virtual const MultiLevelSolution  run_on_single_level(const Files & files,
                                                       MultiLevelProblem & ml_prob,
                                                       const std::vector< Unknown > & unknowns,
                                                       const MultiLevelSolution::BoundaryFuncMLProb  SetBoundaryCondition,
                                                       const MultiLevelSolution::InitFuncMLProb SetInitialCondition,
                                                       MultiLevelMesh & ml_mesh,
-                                                      const unsigned i) const = 0;
+                                                      const unsigned lev) const = 0;
                                                      
 };
 
@@ -149,7 +149,7 @@ template < class type>
                                                                                                  SetInitialCondition);
     
             
-       for (int i = 0; i < max_number_of_meshes; i++) {
+       for (int lev = 0; lev < max_number_of_meshes; lev++) {
                   
             const MultiLevelSolution ml_sol_single_level = main_in.run_on_single_level(files,
                                                                                        ml_prob,
@@ -157,14 +157,14 @@ template < class type>
                                                                                        SetBoundaryCondition,
                                                                                        SetInitialCondition, 
                                                                                        ml_mesh,
-                                                                                       i);
+                                                                                       lev);
             
 
             FE_convergence::compute_error_norms_per_unknown_per_level ( ml_prob.GetQuadratureRuleAllGeomElems(),
                                                                         & ml_sol_single_level,
                                                                         & ml_sol_all_levels,
                                                                         unknowns,
-                                                                        i,
+                                                                        lev,
                                                                         norm_flag,                                                                                                          norms,                                                                                                           conv_order_flag,                                                                                                          exact_sol);
         
       }
@@ -316,7 +316,6 @@ template < class type>
   unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*     msh = ml_sol->_mlMesh->GetLevel(level);
-  elem*     el  = msh->el;
   const Solution* sol = ml_sol->GetSolutionLevel(level);
 
   const unsigned  dim = msh->GetDimension();
