@@ -1,5 +1,6 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
+#include "MultiLevelSolution.hpp"
 
 
 //THIS IS THE 1D ASSEMBLY FOR THE NONLOCAL INTERFACE PROBLEM

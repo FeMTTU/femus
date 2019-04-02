@@ -1,4 +1,5 @@
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelMesh.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
@@ -161,7 +162,8 @@ int main(int argc,char **args) {
   //system1.SetDirichletBCsHandling(ELIMINATION);
 
   // Solve Navier-Stokes system
-  ml_prob.get_system("Stokes").MLsolve();
+  ml_prob.get_system("Navier-Stokes").SetOuterSolver(PREONLY);
+  ml_prob.get_system("Stokes").MGsolve();
   //END Stokes Multilevel Problem
 
   /// Print all solutions

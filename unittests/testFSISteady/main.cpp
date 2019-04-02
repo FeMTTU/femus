@@ -1,3 +1,4 @@
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "Fluid.hpp"
@@ -131,7 +132,8 @@ int main(int argc, char** args) {
   // Solving Fluid-Structure-Interaction system
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   double l2normvarDX = ml_sol.GetSolutionLevel(3)->GetSolutionName("DX").l2_norm();
 

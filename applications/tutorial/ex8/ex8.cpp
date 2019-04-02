@@ -13,6 +13,7 @@
  *  \author Eugenio Aulisa
  */
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -133,7 +134,8 @@ int main(int argc, char** args) {
   system.SetNumberOfSchurVariables(1); // option for FEMuS_ASM fot "P"
   system.SetElementBlockNumber(4); // option for FEMuS_ASM
 
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

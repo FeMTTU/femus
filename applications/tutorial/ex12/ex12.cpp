@@ -13,6 +13,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -130,7 +131,8 @@ int main(int argc, char** args) {
 
   // initilaize and solve the system
   system.init();
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

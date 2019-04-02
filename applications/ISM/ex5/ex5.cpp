@@ -5,6 +5,7 @@
 #include "Marker.hpp"
 #include "Line.hpp"
 #include "MultiLevelMesh.hpp"
+#include "MultiLevelSolution.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "MyVector.hpp"

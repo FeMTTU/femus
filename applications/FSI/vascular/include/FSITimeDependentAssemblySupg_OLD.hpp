@@ -3,6 +3,7 @@
 #endif
 
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "adept.h"
 
 #include "OprtrTypeEnum.hpp"

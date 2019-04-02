@@ -65,9 +65,6 @@ public:
         return *this;
     }
 
-    /** Clear all the data structures associated with the system. */
-    virtual void clear ();
-
     /**
      * @returns \p "Transient" prepended to T::system_type().
      * Helps in identifying the system type in an equation
@@ -81,13 +78,9 @@ public:
 
     /** Set up before calling the parent solve */
     void SetUpForSolve();
-    
+   
     /** calling the parent solve */
-    virtual void MLsolve();
-
-    /** calling the parent solve */
-    virtual void MGsolve( const LinearEquationSolverTypeType& LinearEquationSolverTypeType = MULTIPLICATIVE );
-
+    virtual void MGsolve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE );
 
     /** update the Newmark variables */
     void NewmarkAccUpdate();

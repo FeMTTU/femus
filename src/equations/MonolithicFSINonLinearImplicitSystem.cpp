@@ -18,6 +18,7 @@
 #include "NumericVector.hpp"
 #include "SparseMatrix.hpp"
 #include "ElemType.hpp"
+#include "MultiLevelSolution.hpp"
 
 
 namespace femus {
@@ -35,10 +36,6 @@ namespace femus {
   }
 
   MonolithicFSINonLinearImplicitSystem::~MonolithicFSINonLinearImplicitSystem() {
-    this->clear();
-  }
-
-  void MonolithicFSINonLinearImplicitSystem::clear() {
   }
 
   void MonolithicFSINonLinearImplicitSystem::init() {

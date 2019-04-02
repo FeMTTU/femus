@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -201,7 +202,8 @@ int main(int argc, char** args)
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(2);
   //system.UseSamePreconditioner();
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

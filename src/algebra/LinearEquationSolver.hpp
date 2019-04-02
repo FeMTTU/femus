@@ -79,7 +79,7 @@ namespace femus {
         abort();
       }
 
-      virtual void MGInit(const LinearEquationSolverTypeType &mg_smoother_type, const unsigned &levelMax, const SolverType & mgSolverType) {
+      virtual void MGInit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const SolverType & mgSolverType) {
         std::cout << "Warning InitMG(...) is not available for this smoother\n";
         abort();
       }

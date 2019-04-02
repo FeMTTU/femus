@@ -1,4 +1,6 @@
 #include "UqQuadratureTypeEnum.hpp"
+#include "MultiLevelSolution.hpp"
+
 using namespace femus;
 
 //THIS IS THE MOST UPDATED ASSEMBLY FOR SGM SIMULATIONS OF POISSON's EQUATION with HERMITE or LEGENDRE POLYNOMIALS
@@ -12,7 +14,7 @@ unsigned pIndex = 4;
 unsigned qIndex = 5;
 
 int  numberOfEigPairs = 2; //dimension of the stochastic variable
-double stdDeviationInput = 0.08;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 1.4;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double meanInput = 0.;
 double amin = 1. / 100.; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues (numberOfEigPairs);

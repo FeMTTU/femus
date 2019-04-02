@@ -340,7 +340,7 @@ int main(int argc, char **args)
   //END buid fieldSplitTree
   system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT);   // Field-Split preconditioned
   
-  system.SetMgOuterSolver(LGMRES);//SetOuterKSPSolver("lgmres");
+  system.SetOuterSolver(LGMRES);//SetOuterKSPSolver("lgmres");
   
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
