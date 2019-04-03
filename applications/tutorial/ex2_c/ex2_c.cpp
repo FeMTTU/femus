@@ -42,8 +42,8 @@ public:
 
 // manufactured Laplacian =============
     type value(const std::vector < type >& x) const {
-        double pi = acos(-1.);
-        return cos(pi * x[0]) * cos(pi * x[1]);
+        
+        return sin( pi * (x[0]) ) * sin( pi * (x[1]) );
     }
 
 
@@ -51,17 +51,16 @@ public:
 
         vector < type > solGrad(x.size());
 
-        double pi = acos(-1.);
-        solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-        solGrad[1]  = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+        solGrad[0]  = pi * cos( pi * (x[0]) ) * sin( pi * (x[1]) );
+        solGrad[1]  = pi * sin( pi * (x[0]) ) * cos( pi * (x[1]) );
 
         return solGrad;
     }
 
 
     type laplacian(const std::vector < type >& x) const {
-        double pi = acos(-1.);
-        return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+        
+        return -pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) ) - pi * pi * sin( pi * (x[0]) ) * sin( pi * (x[1]) );
     }
 
 
@@ -82,22 +81,27 @@ public:
 //
 //  double laplacian(const std::vector < double >& x) const {  return 0.; }
 
-
+  private: 
+    
+   static constexpr double pi = acos(-1.);
+      
 };
 
 
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char * name) {
 
-    double value = 0.;
+            double pi = acos(-1.);
+   double value = 0.; /*sin( pi * (x[0]) ) * sin( pi * (x[1]) );*/ /*(x[0]) * (1. - x[0]) * (x[1]) * (1. - x[1]);*//*observe the interpolation convergence of this last one...*/
 
-    
+   return value;   
+
 }
 
 
 bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
 
     bool dirichlet = true; //dirichlet
-    value = 0;
+    value = 0.;
 
     return dirichlet;
 }
@@ -195,8 +199,8 @@ int main(int argc, char** args) {
     // ======= Mesh ========================
     const ElemType geom_elem_type = QUAD9;
     const std::vector< unsigned int > nsub = {2,2,0};
-    const std::vector< double >      xyz_min = {-0.5,-0.5,0.};
-    const std::vector< double >      xyz_max = { 0.5, 0.5,0.};
+    const std::vector< double >      xyz_min = {0.,0.,0.};
+    const std::vector< double >      xyz_max = {1.,1.,0.};
 
 
     MultiLevelMesh ml_mesh;
@@ -299,6 +303,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
         ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
         ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str(), "Steady", & ml_prob);
 
+// If you just want an interpolation study, without equation, just initialize every Solution with some function and comment out all the following System part        
         // ======= System ========================
         std::ostringstream sys_name;
         sys_name << unknowns[u]._name;  //give to each system the name of the unknown it solves for!
@@ -668,3 +673,4 @@ void  assemble_jacobian< double, double >::compute_jacobian_inside_integration_l
 ///@todo: check face names in 3D
 ///@todo: test with linear compressible solid first
 ///@todo: check FE convergence with EXACT solution
+///@todo: problems in the P0 or P1 should happen because of the boundary conditions not being enforced
