@@ -36,113 +36,119 @@ void GaussianElemination (std::vector<std::vector < double > > & A, std::vector 
 int main (int argc, char** args) {
 
 
-  std::vector < std::vector <unsigned> > Jp;
-  unsigned polynomial_order = 4;
-  unsigned dim = 2;
-  ComputeIndexSet (Jp, polynomial_order, dim, true);
-
   // init Petsc-MPI communicator
   FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
-  unsigned N = 5u;
-  std::vector < double > Xv (N);
+  std::vector < std::vector <unsigned> > alphaIndex;
+  unsigned pOrder = 7;
+  unsigned dim = 1;
+  ComputeIndexSet (alphaIndex, pOrder, dim, true);
+
+  unsigned nve = 5u;
+  unsigned nel = nve - 1u;
+
+  std::vector < double > Xv (nve);
+  std::vector < double > hv (nve);
+  
+  
   Xv[0] = 0.;
   Xv[1] = 0.1;
   Xv[2] = 0.5;
   Xv[3] = 1.;
   Xv[4] = 1.3;
+  
+  hv[0] = 0.1;
+  hv[1] = 0.4;
+  hv[2] = 0.5;
+  hv[3] = 0.5;
+  hv[4] = 0.3;
 
-  unsigned Np = 10;
-  std::vector<std::vector< double> >Xp (N - 1);
+  unsigned Np = alphaIndex.size() + 5;
 
-  for (unsigned iel = 0; iel < N - 1; iel++) {
+  std::vector<std::vector< double> >Xp (nel);
+
+  for (unsigned iel = 0; iel < nel; iel++) {
     Xp[iel].resize (Np);
     for (unsigned p = 0; p < Np; p++) {
-
       Xp[iel][p] = Xv[iel] + 1.0 * rand() / RAND_MAX * (Xv[iel + 1] - Xv[iel]);
-
       std::cout << Xp[iel][p] << " ";
     }
     std::cout << std::endl;
   }
 
-  std::vector < std::vector < std::vector< double> > >M (N); // array of matrices
+  std::vector < std::vector < std::vector< double> > > M (nve); // array of matrices
 
-  unsigned Nr = 7;
-
-  for (unsigned i = 0; i < N; i++) {
-
-    M[i].resize (Nr);
-    for (unsigned k = 0; k < Nr; k++) {
-      M[i][k].assign (Nr + 1, 0.);
-
+  for (unsigned i = 0; i < nve; i++) {
+    M[i].resize (alphaIndex.size());
+    for (unsigned k = 0; k < alphaIndex.size(); k++) {
+      M[i][k].assign (alphaIndex.size() + 1, 0.);
     }
   }
 
-  for (unsigned i = 0; i < N; i++) {
-    M[i][0][Nr] = 1.;
+  for (unsigned i = 0; i < nve; i++) {
+    M[i][0][alphaIndex.size()] = 1.;
   }
 
 
-  for (unsigned iel = 0; iel < N - 1; iel++) {
+  for (unsigned iel = 0; iel < nel; iel++) {
     for (unsigned p = 0; p < Np; p++) {
-      for (unsigned k = 0; k < Nr; k++) {
-        for (unsigned l = 0; l < Nr; l++) {
-          M[iel][k][l] += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * pow ( (Xv[iel] - Xp[iel][p]), k + l);
-          M[iel + 1][k][l] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * pow ( (Xv[iel + 1] - Xp[iel][p]), k + l);
+      for (unsigned k = 0; k < alphaIndex.size(); k++) {
+        for (unsigned l = 0; l < alphaIndex.size(); l++) {
+          M[iel][k][l] += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * pow ( (Xv[iel] - Xp[iel][p])/hv[iel], alphaIndex[k][0] + alphaIndex[l][0]);
+          M[iel + 1][k][l] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * pow ( (Xv[iel + 1] - Xp[iel][p])/hv[iel+1], alphaIndex[k][0] + alphaIndex[l][0]);
         }
       }
     }
   }
 
+  
+  
 
-  std::vector < std::vector< double> > alpha (N);
+  std::vector < std::vector< double> > alpha (nve);
 
-  for (unsigned i = 0; i < N; i++) {
-    alpha[i].resize (Nr);
+  for (unsigned i = 0; i < nve; i++) {
+    alpha[i].resize (alphaIndex.size());
     GaussianElemination (M[i], alpha[i]);
   }
 
-  std::vector < double > Ur (N, 0.);
+  std::vector < double > Ur (nve, 0.);
 
-  double ptest = 6;
-  for (unsigned iel = 0; iel < N - 1; iel++) {
+  for (unsigned iel = 0; iel < nel; iel++) {
     for (unsigned p = 0; p < Np; p++) {
 
-      std::vector < double > h (Nr);
-      h[0] = 1;
-      double det = (Xv[iel] - Xp[iel][p]);
-      for (unsigned k = 1; k < Nr; k++) {
-        h[k] = pow (det, k);
-      }
-      det = 0.;
+      std::vector < double > h (alphaIndex.size());
 
-      for (unsigned k = 0; k < Nr; k++) {
+      double det = (Xv[iel] - Xp[iel][p])/hv[iel];
+      for (unsigned k = 0; k < alphaIndex.size(); k++) {
+        h[k] = pow (det, alphaIndex[k][0]);
+      }
+      
+      det = 0.;
+      for (unsigned k = 0; k < alphaIndex.size(); k++) {
         det += alpha[iel][k] * h[k];
       }
 
-      Ur[iel]     += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * det  * pow (Xp[iel][p], ptest) ;
+      Ur[iel]     += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * det  * pow (Xp[iel][p], pOrder) ;
 
-      h[0] = 1;
-      det = (Xv[iel + 1] - Xp[iel][p]);
-      for (unsigned k = 1; k < Nr; k++) {
-        h[k] = pow (det, k);
+      det = (Xv[iel + 1] - Xp[iel][p])/hv[iel+1];
+      for (unsigned k = 0; k < alphaIndex.size(); k++) {
+        h[k] = pow (det, alphaIndex[k][0]);
       }
+      
       det = 0.;
-
-      for (unsigned k = 0; k < Nr; k++) {
+      for (unsigned k = 0; k < alphaIndex.size(); k++) {
         det += alpha[iel + 1][k] * h[k];
       }
 
-      Ur[iel + 1] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * det * pow (Xp[iel][p], ptest);
+      Ur[iel + 1] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * det * pow (Xp[iel][p], pOrder);
     }
 
   }
 
 
   std::cout << std::endl;
-  for (unsigned i = 0; i < N; i++) {
-    std::cout << pow (Xv[i], ptest) << " " << Ur[i] << std::endl;
+  for (unsigned i = 0; i < nve; i++) {
+    std::cout << pow (Xv[i], pOrder) << " " << Ur[i] << std::endl;
   }
   std::cout << std::endl;
 
@@ -152,6 +158,15 @@ int main (int argc, char** args) {
 void GaussianElemination (std::vector<std::vector < double > > & A, std::vector < double> &x) {
 
   unsigned n = A.size();
+  
+//   for(unsigned i = 0; i < n; i++){
+//     for(unsigned j =0; j< n; j++){
+//       std::cout << A[i][j] <<" ";
+//     }
+//     std::cout<<std::endl;
+//   }
+//   std::cout<<std::endl;
+//   
   for (unsigned i = 0; i < n - 1; i++) {
     unsigned p = i;
     while (A[p][i] == 0) {
@@ -190,6 +205,15 @@ void GaussianElemination (std::vector<std::vector < double > > & A, std::vector 
       x[i] /= A[i][i];
     }
   }
+  
+  for(unsigned i = 0; i < n; i++){
+    for(unsigned j =0; j< n; j++){
+      std::cout << A[i][j] <<" ";
+    }
+    std::cout<<std::endl;
+  }
+  std::cout<<std::endl;
+  
   return;
 }
 
@@ -215,14 +239,11 @@ void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
       entrySum += counters[j];
     }
 
-<<<<<<< HEAD
-
-=======
     if (entrySum <= degree) {
       for (unsigned j = 0; j < dimension; j++) {
         Jp[index][j] = counters[dimension - 1 - j];
         if (output) {
-          std::cout << " Jp[" << index << "][" << j << "]= " << Jp[index][j] ;
+          std::cout << "alpha[" << index << "][" << j << "]= " << Jp[index][j] ;
         }
       }
       if (output) {
@@ -236,5 +257,11 @@ void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
     }
     ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
   }
+  if (output) {
+    std::cout << std::endl;
+  }
 }
->>>>>>> da14c9b6647dac4261ea43bf1bb1984ae8e9f747
+
+
+
+
