@@ -28,10 +28,14 @@ using namespace femus;
 // OLD BEST RESULT WITH E = 4.2 * 1.e6, 5 levels, dt= 0.01, NR = 300, R0 = 1.5, factor = 1.3
 // MOST BEST RESULT WITH E = 4.2 * 1.e6, 4 levels, dt= 0.01, NR = 300, R0 = 1.4, factor = 1.14,  beta = 0.3, Gamma = 0.5
 
-
+void GaussianElemination (std::vector<std::vector < double > > & A, std::vector < double> &x);
 
 int main (int argc, char** args) {
 
+  uq &myuq = FemusInit::_uqHermite;  
+  myuq.SetOutput (true);
+  const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet (2, 3);
+  
   // init Petsc-MPI communicator
   FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
@@ -43,13 +47,17 @@ int main (int argc, char** args) {
   Xv[3] = 1.;
   Xv[4] = 1.3;
 
-  unsigned Np = 3;
+  unsigned Np = 10;
   std::vector<std::vector< double> >Xp (N - 1);
 
   for (unsigned iel = 0; iel < N - 1; iel++) {
     Xp[iel].resize (Np);
     for (unsigned p = 0; p < Np; p++) {
+<<<<<<< HEAD
       Xp[iel][p] = Xv[iel] + (p + 1) * (Xv[iel + 1] - Xv[iel]) / (Np + 1); // particle points
+=======
+      Xp[iel][p] = Xv[iel] + 1.0 * rand() / RAND_MAX * (Xv[iel + 1] - Xv[iel]);
+>>>>>>> 5dd751072ed64c98be35af95294b7a523a731b4f
       std::cout << Xp[iel][p] << " ";
     }
     std::cout << std::endl;
@@ -57,116 +65,142 @@ int main (int argc, char** args) {
 
   std::vector < std::vector < std::vector< double> > >M (N); // array of matrices
 
+  unsigned Nr = 7;
+  
   for (unsigned i = 0; i < N; i++) {
+<<<<<<< HEAD
     M[i].resize (3);
     for (unsigned k = 0; k < 3; k++) {
       M[i][k].assign (3, 0.); //assigns new contents to the vector, replacing its current contents, and modifying its size accordingly.
+=======
+    M[i].resize (Nr);
+    for (unsigned k = 0; k < Nr; k++) {
+      M[i][k].assign (Nr + 1, 0.);
+>>>>>>> 5dd751072ed64c98be35af95294b7a523a731b4f
     }
   }
 
+  for (unsigned i = 0; i < N; i++) {
+    M[i][0][Nr] = 1.;
+  }
+    
 
   for (unsigned iel = 0; iel < N - 1; iel++) {
     for (unsigned p = 0; p < Np; p++) {
-      for (unsigned k = 0; k < 3; k++) {
-        for (unsigned l = 0; l < 3; l++) {
+      for (unsigned k = 0; k < Nr; k++) {
+        for (unsigned l = 0; l < Nr; l++) {
           M[iel][k][l] += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * pow ( (Xv[iel] - Xp[iel][p]), k + l);
           M[iel + 1][k][l] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * pow ( (Xv[iel + 1] - Xp[iel][p]), k + l);
         }
       }
     }
   }
-  
-  std::vector < std::vector < std::vector< double> > >MI (N);
-  
+ 
+
+  std::vector < std::vector< double> > alpha (N);
+
   for (unsigned i = 0; i < N; i++) {
-    MI[i].resize (3);
-    for (unsigned k = 0; k < 3; k++) {
-      MI[i][k].assign (3, 0.);
-    }
+    alpha[i].resize (Nr);
+    GaussianElemination (M[i], alpha[i]);
   }
   
-  for (unsigned i = 0; i < N; i++) {
-    double det = (M[i][0][0] * (M[i][1][1] * M[i][2][2] - M[i][1][2] * M[i][2][1]) +
-    M[i][0][1] * (M[i][1][2] * M[i][2][0] - M[i][1][0] * M[i][2][2]) +
-    M[i][0][2] * (M[i][1][0] * M[i][2][1] - M[i][1][1] * M[i][2][0]));
-  
-    MI[i][0][0] = (-M[i][1][2] * M[i][2][1] + M[i][1][1] * M[i][2][2]) / det;
-    MI[i][0][1] = (M[i][0][2] * M[i][2][1] - M[i][0][1] * M[i][2][2]) / det;
-    MI[i][0][2] = (-M[i][0][2] * M[i][1][1] + M[i][0][1] * M[i][1][2]) / det;
-    MI[i][1][0] = (M[i][1][2] * M[i][2][0] - M[i][1][0] * M[i][2][2]) / det;
-    MI[i][1][1] = (-M[i][0][2] * M[i][2][0] + M[i][0][0] * M[i][2][2]) / det;
-    MI[i][1][2] = (M[i][0][2] * M[i][1][0] - M[i][0][0] * M[i][1][2]) / det;
-    MI[i][2][0] = (-M[i][1][1] * M[i][2][0] + M[i][1][0] * M[i][2][1]) / det;
-    MI[i][2][1] = (M[i][0][1] * M[i][2][0] - M[i][0][0] * M[i][2][1]) / det;
-    MI[i][2][2] = (-M[i][0][1] * M[i][1][0] + M[i][0][0] * M[i][1][1]) / det;
-  }
-  
-  
-  std::vector < std::vector < double > > I(3);
-  for (unsigned k = 0; k < 3; k++) {
-    I[k].resize (3);
-  }
-  
-  for (unsigned i = 0; i < N; i++) {
-    
-    for (unsigned j = 0; j < 3; j++) {
-      for (unsigned k = 0; k < 3; k++) {
-        I[j][k] = 0.;
-        for (unsigned l = 0; l < 3; l++) {
-          I[j][k] += M[i][j][l] * MI[i][l][k];
-        }
-      }
-    }
-    for (unsigned j = 0; j < 3; j++) {
-      for (unsigned k = 0; k < 3; k++) {
-        std::cout << I[j][k]<<" ";
-      }
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
-  }
-  
-  std::vector < double > h0(3,0.);
-  h0[0] = 1.;
-  
-  
-  std::vector < double > Ur(N,0.);
-  
-  double ptest = 3;
+  std::vector < double > Ur (N, 0.);
+
+  double ptest = 6;
   for (unsigned iel = 0; iel < N - 1; iel++) {
     for (unsigned p = 0; p < Np; p++) {
-      
-      std::vector < double > h(3);
+
+      std::vector < double > h (Nr);
       h[0] = 1;
-      h[1] = (Xv[iel] - Xp[iel][p]);
-      h[2] = h[1] * h[1];
-      double det = 0.;
-      for (unsigned j = 0; j < 3; j++) {
-        for (unsigned k = 0; k < 3; k++) {
-          det += h0[j] * MI[iel][j][k] * h[k];
-        }
+      double det = (Xv[iel] - Xp[iel][p]);
+      for(unsigned k = 1; k < Nr; k++){
+        h[k] = pow (det, k);
       }
-      
-      Ur[iel]     += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * det  * pow(Xp[iel][p], ptest) ;
-      
-      h[0] = 1;
-      h[1] = (Xv[iel+1] - Xp[iel][p]);
-      h[2] = h[1] * h[1];
       det = 0.;
-      for (unsigned j = 0; j < 3; j++) {
-        for (unsigned k = 0; k < 3; k++) {
-          det += h0[j] * MI[iel+1][j][k] * h[k];
-        }
+
+      for (unsigned k = 0; k < Nr; k++) {
+        det += alpha[iel][k] * h[k];
       }
+
+      Ur[iel]     += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * det  * pow (Xp[iel][p], ptest) ;
+
+      h[0] = 1;
+      det = (Xv[iel + 1] - Xp[iel][p]);
+      for(unsigned k = 1; k < Nr; k++){
+        h[k] = pow (det, k);
+      }
+      det = 0.;
+
+      for (unsigned k = 0; k < Nr; k++) {
+        det += alpha[iel + 1][k] * h[k];
+      }
+<<<<<<< HEAD
+=======
+
+
+      Ur[iel + 1] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * det * pow (Xp[iel][p], ptest);
+    }
+>>>>>>> 5dd751072ed64c98be35af95294b7a523a731b4f
   }
-  
+
+
+  std::cout << std::endl;
   for (unsigned i = 0; i < N; i++) {
-    std::cout << pow(Xv[i],ptest) << " " << Ur[i] << std::endl;
+    std::cout << pow (Xv[i], ptest) << " " << Ur[i] << std::endl;
   }
   std::cout << std::endl;
 
 }
 
+<<<<<<< HEAD
           
       Ur[iel + 1] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * det * pow(Xp[iel][p], ptest);
     }
+=======
+
+void GaussianElemination (std::vector<std::vector < double > > & A, std::vector < double> &x) {
+
+  unsigned n = A.size();
+  for (unsigned i = 0; i < n - 1; i++) {
+    unsigned p = i;
+    while (A[p][i] == 0) {
+      p++;
+      if (p == n) {
+        std::cout << "The Matrix A is singular\n";
+        exit (0);
+      }
+    }
+    if (p != i) {
+      for (unsigned j = 0; j < n + 1; j++) {
+        double tmp;
+        tmp = A[i][j];
+        A[i][j] = A[p][j];
+        A[p][j] = tmp;
+      }
+    }
+    for (unsigned j = i + 1; j < n; j++) {
+      double mji = A[j][i] / A[i][i];
+      for (unsigned k = i; k < n + 1; k++) {
+        A[j][k] -= mji * A[i][k];
+      }
+    }
+  }
+  if (A[n - 1][n - 1] == 0) {
+    std::cout << "The Matrix A is singular\n";
+    exit (0);
+  }
+  else {
+    x[n - 1] = A[n - 1][n] / A[n - 1][n - 1];
+    for (int i = n - 2; i >= 0; i--) {
+      x[i] = A[i][n];
+      for (unsigned j = i + 1; j < n; j++) {
+        x[i] -= A[i][j] * x[j];
+      }
+      x[i] /= A[i][i];
+    }
+  }
+  return;
+}
+
+
+>>>>>>> 5dd751072ed64c98be35af95294b7a523a731b4f
