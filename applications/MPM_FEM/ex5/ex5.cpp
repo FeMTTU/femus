@@ -28,14 +28,19 @@ using namespace femus;
 // OLD BEST RESULT WITH E = 4.2 * 1.e6, 5 levels, dt= 0.01, NR = 300, R0 = 1.5, factor = 1.3
 // MOST BEST RESULT WITH E = 4.2 * 1.e6, 4 levels, dt= 0.01, NR = 300, R0 = 1.4, factor = 1.14,  beta = 0.3, Gamma = 0.5
 
+void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
+                      const unsigned & degree, const unsigned & dimension, bool output = false);
+
 void GaussianElemination (std::vector<std::vector < double > > & A, std::vector < double> &x);
 
 int main (int argc, char** args) {
 
-  uq &myuq = FemusInit::_uqHermite;  
-  myuq.SetOutput (true);
-  const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet (2, 3);
-  
+
+  std::vector < std::vector <unsigned> > Jp;
+  unsigned polynomial_order = 4;
+  unsigned dim = 2;
+  ComputeIndexSet (Jp, polynomial_order, dim, true);
+
   // init Petsc-MPI communicator
   FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
@@ -62,7 +67,7 @@ int main (int argc, char** args) {
   std::vector < std::vector < std::vector< double> > >M (N);
 
   unsigned Nr = 7;
-  
+
   for (unsigned i = 0; i < N; i++) {
     M[i].resize (Nr);
     for (unsigned k = 0; k < Nr; k++) {
@@ -73,7 +78,7 @@ int main (int argc, char** args) {
   for (unsigned i = 0; i < N; i++) {
     M[i][0][Nr] = 1.;
   }
-    
+
 
   for (unsigned iel = 0; iel < N - 1; iel++) {
     for (unsigned p = 0; p < Np; p++) {
@@ -85,7 +90,7 @@ int main (int argc, char** args) {
       }
     }
   }
- 
+
 
   std::vector < std::vector< double> > alpha (N);
 
@@ -93,7 +98,7 @@ int main (int argc, char** args) {
     alpha[i].resize (Nr);
     GaussianElemination (M[i], alpha[i]);
   }
-  
+
   std::vector < double > Ur (N, 0.);
 
   double ptest = 6;
@@ -103,7 +108,7 @@ int main (int argc, char** args) {
       std::vector < double > h (Nr);
       h[0] = 1;
       double det = (Xv[iel] - Xp[iel][p]);
-      for(unsigned k = 1; k < Nr; k++){
+      for (unsigned k = 1; k < Nr; k++) {
         h[k] = pow (det, k);
       }
       det = 0.;
@@ -116,7 +121,7 @@ int main (int argc, char** args) {
 
       h[0] = 1;
       det = (Xv[iel + 1] - Xp[iel][p]);
-      for(unsigned k = 1; k < Nr; k++){
+      for (unsigned k = 1; k < Nr; k++) {
         h[k] = pow (det, k);
       }
       det = 0.;
@@ -184,4 +189,44 @@ void GaussianElemination (std::vector<std::vector < double > > & A, std::vector 
   return;
 }
 
+void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
+                      const unsigned & degree, const unsigned & dimension, bool output) { //p is max poly degree
 
+
+  unsigned dimJp = static_cast <unsigned> (boost::math::binomial_coefficient<double> (dimension + degree, degree));
+
+  Jp.resize (dimJp);
+  for (unsigned i = 0; i < dimJp; i++) {
+    Jp[i].resize (dimension);
+  }
+
+  unsigned index = 0;
+  unsigned counters[dimension + 1];
+  memset (counters, 0, sizeof (counters));
+
+  while (!counters[dimension]) {
+
+    unsigned entrySum = 0;
+    for (unsigned j = 0; j < dimension; j++) {
+      entrySum += counters[j];
+    }
+
+    if (entrySum <= degree) {
+      for (unsigned j = 0; j < dimension; j++) {
+        Jp[index][j] = counters[dimension - 1 - j];
+        if (output) {
+          std::cout << " Jp[" << index << "][" << j << "]= " << Jp[index][j] ;
+        }
+      }
+      if (output) {
+        std::cout << std::endl;
+      }
+      index++;
+    }
+    unsigned i;
+    for (i = 0; counters[i] == degree; i++) {   // inner loops that are at maxval restart at zero
+      counters[i] = 0;
+    }
+    ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
+  }
+}
