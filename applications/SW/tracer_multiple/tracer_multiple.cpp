@@ -43,8 +43,8 @@ unsigned counter2 = 0;
 
 clock_t start_time = clock();
 
-bool phi_once = false;
-bool constant_jac = true;
+bool phi_once = true;
+bool constant_jac = false;
 bool twostage = true;
 bool assembly = true; //assembly must be left always true
 bool slepc = false;
