@@ -49,18 +49,18 @@ int main (int argc, char** args) {
   for (unsigned iel = 0; iel < N - 1; iel++) {
     Xp[iel].resize (Np);
     for (unsigned p = 0; p < Np; p++) {
-      Xp[iel][p] = Xv[iel] + (p + 1) * (Xv[iel + 1] - Xv[iel]) / (Np + 1);
+      Xp[iel][p] = Xv[iel] + (p + 1) * (Xv[iel + 1] - Xv[iel]) / (Np + 1); // particle points
       std::cout << Xp[iel][p] << " ";
     }
     std::cout << std::endl;
   }
 
-  std::vector < std::vector < std::vector< double> > >M (N);
+  std::vector < std::vector < std::vector< double> > >M (N); // array of matrices
 
   for (unsigned i = 0; i < N; i++) {
     M[i].resize (3);
     for (unsigned k = 0; k < 3; k++) {
-      M[i][k].assign (3, 0.);
+      M[i][k].assign (3, 0.); //assigns new contents to the vector, replacing its current contents, and modifying its size accordingly.
     }
   }
 
@@ -158,9 +158,6 @@ int main (int argc, char** args) {
           det += h0[j] * MI[iel+1][j][k] * h[k];
         }
       }
-          
-      Ur[iel + 1] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * det * pow(Xp[iel][p], ptest);
-    }
   }
   
   for (unsigned i = 0; i < N; i++) {
@@ -169,3 +166,7 @@ int main (int argc, char** args) {
   std::cout << std::endl;
 
 }
+
+          
+      Ur[iel + 1] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * det * pow(Xp[iel][p], ptest);
+    }
