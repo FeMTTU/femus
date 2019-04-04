@@ -178,8 +178,12 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
             ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
             ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
 
-            if      ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_lower[i] )) < 0 )  sol_actflag[i] = 1;
-            else if ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_upper[i] )) > 0 )  sol_actflag[i] = 2;
+            if      ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_lower[i] )) < 0 )  {
+                sol_actflag[i] = 1;
+            }
+            else if ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_upper[i] )) > 0 )  {
+                sol_actflag[i] = 2;
+            }
         }
 
 //************** local to global act flag ***************************

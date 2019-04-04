@@ -101,7 +101,7 @@ int main(int argc, char** args) {
     ml_mesh.ReadCoarseMesh("./input/ext_box.neu", fe_quad_rule.c_str(), scalingFactor);
 
     //ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-    unsigned numberOfUniformLevels = 3;
+    unsigned numberOfUniformLevels = 2;
     unsigned numberOfSelectiveLevels = 0;
     ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
     ml_mesh.PrintInfo();
@@ -415,7 +415,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         }
         //all vars###################################################################
 
-  update_active_set_flag_for_current_nonlinear_iteration
+        update_active_set_flag_for_current_nonlinear_iteration
          (msh, sol, iel, coords_at_dofs, sol_eldofs, Sol_n_el_dofs, pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
 
 
