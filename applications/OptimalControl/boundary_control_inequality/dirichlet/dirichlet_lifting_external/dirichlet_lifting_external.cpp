@@ -205,7 +205,6 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     NumericVector*           RES = pdeSys->_RES;
 
     const unsigned  dim = msh->GetDimension();
-    const unsigned dim2 = (3 * (dim - 1) + !(dim - 1));
     const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
     const unsigned    iproc = msh->processor_id();

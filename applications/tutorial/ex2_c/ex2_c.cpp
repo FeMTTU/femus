@@ -493,8 +493,7 @@ void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
 
             // *** get gauss point weight, test function and test function partial derivatives ***
             for (unsigned  u = 0; u < n_unknowns; u++) {
-                static_cast<const elem_type_2D*>( msh->_finiteElement[geom_element.geom_type()][unknowns_local[u].fe_type()] )
-                ->Jacobian_type_non_isoparametric< double >( static_cast<const elem_type_2D*>( msh->_finiteElement[geom_element.geom_type()][xType] ), geom_element.get_coords_at_dofs(), ig, weight_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess());
+                 msh->_finiteElement[geom_element.geom_type()][unknowns_local[u].fe_type()] ->Jacobian_non_isoparametric( msh->_finiteElement[geom_element.geom_type()][xType], geom_element.get_coords_at_dofs(), ig, weight_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess());
             }
 
 //       msh->_finiteElement[geom_element.geom_type()][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
