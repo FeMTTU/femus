@@ -46,8 +46,8 @@ int main (int argc, char** args) {
   //FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
   std::vector < std::vector <unsigned> > aIdx;
-  unsigned pOrder = 7;
-  unsigned dim = 3;
+  unsigned pOrder = 5;
+  unsigned dim = 2;
   ComputeIndexSet (aIdx, pOrder, dim, output);
 
   unsigned nve1d = 5u;
@@ -73,7 +73,7 @@ int main (int argc, char** args) {
     SetElementDofs (elemDof[iel], elIdx, nve1d);
   }
 
-  unsigned Np = aIdx.size();
+  unsigned Np = aIdx.size() + 10;
 
   std::vector< std::vector < std::vector< double> > > Xp (nel);
 
@@ -149,10 +149,12 @@ int main (int argc, char** args) {
     pOrderTest[d] = pOrder/dim;
   }
   pOrderTest[0] += pOrder%dim;
-  for(unsigned d = 0; d < dim; d++){
-    std::cout << pOrderTest[d]<<" ";
+  
+  std::cout << "Testing Polynomial \nPn = ";
+  for (unsigned d = 0 ; d < dim; d++) {
+    std::cout<<"x"<<d<<"^"<<pOrderTest[d]<<" * ";
   }
-  std::cout << std::endl;
+  std::cout<<"\b\b  "<<std::endl;
   
   std::vector < double > Ur (nve, 0.);
   for (unsigned iel = 0; iel < nel; iel++) {
@@ -180,21 +182,22 @@ int main (int argc, char** args) {
           }
           sumAlphaT += alpha[i][k] * Tk;
         }
-        //Ur[i] += W * sumAlphaT  * pow (Xp[iel][p][0], pOrder) ;
         Ur[i] += W * sumAlphaT  * P;
       }
     }
   }
-
-
+ 
+  bool test_is_passed = true;
   for (unsigned i = 0; i < nve; i++) {
     GetMultiIndex (ndIdx, dim, nve1d, i);
     double P = 1.;
     for (unsigned d = 0 ; d < dim; d++) {
       P *= pow (Xv[ndIdx[d]], pOrderTest[d]);
     }
-    //std::cout << pow (Xv[ndIdx[0]], pOrder) << " " << Ur[i] << std::endl;
-    std::cout << P << " " << Ur[i] << std::endl;
+    if( fabs(P - Ur[i]) > 1.0e-10){
+      test_is_passed = false;
+      std::cout <<"Error at node = "<<i <<" exact value = " << P << " reconstructed value = " << Ur[i] << std::endl;
+    }
   }
   std::cout << std::endl;
 
