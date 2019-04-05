@@ -18,13 +18,56 @@
 // #define MODEL "Mooney-Rivlin" 
 // #define MODEL "Neo-Hookean"
 
-double TargetDisp[3] = {1000., 0., 0.};
+double TargetDisp[3] = { 1.e-1, 0., 0.};
 
 double alpha_val = 1.;
 double beta_val = 1.e-1;
 double gamma_val = 1.e-1;
 
 using namespace femus;
+
+
+//*********************** Find volume elements that contain a  Target domain element ********************************
+
+int ElementTargetFlag(const std::vector<adept::adouble> & elem_center) {
+
+ //***** set target domain flag ********************************** 
+  int target_flag = 0;
+  
+//    if ( elem_center[0] > 0.   - 1.e-5  &&  elem_center[0] < 0.25  + 1.e-5  && 
+//         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
+//   ) //target on left 
+   
+    if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
+	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5
+  ) //target on top
+
+//    if ( elem_center[0] > 0.75  - 1.e-5  &&  elem_center[0] < 1.0   + 1.e-5  && 
+//         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
+//   ) //target on right 
+   
+//     if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
+// 	  elem_center[1] > 0.   - 1.e-5  &&  elem_center[1] < 0.25  + 1.e-5
+//   ) //target on bottom
+  
+//     if (  elem_center[0] > 0. - 1.e-5  &&  elem_center[0] < 0.25  + 1.e-5  && 
+// 	  elem_center[1] > 0.75   - 1.e-5  &&  elem_center[1] < 1.0  + 1.e-5
+//   ) //target box  on NW
+
+//     if (  elem_center[0] > 0.75 - 1.e-5  &&  elem_center[0] < 1.0  + 1.e-5  && 
+// 	  elem_center[1] > 0.   - 1.e-5  &&  elem_center[1] < 0.25  + 1.e-5
+//   ) //target box  on SE
+
+
+  {
+     
+     target_flag = 1;
+     
+  }
+  
+     return target_flag;
+
+}
 
 
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
@@ -81,7 +124,7 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
   //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min)  (in 2D)
   //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min) //5: (z=z_min)  //6:  (z=z_max) (in 3D, I guess...)
   
-  bool dirichlet = true; 
+  bool dirichlet  = true; 
   value = 0.;
   
         if (facename == 3) {
@@ -105,14 +148,14 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
 // //       }
 // // 
 // //       if (facename == 2) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = false/*true*/; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = false/*true*/; value = 0.; } 
+// //        if (!strcmp(SolName, "DX"))        { dirichlet = /*false*/true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY"))        { dirichlet = /*false*/true; value = 0.; } 
 // //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = false/*true*/; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = false/*true*/; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = /*false*/true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = /*false*/true; value = 0.; } 
 // //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false/*true*/; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false/*true*/; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = /*false*/true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = /*false*/true; value = 0.; } 
 // //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
 // //   	
 // //       }
@@ -124,21 +167,21 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
 // //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
 // //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
 // //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false/*true*/; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false/*true*/; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = false/*true*/; value = 0.; } 
 // //   	
 // //       }
 // // 
 // //       if (facename == 4) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = false/*true*/; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = false/*true*/; value = 0.; } 
+// //        if (!strcmp(SolName, "DX"))        { dirichlet = /*false*/true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY"))        { dirichlet = /*false*/true; value = 0.; } 
 // //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = false/*true*/; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = false/*true*/; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = /*false*/true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = /*false*/true; value = 0.; } 
 // //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false/*true*/; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false/*true*/; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = /*false*/true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = /*false*/true; value = 0.; } 
 // //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
 // //   	
 // //       }
@@ -509,7 +552,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     const bool penalty = solid_in.get_if_penalty();
 
     // gravity
-    double _gravity[3] = {10., 0., 0.};
+    double _gravity[3] = {0., 0., 0.};
     // -----------------------------------------------------------------
  
     RES->zero();
@@ -581,6 +624,21 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
         }
       }
   
+     // elem average point 
+    vector < real_num > elem_center(dim);   
+    for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
+  for (unsigned j = 0; j < dim; j++) {  
+      for (unsigned i = 0; i < nDofsX; i++) {
+         elem_center[j] += coords[j][i];
+       }
+    }
+    
+   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofsX; }
+  //*************************************** 
+  
+  //***** set target domain flag ********************************** 
+   int target_flag = 0;
+   target_flag = ElementTargetFlag(elem_center);
 
   // geometry end *****************************
 
@@ -638,7 +696,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
     
   //STATE=====================================
-//----------from d_state and p_state
+//----------from displ_state and p_state
               //BEGIN residual Solid Momentum in moving domain
           for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_displ]; i++) {
 
@@ -656,58 +714,50 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
             }
               //END residual Solid Momentum in moving domain
-//----------from d_state and p_state
+//----------from displ_state and p_state
               
 
-//----------from d_state of divergence
+//----------from displ_state of divergence
               //BEGIN residual solid mass balance in reference domain
             for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press]; i++) {
                 
               Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += 
-//              weight_hat_qp * phi_dof_qp[ sol_index_press ][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
-              - weight_hat_qp * phi_hat_dof_qp[ sol_index_press ][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_hat_qp, SolPdeIndex);
+                - weight_hat_qp * phi_dof_qp[ sol_index_press ][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
+//               - weight_hat_qp * phi_dof_qp[ sol_index_press ][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
               
             }
               //END residual solid mass balance in reference domain
-//----------from d_state of div
+//----------from displ_state of div
   //STATE=====================================
 
-// 
-//  // I x = 5 for adjoint block---------------------------
-//   for(unsigned adj_unk = 0 + adj_pos_begin; adj_unk < n_unknowns; adj_unk++) { 
-//          for (unsigned i = 0; i < Sol_n_el_dofs[adj_unk]; i++) {
-//                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[adj_unk], i) ] += (5. - SolVAR_qp[SolPdeIndex[adj_unk]]) *  phi_dof_qp[ adj_unk ][i] * weight_qp;
-//               }
-//           }
-//  // I x = 5 for adjoint block---------------------------
  
  //ADJOINT=====================================
-//----------from d_state only
+//----------from displ_state and displ_ctrl
          for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_adj]; i++) {
                for (int idim = 0; idim < dim; idim++) {
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + adj_pos_begin], i)] += 
-    - alpha_val * (SolVAR_qp[SolPdeIndex[idim]] + SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim]) * phi_dof_qp[ idim + adj_pos_begin ][i] * weight_qp;
+    - alpha_val * target_flag * (SolVAR_qp[SolPdeIndex[idim]] + SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim]) * phi_dof_qp[ idim + adj_pos_begin ][i] * weight_qp;
                }
           }
-//----------from d_state only
+//----------from displ_state and displ_ctrl
  //ADJOINT=====================================
  
         
   //CONTROL=====================================
- //----------from d_state and d_ctrl
+ //----------from displ_state and displ_ctrl
         for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_ctrl]; i++) {
                for (int idim = 0; idim < dim; idim++) {
-                   real_num_mov res_dctrl_ctrl = 0.;
                     for (unsigned jdim = 0; jdim < dim; jdim++) {
-                        res_dctrl_ctrl =  gradSolVAR_qp[idim + ctrl_pos_begin][jdim] * phi_x_dof_qp[idim + ctrl_pos_begin][i * dim + jdim];                   
+   Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
+                    gamma_val * gradSolVAR_qp[idim + ctrl_pos_begin][jdim] * phi_x_dof_qp[idim + ctrl_pos_begin][i * dim + jdim] * weight_qp;                   
                     }
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
-     ((alpha_val * (SolVAR_qp[SolPdeIndex[idim]] + SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim])  
-     + beta_val * SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] )* phi_dof_qp[ idim + ctrl_pos_begin ][i] 
-     + gamma_val * res_dctrl_ctrl) * weight_qp;
+            (   ( alpha_val * target_flag * (SolVAR_qp[SolPdeIndex[idim]] + SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim])  
+                + beta_val * SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] )* phi_dof_qp[ idim + ctrl_pos_begin ][i] 
+            ) * weight_qp;
                }
           }
- //----------from d_state and d_ctrl
+ //----------from displ_state and displ_ctrl
  //CONTROL=====================================
        
     } // end gauss point loop
@@ -739,52 +789,55 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
  
   //STATE=====================================
-//----------from d_ctrl only
+//----------from displ_ctrl only
 
       for(unsigned i_block = state_pos_begin; i_block < state_pos_begin + dim; i_block++) {
         for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
             for(unsigned j_block = state_pos_begin; j_block < state_pos_begin + dim; j_block++) {
                for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
-    Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block , j_block, i_dof, j_dof )] * SolVAR_eldofs[j_block + ctrl_pos_begin][j_dof];
+        Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block , j_block, i_dof, j_dof )] 
+            * SolVAR_eldofs[j_block + ctrl_pos_begin][j_dof];
                 }
            }
         }
    }
-//----------from d_ctrl only
+//----------from displ_ctrl only
   //STATE=====================================
 
 
     
   //ADJOINT=====================================
-//----------from d_adj only
+//----------from adj displ & press
       for(unsigned i_block = adj_pos_begin; i_block < ctrl_pos_begin; i_block++) {
         for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
             for(unsigned j_block = 0; j_block < n_state_vars; j_block++) {
                for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
-    Jac_state_false[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - adj_pos_begin , j_block, i_dof, j_dof )] * SolVAR_eldofs[j_block + adj_pos_begin][j_dof];
+        Jac_state_false[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - adj_pos_begin , j_block, i_dof, j_dof )] 
+            * SolVAR_eldofs[j_block + adj_pos_begin][j_dof];
                 }
            }
         }
    }
-//----------from d_adj only
+//----------from adj 
   //ADJOINT=====================================
 
    //CONTROL=====================================
 
-//----------from d_adj only
+//----------from displ__adj only
       for(unsigned i_block = ctrl_pos_begin; i_block < ctrl_pos_begin + dim ; i_block++) {
         for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
             for(unsigned j_block = 0; j_block < dim; j_block++) {
                for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
-    Jac_state_false[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] * SolVAR_eldofs[j_block + adj_pos_begin][j_dof];
+        - Jac_state_false[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] 
+          * SolVAR_eldofs[j_block + adj_pos_begin][j_dof];
                 }
            }
         }
    }
-//----------from d_adj only
+//----------from displ__adj only
 
 //----------from p_ctrl only
    for(unsigned i_block = ctrl_pos_begin; i_block < ctrl_pos_begin + dim ; i_block++) {
@@ -792,25 +845,27 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
             for(unsigned j_block = dim; j_block < n_state_vars; j_block++) {
                for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
-    Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] * SolVAR_eldofs[j_block + ctrl_pos_begin][j_dof];
+        Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] 
+            * SolVAR_eldofs[j_block + ctrl_pos_begin][j_dof];
                 }
            }
         }
    }
 //----------from p_ctrl only
 
-//----------from div of d_ctrl
+//----------from div of displ_ctrl
    for(unsigned i_block = sol_index_press_ctrl; i_block < n_unknowns ; i_block++) {
         for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
             for(unsigned j_block = 0; j_block < dim; j_block++) {
                for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
-    Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] * SolVAR_eldofs[j_block + ctrl_pos_begin][j_dof];
+        Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] 
+            * SolVAR_eldofs[j_block + ctrl_pos_begin][j_dof];
                 }
            }
         }
    }
-//----------from div of d_ctrl
+//----------from div of displ_ctrl
   //CONTROL=====================================
   
   
@@ -909,7 +964,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             Parameter par(Lref,Uref);
             
             // Generate Solid Object
-            double E = 1500000;
+            double E = 1.5e+6;
             double ni = 0.5;
             double rhos = 1000;
             Solid solid;
