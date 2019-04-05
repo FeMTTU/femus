@@ -113,7 +113,7 @@ namespace femus
                 sum += ( Tp[i][j] + 1 ); //this is because our indices start from 0 but the requirement assumes they start from 1
             }
 
-           if ( sum <= _L + _N - 1 ) { //this is to use sparse grid
+            if ( sum <= _L + _N - 1 ) { //this is to use sparse grid
 //                if ( sum == _L * _N ) { //this is to use the method with standard FEM
 //              if ( sum <= _L * _N ) { //this is to use full grid
 
@@ -311,7 +311,7 @@ namespace femus
             double leftBoundOfSupport = _nodes[n][l][i] - _hs[n][l]; // this is xi - h
             double rightBoundOfSupport = _nodes[n][l][i] + _hs[n][l]; // this is xi + h
 
-            if ( x > leftBoundOfSupport && x <= rightBoundOfSupport ) maybeThere = 1;
+            if ( x >= leftBoundOfSupport && x < rightBoundOfSupport ) maybeThere = 1;
 
             else maybeThere = 0;
         }
@@ -352,15 +352,13 @@ namespace femus
     void sparseGrid::EvaluateNodalValuesPDF ( std::vector < std::vector < double > >  &samples )
     {
 
-        double supportMeasureLowerLevel = 1.;
+        double supportMeasureLowest = 1.;
 
         for ( unsigned n = 0; n < _N; n++ ) {
-            supportMeasureLowerLevel *= 2 * _hs[n][_dofIdentifier[0][0][n][1]];
+            supportMeasureLowest *=  2. * _hs[n][_dofIdentifier[0][0][n][1]];
         }
 
-        if ( _output )  std::cout << "supportMeasureLowerLevel = " << supportMeasureLowerLevel << std::endl;
-
-        _nodalValuesPDF[0][0] = 1. / supportMeasureLowerLevel;
+        _nodalValuesPDF[0][0] = 1. / ( supportMeasureLowest );
 
 
         for ( unsigned w = 1; w < _numberOfWs; w++ ) {
@@ -369,32 +367,24 @@ namespace femus
             }
         }
 
-
-
         for ( unsigned w = 1; w < _numberOfWs; w++ ) {
             unsigned dofsOfW =  _nodalValuesPDF[w].size();
 
             for ( unsigned i = 0; i < dofsOfW; i++ ) {
-                for ( unsigned m = 0; m < _M; m++ ) {
-
-                    unsigned isThere;
-                    InSupport ( isThere, samples[m], _dofIdentifier[w][i] );
-
-                    if ( isThere == 1 ) _nodalValuesPDF[w][i]++;
-                }
 
                 double supportMeasure = 1.;
-                unsigned levelOfPhi = _dofIdentifier[w][i][0][1];
 
                 for ( unsigned n = 0; n < _N; n++ ) {
-                    supportMeasure *= 2 * _hs[n][_dofIdentifier[w][i][n][1]];
-
-                    if ( _dofIdentifier[w][i][n][1] > levelOfPhi ) levelOfPhi = _dofIdentifier[w][i][n][1];
+                    supportMeasure *=  2. * _hs[n][_dofIdentifier[w][i][n][1]];
                 }
 
-                if ( _output )   std::cout << "w = " << w << " i = " << i <<  " supportMeasure = " << supportMeasure << std::endl;
+                for ( unsigned m = 0; m < _M; m++ ) {
 
-                _nodalValuesPDF[w][i] /= ( supportMeasure * _M );
+                    double valuePhi;
+                    PiecewiseConstPhi ( valuePhi, samples[m], _dofIdentifier[w][i] );
+                    _nodalValuesPDF[w][i] += valuePhi / ( supportMeasure * _M );
+
+                }
 
 
                 for ( unsigned w1 = 0; w1 < w; w1++ ) {
@@ -405,17 +395,14 @@ namespace femus
                         unsigned isThere;
                         InSupport ( isThere, _hierarchicalDofsCoordinates[w][i], _dofIdentifier[w1][i1] );
 
-//                         std::cout << "w = " <<  w <<  " w1 = " << w1 << " i1 = " << i1 << " isThere = " << isThere << " dofsOfW = " << dofsOfW << " dofsOfWLower = " << dofsOfWLower << std::endl;
-
                         bool doThey;
                         SupportIsContained ( doThey, w, i, w1, i1 );
 
 
-                        if ( isThere == 1 && dofsOfWLower < dofsOfW && doThey == true) {
+                        if ( isThere == 1 && dofsOfWLower < dofsOfW && doThey == true ) {
 
-                            _nodalValuesPDF[w][i] -= _nodalValuesPDF[w1][i1] ;
+                            _nodalValuesPDF[w][i] -=  _nodalValuesPDF[w1][i1];
 
-//                             if ( w == 2 || w == 5 ) std::cout <<  " let's see " << _nodalValuesPDF[w1][i1] << std::endl;
                         }
 
                     }
@@ -484,11 +471,12 @@ namespace femus
         std::vector<std::vector<double>> phiFncts ( _numberOfWs );
 
         for ( unsigned w = 0; w < _numberOfWs; w++ ) {
-            phiFncts[w].resize ( _nodalValuesPDF[w].size() );
+//             phiFncts[w].resize ( _nodalValuesPDF[w].size() );
 
             for ( unsigned i = 0; i < _nodalValuesPDF[w].size(); i++ ) {
                 double valuePhi;
                 PiecewiseConstPhi ( valuePhi, x, _dofIdentifier[w][i] );
+//                 EvaluatePhi ( valuePhi, x, _dofIdentifier[w][i], false );
                 pdfValue += _nodalValuesPDF[w][i] * valuePhi;
 //                 phiFncts[w][i]  = _nodalValuesPDF[w][i] * valuePhi;
 

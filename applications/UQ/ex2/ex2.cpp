@@ -46,7 +46,7 @@ double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double startPoint = - 3.8;
 double endPoint = 3.8;
-unsigned M = 10000; //number of samples for the Monte Carlo
+unsigned M = 100000; //number of samples for the Monte Carlo
 double deltat;
 int pdfHistogramSize;
 //END
@@ -926,7 +926,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     //BEGIN histogram check
     double checkHistogram = 0;
     for(unsigned i = 0; i < pdfHistogramSize; i++) {
-      double point = (startPoint + i * deltat + startPoint + (i+1) * deltat) * 0.5;
+      double point = ( startPoint + i * deltat + startPoint + ( i + 1 ) * deltat ) * 0.5;
       double pdfCheck = pdfHistogram[i] / M;
       pdfHistogram[i] /= pdfIntegral;
       std::cout << point << "  " << pdfHistogram[i]  << std::endl;
@@ -1068,7 +1068,7 @@ void PlotStochasticData() {
   //BEGIN GRAM CHARLIER PRINT
   std::cout << " ------------------------- GRAM CHARLIER ------------------------- " << std::endl;
   for(unsigned i = 0; i < pdfHistogramSize; i++) {
-    double t = startPoint + i * deltat;
+    double t = ( startPoint + i * deltat + startPoint + ( i + 1 ) * deltat ) * 0.5;
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
@@ -1142,7 +1142,7 @@ void PlotStochasticData() {
   //BEGIN EDGEWORTH PRINT
   std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
   for(unsigned i = 0; i < pdfHistogramSize; i++) {
-    double t = startPoint + i * deltat;
+    double t = ( startPoint + i * deltat + startPoint + ( i + 1 ) * deltat ) * 0.5;
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
