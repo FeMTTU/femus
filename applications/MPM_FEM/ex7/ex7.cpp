@@ -34,7 +34,7 @@ void GaussianElemination (std::vector<std::vector < double > > & A, std::vector 
 
 void GetChebyshev (std::vector<double> &T, const unsigned &n, const double &x, const bool &output = false);
 
-void GetIndexes (std::vector <unsigned> &idx, const unsigned &dim, const unsigned& nel1d, const unsigned &iel);
+void GetMultiIndex (std::vector <unsigned> &idx, const unsigned &dim, const unsigned& n, const unsigned &i);
 void SetElementDofs (std::vector <unsigned> &elementDofs, const std::vector < unsigned > & idx, const unsigned & nve1d);
 
 int main (int argc, char** args) {
@@ -47,7 +47,7 @@ int main (int argc, char** args) {
 
   std::vector < std::vector <unsigned> > aIdx;
   unsigned pOrder = 3;
-  unsigned dim = 3;
+  unsigned dim = 2;
   ComputeIndexSet (aIdx, pOrder, dim, output);
 
   unsigned nve1d = 5u;
@@ -63,13 +63,13 @@ int main (int argc, char** args) {
     elSize[iel] = Xv[iel + 1] - Xv[iel];
   }
 
-  unsigned  nDofs [3] = {2, 4, 8};
+  unsigned  nDofs = static_cast < unsigned > ( pow(2, dim));
 
   std::vector < std::vector < unsigned > > elemDofs (nel);
 
   std::vector <unsigned> elIdx (dim);
   for (unsigned iel = 0; iel < nel; iel++) {
-    GetIndexes (elIdx, dim, nel1d, iel);
+    GetMultiIndex (elIdx, dim, nel1d, iel);
     SetElementDofs (elemDofs[iel], elIdx, nve1d);
   }
 
@@ -78,7 +78,7 @@ int main (int argc, char** args) {
   std::vector< std::vector < std::vector< double> > > Xp (nel);
 
   for (unsigned iel = 0; iel < nel; iel++) {
-    GetIndexes (elIdx, dim, nel1d, iel);
+    GetMultiIndex (elIdx, dim, nel1d, iel);
     Xp[iel].resize (Np);
     for (unsigned p = 0; p < Np; p++) {
       Xp[iel][p].resize (dim);
@@ -111,13 +111,13 @@ int main (int argc, char** args) {
 
   std::vector <unsigned> ndIdx (dim);
   for (unsigned iel = 0; iel < nel; iel++) {
-    GetIndexes (elIdx, dim, nel1d, iel);
+    GetMultiIndex (elIdx, dim, nel1d, iel);
     for (unsigned p = 0; p < Np; p++) {
 
-      for (unsigned idof = 0; idof < nDofs[dim - 1]; idof++) {
+      for (unsigned idof = 0; idof < nDofs; idof++) {
         unsigned i = elemDofs[iel][idof];
 
-        GetIndexes (ndIdx, dim, nve1d, i);
+        GetMultiIndex (ndIdx, dim, nve1d, i);
         double W = 1.;
 
         for (unsigned d = 0 ; d < dim; d++) {
@@ -126,11 +126,11 @@ int main (int argc, char** args) {
         }
         for (unsigned k = 0; k < aIdx.size(); k++) {
           for (unsigned l = 0; l < aIdx.size(); l++) {
-            double Tp = 1;
+            double TkTl = 1;
             for (unsigned d = 0 ; d < dim; d++) {
-              Tp *= T[d][aIdx[k][d]] * T[d][aIdx[l][d]];
+              TkTl *= T[d][aIdx[k][d]] * T[d][aIdx[l][d]];
             }
-            M[i][k][l] +=  W * Tp;
+            M[i][k][l] +=  W * TkTl;
           }
         }
       }
@@ -145,15 +145,15 @@ int main (int argc, char** args) {
 
   std::vector < double > Ur (nve, 0.);
   for (unsigned iel = 0; iel < nel; iel++) {
-    GetIndexes (elIdx, dim, nel1d, iel);
+    GetMultiIndex (elIdx, dim, nel1d, iel);
     for (unsigned p = 0; p < Np; p++) {
 
-      for (unsigned idof = 0; idof < nDofs[dim - 1]; idof++) {
+      for (unsigned idof = 0; idof < nDofs; idof++) {
         unsigned i = elemDofs[iel][idof];
 
-        GetIndexes (ndIdx, dim, nve1d, i);
+        GetMultiIndex (ndIdx, dim, nve1d, i);
+        
         double W = 1.;
-
         for (unsigned d = 0 ; d < dim; d++) {
           GetChebyshev (T[d], pOrder, (Xv[ndIdx[d]] - Xp[iel][p][d]) / hv[ndIdx[d]]);
           W *= (1. - fabs (Xv[ndIdx[d]] - Xp[iel][p][d]) / elSize[elIdx[d]]);
@@ -161,11 +161,11 @@ int main (int argc, char** args) {
 
         double sumAlphaT = 0.;
         for (unsigned k = 0; k < aIdx.size(); k++) {
-          double Tp = 1;
+          double Tk = 1;
           for (unsigned d = 0 ; d < dim; d++) {
-            Tp *= T[d][aIdx[k][d]];
+            Tk *= T[d][aIdx[k][d]];
           }
-          sumAlphaT += alpha[i][k] * Tp;
+          sumAlphaT += alpha[i][k] * Tk;
         }
         Ur[i] += W * sumAlphaT  * pow (Xp[iel][p][0], pOrder) ;
       }
@@ -174,7 +174,7 @@ int main (int argc, char** args) {
 
 
   for (unsigned i = 0; i < nve; i++) {
-    GetIndexes (ndIdx, dim, nve1d, i);
+    GetMultiIndex (ndIdx, dim, nve1d, i);
     std::cout << pow (Xv[ndIdx[0]], pOrder) << " " << Ur[i] << std::endl;
   }
   std::cout << std::endl;
@@ -314,47 +314,71 @@ void GetChebyshev (std::vector<double> &T, const unsigned &n, const double &x, c
 
 }
 
-void GetIndexes (std::vector <unsigned> &idx, const unsigned &dim, const unsigned& n, const unsigned &i) {
+void GetMultiIndex (std::vector <unsigned> &idx, const unsigned &dim, const unsigned& n, const unsigned &i) {
   idx.resize (dim);
-
-  if (dim == 1) {
-    idx[0] = i;
-  }
-  if (dim == 2) {
-    idx[0] = i / n;
-    idx[1] = i % n;
-  }
-  if (dim == 3) {
-    idx[0] = i / (n * n);
-    idx[1] = (i % (n * n)) / n;
-    idx[2] = i % n;
+  for (unsigned d = 0; d < dim; d++) {
+    idx[d] = (i % static_cast < unsigned > (pow (n, dim - d))) / static_cast < unsigned > (pow (n, dim - 1 - d));
   }
 }
 
 
 void SetElementDofs (std::vector <unsigned> &elementDofs, const std::vector < unsigned > & idx, const unsigned & nve1d) {
 
-  if (idx.size() == 1) {
-    elementDofs.resize (2);
-    elementDofs[0] = (idx[0] + 0u);
-    elementDofs[1] = (idx[0] + 1u);
-  }
-  if (idx.size() == 2) {
-    elementDofs.resize (4);
-    elementDofs[0] = (idx[0] + 0u) * nve1d + (idx[1] + 0u);
-    elementDofs[1] = (idx[0] + 0u) * nve1d + (idx[1] + 1u);
-    elementDofs[2] = (idx[0] + 1u) * nve1d + (idx[1] + 1u);
-    elementDofs[3] = (idx[0] + 1u) * nve1d + (idx[1] + 0u);
-  }
-  if (idx.size() == 3) {
-    elementDofs.resize (8);
-    elementDofs[0] = (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 0u);
-    elementDofs[1] = (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 1u);
-    elementDofs[2] = (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 1u);
-    elementDofs[3] = (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 0u);
-    elementDofs[4] = (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 0u);
-    elementDofs[5] = (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 1u);
-    elementDofs[6] = (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 1u);
-    elementDofs[7] = (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 0u);
-  }
+  unsigned dim = idx.size();
+  unsigned size = static_cast < unsigned > (pow( 2, dim ) );  
+  
+  elementDofs.assign (size, 0);
+  unsigned sizeHalf = size / 2u;
+  
+  unsigned jj;
+  for(unsigned d = 0; d < dim; d++){
+    for(unsigned j = 0; j < size; j++){
+      jj = j;  
+      while ( jj >= (2u * sizeHalf) ) {
+        jj -= 2u * sizeHalf; 
+      }
+      jj /= sizeHalf;
+         
+      elementDofs[j] += ( idx[d] + jj ) * ( static_cast <unsigned> ( pow( nve1d , dim - 1u - d)) );
+      
+    }
+    sizeHalf /= 2;
+  }  
+    
+//   if (idx.size() == 1) {
+//     elementDofs.resize (2);
+//     elementDofs[0] = (idx[0] + 0u);
+//     elementDofs[1] = (idx[0] + 1u);
+//   }
+//   if (idx.size() == 2) {
+//     elementDofs.resize (4);
+//     elementDofs[0] = (idx[0] + 0u) * nve1d + (idx[1] + 0u);
+//     elementDofs[1] = (idx[0] + 0u) * nve1d + (idx[1] + 1u);
+//     elementDofs[2] = (idx[0] + 1u) * nve1d + (idx[1] + 1u);
+//     elementDofs[3] = (idx[0] + 1u) * nve1d + (idx[1] + 0u);
+//   }
+//   if (idx.size() == 3) {
+//     elementDofs.resize (8);
+//     elementDofs[0] = (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 0u);
+//     elementDofs[1] = (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 1u);
+//     elementDofs[2] = (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 1u);
+//     elementDofs[3] = (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 0u);
+//     elementDofs[4] = (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 0u);
+//     elementDofs[5] = (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 1u);
+//     elementDofs[6] = (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 1u);
+//     elementDofs[7] = (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 0u);
+//   }
+  
+  
+ /* 
+    std::cout << elementDofs[0] << " " << (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 0u) << std::endl;
+    std::cout << elementDofs[1] << " " << (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 1u) << std::endl;
+    std::cout << elementDofs[2] << " " << (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 1u) << std::endl;
+    std::cout << elementDofs[3] << " " << (idx[0] + 0u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 0u) << std::endl;
+    std::cout << elementDofs[4] << " " << (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 0u) << std::endl;
+    std::cout << elementDofs[5] << " " << (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 0u) * nve1d + (idx[2] + 1u) << std::endl;
+    std::cout << elementDofs[6] << " " << (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 1u) << std::endl;
+    std::cout << elementDofs[7] << " " << (idx[0] + 1u) * (nve1d * nve1d) + (idx[1] + 1u) * nve1d + (idx[2] + 0u) << std::endl;
+  */
+  
 }
