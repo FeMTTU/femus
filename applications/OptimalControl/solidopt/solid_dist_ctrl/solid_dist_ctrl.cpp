@@ -13,61 +13,10 @@
 #include "FE_convergence.hpp"
 #include "Assemble_jacobian.hpp"
 
-
-#define MODEL "Linear_elastic"
-// #define MODEL "Mooney-Rivlin" 
-// #define MODEL "Neo-Hookean"
-
-double TargetDisp[3] = { 1.e-1, 0., 0.};
-
-double alpha_val = 1.;
-double beta_val = 1.e-1;
-double gamma_val = 1.e-1;
+#include   "../solidopt_params.hpp"
 
 using namespace femus;
 
-
-//*********************** Find volume elements that contain a  Target domain element ********************************
-
-int ElementTargetFlag(const std::vector<adept::adouble> & elem_center) {
-
- //***** set target domain flag ********************************** 
-  int target_flag = 0;
-  
-//    if ( elem_center[0] > 0.   - 1.e-5  &&  elem_center[0] < 0.25  + 1.e-5  && 
-//         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
-//   ) //target on left 
-   
-    if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
-	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5
-  ) //target on top
-
-//    if ( elem_center[0] > 0.75  - 1.e-5  &&  elem_center[0] < 1.0   + 1.e-5  && 
-//         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
-//   ) //target on right 
-   
-//     if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
-// 	  elem_center[1] > 0.   - 1.e-5  &&  elem_center[1] < 0.25  + 1.e-5
-//   ) //target on bottom
-  
-//     if (  elem_center[0] > 0. - 1.e-5  &&  elem_center[0] < 0.25  + 1.e-5  && 
-// 	  elem_center[1] > 0.75   - 1.e-5  &&  elem_center[1] < 1.0  + 1.e-5
-//   ) //target box  on NW
-
-//     if (  elem_center[0] > 0.75 - 1.e-5  &&  elem_center[0] < 1.0  + 1.e-5  && 
-// 	  elem_center[1] > 0.   - 1.e-5  &&  elem_center[1] < 0.25  + 1.e-5
-//   ) //target box  on SE
-
-
-  {
-     
-     target_flag = 1;
-     
-  }
-  
-     return target_flag;
-
-}
 
 
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
@@ -332,7 +281,7 @@ int main(int argc, char** args) {
 
   // ======= Mesh ==================
   const ElemType geom_elem_type = QUAD9;
-  const std::vector< unsigned int > nsub = {2, 2, 0};
+  const std::vector< unsigned int > nsub = {NSUB, NSUB, 0};
   const std::vector< double >      xyz_min = {0., 0., 0.};
   const std::vector< double >      xyz_max = {1., 1., 0.};
 
@@ -551,8 +500,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     const bool incompressible   = (0.5  ==  solid_in.get_poisson_coeff()) ? 1 : 0;
     const bool penalty = solid_in.get_if_penalty();
 
-    // gravity
-    double _gravity[3] = {0., 0., 0.};
     // -----------------------------------------------------------------
  
     RES->zero();
@@ -964,9 +911,9 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
             Parameter par(Lref,Uref);
             
             // Generate Solid Object
-            double E = 1.5e+6;
-            double ni = 0.5;
-            double rhos = 1000;
+            double E = YOUNGS_MODULUS;
+            double ni = NI;
+            double rhos = SOLID_DENSITY;
             Solid solid;
             solid = Solid(par,E,ni,rhos,MODEL);
 
