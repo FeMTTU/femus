@@ -491,6 +491,7 @@ void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
         // *** Gauss point loop ***
         for (unsigned ig = 0; ig < quad_rules[geom_element.geom_type()].GetGaussPointsNumber(); ig++) {
 
+            //here we'll first compute the jacobian inverse and pass that one to the other routines
             // *** get gauss point weight, test function and test function partial derivatives ***
             for (unsigned  u = 0; u < n_unknowns; u++) {
                  msh->_finiteElement[geom_element.geom_type()][unknowns_local[u].fe_type()] ->Jacobian_non_isoparametric( msh->_finiteElement[geom_element.geom_type()][xType], geom_element.get_coords_at_dofs(), ig, weight_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess());
