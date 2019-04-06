@@ -190,13 +190,19 @@ int main (int argc, char** argv) {
     std::vector < unsigned > solutionTypeuSGi (1);
     solutionTypeuSGi[0] = mlSol.GetSolutionType (name);
 
-    FielduSGi[i] = new FieldSplitTree (PREONLY, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
+    //FielduSGi[i] = new FieldSplitTree (PREONLY, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
+    FielduSGi[i] = new FieldSplitTree (RICHARDSON, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
+    
+    FielduSGi[i]->SetTolerances (1.e-5, 1.e-5, 1.e+50, 5);
+    FielduSGi[i]->SetRichardsonScaleFactor(0.2); 
 
     FSAll.push_back (FielduSGi[i]);
   }
 
-  FieldSplitTree uSG (PREONLY, FIELDSPLIT_PRECOND, FSAll, "uSG");
-  //uSG.SetRichardsonScaleFactor(1.);
+  //FieldSplitTree uSG (PREONLY, FIELDSPLIT_PRECOND, FSAll, "uSG");
+  FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_PRECOND, FSAll, "uSG");
+  //uSG.SetRichardsonScaleFactor(0.5); // 0.6 is the best choice
+  uSG.SetTolerances (1.e-3, 1.e-30, 1.e+50, 1);
   //END buid fieldSplitTree
    systemSG.SetLinearEquationSolverType (FEMuS_FIELDSPLIT);
   // ******* System FEM Assembly *******
@@ -223,7 +229,7 @@ int main (int argc, char** argv) {
 
   systemSG.SetPreconditionerFineGrids (ILU_PRECOND);
 
-  systemSG.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
+  systemSG.SetTolerances (1.e-10, 1.e-10, 1.e+50, 100);
   //END
 
 

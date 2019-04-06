@@ -194,7 +194,7 @@ int main (int argc, char** argv) {
 
   systemSG.SetPreconditionerFineGrids (ILU_PRECOND);
 
-  systemSG.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
+  systemSG.SetTolerances (1.e-10, 1.e-10, 1.e+50, 100);
   //END
 
 
