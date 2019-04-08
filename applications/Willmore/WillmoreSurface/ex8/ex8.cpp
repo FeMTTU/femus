@@ -32,7 +32,9 @@ const double ap[3] = {1, 0., 0.};
 const double normalSign = -1.;
 using namespace femus;
 
-const bool Constraint = true;
+
+const unsigned volumeConstraint = true;
+const unsigned areaConstraint = true;
 
 
 void AssemblePWillmore (MultiLevelProblem&);
@@ -100,8 +102,8 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
@@ -134,7 +136,7 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("Y2", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("Y3", LAGRANGE, FIRST, 2);
 
-  if (Constraint) {
+  if (volumeConstraint || areaConstraint) {
     mlSol.AddSolution ("Lambda", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
   }
 
@@ -205,9 +207,9 @@ int main (int argc, char** args) {
   system.AddSolutionToSystemPDE ("W2");
   system.AddSolutionToSystemPDE ("W3");
 
-  if (Constraint) {
+  if (volumeConstraint || areaConstraint) {
     system.AddSolutionToSystemPDE ("Lambda");
-    system.SetNumberOfGlobalVariables (2u);
+    system.SetNumberOfGlobalVariables (volumeConstraint + areaConstraint);
   }
 
   system.SetMaxNumberOfNonLinearIterations (20);
@@ -338,39 +340,40 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   adept::adouble aResLambda2;
   unsigned lambda2PdeDof;
   
-  if (Constraint) {
+  if (volumeConstraint || areaConstraint) {
     unsigned solLambdaIndex;
     solLambdaIndex = mlSol->GetIndex ("Lambda");
     solLambaPdeIndex = mlPdeSys->GetSolPdeIndex ("Lambda");
     
-    double lambda1;
-    if (iproc == 0) {
-      lambda1 = (*sol->_Sol[solLambdaIndex]) (0); // global to local solution
-      lambda1PdeDof = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, 0);
+    if(volumeConstraint){
+      double lambda1;
+      if (iproc == 0) {
+        lambda1 = (*sol->_Sol[solLambdaIndex]) (0); // global to local solution
+        lambda1PdeDof = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, 0);
+      }
+      MPI_Bcast (&lambda1, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast (&lambda1PdeDof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+      solLambda1 = lambda1;
     }
-    MPI_Bcast (&lambda1, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast (&lambda1PdeDof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-    solLambda1 = lambda1;
 
-    
-    double lambda2;
-    if (iproc == 0) {
-      lambda2 = (*sol->_Sol[solLambdaIndex]) (0); // global to local solution
-      lambda2PdeDof = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, 1);
+    if(areaConstraint){
+      double lambda2;
+      if (iproc == 0) {
+        lambda2 = (*sol->_Sol[solLambdaIndex]) (volumeConstraint); // global to local solution
+        lambda2PdeDof = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, volumeConstraint);
+      }
+      MPI_Bcast (&lambda2, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast (&lambda2PdeDof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+      solLambda2 = lambda2;
     }
-    MPI_Bcast (&lambda2, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast (&lambda2PdeDof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-    solLambda2 = lambda2;
-    
-    
     std::vector < double > value (2);
     std::vector < int > row (1);
     std::vector < int > columns (2);
     value[0] = 1;
     value[1] = -1;
-    columns[1] = lambda1PdeDof;
+    columns[1] = (volumeConstraint)? lambda1PdeDof : lambda2PdeDof;
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) { //for equations other than Lagrange multiplier
-      if (iel > 1) {
+      if (iel > volumeConstraint * areaConstraint) {
         row[0] = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, iel);
         columns[0] = row[0];
         KK->add_matrix_blocked (value, row, columns);
@@ -380,6 +383,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   double surface = 0.;
   double volume = 0.;
   double energy = 0.;
+  
+  
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -398,7 +403,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       solWOld[K].resize (nWDofs);
     }
 
-    unsigned sizeAll = DIM * (nxDofs + nYDofs +  nWDofs) + 2 * Constraint;
+    unsigned sizeAll = DIM * (nxDofs + nYDofs +  nWDofs) + volumeConstraint + areaConstraint;
 
     // resize local arrays
     SYSDOF.resize (sizeAll);
@@ -445,14 +450,18 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       }
     }
 
-    if (Constraint) {
-      SYSDOF[sizeAll - 2u ] = lambda1PdeDof;
+    if (volumeConstraint) {
+      SYSDOF[sizeAll - 1u - areaConstraint ] = lambda1PdeDof;
+    }
+    if (areaConstraint) {
       SYSDOF[sizeAll - 1u ] = lambda2PdeDof;
     }
 
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
 
+   
+    
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solxType]->GetGaussPointNumber(); ig++) {
 
@@ -665,8 +674,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
                          ) * Area;
         }
         // Lagrange Multiplier Euquation Dx . N =0
-        if (Constraint) {
+        if (volumeConstraint) {
           aResLambda1 += ( (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+        }
+        if(areaConstraint){
           aResLambda2 += ( -YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
         }
       }
@@ -705,8 +716,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         Res[DIM * (nxDofs + nYDofs) + K * nWDofs + i] = -aResW[K][i].value();
       }
     }
-    if (Constraint) {
-      Res[sizeAll - 2u] = - aResLambda1.value();
+    if (volumeConstraint) {
+      Res[sizeAll - 1u - areaConstraint] = - aResLambda1.value();
+    }
+    if (areaConstraint) {
       Res[sizeAll - 1u] = - aResLambda2.value();
     }
 
@@ -724,8 +737,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
     for (int K = 0; K < DIM; K++) {
       s.dependent (&aResW[K][0], nWDofs);
     }
-    if (Constraint) {
+    if (volumeConstraint) {
       s.dependent (&aResLambda1, 1);
+    }
+    if(areaConstraint){
       s.dependent (&aResLambda2, 1);
     }
     // define the dependent variables
@@ -738,12 +753,13 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
     for (int K = 0; K < DIM; K++) {
       s.independent (&solW[K][0], nWDofs);
     }
-    if (Constraint) {
+    if (volumeConstraint) {
       s.independent (&solLambda1, 1);
+    }
+    if(areaConstraint){
       s.independent (&solLambda2, 1);
     }
-      
-
+    
     // get the jacobian matrix (ordered by row)
     s.jacobian (&Jac[0], true);
 

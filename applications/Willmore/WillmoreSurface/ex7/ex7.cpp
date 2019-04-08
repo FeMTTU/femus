@@ -644,7 +644,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         }
         // Lagrange Multiplier Euquation Dx . N =0
         if (areaConstraint) {
-          aResLambda += ( YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+          aResLambda += ( -YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
         }
       }
 
