@@ -72,6 +72,13 @@ int main (int argc, char** args) {
   for (unsigned iel = 0; iel < nel; iel++) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
     SetElementDofs (elemDof[iel], elIdx, nve1d);
+    
+    
+    std::cout << iel << " ";
+    for(unsigned i = 0; i<nDofs; i++){
+      std::cout << elemDof[iel][i] <<" ";
+    }
+    std::cout<<std::endl;
   }
 
   unsigned Np = aIdx.size();
@@ -82,7 +89,7 @@ int main (int argc, char** args) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
     Xp[iel].resize (Np);
     std::cout << iel << " " << elIdx[0] << " " << elIdx[1] <<std::endl;
-    //if(elIdx[0] == 0 || elIdx[0] == nel1d - 1u) Xp[iel].resize (0);
+    if(elIdx[0] == 0 || elIdx[0] == nel1d - 1u) Xp[iel].resize (0);
     for (unsigned p = 0; p < Xp[iel].size(); p++) {
       Xp[iel][p].resize (dim);
       for (unsigned d = 0; d < dim; d++) {
@@ -365,7 +372,7 @@ void GetChebyshev (std::vector<double> &T, const unsigned &n, const double &x, c
 void GetMultiIndex (std::vector <unsigned> &idx, const unsigned &dim, const unsigned& n, const unsigned &i) {
   idx.resize (dim);
   for (unsigned d = 0; d < dim; d++) {
-    idx[d] = (i % static_cast < unsigned > (pow (n, dim - d))) / static_cast < unsigned > (pow (n, dim - 1 - d));
+    idx[dim -1u - d] = (i % static_cast < unsigned > (pow (n, dim - d))) / static_cast < unsigned > (pow (n, dim - 1 - d));
   }
 }
 
