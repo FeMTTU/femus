@@ -15,6 +15,7 @@
 
 #include "../include/mpmFem.hpp"
 
+#include<PolynomialBases.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -37,13 +38,13 @@ void GetChebyshev (std::vector<double> &T, const unsigned &n, const double &x, c
 void GetMultiIndex (std::vector <unsigned> &idx, const unsigned &dim, const unsigned& n, const unsigned &i);
 void SetElementDofs (std::vector <unsigned> &elementDofs, const std::vector < unsigned > & idx, const unsigned & nve1d);
 
+void PrintSolution (const std::vector <double> &U, const std::vector <double> &Ur, const double *x, const unsigned &dim, const unsigned &n);
+
 int main (int argc, char** args) {
 
-
+  FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
   bool output = true;
-
-  // init Petsc-MPI communicator
-  //FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
   std::vector < std::vector <unsigned> > aIdx;
   unsigned pOrder = 3;
@@ -80,7 +81,8 @@ int main (int argc, char** args) {
   for (unsigned iel = 0; iel < nel; iel++) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
     Xp[iel].resize (Np);
-    if(elIdx[0] == 0 || elIdx[0] == nel1d - 1u) Xp[iel].resize (0);
+    std::cout << iel << " " << elIdx[0] << " " << elIdx[1] <<std::endl;
+    //if(elIdx[0] == 0 || elIdx[0] == nel1d - 1u) Xp[iel].resize (0);
     for (unsigned p = 0; p < Xp[iel].size(); p++) {
       Xp[iel][p].resize (dim);
       for (unsigned d = 0; d < dim; d++) {
@@ -88,6 +90,8 @@ int main (int argc, char** args) {
       }
     }
   }
+  
+  PrintLine("./output/marker", Xp, false, 0);
 
   std::vector < std::vector < std::vector< double> > > M (nve); // array of matrices
   for (unsigned i = 0; i < nve; i++) {
@@ -102,27 +106,27 @@ int main (int argc, char** args) {
   std::vector< double> nodeCounter (nve,0.);
   
   std::vector <unsigned> ndIdx (dim);
-  for (unsigned iel = 0; iel < nel; iel++) {
-    GetMultiIndex (elIdx, dim, nel1d, iel);
-    for (unsigned p = 0; p < Xp[iel].size(); p++) {
+  for (unsigned iel = 0; iel < nel; iel++) { //element loop
+    GetMultiIndex (elIdx, dim, nel1d, iel); // Element multiIndex based on iel
+    for (unsigned p = 0; p < Xp[iel].size(); p++) { // particle loop
 
-      for (unsigned idof = 0; idof < nDofs; idof++) {
-        unsigned i = elemDof[iel][idof];
-
-        nodeCounter[i]++;
+      for (unsigned idof = 0; idof < nDofs; idof++) { // node loop in the iel element
+        unsigned i = elemDof[iel][idof]; //node
+        GetMultiIndex (ndIdx, dim, nve1d, i); // node multiIndex based on i
         
-        GetMultiIndex (ndIdx, dim, nve1d, i);
-        double W = 1.;
+        nodeCounter[i]++; // particle to node counter
+                
+        double W = 1.; //weight function
 
-        for (unsigned d = 0 ; d < dim; d++) {
-          GetChebyshev (T[d], pOrder, (Xv[ndIdx[d]] - Xp[iel][p][d]) / hv[ndIdx[d]]);
-          W *= (1. - fabs (Xv[ndIdx[d]] - Xp[iel][p][d]) / edgeSize[elIdx[d]]);
-        }
+        for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
+          GetChebyshev (T[d], pOrder, (Xv[ndIdx[d]] - Xp[iel][p][d]) / hv[ndIdx[d]]); //1D Chebyshev
+          W *= (1. - fabs (Xv[ndIdx[d]] - Xp[iel][p][d]) / edgeSize[elIdx[d]]); //1D Weight
+        } 
         for (unsigned k = 0; k < aIdx.size(); k++) {
           for (unsigned l = 0; l < aIdx.size(); l++) {
             double TkTl = 1;
             for (unsigned d = 0 ; d < dim; d++) {
-              TkTl *= T[d][aIdx[k][d]] * T[d][aIdx[l][d]];
+              TkTl *= T[d][aIdx[k][d]] * T[d][aIdx[l][d]]; //alpha * beta multidimendional product
             }
             M[i][k][l] +=  W * TkTl;
           }
@@ -168,7 +172,9 @@ int main (int argc, char** args) {
   }
   std::cout<<"\b\b  "<<std::endl;
   
+  
   std::vector < double > Ur (nve, 0.);
+  std::vector < double > Ue (nve, 0.);
   for (unsigned iel = 0; iel < nel; iel++) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
     for (unsigned p = 0; p < Xp[iel].size(); p++) {
@@ -206,18 +212,20 @@ int main (int argc, char** args) {
   for (unsigned i = 0; i < nve; i++) {
     if(nodeCounter[i] > 0){
       GetMultiIndex (ndIdx, dim, nve1d, i);
-      double P = 1.;
+      Ue[i] = 1.;
       for (unsigned d = 0 ; d < dim; d++) {
-        P *= pow (Xv[ndIdx[d]], pOrderTest[d]);
+        Ue[i] *= pow (Xv[ndIdx[d]], pOrderTest[d]);
       }
-      if( fabs(P - Ur[i]) > 1.0e-6){
+      if( fabs(Ue[i] - Ur[i]) > 1.0e-6){
         test_passed = false;
-        std::cout <<"Error at node = "<<i <<" exact value = " << P << " reconstructed value = " << Ur[i] << std::endl;
+        std::cout <<"Error at node = "<<i <<" exact value = " << Ue[i] << " reconstructed value = " << Ur[i] << std::endl;
       }
     }
   }
   if(test_passed == true) std::cout << "Test passed";
   std::cout << std::endl;
+  
+  PrintSolution (Ue, Ur, Xv, dim, nve1d);
 
 }
 
@@ -385,3 +393,87 @@ void SetElementDofs (std::vector <unsigned> &elementDof, const std::vector < uns
     sizeHalf /= 2;
   }  
 }
+
+void PrintSolution (const std::vector <double> &Ue, const std::vector <double> &Ur, const double *x, const unsigned &dim, const unsigned &n) {
+  if (dim > 3) {
+    std::cout << "VTK Output: dimension greater than 3 is not supported" << std::endl;
+    return;
+  }
+  std::ofstream fout;
+  fout.open ("./output/IMPM.vtk");
+  
+  fout << "# vtk DataFile Version 2.0" << std::endl;
+  fout << "IMPM example" << std::endl;
+  fout << "ASCII" << std::endl;
+  fout << "DATASET RECTILINEAR_GRID " << std::endl;
+  fout << "DIMENSIONS ";
+  unsigned totalNodes = 1;
+  for (unsigned k = 0u; k < dim; k++) {
+    fout << n << " ";
+    //totalNodes *= n;
+  }
+  if (dim == 2) fout << "1 ";
+    
+  if (dim == 1) fout << "1 1 ";
+  fout << std::endl;
+  
+  fout << "X_COORDINATES " <<n <<" float "<< std::endl;
+  
+  for (unsigned i = 0u; i < n; i++) {
+    fout << x[i] << " ";
+  }
+  fout << std::endl;
+  
+  fout << "Y_COORDINATES ";
+  if(dim > 1){
+    fout << n <<" float "<< std::endl;
+    for (unsigned i = 0u; i < n; i++) {
+      fout << x[i] << " ";
+    }
+  }
+  else{
+    fout <<1 <<" float "<< std::endl << 0.;
+  }
+  fout << std::endl;
+ 
+  fout << "Z_COORDINATES ";
+  if(dim > 2){
+    fout << n <<" float "<< std::endl;
+    for (unsigned i = 0u; i < n; i++) {
+      fout << x[i] << " ";
+    }
+  }
+  else{
+    fout <<1 <<" float "<< std::endl << 0.;
+  }
+  fout << std::endl;
+
+  
+  fout << "POINT_DATA " << Ur.size() << std::endl;
+  fout << "SCALARS Ue float 1" << std::endl;
+  fout << "LOOKUP_TABLE default" << std::endl;
+  for (unsigned i = 0u; i < Ue.size(); i++) {
+    fout << Ue[i] << " ";
+  }
+  
+  fout << std::endl;
+  fout << "SCALARS Ur float 1" << std::endl;
+  fout << "LOOKUP_TABLE default" << std::endl;
+  for (unsigned i = 0u; i < Ur.size(); i++) {
+    fout << Ur[i] << " ";
+  }
+  fout << std::endl;
+  
+  fout << std::endl;
+  fout << "SCALARS Ue_minus_Ur float 1" << std::endl;
+  fout << "LOOKUP_TABLE default" << std::endl;
+  for (unsigned i = 0u; i < Ue.size(); i++) {
+    fout << Ue[i] - Ur[i] << " ";
+  }
+  fout << std::endl;
+  
+  fout << std::endl;
+  fout.close();
+}
+
+
