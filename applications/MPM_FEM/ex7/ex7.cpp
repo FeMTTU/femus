@@ -48,7 +48,7 @@ int main (int argc, char** args) {
 
   std::vector < std::vector <unsigned> > aIdx;
   unsigned pOrder = 3;
-  unsigned dim = 2;
+  unsigned dim = 3;
   ComputeIndexSet (aIdx, pOrder, dim, output);
 
   unsigned nve1d = 5u;
@@ -85,11 +85,13 @@ int main (int argc, char** args) {
 
   std::vector< std::vector < std::vector< double> > > Xp (nel);
 
+  unsigned counter = 0;
   for (unsigned iel = 0; iel < nel; iel++) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
     Xp[iel].resize (Np);
-    std::cout << iel << " " << elIdx[0] << " " << elIdx[1] <<std::endl;
+    
     if(elIdx[0] == 0 || elIdx[0] == nel1d - 1u) Xp[iel].resize (0);
+    counter += Xp[iel].size();  
     for (unsigned p = 0; p < Xp[iel].size(); p++) {
       Xp[iel][p].resize (dim);
       for (unsigned d = 0; d < dim; d++) {
@@ -97,8 +99,24 @@ int main (int argc, char** args) {
       }
     }
   }
+    
+  std::vector< std::vector < std::vector< double> > > Xprint (1);
+  Xprint[0].resize(counter);
+  for(unsigned i = 0; i < counter; i++){
+    Xprint[0][i].resize(dim);    
+  }
   
-  PrintLine("./output/marker", Xp, false, 0);
+  counter = 0;
+  for (unsigned iel = 0; iel < nel; iel++) {
+    for (unsigned p = 0; p < Xp[iel].size(); p++) {
+      for (unsigned d = 0; d < dim; d++) {
+        Xprint[0][counter][d] = Xp[iel][p][d];
+      }
+      counter++;
+    }
+  }
+    
+  PrintLine("./output/", Xprint, false, 0);
 
   std::vector < std::vector < std::vector< double> > > M (nve); // array of matrices
   for (unsigned i = 0; i < nve; i++) {
@@ -394,7 +412,8 @@ void SetElementDofs (std::vector <unsigned> &elementDof, const std::vector < uns
       }
       jj /= sizeHalf;
          
-      elementDof[j] += ( idx[d] + jj ) * ( static_cast <unsigned> ( pow( nve1d , dim - 1u - d)) );
+      //elementDof[j] += ( idx[d] + jj ) * ( static_cast <unsigned> ( pow( nve1d , dim - 1u - d)) );
+      elementDof[j] += ( idx[d] + jj ) * ( static_cast <unsigned> ( pow( nve1d , d)) );
       
     }
     sizeHalf /= 2;
