@@ -46,7 +46,7 @@ int main (int argc, char** args) {
   //FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
   std::vector < std::vector <unsigned> > aIdx;
-  unsigned pOrder = 5;
+  unsigned pOrder = 3;
   unsigned dim = 2;
   ComputeIndexSet (aIdx, pOrder, dim, output);
 
@@ -73,14 +73,15 @@ int main (int argc, char** args) {
     SetElementDofs (elemDof[iel], elIdx, nve1d);
   }
 
-  unsigned Np = aIdx.size() + 10;
+  unsigned Np = aIdx.size();
 
   std::vector< std::vector < std::vector< double> > > Xp (nel);
 
   for (unsigned iel = 0; iel < nel; iel++) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
     Xp[iel].resize (Np);
-    for (unsigned p = 0; p < Np; p++) {
+    if(elIdx[0] == 0 || elIdx[0] == nel1d - 1u) Xp[iel].resize (0);
+    for (unsigned p = 0; p < Xp[iel].size(); p++) {
       Xp[iel][p].resize (dim);
       for (unsigned d = 0; d < dim; d++) {
         Xp[iel][p][d] = Xv[elIdx[d]] + (Xv[elIdx[d] + 1] - Xv[elIdx[d]]) * rand() / RAND_MAX;
@@ -97,26 +98,19 @@ int main (int argc, char** args) {
   }
 
   std::vector < std::vector < double > > T (dim);
-  GetChebyshev (T[0], pOrder, 0., output);
-
-  for (unsigned i = 0; i < nve; i++) {
-    for (unsigned j = 0; j < aIdx.size(); j++) {
-      double rhs = 1.;
-      for (unsigned d = 0 ; d < dim; d++) {
-        rhs *= T[0][ aIdx[j][d] ];
-      }
-      M[i][j][aIdx.size()] = rhs;
-    }
-  }
-
+ 
+  std::vector< double> nodeCounter (nve,0.);
+  
   std::vector <unsigned> ndIdx (dim);
   for (unsigned iel = 0; iel < nel; iel++) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
-    for (unsigned p = 0; p < Np; p++) {
+    for (unsigned p = 0; p < Xp[iel].size(); p++) {
 
       for (unsigned idof = 0; idof < nDofs; idof++) {
         unsigned i = elemDof[iel][idof];
 
+        nodeCounter[i]++;
+        
         GetMultiIndex (ndIdx, dim, nve1d, i);
         double W = 1.;
 
@@ -137,12 +131,30 @@ int main (int argc, char** args) {
     }
   }
 
+  
   std::vector < std::vector< double> > alpha (nve);
+  GetChebyshev (T[0], pOrder, 0., false);
   for (unsigned i = 0; i < nve; i++) {
-    alpha[i].resize (aIdx.size());
-    GaussianElemination (M[i], alpha[i], false);
+    if( nodeCounter[i] > aIdx.size() ) nodeCounter[i] = aIdx.size(); 
+    
+    std::cout << nodeCounter[i] <<" "<< aIdx.size() << std::endl;
+    
+    if( nodeCounter[i] > 0 ){
+      M[i].resize (nodeCounter[i]);
+      for (unsigned k = 0; k < nodeCounter[i]; k++) {
+        M[i][k].resize (nodeCounter[i] + 1);
+      }
+      for (unsigned j = 0; j < nodeCounter[i]; j++) {
+        double rhs = 1.;
+        for (unsigned d = 0 ; d < dim; d++) {
+          rhs *= T[0][ aIdx[j][d] ];
+        }
+        M[i][j][nodeCounter[i]] = rhs;
+      }
+      alpha[i].resize (nodeCounter[i]);
+      GaussianElemination (M[i], alpha[i], false);
+    }
   }
-
   
   std::vector < unsigned > pOrderTest(dim);
   for(unsigned d = 0; d < dim; d++){
@@ -159,46 +171,52 @@ int main (int argc, char** args) {
   std::vector < double > Ur (nve, 0.);
   for (unsigned iel = 0; iel < nel; iel++) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
-    for (unsigned p = 0; p < Np; p++) {
+    for (unsigned p = 0; p < Xp[iel].size(); p++) {
 
       for (unsigned idof = 0; idof < nDofs; idof++) {
         unsigned i = elemDof[iel][idof];
 
-        GetMultiIndex (ndIdx, dim, nve1d, i);
+        if( nodeCounter[i] > 0 ){
         
-        double W = 1.;
-        double P = 1.;
-        for (unsigned d = 0 ; d < dim; d++) {
-          GetChebyshev (T[d], pOrder, (Xv[ndIdx[d]] - Xp[iel][p][d]) / hv[ndIdx[d]]);
-          W *= (1. - fabs (Xv[ndIdx[d]] - Xp[iel][p][d]) / edgeSize[elIdx[d]]);
-          P *= pow (Xp[iel][p][d], pOrderTest[d]);
-        }
-
-        double sumAlphaT = 0.;
-        for (unsigned k = 0; k < aIdx.size(); k++) {
-          double Tk = 1;
+          GetMultiIndex (ndIdx, dim, nve1d, i);
+        
+          double W = 1.;
+          double P = 1.;
           for (unsigned d = 0 ; d < dim; d++) {
-            Tk *= T[d][aIdx[k][d]];
+            GetChebyshev (T[d], pOrder, (Xv[ndIdx[d]] - Xp[iel][p][d]) / hv[ndIdx[d]]);
+            W *= (1. - fabs (Xv[ndIdx[d]] - Xp[iel][p][d]) / edgeSize[elIdx[d]]);
+            P *= pow (Xp[iel][p][d], pOrderTest[d]);
           }
-          sumAlphaT += alpha[i][k] * Tk;
+
+          double sumAlphaT = 0.;
+          for (unsigned k = 0; k < nodeCounter[i]; k++) {
+            double Tk = 1;
+            for (unsigned d = 0 ; d < dim; d++) {
+              Tk *= T[d][aIdx[k][d]];
+            }
+            sumAlphaT += alpha[i][k] * Tk;
+          }
+          Ur[i] += W * sumAlphaT  * P;
         }
-        Ur[i] += W * sumAlphaT  * P;
       }
     }
   }
- 
-  bool test_is_passed = true;
+  
+  bool test_passed = true;
   for (unsigned i = 0; i < nve; i++) {
-    GetMultiIndex (ndIdx, dim, nve1d, i);
-    double P = 1.;
-    for (unsigned d = 0 ; d < dim; d++) {
-      P *= pow (Xv[ndIdx[d]], pOrderTest[d]);
-    }
-    if( fabs(P - Ur[i]) > 1.0e-10){
-      test_is_passed = false;
-      std::cout <<"Error at node = "<<i <<" exact value = " << P << " reconstructed value = " << Ur[i] << std::endl;
+    if(nodeCounter[i] > 0){
+      GetMultiIndex (ndIdx, dim, nve1d, i);
+      double P = 1.;
+      for (unsigned d = 0 ; d < dim; d++) {
+        P *= pow (Xv[ndIdx[d]], pOrderTest[d]);
+      }
+      if( fabs(P - Ur[i]) > 1.0e-6){
+        test_passed = false;
+        std::cout <<"Error at node = "<<i <<" exact value = " << P << " reconstructed value = " << Ur[i] << std::endl;
+      }
     }
   }
+  if(test_passed == true) std::cout << "Test passed";
   std::cout << std::endl;
 
 }
