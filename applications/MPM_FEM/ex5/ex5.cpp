@@ -52,7 +52,7 @@ int main (int argc, char** args) {
   Xv[3] = 1.;
   Xv[4] = 1.3;
 
-  unsigned Np = 10;
+  unsigned Np = 3;
   std::vector<std::vector< double> >Xp (N - 1);
 
   for (unsigned iel = 0; iel < N - 1; iel++) {
@@ -68,7 +68,7 @@ int main (int argc, char** args) {
 
   std::vector < std::vector < std::vector< double> > >M (N); // array of matrices
 
-  unsigned Nr = 7;
+  unsigned Nr = 8;
 
   for (unsigned i = 0; i < N; i++) {
 
@@ -105,7 +105,7 @@ int main (int argc, char** args) {
 
   std::vector < double > Ur (N, 0.);
 
-  double ptest = 6;
+  double ptest = 2;
   for (unsigned iel = 0; iel < N - 1; iel++) {
     for (unsigned p = 0; p < Np; p++) {
 
@@ -142,7 +142,7 @@ int main (int argc, char** args) {
 
   std::cout << std::endl;
   for (unsigned i = 0; i < N; i++) {
-    std::cout << pow (Xv[i], ptest) << " " << Ur[i] << std::endl;
+    std::cout << pow (Xv[i], ptest) << "  " << Ur[i] << std::endl;
   }
   std::cout << std::endl;
 
@@ -154,7 +154,7 @@ void GaussianElemination (std::vector<std::vector < double > > & A, std::vector 
   unsigned n = A.size();
   for (unsigned i = 0; i < n - 1; i++) {
     unsigned p = i;
-    while (A[p][i] == 0) {
+    while (A[p][i] < pow(10,-8)) {
       p++;
       if (p == n) {
         std::cout << "The Matrix A is singular\n";
@@ -215,9 +215,6 @@ void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
       entrySum += counters[j];
     }
 
-<<<<<<< HEAD
-
-=======
     if (entrySum <= degree) {
       for (unsigned j = 0; j < dimension; j++) {
         Jp[index][j] = counters[dimension - 1 - j];
@@ -237,4 +234,4 @@ void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
     ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
   }
 }
->>>>>>> da14c9b6647dac4261ea43bf1bb1984ae8e9f747
+
