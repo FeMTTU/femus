@@ -862,8 +862,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 // // //        }
 
        
-//     assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 5);
-//     assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 9, 5);
+    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 5, 5);
+    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 5, 5);
     
   } //end element loop for each process
 
@@ -976,6 +976,30 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   system.MGsolve();
 
   // ======= Print ========================
+  std::vector < std::string > displ_tot;
+  displ_tot.push_back("DX_TOT");
+  displ_tot.push_back("DY_TOT");
+  if ( ml_mesh.GetDimension() == 3 ) displ_tot.push_back("DZ_TOT");
+  
+  std::vector < std::string > displ_hom;
+  displ_hom.push_back("DX");
+  displ_hom.push_back("DY");
+  if ( ml_mesh.GetDimension() == 3 ) displ_hom.push_back("DZ");
+  
+  std::vector < std::string > displ_ctrl;
+  displ_ctrl.push_back("DX_CTRL");
+  displ_ctrl.push_back("DY_CTRL");
+  if ( ml_mesh.GetDimension() == 3 ) displ_ctrl.push_back("DZ_CTRL");
+  
+  const unsigned dim = ml_mesh.GetDimension();
+  
+  for (unsigned d = 0; d < dim; d++)   assert(  ml_sol.GetSolutionType( displ_hom[d].c_str() ) == ml_sol.GetSolutionType( displ_ctrl[d].c_str() ) );
+     
+  for (unsigned d = 0; d < dim; d++)   {
+     ml_sol.AddSolution(displ_tot[d].c_str(),  ml_sol.GetSolutionFamily( displ_hom[d] ), ml_sol.GetSolutionOrder( displ_hom[d] ), ml_sol.GetSolutionTimeOrder( displ_hom[d] ), false);
+     ml_sol.Initialize(displ_tot[d].c_str()); //minimum that is needed to add and print a Solution without errors
+  }
+
   // set moving variables
   std::vector < std::string > mov_vars;
   mov_vars.push_back("DX");

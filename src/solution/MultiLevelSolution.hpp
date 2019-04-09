@@ -201,6 +201,8 @@ public:
         return _solTimeOrder[i];
     };
 
+    const int   GetSolutionTimeOrder(const std::string & sol_name) const;
+
     /** To be Added */
     bool  TestIfSolutionIsPressure(unsigned i) {
         return _testIfPressure[i];
@@ -220,10 +222,13 @@ public:
       return _family[i];  
     };
     
+    const FEFamily GetSolutionFamily(const std::string & sol_name) const;
+    
     FEOrder GetSolutionOrder(const unsigned& i){
       return _order[i];    
     }
     
+    const FEOrder GetSolutionOrder(const std::string & sol_name) const;
 
     void build();
 
