@@ -163,7 +163,12 @@ public:
     /** To be Added */
     FunctionBase* GetBdcFunction(const std::string varname, const unsigned int facename) const;
 
-    /** To be Added */
+       /** duplicate of GetSolutionLevel, to be removed @todo */
+    Solution* GetLevel(const unsigned i) {
+        return _solution[i];
+    };
+    
+       /** To be Added */
     Solution* GetSolutionLevel(const unsigned i) {
         return _solution[i];
     };
@@ -266,12 +271,6 @@ public:
     void CoarsenSolutionByOneLevel( const unsigned &gridf );
 
   // ********************************************
-    
-    Solution* GetLevel(const unsigned i) {
-      return _solution[i];
-    };
-    
-    
     
     void UpdateSolution(const char name[], InitFunc func, const double& time);
     

@@ -999,13 +999,16 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
      ml_sol.AddSolution(displ_tot[d].c_str(),  ml_sol.GetSolutionFamily( displ_hom[d] ), ml_sol.GetSolutionOrder( displ_hom[d] ), ml_sol.GetSolutionTimeOrder( displ_hom[d] ), false);
      ml_sol.Initialize(displ_tot[d].c_str()); //minimum that is needed to add and print a Solution without errors
   }
+  
+  // DX_TOT = DX + DX_CTRL
+  for (unsigned d = 0; d < dim; d++)   {
+      /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_tot[d].c_str()) /*)*/  = /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_hom[d].c_str()) /*)*/; 
+      /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_tot[d].c_str()) /*)*/ += /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_ctrl[d].c_str()) /*)*/; 
+  }
+  
 
-  // set moving variables
-  std::vector < std::string > mov_vars;
-  mov_vars.push_back("DX");
-  mov_vars.push_back("DY");
-  if ( ml_mesh.GetDimension() == 3 ) mov_vars.push_back("DZ");
-  ml_sol.GetWriter()->SetMovingMesh(mov_vars);
+  // set DX_TOT as moving variable
+  ml_sol.GetWriter()->SetMovingMesh(displ_tot);
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;  variablesToBePrinted.push_back("All");
