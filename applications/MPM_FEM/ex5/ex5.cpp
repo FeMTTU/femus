@@ -40,7 +40,7 @@ int main (int argc, char** args) {
   FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
   std::vector < std::vector <unsigned> > alphaIndex;
-  unsigned pOrder = 7;
+  unsigned pOrder = 3;
   unsigned dim = 1;
   ComputeIndexSet (alphaIndex, pOrder, dim, true);
 
@@ -63,7 +63,9 @@ int main (int argc, char** args) {
   hv[3] = 0.5;
   hv[4] = 0.3;
 
-  unsigned Np = alphaIndex.size() + 5;
+
+  unsigned Np = alphaIndex.size() + 2;
+
 
   std::vector<std::vector< double> >Xp (nel);
 
@@ -73,10 +75,12 @@ int main (int argc, char** args) {
       Xp[iel][p] = Xv[iel] + 1.0 * rand() / RAND_MAX * (Xv[iel + 1] - Xv[iel]);
       std::cout << Xp[iel][p] << " ";
     }
-    std::cout << std::endl;
+    std::cout << "\n" <<std::endl;
   }
 
+
   std::vector < std::vector < std::vector< double> > > M (nve); // array of matrices
+
 
   for (unsigned i = 0; i < nve; i++) {
     M[i].resize (alphaIndex.size());
@@ -102,8 +106,6 @@ int main (int argc, char** args) {
   }
 
   
-  
-
   std::vector < std::vector< double> > alpha (nve);
 
   for (unsigned i = 0; i < nve; i++) {
@@ -113,7 +115,9 @@ int main (int argc, char** args) {
 
   std::vector < double > Ur (nve, 0.);
 
+
   for (unsigned iel = 0; iel < nel; iel++) {
+
     for (unsigned p = 0; p < Np; p++) {
 
       std::vector < double > h (alphaIndex.size());
@@ -147,8 +151,10 @@ int main (int argc, char** args) {
 
 
   std::cout << std::endl;
+
   for (unsigned i = 0; i < nve; i++) {
     std::cout << pow (Xv[i], pOrder) << " " << Ur[i] << std::endl;
+
   }
   std::cout << std::endl;
 
@@ -169,7 +175,7 @@ void GaussianElemination (std::vector<std::vector < double > > & A, std::vector 
 //   
   for (unsigned i = 0; i < n - 1; i++) {
     unsigned p = i;
-    while (A[p][i] == 0) {
+    while (A[p][i] < pow(10,-8)) {
       p++;
       if (p == n) {
         std::cout << "The Matrix A is singular\n";
@@ -207,7 +213,7 @@ void GaussianElemination (std::vector<std::vector < double > > & A, std::vector 
   }
   
   for(unsigned i = 0; i < n; i++){
-    for(unsigned j =0; j< n; j++){
+    for(unsigned j =0; j<= n; j++){
       std::cout << A[i][j] <<" ";
     }
     std::cout<<std::endl;
@@ -216,6 +222,90 @@ void GaussianElemination (std::vector<std::vector < double > > & A, std::vector 
   
   return;
 }
+
+///----------------------
+
+
+
+// void LUDecomposition(std::vector<std::vector<double>> &A, std::vector<double> &x){
+// // A is nx(n+1) augmented matrix
+//     int n  = A.size();
+// 
+//     cout<< "Before pivoting \nA=\n" ;
+//     for(int i=0;i<n;i++){
+//         for(int j=0;j<=n;j++){
+//             cout << A[i][j] << " " ;
+//         }
+//         cout << "\n" ;
+//     }
+//     cout<<"\n";
+// 
+//     const double tol = 1e-10;
+//     double max_row=0.0,abs;
+//     for(int i=0;i<n;i++){
+//         for(int k=i+1;k<n;k++){
+//             max_row = fabs(A[i][i]);
+//             if((abs=fabs(A[k][i])) > max_row ){
+//                 max_row = abs;
+//                 for(int j=0;j<n+1;j++){
+//                     double temp = A[i][j];
+//                     A[i][j] = A[k][j];
+//                     A[k][j] = temp;
+//                 }
+//             }
+//         }
+//         if(max_row < tol){
+//                 cout << "Degenerate matrix.";
+//                 exit(0);
+//         }
+// 
+//         for(int j=i+1;j<n;j++){
+//             double mji = A[j][i] / A[i][i];
+//             for(int k=i;k<n+1;k++){
+//             A[j][k] -= mji * A[i][k];
+//             }
+//         }
+// 
+//     }
+//     if(fabs(A[n-1][n-1])< tol){
+//         cout << "Zero row! Matrix is singular \n";
+//         exit(0);
+//     }
+// 
+//     x[n - 1] = A[n - 1][n] / A[n - 1][n - 1];
+//     for (int i = n - 2; i >= 0; i--) {
+//       x[i] = A[i][n];
+//       for (int j = i + 1; j < n; j++) {
+//         x[i] -= A[i][j] * x[j];
+//       }
+//       x[i] /= A[i][i];
+//     }
+// 
+//     cout<< "After pivoting \nA=\n" ;
+//     for(int i=0;i<n;i++){
+//         for(int j=0;j<=n;j++){
+//             cout << A[i][j] << " " ;
+//         }
+//         cout << "\n" ;
+//     }
+//     cout << "\n\n";
+// 
+//     cout << "Solution is: \n";
+//     for(int i=0;i<n;i++){
+//         cout << x[i] << "\n";
+//     }
+//     return;
+// 
+// }
+
+
+///---------------------
+
+
+
+
+
+
 
 void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
                       const unsigned & degree, const unsigned & dimension, bool output) { //p is max poly degree
@@ -261,7 +351,4 @@ void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
     std::cout << std::endl;
   }
 }
-
-
-
 
