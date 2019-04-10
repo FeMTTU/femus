@@ -15,6 +15,7 @@
 
 #include "../include/mpmFem.hpp"
 
+#include<PolynomialBases.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -37,16 +38,16 @@ void GetChebyshev (std::vector<double> &T, const unsigned &n, const double &x, c
 void GetMultiIndex (std::vector <unsigned> &idx, const unsigned &dim, const unsigned& n, const unsigned &i);
 void SetElementDofs (std::vector <unsigned> &elementDofs, const std::vector < unsigned > & idx, const unsigned & nve1d);
 
+void PrintSolution (const std::vector <double> &U, const std::vector <double> &Ur, const double *x, const unsigned &dim, const unsigned &n);
+
 int main (int argc, char** args) {
 
-
+  FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
   bool output = true;
 
-  // init Petsc-MPI communicator
-  //FemusInit mpinit (argc, args, MPI_COMM_WORLD);
-
   std::vector < std::vector <unsigned> > aIdx;
-  unsigned pOrder = 7;
+  unsigned pOrder = 3;
   unsigned dim = 3;
   ComputeIndexSet (aIdx, pOrder, dim, output);
 
@@ -71,22 +72,51 @@ int main (int argc, char** args) {
   for (unsigned iel = 0; iel < nel; iel++) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
     SetElementDofs (elemDof[iel], elIdx, nve1d);
+    
+    
+    std::cout << iel << " ";
+    for(unsigned i = 0; i<nDofs; i++){
+      std::cout << elemDof[iel][i] <<" ";
+    }
+    std::cout<<std::endl;
   }
 
   unsigned Np = aIdx.size();
 
   std::vector< std::vector < std::vector< double> > > Xp (nel);
 
+  unsigned counter = 0;
   for (unsigned iel = 0; iel < nel; iel++) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
     Xp[iel].resize (Np);
-    for (unsigned p = 0; p < Np; p++) {
+    
+    if(elIdx[0] == 0 || elIdx[0] == nel1d - 1u) Xp[iel].resize (0);
+    counter += Xp[iel].size();  
+    for (unsigned p = 0; p < Xp[iel].size(); p++) {
       Xp[iel][p].resize (dim);
       for (unsigned d = 0; d < dim; d++) {
         Xp[iel][p][d] = Xv[elIdx[d]] + (Xv[elIdx[d] + 1] - Xv[elIdx[d]]) * rand() / RAND_MAX;
       }
     }
   }
+    
+  std::vector< std::vector < std::vector< double> > > Xprint (1);
+  Xprint[0].resize(counter);
+  for(unsigned i = 0; i < counter; i++){
+    Xprint[0][i].resize(dim);    
+  }
+  
+  counter = 0;
+  for (unsigned iel = 0; iel < nel; iel++) {
+    for (unsigned p = 0; p < Xp[iel].size(); p++) {
+      for (unsigned d = 0; d < dim; d++) {
+        Xprint[0][counter][d] = Xp[iel][p][d];
+      }
+      counter++;
+    }
+  }
+    
+  PrintLine("./output/", Xprint, false, 0);
 
   std::vector < std::vector < std::vector< double> > > M (nve); // array of matrices
   for (unsigned i = 0; i < nve; i++) {
@@ -97,38 +127,31 @@ int main (int argc, char** args) {
   }
 
   std::vector < std::vector < double > > T (dim);
-  GetChebyshev (T[0], pOrder, 0., output);
-
-  for (unsigned i = 0; i < nve; i++) {
-    for (unsigned j = 0; j < aIdx.size(); j++) {
-      double rhs = 1.;
-      for (unsigned d = 0 ; d < dim; d++) {
-        rhs *= T[0][ aIdx[j][d] ];
-      }
-      M[i][j][aIdx.size()] = rhs;
-    }
-  }
-
+ 
+  std::vector< double> nodeCounter (nve,0.);
+  
   std::vector <unsigned> ndIdx (dim);
-  for (unsigned iel = 0; iel < nel; iel++) {
-    GetMultiIndex (elIdx, dim, nel1d, iel);
-    for (unsigned p = 0; p < Np; p++) {
+  for (unsigned iel = 0; iel < nel; iel++) { //element loop
+    GetMultiIndex (elIdx, dim, nel1d, iel); // Element multiIndex based on iel
+    for (unsigned p = 0; p < Xp[iel].size(); p++) { // particle loop
 
-      for (unsigned idof = 0; idof < nDofs; idof++) {
-        unsigned i = elemDof[iel][idof];
+      for (unsigned idof = 0; idof < nDofs; idof++) { // node loop in the iel element
+        unsigned i = elemDof[iel][idof]; //node
+        GetMultiIndex (ndIdx, dim, nve1d, i); // node multiIndex based on i
+        
+        nodeCounter[i]++; // particle to node counter
+                
+        double W = 1.; //weight function
 
-        GetMultiIndex (ndIdx, dim, nve1d, i);
-        double W = 1.;
-
-        for (unsigned d = 0 ; d < dim; d++) {
-          GetChebyshev (T[d], pOrder, (Xv[ndIdx[d]] - Xp[iel][p][d]) / hv[ndIdx[d]]);
-          W *= (1. - fabs (Xv[ndIdx[d]] - Xp[iel][p][d]) / edgeSize[elIdx[d]]);
-        }
+        for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
+          GetChebyshev (T[d], pOrder, (Xv[ndIdx[d]] - Xp[iel][p][d]) / hv[ndIdx[d]]); //1D Chebyshev
+          W *= (1. - fabs (Xv[ndIdx[d]] - Xp[iel][p][d]) / edgeSize[elIdx[d]]); //1D Weight
+        } 
         for (unsigned k = 0; k < aIdx.size(); k++) {
           for (unsigned l = 0; l < aIdx.size(); l++) {
             double TkTl = 1;
             for (unsigned d = 0 ; d < dim; d++) {
-              TkTl *= T[d][aIdx[k][d]] * T[d][aIdx[l][d]];
+              TkTl *= T[d][aIdx[k][d]] * T[d][aIdx[l][d]]; //alpha * beta multidimendional product
             }
             M[i][k][l] +=  W * TkTl;
           }
@@ -137,66 +160,97 @@ int main (int argc, char** args) {
     }
   }
 
+  
   std::vector < std::vector< double> > alpha (nve);
+  GetChebyshev (T[0], pOrder, 0., false);
   for (unsigned i = 0; i < nve; i++) {
-    alpha[i].resize (aIdx.size());
-    GaussianElemination (M[i], alpha[i], false);
+    if( nodeCounter[i] > aIdx.size() ) nodeCounter[i] = aIdx.size(); 
+    
+    std::cout << nodeCounter[i] <<" "<< aIdx.size() << std::endl;
+    
+    if( nodeCounter[i] > 0 ){
+      M[i].resize (nodeCounter[i]);
+      for (unsigned k = 0; k < nodeCounter[i]; k++) {
+        M[i][k].resize (nodeCounter[i] + 1);
+      }
+      for (unsigned j = 0; j < nodeCounter[i]; j++) {
+        double rhs = 1.;
+        for (unsigned d = 0 ; d < dim; d++) {
+          rhs *= T[0][ aIdx[j][d] ];
+        }
+        M[i][j][nodeCounter[i]] = rhs;
+      }
+      alpha[i].resize (nodeCounter[i]);
+      GaussianElemination (M[i], alpha[i], false);
+    }
   }
-
   
   std::vector < unsigned > pOrderTest(dim);
   for(unsigned d = 0; d < dim; d++){
     pOrderTest[d] = pOrder/dim;
   }
   pOrderTest[0] += pOrder%dim;
-  for(unsigned d = 0; d < dim; d++){
-    std::cout << pOrderTest[d]<<" ";
+  
+  std::cout << "Testing Polynomial \nPn = ";
+  for (unsigned d = 0 ; d < dim; d++) {
+    std::cout<<"x"<<d<<"^"<<pOrderTest[d]<<" * ";
   }
-  std::cout << std::endl;
+  std::cout<<"\b\b  "<<std::endl;
+  
   
   std::vector < double > Ur (nve, 0.);
+  std::vector < double > Ue (nve, 0.);
   for (unsigned iel = 0; iel < nel; iel++) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
-    for (unsigned p = 0; p < Np; p++) {
+    for (unsigned p = 0; p < Xp[iel].size(); p++) {
 
       for (unsigned idof = 0; idof < nDofs; idof++) {
         unsigned i = elemDof[iel][idof];
 
-        GetMultiIndex (ndIdx, dim, nve1d, i);
+        if( nodeCounter[i] > 0 ){
         
-        double W = 1.;
-        double P = 1.;
-        for (unsigned d = 0 ; d < dim; d++) {
-          GetChebyshev (T[d], pOrder, (Xv[ndIdx[d]] - Xp[iel][p][d]) / hv[ndIdx[d]]);
-          W *= (1. - fabs (Xv[ndIdx[d]] - Xp[iel][p][d]) / edgeSize[elIdx[d]]);
-          P *= pow (Xp[iel][p][d], pOrderTest[d]);
-        }
-
-        double sumAlphaT = 0.;
-        for (unsigned k = 0; k < aIdx.size(); k++) {
-          double Tk = 1;
+          GetMultiIndex (ndIdx, dim, nve1d, i);
+        
+          double W = 1.;
+          double P = 1.;
           for (unsigned d = 0 ; d < dim; d++) {
-            Tk *= T[d][aIdx[k][d]];
+            GetChebyshev (T[d], pOrder, (Xv[ndIdx[d]] - Xp[iel][p][d]) / hv[ndIdx[d]]);
+            W *= (1. - fabs (Xv[ndIdx[d]] - Xp[iel][p][d]) / edgeSize[elIdx[d]]);
+            P *= pow (Xp[iel][p][d], pOrderTest[d]);
           }
-          sumAlphaT += alpha[i][k] * Tk;
+
+          double sumAlphaT = 0.;
+          for (unsigned k = 0; k < nodeCounter[i]; k++) {
+            double Tk = 1;
+            for (unsigned d = 0 ; d < dim; d++) {
+              Tk *= T[d][aIdx[k][d]];
+            }
+            sumAlphaT += alpha[i][k] * Tk;
+          }
+          Ur[i] += W * sumAlphaT  * P;
         }
-        //Ur[i] += W * sumAlphaT  * pow (Xp[iel][p][0], pOrder) ;
-        Ur[i] += W * sumAlphaT  * P;
       }
     }
   }
-
-
+  
+  bool test_passed = true;
   for (unsigned i = 0; i < nve; i++) {
-    GetMultiIndex (ndIdx, dim, nve1d, i);
-    double P = 1.;
-    for (unsigned d = 0 ; d < dim; d++) {
-      P *= pow (Xv[ndIdx[d]], pOrderTest[d]);
+    if(nodeCounter[i] > 0){
+      GetMultiIndex (ndIdx, dim, nve1d, i);
+      Ue[i] = 1.;
+      for (unsigned d = 0 ; d < dim; d++) {
+        Ue[i] *= pow (Xv[ndIdx[d]], pOrderTest[d]);
+      }
+      if( fabs(Ue[i] - Ur[i]) > 1.0e-6){
+        test_passed = false;
+        std::cout <<"Error at node = "<<i <<" exact value = " << Ue[i] << " reconstructed value = " << Ur[i] << std::endl;
+      }
     }
-    //std::cout << pow (Xv[ndIdx[0]], pOrder) << " " << Ur[i] << std::endl;
-    std::cout << P << " " << Ur[i] << std::endl;
   }
+  if(test_passed == true) std::cout << "Test passed";
   std::cout << std::endl;
+  
+  PrintSolution (Ue, Ur, Xv, dim, nve1d);
 
 }
 
@@ -336,7 +390,7 @@ void GetChebyshev (std::vector<double> &T, const unsigned &n, const double &x, c
 void GetMultiIndex (std::vector <unsigned> &idx, const unsigned &dim, const unsigned& n, const unsigned &i) {
   idx.resize (dim);
   for (unsigned d = 0; d < dim; d++) {
-    idx[d] = (i % static_cast < unsigned > (pow (n, dim - d))) / static_cast < unsigned > (pow (n, dim - 1 - d));
+    idx[dim -1u - d] = (i % static_cast < unsigned > (pow (n, dim - d))) / static_cast < unsigned > (pow (n, dim - 1 - d));
   }
 }
 
@@ -358,9 +412,94 @@ void SetElementDofs (std::vector <unsigned> &elementDof, const std::vector < uns
       }
       jj /= sizeHalf;
          
-      elementDof[j] += ( idx[d] + jj ) * ( static_cast <unsigned> ( pow( nve1d , dim - 1u - d)) );
+      //elementDof[j] += ( idx[d] + jj ) * ( static_cast <unsigned> ( pow( nve1d , dim - 1u - d)) );
+      elementDof[j] += ( idx[d] + jj ) * ( static_cast <unsigned> ( pow( nve1d , d)) );
       
     }
     sizeHalf /= 2;
   }  
 }
+
+void PrintSolution (const std::vector <double> &Ue, const std::vector <double> &Ur, const double *x, const unsigned &dim, const unsigned &n) {
+  if (dim > 3) {
+    std::cout << "VTK Output: dimension greater than 3 is not supported" << std::endl;
+    return;
+  }
+  std::ofstream fout;
+  fout.open ("./output/IMPM.vtk");
+  
+  fout << "# vtk DataFile Version 2.0" << std::endl;
+  fout << "IMPM example" << std::endl;
+  fout << "ASCII" << std::endl;
+  fout << "DATASET RECTILINEAR_GRID " << std::endl;
+  fout << "DIMENSIONS ";
+  unsigned totalNodes = 1;
+  for (unsigned k = 0u; k < dim; k++) {
+    fout << n << " ";
+    //totalNodes *= n;
+  }
+  if (dim == 2) fout << "1 ";
+    
+  if (dim == 1) fout << "1 1 ";
+  fout << std::endl;
+  
+  fout << "X_COORDINATES " <<n <<" float "<< std::endl;
+  
+  for (unsigned i = 0u; i < n; i++) {
+    fout << x[i] << " ";
+  }
+  fout << std::endl;
+  
+  fout << "Y_COORDINATES ";
+  if(dim > 1){
+    fout << n <<" float "<< std::endl;
+    for (unsigned i = 0u; i < n; i++) {
+      fout << x[i] << " ";
+    }
+  }
+  else{
+    fout <<1 <<" float "<< std::endl << 0.;
+  }
+  fout << std::endl;
+ 
+  fout << "Z_COORDINATES ";
+  if(dim > 2){
+    fout << n <<" float "<< std::endl;
+    for (unsigned i = 0u; i < n; i++) {
+      fout << x[i] << " ";
+    }
+  }
+  else{
+    fout <<1 <<" float "<< std::endl << 0.;
+  }
+  fout << std::endl;
+
+  
+  fout << "POINT_DATA " << Ur.size() << std::endl;
+  fout << "SCALARS Ue float 1" << std::endl;
+  fout << "LOOKUP_TABLE default" << std::endl;
+  for (unsigned i = 0u; i < Ue.size(); i++) {
+    fout << Ue[i] << " ";
+  }
+  
+  fout << std::endl;
+  fout << "SCALARS Ur float 1" << std::endl;
+  fout << "LOOKUP_TABLE default" << std::endl;
+  for (unsigned i = 0u; i < Ur.size(); i++) {
+    fout << Ur[i] << " ";
+  }
+  fout << std::endl;
+  
+  fout << std::endl;
+  fout << "SCALARS Ue_minus_Ur float 1" << std::endl;
+  fout << "LOOKUP_TABLE default" << std::endl;
+  for (unsigned i = 0u; i < Ue.size(); i++) {
+    fout << Ue[i] - Ur[i] << " ";
+  }
+  fout << std::endl;
+  
+  fout << std::endl;
+  fout.close();
+}
+
+
