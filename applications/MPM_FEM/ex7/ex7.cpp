@@ -203,7 +203,11 @@ int main (int argc, char** args) {
   for (unsigned iel = 0; iel < nel; iel++) {
     GetMultiIndex (elIdx, dim, nel1d, iel);
     for (unsigned p = 0; p < Xp[iel].size(); p++) {
-
+      double P = 1.;
+      for (unsigned d = 0 ; d < dim; d++) {
+        P *= pow (Xp[iel][p][d]*(1. + 0.0 * rand() / RAND_MAX ), pOrderTest[d]);
+      }
+      
       for (unsigned idof = 0; idof < nDofs; idof++) {
         unsigned i = elemDof[iel][idof];
 
@@ -212,11 +216,10 @@ int main (int argc, char** args) {
           GetMultiIndex (ndIdx, dim, nve1d, i);
         
           double W = 1.;
-          double P = 1.;
+         
           for (unsigned d = 0 ; d < dim; d++) {
             GetChebyshev (T[d], pOrder, (Xv[ndIdx[d]] - Xp[iel][p][d]) / hv[ndIdx[d]]);
             W *= (1. - fabs (Xv[ndIdx[d]] - Xp[iel][p][d]) / edgeSize[elIdx[d]]);
-            P *= pow (Xp[iel][p][d], pOrderTest[d]);
           }
 
           double sumAlphaT = 0.;
