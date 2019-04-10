@@ -34,7 +34,7 @@ using namespace femus;
 
 
 const unsigned volumeConstraint = true;
-const unsigned areaConstraint = true;
+const unsigned areaConstraint = false;
 
 
 void AssemblePWillmore (MultiLevelProblem&);
@@ -45,7 +45,7 @@ double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
   //return 0.0001;
 
-  double dt0 = 0.0001;
+  double dt0 = 0.001;
   double s = 1.;
   double n = 0.3;
   return dt0 * pow (1. + t / pow (dt0, s), n);
@@ -103,13 +103,15 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
+  
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -666,7 +668,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             term3 += phiW_Xtan[J][i] * term4;
 
           }
-          aResW[K][i] += ( ( ( solLambda1 - YdotN * solLambda2 ) * normal[K] + (solxNewg[K] - solxOldg[K])  / dt) * phiW[i]
+          aResW[K][i] += ( ( ( solLambda1 /*- YdotN * solLambda2*/ ) * normal[K] + (solxNewg[K] - solxOldg[K])  / dt) * phiW[i]
+                           + solLambda2 * term1
                            - term0
                            + sumP2 * term1
                            - term2 * phiW_Xtan[K][i]
@@ -678,7 +681,14 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           aResLambda1 += ( (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
         }
         if(areaConstraint){
-          aResLambda2 += ( -YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+          //aResLambda2 += ( -YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+          
+          adept::adouble term1t = 0.;
+          for (unsigned J = 0; J < DIM; J++) {
+            term1t +=  solx_Xtan[K][J] * (solxNew_Xtan[K][J] - solxOld_Xtan[K][J]) ;
+          }
+          aResLambda2 += term1t * Area;
+          
         }
       }
 
