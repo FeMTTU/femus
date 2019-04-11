@@ -101,7 +101,7 @@ int main(int argc, char** args) {
     ml_mesh.ReadCoarseMesh("./input/ext_box.neu", fe_quad_rule.c_str(), scalingFactor);
 
     //ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-    unsigned numberOfUniformLevels = 2;
+    unsigned numberOfUniformLevels = 1;
     unsigned numberOfSelectiveLevels = 0;
     ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
     ml_mesh.PrintInfo();
@@ -350,7 +350,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     const double alpha = ALPHA_CTRL_VOL;
     const double beta  = BETA_CTRL_VOL;
     const double penalty_strong_ctrl = 1.e30;
-    const double penalty_strong_u = 1.e30;
+    const double penalty_strong_u =    1.e30;
     const double penalty_interface = 1.e10;         //penalty for u=q
 //***************************************************
 
@@ -797,8 +797,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
         KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag );
 
-    assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 5);
-    assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 9, 5);
+    assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 10, 5);
+    assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 10, 5);
     
     } //end element loop for each process
 

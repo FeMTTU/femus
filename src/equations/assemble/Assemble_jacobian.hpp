@@ -228,12 +228,16 @@ template < class real_num, class real_num_mov >
       for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
 	  for(unsigned j_block=0; j_block< n_unknowns; j_block++) {
                for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
- std::cout << std::right << std::setw(col_width_visualization) << std::setprecision(precision)  /*<< std::scientific*/ << 
+ std::cout << std::right  << std::setprecision(precision) << std::setfill(' ') << std::setw(col_width_visualization) /* << std::scientific*/ << 
  Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, i_block, j_block, i_dof, j_dof) ] << " " ;
                  }
+                  std::cout << " | ";
            } 
      std::cout << std::endl;
         }
+        
+  std::cout << std::endl;
+
     }
 
     
@@ -254,12 +258,14 @@ template < class real_num, class real_num_mov >
     for(unsigned i_block = 0; i_block < n_unknowns; i_block++) {
       for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
           
- std::cout << std::right << std::setw(col_width_visualization) << std::setprecision(precision)  /*<< std::scientific*/ << 
+ std::cout << std::right  << std::setw(col_width_visualization) << std::setfill(' ') << std::setprecision(precision)  /*<< std::scientific*/ << 
  Res[  res_row_index(Sol_n_el_dofs, i_block, i_dof) ] << " " ;
 
           
      std::cout << std::endl;
         }
+   std::cout << std::endl;
+
     }
     
 
