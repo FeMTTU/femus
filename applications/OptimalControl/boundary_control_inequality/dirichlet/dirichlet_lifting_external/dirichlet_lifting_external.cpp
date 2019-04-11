@@ -170,7 +170,8 @@ int main(int argc, char** args) {
 
     // initilaize and solve the system
     system.init();
-    system.MGsolve();
+    system.assemble_call(2);
+//     system.MGsolve();
 
     // ======= Print ========================
     std::vector < std::string > variablesToBePrinted;

@@ -105,6 +105,16 @@ unsigned System::GetSolPdeIndex(const char solname[]) {
  const std::vector< Unknown > System::get_unknown_list_for_assembly() const {
         return  _unknown_list_for_assembly; 
     }
+    
+ void System::assemble_call(const unsigned int n_times) const {
+     
+   for (unsigned it = 0; it < n_times; it++) {
+
+            _assemble_system_function (_equation_systems);
+   }
+   
+ }
+    
 
 
 } //end namespace femus

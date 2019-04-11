@@ -121,6 +121,10 @@ public:
     
     /** Get Unknown list for the current System */
     const std::vector< Unknown > get_unknown_list_for_assembly() const;
+    
+    /** Only call assemble function */
+     void assemble_call(const unsigned int n_times) const;
+
 
 protected:
 
