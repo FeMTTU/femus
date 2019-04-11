@@ -33,6 +33,8 @@ void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
 
 void GaussianElemination (std::vector<std::vector < double > > & A, std::vector < double> &x);
 
+void GaussianEleminationWithPivoting (std::vector<std::vector<double>> &A, std::vector<double> &x);
+
 int main (int argc, char** args) {
 
 
@@ -40,7 +42,7 @@ int main (int argc, char** args) {
   FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
   std::vector < std::vector <unsigned> > alphaIndex;
-  unsigned pOrder = 3;
+  unsigned pOrder = 6;
   unsigned dim = 1;
   ComputeIndexSet (alphaIndex, pOrder, dim, true);
 
@@ -49,14 +51,14 @@ int main (int argc, char** args) {
 
   std::vector < double > Xv (nve);
   std::vector < double > hv (nve);
-  
-  
+
+
   Xv[0] = 0.;
   Xv[1] = 0.1;
   Xv[2] = 0.5;
   Xv[3] = 1.;
   Xv[4] = 1.3;
-  
+
   hv[0] = 0.1;
   hv[1] = 0.4;
   hv[2] = 0.5;
@@ -64,7 +66,7 @@ int main (int argc, char** args) {
   hv[4] = 0.3;
 
 
-  unsigned Np = alphaIndex.size() + 2;
+  unsigned Np = alphaIndex.size();
 
 
   std::vector<std::vector< double> >Xp (nel);
@@ -75,7 +77,7 @@ int main (int argc, char** args) {
       Xp[iel][p] = Xv[iel] + 1.0 * rand() / RAND_MAX * (Xv[iel + 1] - Xv[iel]);
       std::cout << Xp[iel][p] << " ";
     }
-    std::cout << "\n" <<std::endl;
+    std::cout << "\n" << std::endl;
   }
 
 
@@ -98,19 +100,19 @@ int main (int argc, char** args) {
     for (unsigned p = 0; p < Np; p++) {
       for (unsigned k = 0; k < alphaIndex.size(); k++) {
         for (unsigned l = 0; l < alphaIndex.size(); l++) {
-          M[iel][k][l] += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * pow ( (Xv[iel] - Xp[iel][p])/hv[iel], alphaIndex[k][0] + alphaIndex[l][0]);
-          M[iel + 1][k][l] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * pow ( (Xv[iel + 1] - Xp[iel][p])/hv[iel+1], alphaIndex[k][0] + alphaIndex[l][0]);
+          M[iel][k][l] += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * pow ( (Xv[iel] - Xp[iel][p]) / hv[iel], alphaIndex[k][0] + alphaIndex[l][0]);
+          M[iel + 1][k][l] += (1. - (Xv[iel + 1] - Xp[iel][p]) / (Xv[iel + 1] - Xv[iel])) * pow ( (Xv[iel + 1] - Xp[iel][p]) / hv[iel + 1], alphaIndex[k][0] + alphaIndex[l][0]);
         }
       }
     }
   }
 
-  
+
   std::vector < std::vector< double> > alpha (nve);
 
   for (unsigned i = 0; i < nve; i++) {
     alpha[i].resize (alphaIndex.size());
-    GaussianElemination (M[i], alpha[i]);
+    GaussianEleminationWithPivoting (M[i], alpha[i]);
   }
 
   std::vector < double > Ur (nve, 0.);
@@ -122,11 +124,11 @@ int main (int argc, char** args) {
 
       std::vector < double > h (alphaIndex.size());
 
-      double det = (Xv[iel] - Xp[iel][p])/hv[iel];
+      double det = (Xv[iel] - Xp[iel][p]) / hv[iel];
       for (unsigned k = 0; k < alphaIndex.size(); k++) {
         h[k] = pow (det, alphaIndex[k][0]);
       }
-      
+
       det = 0.;
       for (unsigned k = 0; k < alphaIndex.size(); k++) {
         det += alpha[iel][k] * h[k];
@@ -134,11 +136,11 @@ int main (int argc, char** args) {
 
       Ur[iel]     += (1. - (Xv[iel] - Xp[iel][p]) / (Xv[iel] - Xv[iel + 1])) * det  * pow (Xp[iel][p], pOrder) ;
 
-      det = (Xv[iel + 1] - Xp[iel][p])/hv[iel+1];
+      det = (Xv[iel + 1] - Xp[iel][p]) / hv[iel + 1];
       for (unsigned k = 0; k < alphaIndex.size(); k++) {
         h[k] = pow (det, alphaIndex[k][0]);
       }
-      
+
       det = 0.;
       for (unsigned k = 0; k < alphaIndex.size(); k++) {
         det += alpha[iel + 1][k] * h[k];
@@ -164,7 +166,7 @@ int main (int argc, char** args) {
 void GaussianElemination (std::vector<std::vector < double > > & A, std::vector < double> &x) {
 
   unsigned n = A.size();
-  
+
 //   for(unsigned i = 0; i < n; i++){
 //     for(unsigned j =0; j< n; j++){
 //       std::cout << A[i][j] <<" ";
@@ -172,10 +174,10 @@ void GaussianElemination (std::vector<std::vector < double > > & A, std::vector 
 //     std::cout<<std::endl;
 //   }
 //   std::cout<<std::endl;
-//   
+//
   for (unsigned i = 0; i < n - 1; i++) {
     unsigned p = i;
-    while (A[p][i] < pow(10,-8)) {
+    while (A[p][i] < pow (10, -8)) {
       p++;
       if (p == n) {
         std::cout << "The Matrix A is singular\n";
@@ -211,15 +213,15 @@ void GaussianElemination (std::vector<std::vector < double > > & A, std::vector 
       x[i] /= A[i][i];
     }
   }
-  
-  for(unsigned i = 0; i < n; i++){
-    for(unsigned j =0; j<= n; j++){
-      std::cout << A[i][j] <<" ";
+
+  for (unsigned i = 0; i < n; i++) {
+    for (unsigned j = 0; j <= n; j++) {
+      std::cout << A[i][j] << " ";
     }
-    std::cout<<std::endl;
+    std::cout << std::endl;
   }
-  std::cout<<std::endl;
-  
+  std::cout << std::endl;
+
   return;
 }
 
@@ -227,76 +229,76 @@ void GaussianElemination (std::vector<std::vector < double > > & A, std::vector 
 
 
 
-// void LUDecomposition(std::vector<std::vector<double>> &A, std::vector<double> &x){
-// // A is nx(n+1) augmented matrix
-//     int n  = A.size();
-// 
-//     cout<< "Before pivoting \nA=\n" ;
-//     for(int i=0;i<n;i++){
-//         for(int j=0;j<=n;j++){
-//             cout << A[i][j] << " " ;
-//         }
-//         cout << "\n" ;
-//     }
-//     cout<<"\n";
-// 
-//     const double tol = 1e-10;
-//     double max_row=0.0,abs;
-//     for(int i=0;i<n;i++){
-//         for(int k=i+1;k<n;k++){
-//             max_row = fabs(A[i][i]);
-//             if((abs=fabs(A[k][i])) > max_row ){
-//                 max_row = abs;
-//                 for(int j=0;j<n+1;j++){
-//                     double temp = A[i][j];
-//                     A[i][j] = A[k][j];
-//                     A[k][j] = temp;
-//                 }
-//             }
-//         }
-//         if(max_row < tol){
-//                 cout << "Degenerate matrix.";
-//                 exit(0);
-//         }
-// 
-//         for(int j=i+1;j<n;j++){
-//             double mji = A[j][i] / A[i][i];
-//             for(int k=i;k<n+1;k++){
-//             A[j][k] -= mji * A[i][k];
-//             }
-//         }
-// 
-//     }
-//     if(fabs(A[n-1][n-1])< tol){
-//         cout << "Zero row! Matrix is singular \n";
-//         exit(0);
-//     }
-// 
-//     x[n - 1] = A[n - 1][n] / A[n - 1][n - 1];
-//     for (int i = n - 2; i >= 0; i--) {
-//       x[i] = A[i][n];
-//       for (int j = i + 1; j < n; j++) {
-//         x[i] -= A[i][j] * x[j];
-//       }
-//       x[i] /= A[i][i];
-//     }
-// 
-//     cout<< "After pivoting \nA=\n" ;
-//     for(int i=0;i<n;i++){
-//         for(int j=0;j<=n;j++){
-//             cout << A[i][j] << " " ;
-//         }
-//         cout << "\n" ;
-//     }
-//     cout << "\n\n";
-// 
-//     cout << "Solution is: \n";
-//     for(int i=0;i<n;i++){
-//         cout << x[i] << "\n";
-//     }
-//     return;
-// 
-// }
+void GaussianEleminationWithPivoting (std::vector<std::vector<double>> &A, std::vector<double> &x) {
+// A is nx(n+1) augmented matrix
+  int n  = A.size();
+
+  std::cout << "Before pivoting\n A=\n" ;
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j <= n; j++) {
+      std::cout << A[i][j] << " " ;
+    }
+    std::cout << "\n" ;
+  }
+  std::cout << "\n";
+
+  const double tol = 1e-6;
+  double max_row = 0.0, abs;
+  for (int i = 0; i < n; i++) {
+    for (int k = i + 1; k < n; k++) {
+      max_row = fabs (A[i][i]);
+      if ( (abs = fabs (A[k][i])) > max_row) {
+        max_row = abs;
+        for (int j = 0; j < n + 1; j++) {
+          double temp = A[i][j];
+          A[i][j] = A[k][j];
+          A[k][j] = temp;
+        }
+      }
+    }
+    if (max_row < tol) {
+      std::cout << "Degenerate matrix.";
+      exit (0);
+    }
+
+    for (int j = i + 1; j < n; j++) {
+      double mji = A[j][i] / A[i][i];
+      for (int k = i; k < n + 1; k++) {
+        A[j][k] -= mji * A[i][k];
+      }
+    }
+
+  }
+  if (fabs (A[n - 1][n - 1]) < tol) {
+    std::cout << "Zero row! Matrix is singular \n";
+    exit (0);
+  }
+
+  x[n - 1] = A[n - 1][n] / A[n - 1][n - 1];
+  for (int i = n - 2; i >= 0; i--) {
+    x[i] = A[i][n];
+    for (int j = i + 1; j < n; j++) {
+      x[i] -= A[i][j] * x[j];
+    }
+    x[i] /= A[i][i];
+  }
+
+  std::cout << "After pivoting \nA=\n" ;
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j <= n; j++) {
+      std::cout << A[i][j] << " " ;
+    }
+    std::cout << "\n" ;
+  }
+  std::cout << "\n\n";
+
+  std::cout << "Solution is: \n";
+  for (int i = 0; i < n; i++) {
+    std::cout << x[i] << "\n";
+  }
+  return;
+
+}
 
 
 ///---------------------
