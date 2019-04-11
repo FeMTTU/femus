@@ -34,7 +34,7 @@ using namespace femus;
 
 
 const unsigned volumeConstraint = true;
-const unsigned areaConstraint = false;
+const unsigned areaConstraint = true;
 
 
 void AssemblePWillmore (MultiLevelProblem&);
@@ -105,13 +105,13 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
   
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 

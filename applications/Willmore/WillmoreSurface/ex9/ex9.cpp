@@ -106,7 +106,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -201,7 +201,6 @@ int main (int argc, char** args) {
   system.AddSolutionToSystemPDE ("W1");
   system.AddSolutionToSystemPDE ("W2");
   system.AddSolutionToSystemPDE ("W3");
-
   system.AddSolutionToSystemPDE ("Lambda");
   
   system.SetMaxNumberOfNonLinearIterations (20);
@@ -310,15 +309,15 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
   
   unsigned solLIndex;
-  solLIndex = mlSol->GetIndex ("Lambda");   // get the position of "W1" in the ml_sol object
+  solLIndex = mlSol->GetIndex ("Lambda");   // get the position of "lambda" in the ml_sol object
   
   unsigned solLType;
-  solLType = mlSol->GetSolutionType (solLIndex);  // get the finite element type for "W"
+  solLType = mlSol->GetSolutionType (solLIndex);  // get the finite element type for "lambda"
   
   unsigned solLPdeIndex;
-  solLPdeIndex = mlPdeSys->GetSolPdeIndex ("Lambda");   // get the position of "W1" in the pdeSys object
+  solLPdeIndex = mlPdeSys->GetSolPdeIndex ("Lambda");   // get the position of "lambda" in the pdeSys object
   
-  std::vector < adept::adouble > solL; // local W solution
+  std::vector < adept::adouble > solL; // local lambda solution
     
   vector< double > Res; // local redidual vector
   std::vector< adept::adouble > aResx[3]; // local redidual vector
@@ -354,7 +353,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       solYOld[K].resize (nYDofs);
       solW[K].resize (nWDofs);
       solWOld[K].resize (nWDofs);
-      
       solL.resize (nLDofs);
     }
 
@@ -441,8 +439,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
       weight = msh->_finiteElement[ielGeom][solxType]->GetGaussWeight (ig);
 
-      
-      
       adept::adouble solYg[3] = {0., 0., 0.};
       adept::adouble solWg[3] = {0., 0., 0.};
       
@@ -602,16 +598,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           adept::adouble term2 = 0.;
           adept::adouble term3 = 0.;
 
-          adept::adouble term5 = 0.;
-
           for (unsigned J = 0; J < DIM; J++) {
-
             term0 +=  solWNew_Xtan[K][J] * phiW_Xtan[J][i];
-
             term1 +=  solx_Xtan[K][J] * phiW_Xtan[J][i];
-
             term2 +=  solW_Xtan[J][J];
-
             adept::adouble term4 = 0.;
             for (unsigned L = 0; L < DIM; L++) {
               term4 += solxOld_Xtan[L][J] * solWOld_Xtan[L][K] + solxOld_Xtan[L][K] * solWOld_Xtan[L][J];
@@ -637,7 +627,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       for (unsigned K = 0; K < DIM; K++) {
         surface += Area.value();
       }
-      
       
       for (unsigned K = 0; K < DIM; K++) {
         volume += normalSign * (solxNewg[K].value()  * normal[K].value()) * Area.value();
@@ -734,14 +723,14 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
 //   VecView ( (static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_SELF);
 //   MatView ( (static_cast<PetscMatrix*> (KK))->mat(), PETSC_VIEWER_STDOUT_SELF);
-
+/*
     PetscViewer    viewer;
     PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
     PetscObjectSetName ( (PetscObject) viewer, "PWilmore matrix");
     PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
     MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
     double a;
-    std::cin >> a;
+    std::cin >> a;*/
 
 
   // ***************** END ASSEMBLY *******************
