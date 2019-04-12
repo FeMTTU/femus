@@ -54,6 +54,9 @@ public:
     
     /** Solves the system. */
     virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
+    
+    
+    void nonlinear_solve_single_level(const MgSmootherType& mgSmootherType, double & totalAssembyTime, const unsigned int grid0, const unsigned int igridn);
 
 protected:
 
