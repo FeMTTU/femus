@@ -7,6 +7,7 @@
 #include "adept.h"
 #include "LinearImplicitSystem.hpp"
 #include "Parameter.hpp"
+#include "paral.hpp"//to get iproc HAVE_MPI is inside here
 #include "Fluid.hpp"
 #include "Solid.hpp"
 #include "Files.hpp"
@@ -246,6 +247,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 }
 
 
+void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 
 template < class real_num > 
@@ -491,6 +493,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   real_num_mov weight_qp = 0.;
     double weight_hat_qp = 0.;
     vector < real_num > SolVAR_qp(n_unknowns);
+    vector < real_num > SolVAR_hat_qp(n_unknowns);
     vector < vector < real_num > > gradSolVAR_qp(n_unknowns);
     vector < vector < real_num > > gradSolVAR_hat_qp(n_unknowns);
     for(int k = 0; k < n_unknowns; k++) { 
@@ -502,8 +505,10 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    // ------------------------------------------------------------------------
     // Physical parameters
     const int    solid_model	= solid_in.get_physical_model();
+    double rhos         	 	= solid_in.get_density();
     const double mu_lame 	    = solid_in.get_lame_shear_modulus();
     const double lambda_lame 	= solid_in.get_lame_lambda();
+    const double mus   = mu_lame/rhos;
 
     const bool incompressible   = (0.5  ==  solid_in.get_poisson_coeff()) ? 1 : 0;
     const bool penalty = solid_in.get_if_penalty();
@@ -584,7 +589,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {
-         elem_center[j] += coords[j][i];
+         elem_center[j] += coords_hat[j][i];
        }
     }
     
@@ -621,6 +626,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
 	  SolVAR_qp[unk] = 0.;
+	  SolVAR_hat_qp[unk] = 0.;
 
 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
 	    gradSolVAR_qp[unk][ivar2] = 0.; 
@@ -629,6 +635,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 	  
 	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
 	    SolVAR_qp[unk]    += phi_dof_qp[ unk ][i] * SolVAR_eldofs[unk][i];
+	    SolVAR_hat_qp[unk]    += phi_hat_dof_qp[ unk ][i] * SolVAR_eldofs[unk][i];
 	    for(unsigned ivar2 = 0; ivar2 < dim; ivar2++) {
 	      gradSolVAR_qp[unk][ivar2]     += phi_x_dof_qp[ unk ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
 	      gradSolVAR_hat_qp[unk][ivar2] += phi_x_hat_dof_qp[ unk ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
@@ -647,7 +654,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    real_num_mov J_hat;
    real_num_mov trace_e_hat;
 
-    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mu_lame, lambda_lame, dim, sol_index_displ, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
+    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda_lame, dim, sol_index_displ, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
 
     
   //STATE=====================================
@@ -691,7 +698,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
          for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_adj]; i++) {
                for (int idim = 0; idim < dim; idim++) {
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + adj_pos_begin], i)] += 
-    - alpha_val * target_flag * (SolVAR_qp[SolPdeIndex[idim]] + SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim]) * phi_dof_qp[ idim + adj_pos_begin ][i] * weight_qp;
+     alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] + SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim]) 
+     * phi_hat_dof_qp[ idim + adj_pos_begin ][i] * weight_hat_qp;
                }
           }
 //----------from displ_state and displ_ctrl
@@ -704,12 +712,13 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
                for (int idim = 0; idim < dim; idim++) {
                     for (unsigned jdim = 0; jdim < dim; jdim++) {
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
-                    gamma_val * gradSolVAR_qp[idim + ctrl_pos_begin][jdim] * phi_x_dof_qp[idim + ctrl_pos_begin][i * dim + jdim] * weight_qp;                   
+                    gamma_val * ( gradSolVAR_hat_qp[idim + ctrl_pos_begin][jdim] + gradSolVAR_hat_qp[jdim + ctrl_pos_begin][idim] )
+                    * phi_x_hat_dof_qp[idim + ctrl_pos_begin][i * dim + jdim] * weight_hat_qp;                   
                     }
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
-            (   ( alpha_val * target_flag * (SolVAR_qp[SolPdeIndex[idim]] + SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim])  
-                + beta_val * SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] )* phi_dof_qp[ idim + ctrl_pos_begin ][i] 
-            ) * weight_qp;
+            (   ( alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] + SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim])  
+                + beta_val * SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] )* phi_hat_dof_qp[ idim + ctrl_pos_begin ][i] 
+            ) * weight_hat_qp;
                }
           }
  //----------from displ_state and displ_ctrl
@@ -763,10 +772,10 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
     
   //ADJOINT=====================================
-//----------from adj displ & press
-      for(unsigned i_block = adj_pos_begin; i_block < ctrl_pos_begin; i_block++) {
+//----------from adj displ
+      for(unsigned i_block = adj_pos_begin; i_block < adj_pos_begin + dim; i_block++) {
         for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
-            for(unsigned j_block = 0; j_block < n_state_vars; j_block++) {
+            for(unsigned j_block = 0; j_block < dim; j_block++) {
                for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
         Jac_state_false[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - adj_pos_begin , j_block, i_dof, j_dof )] 
@@ -775,7 +784,35 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
            }
         }
    }
-//----------from adj 
+//----------from adj displ 
+
+//----------from p_adj only
+   for(unsigned i_block = adj_pos_begin; i_block < adj_pos_begin + dim ; i_block++) {
+        for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
+            for(unsigned j_block = dim; j_block < n_state_vars; j_block++) {
+               for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
+    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
+        Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - adj_pos_begin , j_block, i_dof, j_dof )] 
+            * SolVAR_eldofs[j_block + adj_pos_begin][j_dof];
+                }
+           }
+        }
+   }
+//----------from p_adj only
+
+//----------from div of displ_adj
+   for(unsigned i_block = sol_index_press_adj; i_block < ctrl_pos_begin ; i_block++) {
+        for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
+            for(unsigned j_block = 0; j_block < dim; j_block++) {
+               for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
+    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
+        Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - adj_pos_begin , j_block, i_dof, j_dof )] 
+            * SolVAR_eldofs[j_block + adj_pos_begin][j_dof];
+                }
+           }
+        }
+   }
+// ----------from div of displ_adj
   //ADJOINT=====================================
 
    //CONTROL=====================================
@@ -828,42 +865,10 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
      if (assembleMatrix) assemble_jac.compute_jacobian_outside_integration_loop(stack, SolVAR_eldofs, Res, Jac, L2G_dofmap_AllVars, RES, JAC);
 
 
-// // //      for (int idim = 0; idim < dim; idim++) {
-// // //           for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_adj]; i++) {
-// // //     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, adj_pos_begin + idim, i) ] =    
-// // //     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, idim, i) ];    
-// // // //              for (unsigned j = 0; j < Sol_n_el_dofs[sol_index_adj]; j++) {
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, adj_pos_begin + idim , adj_pos_begin + idim , i, j) ] =   
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, /*adj_pos_begin +*/ idim , /*adj_pos_begin +*/ idim , i, j) ];
-// // // //           }
-// // //        }      
-// // //     }    
-// // // 
-// // // //          for (int idim = 0; idim < dim; idim++) {
-// // // //              for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_displ]; i++) {
-// // // //           for (unsigned j = 0; j < Sol_n_el_dofs[sol_index_press_adj]; j++) {
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_adj + idim, sol_index_press_adj, i, j) ] =   
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_displ + idim, sol_index_press,   i, j) ];
-// // // //             }
-// // // //                        
-// // // //          }
-// // // //        }      
-// // // 
-// // //     for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press_adj]; i++) {
-// // //     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, sol_index_press_adj, i) ] =    
-// // //     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, sol_index_press, i) ];
-// // // //                    for (int idim = 0; idim < dim; idim++) {
-// // // //              for (unsigned j = 0; j < Sol_n_el_dofs[sol_index_displ]; j++) {
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_press_adj, sol_index_adj + idim, i, j) ] =   
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_press,     sol_index_displ + idim, i, j) ];
-// // // //             }
-// // // //                        
-// // // //          }
-// // //        }
 
        
-    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 5, 5);
-    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 5, 5);
+//     assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 5, 5);
+//     assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 5, 5);
     
   } //end element loop for each process
 
@@ -966,9 +971,10 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   system.AddVariableToBeSolved("All");
 
   system.SetDebugNonlinear(true);
+  system.SetDebugFunction(ComputeIntegral);
 
 //   system.SetMaxNumberOfNonLinearIterations(2);
-//   system.SetNonLinearConvergenceTolerance(1.e-30);
+  system.SetNonLinearConvergenceTolerance(1.e-2);
 //   system.SetDebugLinear(true);
 //   system.SetMaxNumberOfLinearIterations(4);
 //   system.SetAbsoluteLinearConvergenceTolerance(1.e-10);
@@ -1016,4 +1022,284 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
  
  return ml_sol;
 
+}
+
+
+void ComputeIntegral(const MultiLevelProblem& ml_prob) {
+
+   const NonLinearImplicitSystem&  mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("SolidMech");   // pointer to the nonlinear implicit system named "NSOpt"
+ 
+  const unsigned level = mlPdeSys.GetLevelToAssemble();
+ 
+
+  Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
+
+  MultiLevelSolution*  mlSol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+
+  // reserve memory for the local standar vectors
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+  //geometry *******************************
+  vector < vector < double > > coordX(dim);    // local coordinates
+
+  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+
+  for (unsigned  k = 0; k < dim; k++) { 
+    coordX[k].reserve(maxSize);
+  }
+  
+  double weight;
+  
+  
+  //geometry *******************************
+
+//STATE######################################################################
+  vector < unsigned > solVIndex(dim);
+  solVIndex[0] = mlSol->GetIndex("DX");    // get the position of "U" in the ml_sol object
+  solVIndex[1] = mlSol->GetIndex("DY");    // get the position of "V" in the ml_sol object
+
+  if (dim == 3) solVIndex[2] = mlSol->GetIndex("DZ");      // get the position of "V" in the ml_sol object
+
+  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+  
+  vector < vector < double > >  solV(dim);    // local solution
+  vector <double >  V_gss(dim, 0.);    //  solution
+   
+ for (unsigned  k = 0; k < dim; k++) {
+    solV[k].reserve(maxSize);
+  }
+
+  
+  vector <double> phiV_gss;  // local test function
+  vector <double> phiV_x_gss; // local test function first order partial derivatives
+  vector <double> phiV_xx_gss; // local test function second order partial derivatives
+
+  phiV_gss.reserve(maxSize);
+  phiV_x_gss.reserve(maxSize * dim);
+  phiV_xx_gss.reserve(maxSize * dim2);
+  
+//STATE######################################################################
+  
+
+//CONTROL######################################################################
+  vector < unsigned > solVctrlIndex(dim);
+  solVctrlIndex[0] = mlSol->GetIndex("DX_CTRL");    // get the position of "U" in the ml_sol object
+  solVctrlIndex[1] = mlSol->GetIndex("DY_CTRL");    // get the position of "V" in the ml_sol object
+
+  if (dim == 3) solVctrlIndex[2] = mlSol->GetIndex("DZ_CTRL");      // get the position of "V" in the ml_sol object
+
+  unsigned solVctrlType = mlSol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
+  
+  vector < vector < double > >  solVctrl(dim);    // local solution
+  vector < double >   Vctrl_gss(dim, 0.);    //  solution
+   
+ for (unsigned  k = 0; k < dim; k++) {
+    solVctrl[k].reserve(maxSize);
+  }
+
+  
+  vector <double> phiVctrl_gss;  // local test function
+  vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
+  vector <double> phiVctrl_xx_gss; // local test function second order partial derivatives
+
+  phiVctrl_gss.reserve(maxSize);
+  phiVctrl_x_gss.reserve(maxSize * dim);
+  phiVctrl_xx_gss.reserve(maxSize * dim2);
+  
+//CONTROL######################################################################
+
+// Vel_desired##################################################################
+  vector <double> phiVdes_gss;  // local test function
+  vector <double> phiVdes_x_gss; // local test function first order partial derivatives
+  vector <double> phiVdes_xx_gss; // local test function second order partial derivatives
+
+  phiVdes_gss.reserve(maxSize);
+  phiVdes_x_gss.reserve(maxSize * dim);
+  phiVdes_xx_gss.reserve(maxSize * dim2);
+
+  vector <double>  solVdes(dim,0.);
+  vector<double> Vdes_gss(dim, 0.);  
+  
+// Vel_desired##################################################################
+
+
+
+
+double  integral_target_alpha = 0.;
+double	integral_beta   = 0.;
+double	integral_gamma  = 0.;
+  
+  // element loop: each process loops only on the elements that owns
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+// geometry
+    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
+
+    unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
+    
+// equation
+    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
+//     unsigned nDofsVdes = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
+    unsigned nDofsVctrl = msh->GetElementDofNumber(iel, solVctrlType);    // number of solution element dofs
+    
+    for (unsigned  k = 0; k < dim; k++) {       coordX[k].resize(nDofsX);    }
+     
+    for (unsigned  k = 0; k < dim; k++)  {
+      solV[k].resize(nDofsV);
+      solVctrl[k].resize(nDofsVctrl);
+//       solVdes[k].resize(nDofsVdes);
+    }
+
+
+    // geometry ************
+    for (unsigned i = 0; i < nDofsX; i++) {
+      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
+
+      for (unsigned k = 0; k < dim; k++) {
+        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+      }
+    }
+    
+     // elem average point 
+    vector < adept::adouble > elem_center(dim);   
+    for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
+  for (unsigned j = 0; j < dim; j++) {  
+      for (unsigned i = 0; i < nDofsX; i++) {
+         elem_center[j] += coordX[j][i];
+       }
+    }
+    
+   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofsX; }
+  //*************************************** 
+  
+  //***** set target domain flag ********************************** 
+   int target_flag = 0;
+   target_flag = ElementTargetFlag(elem_center);
+//***************************************       
+    
+    
+ //STATE###################################################################  
+    // velocity ************
+    for (unsigned i = 0; i < nDofsV; i++) {
+      unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
+
+      for (unsigned  k = 0; k < dim; k++) {
+        solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
+      }
+    }
+//STATE###################################################################
+
+//CONTROL###################################################################  
+    // velocity ************
+    for (unsigned i = 0; i < nDofsV; i++) {
+      unsigned solVctrlDof = msh->GetSolutionDof(i, iel, solVctrlType);    // global to global mapping between solution node and solution dof
+
+      for (unsigned  k = 0; k < dim; k++) {
+        solVctrl[k][i] = (*sol->_Sol[solVctrlIndex[k]])(solVctrlDof);      // global extraction and local storage for the solution
+      }
+    }
+//CONTROL###################################################################
+
+
+
+
+  //DESIRED VEL###################################################################  
+    // velocity ************
+//     for (unsigned i = 0; i < nDofsV; i++) {
+//       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
+
+      for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
+        solVdes[k]/*[i]*/ = TargetDisp[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+      }
+//     }
+ //DESIRED VEL###################################################################
+
+      // *** Gauss point loop ***
+      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+
+//STATE#############################################################################	
+        // *** get gauss point weight, test function and test function partial derivatives ***
+        msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV_gss, phiV_x_gss, phiV_xx_gss);
+	
+	msh->_finiteElement[ielGeom][solVctrlType]->Jacobian(coordX, ig, weight, phiVctrl_gss, phiVctrl_x_gss, phiVctrl_xx_gss);
+
+	msh->_finiteElement[ielGeom][solVType  /*solVdes*/]->Jacobian(coordX, ig, weight, phiVdes_gss, phiVdes_x_gss, phiVdes_xx_gss);
+
+	  vector < vector < double > > gradVctrl_gss(dim);
+      for (unsigned  k = 0; k < dim; k++) {
+          gradVctrl_gss[k].resize(dim);
+          std::fill(gradVctrl_gss[k].begin(), gradVctrl_gss[k].end(), 0);
+        }
+	
+    for (unsigned  k = 0; k < dim; k++) {
+      V_gss[k]       = 0.;
+      Vdes_gss[k]    = 0.;
+       Vctrl_gss[k]  = 0.;
+    }
+    
+      for (unsigned i = 0; i < nDofsV; i++) {
+        for (unsigned  k = 0; k < dim; k++) {
+            V_gss[k] += solV[k][i] * phiV_gss[i];
+            Vdes_gss[k] += solVdes[k]/*[i]*/ * phiVdes_gss[i];
+		}
+      }
+	
+      for (unsigned i = 0; i < nDofsVctrl; i++) {
+        for (unsigned  k = 0; k < dim; k++) {
+            Vctrl_gss[k] += solVctrl[k][i] * phiVctrl_gss[i];
+	 }
+     for (unsigned j = 0; j < dim; j++) {
+            for (unsigned  k = 0; k < dim; k++) {
+              gradVctrl_gss[k][j] += phiVctrl_x_gss[i * dim + j] * solVctrl[k][i];
+            }
+          }
+      }
+          
+          
+	
+      for (unsigned  k = 0; k < dim; k++) {
+	 integral_target_alpha +=target_flag* (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k])*weight; 
+	 integral_beta	+= ((Vctrl_gss[k])*(Vctrl_gss[k])*weight);
+      }
+      for (unsigned  k = 0; k < dim; k++) {
+	for (unsigned  j = 0; j < dim; j++) {	
+		integral_gamma	  += ((gradVctrl_gss[k][j])*(gradVctrl_gss[k][j])*weight);
+	}
+      }
+   
+  
+      }// end gauss point loop
+    } //end element loop  
+
+       std::ostringstream filename_out; filename_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "Integral_computation"  << ".txt";
+
+       std::ofstream intgr_fstream;
+  if (paral::get_rank() == 0 ) {
+      intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
+      intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys.GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
+      intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << alpha_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
+      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << beta_val  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
+      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << gamma_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
+      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * alpha_val*0.5  + integral_beta *beta_val*0.5 + integral_gamma *gamma_val*0.5 << std::endl;
+      intgr_fstream <<  std::endl;
+      intgr_fstream.close();  //you have to close to disassociate the file from the stream
+}  
+
+    
+//     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
+//     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<beta_val << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
+//     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<gamma_val<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
+//     std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha *(alpha_val*0.5)+ integral_beta *(beta_val*0.5) + integral_gamma*(gamma_val*0.5) << std::endl; 
+   
+    
+    return; 
+	  
+  
 }
