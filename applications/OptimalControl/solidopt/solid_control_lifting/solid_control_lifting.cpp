@@ -491,6 +491,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   real_num_mov weight_qp = 0.;
     double weight_hat_qp = 0.;
     vector < real_num > SolVAR_qp(n_unknowns);
+    vector < real_num > SolVAR_hat_qp(n_unknowns);
     vector < vector < real_num > > gradSolVAR_qp(n_unknowns);
     vector < vector < real_num > > gradSolVAR_hat_qp(n_unknowns);
     for(int k = 0; k < n_unknowns; k++) { 
@@ -586,7 +587,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {
-         elem_center[j] += coords[j][i];
+         elem_center[j] += coords_hat[j][i];
        }
     }
     
@@ -623,6 +624,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
 	  SolVAR_qp[unk] = 0.;
+	  SolVAR_hat_qp[unk] = 0.;
 
 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
 	    gradSolVAR_qp[unk][ivar2] = 0.; 
@@ -631,6 +633,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 	  
 	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
 	    SolVAR_qp[unk]    += phi_dof_qp[ unk ][i] * SolVAR_eldofs[unk][i];
+	    SolVAR_hat_qp[unk]    += phi_hat_dof_qp[ unk ][i] * SolVAR_eldofs[unk][i];
 	    for(unsigned ivar2 = 0; ivar2 < dim; ivar2++) {
 	      gradSolVAR_qp[unk][ivar2]     += phi_x_dof_qp[ unk ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
 	      gradSolVAR_hat_qp[unk][ivar2] += phi_x_hat_dof_qp[ unk ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
@@ -693,7 +696,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
          for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_adj]; i++) {
                for (int idim = 0; idim < dim; idim++) {
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + adj_pos_begin], i)] += 
-    - alpha_val * target_flag * (SolVAR_qp[SolPdeIndex[idim]] + SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim]) * phi_dof_qp[ idim + adj_pos_begin ][i] * weight_qp;
+     alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] + SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim]) 
+     * phi_hat_dof_qp[ idim + adj_pos_begin ][i] * weight_hat_qp;
                }
           }
 //----------from displ_state and displ_ctrl
@@ -706,12 +710,13 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
                for (int idim = 0; idim < dim; idim++) {
                     for (unsigned jdim = 0; jdim < dim; jdim++) {
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
-                    gamma_val * gradSolVAR_qp[idim + ctrl_pos_begin][jdim] * phi_x_dof_qp[idim + ctrl_pos_begin][i * dim + jdim] * weight_qp;                   
+                    gamma_val * ( gradSolVAR_hat_qp[idim + ctrl_pos_begin][jdim] + gradSolVAR_hat_qp[jdim + ctrl_pos_begin][idim] )
+                    * phi_x_hat_dof_qp[idim + ctrl_pos_begin][i * dim + jdim] * weight_hat_qp;                   
                     }
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
-            (   ( alpha_val * target_flag * (SolVAR_qp[SolPdeIndex[idim]] + SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim])  
-                + beta_val * SolVAR_qp[SolPdeIndex[idim + ctrl_pos_begin]] )* phi_dof_qp[ idim + ctrl_pos_begin ][i] 
-            ) * weight_qp;
+            (   ( alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] + SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim])  
+                + beta_val * SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] )* phi_hat_dof_qp[ idim + ctrl_pos_begin ][i] 
+            ) * weight_hat_qp;
                }
           }
  //----------from displ_state and displ_ctrl
@@ -765,10 +770,10 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
     
   //ADJOINT=====================================
-//----------from adj displ & press
-      for(unsigned i_block = adj_pos_begin; i_block < ctrl_pos_begin; i_block++) {
+//----------from adj displ
+      for(unsigned i_block = adj_pos_begin; i_block < adj_pos_begin + dim; i_block++) {
         for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
-            for(unsigned j_block = 0; j_block < n_state_vars; j_block++) {
+            for(unsigned j_block = 0; j_block < dim; j_block++) {
                for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
         Jac_state_false[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - adj_pos_begin , j_block, i_dof, j_dof )] 
@@ -777,7 +782,35 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
            }
         }
    }
-//----------from adj 
+//----------from adj displ 
+
+//----------from p_adj only
+   for(unsigned i_block = adj_pos_begin; i_block < adj_pos_begin + dim ; i_block++) {
+        for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
+            for(unsigned j_block = dim; j_block < n_state_vars; j_block++) {
+               for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
+    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
+        Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - adj_pos_begin , j_block, i_dof, j_dof )] 
+            * SolVAR_eldofs[j_block + adj_pos_begin][j_dof];
+                }
+           }
+        }
+   }
+//----------from p_adj only
+
+//----------from div of displ_adj
+   for(unsigned i_block = sol_index_press_adj; i_block < ctrl_pos_begin ; i_block++) {
+        for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
+            for(unsigned j_block = 0; j_block < dim; j_block++) {
+               for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
+    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
+        Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - adj_pos_begin , j_block, i_dof, j_dof )] 
+            * SolVAR_eldofs[j_block + adj_pos_begin][j_dof];
+                }
+           }
+        }
+   }
+// ----------from div of displ_adj
   //ADJOINT=====================================
 
    //CONTROL=====================================
@@ -830,38 +863,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
      if (assembleMatrix) assemble_jac.compute_jacobian_outside_integration_loop(stack, SolVAR_eldofs, Res, Jac, L2G_dofmap_AllVars, RES, JAC);
 
 
-// // //      for (int idim = 0; idim < dim; idim++) {
-// // //           for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_adj]; i++) {
-// // //     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, adj_pos_begin + idim, i) ] =    
-// // //     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, idim, i) ];    
-// // // //              for (unsigned j = 0; j < Sol_n_el_dofs[sol_index_adj]; j++) {
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, adj_pos_begin + idim , adj_pos_begin + idim , i, j) ] =   
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, /*adj_pos_begin +*/ idim , /*adj_pos_begin +*/ idim , i, j) ];
-// // // //           }
-// // //        }      
-// // //     }    
-// // // 
-// // // //          for (int idim = 0; idim < dim; idim++) {
-// // // //              for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_displ]; i++) {
-// // // //           for (unsigned j = 0; j < Sol_n_el_dofs[sol_index_press_adj]; j++) {
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_adj + idim, sol_index_press_adj, i, j) ] =   
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_displ + idim, sol_index_press,   i, j) ];
-// // // //             }
-// // // //                        
-// // // //          }
-// // // //        }      
-// // // 
-// // //     for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press_adj]; i++) {
-// // //     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, sol_index_press_adj, i) ] =    
-// // //     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, sol_index_press, i) ];
-// // // //                    for (int idim = 0; idim < dim; idim++) {
-// // // //              for (unsigned j = 0; j < Sol_n_el_dofs[sol_index_displ]; j++) {
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_press_adj, sol_index_adj + idim, i, j) ] =   
-// // // //     Jac[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, sol_index_press,     sol_index_displ + idim, i, j) ];
-// // // //             }
-// // // //                        
-// // // //          }
-// // //        }
 
        
 //     assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 5, 5);
