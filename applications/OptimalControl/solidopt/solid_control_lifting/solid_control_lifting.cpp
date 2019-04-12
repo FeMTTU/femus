@@ -502,8 +502,10 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    // ------------------------------------------------------------------------
     // Physical parameters
     const int    solid_model	= solid_in.get_physical_model();
+    double rhos         	 	= solid_in.get_density();
     const double mu_lame 	    = solid_in.get_lame_shear_modulus();
     const double lambda_lame 	= solid_in.get_lame_lambda();
+    const double mus   = mu_lame/rhos;
 
     const bool incompressible   = (0.5  ==  solid_in.get_poisson_coeff()) ? 1 : 0;
     const bool penalty = solid_in.get_if_penalty();
@@ -647,7 +649,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    real_num_mov J_hat;
    real_num_mov trace_e_hat;
 
-    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mu_lame, lambda_lame, dim, sol_index_displ, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
+    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda_lame, dim, sol_index_displ, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
 
     
   //STATE=====================================
@@ -862,8 +864,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 // // //        }
 
        
-    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 5, 5);
-    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 5, 5);
+//     assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 5, 5);
+//     assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 5, 5);
     
   } //end element loop for each process
 
