@@ -109,14 +109,14 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
-//   mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
+   mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
   
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -264,13 +264,13 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
     
-    //if(time_step != 0){
+    if(time_step%2 == 0){
       CopyDisplacement(mlSol, true);
         
       system2.MGsolve();
     
       CopyDisplacement(mlSol, false);
-    //}
+    }
     
     if ( (time_step + 1) % printInterval == 0)
       mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, (time_step + 1) / printInterval);
@@ -1385,7 +1385,7 @@ void AssembleNProj (MultiLevelProblem& ml_prob) {
         }
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
-            solx_uv[K][j]    += phix_uv[j][i] * ( solxOld[K][i] + 0.5 * solNDx[K][i]);
+            solx_uv[K][j]    += phix_uv[j][i] * ( solxOld[K][i] /*+ 0.5 * solNDx[K][i]*/);
           }
         }
       }
