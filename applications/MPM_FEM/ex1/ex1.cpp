@@ -197,6 +197,8 @@ int main(int argc, char** args)
       numberOfUniformLevels = 1;
 
       unsigned dim = mlMsh.GetDimension();
+      
+      std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<dim<<std::endl;
 
       MultiLevelSolution mlSol(&mlMsh);
       // add variables to mlSol
@@ -359,7 +361,7 @@ int main(int argc, char** args)
       std::vector<std::string> mov_vars;
       mov_vars.push_back("DX");
       mov_vars.push_back("DY");
-      mov_vars.push_back("DZ");
+      //mov_vars.push_back("DZ");
       mlSol.GetWriter()->SetMovingMesh(mov_vars);
       
       std::vector<std::string> print_vars;
