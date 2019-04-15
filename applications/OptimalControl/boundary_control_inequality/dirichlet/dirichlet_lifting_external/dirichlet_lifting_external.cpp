@@ -98,8 +98,9 @@ int main(int argc, char** args) {
     double scalingFactor = 1.;
 
     // read coarse level mesh and generate finers level meshes
-    std::string mesh_file = "./input/ext_box.neu";
-//     std::string mesh_file = "./input/ext_box.med";
+//     std::string mesh_file = "./input/ext_box.neu";
+    std::string mesh_file = "./input/ext_box.med";
+//     std::string mesh_file = "./input/ext_box_longer.med";
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
 
     //ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
