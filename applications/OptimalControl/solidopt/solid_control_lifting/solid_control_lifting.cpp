@@ -513,6 +513,9 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     const bool incompressible   = (0.5  ==  solid_in.get_poisson_coeff()) ? 1 : 0;
     const bool penalty = solid_in.get_if_penalty();
 
+    const double young_modulus = solid_in.get_young_module();
+    const double Lref = solid_in._parameter->Get_reference_length();
+    const double nondim_number = Lref/young_modulus;
     // -----------------------------------------------------------------
  
     RES->zero();
@@ -666,7 +669,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
               for (int idim = 0.; idim < dim; idim++) {
                 for (int jdim = 0.; jdim < dim; jdim++) {
-                  Cauchy_direction[idim] += phi_x_dof_qp[ idim ][i * dim + jdim] * Cauchy[idim][jdim];
+                  Cauchy_direction[idim] += nondim_number * phi_x_dof_qp[ idim ][i * dim + jdim] * Cauchy[idim][jdim];
                 }
               }
 
@@ -823,7 +826,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
             for(unsigned j_block = 0; j_block < dim; j_block++) {
                for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
-        - Jac_state_false[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] 
+        + Jac_state_false[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] 
           * SolVAR_eldofs[j_block + adj_pos_begin][j_dof];
                 }
            }
@@ -867,8 +870,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
 
        
-//     assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 5, 5);
-//     assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 5, 5);
+    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 3);
+    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 9, 3);
     
   } //end element loop for each process
 

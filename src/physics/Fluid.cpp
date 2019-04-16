@@ -57,7 +57,7 @@ Fluid::Fluid(Parameter& par, const double viscosity, const double density, const
              const double k, const double cp, const double alpha): Material(par,density,k,cp, alpha) {
 //   cout << "calling 2" << endl;
 
-  const  double lref = par.Get_reference_lenght();
+  const  double lref = par.Get_reference_length();
   const double uref = par.Get_reference_velocity();
   const double DeltaTref = par.Get_reference_temperature();
   _viscosity = viscosity;

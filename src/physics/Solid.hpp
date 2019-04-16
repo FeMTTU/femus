@@ -177,7 +177,7 @@ template < class real_num_mov >
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
                 //incompressible
-                Cauchy[i][j] = 2. * mus *  ( e[i][j] -  SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[i][j] );  ///@todo check that mus is multiplying everything or only the deformation tensor
+                Cauchy[i][j] = 2. * mus *  e[i][j] -  SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[i][j];  ///@todo check that mus is multiplying everything or only the deformation tensor
                 //+(penalty)*lambda*trace_e*Identity[i][j];
               }
             }

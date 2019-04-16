@@ -13,7 +13,7 @@
 
 //*********************** Parameters for Solid Model *****************************************
 #define YOUNGS_MODULUS 1.5e+6
-#define SOLID_DENSITY  1000.
+#define SOLID_DENSITY  1.
 #define NI 0.5
 //******************************************* Desired Target  and RHS function*******************************************************
     
