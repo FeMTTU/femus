@@ -61,7 +61,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 2;
+unsigned numberOfUniformLevels = 1; //keep = 1
 
 int main (int argc, char** argv) {
 
@@ -72,8 +72,10 @@ int main (int argc, char** argv) {
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
 
-  double xMinCoarseBox = leftBound - delta1;
-  double xMaxCoarseBox = rightBound + delta2;
+  double xMinCoarseBox = leftBound - delta1Mesh;
+  double xMaxCoarseBox = rightBound + delta2Mesh;
+  
+  std::cout<<"NNNNNNNNNNNNNNNNNNNNNNNNN = " << numberOfElements << std::endl;
 
   mlMsh.GenerateCoarseBoxMesh (numberOfElements, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "fifth");
 
@@ -405,27 +407,28 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh) {
   unsigned xType = 2;
 
   Mesh* msh = mlMsh.GetLevel (level);
-
-  //         //BEGIN TO REMOVE
-//         for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
-//
-//             unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
-//             unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
-//             unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
-//
-//
-//             double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
-//             double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
-//             double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
-//
-//             std::cout << "xMin = " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
-
-//         }
-//
-//         //END
-
+  
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors(); // get the noumber of processes (for parallel computation)
+
+          //BEGIN TO REMOVE
+        for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
+
+            unsigned xMinDof  = msh->GetSolutionDof ( 0, iel, xType );
+            unsigned xMaxDof  = msh->GetSolutionDof ( 1, iel, xType );
+            unsigned xMidDof  = msh->GetSolutionDof ( 2, iel, xType );
+
+
+            double xMin = ( *msh->_topology->_Sol[0] ) ( xMinDof );
+            double xMax = ( *msh->_topology->_Sol[0] ) ( xMaxDof );
+            double xMid = ( *msh->_topology->_Sol[0] ) ( xMidDof );
+
+            std::cout << "xMin prima del move= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+
+        }
+
+        //END
+
 
   unsigned x0Dof  = msh->GetSolutionDof (0, msh->_elementOffset[iproc], xType);
   unsigned x1Dof  = msh->GetSolutionDof (1, msh->_elementOffset[iproc], xType);
@@ -434,6 +437,8 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh) {
   double x1 = (*msh->_topology->_Sol[0]) (x1Dof);
 
   meshSize = fabs (x1 - x0);
+  
+  std::cout<<"MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMESH = " <<meshSize<<std::endl;
 
   unsigned numberOfNodes = msh->GetNumberOfNodes();
 
@@ -517,7 +522,7 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh) {
     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
     double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
 
-    std::cout << "xMin = " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+    std::cout << "xMin mesh spostato= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
 
   }
 
@@ -547,13 +552,39 @@ void ShiftTheExtrema (MultiLevelMesh &mlMsh) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors(); // get the noumber of processes (for parallel computation)
 
+  //         //BEGIN TO REMOVE
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
+    unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
+    unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
+
+
+    double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
+    double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
+    double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
+
+    std::cout << "xMin prima dello shift= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+
+  }
+  //END
+
+  std::cout.precision (14);
+  std::cout<<"----------------------------------------------> leftBound - delta1Mesh= " << leftBound - delta1Mesh << " , " << "rightBound + delta2Mesh= " << rightBound + delta2Mesh << std::endl;
+  
   for (unsigned idof = msh->_dofOffset[xType][iproc]; idof < msh->_dofOffset[xType][iproc + 1]; idof++) {
 
     double x = (*msh->_topology->_Sol[0]) (idof);
+    
+    std::cout<<"x = " << x << std::endl;
 
-    if (leftBound - delta1 <= x && x < leftBound) msh->_topology->_Sol[0]->set (idof, x + delta1Shift);
+    if ( fabs(x - (leftBound - delta1Mesh)) <= 1.e-10) {
+      std::cout.precision (14);
+      std::cout<< "QUI x = " << x << " , " << "value set = " << x + delta1Shift << std::endl;
+      msh->_topology->_Sol[0]->set (idof, x + delta1Shift);
+    }
 
-    if (rightBound < x && x <= rightBound + delta2) msh->_topology->_Sol[0]->set (idof, x + delta2Shift);
+    if (fabs(x - (rightBound + delta2Mesh)) <= 1.e-10)  msh->_topology->_Sol[0]->set (idof, x - delta2Shift);
 
   }
 
@@ -587,7 +618,7 @@ void ShiftTheExtrema (MultiLevelMesh &mlMsh) {
     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
     double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
 
-    std::cout << "xMin = " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+    std::cout << "xMin dopo lo shift= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
 
   }
 

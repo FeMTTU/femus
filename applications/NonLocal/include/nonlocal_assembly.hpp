@@ -25,21 +25,25 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.2, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05, maxTest8: both 0.025, maxTest9: both 0.0125, maxTest10: both 0.00625
-double delta1 = 0.1; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.1;
+double delta1 = /*0.1*/ 0.003125; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = /*0.1*/ 0.003125;
 double kappa1 = 1.;
 double kappa2 = 1.;
-double delta1Shift = 0.096875 /*0.025*/; //this gives a delta of 0.003125
-double delta2Shift = - 0.096875 /*0.025*/;
 
 //coarse box parameters
 double meshSize;
 double desiredMeshSize = 0.1;
-double leftBound = - 1.1 - 0.5 * desiredMeshSize;
-double rightBound = 1.1 + 0.5 * desiredMeshSize;
-unsigned numberOfElements = static_cast<unsigned>(fabs( rightBound + delta1 - (leftBound - delta2) ) / desiredMeshSize);
+double leftBound = - 1. - 0.5 * desiredMeshSize;
+double rightBound = 1. + 0.5 * desiredMeshSize;
+double delta1Mesh = 0.1;
+double delta2Mesh = 0.1;
+unsigned numberOfElements = static_cast<unsigned>( ceil(fabs( rightBound + delta2Mesh - (leftBound - delta1Mesh) ) / desiredMeshSize) ) ;
+
 bool doubleIntefaceNode = true;
+
 bool shiftExternalNodes = true;
+double delta1Shift = delta1Mesh - delta1;
+double delta2Shift =  delta2Mesh - delta2;
 
 unsigned elementToSkip = UINT_MAX;
 bool elementToSkipFound = false;
