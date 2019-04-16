@@ -137,3 +137,28 @@ At the end of the build process, you should have an hdfview.sh script inside the
 You must open that script and change the INSTALLDIR variable with the path of this build (by default, /usr/local is in it)
 
 Another alternative to view the content of an HDF5 file is to use the 'h5dump' utility shipped with HDF5 (installed through PETSc, for instance)
+
+
+##################################
+###### SALOME ####################
+##################################
+
+
+- Geometry
+
+Draw points and lines
+Create faces
+   --> Extract edges from a face (Explode)
+   
+- Mesh 
+Create Mesh object (only initialize)
+Create SubMesh of Mesh over the wanted SubGeometry
+   --> Hypothesis: Propagation of 1D Hypothesis
+
+In Mesh:
+   2D: Quadrangle Mapping
+   1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
+   
+   Build CompoundMesh to merge the meshes
+     --> Check the Boundary of the CompoundMesh!!!
+     --> Rename it "Mesh" + something!!!
