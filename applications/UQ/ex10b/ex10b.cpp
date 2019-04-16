@@ -78,7 +78,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -193,7 +193,7 @@ int main (int argc, char** argv) {
 
     FielduSGi[i] = new FieldSplitTree (RICHARDSON, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
 
-    FielduSGi[i]->SetTolerances (1.e-5, 1.e-5, 1.e+50, 6);
+    FielduSGi[i]->SetTolerances (1.e-10, 1.e-10, 1.e+50, 50);
     FielduSGi[i]->SetRichardsonScaleFactor(0.6); 
     
     
@@ -205,7 +205,7 @@ int main (int argc, char** argv) {
   systemSG.SetOuterSolver(GMRES);
   //END buid fieldSplitTree
   systemSG.SetLinearEquationSolverType (FEMuS_FIELDSPLIT, INCLUDE_COARSE_LEVEL_TRUE);
-  // systemSG.SetLinearEquationSolverType (FEMuS_DEFAULT, INCLUDE_COARSE_LEVEL_TRUE);
+  //systemSG.SetLinearEquationSolverType (FEMuS_DEFAULT, INCLUDE_COARSE_LEVEL_TRUE);
   // ******* System FEM Assembly *******
   systemSG.SetAssembleFunction (AssembleSysSG);
   systemSG.SetMaxNumberOfLinearIterations (1);
@@ -229,7 +229,7 @@ int main (int argc, char** argv) {
   
   systemSG.SetFieldSplitTree (&uSG);
  
-  systemSG.SetTolerances (1.e-10, 1.e-10, 1.e+50, 100);
+  systemSG.SetTolerances (1.e-10, 1.e-10, 1.e+50, 4000);
   
   //END
 

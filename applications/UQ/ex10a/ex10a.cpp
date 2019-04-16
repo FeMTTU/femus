@@ -78,7 +78,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -193,16 +193,20 @@ int main (int argc, char** argv) {
     //FielduSGi[i] = new FieldSplitTree (PREONLY, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
     FielduSGi[i] = new FieldSplitTree (RICHARDSON, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
     
-    FielduSGi[i]->SetTolerances (1.e-5, 1.e-5, 1.e+50, 5);
-    FielduSGi[i]->SetRichardsonScaleFactor(0.2); 
+    FielduSGi[i]->SetTolerances (1.e-10, 1.e-10, 1.e+50, 5); //(1.e-10, 1.e-10, 1.e+50, 10)
+    FielduSGi[i]->SetRichardsonScaleFactor(0.6);           // 0.5
 
     FSAll.push_back (FielduSGi[i]);
   }
 
   //FieldSplitTree uSG (PREONLY, FIELDSPLIT_PRECOND, FSAll, "uSG");
-  FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_PRECOND, FSAll, "uSG");
+  //FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_PRECOND, FSAll, "uSG");
+  FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_MULTIPLICATIVE_PRECOND, FSAll, "uSG");
+  //FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_SYMMETRIC_MULTIPLICATIVE_PRECOND, FSAll, "uSG");
+  
+  //systemSG.SetOuterSolver(FGMRES);
   //uSG.SetRichardsonScaleFactor(0.5); // 0.6 is the best choice
-  uSG.SetTolerances (1.e-3, 1.e-30, 1.e+50, 1);
+  //uSG.SetTolerances (1.e-3, 1.e-30, 1.e+50, 1);
   //END buid fieldSplitTree
    systemSG.SetLinearEquationSolverType (FEMuS_FIELDSPLIT);
   // ******* System FEM Assembly *******
@@ -224,12 +228,12 @@ int main (int argc, char** argv) {
   // ******* Set Smoother *******
   //systemSG.SetSolverFineGrids (GMRES);
   systemSG.SetSolverFineGrids (RICHARDSON);
+
+  systemSG.SetPreconditionerFineGrids (ILU_PRECOND);
   
   systemSG.SetFieldSplitTree (&uSG);
 
-  systemSG.SetPreconditionerFineGrids (ILU_PRECOND);
-
-  systemSG.SetTolerances (1.e-10, 1.e-10, 1.e+50, 100);
+  systemSG.SetTolerances (1.e-10, 1.e-10, 1.e+50, 4000);
   //END
 
 

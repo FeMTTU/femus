@@ -78,7 +78,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -194,7 +194,7 @@ int main (int argc, char** argv) {
 
   systemSG.SetPreconditionerFineGrids (ILU_PRECOND);
 
-  systemSG.SetTolerances (1.e-10, 1.e-10, 1.e+50, 100);
+  systemSG.SetTolerances (1.e-10, 1.e-10, 1.e+50, 4000);
   //END
 
 
