@@ -74,91 +74,92 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min)  (in 2D)
   //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min) //5: (z=z_min)  //6:  (z=z_max) (in 3D, I guess...)
   
-  bool dirichlet  = true; 
-  value = 0.;
+  bool dirichlet;
+//   = true; 
+//   value = 0.;
   
-        if (facename == 3) {
-       if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; }
-  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; } 
+//         if (facename == 3) {
+//        if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; }
+//   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; } 
+//   	
+//       }
+
+  
+      if (facename == 1) {
+       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
   	
       }
 
-  
-// //       if (facename == 1) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-// //   	
-// //       }
-// // 
-// //       if (facename == 2) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-// //   	
-// //       }
-// // 
-// //       if (facename == 3) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false/*true*/; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false/*true*/; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = false/*true*/; value = 0.; } 
-// //   	
-// //       }
-// // 
-// //       if (facename == 4) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-// //   	
-// //       }
-// //       
-// //       if (facename == 5) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-// //      }
-// //       
-// //       if (facename == 6) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-// //       }
+      if (facename == 2) {
+       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
+  	
+      }
+
+      if (facename == 3) {
+       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
+  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = false; value = 0.; } 
+  	
+      }
+
+      if (facename == 4) {
+       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
+  	
+      }
+      
+      if (facename == 5) {
+       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
+  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
+     }
+      
+      if (facename == 6) {
+       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0. ; }
+  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0. ; } 
+  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0. ; }
+  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0. ; }
+  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0. ; } 
+  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0. ; }
+  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
+  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
+  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
+      }
       
  return dirichlet;
 }
@@ -870,8 +871,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
 
        
-    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 3);
-    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 9, 3);
+//     assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 3);
+//     assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 9, 3);
     
   } //end element loop for each process
 
@@ -1064,73 +1065,73 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   //geometry *******************************
 
 //STATE######################################################################
-  vector < unsigned > solVIndex(dim);
-  solVIndex[0] = mlSol->GetIndex("DX");    // get the position of "U" in the ml_sol object
-  solVIndex[1] = mlSol->GetIndex("DY");    // get the position of "V" in the ml_sol object
+  vector < unsigned > solDIndex(dim);
+  solDIndex[0] = mlSol->GetIndex("DX");    // get the position of "DX" in the ml_sol object
+  solDIndex[1] = mlSol->GetIndex("DY");    // get the position of "DY" in the ml_sol object
 
-  if (dim == 3) solVIndex[2] = mlSol->GetIndex("DZ");      // get the position of "V" in the ml_sol object
+  if (dim == 3) solDIndex[2] = mlSol->GetIndex("DZ");      // get the position of "DZ" in the ml_sol object
 
-  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+  unsigned solDType = mlSol->GetSolutionType(solDIndex[0]);    // get the finite element type for "DX"
   
-  vector < vector < double > >  solV(dim);    // local solution
-  vector <double >  V_gss(dim, 0.);    //  solution
+  vector < vector < double > >  solD(dim);    // local solution
+  vector <double >  D_gss(dim, 0.);    //  solution
    
  for (unsigned  k = 0; k < dim; k++) {
-    solV[k].reserve(maxSize);
+    solD[k].reserve(maxSize);
   }
 
   
-  vector <double> phiV_gss;  // local test function
-  vector <double> phiV_x_gss; // local test function first order partial derivatives
-  vector <double> phiV_xx_gss; // local test function second order partial derivatives
+  vector <double> phiD_gss;  // local test function
+  vector <double> phiD_x_gss; // local test function first order partial derivatives
+  vector <double> phiD_xx_gss; // local test function second order partial derivatives
 
-  phiV_gss.reserve(maxSize);
-  phiV_x_gss.reserve(maxSize * dim);
-  phiV_xx_gss.reserve(maxSize * dim2);
+  phiD_gss.reserve(maxSize);
+  phiD_x_gss.reserve(maxSize * dim);
+  phiD_xx_gss.reserve(maxSize * dim2);
   
 //STATE######################################################################
   
 
 //CONTROL######################################################################
-  vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = mlSol->GetIndex("DX_CTRL");    // get the position of "U" in the ml_sol object
-  solVctrlIndex[1] = mlSol->GetIndex("DY_CTRL");    // get the position of "V" in the ml_sol object
+  vector < unsigned > solDctrlIndex(dim);
+  solDctrlIndex[0] = mlSol->GetIndex("DX_CTRL");    // get the position of "DX" in the ml_sol object
+  solDctrlIndex[1] = mlSol->GetIndex("DY_CTRL");    // get the position of "DY" in the ml_sol object
 
-  if (dim == 3) solVctrlIndex[2] = mlSol->GetIndex("DZ_CTRL");      // get the position of "V" in the ml_sol object
+  if (dim == 3) solDctrlIndex[2] = mlSol->GetIndex("DZ_CTRL");      // get the position of "DZ" in the ml_sol object
 
-  unsigned solVctrlType = mlSol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
+  unsigned solDctrlType = mlSol->GetSolutionType(solDctrlIndex[0]);    // get the finite element type for "u"
   
-  vector < vector < double > >  solVctrl(dim);    // local solution
-  vector < double >   Vctrl_gss(dim, 0.);    //  solution
+  vector < vector < double > >  solDctrl(dim);    // local solution
+  vector < double >   Dctrl_gss(dim, 0.);    //  solution
    
  for (unsigned  k = 0; k < dim; k++) {
-    solVctrl[k].reserve(maxSize);
+    solDctrl[k].reserve(maxSize);
   }
 
   
-  vector <double> phiVctrl_gss;  // local test function
-  vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
-  vector <double> phiVctrl_xx_gss; // local test function second order partial derivatives
+  vector <double> phiDctrl_gss;  // local test function
+  vector <double> phiDctrl_x_gss; // local test function first order partial derivatives
+  vector <double> phiDctrl_xx_gss; // local test function second order partial derivatives
 
-  phiVctrl_gss.reserve(maxSize);
-  phiVctrl_x_gss.reserve(maxSize * dim);
-  phiVctrl_xx_gss.reserve(maxSize * dim2);
+  phiDctrl_gss.reserve(maxSize);
+  phiDctrl_x_gss.reserve(maxSize * dim);
+  phiDctrl_xx_gss.reserve(maxSize * dim2);
   
 //CONTROL######################################################################
 
-// Vel_desired##################################################################
-  vector <double> phiVdes_gss;  // local test function
-  vector <double> phiVdes_x_gss; // local test function first order partial derivatives
-  vector <double> phiVdes_xx_gss; // local test function second order partial derivatives
+// Displ_desired##################################################################
+  vector <double> phiDdes_gss;  // local test function
+  vector <double> phiDdes_x_gss; // local test function first order partial derivatives
+  vector <double> phiDdes_xx_gss; // local test function second order partial derivatives
 
-  phiVdes_gss.reserve(maxSize);
-  phiVdes_x_gss.reserve(maxSize * dim);
-  phiVdes_xx_gss.reserve(maxSize * dim2);
+  phiDdes_gss.reserve(maxSize);
+  phiDdes_x_gss.reserve(maxSize * dim);
+  phiDdes_xx_gss.reserve(maxSize * dim2);
 
-  vector <double>  solVdes(dim,0.);
-  vector<double> Vdes_gss(dim, 0.);  
+  vector <double>  solDdes(dim,0.);
+  vector<double> Ddes_gss(dim, 0.);  
   
-// Vel_desired##################################################################
+// Displ_desired##################################################################
 
 
 
@@ -1148,16 +1149,16 @@ double	integral_gamma  = 0.;
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
     
 // equation
-    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-//     unsigned nDofsVdes = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-    unsigned nDofsVctrl = msh->GetElementDofNumber(iel, solVctrlType);    // number of solution element dofs
+    unsigned nDofsD = msh->GetElementDofNumber(iel, solDType);    // number of solution element dofs
+//     unsigned nDofsDdes = msh->GetElementDofNumber(iel, solDType);    // number of solution element dofs
+    unsigned nDofsDctrl = msh->GetElementDofNumber(iel, solDctrlType);    // number of solution element dofs
     
     for (unsigned  k = 0; k < dim; k++) {       coordX[k].resize(nDofsX);    }
      
     for (unsigned  k = 0; k < dim; k++)  {
-      solV[k].resize(nDofsV);
-      solVctrl[k].resize(nDofsVctrl);
-//       solVdes[k].resize(nDofsVdes);
+      solD[k].resize(nDofsD);
+      solDctrl[k].resize(nDofsDctrl);
+//       solDdes[k].resize(nDofsDdes);
     }
 
 
@@ -1189,23 +1190,23 @@ double	integral_gamma  = 0.;
     
     
  //STATE###################################################################  
-    // velocity ************
-    for (unsigned i = 0; i < nDofsV; i++) {
-      unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
+    // displacement ************
+    for (unsigned i = 0; i < nDofsD; i++) {
+      unsigned solDDof = msh->GetSolutionDof(i, iel, solDType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < dim; k++) {
-        solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
+        solD[k][i] = (*sol->_Sol[solDIndex[k]])(solDDof);      // global extraction and local storage for the solution
       }
     }
 //STATE###################################################################
 
 //CONTROL###################################################################  
-    // velocity ************
-    for (unsigned i = 0; i < nDofsV; i++) {
-      unsigned solVctrlDof = msh->GetSolutionDof(i, iel, solVctrlType);    // global to global mapping between solution node and solution dof
+    // displacement ************
+    for (unsigned i = 0; i < nDofsD; i++) {
+      unsigned solDctrlDof = msh->GetSolutionDof(i, iel, solDctrlType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < dim; k++) {
-        solVctrl[k][i] = (*sol->_Sol[solVctrlIndex[k]])(solVctrlDof);      // global extraction and local storage for the solution
+        solDctrl[k][i] = (*sol->_Sol[solDctrlIndex[k]])(solDctrlDof);      // global extraction and local storage for the solution
       }
     }
 //CONTROL###################################################################
@@ -1213,54 +1214,54 @@ double	integral_gamma  = 0.;
 
 
 
-  //DESIRED VEL###################################################################  
-    // velocity ************
-//     for (unsigned i = 0; i < nDofsV; i++) {
-//       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
+  //DESIRED DISPL###################################################################  
+    // displacement ************
+//     for (unsigned i = 0; i < nDofsD; i++) {
+//       unsigned solDdesDof = msh->GetSolutionDof(i, iel, solDType);    // global to global mapping between solution node and solution dof
 
-      for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = TargetDisp[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+      for (unsigned  k = 0; k < solDdes.size() /*dim*/; k++) {
+        solDdes[k]/*[i]*/ = TargetDisp[k] /*(*sol->_Sol[solDIndex[k]])(solDdesDof)*/;      // global extraction and local storage for the solution
       }
 //     }
- //DESIRED VEL###################################################################
+ //DESIRED DISPL###################################################################
 
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 
 //STATE#############################################################################	
         // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV_gss, phiV_x_gss, phiV_xx_gss);
+        msh->_finiteElement[ielGeom][solDType]->Jacobian(coordX, ig, weight, phiD_gss, phiD_x_gss, phiD_xx_gss);
 	
-	msh->_finiteElement[ielGeom][solVctrlType]->Jacobian(coordX, ig, weight, phiVctrl_gss, phiVctrl_x_gss, phiVctrl_xx_gss);
+	msh->_finiteElement[ielGeom][solDctrlType]->Jacobian(coordX, ig, weight, phiDctrl_gss, phiDctrl_x_gss, phiDctrl_xx_gss);
 
-	msh->_finiteElement[ielGeom][solVType  /*solVdes*/]->Jacobian(coordX, ig, weight, phiVdes_gss, phiVdes_x_gss, phiVdes_xx_gss);
+	msh->_finiteElement[ielGeom][solDType  /*solDdes*/]->Jacobian(coordX, ig, weight, phiDdes_gss, phiDdes_x_gss, phiDdes_xx_gss);
 
-	  vector < vector < double > > gradVctrl_gss(dim);
+	  vector < vector < double > > gradDctrl_gss(dim);
       for (unsigned  k = 0; k < dim; k++) {
-          gradVctrl_gss[k].resize(dim);
-          std::fill(gradVctrl_gss[k].begin(), gradVctrl_gss[k].end(), 0);
+          gradDctrl_gss[k].resize(dim);
+          std::fill(gradDctrl_gss[k].begin(), gradDctrl_gss[k].end(), 0);
         }
 	
     for (unsigned  k = 0; k < dim; k++) {
-      V_gss[k]       = 0.;
-      Vdes_gss[k]    = 0.;
-       Vctrl_gss[k]  = 0.;
+      D_gss[k]       = 0.;
+      Ddes_gss[k]    = 0.;
+       Dctrl_gss[k]  = 0.;
     }
     
-      for (unsigned i = 0; i < nDofsV; i++) {
+      for (unsigned i = 0; i < nDofsD; i++) {
         for (unsigned  k = 0; k < dim; k++) {
-            V_gss[k] += solV[k][i] * phiV_gss[i];
-            Vdes_gss[k] += solVdes[k]/*[i]*/ * phiVdes_gss[i];
+            D_gss[k] += solD[k][i] * phiD_gss[i];
+            Ddes_gss[k] += solDdes[k]/*[i]*/ * phiDdes_gss[i];
 		}
       }
 	
-      for (unsigned i = 0; i < nDofsVctrl; i++) {
+      for (unsigned i = 0; i < nDofsDctrl; i++) {
         for (unsigned  k = 0; k < dim; k++) {
-            Vctrl_gss[k] += solVctrl[k][i] * phiVctrl_gss[i];
+            Dctrl_gss[k] += solDctrl[k][i] * phiDctrl_gss[i];
 	 }
      for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
-              gradVctrl_gss[k][j] += phiVctrl_x_gss[i * dim + j] * solVctrl[k][i];
+              gradDctrl_gss[k][j] += phiDctrl_x_gss[i * dim + j] * solDctrl[k][i];
             }
           }
       }
@@ -1268,12 +1269,12 @@ double	integral_gamma  = 0.;
           
 	
       for (unsigned  k = 0; k < dim; k++) {
-	 integral_target_alpha +=target_flag* (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k])*weight; 
-	 integral_beta	+= ((Vctrl_gss[k])*(Vctrl_gss[k])*weight);
+	 integral_target_alpha +=target_flag* (D_gss[k] + Dctrl_gss[k] - Ddes_gss[k]) * (D_gss[k] + Dctrl_gss[k] - Ddes_gss[k])*weight; 
+	 integral_beta	+= ((Dctrl_gss[k])*(Dctrl_gss[k])*weight);
       }
       for (unsigned  k = 0; k < dim; k++) {
 	for (unsigned  j = 0; j < dim; j++) {	
-		integral_gamma	  += ((gradVctrl_gss[k][j])*(gradVctrl_gss[k][j])*weight);
+		integral_gamma	  += ((gradDctrl_gss[k][j])*(gradDctrl_gss[k][j])*weight);
 	}
       }
    
