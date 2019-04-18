@@ -273,6 +273,8 @@ int main (int argc, char** args) {
       system2.MGsolve();
     
       CopyDisplacement(mlSol, false);
+      
+      system0.MGsolve();
     }
     
     if ( (time_step + 1) % printInterval == 0)
