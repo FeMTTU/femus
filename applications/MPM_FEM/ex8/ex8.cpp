@@ -73,13 +73,24 @@ int main (int argc, char** args) {
 // unsigned nel1d = nve1d - 1u;
 // unsigned nel = static_cast< unsigned > (pow (nel1d, dim));
 
-  double Xv[9] = {0., 0.2, 0.4, 0.6, 0.8, 1., 1.2, 1.4, 1.6};
+  double Xv[9] = {0., 0.15, 0.35, 0.65, 0.8, 1.1, 1.25, 1.45, 1.6};
 
   double scale = 0.5;
   
-  double distanceMax[9] = {0.7, 0.5, 0.7, 0.6, 0.7, 0.6, 0.7, 0.5, 0.7};
+  //double distanceMax[9] = {0.7, 0.5, 0.7, 0.6, 0.7, 0.6, 0.7, 0.5, 0.7};
   //double distanceMax[9] = {0.5, 0.3, 0.5, 0.3, 0.5, 0.3, 0.5, 0.3, 0.5};
-  //double distanceMax[9] = {0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6};
+  double distanceMax[9] = {0.6, 0.4, 0.6, 0.4, 0.6, 0.4, 0.6, 0.4, 0.6};
+  
+  for( int i = 0; i<nve; i++){
+    int deltai = (i%2==0)? 3 : 2;
+    
+    int im = (i - deltai >= 0)?  i - deltai: 0;
+    int ip = (i + deltai < nve)? i + deltai: nve - 1;
+    
+    distanceMax[i] = (Xv[ip] - Xv[i] > Xv[i] - Xv[im] ) ? Xv[ip] - Xv[i]: Xv[i] - Xv[im];
+    
+  }
+  
 
   std::vector< std::vector < std::vector< double> > > XVprint (1);
   XVprint[0].resize (nve);
@@ -154,9 +165,13 @@ int main (int argc, char** args) {
         GetChebyshev (T[d], pOrder, gmpm[p]->_distance[inode][d] / scale);  //1D Chebyshev
       }
       dist = sqrt (dist) / distanceMax[inode];
-      double W = (dist > 1.) ? 0. : pow (1. - dist * dist, 4);
+      
+      double x = gmpm[p]->_xp[0];
+      double Wbc = (i == 0 || i == nve-1) ? 1.: x * (1.6-x) / (0.8*0.8);
+      
+      double W = (dist > 1.) ? 0. : Wbc *pow (1. - dist * dist, 4);
 
-      std::cout << W <<" ";
+      std::cout << x << " " << Wbc <<" ";
       
       if (W > 0.) {
 
@@ -246,8 +261,12 @@ int main (int argc, char** args) {
         GetChebyshev (T[d], pOrder, gmpm[p]->_distance[inode][d] / scale);  //1D Chebyshev
       }
       dist = sqrt (dist) / distanceMax[inode];
-      double W = (dist > 1.) ? 0. : pow (1. - dist * dist, 4);
-
+      
+      double x = gmpm[p]->_xp[0];
+      double Wbc = (i == 0 || i == nve-1) ? 1.: x*(1.6-x)/(0.8*0.8);
+      
+      double W = (dist > 1.) ? 0. : Wbc * pow (1. - dist * dist, 4);
+      
       if (W > 0.) {
         double sumAlphaT = 0.;
         for (unsigned k = 0; k < aIdx.size(); k++) {
@@ -343,7 +362,7 @@ void GaussianEleminationWithPivoting (std::vector<std::vector < double > > & A, 
     }
     if (max_row < tol) {
       std::cout << "Degenerate matrix.";
-      exit (0);
+      //exit (0);
     }
 
     for (int j = i + 1; j < n; j++) {
@@ -366,7 +385,7 @@ void GaussianEleminationWithPivoting (std::vector<std::vector < double > > & A, 
     std::cout << "\n\n";
 
     std::cout << "Zero row! Matrix is singular \n";
-    exit (0);
+    //exit (0);
   }
 
   x[n - 1] = A[n - 1][n] / A[n - 1][n - 1];
@@ -650,5 +669,7 @@ void PrintSolution (const std::vector <double> &Ue, const std::vector <double> &
   fout << std::endl;
   fout.close();
 }
+
+
 
 
