@@ -30,21 +30,26 @@ double delta2 = /*0.1*/ 0.003125;
 double kappa1 = 1.;
 double kappa2 = 1.;
 
-//coarse box parameters
-double meshSize;
-double desiredMeshSize = 0.1;
-double leftBound = - 1. - 0.5 * desiredMeshSize;
-double rightBound = 1. + 0.5 * desiredMeshSize;
-double delta1Mesh = 0.1;
-double delta2Mesh = 0.1;
-unsigned numberOfElements = static_cast<unsigned>( ceil(fabs( rightBound + delta2Mesh - (leftBound - delta1Mesh) ) / desiredMeshSize) ) ;
-
-bool doubleIntefaceNode = true;
+//parameters to play with
+double desiredMeshSize = 0.025;
+double delta1MeshTemp = 0.1; 
+double delta2MeshTemp = 0.1; 
 
 bool shiftExternalNodes = true;
+double delta1Mesh = (shiftExternalNodes) ? desiredMeshSize : delta1MeshTemp;
+double delta2Mesh = (shiftExternalNodes) ? desiredMeshSize : delta2MeshTemp;
 double delta1Shift = delta1Mesh - delta1;
 double delta2Shift =  delta2Mesh - delta2;
 
+bool doubleIntefaceNode = true;
+double leftBoundTemp = - 1.1;
+double rightBoundTemp = 1.1;
+unsigned numberOfElementsTemp = static_cast<unsigned>( fabs( rightBoundTemp + delta2Mesh - (leftBoundTemp - delta1Mesh) ) / desiredMeshSize );
+unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 1 : numberOfElementsTemp;
+double leftBound = (doubleIntefaceNode) ? leftBoundTemp - 0.5 * desiredMeshSize : leftBoundTemp;
+double rightBound = (doubleIntefaceNode) ? rightBoundTemp + 0.5 * desiredMeshSize : rightBoundTemp;
+
+double meshSize;
 unsigned elementToSkip = UINT_MAX;
 bool elementToSkipFound = false;
 unsigned procWhoFoundIt = UINT_MAX;
