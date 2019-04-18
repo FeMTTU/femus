@@ -1,18 +1,16 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
 
 ###
-### This file is generated automatically by SALOME v8.5.0 with dump python functionality
+### This file is generated automatically by SALOME v9.2.1 with dump python functionality
 ###
 
 import sys
 import salome
 
 salome.salome_init()
-theStudy = salome.myStudy
-
 import salome_notebook
-notebook = salome_notebook.NoteBook(theStudy)
-sys.path.insert( 0, r'/home/student/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_lifting_external/input')
+notebook = salome_notebook.NoteBook()
+sys.path.insert(0, r'/home/student/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_lifting_external/input')
 
 ###
 ### GEOM component
@@ -109,35 +107,37 @@ Number_of_Segments_5 = Regular_1D_3.NumberOfSegments(1,None,[])
 Quadrangle_2D_1 = Mesh_2.Quadrangle(algo=smeshBuilder.QUADRANGLE)
 status = Mesh_2.AddHypothesis(Propagation_of_1D_Hyp,Edge_5)
 isDone = Mesh_2.Compute()
-#try:
-  #pass
-#except:
-  #print 'ExportToMEDX() failed. Invalid file name?'
-#try:
-  #pass
-#except:
-  #print 'ExportToMEDX() failed. Invalid file name?'
-#try:
-  #pass
-#except:
-  #print 'ExportToMEDX() failed. Invalid file name?'
 Mesh_1.ConvertToQuadratic(0, Mesh_1,True)
 Mesh_2.ConvertToQuadratic(0, Mesh_2,True)
 isDone = Mesh_1.Compute()
 isDone = Mesh_2.Compute()
 Mesh_4 = smesh.Concatenate([ Mesh_1.GetMesh(), Mesh_2.GetMesh() ], 1, 1, 1e-05)
 isDone = Mesh_4.RemoveElements( [ 6, 7 ] )
+Group_10_0 = Mesh_4.CreateEmptyGroup( SMESH.EDGE, 'Group_1' )
+nbAdd = Group_10_0.AddFrom( Mesh_4.GetMesh() )
+Group_10_0.SetName( 'Group_10_0' )
+smesh.SetName(Mesh_4, 'Mesh_4')
+try:
+  Mesh_4.ExportMED(r'/home/student/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_lifting_external/input/ext_box_2.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=0)
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+[ smeshObj_1, smeshObj_2, Group_10_0 ] = Mesh_4.GetGroups()
+Group_10_0.SetColor( SALOMEDS.Color( 1, 0.666667, 0 ))
 Group_12_0 = Mesh_4.CreateEmptyGroup( SMESH.FACE, 'Group_12_0' )
 nbAdd = Group_12_0.Add( [ 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 ] )
 Group_13_0 = Mesh_4.CreateEmptyGroup( SMESH.FACE, 'Group_13_0' )
 nbAdd = Group_13_0.Add( [ 35, 36 ] )
-Group_10_0 = Mesh_4.CreateEmptyGroup( SMESH.EDGE, 'Group_1' )
-nbAdd = Group_10_0.AddFrom( Mesh_4.GetMesh() )
-Group_10_0.SetName( 'Group_10_0' )
 Sub_mesh_1 = Regular_1D.GetSubMesh()
-Regular_1D_4 = Mesh_1.GetSubMesh( Edge_2, 'Regular_1D' )
 Sub_mesh_2 = Regular_1D_2.GetSubMesh()
+Regular_1D_4 = Mesh_1.GetSubMesh( Edge_2, 'Regular_1D' )
 
+## some objects were removed
+aStudyBuilder = salome.myStudy.NewBuilder()
+SO = salome.myStudy.FindObjectIOR(salome.myStudy.ConvertObjectToIOR(smeshObj_2))
+if SO: aStudyBuilder.RemoveObjectWithChildren(SO)
+SO = salome.myStudy.FindObjectIOR(salome.myStudy.ConvertObjectToIOR(smeshObj_1))
+if SO: aStudyBuilder.RemoveObjectWithChildren(SO)
 
 ## Set names of Mesh objects
 smesh.SetName(Regular_1D.GetAlgorithm(), 'Regular_1D')
@@ -149,12 +149,12 @@ smesh.SetName(Number_of_Segments_5, 'Number of Segments_5')
 smesh.SetName(Number_of_Segments_3, 'Number of Segments_3')
 smesh.SetName(Number_of_Segments_4, 'Number of Segments_4')
 smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
-smesh.SetName(Mesh_2.GetMesh(), 'Mesh_2')
 smesh.SetName(Mesh_4.GetMesh(), 'Mesh_4')
-smesh.SetName(Sub_mesh_2, 'Sub-mesh_2')
-smesh.SetName(Group_12_0, 'Group_12_0')
-smesh.SetName(Group_13_0, 'Group_13_0')
+smesh.SetName(Mesh_2.GetMesh(), 'Mesh_2')
 smesh.SetName(Group_10_0, 'Group_10_0')
+smesh.SetName(Sub_mesh_2, 'Sub-mesh_2')
+smesh.SetName(Group_13_0, 'Group_13_0')
+smesh.SetName(Group_12_0, 'Group_12_0')
 smesh.SetName(Regular_1D_4, 'Regular_1D')
 smesh.SetName(Sub_mesh_1, 'Sub-mesh_1')
 
