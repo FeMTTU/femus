@@ -667,12 +667,12 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
               for (int idim = 0.; idim < dim; idim++) {
                 for (int jdim = 0.; jdim < dim; jdim++) {
-                  Cauchy_direction[idim] += nondim_number * phi_x_dof_qp[ idim ][i * dim + jdim] * Cauchy[idim][jdim];
+                  Cauchy_direction[idim] += nondim_number * phi_x_hat_dof_qp[ idim ][i * dim + jdim] * Cauchy[idim][jdim];
                 }
               }
 
               for (int idim = 0; idim < dim; idim++) {
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( Cauchy_direction[idim] -  phi_dof_qp[ idim ][i] * _gravity[idim] ) * weight_qp;
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( Cauchy_direction[idim] -  phi_hat_dof_qp[ idim ][i] * _gravity[idim] ) * weight_qp;
               }
 
             }
@@ -685,7 +685,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
             for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press]; i++) {
                 
               Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += 
-                - weight_hat_qp * phi_dof_qp[ sol_index_press ][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
+                - weight_hat_qp * phi_hat_dof_qp[ sol_index_press ][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
 //               - weight_hat_qp * phi_dof_qp[ sol_index_press ][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
               
             }
@@ -700,7 +700,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
                for (int idim = 0; idim < dim; idim++) {
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + adj_pos_begin], i)] += 
      alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] + SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim]) 
-     * phi_hat_dof_qp[ idim + adj_pos_begin ][i] * weight_hat_qp;
+     * phi_hat_dof_qp[ idim + adj_pos_begin ][i] * weight_qp;
                }
           }
 //----------from displ_state and displ_ctrl
@@ -714,12 +714,12 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
                     for (unsigned jdim = 0; jdim < dim; jdim++) {
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
                     gamma_val * ( gradSolVAR_hat_qp[idim + ctrl_pos_begin][jdim] + gradSolVAR_hat_qp[jdim + ctrl_pos_begin][idim] )
-                    * phi_x_hat_dof_qp[idim + ctrl_pos_begin][i * dim + jdim] * weight_hat_qp;                   
+                    * phi_x_hat_dof_qp[idim + ctrl_pos_begin][i * dim + jdim] * weight_qp;                   
                     }
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
             (   ( alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] + SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim])  
                 + beta_val * SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] )* phi_hat_dof_qp[ idim + ctrl_pos_begin ][i] 
-            ) * weight_hat_qp;
+            ) * weight_qp;
                }
           }
  //----------from displ_state and displ_ctrl
@@ -824,7 +824,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
             for(unsigned j_block = 0; j_block < dim; j_block++) {
                for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
     Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
-        + Jac_state_false[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] 
+         Jac_state_false[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] 
           * SolVAR_eldofs[j_block + adj_pos_begin][j_dof];
                 }
            }
@@ -975,7 +975,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   system.SetDebugFunction( ComputeIntegral< NonLinearImplicitSystem, adept::adouble, adept::adouble >);
 
 //   system.SetMaxNumberOfNonLinearIterations(2);
-  system.SetNonLinearConvergenceTolerance(1.e-2);
+//   system.SetNonLinearConvergenceTolerance(1.e-2);
 //   system.SetDebugLinear(true);
 //   system.SetMaxNumberOfLinearIterations(4);
 //   system.SetAbsoluteLinearConvergenceTolerance(1.e-10);
@@ -1225,11 +1225,11 @@ real_num	integral_gamma  = 0.;
       }
   
      // elem average point 
-    vector < real_num > elem_center(dim);   
+    vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {
-         elem_center[j] += coords[j][i];
+         elem_center[j] += coords_hat[j][i];
        }
     }
     
@@ -1238,7 +1238,7 @@ real_num	integral_gamma  = 0.;
   
   //***** set target domain flag ********************************** 
    int target_flag = 0;
-   target_flag = ElementTargetFlag < real_num >(elem_center);
+   target_flag = ElementTargetFlag < double >(elem_center); //domain is considered wrt moving
 
   // geometry end *****************************
 
