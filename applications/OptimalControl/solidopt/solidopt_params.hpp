@@ -29,8 +29,8 @@
  
  
 //*********************** Find volume elements that contain a  Target domain element ********************************
-
-int ElementTargetFlag(const std::vector<adept::adouble> & elem_center) {
+template < class var_type >
+int ElementTargetFlag(const std::vector<var_type> & elem_center) {
 
  //***** set target domain flag ********************************** 
   int target_flag = 0;

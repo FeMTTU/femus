@@ -67,99 +67,96 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
       return value;   
 }  
   
-  
-  
 
 bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min)  (in 2D)
   //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min) //5: (z=z_min)  //6:  (z=z_max) (in 3D, I guess...)
   
-  bool dirichlet;
-//   = true; 
-//   value = 0.;
+  bool dirichlet  = true; 
+  value = 0.;
   
-//         if (facename == 3) {
-//        if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; }
-//   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; } 
-//   	
-//       }
+        if (facename == 3) {
+       if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; }
+  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; } 
+  	
+      }
 
   
-      if (facename == 1) {
-       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-  	
-      }
-
-      if (facename == 2) {
-       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-  	
-      }
-
-      if (facename == 3) {
-       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
-  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
-  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = false; value = 0.; } 
-  	
-      }
-
-      if (facename == 4) {
-       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-  	
-      }
-      
-      if (facename == 5) {
-       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
-  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; }
-  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
-  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
-  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-     }
-      
-      if (facename == 6) {
-       if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0. ; }
-  else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0. ; } 
-  else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0. ; }
-  else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0. ; }
-  else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0. ; } 
-  else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0. ; }
-  else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
-  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
-  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-      }
+// //       if (facename == 1) {
+// //        if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
+// //   	
+// //       }
+// // 
+// //       if (facename == 2) {
+// //        if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
+// //   	
+// //       }
+// // 
+// //       if (facename == 3) {
+// //        if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = false; value = 0.; } 
+// //   	
+// //       }
+// // 
+// //       if (facename == 4) {
+// //        if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
+// //   	
+// //       }
+// //       
+// //       if (facename == 5) {
+// //        if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; }
+// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
+// //      }
+// //       
+// //       if (facename == 6) {
+// //        if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0. ; }
+// //   else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0. ; } 
+// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0. ; }
+// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0. ; }
+// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0. ; } 
+// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0. ; }
+// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
+// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
+// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
+// //       }
       
  return dirichlet;
 }
@@ -177,6 +174,13 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
 
 
+template < class system_type, class real_num, class real_num_mov >
+void ComputeIntegral(const MultiLevelProblem& ml_prob);
+
+template < class system_type, class real_num, class real_num_mov >
+void ComputeIntegral(  const MultiLevelProblem& ml_prob,
+                       const system_type * mlPdeSys,
+                       const std::vector< Unknown > &  unknowns);
 
 
  //Unknown definition  ==================
@@ -248,9 +252,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 }
 
 
-void ComputeIntegral(const MultiLevelProblem& ml_prob);
-
-
 template < class real_num > 
 class My_main_single_level : public Main_single_level {
     
@@ -266,10 +267,6 @@ const MultiLevelSolution  run_on_single_level(const Files & files,
   
 };
  
-
-
-
-
 
 
 int main(int argc, char** args) {
@@ -438,13 +435,13 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   vector < vector < double > > phi_x_hat_dof_qp(n_unknowns);
   vector < vector < double > > phi_xx_hat_dof_qp(n_unknowns);
 
-  for(int fe=0; fe < n_unknowns; fe++) {  
-        phi_dof_qp[fe].reserve(max_size_elem_dofs);
-    phi_hat_dof_qp[fe].reserve(max_size_elem_dofs);
-      phi_x_dof_qp[fe].reserve(max_size_elem_dofs * dim);
-  phi_x_hat_dof_qp[fe].reserve(max_size_elem_dofs * dim);
-     phi_xx_dof_qp[fe].reserve(max_size_elem_dofs * dim2);
- phi_xx_hat_dof_qp[fe].reserve(max_size_elem_dofs * dim2);
+  for(int unk=0; unk < n_unknowns; unk++) {  
+        phi_dof_qp[unk].reserve(max_size_elem_dofs);
+    phi_hat_dof_qp[unk].reserve(max_size_elem_dofs);
+      phi_x_dof_qp[unk].reserve(max_size_elem_dofs * dim);
+  phi_x_hat_dof_qp[unk].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp[unk].reserve(max_size_elem_dofs * dim2);
+ phi_xx_hat_dof_qp[unk].reserve(max_size_elem_dofs * dim2);
    }
    
   //----------- at dofs ------------------------------
@@ -476,13 +473,13 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   vector < vector < double > > phi_x_dof_qp_domain_hat(dim);
   vector < vector < double > > phi_xx_dof_qp_domain_hat(dim);
  
-  for(int fe = 0; fe < dim; fe++) {
-        phi_dof_qp_domain[fe].reserve(max_size_elem_dofs);
-      phi_x_dof_qp_domain[fe].reserve(max_size_elem_dofs * dim);
-     phi_xx_dof_qp_domain[fe].reserve(max_size_elem_dofs * dim2);
-        phi_dof_qp_domain_hat[fe].reserve(max_size_elem_dofs);
-      phi_x_dof_qp_domain_hat[fe].reserve(max_size_elem_dofs * dim);
-     phi_xx_dof_qp_domain_hat[fe].reserve(max_size_elem_dofs * dim2);
+  for(int dom_coord = 0; dom_coord < dim; dom_coord++) {
+        phi_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs);
+      phi_x_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs * dim2);
+        phi_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs);
+      phi_x_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs * dim2);
    }
  
  
@@ -589,7 +586,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
       }
   
      // elem average point 
-    vector < real_num > elem_center(dim);   
+    vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {
@@ -602,7 +599,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   
   //***** set target domain flag ********************************** 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(elem_center);
+   target_flag = ElementTargetFlag < double > (elem_center);
 
   // geometry end *****************************
 
@@ -615,9 +612,9 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 
 	// *** get Jacobian and test function and test function derivatives ***
-      for(int fe=0; fe < n_unknowns; fe++) {
-	msh->_finiteElement[ielGeom][SolFEType[fe]]->Jacobian(coords,    ig,weight_qp,    phi_dof_qp[fe],    phi_x_dof_qp[fe],    phi_xx_dof_qp[fe]);
-	msh->_finiteElement[ielGeom][SolFEType[fe]]->Jacobian(coords_hat,ig,weight_hat_qp,phi_hat_dof_qp[fe],phi_x_hat_dof_qp[fe],phi_xx_hat_dof_qp[fe]);
+      for(int unk=0; unk < n_unknowns; unk++) {
+	msh->_finiteElement[ielGeom][SolFEType[unk]]->Jacobian(coords,    ig,weight_qp,    phi_dof_qp[unk],    phi_x_dof_qp[unk],    phi_xx_dof_qp[unk]);
+	msh->_finiteElement[ielGeom][SolFEType[unk]]->Jacobian(coords_hat,ig,weight_hat_qp,phi_hat_dof_qp[unk],phi_x_hat_dof_qp[unk],phi_xx_hat_dof_qp[unk]);
       }
       
    //=============== Integration at qp ========================================
@@ -975,7 +972,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   system.AddVariableToBeSolved("All");
 
   system.SetDebugNonlinear(true);
-  system.SetDebugFunction(ComputeIntegral);
+  system.SetDebugFunction( ComputeIntegral< NonLinearImplicitSystem, adept::adouble, adept::adouble >);
 
 //   system.SetMaxNumberOfNonLinearIterations(2);
   system.SetNonLinearConvergenceTolerance(1.e-2);
@@ -1028,155 +1025,211 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
 }
 
-
+template < class system_type, class real_num, class real_num_mov = double >
 void ComputeIntegral(const MultiLevelProblem& ml_prob) {
+    ComputeIntegral< system_type, real_num, real_num_mov > (  ml_prob, 
+                                                            & ml_prob.get_system< system_type >(0), 
+                                                              ml_prob.get_system< system_type >(0).get_unknown_list_for_assembly());
+}
 
-   const NonLinearImplicitSystem&  mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("SolidMech");   // pointer to the nonlinear implicit system named "NSOpt"
- 
-  const unsigned level = mlPdeSys.GetLevelToAssemble();
- 
+template < class system_type, class real_num, class real_num_mov = double >
+void ComputeIntegral(const MultiLevelProblem& ml_prob,
+                     const system_type * mlPdeSys,
+                     const std::vector< Unknown > & unknowns) {
 
-  Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
+  const unsigned 		level 		= mlPdeSys->GetLevelToAssemble();
 
-  MultiLevelSolution*  mlSol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  Mesh*          		msh    		= ml_prob._ml_msh->GetLevel(level);
+  elem*          		el     		= msh->el;
+
+  MultiLevelSolution*  		ml_sol  = ml_prob._ml_sol;
+  Solution*    			sol      	= ml_prob._ml_sol->GetSolutionLevel(level); 
+
+
+  const unsigned 	dim  = msh->GetDimension();
+  const unsigned   dim2  = (3 * (dim - 1) + !(dim - 1));
+  const unsigned  iproc  = msh->processor_id();
+  // reserve memory for the local standard vectors
+  const unsigned max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27 
+
   
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
-  
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-
-  // reserve memory for the local standar vectors
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
-
-  //geometry *******************************
-  vector < vector < double > > coordX(dim);    // local coordinates
-
-  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
-
-  for (unsigned  k = 0; k < dim; k++) { 
-    coordX[k].reserve(maxSize);
-  }
-  
-  double weight;
-  
-  
-  //geometry *******************************
-
-//STATE######################################################################
-  vector < unsigned > solDIndex(dim);
-  solDIndex[0] = mlSol->GetIndex("DX");    // get the position of "DX" in the ml_sol object
-  solDIndex[1] = mlSol->GetIndex("DY");    // get the position of "DY" in the ml_sol object
-
-  if (dim == 3) solDIndex[2] = mlSol->GetIndex("DZ");      // get the position of "DZ" in the ml_sol object
-
-  unsigned solDType = mlSol->GetSolutionType(solDIndex[0]);    // get the finite element type for "DX"
-  
-  vector < vector < double > >  solD(dim);    // local solution
-  vector <double >  D_gss(dim, 0.);    //  solution
+  //----------- unknowns ------------------------------
+   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
    
- for (unsigned  k = 0; k < dim; k++) {
-    solD[k].reserve(maxSize);
+  constexpr int sol_index_displ      = 0;     //known at compile time
+  const     int sol_index_press      = sol_index_displ + dim;      //known at run time
+  constexpr int state_pos_begin      = sol_index_displ;   //known at compile time
+  const     int adj_pos_begin        = dim + 1;
+  const     int sol_index_adj        = adj_pos_begin;      
+  const     int sol_index_press_adj  = sol_index_adj + dim;     
+  const     int ctrl_pos_begin       = 2 * (dim + 1);
+  const     int sol_index_ctrl       = ctrl_pos_begin;     
+  const     int sol_index_press_ctrl = sol_index_ctrl + dim;      
+
+  
+  vector < std::string > Solname(n_unknowns);     
+  vector < unsigned int > SolIndex(n_unknowns);  
+  vector < unsigned int > SolPdeIndex(n_unknowns);
+  vector < unsigned int > SolFEType(n_unknowns);  
+
+
+  for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
+       Solname[ivar]    = unknowns[ivar]._name; 
+      SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
+//     SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
+//       assert(ivar == SolPdeIndex[ivar]);  //I would like this ivar order to coincide either with SolIndex or with SolPdeIndex, otherwise too many orders... it has to be  with SolPdeIndex, because SolIndex is related to the Solution object which can have more fields... This has to match the order of the unknowns[] argument
+    SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);//
   }
 
-  
-  vector <double> phiD_gss;  // local test function
-  vector <double> phiD_x_gss; // local test function first order partial derivatives
-  vector <double> phiD_xx_gss; // local test function second order partial derivatives
+   constexpr int solFEType_max = BIQUADR_FE;  //biquadratic, this is the highest-order FE 
 
-  phiD_gss.reserve(maxSize);
-  phiD_x_gss.reserve(maxSize * dim);
-  phiD_xx_gss.reserve(maxSize * dim2);
+   vector < unsigned int > Sol_n_el_dofs(n_unknowns);
   
-//STATE######################################################################
-  
+  //----------- of dofs and at quadrature points ------------------------------
+  vector < vector < double > > phi_dof_qp(n_unknowns);
+  vector < vector < real_num_mov > > phi_x_dof_qp(n_unknowns);   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here  //some of these should be real_num, some real_num_mov...
+  vector < vector < real_num_mov > > phi_xx_dof_qp(n_unknowns);  //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
 
-//CONTROL######################################################################
-  vector < unsigned > solDctrlIndex(dim);
-  solDctrlIndex[0] = mlSol->GetIndex("DX_CTRL");    // get the position of "DX" in the ml_sol object
-  solDctrlIndex[1] = mlSol->GetIndex("DY_CTRL");    // get the position of "DY" in the ml_sol object
+  vector < vector < double > > phi_hat_dof_qp(n_unknowns);
+  vector < vector < double > > phi_x_hat_dof_qp(n_unknowns);
+  vector < vector < double > > phi_xx_hat_dof_qp(n_unknowns);
 
-  if (dim == 3) solDctrlIndex[2] = mlSol->GetIndex("DZ_CTRL");      // get the position of "DZ" in the ml_sol object
-
-  unsigned solDctrlType = mlSol->GetSolutionType(solDctrlIndex[0]);    // get the finite element type for "u"
-  
-  vector < vector < double > >  solDctrl(dim);    // local solution
-  vector < double >   Dctrl_gss(dim, 0.);    //  solution
+  for(int unk=0; unk < n_unknowns; unk++) {  
+        phi_dof_qp[unk].reserve(max_size_elem_dofs);
+    phi_hat_dof_qp[unk].reserve(max_size_elem_dofs);
+      phi_x_dof_qp[unk].reserve(max_size_elem_dofs * dim);
+  phi_x_hat_dof_qp[unk].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp[unk].reserve(max_size_elem_dofs * dim2);
+ phi_xx_hat_dof_qp[unk].reserve(max_size_elem_dofs * dim2);
+   }
    
- for (unsigned  k = 0; k < dim; k++) {
-    solDctrl[k].reserve(maxSize);
-  }
+  //----------- at dofs ------------------------------
+  vector < vector < real_num > > SolVAR_eldofs(n_unknowns);  for(int k = 0; k < n_unknowns; k++) { SolVAR_eldofs[k].reserve(max_size_elem_dofs); }
+ 
 
+  // geometry (at dofs) --------------------------------//
+  vector< vector < real_num_mov > >   coords(dim);
+  vector  < vector  < double > >  coords_hat(dim);
+  unsigned coordsType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+  for(int i = 0; i < dim; i++) {   
+           coords[i].reserve(max_size_elem_dofs); 
+       coords_hat[i].reserve(max_size_elem_dofs); 
+ }
+ 
+ //************** geometry phi **************************
+  vector < vector < double > > phi_dof_qp_domain(dim);
+  vector < vector < real_num_mov > > phi_x_dof_qp_domain(dim);
+  vector < vector < real_num_mov > > phi_xx_dof_qp_domain(dim);
+  vector < vector < double > > phi_dof_qp_domain_hat(dim);
+  vector < vector < double > > phi_x_dof_qp_domain_hat(dim);
+  vector < vector < double > > phi_xx_dof_qp_domain_hat(dim);
+ 
+  for(int dom_coord = 0; dom_coord < dim; dom_coord++) {
+        phi_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs);
+      phi_x_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs * dim2);
+        phi_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs);
+      phi_x_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs * dim2);
+   }
+ 
+   // geometry ------------------------------------------
   
-  vector <double> phiDctrl_gss;  // local test function
-  vector <double> phiDctrl_x_gss; // local test function first order partial derivatives
-  vector <double> phiDctrl_xx_gss; // local test function second order partial derivatives
 
-  phiDctrl_gss.reserve(maxSize);
-  phiDctrl_x_gss.reserve(maxSize * dim);
-  phiDctrl_xx_gss.reserve(maxSize * dim2);
-  
-//CONTROL######################################################################
+  //------------ at quadrature points ---------------------
+  real_num_mov weight_qp = 0.;//
+    double weight_hat_qp = 0.;
+    vector < real_num > SolVAR_qp(n_unknowns);
+    vector < real_num > SolVAR_hat_qp(n_unknowns);
+    vector < vector < real_num > > gradSolVAR_qp(n_unknowns);
+    vector < vector < real_num > > gradSolVAR_hat_qp(n_unknowns);
+    for(int k = 0; k < n_unknowns; k++) { 
+          gradSolVAR_qp[k].resize(dim);
+      gradSolVAR_hat_qp[k].resize(dim);
+    }
+      
+
 
 // Displ_desired##################################################################
-  vector <double> phiDdes_gss;  // local test function
-  vector <double> phiDdes_x_gss; // local test function first order partial derivatives
-  vector <double> phiDdes_xx_gss; // local test function second order partial derivatives
+  vector < double > phi_des_dof_qp;
+  vector < real_num_mov > phi_des_x_dof_qp;   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here  //some of these should be real_num, some real_num_mov...
+  vector < real_num_mov > phi_des_xx_dof_qp;  
 
-  phiDdes_gss.reserve(maxSize);
-  phiDdes_x_gss.reserve(maxSize * dim);
-  phiDdes_xx_gss.reserve(maxSize * dim2);
+  vector < double > phi_des_hat_dof_qp;
+  vector < double > phi_des_x_hat_dof_qp;
+  vector < double > phi_des_xx_hat_dof_qp;
 
-  vector <double>  solDdes(dim,0.);
-  vector<double> Ddes_gss(dim, 0.);  
+        phi_des_dof_qp.reserve(max_size_elem_dofs);
+      phi_des_x_dof_qp.reserve(max_size_elem_dofs * dim);
+     phi_des_xx_dof_qp.reserve(max_size_elem_dofs * dim2);
+    phi_des_hat_dof_qp.reserve(max_size_elem_dofs);
+  phi_des_x_hat_dof_qp.reserve(max_size_elem_dofs * dim);
+ phi_des_xx_hat_dof_qp.reserve(max_size_elem_dofs * dim2);
+   
+   
+  vector < real_num >  SolDisp_eldofs(dim,0.);
+  vector < real_num > SolDisp_des_qp(dim, 0.);  
   
+  vector < real_num > SolDisp_des_hat_qp(dim, 0.);  
 // Displ_desired##################################################################
 
 
 
 
-double  integral_target_alpha = 0.;
-double	integral_beta   = 0.;
-double	integral_gamma  = 0.;
+real_num  integral_target_alpha = 0.;
+real_num	integral_beta   = 0.;
+real_num	integral_gamma  = 0.;
   
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-// geometry
-    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
 
-    unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
-    
-// equation
-    unsigned nDofsD = msh->GetElementDofNumber(iel, solDType);    // number of solution element dofs
-//     unsigned nDofsDdes = msh->GetElementDofNumber(iel, solDType);    // number of solution element dofs
-    unsigned nDofsDctrl = msh->GetElementDofNumber(iel, solDctrlType);    // number of solution element dofs
-    
-    for (unsigned  k = 0; k < dim; k++) {       coordX[k].resize(nDofsX);    }
-     
-    for (unsigned  k = 0; k < dim; k++)  {
-      solD[k].resize(nDofsD);
-      solDctrl[k].resize(nDofsDctrl);
-//       solDdes[k].resize(nDofsDdes);
-    }
-
-
-    // geometry ************
-    for (unsigned i = 0; i < nDofsX; i++) {
-      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
-
-      for (unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+   //all vars ###################################################################  
+  for (unsigned  k = 0; k < n_unknowns; k++) {
+    unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+       Sol_n_el_dofs[k] = ndofs_unk;
+       SolVAR_eldofs[k].resize(Sol_n_el_dofs[k]);
+    for (unsigned i = 0; i < SolVAR_eldofs[k].size(); i++) {
+       unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
+       SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
       }
     }
+   //all vars ###################################################################
+  
     
+  // geometry *****************************
+    short unsigned ielGeom = msh->GetElementType(iel);
+
+      unsigned nDofsX = msh->GetElementDofNumber(iel, coordsType);    // number of coordinate element dofs
+    
+    for(int ivar=0; ivar<dim; ivar++) {
+      coords[ivar].resize(nDofsX);
+      coords_hat[ivar].resize(nDofsX);
+    }
+    
+   for( unsigned i = 0; i < nDofsX; i++) {
+      unsigned coordsDof  = msh->GetSolutionDof(i, iel, coordsType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
+      for(unsigned ivar = 0; ivar < dim; ivar++) {
+          //Fixed coordinates (Reference frame)
+	coords_hat[ivar][i] = (*msh->_topology->_Sol[ivar])(coordsDof);
+      }
+    }
+
+  //***************************************  
+    assert(nDofsX == Sol_n_el_dofs[sol_index_displ]);
+    //Moving coordinates (Moving frame)
+      for (unsigned idim = 0; idim < dim; idim++) {
+        for (int j = 0; j < nDofsX; j++) {
+          coords[idim][j] = coords_hat[idim][j] + SolVAR_eldofs[SolIndex[idim]][j];
+        }
+      }
+  
      // elem average point 
-    vector < adept::adouble > elem_center(dim);   
+    vector < real_num > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {
-         elem_center[j] += coordX[j][i];
+         elem_center[j] += coords[j][i];
        }
     }
     
@@ -1185,42 +1238,18 @@ double	integral_gamma  = 0.;
   
   //***** set target domain flag ********************************** 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(elem_center);
-//***************************************       
-    
-    
- //STATE###################################################################  
-    // displacement ************
-    for (unsigned i = 0; i < nDofsD; i++) {
-      unsigned solDDof = msh->GetSolutionDof(i, iel, solDType);    // global to global mapping between solution node and solution dof
+   target_flag = ElementTargetFlag < real_num >(elem_center);
 
-      for (unsigned  k = 0; k < dim; k++) {
-        solD[k][i] = (*sol->_Sol[solDIndex[k]])(solDDof);      // global extraction and local storage for the solution
-      }
-    }
-//STATE###################################################################
-
-//CONTROL###################################################################  
-    // displacement ************
-    for (unsigned i = 0; i < nDofsD; i++) {
-      unsigned solDctrlDof = msh->GetSolutionDof(i, iel, solDctrlType);    // global to global mapping between solution node and solution dof
-
-      for (unsigned  k = 0; k < dim; k++) {
-        solDctrl[k][i] = (*sol->_Sol[solDctrlIndex[k]])(solDctrlDof);      // global extraction and local storage for the solution
-      }
-    }
-//CONTROL###################################################################
-
-
+  // geometry end *****************************
 
 
   //DESIRED DISPL###################################################################  
     // displacement ************
-//     for (unsigned i = 0; i < nDofsD; i++) {
+//     for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_displ]; i++) {
 //       unsigned solDdesDof = msh->GetSolutionDof(i, iel, solDType);    // global to global mapping between solution node and solution dof
 
-      for (unsigned  k = 0; k < solDdes.size() /*dim*/; k++) {
-        solDdes[k]/*[i]*/ = TargetDisp[k] /*(*sol->_Sol[solDIndex[k]])(solDdesDof)*/;      // global extraction and local storage for the solution
+      for (unsigned  k = 0; k < SolDisp_eldofs.size() /*dim*/; k++) {
+        SolDisp_eldofs[k]/*[i]*/ = TargetDisp[k] /*(*sol->_Sol[solDIndex[k]])(solDdesDof)*/;      // global extraction and local storage for the solution
       }
 //     }
  //DESIRED DISPL###################################################################
@@ -1228,54 +1257,65 @@ double	integral_gamma  = 0.;
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 
-//STATE#############################################################################	
-        // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[ielGeom][solDType]->Jacobian(coordX, ig, weight, phiD_gss, phiD_x_gss, phiD_xx_gss);
-	
-	msh->_finiteElement[ielGeom][solDctrlType]->Jacobian(coordX, ig, weight, phiDctrl_gss, phiDctrl_x_gss, phiDctrl_xx_gss);
+	// *** get Jacobian and test function and test function derivatives ***
+      for(int unk=0; unk < n_unknowns; unk++) {
+	msh->_finiteElement[ielGeom][SolFEType[unk]]->Jacobian(coords,    ig,weight_qp,    phi_dof_qp[unk],    phi_x_dof_qp[unk],    phi_xx_dof_qp[unk]);
+	msh->_finiteElement[ielGeom][SolFEType[unk]]->Jacobian(coords_hat,ig,weight_hat_qp,phi_hat_dof_qp[unk],phi_x_hat_dof_qp[unk],phi_xx_hat_dof_qp[unk]);
+      }
+      
+   //=============== Integration at qp ========================================
+         //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN...
+    for (unsigned int d = 0; d < dim; d++) {
+         msh->_finiteElement[ielGeom][coordsType]->Jacobian(coords,    ig, weight_qp,    phi_dof_qp_domain[d],     phi_x_dof_qp_domain[d],     phi_xx_dof_qp_domain[d]);
+         msh->_finiteElement[ielGeom][coordsType]->Jacobian(coords_hat,ig, weight_hat_qp,phi_dof_qp_domain_hat[d], phi_x_dof_qp_domain_hat[d], phi_xx_dof_qp_domain_hat[d]);
+      }
+     
+  //begin unknowns eval at gauss points ********************************
+	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
+	  SolVAR_qp[unk] = 0.;
+	  SolVAR_hat_qp[unk] = 0.;
 
-	msh->_finiteElement[ielGeom][solDType  /*solDdes*/]->Jacobian(coordX, ig, weight, phiDdes_gss, phiDdes_x_gss, phiDdes_xx_gss);
+	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
+	    gradSolVAR_qp[unk][ivar2] = 0.; 
+	    gradSolVAR_hat_qp[unk][ivar2] = 0.; 
+	  }
+	  
+	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
+	    SolVAR_qp[unk]    += phi_dof_qp[ unk ][i] * SolVAR_eldofs[unk][i];
+	    SolVAR_hat_qp[unk]    += phi_hat_dof_qp[ unk ][i] * SolVAR_eldofs[unk][i];
+	    for(unsigned ivar2 = 0; ivar2 < dim; ivar2++) {
+	      gradSolVAR_qp[unk][ivar2]     += phi_x_dof_qp[ unk ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
+	      gradSolVAR_hat_qp[unk][ivar2] += phi_x_hat_dof_qp[ unk ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
+	    }
+	  }
+	  
+	}  
+ //end unknowns eval at gauss points ********************************
 
-	  vector < vector < double > > gradDctrl_gss(dim);
-      for (unsigned  k = 0; k < dim; k++) {
-          gradDctrl_gss[k].resize(dim);
-          std::fill(gradDctrl_gss[k].begin(), gradDctrl_gss[k].end(), 0);
-        }
-	
-    for (unsigned  k = 0; k < dim; k++) {
-      D_gss[k]       = 0.;
-      Ddes_gss[k]    = 0.;
-       Dctrl_gss[k]  = 0.;
-    }
+	msh->_finiteElement[ielGeom][SolFEType[sol_index_displ]  /*SolDisp_eldofs*/]->Jacobian(coords, ig, weight_qp, phi_des_dof_qp, phi_des_x_dof_qp, phi_des_xx_dof_qp);
+	msh->_finiteElement[ielGeom][SolFEType[sol_index_displ]  /*SolDisp_eldofs*/]->Jacobian(coords_hat, ig, weight_hat_qp, phi_des_hat_dof_qp, phi_des_x_hat_dof_qp, phi_des_xx_hat_dof_qp);
+
+    for (unsigned  k = 0; k < dim; k++) {      SolDisp_des_qp[k]    = 0.;     }
     
-      for (unsigned i = 0; i < nDofsD; i++) {
-        for (unsigned  k = 0; k < dim; k++) {
-            D_gss[k] += solD[k][i] * phiD_gss[i];
-            Ddes_gss[k] += solDdes[k]/*[i]*/ * phiDdes_gss[i];
+      for (unsigned  k = 0; k < dim; k++) {
+        for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_displ]; i++) {
+                SolDisp_des_qp[k] += SolDisp_eldofs[k]/*[i]*/ * phi_des_dof_qp[i];
+            SolDisp_des_hat_qp[k] += SolDisp_eldofs[k]/*[i]*/ * phi_des_hat_dof_qp[i];
 		}
       }
 	
-      for (unsigned i = 0; i < nDofsDctrl; i++) {
-        for (unsigned  k = 0; k < dim; k++) {
-            Dctrl_gss[k] += solDctrl[k][i] * phiDctrl_gss[i];
-	 }
-     for (unsigned j = 0; j < dim; j++) {
-            for (unsigned  k = 0; k < dim; k++) {
-              gradDctrl_gss[k][j] += phiDctrl_x_gss[i * dim + j] * solDctrl[k][i];
-            }
-          }
-      }
+      
           
-          
-	
+      for (unsigned  k = 0; k < dim; k++) {	 
+          integral_target_alpha += target_flag * (SolVAR_qp[SolIndex[k]] + SolVAR_qp[SolIndex[k + ctrl_pos_begin]] - SolDisp_des_qp[k]) * 
+                                                 (SolVAR_qp[SolIndex[k]] + SolVAR_qp[SolIndex[k + ctrl_pos_begin]] - SolDisp_des_qp[k]) * weight_qp; 
+          integral_beta	 += SolVAR_qp[SolIndex[k + ctrl_pos_begin]] *SolVAR_qp[SolIndex[k + ctrl_pos_begin]] * weight_qp;
+
+                }
       for (unsigned  k = 0; k < dim; k++) {
-	 integral_target_alpha +=target_flag* (D_gss[k] + Dctrl_gss[k] - Ddes_gss[k]) * (D_gss[k] + Dctrl_gss[k] - Ddes_gss[k])*weight; 
-	 integral_beta	+= ((Dctrl_gss[k])*(Dctrl_gss[k])*weight);
-      }
-      for (unsigned  k = 0; k < dim; k++) {
-	for (unsigned  j = 0; j < dim; j++) {	
-		integral_gamma	  += ((gradDctrl_gss[k][j])*(gradDctrl_gss[k][j])*weight);
-	}
+        for (unsigned  j = 0; j < dim; j++) {	
+            integral_gamma	  +=  gradSolVAR_qp[SolIndex[k + ctrl_pos_begin]][j] * gradSolVAR_qp[SolIndex[k + ctrl_pos_begin]][j] * weight_qp;
+        }
       }
    
   
@@ -1287,7 +1327,7 @@ double	integral_gamma  = 0.;
        std::ofstream intgr_fstream;
   if (paral::get_rank() == 0 ) {
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
-      intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys.GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
+      intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys->GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
       intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << alpha_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
       intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << beta_val  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
       intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << gamma_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
@@ -1296,13 +1336,6 @@ double	integral_gamma  = 0.;
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }  
 
-    
-//     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
-//     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<beta_val << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
-//     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<gamma_val<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
-//     std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha *(alpha_val*0.5)+ integral_beta *(beta_val*0.5) + integral_gamma*(gamma_val*0.5) << std::endl; 
-   
-    
     return; 
 	  
   
