@@ -106,7 +106,7 @@ int main (int argc, char** args) {
 
   //PrintLine ("./output/", XVprint, false, 1);
 
-  unsigned Np = 120;
+  unsigned Np = 1000;
 
   std::vector < GMPM *> gmpm (Np);
   for (unsigned p = 0; p < gmpm.size(); p++) {
@@ -169,9 +169,11 @@ int main (int argc, char** args) {
       double x = gmpm[p]->_xp[0];
       double Wbc = (i == 0 || i == nve-1) ? 1.: x * (1.6-x) / (0.8*0.8);
       
-      double W = (dist > 1.) ? 0. : Wbc *pow (1. - dist * dist, 4);
+      double W = (dist > 1.) ? 0. : pow (1. - dist * dist, 4);
 
-      std::cout << x << " " << Wbc <<" ";
+      std::cout << W << " "<< Wbc * W <<"   ";
+      
+      W *= Wbc;
       
       if (W > 0.) {
 
@@ -224,7 +226,7 @@ int main (int argc, char** args) {
 
   std::ofstream fout;
   std::ofstream fouti;
-  fout.open("./output/testFunctions.txt");
+  fout.open("./output/sum.txt");
   
  
   
@@ -280,14 +282,14 @@ int main (int argc, char** args) {
         ymin = (ymin < W * sumAlphaT)? ymin : W * sumAlphaT;
         ymax = (ymax > W * sumAlphaT)? ymax : W * sumAlphaT;
         
-        fout << W * sumAlphaT <<" ";
+        //fout << W * sumAlphaT <<" ";
         fouti << gmpm[p]->_xp[0] <<" "<< W * sumAlphaT << std::endl;
         
         Ur[p] += W * sumAlphaT  * P;
         phiSum += W * sumAlphaT;
       }
       else{
-        fout << 0. <<" ";
+        //fout << 0. <<" ";
       }
       fouti.close();
     }
@@ -307,7 +309,7 @@ int main (int argc, char** args) {
    
     fout <<stream.str().c_str()<<" u 1:2 title \"{/Symbol f}_{"<<i<<"}\" with line,";
   }
-  fout <<"\"testFunctions.txt\" u 1:"<< nve + 2 <<" title \"{/Symbol S}_{i}{/Symbol f}_{i}\" with line,";
+  fout <<"\"sum.txt\" u 1:2 title \"{/Symbol S}_{i}{/Symbol f}_{i}\" with line,";
   fout<<"\npause -1 "<<std::endl;
   fout.close();
 
