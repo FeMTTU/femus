@@ -77,12 +77,10 @@ int main (int argc, char** args) {
 
   double scale = 0.5;
   
-  //double distanceMax[9] = {0.7, 0.5, 0.7, 0.6, 0.7, 0.6, 0.7, 0.5, 0.7};
-  //double distanceMax[9] = {0.5, 0.3, 0.5, 0.3, 0.5, 0.3, 0.5, 0.3, 0.5};
-  double distanceMax[9] = {0.6, 0.4, 0.6, 0.4, 0.6, 0.4, 0.6, 0.4, 0.6};
+  double distanceMax[9];
   
   for( int i = 0; i<nve; i++){
-    int deltai = (i%2==0)? 3 : 2;
+    int deltai = (i%2==0)? pOrder + 1 : pOrder;
     
     int im = (i - deltai >= 0)?  i - deltai: 0;
     int ip = (i + deltai < nve)? i + deltai: nve - 1;
@@ -91,7 +89,6 @@ int main (int argc, char** args) {
     
   }
   
-
   std::vector< std::vector < std::vector< double> > > XVprint (1);
   XVprint[0].resize (nve);
   for (unsigned i = 0; i < XVprint[0].size(); i++) {
@@ -106,7 +103,7 @@ int main (int argc, char** args) {
 
   //PrintLine ("./output/", XVprint, false, 1);
 
-  unsigned Np = 1000;
+  unsigned Np = 120;
 
   std::vector < GMPM *> gmpm (Np);
   for (unsigned p = 0; p < gmpm.size(); p++) {
@@ -115,7 +112,7 @@ int main (int argc, char** args) {
 
   for (unsigned p = 0; p < gmpm.size(); p++) {
     for (unsigned d = 0; d < dim; d++) {
-      gmpm[p]->_xp[d] = Xv[0] + (Xv[nve-1] - Xv[0]) / (Np + 1) * (p + 1);
+      gmpm[p]->_xp[d] = Xv[0] + (Xv[nve-1] - Xv[0]) / (Np - 1) * (p );
     }
     gmpm[p]->_node.resize (nve);
     gmpm[p]->_distance.resize (nve);
@@ -167,14 +164,9 @@ int main (int argc, char** args) {
       dist = sqrt (dist) / distanceMax[inode];
       
       double x = gmpm[p]->_xp[0];
-      double Wbc = (i == 0 || i == nve-1) ? 1.: x * (1.6-x) / (0.8*0.8);
       
       double W = (dist > 1.) ? 0. : pow (1. - dist * dist, 4);
 
-      std::cout << W << " "<< Wbc * W <<"   ";
-      
-      W *= Wbc;
-      
       if (W > 0.) {
 
         for (unsigned k = 0; k < aIdx.size(); k++) {
@@ -188,8 +180,6 @@ int main (int argc, char** args) {
         }
       }
     }
-    std::cout << std::endl;
-
   }
 
 
@@ -265,9 +255,9 @@ int main (int argc, char** args) {
       dist = sqrt (dist) / distanceMax[inode];
       
       double x = gmpm[p]->_xp[0];
-      double Wbc = (i == 0 || i == nve-1) ? 1.: x*(1.6-x)/(0.8*0.8);
+      //double Wbc = (i == 0 || i == nve-1) ? 1.: x*(1.6-x)/(0.8*0.8);
       
-      double W = (dist > 1.) ? 0. : Wbc * pow (1. - dist * dist, 4);
+      double W = (dist > 1.) ? 0. : pow (1. - dist * dist, 4);
       
       if (W > 0.) {
         double sumAlphaT = 0.;
@@ -282,14 +272,10 @@ int main (int argc, char** args) {
         ymin = (ymin < W * sumAlphaT)? ymin : W * sumAlphaT;
         ymax = (ymax > W * sumAlphaT)? ymax : W * sumAlphaT;
         
-        //fout << W * sumAlphaT <<" ";
-        fouti << gmpm[p]->_xp[0] <<" "<< W * sumAlphaT << std::endl;
+        //fouti << gmpm[p]->_xp[0] <<" "<< W * sumAlphaT << std::endl;
         
         Ur[p] += W * sumAlphaT  * P;
         phiSum += W * sumAlphaT;
-      }
-      else{
-        //fout << 0. <<" ";
       }
       fouti.close();
     }
