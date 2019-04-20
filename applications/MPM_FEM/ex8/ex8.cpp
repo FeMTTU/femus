@@ -272,7 +272,7 @@ int main (int argc, char** args) {
         ymin = (ymin < W * sumAlphaT)? ymin : W * sumAlphaT;
         ymax = (ymax > W * sumAlphaT)? ymax : W * sumAlphaT;
         
-        //fouti << gmpm[p]->_xp[0] <<" "<< W * sumAlphaT << std::endl;
+        fouti << gmpm[p]->_xp[0] <<" "<< W * sumAlphaT << std::endl;
         
         Ur[p] += W * sumAlphaT  * P;
         phiSum += W * sumAlphaT;
