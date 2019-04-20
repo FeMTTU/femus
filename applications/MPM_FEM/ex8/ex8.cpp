@@ -40,7 +40,7 @@ void GetMultiIndex (std::vector <unsigned> &idx, const unsigned &dim, const unsi
 void SetElementDofs (std::vector <unsigned> &elementDofs, const std::vector < unsigned > & idx, const unsigned & nve1d);
 
 void PrintSolution (const std::vector <double> &U, const std::vector <double> &Ur, const double *x, const unsigned &dim, const unsigned &n);
-
+void PrintGnuplotScript (const double & xmin, const double & xmax, const double & ymin, const double & ymax, const unsigned &nve);
 
 class GMPM {
   public:
@@ -76,19 +76,19 @@ int main (int argc, char** args) {
   double Xv[9] = {0., 0.15, 0.35, 0.65, 0.8, 1.1, 1.25, 1.45, 1.6};
 
   double scale = 0.5;
-  
+
   double distanceMax[9];
-  
-  for( int i = 0; i<nve; i++){
-    int deltai = (i%2==0)? pOrder + 1 : pOrder;
-    
-    int im = (i - deltai >= 0)?  i - deltai: 0;
-    int ip = (i + deltai < nve)? i + deltai: nve - 1;
-    
-    distanceMax[i] = (Xv[ip] - Xv[i] > Xv[i] - Xv[im] ) ? Xv[ip] - Xv[i]: Xv[i] - Xv[im];
-    
+
+  for (int i = 0; i < nve; i++) {
+    int deltai = (i % 2 == 0) ? pOrder + 1 : pOrder;
+
+    int im = (i - deltai >= 0) ?  i - deltai : 0;
+    int ip = (i + deltai < nve) ? i + deltai : nve - 1;
+
+    distanceMax[i] = (Xv[ip] - Xv[i] > Xv[i] - Xv[im]) ? Xv[ip] - Xv[i] : Xv[i] - Xv[im];
+
   }
-  
+
   std::vector< std::vector < std::vector< double> > > XVprint (1);
   XVprint[0].resize (nve);
   for (unsigned i = 0; i < XVprint[0].size(); i++) {
@@ -105,97 +105,58 @@ int main (int argc, char** args) {
 
   unsigned Np = 120;
 
+  unsigned maxNumberOfNodes = (2u * (pOrder + 1u) < nve) ? 2u * (pOrder + 1u) : nve;
+
   std::vector < GMPM *> gmpm (Np);
   for (unsigned p = 0; p < gmpm.size(); p++) {
-    gmpm[p] = new GMPM (dim, nve);
+    gmpm[p] = new GMPM (dim, maxNumberOfNodes);
   }
+
+  std::vector <double> distance (dim);
+
+  maxNumberOfNodes = 0;
 
   for (unsigned p = 0; p < gmpm.size(); p++) {
     for (unsigned d = 0; d < dim; d++) {
-      gmpm[p]->_xp[d] = Xv[0] + (Xv[nve-1] - Xv[0]) / (Np - 1) * (p );
+      gmpm[p]->_xp[d] = Xv[0] + (Xv[nve - 1] - Xv[0]) / (Np - 1) * (p);
     }
-    gmpm[p]->_node.resize (nve);
-    gmpm[p]->_distance.resize (nve);
     for (unsigned j = 0; j < nve; j++) {
-      gmpm[p]->_node[j] = j;
-      gmpm[p]->_distance[j].resize (dim);
+      bool particleIsWhithin = false;
       for (unsigned d = 0; d < dim; d++) {
-        gmpm[p]->_distance[j][d] = gmpm[p]->_xp[d] - Xv[j];
+        distance[d] = gmpm[p]->_xp[d] - Xv[j];
+        if (fabs (distance[d]) < distanceMax[j])  particleIsWhithin = true;
+      }
+      if (particleIsWhithin) {
+        unsigned size = gmpm[p]->_node.size();
+        gmpm[p]->_node.resize (size + 1);
+        gmpm[p]->_distance.resize (size + 1);
+
+        gmpm[p]->_node[size] = j;
+        gmpm[p]->_distance[size].resize (dim);
+        for (unsigned d = 0; d < dim; d++) {
+          gmpm[p]->_distance[size][d] = distance[d];
+        }
       }
     }
+    if (maxNumberOfNodes <  gmpm[p]->_node.size()) {
+      maxNumberOfNodes = gmpm[p]->_node.size();
+    }
   }
+
+  std::cout << "MaxNumberOfNOdes = " << maxNumberOfNodes << std::endl;
 
   std::vector< std::vector < std::vector< double> > > XPprint (1);
   XPprint[0].resize (gmpm.size());
   for (unsigned i = 0; i < gmpm.size(); i++) {
     XPprint[0][i].resize (dim);
   }
-
-
   for (unsigned p = 0; p < gmpm.size(); p++) {
     for (unsigned d = 0; d < dim; d++) {
       XPprint[0][p][d] = gmpm[p]->_xp[d];
     }
   }
-
   //PrintLine ("./output/", XPprint, false, 0);
 
-
-  std::vector < std::vector < std::vector< double> > > M (Np); // array of matrices
-  for (unsigned i = 0; i < Np; i++) {
-    M[i].resize (aIdx.size());
-    for (unsigned k = 0; k < aIdx.size(); k++) {
-      M[i][k].assign (aIdx.size() + 1, 0.);
-    }
-  }
-
-  std::vector < std::vector < double > > T (dim);
-
-  for (unsigned p = 0; p < Np; p++) { // particle loop
-    for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
-
-      unsigned inode = gmpm[p]->_node[i];
-
-      double dist = 0.;
-      for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
-        dist += gmpm[p]->_distance[inode][d] * gmpm[p]->_distance[inode][d];
-        GetChebyshev (T[d], pOrder, gmpm[p]->_distance[inode][d] / scale);  //1D Chebyshev
-      }
-      dist = sqrt (dist) / distanceMax[inode];
-      
-      double x = gmpm[p]->_xp[0];
-      
-      double W = (dist > 1.) ? 0. : pow (1. - dist * dist, 4);
-
-      if (W > 0.) {
-
-        for (unsigned k = 0; k < aIdx.size(); k++) {
-          for (unsigned l = 0; l < aIdx.size(); l++) {
-            double TkTl = 1;
-            for (unsigned d = 0 ; d < dim; d++) {
-              TkTl *= T[d][aIdx[k][d]] * T[d][aIdx[l][d]]; //alpha * beta multidimendional product
-            }
-            M[p][k][l] +=  W * TkTl;
-          }
-        }
-      }
-    }
-  }
-
-
-  std::vector < std::vector< double> > alpha (Np);
-  GetChebyshev (T[0], pOrder, 0., false);
-  for (unsigned p = 0; p < Np; p++) {
-    for (unsigned j = 0; j < aIdx.size(); j++) {
-      double rhs = 1.;
-      for (unsigned d = 0 ; d < dim; d++) {
-        rhs *= T[0][ aIdx[j][d] ];
-      }
-      M[p][j][aIdx.size()] = rhs;
-    }
-    alpha[p].resize (aIdx.size());
-    GaussianEleminationWithPivoting (M[p], alpha[p], false);
-  }
 
 
   std::vector < unsigned > pOrderTest (dim);
@@ -203,101 +164,128 @@ int main (int argc, char** args) {
     pOrderTest[d] = pOrder / dim;
   }
   pOrderTest[0] += pOrder % dim;
-
   std::cout << "Testing Polynomial \nPn = ";
   for (unsigned d = 0 ; d < dim; d++) {
     std::cout << "x" << d << "^" << pOrderTest[d] << " * ";
   }
   std::cout << "\b\b  " << std::endl;
-
-
   std::vector < double > Ur (Np, 0.);
   std::vector < double > Ue (Np, 0.);
 
   std::ofstream fout;
   std::ofstream fouti;
-  fout.open("./output/sum.txt");
-  
- 
-  
-  for(unsigned i = 0; i < nve; i++){
+  fout.open ("./output/phiSum.txt");
+  for (unsigned i = 0; i < nve; i++) {
     std::ostringstream stream;
-    stream << "./output/phi"<<i<<".txt";
-    fouti.open(stream.str().c_str());
+    stream << "./output/phi" << i << ".txt";
+    fouti.open (stream.str().c_str());
     fouti.close();
   }
-  
   double ymin = 0.;
   double ymax = 0.;
-  
+
+  std::vector< double> alpha (aIdx.size());
+
+  std::vector < std::vector< double> > Mp (aIdx.size());
+  for (unsigned k = 0; k < aIdx.size(); k++) {
+    Mp[k].resize (aIdx.size() + 1);
+  }
+
+  // array of matrices
+  std::vector < std::vector < std::vector < double > > > T;
+  T.resize (maxNumberOfNodes);
+  for (unsigned i = 0; i < maxNumberOfNodes; i++) {
+    T[i].resize (dim);
+  }
+
+  std::vector < double > weight;
+  weight.resize (maxNumberOfNodes);
+
+  std::vector < double > T0;
+  GetChebyshev (T0, pOrder, 0., false);
+
   for (unsigned p = 0; p < Np; p++) { // particle loop
-    
-    fout << gmpm[p]->_xp[0] <<" ";
+
+    for (unsigned k = 0; k < aIdx.size(); k++) {
+      Mp[k].assign (aIdx.size() + 1, 0.);
+    }
+
+    for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
+
+      unsigned inode = gmpm[p]->_node[i];
+      double dist = 0.;
+      for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
+        dist += gmpm[p]->_distance[i][d] * gmpm[p]->_distance[i][d];
+      }
+      dist = sqrt (dist) / distanceMax[inode];
+      weight[i] = (dist > 1.) ? 0. : pow (1. - dist * dist, 4);
+
+      if (weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
+        for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
+          GetChebyshev (T[i][d], pOrder, gmpm[p]->_distance[i][d] / scale);  //1D Chebyshev
+        }
+        for (unsigned k = 0; k < aIdx.size(); k++) {
+          for (unsigned l = 0; l < aIdx.size(); l++) {
+            double TkTl = 1;
+            for (unsigned d = 0 ; d < dim; d++) {
+              TkTl *= T[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]]; //alpha * beta multidimendional product
+            }
+            Mp[k][l] +=  weight[i] * TkTl;
+          }
+        }
+      }
+      else {
+        T[i].resize (0);
+      }
+    }
+
+    for (unsigned j = 0; j < aIdx.size(); j++) {
+      double rhs = 1.;
+      for (unsigned d = 0 ; d < dim; d++) {
+        rhs *= T0[ aIdx[j][d] ];
+      }
+      Mp[j][aIdx.size()] = rhs;
+    }
+
+    GaussianEleminationWithPivoting (Mp, alpha, false);
+
     double phiSum = 0.;
     for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
-      
+
       unsigned inode = gmpm[p]->_node[i];
-      
       std::ostringstream stream;
-      stream << "./output/phi"<<inode<<".txt";
-      fouti.open(stream.str().c_str(), std::ios_base::app);
-            
+      stream << "./output/phi" << inode << ".txt";
+      fouti.open (stream.str().c_str(), std::ios_base::app);
+
       double P = 1.;
       for (unsigned d = 0 ; d < dim; d++) {
         P *= pow (Xv[inode] , pOrderTest[d]);
       }
-      
-      double dist = 0.;
-      for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
-        dist += gmpm[p]->_distance[inode][d] * gmpm[p]->_distance[inode][d];
-        GetChebyshev (T[d], pOrder, gmpm[p]->_distance[inode][d] / scale);  //1D Chebyshev
-      }
-      dist = sqrt (dist) / distanceMax[inode];
-      
-      double x = gmpm[p]->_xp[0];
-      //double Wbc = (i == 0 || i == nve-1) ? 1.: x*(1.6-x)/(0.8*0.8);
-      
-      double W = (dist > 1.) ? 0. : pow (1. - dist * dist, 4);
-      
-      if (W > 0.) {
+
+      if (weight[i] > 0.) {
         double sumAlphaT = 0.;
         for (unsigned k = 0; k < aIdx.size(); k++) {
           double Tk = 1;
           for (unsigned d = 0 ; d < dim; d++) {
-            Tk *= T[d][aIdx[k][d]];
+            Tk *= T[i][d][aIdx[k][d]];
           }
-          sumAlphaT += alpha[p][k] * Tk;
+          sumAlphaT += alpha[k] * Tk;
         }
-        
-        ymin = (ymin < W * sumAlphaT)? ymin : W * sumAlphaT;
-        ymax = (ymax > W * sumAlphaT)? ymax : W * sumAlphaT;
-        
-        fouti << gmpm[p]->_xp[0] <<" "<< W * sumAlphaT << std::endl;
-        
-        Ur[p] += W * sumAlphaT  * P;
-        phiSum += W * sumAlphaT;
+        double phi = weight[i] * sumAlphaT;
+        Ur[p] += phi * P;
+
+        fouti << gmpm[p]->_xp[0] << " " << phi << std::endl;
+        ymin = (ymin < phi) ? ymin : phi;
+        ymax = (ymax > phi) ? ymax : phi;
+        phiSum += phi;
       }
       fouti.close();
     }
-    fout << phiSum <<" ";
-    fout<<std::endl;
+    fout << gmpm[p]->_xp[0] << " " << phiSum << std::endl;
   }
   fout.close();
-  
-  fout.open("./output/gnuScript.txt");
-  fout << "set xrange["<<Xv[0]<<":"<<Xv[nve-1]<<"]"<<std::endl;
-  fout << "set yrange["<<ymin - 0.02<<":"<<ymax + 0.02<<"]"<<std::endl;
-  fout << "plot ";
-  for(unsigned i = 0;i <nve; i++){
-    
-    std::ostringstream stream;
-    stream << "\"phi"<<i<<".txt\"";
-   
-    fout <<stream.str().c_str()<<" u 1:2 title \"{/Symbol f}_{"<<i<<"}\" with line,";
-  }
-  fout <<"\"sum.txt\" u 1:2 title \"{/Symbol S}_{i}{/Symbol f}_{i}\" with line,";
-  fout<<"\npause -1 "<<std::endl;
-  fout.close();
+
+  PrintGnuplotScript (Xv[0], Xv[nve - 1], ymin, ymax, nve);
 
   bool test_passed = true;
   for (unsigned p = 0; p < Np; p++) { // particle loop
@@ -658,6 +646,20 @@ void PrintSolution (const std::vector <double> &Ue, const std::vector <double> &
   fout.close();
 }
 
+void PrintGnuplotScript (const double & xmin, const double & xmax, const double & ymin, const double & ymax, const unsigned &nve) {
+  std::ofstream fout;
+  fout.open ("./output/gnuScript.txt");
+  fout << "set xrange[" << xmin << ":" << xmax << "]" << std::endl;
+  fout << "set yrange[" << ymin - 0.02 << ":" << ymax + 0.02 << "]" << std::endl;
+  fout << "plot ";
+  for (unsigned i = 0; i < nve; i++) {
 
+    std::ostringstream stream;
+    stream << "\"phi" << i << ".txt\"";
 
-
+    fout << stream.str().c_str() << " u 1:2 title \"{/Symbol f}_{" << i << "}\" with line,";
+  }
+  fout << "\"phiSum.txt\" u 1:2 title \"{/Symbol S}_{i}{/Symbol f}_{i}\" with line,";
+  fout << "\npause -1 " << std::endl;
+  fout.close();
+}
