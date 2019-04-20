@@ -285,7 +285,7 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
 
 //             soluExact_gss = soluExact_gss * soluExact_gss * soluExact_gss * soluExact_gss + 0.1 * soluExact_gss * soluExact_gss; // this is x^4 + delta * x^2
 
-      soluExact_gss = soluExact_gss * soluExact_gss; // this is x^2
+            soluExact_gss = soluExact_gss * soluExact_gss; // this is x^2
 
 //             soluExact_gss = soluExact_gss * soluExact_gss * soluExact_gss; // this is x^3
 
@@ -310,37 +310,37 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
   double norm2 = 0.;
   MPI_Allreduce (&error_solExact_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   double norm = sqrt (norm2);
-  std::cout.precision (14);
+  std::cout.precision(16);
   std::cout << "L2 norm of ERROR: Nonlocal - exact = " << norm << std::endl;
 
   norm2 = 0.;
   MPI_Allreduce (&error_solExact_local_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   norm = sqrt (norm2);
-  std::cout.precision (14);
+  std::cout.precision(16);
   std::cout << "L2 norm of ERROR: Local - exact = " << norm << std::endl;
 
   norm2 = 0.;
   MPI_Allreduce (&error_solLocal_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   norm = sqrt (norm2);
-  std::cout.precision (14);
+  std::cout.precision(16);
   std::cout << "L2 norm of ERROR: Nonlocal - local = " << norm << std::endl;
 
   norm2 = 0.;
   MPI_Allreduce (&solNonlocal_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   norm = sqrt (norm2);
-  std::cout.precision (14);
+  std::cout.precision(16);
   std::cout << "L2 norm of NONLOCAL soln = " << norm << std::endl;
 
   norm2 = 0.;
   MPI_Allreduce (&solLocal_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   norm = sqrt (norm2);
-  std::cout.precision (14);
+  std::cout.precision(16);
   std::cout << "L2 norm of LOCAL soln = " << norm << std::endl;
 
   norm2 = 0.;
   MPI_Allreduce (&sol_exact_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   norm = sqrt (norm2);
-  std::cout.precision (14);
+  std::cout.precision(16);
   std::cout << "L2 norm of EXACT soln = " << norm << std::endl;
 
 
@@ -363,7 +363,7 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
   norm2 = 0.;
   MPI_Allreduce (&littleL2norm, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   norm = sqrt (norm2);
-  std::cout.precision (14);
+  std::cout.precision(16);
   std::cout << "l2 norm of ERROR: Nonlocal - local = " << norm << std::endl;
 
   for (int kproc = 0; kproc < nprocs; kproc++) {
@@ -376,7 +376,7 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
     if (littleLInfinitynorm[kproc] > littleLInfinityNorm) littleLInfinityNorm = littleLInfinitynorm[kproc];
   }
 
-  std::cout.precision (14);
+  std::cout.precision(16);
   std::cout << "linfinity norm of ERROR: Nonlocal - local = " << littleLInfinityNorm << std::endl;
 
 
@@ -390,7 +390,7 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
 
     double u_exact = x * x ;
 
-    std::cout << x << " " << u << " " << u_local << " " << x * x << std::endl;
+    std::cout << x << " " << u << " " << u_local << " " << u_exact << std::endl;
 
   }
 

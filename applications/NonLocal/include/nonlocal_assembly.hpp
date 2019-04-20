@@ -25,25 +25,25 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.2, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05, maxTest8: both 0.025, maxTest9: both 0.0125, maxTest10: both 0.00625
-double delta1 = 0.1 /*0.003125*/; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.1 /*0.003125*/;
+double delta1 = 0.003125; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.003125;
 double kappa1 = 1.;
 double kappa2 = 1.;
 
 //parameters to play with
-double desiredMeshSize = 0.05;
-double delta1MeshTemp = 0.1;
-double delta2MeshTemp = 0.1;
+double desiredMeshSize = 0.1 /*0.00625*/ /*0.003125*/;
+double delta1MeshTemp =  0.003125/*0.00625*/ /*0.003125*/;
+double delta2MeshTemp =  0.003125/*0.00625*/ /*0.003125*/;
 
-bool shiftExternalNodes = false;
+bool shiftExternalNodes = true;
 double delta1Mesh = (shiftExternalNodes) ? desiredMeshSize : delta1MeshTemp;
 double delta2Mesh = (shiftExternalNodes) ? desiredMeshSize : delta2MeshTemp;
 double delta1Shift = delta1Mesh - delta1;
 double delta2Shift =  delta2Mesh - delta2;
 
 bool doubleIntefaceNode = true;
-double leftBoundTemp = - 1.1;
-double rightBoundTemp = 1.1;
+double leftBoundTemp = - 1.;
+double rightBoundTemp = 1.;
 unsigned numberOfElementsTemp = static_cast<unsigned> (fabs (rightBoundTemp + delta2Mesh - (leftBoundTemp - delta1Mesh)) / desiredMeshSize);
 unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 1 : numberOfElementsTemp;
 double leftBound = (doubleIntefaceNode) ? leftBoundTemp - 0.5 * desiredMeshSize : leftBoundTemp;
@@ -59,7 +59,7 @@ std::vector < unsigned > elementGroups;
 
 void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
 //     value = 0.;
-//     value = x[0];
+//   value = x[0];
   value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0];
 //     value = x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0];
@@ -165,7 +165,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 //create element groups
 
 //BEGIN
-  unsigned numberOfElements = msh->GetNumberOfElements();
 
   elementGroups.resize (numberOfElements) ;
 
@@ -189,15 +188,51 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
     double xMax = x1[0][1];
     double xMin = x1[0][0];
 
-    if (xMax <= leftBound && xMin >= leftBound - delta1)  elementGroups[iel] = 5;
+    if ( (xMax < leftBound || fabs (xMax - leftBound) < 1.e-10) && (xMin > (leftBound - delta1) || fabs (xMin - (leftBound - delta1)) < 1.e-10)) {
+      elementGroups[iel] = 5;
+    }
 
-    else if (xMax <= 0. && xMin >= leftBound)  elementGroups[iel] = 7;
+    else if ( (xMax < 0. || fabs (xMax) < 1.e-10) && (xMin > leftBound || fabs (xMin - leftBound) < 1.e-10))  elementGroups[iel] = 7;
 
-    else if (xMax <= rightBound && xMin >= 0.)  elementGroups[iel] = 8;
+    else if ( (xMax < rightBound || fabs (xMax - rightBound) < 1.e-10) && (xMin > 0. || fabs (xMin) < 1.e-10))  elementGroups[iel] = 8;
 
-    else if (xMax <= rightBound + delta2 && xMin >= rightBound)  elementGroups[iel] = 6;
+    else if ( (xMax < (rightBound + delta2) || fabs (xMax - (rightBound + delta2)) < 1.e-10) && (xMin > rightBound || fabs (xMin - rightBound) < 1.e-10)) {
+      elementGroups[iel] = 6;
+    }
 
   }
+  
+  //BEGIN to remove
+  
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    
+    if( elementGroups[iel] == 0) {
+      
+      short unsigned ielGeom = msh->GetElementType (iel);
+    unsigned nDof1  = msh->GetElementDofNumber (iel, soluType);
+
+    for (int k = 0; k < dim; k++) {
+      x1[k].resize (nDof1);
+    }
+
+    for (unsigned i = 0; i < nDof1; i++) {
+      unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
+
+      for (unsigned k = 0; k < dim; k++) {
+        x1[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+      }
+    }
+
+    double xMax = x1[0][1];
+    double xMin = x1[0][0];
+    
+    std::cout.precision(16);
+    std::cout<<"xMax = " << xMax << " , " << "xMin = " << xMin << std::endl;
+    }
+    
+  }
+  
+  //END
 
   for (unsigned iel = 0; iel < elementGroups.size(); iel++) {
     unsigned group = 0;
@@ -370,7 +405,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
               if (iel == jel) {
                 for (unsigned i = 0; i < nDof1; i++) {
-//                                 Res1[i] -= 0. * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
+//                   Res1[i] -= 0. * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
                   Res1[i] -=  - 2. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = - 2)
 //                                     Res1[i] -=  - 6. * xg1[ig][0] * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 x )
 //                                 Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
@@ -649,9 +684,9 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
 
 //                     double srcTerm =  6. * x_gss[0] ; // so f = - 6 x
 //                 double srcTerm =  12. * x_gss[0] * x_gss[0] ; // so f = - 12 x^2
-//                 double srcTerm =  2. ; // so f = - 2
+                double srcTerm =  2. ; // so f = - 2
 //                 double srcTerm =  - 1. ; // so f = 1
-          double srcTerm =  0./*- GetExactSolutionLaplace(x_gss)*/ ;
+//           double srcTerm =  0./*- GetExactSolutionLaplace(x_gss)*/ ;
           aRes[i] += (srcTerm * phi[i] + laplace) * weight;
 
         } // end phi_i loop
