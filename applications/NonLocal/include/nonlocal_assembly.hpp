@@ -41,11 +41,12 @@ double delta2Mesh = (shiftExternalNodes) ? desiredMeshSize : delta2MeshTemp;
 double delta1Shift = delta1Mesh - delta1;
 double delta2Shift =  delta2Mesh - delta2;
 
-bool doubleIntefaceNode = true;
-double leftBoundTemp = - 1.;
-double rightBoundTemp = 1.;
+bool doubleIntefaceNode = false;
+double leftBoundTemp = - 1.1;
+double rightBoundTemp = 1.1;
 unsigned numberOfElementsTemp = static_cast<unsigned> (fabs (rightBoundTemp + delta2Mesh - (leftBoundTemp - delta1Mesh)) / desiredMeshSize);
-unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 1 : numberOfElementsTemp;
+// unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 2 : numberOfElementsTemp + 1; //TODO tune
+unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 1 : numberOfElementsTemp; 
 double leftBound = (doubleIntefaceNode) ? leftBoundTemp - 0.5 * desiredMeshSize : leftBoundTemp;
 double rightBound = (doubleIntefaceNode) ? rightBoundTemp + 0.5 * desiredMeshSize : rightBoundTemp;
 
@@ -202,38 +203,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
   }
   
-  //BEGIN to remove
-  
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    
-    if( elementGroups[iel] == 0) {
-      
-      short unsigned ielGeom = msh->GetElementType (iel);
-    unsigned nDof1  = msh->GetElementDofNumber (iel, soluType);
-
-    for (int k = 0; k < dim; k++) {
-      x1[k].resize (nDof1);
-    }
-
-    for (unsigned i = 0; i < nDof1; i++) {
-      unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
-
-      for (unsigned k = 0; k < dim; k++) {
-        x1[k][i] = (*msh->_topology->_Sol[k]) (xDof);
-      }
-    }
-
-    double xMax = x1[0][1];
-    double xMin = x1[0][0];
-    
-    std::cout.precision(16);
-    std::cout<<"xMax = " << xMax << " , " << "xMin = " << xMin << std::endl;
-    }
-    
-  }
-  
-  //END
-
   for (unsigned iel = 0; iel < elementGroups.size(); iel++) {
     unsigned group = 0;
     MPI_Allreduce (&elementGroups[iel], &group, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
