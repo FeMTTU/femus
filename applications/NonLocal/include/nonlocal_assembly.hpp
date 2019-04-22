@@ -25,15 +25,15 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.2, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05, maxTest8: both 0.025, maxTest9: both 0.0125, maxTest10: both 0.00625
-double delta1 = 0.003125; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.003125;
+double delta1 = 0.0125; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.0125;
 double kappa1 = 1.;
 double kappa2 = 1.;
 
 //parameters to play with
-double desiredMeshSize = 0.003125 * 0.25 /*0.00625*/ /*0.003125*/;
-double delta1MeshTemp =  0.003125/*0.00625*/ /*0.003125*/;
-double delta2MeshTemp =  0.003125/*0.00625*/ /*0.003125*/;
+double desiredMeshSize = 0.0125 * 0.5/*0.00625*/ /*0.003125*/;
+double delta1MeshTemp =  0.0125/*0.00625*/ /*0.003125*/;
+double delta2MeshTemp =  0.0125/*0.00625*/ /*0.003125*/;
 
 bool shiftExternalNodes = true;
 double delta1Mesh = (shiftExternalNodes) ? desiredMeshSize : delta1MeshTemp;
@@ -327,6 +327,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 //                 ReorderElement ( l2GMap1, solu1, x1 );
 
             unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
+          
             vector < vector < double > > xg1 (igNumber);
             vector <double> weight1 (igNumber);
             vector < vector <double> > phi1x (igNumber);
