@@ -31,7 +31,7 @@ double kappa1 = 1.;
 double kappa2 = 1.;
 
 //parameters to play with
-double desiredMeshSize = 0.0125 * 0.5/*0.00625*/ /*0.003125*/;
+double desiredMeshSize = 0.1/*0.00625*/ /*0.003125*/;
 double delta1MeshTemp =  0.0125/*0.00625*/ /*0.003125*/;
 double delta2MeshTemp =  0.0125/*0.00625*/ /*0.003125*/;
 
@@ -281,7 +281,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             }
           }
 
-//                 ReorderElement ( l2GMap2, solu2, x2 );
+                ReorderElement ( l2GMap2, solu2, x2 );
         }
 
         MPI_Bcast (&l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
@@ -324,7 +324,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
               }
             }
 
-//                 ReorderElement ( l2GMap1, solu1, x1 );
+                ReorderElement ( l2GMap1, solu1, x1 );
 
             unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
           
