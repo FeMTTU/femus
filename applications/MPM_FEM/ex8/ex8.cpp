@@ -34,7 +34,7 @@ void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
 void GaussianElemination (std::vector<std::vector < double > > & A, std::vector < double> &x, const bool &output = false);
 void GaussianEleminationWithPivoting (std::vector<std::vector < double > > & A, std::vector < double> &x, const bool &output = false);
 
-void GetChebyshev (std::vector<double> &T, const unsigned &n, const double &x, const bool &output = false);
+void GetChebyshev (std::vector<double> &T, std::vector<double> &dT, const unsigned &n, const double &x, const bool &output = false);
 
 void GetMultiIndex (std::vector <unsigned> &idx, const unsigned &dim, const unsigned& n, const unsigned &i);
 void SetElementDofs (std::vector <unsigned> &elementDofs, const std::vector < unsigned > & idx, const unsigned & nve1d);
@@ -190,26 +190,45 @@ int main (int argc, char** args) {
   for (unsigned k = 0; k < aIdx.size(); k++) {
     Mp[k].resize (aIdx.size() + 1);
   }
+  
+  std::vector < std::vector < std::vector< double> > > dMp (dim);
+  for (unsigned d = 0; d < dim; d++) {
+    dMp[d].resize (aIdx.size());
+    for (unsigned k = 0; k < aIdx.size(); k++) {
+      dMp[d][k].resize (aIdx.size() + 1);
+    }
+  }
+
 
   // array of matrices
   std::vector < std::vector < std::vector < double > > > T;
+  std::vector < std::vector < std::vector < double > > > dT;
   T.resize (maxNumberOfNodes);
+  dT.resize (maxNumberOfNodes);
   for (unsigned i = 0; i < maxNumberOfNodes; i++) {
     T[i].resize (dim);
+    dT[i].resize (dim);
   }
 
   std::vector < double > weight;
   weight.resize (maxNumberOfNodes);
 
   std::vector < double > T0;
-  GetChebyshev (T0, pOrder, 0., false);
+  std::vector < double > dT0;
+  GetChebyshev (T0, dT0, pOrder, 0., false);
 
   for (unsigned p = 0; p < Np; p++) { // particle loop
 
     for (unsigned k = 0; k < aIdx.size(); k++) {
       Mp[k].assign (aIdx.size() + 1, 0.);
     }
-
+    
+    for (unsigned d = 0; d < dim; d++) {
+      for (unsigned k = 0; k < aIdx.size(); k++) {
+        dMp[d][k].assign (aIdx.size() + 1, 0.);
+      }
+    }
+    
     for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
 
       unsigned inode = gmpm[p]->_node[i];
@@ -222,17 +241,21 @@ int main (int argc, char** args) {
 
       if (weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
         for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
-          GetChebyshev (T[i][d], pOrder, gmpm[p]->_distance[i][d] / scale);  //1D Chebyshev
+          GetChebyshev (T[i][d], dT[i][d], 2 * pOrder, gmpm[p]->_distance[i][d] / scale, true);  //1D Chebyshev
         }
         for (unsigned k = 0; k < aIdx.size(); k++) {
           for (unsigned l = 0; l < aIdx.size(); l++) {
-            double TkTl = 1;
+            double TkTl = 1.;
             for (unsigned d = 0 ; d < dim; d++) {
               TkTl *= T[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]]; //alpha * beta multidimendional product
+              //TkTl *= T[i][d][ aIdx[k][d] + aIdx[l][d] ]; //alpha * beta multidimendional product
+              std::cout << aIdx[k][d] <<" "<< aIdx[l][d]<<" "<<aIdx[k][d] + aIdx[l][d]<<"\t";
             }
+            std::cout << std::endl;
             Mp[k][l] +=  weight[i] * TkTl;
           }
         }
+        std::cout << std::endl;
       }
       else {
         T[i].resize (0);
@@ -513,7 +536,7 @@ void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
 }
 
 
-void GetChebyshev (std::vector<double> &T, const unsigned &n, const double &x, const bool &output) {
+void GetChebyshev (std::vector<double> &T, std::vector<double> &dT, const unsigned &n, const double &x, const bool &output) {
   T.resize (n + 1);
   T[0] = 1;
   T[1] = x;
@@ -526,8 +549,28 @@ void GetChebyshev (std::vector<double> &T, const unsigned &n, const double &x, c
       std::cout << "T" << i << " [x] = " << T[i] << std::endl;
     }
     std::cout << std::endl;
-
   }
+  
+  dT.resize (n + 1);
+  dT[0] = 1;
+  dT[1] = 2 * x;
+  for (unsigned i = 2; i < n + 1; i++) {
+    dT[i] = 2 * x * T[ i - 1] - T[ i - 2];
+  }
+  
+  for (unsigned i = n; i > 0; i--) {
+    dT[i] = i * dT[i - 1];
+  }
+  dT[0] = 0.;
+   
+  if (output) {
+    std::cout << "Chebyshev Polynomilas derivative at x = " << x << std::endl;
+    for (unsigned i = 0; i < n + 1; i++) {
+      std::cout << "dT" << i << " [x] = " << dT[i] << std::endl;
+    }
+    std::cout << std::endl;
+  }
+  
 
 }
 
