@@ -94,18 +94,16 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
       return value;   
 }
 
-
 double  nonlin_term_function(const double& v) {
     
 //    return 1.;
 //    return v + 1.;
    return - 0.8 * 1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
-//     return -exp(v);
-//     return -  v * v * v - 1.;
-//     return - v * v;
+//    return -exp(v);
+//    return -  v * v * v - 1.;
+//    return - v * v;
  }
-
 
 double  nonlin_term_derivative(const double& v) {
     
@@ -113,13 +111,10 @@ double  nonlin_term_derivative(const double& v) {
 //    return 1.;
    return - 0.8 * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
-//     return -exp(v);
-//     return -3. * v * v;
-//     return -2. * v;
+//    return -exp(v);
+//    return -3. * v * v;
+//    return -2. * v;
  }
-
-
-
 
 int main(int argc,char **args) {
 
@@ -159,8 +154,8 @@ int main(int argc,char **args) {
 //    std::string input_file = "Lshape.med";
 //    std::string input_file = "circle_tri6.med";
 //    std::string input_file = "ellipse_tri6.med";
-//    std::string input_file = "ellipse_with_hole_tri6.med";
-   std::string input_file = "interval.med";
+   std::string input_file = "ellipse_with_hole_tri6.med";
+//    std::string input_file = "interval.med";
    std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   
@@ -220,11 +215,9 @@ int main(int argc,char **args) {
 //   system.SetDebugNonlinear(true);
   //**************
   
-  
   const unsigned fine_lev = ml_sol._mlMesh->GetNumberOfLevels() - 1;
-
   
-  const double total_time = 10.;  
+  const double total_time = 1.;  
   
   std::vector< unsigned int > n_steps =  {1000/*6*//*2, *//*4, 8, 16*/};
  
@@ -240,11 +233,12 @@ int main(int argc,char **args) {
   system.SetIntervalTime(interval_time);
   
   const unsigned int write_interval = 1.; //n_steps[i];
-  
 
   for (unsigned time_step = 0; time_step < n_steps[i]; time_step++) {
-
-     
+      
+  // ======= Check for quenching ==========
+      if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= 0.99 ) { std::cout << "Detected quenching" << std::endl; exit(0); }
+      
   // ======= Print ========================
     if ( !(time_step % write_interval) ) {
 
@@ -254,10 +248,6 @@ int main(int argc,char **args) {
         ml_sol.GetWriter()->Write(run_prefix, files.GetOutputPath(), "biquadratic", variablesToBePrinted, time_step);    // print solutions
 
     }
-    
-    // ======= Check for quenching ==========
-//      if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= 0.99 ) { std::cout << "Detected quenching" << std::endl; exit(0); }
-
     
     // ======= Solve ========================
     std::cout << std::endl;
@@ -277,19 +267,19 @@ int main(int argc,char **args) {
      
      bool adapt_flag = 1; // Set to 0 for no adaptation and 1 for adaptation (which starts at a specified solution magnitude)
      
-//      if ( adapt_flag == 1 ) {
-//      
-//        double AdaptStarter = 0.85; // Value of ||u||_\infty at which to start adaptation
-//        if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= AdaptStarter ) {
-//     
-//            double NonlinearityTracker = 0.01 * nonlin_term_derivative( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() ) ;
-//            double NewTime = std::min( system.GetIntervalTime(), NonlinearityTracker );
-//            double minTimeStep = 0.000001; // Minimum step-size controller
-//            double NewTimeFixed = std::max( NewTime , minTimeStep );
-//            system.SetIntervalTime(NewTimeFixed);
-//          }    
-//     
-//        }
+      if ( adapt_flag == 1 ) {
+      
+        double AdaptStarter = 0.85; // Value of ||u||_\infty at which to start adaptation
+        if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= AdaptStarter ) {
+     
+            double NonlinearityTracker = 0.1 * nonlin_term_derivative( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() ) ;
+            double NewTime = std::min( system.GetIntervalTime(), NonlinearityTracker );
+            double minTimeStep = 0.001; // Minimum step-size controller
+            double NewTimeFixed = std::max( NewTime , minTimeStep );
+            system.SetIntervalTime(NewTimeFixed);
+          }    
+     
+        }
        
 
      } //end loop timestep
