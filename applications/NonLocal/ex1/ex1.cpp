@@ -81,9 +81,9 @@ int main (int argc, char** argv) {
   
   if (shiftExternalNodes) ShiftTheExtrema (mlMsh);
 
-  mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+ // mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
-  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+ // mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 //     numberOfUniformLevels = 1;
 
   unsigned dim = mlMsh.GetDimension();
@@ -398,6 +398,7 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
 }
 
 
+
 void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh) {
 
   unsigned level = 0;
@@ -578,12 +579,12 @@ void ShiftTheExtrema (MultiLevelMesh &mlMsh) {
 
     if (fabs (xMin - (leftBound - delta1Mesh)) <= 1.e-10){
       msh->_topology->_Sol[0]->set (xMinDof, xMin + delta1Shift);
-      msh->_topology->_Sol[0]->set (xMidDof, 0.5* (xMin + xMax));
+      msh->_topology->_Sol[0]->set (xMidDof, 0.5* (xMin + delta1Shift + xMax));
     }
 
     if (fabs (xMax - (rightBound + delta2Mesh)) <= 1.e-10){
       msh->_topology->_Sol[0]->set (xMaxDof, xMax - delta2Shift);
-      msh->_topology->_Sol[0]->set (xMidDof, 0.5* (xMin + xMax));
+      msh->_topology->_Sol[0]->set (xMidDof, 0.5* (xMin + xMax - delta2Shift));
     }
 
   }
