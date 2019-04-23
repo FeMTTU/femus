@@ -13,11 +13,19 @@
 #include "Files.hpp"
 #include "FE_convergence.hpp"
 #include "Assemble_jacobian.hpp"
+#include "PetscMatrix.hpp"
 
 #include   "../solidopt_params.hpp"
 
+#define CTRL_FACE_IDX  3
+
+
 using namespace femus;
 
+
+ double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
+ double penalty_ctrl = 1.e10;         //penalty for u=g
+ double theta_value_outside_fake_element = 0.;
 
 
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
@@ -50,16 +58,16 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
                  value = 0.;
              }
              
-             else if(!strcmp(name,"DX_CTRL")) {
+             else if(!strcmp(name,"GX")) {
                  value = 0.;
              }
-             else if(!strcmp(name,"DY_CTRL")) {
+             else if(!strcmp(name,"GY")) {
                  value = 0.;
              }
-             else if(!strcmp(name,"DZ_CTRL")) {
+             else if(!strcmp(name,"GZ")) {
                  value = 0.;
              }
-             else if(!strcmp(name,"P_CTRL")) {
+             else if(!strcmp(name,"THETA")) {
                  value = 0.;
              }
           
@@ -67,98 +75,23 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
       return value;   
 }  
   
-  
-  
 
 bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min)  (in 2D)
-  //1: bottom (y=y_min) //2: right (x=x_max)  //3: top (y=y_max)  //4: left (x=x_min) //5: (z=z_min)  //6:  (z=z_max) (in 3D, I guess...)
   
   bool dirichlet  = true; 
   value = 0.;
   
-        if (facename == 3) {
-       if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; }
-  else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; } 
-  	
-      }
+ 
+                if (!strcmp(SolName, "GX"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
+                if (!strcmp(SolName, "GY"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
+                if (!strcmp(SolName, "GZ"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
+                if (!strcmp(SolName, "THETA"))    { dirichlet = false; }
 
+               if (!strcmp(SolName, "DX"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
+                if (!strcmp(SolName, "DY"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
+                if (!strcmp(SolName, "DZ"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
   
-// //       if (facename == 1) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-// //   	
-// //       }
-// // 
-// //       if (facename == 2) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-// //   	
-// //       }
-// // 
-// //       if (facename == 3) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false/*true*/; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false/*true*/; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = false/*true*/; value = 0.; } 
-// //   	
-// //       }
-// // 
-// //       if (facename == 4) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = /*false*/true; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = /*false*/true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-// //   	
-// //       }
-// //       
-// //       if (facename == 5) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-// //      }
-// //       
-// //       if (facename == 6) {
-// //        if (!strcmp(SolName, "DX"))        { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY"))        { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ"))        { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_ADJ"))    { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_ADJ"))    { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_ADJ"))    { dirichlet = true; value = 0.; } 
-// //   else if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; value = 0.; }
-// //   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; value = 0.; } 
-// //   else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = true; value = 0.; } 
-// //       }
       
  return dirichlet;
 }
@@ -176,6 +109,13 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
 
 
+template < class system_type, class real_num, class real_num_mov >
+void ComputeIntegral(const MultiLevelProblem& ml_prob);
+
+template < class system_type, class real_num, class real_num_mov >
+void ComputeIntegral(  const MultiLevelProblem& ml_prob,
+                       const system_type * mlPdeSys,
+                       const std::vector< Unknown > &  unknowns);
 
 
  //Unknown definition  ==================
@@ -196,7 +136,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
                         feFamily.push_back(LAGRANGE);   //control
                         feFamily.push_back(LAGRANGE);
   if (dimension == 3)   feFamily.push_back(LAGRANGE);
-                        feFamily.push_back(LAGRANGE/*DISCONTINOUS_POLYNOMIAL*/);
+                        feFamily.push_back(DISCONTINUOUS_POLYNOMIAL);
  
                         feOrder.push_back(SECOND);
                         feOrder.push_back(SECOND);
@@ -209,7 +149,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
                         feOrder.push_back(SECOND);
                         feOrder.push_back(SECOND);
   if (dimension == 3)   feOrder.push_back(SECOND);
-                        feOrder.push_back(FIRST);
+                        feOrder.push_back(ZERO);
  
 
   assert( feFamily.size() == feOrder.size() );
@@ -227,10 +167,10 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
                         unknowns[adj_pos_begin + 1]._name      = "DY_ADJ";
   if (dimension == 3)   unknowns[adj_pos_begin + 2]._name      = "DZ_ADJ";
                 unknowns[adj_pos_begin + dimension]._name      = "P_ADJ";
-                       unknowns[ctrl_pos_begin + 0]._name      = "DX_CTRL";
-                       unknowns[ctrl_pos_begin + 1]._name      = "DY_CTRL";
-  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "DZ_CTRL";
-               unknowns[ctrl_pos_begin + dimension]._name      = "P_CTRL";
+                       unknowns[ctrl_pos_begin + 0]._name      = "GX";
+                       unknowns[ctrl_pos_begin + 1]._name      = "GY";
+  if (dimension == 3)  unknowns[ctrl_pos_begin + 2]._name      = "GZ";
+               unknowns[ctrl_pos_begin + dimension]._name      = "THETA";
 
      for (unsigned int u = 0; u < unknowns.size(); u++) {
          
@@ -245,9 +185,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    return unknowns;
      
 }
-
-
-void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 
 template < class real_num > 
@@ -265,10 +202,6 @@ const MultiLevelSolution  run_on_single_level(const Files & files,
   
 };
  
-
-
-
-
 
 
 int main(int argc, char** args) {
@@ -378,6 +311,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   SparseMatrix*    		JAC    		= pdeSys->_KK;
   NumericVector*   		RES         = pdeSys->_RES;
 
+  MatSetOption(static_cast< PetscMatrix* >(JAC)->mat(),MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
 
   const unsigned 	dim  = msh->GetDimension();
   const unsigned   dim2  = (3 * (dim - 1) + !(dim - 1));
@@ -401,12 +335,14 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   constexpr int sol_index_displ      = 0;     //known at compile time
   const     int sol_index_press      = sol_index_displ + dim;      //known at run time
   constexpr int state_pos_begin      = sol_index_displ;   //known at compile time
+
   const     int adj_pos_begin        = dim + 1;
   const     int sol_index_adj        = adj_pos_begin;      
   const     int sol_index_press_adj  = sol_index_adj + dim;     
+
   const     int ctrl_pos_begin       = 2 * (dim + 1);
   const     int sol_index_ctrl       = ctrl_pos_begin;     
-  const     int sol_index_press_ctrl = sol_index_ctrl + dim;      
+  const     int theta_index          = sol_index_ctrl + dim;      
 
   const int  n_state_vars = dim + 1;
   
@@ -437,16 +373,41 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   vector < vector < double > > phi_x_hat_dof_qp(n_unknowns);
   vector < vector < double > > phi_xx_hat_dof_qp(n_unknowns);
 
-  for(int fe=0; fe < n_unknowns; fe++) {  
-        phi_dof_qp[fe].reserve(max_size_elem_dofs);
-    phi_hat_dof_qp[fe].reserve(max_size_elem_dofs);
-      phi_x_dof_qp[fe].reserve(max_size_elem_dofs * dim);
-  phi_x_hat_dof_qp[fe].reserve(max_size_elem_dofs * dim);
-     phi_xx_dof_qp[fe].reserve(max_size_elem_dofs * dim2);
- phi_xx_hat_dof_qp[fe].reserve(max_size_elem_dofs * dim2);
+  for(int unk=0; unk < n_unknowns; unk++) {  
+        phi_dof_qp[unk].reserve(max_size_elem_dofs);
+    phi_hat_dof_qp[unk].reserve(max_size_elem_dofs);
+      phi_x_dof_qp[unk].reserve(max_size_elem_dofs * dim);
+  phi_x_hat_dof_qp[unk].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp[unk].reserve(max_size_elem_dofs * dim2);
+ phi_xx_hat_dof_qp[unk].reserve(max_size_elem_dofs * dim2);
    }
    
-  //----------- at dofs ------------------------------
+//----------boundary adjoint & ctrl shape functions----------------------  
+  vector < vector < double > > phi_hat_bd_dof_qp(n_unknowns);
+  vector < vector < double > > phi_hat_bd_x_dof_qp(n_unknowns);
+
+  //bdry vol adj  evaluated at bdry points
+   vector < vector < double > > phi_hat_vol_at_bdry_dof(n_unknowns);
+   vector < vector < double > > phi_hat_x_vol_at_bdry_dof(n_unknowns);
+
+    for(int unk=0; unk < n_unknowns ; unk++) {  
+        phi_hat_bd_dof_qp[unk].reserve(max_size_elem_dofs);
+      phi_hat_bd_x_dof_qp[unk].reserve(max_size_elem_dofs * dim);
+  //bdry vol adj  evaluated at bdry points
+         phi_hat_vol_at_bdry_dof[unk].reserve(max_size_elem_dofs);
+       phi_hat_x_vol_at_bdry_dof[unk].reserve(max_size_elem_dofs * dim);     
+    }
+
+  vector < vector < real_num > >  sol_hat_adj_x_vol_at_bdry_qp(dim);
+  vector < real_num > grad_dot_n_adj_res;
+  vector < double > grad_adj_dot_n;
+  for (int ldim =0; ldim < dim; ldim++) sol_hat_adj_x_vol_at_bdry_qp[ldim].reserve(max_size_elem_dofs);
+  grad_dot_n_adj_res.reserve(max_size_elem_dofs);
+  grad_adj_dot_n.reserve(max_size_elem_dofs);
+
+
+
+    //----------- at dofs ------------------------------
   vector < double >   Jac;   Jac.reserve( n_unknowns * max_size_elem_dofs * n_unknowns * max_size_elem_dofs);
   vector < real_num > Res;   Res.reserve( n_unknowns * max_size_elem_dofs);
            vector < int >       L2G_dofmap_AllVars;   L2G_dofmap_AllVars.reserve( n_unknowns *max_size_elem_dofs);
@@ -457,14 +418,22 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   vector < double >   Jac_state_false;   Jac_state_false.reserve( n_state_vars * max_size_elem_dofs * n_state_vars * max_size_elem_dofs);
   vector < real_num > Res_state;   Res_state.reserve( n_state_vars * max_size_elem_dofs);
  
+  //----------------------------------------------------------------------------------------------------- 
+  vector < real_num > Res_bd;   Res_bd.reserve( n_unknowns * max_size_elem_dofs);
+  vector < vector < double > > Jac_outer(dim);
+  vector < real_num > Res_outer(1);
+
+         for(int i = 0; i < dim; i++) {  Jac_outer[i].reserve(max_size_elem_dofs); }
 
   // geometry (at dofs) --------------------------------
   vector< vector < real_num_mov > >   coords(dim);
   vector  < vector  < double > >  coords_hat(dim);
+  vector  < vector  < double > >  coords_hat_bd(dim);
   unsigned coordsType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
   for(int i = 0; i < dim; i++) {   
            coords[i].reserve(max_size_elem_dofs); 
        coords_hat[i].reserve(max_size_elem_dofs); 
+    coords_hat_bd[i].reserve(max_size_elem_dofs); 
  }
  
  //************** geometry phi **************************
@@ -475,13 +444,13 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   vector < vector < double > > phi_x_dof_qp_domain_hat(dim);
   vector < vector < double > > phi_xx_dof_qp_domain_hat(dim);
  
-  for(int fe = 0; fe < dim; fe++) {
-        phi_dof_qp_domain[fe].reserve(max_size_elem_dofs);
-      phi_x_dof_qp_domain[fe].reserve(max_size_elem_dofs * dim);
-     phi_xx_dof_qp_domain[fe].reserve(max_size_elem_dofs * dim2);
-        phi_dof_qp_domain_hat[fe].reserve(max_size_elem_dofs);
-      phi_x_dof_qp_domain_hat[fe].reserve(max_size_elem_dofs * dim);
-     phi_xx_dof_qp_domain_hat[fe].reserve(max_size_elem_dofs * dim2);
+  for(int dom_coord = 0; dom_coord < dim; dom_coord++) {
+        phi_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs);
+      phi_x_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs * dim2);
+        phi_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs);
+      phi_x_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs * dim2);
    }
  
  
@@ -492,6 +461,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   //------------ at quadrature points ---------------------
   real_num_mov weight_qp = 0.;
     double weight_hat_qp = 0.;
+    double weight_hat_bd_qp = 0.;
     vector < real_num > SolVAR_qp(n_unknowns);
     vector < real_num > SolVAR_hat_qp(n_unknowns);
     vector < vector < real_num > > gradSolVAR_qp(n_unknowns);
@@ -531,6 +501,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
    //all vars ###################################################################  
+    unsigned int fake_iel_flag = 0;
+    unsigned int global_row_index_bdry_constr = pdeSys->KKoffset[SolPdeIndex[theta_index]][iproc];
   for (unsigned  k = 0; k < n_unknowns; k++) {
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
        Sol_n_el_dofs[k] = ndofs_unk;
@@ -540,6 +512,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
        unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
        SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
           L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+     if (k == SolPdeIndex[theta_index] && L2G_dofmap[k][i] == global_row_index_bdry_constr) {       fake_iel_flag = iel;  }
       }
     }
     
@@ -550,14 +523,19 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     for (unsigned  k = 0; k < n_unknowns; k++) { sum_Sol_n_el_dofs += Sol_n_el_dofs[k]; }
     Jac.resize(sum_Sol_n_el_dofs * sum_Sol_n_el_dofs);  std::fill(Jac.begin(), Jac.end(), 0.);
     Res.resize(sum_Sol_n_el_dofs);                      std::fill(Res.begin(), Res.end(), 0.);
- 
+   Res_bd.resize(sum_Sol_n_el_dofs);                      std::fill(Res_bd.begin(), Res_bd.end(), 0.);
+  
  //=================state_only - for Jac retrieval via AD
     unsigned state_sum_Sol_n_el_dofs = 0;
     for (unsigned  k = 0; k < n_state_vars; k++) { state_sum_Sol_n_el_dofs += Sol_n_el_dofs[k]; }
     Jac_state_true.resize(state_sum_Sol_n_el_dofs * state_sum_Sol_n_el_dofs);    std::fill(Jac_state_true.begin(), Jac_state_true.end(), 0.);
     Jac_state_false.resize(state_sum_Sol_n_el_dofs * state_sum_Sol_n_el_dofs);    std::fill(Jac_state_false.begin(), Jac_state_false.end(), 0.);
     Res_state.resize(state_sum_Sol_n_el_dofs);                              std::fill(Res_state.begin(), Res_state.end(), 0.);
-  //all vars ###################################################################
+ 
+    for(int ivar = 0; ivar < dim; ivar++)     std::fill(Jac_outer[ivar].begin(), Jac_outer[ivar].end(), 0.); //did not use Jac_outer as Jac itself was placing the values as expected
+    Res_outer[0] = 0.;
+    
+    //all vars ###################################################################
   
     
   // geometry *****************************
@@ -588,7 +566,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
       }
   
      // elem average point 
-    vector < real_num > elem_center(dim);   
+    vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {
@@ -601,22 +579,292 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
   
   //***** set target domain flag ********************************** 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(elem_center);
+   target_flag = ElementTargetFlag < double > (elem_center);
 
   // geometry end *****************************
 
       
+//************ set control flag *********************
+    int control_el_flag = 0;
+        control_el_flag = ControlDomainFlag(elem_center);
+    std::vector< std::vector<int> > control_node_flag(dim);
+	    for(unsigned idim=0; idim < dim; idim++) {
+	          control_node_flag[idim].resize(Sol_n_el_dofs[ctrl_pos_begin]);
+    std::fill(control_node_flag[idim].begin(), control_node_flag[idim].end(), 0);
+	    }
+ //*************************************************** 
+      
+   //************ set fake theta flag: this flag tells me what degrees of freedom of the current element are fake for the theta variable *********************
+    std::vector<int>  bdry_int_constr_pos_vec(1,global_row_index_bdry_constr); /*KKoffset[SolPdeIndex[PADJ]][iproc]*/
+    std::vector<int> fake_theta_flag(Sol_n_el_dofs[theta_index],0);
+    for (unsigned i = 0; i < Sol_n_el_dofs[theta_index]; i++) {
+      if ( L2G_dofmap[ SolPdeIndex[theta_index] ] [i] == bdry_int_constr_pos_vec[0]) { 	fake_theta_flag[i] = 1;       }
+    }
+ //************ end set fake theta flag *********************
+
      assemble_jac.prepare_before_integration_loop(stack);
      assemble_jac_state.prepare_before_integration_loop(stack_state); //=================state_only - for Jac retrieval via AD
      
   
-    // *** Gauss point loop ***
+//========BoundaryLoop=====================================================================
+
+  // Perform face loop over elements that contain some control face
+  if (control_el_flag == 1) {
+	  
+      double tau = 0.;
+      vector < double > normal(dim,0);
+	  
+      for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+	  std::vector < double > xyz_bdc(3,0.);  //not being used, because the boundaries are identified by the face numbers
+	  // look for boundary faces
+	  if(el->GetFaceElementIndex(iel,jface) < 0) {
+	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+	      if(  face == CTRL_FACE_IDX) { //control face
+//=================================================== 
+		   //we use the dirichlet flag to say: if dirichlet == true, we set 1 on the diagonal. if dirichlet == false, we put the boundary equation
+		  std::vector < bool > dir_bool(dim);
+		  for(unsigned idim=0; idim < dim; idim++) {
+		      dir_bool[idim] = false; //mlSol->GetBdcFunction()(xyz_bdc,ctrl_name[idim].c_str(),tau,face,0.);
+		  }
+	  
+//=================================================== 
+		unsigned nve_bd = msh->GetElementFaceDofNumber(iel,jface, SolFEType[ctrl_pos_begin] ); //AAAAAAAAAAAAAAAAA
+		const unsigned felt_bd = msh->GetElementFaceType(iel, jface);    
+		for(unsigned i=0; i < nve_bd; i++) {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
+		    unsigned      iDof = msh->GetSolutionDof(i_vol, iel, coordsType);
+		    for(unsigned idim=0; idim<dim; idim++) { coords_hat_bd[idim][i]=(*msh->_topology->_Sol[idim])(iDof); }
+		}
+		
+//========= initialize gauss quantities on the boundary ============================================
+		vector < real_num >                      SolVAR_bd_qp(n_unknowns);
+		vector < vector < real_num > >       gradSolVAR_bd_qp(n_unknowns);
+		for(int k=0; k<n_unknowns; k++) {  gradSolVAR_bd_qp[k].resize(dim);  }
+
+//========= gauss_loop boundary===============================================================
+		  for(unsigned ig_bd=0; ig_bd < ml_prob.GetQuadratureRule(felt_bd).GetGaussPointsNumber(); ig_bd++) {
+// // 				for(int fe=0; fe < NFE_FAMS; fe++) {
+// // 		     		ml_prob._ml_msh->_finiteElement[felt_bd][fe]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[fe],phi_hat_bd_x_dof_qp[fe],normal);
+// // 				}
+		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[theta_index]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[theta_index],phi_hat_bd_x_dof_qp[theta_index],normal);
+		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
+		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[kdim + ctrl_pos_begin],phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin],normal);
+		      ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[adj_pos_begin]]->VolumeShapeAtBoundary(coords_hat,coords_hat_bd,jface,ig_bd,phi_hat_vol_at_bdry_dof[kdim + adj_pos_begin],phi_hat_x_vol_at_bdry_dof[kdim + adj_pos_begin]);
+            }
+//========== temporary soln for surface gradient on a face parallel to the X axis ===================
+		    double dx_dxi = 0.;
+		    const elem_type_1D* myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]);
+		    const double* myptr = myeltype->GetDPhiDXi(ig_bd);
+		    for (int inode = 0; inode < nve_bd; inode++) {
+			  dx_dxi += myptr[inode] * coords_hat_bd[0][inode];
+		    }  
+		    for (int inode = 0; inode < nve_bd; inode++) {
+			  for (int d = 0; d < dim; d++) {
+                if (d == 0 )     phi_hat_bd_x_dof_qp[ctrl_pos_begin][inode + d*nve_bd] = myptr[inode]* (1./ dx_dxi);
+                else             phi_hat_bd_x_dof_qp[ctrl_pos_begin][inode + d*nve_bd] = 0.;
+			  }
+		    }
+//========== temporary soln for surface gradient on a face parallel to the X axis ===================
+		  
+//========== compute gauss quantities on the boundary ===============================================
+		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
+			    unsigned int ctrl_index = kdim + ctrl_pos_begin;
+										  SolVAR_bd_qp[ SolPdeIndex[ctrl_index] ] = 0.;
+			  for(unsigned ivar2=0; ivar2<dim; ivar2++) {  gradSolVAR_bd_qp[ SolPdeIndex[ctrl_index] ][ivar2] = 0.; }
+	  
+			  for(int i_bd = 0; i_bd < nve_bd; i_bd++) {
+		                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
+                                                                    SolVAR_bd_qp[SolPdeIndex[ctrl_index]]           += phi_hat_bd_dof_qp  [ ctrl_index ][i_bd]                  * SolVAR_eldofs[ SolPdeIndex[ ctrl_index ] ][i_vol];
+			      for(unsigned ivar2=0; ivar2<dim; ivar2++) {  gradSolVAR_bd_qp[SolPdeIndex[ctrl_index]][ivar2] 	+= phi_hat_bd_x_dof_qp[ ctrl_index ][i_bd + ivar2 * nve_bd] * SolVAR_eldofs[ SolPdeIndex[ ctrl_index ] ][i_vol];      }
+			  }
+		    }//kdim
+ //end unknowns eval at gauss points ********************************
+										  SolVAR_bd_qp[ SolPdeIndex[theta_index] ] = 0.;
+// 			  for(unsigned ivar2=0; ivar2<dim; ivar2++) {  gradSolVAR_bd_qp[ SolPdeIndex[theta_index] ][ivar2] = 0.; }
+	  
+			  for(int i_bd = 0; i_bd < nve_bd; i_bd++) {
+		                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
+                                                                    SolVAR_bd_qp[SolPdeIndex[theta_index]]           += phi_hat_bd_dof_qp  [ theta_index ][i_bd]                  * SolVAR_eldofs[ SolPdeIndex[ theta_index ] ][0];
+// 			      for(unsigned ivar2=0; ivar2<dim; ivar2++) {  gradSolVAR_bd_qp[SolPdeIndex[theta_index]][ivar2] 	+= phi_hat_bd_x_dof_qp[ theta_index ][i_bd + ivar2 * nve_bd] * SolVAR_eldofs[ SolPdeIndex[ theta_index ] ][i_vol];      }
+			  }
+
+//=============== grad dot n for residual ========================================= 
+//     compute gauss quantities on the boundary through VOLUME interpolation
+		for(unsigned ldim=0; ldim<dim; ldim++) {   sol_hat_adj_x_vol_at_bdry_qp[ldim].resize(dim); }
+		grad_dot_n_adj_res.resize(dim);
+		grad_adj_dot_n.resize(dim);
+		for(unsigned ldim=0; ldim<dim; ldim++) {   std::fill(sol_hat_adj_x_vol_at_bdry_qp[ldim].begin(), sol_hat_adj_x_vol_at_bdry_qp[ldim].end(), 0.);  }
+		
+		for(unsigned ldim=0; ldim<dim; ldim++) {  
+		  for (int iv = 0; iv < Sol_n_el_dofs[adj_pos_begin]; iv++)  {
+                     for (int d = 0; d < dim; d++) {
+			   sol_hat_adj_x_vol_at_bdry_qp[ldim][d] += SolVAR_eldofs[SolPdeIndex[ldim + adj_pos_begin]][iv] * phi_hat_x_vol_at_bdry_dof[ldim + adj_pos_begin][iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
+		     }
+		  }  
+		      
+		  grad_dot_n_adj_res[ldim] = 0.;
+		  for(unsigned d=0; d<dim; d++) {
+		      grad_dot_n_adj_res[ldim] += sol_hat_adj_x_vol_at_bdry_qp[ldim][d]*normal[d];  
+		  }
+		}
+//=============== grad dot n  for residual =========================================       
+		  
+//========== compute gauss quantities on the boundary ================================================
+
+		
+//============ Res _ Boundary Integral Constraint ============================================================================================
+	  for (unsigned  kdim = 0; kdim < dim; kdim++) {
+// 		for(unsigned i=0; i < Sol_n_el_dofs[theta_index]; i ++) { //avoid because it is an element dof
+/*delta_theta row */ 	 /*Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[theta_index], i) ] */Res_outer[0] +=  /*fake_theta_flag[i] **/ weight_hat_bd_qp * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
+// 		}  
+	  }
+		  
+//============End of Res _ Boundary Integral Constraint ============================================================================================
+		
+  // *** phi_i loop ***
+		for(unsigned i_bdry=0; i_bdry < nve_bd; i_bdry++) {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+                 
+//=============== construct control node flag field on the go  =========================================    
+	      /* (control_node_flag[i])       picks nodes on \Gamma_c
+	         (1 - control_node_flag[i])   picks nodes on \Omega \setminus \Gamma_c
+	       */
+		    for(unsigned idim=0; idim<dim; idim++) {
+			if (dir_bool[idim] == false) { 
+// 		std::cout << " found boundary control nodes ==== " << std::endl;
+			    for(unsigned k=0; k < control_node_flag[idim].size(); k++) {
+				  control_node_flag[idim][i_vol] = 1;
+			    }
+			}
+		    }
+//=============== construct control node flag field on the go  =========================================    
+		
+		  
+//Boundary Residuals  and Jacobians ==================	
+
+		  
+//============ Boundary Residuals============================================================================================
+		  
+		      for (unsigned  kdim = 0; kdim < dim; kdim++) {
+			
+			    real_num lap_res_dctrl_ctrl_bd = 0.;
+			      for (unsigned jdim = 0; jdim < dim; jdim++) {
+				  lap_res_dctrl_ctrl_bd += gradSolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]][jdim]*phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin][i_bdry + jdim*nve_bd];
+			      }//jdim
+
+			
+/*delta_state row */	    if(i_vol<Sol_n_el_dofs[state_pos_begin])   Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[kdim], i_vol) ]                += - control_node_flag[kdim][i_vol] * penalty_ctrl * (SolVAR_eldofs[SolPdeIndex[kdim + state_pos_begin]][i_vol] - SolVAR_eldofs[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
+/*delta_adjoint row */     if(i_vol<Sol_n_el_dofs[adj_pos_begin])   Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[kdim + adj_pos_begin], i_vol) ] += 0.;	   
+/*delta_control row */     if(i_vol<Sol_n_el_dofs[ctrl_pos_begin])  Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[kdim + ctrl_pos_begin], i_vol) ]  += - control_node_flag[kdim][i_vol] * weight_hat_bd_qp * (
+                                                                                          beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry]
+                                                                                        + gamma_val* lap_res_dctrl_ctrl_bd
+                                                                                        - mus * grad_dot_n_adj_res[kdim]  * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry]
+                                                                                        - (*sol->_Sol[SolIndex[theta_index]])(0) * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry] * normal[kdim]      //*sol->_Sol[SolIndex[theta_index]])(0) finds the global value from KKDof pos(63, 169,etc), SolVAReldof_theta gets the value in the boundary point which will be zero. Theta is just a const
+                                                                                        );	    
+		      }//kdim  
+
+//============ Boundary Residuals  ==================================================================================================
+
+
+// // // //============ Jac _ Boundary Integral Constraint ============================================================================================
+// // // 		    for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+// // // 			  for(unsigned i =0; i < Sol_n_el_dofs[theta_index]; i ++) {
+// // // 			    if(i_vol < Sol_n_el_dofs[ctrl_pos_begin]) {
+// // // 				double temp = weight_hat_bd_qp * ( phi_hat_bd_dof_qp[kdim + ctrl_pos_begin][i_bdry] * normal[kdim]);
+// // // //ROW_BLOCK delta_theta - control -- loop over i in the VOLUME (while j(/i_vol) is in the boundary) -------------------------------------------------------------------------------------------------------------
+// // // 			      Jac[theta_index][ctrl_pos_begin + kdim][i*Sol_n_el_dofs[ctrl_pos_begin] + i_vol]     += - temp; /*weight_hat_bd_qp * ( phi_hat_bd_dof_qp[kdim + ctrl_pos_begin][i_bdry] * normal[kdim])*/
+// // // //COLUMN_BLOCK delta_control - theta ---- loop over j in the VOLUME (while i(/i_vol) is in the boundary) ---------------------------------------------------------------------------------------------------
+// // // 			      Jac[ctrl_pos_begin + kdim][theta_index][i_vol*Sol_n_el_dofs[theta_index] + i] += - control_node_flag[kdim][i_vol] /** phi_hat_bd_dof_qp[theta_index][i]*/*temp; /*weight_hat_bd_qp * ( phi_hat_bd_dof_qp[kdim + ctrl_pos_begin][i_bdry] * normal[kdim]);*/
+// // // 			    }//endif
+// // // 			  }// i 
+// // // 		    }//kdim
+// // // //============ End of Jac _ Boundary Integral Constraint ============================================================================================
+// // // 
+// // // 
+// // // 
+// // // //============  ==================================================================================================
+// // // 		  
+// // // 		      for(unsigned j_bdry=0; j_bdry < nve_bd; j_bdry ++) {
+// // // 			  unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
+// // // 
+// // // 			  for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+// // // //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
+// // // 			    if(i_vol < Sol_n_el_dofs[state_pos_begin] && j_vol < Sol_n_el_dofs[state_pos_begin] && i_vol == j_vol)       		          Jac[kdim][kdim][i_vol*Sol_n_el_dofs[state_pos_begin] + j_vol]	    += penalty_ctrl * control_node_flag[kdim][i_vol];  //u
+// // // 			 
+// // // //BLOCK delta_state - control------------------------------------------------------------------------------------
+// // // 			    if(i_vol < Sol_n_el_dofs[state_pos_begin] && j_vol < Sol_n_el_dofs[ctrl_pos_begin] && i_vol == j_vol) 	Jac[kdim][kdim + ctrl_pos_begin][i_vol*Sol_n_el_dofs[ctrl_pos_begin] + j_vol]  += (-1.) * penalty_ctrl *control_node_flag[kdim][i_vol];  //-g
+// // // 			  
+// // // 			  }//kdim		      
+// // // 
+// // // 
+// // // //DIAG BLOCK delta_control - control  --------------------------------------------------------------------------------------
+// // // 			  if(i_vol < Sol_n_el_dofs[ctrl_pos_begin] && j_vol < Sol_n_el_dofs[ctrl_pos_begin]) {
+// // // 				double lap_jac_dctrl_ctrl_bd = 0.;
+// // // 				for (unsigned ldim = 0; ldim < dim; ldim++) lap_jac_dctrl_ctrl_bd += phi_hat_bd_x_dof_qp[ldim + ctrl_pos_begin][i_bdry + ldim*nve_bd]*phi_hat_bd_x_dof_qp[ldim + ctrl_pos_begin][j_bdry + ldim*nve_bd];
+// // // 
+// // // 			      for (unsigned kdim = 0; kdim < dim; kdim++) {
+// // // 				      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*Sol_n_el_dofs[ctrl_pos_begin] + j_vol] +=   control_node_flag[kdim][i_vol] * weight_hat_bd_qp *(
+// // //                                                                                                        beta_val * phi_hat_bd_dof_qp[kdim + ctrl_pos_begin][i_bdry] * phi_hat_bd_dof_qp[kdim + ctrl_pos_begin][j_bdry]
+// // //                                                                                                     + gamma_val * lap_jac_dctrl_ctrl_bd
+// // //                                                                                                     );
+// // // 			      }//kdim
+// // // 			  }//endif
+// // //                    
+// // //                        }//end j_bdry loop
+// // // 		    
+// // // //BLOCK delta_control - adjoint------------------------------------------------------------------------------------------------
+// // // //===================loop over j in the VOLUME (while i is in the boundary)	      
+// // // 		for(unsigned j=0; j < Sol_n_el_dofs[adj_pos_begin]; j ++) {
+// // // 			//=============== grad dot n  =========================================    
+// // // 		    for(unsigned ldim=0; ldim<dim; ldim++) {
+// // // 			    grad_adj_dot_n[ldim] = 0.;
+// // // 			    for(unsigned d=0; d<dim; d++) {
+// // // 				grad_adj_dot_n[ldim] += phi_hat_x_vol_at_bdry_dof[ldim + adj_pos_begin][j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
+// // // 			    }
+// // // 		    }
+// // // 			
+// // // 			  //=============== grad dot n  =========================================    
+// // // 
+// // // 			  for (unsigned kdim = 0; kdim < dim; kdim++) {
+// // // 				Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i_vol*Sol_n_el_dofs[adj_pos_begin] + j] += control_node_flag[kdim][i_vol] * (-1.) * (weight_hat_bd_qp  * phi_hat_bd_dof_qp[kdim + ctrl_pos_begin][i_bdry]* IRe * grad_adj_dot_n[kdim]);    		      
+// // // 			  }
+// // // 		} // end j loop for volume 
+		  
+		    }//end i_bdry loop
+
+                }  //end ig_bdry loop
+	  
+             }    //end if control face
+	 }  //end if boundary faces
+      }  // loop over element faces //jface   
+  } //end if control element flag
+
+//End Boundary Residuals  and Jacobians ==================	
+
+
+//======================= Loop without Integration =====================================================    
+        //============ delta_theta - theta row ==================================================================================================
+  for (unsigned i = 0; i < Sol_n_el_dofs[theta_index]; i++) {
+             /* if ( fake_theta_flag[i] != 1 ) */       Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[theta_index], i) ]    = - (1 - fake_theta_flag[i]) * ( theta_value_outside_fake_element - SolVAR_eldofs[SolPdeIndex[theta_index]][i]);  // Res_outer for the exact row (i.e. when fakeflag=1 , res =0(use Res_outer) and if not 1 this loop) and this is to take care of fake placement for the rest of dofs of theta values as 8
+// // //      for (unsigned j = 0; j < Sol_n_el_dofs[theta_index]; j++) {
+// // // 			         if(i==j)  Jac[ theta_index ][ theta_index ][i*Sol_n_el_dofs[theta_index] + j] = (1 - fake_theta_flag[i]) * 1.; //likewise Jac_outer (actually Jac itself works in the correct placement) for bdry integral and this is for rest of dofs
+// // //              }//j_theta loop
+        }//i_theta loop
+   
+ //============ delta_theta row ==================================================================================================
+ //======================= Loop without Integration =====================================================    
+
+ 
+ 
+ 
+//======================= VolumeLoop with Integration (and fake boundary) =====================================================    
+// *** Gauss point loop ***
     for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 
 	// *** get Jacobian and test function and test function derivatives ***
-      for(int fe=0; fe < n_unknowns; fe++) {
-	msh->_finiteElement[ielGeom][SolFEType[fe]]->Jacobian(coords,    ig,weight_qp,    phi_dof_qp[fe],    phi_x_dof_qp[fe],    phi_xx_dof_qp[fe]);
-	msh->_finiteElement[ielGeom][SolFEType[fe]]->Jacobian(coords_hat,ig,weight_hat_qp,phi_hat_dof_qp[fe],phi_x_hat_dof_qp[fe],phi_xx_hat_dof_qp[fe]);
+      for(int unk=0; unk < n_unknowns; unk++) {
+	msh->_finiteElement[ielGeom][SolFEType[unk]]->Jacobian(coords,    ig,weight_qp,    phi_dof_qp[unk],    phi_x_dof_qp[unk],    phi_xx_dof_qp[unk]);
+	msh->_finiteElement[ielGeom][SolFEType[unk]]->Jacobian(coords_hat,ig,weight_hat_qp,phi_hat_dof_qp[unk],phi_x_hat_dof_qp[unk],phi_xx_hat_dof_qp[unk]);
       }
       
    //=============== Integration at qp ========================================
@@ -669,12 +917,12 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
               for (int idim = 0.; idim < dim; idim++) {
                 for (int jdim = 0.; jdim < dim; jdim++) {
-                  Cauchy_direction[idim] += nondim_number * phi_x_dof_qp[ idim ][i * dim + jdim] * Cauchy[idim][jdim];
+                  Cauchy_direction[idim] += nondim_number * phi_x_hat_dof_qp[ idim ][i * dim + jdim] * Cauchy[idim][jdim];
                 }
               }
 
               for (int idim = 0; idim < dim; idim++) {
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( Cauchy_direction[idim] -  phi_dof_qp[ idim ][i] * _gravity[idim] ) * weight_qp;
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( Cauchy_direction[idim] -  phi_hat_dof_qp[ idim ][i] * _gravity[idim] ) * weight_qp;
               }
 
             }
@@ -687,7 +935,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
             for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_press]; i++) {
                 
               Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[sol_index_press], i) ] += 
-                - weight_hat_qp * phi_dof_qp[ sol_index_press ][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
+                - weight_hat_qp * phi_hat_dof_qp[ sol_index_press ][i] * Solid::get_mass_balance_reference_domain< real_num_mov >(solid_model, penalty, incompressible, lambda_lame, trace_e_hat, J_hat, SolVAR_qp, SolPdeIndex, sol_index_press);
 //               - weight_hat_qp * phi_dof_qp[ sol_index_press ][i] * Solid::get_mass_balance_moving_domain< real_num_mov >(gradSolVAR_qp, SolPdeIndex);
               
             }
@@ -701,32 +949,36 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
          for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_adj]; i++) {
                for (int idim = 0; idim < dim; idim++) {
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + adj_pos_begin], i)] += 
-     alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] + SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim]) 
-     * phi_hat_dof_qp[ idim + adj_pos_begin ][i] * weight_hat_qp;
+     alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] - TargetDisp[idim]) 
+     * phi_hat_dof_qp[ idim + adj_pos_begin ][i] * weight_qp;
                }
           }
 //----------from displ_state and displ_ctrl
  //ADJOINT=====================================
  
-        
-  //CONTROL=====================================
- //----------from displ_state and displ_ctrl
-        for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_ctrl]; i++) {
-               for (int idim = 0; idim < dim; idim++) {
-                    for (unsigned jdim = 0; jdim < dim; jdim++) {
-   Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
-                    gamma_val * ( gradSolVAR_hat_qp[idim + ctrl_pos_begin][jdim] + gradSolVAR_hat_qp[jdim + ctrl_pos_begin][idim] )
-                    * phi_x_hat_dof_qp[idim + ctrl_pos_begin][i * dim + jdim] * weight_hat_qp;                   
-                    }
-   Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
-            (   ( alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] + SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim])  
-                + beta_val * SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] )* phi_hat_dof_qp[ idim + ctrl_pos_begin ][i] 
-            ) * weight_hat_qp;
-               }
-          }
- //----------from displ_state and displ_ctrl
+               
  //CONTROL=====================================
-       
+ //============ delta_control row ==================================================================================================
+// delta_control
+    for (unsigned kdim = 0; kdim < dim; kdim++) { 
+         for (unsigned i = 0; i < Sol_n_el_dofs[ctrl_pos_begin]; i++) {
+       /*ResVal[SolPdeIndex[kdim + ctrl_pos_begin]][i]*/ Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[kdim + ctrl_pos_begin], i) ] += - penalty_outside_control_boundary * ( (1 - control_node_flag[kdim][i]) * (  SolVAR_eldofs[SolPdeIndex[kdim + ctrl_pos_begin]][i] - 0.)  );              //enforce control zero outside the control boundary
+
+
+// // // // //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
+// // //      for (unsigned j = 0; j < Sol_n_el_dofs[ctrl_pos_begin]; j++) {
+// // // 	    if (i==j) {
+// // // 		Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*Sol_n_el_dofs[ctrl_pos_begin] + j] += penalty_outside_control_boundary *(1 - control_node_flag[kdim][i]);              //enforce control zero outside the control boundary
+// // //                   } //end i==j
+// // //       }//j_dctrl_ctrl loop
+  }//i_ctrl loop
+      }  //kdim
+
+ //============ delta_control row ==================================================================================================
+ //CONTROL=====================================
+
+        
+        
     } // end gauss point loop
 
     //--------------------------------------------------------------------------------------------------------
@@ -755,25 +1007,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     stack_state.clear_dependents();    
 
  
-  //STATE=====================================
-//----------from displ_ctrl only
-
-      for(unsigned i_block = state_pos_begin; i_block < state_pos_begin + dim; i_block++) {
-        for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
-            for(unsigned j_block = state_pos_begin; j_block < state_pos_begin + dim; j_block++) {
-               for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
-    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
-        Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block , j_block, i_dof, j_dof )] 
-            * SolVAR_eldofs[j_block + ctrl_pos_begin][j_dof];
-                }
-           }
-        }
-   }
-//----------from displ_ctrl only
-  //STATE=====================================
-
-
-    
   //ADJOINT=====================================
 //----------from adj displ
       for(unsigned i_block = adj_pos_begin; i_block < adj_pos_begin + dim; i_block++) {
@@ -818,60 +1051,55 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 // ----------from div of displ_adj
   //ADJOINT=====================================
 
-   //CONTROL=====================================
-
-//----------from displ__adj only
-      for(unsigned i_block = ctrl_pos_begin; i_block < ctrl_pos_begin + dim ; i_block++) {
-        for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
-            for(unsigned j_block = 0; j_block < dim; j_block++) {
-               for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
-    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
-        + Jac_state_false[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] 
-          * SolVAR_eldofs[j_block + adj_pos_begin][j_dof];
-                }
-           }
+ 
+    for(unsigned i_block = 0; i_block < n_unknowns; i_block++) {
+            for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
+                Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
+                Res_bd[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)];
+            }
         }
-   }
-//----------from displ__adj only
-
-//----------from p_ctrl only
-   for(unsigned i_block = ctrl_pos_begin; i_block < ctrl_pos_begin + dim ; i_block++) {
-        for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
-            for(unsigned j_block = dim; j_block < n_state_vars; j_block++) {
-               for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
-    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
-        Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] 
-            * SolVAR_eldofs[j_block + ctrl_pos_begin][j_dof];
-                }
-           }
-        }
-   }
-//----------from p_ctrl only
-
-//----------from div of displ_ctrl
-   for(unsigned i_block = sol_index_press_ctrl; i_block < n_unknowns ; i_block++) {
-        for(unsigned i_dof = 0; i_dof < Sol_n_el_dofs[i_block]; i_dof++) {
-            for(unsigned j_block = 0; j_block < dim; j_block++) {
-               for(unsigned j_dof = 0; j_dof < Sol_n_el_dofs[j_block]; j_dof++) {
-    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, i_block, i_dof)] += 
-        Jac_state_true[assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, state_sum_Sol_n_el_dofs,i_block - ctrl_pos_begin , j_block, i_dof, j_dof )] 
-            * SolVAR_eldofs[j_block + ctrl_pos_begin][j_dof];
-                }
-           }
-        }
-   }
-//----------from div of displ_ctrl
-  //CONTROL=====================================
-  
+ 
   
       
      if (assembleMatrix) assemble_jac.compute_jacobian_outside_integration_loop(stack, SolVAR_eldofs, Res, Jac, L2G_dofmap_AllVars, RES, JAC);
 
 
+//       //***************************************************************************************************************
+// 
+//     //Sum the local matrices/vectors into the Global Matrix/Vector
+//     // FIRST ALL THE BLOCKS WITHOUT THETA ROW OR COLUMN 
+//     for(unsigned i_unk=0; i_unk < n_unknowns-1; i_unk++) {
+//       RES->add_vector_blocked(Res[SolPdeIndex[i_unk]],JACDof[i_unk]);
+//         for(unsigned j_unk=0; j_unk < n_unknowns-1; j_unk++) {
+// 	  if(assembleMatrix) JAC->add_matrix_blocked( Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ], JACDof[i_unk], JACDof[j_unk]);
+//         }
+//     }
+//     
+//     // THEN THE BLOCKS WITH THETA ROW OR COLUMN 
+// 	/*delta_theta-theta*/    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-1], JACDof[n_unknowns-1]);
+// 	    
+//      if (control_el_flag == 1) {
+// 	      for (unsigned kdim = 0; kdim < dim; kdim++) {
+//                           /*delta_control*/       RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],JACDof[n_unknowns-2-kdim]); 
+// 		if(assembleMatrix) {
+//                           /*delta_theta-control*/ JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, JACDof[n_unknowns-2-kdim]);
+//                           /*delta_control-theta*/ JAC->add_matrix_blocked( Jac[ /*SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim]*/SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-2-kdim], bdry_int_constr_pos_vec); 
+// 		}
+// 	      }  //kdim
+//      }  //add control boundary element contributions
+//      
+//      
+//           if (control_el_flag == 1) {
+//           /*delta_theta(bdry constr)*/         RES->add_vector_blocked(Res_outer,bdry_int_constr_pos_vec);
+// 	  }
+// 	  
+//      /* if (JACDof[n_unknowns-1][0] != bdry_int_constr_pos_vec[0]) */ /*delta_theta(fake)*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       JACDof[n_unknowns-1]);
+// 	  
+//    //--------------------------------------------------------------------------------------------------------  
 
        
-    assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 3);
-    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 9, 3);
+//     assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 3);
+    assemble_jacobian<real_num,real_num_mov>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 4, 1);
     
   } //end element loop for each process
 
@@ -974,9 +1202,9 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   system.AddVariableToBeSolved("All");
 
   system.SetDebugNonlinear(true);
-  system.SetDebugFunction(ComputeIntegral);
+//   system.SetDebugFunction( ComputeIntegral< NonLinearImplicitSystem, adept::adouble, adept::adouble >);
 
-//   system.SetMaxNumberOfNonLinearIterations(2);
+  system.SetMaxNumberOfNonLinearIterations(2);
   system.SetNonLinearConvergenceTolerance(1.e-2);
 //   system.SetDebugLinear(true);
 //   system.SetMaxNumberOfLinearIterations(4);
@@ -995,14 +1223,14 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   displ_hom.push_back("DY");
   if ( ml_mesh.GetDimension() == 3 ) displ_hom.push_back("DZ");
   
-  std::vector < std::string > displ_ctrl;
-  displ_ctrl.push_back("DX_CTRL");
-  displ_ctrl.push_back("DY_CTRL");
-  if ( ml_mesh.GetDimension() == 3 ) displ_ctrl.push_back("DZ_CTRL");
+//   std::vector < std::string > displ_ctrl;
+//   displ_ctrl.push_back("GX");
+//   displ_ctrl.push_back("GY");
+//   if ( ml_mesh.GetDimension() == 3 ) displ_ctrl.push_back("GZ");
   
   const unsigned dim = ml_mesh.GetDimension();
   
-  for (unsigned d = 0; d < dim; d++)   assert(  ml_sol.GetSolutionType( displ_hom[d].c_str() ) == ml_sol.GetSolutionType( displ_ctrl[d].c_str() ) );
+//   for (unsigned d = 0; d < dim; d++)   assert(  ml_sol.GetSolutionType( displ_hom[d].c_str() ) == ml_sol.GetSolutionType( displ_ctrl[d].c_str() ) );
      
   for (unsigned d = 0; d < dim; d++)   {
      ml_sol.AddSolution(displ_tot[d].c_str(),  ml_sol.GetSolutionFamily( displ_hom[d] ), ml_sol.GetSolutionOrder( displ_hom[d] ), ml_sol.GetSolutionTimeOrder( displ_hom[d] ), false);
@@ -1012,7 +1240,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   // DX_TOT = DX + DX_CTRL
   for (unsigned d = 0; d < dim; d++)   {
       /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_tot[d].c_str()) /*)*/  = /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_hom[d].c_str()) /*)*/; 
-      /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_tot[d].c_str()) /*)*/ += /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_ctrl[d].c_str()) /*)*/; 
+//       /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_tot[d].c_str()) /*)*/ += /**(*/ ml_sol.GetSolutionLevel(lev-1)->GetSolutionName(displ_ctrl[d].c_str()) /*)*/; 
   }
   
 
@@ -1027,155 +1255,211 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
 
 }
 
-
+template < class system_type, class real_num, class real_num_mov = double >
 void ComputeIntegral(const MultiLevelProblem& ml_prob) {
+    ComputeIntegral< system_type, real_num, real_num_mov > (  ml_prob, 
+                                                            & ml_prob.get_system< system_type >(0), 
+                                                              ml_prob.get_system< system_type >(0).get_unknown_list_for_assembly());
+}
 
-   const NonLinearImplicitSystem&  mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("SolidMech");   // pointer to the nonlinear implicit system named "NSOpt"
- 
-  const unsigned level = mlPdeSys.GetLevelToAssemble();
- 
+template < class system_type, class real_num, class real_num_mov = double >
+void ComputeIntegral(const MultiLevelProblem& ml_prob,
+                     const system_type * mlPdeSys,
+                     const std::vector< Unknown > & unknowns) {
 
-  Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
+  const unsigned 		level 		= mlPdeSys->GetLevelToAssemble();
 
-  MultiLevelSolution*  mlSol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  Mesh*          		msh    		= ml_prob._ml_msh->GetLevel(level);
+  elem*          		el     		= msh->el;
+
+  MultiLevelSolution*  		ml_sol  = ml_prob._ml_sol;
+  Solution*    			sol      	= ml_prob._ml_sol->GetSolutionLevel(level); 
+
+
+  const unsigned 	dim  = msh->GetDimension();
+  const unsigned   dim2  = (3 * (dim - 1) + !(dim - 1));
+  const unsigned  iproc  = msh->processor_id();
+  // reserve memory for the local standard vectors
+  const unsigned max_size_elem_dofs = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27 
+
   
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
-  
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-
-  // reserve memory for the local standar vectors
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
-
-  //geometry *******************************
-  vector < vector < double > > coordX(dim);    // local coordinates
-
-  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
-
-  for (unsigned  k = 0; k < dim; k++) { 
-    coordX[k].reserve(maxSize);
-  }
-  
-  double weight;
-  
-  
-  //geometry *******************************
-
-//STATE######################################################################
-  vector < unsigned > solVIndex(dim);
-  solVIndex[0] = mlSol->GetIndex("DX");    // get the position of "U" in the ml_sol object
-  solVIndex[1] = mlSol->GetIndex("DY");    // get the position of "V" in the ml_sol object
-
-  if (dim == 3) solVIndex[2] = mlSol->GetIndex("DZ");      // get the position of "V" in the ml_sol object
-
-  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
-  
-  vector < vector < double > >  solV(dim);    // local solution
-  vector <double >  V_gss(dim, 0.);    //  solution
+  //----------- unknowns ------------------------------
+   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
    
- for (unsigned  k = 0; k < dim; k++) {
-    solV[k].reserve(maxSize);
+  constexpr int sol_index_displ      = 0;     //known at compile time
+  const     int sol_index_press      = sol_index_displ + dim;      //known at run time
+  constexpr int state_pos_begin      = sol_index_displ;   //known at compile time
+  const     int adj_pos_begin        = dim + 1;
+  const     int sol_index_adj        = adj_pos_begin;      
+  const     int sol_index_press_adj  = sol_index_adj + dim;     
+  const     int ctrl_pos_begin       = 2 * (dim + 1);
+  const     int sol_index_ctrl       = ctrl_pos_begin;     
+  const     int sol_index_press_ctrl = sol_index_ctrl + dim;      
+
+  
+  vector < std::string > Solname(n_unknowns);     
+  vector < unsigned int > SolIndex(n_unknowns);  
+  vector < unsigned int > SolPdeIndex(n_unknowns);
+  vector < unsigned int > SolFEType(n_unknowns);  
+
+
+  for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
+       Solname[ivar]    = unknowns[ivar]._name; 
+      SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
+//     SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
+//       assert(ivar == SolPdeIndex[ivar]);  //I would like this ivar order to coincide either with SolIndex or with SolPdeIndex, otherwise too many orders... it has to be  with SolPdeIndex, because SolIndex is related to the Solution object which can have more fields... This has to match the order of the unknowns[] argument
+    SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);//
   }
 
-  
-  vector <double> phiV_gss;  // local test function
-  vector <double> phiV_x_gss; // local test function first order partial derivatives
-  vector <double> phiV_xx_gss; // local test function second order partial derivatives
+   constexpr int solFEType_max = BIQUADR_FE;  //biquadratic, this is the highest-order FE 
 
-  phiV_gss.reserve(maxSize);
-  phiV_x_gss.reserve(maxSize * dim);
-  phiV_xx_gss.reserve(maxSize * dim2);
+   vector < unsigned int > Sol_n_el_dofs(n_unknowns);
   
-//STATE######################################################################
-  
+  //----------- of dofs and at quadrature points ------------------------------
+  vector < vector < double > > phi_dof_qp(n_unknowns);
+  vector < vector < real_num_mov > > phi_x_dof_qp(n_unknowns);   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here  //some of these should be real_num, some real_num_mov...
+  vector < vector < real_num_mov > > phi_xx_dof_qp(n_unknowns);  //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here
 
-//CONTROL######################################################################
-  vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = mlSol->GetIndex("DX_CTRL");    // get the position of "U" in the ml_sol object
-  solVctrlIndex[1] = mlSol->GetIndex("DY_CTRL");    // get the position of "V" in the ml_sol object
+  vector < vector < double > > phi_hat_dof_qp(n_unknowns);
+  vector < vector < double > > phi_x_hat_dof_qp(n_unknowns);
+  vector < vector < double > > phi_xx_hat_dof_qp(n_unknowns);
 
-  if (dim == 3) solVctrlIndex[2] = mlSol->GetIndex("DZ_CTRL");      // get the position of "V" in the ml_sol object
-
-  unsigned solVctrlType = mlSol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
-  
-  vector < vector < double > >  solVctrl(dim);    // local solution
-  vector < double >   Vctrl_gss(dim, 0.);    //  solution
+  for(int unk=0; unk < n_unknowns; unk++) {  
+        phi_dof_qp[unk].reserve(max_size_elem_dofs);
+    phi_hat_dof_qp[unk].reserve(max_size_elem_dofs);
+      phi_x_dof_qp[unk].reserve(max_size_elem_dofs * dim);
+  phi_x_hat_dof_qp[unk].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp[unk].reserve(max_size_elem_dofs * dim2);
+ phi_xx_hat_dof_qp[unk].reserve(max_size_elem_dofs * dim2);
+   }
    
- for (unsigned  k = 0; k < dim; k++) {
-    solVctrl[k].reserve(maxSize);
-  }
+  //----------- at dofs ------------------------------
+  vector < vector < real_num > > SolVAR_eldofs(n_unknowns);  for(int k = 0; k < n_unknowns; k++) { SolVAR_eldofs[k].reserve(max_size_elem_dofs); }
+ 
 
+  // geometry (at dofs) --------------------------------//
+  vector< vector < real_num_mov > >   coords(dim);
+  vector  < vector  < double > >  coords_hat(dim);
+  unsigned coordsType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+  for(int i = 0; i < dim; i++) {   
+           coords[i].reserve(max_size_elem_dofs); 
+       coords_hat[i].reserve(max_size_elem_dofs); 
+ }
+ 
+ //************** geometry phi **************************
+  vector < vector < double > > phi_dof_qp_domain(dim);
+  vector < vector < real_num_mov > > phi_x_dof_qp_domain(dim);
+  vector < vector < real_num_mov > > phi_xx_dof_qp_domain(dim);
+  vector < vector < double > > phi_dof_qp_domain_hat(dim);
+  vector < vector < double > > phi_x_dof_qp_domain_hat(dim);
+  vector < vector < double > > phi_xx_dof_qp_domain_hat(dim);
+ 
+  for(int dom_coord = 0; dom_coord < dim; dom_coord++) {
+        phi_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs);
+      phi_x_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp_domain[dom_coord].reserve(max_size_elem_dofs * dim2);
+        phi_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs);
+      phi_x_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs * dim);
+     phi_xx_dof_qp_domain_hat[dom_coord].reserve(max_size_elem_dofs * dim2);
+   }
+ 
+   // geometry ------------------------------------------
   
-  vector <double> phiVctrl_gss;  // local test function
-  vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
-  vector <double> phiVctrl_xx_gss; // local test function second order partial derivatives
 
-  phiVctrl_gss.reserve(maxSize);
-  phiVctrl_x_gss.reserve(maxSize * dim);
-  phiVctrl_xx_gss.reserve(maxSize * dim2);
+  //------------ at quadrature points ---------------------
+  real_num_mov weight_qp = 0.;//
+    double weight_hat_qp = 0.;
+    vector < real_num > SolVAR_qp(n_unknowns);
+    vector < real_num > SolVAR_hat_qp(n_unknowns);
+    vector < vector < real_num > > gradSolVAR_qp(n_unknowns);
+    vector < vector < real_num > > gradSolVAR_hat_qp(n_unknowns);
+    for(int k = 0; k < n_unknowns; k++) { 
+          gradSolVAR_qp[k].resize(dim);
+      gradSolVAR_hat_qp[k].resize(dim);
+    }
+      
+
+
+// Displ_desired##################################################################
+  vector < double > phi_des_dof_qp;
+  vector < real_num_mov > phi_des_x_dof_qp;   //the derivatives depend on the Jacobian, which depends on the unknown, so we have to be adept here  //some of these should be real_num, some real_num_mov...
+  vector < real_num_mov > phi_des_xx_dof_qp;  
+
+  vector < double > phi_des_hat_dof_qp;
+  vector < double > phi_des_x_hat_dof_qp;
+  vector < double > phi_des_xx_hat_dof_qp;
+
+        phi_des_dof_qp.reserve(max_size_elem_dofs);
+      phi_des_x_dof_qp.reserve(max_size_elem_dofs * dim);
+     phi_des_xx_dof_qp.reserve(max_size_elem_dofs * dim2);
+    phi_des_hat_dof_qp.reserve(max_size_elem_dofs);
+  phi_des_x_hat_dof_qp.reserve(max_size_elem_dofs * dim);
+ phi_des_xx_hat_dof_qp.reserve(max_size_elem_dofs * dim2);
+   
+   
+  vector < real_num >  SolDisp_eldofs(dim,0.);
+  vector < real_num > SolDisp_des_qp(dim, 0.);  
   
-//CONTROL######################################################################
-
-// Vel_desired##################################################################
-  vector <double> phiVdes_gss;  // local test function
-  vector <double> phiVdes_x_gss; // local test function first order partial derivatives
-  vector <double> phiVdes_xx_gss; // local test function second order partial derivatives
-
-  phiVdes_gss.reserve(maxSize);
-  phiVdes_x_gss.reserve(maxSize * dim);
-  phiVdes_xx_gss.reserve(maxSize * dim2);
-
-  vector <double>  solVdes(dim,0.);
-  vector<double> Vdes_gss(dim, 0.);  
-  
-// Vel_desired##################################################################
+  vector < real_num > SolDisp_des_hat_qp(dim, 0.);  
+// Displ_desired##################################################################
 
 
 
 
-double  integral_target_alpha = 0.;
-double	integral_beta   = 0.;
-double	integral_gamma  = 0.;
+real_num  integral_target_alpha = 0.;
+real_num	integral_beta   = 0.;
+real_num	integral_gamma  = 0.;
   
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-// geometry
-    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
 
-    unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
-    
-// equation
-    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-//     unsigned nDofsVdes = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-    unsigned nDofsVctrl = msh->GetElementDofNumber(iel, solVctrlType);    // number of solution element dofs
-    
-    for (unsigned  k = 0; k < dim; k++) {       coordX[k].resize(nDofsX);    }
-     
-    for (unsigned  k = 0; k < dim; k++)  {
-      solV[k].resize(nDofsV);
-      solVctrl[k].resize(nDofsVctrl);
-//       solVdes[k].resize(nDofsVdes);
-    }
-
-
-    // geometry ************
-    for (unsigned i = 0; i < nDofsX; i++) {
-      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
-
-      for (unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+   //all vars ###################################################################  
+  for (unsigned  k = 0; k < n_unknowns; k++) {
+    unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+       Sol_n_el_dofs[k] = ndofs_unk;
+       SolVAR_eldofs[k].resize(Sol_n_el_dofs[k]);
+    for (unsigned i = 0; i < SolVAR_eldofs[k].size(); i++) {
+       unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
+       SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
       }
     }
+   //all vars ###################################################################
+  
     
+  // geometry *****************************
+    short unsigned ielGeom = msh->GetElementType(iel);
+
+      unsigned nDofsX = msh->GetElementDofNumber(iel, coordsType);    // number of coordinate element dofs
+    
+    for(int ivar=0; ivar<dim; ivar++) {
+      coords[ivar].resize(nDofsX);
+      coords_hat[ivar].resize(nDofsX);
+    }
+    
+   for( unsigned i = 0; i < nDofsX; i++) {
+      unsigned coordsDof  = msh->GetSolutionDof(i, iel, coordsType);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
+      for(unsigned ivar = 0; ivar < dim; ivar++) {
+          //Fixed coordinates (Reference frame)
+	coords_hat[ivar][i] = (*msh->_topology->_Sol[ivar])(coordsDof);
+      }
+    }
+
+  //***************************************  
+    assert(nDofsX == Sol_n_el_dofs[sol_index_displ]);
+    //Moving coordinates (Moving frame)
+      for (unsigned idim = 0; idim < dim; idim++) {
+        for (int j = 0; j < nDofsX; j++) {
+          coords[idim][j] = coords_hat[idim][j] + SolVAR_eldofs[SolIndex[idim]][j];
+        }
+      }
+  
      // elem average point 
-    vector < adept::adouble > elem_center(dim);   
+    vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {
-         elem_center[j] += coordX[j][i];
+         elem_center[j] += coords_hat[j][i];
        }
     }
     
@@ -1184,97 +1468,84 @@ double	integral_gamma  = 0.;
   
   //***** set target domain flag ********************************** 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(elem_center);
-//***************************************       
-    
-    
- //STATE###################################################################  
-    // velocity ************
-    for (unsigned i = 0; i < nDofsV; i++) {
-      unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
+   target_flag = ElementTargetFlag < double >(elem_center); //domain is considered wrt moving
 
-      for (unsigned  k = 0; k < dim; k++) {
-        solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
-      }
-    }
-//STATE###################################################################
-
-//CONTROL###################################################################  
-    // velocity ************
-    for (unsigned i = 0; i < nDofsV; i++) {
-      unsigned solVctrlDof = msh->GetSolutionDof(i, iel, solVctrlType);    // global to global mapping between solution node and solution dof
-
-      for (unsigned  k = 0; k < dim; k++) {
-        solVctrl[k][i] = (*sol->_Sol[solVctrlIndex[k]])(solVctrlDof);      // global extraction and local storage for the solution
-      }
-    }
-//CONTROL###################################################################
+  // geometry end *****************************
 
 
+  //DESIRED DISPL###################################################################  
+    // displacement ************
+//     for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_displ]; i++) {
+//       unsigned solDdesDof = msh->GetSolutionDof(i, iel, solDType);    // global to global mapping between solution node and solution dof
 
-
-  //DESIRED VEL###################################################################  
-    // velocity ************
-//     for (unsigned i = 0; i < nDofsV; i++) {
-//       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
-
-      for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = TargetDisp[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+      for (unsigned  k = 0; k < SolDisp_eldofs.size() /*dim*/; k++) {
+        SolDisp_eldofs[k]/*[i]*/ = TargetDisp[k] /*(*sol->_Sol[solDIndex[k]])(solDdesDof)*/;      // global extraction and local storage for the solution
       }
 //     }
- //DESIRED VEL###################################################################
+ //DESIRED DISPL###################################################################
 
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 
-//STATE#############################################################################	
-        // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV_gss, phiV_x_gss, phiV_xx_gss);
-	
-	msh->_finiteElement[ielGeom][solVctrlType]->Jacobian(coordX, ig, weight, phiVctrl_gss, phiVctrl_x_gss, phiVctrl_xx_gss);
+	// *** get Jacobian and test function and test function derivatives ***
+      for(int unk=0; unk < n_unknowns; unk++) {
+	msh->_finiteElement[ielGeom][SolFEType[unk]]->Jacobian(coords,    ig,weight_qp,    phi_dof_qp[unk],    phi_x_dof_qp[unk],    phi_xx_dof_qp[unk]);
+	msh->_finiteElement[ielGeom][SolFEType[unk]]->Jacobian(coords_hat,ig,weight_hat_qp,phi_hat_dof_qp[unk],phi_x_hat_dof_qp[unk],phi_xx_hat_dof_qp[unk]);
+      }
+      
+   //=============== Integration at qp ========================================
+         //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN...
+    for (unsigned int d = 0; d < dim; d++) {
+         msh->_finiteElement[ielGeom][coordsType]->Jacobian(coords,    ig, weight_qp,    phi_dof_qp_domain[d],     phi_x_dof_qp_domain[d],     phi_xx_dof_qp_domain[d]);
+         msh->_finiteElement[ielGeom][coordsType]->Jacobian(coords_hat,ig, weight_hat_qp,phi_dof_qp_domain_hat[d], phi_x_dof_qp_domain_hat[d], phi_xx_dof_qp_domain_hat[d]);
+      }
+     
+  //begin unknowns eval at gauss points ********************************
+	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
+	  SolVAR_qp[unk] = 0.;
+	  SolVAR_hat_qp[unk] = 0.;
 
-	msh->_finiteElement[ielGeom][solVType  /*solVdes*/]->Jacobian(coordX, ig, weight, phiVdes_gss, phiVdes_x_gss, phiVdes_xx_gss);
+	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
+	    gradSolVAR_qp[unk][ivar2] = 0.; 
+	    gradSolVAR_hat_qp[unk][ivar2] = 0.; 
+	  }
+	  
+	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
+	    SolVAR_qp[unk]    += phi_dof_qp[ unk ][i] * SolVAR_eldofs[unk][i];
+	    SolVAR_hat_qp[unk]    += phi_hat_dof_qp[ unk ][i] * SolVAR_eldofs[unk][i];
+	    for(unsigned ivar2 = 0; ivar2 < dim; ivar2++) {
+	      gradSolVAR_qp[unk][ivar2]     += phi_x_dof_qp[ unk ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
+	      gradSolVAR_hat_qp[unk][ivar2] += phi_x_hat_dof_qp[ unk ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
+	    }
+	  }
+	  
+	}  
+ //end unknowns eval at gauss points ********************************
 
-	  vector < vector < double > > gradVctrl_gss(dim);
-      for (unsigned  k = 0; k < dim; k++) {
-          gradVctrl_gss[k].resize(dim);
-          std::fill(gradVctrl_gss[k].begin(), gradVctrl_gss[k].end(), 0);
-        }
-	
-    for (unsigned  k = 0; k < dim; k++) {
-      V_gss[k]       = 0.;
-      Vdes_gss[k]    = 0.;
-       Vctrl_gss[k]  = 0.;
-    }
+	msh->_finiteElement[ielGeom][SolFEType[sol_index_displ]  /*SolDisp_eldofs*/]->Jacobian(coords, ig, weight_qp, phi_des_dof_qp, phi_des_x_dof_qp, phi_des_xx_dof_qp);
+	msh->_finiteElement[ielGeom][SolFEType[sol_index_displ]  /*SolDisp_eldofs*/]->Jacobian(coords_hat, ig, weight_hat_qp, phi_des_hat_dof_qp, phi_des_x_hat_dof_qp, phi_des_xx_hat_dof_qp);
+
+    for (unsigned  k = 0; k < dim; k++) {      SolDisp_des_qp[k]    = 0.;     }
     
-      for (unsigned i = 0; i < nDofsV; i++) {
-        for (unsigned  k = 0; k < dim; k++) {
-            V_gss[k] += solV[k][i] * phiV_gss[i];
-            Vdes_gss[k] += solVdes[k]/*[i]*/ * phiVdes_gss[i];
+      for (unsigned  k = 0; k < dim; k++) {
+        for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_displ]; i++) {
+                SolDisp_des_qp[k] += SolDisp_eldofs[k]/*[i]*/ * phi_des_dof_qp[i];
+            SolDisp_des_hat_qp[k] += SolDisp_eldofs[k]/*[i]*/ * phi_des_hat_dof_qp[i];
 		}
       }
 	
-      for (unsigned i = 0; i < nDofsVctrl; i++) {
-        for (unsigned  k = 0; k < dim; k++) {
-            Vctrl_gss[k] += solVctrl[k][i] * phiVctrl_gss[i];
-	 }
-     for (unsigned j = 0; j < dim; j++) {
-            for (unsigned  k = 0; k < dim; k++) {
-              gradVctrl_gss[k][j] += phiVctrl_x_gss[i * dim + j] * solVctrl[k][i];
-            }
-          }
-      }
+      
           
-          
-	
+      for (unsigned  k = 0; k < dim; k++) {	 
+          integral_target_alpha += target_flag * (SolVAR_qp[SolIndex[k]] + SolVAR_qp[SolIndex[k + ctrl_pos_begin]] - SolDisp_des_qp[k]) * 
+                                                 (SolVAR_qp[SolIndex[k]] + SolVAR_qp[SolIndex[k + ctrl_pos_begin]] - SolDisp_des_qp[k]) * weight_qp; 
+          integral_beta	 += SolVAR_qp[SolIndex[k + ctrl_pos_begin]] *SolVAR_qp[SolIndex[k + ctrl_pos_begin]] * weight_qp;
+
+                }
       for (unsigned  k = 0; k < dim; k++) {
-	 integral_target_alpha +=target_flag* (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k])*weight; 
-	 integral_beta	+= ((Vctrl_gss[k])*(Vctrl_gss[k])*weight);
-      }
-      for (unsigned  k = 0; k < dim; k++) {
-	for (unsigned  j = 0; j < dim; j++) {	
-		integral_gamma	  += ((gradVctrl_gss[k][j])*(gradVctrl_gss[k][j])*weight);
-	}
+        for (unsigned  j = 0; j < dim; j++) {	
+            integral_gamma	  +=  gradSolVAR_qp[SolIndex[k + ctrl_pos_begin]][j] * gradSolVAR_qp[SolIndex[k + ctrl_pos_begin]][j] * weight_qp;
+        }
       }
    
   
@@ -1286,7 +1557,7 @@ double	integral_gamma  = 0.;
        std::ofstream intgr_fstream;
   if (paral::get_rank() == 0 ) {
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
-      intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys.GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
+      intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys->GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
       intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << alpha_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
       intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << beta_val  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
       intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << gamma_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
@@ -1295,13 +1566,6 @@ double	integral_gamma  = 0.;
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }  
 
-    
-//     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
-//     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<beta_val << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
-//     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<gamma_val<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
-//     std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha *(alpha_val*0.5)+ integral_beta *(beta_val*0.5) + integral_gamma*(gamma_val*0.5) << std::endl; 
-   
-    
     return; 
 	  
   
