@@ -31,8 +31,12 @@ using namespace femus;
 void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
                       const unsigned & degree, const unsigned & dimension, const bool &output = false);
 
-void GaussianElemination (std::vector<std::vector < double > > & A, std::vector < double> &x, const bool &output = false);
 void GaussianEleminationWithPivoting (std::vector<std::vector < double > > & A, std::vector < double> &x, const bool &output = false);
+void LUwithPivoting (std::vector<std::vector < double > > & A, std::vector < unsigned > &idx, const bool &output = false);
+void LUbackward (const std::vector<std::vector < double > > & A, const std::vector < unsigned > &idx, 
+                 std::vector < double > &b, std::vector < double > &x, const bool &output = false);
+void LUsolve (std::vector<std::vector < double > > & A, std::vector < unsigned > &idx, 
+              std::vector < double > &b, std::vector < double > &x, const bool &output = false);  
 
 void GetChebyshev (std::vector<double> &T, std::vector<double> &dT, const unsigned &n, const double &x, const bool &output = false);
 
@@ -185,10 +189,13 @@ int main (int argc, char** args) {
   double ymax = 0.;
 
   std::vector< double> alpha (aIdx.size());
+  std::vector< double> b (aIdx.size());
+  std::vector< unsigned> pivotIndex (aIdx.size());
 
   std::vector < std::vector< double> > Mp (aIdx.size());
   for (unsigned k = 0; k < aIdx.size(); k++) {
-    Mp[k].resize (aIdx.size() + 1);
+    //Mp[k].resize (aIdx.size() + 1);
+    Mp[k].resize (aIdx.size());
   }
 
   std::vector < std::vector < std::vector< double> > > dMp (dim);
@@ -220,7 +227,8 @@ int main (int argc, char** args) {
   for (unsigned p = 0; p < Np; p++) { // particle loop
 
     for (unsigned k = 0; k < aIdx.size(); k++) {
-      Mp[k].assign (aIdx.size() + 1, 0.);
+      //Mp[k].assign (aIdx.size() + 1, 0.);
+      Mp[k].assign (aIdx.size(), 0.);
     }
 
     for (unsigned d = 0; d < dim; d++) {
@@ -275,10 +283,14 @@ int main (int argc, char** args) {
       for (unsigned d = 0 ; d < dim; d++) {
         rhs *= T0[ aIdx[j][d] ];
       }
-      Mp[j][aIdx.size()] = rhs;
+      //Mp[j][aIdx.size()] = rhs;
+      b[j] = rhs;
     }
 
-    GaussianEleminationWithPivoting (Mp, alpha, false);
+    //GaussianEleminationWithPivoting (Mp, alpha, false);
+    
+    LUsolve (Mp, pivotIndex, b, alpha, false);
+    
 
     double phiSum = 0.;
     for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
@@ -340,13 +352,18 @@ int main (int argc, char** args) {
 
 void GaussianEleminationWithPivoting (std::vector<std::vector < double > > & A, std::vector < double> &x, const bool &output) {
   // A is nx(n+1) augmented matrix
-  int n  = A.size();
+  unsigned n  = A.size();
+
+  std::vector < unsigned > idx (n);
+  for (unsigned i = 0; i < n; i++) {
+    idx[i] = i;
+  }
 
   if (output) {
     std::cout << "Before pivoting\n A=\n" ;
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j <= n; j++) {
-        std::cout << A[i][j] << " " ;
+    for (unsigned i = 0; i < n; i++) {
+      for (unsigned j = 0; j <= n; j++) {
+        std::cout << A[idx[i]][j] << " " ;
       }
       std::cout << "\n" ;
     }
@@ -355,16 +372,14 @@ void GaussianEleminationWithPivoting (std::vector<std::vector < double > > & A, 
 
   const double tol = 1e-12;
   double max_row = 0.0, abs;
-  for (int i = 0; i < n; i++) {
-    for (int k = i + 1; k < n; k++) {
-      max_row = fabs (A[i][i]);
-      if ( (abs = fabs (A[k][i])) > max_row) {
+  for (unsigned i = 0; i < n; i++) {
+    for (unsigned k = i + 1; k < n; k++) {
+      max_row = fabs (A[idx[i]][i]);
+      if ( (abs = fabs (A[idx[k]][i])) > max_row) {
         max_row = abs;
-        for (int j = 0; j < n + 1; j++) {
-          double temp = A[i][j];
-          A[i][j] = A[k][j];
-          A[k][j] = temp;
-        }
+        unsigned idxi = idx[i];
+        idx[i] = idx[k];
+        idx[k] = idxi;
       }
     }
     if (max_row < tol) {
@@ -372,20 +387,19 @@ void GaussianEleminationWithPivoting (std::vector<std::vector < double > > & A, 
       //exit (0);
     }
 
-    for (int j = i + 1; j < n; j++) {
-      double mji = A[j][i] / A[i][i];
-      for (int k = i; k < n + 1; k++) {
-        A[j][k] -= mji * A[i][k];
+    for (unsigned j = i + 1; j < n; j++) {
+      double mji = A[idx[j]][i] / A[idx[i]][i];
+      for (unsigned k = i; k < n + 1; k++) {
+        A[idx[j]][k] -= mji * A[idx[i]][k];
       }
     }
-
   }
-  if (fabs (A[n - 1][n - 1] / A[n - 1][n]) < tol) {
+  if (fabs (A[idx[n - 1]][n - 1] / A[idx[n - 1]][n]) < tol) {
 
     std::cout << "After pivoting \nA=\n" ;
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j <= n; j++) {
-        std::cout << A[i][j] << " " ;
+    for (unsigned i = 0; i < n; i++) {
+      for (unsigned j = 0; j <= n; j++) {
+        std::cout << A[idx[i]][j] << " " ;
       }
       std::cout << "\n" ;
     }
@@ -395,27 +409,38 @@ void GaussianEleminationWithPivoting (std::vector<std::vector < double > > & A, 
     //exit (0);
   }
 
-  x[n - 1] = A[n - 1][n] / A[n - 1][n - 1];
-  for (int i = n - 2; i >= 0; i--) {
-    x[i] = A[i][n];
-    for (int j = i + 1; j < n; j++) {
-      x[i] -= A[i][j] * x[j];
+//   x[n - 1] = A[idx[n - 1]][n] / A[idx[n - 1]][n - 1];
+//   for (int i = n - 2; i >= 0; i--) {
+//     x[i] = A[idx[i]][n];
+//     for (int j = i + 1; j < n; j++) {
+//       x[i] -= A[idx[i]][j] * x[j];
+//     }
+//     x[i] /= A[idx[i]][i];
+//   }
+
+
+  x[n - 1] = A[idx[n - 1]][n] / A[idx[n - 1]][n - 1];
+  for (unsigned ip1 = n - 1; ip1 > 0; ip1--) {
+    unsigned i = ip1 - 1u;
+    x[i] = A[idx[i]][n];
+    for (int j = ip1; j < n; j++) {
+      x[i] -= A[idx[i]][j] * x[j];
     }
-    x[i] /= A[i][i];
+    x[i] /= A[idx[i]][i];
   }
 
   if (output) {
     std::cout << "After pivoting \nA=\n" ;
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j <= n; j++) {
-        std::cout << A[i][j] << " " ;
+    for (unsigned i = 0; i < n; i++) {
+      for (unsigned j = 0; j <= n; j++) {
+        std::cout << A[idx[i]][j] << " " ;
       }
       std::cout << "\n" ;
     }
     std::cout << "\n\n";
 
     std::cout << "Solution is: \n";
-    for (int i = 0; i < n; i++) {
+    for (unsigned i = 0; i < n; i++) {
       std::cout << x[i] << "\n";
     }
   }
@@ -423,79 +448,113 @@ void GaussianEleminationWithPivoting (std::vector<std::vector < double > > & A, 
 
 }
 
-
-void GaussianElemination (std::vector<std::vector < double > > & A, std::vector < double> &x, const bool &output) {
-
-  unsigned n = A.size();
-
-  if (output) {
-    std::cout << "Before LU\n";
-    for (unsigned i = 0; i < n; i++) {
-      for (unsigned j = 0; j < n + 1; j++) {
-        std::cout << A[i][j] << " ";
-      }
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
+void LUwithPivoting (std::vector<std::vector < double > > & A, std::vector < unsigned > &idx, const bool &output) {
+  unsigned n  = A.size();
+  idx.resize(n);
+  for (unsigned i = 0; i < n; i++) {
+    idx[i] = i;
   }
-
-  for (unsigned i = 0; i < n - 1; i++) {
-    unsigned p = i;
-    while (A[p][i] == 0) {
-      p++;
-      if (p == n) {
-        std::cout << "The Matrix A is singular\n";
-        exit (0);
+  
+  if (output) {
+    std::cout << "Before pivoting\n A=\n" ;
+    for (unsigned i = 0; i < n; i++) {
+      for (unsigned j = 0; j < n; j++) {
+        std::cout << A[idx[i]][j] << " " ;
+      }
+      std::cout << "\n" ;
+    }
+    std::cout << "\n";
+  }
+  
+  const double tol = 1e-12;
+  double max_row = 0.0, abs;
+  for (unsigned i = 0; i < n; i++) {
+    for (unsigned k = i + 1; k < n; k++) {
+      max_row = fabs (A[idx[i]][i]);
+      if ( (abs = fabs (A[idx[k]][i])) > max_row) {
+        max_row = abs;
+        unsigned idxi = idx[i];
+        idx[i] = idx[k];
+        idx[k] = idxi;
       }
     }
-    if (p != i) {
-      for (unsigned j = 0; j < n + 1; j++) {
-        double tmp;
-        tmp = A[i][j];
-        A[i][j] = A[p][j];
-        A[p][j] = tmp;
-      }
+    if (max_row < tol) {
+      std::cout << "Degenerate matrix.";
+      //exit (0);
     }
+    
     for (unsigned j = i + 1; j < n; j++) {
-      double mji = A[j][i] / A[i][i];
-      for (unsigned k = i; k < n + 1; k++) {
-        A[j][k] -= mji * A[i][k];
+      double mji = A[idx[j]][i] / A[idx[i]][i];
+      A[idx[j]][i] = mji;
+      for (unsigned k = i; k < n; k++) {
+        A[idx[j]][k] -= mji * A[idx[i]][k];
       }
     }
   }
-  if (A[n - 1][n - 1] == 0) {
-    std::cout << "The Matrix A is singular\n";
-    exit (0);
-  }
-  else {
-    x[n - 1] = A[n - 1][n] / A[n - 1][n - 1];
-    for (int i = n - 2; i >= 0; i--) {
-      x[i] = A[i][n];
-      for (unsigned j = i + 1; j < n; j++) {
-        x[i] -= A[i][j] * x[j];
-      }
-      x[i] /= A[i][i];
-    }
-  }
-
-  if (output) {
-    std::cout << "After LU\n";
+  if (fabs (A[idx[n - 1]][n - 1] / A[idx[n - 1]][n]) < tol) {
+    std::cout << "After pivoting \nA=\n" ;
     for (unsigned i = 0; i < n; i++) {
-      for (unsigned j = 0; j < n + 1; j++) {
-        std::cout << A[i][j] << " ";
+      for (unsigned j = 0; j < n; j++) {
+        std::cout << A[idx[i]][j] << " " ;
       }
-      std::cout << std::endl;
+      std::cout << "\n" ;
     }
-    std::cout << std::endl;
+    std::cout << "\n\n";
+    
+    std::cout << "Zero row! Matrix is singular \n";
+    //exit (0);
+  }
+  
+  if (output) {
+    std::cout << "After pivoting \nA=\n" ;
+    for (unsigned i = 0; i < n; i++) {
+      for (unsigned j = 0; j < n; j++) {
+        std::cout << A[idx[i]][j] << " " ;
+      }
+      std::cout << "\n" ;
+    }
+    std::cout << "\n\n";
+  }
+}
 
+
+void LUbackward (const std::vector<std::vector < double > > & A, const std::vector < unsigned > &idx, 
+                 std::vector < double > &b, std::vector < double > &x, const bool &output) {  
+  
+  unsigned n  = A.size();
+  
+  for (unsigned i = 0; i < n; i++) {
+    for (unsigned j = i + 1; j < n; j++) {
+      b[idx[j]] -= A[idx[j]][i] * b[idx[i]];
+    }
+  }
+    
+  x[n - 1] = b[idx[n - 1]] / A[idx[n - 1]][n - 1];
+  for (unsigned ip1 = n - 1; ip1 > 0; ip1--) {
+    unsigned i = ip1 - 1u;
+    x[i] = b[idx[i]];
+    for (int j = ip1; j < n; j++) {
+      x[i] -= A[idx[i]][j] * x[j];
+    }
+    x[i] /= A[idx[i]][i];
+  }
+  
+  if (output) {
     std::cout << "Solution is: \n";
-    for (int i = 0; i < n; i++) {
+    for (unsigned i = 0; i < n; i++) {
       std::cout << x[i] << "\n";
     }
-
   }
-
   return;
+}
+
+void LUsolve (std::vector<std::vector < double > > & A, std::vector < unsigned > &idx, 
+            std::vector < double > &b, std::vector < double > &x, const bool &output) {  
+  
+  LUwithPivoting (A, idx, output);
+  LUbackward (A, idx, b, x, output);
+  
+  
 }
 
 void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
@@ -714,3 +773,4 @@ void PrintGnuplotScript (const double & xmin, const double & xmax, const double 
   fout << "\npause -1 " << std::endl;
   fout.close();
 }
+
