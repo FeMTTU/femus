@@ -712,15 +712,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 //========== compute gauss quantities on the boundary ================================================
 
 		
-//============ Res _ Boundary Integral Constraint ============================================================================================
-	  for (unsigned  kdim = 0; kdim < dim; kdim++) {
-// 		for(unsigned i=0; i < Sol_n_el_dofs[theta_index]; i ++) { //avoid because it is an element dof
-/*delta_theta row */ 	 /*Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[theta_index], i) ] */Res_outer[0] +=  /*fake_theta_flag[i] **/ weight_hat_bd_qp * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
-// 		}  
-	  }
-		  
-//============End of Res _ Boundary Integral Constraint ============================================================================================
-		
   // *** phi_i loop ***
 		for(unsigned i_bdry=0; i_bdry < nve_bd; i_bdry++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
@@ -759,7 +750,6 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
                                                                                           beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry]
                                                                                         + gamma_val* lap_res_dctrl_ctrl_bd
                                                                                         - mus * grad_dot_n_adj_res[kdim]  * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry]
-                                                                                        - (*sol->_Sol[SolIndex[theta_index]])(0) * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry] * normal[kdim]      //*sol->_Sol[SolIndex[theta_index]])(0) finds the global value from KKDof pos(63, 169,etc), SolVAReldof_theta gets the value in the boundary point which will be zero. Theta is just a const
                                                                                         );	    
 		      }//kdim  
 
@@ -1065,37 +1055,121 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
 
 //       //***************************************************************************************************************
-// 
-//     //Sum the local matrices/vectors into the Global Matrix/Vector
-//     // FIRST ALL THE BLOCKS WITHOUT THETA ROW OR COLUMN 
-//     for(unsigned i_unk=0; i_unk < n_unknowns-1; i_unk++) {
-//       RES->add_vector_blocked(Res[SolPdeIndex[i_unk]],JACDof[i_unk]);
-//         for(unsigned j_unk=0; j_unk < n_unknowns-1; j_unk++) {
-// 	  if(assembleMatrix) JAC->add_matrix_blocked( Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ], JACDof[i_unk], JACDof[j_unk]);
-//         }
-//     }
-//     
-//     // THEN THE BLOCKS WITH THETA ROW OR COLUMN 
-// 	/*delta_theta-theta*/    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-1], JACDof[n_unknowns-1]);
-// 	    
-//      if (control_el_flag == 1) {
-// 	      for (unsigned kdim = 0; kdim < dim; kdim++) {
-//                           /*delta_control*/       RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],JACDof[n_unknowns-2-kdim]); 
-// 		if(assembleMatrix) {
-//                           /*delta_theta-control*/ JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, JACDof[n_unknowns-2-kdim]);
-//                           /*delta_control-theta*/ JAC->add_matrix_blocked( Jac[ /*SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim]*/SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-2-kdim], bdry_int_constr_pos_vec); 
-// 		}
-// 	      }  //kdim
-//      }  //add control boundary element contributions
-//      
-//      
-//           if (control_el_flag == 1) {
-//           /*delta_theta(bdry constr)*/         RES->add_vector_blocked(Res_outer,bdry_int_constr_pos_vec);
-// 	  }
-// 	  
-//      /* if (JACDof[n_unknowns-1][0] != bdry_int_constr_pos_vec[0]) */ /*delta_theta(fake)*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       JACDof[n_unknowns-1]);
-// 	  
-//    //--------------------------------------------------------------------------------------------------------  
+     
+  if (control_el_flag == 1) {
+      
+      vector < double > normal(dim,0);
+
+        for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+                
+           	  if(el->GetFaceElementIndex(iel,jface) < 0) {  //I am on the boundary
+
+     unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+	      if(  face == CTRL_FACE_IDX) { //I am a control face
+              
+		unsigned nve_bd = msh->GetElementFaceDofNumber(iel,jface, SolFEType[ctrl_pos_begin] ); //AAAAAAAAAAAAAAAAA
+		const unsigned felt_bd = msh->GetElementFaceType(iel, jface);    
+
+		vector < real_num >                      SolVAR_bd_qp(n_unknowns);
+
+        for(unsigned ig_bd=0; ig_bd < ml_prob.GetQuadratureRule(felt_bd).GetGaussPointsNumber(); ig_bd++) {
+              
+              		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
+		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[kdim + ctrl_pos_begin],phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin],normal);
+                        }
+              
+              
+              		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
+			    unsigned int ctrl_index = kdim + ctrl_pos_begin;
+										  SolVAR_bd_qp[ SolPdeIndex[ctrl_index] ] = 0.;
+                                          
+ 			  for(int i_bd = 0; i_bd < nve_bd; i_bd++) {
+		                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
+                                                                    SolVAR_bd_qp[SolPdeIndex[ctrl_index]]           += phi_hat_bd_dof_qp  [ ctrl_index ][i_bd]                  * SolVAR_eldofs[ SolPdeIndex[ ctrl_index ] ][i_vol];
+			                  }                                         
+                        }
+              
+              
+              //residual =========================================
+    for (unsigned  kdim = 0; kdim < dim; kdim++) {
+// 		for(unsigned i=0; i < Sol_n_el_dofs[theta_index]; i ++) { //avoid because it is an element dof
+/*delta_theta row */ 	 /*Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[theta_index], i) ] */Res_outer[0] +=  /*fake_theta_flag[i] **/ weight_hat_bd_qp * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
+// 		}  
+	  }
+              
+              		for(unsigned i_bdry=0; i_bdry < nve_bd; i_bdry++) {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+
+              
+              
+              		      for (unsigned  kdim = 0; kdim < dim; kdim++) {
+			
+			
+/*delta_control row */     if( i_vol < Sol_n_el_dofs[ctrl_pos_begin] )  Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[kdim + ctrl_pos_begin], i_vol) ]  +=
+                                                                                      - control_node_flag[kdim][i_vol] * weight_hat_bd_qp * (
+                                                                                        - SolVAR_eldofs[theta_index][0] /*(*sol->_Sol[SolIndex[theta_index]])(0)*/ * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry] * normal[kdim]  
+                                                                                        //*sol->_Sol[SolIndex[theta_index]])(0) finds the global value from KKDof pos(63, 169,etc), SolVAReldof_theta gets the value in the boundary point which will be zero. Theta is just a const
+                                                                                        );	    
+		                        }//kdim  
+              //residual - end =========================================
+              
+              //jacobian =========================================
+              
+  //============ Jac _ Boundary Integral Constraint ============================================================================================
+		    for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+			  for(unsigned i =0; i < Sol_n_el_dofs[theta_index]; i ++) {
+			    if(i_vol < Sol_n_el_dofs[ctrl_pos_begin]) {
+				double temp = weight_hat_bd_qp * ( phi_hat_bd_dof_qp[kdim + ctrl_pos_begin][i_bdry] * normal[kdim]);
+//ROW_BLOCK delta_theta - control -- loop over i in the VOLUME (while j(/i_vol) is in the boundary) -------------------------------------------------------------------------------------------------------------
+			      Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, theta_index , ctrl_pos_begin + kdim, i, i_vol) ]  += - temp;
+//COLUMN_BLOCK delta_control - theta ---- loop over j in the VOLUME (while i(/i_vol) is in the boundary) ---------------------------------------------------------------------------------------------------
+			      Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, ctrl_pos_begin + kdim, theta_index , i_vol, i) ] += - control_node_flag[kdim][i_vol] * temp;
+			    }//endif
+			  }// i 
+		    }//kdim
+//============ End of Jac _ Boundary Integral Constraint ============================================================================================
+            
+              
+              
+              //jacobian - end =========================================
+              
+                    } //i_bdry
+                    
+          }  //end gauss boundary loop
+
+              
+              
+              
+             }
+                        
+          }
+                
+
+      }      
+  }
+     
+
+// //     // THE BLOCKS WITH THETA ROW OR COLUMN 
+// // // 	/*delta_theta-theta*/    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-1] ], L2G_dofmap[n_unknowns-1], L2G_dofmap[n_unknowns-1]);
+// // 	    
+// //      if (control_el_flag == 1) {
+// // 	      for (unsigned kdim = 0; kdim < dim; kdim++) {
+// //                           /*delta_control*/       RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],L2G_dofmap[n_unknowns-2-kdim]); 
+// // 		if(assembleMatrix) {
+// //                           /*delta_theta-control*/ JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, L2G_dofmap[n_unknowns-2-kdim]);
+// //                           /*delta_control-theta*/ JAC->add_matrix_blocked( Jac[ /*SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim]*/SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], L2G_dofmap[n_unknowns-2-kdim], bdry_int_constr_pos_vec); 
+// // 		}
+// // 	      }  //kdim
+// //      }  //add control boundary element contributions
+// //      
+// //      
+// //           if (control_el_flag == 1) {
+// //           /*delta_theta(bdry constr)*/         RES->add_vector_blocked(Res_outer,bdry_int_constr_pos_vec);
+// // 	  }
+// // 	  
+// // //      /* if (L2G_dofmap[n_unknowns-1][0] != bdry_int_constr_pos_vec[0]) */ /*delta_theta(fake)*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       L2G_dofmap[n_unknowns-1]);
+// // 	  
+// //    //--------------------------------------------------------------------------------------------------------  
 
        
 //     assemble_jacobian<real_num,real_num_mov>::print_element_residual(iel, Res, Sol_n_el_dofs, 9, 3);
