@@ -4,7 +4,7 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB  4
+#define NSUB  1
 
 //*********************** Model *****************************************
 #define MODEL "Linear_elastic"
@@ -22,7 +22,7 @@
 
 //*********************** Sets the regularization parameters *******************************************************
 
- double alpha_val = 1.e+3;
+ double alpha_val = 1.e+0;
  double beta_val  = 1.;
  double gamma_val = 1.;
  
