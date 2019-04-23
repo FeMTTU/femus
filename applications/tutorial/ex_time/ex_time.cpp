@@ -96,28 +96,51 @@ double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector
       return value;   
 }
 
-double  nonlin_term_function(const double& v) {
+
+class Singularity {
+
+    
+public:
+
+    
+static double  function(const double& v) {
     
 //    return 1.;
 //    return v + 1.;
-   return - 0.8 * 1./( (1. - v) );
+   return - amp_factor * 1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
 //    return -exp(v);
 //    return -  v * v * v - 1.;
 //    return - v * v;
  }
 
-double  nonlin_term_derivative(const double& v) {
+static double  derivative(const double& v) {
     
 //    return 0.;
 //    return 1.;
-   return - 0.8 * 1./( (1. - v)*(1. - v) ); 
+   return - amp_factor * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
 //    return -exp(v);
 //    return -3. * v * v;
 //    return -2. * v;
  }
 
+
+static double  g_vc(const double& v) {
+    
+   return 1./amp_factor * (-1.) * 0.5 * (v * v + 2. * v - 1.);
+   
+ }
+ 
+
+private:
+
+  static constexpr double amp_factor = 0.8;  
+ 
+};
+
+ 
+ 
 int main(int argc,char **args) {
 
   // ======= Initialize ========================
@@ -274,7 +297,7 @@ int main(int argc,char **args) {
         double AdaptStarter = 0.85; // Value of ||u||_\infty at which to start adaptation
         if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= AdaptStarter ) {
      
-            double NonlinearityTracker = 0.1 * nonlin_term_derivative( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() ) ;
+            double NonlinearityTracker = 0.1 * Singularity::derivative( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() ) ;
             double NewTime = std::min( system.GetIntervalTime(), NonlinearityTracker );
             double minTimeStep = 0.001; // Minimum step-size controller
             double NewTimeFixed = std::max( NewTime , minTimeStep );
@@ -509,8 +532,8 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob) {
 	    }
 	    Res_el[SolPdeIndex[0]][i] +=  - weight_qp * ( 
                 dt * (
-                     +       theta  * ( Lap_rhs_i     +  nonlin_term_function(sol_qp[0])     * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
-					 + (1. - theta) * ( Lap_old_rhs_i +  nonlin_term_function(sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
+                     +       theta  * ( Lap_rhs_i     +  Singularity::function(sol_qp[0])     * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
+					 + (1. - theta) * ( Lap_old_rhs_i +  Singularity::function(sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
                      ) 
 					+ (sol_qp[0] - sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i]        // acceleration
             );
@@ -525,7 +548,7 @@ void AssembleMatrixRes(MultiLevelProblem &ml_prob) {
                                                            phi_x_fe_qp[SolFEType[0]][j * dim + d];
 
 
-          Jac_el[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * ( Lap_mat_i_j  + phi_fe_qp[ SolFEType[0] ][i] * nonlin_term_derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] )
+          Jac_el[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * ( Lap_mat_i_j  + phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] )
                                                                                                                 + phi_fe_qp[ SolFEType[0] ][i] * phi_fe_qp[ SolFEType[0] ][j] );
 	      
   	    }    //end phij loop
@@ -759,8 +782,8 @@ void AssembleMatrixRes_VC(MultiLevelProblem &ml_prob) {
 	    }
 	    Res_el[SolPdeIndex[0]][i] +=  - weight_qp * ( 
                 dt * (
-                     +       theta  * ( Lap_rhs_i     +  nonlin_term_function(sol_qp[0])     * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
-					 + (1. - theta) * ( Lap_old_rhs_i +  nonlin_term_function(sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
+                     +       theta  * ( Lap_rhs_i     +  Singularity::function(sol_qp[0])     * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
+					 + (1. - theta) * ( Lap_old_rhs_i +  Singularity::function(sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
                      ) 
 					+ (sol_qp[0] - sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i]        // acceleration
             );
@@ -775,7 +798,7 @@ void AssembleMatrixRes_VC(MultiLevelProblem &ml_prob) {
                                                            phi_x_fe_qp[SolFEType[0]][j * dim + d];
 
 
-          Jac_el[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * ( Lap_mat_i_j  + phi_fe_qp[ SolFEType[0] ][i] * nonlin_term_derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] )
+          Jac_el[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * ( Lap_mat_i_j  + phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] )
                                                                                                                 + phi_fe_qp[ SolFEType[0] ][i] * phi_fe_qp[ SolFEType[0] ][j] );
 	      
   	    }    //end phij loop
