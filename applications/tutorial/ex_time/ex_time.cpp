@@ -131,7 +131,13 @@ static double  g_vc(const double& v) {
    return 1./amp_factor * (-1.) * 0.5 * (v * v + 2. * v - 1.);
    
  }
+
  
+static double  g_vc_derivative(const double& v) {
+    
+   return 1./amp_factor * (-1.) * ( v + 1. );
+   
+ }
 
 private:
 
@@ -599,7 +605,7 @@ void AssembleMatrixRes_VC(MultiLevelProblem &ml_prob) {
   
   // time dep data
   double dt = mlPdeSys->GetIntervalTime();
-  double theta = 0.5;
+//   double theta = 0.5;
 
   //************** geometry (at dofs and quadrature points) *************************************  
   vector < vector < double > > coords_at_dofs(dim);
@@ -781,11 +787,10 @@ void AssembleMatrixRes_VC(MultiLevelProblem &ml_prob) {
 	      Lap_old_rhs_i += phi_x_fe_qp[SolFEType[0]][i * dim + d] * sol_old_grad_qp[0][d];
 	    }
 	    Res_el[SolPdeIndex[0]][i] +=  - weight_qp * ( 
-                dt * (
-                     +       theta  * ( Lap_rhs_i     +  Singularity::function(sol_qp[0])     * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
-					 + (1. - theta) * ( Lap_old_rhs_i +  Singularity::function(sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i] )     // Laplacian + nonlinear term
-                     ) 
-					+ (sol_qp[0] - sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i]        // acceleration
+                       Singularity::function(sol_qp[0]) * Singularity::g_vc(sol_qp[0])     * phi_fe_qp[ SolFEType[0] ][i]
+                     - Singularity::function(sol_qp[0]) * Singularity::g_vc(sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i]
+                     + Singularity::function(sol_qp[0]) * dt                               * phi_fe_qp[ SolFEType[0] ][i]
+                     +   dt * Lap_rhs_i
             );
     //END RESIDUALS A block ===========================
 
@@ -798,8 +803,15 @@ void AssembleMatrixRes_VC(MultiLevelProblem &ml_prob) {
                                                            phi_x_fe_qp[SolFEType[0]][j * dim + d];
 
 
-          Jac_el[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * ( dt * ( Lap_mat_i_j  + phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] )
-                                                                                                                + phi_fe_qp[ SolFEType[0] ][i] * phi_fe_qp[ SolFEType[0] ][j] );
+          Jac_el[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * (
+                    + phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] * Singularity::g_vc( phi_fe_qp[ SolFEType[0] ][j] ) 
+                    + phi_fe_qp[ SolFEType[0] ][i] * Singularity::function  (  phi_fe_qp[ SolFEType[0] ][j] ) * Singularity::g_vc_derivative( phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] 
+                    
+                    - phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] * Singularity::g_vc( sol_old_qp[0] ) 
+                    
+                    + phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] * dt 
+                    + dt * Lap_mat_i_j  
+                                                                                          );
 	      
   	    }    //end phij loop
 
