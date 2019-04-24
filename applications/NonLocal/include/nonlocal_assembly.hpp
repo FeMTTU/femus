@@ -25,8 +25,8 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.2, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05, maxTest8: both 0.025, maxTest9: both 0.0125, maxTest10: both 0.00625
-double delta1 = 0.1; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.1;
+double delta1 = 0.1 ; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.1 ;
 double kappa1 = 1.;
 double kappa2 = 1.;
 
@@ -42,8 +42,8 @@ double delta1Shift = delta1Mesh - delta1;
 double delta2Shift =  delta2Mesh - delta2;
 
 bool doubleIntefaceNode = true;
-double leftBoundTemp = - 1.1;
-double rightBoundTemp = 1.1;
+double leftBoundTemp = - 1.;
+double rightBoundTemp = 1.;
 unsigned numberOfElementsTemp = static_cast<unsigned> (fabs (rightBoundTemp + delta2Mesh - (leftBoundTemp - delta1Mesh)) / desiredMeshSize);
 // // unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 2 : numberOfElementsTemp + 1; //TODO tune
 unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 1 : numberOfElementsTemp;
@@ -55,6 +55,7 @@ unsigned elementToSkip = UINT_MAX;
 bool elementToSkipFound = false;
 unsigned procWhoFoundIt = UINT_MAX;
 
+std::vector <unsigned> elementSkipFlags;
 
 void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
 //     value = 0.;
@@ -236,7 +237,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   for (int kproc = 0; kproc < nprocs; kproc++) {
     for (int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
-      if (jel != elementToSkip) {
+//       if (jel != elementToSkip) {
+      if (elementSkipFlags[jel] == 0) {
 
         short unsigned jelGeom;
         short unsigned jelGroup;
@@ -281,7 +283,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
         for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-          if (iel != elementToSkip) {
+//           if (iel != elementToSkip) {
+          if (elementSkipFlags[iel] == 0) {
 
             short unsigned ielGeom = msh->GetElementType (iel);
             short unsigned ielGroup = msh->GetElementGroup (iel);
@@ -362,11 +365,12 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
               if (iel == jel) {
                 for (unsigned i = 0; i < nDof1; i++) {
 //                   Res1[i] -= 0. * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
-                  Res1[i] -=  - 2. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = - 2)
-//                                     Res1[i] -=  - 6. * xg1[ig][0] * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 x )
-//                                 Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
-//                                      Res1[i] -=  - 20. * ( xg1[ig][0] * xg1[ig][0] * xg1[ig][0] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 20 x^3 )
-//                                 Res1[i] -=  - 12. * ( xg1[ig][0] * xg1[ig][0] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 12 x^2 )
+                  Res1[i] -=  - 2. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = - 2)  
+//                      Res1[i] -=  1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)  
+//                   Res1[i] -=  - 6. * xg1[ig][0] * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 x )
+//                   Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
+//                   Res1[i] -=  - 20. * ( xg1[ig][0] * xg1[ig][0] * xg1[ig][0] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 20 x^3 )
+//                   Res1[i] -=  - 12. * ( xg1[ig][0] * xg1[ig][0] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 12 x^2 )
                 }
               }
 
@@ -458,14 +462,14 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
   KK->close();
 
-//     Mat A = ( static_cast<PetscMatrix*> ( KK ) )->mat();
-//     MatAssemblyBegin ( A, MAT_FINAL_ASSEMBLY );
-//     MatAssemblyEnd ( A, MAT_FINAL_ASSEMBLY );
-//     PetscViewer viewer;
-//     MatView ( A, viewer );
+    Mat A = ( static_cast<PetscMatrix*> ( KK ) )->mat();
+    MatAssemblyBegin ( A, MAT_FINAL_ASSEMBLY );
+    MatAssemblyEnd ( A, MAT_FINAL_ASSEMBLY );
+    PetscViewer viewer;
+    MatView ( A, viewer );
 
-//     Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
-//     VecView(v,PETSC_VIEWER_STDOUT_WORLD);
+    Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
+    VecView(v,PETSC_VIEWER_STDOUT_WORLD);
 
 // ***************** END ASSEMBLY *******************
 }
@@ -574,7 +578,8 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    if (iel != elementToSkip) {
+//     if (iel != elementToSkip) {
+    if (elementSkipFlags[iel] == 0) {
 
       short unsigned ielGeom = msh->GetElementType (iel);
       unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);   // number of solution element dofs
