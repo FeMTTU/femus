@@ -81,9 +81,9 @@ int main (int argc, char** argv) {
   
   if (shiftExternalNodes) ShiftTheExtrema (mlMsh);
 
- // mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+ mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
- // mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+//  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 //     numberOfUniformLevels = 1;
 
   unsigned dim = mlMsh.GetDimension();

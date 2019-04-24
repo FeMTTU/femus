@@ -31,22 +31,22 @@ double kappa1 = 1.;
 double kappa2 = 1.;
 
 //parameters to play with
-double desiredMeshSize = 0.1/*0.00625*/ /*0.003125*/;
+double desiredMeshSize = 0.0125/*0.00625*/ /*0.003125*/;
 double delta1MeshTemp =  0.0125/*0.00625*/ /*0.003125*/;
 double delta2MeshTemp =  0.0125/*0.00625*/ /*0.003125*/;
 
-bool shiftExternalNodes = true;
+bool shiftExternalNodes = false;
 double delta1Mesh = (shiftExternalNodes) ? desiredMeshSize : delta1MeshTemp;
 double delta2Mesh = (shiftExternalNodes) ? desiredMeshSize : delta2MeshTemp;
 double delta1Shift = delta1Mesh - delta1;
 double delta2Shift =  delta2Mesh - delta2;
 
-bool doubleIntefaceNode = true;
+bool doubleIntefaceNode = false;
 double leftBoundTemp = - 1.1;
 double rightBoundTemp = 1.1;
 unsigned numberOfElementsTemp = static_cast<unsigned> (fabs (rightBoundTemp + delta2Mesh - (leftBoundTemp - delta1Mesh)) / desiredMeshSize);
-// unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 2 : numberOfElementsTemp + 1; //TODO tune
-unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 1 : numberOfElementsTemp; 
+// // unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 2 : numberOfElementsTemp + 1; //TODO tune
+unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 1 : numberOfElementsTemp;
 double leftBound = (doubleIntefaceNode) ? leftBoundTemp - 0.5 * desiredMeshSize : leftBoundTemp;
 double rightBound = (doubleIntefaceNode) ? rightBoundTemp + 0.5 * desiredMeshSize : rightBoundTemp;
 
@@ -69,8 +69,6 @@ void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
 
 
 }
-
-void ReorderElement (std::vector < int > &dofs, std::vector < double > & sol, std::vector < std::vector < double > > & x);
 
 void RectangleAndBallRelation (bool &theyIntersect, const std::vector<double> &ballCenter, const double &ballRadius, const std::vector < std::vector < double> > &elementCoordinates,  std::vector < std::vector < double> > &newCoordinates);
 
@@ -202,7 +200,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
     }
 
   }
-  
+
   for (unsigned iel = 0; iel < elementGroups.size(); iel++) {
     unsigned group = 0;
     MPI_Allreduce (&elementGroups[iel], &group, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
@@ -280,8 +278,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
               x2[k][j] = (*msh->_topology->_Sol[k]) (xDof);
             }
           }
-
-                ReorderElement ( l2GMap2, solu2, x2 );
         }
 
         MPI_Bcast (&l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
@@ -324,10 +320,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
               }
             }
 
-                ReorderElement ( l2GMap1, solu1, x1 );
-
             unsigned igNumber = msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber();
-          
+
             vector < vector < double > > xg1 (igNumber);
             vector <double> weight1 (igNumber);
             vector < vector <double> > phi1x (igNumber);
@@ -654,7 +648,7 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
 
 //                     double srcTerm =  6. * x_gss[0] ; // so f = - 6 x
 //                 double srcTerm =  12. * x_gss[0] * x_gss[0] ; // so f = - 12 x^2
-                double srcTerm =  2. ; // so f = - 2
+          double srcTerm =  2. ; // so f = - 2
 //                 double srcTerm =  - 1. ; // so f = 1
 //           double srcTerm =  0./*- GetExactSolutionLaplace(x_gss)*/ ;
           aRes[i] += (srcTerm * phi[i] + laplace) * weight;
@@ -768,48 +762,6 @@ void RectangleAndBallRelation (bool & theyIntersect, const std::vector<double> &
   }
 
 }
-
-const unsigned swap[4][9] = {
-  {0, 1, 2, 3, 4, 5, 6, 7, 8},
-  {3, 0, 1, 2, 7, 4, 5, 6, 8},
-  {2, 3, 0, 1, 6, 7, 4, 5, 8},
-  {1, 2, 3, 0, 5, 6, 7, 4, 8}
-};
-
-void ReorderElement (std::vector < int > &dofs, std::vector < double > & sol, std::vector < std::vector < double > > & x) {
-
-  unsigned type = 0;
-
-  if (fabs (x[0][0] - x[0][1]) > 1.e-10) {
-    if (x[0][0] - x[0][1] > 0) {
-      type = 2;
-    }
-  }
-
-  else {
-    type = 1;
-
-    if (x[1][0] - x[1][1] > 0) {
-      type = 3;
-    }
-  }
-
-  if (type != 0) {
-    std::vector < int > dofsCopy = dofs;
-    std::vector < double > solCopy = sol;
-    std::vector < std::vector < double > > xCopy = x;
-
-    for (unsigned i = 0; i < dofs.size(); i++) {
-      dofs[i] = dofsCopy[swap[type][i]];
-      sol[i] = solCopy[swap[type][i]];
-
-      for (unsigned k = 0; k < x.size(); k++) {
-        x[k][i] = xCopy[k][swap[type][i]];
-      }
-    }
-  }
-}
-
 
 void RectangleAndBallRelation2 (bool & theyIntersect, const std::vector<double> &ballCenter, const double & ballRadius, const std::vector < std::vector < double> > &elementCoordinates, std::vector < std::vector < double> > &newCoordinates) {
 
