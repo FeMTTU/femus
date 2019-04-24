@@ -54,8 +54,6 @@ double meshSize;
 unsigned elementToSkip = UINT_MAX;
 bool elementToSkipFound = false;
 unsigned procWhoFoundIt = UINT_MAX;
-std::vector < unsigned > elementGroups;
-
 
 
 void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
@@ -165,8 +163,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
 //BEGIN
 
-  elementGroups.resize (numberOfElements) ;
-
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
@@ -188,32 +184,26 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
     double xMin = x1[0][0];
 
     if ( (xMax < leftBound || fabs (xMax - leftBound) < 1.e-10) && (xMin > (leftBound - delta1) || fabs (xMin - (leftBound - delta1)) < 1.e-10)) {
-      elementGroups[iel] = 5;
+      msh->el->SetElementGroup (iel, 5);
     }
 
-    else if ( (xMax < 0. || fabs (xMax) < 1.e-10) && (xMin > leftBound || fabs (xMin - leftBound) < 1.e-10))  elementGroups[iel] = 7;
+    else if ( (xMax < 0. || fabs (xMax) < 1.e-10) && (xMin > leftBound || fabs (xMin - leftBound) < 1.e-10)) msh->el->SetElementGroup (iel, 7);
 
-    else if ( (xMax < rightBound || fabs (xMax - rightBound) < 1.e-10) && (xMin > 0. || fabs (xMin) < 1.e-10))  elementGroups[iel] = 8;
+    else if ( (xMax < rightBound || fabs (xMax - rightBound) < 1.e-10) && (xMin > 0. || fabs (xMin) < 1.e-10)) msh->el->SetElementGroup (iel, 8);
 
     else if ( (xMax < (rightBound + delta2) || fabs (xMax - (rightBound + delta2)) < 1.e-10) && (xMin > rightBound || fabs (xMin - rightBound) < 1.e-10)) {
-      elementGroups[iel] = 6;
+      msh->el->SetElementGroup (iel, 6);
     }
 
   }
 
-  for (unsigned iel = 0; iel < elementGroups.size(); iel++) {
-    unsigned group = 0;
-    MPI_Allreduce (&elementGroups[iel], &group, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
-    elementGroups[iel] = group;
-  }
-
-//END
+  //END
 
 //loop to change _Bdc in the boundary elements and assign the BoundaryFunctionValue to their nodes
 //BEGIN
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielGroup = elementGroups[iel];
+    short unsigned ielGroup = msh->el->GetElementGroup (iel);
 
     if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
 
@@ -249,15 +239,17 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       if (jel != elementToSkip) {
 
         short unsigned jelGeom;
-        short unsigned jelGroup = elementGroups[jel];
+        short unsigned jelGroup;
         unsigned nDof2;
 
         if (iproc == kproc) {
           jelGeom = msh->GetElementType (jel);
+          jelGroup = msh->el->GetElementGroup (jel);
           nDof2  = msh->GetElementDofNumber (jel, soluType);
         }
 
         MPI_Bcast (&jelGeom, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
+        MPI_Bcast (&jelGroup, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
         MPI_Bcast (&nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
 
         l2GMap2.resize (nDof2);
@@ -292,7 +284,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           if (iel != elementToSkip) {
 
             short unsigned ielGeom = msh->GetElementType (iel);
-            short unsigned ielGroup = elementGroups[iel];
+            short unsigned ielGroup = msh->el->GetElementGroup (iel);
             unsigned nDof1  = msh->GetElementDofNumber (iel, soluType);
 
             l2GMap1.resize (nDof1);
@@ -549,7 +541,7 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielGroup = elementGroups[iel];
+    short unsigned ielGroup = msh->el->GetElementGroup (iel);
 
     if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
 
