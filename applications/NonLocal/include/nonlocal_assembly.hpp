@@ -41,7 +41,7 @@ double delta2Mesh = (shiftExternalNodes) ? desiredMeshSize : delta2MeshTemp;
 double delta1Shift = delta1Mesh - delta1;
 double delta2Shift =  delta2Mesh - delta2;
 
-bool doubleIntefaceNode = false;
+bool doubleIntefaceNode = true;
 double leftBoundTemp = - 1.1;
 double rightBoundTemp = 1.1;
 unsigned numberOfElementsTemp = static_cast<unsigned> (fabs (rightBoundTemp + delta2Mesh - (leftBoundTemp - delta1Mesh)) / desiredMeshSize);

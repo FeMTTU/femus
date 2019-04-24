@@ -61,7 +61,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 3; 
+unsigned numberOfUniformLevels = 2; 
 
 int main (int argc, char** argv) {
 
@@ -83,7 +83,7 @@ int main (int argc, char** argv) {
 
  mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
-//  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+ mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 //     numberOfUniformLevels = 1;
 
   unsigned dim = mlMsh.GetDimension();
