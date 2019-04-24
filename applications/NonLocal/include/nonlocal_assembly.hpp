@@ -25,15 +25,15 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.2, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05, maxTest8: both 0.025, maxTest9: both 0.0125, maxTest10: both 0.00625
-double delta1 = 0.0125; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = 0.0125;
+double delta1 = 0.1; //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = 0.1;
 double kappa1 = 1.;
 double kappa2 = 1.;
 
 //parameters to play with
-double desiredMeshSize = 0.0125/*0.00625*/ /*0.003125*/;
-double delta1MeshTemp =  0.0125/*0.00625*/ /*0.003125*/;
-double delta2MeshTemp =  0.0125/*0.00625*/ /*0.003125*/;
+double desiredMeshSize = 0.1/*0.00625*/ /*0.003125*/;
+double delta1MeshTemp =  0.1/*0.00625*/ /*0.003125*/;
+double delta2MeshTemp =  0.1/*0.00625*/ /*0.003125*/;
 
 bool shiftExternalNodes = false;
 double delta1Mesh = (shiftExternalNodes) ? desiredMeshSize : delta1MeshTemp;
@@ -203,7 +203,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 //BEGIN
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielGroup = msh->el->GetElementGroup (iel);
+    short unsigned ielGroup = msh->GetElementGroup (iel);
 
     if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
 
@@ -244,7 +244,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
         if (iproc == kproc) {
           jelGeom = msh->GetElementType (jel);
-          jelGroup = msh->el->GetElementGroup (jel);
+          jelGroup = msh->GetElementGroup (jel);
           nDof2  = msh->GetElementDofNumber (jel, soluType);
         }
 
@@ -284,7 +284,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           if (iel != elementToSkip) {
 
             short unsigned ielGeom = msh->GetElementType (iel);
-            short unsigned ielGroup = msh->el->GetElementGroup (iel);
+            short unsigned ielGroup = msh->GetElementGroup (iel);
             unsigned nDof1  = msh->GetElementDofNumber (iel, soluType);
 
             l2GMap1.resize (nDof1);
@@ -541,7 +541,7 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielGroup = msh->el->GetElementGroup (iel);
+    short unsigned ielGroup = msh->GetElementGroup (iel);
 
     if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
 
