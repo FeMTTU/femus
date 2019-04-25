@@ -44,11 +44,11 @@ double InitalValueU (const std::vector < double >& x) {
   return value;
 }
 
-void GetL2Norm (MultiLevelSolution &mlSol);
+void GetL2Norm (MultiLevelSolution &mlSol, MultiLevelSolution &mlSolFine);
 
-void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh);
+void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh, const double &meshSize, double &leftBound, double &rightBound);
 
-void ShiftTheExtrema (MultiLevelMesh &mlMsh);
+void ShiftTheExtrema (MultiLevelMesh &mlMsh, const double &meshSize, const double &delta1Shift, const double &delta2Shift, double &leftBound, double &rightBound);
 
 void BuildElementSkipFlags (MultiLevelMesh &mlMsh, std::vector<unsigned> &elementSkipFlags);
 
@@ -88,14 +88,15 @@ int main (int argc, char** argv) {
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
 
+  //coarse soln mesh
   double xMinCoarseBox = leftBound - delta1Mesh;
   double xMaxCoarseBox = rightBound + delta2Mesh;
 
   mlMsh.GenerateCoarseBoxMesh (numberOfElements, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "fifth");
 
-  if (doubleIntefaceNode) PutADoubleNodeAtTheInterface (mlMsh);
+  if (doubleIntefaceNode) PutADoubleNodeAtTheInterface (mlMsh, desiredMeshSize, leftBound, rightBound);
 
-  if (shiftExternalNodes) ShiftTheExtrema (mlMsh);
+  if (shiftExternalNodes) ShiftTheExtrema (mlMsh, desiredMeshSize, delta1Shift, delta2Shift, leftBound, rightBound);
 
 //   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
@@ -104,25 +105,49 @@ int main (int argc, char** argv) {
   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 //     numberOfUniformLevels = 1;
 
+  //fine soln mesh
+  MultiLevelMesh mlMshFine;
+
+  double xMinCoarseBoxFine = leftBoundFine - delta1Mesh;
+  double xMaxCoarseBoxFine = rightBoundFine + delta2Mesh;
+
+  mlMshFine.GenerateCoarseBoxMesh (numberOfElementsFine, 0, 0, xMinCoarseBoxFine, xMaxCoarseBoxFine, 0., 0., 0., 0., EDGE3, "fifth");
+
+  if (doubleIntefaceNode) PutADoubleNodeAtTheInterface (mlMshFine, desiredMeshSizeFine, leftBoundFine, rightBoundFine);
+
+  if (shiftExternalNodes) ShiftTheExtrema (mlMshFine, desiredMeshSizeFine, delta1ShiftFine, delta2ShiftFine, leftBoundFine, rightBoundFine);
+
+//   mlMshFine.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+
+  BuildElementSkipFlags (mlMshFine, elementSkipFlagsFine);
+
+  mlMshFine.EraseCoarseLevels (numberOfUniformLevels - 1);
+//     numberOfUniformLevels = 1;
+
   unsigned dim = mlMsh.GetDimension();
 
   MultiLevelSolution mlSol (&mlMsh);
+  MultiLevelSolution mlSolFine (&mlMshFine);
 
   // add variables to mlSol
   mlSol.AddSolution ("u", LAGRANGE, FIRST, 2);
+  mlSolFine.AddSolution ("u_fine", LAGRANGE, FIRST, 2);
 
   mlSol.AddSolution ("u_local", LAGRANGE, FIRST, 2);
 
   mlSol.AddSolution ("u_exact", LAGRANGE, FIRST, 2);
 
   mlSol.Initialize ("All");
+  mlSolFine.Initialize ("All");
 
   mlSol.Initialize ("u_exact", InitalValueU);
 
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
+  mlSolFine.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
 
   // ******* Set boundary conditions *******
   mlSol.GenerateBdc ("All");
+  mlSolFine.GenerateBdc ("All");
 
 
   //BEGIN assemble and solve nonlocal problem
@@ -201,9 +226,47 @@ int main (int argc, char** argv) {
 
   //END assemble and solve local problem
 
+  //BEGIN assemble and solve fine nonlocal problem
+  MultiLevelProblem ml_probFine (&mlSolFine);
+
+  // ******* Add FEM system to the MultiLevel problem *******
+  LinearImplicitSystem& systemFine = ml_probFine.add_system < LinearImplicitSystem > ("NonLocalFine");
+  systemFine.AddSolutionToSystemPDE ("u_fine");
+
+  // ******* System FEM Assembly *******
+  systemFine.SetAssembleFunction (AssembleNonLocalSysFine);
+  systemFine.SetMaxNumberOfLinearIterations (1);
+  // ******* set MG-Solver *******
+  systemFine.SetMgType (V_CYCLE);
+
+  systemFine.SetAbsoluteLinearConvergenceTolerance (1.e-50);
+
+  systemFine.SetNumberPreSmoothingStep (1);
+  systemFine.SetNumberPostSmoothingStep (1);
+
+  // ******* Set Preconditioner *******
+  systemFine.SetMgSmoother (GMRES_SMOOTHER);
+
+  systemFine.SetSparsityPatternMinimumSize (500u);   //TODO tune
+
+  systemFine.init();
+
+  // ******* Set Smoother *******
+  systemFine.SetSolverFineGrids (GMRES);
+
+  systemFine.SetPreconditionerFineGrids (ILU_PRECOND);
+
+  systemFine.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
+
+// ******* Solution *******
+
+  systemFine.MGsolve();
+
+  //END assemble and solve fine nonlocal problem
+
 
   //BEGIN compute errors
-  GetL2Norm (mlSol);
+  GetL2Norm (mlSol, mlSolFine);
   //END compute errors
 
   // ******* Print solution *******
@@ -214,18 +277,22 @@ int main (int argc, char** argv) {
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
   std::cout << "Mesh size h = " << (xMaxCoarseBox - xMinCoarseBox) / (numberOfElements * pow (2, numberOfUniformLevels - 1)) << std::endl;
+  std::cout << "Mesh size fine h = " << (xMaxCoarseBoxFine - xMinCoarseBoxFine) / (numberOfElementsFine * pow (2, numberOfUniformLevels - 1)) << std::endl;
 
   return 0;
 
 } //end main
 
 
-void GetL2Norm (MultiLevelSolution &mlSol) {
+void GetL2Norm (MultiLevelSolution &mlSol, MultiLevelSolution &mlSolFine) {
 
   const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
   Mesh* msh = mlSol._mlMesh->GetLevel (level);
-  elem*                     el = msh->el;
   Solution* sol  = mlSol.GetSolutionLevel (level);
+
+  const unsigned levelFine = mlSolFine._mlMesh->GetNumberOfLevels() - 1;
+  Mesh* mshFine = mlSolFine._mlMesh->GetLevel (levelFine);
+  Solution* solFine  = mlSolFine.GetSolutionLevel (levelFine);
 
   const unsigned  dim = msh->GetDimension();
 
@@ -237,7 +304,11 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
 
   double error_solLocal_norm2 = 0.;
 
+  double error_NonLocCoarse_NonLocFine_norm2 = 0.;
+
   double solNonlocal_norm2 = 0.;
+
+  double solNonlocalFine_norm2 = 0.;
 
   double solLocal_norm2 = 0.;
 
@@ -290,6 +361,7 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian (x1, ig, weight, phi, phi_x);
       double soluNonLoc_gss = 0.;
+      double soluNonLocFine_gss = 0.;
       double soluLoc_gss = 0.;
       double soluExact_gss = 0.;
       double x_gss = 0.;
@@ -302,10 +374,61 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
 
       }
 
-      double u1 = 1. / 4. - 1. / 4. * x_gss - 1. / 2. * x_gss * x_gss;
-      double u2 = 1. / 4. - 1. / 12. * x_gss - 1. / 6. * x_gss * x_gss;
+      //BEGIN computation of the fine solution at the coarse Gauss point
 
-      soluExact_gss = (x_gss < 0.) ? u1 : u2;
+      unsigned    iprocFine = mshFine->processor_id(); // get the process_id (for parallel computation)
+
+      for (int ielFine = solFine->GetMesh()->_elementOffset[iprocFine]; ielFine < solFine->GetMesh()->_elementOffset[iprocFine + 1]; ielFine ++) {
+
+        unsigned  xLeftDof = solFine->GetMesh()->GetSolutionDof (0, ielFine, 2);
+        unsigned  xRightDof = solFine->GetMesh()->GetSolutionDof (1, ielFine, 2);
+
+        double xLeft = (*solFine->GetMesh()->_topology->_Sol[0]) (xLeftDof);
+        double xRight = (*solFine->GetMesh()->_topology->_Sol[0]) (xRightDof);
+
+        if (x_gss > xLeft && x_gss < xRight) {
+
+          short unsigned iel_x_gssGeom = mshFine->GetElementType (ielFine);
+          unsigned nDofFine  = mshFine->GetElementDofNumber (ielFine, soluType);
+
+          vector < double >  soluNonLocFine (nDofFine);
+
+          std::vector < std::vector <double> > xFine (dim);
+
+          for (int k = 0; k < dim; k++) {
+            xFine[k].assign (nDofFine, 0.);
+          }
+
+          for (unsigned jdof = 0; jdof < nDofFine; jdof++) {
+
+            unsigned solDof = msh->GetSolutionDof (jdof, ielFine, soluType);
+            soluNonLocFine[jdof] = (*sol->_Sol[soluIndex]) (solDof);
+            unsigned xDofFine  = mshFine->GetSolutionDof (jdof, ielFine, xType);
+            xFine[0][jdof] = (*msh->_topology->_Sol[0]) (xDofFine);
+          }
+
+          std::vector<double> x_gss_Local (3, 0.);
+          x_gss_Local[0] = - 1. + 2. * (x_gss - xFine[0][0]) / (xFine[0][1] - xFine[0][0]);
+
+          vector <double> phiFine;  // local test function
+          vector <double> phi_xFine; // local test function first order partial derivatives
+          double weightFine; // gauss point weight
+          msh->_finiteElement[iel_x_gssGeom][soluType]->Jacobian (xFine, x_gss_Local, weightFine, phiFine, phi_xFine);
+
+          for (unsigned jdof = 0; jdof < nDofFine; jdof++) {
+            soluNonLocFine_gss += soluNonLocFine[jdof] * phiFine[jdof];
+          }
+
+        }
+      }
+
+      //END computation of the fine solution at the coarse Gauss point
+
+
+//       double u1 = 1. / 4. - 1. / 4. * x_gss - 1. / 2. * x_gss * x_gss;
+//       double u2 = 1. / 4. - 1. / 12. * x_gss - 1. / 6. * x_gss * x_gss;
+//
+//       soluExact_gss = (x_gss < 0.) ? u1 : u2;
 
 
 //       soluExact_gss = soluExact_gss * soluExact_gss * soluExact_gss * soluExact_gss + 0.1 * soluExact_gss * soluExact_gss; // this is x^4 + delta * x^2
@@ -320,11 +443,15 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
 
       error_solExact_norm2 += (soluNonLoc_gss - soluExact_gss) * (soluNonLoc_gss - soluExact_gss) * weight;
 
+      error_NonLocCoarse_NonLocFine_norm2 += (soluNonLoc_gss - soluNonLocFine_gss) * (soluNonLoc_gss - soluNonLocFine_gss) * weight;
+
       error_solExact_local_norm2 += (soluLoc_gss - soluExact_gss) * (soluLoc_gss - soluExact_gss) * weight;
 
       error_solLocal_norm2 += (soluNonLoc_gss - soluLoc_gss) * (soluNonLoc_gss - soluLoc_gss) * weight;
 
       solNonlocal_norm2 += soluNonLoc_gss * soluNonLoc_gss * weight;
+
+      solNonlocalFine_norm2 += soluNonLocFine_gss * soluNonLocFine_gss * weight;
 
       solLocal_norm2 += soluLoc_gss * soluLoc_gss * weight;
 
@@ -337,6 +464,12 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
   double norm = sqrt (norm2);
   std::cout.precision (16);
   std::cout << "L2 norm of ERROR: Nonlocal - exact = " << norm << std::endl;
+
+  norm2 = 0.;
+  MPI_Allreduce (&error_NonLocCoarse_NonLocFine_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  norm = sqrt (norm2);
+  std::cout.precision (16);
+  std::cout << "L2 norm of ERROR: Nonlocal - Nonlocal Fine = " << norm << std::endl;
 
   norm2 = 0.;
   MPI_Allreduce (&error_solExact_local_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -355,6 +488,12 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
   norm = sqrt (norm2);
   std::cout.precision (16);
   std::cout << "L2 norm of NONLOCAL soln = " << norm << std::endl;
+
+  norm2 = 0.;
+  MPI_Allreduce (&solNonlocalFine_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  norm = sqrt (norm2);
+  std::cout.precision (16);
+  std::cout << "L2 norm of NONLOCAL FINE soln = " << norm << std::endl;
 
   norm2 = 0.;
   MPI_Allreduce (&solLocal_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -422,28 +561,28 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
 //   }
 
 //   for (unsigned idof = msh->_dofOffset[0][iproc]; idof < msh->_dofOffset[0][iproc + 1]; idof++) {
-// 
+//
 //     double x = (*msh->_topology->_Sol[0]) (idof);
-// 
+//
 //     double u = (*sol->_Sol[soluIndex]) (idof);
-// 
+//
 //     double u_local = (*sol->_Sol[soluIndexLocal]) (idof);
-// 
+//
 //     double u1 = 1. / 4. - 1. / 4. * x - 1. / 2. * x * x;
 //     double u2 = 1. / 4. - 1. / 12. * x - 1. / 6. * x * x;
-// 
+//
 //     double u_exact = (x < 0.) ? u1 : u2;
-// 
-// 
+//
+//
 //     std::cout << x << " " << u << " " << u_local << " " << u_exact << std::endl;
-// 
+//
 //   }
 
 }
 
 
 
-void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh) {
+void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh, const double &meshSize, double &leftBound, double &rightBound) {
 
   unsigned level = 0;
 
@@ -454,26 +593,24 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors(); // get the noumber of processes (for parallel computation)
 
-//   //BEGIN TO REMOVE
-//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-// 
-//     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
-//     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
-//     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
-// 
-// 
-//     double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-//     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
-//     double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
-// 
-//     std::cout.precision (16);
-//     std::cout << "xMin prima del move= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
-// 
-//   }
-// 
-//   //END
+  //BEGIN TO REMOVE
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-  meshSize = desiredMeshSize;
+    unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
+    unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
+    unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
+
+
+    double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
+    double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
+    double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
+
+    std::cout.precision (16);
+    std::cout << "xMin prima del move= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+
+  }
+
+  //END
 
   unsigned numberOfNodes = msh->GetNumberOfNodes();
 
@@ -545,39 +682,31 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh) {
   leftBound += 0.5 * meshSize;
   rightBound -= 0.5 * meshSize;
 
-// //         //BEGIN TO REMOVE
-//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-// 
-//     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
-//     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
-//     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
-// 
-// 
-//     double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-//     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
-//     double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
-// 
-//     std::cout.precision (16);
-//     std::cout << "xMin mesh spostato= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
-// 
-//   }
-// 
-//   //END
+//         //BEGIN TO REMOVE
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-//   if (elementToSkipFound) {
-//     for (unsigned kproc = 0; kproc < nprocs; kproc++) {
-//       if (kproc != iproc) MPI_Send (&elementToSkip, 1, MPI_UNSIGNED, kproc, 1 , PETSC_COMM_WORLD);
-//     }
-//   }
-//
-//   else MPI_Recv (&elementToSkip, 1, MPI_UNSIGNED, procWhoFoundIt, 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+    unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
+    unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
+    unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
+
+
+    double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
+    double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
+    double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
+
+    std::cout.precision (16);
+    std::cout << "xMin mesh spostato= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+
+  }
+
+  //END
 
 //         END
 
 }
 
 
-void ShiftTheExtrema (MultiLevelMesh &mlMsh) {
+void ShiftTheExtrema (MultiLevelMesh &mlMsh, const double &meshSize, const double &delta1Shift, const double &delta2Shift, double &leftBound, double &rightBound) {
 
   unsigned level = 0;
 
@@ -700,6 +829,8 @@ void BuildElementSkipFlags (MultiLevelMesh &mlMsh, std::vector<unsigned> &elemen
   //END TO REMOVE
 
 }
+
+
 
 
 
