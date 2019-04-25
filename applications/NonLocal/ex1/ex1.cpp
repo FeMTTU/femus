@@ -384,20 +384,21 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
   std::cout << "linfinity norm of ERROR: Nonlocal - local = " << littleLInfinityNorm << std::endl;
 
 
-  for (unsigned idof = msh->_dofOffset[0][iproc]; idof < msh->_dofOffset[0][iproc + 1]; idof++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    double x = (*msh->_topology->_Sol[0]) (idof); 
+    unsigned xDof = msh->GetSolutionDof (0, iel, soluType);
 
-    double u = (*sol->_Sol[soluIndex]) (idof);
+    double x = (*msh->_topology->_Sol[0]) (xDof);
 
-    double u_local = (*sol->_Sol[soluIndexLocal]) (idof);
+    double u = (*sol->_Sol[soluIndex]) (xDof); 
+
+    double u_local = (*sol->_Sol[soluIndexLocal]) (xDof);
 
     double u_exact = x * x ;
 
     std::cout << x << " " << u << " " << u_local << " " << u_exact << std::endl;
 
   }
-
 
 }
 
@@ -506,20 +507,20 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh) {
 
 // //         //BEGIN TO REMOVE
 //   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-// 
+//
 //     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
 //     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
 //     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
-// 
-// 
+//
+//
 //     double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
 //     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
 //     double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
-// 
+//
 //     std::cout << "xMin mesh spostato= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
-// 
+//
 //   }
-// 
+//
 //   //END
 
 //   if (elementToSkipFound) {
@@ -644,16 +645,16 @@ void BuildElementSkipFlags (MultiLevelMesh &mlMsh, std::vector<unsigned> &elemen
 
   //BEGIN TO REMOVE (use with serial)
 //   for (unsigned iel = 0; iel < numberOfElements; iel++) {
-// 
+//
 //     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
 //     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
-// 
+//
 //     double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
 //     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
-// 
+//
 //     std::cout << xMin << " , " << xMax << " , " << "flag = " << elementSkipFlags[iel] << std::endl ;
-// 
-// 
+//
+//
 //   }
   //END TO REMOVE
 

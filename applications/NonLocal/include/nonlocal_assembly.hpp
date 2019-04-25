@@ -41,7 +41,7 @@ double delta2Mesh = (shiftExternalNodes) ? desiredMeshSize : delta2MeshTemp;
 double delta1Shift = delta1Mesh - delta1;
 double delta2Shift =  delta2Mesh - delta2;
 
-bool doubleIntefaceNode = true;
+bool doubleIntefaceNode = false;
 double leftBoundTemp = - 1.;
 double rightBoundTemp = 1.;
 unsigned numberOfElementsTemp = static_cast<unsigned> (fabs (rightBoundTemp + delta2Mesh - (leftBoundTemp - delta1Mesh)) / desiredMeshSize);
@@ -462,14 +462,14 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
   KK->close();
 
-    Mat A = ( static_cast<PetscMatrix*> ( KK ) )->mat();
-    MatAssemblyBegin ( A, MAT_FINAL_ASSEMBLY );
-    MatAssemblyEnd ( A, MAT_FINAL_ASSEMBLY );
-    PetscViewer viewer;
-    MatView ( A, viewer );
-
-    Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
-    VecView(v,PETSC_VIEWER_STDOUT_WORLD);
+//     Mat A = ( static_cast<PetscMatrix*> ( KK ) )->mat();
+//     MatAssemblyBegin ( A, MAT_FINAL_ASSEMBLY );
+//     MatAssemblyEnd ( A, MAT_FINAL_ASSEMBLY );
+//     PetscViewer viewer;
+//     MatView ( A, viewer );
+// 
+//     Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
+//     VecView(v,PETSC_VIEWER_STDOUT_WORLD);
 
 // ***************** END ASSEMBLY *******************
 }
