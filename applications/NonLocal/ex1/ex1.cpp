@@ -27,13 +27,21 @@
 using namespace femus;
 
 double InitalValueU (const std::vector < double >& x) {
+
+  double u1 = 1. / 4. - 1. / 4. * x[0] - 1. / 2. * x[0] * x[0];
+  double u2 = 1. / 4. - 1. / 12. * x[0] - 1. / 6. * x[0] * x[0];
+
+  double value = (x[0] < 0.) ? u1 : u2;
+
 //     return x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
 //     return x[0];
-  return x[0] * x[0];
+//     return x[0] * x[0];
 //     return x[0] * x[0] * x[0];
 //     return x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
 //     return x[0] * x[0] * x[0] * x[0]; //this is x^4
-//        return 2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
+//     return 2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
+
+  return value;
 }
 
 void GetL2Norm (MultiLevelSolution &mlSol);
@@ -47,13 +55,19 @@ void BuildElementSkipFlags (MultiLevelMesh &mlMsh, std::vector<unsigned> &elemen
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
 
   bool dirichlet = true;
+
+  double u1 = 1. / 4. - 1. / 4. * x[0] - 1. / 2. * x[0] * x[0];
+  double u2 = 1. / 4. - 1. / 12. * x[0] - 1. / 6. * x[0] * x[0];
+
+  value = (x[0] < 0.) ? u1 : u2;
+
 //     value = 0.;
 //     value = x[0];
-  value = x[0] * x[0];
+//     value = x[0] * x[0];
 //     value =  x[0] * x[0] * x[0];
 //     value = x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
 //     value = x[0] * x[0] * x[0] * x[0];
-//        value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
+//     value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 
   if (fabs (x[0]) <= 1.e-10) {
     dirichlet = false;
@@ -63,7 +77,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 2;
+unsigned numberOfUniformLevels = 1;
 
 int main (int argc, char** argv) {
 
@@ -83,7 +97,7 @@ int main (int argc, char** argv) {
 
   if (shiftExternalNodes) ShiftTheExtrema (mlMsh);
 
-  mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+//   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   BuildElementSkipFlags (mlMsh, elementSkipFlags);
 
@@ -278,24 +292,31 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
       double soluNonLoc_gss = 0.;
       double soluLoc_gss = 0.;
       double soluExact_gss = 0.;
+      double x_gss = 0.;
 
 
       for (unsigned i = 0; i < nDofu; i++) {
         soluNonLoc_gss += phi[i] * soluNonLoc[i];
         soluLoc_gss += phi[i] * soluLoc[i];
-        soluExact_gss += phi[i] * x1[0][i]; // this is x at the Gauss point
+        x_gss += phi[i] * x1[0][i]; // this is x at the Gauss point
 
       }
 
-//             soluExact_gss = soluExact_gss * soluExact_gss * soluExact_gss * soluExact_gss + 0.1 * soluExact_gss * soluExact_gss; // this is x^4 + delta * x^2
+      double u1 = 1. / 4. - 1. / 4. * x_gss - 1. / 2. * x_gss * x_gss;
+      double u2 = 1. / 4. - 1. / 12. * x_gss - 1. / 6. * x_gss * x_gss;
 
-      soluExact_gss = soluExact_gss * soluExact_gss; // this is x^2
+      soluExact_gss = (x_gss < 0.) ? u1 : u2;
 
-//             soluExact_gss = soluExact_gss * soluExact_gss * soluExact_gss; // this is x^3
 
-//             soluExact_gss = soluExact_gss * soluExact_gss * soluExact_gss * soluExact_gss; // this is x^4
+//       soluExact_gss = soluExact_gss * soluExact_gss * soluExact_gss * soluExact_gss + 0.1 * soluExact_gss * soluExact_gss; // this is x^4 + delta * x^2
 
-//             soluExact_gss = 2 * soluExact_gss  + soluExact_gss * soluExact_gss * soluExact_gss * soluExact_gss * soluExact_gss ; // this is 2x + x^5
+//       soluExact_gss = soluExact_gss * soluExact_gss; // this is x^2
+
+//       soluExact_gss = soluExact_gss * soluExact_gss * soluExact_gss; // this is x^3
+
+//       soluExact_gss = soluExact_gss * soluExact_gss * soluExact_gss * soluExact_gss; // this is x^4
+
+//       soluExact_gss = 2 * soluExact_gss  + soluExact_gss * soluExact_gss * soluExact_gss * soluExact_gss * soluExact_gss ; // this is 2x + x^5
 
       error_solExact_norm2 += (soluNonLoc_gss - soluExact_gss) * (soluNonLoc_gss - soluExact_gss) * weight;
 
@@ -384,21 +405,39 @@ void GetL2Norm (MultiLevelSolution &mlSol) {
   std::cout << "linfinity norm of ERROR: Nonlocal - local = " << littleLInfinityNorm << std::endl;
 
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+//
+//     unsigned xDof = msh->GetSolutionDof (0, iel, soluType);
+//
+//     double x = (*msh->_topology->_Sol[0]) (xDof);
+//
+//     double u = (*sol->_Sol[soluIndex]) (xDof);
+//
+//     double u_local = (*sol->_Sol[soluIndexLocal]) (xDof);
+//
+//     double u_exact = x * x ;
+//
+//     std::cout << x << " " << u << " " << u_local << " " << u_exact << std::endl;
+//
+//   }
 
-    unsigned xDof = msh->GetSolutionDof (0, iel, soluType);
-
-    double x = (*msh->_topology->_Sol[0]) (xDof);
-
-    double u = (*sol->_Sol[soluIndex]) (xDof); 
-
-    double u_local = (*sol->_Sol[soluIndexLocal]) (xDof);
-
-    double u_exact = x * x ;
-
-    std::cout << x << " " << u << " " << u_local << " " << u_exact << std::endl;
-
-  }
+//   for (unsigned idof = msh->_dofOffset[0][iproc]; idof < msh->_dofOffset[0][iproc + 1]; idof++) {
+// 
+//     double x = (*msh->_topology->_Sol[0]) (idof);
+// 
+//     double u = (*sol->_Sol[soluIndex]) (idof);
+// 
+//     double u_local = (*sol->_Sol[soluIndexLocal]) (idof);
+// 
+//     double u1 = 1. / 4. - 1. / 4. * x - 1. / 2. * x * x;
+//     double u2 = 1. / 4. - 1. / 12. * x - 1. / 6. * x * x;
+// 
+//     double u_exact = (x < 0.) ? u1 : u2;
+// 
+// 
+//     std::cout << x << " " << u << " " << u_local << " " << u_exact << std::endl;
+// 
+//   }
 
 }
 
@@ -417,20 +456,21 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh) {
 
 //   //BEGIN TO REMOVE
 //   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-//
+// 
 //     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
 //     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
 //     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
-//
-//
+// 
+// 
 //     double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
 //     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
 //     double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
-//
+// 
+//     std::cout.precision (16);
 //     std::cout << "xMin prima del move= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
-//
+// 
 //   }
-//
+// 
 //   //END
 
   meshSize = desiredMeshSize;
@@ -507,20 +547,21 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh) {
 
 // //         //BEGIN TO REMOVE
 //   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-//
+// 
 //     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
 //     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
 //     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
-//
-//
+// 
+// 
 //     double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
 //     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
 //     double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
-//
+// 
+//     std::cout.precision (16);
 //     std::cout << "xMin mesh spostato= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
-//
+// 
 //   }
-//
+// 
 //   //END
 
 //   if (elementToSkipFound) {
