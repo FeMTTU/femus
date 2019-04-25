@@ -98,9 +98,9 @@ int main(int argc, char** args) {
     double scalingFactor = 1.;
 
     // read coarse level mesh and generate finers level meshes
-//     std::string mesh_file = "./input/ext_box.neu";
+    std::string mesh_file = "./input/ext_box.neu";
 //     std::string mesh_file = "./input/ext_box.med";
-    std::string mesh_file = "./input/ext_box_2.med";
+//     std::string mesh_file = "./input/ext_box_2.med";
 //     std::string mesh_file = "./input/ext_box_longer.med";
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
 
@@ -786,7 +786,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
             }
         }
 
-
+        for (unsigned i = 0; i < sol_actflag.size(); i++)        std::cout << " Res_mu = " << Res_mu[i] << std::endl;
+     
         RES->insert(Res_mu, L2G_dofmap[pos_mu]);
 
         //============= delta_ctrl-delta_mu row ===============================

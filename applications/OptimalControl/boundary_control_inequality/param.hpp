@@ -179,9 +179,13 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
             ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
 
             if      ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_lower[i] )) < 0 )  {
-                sol_actflag[i] = 1;
+                std::cout << "Found active node below" << std::endl;
+                std::cout << "The current value of mu is " <<  sol_eldofs[pos_mu][i] << std::endl;
+                   sol_actflag[i] = 1;
             }
             else if ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_upper[i] )) > 0 )  {
+                std::cout << "Found active node above" << std::endl;
+                std::cout << "The current value of mu is " <<  sol_eldofs[pos_mu][i] << std::endl;
                 sol_actflag[i] = 2;
             }
         }
