@@ -39,7 +39,7 @@ void LUsolve (std::vector<std::vector < double > > & A, std::vector < unsigned >
               std::vector < double > &b, std::vector < double > &x, const bool &output = false);
 
 void GetChebyshev (std::vector<double> &T, std::vector<double> &dT, const unsigned &n, const double &x, const bool &output = false);
-
+void GetPolynomial (std::vector<double> &P, std::vector<double> &dP, const unsigned &n, const double &x, const bool &output = false);
 void GetMultiIndex (std::vector <unsigned> &idx, const unsigned &dim, const unsigned& n, const unsigned &i);
 void SetElementDofs (std::vector <unsigned> &elementDofs, const std::vector < unsigned > & idx, const unsigned & nve1d);
 
@@ -77,7 +77,7 @@ int main (int argc, char** args) {
 // unsigned nel1d = nve1d - 1u;
 // unsigned nel = static_cast< unsigned > (pow (nel1d, dim));
 
-  double Xv[9] = {0., 0.15, 0.35, 0.65, 0.8, 1.1, 1.25, 1.45, 1.6};
+  double Xv[9] = {0., 0.2, 0.4, 0.6, 0.8, 1., 1.2, 1.4, 1.6};
 
   double scale = 0.5;
 
@@ -189,6 +189,11 @@ int main (int argc, char** args) {
   double ymax = 0.;
 
   std::vector< double> alpha (aIdx.size());
+  std::vector< std::vector< double> > dalpha (dim);
+  for (unsigned d = 0; d < dim; d++) {
+    dalpha[d].resize (aIdx.size());
+  }
+    
   std::vector< double> b (aIdx.size());
   std::vector< unsigned> pivotIndex (aIdx.size());
 
@@ -217,12 +222,17 @@ int main (int argc, char** args) {
     dT[i].resize (dim);
   }
 
-  std::vector < double > weight;
-  weight.resize (maxNumberOfNodes);
+  std::vector < double > weight (maxNumberOfNodes);
+  std::vector < std::vector < double > > dweight (maxNumberOfNodes);
+  for (unsigned i = 0; i < maxNumberOfNodes; i++) {
+    dweight[i].resize (dim);
+  }
+
 
   std::vector < double > T0;
   std::vector < double > dT0;
-  GetChebyshev (T0, dT0, pOrder, 0., false);
+  //GetChebyshev (T0, dT0, pOrder, 0., true);
+  GetPolynomial (T0, dT0, pOrder, 0., true);
 
   for (unsigned p = 0; p < Np; p++) { // particle loop
 
@@ -240,16 +250,22 @@ int main (int argc, char** args) {
     for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
 
       unsigned inode = gmpm[p]->_node[i];
-      double dist = 0.;
+      double dist2 = 0.;
       for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
-        dist += gmpm[p]->_distance[i][d] * gmpm[p]->_distance[i][d];
+        dist2 += gmpm[p]->_distance[i][d] * gmpm[p]->_distance[i][d];
       }
-      dist = sqrt (dist) / distanceMax[inode];
-      weight[i] = (dist > 1.) ? 0. : pow (1. - dist * dist, 4);
+      dist2 /= distanceMax[inode] * distanceMax[inode];
+      weight[i] = (dist2 > 1.) ? 0. : pow (1. - dist2, 4);
+      for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
+        dweight[i][d] = (dist2 > 1.) ? 0. : 
+                        4. * pow (1. - dist2, 3) * (-2.) * gmpm[p]->_distance[i][d] / distanceMax[inode];
+      }
+
 
       if (weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
         for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
-          GetChebyshev (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, false);  //1D Chebyshev
+          //GetChebyshev (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, false);  //1D Chebyshev
+          GetPolynomial (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, false);  //1D Polynomials
         }
         for (unsigned k = 0; k < aIdx.size(); k++) {
           for (unsigned l = 0; l < aIdx.size(); l++) {
@@ -257,18 +273,19 @@ int main (int argc, char** args) {
             std::vector< double > dTkTl (3, 1.);
             for (unsigned d = 0 ; d < dim; d++) {
               TkTl *= T[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]]; //alpha * beta multidimendional product
-              for (unsigned d2 = 0 ; d2 < dim; d2++) {
-                if (d == d2) {
-                  dTkTl[d] *= (dT[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]] + T[i][d][aIdx[k][d]] * dT[i][d][aIdx[l][d]]) ;
-                }
-                else {
-                  dTkTl[d] *= T[i][d2][aIdx[k][d2]] * T[i][d2][aIdx[l][d2]];
-                }
-              }
+//               for (unsigned d2 = 0 ; d2 < dim; d2++) {
+//                 if (d == d2) {
+//                   dTkTl[d] *= (dT[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]] + T[i][d][aIdx[k][d]] * dT[i][d][aIdx[l][d]]) ;
+//                 }
+//                 else {
+//                   dTkTl[d] *= T[i][d2][aIdx[k][d2]] * T[i][d2][aIdx[l][d2]];
+//                 }
+//               }
             }
             Mp[k][l] +=  weight[i] * TkTl;
             for (unsigned d = 0 ; d < dim; d++) {
-              dMp[d][k][l] +=  weight[i] * dTkTl[d];
+              //dMp[d][k][l] +=  weight[i] * dTkTl[d];
+              dMp[d][k][l] += dweight[i][d] * TkTl;
             }
           }
         }
@@ -288,7 +305,19 @@ int main (int argc, char** args) {
     }
 
     //GaussianEleminationWithPivoting (Mp, alpha, false);
-    LUsolve (Mp, pivotIndex, b, alpha, true);
+    LUsolve (Mp, pivotIndex, b, alpha, false);
+    
+    for(unsigned d=0; d < dim; d++){
+      b.assign(aIdx.size(),0.);
+      //b[1] = -1;
+      for(unsigned j = 0; j < aIdx.size(); j++){
+        for(unsigned k = 0; k < aIdx.size(); k++){
+          b[j] -= dMp[d][j][k] * alpha[k];   
+        }
+      }
+      LUbackward(Mp, pivotIndex, b, dalpha[d], false);
+    }
+    
 
     double phiSum = 0.;
     for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
@@ -305,20 +334,31 @@ int main (int argc, char** args) {
 
       if (weight[i] > 0.) {
         double sumAlphaT = 0.;
+        std::vector < double > sumdAlphaT(dim,0.);
         for (unsigned k = 0; k < aIdx.size(); k++) {
           double Tk = 1;
           for (unsigned d = 0 ; d < dim; d++) {
             Tk *= T[i][d][aIdx[k][d]];
           }
           sumAlphaT += alpha[k] * Tk;
+          for(unsigned d = 0; d < dim; d++){
+            sumdAlphaT[d] += dalpha[d][k] * Tk;
+          }
         }
         double phi = weight[i] * sumAlphaT;
+        
+        std::vector < double > dphi(dim, 0.);
+        for(unsigned d = 0; d < dim; d++){
+          dphi[d] = weight[i] * sumdAlphaT[d] + dweight[d][i] * sumAlphaT ;
+        }
+        
+        
         Ur[p] += phi * P;
 
-        fouti << gmpm[p]->_xp[0] << " " << phi << std::endl;
+        fouti << gmpm[p]->_xp[0] << " " << dphi[0] << std::endl;
         ymin = (ymin < phi) ? ymin : phi;
         ymax = (ymax > phi) ? ymax : phi;
-        phiSum += phi;
+        phiSum += dphi[0];
       }
       fouti.close();
     }
@@ -632,6 +672,42 @@ void GetChebyshev (std::vector<double> &T, std::vector<double> &dT, const unsign
 
 
 }
+
+
+void GetPolynomial (std::vector<double> &P, std::vector<double> &dP, const unsigned &n, const double &x, const bool &output) {
+  P.resize (n + 1);
+  P[0] = 1.;
+
+  for (unsigned i = 1; i < n + 1; i++) {
+    P[i] = P[i - 1] * x;
+  }
+
+  if (output) {
+    std::cout << "Chebyshev Polynomials at x = " << x << std::endl;
+    for (unsigned i = 0; i < n + 1; i++) {
+      std::cout << "P" << i << " [x] = " << P[i] << std::endl;
+    }
+    std::cout << std::endl;
+  }
+
+  dP.resize (n + 1);
+  dP[0] = 0.;
+  for (unsigned i = 1; i < n + 1; i++) {
+    dP[i] = P[i - 1] * i;
+  }
+
+  if (output) {
+    std::cout << "Polynomial derivatives at x = " << x << std::endl;
+    for (unsigned i = 0; i < n + 1; i++) {
+      std::cout << "dP" << i << " [x] = " << dP[i] << std::endl;
+    }
+    std::cout << std::endl;
+  }
+
+
+
+}
+
 
 void GetMultiIndex (std::vector <unsigned> &idx, const unsigned &dim, const unsigned& n, const unsigned &i) {
   idx.resize (dim);
