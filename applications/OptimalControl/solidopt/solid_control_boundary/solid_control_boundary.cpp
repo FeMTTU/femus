@@ -1239,8 +1239,8 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
   system.SetDebugNonlinear(true);
   system.SetDebugFunction( ComputeIntegral< NonLinearImplicitSystem, adept::adouble, adept::adouble >);
 
-  system.SetMaxNumberOfNonLinearIterations(3);
-  system.SetNonLinearConvergenceTolerance(1.e-2);
+//   system.SetMaxNumberOfNonLinearIterations(3);
+//   system.SetNonLinearConvergenceTolerance(1.e-2);
 //   system.SetDebugLinear(true);
 //   system.SetMaxNumberOfLinearIterations(4);
 //   system.SetAbsoluteLinearConvergenceTolerance(1.e-10);

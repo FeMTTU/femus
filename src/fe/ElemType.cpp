@@ -1769,7 +1769,7 @@ namespace femus {
     std::vector < std::vector<double> > xi_qps(n_gauss_bdry);
     for (unsigned qp = 0; qp < n_gauss_bdry; qp++) { xi_qps[qp].resize(_dim); }
     
-std::cout << "Inside  ig = " << ig_bdry << " ";
+// std::cout << "Inside  ig = " << ig_bdry << " ";
 for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
         
       double xi_one_dim[1];
@@ -1795,8 +1795,8 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
     }
     
              
-      for (unsigned d = 0; d < _dim; d++) std::cout << xi_qps[ig_bdry][d] << " ";
-std::cout << std::endl;
+//       for (unsigned d = 0; d < _dim; d++) std::cout << xi_qps[ig_bdry][d] << " ";
+// std::cout << std::endl;
     
 //********* END EVALUATION STAGE **********************
     
