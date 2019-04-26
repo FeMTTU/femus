@@ -247,7 +247,7 @@ int main (int argc, char** argv) {
   // ******* Set Preconditioner *******
   systemFine.SetMgSmoother (GMRES_SMOOTHER);
 
-  systemFine.SetSparsityPatternMinimumSize (500u);   //TODO tune
+  systemFine.SetSparsityPatternMinimumSize (1000u);   //TODO tune
 
   systemFine.init();
 
@@ -603,24 +603,24 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh, const double &meshSize
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors(); // get the noumber of processes (for parallel computation)
 
-//   //BEGIN TO REMOVE
-//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-// 
-//     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
-//     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
-//     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
-// 
-// 
-//     double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-//     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
-//     double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
-// 
-//     std::cout.precision (16);
-//     std::cout << "xMin prima del move= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
-// 
-//   }
-// 
-//   //END
+  //BEGIN TO REMOVE
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
+    unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
+    unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
+
+
+    double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
+    double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
+    double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
+
+    std::cout.precision (16);
+    std::cout << "xMin prima del move= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+
+  }
+
+  //END
 
   unsigned numberOfNodes = msh->GetNumberOfNodes();
 
@@ -692,24 +692,24 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh, const double &meshSize
   leftBound += 0.5 * meshSize;
   rightBound -= 0.5 * meshSize;
 
-// //         //BEGIN TO REMOVE
-//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-// 
-//     unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
-//     unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
-//     unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
-// 
-// 
-//     double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
-//     double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
-//     double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
-// 
-//     std::cout.precision (16);
-//     std::cout << "xMin mesh spostato= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
-// 
-//   }
-// 
-//   //END
+//         //BEGIN TO REMOVE
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    unsigned xMinDof  = msh->GetSolutionDof (0, iel, xType);
+    unsigned xMaxDof  = msh->GetSolutionDof (1, iel, xType);
+    unsigned xMidDof  = msh->GetSolutionDof (2, iel, xType);
+
+
+    double xMin = (*msh->_topology->_Sol[0]) (xMinDof);
+    double xMax = (*msh->_topology->_Sol[0]) (xMaxDof);
+    double xMid = (*msh->_topology->_Sol[0]) (xMidDof);
+
+    std::cout.precision (16);
+    std::cout << "xMin mesh spostato= " << xMin << " , " << "xMid = " << xMid << " , " << "xMax = " << xMax << std::endl;
+
+  }
+
+  //END
 
 //         END
 
