@@ -32,7 +32,7 @@ double kappa2 = 3.;
 
 //parameters to play with
 double desiredMeshSize = 0.1/*0.00625*/ /*0.003125*/;
-double desiredMeshSizeFine = 0.00078125;
+double desiredMeshSizeFine = 0.0125;
 double delta1MeshTemp =  0.1/*0.00625*/ /*0.003125*/;
 double delta2MeshTemp =  0.1/*0.00625*/ /*0.003125*/;
 
