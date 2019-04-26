@@ -32,7 +32,7 @@ double kappa2 = 3.;
 
 //parameters to play with
 double desiredMeshSize = 0.1/*0.00625*/ /*0.003125*/;
-double desiredMeshSizeFine = 0.1;
+double desiredMeshSizeFine = 0.00078125;
 double delta1MeshTemp =  0.1/*0.00625*/ /*0.003125*/;
 double delta2MeshTemp =  0.1/*0.00625*/ /*0.003125*/;
 
@@ -57,11 +57,11 @@ double leftBound = (doubleIntefaceNode) ? leftBoundTemp - 0.5 * desiredMeshSize 
 double rightBound = (doubleIntefaceNode) ? rightBoundTemp + 0.5 * desiredMeshSize : rightBoundTemp;
 
 
-unsigned numberOfElementsFineTemp = static_cast<unsigned> (fabs (rightBoundTemp + delta2Mesh - (leftBoundTemp - delta1Mesh)) / desiredMeshSizeFine);
+unsigned numberOfElementsFineTemp = static_cast<unsigned> (fabs (rightBoundTemp + delta2MeshFine - (leftBoundTemp - delta1MeshFine)) / desiredMeshSizeFine);
 // unsigned numberOfElementsFine = (doubleIntefaceNode) ?  numberOfElementsFineTemp + 2 : numberOfElementsFineTemp + 1; //TODO tune
 unsigned numberOfElementsFine = (doubleIntefaceNode) ?  numberOfElementsFineTemp + 1 : numberOfElementsFineTemp;
-double leftBoundFine = (doubleIntefaceNode) ? leftBoundTemp - 0.5 * desiredMeshSize : leftBoundTemp;
-double rightBoundFine = (doubleIntefaceNode) ? rightBoundTemp + 0.5 * desiredMeshSize : rightBoundTemp;
+double leftBoundFine = (doubleIntefaceNode) ? leftBoundTemp - 0.5 * desiredMeshSizeFine : leftBoundTemp;
+double rightBoundFine = (doubleIntefaceNode) ? rightBoundTemp + 0.5 * desiredMeshSizeFine : rightBoundTemp;
 
 std::vector <unsigned> elementSkipFlags;
 std::vector <unsigned> elementSkipFlagsFine;

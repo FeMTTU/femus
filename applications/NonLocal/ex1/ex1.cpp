@@ -274,7 +274,13 @@ int main (int argc, char** argv) {
   std::vector<std::string> print_vars;
   print_vars.push_back ("All");
   mlSol.GetWriter()->SetDebugOutput (true);
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "nonlocal_local_exact", print_vars, 0);
+
+  mlSolFine.SetWriter (VTK);
+  std::vector<std::string> print_vars2;
+  print_vars2.push_back ("All");
+  mlSolFine.GetWriter()->SetDebugOutput (true);
+  mlSolFine.GetWriter()->Write (DEFAULT_OUTPUTDIR, "fine", print_vars2, 0);
 
   std::cout << "Mesh size h = " << (xMaxCoarseBox - xMinCoarseBox) / (numberOfElements * pow (2, numberOfUniformLevels - 1)) << std::endl;
   std::cout << "Mesh size fine h = " << (xMaxCoarseBoxFine - xMinCoarseBoxFine) / (numberOfElementsFine * pow (2, numberOfUniformLevels - 1)) << std::endl;
@@ -380,35 +386,37 @@ void GetL2Norm (MultiLevelSolution &mlSol, MultiLevelSolution &mlSolFine) {
 
       for (int ielFine = solFine->GetMesh()->_elementOffset[iprocFine]; ielFine < solFine->GetMesh()->_elementOffset[iprocFine + 1]; ielFine ++) {
 
+        short unsigned iel_x_gssGeom = mshFine->GetElementType (ielFine);
+        unsigned nDofFine  = mshFine->GetElementDofNumber (ielFine, soluType);
+
+        vector < double >  soluNonLocFine (nDofFine);
+
+        std::vector < std::vector <double> > xFine (dim);
+
+        for (int k = 0; k < dim; k++) {
+          xFine[k].assign (nDofFine, 0.);
+        }
+
         unsigned  xLeftDof = solFine->GetMesh()->GetSolutionDof (0, ielFine, 2);
         unsigned  xRightDof = solFine->GetMesh()->GetSolutionDof (1, ielFine, 2);
 
-        double xLeft = (*solFine->GetMesh()->_topology->_Sol[0]) (xLeftDof);
-        double xRight = (*solFine->GetMesh()->_topology->_Sol[0]) (xRightDof);
+        xFine[0][0] = (*solFine->GetMesh()->_topology->_Sol[0]) (xLeftDof);
+        xFine[0][1] = (*solFine->GetMesh()->_topology->_Sol[0]) (xRightDof);
 
-        if (x_gss > xLeft && x_gss < xRight) {
+        if ( (x_gss > xFine[0][0] && x_gss < xFine[0][1]) || fabs (x_gss - xFine[0][0]) < 1.e-10 || fabs (x_gss - xFine[0][1]) < 1.e-10) {
 
-          short unsigned iel_x_gssGeom = mshFine->GetElementType (ielFine);
-          unsigned nDofFine  = mshFine->GetElementDofNumber (ielFine, soluType);
-
-          vector < double >  soluNonLocFine (nDofFine);
-
-          std::vector < std::vector <double> > xFine (dim);
-
-          for (int k = 0; k < dim; k++) {
-            xFine[k].assign (nDofFine, 0.);
-          }
+//           std::cout.precision (16);
+//           std::cout << "FOUND ----------> " << xFine[0][0] << " , " << xFine[0][1] << " , " << x_gss << std::endl;
 
           for (unsigned jdof = 0; jdof < nDofFine; jdof++) {
-
             unsigned solDof = msh->GetSolutionDof (jdof, ielFine, soluType);
             soluNonLocFine[jdof] = (*sol->_Sol[soluIndex]) (solDof);
-            unsigned xDofFine  = mshFine->GetSolutionDof (jdof, ielFine, xType);
-            xFine[0][jdof] = (*msh->_topology->_Sol[0]) (xDofFine);
           }
 
-          std::vector<double> x_gss_Local (3, 0.);
+          std::vector<double> x_gss_Local (1, 0.);
           x_gss_Local[0] = - 1. + 2. * (x_gss - xFine[0][0]) / (xFine[0][1] - xFine[0][0]);
+
+//           std::cout << "=====-------------------==== x_gss_Local[0] = " << x_gss_Local[0] << std::endl;
 
           vector <double> phiFine;  // local test function
           vector <double> phi_xFine; // local test function first order partial derivatives
@@ -419,16 +427,18 @@ void GetL2Norm (MultiLevelSolution &mlSol, MultiLevelSolution &mlSolFine) {
             soluNonLocFine_gss += soluNonLocFine[jdof] * phiFine[jdof];
           }
 
+          break;
+
         }
       }
 
       //END computation of the fine solution at the coarse Gauss point
 
 
-//       double u1 = 1. / 4. - 1. / 4. * x_gss - 1. / 2. * x_gss * x_gss;
-//       double u2 = 1. / 4. - 1. / 12. * x_gss - 1. / 6. * x_gss * x_gss;
-//
-//       soluExact_gss = (x_gss < 0.) ? u1 : u2;
+      double u1 = 1. / 4. - 1. / 4. * x_gss - 1. / 2. * x_gss * x_gss;
+      double u2 = 1. / 4. - 1. / 12. * x_gss - 1. / 6. * x_gss * x_gss;
+
+      soluExact_gss = (x_gss < 0.) ? u1 : u2;
 
 
 //       soluExact_gss = soluExact_gss * soluExact_gss * soluExact_gss * soluExact_gss + 0.1 * soluExact_gss * soluExact_gss; // this is x^4 + delta * x^2
