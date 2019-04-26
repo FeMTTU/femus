@@ -44,7 +44,7 @@ void GetMultiIndex (std::vector <unsigned> &idx, const unsigned &dim, const unsi
 void SetElementDofs (std::vector <unsigned> &elementDofs, const std::vector < unsigned > & idx, const unsigned & nve1d);
 
 void PrintSolution (const std::vector <double> &U, const std::vector <double> &Ur, const double *x, const unsigned &dim, const unsigned &n);
-void PrintGnuplotScript (const double & xmin, const double & xmax, const double & ymin, const double & ymax, const unsigned &nve);
+void PrintGnuplotScript (const double & xmin, const double & xmax, const double & ymin, const double & ymax, const unsigned &nve, const bool&printDerivative = false);
 
 class GMPM {
   public:
@@ -68,7 +68,7 @@ int main (int argc, char** args) {
   bool output = true;
 
   std::vector < std::vector <unsigned> > aIdx;
-  unsigned pOrder = 2;
+  unsigned pOrder = 3;
   unsigned dim = 1;
   ComputeIndexSet (aIdx, pOrder, dim, output);
 
@@ -90,7 +90,6 @@ int main (int argc, char** args) {
     int ip = (i + deltai < nve) ? i + deltai : nve - 1;
 
     distanceMax[i] = (Xv[ip] - Xv[i] > Xv[i] - Xv[im]) ? Xv[ip] - Xv[i] : Xv[i] - Xv[im];
-
   }
 
   std::vector< std::vector < std::vector< double> > > XVprint (1);
@@ -107,7 +106,7 @@ int main (int argc, char** args) {
 
   //PrintLine ("./output/", XVprint, false, 1);
 
-  unsigned Np = 120;
+  unsigned Np = 170;
 
   unsigned maxNumberOfNodes = (2u * (pOrder + 1u) < nve) ? 2u * (pOrder + 1u) : nve;
 
@@ -128,7 +127,7 @@ int main (int argc, char** args) {
       bool particleIsWhithin = false;
       for (unsigned d = 0; d < dim; d++) {
         distance[d] = gmpm[p]->_xp[d] - Xv[j];
-        if (fabs (distance[d]) < distanceMax[j])  particleIsWhithin = true;
+        if (fabs (distance[d]) <= distanceMax[j])  particleIsWhithin = true;
       }
       if (particleIsWhithin) {
         unsigned size = gmpm[p]->_node.size();
@@ -174,26 +173,46 @@ int main (int argc, char** args) {
   }
   std::cout << "\b\b  " << std::endl;
   std::vector < double > Ur (Np, 0.);
+  std::vector < double > dUr (Np, 0.);
   std::vector < double > Ue (Np, 0.);
 
   std::ofstream fout;
   std::ofstream fouti;
+  std::vector < std::ofstream > dfout (dim);
+  std::vector < std::ofstream > dfouti (dim);
   fout.open ("./output/phiSum.txt");
+  for (unsigned d = 0; d < dim; d++) {
+    std::ostringstream stream;
+    stream << "./output/dphi" << "dx" << d << "Sum.txt";
+    dfout[d].open (stream.str().c_str());
+  }
+
+
   for (unsigned i = 0; i < nve; i++) {
     std::ostringstream stream;
     stream << "./output/phi" << i << ".txt";
     fouti.open (stream.str().c_str());
     fouti.close();
+
+    for (unsigned d = 0; d < dim; d++) {
+      std::ostringstream stream;
+      stream << "./output/dphi" << i << "dx" << d << ".txt";
+      dfouti[d].open (stream.str().c_str());
+      dfouti[d].close();
+    }
   }
   double ymin = 0.;
   double ymax = 0.;
+  
+  std::vector < double > dymin (dim,0.);
+  std::vector < double > dymax (dim,0.);
 
   std::vector< double> alpha (aIdx.size());
   std::vector< std::vector< double> > dalpha (dim);
   for (unsigned d = 0; d < dim; d++) {
     dalpha[d].resize (aIdx.size());
   }
-    
+
   std::vector< double> b (aIdx.size());
   std::vector< unsigned> pivotIndex (aIdx.size());
 
@@ -255,9 +274,9 @@ int main (int argc, char** args) {
         dist2 += gmpm[p]->_distance[i][d] * gmpm[p]->_distance[i][d];
       }
       dist2 /= distanceMax[inode] * distanceMax[inode];
-      weight[i] = (dist2 > 1.) ? 0. : pow (1. - dist2, 4);
+      weight[i] = (dist2 >= 1.) ? 0. : pow (1. - dist2, 4);
       for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
-        dweight[i][d] = (dist2 > 1.) ? 0. : 
+        dweight[i][d] = (dist2 >= 1.) ? 0. :
                         4. * pow (1. - dist2, 3) * (-2.) * gmpm[p]->_distance[i][d] / distanceMax[inode];
       }
 
@@ -273,18 +292,18 @@ int main (int argc, char** args) {
             std::vector< double > dTkTl (3, 1.);
             for (unsigned d = 0 ; d < dim; d++) {
               TkTl *= T[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]]; //alpha * beta multidimendional product
-//               for (unsigned d2 = 0 ; d2 < dim; d2++) {
-//                 if (d == d2) {
-//                   dTkTl[d] *= (dT[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]] + T[i][d][aIdx[k][d]] * dT[i][d][aIdx[l][d]]) ;
-//                 }
-//                 else {
-//                   dTkTl[d] *= T[i][d2][aIdx[k][d2]] * T[i][d2][aIdx[l][d2]];
-//                 }
-//               }
+              for (unsigned d2 = 0 ; d2 < dim; d2++) {
+                if (d == d2) {
+                  dTkTl[d] *= (dT[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]] + T[i][d][aIdx[k][d]] * dT[i][d][aIdx[l][d]]) ;
+                }
+                else {
+                  dTkTl[d] *= T[i][d2][aIdx[k][d2]] * T[i][d2][aIdx[l][d2]];
+                }
+              }
             }
             Mp[k][l] +=  weight[i] * TkTl;
             for (unsigned d = 0 ; d < dim; d++) {
-              //dMp[d][k][l] +=  weight[i] * dTkTl[d];
+              dMp[d][k][l] += weight[i] * dTkTl[d];
               dMp[d][k][l] += dweight[i][d] * TkTl;
             }
           }
@@ -306,26 +325,35 @@ int main (int argc, char** args) {
 
     //GaussianEleminationWithPivoting (Mp, alpha, false);
     LUsolve (Mp, pivotIndex, b, alpha, false);
-    
-    for(unsigned d=0; d < dim; d++){
-      b.assign(aIdx.size(),0.);
-      //b[1] = -1;
-      for(unsigned j = 0; j < aIdx.size(); j++){
-        for(unsigned k = 0; k < aIdx.size(); k++){
-          b[j] -= dMp[d][j][k] * alpha[k];   
+
+    for (unsigned d = 0; d < dim; d++) {
+      b.assign (aIdx.size(), 0.);
+      b[1] = -1;
+      for (unsigned j = 0; j < aIdx.size(); j++) {
+        for (unsigned k = 0; k < aIdx.size(); k++) {
+          b[j] -= dMp[d][j][k] * alpha[k];
         }
       }
-      LUbackward(Mp, pivotIndex, b, dalpha[d], false);
+      LUbackward (Mp, pivotIndex, b, dalpha[d], false);
     }
-    
+
 
     double phiSum = 0.;
+    std::vector < double > dphiSum (dim, 0.);
+
     for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
 
       unsigned inode = gmpm[p]->_node[i];
       std::ostringstream stream;
       stream << "./output/phi" << inode << ".txt";
       fouti.open (stream.str().c_str(), std::ios_base::app);
+
+      for (unsigned d = 0 ; d < dim; d++) {
+        std::ostringstream stream;
+        stream << "./output/dphi" << inode << "dx" << d << ".txt";
+        dfouti[0].open (stream.str().c_str(), std::ios_base::app);
+      }
+
 
       double P = 1.;
       for (unsigned d = 0 ; d < dim; d++) {
@@ -334,50 +362,95 @@ int main (int argc, char** args) {
 
       if (weight[i] > 0.) {
         double sumAlphaT = 0.;
-        std::vector < double > sumdAlphaT(dim,0.);
+        std::vector < double > sumdAlphaT (dim, 0.);
+        std::vector < double > sumAlphadT (dim, 0.);
         for (unsigned k = 0; k < aIdx.size(); k++) {
           double Tk = 1;
+          std::vector < double > dTk(dim,1.); 
           for (unsigned d = 0 ; d < dim; d++) {
             Tk *= T[i][d][aIdx[k][d]];
+            for (unsigned d2 = 0 ; d2 < dim; d2++) {
+              if (d == d2) {
+                dTk[d] *= dT[i][d][aIdx[k][d]];
+              }
+              else {
+                dTk[d] *= T[i][d2][aIdx[k][d2]];
+              }
+            }
           }
+          
           sumAlphaT += alpha[k] * Tk;
-          for(unsigned d = 0; d < dim; d++){
+          for (unsigned d = 0; d < dim; d++) {
             sumdAlphaT[d] += dalpha[d][k] * Tk;
+            sumAlphadT[d] += alpha[k] * dTk[d];
           }
         }
         double phi = weight[i] * sumAlphaT;
-        
-        std::vector < double > dphi(dim, 0.);
-        for(unsigned d = 0; d < dim; d++){
-          dphi[d] = weight[i] * sumdAlphaT[d] + dweight[d][i] * sumAlphaT ;
-        }
-        
-        
-        Ur[p] += phi * P;
 
-        fouti << gmpm[p]->_xp[0] << " " << dphi[0] << std::endl;
+        std::vector < double > dphi (dim, 0.);
+        for (unsigned d = 0; d < dim; d++) {
+          dphi[d] = weight[i] * sumdAlphaT[d] + dweight[i][d] * sumAlphaT + weight[i] * sumAlphadT[d];
+        }
+
+        Ur[p] += phi * P;
+        dUr[p] += dphi[0] * P;
+
+        fouti << gmpm[p]->_xp[0] << " " << phi << std::endl;
+
+        for (unsigned d = 0 ; d < dim; d++) {
+          dfouti[0] << gmpm[p]->_xp[0] << " " << dphi[0] << std::endl;
+        }
+
         ymin = (ymin < phi) ? ymin : phi;
         ymax = (ymax > phi) ? ymax : phi;
-        phiSum += dphi[0];
+        phiSum += phi;
+        for (unsigned d = 0 ; d < dim; d++) {
+          
+          dymin[d] = (dymin[d] < dphi[d]) ? dymin[d] : dphi[d];
+          dymax[d] = (dymax[d] > dphi[d]) ? dymax[d] : dphi[d];
+          
+          dphiSum[d] += dphi[d];
+        }
       }
       fouti.close();
+      dfouti[0].close();
+      for (unsigned d = 0 ; d < dim; d++) {
+        dfouti[d].close();
+      }
     }
     fout << gmpm[p]->_xp[0] << " " << phiSum << std::endl;
+    for (unsigned d = 0 ; d < dim; d++) {
+      dfout[d] << gmpm[p]->_xp[0] << " " << dphiSum[d] << std::endl;
+    }
   }
   fout.close();
+  for (unsigned d = 0 ; d < dim; d++) {
+    dfout[d].close();
+  }
 
+  
   PrintGnuplotScript (Xv[0], Xv[nve - 1], ymin, ymax, nve);
+  bool printDerivative = true;
+  PrintGnuplotScript (Xv[0], Xv[nve - 1], dymin[0], dymax[0], nve, printDerivative);
 
   bool test_passed = true;
   for (unsigned p = 0; p < Np; p++) { // particle loop
     Ue[p] = 1.;
+    double dUe = 1.;
     for (unsigned d = 0 ; d < dim; d++) {
       Ue[p] *= pow (gmpm[p]->_xp[d], pOrderTest[d]);
     }
+    dUe *= pOrderTest[0] * pow (gmpm[p]->_xp[0], pOrderTest[0] - 1);
     if (fabs (Ue[p] - Ur[p]) > 1.0e-6) {
       test_passed = false;
       std::cout << "Error at node = " << p << " exact value = " << Ue[p] << " reconstructed value = " << Ur[p] << std::endl;
     }
+    if (fabs (dUe - dUr[p]) > 1.0e-6) {
+      test_passed = false;
+      std::cout << "Error at node = " << p << " derivative exact value = " << dUe << " reconstructed value = " << dUr[p] << std::endl;
+    }
+    
+    
   }
   if (test_passed == true) std::cout << "Test passed";
   std::cout << std::endl;
@@ -824,21 +897,38 @@ void PrintSolution (const std::vector <double> &Ue, const std::vector <double> &
   fout.close();
 }
 
-void PrintGnuplotScript (const double & xmin, const double & xmax, const double & ymin, const double & ymax, const unsigned &nve) {
+void PrintGnuplotScript (const double & xmin, const double & xmax, const double & ymin, const double & ymax, const unsigned &nve, const bool &printDerivative) {
   std::ofstream fout;
-  fout.open ("./output/gnuScript.txt");
+  if(printDerivative){
+    fout.open ("./output/gnuScriptdPhi.txt");
+  }
+  else{
+    fout.open ("./output/gnuScriptPhi.txt");
+  }
   fout << "set xrange[" << xmin << ":" << xmax << "]" << std::endl;
   fout << "set yrange[" << ymin - 0.02 << ":" << ymax + 0.02 << "]" << std::endl;
   fout << "plot ";
   for (unsigned i = 0; i < nve; i++) {
+    //if(i==0 || i==nve-1){
 
     std::ostringstream stream;
-    stream << "\"phi" << i << ".txt\"";
-
-    fout << stream.str().c_str() << " u 1:2 title \"{/Symbol f}_{" << i << "}\" with line,";
+    if(printDerivative){
+      stream << "\"dphi" << i << "dx0.txt\"";
+      fout << stream.str().c_str() << " u 1:2 title \"d{/Symbol f}_{" << i << "}\" with line,";
+    }
+    else{
+      stream << "\"phi" << i << ".txt\"";
+      fout << stream.str().c_str() << " u 1:2 title \"{/Symbol f}_{" << i << "}\" with line,";
+    }
   }
-  fout << "\"phiSum.txt\" u 1:2 title \"{/Symbol S}_{i}{/Symbol f}_{i}\" with line,";
+  if(printDerivative){
+    fout << "\"dphidx0Sum.txt\" u 1:2 title \"{/Symbol S}_{i}d{/Symbol f}_{i}\" with line,";
+  }
+  else{
+    fout << "\"phiSum.txt\" u 1:2 title \"{/Symbol S}_{i}{/Symbol f}_{i}\" with line,";
+  }
   fout << "\npause -1 " << std::endl;
   fout.close();
+  
 }
 
