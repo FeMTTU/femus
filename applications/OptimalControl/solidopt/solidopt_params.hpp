@@ -4,7 +4,7 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB  1
+#define NSUB  2
 
 //*********************** Model *****************************************
 #define MODEL "Linear_elastic"
@@ -18,13 +18,13 @@
 //******************************************* Desired Target  and RHS function*******************************************************
     
  double _gravity[3] = {0., 0., 0.};  // gravity
- double TargetDisp[3] = { 1.e-2, 0., 0.};
+ double TargetDisp[3] = { 1.e-3, 0., 0.};
 
 //*********************** Sets the regularization parameters *******************************************************
 
- double alpha_val = 1.e+0;
- double beta_val  = 1.;
- double gamma_val = 1.;
+ double alpha_val = 1.;
+ double beta_val  = 1.e-3;
+ double gamma_val = 1.e-3;
  
  
  
