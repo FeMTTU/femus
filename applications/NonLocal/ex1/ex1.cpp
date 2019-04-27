@@ -28,8 +28,8 @@ using namespace femus;
 
 double InitalValueU (const std::vector < double >& x) {
 
-  double u1 = 1. / 4. - 1. / 4. * x[0] - 1. / 2. * x[0] * x[0];
-  double u2 = 1. / 4. - 1. / 12. * x[0] - 1. / 6. * x[0] * x[0];
+  double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0];
+  double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0];
 
   double value = (x[0] < 0.) ? u1 : u2;
 
@@ -56,8 +56,8 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 
   bool dirichlet = true;
 
-  double u1 = 1. / 4. - 1. / 4. * x[0] - 1. / 2. * x[0] * x[0];
-  double u2 = 1. / 4. - 1. / 12. * x[0] - 1. / 6. * x[0] * x[0];
+  double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0];
+  double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0];
 
   value = (x[0] < 0.) ? u1 : u2;
 
@@ -434,9 +434,8 @@ void GetL2Norm (MultiLevelSolution &mlSol, MultiLevelSolution &mlSolFine) {
 
       //END computation of the fine solution at the coarse Gauss point
 
-
-      double u1 = 1. / 4. - 1. / 4. * x_gss - 1. / 2. * x_gss * x_gss;
-      double u2 = 1. / 4. - 1. / 12. * x_gss - 1. / 6. * x_gss * x_gss;
+      double u1 = a1 + b1 * x_gss - 1. / (2. * kappa1) * x_gss * x_gss;
+      double u2 = a2 + b2 * x_gss - 1. / (2. * kappa2) * x_gss * x_gss;
 
       soluExact_gss = (x_gss < 0.) ? u1 : u2;
 
@@ -578,8 +577,8 @@ void GetL2Norm (MultiLevelSolution &mlSol, MultiLevelSolution &mlSolFine) {
 //
 //     double u_local = (*sol->_Sol[soluIndexLocal]) (idof);
 //
-//     double u1 = 1. / 4. - 1. / 4. * x - 1. / 2. * x * x;
-//     double u2 = 1. / 4. - 1. / 12. * x - 1. / 6. * x * x;
+//     double u1 = a1 + b1 * x - 1. / (2. * kappa1) * x * x;
+//     double u2 = a2 + b2 * x - 1. / (2. * kappa2) * x * x;
 //
 //     double u_exact = (x < 0.) ? u1 : u2;
 //
