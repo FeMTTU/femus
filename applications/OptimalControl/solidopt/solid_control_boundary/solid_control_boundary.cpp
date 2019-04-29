@@ -491,7 +491,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
     const double Lref = solid_in._parameter->Get_reference_length();
     const double nondim_number = Lref/young_modulus;
     
-    const double mus   =  nondim_number * mu_lame/rhos;
+    const double mus   =  /*nondim_number **/ mu_lame/rhos;
     // -----------------------------------------------------------------
  
     RES->zero();
@@ -669,8 +669,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
               ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[theta_index]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[theta_index],phi_hat_bd_x_dof_qp[theta_index],normal);
 		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
-		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[kdim + ctrl_pos_begin],phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin],normal);
-		      ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[adj_pos_begin]]->VolumeShapeAtBoundary(coords_hat,coords_hat_bd,jface,ig_bd,phi_hat_vol_at_bdry_dof[kdim + adj_pos_begin],phi_hat_x_vol_at_bdry_dof[kdim + adj_pos_begin]);
+		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[kdim + ctrl_pos_begin]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[kdim + ctrl_pos_begin],phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin],normal);
+		      ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[kdim + adj_pos_begin]]->VolumeShapeAtBoundary(coords_hat,coords_hat_bd,jface,ig_bd,phi_hat_vol_at_bdry_dof[kdim + adj_pos_begin],phi_hat_x_vol_at_bdry_dof[kdim + adj_pos_begin]);
             }
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		    double dx_dxi = 0.;
@@ -679,11 +679,13 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 		    for (int inode = 0; inode < nve_bd; inode++) {
 			  dx_dxi += myptr[inode] * coords_hat_bd[0][inode];
 		    }  
-		    for (int inode = 0; inode < nve_bd; inode++) {
-			  for (int d = 0; d < dim; d++) {
-                if (d == 0 )     phi_hat_bd_x_dof_qp[ctrl_pos_begin][inode + d*nve_bd] = myptr[inode]* (1./ dx_dxi);
-                else             phi_hat_bd_x_dof_qp[ctrl_pos_begin][inode + d*nve_bd] = 0.;
-			  }
+		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
+                for (int inode = 0; inode < nve_bd; inode++) {
+                    for (int d = 0; d < dim; d++) {
+                        if (d == 0 )     phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin][inode + d*nve_bd] = myptr[inode]* (1./ dx_dxi);
+                        else             phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin][inode + d*nve_bd] = 0.;
+                    }
+                }
 		    }
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  
@@ -766,7 +768,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 /*delta_control row */     if(i_vol<Sol_n_el_dofs[ctrl_pos_begin])  Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[kdim + ctrl_pos_begin], i_vol) ]  += control_node_flag[kdim][i_vol] * weight_hat_bd_qp * (
                                                                                           beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry]
                                                                                         + gamma_val* lap_res_dctrl_ctrl_bd
-                                                                                        + mus * grad_dot_n_adj_res[kdim]  * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry]
+                                                                                        - nondim_number * mus * grad_dot_n_adj_res[kdim]  * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry]
                                                                                         );	    
 		      }//kdim  
 
@@ -859,12 +861,12 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 
               for (int idim = 0.; idim < dim; idim++) {
                 for (int jdim = 0.; jdim < dim; jdim++) {
-                  Cauchy_direction[idim] += /*nondim_number **/ phi_x_hat_dof_qp[ idim ][i * dim + jdim] * Cauchy[idim][jdim];
+                  Cauchy_direction[idim] += nondim_number * phi_x_dof_qp[ idim ][i * dim + jdim] * Cauchy[idim][jdim];
                 }
               }
 
               for (int idim = 0; idim < dim; idim++) {
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( Cauchy_direction[idim] -  phi_hat_dof_qp[ idim ][i] * _gravity[idim] ) * weight_qp;
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim], i) ] += ( Cauchy_direction[idim] -  phi_dof_qp[ idim ][i] * _gravity[idim] ) * weight_qp;
               }
 
             }
@@ -891,8 +893,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
          for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_adj]; i++) {
                for (int idim = 0; idim < dim; idim++) {
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + adj_pos_begin], i)] += 
-     alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] - TargetDisp[idim]) 
-     * phi_hat_dof_qp[ idim + adj_pos_begin ][i] * weight_qp;
+    - alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] - TargetDisp[idim]) 
+     * phi_dof_qp[ idim + adj_pos_begin ][i] * weight_qp;
                }
           }
 //----------from displ_state and displ_ctrl
@@ -1019,7 +1021,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
         for(unsigned ig_bd=0; ig_bd < ml_prob.GetQuadratureRule(felt_bd).GetGaussPointsNumber(); ig_bd++) {
               
               		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
-		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[kdim + ctrl_pos_begin],phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin],normal);
+		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[kdim + ctrl_pos_begin]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[kdim + ctrl_pos_begin],phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin],normal);
                         }
               
               
@@ -1038,7 +1040,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
               //residual  -  delta_theta  * g dot n =========================================
     for (unsigned  kdim = 0; kdim < dim; kdim++) {
 // 		for(unsigned i=0; i < Sol_n_el_dofs[theta_index]; i ++) { //avoid because it is an element dof
-/*delta_theta row */ 	 /*Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[theta_index], i) ] */Res_outer[0] +=  /*fake_theta_flag[i] **/ weight_hat_bd_qp * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
+/*delta_theta row */ 	 /*Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[theta_index], i) ] */Res_outer[0] += - /*fake_theta_flag[i] **/ weight_hat_bd_qp * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
 // 		}  
 	  }
               //residual  -  delta_theta * g dot n =========================================
@@ -1050,7 +1052,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
               		      for (unsigned  kdim = 0; kdim < dim; kdim++) {
 			
 			
-/*delta_control row */     if( i_vol < Sol_n_el_dofs[ctrl_pos_begin] )  Res_g[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[kdim + ctrl_pos_begin], i_vol) ]  +=
+/*delta_control row */     if( i_vol < Sol_n_el_dofs[ctrl_pos_begin] )  Res_g[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[kdim + ctrl_pos_begin], i_vol) ]  += -
                                                                                        control_node_flag[kdim][i_vol] * weight_hat_bd_qp * (
                                                                                          SolVAR_eldofs[SolPdeIndex[theta_index]][0] /*(*sol->_Sol[SolIndex[theta_index]])(0)*/ * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry] * normal[kdim]  
                                                                                         //*sol->_Sol[SolIndex[theta_index]])(0) finds the global value from KKDof pos(63, 169,etc), SolVAReldof_theta gets the value in the boundary point which will be zero. Theta is just a const
@@ -1068,9 +1070,9 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 			    if(i_vol < Sol_n_el_dofs[ctrl_pos_begin]) {
 				double temp = weight_hat_bd_qp * ( phi_hat_bd_dof_qp[kdim + ctrl_pos_begin][i_bdry] * normal[kdim]);
 //ROW_BLOCK delta_theta - control -- loop over i in the VOLUME (while j(/i_vol) is in the boundary) -------------------------------------------------------------------------------------------------------------
-			      Jac_g[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, theta_index , ctrl_pos_begin + kdim, i, i_vol) ]  += - temp;
+			      Jac_g[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, theta_index , ctrl_pos_begin + kdim, i, i_vol) ]  +=  temp;
 //COLUMN_BLOCK delta_control - theta ---- loop over j in the VOLUME (while i(/i_vol) is in the boundary) ---------------------------------------------------------------------------------------------------
-			      Jac_g[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, ctrl_pos_begin + kdim, theta_index , i_vol, i) ] += - control_node_flag[kdim][i_vol] * temp;
+			      Jac_g[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, ctrl_pos_begin + kdim, theta_index , i_vol, i) ] +=  control_node_flag[kdim][i_vol] * temp;
 			    }//endif
 			  }// i 
 		    }//kdim

@@ -4,7 +4,7 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB  4
+#define NSUB  16
 
 //*********************** Model *****************************************
 #define MODEL "Linear_elastic"
@@ -12,13 +12,13 @@
 // #define MODEL "Neo-Hookean"
 
 //*********************** Parameters for Solid Model *****************************************
-#define YOUNGS_MODULUS 1.5e+9
+#define YOUNGS_MODULUS 1.5e+6
 #define SOLID_DENSITY  1.
 #define NI 0.5
 //******************************************* Desired Target  and RHS function*******************************************************
     
  double _gravity[3] = {0., 0., 0.};  // gravity
- double TargetDisp[3] = { 1.e-6, 0., 0.};
+ double TargetDisp[3] = { 1.e-1, 0., 0.};
 
 //*********************** Sets the regularization parameters *******************************************************
 
