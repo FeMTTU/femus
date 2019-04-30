@@ -15,6 +15,10 @@
 #include "Assemble_jacobian.hpp"
 #include "PetscMatrix.hpp"
 
+#define FACE_FOR_CONTROL             3  //we do control on the right (=2) face
+#define AXIS_DIRECTION_CONTROL_SIDE  0 //=0 if horizontal face, = 1 if vertical face (change this accordingly to the other variable above)
+
+
 #include   "../solidopt_params.hpp"
 
 #define CTRL_FACE_IDX  3
@@ -201,6 +205,36 @@ const MultiLevelSolution  run_on_single_level(const Files & files,
   
 };
  
+
+void set_phi_gradient_surface(const unsigned int axis_direction_control_side, 
+                      const Mesh* msh,
+                      const unsigned int ig_bd, 
+                      const std::vector<unsigned int> SolFEType, 
+                      const unsigned int felt_bd, 
+                      const unsigned int nve_bd,
+                      const std::vector< std::vector< double > > & coords_hat_bd,
+                      std::vector< std::vector< double > > & phi_hat_bd_x_dof_qp,
+                      const unsigned int dim,  //dim of the (vector) unknown
+                      const unsigned int ctrl_pos_begin //unknown
+                     ) {
+    
+//========== temporary soln for surface gradient on a face parallel to the axes ===================
+//           const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
+		  double dx_dcurv_abscissa = 0.;
+		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]);
+		 const double * myptr = myptr = myeltype->GetDPhiDXi(ig_bd);
+		      for (int inode = 0; inode < nve_bd; inode++) dx_dcurv_abscissa += myptr[inode] * coords_hat_bd[axis_direction_control_side][inode];
+  
+		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
+		      for (int inode = 0; inode < nve_bd; inode++) {
+                            for (int d = 0; d < coords_hat_bd.size(); d++) {
+                              if (d == axis_direction_control_side ) phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin][inode + d*nve_bd] = myptr[inode]* (1./ dx_dcurv_abscissa);
+                              else  phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin][inode + d*nve_bd] = 0.;
+                         }
+                     }
+            }
+            
+}
 
 
 int main(int argc, char** args) {
@@ -672,23 +706,11 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[kdim + ctrl_pos_begin]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[kdim + ctrl_pos_begin],phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin],normal);
 		      ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[kdim + adj_pos_begin]]->VolumeShapeAtBoundary(coords_hat,coords_hat_bd,jface,ig_bd,phi_hat_vol_at_bdry_dof[kdim + adj_pos_begin],phi_hat_x_vol_at_bdry_dof[kdim + adj_pos_begin]);
             }
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
-		    double dx_dxi = 0.;
-		    const elem_type_1D* myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]);
-		    const double* myptr = myeltype->GetDPhiDXi(ig_bd);
-		    for (int inode = 0; inode < nve_bd; inode++) {
-			  dx_dxi += myptr[inode] * coords_hat_bd[0][inode];
-		    }  
-		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
-                for (int inode = 0; inode < nve_bd; inode++) {
-                    for (int d = 0; d < dim; d++) {
-                        if (d == 0 )     phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin][inode + d*nve_bd] = myptr[inode]* (1./ dx_dxi);
-                        else             phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin][inode + d*nve_bd] = 0.;
-                    }
-                }
-		    }
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
-		  
+            
+            
+ set_phi_gradient_surface(AXIS_DIRECTION_CONTROL_SIDE, msh, ig_bd, SolFEType, felt_bd, nve_bd, coords_hat_bd, phi_hat_bd_x_dof_qp, dim, ctrl_pos_begin);
+ 
+
 //========== compute gauss quantities on the boundary ===============================================
 		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
 			    unsigned int ctrl_index = kdim + ctrl_pos_begin;
@@ -1552,20 +1574,9 @@ real_num   integral_g_dot_n = 0.;
 		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
 		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[kdim + ctrl_pos_begin],phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin],normal);
             }
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
-		    double dx_dxi = 0.;
-		    const elem_type_1D* myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]);
-		    const double* myptr = myeltype->GetDPhiDXi(ig_bd);
-		    for (int inode = 0; inode < nve_bd; inode++) {
-			  dx_dxi += myptr[inode] * coords_hat_bd[0][inode];
-		    }  
-		    for (int inode = 0; inode < nve_bd; inode++) {
-			  for (int d = 0; d < dim; d++) {
-                if (d == 0 )     phi_hat_bd_x_dof_qp[ctrl_pos_begin][inode + d*nve_bd] = myptr[inode]* (1./ dx_dxi);
-                else             phi_hat_bd_x_dof_qp[ctrl_pos_begin][inode + d*nve_bd] = 0.;
-			  }
-		    }
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
+            
+ set_phi_gradient_surface(AXIS_DIRECTION_CONTROL_SIDE, msh, ig_bd, SolFEType, felt_bd, nve_bd, coords_hat_bd, phi_hat_bd_x_dof_qp, dim, ctrl_pos_begin);
+            
 		  
 //========== compute gauss quantities on the boundary ===============================================
 		    for (unsigned  kdim = 0; kdim < dim; kdim++) {

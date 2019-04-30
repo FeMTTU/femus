@@ -4,7 +4,7 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB  16
+#define NSUB  2
 
 //*********************** Model *****************************************
 #define MODEL "Linear_elastic"
