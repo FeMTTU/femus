@@ -77,7 +77,7 @@ int main (int argc, char** args) {
 // unsigned nel1d = nve1d - 1u;
 // unsigned nel = static_cast< unsigned > (pow (nel1d, dim));
 
-  double Xv[9] = {0., 0.2, 0.4, 0.6, 0.8, 1., 1.2, 1.4, 1.6};
+  double Xv[9] = {0., 0.25, 0.43, 0.58, 0.81, 0.98, 1.25, 1.425, 1.6};
 
   double scale = 0.5;
 
@@ -106,7 +106,7 @@ int main (int argc, char** args) {
 
   //PrintLine ("./output/", XVprint, false, 1);
 
-  unsigned Np = 170;
+  unsigned Np = 500;
 
   unsigned maxNumberOfNodes = (2u * (pOrder + 1u) < nve) ? 2u * (pOrder + 1u) : nve;
 
@@ -247,7 +247,6 @@ int main (int argc, char** args) {
     dweight[i].resize (dim);
   }
 
-
   std::vector < double > T0;
   std::vector < double > dT0;
   //GetChebyshev (T0, dT0, pOrder, 0., true);
@@ -276,12 +275,14 @@ int main (int argc, char** args) {
       dist2 /= distanceMax[inode] * distanceMax[inode];
       weight[i] = (dist2 >= 1.) ? 0. : pow (1. - dist2, 4);
       for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
-        dweight[i][d] = (dist2 >= 1.) ? 0. :
+        dweight[i][d] = /*(dist2 >= 1.) ? 0. :*/
                         4. * pow (1. - dist2, 3) * (-2.) * gmpm[p]->_distance[i][d] / distanceMax[inode];
       }
 
-
-      if (weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
+      std::cout << inode <<" " <<distanceMax[inode] << " " << dist2 <<" "<< weight[i] << " "<< dweight[i][0] << std::endl;
+      
+      if (true || weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
+               
         for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
           //GetChebyshev (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, false);  //1D Chebyshev
           GetPolynomial (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, false);  //1D Polynomials
@@ -303,7 +304,7 @@ int main (int argc, char** args) {
             }
             Mp[k][l] +=  weight[i] * TkTl;
             for (unsigned d = 0 ; d < dim; d++) {
-              dMp[d][k][l] += weight[i] * dTkTl[d];
+              //dMp[d][k][l] += weight[i] * dTkTl[d];
               dMp[d][k][l] += dweight[i][d] * TkTl;
             }
           }
@@ -360,7 +361,7 @@ int main (int argc, char** args) {
         P *= pow (Xv[inode] , pOrderTest[d]);
       }
 
-      if (weight[i] > 0.) {
+      if (true || weight[i] > 0.) {
         double sumAlphaT = 0.;
         std::vector < double > sumdAlphaT (dim, 0.);
         std::vector < double > sumAlphadT (dim, 0.);
@@ -389,11 +390,11 @@ int main (int argc, char** args) {
 
         std::vector < double > dphi (dim, 0.);
         for (unsigned d = 0; d < dim; d++) {
-          dphi[d] = weight[i] * sumdAlphaT[d] + dweight[i][d] * sumAlphaT + weight[i] * sumAlphadT[d];
+          dphi[d] = weight[i] * sumdAlphaT[d] + dweight[i][d] * sumAlphaT;// + weight[i] * sumAlphadT[d];
         }
 
         Ur[p] += phi * P;
-        dUr[p] += dphi[0] * P;
+        dUr[p] += 2. * dphi[0] * P;
 
         fouti << gmpm[p]->_xp[0] << " " << phi << std::endl;
 
@@ -444,9 +445,11 @@ int main (int argc, char** args) {
     if (fabs (Ue[p] - Ur[p]) > 1.0e-6) {
       test_passed = false;
       std::cout << "Error at node = " << p << " exact value = " << Ue[p] << " reconstructed value = " << Ur[p] << std::endl;
+      std::cout << "Error at node = " << p << " derivative exact value = " << dUe << " reconstructed value = " << dUr[p] << std::endl;
     }
     if (fabs (dUe - dUr[p]) > 1.0e-6) {
       test_passed = false;
+      std::cout << "Error at node = " << p << " exact value = " << Ue[p] << " reconstructed value = " << Ur[p] << std::endl;
       std::cout << "Error at node = " << p << " derivative exact value = " << dUe << " reconstructed value = " << dUr[p] << std::endl;
     }
     
