@@ -68,7 +68,7 @@ int main (int argc, char** args) {
   bool output = true;
 
   std::vector < std::vector <unsigned> > aIdx;
-  unsigned pOrder = 3;
+  unsigned pOrder = 2;
   unsigned dim = 1;
   ComputeIndexSet (aIdx, pOrder, dim, output);
 
@@ -203,9 +203,9 @@ int main (int argc, char** args) {
   }
   double ymin = 0.;
   double ymax = 0.;
-  
-  std::vector < double > dymin (dim,0.);
-  std::vector < double > dymax (dim,0.);
+
+  std::vector < double > dymin (dim, 0.);
+  std::vector < double > dymax (dim, 0.);
 
   std::vector< double> alpha (aIdx.size());
   std::vector< std::vector< double> > dalpha (dim);
@@ -273,16 +273,18 @@ int main (int argc, char** args) {
         dist2 += gmpm[p]->_distance[i][d] * gmpm[p]->_distance[i][d];
       }
       dist2 /= distanceMax[inode] * distanceMax[inode];
-      weight[i] = (dist2 >= 1.) ? 0. : pow (1. - dist2, 4);
-      for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
-        dweight[i][d] = /*(dist2 >= 1.) ? 0. :*/
-                        4. * pow (1. - dist2, 3) * (-2.) * gmpm[p]->_distance[i][d] / distanceMax[inode];
+      if (dist2 >= 1.) {
+        weight[i] = 0.;
+        dweight[i].assign (dim, 0.);
+      }
+      else {
+        weight[i] = pow (1. - dist2, 4);
+        for (unsigned d = 0 ; d < dim; d++) {
+          dweight[i][d] = 4. * pow (1. - dist2, 3) * (-2.) * gmpm[p]->_distance[i][d] / (distanceMax[inode] * distanceMax[inode]);
+        }
       }
 
-      std::cout << inode <<" " <<distanceMax[inode] << " " << dist2 <<" "<< weight[i] << " "<< dweight[i][0] << std::endl;
-      
-      if (true || weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
-               
+      if (weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
         for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
           //GetChebyshev (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, false);  //1D Chebyshev
           GetPolynomial (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, false);  //1D Polynomials
@@ -329,7 +331,7 @@ int main (int argc, char** args) {
 
     for (unsigned d = 0; d < dim; d++) {
       b.assign (aIdx.size(), 0.);
-      b[1] = -1;
+      b[1] = -1./scale;
       for (unsigned j = 0; j < aIdx.size(); j++) {
         for (unsigned k = 0; k < aIdx.size(); k++) {
           b[j] -= dMp[d][j][k] * alpha[k];
@@ -361,13 +363,13 @@ int main (int argc, char** args) {
         P *= pow (Xv[inode] , pOrderTest[d]);
       }
 
-      if (true || weight[i] > 0.) {
+      if (weight[i] > 0.) {
         double sumAlphaT = 0.;
         std::vector < double > sumdAlphaT (dim, 0.);
         std::vector < double > sumAlphadT (dim, 0.);
         for (unsigned k = 0; k < aIdx.size(); k++) {
           double Tk = 1;
-          std::vector < double > dTk(dim,1.); 
+          std::vector < double > dTk (dim, 1.);
           for (unsigned d = 0 ; d < dim; d++) {
             Tk *= T[i][d][aIdx[k][d]];
             for (unsigned d2 = 0 ; d2 < dim; d2++) {
@@ -379,7 +381,7 @@ int main (int argc, char** args) {
               }
             }
           }
-          
+
           sumAlphaT += alpha[k] * Tk;
           for (unsigned d = 0; d < dim; d++) {
             sumdAlphaT[d] += dalpha[d][k] * Tk;
@@ -390,11 +392,11 @@ int main (int argc, char** args) {
 
         std::vector < double > dphi (dim, 0.);
         for (unsigned d = 0; d < dim; d++) {
-          dphi[d] = weight[i] * sumdAlphaT[d] + dweight[i][d] * sumAlphaT;// + weight[i] * sumAlphadT[d];
+          dphi[d] = weight[i] * sumdAlphaT[d] + dweight[i][d] * sumAlphaT; //+ weight[i] * sumAlphadT[d];
         }
 
         Ur[p] += phi * P;
-        dUr[p] += 2. * dphi[0] * P;
+        dUr[p] += dphi[0] * P;
 
         fouti << gmpm[p]->_xp[0] << " " << phi << std::endl;
 
@@ -406,10 +408,10 @@ int main (int argc, char** args) {
         ymax = (ymax > phi) ? ymax : phi;
         phiSum += phi;
         for (unsigned d = 0 ; d < dim; d++) {
-          
+
           dymin[d] = (dymin[d] < dphi[d]) ? dymin[d] : dphi[d];
           dymax[d] = (dymax[d] > dphi[d]) ? dymax[d] : dphi[d];
-          
+
           dphiSum[d] += dphi[d];
         }
       }
@@ -429,7 +431,7 @@ int main (int argc, char** args) {
     dfout[d].close();
   }
 
-  
+
   PrintGnuplotScript (Xv[0], Xv[nve - 1], ymin, ymax, nve);
   bool printDerivative = true;
   PrintGnuplotScript (Xv[0], Xv[nve - 1], dymin[0], dymax[0], nve, printDerivative);
@@ -452,8 +454,8 @@ int main (int argc, char** args) {
       std::cout << "Error at node = " << p << " exact value = " << Ue[p] << " reconstructed value = " << Ur[p] << std::endl;
       std::cout << "Error at node = " << p << " derivative exact value = " << dUe << " reconstructed value = " << dUr[p] << std::endl;
     }
-    
-    
+
+
   }
   if (test_passed == true) std::cout << "Test passed";
   std::cout << std::endl;
@@ -902,10 +904,10 @@ void PrintSolution (const std::vector <double> &Ue, const std::vector <double> &
 
 void PrintGnuplotScript (const double & xmin, const double & xmax, const double & ymin, const double & ymax, const unsigned &nve, const bool &printDerivative) {
   std::ofstream fout;
-  if(printDerivative){
+  if (printDerivative) {
     fout.open ("./output/gnuScriptdPhi.txt");
   }
-  else{
+  else {
     fout.open ("./output/gnuScriptPhi.txt");
   }
   fout << "set xrange[" << xmin << ":" << xmax << "]" << std::endl;
@@ -915,23 +917,23 @@ void PrintGnuplotScript (const double & xmin, const double & xmax, const double 
     //if(i==0 || i==nve-1){
 
     std::ostringstream stream;
-    if(printDerivative){
+    if (printDerivative) {
       stream << "\"dphi" << i << "dx0.txt\"";
       fout << stream.str().c_str() << " u 1:2 title \"d{/Symbol f}_{" << i << "}\" with line,";
     }
-    else{
+    else {
       stream << "\"phi" << i << ".txt\"";
       fout << stream.str().c_str() << " u 1:2 title \"{/Symbol f}_{" << i << "}\" with line,";
     }
   }
-  if(printDerivative){
+  if (printDerivative) {
     fout << "\"dphidx0Sum.txt\" u 1:2 title \"{/Symbol S}_{i}d{/Symbol f}_{i}\" with line,";
   }
-  else{
+  else {
     fout << "\"phiSum.txt\" u 1:2 title \"{/Symbol S}_{i}{/Symbol f}_{i}\" with line,";
   }
   fout << "\npause -1 " << std::endl;
   fout.close();
-  
+
 }
 
