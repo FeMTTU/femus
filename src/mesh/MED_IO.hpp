@@ -30,6 +30,7 @@
 
 #ifdef HAVE_HDF5
   #include "hdf5.h"
+  #include "H5Tpublic.h"
 #endif
 
 namespace femus
