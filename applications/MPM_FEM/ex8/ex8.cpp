@@ -77,9 +77,9 @@ int main (int argc, char** args) {
 // unsigned nel1d = nve1d - 1u;
 // unsigned nel = static_cast< unsigned > (pow (nel1d, dim));
 
-  double Xv[9] = {0., 0.25, 0.43, 0.58, 0.81, 0.98, 1.25, 1.425, 1.6};
+  double Xv[9] = {0., 0.15, 0.43, 0.58, 0.81, 0.98, 1.25, 1.425, 1.6};
 
-  double scale = 0.5;
+  double scale = 0.25;
 
   double distanceMax[9];
 
@@ -106,7 +106,7 @@ int main (int argc, char** args) {
 
   //PrintLine ("./output/", XVprint, false, 1);
 
-  unsigned Np = 500;
+  unsigned Np = 1;
 
   unsigned maxNumberOfNodes = (2u * (pOrder + 1u) < nve) ? 2u * (pOrder + 1u) : nve;
 
@@ -121,7 +121,7 @@ int main (int argc, char** args) {
 
   for (unsigned p = 0; p < gmpm.size(); p++) {
     for (unsigned d = 0; d < dim; d++) {
-      gmpm[p]->_xp[d] = Xv[0] + (Xv[nve - 1] - Xv[0]) / (Np - 1) * (p);
+      gmpm[p]->_xp[d] = Xv[0];//+ (Xv[nve - 1] - Xv[0]) / (Np - 1) * (p);
     }
     for (unsigned j = 0; j < nve; j++) {
       bool particleIsWhithin = false;
@@ -250,7 +250,7 @@ int main (int argc, char** args) {
   std::vector < double > T0;
   std::vector < double > dT0;
   //GetChebyshev (T0, dT0, pOrder, 0., true);
-  GetPolynomial (T0, dT0, pOrder, 0., true);
+  GetPolynomial (T0, dT0, pOrder, 0., false);
 
   for (unsigned p = 0; p < Np; p++) { // particle loop
 
@@ -287,22 +287,22 @@ int main (int argc, char** args) {
       if (weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
         for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
           //GetChebyshev (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, false);  //1D Chebyshev
-          GetPolynomial (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, false);  //1D Polynomials
+          GetPolynomial (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, true);  //1D Polynomials
         }
         for (unsigned k = 0; k < aIdx.size(); k++) {
           for (unsigned l = 0; l < aIdx.size(); l++) {
             double TkTl = 1.;
-            std::vector< double > dTkTl (3, 1.);
+            //std::vector< double > dTkTl (3, 1.);
             for (unsigned d = 0 ; d < dim; d++) {
               TkTl *= T[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]]; //alpha * beta multidimendional product
-              for (unsigned d2 = 0 ; d2 < dim; d2++) {
-                if (d == d2) {
-                  dTkTl[d] *= (dT[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]] + T[i][d][aIdx[k][d]] * dT[i][d][aIdx[l][d]]) ;
-                }
-                else {
-                  dTkTl[d] *= T[i][d2][aIdx[k][d2]] * T[i][d2][aIdx[l][d2]];
-                }
-              }
+//               for (unsigned d2 = 0 ; d2 < dim; d2++) {
+//                 if (d == d2) {
+//                   dTkTl[d] *= (dT[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]] + T[i][d][aIdx[k][d]] * dT[i][d][aIdx[l][d]]) ;
+//                 }
+//                 else {
+//                   dTkTl[d] *= T[i][d2][aIdx[k][d2]] * T[i][d2][aIdx[l][d2]];
+//                 }
+//               }
             }
             Mp[k][l] +=  weight[i] * TkTl;
             for (unsigned d = 0 ; d < dim; d++) {
@@ -327,7 +327,7 @@ int main (int argc, char** args) {
     }
 
     //GaussianEleminationWithPivoting (Mp, alpha, false);
-    LUsolve (Mp, pivotIndex, b, alpha, false);
+    LUsolve (Mp, pivotIndex, b, alpha, true);
 
     for (unsigned d = 0; d < dim; d++) {
       b.assign (aIdx.size(), 0.);
