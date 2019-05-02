@@ -90,7 +90,8 @@ ENDIF(FPARSER_FOUND)
 # 
 # SET(HAVE_HDF5 0)
 # IF(HDF5_FOUND)
-SET(HAVE_HDF5 1)
+# SET(HAVE_HDF5 0)
+#  SET (HDF5_FOUND "TRUE")
 # ENDIF(HDF5_FOUND)
 
 # # Find Metis (optional)
@@ -124,6 +125,9 @@ set(CMAKE_CXX_STANDARD 11)
 #############################################################################################
 ### Build options
 #############################################################################################
+
+#-- Add MED_IO
+OPTION(HAVE_HDF5 "Compile FEMuS with hdf5" OFF)
 
 #-- Add an Option to toggle the generation of the API documentation
 OPTION(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)

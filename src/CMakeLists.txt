@@ -77,7 +77,6 @@ mesh/Mesh.cpp
 mesh/MultiLevelMesh.cpp
 mesh/MeshGeneration.cpp
 mesh/GambitIO.cpp
-mesh/MED_IO.cpp
 mesh/MeshRefinement.cpp
 mesh/MeshMetisPartitioning.cpp
 mesh/MeshPartitioning.cpp
@@ -103,6 +102,10 @@ utils/JsonInputParser.cpp
 uq/uq.cpp
 uq/sparseGrid.cpp
 )
+
+IF(HAVE_HDF5)
+  SET(femus_src ${femus_src} mesh/MED_IO.cpp)
+ENDIF(HAVE_HDF5) 
 
 IF (NOT LIBRARY_OUTPUT_PATH)
   SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib64 CACHE PATH

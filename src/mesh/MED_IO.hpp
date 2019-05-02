@@ -17,6 +17,7 @@
 #define __femus_mesh_MED_IO_hpp__
 
 
+
 // Local includes
 #include "MeshInput.hpp"
 #include "GeomElTypeEnum.hpp"
@@ -29,9 +30,8 @@
 
 
 #ifdef HAVE_HDF5
-  #include "hdf5.h"
-  #include "H5Tpublic.h"
-#endif
+
+#include "hdf5.h"
 
 namespace femus
 {
@@ -170,3 +170,6 @@ MED_IO::MED_IO (Mesh& mesh) :
 } // namespace femus
 
 #endif 
+
+#endif
+
