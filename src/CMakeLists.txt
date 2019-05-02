@@ -42,7 +42,6 @@ equations/NonLinearImplicitSystemWithPrimalDualActiveSetMethod.cpp
 equations/MultiLevelProblem.cpp
 equations/System.cpp
 equations/SystemTwo.cpp
-equations/TimeLoop.cpp
 equations/TransientSystem.cpp
 equations/FE_convergence.cpp
 equations/Assemble_jacobian.cpp
@@ -60,7 +59,6 @@ meshGencase/Box.cpp
 meshGencase/Domain.cpp
 meshGencase/ElemSto.cpp
 meshGencase/MultiLevelMeshTwo.cpp
-meshGencase/GenCase.cpp
 meshGencase/GeomElemBase.cpp
 meshGencase/GeomElemHex8.cpp
 meshGencase/GeomElemHex27.cpp
@@ -94,7 +92,6 @@ solution/Solution.cpp
 solution/Writer.cpp
 solution/VTKWriter.cpp
 solution/GMVWriter.cpp
-solution/XDMFWriter.cpp
 utils/FemusInit.cpp
 utils/Files.cpp
 utils/InputParser.cpp
@@ -104,7 +101,12 @@ uq/sparseGrid.cpp
 )
 
 IF(HAVE_HDF5)
-  SET(femus_src ${femus_src} mesh/MED_IO.cpp)
+  SET(femus_src ${femus_src} 
+  mesh/MED_IO.cpp
+  solution/XDMFWriter.cpp
+  meshGencase/GenCase.cpp
+  equations/TimeLoop.cpp
+  )
 ENDIF(HAVE_HDF5) 
 
 IF (NOT LIBRARY_OUTPUT_PATH)

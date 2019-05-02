@@ -16,8 +16,6 @@
 #ifndef __femus_mesh_MED_IO_hpp__
 #define __femus_mesh_MED_IO_hpp__
 
-
-
 // Local includes
 #include "MeshInput.hpp"
 #include "GeomElTypeEnum.hpp"
@@ -27,7 +25,6 @@
 #include "GeomElemQuad9.hpp"
 #include "GeomElemTri6.hpp"
 #include "GeomElemEdge3.hpp"
-
 
 #ifdef HAVE_HDF5
 
