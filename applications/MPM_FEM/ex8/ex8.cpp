@@ -52,19 +52,21 @@ class GMPM {
       _dim = dim;
       _xp.resize (dim);
       _node.reserve (Nv);
-      _distance.reserve (Nv);
+      _s.reserve (Nv);
     };
 
     unsigned _dim;
     std::vector < unsigned > _node;
     std::vector < double > _xp;
-    std::vector < std::vector < double > > _distance;
+    std::vector < std::vector < double > > _s;
 };
 
 int main (int argc, char** args) {
 
   //FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
+  bool nonLocal = true;
+  
   bool output = true;
 
   std::vector < std::vector <unsigned> > aIdx;
@@ -77,19 +79,27 @@ int main (int argc, char** args) {
 // unsigned nel1d = nve1d - 1u;
 // unsigned nel = static_cast< unsigned > (pow (nel1d, dim));
 
-  double Xv[9] = {0., 0.15, 0.43, 0.58, 0.81, 0.98, 1.25, 1.425, 1.6};
+  double Xv[9] = {0., 0.186, 0.409, 0.567, 0.8235, 1.03, 1.2222, 1.4345, 1.6};
 
   double scale = 0.25;
 
-  double distanceMax[9];
+  std::vector < double > sMax (nve1d);
+  std::vector < double > sMin (nve1d);
 
-  for (int i = 0; i < nve; i++) {
-    int deltai = (i % 2 == 0) ? pOrder + 1 : pOrder;
+  for (int i = 0; i < nve1d; i++) {
+    int deltai = (i % 2 == 0) ? pOrder + nonLocal : pOrder - (!nonLocal);
 
     int im = (i - deltai >= 0) ?  i - deltai : 0;
     int ip = (i + deltai < nve) ? i + deltai : nve - 1;
 
-    distanceMax[i] = (Xv[ip] - Xv[i] > Xv[i] - Xv[im]) ? Xv[ip] - Xv[i] : Xv[i] - Xv[im];
+    sMin[i] = Xv[im] - Xv[i];
+    sMax[i] = Xv[ip] - Xv[i];
+
+    if(nonLocal){
+      if( i - deltai < 0 ) sMin[i] += Xv[0] - Xv[1];
+      if( i + deltai >= nve1d) sMax[i] += Xv[nve1d - 1] - Xv[nve1d - 2];
+    }
+   
   }
 
   std::vector< std::vector < std::vector< double> > > XVprint (1);
@@ -106,7 +116,7 @@ int main (int argc, char** args) {
 
   //PrintLine ("./output/", XVprint, false, 1);
 
-  unsigned Np = 1;
+  unsigned Np = 500;
 
   unsigned maxNumberOfNodes = (2u * (pOrder + 1u) < nve) ? 2u * (pOrder + 1u) : nve;
 
@@ -121,23 +131,26 @@ int main (int argc, char** args) {
 
   for (unsigned p = 0; p < gmpm.size(); p++) {
     for (unsigned d = 0; d < dim; d++) {
-      gmpm[p]->_xp[d] = Xv[0];//+ (Xv[nve - 1] - Xv[0]) / (Np - 1) * (p);
+      gmpm[p]->_xp[d] = Xv[0] + (Xv[nve - 1] - Xv[0]) / (Np - 1) * (p);
     }
     for (unsigned j = 0; j < nve; j++) {
       bool particleIsWhithin = false;
       for (unsigned d = 0; d < dim; d++) {
         distance[d] = gmpm[p]->_xp[d] - Xv[j];
-        if (fabs (distance[d]) <= distanceMax[j])  particleIsWhithin = true;
+        if ( (distance[d] >= 0 && distance[d] <= sMax[j]) || (distance[d] <= 0 && distance[d] >= sMin[j])) {
+          particleIsWhithin = true;
+        }
+        //if (fabs (distance[d]) <= distanceMax[j] )  particleIsWhithin = true;
       }
       if (particleIsWhithin) {
         unsigned size = gmpm[p]->_node.size();
         gmpm[p]->_node.resize (size + 1);
-        gmpm[p]->_distance.resize (size + 1);
+        gmpm[p]->_s.resize (size + 1);
 
         gmpm[p]->_node[size] = j;
-        gmpm[p]->_distance[size].resize (dim);
+        gmpm[p]->_s[size].resize (dim);
         for (unsigned d = 0; d < dim; d++) {
-          gmpm[p]->_distance[size][d] = distance[d];
+          gmpm[p]->_s[size][d] = distance[d];
         }
       }
     }
@@ -268,26 +281,45 @@ int main (int argc, char** args) {
     for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
 
       unsigned inode = gmpm[p]->_node[i];
-      double dist2 = 0.;
-      for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
-        dist2 += gmpm[p]->_distance[i][d] * gmpm[p]->_distance[i][d];
-      }
-      dist2 /= distanceMax[inode] * distanceMax[inode];
-      if (dist2 >= 1.) {
-        weight[i] = 0.;
-        dweight[i].assign (dim, 0.);
-      }
-      else {
-        weight[i] = pow (1. - dist2, 4);
+      
+//       double dist2 = 0.;
+//       for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
+//         dist2 += gmpm[p]->_s[i][d] * gmpm[p]->_s[i][d];
+//       }
+//       dist2 /= distanceMax[inode] * distanceMax[inode];
+//       if (dist2 > 1.) {
+//         weight[i] = 0.;
+//         dweight[i].assign (dim, 0.);
+//       }
+//       else {
+//         weight[i] = pow (1. - dist2, 4);
+//         for (unsigned d = 0 ; d < dim; d++) {
+//           dweight[i][d] = 4. * pow (1. - dist2, 3) * (-2.) * gmpm[p]->_s[i][d] / (distanceMax[inode] * distanceMax[inode]);
+//         }
+//       }
+      if(nonLocal){
+        double s = gmpm[p]->_s[i][0];
+        weight[i] = pow ( (1. - s / sMax[inode]) * (1. - s / sMin[inode]), 4.);
         for (unsigned d = 0 ; d < dim; d++) {
-          dweight[i][d] = 4. * pow (1. - dist2, 3) * (-2.) * gmpm[p]->_distance[i][d] / (distanceMax[inode] * distanceMax[inode]);
+          dweight[i][d] = 4. * pow ( (1. - s / sMax[inode]) * (1. - s / sMin[inode]), 3.) * 
+                          ( (- 1. / sMax[inode]) * (1. - s / sMin[inode]) + 
+                            (1. - s / sMax[inode]) * (- 1. / sMin[inode]) );
+        }
+      }
+      else{
+        weight[i] =1.;
+        for (unsigned d = 0 ; d < dim; d++) {
+          dweight[i][d] = 0.; 
         }
       }
 
+
+      //std::cout << i << " " << inode << " " << weight[i] << std::endl ;
+
       if (weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
         for (unsigned d = 0 ; d < dim; d++) { // multidimensional loop
-          //GetChebyshev (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, false);  //1D Chebyshev
-          GetPolynomial (T[i][d], dT[i][d], pOrder, gmpm[p]->_distance[i][d] / scale, true);  //1D Polynomials
+          //GetChebyshev (T[i][d], dT[i][d], pOrder, gmpm[p]->_s[i][d] / scale, false);  //1D Chebyshev
+          GetPolynomial (T[i][d], dT[i][d], pOrder, gmpm[p]->_s[i][d] / scale, false);  //1D Polynomials
         }
         for (unsigned k = 0; k < aIdx.size(); k++) {
           for (unsigned l = 0; l < aIdx.size(); l++) {
@@ -327,11 +359,11 @@ int main (int argc, char** args) {
     }
 
     //GaussianEleminationWithPivoting (Mp, alpha, false);
-    LUsolve (Mp, pivotIndex, b, alpha, true);
+    LUsolve (Mp, pivotIndex, b, alpha, false);
 
     for (unsigned d = 0; d < dim; d++) {
       b.assign (aIdx.size(), 0.);
-      b[1] = -1./scale;
+      b[1] = -1. / scale;
       for (unsigned j = 0; j < aIdx.size(); j++) {
         for (unsigned k = 0; k < aIdx.size(); k++) {
           b[j] -= dMp[d][j][k] * alpha[k];
