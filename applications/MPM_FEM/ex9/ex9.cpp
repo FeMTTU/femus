@@ -167,12 +167,12 @@ int main (int argc, char** args) {
 //   //PrintLine ("./output/", XPprint, false, 0);
 
 
-  std::vector < std::vector < double > > K (nve1d);
-  for (unsigned i = 0; i < nve1d; i++) {
-    K[i].assign (nve1d, 0.);
+  std::vector < std::vector < double > > K (nve);
+  for (unsigned i = 0; i < nve; i++) {
+    K[i].assign (nve, 0.);
   }
-  std::vector < double > F (nve1d, 0);
-  std::vector < double > U (nve1d, 0);
+  std::vector < double > F (nve, 0);
+  std::vector < double > U (nve, 0);
 
 
   std::vector < unsigned > pOrderTest (dim);
@@ -242,7 +242,6 @@ int main (int argc, char** args) {
       dMp[d][k].resize (aIdx.size() + 1);
     }
   }
-
 
   // array of matrices
   std::vector < std::vector < std::vector < double > > > T;
@@ -503,7 +502,7 @@ int main (int argc, char** args) {
 
   double P = -1;
 
-  K[0].assign (nve1d, 0.);
+  K[0].assign (nve, 0.);
   K[0][0] = 1;
 
   LUsolve (K, pivotIndex, F, U, true);
