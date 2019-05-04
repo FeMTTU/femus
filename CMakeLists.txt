@@ -127,7 +127,7 @@ set(CMAKE_CXX_STANDARD 11)
 #############################################################################################
 
 #-- Add MED_IO
-OPTION(HAVE_HDF5 "Compile FEMuS with hdf5" OFF)
+OPTION(HAVE_HDF5 "Compile FEMuS with hdf5" ON)
 
 #-- Add an Option to toggle the generation of the API documentation
 OPTION(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
