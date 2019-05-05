@@ -31,126 +31,192 @@ class GMPM {
       _s.reserve (Nv);
     };
 
+    void CheckIfParticleIsWhithin (const std::vector < double > &Xv,
+                                   const std::vector < double > &sMin,
+                                   const std::vector < double > &sMax);
+    
     void GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
-                          std::vector < std::vector< double> > &Mp,
-                          std::vector < std::vector < std::vector< double> > > &dMp,
                           const bool &nonLocal,
-                          std::vector < double > &weight,
                           const std::vector < double > &sMax,
                           const std::vector < double > &sMin,
-                          std::vector < std::vector < double > > &dweight,
-                          std::vector < std::vector < std::vector < double > > > &T,
-                          std::vector < std::vector < std::vector < double > > > &dT,
-                          const std::vector < double > &T0,
-                          const std::vector < double > &dT0,
                           const unsigned &pOrder,
                           const double &scale,
-                          std::vector< double> &b,
-                          std::vector< unsigned> &pivotIndex,
-                          std::vector< double> &alpha,
-                          std::vector< std::vector< double> > &dalpha,
                           std::vector <double > &phi,
-                          std::vector < std::vector < double > > &dphi);
-
-    void GetTestFunction();
+                          std::vector < std::vector < double > > &dphi,
+                          double & weight
+                         );
 
     unsigned _dim;
     std::vector < unsigned > _node;
     std::vector < double > _xp;
     std::vector < std::vector < double > > _s;
+    void SetVolume(const double &volume){
+        _volume = volume;
+    }
+  private:
+    double _volume;  
+    static std::vector < double > _T0;
+    static std::vector < double > _dT0;
+    static std::vector < std::vector< double> > _Mp;
+    static std::vector < std::vector < std::vector< double> > > _dMp;
+    static std::vector < double > _weight;
+    static std::vector < std::vector < double > > _dweight;
+    static std::vector < std::vector < std::vector < double > > > _T;
+    static std::vector < std::vector < std::vector < double > > > _dT;
+    static std::vector< double> _b;
+    static std::vector< unsigned> _pivotIndex;
+    static std::vector< double> _alpha;
+    static std::vector< std::vector< double> > _dalpha;
 };
 
+std::vector < double > GMPM::_T0;
+std::vector < double > GMPM::_dT0;
+std::vector < std::vector< double> > GMPM::_Mp;
+std::vector < std::vector < std::vector< double> > > GMPM::_dMp;
+std::vector < double > GMPM::_weight;
+std::vector < std::vector < double > > GMPM::_dweight;
+std::vector < std::vector < std::vector < double > > > GMPM::_T;
+std::vector < std::vector < std::vector < double > > > GMPM::_dT;
+std::vector< double> GMPM::_b;
+std::vector< unsigned> GMPM::_pivotIndex;
+std::vector< double> GMPM::_alpha;
+std::vector< std::vector< double> > GMPM::_dalpha;
+
+void GMPM::CheckIfParticleIsWhithin (const std::vector < double > &Xv,
+                                     const std::vector < double > &sMin,
+                                     const std::vector < double > &sMax) {
+  std::vector < double > s (_dim);
+  for (unsigned j = 0; j < Xv.size(); j++) {
+    bool particleIsWhithin = true;
+    for (unsigned d = 0; d < _dim; d++) {
+      s[d] = _xp[d] - Xv[j];
+      if ( (s[d] >= 0 && s[d] > sMax[j]) || (s[d] <= 0 && s[d] < sMin[j])) {
+        particleIsWhithin = false;
+        break;
+      }
+    }
+    if (particleIsWhithin) {
+      unsigned size = _node.size();
+      _node.resize (size + 1);
+      _s.resize (size + 1);
+
+      _node[size] = j;
+      _s[size].resize (_dim);
+      for (unsigned d = 0; d < _dim; d++) {
+        _s[size][d] = s[d];
+      }
+    }
+  }
+}
+
+
 void GMPM::GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
-                            std::vector < std::vector< double> > &Mp,
-                            std::vector < std::vector < std::vector< double> > > &dMp,
                             const bool &nonLocal,
-                            std::vector < double > &weight,
                             const std::vector < double > &sMax,
                             const std::vector < double > &sMin,
-                            std::vector < std::vector < double > > &dweight,
-                            std::vector < std::vector < std::vector < double > > > &T,
-                            std::vector < std::vector < std::vector < double > > > &dT,
-                            const std::vector < double > &T0,
-                            const std::vector < double > &dT0,
                             const unsigned &pOrder,
                             const double &scale,
-                            std::vector< double> &b,
-                            std::vector< unsigned> &pivotIndex,
-                            std::vector< double> &alpha,
-                            std::vector< std::vector< double> > &dalpha,
                             std::vector <double > &phi,
-                            std::vector < std::vector < double > > &dphi) {
+                            std::vector < std::vector < double > > &dphi,
+                            double & weight
+                           ) {
 
+  weight = _volume;  
+  GetPolynomial (_T0, _dT0, pOrder, 0., false);
+
+  _Mp.resize (aIdx.size());
   for (unsigned k = 0; k < aIdx.size(); k++) {
-    Mp[k].assign (aIdx.size(), 0.);
+    _Mp[k].assign (aIdx.size(), 0.);
   }
 
+  _dMp.resize (_dim);
   for (unsigned d = 0; d < _dim; d++) {
+    _dMp[d].resize (aIdx.size());
     for (unsigned k = 0; k < aIdx.size(); k++) {
-      dMp[d][k].assign (aIdx.size(), 0.);
+      _dMp[d][k].assign (aIdx.size(), 0.);
     }
+  }
+
+  _alpha.resize (aIdx.size());
+  _dalpha.resize (_dim);
+  for (unsigned d = 0; d < _dim; d++) {
+    _dalpha[d].resize (aIdx.size());
+  }
+
+  _b.resize (aIdx.size());
+  _pivotIndex.resize (aIdx.size());
+
+  _T.resize (_node.size());
+  _dT.resize (_node.size());
+  for (unsigned i = 0; i < _node.size(); i++) {
+    _T[i].resize (_dim);
+    _dT[i].resize (_dim);
+  }
+
+  _weight.assign (_node.size(), 0.);
+  _dweight.resize (_node.size());
+  for (unsigned i = 0; i < _node.size(); i++) {
+    _dweight[i].resize (_dim);
   }
 
   for (unsigned i = 0; i < _node.size(); i++) {
-
     unsigned inode = _node[i];
-
     if (nonLocal) {
       double s = _s[i][0];
-      weight[i] = pow ( (1. - s / sMax[inode]) * (1. - s / sMin[inode]), 4.);
+      _weight[i] = pow ( (1. - s / sMax[inode]) * (1. - s / sMin[inode]), 4.);
       for (unsigned d = 0 ; d < _dim; d++) {
-        dweight[i][d] = 4. * pow ( (1. - s / sMax[inode]) * (1. - s / sMin[inode]), 3.) *
-                        ( (- 1. / sMax[inode]) * (1. - s / sMin[inode]) +
-                          (1. - s / sMax[inode]) * (- 1. / sMin[inode]));
+        _dweight[i][d] = 4. * pow ( (1. - s / sMax[inode]) * (1. - s / sMin[inode]), 3.) *
+                         ( (- 1. / sMax[inode]) * (1. - s / sMin[inode]) +
+                           (1. - s / sMax[inode]) * (- 1. / sMin[inode]));
       }
     }
     else {
-      weight[i] = 1.;
+      _weight[i] = 1.;
       for (unsigned d = 0 ; d < _dim; d++) {
-        dweight[i][d] = 0.;
+        _dweight[i][d] = 0.;
       }
     }
 
-    if (weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
+    if (_weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
       for (unsigned d = 0 ; d < _dim; d++) { // multi_dimensional loop
-        GetPolynomial (T[i][d], dT[i][d], pOrder, _s[i][d] / scale, false); //1D Polynomials
+        GetPolynomial (_T[i][d], _dT[i][d], pOrder, _s[i][d] / scale, false); //1D Polynomials
       }
       for (unsigned k = 0; k < aIdx.size(); k++) {
         for (unsigned l = 0; l < aIdx.size(); l++) {
           double TkTl = 1.;
           for (unsigned d = 0 ; d < _dim; d++) {
-            TkTl *= T[i][d][aIdx[k][d]] * T[i][d][aIdx[l][d]]; //alpha * beta multi_dimendional product
+            TkTl *= _T[i][d][aIdx[k][d]] * _T[i][d][aIdx[l][d]]; //alpha * beta multi_dimendional product
           }
-          Mp[k][l] +=  weight[i] * TkTl;
+          _Mp[k][l] +=  _weight[i] * TkTl;
           for (unsigned d = 0 ; d < _dim; d++) {
-            dMp[d][k][l] += dweight[i][d] * TkTl;
+            _dMp[d][k][l] += _dweight[i][d] * TkTl;
           }
         }
       }
     }
     else {
-      T[i].resize (0);
+      _T[i].resize (0);
     }
   }
 
   for (unsigned j = 0; j < aIdx.size(); j++) {
     double rhs = 1.;
     for (unsigned d = 0 ; d < _dim; d++) {
-      rhs *= T0[ aIdx[j][d] ];
+      rhs *= _T0[ aIdx[j][d] ];
     }
-    b[j] = rhs;
+    _b[j] = rhs;
   }
-  LUsolve (Mp, pivotIndex, b, alpha, false);
+  LUsolve (_Mp, _pivotIndex, _b, _alpha, false);
 
   for (unsigned d = 0; d < _dim; d++) {
-    b.assign (aIdx.size(), 0.);
-    b[1] = -1. / scale;
+    _b.assign (aIdx.size(), 0.);
+    _b[1] = -1. / scale;
     for (unsigned j = 0; j < aIdx.size(); j++) {
       for (unsigned k = 0; k < aIdx.size(); k++) {
-        b[j] -= dMp[d][j][k] * alpha[k];
+        _b[j] -= _dMp[d][j][k] * _alpha[k];
       }
     }
-    LUbackward (Mp, pivotIndex, b, dalpha[d], false);
+    LUbackward (_Mp, _pivotIndex, _b, _dalpha[d], false);
   }
 
   phi.assign (_node.size(), 0.);
@@ -162,7 +228,7 @@ void GMPM::GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
 
     unsigned inode = _node[i];
 
-    if (weight[i] > 0.) {
+    if (_weight[i] > 0.) {
       double sumAlphaT = 0.;
       std::vector < double > sumdAlphaT (_dim, 0.);
       std::vector < double > sumAlphadT (_dim, 0.);
@@ -170,26 +236,26 @@ void GMPM::GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
         double Tk = 1;
         std::vector < double > dTk (_dim, 1.);
         for (unsigned d = 0 ; d < _dim; d++) {
-          Tk *= T[i][d][aIdx[k][d]];
+          Tk *= _T[i][d][aIdx[k][d]];
           for (unsigned d2 = 0 ; d2 < _dim; d2++) {
             if (d == d2) {
-              dTk[d] *= dT[i][d][aIdx[k][d]];
+              dTk[d] *= _dT[i][d][aIdx[k][d]];
             }
             else {
-              dTk[d] *= T[i][d2][aIdx[k][d2]];
+              dTk[d] *= _T[i][d2][aIdx[k][d2]];
             }
           }
         }
 
-        sumAlphaT += alpha[k] * Tk;
+        sumAlphaT += _alpha[k] * Tk;
         for (unsigned d = 0; d < _dim; d++) {
-          sumdAlphaT[d] += dalpha[d][k] * Tk;
-          sumAlphadT[d] += alpha[k] * dTk[d];
+          sumdAlphaT[d] += _dalpha[d][k] * Tk;
+          sumAlphadT[d] += _alpha[k] * dTk[d];
         }
       }
-      phi[i] = weight[i] * sumAlphaT;
+      phi[i] = _weight[i] * sumAlphaT;
       for (unsigned d = 0; d < _dim; d++) {
-        dphi[i][d] = weight[i] * sumdAlphaT[d] + dweight[i][d] * sumAlphaT;
+        dphi[i][d] = _weight[i] * sumdAlphaT[d] + _dweight[i][d] * sumAlphaT;
       }
     }
   }
@@ -325,7 +391,7 @@ void LUwithPivoting (std::vector<std::vector < double > > & A, std::vector < uns
       }
     }
   }
- 
+
   if (output) {
     std::cout << "After pivoting, A = " << std::endl;
     for (unsigned i = 0; i < n; i++) {
@@ -369,7 +435,7 @@ void LUbackward (const std::vector<std::vector < double > > & A, const std::vect
     std::cout << std::endl;
     //exit (0);
   }
-  
+
   if (output) {
     std::cout << "RHS after pivoting:" << std::endl;
     for (unsigned i = 0; i < n; i++) {
