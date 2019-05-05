@@ -31,7 +31,7 @@ double kappa1 = 1.;
 double kappa2 = 3.;
 
 //parameters to play with
-double desiredMeshSize = 0.0625 * 0.125 * 0.5/*0.00625*/ /*0.003125*/;
+double desiredMeshSize = 0.0625 * 0.125 * 0.25/*0.00625*/ /*0.003125*/;
 double desiredMeshSizeFine = 1. / 4096.;
 double delta1MeshTemp =  0.0625/*0.00625*/ /*0.003125*/;
 double delta2MeshTemp =  0.0625/*0.00625*/ /*0.003125*/;
@@ -66,15 +66,20 @@ double rightBoundFine = (doubleIntefaceNode) ? rightBoundTemp + 0.5 * desiredMes
 std::vector <unsigned> elementSkipFlags;
 std::vector <unsigned> elementSkipFlagsFine;
 
-double a1 = 1./4.; 
-double b1 = - 1./4.; 
-double a2 = 1./4.; 
-double b2 = - 1./12.; 
+// double a1 = 1./4.; 
+// double b1 = - 1./4.; 
+// double a2 = 1./4.; 
+// double b2 = - 1./12.; 
 
 /*double a1 = 0.5; 
 double b1 = 0.; 
 double a2 = 0.5; 
 double b2 = 0.;*/ 
+
+double a1 = 1./16.; 
+double b1 = - 1./8.; 
+double a2 = 1./16.; 
+double b2 = - 1./24.; 
 
 
 void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
