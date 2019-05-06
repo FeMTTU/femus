@@ -72,17 +72,9 @@ ENDIF(PETSC_FOUND)
 # MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
 # 
 # SET(HAVE_MPI 0)
-# IF(MPI_FOUND)
 SET(HAVE_MPI 1)
+SET(MPI_FOUND 1)
 # ENDIF(MPI_FOUND)
-
-# Find FParser
-FIND_PACKAGE(FParser)
-MESSAGE(STATUS "FPARSER_FOUND = ${FPARSER_FOUND}")
-SET (HAVE_FPARSER 0)
-IF(FPARSER_FOUND)
-  SET(HAVE_FPARSER 1)
-ENDIF(FPARSER_FOUND)
 
 # # Find HDF5 (optional)
 # FIND_PACKAGE (HDF5)
@@ -90,8 +82,9 @@ ENDIF(FPARSER_FOUND)
 # 
 # SET(HAVE_HDF5 0)
 # IF(HDF5_FOUND)
-# SET(HAVE_HDF5 0)
-#  SET (HDF5_FOUND "TRUE")
+SET(HAVE_HDF5 1)
+SET(HDF5_FOUND 1)
+# SET (HDF5_FOUND 1)
 # ENDIF(HDF5_FOUND)
 
 # # Find Metis (optional)
@@ -101,7 +94,16 @@ ENDIF(FPARSER_FOUND)
 # SET (HAVE_METIS 0)
 # IF(METIS_FOUND)
 SET(HAVE_METIS 1)
+SET(METIS_FOUND 1)
 # ENDIF(METIS_FOUND)
+
+# Find FParser
+FIND_PACKAGE(FParser)
+MESSAGE(STATUS "FPARSER_FOUND = ${FPARSER_FOUND}")
+SET (HAVE_FPARSER 0)
+IF(FPARSER_FOUND)
+  SET(HAVE_FPARSER 1)
+ENDIF(FPARSER_FOUND)
 
 # Find Slepc Library (optional)
 FIND_PACKAGE(SLEPc)
@@ -126,8 +128,6 @@ set(CMAKE_CXX_STANDARD 11)
 ### Build options
 #############################################################################################
 
-#-- Add MED_IO
-OPTION(HAVE_HDF5 "Compile FEMuS with hdf5" ON)
 
 #-- Add an Option to toggle the generation of the API documentation
 OPTION(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
