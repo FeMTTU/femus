@@ -10,6 +10,8 @@ MACRO(femusMacroBuildApplication mainname appname)
 
 # Build the executable
 ADD_EXECUTABLE(${appname} ${PROJECT_SOURCE_DIR}/${mainname}.cpp)
+set_target_properties(${appname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+
 
 # Link the executable to the petsc anf femttu libs
 TARGET_LINK_LIBRARIES(${appname} femus)

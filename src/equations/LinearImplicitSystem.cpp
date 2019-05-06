@@ -120,7 +120,7 @@ namespace femus {
     _LinSolver.resize (_gridn);
 
 
-    if (_includeCoarseLevelSmoother = INCLUDE_COARSE_LEVEL_TRUE) {
+    if (_includeCoarseLevelSmoother == INCLUDE_COARSE_LEVEL_TRUE) {
       _LinSolver[0] = LinearEquationSolver::build (0, _solution[0], _smootherType).release();
     }
     else {
