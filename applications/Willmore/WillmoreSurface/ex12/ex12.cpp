@@ -55,8 +55,6 @@ double GetTimeStep (const double t) {
   double s = 1.;
   double n = 0.3;
   return dt0 * pow (1. + t / pow (dt0, s), n);
-
-
 }
 
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -115,12 +113,12 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/virus.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/virus2.neu", "seventh", scalingFactor);
 
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -193,23 +191,9 @@ int main (int argc, char** args) {
   // initilaize and solve the system
   system0.init();
 
-  system0.MGsolve();
+  //system0.MGsolve();
 
-  mlSol.SetWriter (VTK);
-  std::vector<std::string> mov_vars;
-  mov_vars.push_back ("Dx1");
-  mov_vars.push_back ("Dx2");
-  mov_vars.push_back ("Dx3");
-  mlSol.GetWriter()->SetMovingMesh (mov_vars);
-
-  std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back ("All");
-
-  mlSol.GetWriter()->SetDebugOutput (true);
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
-  //END Get initial curbvature data
-
-  // add system Wilmore in mlProb as a Linear Implicit System
+   // add system Wilmore in mlProb as a Linear Implicit System
   TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("PWillmore");
 
   // add solution "X", "Y", "Z" and "H" to the system
@@ -230,7 +214,7 @@ int main (int argc, char** args) {
   }
 
   system.SetMaxNumberOfNonLinearIterations (20);
-  system.SetNonLinearConvergenceTolerance (1.e-9);
+  system.SetNonLinearConvergenceTolerance (1.e-15);
 
   // attach the assembling function to system
   system.SetAssembleFunction (AssemblePWillmore);
@@ -262,8 +246,27 @@ int main (int argc, char** args) {
 
   system2.init();
 
+  CopyDisplacement (mlSol, true);
+  
+  system2.MGsolve();
+  
+  CopyDisplacement (mlSol, false);
+  
+  system0.MGsolve();
 
-
+  mlSol.SetWriter (VTK);
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back ("Dx1");
+  mov_vars.push_back ("Dx2");
+  mov_vars.push_back ("Dx3");
+  mlSol.GetWriter()->SetMovingMesh (mov_vars);
+  
+  std::vector < std::string > variablesToBePrinted;
+  variablesToBePrinted.push_back ("All");
+  
+  mlSol.GetWriter()->SetDebugOutput (true);
+  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
+  //END Get initial curbvature data
 
   unsigned numberOfTimeSteps = 1000u;
   unsigned printInterval = 1u;
@@ -716,7 +719,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
               term4 += solxOld_Xtan[L][J] * solWOld_Xtan[L][K] + solxOld_Xtan[L][K] * solWOld_Xtan[L][J];
             }
             term3 += phiW_Xtan[J][i] * term4;
-
           }
           aResW[K][i] += ( ( (solLambda1 /*- YdotN * solLambda2*/) * normal[K] + (solxNewg[K] - solxOldg[K])  / dt) * phiW[i]
                            + solLambda2 * term1
@@ -1807,9 +1809,11 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
           adept::adouble term1 = 0.;
           for (unsigned j = 0; j < dim; j++) {
             term1 +=  M[K][j] * phix_uv[j][i];
+            //term1 +=  X_uv[K][j] * phix_uv[j][i];
+            
           }
           aResNDx[K][i] += term1 * Area2
-                           +1 * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
+                           +0.1 * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
                            + solL[0] * phix[i] * normal[K] * Area;
         }
       }
@@ -1824,7 +1828,6 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
 
     //copy the value of the adept::adoube aRes in double Res and store
 
-
     for (int K = 0; K < DIM; K++) {
       for (int i = 0; i < nxDofs; i++) {
         Res[ K * nxDofs + i] = -aResNDx[K][i].value();
@@ -1834,10 +1837,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
     for (int i = 0; i < nLDofs; i++) {
       Res[DIM * nxDofs + i] = - aResL[i].value();
     }
-
     RES->add_vector_blocked (Res, SYSDOF);
-
-
 
     Jac.resize ( (DIM * nxDofs + nLDofs) * (DIM * nxDofs + nLDofs));
 
