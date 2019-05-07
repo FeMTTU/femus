@@ -66,6 +66,14 @@ IF(PETSC_FOUND)
   SET(HAVE_PETSC 1)
 ENDIF(PETSC_FOUND)
 
+IF(UNIX)
+SET (DYLIB so)
+ENDIF(UNIX)
+
+IF(APPLE)
+SET (DYLIB dylib)
+ENDIF(APPLE)
+
 
 # Find MPI (optional)
 # FIND_PACKAGE(MPI)
@@ -73,7 +81,7 @@ ENDIF(PETSC_FOUND)
 # 
 # SET(HAVE_MPI 0)
 SET(HAVE_MPI 1)
-SET(MPI_FOUND 1)
+# SET(MPI_FOUND 1)
 # ENDIF(MPI_FOUND)
 
 # # Find HDF5 (optional)
@@ -83,7 +91,7 @@ SET(MPI_FOUND 1)
 # SET(HAVE_HDF5 0)
 # IF(HDF5_FOUND)
 SET(HAVE_HDF5 1)
-SET(HDF5_FOUND 1)
+# SET(HDF5_FOUND 1)
 # SET (HDF5_FOUND 1)
 # ENDIF(HDF5_FOUND)
 
@@ -94,7 +102,7 @@ SET(HDF5_FOUND 1)
 # SET (HAVE_METIS 0)
 # IF(METIS_FOUND)
 SET(HAVE_METIS 1)
-SET(METIS_FOUND 1)
+# SET(METIS_FOUND 1)
 # ENDIF(METIS_FOUND)
 
 # Find FParser
@@ -211,8 +219,6 @@ IF(BUILD_DOCUMENTATION)
   # IF you do NOT want the documentation to be generated EVERY time you build the project
   # then leave out the 'ALL' keyword from the above command.
 ENDIF(BUILD_DOCUMENTATION)
-
-
 
 #############################################################################################
 ### Add external libraries
@@ -344,4 +350,14 @@ IF(BUILD_TESTING)
   ENABLE_TESTING()
   ADD_SUBDIRECTORY(unittests)
 ENDIF(BUILD_TESTING)
+
+# message(petsc library = ${PETSC_LIBRARIES})
+# message(b64 library = ${B64_LIBRARIES})
+# message(json library = ${JSONCPP_LIBRARIES})
+# message(adept library = ${ADEPT_LIBRARIES})
+# message(fparser library = ${FPARSER_LIBRARY})
+# message(mpi extra library = ${MPI_EXTRA_LIBRARY})
+# message(hdf5 extra library = ${HDF5_LIBRARIES})
+# message(slepc library = ${SLEPC_LIBARIES})
+# message(slepc library = SLEPC::slepc)
 
