@@ -34,8 +34,8 @@ using namespace femus;
 
 
 const unsigned volumeConstraint = true;
-const unsigned areaConstraint = true;
-
+const unsigned areaConstraint = false;
+const double eps = 0.0001;
 
 void CopyDisplacement (MultiLevelSolution &mlSol,  const bool &forward);
 
@@ -112,13 +112,13 @@ int main (int argc, char** args) {
 //   mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/virus2.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/virus2.neu", "seventh", scalingFactor);
 
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -247,11 +247,11 @@ int main (int argc, char** args) {
   system2.init();
 
   CopyDisplacement (mlSol, true);
-  
+
   system2.MGsolve();
-  
+
   CopyDisplacement (mlSol, false);
-  
+
   system0.MGsolve();
 
   mlSol.SetWriter (VTK);
@@ -260,10 +260,10 @@ int main (int argc, char** args) {
   mov_vars.push_back ("Dx2");
   mov_vars.push_back ("Dx3");
   mlSol.GetWriter()->SetMovingMesh (mov_vars);
-  
+
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back ("All");
-  
+
   mlSol.GetWriter()->SetDebugOutput (true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
   //END Get initial curbvature data
@@ -1810,7 +1810,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
           for (unsigned j = 0; j < dim; j++) {
             term1 +=  M[K][j] * phix_uv[j][i];
             //term1 +=  X_uv[K][j] * phix_uv[j][i];
-            
+
           }
           aResNDx[K][i] += term1 * Area2
                            +0.1 * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
@@ -1818,7 +1818,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
         }
       }
 
-      aResL[0] += DnXmDxdotN * Area;
+      aResL[0] += (DnXmDxdotN + eps * solL[0]) * Area;
 
 
     } // end gauss point loop
@@ -1874,7 +1874,3 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
 
   // ***************** END ASSEMBLY *******************
 }
-
-
-
-

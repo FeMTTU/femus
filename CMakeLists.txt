@@ -5,6 +5,7 @@ PROJECT(femus)
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake-modules")
 # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}     -O3 -march=native -mtune=native")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -mtune=native")
+set(CMAKE_MACOSX_RPATH 1)
 
 #############################################################################################
 ### Femus library version
@@ -78,7 +79,7 @@ ENDIF(APPLE)
 # Find MPI (optional)
 # FIND_PACKAGE(MPI)
 # MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
-# 
+#
 # SET(HAVE_MPI 0)
 SET(HAVE_MPI 1)
 # SET(MPI_FOUND 1)
@@ -87,7 +88,7 @@ SET(HAVE_MPI 1)
 # # Find HDF5 (optional)
 # FIND_PACKAGE (HDF5)
 # MESSAGE(STATUS "HDF5_FOUND = ${HDF5_FOUND}")
-# 
+#
 # SET(HAVE_HDF5 0)
 # IF(HDF5_FOUND)
 SET(HAVE_HDF5 1)
@@ -98,7 +99,7 @@ SET(HAVE_HDF5 1)
 # # Find Metis (optional)
 # FIND_PACKAGE(METIS)
 # MESSAGE(STATUS "METIS_FOUND = ${METIS_FOUND}")
-# 
+#
 # SET (HAVE_METIS 0)
 # IF(METIS_FOUND)
 SET(HAVE_METIS 1)
@@ -264,7 +265,7 @@ CONFIGURE_FILE(
   "${PROJECT_SOURCE_DIR}/UseFemus.CMake.in"
   "${PROJECT_BINARY_DIR}/UseFemus.CMake" @ONLY IMMEDIATE
   )
-  
+
 #############################################################################################
 ### Include files
 #############################################################################################
@@ -360,4 +361,3 @@ ENDIF(BUILD_TESTING)
 # message(hdf5 extra library = ${HDF5_LIBRARIES})
 # message(slepc library = ${SLEPC_LIBARIES})
 # message(slepc library = SLEPC::slepc)
-
