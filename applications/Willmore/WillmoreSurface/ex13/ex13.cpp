@@ -1656,6 +1656,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   vector< double > Res; // local redidual vector
   std::vector< adept::adouble > aResNDx[3]; // local redidual vector
   std::vector< adept::adouble > aResL; // local redidual vector
+  std::vector< adept::adouble > aResLPc; // local redidual vector
   
   
   vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
@@ -1693,6 +1694,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       aResNDx[K].assign (nxDofs, 0.);  //resize and zet to zero
     }
     aResL.assign (nLDofs, 0.);
+    aResLPc.assign (nLDofs, 0.);
     
     
     // local storage of global mapping and solution
@@ -1721,7 +1723,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     
     for (unsigned i = 0; i < nxDofs; i++) {
       for (unsigned K = 0; K < DIM; K++) {
-        solx[K][i] = xhat[K][i] + 0.5*(solDx[K][i] + solNDx[K][i]);
+        solx[K][i] = xhat[K][i] + solDx[K][i];
       }
     }
     
@@ -1781,7 +1783,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
             solx_uv[K][j]    += phix_uv[j][i] * solx[K][i];
-            X_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + solNDx[K][i]);
+//             X_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + solNDx[K][i]);
+            X_uv[K][j]     += phix_uv[j][i] * (xhat[K][i] + solNDx[K][i]);//solx[K][i];
           }
         }
       }
@@ -1858,12 +1861,13 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
             
           }
           aResNDx[K][i] += term1 * Area2
-          + 0.1 * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
+          + 0. * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
           + solL[0] * phix[i] * normal[K] * Area;
         }
       }
       
-      aResL[0] += (DnXmDxdotN + eps * solL[0]) * Area;
+      aResL[0] += (DnXmDxdotN) * Area;
+      aResLPc[0] += (DnXmDxdotN + eps * solL[0]) * Area;
       
       
     } // end gauss point loop
@@ -1891,7 +1895,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (int K = 0; K < DIM; K++) {
       s.dependent (&aResNDx[K][0], nxDofs);
     }
-    s.dependent (&aResL[0], nLDofs);
+    s.dependent (&aResLPc[0], nLDofs);
     
     
     // define the dependent variables
