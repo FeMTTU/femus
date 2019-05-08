@@ -34,7 +34,7 @@ using namespace femus;
 
 
 const unsigned volumeConstraint = true;
-const unsigned areaConstraint = false;
+const unsigned areaConstraint = true;
 const double eps = 0.0001;
 
 void CopyDisplacement (MultiLevelSolution &mlSol,  const bool &forward);
@@ -43,9 +43,9 @@ void AssemblePWillmore (MultiLevelProblem&);
 
 void AssembleInit (MultiLevelProblem&);
 
-void AssembleNProj (MultiLevelProblem&);
-
 void AssembleShearMinimization (MultiLevelProblem&);
+
+void AssembleConformalMinimization (MultiLevelProblem&);
 
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
@@ -112,8 +112,8 @@ int main (int argc, char** args) {
 //   mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/virus2.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/virus3.neu", "seventh", scalingFactor);
 
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
@@ -193,7 +193,7 @@ int main (int argc, char** args) {
 
   //system0.MGsolve();
 
-   // add system Wilmore in mlProb as a Linear Implicit System
+  // add system Wilmore in mlProb as a Linear Implicit System
   TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("PWillmore");
 
   // add solution "X", "Y", "Z" and "H" to the system
@@ -242,7 +242,7 @@ int main (int argc, char** args) {
   system2.SetNonLinearConvergenceTolerance (1.e-9);
 
   // attach the assembling function to system
-  system2.SetAssembleFunction (AssembleShearMinimization);
+  system2.SetAssembleFunction (AssembleConformalMinimization);
 
   system2.init();
 
@@ -1268,7 +1268,7 @@ void CopyDisplacement (MultiLevelSolution &mlSol,  const bool &forward) {
 
 
 
-void AssembleNProj (MultiLevelProblem& ml_prob) {
+void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -1571,7 +1571,7 @@ void AssembleNProj (MultiLevelProblem& ml_prob) {
 }
 
 
-void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
+void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -1598,6 +1598,24 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
   const unsigned  dim = 2;
   const unsigned  DIM = 3;
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
+
+
+  std::vector < std::vector < double > > xT (2);
+  xT[0].resize (3);
+  xT[0][0] = -0.5;
+  xT[0][1] = 0.5;
+  xT[0][2] = 0.;
+
+  xT[1].resize (3);
+  xT[1][0] = 0.;
+  xT[1][1] = 0.;
+  xT[1][2] = sqrt (3.) / 2.;
+  
+  std::vector<double> phi_uv0;
+  std::vector<double> phi_uv1;
+
+  std::vector< double > stdVectorPhi;
+  std::vector< double > stdVectorPhi_uv;
 
   //solution variable
   unsigned solDxIndex[DIM];
@@ -1682,15 +1700,10 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
       unsigned iDDof = msh->GetSolutionDof (i, iel, solType); // global to local mapping between solution node and solution dof
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned K = 0; K < DIM; K++) {
-
         xhat[K][i] = (*msh->_topology->_Sol[K]) (iXDof);
-
         solDx[K][i] = (*sol->_Sol[solDxIndex[K]]) (iDDof);
-
         solx[K][i] = xhat[K][i] + solDx[K][i];
-
         solNDx[K][i] = (*sol->_Sol[solNDxIndex[K]]) (iDDof);
-
         SYSDOF[ K * nxDofs + i] = pdeSys->GetSystemDof (solNDxIndex[K], solNDxPdeIndex[K], i, iel); // global to global mapping between solution node and pdeSys dof
       }
     }
@@ -1715,12 +1728,56 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
       double weight; // gauss point weight
 
       // *** get gauss point weight, test function and test function partial derivatives ***
-      phix = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
-      phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig); //derivative in u
-      phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig); //derivative in v
+      if (ielGeom == QUAD) {
+        phix = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
+        phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig); //derivative in u
+        phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig); //derivative in v
+        weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
+      }
+      else {
 
-      weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
+        phix = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
+        phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig); //derivative in u
+        phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig); //derivative in v
+        weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
 
+//         for (unsigned i = 0; i < nxDofs; i++) {
+//           std::cout << phix[i] << " ";
+//           for (unsigned k = 0; k < dim; k++) {
+//             std::cout << phix_uv[k][i] << " ";
+//           }
+//           std::cout << std::endl;
+//         }
+//         std::cout << weight;
+//         std::cout << std::endl;
+
+        msh->_finiteElement[ielGeom][solType]->Jacobian (xT, ig, weight, stdVectorPhi, stdVectorPhi_uv);
+        phix = &stdVectorPhi[0];
+        
+        phi_uv0.resize(nxDofs);
+        phi_uv1.resize(nxDofs);
+
+        
+        for (unsigned i = 0; i < nxDofs; i++) {
+          phi_uv0[i] = stdVectorPhi_uv[i * dim];
+          phi_uv1[i] = stdVectorPhi_uv[i * dim + 1];
+        }
+        
+        phix_uv[0] = &phi_uv0[0];
+        phix_uv[1] = &phi_uv1[0];
+        
+//         for (unsigned i = 0; i < nxDofs; i++) {
+//           std::cout << phix[i] << " ";
+//           for (unsigned k = 0; k < dim; k++) {
+//             std::cout << phix_uv[k][i] << " ";
+//           }
+//           std::cout << std::endl;
+//         }
+//         std::cout << weight;
+//         std::cout << std::endl;
+      }
+      
+    //  exit(0);
 
       double solDxg[3] = {0., 0., 0.};
       adept::adouble solNDxg[3] = {0., 0., 0.};
@@ -1813,7 +1870,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
 
           }
           aResNDx[K][i] += term1 * Area2
-                           +0.1 * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
+                           + 0.1 * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
                            + solL[0] * phix[i] * normal[K] * Area;
         }
       }
