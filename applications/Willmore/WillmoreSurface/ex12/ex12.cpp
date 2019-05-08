@@ -33,7 +33,7 @@ const double normalSign = -1.;
 using namespace femus;
 
 
-const unsigned volumeConstraint = true;
+const unsigned volumeConstraint = false;
 const unsigned areaConstraint = false;
 const double eps = 0.0001;
 
@@ -51,6 +51,7 @@ double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
   //return 0.0001;
 
+  //double dt0 = .00002;
   double dt0 = .05;
   double s = 1.;
   double n = 0.3;
@@ -103,22 +104,22 @@ int main (int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
 
-  //mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
+//  mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
-//   mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/virus2.neu", "seventh", scalingFactor);
 
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
