@@ -14,7 +14,8 @@ int main(int argc,char **args) {
 
   FemusInit init(argc,args,MPI_COMM_WORLD);
 
-  std::string input_file = "turek_FSI1.neu";
+//   std::string input_file = "turek_FSI1.neu";
+   std::string input_file = "cyl.med";
 //   std::string input_file = "Quad9_Four_boundaries_groups.med";
 //   std::string input_file = "Quad9_Nine_without_groups.med";
 //   std::string input_file = "Tri6_Two_boundaries.med"; 
