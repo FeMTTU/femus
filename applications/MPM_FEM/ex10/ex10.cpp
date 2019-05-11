@@ -45,10 +45,10 @@ int main (int argc, char** args) {
     }
   }
 
-  unsigned Np = 101;
+  unsigned Np = 51;
   //double L = ( Xv[nve1d - 1] - Xv[0]);
 
-  double L = (Xv[nve1d - 3]  - 0.0025 - Xv[0]);
+  double L = (Xv[nve1d - 4]  + 0.0025 - Xv[0]);
 
   double DX = L / (Np - 1.);
   unsigned maxNumberOfNodes = (2u * (pOrder + 1u) < nve) ? 2u * (pOrder + 1u) : nve;
@@ -121,7 +121,7 @@ int main (int argc, char** args) {
         fout.close();
       }
     }
-    PrintGnuplotScript (Xv[0], Xv[nve - 1], -0.5, 1.5, nve);
+    PrintGnuplotScript (Xv[0], Xv[nve - 1], -0.5, 1.5, XvR.size());
     bool printDerivative = true;
     PrintGnuplotScript (Xv[0], Xv[nve - 1], -10., 10., XvR.size(), printDerivative);
   }
@@ -144,11 +144,17 @@ int main (int argc, char** args) {
     double l0p = 1. / (w.x0 - w.x1);
     double l1p = -l0p;
 
-    w.W0 = (1. - 2.* (x - w.x0) * l0p) * l0 * l0;
-    w.W1 = (1. - 2.* (x - w.x1) * l1p) * l1 * l1;
+//     w.W0 = (1. - 2.* (x - w.x0) * l0p) * l0 * l0;
+//     w.W1 = (1. - 2.* (x - w.x1) * l1p) * l1 * l1;
+//     
+//     w.dW0 = 6 * l0 * l1 * l0p;
+//     w.dW1 = 6 * l0 * l1 * l1p;
     
-    w.dW0 = 6 * l0 * l1 * l0p;
-    w.dW1 = 6 * l0 * l1 * l1p;
+    w.W0 = l0 * l0 * l0 * (6. * l1 * l1 + 3 * l1 + 1.);
+    w.W1 = l1 * l1 * l1 * (6. * l0 * l0 + 3 * l0 + 1.);
+    
+    w.dW0 = 30. * l0 * l0 * l1 * l1 * l0p;
+    w.dW1 = 30. * l1 * l1 * l0 * l0 * l1p;
   
 
     std::cout << w.x0 << " "<<x<<" "<< w.x1<<" "<< w.W0 <<" "<< w.W1<<" "<< w.dW0 <<" "<< w.dW1 << std::endl;
@@ -255,11 +261,12 @@ int main (int argc, char** args) {
       double l0p = 1. / (w.x0 - w.x1);
       double l1p = -l0p;
       
-      w.W0 = (1. - 2.* (x - w.x0) * l0p) * l0 * l0;
-      w.W1 = (1. - 2.* (x - w.x1) * l1p) * l1 * l1;
+      w.W0 = l0 * l0 * l0 * (6. * l1 * l1 + 3. * l1 + 1.);
+      w.W1 = l1 * l1 * l1 * (6. * l0 * l0 + 3. * l0 + 1.);
+         
+      w.dW0 = 30. * l0 * l0 * l1 * l1 * l0p;
+      w.dW1 = 30. * l1 * l1 * l0 * l0 * l1p;
       
-      w.dW0 = 6 * l0 * l1 * l0p;
-      w.dW1 = 6 * l0 * l1 * l1p;
       
       gmpm[p]->GetTestFunction (aIdx, nonLocal, XvR, sMaxR, sMinR, pOrder, scale, w, phi, dphi, weight);
 
