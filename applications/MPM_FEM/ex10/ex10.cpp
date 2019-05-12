@@ -2,10 +2,6 @@
 
 #include "./include/gmpm.hpp"
 
-#include <boost/math/special_functions/factorials.hpp>
-
-//double NeumannFactor = 0.;
-
 using namespace femus;
 
 int main (int argc, char** args) {

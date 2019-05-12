@@ -2,6 +2,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <boost/math/special_functions/factorials.hpp>
+
 void ComputeIndexSet (std::vector < std::vector <unsigned> > & Jp,
                       const unsigned & degree, const unsigned & dimension, const bool &output = false);
 
@@ -34,40 +36,45 @@ class WindowFunction {
     double dw1;
 };
 
-void WindowFunction::BuildWeight (const std::vector <double> &Xv, const double &x, const bool &nonLocal, const unsigned &n) {
-  unsigned i = 2;
-  while (x > Xv[i]) i += 2;
-  x0 = Xv[i - 2];
-  x1 = Xv[i];
-
-  double l0 = (x - x1) / (x0 - x1);
-  double l1 = (x - x0) / (x1 - x0);
-
-  double l0p = 1. / (x0 - x1);
-  double l1p = -l0p;
+void WindowFunction::BuildWeight (const std::vector <double> &Xv, const double &x, const bool &nonLocal, const unsigned &Cn) {
 
   if (nonLocal) {
-    double Pl0 = 0;
-    double Pl1 = 0;
-    for (unsigned k = 1; k <= n; k++) {
-      Pl0 += pow (l0, n - k) / boost::math::factorial<double> (k);
-      Pl1 += pow (l1, n - k) / boost::math::factorial<double> (k);
-    }
-    w0 = Pl1 * boost::math::factorial<double> (n) * pow (l0, n);
-    w1 = Pl0 * boost::math::factorial<double> (n) * pow (l1, n);
+    unsigned i = 2;
+    while (x > Xv[i]) i += 2;
+    x0 = Xv[i - 2];
+    x1 = Xv[i];
 
+    double l0 = (x - x1) / (x0 - x1);
+    double l1 = (x - x0) / (x1 - x0);
+
+    double l0p = 1. / (x0 - x1);
+    double l1p = -l0p;
+
+    unsigned n = Cn + 1;
+    double l0n = pow (l0, n);
+    double l0nm1 = l0n / l0;
+    double l1n = pow (l1, n);
+    double l1nm1 = l1n / l1;
+
+    double Pl0 = l0nm1;
+    double Pl1 = l1nm1;
     double dPl0 = 0.;
     double dPl1 = 0.;
+    double l0nm1mk = l0nm1;
+    double l1nm1mk = l1nm1;
     for (unsigned k = 1; k < n; k++) {
-      dPl0 += (n - k) * pow (l0, n - k - 1) * l0p / boost::math::factorial<double> (k);
-      dPl1 += (n - k) * pow (l1, n - k - 1) * l1p / boost::math::factorial<double> (k);
+      l0nm1mk /= l0;
+      l1nm1mk /= l1;
+      Pl0 += l0nm1mk / boost::math::factorial<double> (k + 1);
+      Pl1 += l1nm1mk / boost::math::factorial<double> (k + 1);
+      dPl0 += (n - k) * l0nm1mk * l0p / boost::math::factorial<double> (k);
+      dPl1 += (n - k) * l1nm1mk * l1p / boost::math::factorial<double> (k);
     }
-    dw0 = Pl1 * boost::math::factorial<double> (n) * n * pow (l0, n - 1) * l0p +
-          dPl1 * boost::math::factorial<double> (n) * pow (l0, n);
 
-    dw1 = Pl0 * boost::math::factorial<double> (n) * n * pow (l1, n - 1) * l1p +
-          dPl0 * boost::math::factorial<double> (n) * pow (l1, n);
-
+    w0 = Pl1 * boost::math::factorial<double> (n) * l0n;
+    w1 = Pl0 * boost::math::factorial<double> (n) * l1n;
+    dw0 = boost::math::factorial<double> (n) * l0nm1 * (n * l0p * Pl1 + l0 * dPl1);
+    dw1 = boost::math::factorial<double> (n) * l1nm1 * (n * l1p * Pl0 + l1 * dPl0);
   }
   else {
     w0 = w1 = dw0 = dw1 = 0.;
