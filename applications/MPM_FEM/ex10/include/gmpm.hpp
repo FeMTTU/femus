@@ -20,16 +20,59 @@ void SetElementDofs (std::vector <unsigned> &elementDofs, const std::vector < un
 void PrintSolution (const std::vector <double> &U, const std::vector <double> &Ur, const double *x, const unsigned &dim, const unsigned &n);
 void PrintGnuplotScript (const double & xmin, const double & xmax, const double & ymin, const double & ymax, const unsigned &nve, const bool&printDerivative = false);
 
-struct window{
-  double x0;
-  double x1;
-  
-  double W0;
-  double W1;
-  
-  double dW0;
-  double dW1;
+class WindowFunction {
+  public:
+    void BuildWeight (const std::vector <double> &Xv, const double &x, const bool &nonLocal, const unsigned &n);
+
+    double x0;
+    double x1;
+
+    double w0;
+    double w1;
+
+    double dw0;
+    double dw1;
 };
+
+void WindowFunction::BuildWeight (const std::vector <double> &Xv, const double &x, const bool &nonLocal, const unsigned &n) {
+  unsigned i = 2;
+  while (x > Xv[i]) i += 2;
+  x0 = Xv[i - 2];
+  x1 = Xv[i];
+
+  double l0 = (x - x1) / (x0 - x1);
+  double l1 = (x - x0) / (x1 - x0);
+
+  double l0p = 1. / (x0 - x1);
+  double l1p = -l0p;
+
+  if (nonLocal) {
+    double Pl0 = 0;
+    double Pl1 = 0;
+    for (unsigned k = 1; k <= n; k++) {
+      Pl0 += pow (l0, n - k) / boost::math::factorial<double> (k);
+      Pl1 += pow (l1, n - k) / boost::math::factorial<double> (k);
+    }
+    w0 = Pl1 * boost::math::factorial<double> (n) * pow (l0, n);
+    w1 = Pl0 * boost::math::factorial<double> (n) * pow (l1, n);
+
+    double dPl0 = 0.;
+    double dPl1 = 0.;
+    for (unsigned k = 1; k < n; k++) {
+      dPl0 += (n - k) * pow (l0, n - k - 1) * l0p / boost::math::factorial<double> (k);
+      dPl1 += (n - k) * pow (l1, n - k - 1) * l1p / boost::math::factorial<double> (k);
+    }
+    dw0 = Pl1 * boost::math::factorial<double> (n) * n * pow (l0, n - 1) * l0p +
+          dPl1 * boost::math::factorial<double> (n) * pow (l0, n);
+
+    dw1 = Pl0 * boost::math::factorial<double> (n) * n * pow (l1, n - 1) * l1p +
+          dPl0 * boost::math::factorial<double> (n) * pow (l1, n);
+
+  }
+  else {
+    w0 = w1 = dw0 = dw1 = 0.;
+  }
+}
 
 class GMPM {
   public:
@@ -43,15 +86,15 @@ class GMPM {
     void CheckIfParticleIsWhithin (const std::vector < double > &Xv,
                                    const std::vector < double > &sMin,
                                    const std::vector < double > &sMax);
-    
+
     void GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
-                          const bool &nonLocal,                          
+                          const bool &nonLocal,
                           const std::vector < double > &Xv,
                           const std::vector < double > &sMax,
                           const std::vector < double > &sMin,
                           const unsigned &pOrder,
                           const double &scale,
-                          const window &w,
+                          const WindowFunction &w,
                           std::vector <double > &phi,
                           std::vector < std::vector < double > > &dphi,
                           double & weight
@@ -61,11 +104,11 @@ class GMPM {
     std::vector < unsigned > _node;
     std::vector < double > _xp;
     std::vector < std::vector < double > > _s;
-    void SetVolume(const double &volume){
-        _volume = volume;
+    void SetVolume (const double &volume) {
+      _volume = volume;
     }
   private:
-    double _volume;  
+    double _volume;
     static std::vector < double > _T0;
     static std::vector < double > _dT0;
     static std::vector < std::vector< double> > _Mp;
@@ -128,13 +171,13 @@ void GMPM::GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
                             const std::vector < double > &sMin,
                             const unsigned &pOrder,
                             const double &scale,
-                            const window &w,
+                            const WindowFunction &w,
                             std::vector <double > &phi,
                             std::vector < std::vector < double > > &dphi,
                             double & weight
                            ) {
 
-  weight = _volume;  
+  weight = _volume;
   GetPolynomial (_T0, _dT0, pOrder, 0., false);
 
   _Mp.resize (aIdx.size());
@@ -174,26 +217,26 @@ void GMPM::GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
 
   for (unsigned i = 0; i < _node.size(); i++) {
     unsigned inode = _node[i];
-    if (nonLocal) {
-      
-      double x = Xv[inode];
-      
-      if( x < w.x0 - 1.0e-10){
-        _weight[i] = w.W0;
-        _dweight[i][0] = w.dW0;
-      }
-      else if( x <= w.x1 + 1.0e-10){
-        _weight[i] = 1.;
-        _dweight[i][0] = 0.;
-      }
-      else{
-        _weight[i] = w.W1;
-        _dweight[i][0] = w.dW1;
-      }
-      
-     // std::cout << inode << " " << _weight[i] <<" "<<_dweight[i][0] << std::endl<<std::flush;
-      
-      
+    //if (nonLocal) {
+
+    double x = Xv[inode];
+
+    if (x < w.x0 - 1.0e-10) {
+      _weight[i] = w.w0;
+      _dweight[i][0] = w.dw0;
+    }
+    else if (x <= w.x1 + 1.0e-10) {
+      _weight[i] = 1.;
+      _dweight[i][0] = 0.;
+    }
+    else {
+      _weight[i] = w.w1;
+      _dweight[i][0] = w.dw1;
+    }
+
+    // std::cout << inode << " " << _weight[i] <<" "<<_dweight[i][0] << std::endl<<std::flush;
+
+
 //       double s = _s[i][0];
 //       _weight[i] = pow ( (1. - s / sMax[inode]) * (1. - s / sMin[inode]), 4.);
 //       for (unsigned d = 0 ; d < _dim; d++) {
@@ -201,13 +244,13 @@ void GMPM::GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
 //                          ( (- 1. / sMax[inode]) * (1. - s / sMin[inode]) +
 //                            (1. - s / sMax[inode]) * (- 1. / sMin[inode]));
 //       }
-    }
-    else {
-      _weight[i] = 1.;
-      for (unsigned d = 0 ; d < _dim; d++) {
-        _dweight[i][d] = 0.;
-      }
-    }
+    // }
+    // else {
+    //   _weight[i] = 1.;
+    //   for (unsigned d = 0 ; d < _dim; d++) {
+    //     _dweight[i][d] = 0.;
+    //   }
+    // }
 
     if (_weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
       for (unsigned d = 0 ; d < _dim; d++) { // multi_dimensional loop
@@ -767,9 +810,20 @@ void PrintGnuplotScript (const double & xmin, const double & xmax, const double 
   else {
     fout << "\"phiSum.txt\" u 1:2 title \"{/Symbol S}_{i}{/Symbol f}_{i}\" with line,";
   }
+  fout << "\"grid.txt\" u 1:2 title \"\" with linespoints,";
   fout << "\npause -1 " << std::endl;
   fout.close();
 
 }
+
+void PrintGrid (const std::vector<double> &Xv) {
+  std::ofstream fout;
+  fout.open ("./output/grid.txt");
+  for (unsigned i = 0; i < Xv.size(); i++) {
+    fout << Xv[i] << " " << 0. << std::endl;
+  }
+  fout.close();
+}
+
 
 
