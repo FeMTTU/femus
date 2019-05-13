@@ -282,7 +282,7 @@ void GMPM::GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
       _dweight[i][0] = w.dw1;
     }
 
-    // std::cout << inode << " " << _weight[i] <<" "<<_dweight[i][0] << std::endl<<std::flush;
+    std::cout << inode << " " << _weight[i] <<" "<<_dweight[i][0] << std::endl<<std::flush;
 
 
 //       double s = _s[i][0];

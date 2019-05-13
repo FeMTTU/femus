@@ -12,13 +12,11 @@ int main (int argc, char** args) {
   bool output = true;
 
   std::vector < std::vector <unsigned> > aIdx;
-  unsigned pOrder = 2;
+  unsigned pOrder = 3;
   unsigned dim = 1;
   double scale = 0.25;
   
   ComputeIndexSet (aIdx, pOrder, dim, output);
-
-
 
   unsigned nel1d = 4;
   unsigned nel =  static_cast< unsigned > (pow (nel, dim));
@@ -67,7 +65,7 @@ int main (int argc, char** args) {
   }
   
 
-  unsigned Np = 1001;
+  unsigned Np = 1;
   //double L = ( Xv[nve1d - 1] - Xv[0]);
 
   double L = (Xv[nve1d - pOrder - 1]  - Xv[0]);
@@ -91,7 +89,7 @@ int main (int argc, char** args) {
   maxNumberOfNodes = 0;
   for (unsigned p = 0; p < gmpm.size(); p++) {
     for (unsigned d = 0; d < dim; d++) {
-      gmpm[p]->_xp[d] = Xv[0] + DX * p;
+      gmpm[p]->_xp[d] = Xv[3] + DX * p;
       
       //std::cout << gmpm[p]->_xp[d]<<" ";
     }
@@ -162,7 +160,7 @@ int main (int argc, char** args) {
   for (unsigned p = 0; p < Np; p++) { // particle loop
 
     WindowFunction wf;
-    wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal, 2);
+    wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal, pOrder + 1);
 
     gmpm[p]->GetTestFunction (aIdx, nonLocal, XvR, sMaxR, sMinR, pOrder, scale, wf, phi, dphi, weight);
 
@@ -245,7 +243,7 @@ int main (int argc, char** args) {
       double Up = 0.;
 
       WindowFunction wf;
-      wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal, 4);
+      wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal,  pOrder + 1);
 
       gmpm[p]->GetTestFunction (aIdx, nonLocal, XvR, sMaxR, sMinR, pOrder, scale, wf, phi, dphi, weight);
 
