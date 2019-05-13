@@ -12,7 +12,7 @@ int main (int argc, char** args) {
   bool output = true;
 
   std::vector < std::vector <unsigned> > aIdx;
-  unsigned pOrder = 3;
+  unsigned pOrder = 2;
   unsigned dim = 1;
   double scale = 0.25;
   
@@ -67,10 +67,10 @@ int main (int argc, char** args) {
   }
   
 
-  unsigned Np = 201;
+  unsigned Np = 1001;
   //double L = ( Xv[nve1d - 1] - Xv[0]);
 
-  double L = (Xv[nve1d - 4]  + 0.0025 - Xv[0]);
+  double L = (Xv[nve1d - pOrder - 1]  - Xv[0]);
 
   double DX = L / (Np - 1.);
   unsigned maxNumberOfNodes = ( (3u * pOrder + 1u) < nve) ? (3u * pOrder + 1u) : nve;
@@ -162,7 +162,7 @@ int main (int argc, char** args) {
   for (unsigned p = 0; p < Np; p++) { // particle loop
 
     WindowFunction wf;
-    wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal, 4);
+    wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal, 2);
 
     gmpm[p]->GetTestFunction (aIdx, nonLocal, XvR, sMaxR, sMinR, pOrder, scale, wf, phi, dphi, weight);
 

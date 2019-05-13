@@ -34,18 +34,22 @@ class WindowFunction {
 
     double dw0;
     double dw1;
+
+    const static unsigned ak[5][5];
 };
+
+const unsigned WindowFunction::ak[5][5] = {{1}, {2, 1}, {6, 3, 1}, {20, 10, 4, 1}, {70, 35, 15, 5, 1}};
 
 void WindowFunction::BuildWeight (const std::vector <double> &Xv, const unsigned &pOrder, const double &x, const bool &nonLocal, const unsigned &Cn) {
 
   unsigned i = pOrder;
   while (x > Xv[i]) i += pOrder;
   x0 = Xv[i - pOrder];
-  x1 = Xv[i];  
-    
-  if (nonLocal) {
-    
+  x1 = Xv[i];
 
+  if (nonLocal) {
+
+/*
     double l0 = (x - x1) / (x0 - x1);
     double l1 = (x - x0) / (x1 - x0);
 
@@ -76,7 +80,42 @@ void WindowFunction::BuildWeight (const std::vector <double> &Xv, const unsigned
     w0 = Pl1 * boost::math::factorial<double> (n) * l0n;
     w1 = Pl0 * boost::math::factorial<double> (n) * l1n;
     dw0 = boost::math::factorial<double> (n) * l0nm1 * (n * l0p * Pl1 + l0 * dPl1);
-    dw1 = boost::math::factorial<double> (n) * l1nm1 * (n * l1p * Pl0 + l1 * dPl0);
+    dw1 = boost::math::factorial<double> (n) * l1nm1 * (n * l1p * Pl0 + l1 * dPl0);*/
+    
+    
+    double l0 = (x - x1) / (x0 - x1);
+    double l1 = (x - x0) / (x1 - x0);
+    
+    double dl0 = 1. / (x0 - x1);
+    double dl1 = -dl0;
+    
+    unsigned n = Cn + 1;
+    double l0n = pow (l0, n);
+    double l0nm1 = l0n / l0;
+    double l1n = pow (l1, n);
+    double l1nm1 = l1n / l1;
+    
+    double Pl0 = ak[Cn][0] * l0nm1;
+    double Pl1 = ak[Cn][0] * l1nm1;
+    double dPl0 = 0.;
+    double dPl1 = 0.;
+    double l0nm1mk = l0nm1;
+    double l1nm1mk = l1nm1;
+    for (unsigned k = 1; k < n; k++) {
+      l0nm1mk /= l0;
+      l1nm1mk /= l1;
+      Pl0 += ak[Cn][k] * l0nm1mk;
+      Pl1 += ak[Cn][k] * l1nm1mk;
+      dPl0 += (n - k) * ak[Cn][k-1] * l0nm1mk * dl0;
+      dPl1 += (n - k) * ak[Cn][k-1] * l1nm1mk * dl1;
+    }
+    
+    w0 =  l0n * Pl1;
+    w1 =  l1n * Pl0;
+    dw0 = l0nm1 * (n * dl0 * Pl1 + l0 * dPl1);
+    dw1 = l1nm1 * (n * dl1 * Pl0 + l1 * dPl0);
+    
+    
   }
   else {
     w0 = w1 = dw0 = dw1 = 0.;
@@ -230,11 +269,11 @@ void GMPM::GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
 
     double x = Xv[inode];
 
-    if (x < w.x0 - 1.0e-10) {
+    if (x < w.x0) {
       _weight[i] = w.w0;
       _dweight[i][0] = w.dw0;
     }
-    else if (x <= w.x1 + 1.0e-10) {
+    else if (x <= w.x1) {
       _weight[i] = 1.;
       _dweight[i][0] = 0.;
     }
@@ -260,7 +299,7 @@ void GMPM::GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
     //     _dweight[i][d] = 0.;
     //   }
     // }
-    
+
     //std::cout << inode << " " << _weight[i] <<std::endl;
 
     if (_weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
