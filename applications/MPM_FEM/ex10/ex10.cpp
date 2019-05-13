@@ -12,43 +12,68 @@ int main (int argc, char** args) {
   bool output = true;
 
   std::vector < std::vector <unsigned> > aIdx;
-  unsigned pOrder = 2;
+  unsigned pOrder = 3;
   unsigned dim = 1;
+  double scale = 0.25;
+  
   ComputeIndexSet (aIdx, pOrder, dim, output);
 
-  unsigned nve1d = 9u;
+
+
+  unsigned nel1d = 4;
+  unsigned nel =  static_cast< unsigned > (pow (nel, dim));
+  std::vector < double > Xel {0., 0.43, 0.81, 1.25, 1.6};
+  
+  unsigned nve1d =  nel1d * pOrder + 1u;
   unsigned nve = static_cast< unsigned > (pow (nve1d, dim));
 
-  std::vector < double > Xv {0., 0.15, 0.43, 0.58, 0.81, 0.98, 1.25, 1.425, 1.6};
+  std::vector < double > Xv (nve1d);
 
-  double scale = 0.25;
-
+  unsigned counter = 0;
+  Xv[counter] = Xel[0];
+  counter++;
+  for (unsigned i = 0; i < nel1d; i++) {
+    double Dx = (Xel[i + 1] - Xel[i]) / pOrder;
+    for (unsigned j = 0; j < pOrder; j++) {
+      Xv[counter] = Xv[counter - 1] + Dx;
+      //std::cout << counter <<  " " << Xv[counter] << std::endl; 
+      counter++;
+    }
+  }
+  
   std::vector < double > sMax (nve1d);
   std::vector < double > sMin (nve1d);
 
   for (int i = 0; i < nve1d; i++) {
-    int deltai = (i % 2 == 0) ? pOrder + nonLocal * 2 : pOrder  + 1 - 2 * (!nonLocal);
+    //int deltaim = (i % 2 == 0) ? pOrder + nonLocal * 2 : pOrder  + 1 - 2 * (!nonLocal);
+    //int deltaip = (i % 2 == 0) ? pOrder + nonLocal * 2 : pOrder  + 1 - 2 * (!nonLocal);
+    int deltaip = nonLocal * pOrder + ( pOrder  - i % pOrder);
+    int deltaim = (i % pOrder == 0) ? nonLocal * pOrder + pOrder : nonLocal * pOrder + i % pOrder;
 
-    int im = (i - deltai >= 0) ?  i - deltai : 0;
-    int ip = (i + deltai < nve) ? i + deltai : nve - 1;
+    //std::cout << i << " "<< deltaim <<" "<< deltaip <<std::endl;
+    
+    int im = (i - deltaim >= 0) ?  i - deltaim : 0;
+    int ip = (i + deltaip < nve1d) ? i + deltaip : nve1d - 1;
 
     sMin[i] = Xv[im] - Xv[i];
     sMax[i] = Xv[ip] - Xv[i];
-
+    
     if (nonLocal) {
-      if (i - deltai < 0) sMin[i] += Xv[0] - Xv[1];
-      if (i + deltai >= nve1d) sMax[i] += Xv[nve1d - 1] - Xv[nve1d - 2];
+      if (i - deltaim < 0) sMin[i] += Xv[0] - Xv[1];
+      if (i + deltaip >= nve1d) sMax[i] += Xv[nve1d - 1] - Xv[nve1d - 2];
     }
+    
+    //std::cout << i << " "<< deltaim <<" "<< deltaip << " "<<sMin[i] <<" "<<sMax[i]<<std::endl;
   }
   
 
-  unsigned Np = 51;
+  unsigned Np = 201;
   //double L = ( Xv[nve1d - 1] - Xv[0]);
 
   double L = (Xv[nve1d - 4]  + 0.0025 - Xv[0]);
 
   double DX = L / (Np - 1.);
-  unsigned maxNumberOfNodes = (2u * (pOrder + 1u) < nve) ? 2u * (pOrder + 1u) : nve;
+  unsigned maxNumberOfNodes = ( (3u * pOrder + 1u) < nve) ? (3u * pOrder + 1u) : nve;
 
   std::vector < GMPM *> gmpm (Np);
   for (unsigned p = 0; p < gmpm.size(); p++) {
@@ -59,21 +84,30 @@ int main (int argc, char** args) {
   std::vector < double > sMinR = sMin;
   std::vector < double > XvR = Xv;
 
-  sMaxR.resize (nve1d - 2);
-  sMinR.resize (nve1d - 2);
-  XvR.resize (nve1d - 2);
+  sMaxR.resize (nve1d - pOrder);
+  sMinR.resize (nve1d - pOrder);
+  XvR.resize (nve1d - pOrder);
 
   maxNumberOfNodes = 0;
   for (unsigned p = 0; p < gmpm.size(); p++) {
     for (unsigned d = 0; d < dim; d++) {
       gmpm[p]->_xp[d] = Xv[0] + DX * p;
+      
+      //std::cout << gmpm[p]->_xp[d]<<" ";
     }
-    //gmpm[p]->SetVolume (DX);
     gmpm[p]->CheckIfParticleIsWhithin (XvR, sMinR, sMaxR);
+    
+    for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
+      //std::cout << gmpm[p]->_node[i] << " ";
+    }
+    //std::cout<<std::endl;
+    
     if (maxNumberOfNodes <  gmpm[p]->_node.size()) {
       maxNumberOfNodes = gmpm[p]->_node.size();
     }
   }
+  
+  //exit(0);
 
   gmpm[0]->SetVolume (DX / 2.);
   for (unsigned p = 1; p < Np - 1; p++) {
@@ -118,7 +152,7 @@ int main (int argc, char** args) {
         fout.close();
       }
     }
-    PrintGrid(Xv);
+    PrintGrid (Xv);
     PrintGnuplotScript (Xv[0], Xv[nve - 1], -0.5, 1.5, XvR.size());
     bool printDerivative = true;
     PrintGnuplotScript (Xv[0], Xv[nve - 1], -10., 10., XvR.size(), printDerivative);
@@ -128,7 +162,7 @@ int main (int argc, char** args) {
   for (unsigned p = 0; p < Np; p++) { // particle loop
 
     WindowFunction wf;
-    wf.BuildWeight (XvR, gmpm[p]->_xp[0], nonLocal, 4);
+    wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal, 4);
 
     gmpm[p]->GetTestFunction (aIdx, nonLocal, XvR, sMaxR, sMinR, pOrder, scale, wf, phi, dphi, weight);
 
@@ -211,7 +245,7 @@ int main (int argc, char** args) {
       double Up = 0.;
 
       WindowFunction wf;
-      wf.BuildWeight (XvR, gmpm[p]->_xp[0], nonLocal, 4);
+      wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal, 4);
 
       gmpm[p]->GetTestFunction (aIdx, nonLocal, XvR, sMaxR, sMinR, pOrder, scale, wf, phi, dphi, weight);
 

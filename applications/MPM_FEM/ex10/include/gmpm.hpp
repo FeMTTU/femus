@@ -24,7 +24,7 @@ void PrintGnuplotScript (const double & xmin, const double & xmax, const double 
 
 class WindowFunction {
   public:
-    void BuildWeight (const std::vector <double> &Xv, const double &x, const bool &nonLocal, const unsigned &n);
+    void BuildWeight (const std::vector <double> &Xv, const unsigned &pOrder, const double &x, const bool &nonLocal, const unsigned &n);
 
     double x0;
     double x1;
@@ -36,13 +36,15 @@ class WindowFunction {
     double dw1;
 };
 
-void WindowFunction::BuildWeight (const std::vector <double> &Xv, const double &x, const bool &nonLocal, const unsigned &Cn) {
+void WindowFunction::BuildWeight (const std::vector <double> &Xv, const unsigned &pOrder, const double &x, const bool &nonLocal, const unsigned &Cn) {
 
+  unsigned i = pOrder;
+  while (x > Xv[i]) i += pOrder;
+  x0 = Xv[i - pOrder];
+  x1 = Xv[i];  
+    
   if (nonLocal) {
-    unsigned i = 2;
-    while (x > Xv[i]) i += 2;
-    x0 = Xv[i - 2];
-    x1 = Xv[i];
+    
 
     double l0 = (x - x1) / (x0 - x1);
     double l1 = (x - x0) / (x1 - x0);
@@ -258,6 +260,8 @@ void GMPM::GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
     //     _dweight[i][d] = 0.;
     //   }
     // }
+    
+    //std::cout << inode << " " << _weight[i] <<std::endl;
 
     if (_weight[i] > 0.) { // take only contribution form the nodes whose weight function overlap with xp
       for (unsigned d = 0 ; d < _dim; d++) { // multi_dimensional loop
