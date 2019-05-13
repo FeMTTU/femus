@@ -133,9 +133,11 @@ namespace femus {
     if (name.rfind (".neu") < name.size()) {
       GambitIO (*this).read (name, _coords, Lref, type_elem_flag);
     }
+#ifdef HAVE_HDF5
     else if (name.rfind (".med") < name.size()) {
       MED_IO (*this).read (name, _coords, Lref, type_elem_flag);
     }
+#endif
     else {
       std::cerr << " ERROR: Unrecognized file extension: " << name
                 << "\n   I understand the following:\n\n"
