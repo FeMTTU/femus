@@ -38,7 +38,7 @@ class WindowFunction {
     const static unsigned ak[5][5];
 };
 
-const unsigned WindowFunction::ak[5][5] = {{1}, {2, 1}, {6, 3, 1}, {20, 10, 4, 1}, {70, 35, 15, 5, 1}};
+const unsigned WindowFunction::ak[5][5] = {{1}, {1, 2}, {1, 3, 6}, {1, 4, 10, 20}, {1, 5, 15, 35, 70}};
 
 void WindowFunction::BuildWeight (const std::vector <double> &Xv, const unsigned &pOrder, const double &x, const bool &nonLocal, const unsigned &Cn) {
 
@@ -49,73 +49,81 @@ void WindowFunction::BuildWeight (const std::vector <double> &Xv, const unsigned
 
   if (nonLocal) {
 
-/*
+
+//     double l0 = (x - x1) / (x0 - x1);
+//     double l1 = (x - x0) / (x1 - x0);
+//
+//     double l0p = 1. / (x0 - x1);
+//     double l1p = -l0p;
+//
+//     unsigned n = Cn + 1;
+//     double l0n = pow (l0, n);
+//     double l0nm1 = l0n / l0;
+//     double l1n = pow (l1, n);
+//     double l1nm1 = l1n / l1;
+//
+//     double Pl0 = l0nm1;
+//     double Pl1 = l1nm1;
+//     double dPl0 = 0.;
+//     double dPl1 = 0.;
+//     double l0nm1mk = l0nm1;
+//     double l1nm1mk = l1nm1;
+//     for (unsigned k = 1; k < n; k++) {
+//       l0nm1mk /= l0;
+//       l1nm1mk /= l1;
+//       Pl0 += l0nm1mk / boost::math::factorial<double> (k + 1);
+//       Pl1 += l1nm1mk / boost::math::factorial<double> (k + 1);
+//       dPl0 += (n - k) * l0nm1mk * l0p / boost::math::factorial<double> (k);
+//       dPl1 += (n - k) * l1nm1mk * l1p / boost::math::factorial<double> (k);
+//     }
+//
+//     w0 = Pl1 * boost::math::factorial<double> (n) * l0n;
+//     w1 = Pl0 * boost::math::factorial<double> (n) * l1n;
+//     dw0 = boost::math::factorial<double> (n) * l0nm1 * (n * l0p * Pl1 + l0 * dPl1);
+//     dw1 = boost::math::factorial<double> (n) * l1nm1 * (n * l1p * Pl0 + l1 * dPl0);
+
+
     double l0 = (x - x1) / (x0 - x1);
     double l1 = (x - x0) / (x1 - x0);
 
-    double l0p = 1. / (x0 - x1);
-    double l1p = -l0p;
-
-    unsigned n = Cn + 1;
-    double l0n = pow (l0, n);
-    double l0nm1 = l0n / l0;
-    double l1n = pow (l1, n);
-    double l1nm1 = l1n / l1;
-
-    double Pl0 = l0nm1;
-    double Pl1 = l1nm1;
-    double dPl0 = 0.;
-    double dPl1 = 0.;
-    double l0nm1mk = l0nm1;
-    double l1nm1mk = l1nm1;
-    for (unsigned k = 1; k < n; k++) {
-      l0nm1mk /= l0;
-      l1nm1mk /= l1;
-      Pl0 += l0nm1mk / boost::math::factorial<double> (k + 1);
-      Pl1 += l1nm1mk / boost::math::factorial<double> (k + 1);
-      dPl0 += (n - k) * l0nm1mk * l0p / boost::math::factorial<double> (k);
-      dPl1 += (n - k) * l1nm1mk * l1p / boost::math::factorial<double> (k);
-    }
-
-    w0 = Pl1 * boost::math::factorial<double> (n) * l0n;
-    w1 = Pl0 * boost::math::factorial<double> (n) * l1n;
-    dw0 = boost::math::factorial<double> (n) * l0nm1 * (n * l0p * Pl1 + l0 * dPl1);
-    dw1 = boost::math::factorial<double> (n) * l1nm1 * (n * l1p * Pl0 + l1 * dPl0);*/
-    
-    
-    double l0 = (x - x1) / (x0 - x1);
-    double l1 = (x - x0) / (x1 - x0);
-    
     double dl0 = 1. / (x0 - x1);
     double dl1 = -dl0;
-    
+
+
+
     unsigned n = Cn + 1;
-    double l0n = pow (l0, n);
-    double l0nm1 = l0n / l0;
-    double l1n = pow (l1, n);
-    double l1nm1 = l1n / l1;
-    
-    double Pl0 = ak[Cn][0] * l0nm1;
-    double Pl1 = ak[Cn][0] * l1nm1;
+//     double l0n = pow (l0, n);
+//     double l0nm1 = l0n / l0;
+//     double l1n = pow (l1, n);
+//     double l1nm1 = l1n / l1;
+
+    double Pl0 = ak[Cn][0];
+    double Pl1 = ak[Cn][0];
     double dPl0 = 0.;
     double dPl1 = 0.;
-    double l0nm1mk = l0nm1;
-    double l1nm1mk = l1nm1;
+
+    double l0k = 1.;
+    double l1k = 1.;
     for (unsigned k = 1; k < n; k++) {
-      l0nm1mk /= l0;
-      l1nm1mk /= l1;
-      Pl0 += ak[Cn][k] * l0nm1mk;
-      Pl1 += ak[Cn][k] * l1nm1mk;
-      dPl0 += (n - k) * ak[Cn][k-1] * l0nm1mk * dl0;
-      dPl1 += (n - k) * ak[Cn][k-1] * l1nm1mk * dl1;
+      dPl0 += k * ak[Cn][k] * l0k * dl0;
+      dPl1 += k * ak[Cn][k] * l1k * dl1;
+      l0k *= l0;
+      l1k *= l1;
+      Pl0 += ak[Cn][k] * l0k;
+      Pl1 += ak[Cn][k] * l1k;
     }
-    
-    w0 =  l0n * Pl1;
-    w1 =  l1n * Pl0;
-    dw0 = l0nm1 * (n * dl0 * Pl1 + l0 * dPl1);
-    dw1 = l1nm1 * (n * dl1 * Pl0 + l1 * dPl0);
-    
-    
+    dw0 = l0k * (n * dl0 * Pl1 + l0 * dPl1);
+    dw1 = l1k * (n * dl1 * Pl0 + l1 * dPl0);
+
+    l0k *= l0;
+    l1k *= l1;
+    w0 =  l0k * Pl1;
+    w1 =  l1k * Pl0;
+
+
+    // std::cout << l0 << " " << l1 << " " << dl0 << " " <<dl1 << std::endl;
+    // std::cout << w0 << " " << w1 << " " << dw0 << " " <<dw1 << std::endl;
+
   }
   else {
     w0 = w1 = dw0 = dw1 = 0.;
@@ -263,26 +271,54 @@ void GMPM::GetTestFunction (const std::vector < std::vector <unsigned> > &aIdx,
     _dweight[i].resize (_dim);
   }
 
+  bool pIsNode = false;
+  unsigned pnode = 0;
+  if(nonLocal){
+    for (unsigned i = 0; i < _node.size(); i++) {
+        unsigned inode = _node[i];
+        if (inode % pOrder == 0) {
+        if (fabs (_xp[0] - Xv[inode]) < 1.e-14) {
+            pIsNode = true;
+            pnode = inode;
+        }
+      }
+    }
+  }
+
   for (unsigned i = 0; i < _node.size(); i++) {
     unsigned inode = _node[i];
     //if (nonLocal) {
 
     double x = Xv[inode];
-
-    if (x < w.x0) {
-      _weight[i] = w.w0;
-      _dweight[i][0] = w.dw0;
-    }
-    else if (x <= w.x1) {
-      _weight[i] = 1.;
-      _dweight[i][0] = 0.;
+    if (pIsNode == false) {
+    
+      if (x < w.x0 - 1.e-14) {
+        _weight[i] = w.w0;
+        _dweight[i][0] = w.dw0;
+      }
+      else if (x <= w.x1 + 1.e-14) {
+        _weight[i] = 1.;
+        _dweight[i][0] = 0.;
+      }
+      else {
+        _weight[i] = w.w1;
+        _dweight[i][0] = w.dw1;
+      }
     }
     else {
-      _weight[i] = w.w1;
-      _dweight[i][0] = w.dw1;
+      if (pnode > inode) {
+        _weight[i] = (pnode - inode > pOrder) ? 0. : 1.;
+      }
+      else {
+        _weight[i] = (inode - pnode > pOrder) ? 0. : 1.;
+      }
+      _dweight[i][0] = 0;
     }
 
-    std::cout << inode << " " << _weight[i] <<" "<<_dweight[i][0] << std::endl<<std::flush;
+//     if (fabs (_xp[0] - 0.43) < 1.0e-8) {
+//       std::cout << x << " " << w.x0 << " " << w.x1 << " " << w.w0 << " " << w.w1 << " " << w.dw0 << " " << w.dw1 << std::endl;
+//       std::cout << inode << " " << _weight[i] << " " << _dweight[i][0] << std::endl << std::flush;
+//     }
 
 
 //       double s = _s[i][0];

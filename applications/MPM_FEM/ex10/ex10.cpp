@@ -10,11 +10,15 @@ int main (int argc, char** args) {
 
   bool nonLocal = true;
   bool output = true;
-
-  std::vector < std::vector <unsigned> > aIdx;
-  unsigned pOrder = 3;
+  unsigned Cn = 1;
+  unsigned Np = 201;
+  unsigned pOrder = 1;
   unsigned dim = 1;
   double scale = 0.25;
+  
+  
+  std::vector < std::vector <unsigned> > aIdx;
+ 
   
   ComputeIndexSet (aIdx, pOrder, dim, output);
 
@@ -43,13 +47,9 @@ int main (int argc, char** args) {
   std::vector < double > sMin (nve1d);
 
   for (int i = 0; i < nve1d; i++) {
-    //int deltaim = (i % 2 == 0) ? pOrder + nonLocal * 2 : pOrder  + 1 - 2 * (!nonLocal);
-    //int deltaip = (i % 2 == 0) ? pOrder + nonLocal * 2 : pOrder  + 1 - 2 * (!nonLocal);
     int deltaip = nonLocal * pOrder + ( pOrder  - i % pOrder);
     int deltaim = (i % pOrder == 0) ? nonLocal * pOrder + pOrder : nonLocal * pOrder + i % pOrder;
 
-    //std::cout << i << " "<< deltaim <<" "<< deltaip <<std::endl;
-    
     int im = (i - deltaim >= 0) ?  i - deltaim : 0;
     int ip = (i + deltaip < nve1d) ? i + deltaip : nve1d - 1;
 
@@ -61,11 +61,10 @@ int main (int argc, char** args) {
       if (i + deltaip >= nve1d) sMax[i] += Xv[nve1d - 1] - Xv[nve1d - 2];
     }
     
-    //std::cout << i << " "<< deltaim <<" "<< deltaip << " "<<sMin[i] <<" "<<sMax[i]<<std::endl;
   }
   
 
-  unsigned Np = 1;
+ 
   //double L = ( Xv[nve1d - 1] - Xv[0]);
 
   double L = (Xv[nve1d - pOrder - 1]  - Xv[0]);
@@ -89,23 +88,14 @@ int main (int argc, char** args) {
   maxNumberOfNodes = 0;
   for (unsigned p = 0; p < gmpm.size(); p++) {
     for (unsigned d = 0; d < dim; d++) {
-      gmpm[p]->_xp[d] = Xv[3] + DX * p;
-      
-      //std::cout << gmpm[p]->_xp[d]<<" ";
+      gmpm[p]->_xp[d] = Xv[0] + DX * p;
     }
     gmpm[p]->CheckIfParticleIsWhithin (XvR, sMinR, sMaxR);
-    
-    for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
-      //std::cout << gmpm[p]->_node[i] << " ";
-    }
-    //std::cout<<std::endl;
     
     if (maxNumberOfNodes <  gmpm[p]->_node.size()) {
       maxNumberOfNodes = gmpm[p]->_node.size();
     }
   }
-  
-  //exit(0);
 
   gmpm[0]->SetVolume (DX / 2.);
   for (unsigned p = 1; p < Np - 1; p++) {
@@ -136,7 +126,7 @@ int main (int argc, char** args) {
       fout.open (stream.str().c_str());
       fout.close();
 
-      fout.open ("./output/.txt");
+      fout.open ("./output/phiSum.txt");
       fout.close();
 
       for (unsigned d = 0; d < dim; d++) {
@@ -160,7 +150,7 @@ int main (int argc, char** args) {
   for (unsigned p = 0; p < Np; p++) { // particle loop
 
     WindowFunction wf;
-    wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal, pOrder + 1);
+    wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal, Cn);
 
     gmpm[p]->GetTestFunction (aIdx, nonLocal, XvR, sMaxR, sMinR, pOrder, scale, wf, phi, dphi, weight);
 
@@ -243,7 +233,7 @@ int main (int argc, char** args) {
       double Up = 0.;
 
       WindowFunction wf;
-      wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal,  pOrder + 1);
+      wf.BuildWeight (XvR, pOrder, gmpm[p]->_xp[0], nonLocal,  Cn );
 
       gmpm[p]->GetTestFunction (aIdx, nonLocal, XvR, sMaxR, sMinR, pOrder, scale, wf, phi, dphi, weight);
 
