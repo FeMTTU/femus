@@ -28,14 +28,14 @@ const double ap[3] = {1, 0., 0.};
 using namespace femus;
 
 // Toggle for setting volume and area constraints, as well as sign of N.
-bool volumeConstraint = true;
-bool areaConstraint = true;
+const bool volumeConstraint = true;
+const bool areaConstraint = true;
 const double normalSign = -1.;
 
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta). ????
 // Trick for system2 (timederiv).
-const double eps = 0.0001;
+const double eps = 0.0000;
 const double delta = 0.0005;
 const double timederiv = 0.;
 
@@ -146,8 +146,10 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("nDx1", LAGRANGE, FIRST, 0);
   mlSol.AddSolution ("nDx2", LAGRANGE, FIRST, 0);
   mlSol.AddSolution ("nDx3", LAGRANGE, FIRST, 0);
-  mlSol.AddSolution ("Lambda1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
-
+  //mlSol.AddSolution ("Lambda1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
+  mlSol.AddSolution ("Lambda1", LAGRANGE, FIRST, 0);
+  
+  
   // Initialize the variables and attach boundary conditions.
   mlSol.Initialize ("All");
   mlSol.Initialize ("W1", InitalValueW1);
@@ -232,31 +234,37 @@ int main (int argc, char** args) {
   system2.SetAssembleFunction (AssembleConformalMinimization);
   system2.init();
 
-  // First, solve system2 to "conformalize" the initial mesh.
-  CopyDisplacement (mlSol, true);
-  system2.MGsolve();
-
-  // Then, solve system0 to compute initial curvatures.
-  CopyDisplacement (mlSol, false);
-  system0.MGsolve();
-
-  // What is this doing?
   mlSol.SetWriter (VTK);
   std::vector<std::string> mov_vars;
   mov_vars.push_back ("Dx1");
   mov_vars.push_back ("Dx2");
   mov_vars.push_back ("Dx3");
   mlSol.GetWriter()->SetMovingMesh (mov_vars);
-
+  
   // and this?
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back ("All");
-
+  
   // and this?
-  mlSol.GetWriter()->SetDebugOutput (true);
+  mlSol.GetWriter()->SetDebugOutput (false);
+  mlSol.GetWriter()->Write ("./output1",
+                            "linear", variablesToBePrinted, 0);
+  
+  
+  // First, solve system2 to "conformalize" the initial mesh.
+  CopyDisplacement (mlSol, true);
+  system2.MGsolve();
+  
+  // Then, solve system0 to compute initial curvatures.
+  CopyDisplacement (mlSol, false);
+  
+ 
+  
+  system0.MGsolve();
+
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR,
                             "linear", variablesToBePrinted, 0);
-
+  
   // Parameters for the algorithm loop.
   unsigned numberOfTimeSteps = 1000u;
   unsigned printInterval = 1u;
@@ -267,6 +275,9 @@ int main (int argc, char** args) {
     system.MGsolve();
 
     if (time_step % 1 == 0) {
+      mlSol.GetWriter()->Write ("./output1", "linear",
+                                variablesToBePrinted, (time_step + 1) / printInterval);
+            
       CopyDisplacement (mlSol, true);
       system2.MGsolve();
 
@@ -1579,6 +1590,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
          _finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
 
       const double *phix;  // local test function
+      const double *phiL;  // local test function
       const double *phix_uv[dim]; // first order derivatives in (u,v)
 
       double weight; // gauss point weight
@@ -1589,14 +1601,15 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig);
         phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig);
         weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
+        phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
       }
 
       // Special adjustments for triangles.
       else {
-        phix = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
-        phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig);
-        phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig);
-        weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
+        //phix = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
+        //phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig);
+        //phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig);
+        //weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
 
         msh->_finiteElement[ielGeom][solType]->Jacobian (xT, ig,
                                                          weight, stdVectorPhi, stdVectorPhi_uv);
@@ -1611,6 +1624,9 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         }
         phix_uv[0] = &phi_uv0[0];
         phix_uv[1] = &phi_uv1[0];
+        
+        phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
+        
       }
 
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
@@ -1619,6 +1635,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble X_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      
+     
 
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
@@ -1634,6 +1652,11 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         }
       }
 
+      adept::adouble solLg = 0.;
+      for (unsigned i = 0; i < nLDofs; i++) {
+        solLg += phiL[i] * solL[i];
+      }
+      
       // Compute the metric, metric determinant, and area element.
       double g[dim][dim] = {{0., 0.}, {0., 0.}};
       for (unsigned i = 0; i < dim; i++) {
@@ -1711,12 +1734,14 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
           // Conformal energy equation (with trick).
           aResNDx[K][i] += term1 * Area2
                            + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
-                           + solL[0] * phix[i] * normal[K] * Area2;  //no2
+                           + solLg * phix[i] * normal[K] * Area2;  //no2
         }
       }
 
       // Lagrange multiplier equation (with trick).
-      aResL[0] += (DnXmDxdotN + eps * solL[0]) * Area2; // no2
+      for(unsigned i = 0; i< nLDofs; i++){
+        aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area2; // no2
+      }
 
     } // end GAUSS POINT LOOP
 
