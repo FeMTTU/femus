@@ -28,8 +28,8 @@ const double ap[3] = {1, 0., 0.};
 using namespace femus;
 
 // Toggle for setting volume and area constraints, as well as sign of N.
-bool volumeConstraint = false;
-bool areaConstraint = false;
+bool volumeConstraint = true;
+bool areaConstraint = true;
 const double normalSign = -1.;
 
 // Penalty parameter for conformal minimization (eps).
@@ -51,7 +51,7 @@ double GetTimeStep (const double t) {
   // if(time==0) return 5.0e-7;
   //return 0.0001;
   //double dt0 = .00002;
-  double dt0 = .025;
+  double dt0 = .05;
   double s = 1.;
   double n = 0.3;
   return dt0 * pow (1. + t / pow (dt0, s), n);
@@ -1711,12 +1711,12 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
           // Conformal energy equation (with trick).
           aResNDx[K][i] += term1 * Area2
                            + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
-                           + solL[0] * phix[i] * normal[K] * Area;
+                           + solL[0] * phix[i] * normal[K] * Area2;  //no2
         }
       }
 
       // Lagrange multiplier equation (with trick).
-      aResL[0] += (DnXmDxdotN + eps * solL[0]) * Area;
+      aResL[0] += (DnXmDxdotN + eps * solL[0]) * Area2; // no2
 
     } // end GAUSS POINT LOOP
 
