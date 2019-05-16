@@ -25,7 +25,7 @@
 
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
-#define no_of_ref 1     //mesh refinements
+#define no_of_ref 2     //mesh refinements
 
 #define NO_OF_L2_NORMS 11   //U,V,P,UADJ,VADJ,PADJ,UCTRL,VCTRL,PCTRL,U+U0,V+V0
 #define NO_OF_H1_NORMS 8    //U,V,UADJ,VADJ,UCTRL,VCTRL,U+U0,V+V0
@@ -43,9 +43,15 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
 #if exact_sol_flag == 0
 // b.c. for lid-driven cavity problem, wall u_top = 1 = shear_force, v_top = 0 and u=v=0 on other 3 walls ; rhs_f = body_force = {0,0}
 // TOP ==========================  
-      if (facename == 3) {
+      if (/*facename == 3*/
+ sqrt(x[0] * x[0] + x[1] * x[1]) < 0.5 + 1.e-5 && x[2] > 0. - 1.e-5 && x[2] < 1.0 + 1.e-5 
+//           x[0] > 0. - 1.e-5 && x[0] < 1.0 + 1.e-5 &&
+//           x[1] > 0. - 1.e-5 && x[1] < 1.0 + 1.e-5 && 
+//           x[2] > 1.0 - 1.e-5 //cube top
+    ) {
        if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
   else if (!strcmp(SolName, "VCTRL"))    { dirichlet = false; } 
+  else if (!strcmp(SolName, "WCTRL"))    { dirichlet = false; } 
 	
       }   
 #endif
@@ -128,10 +134,14 @@ int main(int argc, char** args) {
        // ======= Files ========================
   Files files; 
         files.CheckIODirectories();
-	files.RedirectCout();
+	    files.RedirectCout();
  
+    std::string input_file = "cyl.med";
+  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+  const std::string infile = mystream.str();
+
     // ======= Quad Rule ========================
-    std::string fe_quad_rule("seventh");
+    std::string fe_quad_rule("fifth");
     
 // define multilevel mesh
   MultiLevelMesh mlMsh;
@@ -156,8 +166,10 @@ int main(int argc, char** args) {
 
 //   MultiLevelMesh mlMsh;
 //  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
-    mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
-    mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+//    mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,NSUB_Z,0.,1.,0.,1.,0.,1.,HEX27,fe_quad_rule.c_str());
+//     mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,NSUB_Z,0.,1.,0.,1.,0.,1.,HEX27,fe_quad_rule.c_str());
+   mlMsh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+   mlMsh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
     
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
@@ -167,7 +179,7 @@ int main(int argc, char** args) {
   if (dim == 2) {
     maxNumberOfMeshes = no_of_ref;
   } else {
-    maxNumberOfMeshes = 4;
+    maxNumberOfMeshes = no_of_ref /*4*/;
   }
 
 
@@ -276,8 +288,8 @@ int main(int argc, char** args) {
   
   
   // attach the assembling function to system
-//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
-  system_opt.SetAssembleFunction(AssembleNavierStokesOpt_nonAD);
+  system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
+//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_nonAD);
     
   // initilaize and solve the system
   system_opt.init();
