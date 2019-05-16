@@ -68,7 +68,7 @@ unsigned numberOfSamplesFinest = 100000000; //10^6 for spatial average, 10^7 for
 unsigned kOrderFinest = 8;
 // unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamplesFinest ) ) ); //for spatial average
 // unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamplesFinest ) ) ); //for integral of the square
-unsigned nxCoarseBoxFinest = static_cast<unsigned> ( pow(2,kOrderFinest) );
+unsigned nxCoarseBoxFinest = static_cast<unsigned> (pow (2, kOrderFinest));
 unsigned nyCoarseBoxFinest = nxCoarseBoxFinest;
 unsigned nzCoarseBoxFinest = nxCoarseBoxFinest;
 
@@ -78,7 +78,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 2; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -111,14 +111,71 @@ int main (int argc, char** argv) {
     sprintf (name, "egnf%d", i);
     mlSol.AddSolution (name, LAGRANGE, SECOND, 0, false);
   }
-  
+
+//   std::vector < std::vector < std::vector <unsigned> > > Jpi(pIndex);
+//   for(unsigned i = 0; i < pIndex;i++){
+//     Jpi[i] = myuq.GetIndexSet (i + 1, numberOfEigPairs);
+//     std::cout << std::endl;
+//   }
+//
+//   for(unsigned i = 0; i < pIndex - 1;i++){
+//     for(unsigned ii = 0; ii < Jpi[i].size(); ii++){
+//       for(unsigned j = i + 1; j < pIndex;j++){
+//         for(unsigned jj = 0; jj < Jpi[j].size(); jj++){
+//           bool ijsame = true;
+//           for(unsigned k = 0; k < numberOfEigPairs; k++){
+//             if(Jpi[i][ii][k] != Jpi[j][jj][k]){
+//               ijsame = false;
+//               break;
+//             }
+//           }
+//           if(ijsame){
+//             Jpi[j][jj][0] = UINT_MAX;
+//           }
+//         }
+//       }
+//     }
+//   }
+//   for(unsigned i = 0; i < pIndex - 1;i++){
+//
+//     for(unsigned ii = 0; ii < Jpi[i].size(); ii++){
+//       for(unsigned k = 0; k < numberOfEigPairs; k++){
+//         std::cout << Jpi[i][ii][k]<< " ";
+//       }
+//       std::cout << std::endl;
+//     }
+//     std::cout << std::endl;
+//   }
+
+  //exit(0);
+
+
+  std::vector< unsigned > JpAllpSize (pIndex + 1);
+  for (unsigned p = 0; p <= pIndex; p++) {
+    JpAllpSize[p] = static_cast <unsigned> (boost::math::binomial_coefficient<double> (numberOfEigPairs + p, p));
+  }
+
+  for (unsigned p = pIndex; p > 0; p--) {
+    JpAllpSize[p] -= JpAllpSize[p - 1];
+  }
+//   for(unsigned p = 0; p < pIndex + 1; p++){
+//     std::cout << JpAllpSize[p] <<" ";
+//   }
+//   std::cout << std::endl;
+//
+
+
   const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet (pIndex, numberOfEigPairs);
+
+// exit(0);
 
   for (unsigned i = 0; i < Jp.size(); i++) {
     char name[10];
     sprintf (name, "uSG%d", i);
     mlSol.AddSolution (name, LAGRANGE, SECOND, 2);
   }
+
+
 
   mlSol.Initialize ("All");
 
@@ -173,12 +230,12 @@ int main (int argc, char** argv) {
   }
 
   FieldSplitTree **FielduSGi;
-
   FielduSGi = new FieldSplitTree * [Jp.size()];
 
-  std::vector < FieldSplitTree *> FSAll;
-  FSAll.reserve (Jp.size());
-
+  std::vector < std::vector < FieldSplitTree *> > FSAllp (pIndex + 1);
+  for (unsigned i = 0; i <= pIndex; i++) {
+    FSAllp[i].reserve (JpAllpSize[i]);
+  }
 
   //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
   for (unsigned i = 0; i < Jp.size(); i++) {
@@ -191,24 +248,50 @@ int main (int argc, char** argv) {
     solutionTypeuSGi[0] = mlSol.GetSolutionType (name);
 
     //FielduSGi[i] = new FieldSplitTree (PREONLY, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
-    FielduSGi[i] = new FieldSplitTree (RICHARDSON, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
-    
-    FielduSGi[i]->SetTolerances (1.e-10, 1.e-10, 1.e+50, 5); //(1.e-10, 1.e-10, 1.e+50, 10)
-    FielduSGi[i]->SetRichardsonScaleFactor(1.0);           // 0.5
+    FielduSGi[i] = new FieldSplitTree (PREONLY, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
 
-    FSAll.push_back (FielduSGi[i]);
+//     FielduSGi[i]->SetTolerances (1.e-10, 1.e-10, 1.e+50, 5); //(1.e-10, 1.e-10, 1.e+50, 10)
+//     FielduSGi[i]->SetRichardsonScaleFactor (1.0);          // 0.5
+
+    unsigned j = 0;
+    for (unsigned k = 0; k < numberOfEigPairs; k++) {
+      j += Jp[i][k];
+    }
+    if (j == 0) j = 1;
+    FSAllp[j].push_back (FielduSGi[i]);
+
+
   }
+
+  std::vector < FieldSplitTree *> FSAll;
+  FSAll.reserve (pIndex + 1);
+
+  FieldSplitTree **FielduSGAllp;
+  FielduSGAllp = new FieldSplitTree * [pIndex + 1];
+
+  for (unsigned i = 1; i <= pIndex; i++) {
+    char name[10];
+    sprintf (name, "uSGAllp%d", i);
+    FielduSGAllp[i] = new FieldSplitTree (PREONLY, FIELDSPLIT_MULTIPLICATIVE_PRECOND, FSAllp[i], name);
+//     FielduSGAllp[i]->SetRichardsonScaleFactor (.6);          // 0.5
+//     FielduSGAllp[i]->SetTolerances (1.e-10, 1.e-10, 1.e+50, 20); //(1.e-10, 1.e-10, 1.e+50, 10)
+
+    FSAll.push_back (FielduSGAllp[i]);
+  }
+
 
   //FieldSplitTree uSG (PREONLY, FIELDSPLIT_PRECOND, FSAll, "uSG");
   //FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_PRECOND, FSAll, "uSG");
   FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_MULTIPLICATIVE_PRECOND, FSAll, "uSG");
   //FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_SYMMETRIC_MULTIPLICATIVE_PRECOND, FSAll, "uSG");
-  uSG.PrintFieldSplitTree();
+
+  //uSG.PrintFieldSplitTree();
+
   //systemSG.SetOuterSolver(FGMRES);
-  uSG.SetRichardsonScaleFactor(1.0); // 0.6 is the best choice
+  //uSG.SetRichardsonScaleFactor(1.0); // 0.6 is the best choice
   //uSG.SetTolerances (1.e-3, 1.e-30, 1.e+50, 1);
   //END buid fieldSplitTree
-   systemSG.SetLinearEquationSolverType (FEMuS_FIELDSPLIT);
+  systemSG.SetLinearEquationSolverType (FEMuS_FIELDSPLIT);
   // ******* System FEM Assembly *******
   systemSG.SetAssembleFunction (AssembleSysSG);
   systemSG.SetMaxNumberOfLinearIterations (1);
@@ -230,7 +313,7 @@ int main (int argc, char** argv) {
   systemSG.SetSolverFineGrids (RICHARDSON);
 
   systemSG.SetPreconditionerFineGrids (ILU_PRECOND);
-  
+
   systemSG.SetFieldSplitTree (&uSG);
 
   systemSG.SetTolerances (1.e-10, 1.e-10, 1.e+50, 4000);
@@ -269,80 +352,89 @@ int main (int argc, char** argv) {
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
   //END
 
-/*
-  //BEGIN Define the instances of the problem for HISTOGRAM and KDE
-  MultiLevelMesh mlMshHisto;
-  MultiLevelMesh mlMshHistoFinest;
+  /*
+    //BEGIN Define the instances of the problem for HISTOGRAM and KDE
+    MultiLevelMesh mlMshHisto;
+    MultiLevelMesh mlMshHistoFinest;
 
-//     nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamples ) ) );
-//     nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamples ) ) );
-    nxCoarseBox = static_cast<unsigned> ( pow(2,kOrder) );
-    nyCoarseBox = nxCoarseBox;
-    nzCoarseBox = nxCoarseBox;
+  //     nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamples ) ) );
+  //     nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamples ) ) );
+      nxCoarseBox = static_cast<unsigned> ( pow(2,kOrder) );
+      nyCoarseBox = nxCoarseBox;
+      nzCoarseBox = nxCoarseBox;
 
-    mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
-//     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
-//     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, nzCoarseBox, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh" ); //for 3D
+      mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
+  //     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
+  //     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, nzCoarseBox, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh" ); //for 3D
 
-    mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
-//     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
-//     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, nzCoarseBoxFinest, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh" ); //for 3D
+      mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
+  //     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
+  //     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, nzCoarseBoxFinest, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh" ); //for 3D
 
-  mlMshHisto.PrintInfo();
+    mlMshHisto.PrintInfo();
 
-  unsigned dimCoarseBox = mlMshHisto.GetDimension();
+    unsigned dimCoarseBox = mlMshHisto.GetDimension();
 
-  std::vector< std::vector <double > > sgmQoIStandardized;
-  std::vector< std::vector <double > > sgmQoIStandardizedFinest;
-  GetQoIStandardizedSamples (alphas, sgmQoIStandardized, sgmQoIStandardizedFinest, dimCoarseBox);
-
-
-  MultiLevelSolution mlSolHisto (&mlMshHisto);
-  MultiLevelSolution mlSolHistoFinest (&mlMshHistoFinest);
-
-  mlSolHisto.AddSolution ("HISTO", DISCONTINUOUS_POLYNOMIAL, ZERO);
-  mlSolHisto.AddSolution ("PROPOSED", LAGRANGE, FIRST);
-
-  mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINUOUS_POLYNOMIAL, ZERO);
-
-  mlSolHisto.Initialize ("All");
-
-  mlSolHistoFinest.Initialize ("All");
-
-  MultiLevelProblem ml_probHisto (&mlSolHisto);
-
-  MultiLevelProblem ml_probHistoFinest (&mlSolHistoFinest);
-
-  clock_t start_time = clock();
-
-  GetHistogramAndKDE (sgmQoIStandardized, sgmQoIStandardizedFinest, ml_probHisto, ml_probHistoFinest);
-
-  std::cout << std::endl << " RANNA in: " << std::setw (11) << std::setprecision (6) << std::fixed
-            << static_cast<double> ( (clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
-
-//   GetKDEIntegral(ml_probHisto);
-
-  GetAverageL2Error (sgmQoIStandardized, ml_probHisto, ml_probHistoFinest);
-
-  mlSolHisto.SetWriter (VTK);
-  std::vector<std::string> print_vars_2;
-  print_vars_2.push_back ("All");
-  //mlSolHisto.GetWriter()->SetDebugOutput(true);
-  mlSolHisto.GetWriter()->Write (DEFAULT_OUTPUTDIR, "histo_and_proposed", print_vars_2, 0);
+    std::vector< std::vector <double > > sgmQoIStandardized;
+    std::vector< std::vector <double > > sgmQoIStandardizedFinest;
+    GetQoIStandardizedSamples (alphas, sgmQoIStandardized, sgmQoIStandardizedFinest, dimCoarseBox);
 
 
-  mlSolHistoFinest.SetWriter (VTK);
-  std::vector<std::string> print_vars_3;
-  print_vars_3.push_back ("All");
-  //mlSolHisto.GetWriter()->SetDebugOutput(true);
-  mlSolHistoFinest.GetWriter()->Write (DEFAULT_OUTPUTDIR, "histo_finer", print_vars_3, 0);
-  //END
-  */
-  
+    MultiLevelSolution mlSolHisto (&mlMshHisto);
+    MultiLevelSolution mlSolHistoFinest (&mlMshHistoFinest);
+
+    mlSolHisto.AddSolution ("HISTO", DISCONTINUOUS_POLYNOMIAL, ZERO);
+    mlSolHisto.AddSolution ("PROPOSED", LAGRANGE, FIRST);
+
+    mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINUOUS_POLYNOMIAL, ZERO);
+
+    mlSolHisto.Initialize ("All");
+
+    mlSolHistoFinest.Initialize ("All");
+
+    MultiLevelProblem ml_probHisto (&mlSolHisto);
+
+    MultiLevelProblem ml_probHistoFinest (&mlSolHistoFinest);
+
+    clock_t start_time = clock();
+
+    GetHistogramAndKDE (sgmQoIStandardized, sgmQoIStandardizedFinest, ml_probHisto, ml_probHistoFinest);
+
+    std::cout << std::endl << " RANNA in: " << std::setw (11) << std::setprecision (6) << std::fixed
+              << static_cast<double> ( (clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+
+  //   GetKDEIntegral(ml_probHisto);
+
+    GetAverageL2Error (sgmQoIStandardized, ml_probHisto, ml_probHistoFinest);
+
+    mlSolHisto.SetWriter (VTK);
+    std::vector<std::string> print_vars_2;
+    print_vars_2.push_back ("All");
+    //mlSolHisto.GetWriter()->SetDebugOutput(true);
+    mlSolHisto.GetWriter()->Write (DEFAULT_OUTPUTDIR, "histo_and_proposed", print_vars_2, 0);
+
+
+    mlSolHistoFinest.SetWriter (VTK);
+    std::vector<std::string> print_vars_3;
+    print_vars_3.push_back ("All");
+    //mlSolHisto.GetWriter()->SetDebugOutput(true);
+    mlSolHistoFinest.GetWriter()->Write (DEFAULT_OUTPUTDIR, "histo_finer", print_vars_3, 0);
+    //END
+    */
+
+
+  for (unsigned i = 1; i <= pIndex; i++) {
+    delete FielduSGAllp[i];
+  }
+  delete [] FielduSGAllp;
+
   for (unsigned i = 0; i < Jp.size(); i++) {
     delete FielduSGi[i];
   }
   delete [] FielduSGi;
+
+
+
 
   return 0;
 
@@ -1442,7 +1534,7 @@ void GetQoIStandardizedSamples (std::vector< double >& alphas, std::vector< std:
         sgmQoI += alphas[i] * MultivariatePolyHistogram[i]; //TODO with QoIs that are different from each other, alphas[i] will be alphas[idim][i]
       }
 
-            sgmQoIStandardized[m][idim] = ( sgmQoI - meanQoI ) / stdDeviationQoI; //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
+      sgmQoIStandardized[m][idim] = (sgmQoI - meanQoI) / stdDeviationQoI;   //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
 
 //             double normalSample = var_nor();
 //             sgmQoIStandardized[m][idim] = normalSample;
@@ -1909,14 +2001,14 @@ void GetAverageL2Error (std::vector< std::vector <double > > & sgmQoIStandardize
 
           //END
 
-                    double diffPHI = 0.5 * ( 1. + erf ( 5.5 / sqrt ( 2 ) ) ) - 0.5 * ( 1. + erf ( -5.5 / sqrt ( 2 ) ) );
-                    double stdGaussian = ( exp ( - sgmQoIStandardized[m][0] * sgmQoIStandardized[m][0] * 0.5 ) / sqrt ( 2 * PI ) ) / diffPHI;
+          double diffPHI = 0.5 * (1. + erf (5.5 / sqrt (2))) - 0.5 * (1. + erf (-5.5 / sqrt (2)));
+          double stdGaussian = (exp (- sgmQoIStandardized[m][0] * sgmQoIStandardized[m][0] * 0.5) / sqrt (2 * PI)) / diffPHI;
 
-                    aL2ELocal += ( solKDESample - stdGaussian ) * ( solKDESample - stdGaussian );
+          aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
 
 
 //                     double uniform = ( fabs ( sgmQoIStandardized[m][0] ) <= 1. ) ? 0.5 : 0. ;
-// 
+//
 //                     aL2ELocal += ( solKDESample - uniform ) * ( solKDESample - uniform );
 
 //                     if ( histoErr ) aL2ELocalHisto += ( solHISTOSampleError - uniform ) * ( solHISTOSampleError - uniform );
@@ -1990,22 +2082,22 @@ void GetAverageL2Error (std::vector< std::vector <double > > & sgmQoIStandardize
           solKDESample += solKdeLocal[inode] * phi[inode];
         }
 
-                double dotProduct = 0.;
+        double dotProduct = 0.;
 
-                for ( unsigned jdim = 0; jdim < dim; jdim++ ) {
-                    dotProduct += sgmQoIStandardized[m][jdim] * sgmQoIStandardized[m][jdim];
-                }
-
-
-                double diffPHI = 0.5 * ( 1. + erf ( 5.5 / sqrt ( 2 ) ) ) - 0.5 * ( 1. + erf ( -5.5 / sqrt ( 2 ) ) );
-                double stdGaussian = ( exp ( - dotProduct * 0.5 ) / ( 2 * PI ) ) / ( diffPHI * diffPHI );
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          dotProduct += sgmQoIStandardized[m][jdim] * sgmQoIStandardized[m][jdim];
+        }
 
 
-                if ( dim == 3 ) stdGaussian /= ( sqrt ( 2 * PI ) * diffPHI );
+        double diffPHI = 0.5 * (1. + erf (5.5 / sqrt (2))) - 0.5 * (1. + erf (-5.5 / sqrt (2)));
+        double stdGaussian = (exp (- dotProduct * 0.5) / (2 * PI)) / (diffPHI * diffPHI);
+
+
+        if (dim == 3) stdGaussian /= (sqrt (2 * PI) * diffPHI);
 
 
 
-                aL2ELocal += ( solKDESample - stdGaussian ) * ( solKDESample - stdGaussian );
+        aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
 
 
 //                     double uniform = (dim == 2) ? 0.25 : 0.125;
@@ -2019,9 +2111,9 @@ void GetAverageL2Error (std::vector< std::vector <double > > & sgmQoIStandardize
 //                 double diffPHI = 0.5 * ( 1. + erf ( 5.5 / sqrt ( 2 ) ) ) - 0.5 * ( 1. + erf ( -5.5 / sqrt ( 2 ) ) );
 //                 double laplaceDist = ( 1. / ( 2. * bLaplace ) ) * exp ( - fabs ( sgmQoIStandardized[m][0] - muLaplace ) / bLaplace ) / ( 0.974438 );
 //                 double stdGaussian = ( exp ( - sgmQoIStandardized[m][1] * sgmQoIStandardized[m][1] * 0.5 ) / sqrt ( 2 * PI ) ) / diffPHI;
-// 
+//
 //                 double jointPDF = laplaceDist * stdGaussian;
-// 
+//
 //                 aL2ELocal += ( solKDESample - jointPDF ) * ( solKDESample - jointPDF );
 
 //                 if ( histoErr ) aL2ELocalHisto += ( solHISTOSampleError - jointPDF ) * ( solHISTOSampleError - jointPDF );
