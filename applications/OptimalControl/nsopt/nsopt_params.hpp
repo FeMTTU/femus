@@ -6,12 +6,13 @@
 
 #define NSUB_X  2
 #define NSUB_Y  2
+#define NSUB_Z  2
 
 #define FLUID_DENSITY  1
 //******************************************* Desired Target  and RHS function*******************************************************
 
  double force[3] = {0.,0.,0.};
- double Vel_desired[3] = {1.,0.,0.};
+ double Vel_desired[3] = {1.,0.,1.};
 
 //*********************** Sets the regularization parameters *******************************************************
 
@@ -22,7 +23,7 @@
  
 //******************************** switch between stokes and navier stokes *********************************************
  
- int advection_flag = 1;
+ int advection_flag = 0;
  int advection_Picard = 0;
  
 //  Newton: advection_flag = 1; advection_Picard = 0;
@@ -35,14 +36,23 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 
  //***** set target domain flag ********************************** 
   int target_flag = 0;
-  
+
+    if (  sqrt(elem_center[0] * elem_center[0] + elem_center[1] * elem_center[1]) < 0.5 + 1.e-5   &&
+	  elem_center[2] > 0.0 - 1.e-5  &&  elem_center[2] < 1.0  + 1.e-5
+  ) //target for cylinder
+
+//     if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
+// 	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5 /*&&
+// 	  elem_center[2] > 0.0 - 1.e-5  &&  elem_center[2] < 1.0  + 1.e-5*/
+//   ) //target on top for cube
+ 
 //    if ( elem_center[0] > 0.   - 1.e-5  &&  elem_center[0] < 0.25  + 1.e-5  && 
 //         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
 //   ) //target on left 
    
-    if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
-	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5
-  ) //target on top
+//     if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
+// 	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5 /*&&
+//   ) //target on top
 
 //    if ( elem_center[0] > 0.75  - 1.e-5  &&  elem_center[0] < 1.0   + 1.e-5  && 
 //         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
