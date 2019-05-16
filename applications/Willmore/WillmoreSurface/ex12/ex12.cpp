@@ -35,7 +35,7 @@ const double normalSign = -1.;
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta). ????
 // Trick for system2 (timederiv).
-const double eps = 0.0000;
+const double eps = 0.0001;
 const double delta = 0.0005;
 const double timederiv = 0.;
 
@@ -102,10 +102,10 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/virus3.neu", "seventh", scalingFactor);
@@ -113,7 +113,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels, numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -146,10 +146,10 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("nDx1", LAGRANGE, FIRST, 0);
   mlSol.AddSolution ("nDx2", LAGRANGE, FIRST, 0);
   mlSol.AddSolution ("nDx3", LAGRANGE, FIRST, 0);
-  //mlSol.AddSolution ("Lambda1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
-  mlSol.AddSolution ("Lambda1", LAGRANGE, FIRST, 0);
-  
-  
+  //mlSol.AddSolution ("Lambda1", LAGRANGE, FIRST, 0);
+  mlSol.AddSolution ("Lambda1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
+
+
   // Initialize the variables and attach boundary conditions.
   mlSol.Initialize ("All");
   mlSol.Initialize ("W1", InitalValueW1);
@@ -240,31 +240,31 @@ int main (int argc, char** args) {
   mov_vars.push_back ("Dx2");
   mov_vars.push_back ("Dx3");
   mlSol.GetWriter()->SetMovingMesh (mov_vars);
-  
+
   // and this?
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back ("All");
-  
+
   // and this?
   mlSol.GetWriter()->SetDebugOutput (false);
   mlSol.GetWriter()->Write ("./output1",
                             "linear", variablesToBePrinted, 0);
-  
-  
-  // First, solve system2 to "conformalize" the initial mesh.
-  CopyDisplacement (mlSol, true);
-  system2.MGsolve();
-  
+
+
+  // // First, solve system2 to "conformalize" the initial mesh.
+  // CopyDisplacement (mlSol, true);
+  // system2.MGsolve();
+
   // Then, solve system0 to compute initial curvatures.
   CopyDisplacement (mlSol, false);
-  
- 
-  
+
+
+
   system0.MGsolve();
 
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR,
                             "linear", variablesToBePrinted, 0);
-  
+
   // Parameters for the algorithm loop.
   unsigned numberOfTimeSteps = 1000u;
   unsigned printInterval = 1u;
@@ -277,9 +277,9 @@ int main (int argc, char** args) {
     if (time_step % 1 == 0) {
       mlSol.GetWriter()->Write ("./output1", "linear",
                                 variablesToBePrinted, (time_step + 1) / printInterval);
-            
+
       CopyDisplacement (mlSol, true);
-      system2.MGsolve();
+      // system2.MGsolve();
 
       CopyDisplacement (mlSol, false);
       system0.MGsolve();
@@ -838,14 +838,14 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   solWPdeIndex[2] = mlPdeSys->GetSolPdeIndex ("W3");
 
   // Local-to-global pdeSys dofs.
-  std::vector< unsigned > SYSDOF;
+  std::vector < unsigned > SYSDOF;
 
   // Define local W, WOld solutions.
   std::vector < adept::adouble > solW[DIM];
   std::vector < double > solWOld[DIM];
 
   // Define local residual vectors.
-  vector< double > Res;
+  vector < double > Res;
   std::vector< adept::adouble > aResx[3];
   std::vector< adept::adouble > aResY[3];
   std::vector< adept::adouble > aResW[3];
@@ -1606,11 +1606,6 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
       // Special adjustments for triangles.
       else {
-        //phix = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
-        //phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig);
-        //phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig);
-        //weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
-
         msh->_finiteElement[ielGeom][solType]->Jacobian (xT, ig,
                                                          weight, stdVectorPhi, stdVectorPhi_uv);
         phix = &stdVectorPhi[0];
@@ -1624,9 +1619,9 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         }
         phix_uv[0] = &phi_uv0[0];
         phix_uv[1] = &phi_uv1[0];
-        
+
         phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
-        
+
       }
 
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
@@ -1635,8 +1630,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble X_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-      
-     
+
+
 
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
@@ -1656,7 +1651,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nLDofs; i++) {
         solLg += phiL[i] * solL[i];
       }
-      
+
       // Compute the metric, metric determinant, and area element.
       double g[dim][dim] = {{0., 0.}, {0., 0.}};
       for (unsigned i = 0; i < dim; i++) {
