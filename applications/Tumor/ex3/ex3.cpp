@@ -42,9 +42,9 @@ double Keps = 1.0e-08;
 double V0;
 
 double InitalValueU3D (const std::vector < double >& x) {
-  double xc = 0.;
+  double xc = 0.5;
   double yc = 0.;
-  double zc = 0.4;
+  double zc = 0.;
   double r = sqrt ( (x[0] - xc) * (x[0] - xc) + (x[1] - yc) * (x[1] - yc) + (x[2] - zc) * (x[2] - zc));
   double r2 = r * r;
   double R = 1.; //radius of the tumor
@@ -57,7 +57,7 @@ double InitalValueU3D (const std::vector < double >& x) {
   else if (R == 0.5) {
     Vb = 0.149875;
   }
-  else if (R == 0.35){
+  else if (R == 0.35) {
     Vb = 0.0514073;
   }
   else {
@@ -111,7 +111,7 @@ int main (int argc, char** args) {
 
   for (unsigned simulation = 24; simulation < 25; simulation++) {
 
-    V0 = 0.005 * (simulation + 1) ;   // fraction of injection vs tumor
+    V0 = 0.06 * (simulation + 1) ;   // fraction of injection vs tumor
 
     // define the multilevel solution and attach the mlMsh object to it
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
@@ -550,6 +550,7 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
       x[k].resize (nDofd); // Now we
     }
 
+
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofd; i++) {
       unsigned solDof = msh->GetSolutionDof (i, iel, soldType);   // global to global mapping between solution node and solution dof
@@ -565,26 +566,40 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
       }
     }
 
+    double K11 = (*sol->_Sol[ mlSol.GetIndex ("K11")]) (iel);
+//     double xc = 0.;
+//     double yc = 0.;
+//     double zc = 0.35;
+//     double r = sqrt ( (x[0][nDofd - 1] - xc) * (x[0][nDofd - 1] - xc)
+//                       + (x[1][nDofd - 1] - yc) * (x[1][nDofd - 1] - yc)
+//                       + (x[2][nDofd - 1] - zc) * (x[2][nDofd - 1] - zc));
+//
+//
+//     if (r < 1.2 && K11 > 0.5) {
 
-    // *** Element Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soldType]->GetGaussPointNumber(); ig++) {
-      // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soldType]->Jacobian (x, ig, weight, phi, phi_x);
+    if (x[0][nDofd - 1] > -0.6 && x[0][nDofd - 1] < 1.7 &&
+        x[1][nDofd - 1] > -1.5 && x[1][nDofd - 1] < 1.5 &&
+        x[2][nDofd - 1] > -1.1 && x[0][nDofd - 1] < 2.2 && K11 > 0.6) {
+      // *** Element Gauss point loop ***
+      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soldType]->GetGaussPointNumber(); ig++) {
+        // *** get gauss point weight, test function and test function partial derivatives ***
+        msh->_finiteElement[ielGeom][soldType]->Jacobian (x, ig, weight, phi, phi_x);
 
-      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      double sold_gss = 0;
+        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+        double sold_gss = 0;
 
-      for (unsigned i = 0; i < nDofd; i++) {
-        sold_gss += phi[i] * sold[i];
-      }
+        for (unsigned i = 0; i < nDofd; i++) {
+          sold_gss += phi[i] * sold[i];
+        }
 
-      volume += weight;
+        volume += weight;
 
-      if (sold_gss <= 24) volumeUT[0] += weight;
-      if (sold_gss <= 48) volumeUT[1] += weight;
-      if (sold_gss <= 72) volumeUT[2] += weight;
+        if (sold_gss <= 24) volumeUT[0] += weight;
+        if (sold_gss <= 48) volumeUT[1] += weight;
+        if (sold_gss <= 72) volumeUT[2] += weight;
 
-    } // end gauss point loop
+      } // end gauss point loop
+    }
 
   }
 
@@ -851,11 +866,36 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   double trace = 0.;
   unsigned counter = 0;
   for (int iel = msh->_dofOffset[kType][iproc]; iel < msh->_dofOffset[kType][iproc + 1]; iel++) {
-    double traceIel = ( (*sol->_Sol[kIndex[0]]) (iel) + (*sol->_Sol[kIndex[3]]) (iel)
-                        + (*sol->_Sol[kIndex[5]]) (iel)) / 3.;
-    if (traceIel > 1.1 * Keps) {
-      trace += traceIel;
-      counter++;
+
+    unsigned xType = 2;
+    unsigned n  = msh->GetElementDofNumber (iel, xType); // number of solution element dofs
+
+    unsigned xDof  = msh->GetSolutionDof (n - 1, iel, xType);   // local to global mapping between coordinates node and coordinate dof
+
+    std::vector<double> x (3);
+    for (unsigned k = 0; k < dim; k++) {
+      x[k] = (*msh->_topology->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
+    }
+
+
+//     double xc = 0.4;
+//     double yc = 0.;
+//     double zc = 0.;
+//     double r = sqrt ( (x[0] - xc) * (x[0] - xc)
+//                       + (x[1] - yc) * (x[1] - yc)
+//                       + (x[2] - zc) * (x[2] - zc));
+
+    if (x[0] > -0.6 && x[0] < 1.7 &&
+        x[1] > -1.5 && x[1] < 1.5 &&
+        x[2] > -1.1 && x[0] < 2.2)  {
+
+      //if (r < 1.3) {
+      double traceIel = ( (*sol->_Sol[kIndex[0]]) (iel) + (*sol->_Sol[kIndex[3]]) (iel)
+                          + (*sol->_Sol[kIndex[5]]) (iel)) / 3.;
+      if (traceIel > 0.002) {
+        trace += traceIel;
+        counter++;
+      }
     }
   }
 
@@ -864,11 +904,14 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   MPI_Allreduce (&trace, &traceAll, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce (&counter, &counterAll, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
 
-  traceAll *= 2.5 / counterAll;
+  traceAll *= 1. / counterAll;
 
+
+  std::cout << traceAll << " " << std::endl;
+
+  //exit(0);
 
   for (int iel = msh->_dofOffset[kType][iproc]; iel < msh->_dofOffset[kType][iproc + 1]; iel++) {
-
     for (unsigned j = 0; j < 6; j++) {
       double value = (*sol->_Sol[kIndex[j]]) (iel) / traceAll;
       sol->_Sol[kIndex[j]]->set (iel, value);
