@@ -15,11 +15,8 @@ int main (int argc, char** args) {
   unsigned pOrder = 1;
   unsigned dim = 1;
   double scale = 0.25;
-  
-  
+   
   std::vector < std::vector <unsigned> > aIdx;
- 
-  
   ComputeIndexSet (aIdx, pOrder, dim, output);
 
   unsigned nel1d = 4;
@@ -38,7 +35,6 @@ int main (int argc, char** args) {
     double Dx = (Xel[i + 1] - Xel[i]) / pOrder;
     for (unsigned j = 0; j < pOrder; j++) {
       Xv[counter] = Xv[counter - 1] + Dx;
-      //std::cout << counter <<  " " << Xv[counter] << std::endl; 
       counter++;
     }
   }
@@ -60,13 +56,8 @@ int main (int argc, char** args) {
       if (i - deltaim < 0) sMin[i] += Xv[0] - Xv[1];
       if (i + deltaip >= nve1d) sMax[i] += Xv[nve1d - 1] - Xv[nve1d - 2];
     }
-    
   }
   
-
- 
-  //double L = ( Xv[nve1d - 1] - Xv[0]);
-
   double L = (Xv[nve1d - pOrder - 1]  - Xv[0]);
 
   double DX = L / (Np - 1.);
