@@ -107,9 +107,9 @@ static double  function(const double& v) {
     
 //    return 1.;
 //    return v + 1.;
-   return - amp_factor * 1./( (1. - v) );
+//    return - amp_factor * 1./( (1. - v) );
 //    return -0.01*1./( (1. - v)*(1. - v) );
-//    return -exp(v);
+   return - amp_factor * exp(v);
 //    return -  v * v * v - 1.;
 //    return - v * v;
  }
@@ -118,9 +118,9 @@ static double  derivative(const double& v) {
     
 //    return 0.;
 //    return 1.;
-   return - amp_factor * 1./( (1. - v)*(1. - v) ); 
+//    return - amp_factor * 1./( (1. - v)*(1. - v) ); 
 //    return -0.01* (+2.) * 1./( (1. - v)*(1. - v)*(1. - v) ); 
-//    return -exp(v);
+   return - amp_factor * exp(v);
 //    return -3. * v * v;
 //    return -2. * v;
  }
@@ -128,20 +128,24 @@ static double  derivative(const double& v) {
 
 static double  g_vc(const double& v) {
     
-   return 1./amp_factor * (-1.) * 0.5 * (v * v + 2. * v - 1.);
+//    return 1./amp_factor * (-1.) * 0.5 * (v * v + 2. * v - 1.);
+//    return 1./v;
+   return + 1./amp_factor * exp(-v);
    
  }
 
  
 static double  g_vc_derivative(const double& v) {
     
-   return 1./amp_factor * (-1.) * ( v + 1. );
+//    return 1./amp_factor * (-1.) * ( v + 1. );
+//    return - 1./(v*v);
+   return - 1./amp_factor * exp(-v);
    
  }
 
 private:
 
-  static constexpr double amp_factor = 0.8;  
+  static constexpr double amp_factor = 10.;  
  
 };
 
@@ -250,7 +254,7 @@ int main(int argc,char **args) {
   
   const double total_time = 1.;  
   
-  std::vector< unsigned int > n_steps =  {1000/*6*//*2, *//*4, 8, 16*/};
+  std::vector< unsigned int > n_steps =  {2000/*6*//*2, *//*4, 8, 16*/};
  
 //   std::vector< MultiLevelSolution >  last_sol(n_steps.size(),  & ml_msh);  
 //   std::vector< Solution >  last_sol(n_steps.size(),  ml_msh.GetLevel(fine_lev) );  
@@ -265,10 +269,15 @@ int main(int argc,char **args) {
   
   const unsigned int write_interval = 1.; //n_steps[i];
 
+  const bool detect_quench = false; // Set to 0 for no adaptation and 1 for adaptation (which starts at a specified solution magnitude)
+     
+     
   for (unsigned time_step = 0; time_step < n_steps[i]; time_step++) {
       
   // ======= Check for quenching ==========
+    if ( detect_quench == true ) {
       if ( (ml_sol.GetSolutionLevel( fine_lev ) )->GetSolutionName( unknown.c_str() ).linfty_norm() >= 0.99 ) { std::cout << "Detected quenching" << std::endl; exit(0); }
+    }
       
   // ======= Print ========================
     if ( !(time_step % write_interval) ) {
@@ -296,7 +305,7 @@ int main(int argc,char **args) {
     system.CopySolutionToOldSolution();
     
      
-     bool adapt_flag = 1; // Set to 0 for no adaptation and 1 for adaptation (which starts at a specified solution magnitude)
+     bool adapt_flag = 0; // Set to 0 for no adaptation and 1 for adaptation (which starts at a specified solution magnitude)
      
       if ( adapt_flag == 1 ) {
       
@@ -690,7 +699,13 @@ void AssembleMatrixRes_VC(MultiLevelProblem &ml_prob) {
   // Set to zero all the entries of the matrix
   RES->zero();
   JAC->zero();
+  
+  
+  const double deltat_term = 1.;
+  const double lapl_term = 1.;
+  const double delta_g_term = 1.;
 
+  
   // *** element loop ***
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc+1]; iel++) {
 
@@ -787,10 +802,10 @@ void AssembleMatrixRes_VC(MultiLevelProblem &ml_prob) {
 	      Lap_old_rhs_i += phi_x_fe_qp[SolFEType[0]][i * dim + d] * sol_old_grad_qp[0][d];
 	    }
 	    Res_el[SolPdeIndex[0]][i] +=  - weight_qp * ( 
-                       Singularity::function(sol_qp[0]) * Singularity::g_vc(sol_qp[0])     * phi_fe_qp[ SolFEType[0] ][i]
-                     - Singularity::function(sol_qp[0]) * Singularity::g_vc(sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i]
-                     + Singularity::function(sol_qp[0]) * dt                               * phi_fe_qp[ SolFEType[0] ][i]
-                     +   dt * Lap_rhs_i
+                       delta_g_term * Singularity::function(sol_qp[0]) * Singularity::g_vc(sol_qp[0])     * phi_fe_qp[ SolFEType[0] ][i]
+                     - delta_g_term * Singularity::function(sol_qp[0]) * Singularity::g_vc(sol_old_qp[0]) * phi_fe_qp[ SolFEType[0] ][i]
+                     + deltat_term * Singularity::function(sol_qp[0]) * dt                               * phi_fe_qp[ SolFEType[0] ][i]
+                     + lapl_term *  dt * Lap_rhs_i
             );
     //END RESIDUALS A block ===========================
 
@@ -804,13 +819,13 @@ void AssembleMatrixRes_VC(MultiLevelProblem &ml_prob) {
 
 
           Jac_el[SolPdeIndex[0]][SolPdeIndex[0]][i * Sol_n_el_dofs[0] + j] += weight_qp * (
-                    + phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] * Singularity::g_vc( phi_fe_qp[ SolFEType[0] ][j] ) 
-                    + phi_fe_qp[ SolFEType[0] ][i] * Singularity::function  (  phi_fe_qp[ SolFEType[0] ][j] ) * Singularity::g_vc_derivative( phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] 
+                    + delta_g_term * phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] * Singularity::g_vc( phi_fe_qp[ SolFEType[0] ][j] ) 
+                    + delta_g_term * phi_fe_qp[ SolFEType[0] ][i] * Singularity::function  (  phi_fe_qp[ SolFEType[0] ][j] ) * Singularity::g_vc_derivative( phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] 
                     
-                    - phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] * Singularity::g_vc( sol_old_qp[0] ) 
+                    - delta_g_term * phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] * Singularity::g_vc( sol_old_qp[0] ) 
                     
-                    + phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] * dt 
-                    + dt * Lap_mat_i_j  
+                    + deltat_term * phi_fe_qp[ SolFEType[0] ][i] * Singularity::derivative(  phi_fe_qp[ SolFEType[0] ][j] ) * phi_fe_qp[ SolFEType[0] ][j] * dt 
+                    + lapl_term * dt * Lap_mat_i_j  
                                                                                           );
 	      
   	    }    //end phij loop
