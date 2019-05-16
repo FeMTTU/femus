@@ -11,7 +11,6 @@
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
-#include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 // #include "MultiLevelMesh.hpp"
 #include "LinearImplicitSystem.hpp"
@@ -25,7 +24,7 @@
 
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
-#define no_of_ref 2     //mesh refinements
+#define no_of_ref 1     //mesh refinements
 
 #define NO_OF_L2_NORMS 11   //U,V,P,UADJ,VADJ,PADJ,UCTRL,VCTRL,PCTRL,U+U0,V+V0
 #define NO_OF_H1_NORMS 8    //U,V,UADJ,VADJ,UCTRL,VCTRL,U+U0,V+V0
@@ -43,12 +42,8 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
 #if exact_sol_flag == 0
 // b.c. for lid-driven cavity problem, wall u_top = 1 = shear_force, v_top = 0 and u=v=0 on other 3 walls ; rhs_f = body_force = {0,0}
 // TOP ==========================  
-      if (/*facename == 3*/
- sqrt(x[0] * x[0] + x[1] * x[1]) < 0.5 + 1.e-5 && x[2] > 0. - 1.e-5 && x[2] < 1.0 + 1.e-5 
-//           x[0] > 0. - 1.e-5 && x[0] < 1.0 + 1.e-5 &&
-//           x[1] > 0. - 1.e-5 && x[1] < 1.0 + 1.e-5 && 
-//           x[2] > 1.0 - 1.e-5 //cube top
-    ) {
+      if (facename == 2) 
+     {
        if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
   else if (!strcmp(SolName, "VCTRL"))    { dirichlet = false; } 
   else if (!strcmp(SolName, "WCTRL"))    { dirichlet = false; } 
@@ -136,8 +131,9 @@ int main(int argc, char** args) {
         files.CheckIODirectories();
 	    files.RedirectCout();
  
+    std::string mesh_folder_file = "input/";
     std::string input_file = "cyl.med";
-  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+  std::ostringstream mystream; mystream << "./" << /*DEFAULT_INPUTDIR*/ mesh_folder_file << input_file;
   const std::string infile = mystream.str();
 
     // ======= Quad Rule ========================

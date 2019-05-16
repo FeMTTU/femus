@@ -12,7 +12,7 @@
 //******************************************* Desired Target  and RHS function*******************************************************
 
  double force[3] = {0.,0.,0.};
- double Vel_desired[3] = {1.,0.,1.};
+ double Vel_desired[3] = {0.,0.,1.};
 
 //*********************** Sets the regularization parameters *******************************************************
 
@@ -35,7 +35,7 @@
 int ElementTargetFlag(const std::vector<double> & elem_center) {
 
  //***** set target domain flag ********************************** 
-  int target_flag = 0;
+  int target_flag = 1;
 
     if (  sqrt(elem_center[0] * elem_center[0] + elem_center[1] * elem_center[1]) < 0.5 + 1.e-5   &&
 	  elem_center[2] > 0.0 - 1.e-5  &&  elem_center[2] < 1.0  + 1.e-5
