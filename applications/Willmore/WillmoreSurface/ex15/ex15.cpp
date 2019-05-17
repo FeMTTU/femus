@@ -1456,16 +1456,23 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   solDxIndex[0] = mlSol->GetIndex ("Dx1");
   solDxIndex[1] = mlSol->GetIndex ("Dx2");
   solDxIndex[2] = mlSol->GetIndex ("Dx3");
+  
+  
+  unsigned solYIndex[DIM];
+  solYIndex[0] = mlSol->GetIndex ("Y1");
+  solYIndex[1] = mlSol->GetIndex ("Y2");
+  solYIndex[2] = mlSol->GetIndex ("Y3");
 
   // Extract finite element type for the solution.
   unsigned solType;
   solType = mlSol->GetSolutionType (solDxIndex[0]);
 
   // Local solution vectors for X, Dx, Xhat, XC.
+  std::vector < double > solY[DIM];
   std::vector < double > solx[DIM];
   std::vector < double > solDx[DIM];
   std::vector < double > xhat[DIM];
-  std::vector < double > xc[DIM];
+  
 
   // Get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC).
   unsigned xType = 2;
@@ -1528,10 +1535,11 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned K = 0; K < DIM; K++) {
 
       xhat[K].resize (nxDofs);
-      xc[K].assign (nxDofs, 0.);
-
+     
       solDx[K].resize (nxDofs);
       solx[K].resize (nxDofs);
+      
+      solY[K].resize (nxDofs);
 
       solNDx[K].resize (nxDofs);
       solNx[K].resize (nxDofs);
@@ -1558,6 +1566,9 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       for (unsigned K = 0; K < DIM; K++) {
         xhat[K][i] = (*msh->_topology->_Sol[K]) (iXDof);
         solDx[K][i] = (*sol->_Sol[solDxIndex[K]]) (iDDof);
+        
+        solY[K][i] = (*sol->_Sol[solYIndex[K]]) (iDDof);
+        
         solx[K][i] = xhat[K][i] + solDx[K][i];
         solNDx[K][i] = (*sol->_Sol[solNDxIndex[K]]) (iDDof);
 
@@ -1622,6 +1633,9 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       }
 
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
+      double solYg[3] = {0., 0., 0.};
+      double solxg[3] = {0., 0., 0.};
+      
       double solDxg[3] = {0., 0., 0.};
       adept::adouble solNDxg[3] = {0., 0., 0.};
 
@@ -1632,6 +1646,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
+          solxg[K] += phix[i] * solx[K][i];
+          solYg[K] += phix[i] * solY[K][i];
           solDxg[K] += phix[i] * solDx[K][i];
           solNDxg[K] += phix[i] * solNDx[K][i];
         }
@@ -1670,7 +1686,18 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
                    - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
       normal[2] = (solx_uv[0][0] * solx_uv[1][1]
                    - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
-
+                   
+      double a = 0;
+      for(unsigned I=0; I<DIM; I++){
+        a -= solYg[I] * normal[I];
+      }
+      double signa = (a > 0)? 1 : -1;
+      a = 2. / (a + 0 * signa * eps);
+      
+//       std::cout << solxg[0] << " " << solxg[1] <<" "<< solxg[2]<<std::endl;
+//       std::cout << normal[0] << " " << normal[1] <<" "<< normal[2]<<std::endl;
+//       std::cout << a<<std::endl;
+      
       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
       adept::adouble V[DIM];
       V[0] = X_uv[0][1] - normal[1] * X_uv[2][0] + normal[2] * X_uv[1][0];
@@ -1756,30 +1783,39 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
-          adept::adouble term3 = 0.;
 
           for (unsigned j = 0; j < dim; j++) {
             term1 +=  M[K][j] * phix_uv[j][i];
             // term3 += solx_uv[K][j] * phix_uv[j][i];
           }
 
-          for (unsigned J = 0; J < DIM; J++) {
-            term3 += NX_Xtan[K][J] * phix_Xtan[J][i];
-          }
+          
+          adept::adouble term2 = 0.;
+//           for (unsigned J = 0; J < DIM; J++) {
+//             term2 += (a * normal[J] - solDxg[J] + solNDxg [J]) * phix[i];
+//           }
+          
+          term2 += (a * normal[K] - solDxg[K] + solNDxg [K]) * phix[i];
 
           // Conformal energy equation (with trick).
           aResNDx[K][i] += term1 * Area2
-                           + solLg * term3 * Area2;  //no2
+                           + solLg * term2 * Area2;  //no2
         }
 
         // Lagrange multiplier equation (with trick).
         for(unsigned i = 0; i< nLDofs; i++) {
+          adept::adouble term1 = 0.;
           adept::adouble term2 = 0.;
           for (unsigned J = 0; J < DIM; J++) {
-            term2 += (NX_Xtan[K][J] - solx_Xtan[K][J]) * NX_Xtan[K][J];
+            term1 += (a * normal[J] - solDxg[J] + solNDxg [J]) * (a * normal[J] - solDxg[J] + solNDxg [J]) ;
+            term2 += (a * normal[J] ) * (a * normal[J]) ;
           }
-          aResL[i] += term2 * Area2; // no2
+          aResL[i] += (phiL[i] * ( term1 - term2 ) + eps * 0 * solLg * phiL[i] ) * Area2; // no2
         }
+        
+//         for(unsigned i = 0; i< nLDofs; i++){
+//           aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area2; // no2
+//         }
 
       }
 
