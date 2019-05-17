@@ -17,8 +17,8 @@
 #define BETA_CTRL_BDRY 1.e-2
 
 
-#define ALPHA_CTRL_VOL 1.e-6
-#define BETA_CTRL_VOL 1.e-5
+#define ALPHA_CTRL_VOL 1.e-3
+#define BETA_CTRL_VOL 1.e-2
 
 
 //*********************** Control box constraints *******************************************************
@@ -29,7 +29,7 @@
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper = .5;//0.3; //0.2 + dof_obj_coord[0]*(1. - dof_obj_coord[0]);
+     double constr_value_upper =  0.5 * dof_obj_coord[1]; //dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower = -1000.; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      
@@ -95,8 +95,8 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
   
    if ( ( target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] <   target_line_sign * (  extreme_pos  + target_line_sign * mesh_size) )
-/*       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - offset_to_include_line ) 
-       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + offset_to_include_line ) */)
+      && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - offset_to_include_line ) 
+       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + offset_to_include_line ) )
       { control_el_flag = 1; }
 
      return control_el_flag;
@@ -123,8 +123,8 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
    else if (FACE_FOR_CONTROL == 1 || FACE_FOR_CONTROL == 4) { target_line_sign = 1;  extreme_pos = 0.;}
    
    if ( ( target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] <   target_line_sign * ( extreme_pos + target_line_sign * control_domain_width ) )
- /*      && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - offset_to_include_line ) 
-       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + offset_to_include_line ) */)
+       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - offset_to_include_line ) 
+       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + offset_to_include_line ) )
       { control_el_flag = 1; }
    
      return control_el_flag;
