@@ -10,7 +10,7 @@ using namespace femus;
 
 int main (int argc, char** args) {
 
-  //FemusInit mpinit (argc, args, MPI_COMM_WORLD);
+  FemusInit(argc, args, MPI_COMM_WORLD);
 
   bool nonLocal = true;
   bool output = true;
@@ -101,7 +101,7 @@ int main (int argc, char** args) {
 
   double weight;
   for (unsigned p = 0; p < Np; p++) { // particle loop
-    gmpm[p]->GetTestFunction (aIdx, nonLocal, sMax, sMin, pOrder, scale, phi, dphi, weight);
+    gmpm[p]->GetTestFunction (aIdx, nonLocal, sMaxR, sMinR, pOrder, scale, phi, dphi, weight);
     for (unsigned i = 0; i <  gmpm[p]->_node.size(); i++) {
       unsigned inode = gmpm[p]->_node[i];
       for (unsigned j = 0; j <  gmpm[p]->_node.size(); j++) {
