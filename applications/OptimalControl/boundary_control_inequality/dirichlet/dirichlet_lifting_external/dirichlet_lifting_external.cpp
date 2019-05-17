@@ -16,6 +16,34 @@
 using namespace femus;
 
 
+
+// //============ find interface boundary elements (now we do with coordinates, later we can do also with flag) =======================================
+ bool find_control_boundary_nodes(std::vector<double> & interface_node_flag, const std::vector<double> & elem_center_bdry, const unsigned int nDofu_bdry, const unsigned int iel, const int jface, const Mesh * msh) {
+   
+  bool interface_elem_flag = false;
+            const double my_eps = 1.e-6;
+            
+            if (elem_center_bdry[0] > 1. - my_eps   && elem_center_bdry[0] < 1.   + my_eps  &&
+                    elem_center_bdry[1] > 0.25 - my_eps && elem_center_bdry[1] < 0.75 + my_eps
+               ) {
+                
+                std::cout << " bdry elem on interface with center " << "(" << elem_center_bdry[0] << "," << elem_center_bdry[1] << ")" << std::endl;
+                
+             interface_elem_flag = true;
+                
+                for (int i_bdry = 0; i_bdry < nDofu_bdry; i_bdry++)  {
+                    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+                    interface_node_flag[i_vol] = 1.;
+                   }
+
+
+               }
+
+      return interface_elem_flag;
+      
+}
+
+
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
 
     double value = 0.;
@@ -98,14 +126,14 @@ int main(int argc, char** args) {
     double scalingFactor = 1.;
 
     // read coarse level mesh and generate finers level meshes
-    std::string mesh_file = "./input/ext_box.neu";
-//     std::string mesh_file = "./input/ext_box.med";
+//     std::string mesh_file = "./input/ext_box.neu";
+    std::string mesh_file = "./input/ext_box.med";
 //     std::string mesh_file = "./input/ext_box_2.med";
 //     std::string mesh_file = "./input/ext_box_longer.med";
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
 
     //ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-    unsigned numberOfUniformLevels = 3;
+    unsigned numberOfUniformLevels = 1;
     unsigned numberOfSelectiveLevels = 0;
     ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
     ml_mesh.PrintInfo();
@@ -444,14 +472,14 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_AllVars.insert(L2G_dofmap_AllVars.end(),L2G_dofmap[k].begin(),L2G_dofmap[k].end());
 //***************************************************
 
-
+        bool interface_elem_flag = false;
         std::vector <double> interface_node_flag(Sol_n_el_dofs[pos_state]); //flag for boundary interface
-        std::fill(interface_node_flag.begin(), interface_node_flag.end(), 0.);
-
-        //************ Boundary loops ***************************************
-        vector<double> normal_qp(dim,0);
 
         for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+
+        //setting up control boundary region ***************************
+        interface_elem_flag = false;
+        std::fill(interface_node_flag.begin(), interface_node_flag.end(), 0.);
 
 //========= compute coordinates of boundary nodes on each element ==========================================
             unsigned nDofx_bdry    = msh->GetElementFaceDofNumber(iel,jface,coords_fe_type);
@@ -490,21 +518,14 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 //===================================================
 
 
-//============ find interface boundary elements (now we do with coordinates, later we can do also with flag in gambit) =======================================
-            double my_eps = 1.e-6;
-            if (elem_center_bdry[0] > 1. - my_eps   && elem_center_bdry[0] < 1.   + my_eps  &&
-                    elem_center_bdry[1] > 0.25 - my_eps && elem_center_bdry[1] < 0.75 + my_eps
-               ) {
-                std::cout << " bdry elem on interface with center " << "(" << elem_center_bdry[0] << "," << elem_center_bdry[1] << ")" << std::endl;
-                for (int i_bdry = 0; i_bdry < nDofu_bdry; i_bdry++)  {
-                    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-                    interface_node_flag[i_vol] = 1.;
-                }
+    interface_elem_flag = find_control_boundary_nodes(interface_node_flag, elem_center_bdry, nDofu_bdry, iel, jface, msh);
 
+    if (interface_elem_flag == true) {
 
-//========= initialize gauss quantities on the boundary ============================================
-
-                for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]]->GetGaussPointNumber(); ig_bdry++) {
+              std::vector<double> normal_qp(dim,0.);
+              
+              
+          for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]]->GetGaussPointNumber(); ig_bdry++) {
 
                     // *** get gauss point weight, test function and test function partial derivatives ***
                     for(int fe=0; fe < NFE_FAMS; fe++) {
@@ -628,7 +649,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         //************ Boundary loops ***************************************
 
 
-// *** Gauss point loop ***
+
         for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 
             // *** get gauss point weight, test function and test function partial derivatives ***

@@ -173,17 +173,30 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
         std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
 
         for (unsigned i = 0; i < sol_actflag.size(); i++) {
+                std::cout << sol_eldofs[pos_mu][i] << " ";
+        }
+        
+        std::cout << std::endl;
+        
+        for (unsigned i = 0; i < sol_actflag.size(); i++) {
+                std::cout << sol_eldofs[pos_ctrl][i] << " ";
+        }
+        
+        for (unsigned i = 0; i < sol_actflag.size(); i++) {
             std::vector<double> node_coords_i(coords_at_dofs.size(),0.);
             for (unsigned d = 0; d < coords_at_dofs.size(); d++) node_coords_i[d] = coords_at_dofs[d][i];
             ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
             ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
+            
+            const double lower_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_lower[i] );
+            const double upper_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_upper[i] );
 
-            if      ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_lower[i] )) < 0 )  {
+            if      ( lower_test_value < 0 )  {
                 std::cout << "Found active node below" << std::endl;
                 std::cout << "The current value of mu is " <<  sol_eldofs[pos_mu][i] << std::endl;
                    sol_actflag[i] = 1;
             }
-            else if ( (sol_eldofs[pos_mu][i] + c_compl * (sol_eldofs[pos_ctrl][i] - ctrl_upper[i] )) > 0 )  {
+            else if ( upper_test_value > 0 )  {
                 std::cout << "Found active node above" << std::endl;
                 std::cout << "The current value of mu is " <<  sol_eldofs[pos_mu][i] << std::endl;
                 sol_actflag[i] = 2;
