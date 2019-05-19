@@ -78,7 +78,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -112,44 +112,6 @@ int main (int argc, char** argv) {
     mlSol.AddSolution (name, LAGRANGE, SECOND, 0, false);
   }
 
-//   std::vector < std::vector < std::vector <unsigned> > > Jpi(pIndex);
-//   for(unsigned i = 0; i < pIndex;i++){
-//     Jpi[i] = myuq.GetIndexSet (i + 1, numberOfEigPairs);
-//     std::cout << std::endl;
-//   }
-//
-//   for(unsigned i = 0; i < pIndex - 1;i++){
-//     for(unsigned ii = 0; ii < Jpi[i].size(); ii++){
-//       for(unsigned j = i + 1; j < pIndex;j++){
-//         for(unsigned jj = 0; jj < Jpi[j].size(); jj++){
-//           bool ijsame = true;
-//           for(unsigned k = 0; k < numberOfEigPairs; k++){
-//             if(Jpi[i][ii][k] != Jpi[j][jj][k]){
-//               ijsame = false;
-//               break;
-//             }
-//           }
-//           if(ijsame){
-//             Jpi[j][jj][0] = UINT_MAX;
-//           }
-//         }
-//       }
-//     }
-//   }
-//   for(unsigned i = 0; i < pIndex - 1;i++){
-//
-//     for(unsigned ii = 0; ii < Jpi[i].size(); ii++){
-//       for(unsigned k = 0; k < numberOfEigPairs; k++){
-//         std::cout << Jpi[i][ii][k]<< " ";
-//       }
-//       std::cout << std::endl;
-//     }
-//     std::cout << std::endl;
-//   }
-
-  //exit(0);
-
-
   std::vector< unsigned > JpAllpSize (pIndex + 1);
   for (unsigned p = 0; p <= pIndex; p++) {
     JpAllpSize[p] = static_cast <unsigned> (boost::math::binomial_coefficient<double> (numberOfEigPairs + p, p));
@@ -158,16 +120,11 @@ int main (int argc, char** argv) {
   for (unsigned p = pIndex; p > 0; p--) {
     JpAllpSize[p] -= JpAllpSize[p - 1];
   }
-//   for(unsigned p = 0; p < pIndex + 1; p++){
-//     std::cout << JpAllpSize[p] <<" ";
-//   }
-//   std::cout << std::endl;
-//
+
 
 
   const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet (pIndex, numberOfEigPairs);
 
-// exit(0);
 
   for (unsigned i = 0; i < Jp.size(); i++) {
     char name[10];
@@ -229,66 +186,53 @@ int main (int argc, char** argv) {
     systemSG.AddSolutionToSystemPDE (name);
   }
 
-  FieldSplitTree **FielduSGi;
-  FielduSGi = new FieldSplitTree * [Jp.size()];
-
-  std::vector < std::vector < FieldSplitTree *> > FSAllp (pIndex + 1);
-  for (unsigned i = 0; i <= pIndex; i++) {
-    FSAllp[i].reserve (JpAllpSize[i]);
-  }
-
-  //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
-  for (unsigned i = 0; i < Jp.size(); i++) {
-    char name[10];
-    sprintf (name, "uSG%d", i);
-    std::vector < unsigned > fielduSGi (1);
-    fielduSGi[0] = systemSG.GetSolPdeIndex (name);
-
-    std::vector < unsigned > solutionTypeuSGi (1);
-    solutionTypeuSGi[0] = mlSol.GetSolutionType (name);
-
-    //FielduSGi[i] = new FieldSplitTree (PREONLY, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
-    FielduSGi[i] = new FieldSplitTree (PREONLY, ILU_PRECOND, fielduSGi, solutionTypeuSGi, name);
-
-//     FielduSGi[i]->SetTolerances (1.e-10, 1.e-10, 1.e+50, 5); //(1.e-10, 1.e-10, 1.e+50, 10)
-//     FielduSGi[i]->SetRichardsonScaleFactor (1.0);          // 0.5
-
-    unsigned j = 0;
-    for (unsigned k = 0; k < numberOfEigPairs; k++) {
-      j += Jp[i][k];
-    }
-    if (j == 0) j = 1;
-    FSAllp[j].push_back (FielduSGi[i]);
-
-
-  }
-
   std::vector < FieldSplitTree *> FSAll;
   FSAll.reserve (pIndex + 1);
 
-  FieldSplitTree **FielduSGAllp;
-  FielduSGAllp = new FieldSplitTree * [pIndex + 1];
+  FieldSplitTree **FSAllp;
+  FSAllp = new FieldSplitTree * [pIndex + 1];
 
-  for (unsigned i = 1; i <= pIndex; i++) {
+  //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
+  for (unsigned i = 0; i <= pIndex; i++) {
+//  for (int i = pIndex; i >= 0; i--) {
+    std::vector < unsigned > fielduAllp;
+    std::vector < unsigned > solutionTypeuAllp;
+
+    for (unsigned j = 0; j < Jp.size(); j++) {
+      if (Jp[j][0] == i) {
+          
+        char name[10];
+        sprintf (name, "uSG%d", j);
+
+        unsigned k = fielduAllp.size();
+        fielduAllp.resize (k + 1);
+        solutionTypeuAllp.resize (k + 1);
+
+        fielduAllp[k] = systemSG.GetSolPdeIndex (name);
+        solutionTypeuAllp[k] = mlSol.GetSolutionType (name);
+
+      }
+    }
+
     char name[10];
-    sprintf (name, "uSGAllp%d", i);
-    FielduSGAllp[i] = new FieldSplitTree (PREONLY, FIELDSPLIT_MULTIPLICATIVE_PRECOND, FSAllp[i], name);
-//     FielduSGAllp[i]->SetRichardsonScaleFactor (.6);          // 0.5
-//     FielduSGAllp[i]->SetTolerances (1.e-10, 1.e-10, 1.e+50, 20); //(1.e-10, 1.e-10, 1.e+50, 10)
+    sprintf (name, "uSGAll%d", i);
 
-    FSAll.push_back (FielduSGAllp[i]);
+    FSAllp[i] = new FieldSplitTree (PREONLY, ILU_PRECOND, fielduAllp, solutionTypeuAllp, name);
+    FSAllp[i]->SetTolerances (1.e-10, 1.e-10, 1.e+50, 1); //(1.e-10, 1.e-10, 1.e+50, 10)
+    FSAllp[i]->SetRichardsonScaleFactor (1.0);          // 0.5
+
+    FSAll.push_back (FSAllp[i]);
+
   }
-
 
   //FieldSplitTree uSG (PREONLY, FIELDSPLIT_PRECOND, FSAll, "uSG");
   //FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_PRECOND, FSAll, "uSG");
-  FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_MULTIPLICATIVE_PRECOND, FSAll, "uSG");
-  //FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_SYMMETRIC_MULTIPLICATIVE_PRECOND, FSAll, "uSG");
-
-  //uSG.PrintFieldSplitTree();
+  //FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_MULTIPLICATIVE_PRECOND, FSAll, "uSG");
+  FieldSplitTree uSG (RICHARDSON, FIELDSPLIT_SYMMETRIC_MULTIPLICATIVE_PRECOND, FSAll, "uSG");
+  uSG.PrintFieldSplitTree();
 
   //systemSG.SetOuterSolver(FGMRES);
-  //uSG.SetRichardsonScaleFactor(1.0); // 0.6 is the best choice
+  uSG.SetRichardsonScaleFactor (1.); // 0.6 is the best choice
   //uSG.SetTolerances (1.e-3, 1.e-30, 1.e+50, 1);
   //END buid fieldSplitTree
   systemSG.SetLinearEquationSolverType (FEMuS_FIELDSPLIT);
@@ -424,14 +368,14 @@ int main (int argc, char** argv) {
 
 
   for (unsigned i = 1; i <= pIndex; i++) {
-    delete FielduSGAllp[i];
+    delete FSAllp[i];
   }
-  delete [] FielduSGAllp;
+  delete [] FSAllp;
 
-  for (unsigned i = 0; i < Jp.size(); i++) {
-    delete FielduSGi[i];
-  }
-  delete [] FielduSGi;
+//   for (unsigned i = 0; i < Jp.size(); i++) {
+//     delete FielduSGi[i];
+//   }
+//   delete [] FielduSGi;
 
 
 
