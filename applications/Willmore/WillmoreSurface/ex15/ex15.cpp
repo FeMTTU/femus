@@ -36,7 +36,7 @@ const double normalSign = -1.;
 // Trick for system0 (delta). ????
 // Trick for system2 (timederiv).
 const double eps = 0.0001;
-const double delta = 0.0005;
+const double delta = 0.000;
 const double timederiv = 0.;
 
 // Declaration of systems.
@@ -51,7 +51,7 @@ double GetTimeStep (const double t) {
   // if(time==0) return 5.0e-7;
   //return 0.0001;
   //double dt0 = .00002;
-  double dt0 = .05;
+  double dt0 = .01;
   double s = 1.;
   double n = 0.3;
   return dt0 * pow (1. + t / pow (dt0, s), n);
@@ -1456,8 +1456,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   solDxIndex[0] = mlSol->GetIndex ("Dx1");
   solDxIndex[1] = mlSol->GetIndex ("Dx2");
   solDxIndex[2] = mlSol->GetIndex ("Dx3");
-  
-  
+
+
   unsigned solYIndex[DIM];
   solYIndex[0] = mlSol->GetIndex ("Y1");
   solYIndex[1] = mlSol->GetIndex ("Y2");
@@ -1472,7 +1472,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   std::vector < double > solx[DIM];
   std::vector < double > solDx[DIM];
   std::vector < double > xhat[DIM];
-  
+
 
   // Get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC).
   unsigned xType = 2;
@@ -1535,10 +1535,10 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned K = 0; K < DIM; K++) {
 
       xhat[K].resize (nxDofs);
-     
+
       solDx[K].resize (nxDofs);
       solx[K].resize (nxDofs);
-      
+
       solY[K].resize (nxDofs);
 
       solNDx[K].resize (nxDofs);
@@ -1566,9 +1566,9 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       for (unsigned K = 0; K < DIM; K++) {
         xhat[K][i] = (*msh->_topology->_Sol[K]) (iXDof);
         solDx[K][i] = (*sol->_Sol[solDxIndex[K]]) (iDDof);
-        
+
         solY[K][i] = (*sol->_Sol[solYIndex[K]]) (iDDof);
-        
+
         solx[K][i] = xhat[K][i] + solDx[K][i];
         solNDx[K][i] = (*sol->_Sol[solNDxIndex[K]]) (iDDof);
 
@@ -1635,7 +1635,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
       double solYg[3] = {0., 0., 0.};
       double solxg[3] = {0., 0., 0.};
-      
+
       double solDxg[3] = {0., 0., 0.};
       adept::adouble solNDxg[3] = {0., 0., 0.};
 
@@ -1686,18 +1686,18 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
                    - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
       normal[2] = (solx_uv[0][0] * solx_uv[1][1]
                    - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
-                   
+
       double a = 0;
       for(unsigned I=0; I<DIM; I++){
         a -= solYg[I] * normal[I];
       }
       double signa = (a > 0)? 1 : -1;
       a = 2. / (a + 0 * signa * eps);
-      
+
 //       std::cout << solxg[0] << " " << solxg[1] <<" "<< solxg[2]<<std::endl;
 //       std::cout << normal[0] << " " << normal[1] <<" "<< normal[2]<<std::endl;
 //       std::cout << a<<std::endl;
-      
+
       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
       adept::adouble V[DIM];
       V[0] = X_uv[0][1] - normal[1] * X_uv[2][0] + normal[2] * X_uv[1][0];
@@ -1789,17 +1789,17 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
             // term3 += solx_uv[K][j] * phix_uv[j][i];
           }
 
-          
+
           adept::adouble term2 = 0.;
 //           for (unsigned J = 0; J < DIM; J++) {
 //             term2 += (a * normal[J] - solDxg[J] + solNDxg [J]) * phix[i];
 //           }
-          
+
           term2 += (a * normal[K] - solDxg[K] + solNDxg [K]) * phix[i];
 
           // Conformal energy equation (with trick).
           aResNDx[K][i] += term1 * Area2
-                           + solLg * term2 * Area2;  //no2
+                           + solLg * term2 * Area;  //no2
         }
 
         // Lagrange multiplier equation (with trick).
@@ -1810,9 +1810,9 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
             term1 += (a * normal[J] - solDxg[J] + solNDxg [J]) * (a * normal[J] - solDxg[J] + solNDxg [J]) ;
             term2 += (a * normal[J] ) * (a * normal[J]) ;
           }
-          aResL[i] += (phiL[i] * ( term1 - term2 ) + eps * 0 * solLg * phiL[i] ) * Area2; // no2
+          aResL[i] += (phiL[i] * ( term1 - term2 ) + eps * 0 * solLg * phiL[i] ) * Area; // no2
         }
-        
+
 //         for(unsigned i = 0; i< nLDofs; i++){
 //           aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area2; // no2
 //         }

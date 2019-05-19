@@ -22,7 +22,7 @@
 
 /* Vector option for P (to handle polynomials).
  ap is the coefficient in front of the power of H. */
-const unsigned P[3] = {2, 3, 4};
+const unsigned P[3] = {4, 3, 4};
 const double ap[3] = {1, 0., 0.};
 
 using namespace femus;
@@ -35,8 +35,8 @@ const double normalSign = -1.;
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta). ????
 // Trick for system2 (timederiv).
-const double eps = 0.0001;
-const double delta = 0.0005;
+const double eps = 0.003;
+const double delta = 0.0001;
 const double timederiv = 0.;
 
 // Declaration of systems.
@@ -51,7 +51,7 @@ double GetTimeStep (const double t) {
   // if(time==0) return 5.0e-7;
   //return 0.0001;
   //double dt0 = .00002;
-  double dt0 = .05;
+  double dt0 = .0000001;
   double s = 1.;
   double n = 0.3;
   return dt0 * pow (1. + t / pow (dt0, s), n);
@@ -105,15 +105,15 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/virus3.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels, numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -222,7 +222,7 @@ int main (int argc, char** args) {
 
   // Parameters for convergence and # of iterations.
   system2.SetMaxNumberOfNonLinearIterations (40);
-  system2.SetNonLinearConvergenceTolerance (1.e-9);
+  system2.SetNonLinearConvergenceTolerance (1.e-12);
 
   // Add solutions newX, Lambda1 to system2.
   system2.AddSolutionToSystemPDE ("nDx1");
@@ -251,15 +251,12 @@ int main (int argc, char** args) {
                             "linear", variablesToBePrinted, 0);
 
 
-  // // First, solve system2 to "conformalize" the initial mesh.
-  // CopyDisplacement (mlSol, true);
-  // system2.MGsolve();
+  // First, solve system2 to "conformalize" the initial mesh.
+  CopyDisplacement (mlSol, true);
+  system2.MGsolve();
 
   // Then, solve system0 to compute initial curvatures.
   CopyDisplacement (mlSol, false);
-
-
-
   system0.MGsolve();
 
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR,
@@ -279,7 +276,7 @@ int main (int argc, char** args) {
                                 variablesToBePrinted, (time_step + 1) / printInterval);
 
       CopyDisplacement (mlSol, true);
-      // system2.MGsolve();
+      system2.MGsolve();
 
       CopyDisplacement (mlSol, false);
       system0.MGsolve();
@@ -1728,14 +1725,14 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
           // Conformal energy equation (with trick).
           aResNDx[K][i] += term1 * Area2
-                           + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
-                           + solLg * phix[i] * normal[K] * Area2;  //no2
+                           // + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
+                           + solLg * phix[i] * normal[K] * Area;  //no2
         }
       }
 
       // Lagrange multiplier equation (with trick).
       for(unsigned i = 0; i< nLDofs; i++){
-        aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area2; // no2
+        aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area; // no2
       }
 
     } // end GAUSS POINT LOOP

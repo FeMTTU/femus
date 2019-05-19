@@ -28,22 +28,21 @@ const double ap[3] = {1, 0., 0.};
 using namespace femus;
 
 // Toggle for setting volume and area constraints, as well as sign of N.
-const bool volumeConstraint = true;
-const bool areaConstraint = true;
+const bool volumeConstraint = false;
+const bool areaConstraint = false;
 const double normalSign = -1.;
 
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta). ????
 // Trick for system2 (timederiv).
-const double eps = 0.0001;
-const double delta = 0.0005;
+const double eps = 0.003;
+const double delta = 0.00001;
 const double timederiv = 0.;
 
 // Declaration of systems.
 void CopyDisplacement (MultiLevelSolution &mlSol,  const bool &forward);
-void AssemblePWillmore (MultiLevelProblem&);
+void AssembleMCF (MultiLevelProblem&);
 void AssembleInit (MultiLevelProblem&);
-void AssembleShearMinimization (MultiLevelProblem&); // not used anymore
 void AssembleConformalMinimization (MultiLevelProblem&);
 
 // Function to control the time stepping.
@@ -51,7 +50,7 @@ double GetTimeStep (const double t) {
   // if(time==0) return 5.0e-7;
   //return 0.0001;
   //double dt0 = .00002;
-  double dt0 = .05;
+  double dt0 = .0005;
   double s = 1.;
   double n = 0.3;
   return dt0 * pow (1. + t / pow (dt0, s), n);
@@ -74,15 +73,7 @@ double InitalValueY2 (const std::vector < double >& x) {
 double InitalValueY3 (const std::vector < double >& x) {
   return -2. * x[2];
 }
-double InitalValueW1 (const std::vector < double >& x) {
-  return -2. * P[2] * pow (2., P[2] - 2) * x[0];
-}
-double InitalValueW2 (const std::vector < double >& x) {
-  return -2. * P[2] * pow (2., P[2] - 2) * x[1];
-}
-double InitalValueW3 (const std::vector < double >& x) {
-  return -2. * P[2] * pow (2., P[2] - 2) * x[2];
-}
+
 
 // Main program starts here.
 int main (int argc, char** args) {
@@ -102,10 +93,10 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/virus3.neu", "seventh", scalingFactor);
@@ -113,7 +104,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels, numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -130,9 +121,6 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("Dx1", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("Dx2", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("Dx3", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution ("W1", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution ("W2", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution ("W3", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("Y1", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("Y2", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("Y3", LAGRANGE, FIRST, 2);
@@ -142,25 +130,16 @@ int main (int argc, char** args) {
     mlSol.AddSolution ("Lambda", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
   }
 
-  // Add variables "nDx", "nY", "nW", and "Lambda1" for the conformal system.
+  // Add variables "nDx" and "Lambda1" for the conformal system.
   mlSol.AddSolution ("nDx1", LAGRANGE, FIRST, 0);
   mlSol.AddSolution ("nDx2", LAGRANGE, FIRST, 0);
   mlSol.AddSolution ("nDx3", LAGRANGE, FIRST, 0);
-  mlSol.AddSolution ("nY1", LAGRANGE, FIRST, 0);
-  mlSol.AddSolution ("nY2", LAGRANGE, FIRST, 0);
-  mlSol.AddSolution ("nY3", LAGRANGE, FIRST, 0);
-  mlSol.AddSolution ("nW1", LAGRANGE, FIRST, 0);
-  mlSol.AddSolution ("nW2", LAGRANGE, FIRST, 0);
-  mlSol.AddSolution ("nW3", LAGRANGE, FIRST, 0);
   //mlSol.AddSolution ("Lambda1", LAGRANGE, FIRST, 0);
   mlSol.AddSolution ("Lambda1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
 
 
   // Initialize the variables and attach boundary conditions.
   mlSol.Initialize ("All");
-  mlSol.Initialize ("W1", InitalValueW1);
-  mlSol.Initialize ("W2", InitalValueW2);
-  mlSol.Initialize ("W3", InitalValueW3);
   mlSol.Initialize ("Y1", InitalValueY1);
   mlSol.Initialize ("Y2", InitalValueY2);
   mlSol.Initialize ("Y3", InitalValueY3);
@@ -182,9 +161,6 @@ int main (int argc, char** args) {
   system0.AddSolutionToSystemPDE ("Y1");
   system0.AddSolutionToSystemPDE ("Y2");
   system0.AddSolutionToSystemPDE ("Y3");
-  system0.AddSolutionToSystemPDE ("W1");
-  system0.AddSolutionToSystemPDE ("W2");
-  system0.AddSolutionToSystemPDE ("W3");
 
   // Add the assembling function to system0 and initialize.
   system0.SetAssembleFunction (AssembleInit);
@@ -192,7 +168,7 @@ int main (int argc, char** args) {
 
   // Add system P-Willmore in mlProb as a time-dependent system.
   TransientNonlinearImplicitSystem& system =
-    mlProb.add_system < TransientNonlinearImplicitSystem > ("PWillmore");
+    mlProb.add_system < TransientNonlinearImplicitSystem > ("MCF");
 
   // Parameters for convergence and # of iterations for Willmore.
   system.SetMaxNumberOfNonLinearIterations (20);
@@ -205,9 +181,6 @@ int main (int argc, char** args) {
   system.AddSolutionToSystemPDE ("Y1");
   system.AddSolutionToSystemPDE ("Y2");
   system.AddSolutionToSystemPDE ("Y3");
-  system.AddSolutionToSystemPDE ("W1");
-  system.AddSolutionToSystemPDE ("W2");
-  system.AddSolutionToSystemPDE ("W3");
 
   // Add solution Lambda to system based on constraint choice.
   if (volumeConstraint || areaConstraint) {
@@ -215,7 +188,7 @@ int main (int argc, char** args) {
     system.SetNumberOfGlobalVariables (volumeConstraint + areaConstraint);
   }
   // Attach the assembling function to P-Willmore system.
-  system.SetAssembleFunction (AssemblePWillmore);
+  system.SetAssembleFunction (AssembleMCF);
   // Attach time step function to P-Willmore sysyem.
   system.AttachGetTimeIntervalFunction (GetTimeStep);
   // initialize the P-Willmore system.
@@ -228,18 +201,12 @@ int main (int argc, char** args) {
 
   // Parameters for convergence and # of iterations.
   system2.SetMaxNumberOfNonLinearIterations (40);
-  system2.SetNonLinearConvergenceTolerance (1.e-9);
+  system2.SetNonLinearConvergenceTolerance (1.e-12);
 
   // Add solutions newX, Lambda1 to system2.
   system2.AddSolutionToSystemPDE ("nDx1");
   system2.AddSolutionToSystemPDE ("nDx2");
   system2.AddSolutionToSystemPDE ("nDx3");
-  system2.AddSolutionToSystemPDE ("nY1");
-  system2.AddSolutionToSystemPDE ("nY2");
-  system2.AddSolutionToSystemPDE ("nY3");
-  system2.AddSolutionToSystemPDE ("nW1");
-  system2.AddSolutionToSystemPDE ("nW2");
-  system2.AddSolutionToSystemPDE ("nW3");
   system2.AddSolutionToSystemPDE ("Lambda1");
 
   // Attach the assembling function to system2 and initialize.
@@ -262,7 +229,8 @@ int main (int argc, char** args) {
   mlSol.GetWriter()->Write ("./output1",
                             "linear", variablesToBePrinted, 0);
 
-  // First, solve system2 to "conformalize" the initial mesh.
+
+  // // First, solve system2 to "conformalize" the initial mesh.
   CopyDisplacement (mlSol, true);
   system2.MGsolve();
 
@@ -322,39 +290,15 @@ void CopyDisplacement (MultiLevelSolution &mlSol,  const bool &forward) {
   solNDxIndex[1] = mlSol.GetIndex ("nDx2");
   solNDxIndex[2] = mlSol.GetIndex ("nDx3");
 
-  vector < unsigned > solYIndex (DIM);
-  solYIndex[0] = mlSol.GetIndex ("Y1");
-  solYIndex[1] = mlSol.GetIndex ("Y2");
-  solYIndex[2] = mlSol.GetIndex ("Y3");
-
-  vector < unsigned > solNYIndex (DIM);
-  solNYIndex[0] = mlSol.GetIndex ("nY1");
-  solNYIndex[1] = mlSol.GetIndex ("nY2");
-  solNYIndex[2] = mlSol.GetIndex ("nY3");
-
-  vector < unsigned > solWIndex (DIM);
-  solWIndex[0] = mlSol.GetIndex ("W1");
-  solWIndex[1] = mlSol.GetIndex ("W2");
-  solWIndex[2] = mlSol.GetIndex ("W3");
-
-  vector < unsigned > solNWIndex (DIM);
-  solNWIndex[0] = mlSol.GetIndex ("nW1");
-  solNWIndex[1] = mlSol.GetIndex ("nW2");
-  solNWIndex[2] = mlSol.GetIndex ("nW3");
-
   if (forward) {
     for (unsigned i = 0; i < DIM; i++) {
       * (solution->_Sol[solNDxIndex[i]]) = * (solution->_Sol[solDxIndex[i]]);
-      * (solution->_Sol[solNYIndex[i]]) = * (solution->_Sol[solYIndex[i]]);
-      * (solution->_Sol[solNWIndex[i]]) = * (solution->_Sol[solWIndex[i]]);
     }
   }
 
   else {
     for (unsigned i = 0; i < DIM; i++) {
       * (solution->_Sol[solDxIndex[i]]) = * (solution->_Sol[solNDxIndex[i]]);
-      * (solution->_Sol[solYIndex[i]]) = * (solution->_Sol[solNYIndex[i]]);
-      * (solution->_Sol[solWIndex[i]]) = * (solution->_Sol[solNWIndex[i]]);
     }
   }
 }
@@ -429,22 +373,6 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
   // Define local Y solution.
   std::vector < adept::adouble > solY[DIM];
 
-  // Get positions of W in the ml_sol object.
-  unsigned solWIndex[DIM];
-  solWIndex[0] = mlSol->GetIndex ("W1");
-  solWIndex[1] = mlSol->GetIndex ("W2");
-  solWIndex[2] = mlSol->GetIndex ("W3");
-
-  // Extract the finite element type for W.
-  unsigned solWType;
-  solWType = mlSol->GetSolutionType (solWIndex[0]);
-
-  // Get positions of W in the pdeSys object.
-  unsigned solWPdeIndex[DIM];
-  solWPdeIndex[0] = mlPdeSys->GetSolPdeIndex ("W1");
-  solWPdeIndex[1] = mlPdeSys->GetSolPdeIndex ("W2");
-  solWPdeIndex[2] = mlPdeSys->GetSolPdeIndex ("W3");
-
   // Local-to-global pdeSys dofs.
   std::vector< unsigned > SYSDOF;
 
@@ -454,7 +382,6 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
   // Define local residual vectors.
   vector< double > Res;
   std::vector< adept::adouble > aResY[3];
-  std::vector< adept::adouble > aResW[3];
 
   // Local (column-ordered) Jacobian matrix.
   vector < double > Jac;
@@ -471,22 +398,19 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nxDofs  = msh->GetElementDofNumber (iel, solxType);
     unsigned nYDofs  = msh->GetElementDofNumber (iel, solYType);
-    unsigned nWDofs  = msh->GetElementDofNumber (iel, solWType);
 
     // Resize solution vectors.
     for (unsigned K = 0; K < DIM; K++) {
       solx[K].resize (nxDofs);
       solY[K].resize (nYDofs);
-      solW[K].resize (nWDofs);
     }
 
     // Resize local arrays.
-    SYSDOF.resize (DIM * (nYDofs + nWDofs));
-    Res.resize (DIM * (nYDofs + nWDofs));
+    SYSDOF.resize (DIM * nYDofs);
+    Res.resize (DIM * nYDofs);
 
     for (unsigned K = 0; K < DIM; K++) {
       aResY[K].assign (nYDofs, 0.);  //resize and zet to zero
-      aResW[K].assign (nWDofs, 0.);  //resize and zet to zero
     }
 
     // Local storage of global X mapping and solution.
@@ -516,20 +440,6 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
       }
     }
 
-    // Local storage of global W mapping and solution
-    for (unsigned i = 0; i < nWDofs; i++) {
-      unsigned iWDof = msh->GetSolutionDof (i, iel, solWType);
-
-      // Global-to-local mapping between solution node and solution dof.
-      for (unsigned K = 0; K < DIM; K++) {
-        solW[K][i] = (*sol->_Sol[solWIndex[K]]) (iWDof); // global to local soln
-
-        // Global-to-global mapping between solution node and pdeSys dof
-        SYSDOF[ DIM * nYDofs + K * nWDofs + i] =
-          pdeSys->GetSystemDof (solWIndex[K], solWPdeIndex[K], i, iel);
-      }
-    }
-
     // Start a new recording of all the operations involving adept::adouble variables.
     s.new_recording();
 
@@ -542,8 +452,6 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
 
       const double *phiY;  // local test function
       const double *phiY_uv[dim]; // first order derivatives in (u,v)
-
-      const double *phiW;  // local test function
 
       double weight; // Gauss point weight
 
@@ -559,8 +467,6 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
       phiY_uv[0] = msh->_finiteElement[ielGeom][solYType]->GetDPhiDXi (ig);
       phiY_uv[1] = msh->_finiteElement[ielGeom][solYType]->GetDPhiDEta (ig);
 
-      phiW = msh->_finiteElement[ielGeom][solWType]->GetPhi (ig);
-
       // Initialize fist order derivatives of X,Y.
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble solY_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
@@ -568,7 +474,6 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
       // Initialize solutions X,Y,W at Gauss points.
       double solxg[3] = {0., 0., 0.};
       adept::adouble solYg[3] = {0., 0., 0.};
-      adept::adouble solWg[3] = {0., 0., 0.};
 
       // Compute values of the above at the Gauss points.
       for (unsigned K = 0; K < DIM; K++) {
@@ -578,10 +483,6 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
 
         for (unsigned i = 0; i < nYDofs; i++) {
           solYg[K] += phiY[i] * solY[K][i];
-        }
-
-        for (unsigned i = 0; i < nWDofs; i++) {
-          solWg[K] += phiW[i] * solW[K][i];
         }
 
         for (int j = 0; j < dim; j++) {
@@ -652,7 +553,7 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
       // }
 
       // Compute the "reduced Jacobian" g^{ij}X_j .
-      double Jir[2][3] = {{0., 0., 0.}, {0., 0., 0.}};
+      double Jir[dim][DIM] = {{0., 0., 0.}, {0., 0., 0.}};
       for (unsigned i = 0; i < dim; i++) {
         for (unsigned J = 0; J < DIM; J++) {
           for (unsigned k = 0; k < dim; k++) {
@@ -682,20 +583,19 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
         phix_Xtan[J].assign (nxDofs, 0.);
         phiY_Xtan[J].assign (nYDofs, 0.);
 
-        for (unsigned inode  = 0; inode < nxDofs; inode++) {
-          for (unsigned k = 0; k < dim; k++) {
-            phix_Xtan[J][inode] += phix_uv[k][inode] * Jir[k][J];
-          }
-        }
+        for (unsigned k = 0; k < dim; k++) {
 
-        for (unsigned inode  = 0; inode < nYDofs; inode++) {
-          for (unsigned k = 0; k < dim; k++) {
-            phiY_Xtan[J][inode] += phiY_uv[k][inode] * Jir[k][J];
+          for (unsigned i  = 0; i < nxDofs; i++) {
+            phix_Xtan[J][i] += phix_uv[k][i] * Jir[k][J];
+          }
+
+          for (unsigned i  = 0; i < nYDofs; i++) {
+            phiY_Xtan[J][i] += phiY_uv[k][i] * Jir[k][J];
           }
         }
       }
 
-      // Implement the equations for Y and W.
+      // Implement the equation for Y.
       for (unsigned K = 0; K < DIM; K++) {
 
         // Solve the equation Y = \Delta X.
@@ -708,15 +608,11 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
             term2 +=  solY_Xtan[K][J] * phiY_Xtan[J][i];
           }
 
-          // This is a trick, need to think about how it works?
+          // This is a trick, need to think about how it works ???
           aResY[K][i] += (solYg[K] * phiY[i] + delta * term2 + term1) * Area;
         }
-
-        //  Solve the equation W = |Y|^{p-2}Y .
-        for (unsigned i = 0; i < nWDofs; i++) {
-          aResW[K][i] += (solWg[K] - sumP1 * solYg[K]) * phiW[i] * weight;
-        }
       }
+
     } // end GAUSS POINT LOOP
 
     //------------------------------------------------------------------------
@@ -729,34 +625,20 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
       }
     }
 
-    for (int K = 0; K < DIM; K++) {
-      for (int i = 0; i < nWDofs; i++) {
-        Res[ DIM * nYDofs + K * nWDofs + i] = -aResW[K][i].value(); // for W
-      }
-    }
-
     // ???
     RES->add_vector_blocked (Res, SYSDOF);
 
     // Resize Jacobian.
-    Jac.resize (DIM * (nYDofs + nWDofs) * DIM * (nYDofs + nWDofs));
+    Jac.resize (DIM * nYDofs * DIM * nYDofs);
 
     // Define the dependent variables.
     for (int K = 0; K < DIM; K++) {
       s.dependent (&aResY[K][0], nYDofs); // Y
     }
 
-    for (int K = 0; K < DIM; K++) {
-      s.dependent (&aResW[K][0], nWDofs); // W
-    }
-
     // Define the independent variables.
     for (int K = 0; K < DIM; K++) {
       s.independent (&solY[K][0], nYDofs); // Y
-    }
-
-    for (int K = 0; K < DIM; K++) {
-      s.independent (&solW[K][0], nWDofs); // W
     }
 
     // Extract the Jacobian matrix (ordered by row).
@@ -775,7 +657,7 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
 
 
 // Building the P-Willmore assembly function.
-void AssemblePWillmore (MultiLevelProblem& ml_prob) {
+void AssembleMCF (MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
 
@@ -784,7 +666,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
   // Extract pointers to the several objects that we are going to use.
   TransientNonlinearImplicitSystem* mlPdeSys =
-    &ml_prob.get_system<TransientNonlinearImplicitSystem> ("PWillmore");
+    &ml_prob.get_system<TransientNonlinearImplicitSystem> ("MCF");
 
   // Define level and time variable.
   double dt = mlPdeSys->GetIntervalTime();
@@ -853,34 +735,13 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   std::vector < adept::adouble > solY[DIM];
   std::vector < double > solYOld[DIM];
 
-  // Get positions of W in the ml_sol object.
-  unsigned solWIndex[DIM];
-  solWIndex[0] = mlSol->GetIndex ("W1");
-  solWIndex[1] = mlSol->GetIndex ("W2");
-  solWIndex[2] = mlSol->GetIndex ("W3");
-
-  // Extract the finite element type for W.
-  unsigned solWType;
-  solWType = mlSol->GetSolutionType (solWIndex[0]);
-
-  // Get positions of W in the pdeSys object.
-  unsigned solWPdeIndex[DIM];
-  solWPdeIndex[0] = mlPdeSys->GetSolPdeIndex ("W1");
-  solWPdeIndex[1] = mlPdeSys->GetSolPdeIndex ("W2");
-  solWPdeIndex[2] = mlPdeSys->GetSolPdeIndex ("W3");
-
   // Local-to-global pdeSys dofs.
-  std::vector< unsigned > SYSDOF;
-
-  // Define local W, WOld solutions.
-  std::vector < adept::adouble > solW[DIM];
-  std::vector < double > solWOld[DIM];
+  std::vector < unsigned > SYSDOF;
 
   // Define local residual vectors.
-  vector< double > Res;
+  vector < double > Res;
   std::vector< adept::adouble > aResx[3];
   std::vector< adept::adouble > aResY[3];
-  std::vector< adept::adouble > aResW[3];
 
   // Local (column-ordered) Jacobian matrix
   vector < double > Jac;
@@ -895,9 +756,11 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
   // Setting up solLambda1 and solLambda2.
   unsigned solLambaPdeIndex;
+
   adept::adouble solLambda1 = 0.;
   adept::adouble aResLambda1;
   unsigned lambda1PdeDof;
+
   adept::adouble solLambda2 = 0.;
   adept::adouble aResLambda2;
   unsigned lambda2PdeDof;
@@ -965,7 +828,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nxDofs  = msh->GetElementDofNumber (iel, solxType);
     unsigned nYDofs  = msh->GetElementDofNumber (iel, solYType);
-    unsigned nWDofs  = msh->GetElementDofNumber (iel, solWType);
 
     // Resize solution vectors.
     for (unsigned K = 0; K < DIM; K++) {
@@ -973,12 +835,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       solxOld[K].resize (nxDofs);
       solY[K].resize (nYDofs);
       solYOld[K].resize (nYDofs);
-      solW[K].resize (nWDofs);
-      solWOld[K].resize (nWDofs);
     }
 
     // Convenience variable for keeping track of problem size.
-    unsigned sizeAll = DIM * (nxDofs + nYDofs +  nWDofs)
+    unsigned sizeAll = DIM * (nxDofs + nYDofs)
                        + volumeConstraint + areaConstraint;
 
     // Resize local arrays.
@@ -987,7 +847,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
     for (unsigned K = 0; K < DIM; K++) {
       aResx[K].assign (nxDofs, 0.);
       aResY[K].assign (nYDofs, 0.);
-      aResW[K].assign (nWDofs, 0.);
     }
     aResLambda1 = 0.;
     aResLambda2 = 0.;
@@ -1028,23 +887,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       }
     }
 
-    // Loop which handles local storage of global mapping and solution W.
-    for (unsigned i = 0; i < nWDofs; i++) {
-
-      // Global-to-local mapping between solution node and solution dof.
-      unsigned iWDof = msh->GetSolutionDof (i, iel, solWType);
-      for (unsigned K = 0; K < DIM; K++) {
-
-        // Global-to-local solutions.
-        solWOld[K][i] = (*sol->_SolOld[solWIndex[K]]) (iWDof);
-        solW[K][i] = (*sol->_Sol[solWIndex[K]]) (iWDof);
-
-        // Global-to-global mapping between solution node and pdeSys dof.
-        SYSDOF[DIM * (nxDofs + nYDofs) + K * nWDofs + i] =
-          pdeSys->GetSystemDof (solWIndex[K], solWPdeIndex[K], i, iel);
-      }
-    }
-
     // Conditions for local storage of global Lagrange multipliers.
     if (volumeConstraint) {
       SYSDOF[sizeAll - 1u - areaConstraint ] = lambda1PdeDof;
@@ -1065,9 +907,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       const double *phix_uv[dim]; // first order derivatives in (u,v)
 
       const double *phiY;  // local test function
-
-      const double *phiW;  // local test function
-      const double *phiW_uv[dim]; // first order derivatives in (u,v)
+      const double *phiY_uv[dim]; // first order derivatives in (u,v)
 
       double weight; // gauss point weight
 
@@ -1080,24 +920,26 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       phix_uv[1] = msh->_finiteElement[ielGeom][solxType]->GetDPhiDEta (ig);
 
       phiY = msh->_finiteElement[ielGeom][solYType]->GetPhi (ig);
+      phiY_uv[0] = msh->_finiteElement[ielGeom][solYType]->GetDPhiDXi (ig);
+      phiY_uv[1] = msh->_finiteElement[ielGeom][solYType]->GetDPhiDEta (ig);
 
-      phiW = msh->_finiteElement[ielGeom][solWType]->GetPhi (ig);
-      phiW_uv[0] = msh->_finiteElement[ielGeom][solWType]->GetDPhiDXi (ig);
-      phiW_uv[1] = msh->_finiteElement[ielGeom][solWType]->GetDPhiDEta (ig);
+      // phiW = msh->_finiteElement[ielGeom][solWType]->GetPhi (ig);
+      // phiW_uv[0] = msh->_finiteElement[ielGeom][solWType]->GetDPhiDXi (ig);
+      // phiW_uv[1] = msh->_finiteElement[ielGeom][solWType]->GetDPhiDEta (ig);
 
       // Initialize quantities xNew, xOld, Y, W at the Gauss points.
       adept::adouble solxNewg[3] = {0., 0., 0.};
       double solxOldg[3] = {0., 0., 0.};
       adept::adouble solYg[3] = {0., 0., 0.};
-      adept::adouble solWg[3] = {0., 0., 0.};
 
       // Initialize derivatives of x and W (new, middle, old) at the Gauss points.
       adept::adouble solxNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       double solxOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-      adept::adouble solWNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-      adept::adouble solW_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-      double solWOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+
+      adept::adouble solYNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      adept::adouble solY_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      double solYOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
 
       // Compute the above quantities at the Gauss points.
       for (unsigned K = 0; K < DIM; K++) {
@@ -1112,11 +954,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           solYg[K] += phiY[i] * 0.5 * (solYOld[K][i] + solY[K][i]);
         }
 
-        for (unsigned i = 0; i < nWDofs; i++) {
-          solWg[K] += phiW[i] * 0.5 * (solWOld[K][i] + solW[K][i]);
-          //solWOldg[K] += phiW[i] * solWOld[K][i];
-        }
-
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
             solxNew_uv[K][j]    += phix_uv[j][i] * solx[K][i];
@@ -1126,10 +963,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         }
 
         for (int j = 0; j < dim; j++) {
-          for (unsigned i = 0; i < nWDofs; i++) {
-            solWNew_uv[K][j] += phiW_uv[j][i] * solW[K][i];
-            solW_uv[K][j] += phiW_uv[j][i] * 0.5 * (solW[K][i] + solWOld[K][i]);
-            solWOld_uv[K][j] += phiW_uv[j][i] * solWOld[K][i];
+          for (unsigned i = 0; i < nYDofs; i++) {
+            solYNew_uv[K][j] += phiY_uv[j][i] * solY[K][i];
+            solY_uv[K][j] += phiY_uv[j][i] * 0.5 * (solY[K][i] + solYOld[K][i]);
+            solYOld_uv[K][j] += phiY_uv[j][i] * solYOld[K][i];
           }
         }
       }
@@ -1198,9 +1035,9 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       adept::adouble solx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
       adept::adouble solxOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
-      adept::adouble solWNew_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-      adept::adouble solW_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-      adept::adouble solWOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      adept::adouble solYNew_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      adept::adouble solY_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      adept::adouble solYOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
       // Computing tangential gradients defined above.
       for (unsigned I = 0; I < DIM; I++) {
@@ -1210,20 +1047,20 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
             solxOld_Xtan[I][J] += solxOld_uv[I][k] * Jir[k][J];
 
-            solWNew_Xtan[I][J] += solWNew_uv[I][k] * Jir[k][J];
-            solW_Xtan[I][J] += solW_uv[I][k] * Jir[k][J];
-            solWOld_Xtan[I][J] += solWOld_uv[I][k] * Jir[k][J];
+            solYNew_Xtan[I][J] += solYNew_uv[I][k] * Jir[k][J];
+            solY_Xtan[I][J] += solY_uv[I][k] * Jir[k][J];
+            solYOld_Xtan[I][J] += solYOld_uv[I][k] * Jir[k][J];
           }
         }
       }
 
       // Define and compute gradients of test functions for X and W.
-      std::vector < adept::adouble > phiW_Xtan[DIM];
       std::vector < adept::adouble > phix_Xtan[DIM];
+      std::vector < adept::adouble > phiY_Xtan[DIM];
 
       for (unsigned J = 0; J < DIM; J++) {
         phix_Xtan[J].assign (nxDofs, 0.);
-        phiW_Xtan[J].assign (nWDofs, 0.);
+        phiY_Xtan[J].assign (nYDofs, 0.);
 
         for (unsigned inode  = 0; inode < nxDofs; inode++) {
           for (unsigned k = 0; k < dim; k++) {
@@ -1231,9 +1068,9 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           }
         }
 
-        for (unsigned inode  = 0; inode < nWDofs; inode++) {
+        for (unsigned inode  = 0; inode < nYDofs; inode++) {
           for (unsigned k = 0; k < dim; k++) {
-            phiW_Xtan[J][inode] += phiW_uv[k][inode] * Jir[k][J];
+            phiY_Xtan[J][inode] += phiY_uv[k][inode] * Jir[k][J];
           }
         }
       }
@@ -1249,40 +1086,16 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           aResx[K][i] += (solYg[K] * phix[i] + term1) * Area;
         }
 
-        // Implement the equation relating Y and W.
-        for (unsigned i = 0; i < nWDofs; i++) {
-          aResY[K][i] += (solWg[K] - sumP1 * solYg[K]) * phiY[i] * Area;
-        }
-
-        // Implement the main P-Willmore equation.
-        for (unsigned i = 0; i < nWDofs; i++) {
-          adept::adouble term0 = 0.;
+        // Implement the MCF equation.
+        for (unsigned i = 0; i < nYDofs; i++) {
           adept::adouble term1 = 0.;
-          adept::adouble term2 = 0.;
-          adept::adouble term3 = 0.;
-          adept::adouble term5 = 0.;
 
           for (unsigned J = 0; J < DIM; J++) {
-            term0 +=  solWNew_Xtan[K][J] * phiW_Xtan[J][i];
-            term1 +=  solx_Xtan[K][J] * phiW_Xtan[J][i];
-            term2 +=  solW_Xtan[J][J];
-
-            adept::adouble term4 = 0.;
-            for (unsigned L = 0; L < DIM; L++) {
-              term4 += solxOld_Xtan[L][J] * solWOld_Xtan[L][K]
-                       + solxOld_Xtan[L][K] * solWOld_Xtan[L][J];
-            }
-            term3 += phiW_Xtan[J][i] * term4;
+            term1 +=  solx_Xtan[K][J] * phiY_Xtan[J][i];
           }
-
-          // P-Willmore equation
-          aResW[K][i] += ( ( ( (solxNewg[K] - solxOldg[K])  / dt)
-                             + solLambda1 * normal[K]) * phiW[i]
-                           + solLambda2 * term1
-                           - term0
-                           + sumP2 * term1
-                           - term2 * phiW_Xtan[K][i]
-                           + term3) * Area;
+          aResY[K][i] += ( ( ( (solxNewg[K] - solxOldg[K])  / dt) - solYg[K]
+                          + solLambda1 * normal[K] ) * phiY[i]
+                          + solLambda2 * term1) * Area;
         }
 
         // Lagrange multiplier (volume) equation Dx.N = 0.
@@ -1305,8 +1118,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       // Compute new surface area, volume, and P-Willmore energy.
       for (unsigned K = 0; K < DIM; K++) {
         surface += Area.value();
-      }
-      for (unsigned K = 0; K < DIM; K++) {
         volume += normalSign * (solxNewg[K].value() * normal[K].value()) * Area.value();
       }
       energy += sumP3.value() * Area.value();
@@ -1318,20 +1129,13 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
     //copy the value of the adept::adoube aRes in double Res and store
 
     for (int K = 0; K < DIM; K++) {
+
       for (int i = 0; i < nxDofs; i++) {
         Res[ K * nxDofs + i] = -aResx[K][i].value();
       }
-    }
 
-    for (int K = 0; K < DIM; K++) {
       for (int i = 0; i < nYDofs; i++) {
         Res[DIM * nxDofs + K * nYDofs + i] = -aResY[K][i].value();
-      }
-    }
-
-    for (int K = 0; K < DIM; K++) {
-      for (int i = 0; i < nWDofs; i++) {
-        Res[DIM * (nxDofs + nYDofs) + K * nWDofs + i] = -aResW[K][i].value();
       }
     }
 
@@ -1358,10 +1162,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       s.dependent (&aResY[K][0], nYDofs);
     }
 
-    for (int K = 0; K < DIM; K++) {
-      s.dependent (&aResW[K][0], nWDofs);
-    }
-
     if (volumeConstraint) {
       s.dependent (&aResLambda1, 1);
     }
@@ -1377,10 +1177,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
     for (int K = 0; K < DIM; K++) {
       s.independent (&solY[K][0], nYDofs);
-    }
-
-    for (int K = 0; K < DIM; K++) {
-      s.independent (&solW[K][0], nWDofs);
     }
 
     if (volumeConstraint) {
@@ -1403,7 +1199,6 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
   RES->close();
   KK->close();
-
 
   // Get data from each process running in parallel.
   double surfaceAll;
@@ -1486,44 +1281,32 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   std::vector< double > stdVectorPhi;
   std::vector< double > stdVectorPhi_uv;
 
-  // Extract positions of Dx, Y, W, in ml_sol object.
+  // Extract positions of Dx in ml_sol object.
   unsigned solDxIndex[DIM];
   solDxIndex[0] = mlSol->GetIndex ("Dx1");
   solDxIndex[1] = mlSol->GetIndex ("Dx2");
   solDxIndex[2] = mlSol->GetIndex ("Dx3");
 
-  unsigned solYIndex[DIM];
-  solYIndex[0] = mlSol->GetIndex ("Y1");
-  solYIndex[1] = mlSol->GetIndex ("Y2");
-  solYIndex[2] = mlSol->GetIndex ("Y3");
-
-  unsigned solWIndex[DIM];
-  solWIndex[0] = mlSol->GetIndex ("W1");
-  solWIndex[1] = mlSol->GetIndex ("W2");
-  solWIndex[2] = mlSol->GetIndex ("W3");
-
-
-  // Extract finite element type for the solutions.
+  // Extract finite element type for the solution.
   unsigned solType;
   solType = mlSol->GetSolutionType (solDxIndex[0]);
 
-  // Local solution vectors for X, Dx, Xhat, Y, W.
+  // Local solution vectors for X, Dx, Xhat, XC.
   std::vector < double > solx[DIM];
   std::vector < double > solDx[DIM];
   std::vector < double > xhat[DIM];
-  std::vector < double > solY[DIM];
-  std::vector < double > solW[DIM];
+  std::vector < double > xc[DIM];
 
   // Get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC).
   unsigned xType = 2;
 
-  // Get the poitions of NDx in the ml_sol object.
+  // Get the poitions of Y in the ml_sol object.
   unsigned solNDxIndex[DIM];
   solNDxIndex[0] = mlSol->GetIndex ("nDx1");
   solNDxIndex[1] = mlSol->GetIndex ("nDx2");
   solNDxIndex[2] = mlSol->GetIndex ("nDx3");
 
-  // Get the positions of NDx in the pdeSys object.
+  // Get the positions of Y in the pdeSys object.
   unsigned solNDxPdeIndex[DIM];
   solNDxPdeIndex[0] = mlPdeSys->GetSolPdeIndex ("nDx1");
   solNDxPdeIndex[1] = mlPdeSys->GetSolPdeIndex ("nDx2");
@@ -1532,34 +1315,6 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   // Local solution vectors for Nx and NDx.
   std::vector < adept::adouble > solNDx[DIM];
   std::vector < adept::adouble > solNx[DIM];
-
-  // Get the positions of NY in the ml_sol object.
-  unsigned solNYIndex[DIM];
-  solNYIndex[0] = mlSol->GetIndex ("nY1");
-  solNYIndex[1] = mlSol->GetIndex ("nY2");
-  solNYIndex[2] = mlSol->GetIndex ("nY3");
-
-  // Get the positions of NY in the pdeSys object.
-  unsigned solNYPdeIndex[DIM];
-  solNYPdeIndex[0] = mlPdeSys->GetSolPdeIndex ("nY1");
-  solNYPdeIndex[1] = mlPdeSys->GetSolPdeIndex ("nY2");
-  solNYPdeIndex[2] = mlPdeSys->GetSolPdeIndex ("nY3");
-
-  // Get the positions of NW in the ml_sol object.
-  unsigned solNWIndex[DIM];
-  solNWIndex[0] = mlSol->GetIndex ("nW1");
-  solNWIndex[1] = mlSol->GetIndex ("nW2");
-  solNWIndex[2] = mlSol->GetIndex ("nW3");
-
-  // Get the positions of nW in the pdeSys object.
-  unsigned solNWPdeIndex[DIM];
-  solNWPdeIndex[0] = mlPdeSys->GetSolPdeIndex ("nW1");
-  solNWPdeIndex[1] = mlPdeSys->GetSolPdeIndex ("nW2");
-  solNWPdeIndex[2] = mlPdeSys->GetSolPdeIndex ("nW3");
-
-  // Define solNY and solNW.
-  std::vector < adept::adouble > solNY[DIM];
-  std::vector < adept::adouble > solNW[DIM];
 
   // Get the position of "Lambda1" in the ml_sol object.
   unsigned solLIndex;
@@ -1580,10 +1335,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   std::vector < int > SYSDOF;
 
   // Local residual vectors.
-  vector < double > Res;
+  vector< double > Res;
   std::vector< adept::adouble > aResNDx[3];
-  std::vector< adept::adouble > aResNY[3];
-  std::vector< adept::adouble > aResNW[3];
   std::vector< adept::adouble > aResL;
 
   // Local Jacobian matrix (ordered by column).
@@ -1599,14 +1352,13 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     // Numer of solution element dofs.
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nxDofs  = msh->GetElementDofNumber (iel, solType);
-    unsigned nYDofs  = msh->GetElementDofNumber (iel, solType);
-    unsigned nWDofs  = msh->GetElementDofNumber (iel, solType);
     unsigned nLDofs  = msh->GetElementDofNumber (iel, solLType);
 
     // Resize local arrays.
     for (unsigned K = 0; K < DIM; K++) {
 
       xhat[K].resize (nxDofs);
+      xc[K].assign (nxDofs, 0.);
 
       solDx[K].resize (nxDofs);
       solx[K].resize (nxDofs);
@@ -1614,22 +1366,14 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       solNDx[K].resize (nxDofs);
       solNx[K].resize (nxDofs);
 
-      solNY[K].resize (nYDofs);
-      solY[K].resize (nYDofs);
-
-      solNW[K].resize (nWDofs);
-      solW[K].resize (nWDofs);
-
       solL.resize (nLDofs);
     }
 
-    SYSDOF.resize (DIM * (nxDofs + nYDofs + nWDofs) + nLDofs);
-    Res.resize (DIM * (nxDofs + nYDofs + nWDofs) + nLDofs);
+    SYSDOF.resize (DIM * nxDofs + nLDofs);
+    Res.resize (DIM * nxDofs + nLDofs);
 
     for (unsigned K = 0; K < DIM; K++) {
       aResNDx[K].assign (nxDofs, 0.);
-      aResNY[K].assign (nYDofs, 0.);
-      aResNW[K].assign (nWDofs, 0.);
     }
     aResL.assign (nLDofs, 0.);
 
@@ -1653,39 +1397,6 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       }
     }
 
-  for (unsigned i = 0; i < nYDofs; i++) {
-
-    // Global-to-local mapping between solution node and solution dof.
-    unsigned iYDof = msh->GetSolutionDof (i, iel, solType);
-    for (unsigned K = 0; K < DIM; K++) {
-
-      // Global-to-local solutions.
-      solY[K][i] = (*sol->_Sol[solYIndex[K]]) (iYDof);
-      solNY[K][i] = (*sol->_Sol[solNYIndex[K]]) (iYDof);
-
-      // Global-to-global mapping between solution node and pdeSys dof.
-      SYSDOF[DIM * nxDofs + K * nYDofs + i] =
-        pdeSys->GetSystemDof (solNYIndex[K], solNYPdeIndex[K], i, iel);
-    }
-  }
-
-  // Loop which handles local storage of global mapping and solution W.
-  for (unsigned i = 0; i < nWDofs; i++) {
-
-    // Global-to-local mapping between solution node and solution dof.
-    unsigned iWDof = msh->GetSolutionDof (i, iel, solType);
-    for (unsigned K = 0; K < DIM; K++) {
-
-      // Global-to-local solutions.
-      solW[K][i] = (*sol->_Sol[solWIndex[K]]) (iWDof);
-      solNW[K][i] = (*sol->_Sol[solNWIndex[K]]) (iWDof);
-
-      // Global-to-global mapping between solution node and pdeSys dof.
-      SYSDOF[DIM * (nxDofs + nYDofs) + K * nWDofs + i] =
-        pdeSys->GetSystemDof (solNWIndex[K], solNWPdeIndex[K], i, iel);
-    }
-  }
-
     // Local storage of global mapping and solution.
     for (unsigned i = 0; i < nLDofs; i++) {
 
@@ -1694,7 +1405,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       solL[i] = (*sol->_Sol[solLIndex]) (iLDof);
 
       // Global-to-global mapping between Lambda solution node and pdeSys dof.
-      SYSDOF[DIM * (nxDofs + nYDofs + nWDofs) + i] =
+      SYSDOF[DIM * nxDofs + i] =
         pdeSys->GetSystemDof (solLIndex, solLPdeIndex, i, iel);
     }
 
@@ -1706,12 +1417,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
          _finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
 
       const double *phix;  // local test function
-      const double *phiY;  // local test function
-      const double *phiW;  // local test function
       const double *phiL;  // local test function
       const double *phix_uv[dim]; // first order derivatives in (u,v)
-      const double *phiY_uv[dim]; // first order derivatives in (u,v)
-      const double *phiW_uv[dim]; // first order derivatives in (u,v)
 
       double weight; // gauss point weight
 
@@ -1720,28 +1427,15 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         phix = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
         phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig);
         phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig);
-        phiY = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
-        phiY_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig);
-        phiY_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig);
-        phiW = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
-        phiW_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig);
-        phiW_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig);
         weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
         phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
       }
 
       // Special adjustments for triangles.
       else {
-        //phix = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
-        //phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig);
-        //phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig);
-        //weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
-
         msh->_finiteElement[ielGeom][solType]->Jacobian (xT, ig,
                                                          weight, stdVectorPhi, stdVectorPhi_uv);
         phix = &stdVectorPhi[0];
-        phiY = &stdVectorPhi[0];
-        phiW = &stdVectorPhi[0];
 
         phi_uv0.resize (nxDofs);
         phi_uv1.resize (nxDofs);
@@ -1752,10 +1446,6 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         }
         phix_uv[0] = &phi_uv0[0];
         phix_uv[1] = &phi_uv1[0];
-        phiY_uv[0] = &phi_uv0[0];
-        phiY_uv[1] = &phi_uv1[0];
-        phiW_uv[0] = &phi_uv0[0];
-        phiW_uv[1] = &phi_uv1[0];
 
         phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
 
@@ -1763,15 +1453,10 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
       double solDxg[3] = {0., 0., 0.};
-      double solYg[3] = {0., 0., 0.};
-      double solWg[3] = {0., 0., 0.};
       adept::adouble solNDxg[3] = {0., 0., 0.};
-      adept::adouble solNYg[3] = {0., 0., 0.};
-      adept::adouble solNWg[3] = {0., 0., 0.};
 
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-      adept::adouble NX_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-      adept::adouble XminusXold_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      adept::adouble X_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
 
 
 
@@ -1781,21 +1466,10 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
           solNDxg[K] += phix[i] * solNDx[K][i];
         }
 
-        for (unsigned i = 0; i < nYDofs; i++) {
-          solYg[K] += phiY[i] * solY[K][i];
-          solNYg[K] += phiY[i] * solNY[K][i];
-        }
-
-        for (unsigned i = 0; i < nWDofs; i++) {
-          solWg[K] += phiW[i] * solW[K][i];
-          solNWg[K] += phiW[i] * solNW[K][i];
-        }
-
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
             solx_uv[K][j]    += phix_uv[j][i] * solx[K][i];
-            NX_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + solNDx[K][i]);
-            XminusXold_uv[K][j] += phix_uv[j][i] * (xhat[K][i] + solNDx[K][i] - solx[K][i]);
+            X_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + solNDx[K][i]);
           }
         }
       }
@@ -1827,25 +1501,16 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       normal[2] = (solx_uv[0][0] * solx_uv[1][1]
                    - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
 
-    // Computing Y.N and |Y|^2, which are essentially 2H and 4H^2.
-                   double YdotN = 0.;
-                   double YdotY = 0.;
-                   for (unsigned K = 0; K < DIM; K++) {
-                     YdotN += solYg[K] * normal[K];
-                     YdotY += solYg[K] * solYg[K];
-                   }
-                   double signYdotN = (YdotN >= 0.) ? 1. : -1.;
-
       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
       adept::adouble V[DIM];
-      V[0] = NX_uv[0][1] - normal[1] * NX_uv[2][0] + normal[2] * NX_uv[1][0];
-      V[1] = NX_uv[1][1] - normal[2] * NX_uv[0][0] + normal[0] * NX_uv[2][0];
-      V[2] = NX_uv[2][1] - normal[0] * NX_uv[1][0] + normal[1] * NX_uv[0][0];
+      V[0] = X_uv[0][1] - normal[1] * X_uv[2][0] + normal[2] * X_uv[1][0];
+      V[1] = X_uv[1][1] - normal[2] * X_uv[0][0] + normal[0] * X_uv[2][0];
+      V[2] = X_uv[2][1] - normal[0] * X_uv[1][0] + normal[1] * X_uv[0][0];
 
       adept::adouble W[DIM];
-      W[0] = NX_uv[0][0] + normal[1] * NX_uv[2][1] - normal[2] * NX_uv[1][1];
-      W[1] = NX_uv[1][0] + normal[2] * NX_uv[0][1] - normal[0] * NX_uv[2][1];
-      W[2] = NX_uv[2][0] + normal[0] * NX_uv[1][1] - normal[1] * NX_uv[0][1];
+      W[0] = X_uv[0][0] + normal[1] * X_uv[2][1] - normal[2] * X_uv[1][1];
+      W[1] = X_uv[1][0] + normal[2] * X_uv[0][1] - normal[0] * X_uv[2][1];
+      W[2] = X_uv[2][0] + normal[0] * X_uv[1][1] - normal[1] * X_uv[0][1];
 
       adept::adouble M[DIM][dim];
       M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2];
@@ -1856,11 +1521,11 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
       M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
 
-      // // Compute new X minus old X dot N, for "reparametrization".
-      // adept::adouble DnXmDxdotN = 0.;
-      // for (unsigned K = 0; K < DIM; K++) {
-      //   DnXmDxdotN += (solDxg[K] - solNDxg[K]) * normal[K];
-      // }
+      // Compute new X minus old X dot N, for "reparametrization".
+      adept::adouble DnXmDxdotN = 0.;
+      for (unsigned K = 0; K < DIM; K++) {
+        DnXmDxdotN += (solDxg[K] - solNDxg[K]) * normal[K];
+      }
 
       // Compute the metric inverse.
       double gi[dim][dim];
@@ -1879,133 +1544,57 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         }
       }
 
-      // Initializing tangential gradients of X and W (new, middle, old).
-      double solx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-      adept::adouble NX_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-      adept::adouble XminusXold_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-      // adept::adouble solW_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-
-      // Computing tangential gradients defined above.
-      for (unsigned I = 0; I < DIM; I++) {
-        for (unsigned J = 0; J < DIM; J++) {
-          for (unsigned k = 0; k < dim; k++) {
-            NX_Xtan[I][J] += NX_uv[I][k] * Jir[k][J];
-            XminusXold_Xtan[I][J] += XminusXold_uv[I][k] * Jir[k][J];
-            solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
-            // solW_Xtan[I][J] += solW_uv[I][k] * Jir[k][J];
-          }
-        }
-      }
-
-      // Define and compute gradients of test functions for X and W.
-      std::vector < adept::adouble > phiY_Xtan[DIM];
-      std::vector < adept::adouble > phix_Xtan[DIM];
-
-      for (unsigned J = 0; J < DIM; J++) {
-        phix_Xtan[J].assign (nxDofs, 0.);
-        phiY_Xtan[J].assign (nYDofs, 0.);
-
-        for (unsigned inode  = 0; inode < nxDofs; inode++) {
-          for (unsigned k = 0; k < dim; k++) {
-            phix_Xtan[J][inode] += phix_uv[k][inode] * Jir[k][J];
-          }
-        }
-
-        for (unsigned inode  = 0; inode < nYDofs; inode++) {
-          for (unsigned k = 0; k < dim; k++) {
-            phiY_Xtan[J][inode] += phiY_uv[k][inode] * Jir[k][J];
-          }
-        }
-      }
-
-      // Implement the curvature equation Y = \Delta X .
+      // Implement the Conformal Minimization equations.
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
-          adept::adouble term1new = 0.;
-          adept::adouble term1old = 0.;
-          adept::adouble term2 = 0.;
-
-          for (unsigned J = 0; J < DIM; J++) {
-            term1old +=  solx_Xtan[K][J] * phix_Xtan[J][i];
-            term1new += (NX_Xtan[K][J] - solx_Xtan[K][J]) * phix_Xtan[J][i];
-          }
-          aResNY[K][i] += (solYg[K] * phix[i] + term1old) * Area;
+          adept::adouble term1 = 0.;
 
           for (unsigned j = 0; j < dim; j++) {
-            term2 +=  M[K][j] * phix_uv[j][i];
+            term1 +=  M[K][j] * phix_uv[j][i];
           }
 
           // Conformal energy equation (with trick).
-          aResNDx[K][i] += term2 * Area
-                           + solLg * term1new * Area;  //no2
+          aResNDx[K][i] += term1 * Area2
+                           // + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
+                           + solLg * phix[i] * normal[K] * Area;  //no2
         }
-
-        // Implement the equation relating Y and W.
-        for (unsigned i = 0; i < nWDofs; i++) {
-          aResNW[K][i] += (solNWg[K] - pow (YdotY, (P[0] - 2.) / 2.) * solYg[K]) * phiW[i] * Area;
-        }
-
-        // Implement Lagrange multiplier equation.
-        for(unsigned i = 0; i< nLDofs; i++) {
-          adept::adouble term1t = 0.;
-
-          for (unsigned J = 0; J < DIM; J++) {
-            term1t +=  NX_Xtan[K][J] * (NX_Xtan[K][J] - solx_Xtan[K][J]) ;
-          }
-          aResL[i] += term1t * Area; // no2
-        }
-
       }
-      // Implement the Conformal Minimization equations.
-          // Conformal energy equation (with trick).  //no2
 
       // Lagrange multiplier equation (with trick).
+      for(unsigned i = 0; i< nLDofs; i++){
+        aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area; // no2
+      }
 
     } // end GAUSS POINT LOOP
+
     //------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
     //copy the value of the adept::adoube aRes in double Res and store
 
     for (int K = 0; K < DIM; K++) {
       for (int i = 0; i < nxDofs; i++) {
-        Res[ K * nxDofs + i] = -aResNDx[K][i].value();
-      }
-    }
-
-    for (int K = 0; K < DIM; K++) {
-      for (int i = 0; i < nYDofs; i++) {
-        Res[DIM * nxDofs + K * nYDofs + i] = -aResNY[K][i].value();
-      }
-    }
-
-    for (int K = 0; K < DIM; K++) {
-      for (int i = 0; i < nWDofs; i++) {
-        Res[DIM * (nxDofs + nYDofs) + K * nWDofs + i] = -aResNW[K][i].value();
+        Res[ K * nxDofs + i] = -aResNDx[K][i].value(); // for X
       }
     }
 
     for (int i = 0; i < nLDofs; i++) {
-      Res[DIM * (nxDofs + nYDofs + nWDofs) + i] = - aResL[i].value(); // for Lambda
+      Res[DIM * nxDofs + i] = - aResL[i].value(); // for Lambda
     }
 
     RES->add_vector_blocked (Res, SYSDOF);
 
     // Resize Jacobian.
-    Jac.resize ( (DIM * (nxDofs + nYDofs + nWDofs) + nLDofs) * (DIM * (nxDofs + nYDofs + nWDofs) + nLDofs));
+    Jac.resize ( (DIM * nxDofs + nLDofs) * (DIM * nxDofs + nLDofs));
 
     // Define the dependent variables.
     for (int K = 0; K < DIM; K++) {
       s.dependent (&aResNDx[K][0], nxDofs);
-      s.dependent (&aResNY[K][0], nYDofs);
-      s.dependent (&aResNW[K][0], nWDofs);
     }
     s.dependent (&aResL[0], nLDofs);
 
     // Define the independent variables.
     for (int K = 0; K < DIM; K++) {
       s.independent (&solNDx[K][0], nxDofs);
-      s.independent (&solNY[K][0], nYDofs);
-      s.independent (&solNW[K][0], nWDofs);
     }
     s.independent (&solL[0], nLDofs);
 
