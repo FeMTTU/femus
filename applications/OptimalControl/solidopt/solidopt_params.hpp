@@ -35,13 +35,17 @@ int ElementTargetFlag(const std::vector<var_type> & elem_center) {
  //***** set target domain flag ********************************** 
   int target_flag = 0;
   
+    if ( sqrt(elem_center[0] * elem_center[0] + elem_center[1] * elem_center[1]) < 1.0 + 1.e-5  &&
+	  elem_center[2] > 0.75 - 1.e-5  &&  elem_center[2] < 1.0  + 1.e-5
+  ) //target for cylinder
+
 //    if ( elem_center[0] > 0.   - 1.e-5  &&  elem_center[0] < 0.25  + 1.e-5  && 
 //         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
 //   ) //target on left 
    
-    if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
-	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5
-  ) //target on top
+//     if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
+// 	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5
+//   ) //target on top
 
 //    if ( elem_center[0] > 0.75  - 1.e-5  &&  elem_center[0] < 1.0   + 1.e-5  && 
 //         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5

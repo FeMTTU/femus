@@ -75,9 +75,10 @@ bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const s
   bool dirichlet  = true; 
   value = 0.;
   
-        if (facename == 3) {
+        if (facename == 2) {
        if (!strcmp(SolName, "DX_CTRL"))   { dirichlet = false; }
   else if (!strcmp(SolName, "DY_CTRL"))   { dirichlet = false; } 
+  else if (!strcmp(SolName, "DZ_CTRL"))   { dirichlet = false; } 
   	
       }
 
@@ -279,8 +280,13 @@ int main(int argc, char** args) {
         files.CheckIODirectories();
         files.RedirectCout();
 
+    std::string mesh_folder_file = "input/";
+    std::string input_file = "cyl.med";
+  std::ostringstream mystream; mystream << "./" << /*DEFAULT_INPUTDIR*/ mesh_folder_file << input_file;
+  const std::string infile = mystream.str();
+
   // ======= Quad Rule ========================
-  std::string quad_rule_order("seventh");
+  std::string quad_rule_order("fifth");
 
   // ======= Problem ========================
     MultiLevelProblem ml_prob;
@@ -294,7 +300,8 @@ int main(int argc, char** args) {
   const std::vector< double >      xyz_max = {1., 1., 0.};
 
   MultiLevelMesh ml_mesh;
-  ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,quad_rule_order.c_str());
+//   ml_mesh.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,quad_rule_order.c_str());
+   ml_mesh.ReadCoarseMesh(infile.c_str(),quad_rule_order.c_str(), 1./*Lref*/);
 
   // ======= Unknowns ========================
   const unsigned int dimension = ml_mesh.GetDimension();  
