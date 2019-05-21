@@ -29,13 +29,13 @@ using namespace femus;
 
 // Toggle for setting volume and area constraints, as well as sign of N.
 const bool volumeConstraint = true;
-const bool areaConstraint = true;
+const bool areaConstraint = false;
 const double normalSign = -1.;
 
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta). ????
 // Trick for system2 (timederiv).
-const double eps = 0.00;
+const double eps = 0.0001;
 const double delta = 0.0001;
 const double timederiv = 0.;
 
@@ -51,7 +51,7 @@ double GetTimeStep (const double t) {
   // if(time==0) return 5.0e-7;
   //return 0.0001;
   //double dt0 = .00002;
-  double dt0 = .001;
+  double dt0 = .05;
   double s = 1.;
   double n = 0.3;
   return dt0 * pow (1. + t / pow (dt0, s), n);
@@ -103,9 +103,9 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
@@ -266,9 +266,9 @@ int main (int argc, char** args) {
   unsigned numberOfTimeSteps = 1000u;
   unsigned printInterval = 1u;
 
-  mlSol.LoadSolution("./save/PWillmore_iteration100");
-  unsigned timeStart = 101;
-  //unsigned timeStart = 0;
+  //mlSol.LoadSolution("./save/PWillmore_iteration100");
+  //unsigned timeStart = 101;
+  unsigned timeStart = 0;
   
   // Main algorithm loop.
   for (unsigned time_step = timeStart; time_step < numberOfTimeSteps; time_step++) {

@@ -51,7 +51,7 @@ double GetTimeStep (const double t) {
   // if(time==0) return 5.0e-7;
   //return 0.0001;
   //double dt0 = .00002;
-  double dt0 = .001;
+  double dt0 = .05;
   double s = 1.;
   double n = 0.3;
   return dt0 * pow (1. + t / pow (dt0, s), n);
@@ -102,13 +102,13 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/sphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
