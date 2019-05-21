@@ -709,6 +709,8 @@ namespace femus
         GetJacobian_type(vt, ig, Weight, jacobianMatrix);
       }
 
+     void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+
      /* adept-adept */                        
      void Jacobian_non_isoparametric(const elem_type * fe_elem_coords_in,
                                           const vector < vector < adept::adouble > > & vt,
@@ -826,7 +828,17 @@ namespace femus
       std::vector < std::vector < std::vector < double > > > _phiFace;
       std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
       std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
-
+      
+        // values at boundary gauss points
+      double **_phi_bdry;
+      double *_phi_memory_bdry;
+      double **_dphidxi_bdry;
+      double *_dphidxi_memory_bdry;
+      double **_dphideta_bdry;
+      double *_dphideta_memory_bdry;
+      double **_dphidzeta_bdry;
+      double *_dphidzeta_memory_bdry;
+      ///@todo do the same also in elem_type_1D
   };
 
 

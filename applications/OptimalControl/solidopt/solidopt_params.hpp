@@ -18,7 +18,7 @@
 //******************************************* Desired Target  and RHS function*******************************************************
     
  double _gravity[3] = {0., 0., 0.};  // gravity
- double TargetDisp[3] = { 1.e-1, 0., 0.};
+ double TargetDisp[3] = {0., 0., 1.e-1};
 
 //*********************** Sets the regularization parameters *******************************************************
 
