@@ -169,8 +169,8 @@ int main(int argc, char** args) {
     double scalingFactor = 1.;
 
     // read coarse level mesh and generate finers level meshes
-    std::string mesh_file = "./input/ext_box.neu";
-//     std::string mesh_file = "./input/ext_box.med";
+//     std::string mesh_file = "./input/ext_box.neu";
+    std::string mesh_file = "./input/ext_box.med";
 //     std::string mesh_file = "./input/ext_box_2.med";
 //     std::string mesh_file = "./input/ext_box_longer.med";
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
@@ -515,15 +515,38 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_AllVars.insert(L2G_dofmap_AllVars.end(),L2G_dofmap[k].begin(),L2G_dofmap[k].end());
 //***************************************************
 
-        bool interface_elem_flag = false;
-        std::vector <double> interface_node_flag(Sol_n_el_dofs[pos_state]); //flag for boundary interface
+        const int n_faces = msh->GetElementFaceNumber(iel);
+        
+        //setting up control boundary region ***************************
+        std::vector <bool> interface_elem_flag(n_faces);      for(unsigned j = 0; j < n_faces; j++) interface_elem_flag[j] = false;
+        std::vector <double> interface_node_flag(Sol_n_el_dofs[pos_state]);
+        std::fill(interface_node_flag.begin(), interface_node_flag.end(), 0.);
 
+     for(unsigned jface = 0; jface < n_faces; jface++) {
+            
+         //************** later try to avoid repeating this
+          compute_coordinates_bdry_one_face(coords_at_dofs_bdry, coords_fe_type, iel, jface, msh);
+          
+            unsigned nDofu_bdry    = msh->GetElementFaceDofNumber(iel,jface,SolFEType[pos_state]);
+            unsigned nDofctrl_bdry = msh->GetElementFaceDofNumber(iel,jface,SolFEType[pos_ctrl]);
+            if (nDofu_bdry != nDofctrl_bdry) {
+                std::cout << "State and control need to have the same FE space" << std::endl;
+                abort();
+            }
+         //************** later try to avoid repeating this - end
+            
+       std::vector < double > elem_center_bdry(dim);  elem_center_bdry =  face_elem_center(coords_at_dofs_bdry);
+        
+           interface_elem_flag[jface] = find_control_boundary_nodes(interface_node_flag, elem_center_bdry, nDofu_bdry, iel, jface, msh);
+    
+        }
+         //setting up control boundary region - end ***************************
+       
         
         
         for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
 
 
-            const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);
             
      compute_coordinates_bdry_one_face(coords_at_dofs_bdry, coords_fe_type, iel, jface, msh);
 
@@ -534,19 +557,13 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                 abort();
             }
             
-            std::vector < double > elem_center_bdry(dim);  elem_center_bdry =  face_elem_center(coords_at_dofs_bdry);
-
-        //setting up control boundary region ***************************
-        interface_elem_flag = false;
-        std::fill(interface_node_flag.begin(), interface_node_flag.end(), 0.);
-        
-    interface_elem_flag = find_control_boundary_nodes(interface_node_flag, elem_center_bdry, nDofu_bdry, iel, jface, msh);
     
 
-    if (interface_elem_flag == true) {
+    if (interface_elem_flag[jface] == true) {
 
               std::vector<double> normal_qp(dim,0.);
               
+            const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);
               
           for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]]->GetGaussPointNumber(); ig_bdry++) {
 
@@ -672,7 +689,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         //************ Boundary loops ***************************************
 
             for (unsigned j = 0; j < interface_node_flag.size(); j++) {
-                std::cout << interface_elem_flag << " ** " << interface_node_flag[j] << " ";
+                std::cout <<  " ** " << interface_node_flag[j] << " ";
             }
             
 
