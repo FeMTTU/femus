@@ -98,19 +98,19 @@ int main (int argc, char** args) {
   double scalingFactor = 1.;
 
 // Below this are options for the initial mesh (choose one).
-  //mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/dog.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/virus3.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("../input/torus.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/sphere.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
   // Set number of mesh levels.
   unsigned numberOfUniformLevels = 1;
