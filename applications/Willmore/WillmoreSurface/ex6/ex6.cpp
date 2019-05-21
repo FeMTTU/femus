@@ -1556,36 +1556,28 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
 
       const double *phix;  // local test function
+      const double *phiL;  // local test function
       const double *phix_uv[dim]; // local test function first order partial derivatives
 
       double weight; // gauss point weight
 
-      // *** get gauss point weight, test function and test function partial derivatives ***
+      // Get Gauss point weight, test function, and first order derivatives.
       if (ielGeom == QUAD) {
         phix = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
-        phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig); //derivative in u
-        phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig); //derivative in v
+        phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
+
+        phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig);
+        phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig);
+
         weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
       }
+
+      // Special adjustments for triangles.
       else {
-
-        phix = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
-        phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig); //derivative in u
-        phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig); //derivative in v
-        weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
-
-//         for (unsigned i = 0; i < nxDofs; i++) {
-//           std::cout << phix[i] << " ";
-//           for (unsigned k = 0; k < dim; k++) {
-//             std::cout << phix_uv[k][i] << " ";
-//           }
-//           std::cout << std::endl;
-//         }
-//         std::cout << weight;
-//         std::cout << std::endl;
-
         msh->_finiteElement[ielGeom][solType]->Jacobian (xT, ig, weight, stdVectorPhi, stdVectorPhi_uv);
+
         phix = &stdVectorPhi[0];
+///////// WHAT ABOUT PHIL? ////////////////////
 
         phi_uv0.resize(nxDofs);
         phi_uv1.resize(nxDofs);
@@ -1599,24 +1591,16 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         phix_uv[0] = &phi_uv0[0];
         phix_uv[1] = &phi_uv1[0];
 
-//         for (unsigned i = 0; i < nxDofs; i++) {
-//           std::cout << phix[i] << " ";
-//           for (unsigned k = 0; k < dim; k++) {
-//             std::cout << phix_uv[k][i] << " ";
-//           }
-//           std::cout << std::endl;
-//         }
-//         std::cout << weight;
-//         std::cout << std::endl;
+        phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
+
       }
 
-    //  exit(0);
-
+      // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
       double solDxg[3] = {0., 0., 0.};
       adept::adouble solNDxg[3] = {0., 0., 0.};
 
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-      adept::adouble X_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      adept::adouble solNx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
 
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
@@ -1626,12 +1610,18 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
             solx_uv[K][j]    += phix_uv[j][i] * solx[K][i];
-            X_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + solNDx[K][i]);
+            solNx_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + solNDx[K][i]);
           }
         }
       }
 
+      ///////// ADDED THIS /////////
+      adept::adouble solLg = 0.;
+      for (unsigned i = 0; i < nLDofs; i++) {
+        solLg += phiL[i] * solL[i];
+      }
 
+      // Compute the metric, metric determinant, and area element.
       double g[dim][dim] = {{0., 0.}, {0., 0.}};
       for (unsigned i = 0; i < dim; i++) {
         for (unsigned j = 0; j < dim; j++) {
@@ -1641,24 +1631,25 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         }
       }
       double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
+      double Area = weight * sqrt (detg);
+      double Area2 = weight; // Trick to give equal weight to each element.
 
+      // Compute components of the unit normal N.
       double normal[DIM];
       normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
       normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
       normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
 
-
+      // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
       adept::adouble V[DIM];
-
-      V[0] = X_uv[0][1] - normal[1] * X_uv[2][0] + normal[2] * X_uv[1][0];
-      V[1] = X_uv[1][1] - normal[2] * X_uv[0][0] + normal[0] * X_uv[2][0];
-      V[2] = X_uv[2][1] - normal[0] * X_uv[1][0] + normal[1] * X_uv[0][0];
+      V[0] = solNx_uv[0][1] - normal[1] * solNx_uv[2][0] + normal[2] * solNx_uv[1][0];
+      V[1] = solNx_uv[1][1] - normal[2] * solNx_uv[0][0] + normal[0] * solNx_uv[2][0];
+      V[2] = solNx_uv[2][1] - normal[0] * solNx_uv[1][0] + normal[1] * solNx_uv[0][0];
 
       adept::adouble W[DIM];
-
-      W[0] = X_uv[0][0] + normal[1] * X_uv[2][1] - normal[2] * X_uv[1][1];
-      W[1] = X_uv[1][0] + normal[2] * X_uv[0][1] - normal[0] * X_uv[2][1];
-      W[2] = X_uv[2][0] + normal[0] * X_uv[1][1] - normal[1] * X_uv[0][1];
+      W[0] = solNx_uv[0][0] + normal[1] * solNx_uv[2][1] - normal[2] * solNx_uv[1][1];
+      W[1] = solNx_uv[1][0] + normal[2] * solNx_uv[0][1] - normal[0] * solNx_uv[2][1];
+      W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
 
       adept::adouble M[DIM][dim];
       M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2];
@@ -1669,21 +1660,20 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
       M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
 
+      // Compute new X minus old X dot N, for "reparametrization".
       adept::adouble DnXmDxdotN = 0.;
       for (unsigned K = 0; K < DIM; K++) {
         DnXmDxdotN += (solDxg[K] - solNDxg[K]) * normal[K];
       }
 
-      double Area = weight * sqrt (detg);
-      double Area2 = weight;
-
+      // Compute the metric inverse.
       double gi[dim][dim];
       gi[0][0] =  g[1][1] / detg;
       gi[0][1] = -g[0][1] / detg;
       gi[1][0] = -g[1][0] / detg;
       gi[1][1] =  g[0][0] / detg;
 
-
+      // Compute the "reduced Jacobian" g^{ij}X_j .
       double Jir[2][3] = {{0., 0., 0.}, {0., 0., 0.}};
       for (unsigned i = 0; i < dim; i++) {
         for (unsigned J = 0; J < DIM; J++) {
@@ -1693,29 +1683,33 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         }
       }
 
+      // Implement the Conformal Minimization equations.
       for (unsigned K = 0; K < DIM; K++) {
-        //Energy equation
         for (unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
+
           for (unsigned j = 0; j < dim; j++) {
             term1 +=  M[K][j] * phix_uv[j][i];
             //term1 +=  X_uv[K][j] * phix_uv[j][i];
-
           }
+
+          // Conformal energy equation (with trick).
           aResNDx[K][i] += term1 * Area2
                            + 0.1 * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
                            + solL[0] * phix[i] * normal[K] * Area;
         }
       }
 
-      aResL[0] += (DnXmDxdotN + eps * solL[0]) * Area;
+      // Lagrange multiplier equation (with trick).
+      for (unsigned i = 0; i < nLDofs; i++) {
+        aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area; // no2
+      }
+      //aResL[0] += (DnXmDxdotN + eps * solL[0]) * Area;
 
+    } // end GAUSS POINT LOOP
 
-    } // end gauss point loop
-
-    //--------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
-
     //copy the value of the adept::adoube aRes in double Res and store
 
     for (int K = 0; K < DIM; K++) {
@@ -1729,24 +1723,23 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     }
     RES->add_vector_blocked (Res, SYSDOF);
 
+    // Resize Jacobian.
     Jac.resize ( (DIM * nxDofs + nLDofs) * (DIM * nxDofs + nLDofs));
 
-    // define the dependent variables
-
+    // Define the dependent variables.
     for (int K = 0; K < DIM; K++) {
       s.dependent (&aResNDx[K][0], nxDofs);
     }
     s.dependent (&aResL[0], nLDofs);
 
 
-    // define the dependent variables
-
+    // Define the independent variables.
     for (int K = 0; K < DIM; K++) {
       s.independent (&solNDx[K][0], nxDofs);
     }
     s.independent (&solL[0], nLDofs);
 
-    // get the jacobian matrix (ordered by row)
+    // Get the jacobian matrix (ordered by row).
     s.jacobian (&Jac[0], true);
 
     KK->add_matrix_blocked (Jac, SYSDOF, SYSDOF);
@@ -1754,13 +1747,13 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     s.clear_independents();
     s.clear_dependents();
 
-  } //end element loop for each process
+  } //end ELEMENT LOOP for each process.
 
   RES->close();
   KK->close();
 
-  // ***************** END ASSEMBLY *******************
-}
+} // end AssembleConformalMinimization.
+
 
 void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data

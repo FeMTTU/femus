@@ -1528,7 +1528,6 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned K = 0; K < DIM; K++) {
 
       xhat[K].resize (nxDofs);
-      xc[K].assign (nxDofs, 0.);
 
       solDx[K].resize (nxDofs);
       solx[K].resize (nxDofs);
@@ -1539,6 +1538,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       solL.resize (nLDofs);
     }
 
+    // Resize local arrays
     SYSDOF.resize (DIM * nxDofs + nLDofs);
     Res.resize (DIM * nxDofs + nLDofs);
 
@@ -1725,7 +1725,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
           // Conformal energy equation (with trick).
           aResNDx[K][i] += term1 * Area2
-                           // + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
+                           + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
                            + solLg * phix[i] * normal[K] * Area;  //no2
         }
       }
