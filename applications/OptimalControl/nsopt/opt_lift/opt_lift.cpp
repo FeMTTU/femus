@@ -24,7 +24,7 @@
 
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
-#define no_of_ref 1     //mesh refinements
+#define no_of_ref 2     //mesh refinements
 
 #define NO_OF_L2_NORMS 11   //U,V,P,UADJ,VADJ,PADJ,UCTRL,VCTRL,PCTRL,U+U0,V+V0
 #define NO_OF_H1_NORMS 8    //U,V,UADJ,VADJ,UCTRL,VCTRL,U+U0,V+V0
@@ -34,7 +34,9 @@ using namespace femus;
 
  
 bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  //1: bottom  //2: right  //3: top  //4: left
+  //1: bottom  //2: right  //3: top  //4: left  (2D square)
+  //1: bottom  //2: top    //3: side            (3D cylinder)
+    
   
   bool dirichlet = true;
    value = 0.;
@@ -179,6 +181,7 @@ int main(int argc, char** args) {
   }
 
 
+#if compute_conv_flag == 1
      double comp_conv[maxNumberOfMeshes][NO_OF_L2_NORMS+NO_OF_H1_NORMS];
  
   
@@ -208,6 +211,7 @@ int main(int argc, char** args) {
             mlSol_all_levels->Initialize("All");
             mlSol_all_levels->AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
             mlSol_all_levels->GenerateBdc("All");
+#endif
 
          for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
@@ -307,6 +311,7 @@ int main(int argc, char** args) {
   system_opt.SetOuterSolver(PREONLY);
   system_opt.MGsolve();
 
+#if compute_conv_flag == 1
     if ( i > 0 ) {
         
 //prolongation of coarser  
@@ -329,7 +334,8 @@ int main(int argc, char** args) {
         for(unsigned short j = 0; j < n_vars; j++) {  
                *(mlSol_all_levels->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
         }
-        
+ #endif
+       
    
   // print solutions
   std::vector < std::string > variablesToBePrinted;
