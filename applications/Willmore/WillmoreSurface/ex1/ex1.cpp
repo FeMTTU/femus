@@ -29,15 +29,15 @@ using namespace femus;
 
 // Toggle for setting volume and area constraints, as well as sign of N.
 const bool volumeConstraint = true;
-const bool areaConstraint = true;
+const bool areaConstraint = false;
 const double normalSign = -1.;
 
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta). ????
 // Trick for system2 (timederiv).
-const double eps = 0.003;
-const double delta = 0.0001;
-const double timederiv = 0.;
+const double eps = 0.0001;
+const double delta = 0.005;
+const double timederiv = 0.1;
 
 // Declaration of systems.
 void CopyDisplacement (MultiLevelSolution &mlSol,  const bool &forward);
@@ -102,10 +102,10 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/sphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
@@ -2123,4 +2123,3 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
   KK->close();
 
 } // end AssembleShearMinimization.
-
