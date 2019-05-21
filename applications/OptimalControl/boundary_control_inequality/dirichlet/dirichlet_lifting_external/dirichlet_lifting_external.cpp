@@ -16,7 +16,50 @@
 using namespace femus;
 
 
+void compute_coordinates_bdry_one_face(std::vector< std::vector <double> > & coords_at_dofs_bdry, const int coords_fe_type, const unsigned int iel, const int jface, const Mesh * msh)  {
+    
+     const unsigned int dim = coords_at_dofs_bdry.size();
+     
+            unsigned nDofx_bdry    = msh->GetElementFaceDofNumber(iel,jface,coords_fe_type);
 
+            for (unsigned idim = 0; idim < dim; idim++) {
+                coords_at_dofs_bdry[idim].resize(nDofx_bdry);
+            }
+            
+            for(unsigned i=0; i < nDofx_bdry; i++) {
+                unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
+                unsigned iDof = msh->GetSolutionDof(i_vol, iel, coords_fe_type);
+                for(unsigned idim=0; idim<dim; idim++) {
+                    coords_at_dofs_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
+                }
+            }
+
+      }
+
+
+ std::vector< double > face_elem_center(const std::vector< std::vector< double > > & coords_at_dofs_bdry) {
+     
+     const unsigned int dim = coords_at_dofs_bdry.size();
+     
+            std::vector < double > elem_center_bdry(dim);
+            
+            for (unsigned j = 0; j < dim; j++) {  elem_center_bdry[j] = 0.;  }
+            
+            
+            for (unsigned j = 0; j < dim; j++) {
+                for (unsigned i = 0; i < coords_at_dofs_bdry[j].size(); i++) {
+                    elem_center_bdry[j] += coords_at_dofs_bdry[j][i];
+                }
+            }
+            for (unsigned j = 0; j < dim; j++) {
+                elem_center_bdry[j] = elem_center_bdry[j]/coords_at_dofs_bdry[j].size();
+            }
+            
+            return elem_center_bdry;
+            
+ }
+ 
+ 
 // //============ find interface boundary elements (now we do with coordinates, later we can do also with flag) =======================================
  bool find_control_boundary_nodes(std::vector<double> & interface_node_flag, const std::vector<double> & elem_center_bdry, const unsigned int nDofu_bdry, const unsigned int iel, const int jface, const Mesh * msh) {
    
@@ -126,8 +169,8 @@ int main(int argc, char** args) {
     double scalingFactor = 1.;
 
     // read coarse level mesh and generate finers level meshes
-//     std::string mesh_file = "./input/ext_box.neu";
-    std::string mesh_file = "./input/ext_box.med";
+    std::string mesh_file = "./input/ext_box.neu";
+//     std::string mesh_file = "./input/ext_box.med";
 //     std::string mesh_file = "./input/ext_box_2.med";
 //     std::string mesh_file = "./input/ext_box_longer.med";
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
@@ -160,7 +203,7 @@ int main(int argc, char** args) {
     ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
     ml_prob.SetFilesHandler(&files);
 
-    ml_sol.Initialize("All");    // initialize all varaibles to zero
+    ml_sol.Initialize("All");    // initialize all variables to zero
 
     ml_sol.Initialize("state",       Solution_set_initial_conditions, & ml_prob);
     ml_sol.Initialize("control",     Solution_set_initial_conditions, & ml_prob);
@@ -475,50 +518,30 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         bool interface_elem_flag = false;
         std::vector <double> interface_node_flag(Sol_n_el_dofs[pos_state]); //flag for boundary interface
 
+        
+        
         for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
 
-        //setting up control boundary region ***************************
-        interface_elem_flag = false;
-        std::fill(interface_node_flag.begin(), interface_node_flag.end(), 0.);
 
-//========= compute coordinates of boundary nodes on each element ==========================================
-            unsigned nDofx_bdry    = msh->GetElementFaceDofNumber(iel,jface,coords_fe_type);
+            const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);
+            
+     compute_coordinates_bdry_one_face(coords_at_dofs_bdry, coords_fe_type, iel, jface, msh);
+
             unsigned nDofu_bdry    = msh->GetElementFaceDofNumber(iel,jface,SolFEType[pos_state]);
             unsigned nDofctrl_bdry = msh->GetElementFaceDofNumber(iel,jface,SolFEType[pos_ctrl]);
             if (nDofu_bdry != nDofctrl_bdry) {
                 std::cout << "State and control need to have the same FE space" << std::endl;
                 abort();
             }
-            for (unsigned idim = 0; idim < dim; idim++) {
-                coords_at_dofs_bdry[idim].resize(nDofx_bdry);
-            }
-            const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);
-            for(unsigned i=0; i < nDofx_bdry; i++) {
-                unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
-                unsigned iDof = msh->GetSolutionDof(i_vol, iel, coords_fe_type);
-                for(unsigned idim=0; idim<dim; idim++) {
-                    coords_at_dofs_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
-                }
-            }
-//===================================================
+            
+            std::vector < double > elem_center_bdry(dim);  elem_center_bdry =  face_elem_center(coords_at_dofs_bdry);
 
-//============== face elem average point =====================================
-            vector < double > elem_center_bdry(dim);
-            for (unsigned j = 0; j < dim; j++) {
-                elem_center_bdry[j] = 0.;
-            }
-            for (unsigned j = 0; j < dim; j++) {
-                for (unsigned i = 0; i < nDofx_bdry; i++) {
-                    elem_center_bdry[j] += coords_at_dofs_bdry[j][i];
-                }
-            }
-            for (unsigned j = 0; j < dim; j++) {
-                elem_center_bdry[j] = elem_center_bdry[j]/nDofx_bdry;
-            }
-//===================================================
-
-
+        //setting up control boundary region ***************************
+        interface_elem_flag = false;
+        std::fill(interface_node_flag.begin(), interface_node_flag.end(), 0.);
+        
     interface_elem_flag = find_control_boundary_nodes(interface_node_flag, elem_center_bdry, nDofu_bdry, iel, jface, msh);
+    
 
     if (interface_elem_flag == true) {
 
@@ -648,7 +671,10 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
         //************ Boundary loops ***************************************
 
-
+            for (unsigned j = 0; j < interface_node_flag.size(); j++) {
+                std::cout << interface_elem_flag << " ** " << interface_node_flag[j] << " ";
+            }
+            
 
         for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 
