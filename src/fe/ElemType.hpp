@@ -226,9 +226,7 @@ namespace femus
  
       static const int _fe_new_to_old[NFE_FAMS];
   
-      virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const {
-           std::cout << "Implemented only for quad4 now" << std::endl; abort(); 
-      }
+      virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const = 0;
 
       
       basis* GetBasis() const {
@@ -389,6 +387,8 @@ namespace femus
         return _dphidxi[ig];
       }
 
+      virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
+      
       double** _phi;
       double* _phi_memory;
       double** _dphidxi;
@@ -515,7 +515,7 @@ namespace femus
         return _dphideta[ig];
       }
 
-     void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+  void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
      
      /* adept-adept */     //adept, moving domain
@@ -634,6 +634,12 @@ namespace femus
 
 
   private:
+
+      
+  void volume_shape_functions_at_reference_boundary_quadrature_points(const vector < vector < double> > & vt_bdry,  
+                                           const unsigned jface) const;
+                                           
+      
       double** _phi;
       double* _phi_memory;
       double** _dphidxi;

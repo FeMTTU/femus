@@ -1714,44 +1714,42 @@ namespace femus {
   }
 
 
+  void elem_type_2D::volume_shape_functions_at_reference_boundary_quadrature_points(
+      const vector < vector < double> > & vt_bdry,  
+      const unsigned  jface) const {
 
-//---------------------------------------------------------------------------------------------------------
-
-  void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, 
-                                           const vector < vector < double> > & vt_bdry,  
-                                           const unsigned& jface, 
-                                           const unsigned& ig_bdry, 
-                                           vector < double >& phi, 
-                                           vector < double >& gradphi) const {
-                                       
-
-//********* EVALUATION STAGE **********************
-                                       
-    //check that our volume element shape is a quadrilateral, doesn't work for triangles for now
-    std::vector<int> face_orient_ref(_dim);     std::fill(face_orient_ref.begin(), face_orient_ref.end(), 0.);
-    std::vector<double> face_orient_real(_dim);    std::fill(face_orient_real.begin(), face_orient_real.end(), 0.);
-    double xi_factor;
+//********* EVALUATION OF REFERENCE POINTS **********************
+//first of all I have to place the boundary gauss points in one of the faces of the volume
+          
         
-    if      (jface == 0) { face_orient_ref[0]  = 1;  face_orient_ref[1] =  0; xi_factor = -1; }
-    else if (jface == 1) { face_orient_ref[0]  = 0;  face_orient_ref[1] =  1; xi_factor = +1; }
-    else if (jface == 2) { face_orient_ref[0] =  1;  face_orient_ref[1] =  0; xi_factor = +1; }
-    else if (jface == 3) { face_orient_ref[0]  = 0;  face_orient_ref[1] =  1; xi_factor = -1; }
+    ///@todo check that our volume element shape is a quadrilateral, doesn't work for triangles for now
+                                               
+    std::vector<int> normal_vec_ref(_dim);         std::fill(normal_vec_ref.begin(), normal_vec_ref.end(), 0.);
+    std::vector<double> normal_vec_real(_dim);     std::fill(normal_vec_real.begin(), normal_vec_real.end(), 0.);
+    std::vector <double> translation(_dim);        std::fill(translation.begin(), translation.end(), 0.);
+        
+    if      (jface == 0) {  normal_vec_ref[0] =  0;  normal_vec_ref[1] = -1; }
+    else if (jface == 1) {  normal_vec_ref[0] =  1;  normal_vec_ref[1] =  0; }
+    else if (jface == 2) {  normal_vec_ref[0] =  0;  normal_vec_ref[1] =  1; }
+    else if (jface == 3) {  normal_vec_ref[0] = -1;  normal_vec_ref[1] =  0; }
     
-    face_orient_real[0] = vt_bdry[0][1] - vt_bdry[0][0]; 
-    face_orient_real[1] = vt_bdry[1][1] - vt_bdry[1][0];
+    
+    for (unsigned d = 0; d < _dim; d++) { translation[d] = normal_vec_ref[d]; }
+    
+    
+    normal_vec_real[0] = - (vt_bdry[1][1] - vt_bdry[1][0]); 
+    normal_vec_real[1] = - (vt_bdry[0][1] - vt_bdry[0][0]);
     
     double magn = 0.;
-    for (unsigned d = 0; d < _dim; d++) magn += face_orient_real[d]*face_orient_real[d]; 
+    for (unsigned d = 0; d < _dim; d++) magn += normal_vec_real[d] * normal_vec_real[d]; 
         
      magn = sqrt(magn);
     
-    for (unsigned d = 0; d < _dim; d++) { face_orient_real[d] /= magn; }
+    for (unsigned d = 0; d < _dim; d++) { normal_vec_real[d] /= magn; }
     
     double cosine_theta = 0.; 
-    for (unsigned d = 0; d < _dim; d++) cosine_theta += face_orient_real[d]*face_orient_ref[d];
-
-    
-    
+    for (unsigned d = 0; d < _dim; d++) cosine_theta += normal_vec_real[d] * normal_vec_ref[d];
+     
     //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
     //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
     //we should access the bdry element and compute the abscissa using the coordinates of it
@@ -1766,10 +1764,10 @@ namespace femus {
     
     const double* pt_one_dim[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
     
-    std::vector < std::vector<double> > xi_qps(n_gauss_bdry);
-    for (unsigned qp = 0; qp < n_gauss_bdry; qp++) { xi_qps[qp].resize(_dim); }
+//     std::vector < std::vector<double> > xi_qps(n_gauss_bdry);
+//     for (unsigned qp = 0; qp < n_gauss_bdry; qp++) { xi_qps[qp].resize(_dim); }
+
     
-// std::cout << "Inside  ig = " << ig_bdry << " ";
 for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
         
       double xi_one_dim[1];
@@ -1779,31 +1777,49 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
       }
 
 //here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
-      std::vector <double> xi_vol(2);
-             xi_vol[1-abs(face_orient_ref[0])] = cosine_theta * xi_one_dim[0]; 
-             xi_vol[abs(face_orient_ref[0])]   = xi_factor * 1.;
+ //we have to use a transformation that locates the 1d edge in one of the sides of my 2d elem
+ 
+      std::vector <double> ref_bdry_qp_coords_in_vol(2);
       
-             
+             ref_bdry_qp_coords_in_vol[1 - abs(normal_vec_ref[1])] = cosine_theta * xi_one_dim[0]  + translation[1 - abs(normal_vec_ref[1])]; 
+             ref_bdry_qp_coords_in_vol[    abs(normal_vec_ref[1])] = 0                             + translation[    abs(normal_vec_ref[1])];
+      
+//evaluate volume shape functions and derivatives at reference boundary gauss points             
       for (int dof = 0; dof < _nc; dof++) {
-             _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &xi_vol[0]);
-         _dphidxi_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &xi_vol[0]);
-        _dphideta_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &xi_vol[0]);
+             _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]);
+         _dphidxi_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
+        _dphideta_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
       }
       
-             xi_qps[qp] = xi_vol;
+//              xi_qps[qp] = ref_bdry_qp_coords_in_vol;
              
     }
     
              
 //       for (unsigned d = 0; d < _dim; d++) std::cout << xi_qps[ig_bdry][d] << " ";
 // std::cout << std::endl;
-    
-//********* END EVALUATION STAGE **********************
-    
+
+
+}
+
+
+//---------------------------------------------------------------------------------------------------------
+//Compute volume jacobian and evaluate volume shape functions and derivatives at REAL boundary quadrature points
+
+  void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, 
+                                           const vector < vector < double> > & vt_bdry,  
+                                           const unsigned& jface, 
+                                           const unsigned& ig_bdry, 
+                                           vector < double >& phi, 
+                                           vector < double >& gradphi) const {
+                                       
+
+    volume_shape_functions_at_reference_boundary_quadrature_points(vt_bdry, jface);
 
     phi.resize(_nc);
     gradphi.resize(_nc * 2);
 
+//Compute volume jacobian and its inverse at boundary gauss points
     double Jac[2][2] = {{0, 0}, {0, 0}};
     double JacInv[2][2];
     const double* dxi = _dphidxi_bdry[ig_bdry];
@@ -1820,11 +1836,15 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
     JacInv[0][1] = -Jac[0][1] / det;
     JacInv[1][0] = -Jac[1][0] / det;
     JacInv[1][1] = Jac[0][0] / det;
+//Compute volume jacobian and its inverse at boundary gauss points - end
     
     
-    //Use the Jacobian here to go from the REAL back to the CANONICAL coordinates
+    //Use Jacobian        to go from the REAL to the CANONICAL coordinates
+    //Use JacobianInverse to go from the CANONICAL to the REAL coordinates
     
 
+//Compute shape functions and derivatives in REAL coordinates
+    
     dxi  = _dphidxi_bdry[ig_bdry];
     deta = _dphideta_bdry[ig_bdry];
 
@@ -1957,27 +1977,27 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 //********* EVALUATION STAGE **********************
                                        
     //check that our volume element shape is a quadrilateral, doesn't work for triangles for now
-    std::vector<int> face_orient_ref(_dim);     std::fill(face_orient_ref.begin(), face_orient_ref.end(), 0.);
-    std::vector<double> face_orient_real(_dim);    std::fill(face_orient_real.begin(), face_orient_real.end(), 0.);
+    std::vector<int> tang_vec_ref(_dim);     std::fill(tang_vec_ref.begin(), tang_vec_ref.end(), 0.);
+    std::vector<double> tang_vec_real(_dim);    std::fill(tang_vec_real.begin(), tang_vec_real.end(), 0.);
     double xi_factor;
         
-    if      (jface == 0) { face_orient_ref[0]  = 1;  face_orient_ref[1] =  0; xi_factor = -1; }
-    else if (jface == 1) { face_orient_ref[0]  = 0;  face_orient_ref[1] =  1; xi_factor = +1; }
-    else if (jface == 2) { face_orient_ref[0] =  1;  face_orient_ref[1] =  0; xi_factor = +1; }
-    else if (jface == 3) { face_orient_ref[0]  = 0;  face_orient_ref[1] =  1; xi_factor = -1; }
+    if      (jface == 0) { tang_vec_ref[0]  = 1;  tang_vec_ref[1] =  0; xi_factor = -1; }
+    else if (jface == 1) { tang_vec_ref[0]  = 0;  tang_vec_ref[1] =  1; xi_factor = +1; }
+    else if (jface == 2) { tang_vec_ref[0] =  1;  tang_vec_ref[1] =  0; xi_factor = +1; }
+    else if (jface == 3) { tang_vec_ref[0]  = 0;  tang_vec_ref[1] =  1; xi_factor = -1; }
     
-    face_orient_real[0] = vt_bdry[0][1] - vt_bdry[0][0]; 
-    face_orient_real[1] = vt_bdry[1][1] - vt_bdry[1][0];
+    tang_vec_real[0] = vt_bdry[0][1] - vt_bdry[0][0]; 
+    tang_vec_real[1] = vt_bdry[1][1] - vt_bdry[1][0];
     
     double magn = 0.;
-    for (unsigned d = 0; d < _dim; d++) magn += face_orient_real[d]*face_orient_real[d]; 
+    for (unsigned d = 0; d < _dim; d++) magn += tang_vec_real[d]*tang_vec_real[d]; 
         
      magn = sqrt(magn);
     
-    for (unsigned d = 0; d < _dim; d++) { face_orient_real[d] /= magn; }
+    for (unsigned d = 0; d < _dim; d++) { tang_vec_real[d] /= magn; }
     
     double cosine_theta = 0.; 
-    for (unsigned d = 0; d < _dim; d++) cosine_theta += face_orient_real[d]*face_orient_ref[d];
+    for (unsigned d = 0; d < _dim; d++) cosine_theta += tang_vec_real[d]*tang_vec_ref[d];
 
     
     
@@ -2008,18 +2028,18 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
       }
 
 //here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
-      std::vector <double> xi_vol(2);
-             xi_vol[1-abs(face_orient_ref[0])] = cosine_theta * xi_one_dim[0]; 
-             xi_vol[abs(face_orient_ref[0])]   = xi_factor * 1.;
+      std::vector <double> ref_bdry_qp_coords_in_vol(2);
+             ref_bdry_qp_coords_in_vol[1-abs(tang_vec_ref[0])] = cosine_theta * xi_one_dim[0]; 
+             ref_bdry_qp_coords_in_vol[abs(tang_vec_ref[0])]   = xi_factor * 1.;
       
              
       for (int dof = 0; dof < _nc; dof++) {
-             _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &xi_vol[0]);
-         _dphidxi_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &xi_vol[0]);
-        _dphideta_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &xi_vol[0]);
+             _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]);
+         _dphidxi_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
+        _dphideta_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
       }
       
-             xi_qps[qp] = xi_vol;
+             xi_qps[qp] = ref_bdry_qp_coords_in_vol;
              
     }
     
