@@ -1770,12 +1770,23 @@ namespace femus {
     
 for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
         
-      double xi_one_dim[1];
+      double xi_one_dim[2];
       for (unsigned d = 0; d < 1; d++) {
         xi_one_dim[d] = *pt_one_dim[d];
         pt_one_dim[d]++;
       }
+      
+      xi_one_dim[1] = 0.; //placing along xi direction (eta = 0)
+      
+    double rotation[2][2] = {{0, 0}, {0, 0}};
 
+// // //     const double theta = arccos(cosine_theta);
+// // //     
+// // //     rotation[0][0] =  cosine_theta;
+// // //     rotation[0][1] = - sin( theta );
+// // //     rotation[1][0] =   sin( theta );
+// // //     rotation[1][1] =  cosine_theta;
+    
 //here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
  //we have to use a transformation that locates the 1d edge in one of the sides of my 2d elem
  
@@ -1784,6 +1795,14 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
              ref_bdry_qp_coords_in_vol[1 - abs(normal_vec_ref[1])] = cosine_theta * xi_one_dim[0]  + translation[1 - abs(normal_vec_ref[1])]; 
              ref_bdry_qp_coords_in_vol[    abs(normal_vec_ref[1])] = 0                             + translation[    abs(normal_vec_ref[1])];
       
+// // //       std::vector <double> rotation_vec(_dim); std::fill(rotation_vec.begin(), rotation_vec.end(), 0.);
+// // //       
+// // //    for (unsigned k = 0; k < _dim; k++)  
+// // //      for (unsigned d = 0; d < _dim; d++)  rotation_vec[k] +=  rotation[k][d] * xi_one_dim[d]; 
+// // //         
+// // //     for (unsigned d = 0; d < _dim; d++) ref_bdry_qp_coords_in_vol[ d ] =  rotation_vec[d]  + normal [d];
+             
+             
 //evaluate volume shape functions and derivatives at reference boundary gauss points             
       for (int dof = 0; dof < _nc; dof++) {
              _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]);
