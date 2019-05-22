@@ -12,7 +12,7 @@ theStudy = salome.myStudy
 
 import salome_notebook
 notebook = salome_notebook.NoteBook(theStudy)
-sys.path.insert( 0, r'/home/gbornia/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_lifting_external/input')
+sys.path.insert( 0, r'/home/student/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_lifting_external/input')
 
 ###
 ### GEOM component
@@ -24,7 +24,7 @@ import math
 import SALOMEDS
 
 
-geompy = geomBuilder.New(theStudy)
+geompy = geomBuilder.New()
 
 O = geompy.MakeVertex(0, 0, 0)
 OX = geompy.MakeVectorDXDYDZ(1, 0, 0)
@@ -34,10 +34,10 @@ Vertex_1 = geompy.MakeVertex(0, 0, 0)
 Vertex_2 = geompy.MakeVertex(1, 0, 0)
 Vertex_3 = geompy.MakeVertex(0, 1, 0)
 Vertex_4 = geompy.MakeVertex(1, 1, 0)
-Vertex_5 = geompy.MakeVertex(1, 0.25, 0)
-Vertex_6 = geompy.MakeVertex(1, 0.75, 0)
-Vertex_7 = geompy.MakeVertex(1.5, 0.25, 0)
-Vertex_8 = geompy.MakeVertex(1.5, 0.75, 0)
+Vertex_5 = geompy.MakeVertex(1, 0., 0)
+Vertex_6 = geompy.MakeVertex(1, 1, 0)
+Vertex_7 = geompy.MakeVertex(1.25, 0., 0)
+Vertex_8 = geompy.MakeVertex(1.25, 1, 0)
 Line_1 = geompy.MakeLineTwoPnt(Vertex_1, Vertex_2)
 Line_2 = geompy.MakeLineTwoPnt(Vertex_2, Vertex_4)
 Line_3 = geompy.MakeLineTwoPnt(Vertex_4, Vertex_3)
@@ -88,7 +88,7 @@ geompy.addToStudyInFather( Face_2, Edge_8, 'Edge_8' )
 import  SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
 
-smesh = smeshBuilder.New(theStudy)
+smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(Face_1)
 Regular_1D = Mesh_1.Segment(geom=Edge_1)
 Number_of_Segments_1 = Regular_1D.NumberOfSegments(4,None,[])
@@ -109,6 +109,18 @@ Number_of_Segments_5 = Regular_1D_3.NumberOfSegments(1,None,[])
 Quadrangle_2D_1 = Mesh_2.Quadrangle(algo=smeshBuilder.QUADRANGLE)
 status = Mesh_2.AddHypothesis(Propagation_of_1D_Hyp,Edge_5)
 isDone = Mesh_2.Compute()
+#try:
+  #pass
+#except:
+  #print 'ExportToMEDX() failed. Invalid file name?'
+#try:
+  #pass
+#except:
+  #print 'ExportToMEDX() failed. Invalid file name?'
+#try:
+  #pass
+#except:
+  #print 'ExportToMEDX() failed. Invalid file name?'
 Mesh_1.ConvertToQuadratic(0, Mesh_1,True)
 Mesh_2.ConvertToQuadratic(0, Mesh_2,True)
 isDone = Mesh_1.Compute()
@@ -122,15 +134,9 @@ nbAdd = Group_13_0.Add( [ 35, 36 ] )
 Group_10_0 = Mesh_4.CreateEmptyGroup( SMESH.EDGE, 'Group_1' )
 nbAdd = Group_10_0.AddFrom( Mesh_4.GetMesh() )
 Group_10_0.SetName( 'Group_10_0' )
-smesh.SetName(Mesh_4, 'Mesh_4')
-try:
-  Mesh_4.ExportMED( r'/home/gbornia/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_lifting_external/input/ext_box_longer.med', 0, SMESH.MED_V2_2, 1, None ,0)
-  pass
-except:
-  print 'ExportToMEDX() failed. Invalid file name?'
 Sub_mesh_1 = Regular_1D.GetSubMesh()
-Sub_mesh_2 = Regular_1D_2.GetSubMesh()
 Regular_1D_4 = Mesh_1.GetSubMesh( Edge_2, 'Regular_1D' )
+Sub_mesh_2 = Regular_1D_2.GetSubMesh()
 
 
 ## Set names of Mesh objects
@@ -143,15 +149,15 @@ smesh.SetName(Number_of_Segments_5, 'Number of Segments_5')
 smesh.SetName(Number_of_Segments_3, 'Number of Segments_3')
 smesh.SetName(Number_of_Segments_4, 'Number of Segments_4')
 smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
-smesh.SetName(Mesh_4.GetMesh(), 'Mesh_4')
 smesh.SetName(Mesh_2.GetMesh(), 'Mesh_2')
-smesh.SetName(Group_10_0, 'Group_10_0')
+smesh.SetName(Mesh_4.GetMesh(), 'Mesh_4')
 smesh.SetName(Sub_mesh_2, 'Sub-mesh_2')
-smesh.SetName(Group_13_0, 'Group_13_0')
 smesh.SetName(Group_12_0, 'Group_12_0')
+smesh.SetName(Group_13_0, 'Group_13_0')
+smesh.SetName(Group_10_0, 'Group_10_0')
 smesh.SetName(Regular_1D_4, 'Regular_1D')
 smesh.SetName(Sub_mesh_1, 'Sub-mesh_1')
 
 
 if salome.sg.hasDesktop():
-  salome.sg.updateObjBrowser(True)
+  salome.sg.updateObjBrowser()

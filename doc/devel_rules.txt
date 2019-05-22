@@ -160,5 +160,5 @@ In Mesh:
    1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
    
    Build CompoundMesh to merge the meshes
-     --> Check the Boundary of the CompoundMesh!!!
+     --> Check the Boundary of the CompoundMesh!!! You need to remove previous boundary elements that now are inside the new domain
      --> Rename it to "Mesh" + something!!!
