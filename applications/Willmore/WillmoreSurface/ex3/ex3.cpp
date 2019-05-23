@@ -28,14 +28,14 @@ const double ap[3] = {1, 0., 0.};
 using namespace femus;
 
 // Toggle for setting volume and area constraints, as well as sign of N.
-const bool volumeConstraint = false;
+const bool volumeConstraint = true;
 const bool areaConstraint = false;
 const double normalSign = -1.;
 
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta). ????
 // Trick for system2 (timederiv).
-const double eps = 0.00001;
+const double eps = 0.001;
 const double delta = 0.005;
 const double timederiv = 0.;
 
@@ -51,7 +51,7 @@ double GetTimeStep (const double t) {
   // if(time==0) return 5.0e-7;
   //return 0.0001;
   //double dt0 = .00002;
-  double dt0 = .01;
+  double dt0 = .001;
   double s = 1.;
   double n = 0.3;
   return dt0 * pow (1. + t / pow (dt0, s), n);
@@ -88,19 +88,19 @@ int main (int argc, char** args) {
   double scalingFactor = 1.;
 
   // Below this are options for the initial mesh (choose one).
-  //mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/tiltedTorus.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/virus3.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/torus.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/sphere.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
   // Set number of mesh levels.
   unsigned numberOfUniformLevels = 1;
@@ -170,7 +170,7 @@ int main (int argc, char** args) {
 
   // Parameters for convergence and # of iterations for Willmore.
   system.SetMaxNumberOfNonLinearIterations (20);
-  system.SetNonLinearConvergenceTolerance (1.e-15);
+  system.SetNonLinearConvergenceTolerance (1.e-13);
 
   // Add solutions X, Y, W to MCF system.
   system.AddSolutionToSystemPDE ("Dx1");
@@ -201,7 +201,7 @@ int main (int argc, char** args) {
 
   // Parameters for convergence and # of iterations.
   system2.SetMaxNumberOfNonLinearIterations (40);
-  system2.SetNonLinearConvergenceTolerance (1.e-9);
+  system2.SetNonLinearConvergenceTolerance (1.e-11);
 
   // Add solutions newX, Lambda1 to system2.
   system2.AddSolutionToSystemPDE ("nDx1");
