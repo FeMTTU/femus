@@ -21,6 +21,7 @@
 #include "MeshMetisPartitioning.hpp"
 #include "GambitIO.hpp"
 #include "MED_IO.hpp"
+// #include "obj_io.hpp"
 #include "NumericVector.hpp"
 
 // C++ includes
@@ -133,6 +134,11 @@ namespace femus {
     if (name.rfind (".neu") < name.size()) {
       GambitIO (*this).read (name, _coords, Lref, type_elem_flag);
     }
+
+    // else if (name.rfind (".obj") < name.size()) {
+    //   obj_io (*this).read (name, _coords, Lref, type_elem_flag);
+    // }
+
 #ifdef HAVE_HDF5
     else if (name.rfind (".med") < name.size()) {
       MED_IO (*this).read (name, _coords, Lref, type_elem_flag);
@@ -1141,5 +1147,3 @@ namespace femus {
   }
 
 } //end namespace femus
-
-

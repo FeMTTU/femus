@@ -75,6 +75,7 @@ mesh/Mesh.cpp
 mesh/MultiLevelMesh.cpp
 mesh/MeshGeneration.cpp
 mesh/GambitIO.cpp
+mesh/obj_io.cpp
 mesh/MeshRefinement.cpp
 mesh/MeshMetisPartitioning.cpp
 mesh/MeshPartitioning.cpp
