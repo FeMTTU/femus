@@ -85,7 +85,7 @@ double GetSmootK (const double & kmin, const double & kmax, const double & h, co
   return value;
 }
 
-bool GetDeadCells (const double &time, MultiLevelSolution &mlSol);
+bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & last);
 
 void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob);
 
@@ -109,7 +109,7 @@ int main (int argc, char** args) {
   // erase all the coarse mesh levels
   // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
 
-  for (unsigned simulation = 24; simulation < 25; simulation++) {
+  for (unsigned simulation = 0; simulation < 25; simulation++) {
 
     V0 = 0.06 * (simulation + 1) ;   // fraction of injection vs tumor
 
@@ -150,7 +150,7 @@ int main (int argc, char** args) {
 
     // time loop parameter
     system.AttachGetTimeIntervalFunction (GetTimeStep);
-    const unsigned int n_timesteps = 40;
+    const unsigned int n_timesteps = 60;
 
     system.SetMaxNumberOfNonLinearIterations (1);
     system.SetMaxNumberOfLinearIterations (1);
@@ -170,7 +170,7 @@ int main (int argc, char** args) {
     print_vars.push_back ("All");
 
     double time = system.GetTime();
-    GetDeadCells (time, mlSol);
+    GetDeadCells (time, mlSol, false);
 
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
@@ -180,8 +180,10 @@ int main (int argc, char** args) {
 
       system.MGsolve();
 
+      bool last = (time_step == n_timesteps - 1) ? true : false;
+
       double time = system.GetTime();
-      bool stop = GetDeadCells (time, mlSol);
+      bool stop = GetDeadCells (time, mlSol, last);
       mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
       if (stop) break;
     }
@@ -484,7 +486,7 @@ void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob) {
 }
 
 
-bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
+bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & last) {
 
   double a = 0.0471;
   double b = -1.4629;
@@ -619,7 +621,7 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
 
   bool stop = (lInfinityNorm < uT[2].second) ? true : false;
 
-  if (stop && iproc == 0) {
+  if ( (stop || last) && iproc == 0) {
     std::ofstream fout;
     fout.open ("DoseResponseCurve.csv", std::ofstream::app);
     fout << V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
