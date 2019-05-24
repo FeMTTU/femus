@@ -176,7 +176,7 @@ int main(int argc, char** args) {
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
 
     //ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-    unsigned numberOfUniformLevels = 1;
+    unsigned numberOfUniformLevels = 2;
     unsigned numberOfSelectiveLevels = 0;
     ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
     ml_mesh.PrintInfo();

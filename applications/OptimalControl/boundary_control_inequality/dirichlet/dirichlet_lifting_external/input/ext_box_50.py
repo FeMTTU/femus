@@ -10,8 +10,17 @@ import salome
 salome.salome_init()
 import salome_notebook
 notebook = salome_notebook.NoteBook()
-sys.path.insert(0, r'/home/student/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_lifting_external/input')
+sys.path.insert(0, r'/home/gbornia/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_lifting_external/input')
 
+####################################################
+##       Begin of NoteBook variables section      ##
+####################################################
+notebook.set("y_axis", 2)
+notebook.set("x_axis", 2)
+notebook.set("x_axis_ext", 1)
+####################################################
+##        End of NoteBook variables section       ##
+####################################################
 ###
 ### GEOM component
 ###
@@ -96,102 +105,60 @@ from salome.smesh import smeshBuilder
 
 smesh = smeshBuilder.New()
 Mesh_1 = smesh.Mesh(Face_1)
-Regular_1D = Mesh_1.Segment(geom=Edge_1)
-Number_of_Segments_1 = Regular_1D.NumberOfSegments(4,None,[])
-Propagation_of_1D_Hyp = Regular_1D.Propagation()
-Number_of_Segments_2 = smesh.CreateHypothesis('NumberOfSegments')
-Number_of_Segments_2.SetReversedEdges( [] )
-Number_of_Segments_2.SetObjectEntry( "Face_1" )
-Quadrangle_2D = Mesh_1.Quadrangle(algo=smeshBuilder.QUADRANGLE)
-Regular_1D_1 = Mesh_1.Segment()
-Number_of_Segments_3 = Regular_1D_1.NumberOfSegments(4,None,[])
-Number_of_Segments_2.SetNumberOfSegments( 4 )
-isDone = Mesh_1.Compute()
 Mesh_2 = smesh.Mesh(Face_2)
-Regular_1D_2 = Mesh_2.Segment(geom=Edge_5)
-Number_of_Segments_4 = Regular_1D_2.NumberOfSegments(2,None,[])
-Regular_1D_3 = Mesh_2.Segment()
-Number_of_Segments_5 = Regular_1D_3.NumberOfSegments(1,None,[])
+theNbElems = Mesh_1.Evaluate(Face_1)
+Regular_1D = Mesh_1.Segment(geom=Edge_1)
+Number_of_Segments_1 = Regular_1D.NumberOfSegments("y_axis",None,[])
+Regular_1D_1 = Mesh_1.Segment(geom=Edge_2)
+Number_of_Segments_2 = Regular_1D_1.NumberOfSegments("x_axis",None,[])
+Quadrangle_2D = Mesh_1.Quadrangle(algo=smeshBuilder.QUADRANGLE)
+Regular_1D_2 = Mesh_1.Segment()
+Regular_1D_3 = Mesh_2.Segment(geom=Edge_5)
+Regular_1D_4 = Mesh_2.Segment(geom=Edge_6)
+status = Mesh_2.AddHypothesis(Number_of_Segments_1,Edge_5)
+Number_of_Segments_3 = Regular_1D_4.NumberOfSegments("x_axis_ext",None,[])
+Propagation_of_1D_Hyp = Regular_1D_4.Propagation()
+Regular_1D_5 = Mesh_2.Segment()
 Quadrangle_2D_1 = Mesh_2.Quadrangle(algo=smeshBuilder.QUADRANGLE)
+status = Mesh_1.AddHypothesis(Propagation_of_1D_Hyp,Edge_1)
+status = Mesh_1.AddHypothesis(Propagation_of_1D_Hyp,Edge_2)
+isDone = Mesh_1.Compute()
 status = Mesh_2.AddHypothesis(Propagation_of_1D_Hyp,Edge_5)
 isDone = Mesh_2.Compute()
 Mesh_1.ConvertToQuadratic(0, Mesh_1,True)
 Mesh_2.ConvertToQuadratic(0, Mesh_2,True)
-isDone = Mesh_1.Compute()
-isDone = Mesh_2.Compute()
-Mesh_4 = smesh.Concatenate([ Mesh_1.GetMesh(), Mesh_2.GetMesh() ], 1, 1, 1e-05)
-isDone = Mesh_4.RemoveElements( [ 6, 7 ] )
-Group_12_0 = Mesh_4.CreateEmptyGroup( SMESH.FACE, 'Group_12_0' )
-nbAdd = Group_12_0.Add( [ 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 ] )
-Group_13_0 = Mesh_4.CreateEmptyGroup( SMESH.FACE, 'Group_13_0' )
-nbAdd = Group_13_0.Add( [ 35, 36 ] )
-Group_10_0 = Mesh_4.CreateEmptyGroup( SMESH.EDGE, 'Group_1' )
-nbAdd = Group_10_0.AddFrom( Mesh_4.GetMesh() )
-Group_10_0.SetName( 'Group_10_0' )
-status = Mesh_2.RemoveHypothesis(Number_of_Segments_4,Edge_5)
-Number_of_Segments_6 = Regular_1D_2.NumberOfSegments(4,None,[])
-Regular_1D_4 = Mesh_2.Segment(geom=Edge_6)
-Number_of_Segments_7 = Regular_1D_4.NumberOfSegments(2,None,[])
-status = Mesh_2.AddHypothesis(Propagation_of_1D_Hyp,Edge_6)
-isDone = Mesh_2.Compute()
-Mesh_5 = smesh.Concatenate([ Mesh_1.GetMesh(), Mesh_2.GetMesh() ], 1, 1, 1e-05,True)
-isDone = Mesh_5.RemoveElements( [ 5 ] )
-isDone = Mesh_5.RemoveElements( [ 6 ] )
-isDone = Mesh_5.RemoveElements( [ 5 ] )
-isDone = Mesh_5.RemoveElements( [ 36 ] )
-isDone = Mesh_5.RemoveElements( [ 35 ] )
-isDone = Mesh_5.RemoveElements( [ 34 ] )
-isDone = Mesh_5.RemoveElements( [ 33 ] )
-smesh.SetName(Mesh_5, 'Mesh_5')
-try:
-  Mesh_5.ExportMED(r'/home/student/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_lifting_external/input/ext_box_50.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=0)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
-#Mesh_5.RemoveGroup( smeshObj_1 ) ### smeshObj_1 has not been yet created
-#Group_10_0_1.SetName( 'Group_10_0' ) ### not created Object
-#Group_11_0.SetName( 'Group_11_0' ) ### not created Object
-#Group_12_0_1.SetName( 'Group_12_0' ) ### not created Object
-#Group_13_0_1.SetName( 'Group_13_0' ) ### not created Object
-smesh.SetName(Mesh_5, 'Mesh_5')
-try:
-  Mesh_5.ExportMED(r'/home/student/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_lifting_external/input/ext_box_50.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=1)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
-smesh.SetName(Mesh_5, 'Mesh_5')
-try:
-  Mesh_5.ExportMED(r'/home/student/software/femus/applications/OptimalControl/boundary_control_inequality/dirichlet/dirichlet_lifting_external/input/ext_box_50.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=0)
-  pass
-except:
-  print('ExportMED() failed. Invalid file name?')
+Mesh_3 = smesh.Concatenate([ Mesh_1.GetMesh(), Mesh_2.GetMesh() ], 1, 1, 1e-05)
+isDone = Mesh_1.RemoveElements( [ 5, 6 ] )
+Mesh_3.Clear()
+isDone = Mesh_3.RemoveElements( [ 3, 4 ] )
+Group_13_0 = Mesh_3.CreateEmptyGroup( SMESH.FACE, 'Group_13_0' )
+nbAdd = Group_13_0.Add( [ 15, 16 ] )
+Group_12_0 = Mesh_3.CreateEmptyGroup( SMESH.FACE, 'Group_12_0' )
+nbAdd = Group_12_0.Add( [ 7, 8, 9, 10 ] )
+Group_1_0 = Mesh_3.CreateEmptyGroup( SMESH.EDGE, 'Group_1_0' )
+nbAdd = Group_1_0.AddFrom( Mesh_3.GetMesh() )
 Sub_mesh_1 = Regular_1D.GetSubMesh()
-Sub_mesh_2 = Regular_1D_2.GetSubMesh()
-Sub_mesh_3 = Regular_1D_4.GetSubMesh()
-Regular_1D_5 = Mesh_1.GetSubMesh( Edge_2, 'Regular_1D' )
+Sub_mesh_4 = Regular_1D_1.GetSubMesh()
+Sub_mesh_2 = Mesh_2.GetSubMesh( Edge_5, 'Regular_1D' )
+Sub_mesh_3 = Mesh_2.GetSubMesh( Edge_6, 'Regular_1D' )
 
 
 ## Set names of Mesh objects
 smesh.SetName(Regular_1D.GetAlgorithm(), 'Regular_1D')
 smesh.SetName(Quadrangle_2D.GetAlgorithm(), 'Quadrangle_2D')
-smesh.SetName(Propagation_of_1D_Hyp, 'Propagation of 1D Hyp. on Opposite Edges_1')
 smesh.SetName(Number_of_Segments_2, 'Number of Segments_2')
-smesh.SetName(Number_of_Segments_1, 'Number of Segments_1')
-smesh.SetName(Number_of_Segments_5, 'Number of Segments_5')
-smesh.SetName(Number_of_Segments_6, 'Number of Segments_6')
 smesh.SetName(Number_of_Segments_3, 'Number of Segments_3')
-smesh.SetName(Number_of_Segments_4, 'Number of Segments_4')
-smesh.SetName(Number_of_Segments_7, 'Number of Segments_7')
+smesh.SetName(Number_of_Segments_1, 'Number of Segments_1')
+smesh.SetName(Propagation_of_1D_Hyp, 'Propagation of 1D Hyp. on Opposite Edges_1')
 smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
-smesh.SetName(Mesh_4.GetMesh(), 'Mesh_4')
+smesh.SetName(Mesh_3.GetMesh(), 'Mesh_3')
 smesh.SetName(Mesh_2.GetMesh(), 'Mesh_2')
-smesh.SetName(Mesh_5.GetMesh(), 'Mesh_5')
-smesh.SetName(Group_10_0, 'Group_10_0')
+smesh.SetName(Group_1_0, 'Group_1_0')
 smesh.SetName(Sub_mesh_2, 'Sub-mesh_2')
 smesh.SetName(Sub_mesh_3, 'Sub-mesh_3')
-smesh.SetName(Group_13_0, 'Group_13_0')
 smesh.SetName(Group_12_0, 'Group_12_0')
-smesh.SetName(Regular_1D_5, 'Regular_1D')
+smesh.SetName(Group_13_0, 'Group_13_0')
+smesh.SetName(Sub_mesh_4, 'Sub-mesh_4')
 smesh.SetName(Sub_mesh_1, 'Sub-mesh_1')
 
 
