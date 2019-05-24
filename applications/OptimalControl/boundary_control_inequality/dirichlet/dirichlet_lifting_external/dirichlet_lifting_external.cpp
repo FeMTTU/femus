@@ -67,7 +67,7 @@ void compute_coordinates_bdry_one_face(std::vector< std::vector <double> > & coo
             const double my_eps = 1.e-6;
             
             if (elem_center_bdry[0] > 1. - my_eps   && elem_center_bdry[0] < 1.   + my_eps  &&
-                    elem_center_bdry[1] > 0.25 - my_eps && elem_center_bdry[1] < 0.75 + my_eps
+                    elem_center_bdry[1] > 0. - my_eps && elem_center_bdry[1] < 1. + my_eps
                ) {
                 
                 std::cout << " bdry elem on interface with center " << "(" << elem_center_bdry[0] << "," << elem_center_bdry[1] << ")" << std::endl;
@@ -170,7 +170,7 @@ int main(int argc, char** args) {
 
     // read coarse level mesh and generate finers level meshes
 //     std::string mesh_file = "./input/ext_box.neu";
-    std::string mesh_file = "./input/ext_box.med";
+    std::string mesh_file = "./input/ext_box_50.med";
 //     std::string mesh_file = "./input/ext_box_2.med";
 //     std::string mesh_file = "./input/ext_box_longer.med";
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
