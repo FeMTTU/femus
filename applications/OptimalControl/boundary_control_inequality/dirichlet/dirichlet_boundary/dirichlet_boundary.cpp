@@ -48,32 +48,27 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   value = 0.;
 
   if(!strcmp(name,"control")) {
-  if (faceName == FACE_FOR_CONTROL)
-//   if (x[1-AXIS_DIRECTION_CONTROL_SIDE] > 1. - 1.e-5 && x[1-AXIS_DIRECTION_CONTROL_SIDE] < 1. + 1.e-5)    
+  if (faceName == FACE_FOR_CONTROL) {
+  if (x[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + 1.e-5)    
     dirichlet = false;
+  }
   }
 
-  if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u=q)
-  if (faceName == FACE_FOR_CONTROL)
-//   if (x[1-AXIS_DIRECTION_CONTROL_SIDE] > 1. - 1.e-5 && x[1-AXIS_DIRECTION_CONTROL_SIDE] < 1. + 1.e-5)    
+  if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u = q)
+  if (faceName == FACE_FOR_CONTROL) {
+  if (x[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + 1.e-5)    
     dirichlet = false;
   }
+      
+}
 
   if(!strcmp(name,"mu")) {
 //       value = 0.;
-//   if (faceName == FACE_FOR_CONTROL)
     dirichlet = false;
   }
   
 //     if(!strcmp(name,"adjoint")) { 
-//   if (faceName == FACE_FOR_CONTROL)
 //     dirichlet = false;
-//   }
-
-  
-  
-//     if(!strcmp(name,"adjoint")) {  //"adjoint" corresponds to the third block row
-//   if (faceName == FACE_FOR_CONTROL)    value = 1.;
 //   }
 
   
@@ -230,9 +225,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
   vector < double > coord_at_qp_bdry(dim);
   
-  vector <double> phi_coords;  // local test function
-  vector <double> phi_coords_x; // local test function first order partial derivatives
-  vector <double> phi_coords_xx; // local test function second order partial derivatives
+  vector <double> phi_coords;
+  vector <double> phi_coords_x;
+  vector <double> phi_coords_xx; 
 
   phi_coords.reserve(maxSize);
   phi_coords_x.reserve(maxSize * dim);
