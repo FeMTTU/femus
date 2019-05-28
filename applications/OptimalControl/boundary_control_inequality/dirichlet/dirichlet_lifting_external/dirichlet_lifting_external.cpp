@@ -170,13 +170,13 @@ int main(int argc, char** args) {
 
     // read coarse level mesh and generate finers level meshes
 //     std::string mesh_file = "./input/ext_box.neu";
-    std::string mesh_file = "./input/ext_box_50.med";
+    std::string mesh_file = "./input/ext_box_1.med";
 //     std::string mesh_file = "./input/ext_box_2.med";
 //     std::string mesh_file = "./input/ext_box_longer.med";
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
 
     //ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-    unsigned numberOfUniformLevels = 2;
+    unsigned numberOfUniformLevels = 4;
     unsigned numberOfSelectiveLevels = 0;
     ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
     ml_mesh.PrintInfo();
