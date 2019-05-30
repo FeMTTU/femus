@@ -1666,54 +1666,8 @@ namespace femus {
     //TODO warning the surface gradient is missing!!!!!!!!!!!!!!!
   }
   
+
 //---------------------------------------------------------------------------------------------------------
-  template <class type>
-  void elem_type_3D::GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                      vector< vector < type > >& jacobianMatrix) const
-  {
-
-    jacobianMatrix.resize(3);
-    jacobianMatrix[0].resize(3);
-    jacobianMatrix[1].resize(3);
-    jacobianMatrix[2].resize(3);
-
-    type Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-
-    const double* dxi = _dphidxi[ig];
-    const double* deta = _dphideta[ig];
-    const double* dzeta = _dphidzeta[ig];
-
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
-      Jac[0][0] += (*dxi) * vt[0][inode];
-      Jac[0][1] += (*dxi) * vt[1][inode];
-      Jac[0][2] += (*dxi) * vt[2][inode];
-      Jac[1][0] += (*deta) * vt[0][inode];
-      Jac[1][1] += (*deta) * vt[1][inode];
-      Jac[1][2] += (*deta) * vt[2][inode];
-      Jac[2][0] += (*dzeta) * vt[0][inode];
-      Jac[2][1] += (*dzeta) * vt[1][inode];
-      Jac[2][2] += (*dzeta) * vt[2][inode];
-    }
-
-    type det = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
-                Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
-                Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
-
-    jacobianMatrix[0][0] = (-Jac[1][2] * Jac[2][1] + Jac[1][1] * Jac[2][2]) / det;
-    jacobianMatrix[0][1] = (Jac[0][2] * Jac[2][1] - Jac[0][1] * Jac[2][2]) / det;
-    jacobianMatrix[0][2] = (-Jac[0][2] * Jac[1][1] + Jac[0][1] * Jac[1][2]) / det;
-    jacobianMatrix[1][0] = (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) / det;
-    jacobianMatrix[1][1] = (-Jac[0][2] * Jac[2][0] + Jac[0][0] * Jac[2][2]) / det;
-    jacobianMatrix[1][2] = (Jac[0][2] * Jac[1][0] - Jac[0][0] * Jac[1][2]) / det;
-    jacobianMatrix[2][0] = (-Jac[1][1] * Jac[2][0] + Jac[1][0] * Jac[2][1]) / det;
-    jacobianMatrix[2][1] = (Jac[0][1] * Jac[2][0] - Jac[0][0] * Jac[2][1]) / det;
-    jacobianMatrix[2][2] = (-Jac[0][1] * Jac[1][0] + Jac[0][0] * Jac[1][1]) / det;
-
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
-
-  }
-
-
   void elem_type_2D::volume_shape_functions_at_reference_boundary_quadrature_points(
       const vector < vector < double> > & vt_bdry,  
       const unsigned  jface) const {
@@ -1879,6 +1833,54 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
   }
   
   
+ 
+ //---------------------------------------------------------------------------------------------------------
+  template <class type>
+  void elem_type_3D::GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
+                                      vector< vector < type > >& jacobianMatrix) const
+  {
+
+    jacobianMatrix.resize(3);
+    jacobianMatrix[0].resize(3);
+    jacobianMatrix[1].resize(3);
+    jacobianMatrix[2].resize(3);
+
+    type Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+
+    const double* dxi = _dphidxi[ig];
+    const double* deta = _dphideta[ig];
+    const double* dzeta = _dphidzeta[ig];
+
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
+      Jac[0][0] += (*dxi) * vt[0][inode];
+      Jac[0][1] += (*dxi) * vt[1][inode];
+      Jac[0][2] += (*dxi) * vt[2][inode];
+      Jac[1][0] += (*deta) * vt[0][inode];
+      Jac[1][1] += (*deta) * vt[1][inode];
+      Jac[1][2] += (*deta) * vt[2][inode];
+      Jac[2][0] += (*dzeta) * vt[0][inode];
+      Jac[2][1] += (*dzeta) * vt[1][inode];
+      Jac[2][2] += (*dzeta) * vt[2][inode];
+    }
+
+    type det = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
+                Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
+                Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
+
+    jacobianMatrix[0][0] = (-Jac[1][2] * Jac[2][1] + Jac[1][1] * Jac[2][2]) / det;
+    jacobianMatrix[0][1] = (Jac[0][2] * Jac[2][1] - Jac[0][1] * Jac[2][2]) / det;
+    jacobianMatrix[0][2] = (-Jac[0][2] * Jac[1][1] + Jac[0][1] * Jac[1][2]) / det;
+    jacobianMatrix[1][0] = (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) / det;
+    jacobianMatrix[1][1] = (-Jac[0][2] * Jac[2][0] + Jac[0][0] * Jac[2][2]) / det;
+    jacobianMatrix[1][2] = (Jac[0][2] * Jac[1][0] - Jac[0][0] * Jac[1][2]) / det;
+    jacobianMatrix[2][0] = (-Jac[1][1] * Jac[2][0] + Jac[1][0] * Jac[2][1]) / det;
+    jacobianMatrix[2][1] = (Jac[0][1] * Jac[2][0] - Jac[0][0] * Jac[2][1]) / det;
+    jacobianMatrix[2][2] = (-Jac[0][1] * Jac[1][0] + Jac[0][0] * Jac[1][1]) / det;
+
+    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+
+  }
+
   
 //---------------------------------------------------------------------------------------------------------
   template <class type>
@@ -1981,133 +1983,9 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 
   }
 
-//---------------------------------------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------------------------------------
-
-  void elem_type_3D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, 
-                                           const vector < vector < double> > & vt_bdry,  
-                                           const unsigned& jface, 
-                                           const unsigned& ig_bdry, 
-                                           vector < double >& phi, 
-                                           vector < double >& gradphi) const {
-                                       
-
-//********* EVALUATION STAGE **********************
-                                       
-    //check that our volume element shape is a quadrilateral, doesn't work for triangles for now
-    std::vector<int> tang_vec_ref(_dim);     std::fill(tang_vec_ref.begin(), tang_vec_ref.end(), 0.);
-    std::vector<double> tang_vec_real(_dim);    std::fill(tang_vec_real.begin(), tang_vec_real.end(), 0.);
-    double xi_factor;
-        
-    if      (jface == 0) { tang_vec_ref[0]  = 1;  tang_vec_ref[1] =  0; xi_factor = -1; }
-    else if (jface == 1) { tang_vec_ref[0]  = 0;  tang_vec_ref[1] =  1; xi_factor = +1; }
-    else if (jface == 2) { tang_vec_ref[0] =  1;  tang_vec_ref[1] =  0; xi_factor = +1; }
-    else if (jface == 3) { tang_vec_ref[0]  = 0;  tang_vec_ref[1] =  1; xi_factor = -1; }
-    
-    tang_vec_real[0] = vt_bdry[0][1] - vt_bdry[0][0]; 
-    tang_vec_real[1] = vt_bdry[1][1] - vt_bdry[1][0];
-    
-    double magn = 0.;
-    for (unsigned d = 0; d < _dim; d++) magn += tang_vec_real[d]*tang_vec_real[d]; 
-        
-     magn = sqrt(magn);
-    
-    for (unsigned d = 0; d < _dim; d++) { tang_vec_real[d] /= magn; }
-    
-    double cosine_theta = 0.; 
-    for (unsigned d = 0; d < _dim; d++) cosine_theta += tang_vec_real[d]*tang_vec_ref[d];
-
-    
-    
-    //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
-    //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
-    //we should access the bdry element and compute the abscissa using the coordinates of it
-    //here what we have to do is to locate the reference boundary element in the reference volume element
-    //Notice that the SIGN of the direction is also important
-    //we need to understand:
-    // 1) where my boundary element is located in the reference volume element
-    // 2) in what direction it is oriented
-    
-    //here we compute for ALL quadrature points and for ALL dofs the test functions
-    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
-    
-    const double* pt_one_dim[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
-    
-    std::vector < std::vector<double> > xi_qps(n_gauss_bdry);
-    for (unsigned qp = 0; qp < n_gauss_bdry; qp++) { xi_qps[qp].resize(_dim); }
-    
-// std::cout << "Inside  ig = " << ig_bdry << " ";
-for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
-        
-      double xi_one_dim[1];
-      for (unsigned d = 0; d < 1; d++) {
-        xi_one_dim[d] = *pt_one_dim[d];
-        pt_one_dim[d]++;
-      }
-
-//here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
-      std::vector <double> ref_bdry_qp_coords_in_vol(2);
-             ref_bdry_qp_coords_in_vol[1-abs(tang_vec_ref[0])] = cosine_theta * xi_one_dim[0]; 
-             ref_bdry_qp_coords_in_vol[abs(tang_vec_ref[0])]   = xi_factor * 1.;
-      
-             
-      for (int dof = 0; dof < _nc; dof++) {
-             _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]);
-         _dphidxi_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
-        _dphideta_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
-      }
-      
-             xi_qps[qp] = ref_bdry_qp_coords_in_vol;
-             
-    }
-    
-             
-//       for (unsigned d = 0; d < _dim; d++) std::cout << xi_qps[ig_bdry][d] << " ";
-// std::cout << std::endl;
-    
-//********* END EVALUATION STAGE **********************
-    
-
-    phi.resize(_nc);
-    gradphi.resize(_nc * 2);
-
-    double Jac[2][2] = {{0, 0}, {0, 0}};
-    double JacInv[2][2];
-    const double* dxi = _dphidxi_bdry[ig_bdry];
-    const double* deta = _dphideta_bdry[ig_bdry];
-    for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
-      Jac[0][0] += (*dxi) * vt_vol[0][inode];  // d x/d csi
-      Jac[0][1] += (*dxi) * vt_vol[1][inode];  // d y/d csi
-      Jac[1][0] += (*deta) * vt_vol[0][inode]; // d x/d eta
-      Jac[1][1] += (*deta) * vt_vol[1][inode]; // d y/d eta
-    }
-    double det = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
-
-    JacInv[0][0] = Jac[1][1] / det;
-    JacInv[0][1] = -Jac[0][1] / det;
-    JacInv[1][0] = -Jac[1][0] / det;
-    JacInv[1][1] = Jac[0][0] / det;
-    
-    
-    //Use the Jacobian here to go from the REAL back to the CANONICAL coordinates
-    
-
-    dxi  = _dphidxi_bdry[ig_bdry];
-    deta = _dphideta_bdry[ig_bdry];
-
-    for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
-
-      phi[inode] = _phi_bdry[ig_bdry][inode];
-
-      gradphi[2 * inode + 0] = (*dxi) * JacInv[0][0] + (*deta) * JacInv[0][1];
-      gradphi[2 * inode + 1] = (*dxi) * JacInv[1][0] + (*deta) * JacInv[1][1];
-
-    }
-    
-  }
   
-
+//---------------------------------------------------------------------------------------------------------
   template <class type>
   void elem_type_3D::Jacobian_type(const vector < vector < type > >& vt, const vector <double>& xi, type& Weight,
                                    vector < double >& phi, vector < type >& gradphi,
@@ -2225,6 +2103,186 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
       }
     }
   }
+
+  
+//---------------------------------------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------------------------------------
+
+  void elem_type_3D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, 
+                                           const vector < vector < double> > & vt_bdry,  
+                                           const unsigned& jface, 
+                                           const unsigned& ig_bdry, 
+                                           vector < double >& phi, 
+                                           vector < double >& gradphi) const {
+                                       
+
+//********* EVALUATION STAGE **********************
+                                       
+    //check that our volume element shape is a quadrilateral, doesn't work for triangles for now
+    std::vector<int> tang_vec_ref(_dim);     std::fill(tang_vec_ref.begin(), tang_vec_ref.end(), 0.);
+    std::vector<double> tang_vec_real(_dim);    std::fill(tang_vec_real.begin(), tang_vec_real.end(), 0.);
+    double xi_factor;
+        
+    if      (jface == 0) { tang_vec_ref[0]  = 1;  tang_vec_ref[1] =  0; xi_factor = -1; }
+    else if (jface == 1) { tang_vec_ref[0]  = 0;  tang_vec_ref[1] =  1; xi_factor = +1; }
+    else if (jface == 2) { tang_vec_ref[0] =  1;  tang_vec_ref[1] =  0; xi_factor = +1; }
+    else if (jface == 3) { tang_vec_ref[0]  = 0;  tang_vec_ref[1] =  1; xi_factor = -1; }
+    
+    tang_vec_real[0] = vt_bdry[0][1] - vt_bdry[0][0]; 
+    tang_vec_real[1] = vt_bdry[1][1] - vt_bdry[1][0];
+    
+    double magn = 0.;
+    for (unsigned d = 0; d < _dim; d++) magn += tang_vec_real[d]*tang_vec_real[d]; 
+        
+     magn = sqrt(magn);
+    
+    for (unsigned d = 0; d < _dim; d++) { tang_vec_real[d] /= magn; }
+    
+    double cosine_theta = 0.; 
+    for (unsigned d = 0; d < _dim; d++) cosine_theta += tang_vec_real[d]*tang_vec_ref[d];
+
+    
+    
+    //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
+    //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
+    //we should access the bdry element and compute the abscissa using the coordinates of it
+    //here what we have to do is to locate the reference boundary element in the reference volume element
+    //Notice that the SIGN of the direction is also important
+    //we need to understand:
+    // 1) where my boundary element is located in the reference volume element
+    // 2) in what direction it is oriented
+    
+    //here we compute for ALL quadrature points and for ALL dofs the test functions
+    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    const double* pt_one_dim[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
+    
+    std::vector < std::vector<double> > xi_qps(n_gauss_bdry);
+    for (unsigned qp = 0; qp < n_gauss_bdry; qp++) { xi_qps[qp].resize(_dim); }
+    
+// std::cout << "Inside  ig = " << ig_bdry << " ";
+for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
+        
+      double xi_one_dim[1];
+      for (unsigned d = 0; d < 1; d++) {
+        xi_one_dim[d] = *pt_one_dim[d];
+        pt_one_dim[d]++;
+      }
+
+//here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
+      std::vector <double> ref_bdry_qp_coords_in_vol(2);
+             ref_bdry_qp_coords_in_vol[1-abs(tang_vec_ref[0])] = cosine_theta * xi_one_dim[0]; 
+             ref_bdry_qp_coords_in_vol[abs(tang_vec_ref[0])]   = xi_factor * 1.;
+      
+             
+      for (int dof = 0; dof < _nc; dof++) {
+             _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]);
+         _dphidxi_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
+        _dphideta_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
+      }
+      
+             xi_qps[qp] = ref_bdry_qp_coords_in_vol;
+             
+    }
+    
+             
+//       for (unsigned d = 0; d < _dim; d++) std::cout << xi_qps[ig_bdry][d] << " ";
+// std::cout << std::endl;
+    
+//********* END EVALUATION STAGE **********************
+    
+
+    phi.resize(_nc);
+    gradphi.resize(_nc * 3);
+//     if(nablaphi) nablaphi->resize(_nc * 6);
+
+
+    double Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+    double JacInv[3][3];
+
+    const double* dxi = _dphidxi_bdry[ig_bdry];
+    const double* deta = _dphideta_bdry[ig_bdry];
+    const double* dzeta = _dphidzeta_bdry[ig_bdry];
+
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
+      Jac[0][0] += (*dxi) * vt_vol[0][inode];
+      Jac[0][1] += (*dxi) * vt_vol[1][inode];
+      Jac[0][2] += (*dxi) * vt_vol[2][inode];
+      Jac[1][0] += (*deta) * vt_vol[0][inode];
+      Jac[1][1] += (*deta) * vt_vol[1][inode];
+      Jac[1][2] += (*deta) * vt_vol[2][inode];
+      Jac[2][0] += (*dzeta) * vt_vol[0][inode];
+      Jac[2][1] += (*dzeta) * vt_vol[1][inode];
+      Jac[2][2] += (*dzeta) * vt_vol[2][inode];
+    }
+
+    double det = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
+                Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
+                Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
+
+    JacInv[0][0] = (-Jac[1][2] * Jac[2][1] + Jac[1][1] * Jac[2][2]) / det;
+    JacInv[0][1] = (Jac[0][2] * Jac[2][1] - Jac[0][1] * Jac[2][2]) / det;
+    JacInv[0][2] = (-Jac[0][2] * Jac[1][1] + Jac[0][1] * Jac[1][2]) / det;
+    JacInv[1][0] = (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) / det;
+    JacInv[1][1] = (-Jac[0][2] * Jac[2][0] + Jac[0][0] * Jac[2][2]) / det;
+    JacInv[1][2] = (Jac[0][2] * Jac[1][0] - Jac[0][0] * Jac[1][2]) / det;
+    JacInv[2][0] = (-Jac[1][1] * Jac[2][0] + Jac[1][0] * Jac[2][1]) / det;
+    JacInv[2][1] = (Jac[0][1] * Jac[2][0] - Jac[0][0] * Jac[2][1]) / det;
+    JacInv[2][2] = (-Jac[0][1] * Jac[1][0] + Jac[0][0] * Jac[1][1]) / det;
+
+    //Use the Jacobian here to go from the REAL back to the CANONICAL coordinates
+ 
+    dxi = _dphidxi_bdry[ig_bdry];
+    deta = _dphideta_bdry[ig_bdry];
+    dzeta = _dphidzeta_bdry[ig_bdry];
+
+//     const double* dxi2 = _d2phidxi2[ig];
+//     const double* deta2 = _d2phideta2[ig];
+//     const double* dzeta2 = _d2phidzeta2[ig];
+//     const double* dxideta = _d2phidxideta[ig];
+//     const double* detadzeta = _d2phidetadzeta[ig];
+//     const double* dzetadxi = _d2phidzetadxi[ig];
+
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
+
+      phi[inode] = _phi_bdry[ig_bdry][inode];
+
+      gradphi[3 * inode + 0] = (*dxi) * JacInv[0][0] + (*deta) * JacInv[0][1] + (*dzeta) * JacInv[0][2];
+      gradphi[3 * inode + 1] = (*dxi) * JacInv[1][0] + (*deta) * JacInv[1][1] + (*dzeta) * JacInv[1][2];
+      gradphi[3 * inode + 2] = (*dxi) * JacInv[2][0] + (*deta) * JacInv[2][1] + (*dzeta) * JacInv[2][2];
+
+//       if(nablaphi) {
+//         (*nablaphi)[6 * inode + 0] =
+//           ((*dxi2)    * JacInv[0][0] + (*dxideta)  * JacInv[0][1] + (*dzetadxi) * JacInv[0][2]) * JacInv[0][0] +
+//           ((*dxideta) * JacInv[0][0] + (*deta2)    * JacInv[0][1] + (*detadzeta) * JacInv[0][2]) * JacInv[0][1] +
+//           ((*dzetadxi) * JacInv[0][0] + (*detadzeta) * JacInv[0][1] + (*dzeta2)   * JacInv[0][2]) * JacInv[0][2];
+//         (*nablaphi)[6 * inode + 1] =
+//           ((*dxi2)    * JacInv[1][0] + (*dxideta)  * JacInv[1][1] + (*dzetadxi) * JacInv[1][2]) * JacInv[1][0] +
+//           ((*dxideta) * JacInv[1][0] + (*deta2)    * JacInv[1][1] + (*detadzeta) * JacInv[1][2]) * JacInv[1][1] +
+//           ((*dzetadxi) * JacInv[1][0] + (*detadzeta) * JacInv[1][1] + (*dzeta2)   * JacInv[1][2]) * JacInv[1][2];
+//         (*nablaphi)[6 * inode + 2] =
+//           ((*dxi2)    * JacInv[2][0] + (*dxideta)  * JacInv[2][1] + (*dzetadxi) * JacInv[2][2]) * JacInv[2][0] +
+//           ((*dxideta) * JacInv[2][0] + (*deta2)    * JacInv[2][1] + (*detadzeta) * JacInv[2][2]) * JacInv[2][1] +
+//           ((*dzetadxi) * JacInv[2][0] + (*detadzeta) * JacInv[2][1] + (*dzeta2)   * JacInv[2][2]) * JacInv[2][2];
+//         (*nablaphi)[6 * inode + 3] =
+//           ((*dxi2)    * JacInv[0][0] + (*dxideta)  * JacInv[0][1] + (*dzetadxi) * JacInv[0][2]) * JacInv[1][0] +
+//           ((*dxideta) * JacInv[0][0] + (*deta2)    * JacInv[0][1] + (*detadzeta) * JacInv[0][2]) * JacInv[1][1] +
+//           ((*dzetadxi) * JacInv[0][0] + (*detadzeta) * JacInv[0][1] + (*dzeta2)   * JacInv[0][2]) * JacInv[1][2];
+//         (*nablaphi)[6 * inode + 4] =
+//           ((*dxi2)    * JacInv[1][0] + (*dxideta)  * JacInv[1][1] + (*dzetadxi) * JacInv[1][2]) * JacInv[2][0] +
+//           ((*dxideta) * JacInv[1][0] + (*deta2)    * JacInv[1][1] + (*detadzeta) * JacInv[1][2]) * JacInv[2][1] +
+//           ((*dzetadxi) * JacInv[1][0] + (*detadzeta) * JacInv[1][1] + (*dzeta2)   * JacInv[1][2]) * JacInv[2][2];
+//         (*nablaphi)[6 * inode + 5] =
+//           ((*dxi2)    * JacInv[2][0] + (*dxideta)  * JacInv[2][1] + (*dzetadxi) * JacInv[2][2]) * JacInv[0][0] +
+//           ((*dxideta) * JacInv[2][0] + (*deta2)    * JacInv[2][1] + (*detadzeta) * JacInv[2][2]) * JacInv[0][1] +
+//           ((*dzetadxi) * JacInv[2][0] + (*detadzeta) * JacInv[2][1] + (*dzeta2)   * JacInv[2][2]) * JacInv[0][2];
+//       }
+    }
+    
+  }
+  
+
 } //end namespace femus
 
 
