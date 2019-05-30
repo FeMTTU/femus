@@ -49,14 +49,14 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 
   if(!strcmp(name,"control")) {
   if (faceName == FACE_FOR_CONTROL) {
-  if (x[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + 1.e-5)    
+//   if (x[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + 1.e-5)    
     dirichlet = false;
   }
   }
 
   if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u = q)
   if (faceName == FACE_FOR_CONTROL) {
-  if (x[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + 1.e-5)    
+//   if (x[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + 1.e-5)    
     dirichlet = false;
   }
       
@@ -95,21 +95,30 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
   // define multilevel mesh
-  MultiLevelMesh mlMsh;
+  MultiLevelMesh ml_msh;
   double scalingFactor = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+  ml_msh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+  
+//   std::string input_file = "square_parametric.med";
+//   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+//   const std::string infile = mystream.str();
+//   const double Lref = 1.;
+//   ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+
+  
    //1: bottom  //2: right  //3: top  //4: left
   
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-  mlMsh.PrintInfo();
+  ml_msh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  ml_msh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  ml_msh.PrintInfo();
 
-  // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution mlSol(&mlMsh);
+  // define the multilevel solution and attach the ml_msh object to it
+  MultiLevelSolution mlSol(&ml_msh);
 
   // add variables to mlSol
   mlSol.AddSolution("state", LAGRANGE, FIRST);
@@ -429,20 +438,20 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     l2GMap_u.resize(nDof_u);
    // local storage of global mapping and solution
     for (unsigned i = 0; i < sol_u.size(); i++) {
-      unsigned solDof_u = msh->GetSolutionDof(i,iel, solType_u);    // global to global mapping between solution node and solution dof
-      sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);      // global extraction and local storage for the solution
-      l2GMap_u[i] = pdeSys->GetSystemDof(solIndex_u, solPdeIndex_u, i, iel);    // global to global mapping between solution node and pdeSys dof
+      unsigned solDof_u = msh->GetSolutionDof(i,iel, solType_u);
+      sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
+      l2GMap_u[i] = pdeSys->GetSystemDof(solIndex_u, solPdeIndex_u, i, iel);
     }
  //***************************************************
 
  //********************* bdry cont *******************
-    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);    // number of solution element dofs
+    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl); 
     sol_ctrl    .resize(nDof_ctrl);
     l2GMap_ctrl.resize(nDof_ctrl);
     for (unsigned i = 0; i < sol_ctrl.size(); i++) {
-      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);    // global to global mapping between solution node and solution dof
-      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);      // global extraction and local storage for the solution
-      l2GMap_ctrl[i] = pdeSys->GetSystemDof(solIndex_ctrl, solPdeIndex_ctrl, i, iel);    // global to global mapping between solution node and pdeSys dof
+      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);
+      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);
+      l2GMap_ctrl[i] = pdeSys->GetSystemDof(solIndex_ctrl, solPdeIndex_ctrl, i, iel);
     } 
  //*************************************************** 
 
@@ -461,9 +470,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     sol_mu   .resize(nDof_mu);
     l2GMap_mu.resize(nDof_mu);
     for (unsigned i = 0; i < sol_mu.size(); i++) {
-      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solType_mu);   // global to global mapping between solution node and solution dof
-      sol_mu[i] = (*sol->_Sol[solIndex_mu])(solDof_mu);      // global extraction and local storage for the solution 
-      l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solType_mu);
+      sol_mu[i] = (*sol->_Sol[solIndex_mu])(solDof_mu); 
+      l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);
     }
     
 
