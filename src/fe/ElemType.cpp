@@ -1780,27 +1780,27 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
       
     double rotation[2][2] = {{0, 0}, {0, 0}};
 
-// // //     const double theta = arccos(cosine_theta);
-// // //     
-// // //     rotation[0][0] =  cosine_theta;
-// // //     rotation[0][1] = - sin( theta );
-// // //     rotation[1][0] =   sin( theta );
-// // //     rotation[1][1] =  cosine_theta;
+    const double theta = acos(cosine_theta);
+    
+    rotation[0][0] =  cosine_theta;
+    rotation[0][1] = - sin( theta );
+    rotation[1][0] =   sin( theta );
+    rotation[1][1] =  cosine_theta;
     
 //here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
  //we have to use a transformation that locates the 1d edge in one of the sides of my 2d elem
  
       std::vector <double> ref_bdry_qp_coords_in_vol(2);
       
-             ref_bdry_qp_coords_in_vol[1 - abs(normal_vec_ref[1])] = cosine_theta * xi_one_dim[0]  + translation[1 - abs(normal_vec_ref[1])]; 
-             ref_bdry_qp_coords_in_vol[    abs(normal_vec_ref[1])] = 0                             + translation[    abs(normal_vec_ref[1])];
+//              ref_bdry_qp_coords_in_vol[1 - abs(normal_vec_ref[1])] = cosine_theta * xi_one_dim[0]  + translation[1 - abs(normal_vec_ref[1])]; 
+//              ref_bdry_qp_coords_in_vol[    abs(normal_vec_ref[1])] = 0                             + translation[    abs(normal_vec_ref[1])];
       
-// // //       std::vector <double> rotation_vec(_dim); std::fill(rotation_vec.begin(), rotation_vec.end(), 0.);
-// // //       
-// // //    for (unsigned k = 0; k < _dim; k++)  
-// // //      for (unsigned d = 0; d < _dim; d++)  rotation_vec[k] +=  rotation[k][d] * xi_one_dim[d]; 
-// // //         
-// // //     for (unsigned d = 0; d < _dim; d++) ref_bdry_qp_coords_in_vol[ d ] =  rotation_vec[d]  + normal [d];
+      std::vector <double> rotation_vec(_dim); std::fill(rotation_vec.begin(), rotation_vec.end(), 0.);
+      
+   for (unsigned k = 0; k < _dim; k++)  
+     for (unsigned d = 0; d < _dim; d++)  rotation_vec[k] +=  rotation[k][d] * xi_one_dim[d]; 
+        
+    for (unsigned d = 0; d < _dim; d++) ref_bdry_qp_coords_in_vol[ d ] =  rotation_vec[d]  + normal_vec_ref [d];
              
              
 //evaluate volume shape functions and derivatives at reference boundary gauss points             
