@@ -81,7 +81,7 @@ double DesiredTarget()
 
 int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
-  const double mesh_size = 1./NSUB_X;
+  const double mesh_size = 1./*/NSUB_X*/;  //this picks a lot more elements, but then the if on the faces only gets the control boundary
    
   int control_el_flag = 0;
   
