@@ -51,14 +51,14 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 
   if(!strcmp(name,"control")) {
   if (faceName == FACE_FOR_CONTROL) {
-  if (x[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + 1.e-5)    
+  if (x[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + 1.e-5)    
     dirichlet = false;
   }
   }
 
   if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u = q)
   if (faceName == FACE_FOR_CONTROL) {
-  if (x[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + 1.e-5)    
+  if (x[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + 1.e-5)    
     dirichlet = false;
   }
       

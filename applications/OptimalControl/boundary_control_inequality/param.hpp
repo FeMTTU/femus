@@ -21,6 +21,12 @@
 #define BETA_CTRL_VOL 1.e-2
 
 
+//*********************** Control boundary extremes *******************************************************
+
+#define GAMMA_CONTROL_LOWER 0.
+#define GAMMA_CONTROL_UPPER 1.
+
+
 //*********************** Control box constraints *******************************************************
 #define  INEQ_FLAG 1.
 #define  C_COMPL 1.
@@ -95,8 +101,8 @@ int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
   
    if ( ( target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] <   target_line_sign * (  extreme_pos  + target_line_sign * mesh_size) )
-       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - offset_to_include_line ) 
-       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + offset_to_include_line ) )
+       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - offset_to_include_line ) 
+       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + offset_to_include_line ) )
       { control_el_flag = 1; }
 
      return control_el_flag;
@@ -123,8 +129,8 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
    else if (FACE_FOR_CONTROL == 1 || FACE_FOR_CONTROL == 4) { target_line_sign = 1;  extreme_pos = 0.;}
    
    if ( ( target_line_sign * elem_center[1-AXIS_DIRECTION_CONTROL_SIDE] <   target_line_sign * ( extreme_pos + target_line_sign * control_domain_width ) )
-       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] > 0.25 - offset_to_include_line ) 
-       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] < 0.75 + offset_to_include_line ) )
+       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - offset_to_include_line ) 
+       && ( elem_center[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + offset_to_include_line ) )
       { control_el_flag = 1; }
    
      return control_el_flag;
