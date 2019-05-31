@@ -161,7 +161,9 @@ In Mesh:
    1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
    
    Build CompoundMesh to merge the meshes
-     --> Check the Boundary of the CompoundMesh!!! You need to remove previous boundary elements that now are inside the new domain
+     --> Check the Boundary of the CompoundMesh!!! 
+     ---> You need to remove previous boundary elements that now are inside the new domain!
+          To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
      --> Rename it to "Mesh" + something!!!
      
 Then, Groups of Mesh elements
