@@ -38,27 +38,7 @@ void compute_coordinates_bdry_one_face(std::vector< std::vector <double> > & coo
       }
 
 
- std::vector< double > face_elem_center(const std::vector< std::vector< double > > & coords_at_dofs_bdry) {
-     
-     const unsigned int dim = coords_at_dofs_bdry.size();
-     
-            std::vector < double > elem_center_bdry(dim);
-            
-            for (unsigned j = 0; j < dim; j++) {  elem_center_bdry[j] = 0.;  }
-            
-            
-            for (unsigned j = 0; j < dim; j++) {
-                for (unsigned i = 0; i < coords_at_dofs_bdry[j].size(); i++) {
-                    elem_center_bdry[j] += coords_at_dofs_bdry[j][i];
-                }
-            }
-            for (unsigned j = 0; j < dim; j++) {
-                elem_center_bdry[j] = elem_center_bdry[j]/coords_at_dofs_bdry[j].size();
-            }
-            
-            return elem_center_bdry;
-            
- }
+
  
  
 // //============ find interface boundary elements (now we do with coordinates, later we can do also with flag) =======================================
@@ -172,8 +152,8 @@ int main(int argc, char** args) {
     double scalingFactor = 1.;
 
     // read coarse level mesh and generate finers level meshes
-    std::string mesh_file = "./input/ext_box.neu";
-//     std::string mesh_file = "./input/ext_box.med";
+//     std::string mesh_file = "./input/ext_box.neu";
+    std::string mesh_file = "./input/ext_box.med";
 //     std::string mesh_file = "./input/ext_box_50.med";
 //     std::string mesh_file = "./input/ext_box_2.med";
 //     std::string mesh_file = "./input/ext_box_longer.med";
@@ -183,8 +163,8 @@ int main(int argc, char** args) {
     unsigned numberOfUniformLevels = 3;
     unsigned numberOfSelectiveLevels = 0;
     ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-    ml_mesh.PrintInfo();
     ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
+    ml_mesh.PrintInfo();
 
     // ======= Solution  ==================
     MultiLevelSolution ml_sol(&ml_mesh);
