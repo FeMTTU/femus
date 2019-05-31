@@ -4,6 +4,7 @@
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
 #include "Assemble_jacobian.hpp"
+#include "Assemble_unknown_jacres.hpp"
 
 #define FACE_FOR_CONTROL 2  //we do control on the right (=2) face
 #define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
@@ -393,7 +394,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
         SolFEType[ivar]   = ml_sol->GetSolutionType(SolIndex[ivar]);
     }
 
-    vector < unsigned > Sol_n_el_dofs(n_unknowns);
+    vector < unsigned int > Sol_n_el_dofs(n_unknowns);
 
 //***************************************************
     //----------- quantities (at dof objects) ------------------------------
@@ -498,17 +499,10 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
 
 //******************** ALL VARS *********************
-        //******************** ALL VARS *********************
-        unsigned sum_Sol_n_el_dofs = 0;
-        for (unsigned  k = 0; k < n_unknowns; k++) {
-            sum_Sol_n_el_dofs += Sol_n_el_dofs[k];
-        }
-// TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
-        int nDof_max    =  0;
-        for (unsigned  k = 0; k < n_unknowns; k++)     {
-            if(Sol_n_el_dofs[k] > nDof_max)    nDof_max = Sol_n_el_dofs[k];
-        }
-
+    unsigned int nDof_max          = ElementJacRes<double>::compute_max_n_dofs(Sol_n_el_dofs);
+    unsigned int sum_Sol_n_el_dofs = ElementJacRes<double>::compute_sum_n_dofs(Sol_n_el_dofs);
+    
+        
         Res.resize(sum_Sol_n_el_dofs);
         std::fill(Res.begin(), Res.end(), 0.);
         Jac.resize(sum_Sol_n_el_dofs * sum_Sol_n_el_dofs);

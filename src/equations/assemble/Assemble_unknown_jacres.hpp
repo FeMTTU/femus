@@ -65,7 +65,30 @@ inline void set_loc_to_glob_map(const unsigned int iel, const Mesh * msh,  Linea
     
   }
 
-   
+  
+inline static unsigned int compute_max_n_dofs(const std::vector < unsigned int > & Sol_n_el_dofs) {
+    
+        unsigned int nDof_max    =  0;
+        
+        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++)     {
+            if(Sol_n_el_dofs[k] > nDof_max)    nDof_max = Sol_n_el_dofs[k];
+        }
+        
+      return nDof_max;
+}
+
+
+inline static unsigned int compute_sum_n_dofs(const std::vector < unsigned int > & Sol_n_el_dofs) {
+    
+        unsigned int sum_Sol_n_el_dofs = 0;
+        
+        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
+            sum_Sol_n_el_dofs += Sol_n_el_dofs[k];
+        }
+        
+      return sum_Sol_n_el_dofs;
+}
+
    inline vector < int >      & dof_map() { return loc_to_glob_map_all_vars; }
     
    inline vector < real_num > & res() { return Res; }

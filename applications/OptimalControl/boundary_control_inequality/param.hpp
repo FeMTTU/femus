@@ -162,7 +162,8 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                                                              const unsigned int solFEType_act_flag,
                                                              const unsigned int solIndex_act_flag) {
      
-//**************  ****************************
+        const unsigned int dim = coords_at_dofs.size();
+        
 // 0: inactive; 1: active_a; 2: active_b
         assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);
         sol_actflag.resize(Sol_n_el_dofs[pos_mu]);
@@ -183,8 +184,9 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
         }
         
         for (unsigned i = 0; i < sol_actflag.size(); i++) {
-            std::vector<double> node_coords_i(coords_at_dofs.size(),0.);
-            for (unsigned d = 0; d < coords_at_dofs.size(); d++) node_coords_i[d] = coords_at_dofs[d][i];
+            std::vector<double> node_coords_i(dim,0.);
+            for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i];
+            
             ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
             ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
             
@@ -212,6 +214,64 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 
 }
 
+
+
+
+
+ void update_active_set_flag_for_current_nonlinear_iteration_bdry(const femus::Mesh* msh,
+                                                             const femus::Solution* sol,
+                                                             const unsigned int iel,
+                                                             const unsigned int jface,
+                                                             const unsigned int solType_coords,
+                                                             const std::vector < std::vector < double > > & coords_at_dofs,
+                                                             const std::vector < std::vector < double > > sol_eldofs,
+                                                             const std::vector < unsigned int > & Sol_n_el_dofs,
+                                                             const unsigned int pos_mu,
+                                                             const unsigned int pos_ctrl,
+                                                             const unsigned int c_compl,
+                                                                   std::vector < double > & ctrl_lower,
+                                                                   std::vector < double > & ctrl_upper,
+                                                                   std::vector < double > & sol_actflag,
+                                                             const unsigned int solFEType_act_flag,
+                                                             const unsigned int solIndex_act_flag) {
+     
+		const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
+        
+        const unsigned dim = coords_at_dofs.size();
+        
+         // 0: inactive; 1: active_a; 2: active_b
+        assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);
+            sol_actflag.resize(nve_bdry/*nDof_mu*/);
+            ctrl_lower.resize(nve_bdry/*nDof_mu*/);
+            ctrl_upper.resize(nve_bdry/*nDof_mu*/);
+           std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+           std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
+           std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
+
+      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+        std::vector<double> node_coords_i(dim,0.);
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i_bdry];
+        
+        ctrl_lower[i_bdry] = InequalityConstraint(node_coords_i,false);
+        ctrl_upper[i_bdry] = InequalityConstraint(node_coords_i,true);
+
+        const double lower_test_value = sol_eldofs[pos_mu][i_vol] + c_compl * ( sol_eldofs[pos_ctrl][i_vol] - ctrl_lower[i_bdry] );
+        const double upper_test_value = sol_eldofs[pos_mu][i_vol] + c_compl * ( sol_eldofs[pos_ctrl][i_vol] - ctrl_upper[i_bdry] );
+        
+        if      ( lower_test_value < 0 )  sol_actflag[i_bdry] = 1;
+        else if ( upper_test_value > 0 )  sol_actflag[i_bdry] = 2;
+            }
+            
+        //************** act flag **************************** 
+      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+      unsigned solDof_actflag = msh->GetSolutionDof(i_vol, iel, solFEType_act_flag); 
+      (sol->_Sol[solIndex_act_flag])->set(solDof_actflag,sol_actflag[i_bdry]);     
+    }
+    
+    
+    }
 
 
 #endif
