@@ -15,7 +15,9 @@ int main(int argc,char **args) {
   FemusInit init(argc,args,MPI_COMM_WORLD);
 
 //   std::string input_file = "turek_FSI1.neu";
-   std::string input_file = "cyl.med";
+//    std::string input_file = "cyl.med";
+//    std::string input_file = "horse2.med";
+   std::string input_file = "knot.neu";
 //   std::string input_file = "Quad9_Four_boundaries_groups.med";
 //   std::string input_file = "Quad9_Nine_without_groups.med";
 //   std::string input_file = "Tri6_Two_boundaries.med"; 
@@ -31,9 +33,12 @@ int main(int argc,char **args) {
   std::string fe_quad_rule("fifth");
 
   MultiLevelMesh ml_msh;
-//   const int n_sub = 4;
-//   ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
-  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+  
+  const int n_sub = 1;
+  ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
+  
+//   ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+  
   ml_msh.PrintInfo();
   
   // define the multilevel solution and attach the mlMsh object to it
