@@ -1678,31 +1678,43 @@ namespace femus {
         
     ///@todo check that our volume element shape is a quadrilateral, doesn't work for triangles for now
                                                
-    std::vector<int> normal_vec_ref(_dim);         std::fill(normal_vec_ref.begin(), normal_vec_ref.end(), 0.);
-    std::vector<double> normal_vec_real(_dim);     std::fill(normal_vec_real.begin(), normal_vec_real.end(), 0.);
+    std::vector<int> normal_ref(_dim);         std::fill(normal_ref.begin(), normal_ref.end(), 0.);
+    std::vector<double> normal_real(_dim);     std::fill(normal_real.begin(), normal_real.end(), 0.);
+    std::vector<double> tangent_real(_dim);     std::fill(tangent_real.begin(), tangent_real.end(), 0.);
     std::vector <double> translation(_dim);        std::fill(translation.begin(), translation.end(), 0.);
         
-    if      (jface == 0) {  normal_vec_ref[0] =  0;  normal_vec_ref[1] = -1; }
-    else if (jface == 1) {  normal_vec_ref[0] =  1;  normal_vec_ref[1] =  0; }
-    else if (jface == 2) {  normal_vec_ref[0] =  0;  normal_vec_ref[1] =  1; }
-    else if (jface == 3) {  normal_vec_ref[0] = -1;  normal_vec_ref[1] =  0; }
+// normals of the reference faces
+    if      (jface == 0) {  normal_ref[0] =  0;  normal_ref[1] = -1; }
+    else if (jface == 1) {  normal_ref[0] =  1;  normal_ref[1] =  0; }
+    else if (jface == 2) {  normal_ref[0] =  0;  normal_ref[1] =  1; }
+    else if (jface == 3) {  normal_ref[0] = -1;  normal_ref[1] =  0; }
     
     
-    for (unsigned d = 0; d < _dim; d++) { translation[d] = normal_vec_ref[d]; }
+// translation to the face
+    for (unsigned d = 0; d < _dim; d++) { translation[d] = normal_ref[d]; }
     
-    
-    normal_vec_real[0] = - (vt_bdry[1][1] - vt_bdry[1][0]); 
-    normal_vec_real[1] = - (vt_bdry[0][1] - vt_bdry[0][0]);
+// tangent computation ******
+   tangent_real[0] = (vt_bdry[0][1] - vt_bdry[0][0]);
+   tangent_real[1] = (vt_bdry[1][1] - vt_bdry[1][0]);
+//****************************
+
+   
+// normal computation from the tangent ******
+   //rotation by 90 degrees clockwise
+   normal_real[0] =   tangent_real[1];
+   normal_real[1] = - tangent_real[0];
     
     double magn = 0.;
-    for (unsigned d = 0; d < _dim; d++) magn += normal_vec_real[d] * normal_vec_real[d]; 
+    for (unsigned d = 0; d < _dim; d++) magn += normal_real[d] * normal_real[d]; 
         
      magn = sqrt(magn);
     
-    for (unsigned d = 0; d < _dim; d++) { normal_vec_real[d] /= magn; }
+    for (unsigned d = 0; d < _dim; d++) { normal_real[d] /= magn; }
+//****************************
     
+// angle between reference normal and real normal ******
     double cosine_theta = 0.; 
-    for (unsigned d = 0; d < _dim; d++) cosine_theta += normal_vec_real[d] * normal_vec_ref[d];
+    for (unsigned d = 0; d < _dim; d++) cosine_theta += normal_real[d] * normal_ref[d];
      
     //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
     //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
@@ -1712,26 +1724,27 @@ namespace femus {
     //we need to understand:
     // 1) where my boundary element is located in the reference volume element
     // 2) in what direction it is oriented
+//****************************
+
     
-    //here we compute for ALL quadrature points and for ALL dofs the test functions
+//here we compute at ALL quadrature points... it should be only for the current quadrature point...
+    
     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
     
     const double* pt_one_dim[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
+   
     
-//     std::vector < std::vector<double> > xi_qps(n_gauss_bdry);
-//     for (unsigned qp = 0; qp < n_gauss_bdry; qp++) { xi_qps[qp].resize(_dim); }
-
-    
-for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
-        
+// one-dim vector ****************************
       double xi_one_dim[2];
       for (unsigned d = 0; d < 1; d++) {
         xi_one_dim[d] = *pt_one_dim[d];
         pt_one_dim[d]++;
       }
       
-      xi_one_dim[1] = 0.; //placing along xi direction (eta = 0)
+      xi_one_dim[1] = 0.; //placing along xi direction (eta = 0) ///@todo fix this here wrt the normal_ref above
+//****************************
       
+// rotation matrix ****************************
     double rotation[2][2] = {{0, 0}, {0, 0}};
 
     const double theta = acos(cosine_theta);
@@ -1741,37 +1754,36 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
     rotation[1][0] =   sin( theta );
     rotation[1][1] =  cosine_theta;
     
-//here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
- //we have to use a transformation that locates the 1d edge in one of the sides of my 2d elem
  
-      std::vector <double> ref_bdry_qp_coords_in_vol(2);
-      
-//              ref_bdry_qp_coords_in_vol[1 - abs(normal_vec_ref[1])] = cosine_theta * xi_one_dim[0]  + translation[1 - abs(normal_vec_ref[1])]; 
-//              ref_bdry_qp_coords_in_vol[    abs(normal_vec_ref[1])] = 0                             + translation[    abs(normal_vec_ref[1])];
-      
-      std::vector <double> rotation_vec(_dim); std::fill(rotation_vec.begin(), rotation_vec.end(), 0.);
+  std::vector <double> rotation_vec(_dim); std::fill(rotation_vec.begin(), rotation_vec.end(), 0.);
       
    for (unsigned k = 0; k < _dim; k++)  
      for (unsigned d = 0; d < _dim; d++)  rotation_vec[k] +=  rotation[k][d] * xi_one_dim[d]; 
-        
-    for (unsigned d = 0; d < _dim; d++) ref_bdry_qp_coords_in_vol[ d ] =  rotation_vec[d]  + normal_vec_ref [d];
+//****************************
+
+     
+     
+// rotate and translate ****************************
+//here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
+ //we have to use a transformation that locates the 1d edge in one of the sides of my 2d elem
+    std::vector <double> ref_bdry_qp_coords_in_vol(2);
+      
+    for (unsigned d = 0; d < _dim; d++) ref_bdry_qp_coords_in_vol[d] =  rotation_vec[d]  + translation[d];
+// ****************************
+    
+
+ //evaluate volume shape functions and derivatives at reference boundary gauss points             
+for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
              
-             
-//evaluate volume shape functions and derivatives at reference boundary gauss points             
       for (int dof = 0; dof < _nc; dof++) {
              _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]);
          _dphidxi_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
         _dphideta_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
       }
       
-//              xi_qps[qp] = ref_bdry_qp_coords_in_vol;
-             
-    }
+ }
     
              
-//       for (unsigned d = 0; d < _dim; d++) std::cout << xi_qps[ig_bdry][d] << " ";
-// std::cout << std::endl;
-
 
 }
 
@@ -2124,6 +2136,18 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
     std::vector<double> tang_vec_real(_dim);    std::fill(tang_vec_real.begin(), tang_vec_real.end(), 0.);
     double xi_factor;
         
+ // normals of the reference faces
+    
+ // translation to the face
+
+// tangent computation ******
+    
+// normal computation from the tangent ******
+    
+// angle between reference normal and real normal ******
+    
+    
+    
     if      (jface == 0) { tang_vec_ref[0]  = 1;  tang_vec_ref[1] =  0; xi_factor = -1; }
     else if (jface == 1) { tang_vec_ref[0]  = 0;  tang_vec_ref[1] =  1; xi_factor = +1; }
     else if (jface == 2) { tang_vec_ref[0] =  1;  tang_vec_ref[1] =  0; xi_factor = +1; }

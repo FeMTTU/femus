@@ -9,7 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             2  //we do control on the right (=2) face
+#define FACE_FOR_CONTROL             4  //we do control on the right (=2) face
 #define AXIS_DIRECTION_CONTROL_SIDE  1 //change this accordingly to the other variable above
 
 #include "../../param.hpp"
@@ -633,7 +633,7 @@ std::cout << "Outside ig = " << ig_bdry << " ";
         	for (unsigned i = 0; i < coords_at_dofs_bdry[d].size(); i++) {
                coord_at_qp_bdry[d] += coords_at_dofs_bdry[d][i] * phi_coords_bdry[i];
             }
-std::cout <<  " qp_" << d << " " << coord_at_qp_bdry[d];
+std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
     }
     
   //========= fill gauss value xyz ==================   
