@@ -152,7 +152,6 @@ int main(int argc, char** args) {
     double scalingFactor = 1.;
 
     // read coarse level mesh and generate finers level meshes
-//     std::string mesh_file = "./input/ext_box.neu";
     std::string mesh_file = "./input/ext_box.med";
 //     std::string mesh_file = "./input/ext_box_50.med";
 //     std::string mesh_file = "./input/ext_box_2.med";
