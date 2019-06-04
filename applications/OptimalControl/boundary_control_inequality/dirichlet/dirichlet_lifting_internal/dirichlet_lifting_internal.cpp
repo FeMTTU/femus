@@ -3,6 +3,8 @@
 #include "MultiLevelSolution.hpp"
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "NumericVector.hpp"
+#include "Assemble_jacobian.hpp"
+#include "Assemble_unknown_jacres.hpp"
 
 #define FACE_FOR_CONTROL 2  //we do control on the right (=2) face
 #define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
@@ -45,9 +47,10 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   if(!strcmp(name,"control")) {
       value = 0.;
-  if (faceName == FACE_FOR_CONTROL)
-    dirichlet = false;
-  
+    if (faceName == FACE_FOR_CONTROL) {
+        if (x[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + 1.e-5)    
+            dirichlet = false;
+    }
   }
   
   if(!strcmp(name,"mu")) {
@@ -83,12 +86,20 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
- /* "seventh" is the order of accuracy that is used in the gauss integration scheme
+//   mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+ 
+  std::string input_file = "square_parametric.med";
+  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+  const std::string infile = mystream.str();
+  const double Lref = 1.;
+  mlMsh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+
+  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
   mlMsh.PrintInfo();
 
   // define the multilevel solution and attach the mlMsh object to it
@@ -833,6 +844,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =  ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
 
   KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );
+  
+//     assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 10, 5);
+//     assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 10, 5);
   
   } //end element loop for each process
   

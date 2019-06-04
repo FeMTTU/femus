@@ -23,8 +23,8 @@
 
 //*********************** Control boundary extremes *******************************************************
 
-#define GAMMA_CONTROL_LOWER 0.
-#define GAMMA_CONTROL_UPPER 1.
+#define GAMMA_CONTROL_LOWER 0.25
+#define GAMMA_CONTROL_UPPER 0.75
 
 
 //*********************** Control box constraints *******************************************************
