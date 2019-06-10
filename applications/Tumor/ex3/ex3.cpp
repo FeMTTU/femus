@@ -70,7 +70,7 @@ double InitalValueU3D (const std::vector < double >& x) {
 }
 
 double InitalValueD (const std::vector < double >& x) {
-  return 100.;
+  return 100.; //Initially all cancer cells are alive.
 }
 
 double GetSmootK (const double & kmin, const double & kmax, const double & h, const double & r0, const std::vector < double >& x) {
@@ -118,7 +118,8 @@ int main (int argc, char** args) {
 
     // add variables to mlSol
     mlSol.AddSolution ("u", LAGRANGE, SECOND, 2);
-    mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false);
+    mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false); // False because we are not solving for d. This is an information we
+    // attach to the element.
 
     mlSol.AddSolution ("K11", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
     mlSol.AddSolution ("K12", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
@@ -183,7 +184,7 @@ int main (int argc, char** args) {
       bool last = (time_step == n_timesteps - 1) ? true : false;
 
       double time = system.GetTime();
-      bool stop = GetDeadCells (time, mlSol, last);
+      bool stop = GetDeadCells (time, mlSol, last); // we stop whenver the subtance no longer diffuses. Refer to the function.
       mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
       if (stop) break;
     }
@@ -275,7 +276,7 @@ void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob) {
 
   double weight; // gauss point weight
   phi.reserve (maxSize);
-  phi_x.reserve (maxSize * dim); // This is probably gradient but he is doing the life difficult for me!
+  phi_x.reserve (maxSize * dim); // This is probably the gradient of the test function but he is doing the life difficult for me!
 
   vector< adept::adouble > aRes; // local redidual vector
   aRes.reserve (maxSize);
@@ -303,7 +304,6 @@ void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob) {
     double K = (*sol->_Sol[kIndex[0]]) (iel);
 
     if (K <= Keps) {
-      // local storage of global mapping and solution
       for (unsigned i = 0; i < nDofu; i++) {
         unsigned solDof = msh->GetSolutionDof (i, iel, soluType);   // global to global mapping between solution node and solution dof
         sol->_Sol[soluIndex]->set (solDof, 0.);
@@ -495,8 +495,8 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
   std::pair<double, double> uT[3];
 
   for (unsigned i = 0; i < 3; i++) {
-    uT[i].first = (i + 1) * 24;
-    uT[i].second =  a - b * exp (-c * uT[i].first); //0.1 * exp( - uT[i].first / 24);
+    uT[i].first = (i + 1) * 24; //Observation times.
+    uT[i].second =  a - b * exp (-c * uT[i].first); //Note that these are fixed parameters now.
   }
 
   double treshold = a - b * exp (-c * time);
@@ -515,15 +515,16 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
   for (int inode = msh->_dofOffset[solType][iproc]; inode < msh->_dofOffset[solType][iproc + 1]; inode++) {
     double d = (*sol->_Sol[soldIndex]) (inode);
     double u = (*sol->_Sol[soluIndex]) (inode);
-
+// Here we identify the dead elememts.d=100 at t=0 for all elements. If the conc. is above theresold at t=t1, we attach 24,48 or 72 to the element accordingly.Notice that if the cell is dead, we will skip the if loop. 
     for (unsigned i = 0; i < 3; i++) {
       if (d > uT[i].first && u > uT[i].second) {
-        sol->_Sol[soldIndex]->set (inode, uT[i].first);
+        sol->_Sol[soldIndex]->set (inode, uT[i].first); 
         break;
       }
     }
   }
   sol->_Sol[soldIndex]->close();
+  
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
 
@@ -556,7 +557,7 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofd; i++) {
       unsigned solDof = msh->GetSolutionDof (i, iel, soldType);   // global to global mapping between solution node and solution dof
-      sold[i] = (*sol->_Sol[soldIndex]) (solDof);                 // global extraction and local storage for the solution
+      sold[i] = (*sol->_Sol[soldIndex]) (solDof);                 // We attach already found solution to sold.
     }
 
     // local storage of coordinates
@@ -581,7 +582,7 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
 
     if (x[0][nDofd - 1] > -0.6 && x[0][nDofd - 1] < 1.7 &&
         x[1][nDofd - 1] > -1.5 && x[1][nDofd - 1] < 1.5 &&
-        x[2][nDofd - 1] > -1.1 && x[0][nDofd - 1] < 2.2 && K11 > 0.6) {
+        x[2][nDofd - 1] > -1.1 && x[0][nDofd - 1] < 2.2 && K11 > 0.6) { // This is the possible tumor location.
       // *** Element Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soldType]->GetGaussPointNumber(); ig++) {
         // *** get gauss point weight, test function and test function partial derivatives ***
