@@ -57,7 +57,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 //     value = x[0] * x[0] * x[0] * x[0];
 //        value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 
-    if ( facename == 2 ) {
+    if ( facename == 2 ) { //TODO check if we have to add a dirichlet zero condition for the local problem here
         dirichlet = false; //Neumann at the interface boundaries
         value = 0.;
     }

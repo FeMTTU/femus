@@ -64,15 +64,10 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 //     value = 0.;
 //     value = x[0];
 //     value = x[0] * x[0];
-//     value =  x[0] * x[0] * x[0];
+//     value = x[0] * x[0] * x[0];
 //     value = x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
 //     value = x[0] * x[0] * x[0] * x[0];
 //     value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
-
-  if (fabs (x[0]) <= 1.e-10) {
-    dirichlet = false;
-    value = 0.;
-  }
 
   return dirichlet;
 }
@@ -173,7 +168,7 @@ int main (int argc, char** argv) {
   // ******* Set Preconditioner *******
   system.SetMgSmoother (GMRES_SMOOTHER);
 
-  system.SetSparsityPatternMinimumSize (500u);   //TODO tune
+  system.SetSparsityPatternMinimumSize (10000u);   //TODO tune was 500
 
   system.init();
 
@@ -260,7 +255,7 @@ int main (int argc, char** argv) {
 
 // ******* Solution *******
 
-  systemFine.MGsolve();
+//   systemFine.MGsolve();  //TODO uncomment
 
   //END assemble and solve fine nonlocal problem
 
@@ -296,7 +291,7 @@ int main (int argc, char** argv) {
 } //end main
 
 
-void GetL2Norm (MultiLevelSolution &mlSol, MultiLevelSolution &mlSolFine) {
+void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
   const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
   Mesh* msh = mlSol._mlMesh->GetLevel (level);
@@ -658,7 +653,7 @@ void GetL2Norm (MultiLevelSolution &mlSol, MultiLevelSolution &mlSolFine) {
 
 
 
-void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh, const double &meshSize, double &leftBound, double &rightBound) {
+void PutADoubleNodeAtTheInterface (MultiLevelMesh & mlMsh, const double & meshSize, double & leftBound, double & rightBound) {
 
   unsigned level = 0;
 
@@ -782,7 +777,7 @@ void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh, const double &meshSize
 }
 
 
-void ShiftTheExtrema (MultiLevelMesh &mlMsh, const double &meshSize, const double &delta1Shift, const double &delta2Shift, double &leftBound, double &rightBound) {
+void ShiftTheExtrema (MultiLevelMesh & mlMsh, const double & meshSize, const double & delta1Shift, const double & delta2Shift, double & leftBound, double & rightBound) {
 
   unsigned level = 0;
 
@@ -856,7 +851,7 @@ void ShiftTheExtrema (MultiLevelMesh &mlMsh, const double &meshSize, const doubl
 
 }
 
-void BuildElementSkipFlags (MultiLevelMesh &mlMsh, std::vector<unsigned> &elementSkipFlags) {
+void BuildElementSkipFlags (MultiLevelMesh & mlMsh, std::vector<unsigned> &elementSkipFlags) {
 
   const unsigned level = mlMsh.GetNumberOfLevels() - 1;
 

@@ -6,17 +6,16 @@
 
 using namespace femus;
 
-bool nonLocalAssembly = true;
-double delta1 = 0.0625/*1. / 4096*/ ; 
-double delta2 = 0.0625 * 2./*1. / 4096 * 2.*/;
+double delta1 = /*1. / 32.*/ 0.0625 * 0.125 * 0.125/*1. / 4096*/ ; 
+double delta2 = /*1. / 16.*/ 0.0625 * 2. * 0.125 * 0.125/*1. / 4096 * 2.*/;
 double kappa1 = 1.;
 double kappa2 = 3.;
 
 //parameters to play with
-double desiredMeshSize = /*1. / 4096*/0.0625 ;
-double desiredMeshSizeFine = 1. / 4096.;
-double delta1MeshTemp =  /*1. / 4096*/0.0625 ;
-double delta2MeshTemp =  /*1. / 4096 * 2.*/0.0625 * 2.;
+double desiredMeshSize = /*1. / 4096*/ /*1. / 32.*/ 1. / 4096 * 2.;
+double desiredMeshSizeFine = /*1. / 4096.*/ 1. / 4096 * 0.5;
+double delta1MeshTemp =  /*1. / 4096*/  0.0625 * 0.125 * 0.125/* 1. / 32.*/;
+double delta2MeshTemp =  /*1. / 4096 * 2.*/  0.0625 * 2. * 0.125 * 0.125/*1. / 16.*/;
 
 bool shiftExternalNodes = false;
 double delta1Mesh = (shiftExternalNodes) ? desiredMeshSize : delta1MeshTemp;
