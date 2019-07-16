@@ -2,9 +2,9 @@
 ** GAMBIT NEUTRAL FILE
 default_id
 PROGRAM:                Gambit     VERSION:  2.3.16
-21 Sep 2018    08:25:52 
+21 Sep 2018    08:25:52
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
-      1920       480         1         0         2         3
+      1920       480         0         0         2         3
 ENDOFSECTION
    NODAL COORDINATES 2.3.16
          1   0.00000000000e+00   8.00000000000e-01   0.00000000000e+00
