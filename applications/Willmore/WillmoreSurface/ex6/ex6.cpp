@@ -29,13 +29,13 @@ using namespace femus;
 
 // Toggle for setting volume and area constraints, as well as sign of N.
 bool volumeConstraint = true;
-bool areaConstraint = true;
+bool areaConstraint = false;
 const double normalSign = -1.;
 
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta).
 // Trick for system2 (timederiv).
-const double eps = 1e-3;
+const double eps = 1e-4;
 const double delta = 0.005;
 const double timederiv = 0.;
 
@@ -52,7 +52,7 @@ void AssembleSphereConformalMinimization (MultiLevelProblem&);  //inferior
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
   //return 0.0001;
-  double dt0 = 4000;
+  double dt0 = 0.1;
   //double dt0 = 0.00000032; // spot
   double s = 1.;
   double n = 0.3;
@@ -113,10 +113,10 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  mlMsh.ReadCoarseMesh ("../input/superknot.med", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/duckpoint85.med", "seventh", scalingFactor);
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -232,7 +232,7 @@ int main (int argc, char** args) {
   system2.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system2 and initialize.
-  system2.SetAssembleFunction (AssembleO2ConformalMinimization);
+  system2.SetAssembleFunction (AssembleConformalMinimization);
   system2.init();
 
   mlSol.SetWriter (VTK);
