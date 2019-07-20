@@ -55,7 +55,7 @@ double GetTimeStep (const double t) {
   double dt0 = 0.1;
   //double dt0 = 0.00000032; // spot
   double s = 1.;
-  double n = 0.3;
+  double n = 2;
   return dt0 * pow (1. + t / pow (dt0, s), n);
 }
 
