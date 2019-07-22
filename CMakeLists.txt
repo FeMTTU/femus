@@ -197,6 +197,8 @@ OPTION(BUILD_TUMOR "Build the Tumor apps" ON)
 
 OPTION(BUILD_RK "Build the Runge-Kutta apps" ON)
 
+OPTION(BUILD_CONFORMAL "Build the Conformal mesh apps" ON)
+
 #############################################################################################
 ### Build documentation (Doxygen)
 #############################################################################################
