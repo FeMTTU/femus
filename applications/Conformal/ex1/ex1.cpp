@@ -75,7 +75,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  mlMsh.ReadCoarseMesh ("../input/square.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/squareTri.neu", "seventh", scalingFactor);
 
   // Set number of mesh levels.
   unsigned numberOfUniformLevels = 3;
@@ -92,9 +92,13 @@ int main (int argc, char** args) {
   MultiLevelSolution mlSol (&mlMsh);
 
   // Add variables X,Y,W to mlSol.
-  mlSol.AddSolution ("Dx1", LAGRANGE, FIRST, 0);
-  mlSol.AddSolution ("Dx2", LAGRANGE, FIRST, 0);
-  mlSol.AddSolution ("Dx3", LAGRANGE, FIRST, 0);
+//   mlSol.AddSolution ("Dx1", LAGRANGE, FIRST, 0);
+//   mlSol.AddSolution ("Dx2", LAGRANGE, FIRST, 0);
+//   mlSol.AddSolution ("Dx3", LAGRANGE, FIRST, 0);
+  
+  mlSol.AddSolution ("Dx1", LAGRANGE, SECOND, 0);
+  mlSol.AddSolution ("Dx2", LAGRANGE, SECOND, 0);
+  mlSol.AddSolution ("Dx3", LAGRANGE, SECOND, 0);
 
 
   // Initialize the variables and attach boundary conditions.
@@ -106,8 +110,8 @@ int main (int argc, char** args) {
   MultiLevelProblem mlProb (&mlSol);
 
   // Add system Conformal or Shear Minimization in mlProb.
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("nProj"); //for shear
-  //NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("conformal"); //for conformal
+  //NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("nProj"); //for shear
+  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("conformal"); //for conformal
 
   // Add solutions newDX, Lambda1 to system.
   system.AddSolutionToSystemPDE ("Dx1");
@@ -119,7 +123,8 @@ int main (int argc, char** args) {
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system and initialize.
-  system.SetAssembleFunction (AssembleShearMinimization);
+  //system.SetAssembleFunction (AssembleShearMinimization);
+  system.SetAssembleFunction (AssembleConformalMinimization);
   system.init();
 
   mlSol.SetWriter (VTK);
@@ -132,11 +137,13 @@ int main (int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back ("All");
   mlSol.GetWriter()->SetDebugOutput (true);
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
+  //mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
+  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
   system.MGsolve();
 
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 1);
+  //mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 1);
+  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 1);
 
   return 0;
 }
@@ -178,15 +185,23 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
   // Setting the reference elements to be equilateral triangles.
   std::vector < std::vector < double > > xT (2);
-  xT[0].resize (3);
+  xT[0].resize (7);
   xT[0][0] = -0.5;
   xT[0][1] = 0.5;
   xT[0][2] = 0.;
+  xT[0][3] = 0.;
+  xT[0][4] = 0.25;
+  xT[0][5] = -0.25;
+  xT[0][6] = 0.;
 
-  xT[1].resize (3);
+  xT[1].resize (7);
   xT[1][0] = 0.;
   xT[1][1] = 0.;
   xT[1][2] = sqrt (3.) / 2.;
+  xT[1][3] = 0.;
+  xT[1][4] = sqrt (3.) / 4.;
+  xT[1][5] = sqrt (3.) / 4.;
+  xT[1][6] = sqrt (3.) / 6.;;
 
   std::vector<double> phi_uv0;
   std::vector<double> phi_uv1;
@@ -322,26 +337,26 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       }
 
       // Special adjustments for triangles.
-//       else {
-//         msh->_finiteElement[ielGeom][solType]->Jacobian (xT, ig, weight, stdVectorPhi, stdVectorPhi_uv);
-//
-//         phix = &stdVectorPhi[0];
-//
-//         phi_uv0.resize (nxDofs);
-//         phi_uv1.resize (nxDofs);
-//
-//
-//         for (unsigned i = 0; i < nxDofs; i++) {
-//           phi_uv0[i] = stdVectorPhi_uv[i * dim];
-//           phi_uv1[i] = stdVectorPhi_uv[i * dim + 1];
-//         }
-//
-//         phix_uv[0] = &phi_uv0[0];
-//         phix_uv[1] = &phi_uv1[0];
-//
-//         //phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
-//
-//       }
+      else {
+        msh->_finiteElement[ielGeom][solType]->Jacobian (xT, ig, weight, stdVectorPhi, stdVectorPhi_uv);
+
+        phix = &stdVectorPhi[0];
+
+        phi_uv0.resize (nxDofs);
+        phi_uv1.resize (nxDofs);
+
+
+        for (unsigned i = 0; i < nxDofs; i++) {
+          phi_uv0[i] = stdVectorPhi_uv[i * dim];
+          phi_uv1[i] = stdVectorPhi_uv[i * dim + 1];
+        }
+
+        phix_uv[0] = &phi_uv0[0];
+        phix_uv[1] = &phi_uv1[0];
+
+        //phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
+
+      }
 
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
       //double solDxg[3] = {0., 0., 0.};
