@@ -29,20 +29,24 @@ void AssembleShearMinimization (MultiLevelProblem&);  //vastly inferior
 bool SetBoundaryCondition (const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
 
   bool dirichlet = true;
-
+  value = 0.;
+  
   if(!strcmp(solName, "Dx1")) {
     if(1 == faceName || 3 == faceName) {
       dirichlet = false;
     }
+    if(4 == faceName){
+      value = 0.5 * sin( x[1] / 0.5 * acos(-1.) );
+    }
   }
   else if(!strcmp(solName, "Dx2")) {
-    if(2 == faceName || 4 == faceName) {
+    if(2 == faceName ) {
       dirichlet = false;
     }
   }
 
 
-  value = 0.;
+  
   return dirichlet;
 }
 
@@ -75,10 +79,10 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  mlMsh.ReadCoarseMesh ("../input/squareTri.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/square.neu", "seventh", scalingFactor);
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -397,6 +401,10 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       adept::adouble detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
       adept::adouble Area = weight * sqrt (detg);
       double Area2 = weight; // Trick to give equal weight to each element.
+      if(detg < 0.) {
+        Area2 *= 1000;
+        std::cout <<"AAAAAAAAAAAAAAAAA";
+      }
 
       // Compute components of the unit normal N.
       double normal[DIM];
