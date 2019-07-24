@@ -247,6 +247,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   // Local solution vectors for Nx and NDx.
   std::vector < adept::adouble > solDx[DIM];
   std::vector < adept::adouble > solx[DIM];
+  std::vector < double > solxHat[DIM];
 
   // Get the position of "Lambda1" in the ml_sol object.
   //unsigned solLIndex;
@@ -289,6 +290,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned K = 0; K < DIM; K++) {
       solDx[K].resize (nxDofs);
       solx[K].resize (nxDofs);
+      solxHat[K].resize (nxDofs);
     }
 
     // Resize local arrays
@@ -316,6 +318,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nxDofs; i++) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned K = 0; K < DIM; K++) {
+        solxHat[K][i] = (*msh->_topology->_Sol[K]) (iXDof);
         solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + solDx[K][i];
       }
     }
@@ -363,15 +366,15 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       }
 
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
-      //double solDxg[3] = {0., 0., 0.};
-      adept::adouble solDxg[3] = {0., 0., 0.};
+      double solxHatg[3] = {0., 0., 0.};
+      //adept::adouble solDxg[3] = {0., 0., 0.};
 
       //double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
 
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
-          solDxg[K] += phix[i] * solDx[K][i];
+          solxHatg[K] += phix[i] * solxHat[K][i];
           //solNDxg[K] += phix[i] * solNDx[K][i];
         }
         for (int j = 0; j < dim; j++) {
@@ -397,20 +400,32 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
           }
         }
       }
+      
+      double a = 1000; 
+      double b = 0.0001;
+      adept::adouble x = ((solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]));
+      adept::adouble scale = (1. + a) - a * atan(x/b)/(acos(-1.)/2.);
 
       adept::adouble detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
       adept::adouble Area = weight * sqrt (detg);
-      double Area2 = weight; // Trick to give equal weight to each element.
-      if(detg < 0.) {
-        Area2 *= 1000;
-        std::cout <<"AAAAAAAAAAAAAAAAA";
-      }
+      adept::adouble Area2 = weight;// * scale.value(); // Trick to give equal weight to each element.
+      
+      //std::cout <<" "<<Area2<<" ";
+      //std::cout << scale<<" ";
+//       if(((solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1])) < 0.) {
+//         
+//         std::cout << "A" << scale << "A ";
+//         //Area2 *= 1000;
+//         //std::cout << (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1])<<" ";
+//         //std::cout << exp(-10.*((solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]))) <<" ";
+//         //std::cout <<"A"<<Area2<<"A";
+//       }
 
       // Compute components of the unit normal N.
-      double normal[DIM];
-      //normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
-      //normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
-      //normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
+      adept::adouble normal[DIM];
+//       normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
+//       normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
+//       normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
 
       normal[0] = 0.;
       normal[1] = 0.;
@@ -423,9 +438,9 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       V[2] = solx_uv[2][1] - normal[0] * solx_uv[1][0] + normal[1] * solx_uv[0][0];
 
       adept::adouble W[DIM];
-      W[0] = solx_uv[0][0] + normal[1] * solx_uv[2][1] - normal[2] * solx_uv[1][1];
-      W[1] = solx_uv[1][0] + normal[2] * solx_uv[0][1] - normal[0] * solx_uv[2][1];
-      W[2] = solx_uv[2][0] + normal[0] * solx_uv[1][1] - normal[1] * solx_uv[0][1];
+      W[0] = 0*(solx_uv[0][0] + normal[1] * solx_uv[2][1] - normal[2] * solx_uv[1][1]);
+      W[1] = 0*(solx_uv[1][0] + normal[2] * solx_uv[0][1] - normal[0] * solx_uv[2][1]);
+      W[2] = 0*(solx_uv[2][0] + normal[0] * solx_uv[1][1] - normal[1] * solx_uv[0][1]);
 
       adept::adouble M[DIM][dim];
       M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2];
@@ -625,7 +640,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nxDofs; i++) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned K = 0; K < DIM; K++) {
-        solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + solDx[K][i];
+        solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof);// + solDx[K][i];
       }
     }
 
@@ -679,14 +694,14 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
       }
       adept::adouble detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
 
-      double normal[DIM];
-      // normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
-      // normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
-      // normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
+      adept::adouble normal[DIM];
+      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
+      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
+      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
 
-      normal[0] = 0.;
-      normal[1] = 0.;
-      normal[2] = 1.;
+      //normal[0] = 0.;
+      //normal[1] = 0.;
+      //normal[2] = 1.;
 
       adept::adouble Area = weight * sqrt (detg);
 
