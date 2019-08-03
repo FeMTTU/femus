@@ -282,7 +282,10 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/ism)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/uq)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
-INCLUDE_DIRECTORIES(/opt/apps/local/mpi/gnu/openmpi/1.10.6/include/)
+#INCLUDE_DIRECTORIES(/opt/apps/local/mpi/gnu/openmpi/1.10.6/include/)
+#INCLUDE_DIRECTORIES(/opt/apps/local/gnu/openmpi/boost/1.61.0/include/)
+
+INCLUDE_DIRECTORIES(/opt/ohpc/pub/mpi/openmpi-gnu7/1.10.7/include/)
 INCLUDE_DIRECTORIES(/opt/apps/local/gnu/openmpi/boost/1.61.0/include/)
 
 # Include Fparser files
