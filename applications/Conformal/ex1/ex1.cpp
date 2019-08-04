@@ -45,14 +45,14 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
 //       dirichlet = false;
 //     }
 //   }
-  
-  
+
+
   if (!strcmp (solName, "Dx1")) {
-    if (1 == faceName || 3 == faceName ) {
+    if (1 == faceName || 3 == faceName) {
       dirichlet = false;
     }
     if (4 == faceName) {
-      value = 0.5 * sin ( x[1] / 0.5 * acos (-1.));
+      value = 0.5 * sin (x[1] / 0.5 * acos (-1.));
     }
   }
   else if (!strcmp (solName, "Dx2")) {
@@ -361,7 +361,9 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       }
 
       // Compute the metric, metric determinant, and area element.
-      adept::adouble g[dim][dim] = {{0., 0.}, {0., 0.}};
+      std::vector < std::vector < adept::adouble > > g (dim);
+      for (unsigned i = 0; i < dim; i++) g[i].assign (dim, 0.);
+
       for (unsigned i = 0; i < dim; i++) {
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned K = 0; K < DIM; K++) {
@@ -716,12 +718,12 @@ void UpdateScale (MultiLevelProblem& ml_prob, const double &elScalingFactor) {
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solDxType]->GetGaussPointNumber(); ig++) {
       msh->_finiteElement[ielGeom][solDxType]->Jacobian (x, ig, weight, phi, phi_x);
-      
+
       weight /= msh->_finiteElement[ielGeom][solDxType]->GetGaussWeight (ig);
 
       if (weight < 0.) {
         std::cout << "warning element inversion at iel = " << iel << " " << scaleValue << std::endl;
-        sol->_Sol[elScaleIndex]->set (iel, ( elScalingFactor + 0.05 * counter ) * scaleValue);
+        sol->_Sol[elScaleIndex]->set (iel, (elScalingFactor + 0.05 * counter) * scaleValue);
         //vtScalingFactor = elScalingFactor;
         sol->_Sol[counterIndex]->add (iel, 1.);
         break;
@@ -742,18 +744,19 @@ void UpdateScale (MultiLevelProblem& ml_prob, const double &elScalingFactor) {
 //     sol->_Sol[vtScaleIndex]->set (i, value / (*sol->_Sol[counterIndex]) (i));
 //   }
 //   sol->_Sol[vtScaleIndex]->close();
-//   
+//
 //   for (unsigned iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 //      double value = .99 * (*sol->_Sol[elScaleIndex]) (iel);
-//      unsigned vtDofs  = msh->GetElementDofNumber (iel, vtScaleType); 
+//      unsigned vtDofs  = msh->GetElementDofNumber (iel, vtScaleType);
 //      for (unsigned i = 0; i < vtDofs; i++) {
 //       unsigned iDof  = msh->GetSolutionDof (i, iel, vtScaleType);
 //       value += 0.01 * (*sol->_Sol[vtScaleIndex]) (iDof) / vtDofs;
-//     } 
+//     }
 //     sol->_Sol[elScaleIndex]->set (iel, value);
 //   }
 //   sol->_Sol[elScaleIndex]->close();
-//   
+//
 
   // ***************** END ASSEMBLY *******************
 }
+
