@@ -140,6 +140,18 @@ void PetscVector::add_vector_blocked(const std::vector<double>& values,
 
 }
 
+// ===============================================================
+void PetscVector::add_vector_blocked(const std::vector<double>& values,
+                                     const std::vector< unsigned >& dof_indices) {
+  //this->_restore_array();
+  int dof_size = dof_indices.size();
+  assert(values.size() == dof_size);
+  
+  int ierr = VecSetValues(_vec,dof_size,(int*)&dof_indices[0],&values[0],ADD_VALUES);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+  
+                                     }
+
 void PetscVector::insert_vector_blocked(const std::vector<double>& values,
 				     const std::vector< int>& dof_indices) {
   //this->_restore_array();
