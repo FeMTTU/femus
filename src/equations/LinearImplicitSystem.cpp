@@ -44,7 +44,6 @@ namespace femus {
     _AMRtest (0),
     _maxAMRlevels (0),
     _AMRnorm (0),
-    _AMRthreshold (0.01),
     _AMReighborThresholdValue (0.),
     _smootherType (smoother_type),
     _includeCoarseLevelSmoother (INCLUDE_COARSE_LEVEL_FALSE),
@@ -58,6 +57,7 @@ namespace femus {
     _mgOuterSolver = GMRES;
     _totalAssemblyTime = 0.;
     _totalSolverTime = 0.;
+    
 
   }
 
@@ -120,7 +120,7 @@ namespace femus {
     _LinSolver.resize (_gridn);
 
 
-    if (_includeCoarseLevelSmoother = INCLUDE_COARSE_LEVEL_TRUE) {
+    if (_includeCoarseLevelSmoother == INCLUDE_COARSE_LEVEL_TRUE) {
       _LinSolver[0] = LinearEquationSolver::build (0, _solution[0], _smootherType).release();
     }
     else {
