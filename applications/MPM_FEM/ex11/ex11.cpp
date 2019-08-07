@@ -7,8 +7,6 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 
-
-#include "PetscMatrix.hpp"
 using namespace femus;
 
 
@@ -25,6 +23,8 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 
 void AssembleStandardProblem (MultiLevelProblem& ml_prob);
 void BuidProjection (MultiLevelProblem& ml_prob);
+
+void ProjectSolutionIntoGradient (MultiLevelProblem& ml_prob);
 
 std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol);
 
@@ -52,7 +52,7 @@ int main (int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
-    maxNumberOfMeshes = 7;
+    maxNumberOfMeshes = 3;
   }
   else {
     maxNumberOfMeshes = 6;
@@ -84,11 +84,18 @@ int main (int argc, char** args) {
       // define the multilevel solution and attach the mlMsh object to it
       MultiLevelSolution mlSol (&mlMsh);
 
+     
+
       // add variables to mlSol
       mlSol.AddSolution ("u", LAGRANGE, feOrder[j]);
-      mlSol.AddSolution ("ux", LAGRANGE, feOrder[j]);
-      mlSol.AddSolution ("uy", LAGRANGE, feOrder[j]);
-      if (dim == 3) mlSol.AddSolution ("uz", LAGRANGE, feOrder[j]);
+      
+      std::string Uxname[3] = {"ux", "uy", "uz"};
+      for (unsigned k = 0; k < dim; k++) {
+        mlSol.AddSolution (Uxname[k].c_str(), LAGRANGE, feOrder[j]);
+      }
+      
+      mlSol.AddSolution ("weight", LAGRANGE, feOrder[j], 0);
+
       mlSol.Initialize ("All");
 
       // attach the boundary condition function and generate boundary data
@@ -98,24 +105,14 @@ int main (int argc, char** args) {
       // define the multilevel problem attach the mlSol object to it
       MultiLevelProblem mlProb (&mlSol);
 
-
-      // add system Poisson in mlProb as a Linear Implicit System
-      LinearImplicitSystem& systemPx = mlProb.add_system < LinearImplicitSystem > ("Px");
-      systemPx.AddSolutionToSystemPDE ("ux");
-      systemPx.init();
-
-      LinearImplicitSystem& systemPy = mlProb.add_system < LinearImplicitSystem > ("Py");
-      systemPy.AddSolutionToSystemPDE ("uy");
-      systemPy.init();
-
-      if (dim == 3) {
-        LinearImplicitSystem& systemPz = mlProb.add_system < LinearImplicitSystem > ("Pz");
-        systemPz.AddSolutionToSystemPDE ("uz");
-        systemPz.init();
+      LinearImplicitSystem* systemP[3]; 
+      std::string Pname[3] = {"Px", "Py", "Pz"};
+        for (unsigned k = 0; k < dim; k++) {
+        systemP[k] = &mlProb.add_system < LinearImplicitSystem > (Pname[k]);
+        systemP[k]->AddSolutionToSystemPDE (Uxname[k].c_str());
+        systemP[k]->init();
       }
-
       BuidProjection (mlProb);
-
 
       // add system Poisson in mlProb as a Linear Implicit System
       NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Poisson");
@@ -130,6 +127,8 @@ int main (int argc, char** args) {
       system.init();
       system.SetOuterSolver (PREONLY);
       system.MGsolve();
+
+      ProjectSolutionIntoGradient (mlProb);
 
       std::pair< double , double > norm = GetErrorNorm (&mlSol);
       l2Norm[i][j]  = norm.first;
@@ -563,19 +562,20 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
   std::vector < SparseMatrix*> P (dim);
 
   std::string Pname[3] = {"Px", "Py", "Pz"};
+  std::string Uxname[3] = {"ux", "uy", "uz"};
+  std::vector < unsigned > soluxIndex (dim);
   for (unsigned k = 0; k < dim; k++) {
     mlSysP[k] =  &ml_prob.get_system< LinearImplicitSystem > (Pname[k]);
     sysP[k] = mlSysP[k]->_LinSolver[level];
+    soluxIndex[k] = mlSol->GetIndex (Uxname[k].c_str());
     P[k] = sysP[k]->_KK;
     P[k]->zero();
   }
 
-  //solution variable
-  unsigned soluIndex = mlSol->GetIndex ("u");  ;
-  unsigned soluType = mlSol->GetSolutionType (soluIndex);
-  unsigned soluPdeIndex = mlSysP[0]->GetSolPdeIndex ("ux");
+  unsigned solwIndex = mlSol->GetIndex ("weight");
+  unsigned solType = mlSol->GetSolutionType (solwIndex);
 
-  std::vector < adept::adouble > solu;
+  sol->_Sol[solwIndex]->zero();
 
   vector < vector < double > > x (dim);
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -585,16 +585,65 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
   vector <double> phi_x;
   double weight;
 
+  unsigned    iproc = msh->processor_id();
+
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    short unsigned ielGeom = msh->GetElementType (iel);
+    unsigned nDofs  = msh->GetElementDofNumber (iel, solType);
+    sysDof.resize (nDofs);
+    for (int k = 0; k < dim; k++) {
+      x[k].resize (nDofs);
+    }
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofs; i++) {
+      sysDof[i] = msh->GetSolutionDof (i, iel, solType);
+    }
+    // local storage of coordinates
+    for (unsigned i = 0; i < nDofs; i++) {
+      unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
+      for (unsigned k = 0; k < dim; k++) {
+        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+      }
+    }
+
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+      msh->_finiteElement[ielGeom][solType]->Jacobian (x, ig, weight, phi, phi_x);
+      // *** phi_i loop ***
+      for (unsigned i = 0; i < nDofs; i++) {
+        sol->_Sol[solwIndex]->add (sysDof[i], phi[i] * weight);
+
+      } // end phi_i loop
+    } // end gauss point loop
+
+  } //end element loop for each process*/
+  sol->_Sol[solwIndex]->close();
+
+
+  //solution variable
+
+  unsigned soluIndex = mlSol->GetIndex ("u");
+  {
+    unsigned soluType = mlSol->GetSolutionType (soluIndex);
+    if (soluType != solType) {
+      std::cout << "error weight and u should be of the same type\n";
+      abort();
+    }
+  }
+  unsigned soluPdeIndex = mlSysP[0]->GetSolPdeIndex ("ux");
+  std::vector < adept::adouble > solu;
+  std::vector < adept::adouble > solw;
   vector <double> Jac;
   std::vector < std::vector< adept::adouble > > aRes (dim); // local redidual vector
 
-  unsigned    iproc = msh->processor_id();
+
   //BEGIN element loop
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
-    unsigned nDofs  = msh->GetElementDofNumber (iel, soluType);
+    unsigned nDofs  = msh->GetElementDofNumber (iel, solType);
     solu.resize (nDofs);
+    solw.resize (nDofs);
     sysDof.resize (nDofs);
     for (int k = 0; k < dim; k++) {
       x[k].resize (nDofs);
@@ -603,8 +652,9 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     Jac.resize (nDofs * nDofs);
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
-      unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
+      unsigned solDof = msh->GetSolutionDof (i, iel, solType);
       solu[i] = (*sol->_Sol[soluIndex]) (solDof);
+      solw[i] = (*sol->_Sol[solwIndex]) (solDof);
       sysDof[i] = sysP[0]->GetSystemDof (soluIndex, soluPdeIndex, i, iel);
     }
     // local storage of coordinates
@@ -614,10 +664,10 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
         x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
       }
     }
-    
+
     s.new_recording();
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
-      msh->_finiteElement[ielGeom][soluType]->Jacobian (x, ig, weight, phi, phi_x);
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+      msh->_finiteElement[ielGeom][solType]->Jacobian (x, ig, weight, phi, phi_x);
       std::vector < adept::adouble > solux_g (dim, 0.);
       for (unsigned i = 0; i < nDofs; i++) {
         for (unsigned k = 0; k < dim; k++) {
@@ -627,11 +677,11 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofs; i++) {
         for (unsigned k = 0; k < dim; k++) {
-          aRes[k][i] += solux_g[k] * phi[i] * weight;
+          aRes[k][i] += solux_g[k] * phi[i] * weight / solw[i];
         }
       } // end phi_i loop
     } // end gauss point loop
-      
+
     s.independent (&solu[0], nDofs);
     for (unsigned k = 0; k < dim; k++) {
       s.dependent (&aRes[k][0], nDofs);
@@ -645,28 +695,56 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
   for (unsigned k = 0; k < dim; k++) {
     P[k]->close();
   }
+
+  SparseMatrix *Proj;
+  Proj = SparseMatrix::build().release();
+  Proj->init (dim, 1, P);
+  delete Proj;
   
-  Mat KK[3];
-  for (unsigned k = 0; k < dim; k++) {
-    KK[k] = (static_cast<PetscMatrix*> (P[k]))->mat();
-  }
-  
-  Mat B;
-  MatCreateNest(MPI_COMM_WORLD, dim, NULL, 1,NULL, KK, &B);
-  
-//   PetscViewer    viewer;
-//   PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,dim * 300,300,&viewer);
-//   PetscObjectSetName((PetscObject)viewer,"P matrix");
-//   PetscViewerPushFormat(viewer,	PETSC_VIEWER_DRAW_WORLD );
-//   MatView(B,viewer);
-  MatView(B,PETSC_VIEWER_STDOUT_WORLD);
+//
+//   PetscViewer viewer;
+//   PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, dim * 300, 300, &viewer);
+//   PetscObjectSetName ( (PetscObject) viewer, "P matrix");
+//   PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
+//   MatView (B, viewer);
+//   //MatView(B,PETSC_VIEWER_STDOUT_WORLD);
 
   //double a;
   //std::cin>>a;
+
   
-  MatDestroy(&B);
-  
-  
+
+
+}
+
+void ProjectSolutionIntoGradient (MultiLevelProblem& ml_prob) {
+
+  MultiLevelSolution*  mlSol = ml_prob._ml_sol;
+  unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
+
+  Solution* sol = ml_prob._ml_sol->GetSolutionLevel (level);
+  Mesh* msh = ml_prob._ml_msh->GetLevel (level);
+  elem* el = msh->el;
+
+  unsigned  dim = msh->GetDimension();
+
+  std::vector < LinearImplicitSystem* > mlSysP (dim);
+  std::vector < LinearEquationSolver* > sysP (dim);
+  std::vector < SparseMatrix*> P (dim);
+
+  std::string Pname[3] = {"Px", "Py", "Pz"};
+  std::string Uxname[3] = {"ux", "uy", "uz"};
+  std::vector < unsigned > soluxIndex (dim);
+  for (unsigned k = 0; k < dim; k++) {
+    mlSysP[k] =  &ml_prob.get_system< LinearImplicitSystem > (Pname[k]);
+    sysP[k] = mlSysP[k]->_LinSolver[level];
+    soluxIndex[k] = mlSol->GetIndex (Uxname[k].c_str());
+    P[k] = sysP[k]->_KK;
+  }
+  unsigned soluIndex = mlSol->GetIndex ("u");
+  for (unsigned k = 0; k < dim; k++) {
+    (*sol->_Sol[soluxIndex[k]]).matrix_mult ( (*sol->_Sol[soluIndex]), (*P[k]));
+  }
 }
 
 

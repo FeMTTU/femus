@@ -87,6 +87,8 @@ namespace femus {
       void init (const  int m, const  int n, const  int m_l, const  int n_l,
                  const std::vector< int > & n_nz, const std::vector< int > & n_oz);
 
+      void init (const int nr, const int nc, const std::vector < SparseMatrix*> &P);
+            
       void init (const int m,  const int n) {
         _m = m;
         _n = n;

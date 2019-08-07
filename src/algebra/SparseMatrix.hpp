@@ -76,6 +76,8 @@ namespace femus {
         _m = m; ///< Initialize  matrix  with dims
         _n = n;
       }
+      
+      virtual void init (const int nr, const int nc, const std::vector < SparseMatrix*> &P) = 0;
 
       /** To be Added */
       virtual void init () {};

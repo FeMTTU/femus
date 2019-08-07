@@ -103,6 +103,23 @@ namespace femus {
 
     this->zero();
   }
+  
+  
+  void PetscMatrix::init (const int nr, const int nc, const std::vector < SparseMatrix*> &P){
+    Mat KK[3];
+    unsigned dim = P.size();
+    for (unsigned k = 0; k < dim; k++) {
+      KK[k] = (static_cast<PetscMatrix*> (P[k]))->mat();
+    }
+    MatCreateNest (MPI_COMM_WORLD, dim, NULL, 1, NULL, KK, &_mat);
+    this->_is_initialized = true;
+    MatGetSize(_mat, &_n, &_m);
+    MatGetLocalSize(_mat, &_n_l, &_m_l);
+    _destroy_mat_on_exit = true;
+    
+    std::cout << _n <<" " <<  _m << " " << _n_l << " " << _m_l << std::endl;
+  }
+  
 
   void PetscMatrix::init (const  int m, const  int n, const  int m_l, const  int n_l,
                           const std::vector< int > & n_nz, const std::vector< int > & n_oz) {
