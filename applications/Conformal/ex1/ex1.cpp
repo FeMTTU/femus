@@ -23,6 +23,7 @@
 using namespace femus;
 
 void AssembleConformalMinimization (MultiLevelProblem&);  //stable and not bad
+
 void AssembleShearMinimization (MultiLevelProblem&);  //vastly inferior
 void UpdateScale (MultiLevelProblem& ml_prob, const double &scalingFactor) ;
 
@@ -37,7 +38,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
 //       dirichlet = false;
 //     }
 //     if (4 == faceName || 3 == faceName ) {
-//       value = (0.5 + 0.4 * cos ( (x[1] - 0.5) * acos (-1.))) * (0.5 - x[0]);
+//       value = (0.5 + 0.499 * cos ( (x[1] - 0.5) * acos (-1.))) * (0.5 - x[0]);
 //     }
 //   }
 //   else if (!strcmp (solName, "Dx2")) {
@@ -164,16 +165,16 @@ int main (int argc, char** args) {
 
   //mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 1);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 1);
-  
-  system.SetAssembleFunction (AssembleConformalMinimization);
-  system.MGsolve();
-   
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 2);
+
+//   system.SetAssembleFunction (AssembleConformalMinimization);
+//   system.MGsolve();
+
+// mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 2);
 
   return 0;
 }
 
-
+unsigned counter = 0;
 
 // Building the Conformal Minimization system.
 void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
@@ -247,7 +248,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   solType = mlSol->GetSolutionType (solDxIndex[0]);
 
   unsigned scaleIndex = mlSol->GetIndex ("eScale");
-  
+
   unsigned energyIndex = mlSol->GetIndex ("energy");
 
   // Get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC).
@@ -284,7 +285,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     double energyValue = (*sol->_Sol[energyIndex]) (iel);
 
     adept::adouble newEnergyValue = 0.;
-    
+
     // Numer of solution element dofs.
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nxDofs  = msh->GetElementDofNumber (iel, solType);
@@ -421,15 +422,15 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2];
       M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
       M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
-      
+
       adept::adouble gEnergyValue = 0.;
-      for(unsigned i = 0;i<DIM;i++){
+      for (unsigned i = 0; i < DIM; i++) {
         gEnergyValue += (V[i] * V[i] + W[i] * W[i]);
         newEnergyValue += gEnergyValue * Area2;
       }
 
       //std::cout << gEnergyValue << " ";
-      
+
       // Implement the Conformal Minimization equations.
       for (unsigned k = 0; k < dim; k++) {
         for (unsigned i = 0; i < nxDofs; i++) {
@@ -476,16 +477,16 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
     s.clear_independents();
     s.clear_dependents();
-    
+
     //if (newEnergyValue > energyValue) {
-      sol->_Sol[energyIndex]->set (iel, newEnergyValue.value());
+    sol->_Sol[energyIndex]->set (iel, newEnergyValue.value());
     //}
 
   } //end ELEMENT LOOP for each process.
 
   RES->close();
   KK->close();
-  
+
   sol->_Sol[energyIndex]->close();
 
 } // end AssembleConformalMinimization.
@@ -595,7 +596,12 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nxDofs; i++) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (iXDof);// + solDx[k][i];
+        if (counter < 1) {
+          x[k][i] = (*msh->_topology->_Sol[k]) (iXDof);
+        }
+        else {
+          x[k][i] = (*msh->_topology->_Sol[k]) (iXDof);// + solDx[k][i];
+        }
       }
     }
 
@@ -603,7 +609,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
 
       msh->_finiteElement[ielGeom][solType]->Jacobian (x, ig, weight, phi, phi_x);
-      weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
+      //weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
 
       std::vector < std::vector < adept::adouble > > gradSolDx (dim);
 
@@ -622,13 +628,13 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nxDofs; i++) {
         for (unsigned  k = 0; k < dim; k++) {
           adept::adouble term = 0.;
-          for (unsigned j = 0; j < dim; j++) {
-            term  +=  phi_x[i * dim + j] * (gradSolDx[k][j] + 0. * gradSolDx[j][k]);
-          }
-          //term  +=  phi_x[i * dim + k] * (gradSolDx[k][k] );
-          
-          aResDx[k][i] += term * scaleValue * weight;
-          //aResDx[k][i] += term * weight;
+          //for (unsigned j = 0; j < dim; j++) {
+          //  term  +=  phi_x[i * dim + j] * (gradSolDx[k][j] + 0 * gradSolDx[j][k]);
+          //}
+          term  +=  phi_x[i * dim + k] * (gradSolDx[k][k]);
+
+          //aResDx[k][i] += term * scaleValue * weight;
+          aResDx[k][i] += term * weight;
         }
       }
     } // end gauss point loop
@@ -674,8 +680,23 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
   RES->close();
   KK->close();
 
+  counter++;
+
   // ***************** END ASSEMBLY *******************
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void UpdateScale (MultiLevelProblem& ml_prob, const double &elScalingFactor) {
   //  ml_prob is the global object from/to where get/set all the data
@@ -793,4 +814,6 @@ void UpdateScale (MultiLevelProblem& ml_prob, const double &elScalingFactor) {
 
   // ***************** END ASSEMBLY *******************
 }
+
+
 
