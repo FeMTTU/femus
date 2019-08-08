@@ -24,7 +24,6 @@ using namespace femus;
 
 void AssembleShearMinimization (MultiLevelProblem& ml_prob);
 void AssembleConformalMinimization (MultiLevelProblem&);  //stable and not bad
-
 void UpdateMesh (MultiLevelSolution& mlSol);
 
 // IBVs.  No boundary, and IVs set to sphere (just need something).
@@ -136,9 +135,6 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("Dx2", LAGRANGE, SECOND, 0);
   mlSol.AddSolution ("Dx3", LAGRANGE, SECOND, 0);
 
-  //mlSol.AddSolution ("Lambda", DISCONTINUOUS_POLYNOMIAL, FIRST, 0);
-  // mlSol.AddSolution ("Lambda", LAGRANGE, FIRST, 0);
-
   // Initialize the variables and attach boundary conditions.
   mlSol.Initialize ("All");
 
@@ -176,8 +172,6 @@ int main (int argc, char** args) {
   system1.AddSolutionToSystemPDE ("Dx1");
   system1.AddSolutionToSystemPDE ("Dx2");
   if (dim == 3) system1.AddSolutionToSystemPDE ("Dx3");
-
-  //system1.AddSolutionToSystemPDE ("Lambda");
 
   // Parameters for convergence and # of iterations.
   system1.SetMaxNumberOfNonLinearIterations (4);
@@ -394,7 +388,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
           energy2 += (gradSolU[k][j] + gradSolU[j][k]) * (gradSolU[k][j] + gradSolU[j][k]);
         }
       }
-      double energy = 0.8 * pow ( 10 * energy1, 1) + 0.2 * pow ( 0.1 * energy2, 4);
+      double penalty = 0.8 * pow ( 10 * energy1, 1) + 0.2 * pow ( 0.1 * energy2, 4);
       
 
       const double *phi;  // local test function
@@ -488,7 +482,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
             term1 +=  M[k][j] * phi_uv[j][i];
           }
 
-          aResDx[k][i] += (term1 + dir[k] * energy * solDxg[k] * phi[i]) * Area2;
+          aResDx[k][i] += (term1 + dir[k] * penalty * solDxg[k] * phi[i]) * Area2;
 
         }
       }
