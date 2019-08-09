@@ -74,6 +74,20 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
       dirichlet = false;
     }
   }
+  
+//     if (!strcmp (solName, "U1")) {
+//     if (1 == faceName ) {
+//       dirichlet = false;
+//     }
+//     if (4 == faceName || 3 == faceName ) {
+//       value = (0.5 + 0.499 * cos ( (x[1] - 0.5) * acos (-1.))) * (0.5 - x[0]);
+//     }
+//   }
+//   else if (!strcmp (solName, "U2")) {
+//     if (2 == faceName) {
+//       dirichlet = false;
+//     }
+//   }
 
 
   if (!strcmp (solName, "Dx1")) {
@@ -648,7 +662,7 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nxDofs; i++) {
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned  k = 0; k < dim; k++) {
-            gradSolDx[k][j] += solDx[k][i] * phi_x[i * dim + j];
+            gradSolDx[k][j] += (x[k][i] + solDx[k][i]) * phi_x[i * dim + j];
           }
         }
       }
