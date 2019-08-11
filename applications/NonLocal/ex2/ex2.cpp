@@ -78,9 +78,11 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 1;
+unsigned numberOfUniformLevels = 2;
 
 int main (int argc, char** argv) {
+
+  clock_t total_time = clock();
 
   // init Petsc-MPI communicator
   FemusInit mpinit (argc, argv, MPI_COMM_WORLD);
@@ -227,6 +229,9 @@ int main (int argc, char** argv) {
   print_vars.push_back ("All");
   mlSol.GetWriter()->SetDebugOutput (true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+
+  std::cout << std::endl << " total CPU time : " << std::setw (11) << std::setprecision (6) << std::fixed
+            << static_cast<double> ( (clock() - total_time)) / CLOCKS_PER_SEC << " s" << std::endl;
 
   return 0;
 
