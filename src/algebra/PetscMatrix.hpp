@@ -165,6 +165,7 @@ namespace femus {
       void matrix_LeftMatMult (const SparseMatrix &mat_A);
 
       void matrix_get_diagonal_values (const std::vector< int > &index, std::vector<double> &value) const ;
+      void matrix_set_diagonal_values (NumericVector& D);
       void matrix_set_diagonal_values (const std::vector< int > &index, const double &value);
       void matrix_set_diagonal_values (const std::vector< int > &index, const std::vector<double> &value);
       void matrix_set_off_diagonal_values_blocked (const std::vector< int > &index_rows, const std::vector< int > &index_cols, const double &value);

@@ -790,6 +790,13 @@ namespace femus {
     }
   }
 
+  // ===========================================================
+  
+  void PetscMatrix::matrix_set_diagonal_values (NumericVector& D) {
+    MatDiagonalSet(_mat, (static_cast< PetscVector& > (D)).vec(),INSERT_VALUES);
+  }
+  
+  
 // ===========================================================
 
   void PetscMatrix::matrix_set_diagonal_values (const std::vector< int > &index, const double &value) {

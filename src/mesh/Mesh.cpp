@@ -452,7 +452,7 @@ namespace femus {
           if (jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
             imapping[j - 1] = jel;
             imapping[j] = iel;
-            newN = j;
+            newN = j - _elementOffset[isdom];
           }
         }
         n = newN;
