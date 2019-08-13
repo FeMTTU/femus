@@ -103,23 +103,53 @@ namespace femus {
 
     this->zero();
   }
-  
-  
-  void PetscMatrix::init (const int nr, const int nc, const std::vector < SparseMatrix*> &P){
-    Mat KK[3];
+
+  void PetscMatrix::init (const int nr, const int nc, const std::vector < SparseMatrix*> &P) {
+
     unsigned dim = P.size();
+
+    if (nr * nc != dim) {
+      std::cout << "error in function PetscMatrix::init (const int nr, const int nc, const std::vector < SparseMatrix*> &P)\n";
+      std::cout << "the product of nr * nc should be equal to the dimension of P\n";
+      abort();
+    }
+
+    int numprocs;
+    MPI_Comm_size (MPI_COMM_WORLD, &numprocs);
+
+    std::vector < Mat > KK (dim);
     for (unsigned k = 0; k < dim; k++) {
       KK[k] = (static_cast<PetscMatrix*> (P[k]))->mat();
     }
-    MatCreateNest (MPI_COMM_WORLD, dim, NULL, 1, NULL, KK, &_mat);
+
+    if (dim != 1) {
+      Mat nMat;
+      MatCreateNest (MPI_COMM_WORLD, dim, NULL, 1, NULL, &KK[0], &nMat);
+
+      if (numprocs == 1) {
+        MatConvert (nMat, MATSEQAIJ, MAT_INITIAL_MATRIX, &_mat);
+      }
+      else {
+        MatConvert (nMat, MATMPIAIJ, MAT_INITIAL_MATRIX, &_mat);
+      }
+      
+      MatDestroy (&nMat);
+    }
+    else{
+      if (numprocs == 1) {
+        MatConvert (KK[0], MATSEQAIJ, MAT_INITIAL_MATRIX, &_mat);
+      }
+      else {
+        MatConvert (KK[0], MATMPIAIJ, MAT_INITIAL_MATRIX, &_mat);
+      }  
+    }
+
     this->_is_initialized = true;
-    MatGetSize(_mat, &_n, &_m);
-    MatGetLocalSize(_mat, &_n_l, &_m_l);
+    MatGetSize (_mat, &_n, &_m);
+    MatGetLocalSize (_mat, &_n_l, &_m_l);
     _destroy_mat_on_exit = true;
-    
-    std::cout << _n <<" " <<  _m << " " << _n_l << " " << _m_l << std::endl;
+
   }
-  
 
   void PetscMatrix::init (const  int m, const  int n, const  int m_l, const  int n_l,
                           const std::vector< int > & n_nz, const std::vector< int > & n_oz) {
@@ -791,12 +821,12 @@ namespace femus {
   }
 
   // ===========================================================
-  
+
   void PetscMatrix::matrix_set_diagonal_values (NumericVector& D) {
-    MatDiagonalSet(_mat, (static_cast< PetscVector& > (D)).vec(),INSERT_VALUES);
+    MatDiagonalSet (_mat, (static_cast< PetscVector& > (D)).vec(), INSERT_VALUES);
   }
-  
-  
+
+
 // ===========================================================
 
   void PetscMatrix::matrix_set_diagonal_values (const std::vector< int > &index, const double &value) {

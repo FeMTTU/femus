@@ -128,8 +128,7 @@ int main (int argc, char** args) {
       systemP[dim] = &mlProb.add_system < LinearImplicitSystem > ("Pu");
       systemP[dim]->AddSolutionToSystemPDE ("u");
       systemP[dim]->init();
-      Proj = SparseMatrix::build().release();
-       
+             
       BuidProjection (mlProb);
 
       LinearImplicitSystem& system0 = mlProb.add_system < LinearImplicitSystem > ("auxiliary");
@@ -147,8 +146,8 @@ int main (int argc, char** args) {
       
       
       // attach the assembling function to system
-      //system.SetAssembleFunction (AssembleWithProjection);
-      system.SetAssembleFunction (AssembleStandardProblem);
+      system.SetAssembleFunction (AssembleWithProjection);
+      //system.SetAssembleFunction (AssembleStandardProblem);
 
       // initilaize and solve the system
 
@@ -746,35 +745,8 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     P[k]->close();
   }
 
+  Proj = SparseMatrix::build().release();
   Proj->init (dim + 1, 1, P);
-  
-  //SparseMatrix* nProj;
-  //nProj = SparseMatrix::build().release();
-  //nProj->init (dim + 1, 1, P);
-   
-  //Mat pnProj = (static_cast< PetscMatrix* > (nProj))->mat();
-  Mat psProj = (static_cast< PetscMatrix* > (Proj))->mat();
-//   
-  
-  MatConvert( psProj, MATSEQAIJ, MAT_INPLACE_MATRIX, &psProj);
-  
-  //std::cout << "AAAAAAAAAAAAAAAAAAAA"<<std::endl;
-    
-  //delete nProj;
-
-//
-  //PetscViewer viewer;
-  //PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, dim * 300, 300, &viewer);
-  //PetscObjectSetName ( (PetscObject) viewer, "P matrix");
-  //PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
-  //MatView ((static_cast< PetscMatrix* > (Proj))->mat(), viewer);
-//   MatView((static_cast< PetscMatrix* > (Proj))->mat(),PETSC_VIEWER_STDOUT_WORLD);
-
-  //double a;
-  //std::cin>>a;
-
-
-
 
 }
 

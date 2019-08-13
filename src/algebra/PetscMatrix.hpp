@@ -107,7 +107,7 @@ namespace femus {
       // Returns -------------------------------------------
       /// PETSc matrix context pointer
       Mat mat() {
-        assert (_mat != NULL);
+        //assert (_mat != NULL);
         return _mat;
       }
 
