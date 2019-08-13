@@ -18,6 +18,7 @@
 //----------------------------------------------------------------------------
 #include "FemusConfig.hpp"
 #include "XDMFWriter.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include <cstdio>
@@ -36,7 +37,7 @@
 #include "DofMap.hpp"
 #include "SystemTwo.hpp"
 #include "NumericVector.hpp"
-#include "FEElemBase.hpp"
+#include "GeomElemBase.hpp"
 #include "FETypeEnum.hpp"
 #include "paral.hpp"
 
@@ -449,6 +450,7 @@ namespace femus {
       if( !( time_step % print_step ) ) {
         filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << type << ".xmf";
         ftr_out << "<xi:include href=\"" << filename.str().c_str() << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid[" << 1 << "])\">\n";
+        ftr_out << "<xi:include href=\"" << filename.str() << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid[" << 1 << "])\">\n";
         ftr_out << "<xi:fallback/>\n";
         ftr_out << "</xi:include>\n";
       }
@@ -943,8 +945,8 @@ namespace femus {
 // This prints All Variables of One Equation
   void XDMFWriter::write( const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn ) {
 
-    std::vector<FEElemBase*> fe_in( QL );
-    for( int fe = 0; fe < QL; fe++ )    fe_in[fe] = FEElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), fe );
+    std::vector<GeomElemBase*> fe_in( QL );
+    for( int fe = 0; fe < QL; fe++ )    fe_in[fe] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), fe );
 
 
     hid_t file_id = H5Fopen( namefile.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );
@@ -1276,8 +1278,8 @@ namespace femus {
 
   void XDMFWriter::write_bc( const std::string namefile, const MultiLevelMeshTwo* mesh, const DofMap* dofmap, const SystemTwo* eqn, const int* bc, int** bc_fe_kk ) {
 
-    std::vector<FEElemBase*> fe_in( QL );
-    for( int fe = 0; fe < QL; fe++ )    fe_in[fe] = FEElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), fe );
+    std::vector<GeomElemBase*> fe_in( QL );
+    for( int fe = 0; fe < QL; fe++ )    fe_in[fe] = GeomElemBase::build( mesh->_geomelem_id[mesh->get_dim() - 1 - VV].c_str(), fe );
 
     hid_t file_id = H5Fopen( namefile.c_str(), H5F_ACC_RDWR, H5P_DEFAULT );
 

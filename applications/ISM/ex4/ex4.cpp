@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -148,7 +149,7 @@ int main(int argc, char** args)
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure", false);
   mlSol.Initialize("All");
@@ -170,8 +171,8 @@ int main(int argc, char** args)
 
   system.AddSolutionToSystemPDE("P");
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(ASM_SMOOTHER);   // Additive Swartz Method
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType(FEMuS_ASM);   // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleIncompressibleNavierStokes);
 
@@ -201,7 +202,8 @@ int main(int argc, char** args)
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(2);
   //system.UseSamePreconditioner();
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

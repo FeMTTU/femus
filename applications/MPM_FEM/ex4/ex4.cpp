@@ -196,7 +196,7 @@ int main(int argc, char** args)
     if(dim > 2) mlSol.AddSolution("AZ", LAGRANGE, SECOND, 2);
 
     mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
-    mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+    mlSol.AddSolution("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
     mlSol.Initialize("All");
 
@@ -237,7 +237,7 @@ int main(int argc, char** args)
     system.SetNumberPostSmoothingStep(1);
 
     // ******* Set Preconditioner *******
-    system.SetMgSmoother(GMRES_SMOOTHER);
+    system.SetLinearEquationSolverType(FEMuS_DEFAULT);
 
     system.init();
 
@@ -270,7 +270,7 @@ int main(int argc, char** args)
     system2.SetNumberPostSmoothingStep(1);
       
     // ******* Set Preconditioner *******
-    system2.SetMgSmoother(GMRES_SMOOTHER);
+    system2.SetLinearEquationSolverType(FEMuS_DEFAULT);
       
     system2.init();
       

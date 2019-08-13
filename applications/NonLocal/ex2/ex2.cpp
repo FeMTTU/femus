@@ -148,7 +148,7 @@ int main ( int argc, char** argv )
     system.SetNumberPostSmoothingStep ( 1 );
 
     // ******* Set Preconditioner *******
-    system.SetMgSmoother ( GMRES_SMOOTHER );
+    system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
 
     system.SetSparsityPatternMinimumSize ( 500u ); //TODO tune
 
@@ -186,7 +186,7 @@ int main ( int argc, char** argv )
     system2.SetNumberPostSmoothingStep ( 1 );
 
     // ******* Set Preconditioner *******
-    system2.SetMgSmoother ( GMRES_SMOOTHER );
+    system2.SetLinearEquationSolverType ( FEMuS_DEFAULT );
 
     system2.init();
 

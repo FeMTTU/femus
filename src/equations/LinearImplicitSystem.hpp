@@ -23,7 +23,7 @@
 #include "LinearEquationSolver.hpp"
 #include "MgTypeEnum.hpp"
 #include "DirichletBCTypeEnum.hpp"
-#include "MgSmootherEnum.hpp"
+#include "LinearEquationSolverEnum.hpp"
 #include "FemusDefault.hpp"
 
 #include <petscksp.h>
@@ -40,16 +40,13 @@ namespace femus {
     public:
 
       /** Constructor.  Optionally initializes required data structures. */
-      LinearImplicitSystem(MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number, const MgSmoother & smoother_type);
+      LinearImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number, const LinearEquationSolverType & smoother_type);
 
       /** Destructor */
       virtual ~LinearImplicitSystem();
 
       /** The type of the parent. */
       typedef ImplicitSystem Parent;
-
-      /** Clear all the data structures associated with the system. */
-      virtual void clear();
 
       /** Init the system PDE structures */
       virtual void init();
@@ -58,10 +55,10 @@ namespace femus {
       virtual void init_two();
 
       /** @deprecated Multigrid routine */
-      void MGSolve(double Eps, int MaxIter, const uint Gamma = DEFAULT_MG_GAMMA, const uint Nc_pre = DEFAULT_NC_PRE, const uint Nc_coarse = DEFAULT_NC_COARSE, const uint Nc_post = DEFAULT_NC_POST);
+      void MGSolve (double Eps, int MaxIter, const uint Gamma = DEFAULT_MG_GAMMA, const uint Nc_pre = DEFAULT_NC_PRE, const uint Nc_coarse = DEFAULT_NC_COARSE, const uint Nc_post = DEFAULT_NC_POST);
 
       /** @deprecated Multigrid step routine */
-      double MGStep(int Level, double Eps1, int MaxIter, const uint Gamma, const uint Nc_pre, const uint Nc_coarse, const uint Nc_post);
+      double MGStep (int Level, double Eps1, int MaxIter, const uint Gamma, const uint Nc_pre, const uint Nc_coarse, const uint Nc_post);
 
 
       /** Add a system level */
@@ -81,13 +78,13 @@ namespace femus {
       * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
       */
       vector < LinearEquationSolver*> _LinSolver;
-      
-      void SetNumberOfGlobalVariables(const unsigned &numberOfGlobalVariables){
+
+      void SetNumberOfGlobalVariables (const unsigned &numberOfGlobalVariables) {
         _numberOfGlobalVariables = numberOfGlobalVariables;
       }
 
       /** Set the max number of linear iterationsfor solving Ax=b */
-      void SetMaxNumberOfLinearIterations(unsigned int max_lin_it) {
+      void SetMaxNumberOfLinearIterations (unsigned int max_lin_it) {
         _n_max_linear_iterations = max_lin_it;
       };
 
@@ -96,122 +93,134 @@ namespace femus {
         return _final_linear_residual;
       };
 
+      /** Flag to print fields to file after each linear iteration */
+      void SetDebugLinear(const bool my_value); 
+
       /** Get the absolute convergence tolerance for the linear problem Ax=b*/
       double GetAbsoluteConvergenceTolerance() const {
         return _linearAbsoluteConvergenceTolerance;
       };
 
       /** Set the absolute convergence tolerance for the linear problem Ax=b*/
-      void SetAbsoluteLinearConvergenceTolerance(const double & absolute_convergence_tolerance) {
+      void SetAbsoluteLinearConvergenceTolerance (const double & absolute_convergence_tolerance) {
         _linearAbsoluteConvergenceTolerance = absolute_convergence_tolerance;
       };
 
       /** */
-      bool IsLinearConverged(const unsigned igridn);
+      bool IsLinearConverged (const unsigned igridn);
 
       /** Set the type of multigrid */
-      void SetMgType(const MgType mgtype) {
+      void SetMgType (const MgType mgtype) {
         _mg_type = mgtype;
       };
 
       /** Set the modality of handling the BC boundary condition (penalty or elimination)*/
-      void SetDirichletBCsHandling(const DirichletBCType DirichletMode);
+      void SetDirichletBCsHandling (const DirichletBCType DirichletMode);
 
       /** Add the variable solname to the variable set to be solved by using the Vanka smoother */
-      void AddVariableToBeSolved(const char solname[]);
+      void AddVariableToBeSolved (const char solname[]);
 
       /** Clear the Vanka index */
       void ClearVariablesToBeSolved();
 
       /** Set the multigrid smoother, gmres or Vanka (in future AMS (additive schwartz preconditioner))*/
-      void SetMgSmoother(const MgSmoother mgsmoother);
-
-      /** Set the PCFIELDSPLIT structure in linear solver */
-      void SetFieldSplitTree(FieldSplitTree *fieldSplitTree);
+      void SetLinearEquationSolverType (const LinearEquationSolverType LinearEquationSolverType, const CoarseLevelInclude &includeCoarseLevel = INCLUDE_COARSE_LEVEL_FALSE);      /** Set the PCFIELDSPLIT structure in linear solver */
+      void SetFieldSplitTree (FieldSplitTree *fieldSplitTree);
 
       /** Set if the solver has to output convergence information **/
-      void PrintSolverInfo(const bool & printInfo = true);
+      void PrintSolverInfo (const bool & printInfo = true);
 
       /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
-      void SetElementBlockNumber(unsigned const &dim_vanka_block);
+      void SetElementBlockNumber (unsigned const &dim_vanka_block);
 
       /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
-      void SetElementBlockNumber(const char all[], const unsigned & overlap = 1);
+      void SetElementBlockNumber (const char all[], const unsigned & overlap = 1);
 
       /** Set the Ksp smoother solver on the fine grids. At the coarse solver we always use the LU (Mumps) direct solver */
-      void SetSolverFineGrids(const SolverType solvertype);
+      void SetSolverCoarseGrid (const SolverType &solvertype);
 
       /** Set the preconditioner for the Ksp smoother solver on the fine grids */
-      void SetPreconditionerFineGrids(const PreconditionerType preconditioner_type);
+      void SetPreconditionerCoarseGrid (const PreconditionerType &preconditioner_type);
+
+
+      /** Set the Ksp smoother solver on the fine grids. At the coarse solver we always use the LU (Mumps) direct solver */
+      void SetSolverFineGrids (const SolverType &solvertype);
+
+      /** Set the preconditioner for the Ksp smoother solver on the fine grids */
+      void SetPreconditionerFineGrids (const PreconditionerType &preconditioner_type);
 
       /** Set the tolerances for the ksp solver on fine grids: rtol, atol, divtol, maxits */
-      void SetTolerances(const double &rtol, const double &atol,
-                         const double &divtol, const unsigned &maxits,
-                         const unsigned &restart = 30);
-      
-      void SetRichardsonScaleFactor(const double &richardsonScaleFactor){
-	_richardsonScaleFactor = richardsonScaleFactor;
-	_richardsonScaleFactorDecrease = 0;
-	_richardsonScaleFactorIsSet = true;
-	for(unsigned i=0;i<_gridn;i++){
-	   _LinSolver[i]->SetRichardsonScaleFactor(_richardsonScaleFactor);
-	}
-      }
-      
-      void SetRichardsonScaleFactor(const double &richardsonScaleFactorMin, const double &richardsonScaleFactorMax){
-	_richardsonScaleFactor = richardsonScaleFactorMax;
-	_richardsonScaleFactorDecrease = (_gridn > 1)?(richardsonScaleFactorMin - richardsonScaleFactorMax)/(_gridn - 2) : 0;
-	_richardsonScaleFactorIsSet = true;
-	_LinSolver[0]->SetRichardsonScaleFactor(_richardsonScaleFactor);
-	for(unsigned i=1;i<_gridn;i++){
-	   _LinSolver[i]->SetRichardsonScaleFactor(_richardsonScaleFactor + _richardsonScaleFactorDecrease * (i - 1));
-	}
-      }
-      
-      void ResetComputationalTime(){
-	_totalAssemblyTime = 0.;
-	_totalSolverTime = 0.;
+      void SetTolerances (const double &rtol, const double &atol,
+                          const double &divtol, const unsigned &maxits,
+                          const unsigned &restart = 30);
+
+      void SetRichardsonScaleFactor (const double &richardsonScaleFactor) {
+        _richardsonScaleFactor = richardsonScaleFactor;
+        _richardsonScaleFactorDecrease = 0;
+        _richardsonScaleFactorIsSet = true;
+        for (unsigned i = 0; i < _gridn; i++) {
+          _LinSolver[i]->SetRichardsonScaleFactor (_richardsonScaleFactor);
+        }
       }
 
-      void PrintComputationalTime(){
-	std::cout << "Total Assembly Time = " << _totalAssemblyTime <<std::endl;
-	std::cout << "Total Solver Time = " << _totalSolverTime <<std::endl;
-	std::cout << "Total Computational Time = " << _totalAssemblyTime + _totalSolverTime <<std::endl;
+      void SetRichardsonScaleFactor (const double &richardsonScaleFactorMin, const double &richardsonScaleFactorMax) {
+        _richardsonScaleFactor = richardsonScaleFactorMax;
+        _richardsonScaleFactorDecrease = (_gridn > 1) ? (richardsonScaleFactorMin - richardsonScaleFactorMax) / (_gridn - 2) : 0;
+        _richardsonScaleFactorIsSet = true;
+        _LinSolver[0]->SetRichardsonScaleFactor (_richardsonScaleFactor);
+        for (unsigned i = 1; i < _gridn; i++) {
+          _LinSolver[i]->SetRichardsonScaleFactor (_richardsonScaleFactor + _richardsonScaleFactorDecrease * (i - 1));
+        }
       }
 
-      void SetOuterKSPSolver(const std::string outer_ksp_solver) {
-        _outer_ksp_solver = outer_ksp_solver;
+      void ResetComputationalTime() {
+        _totalAssemblyTime = 0.;
+        _totalSolverTime = 0.;
+      }
+
+      void PrintComputationalTime() {
+        std::cout << "Total Assembly Time = " << _totalAssemblyTime << std::endl;
+        std::cout << "Total Solver Time = " << _totalSolverTime << std::endl;
+        std::cout << "Total Computational Time = " << _totalAssemblyTime + _totalSolverTime << std::endl;
+      }
+
+      void SetOuterSolver (const SolverType & mgOuterSolver) {
+        _mgOuterSolver = mgOuterSolver;
       };
 
       /** Set AMR options */
-      void SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,
-                            const std::string& AMRnorm, const double &AMRthreshold,
-                            bool (* SetRefinementFlag)(const std::vector < double > &x,
-                                const int &ElemGroupNumber, const int &level) = NULL);
-     
-      void SetAMRghborThresholdValue(const double &neighborThresholdValue){
-	_AMReighborThresholdValue = neighborThresholdValue;
+      void SetAMRSetOptions (const std::string& AMR, const unsigned &AMRlevels,
+                             const std::string& AMRnorm, const double &AMRthreshold,
+                             bool (* SetRefinementFlag) (const std::vector < double > &x,
+                                                         const int &ElemGroupNumber, const int &level) = NULL);
+
+      void SetAMRghborThresholdValue (const double &neighborThresholdValue) {
+        _AMReighborThresholdValue = neighborThresholdValue;
       }
-      
+
       /** Set the options of the Schur-Vanka smoother */
       //void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);
-      void SetNumberOfSchurVariables(const unsigned short &NSchurVar);
+      void SetNumberOfSchurVariables (const unsigned short &NSchurVar);
 
 
       /** Set the number of pre-smoothing step of a Multigrid cycle */
-      void SetNumberPreSmoothingStep(const unsigned int npre) {
+      void SetNumberPreSmoothingStep (const unsigned &npre) {
         _npre = npre;
+      };
+      
+      void SetNumberSmoothingStepCoarseGrid (const unsigned &npre0) {
+        _npre0 = npre0;
       };
 
       /** Set the number of post-smoothing step of a Multigrid cycle */
-      void SetNumberPostSmoothingStep(const unsigned int npost) {
+      void SetNumberPostSmoothingStep (const unsigned &npost) {
         _npost = npost;
       };
 
       /** enforce sparcity pattern for setting uncoupled variables and save on memory allocation **/
-      void SetSparsityPattern(vector < bool > other_sparcity_pattern);
+      void SetSparsityPattern (vector < bool > other_sparcity_pattern);
 
-      void SetSparsityPatternMinimumSize(const unsigned & minimumSize);
+      void SetSparsityPatternMinimumSize (const unsigned & minimumSize);
 
       bool GetAssembleMatrix() {
         return _assembleMatrix;
@@ -220,41 +229,45 @@ namespace femus {
       vector < SparseMatrix* > &GetProjectionMatrix() {
         return _PP;
       }
-      
+
       vector < SparseMatrix* > &GetRestrictionMatrix() {
         return _RR;
       }
-      vector < SparseMatrix* > _PPamr, _RRamr; 
+     
+      /** Solves the system. */
+      virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
     protected:
 
-      vector < SparseMatrix* > _PP, _RR; 
-//       vector < SparseMatrix* > _PPamr, _RRamr; 
+      vector < SparseMatrix* > _PP, _RR;
+      vector < SparseMatrix* > _PPamr, _RRamr;
 
       bool _printSolverInfo;
       bool _assembleMatrix;
-      void AddAMRLevel(unsigned &AMRCounter);
+      void AddAMRLevel (unsigned &AMRCounter);
 
-      bool MLVcycle(const unsigned &gridn);
-      bool MGVcycle(const unsigned & gridn, const MgSmootherType& mgSmootherType);
+      bool Vcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
 
 
       /** Create the Prolongator matrix for the Multigrid solver */
-      void Prolongator(const unsigned &gridf);
+      void Prolongator (const unsigned &gridf);
 
       /** Create the Restrictor matrix for the Multigrid solver */
-      virtual void Restrictor(const unsigned &gridf);
+      virtual void Restrictor (const unsigned &gridf);
 
       /** Prolongate the solution to a finer level */
-      void ProlongatorSol(unsigned gridf);
+      void ProlongatorSol (unsigned gridf);
 
       /** Create the Prolongator Operator in order to get the coarser matrix for the Algebraic Multigrid Solver */
-      virtual void BuildProlongatorMatrix(unsigned gridf);
-      virtual void BuildAmrProlongatorMatrix( unsigned level);
-      void ZeroInterpolatorDirichletNodes(const unsigned &level);
-      
+      virtual void BuildProlongatorMatrix (unsigned gridf);
+      virtual void BuildAmrProlongatorMatrix (unsigned level);
+      void ZeroInterpolatorDirichletNodes (const unsigned &level);
+
       // member data
       /** The number of linear iterations required to solve the linear system Ax=b. */
       //unsigned int _n_linear_iterations;
+
+      /** Flag for printing fields at each linear iteration */
+      bool _debug_linear;
 
       /** The final residual for the linear system Ax=b. */
       double _final_linear_residual;
@@ -266,19 +279,19 @@ namespace femus {
       unsigned int _n_max_linear_iterations;
 
       /** The ksp outer solver*/
-      std::string _outer_ksp_solver;
+      SolverType _mgOuterSolver;
 
       /** The type of multigrid, F-cyle, V-cycle, M-cycle */
       MgType _mg_type;
 
       /** To be Added */
-      int _npre;
+      unsigned _npre;
+      unsigned _npre0;
+      unsigned _npost;
 
       /** To be Added */
-      int _npost;
-
-      /** To be Added */
-      MgSmoother _SmootherType;
+      LinearEquationSolverType _smootherType;
+      CoarseLevelInclude _includeCoarseLevelSmoother;
       bool _MGmatrixFineReuse;
       bool _MGmatrixCoarseReuse;
 
@@ -303,27 +316,22 @@ namespace femus {
       short _AMRnorm;
       double _AMReighborThresholdValue;
       std::vector <double> _AMRthreshold;
-      
-      
 
       vector <bool> _SparsityPattern;
 
-      /** Solves the system. */
-      virtual void solve(const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
-            
       double _richardsonScaleFactor;
       double _richardsonScaleFactorDecrease;
       bool _richardsonScaleFactorIsSet;
 
       double _totalSolverTime;
       double _totalAssemblyTime;
-      
+
       bool _bitFlipOccurred;
       unsigned _bitFlipCounter;
-      
+
       unsigned _numberOfGlobalVariables;
       unsigned _sparsityPatternMinimumSize;
-      
+
   };
 
 } //end namespace femus

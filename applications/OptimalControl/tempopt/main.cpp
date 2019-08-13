@@ -13,6 +13,7 @@
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "GaussPoints.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "ElemType.hpp"
 #include "TimeLoop.hpp"
@@ -230,7 +231,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
   sys->SetMaxNumberOfNonLinearIterations(15); //10
 
   // ******* Set Preconditioner *******
-  sys->SetMgSmoother(GMRES_SMOOTHER);//ASM_SMOOTHER,VANKA_SMOOTHER
+  sys->SetLinearEquationSolverType(FEMuS_DEFAULT);//FEMuS_ASM,VANKA_SMOOTHER
 
   // ******* init *******
   sys->init();

@@ -12,6 +12,7 @@
  **/
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
@@ -73,8 +74,8 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 }
 
 
-void ETD ( MultiLevelProblem& ml_prob );
-void ETD2 ( MultiLevelProblem& ml_prob );
+void ETDvh ( MultiLevelProblem& ml_prob );
+void ETDt ( MultiLevelProblem& ml_prob );
 
 
 int main ( int argc, char** args ) {
@@ -84,7 +85,7 @@ int main ( int argc, char** args ) {
   // init Petsc-MPI communicator
   FemusInit mpinit ( argc, args, MPI_COMM_WORLD );
 
-  // define multilevel mesh
+  // define multilevel mesh2
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
@@ -106,32 +107,20 @@ int main ( int argc, char** args ) {
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "h%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO, 2);
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO, 2);
     sprintf ( name, "v%d", i );
     mlSol.AddSolution ( name, LAGRANGE, FIRST, 2 );
     sprintf ( name, "T%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO, 2);
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO, 2);
     sprintf ( name, "HT%d", i );
-    mlSol.AddSolution ( name, DISCONTINOUS_POLYNOMIAL, ZERO, 2);
+    mlSol.AddSolution ( name, DISCONTINUOUS_POLYNOMIAL, ZERO, 2);
   }
 
-  mlSol.AddSolution ( "b", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false );
+  mlSol.AddSolution ( "b", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, false );
 
-  mlSol.AddSolution ( "eta", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false );
+  mlSol.AddSolution ( "eta", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, false );
 
   mlSol.Initialize ( "All" );
-
-
-//   mlSol.Initialize("h0",InitalValueH0);
-//   mlSol.Initialize("T0",InitalValueT0);
-//   if(NumberOfLayers > 1){
-//     mlSol.Initialize("h1",InitalValueH1);
-//     mlSol.Initialize("T1",InitalValueT1);
-//     if(NumberOfLayers > 2){
-//       mlSol.Initialize("h2",InitalValueH2);
-//       mlSol.Initialize("T2",InitalValueT2);
-//     }
-//   }
 
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
@@ -182,17 +171,17 @@ int main ( int argc, char** args ) {
   unsigned numberOfTimeSteps = 1800; //17h=1020 with dt=60, 17h=10200 with dt=6
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     system.CopySolutionToOldSolution();
-    dt = 60.;
-    ETD ( ml_prob );
-    dt = 60.;
-    ETD2 ( ml_prob );
+    //dt = 60.;
+    ETDvh ( ml_prob );
+    //dt = 60.;
+    ETDt ( ml_prob );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
   return 0;
 }
 
 
-void ETD ( MultiLevelProblem& ml_prob ) {
+void ETDvh ( MultiLevelProblem& ml_prob ) {
 
   const unsigned& NLayers = NumberOfLayers;
 
@@ -382,9 +371,8 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       else{
         //w[k - 1] +=   solh[k - 1] * 0. /dx;   
       }
-      //std::cout<< w[k-1] << " ";
+      //std::cout<< w[k-1] << " " << std::endl;
     }
-    
     
 
 //     for(unsigned k = 1; k < NLayers; k++){
@@ -811,7 +799,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
 
 
-void ETD2 ( MultiLevelProblem& ml_prob ) {
+void ETDt ( MultiLevelProblem& ml_prob ) {
 
   const unsigned& NLayers = NumberOfLayers;
 

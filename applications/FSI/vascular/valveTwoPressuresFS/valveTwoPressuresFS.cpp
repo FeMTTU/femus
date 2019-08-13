@@ -119,14 +119,14 @@ int main(int argc, char** args)
   ml_sol.PairSolution("V", "DY");    // Add this line
   if (dim == 3) ml_sol.PairSolution("W", "DZ");   // Add this line
 
-  ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AddSolution("PS", DISCONTINUOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PS", "Pressure", false);    // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("PF", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AddSolution("PF", DISCONTINUOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PF", "Pressure", false);    // Add this line
 
-  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+  ml_sol.AddSolution("lmbd", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
   ml_sol.AddSolution("Um", LAGRANGE, SECOND, 0, false);
   ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
@@ -236,11 +236,12 @@ int main(int argc, char** args)
   FS2.push_back(&VelPf);  // velocity second
 
   FieldSplitTree FSI(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "FSI");
-
-  //END buid fieldSplitTree
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
+  FSI.SetRichardsonScaleFactor(.4);
   
-  system.SetOuterKSPSolver("lgmres");
+  //END buid fieldSplitTree
+  system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT);   // Field-Split preconditioned
+  
+  system.SetOuterSolver(LGMRES); //system.SetOuterKSPSolver("lgmres");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);

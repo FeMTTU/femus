@@ -14,6 +14,7 @@ enum SolverType {
     MINRES,
     FGMRES,
     GMRES,
+    LGMRES,
     LSQR,
     JACOBI,
     SOR_FORWARD,

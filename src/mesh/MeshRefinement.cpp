@@ -425,7 +425,7 @@ namespace femus {
     _mesh._topology->ResizeSolutionVector("Y");
     _mesh._topology->ResizeSolutionVector("Z");
 
-    _mesh._topology->AddSolution("AMR", DISCONTINOUS_POLYNOMIAL, ZERO, 1, 0);
+    _mesh._topology->AddSolution("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
     _mesh._topology->ResizeSolutionVector("AMR");
 
     unsigned solType = 2;
@@ -465,6 +465,8 @@ namespace femus {
     else{
       restriction.resize(3);
     }
+    
+    _mesh.PrintInfo();
   }
 
 

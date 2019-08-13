@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -145,7 +146,7 @@ int main(int argc, char** args) {
 
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
 
@@ -174,7 +175,7 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz preconditioner
+  system.SetLinearEquationSolverType(FEMuS_ASM); // Additive Swartz preconditioner
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleNavierStokes);
@@ -252,9 +253,9 @@ int main(int argc, char** args) {
 
   FieldSplitTree FsAll( RICHARDSON, FIELDSPLIT_PRECOND, FS3, "Temperature");
 
-  //system2.SetMgSmoother(FIELDSPLIT_SMOOTHER);
+  //system2.SetLinearEquationSolverType(FEMuS_FIELDSPLIT);
 
-  system2.SetMgSmoother(ASM_SMOOTHER);
+  system2.SetLinearEquationSolverType(FEMuS_ASM);
   system2.SetAssembleFunction(AssembleTemperature);
 
   system2.SetMaxNumberOfLinearIterations(10);

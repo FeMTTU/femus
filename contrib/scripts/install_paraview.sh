@@ -21,8 +21,8 @@ cd $SW_DIR
 
 export PV_BINNAME=paraview
 
-export PV_FILEPREFIX=ParaView-4.4.0-Qt4-Linux-64bit
-wget -O  ${PV_FILEPREFIX}.tar.gz "http://www.paraview.org/paraview-downloads/download.php?submit=Download&version=v4.4&type=binary&os=linux64&downloadFile=ParaView-4.4.0-Qt4-Linux-64bit.tar.gz"  # beware of symbols interpreted by the shell!, and beware of the meaning of "-O" which is more than what we use it for
+export PV_FILEPREFIX=ParaView-5.6.0-MPI-Linux-64bit
+wget -O  ${PV_FILEPREFIX}.tar.gz "https://www.paraview.org/paraview-downloads/download.php?submit=Download&version=v5.6&type=binary&os=Linux&downloadFile=ParaView-5.6.0-MPI-Linux-64bit.tar.gz"  # beware of symbols interpreted by the shell!, and beware of the meaning of "-O" which is more than what we use it for
 
 tar xzvf ${PV_FILEPREFIX}.tar.gz 
 
@@ -39,3 +39,4 @@ EOF
 
 # make the script executable
 chmod a+x $PV_BINNAME
+

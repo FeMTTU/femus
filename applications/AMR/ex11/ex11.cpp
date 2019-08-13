@@ -1,3 +1,4 @@
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMesh.hpp"
 #include "TransientSystem.hpp"
@@ -397,8 +398,8 @@ int main(int argc, char** argv)
   system2.SetNumberPostSmoothingStep(npostmoothing);
 
   //Set Smoother Options
-  if (Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
-  else if (Asm) 	system2.SetMgSmoother(ASM_SMOOTHER);
+  if (Gmres) 		system2.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  else if (Asm) 	system2.SetLinearEquationSolverType(FEMuS_ASM);
 
   system2.init();
 

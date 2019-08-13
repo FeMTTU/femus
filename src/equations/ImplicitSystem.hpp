@@ -37,16 +37,13 @@ class ImplicitSystem : public ExplicitSystem {
 public:
 
     /** Constructor.  Optionally initializes required data structures. */
-    ImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number,const MgSmoother & smoother_type);
+    ImplicitSystem (MultiLevelProblem& ml_probl, const std::string& name, const unsigned int number,const LinearEquationSolverType & smoother_type);
 
     /** Destructor */
     virtual ~ImplicitSystem();
 
     /** The type of the parent. */
     typedef ExplicitSystem Parent;
-
-    /** Clear all the data structures associated with the system. */
-    virtual void clear();
 
     /** Init the system PDE structures */
     virtual void init();

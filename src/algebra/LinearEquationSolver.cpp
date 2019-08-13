@@ -24,16 +24,16 @@
 #include "petscvec.h"
 
 // Local Includes
-#include "AsmPetscLinearEquationSolver.hpp"
-#include "GmresPetscLinearEquationSolver.hpp"
-#include "FieldSplitPetscLinearEquationSolver.hpp"
+#include "LinearEquationSolverPetscAsm.hpp"
+#include "LinearEquationSolverPetsc.hpp"
+#include "LinearEquationSolverPetscFieldSplit.hpp"
 #include "Preconditioner.hpp"
 
 namespace femus
 {
 
   // =============================================================
-  std::unique_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned& igrid, Solution* other_solution, const MgSmoother& smoother_type, const SolverPackage solver_package)
+  std::unique_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned& igrid, Solution* other_solution, const LinearEquationSolverType& smoother_type, const SolverPackage solver_package)
   {
     // Build the appropriate solver
 
@@ -41,16 +41,16 @@ namespace femus
 #ifdef HAVE_PETSC
       case PETSC_SOLVERS:  {
           switch(smoother_type) {
-            case ASM_SMOOTHER: {
-                std::unique_ptr<LinearEquationSolver> ap(new AsmPetscLinearEquationSolver(igrid, other_solution));
+            case FEMuS_ASM: {
+                std::unique_ptr<LinearEquationSolver> ap(new LinearEquationSolverPetscAsm(igrid, other_solution));
                 return ap;
               }
-            case GMRES_SMOOTHER: {
-                std::unique_ptr<LinearEquationSolver> ap(new GmresPetscLinearEquationSolver(igrid, other_solution));
+            case FEMuS_DEFAULT: {
+                std::unique_ptr<LinearEquationSolver> ap(new LinearEquationSolverPetsc(igrid, other_solution));
                 return ap;
               }
-            case FIELDSPLIT_SMOOTHER: {
-                std::unique_ptr<LinearEquationSolver> ap(new FieldSplitPetscLinearEquationSolver(igrid, other_solution));
+            case FEMuS_FIELDSPLIT: {
+                std::unique_ptr<LinearEquationSolver> ap(new LinearEquationSolverPetscFieldSplit(igrid, other_solution));
                 return ap;
               }
           }

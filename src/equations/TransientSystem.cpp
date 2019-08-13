@@ -17,6 +17,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
@@ -30,7 +31,7 @@ TransientSystem<Base>::TransientSystem (
                     MultiLevelProblem& ml_probl,
 					const std::string& name_in,
 					const unsigned int number_in,
-                    const MgSmoother & smoother_type) :
+                    const LinearEquationSolverType & smoother_type) :
   Base (ml_probl, name_in, number_in,smoother_type),
   _is_selective_timestep(false),
   _time(0.),
@@ -45,20 +46,12 @@ TransientSystem<Base>::TransientSystem (
 template <class Base>
 TransientSystem<Base>::~TransientSystem ()
 {
-  this->clear();
-}
-
-// ------------------------------------------------------------
-template <class Base>
-void TransientSystem<Base>::clear ()
-{
-  // clear the parent data
+   // clear the parent data
   _is_selective_timestep = false;
   _time = 0.;
   _time_step = 0;
   _dt = 0.1;
-  _assembleCounter= 0;     
-  Base::clear();
+  _assembleCounter= 0;   
 }
 
 // ------------------------------------------------------------
@@ -108,27 +101,11 @@ void TransientSystem<Base>::SetUpForSolve(){
 
 // ------------------------------------------------------------
 template <class Base>
-void TransientSystem<Base>::MLsolve() {
-  
-  SetUpForSolve(); 
-  // call the parent MLsolver
-  Base::_MLsolver = true;
-  Base::_MGsolver = false;
-
-  Base::solve();
-
-}
-
-// ------------------------------------------------------------
-template <class Base>
 void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
 
   SetUpForSolve();  
-  // call the parent MGsolver
-  Base::_MLsolver = false;
-  Base::_MGsolver = true;
 
-  Base::solve( mgSmootherType );
+  Base::MGsolve( mgSmootherType );
 
 }
 

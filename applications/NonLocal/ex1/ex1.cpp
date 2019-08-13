@@ -131,8 +131,13 @@ int main (int argc, char** argv) {
   system.SetNumberPreSmoothingStep (1);
   system.SetNumberPostSmoothingStep (1);
 
-  // ******* Set Preconditioner *******
-  system.SetMgSmoother (GMRES_SMOOTHER);
+// <<<<<<< HEAD
+//   // ******* Set Preconditioner *******
+//   system.SetMgSmoother (GMRES_SMOOTHER);
+// =======
+//     // ******* Set Preconditioner *******
+    system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
+//>>>>>>> erdi
 
   system.SetSparsityPatternMinimumSize (500u);   //TODO tune
 
@@ -169,8 +174,13 @@ int main (int argc, char** argv) {
   system2.SetNumberPreSmoothingStep (1);
   system2.SetNumberPostSmoothingStep (1);
 
-  // ******* Set Preconditioner *******
-  system2.SetMgSmoother (GMRES_SMOOTHER);
+// <<<<<<< HEAD
+//   // ******* Set Preconditioner *******
+//   system2.SetMgSmoother (GMRES_SMOOTHER);
+// =======
+    // ******* Set Preconditioner *******
+    system2.SetLinearEquationSolverType ( FEMuS_DEFAULT );
+// >>>>>>> erdi
 
   system2.init();
 

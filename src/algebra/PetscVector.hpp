@@ -207,11 +207,17 @@ public:
   /// \f$ U+=v \f$ where \p v is a std::vector !!!fast
   void add_vector_blocked(const std::vector<double>& v,
 			  const std::vector< int>& dof_indices);
+  
+  void add_vector_blocked(const std::vector<double>& v,
+                          const std::vector< unsigned>& dof_indices);
 
+  void insert_vector_blocked(const std::vector<double>& values,
+                             const std::vector< int>& dof_indices);
+  
   /// \f$ U+=v \f$ where \p v is a std::vector
   void add_vector (const std::vector<double>& v,
                    const std::vector<int>& dof_indices);
-
+  
   /// \f$ U+=V \f$ where U and V are type  \p NumericVector and you
   void add_vector (const NumericVector& V,
                    const std::vector<int>& dof_indices);

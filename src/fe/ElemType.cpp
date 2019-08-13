@@ -17,8 +17,8 @@
 // includes :
 //----------------------------------------------------------------------------
 
-#include "GaussPoints.hpp"
 #include "ElemType.hpp"
+#include "GaussPoints.hpp"
 #include "FETypeEnum.hpp"
 #include "Elem.hpp"
 #include "NumericVector.hpp"
@@ -27,16 +27,40 @@ using std::cout;
 using std::endl;
 
 
-namespace femus
-{
+
+namespace femus {
+    
   const unsigned elem_type::_fe_old_to_new[QL] = {2, 0, 3};
+  const int elem_type::_fe_new_to_old[NFE_FAMS] = {1, -7, 0, 2, -7};
 
   unsigned elem_type::_refindex = 1;
 
 //   Constructor
-  elem_type::elem_type(const char* geom_elem, const char* order_gauss) : _gauss(geom_elem, order_gauss)
+  elem_type::elem_type(const char* geom_elem, const char* fe_order, const char* order_gauss) : _gauss(geom_elem, order_gauss)
   {
+      
+    if(!strcmp(fe_order, "linear"))           _SolType = 0;
+    else if(!strcmp(fe_order, "quadratic"))   _SolType = 1;
+    else if(!strcmp(fe_order, "biquadratic")) _SolType = 2;
+    else if(!strcmp(fe_order, "constant"))    _SolType = 3;
+    else if(!strcmp(fe_order, "disc_linear")) _SolType = 4;
+    else {
+      cout << fe_order << " is not a valid option for " << geom_elem << endl;
+      abort();
+    }  
+      
+      
     isMpGDAllocated = false;
+    
+      if ( !strcmp(geom_elem, "quad") || !strcmp(geom_elem, "tri") ) { //QUAD or TRI ///@todo delete in the destructor 
+           _gauss_bdry = new  Gauss("line",order_gauss);
+       }
+//       else {
+//         cout << " Boundary gauss points for " << geom_elem << " is not implemented yet" << endl;
+//         abort();
+//       }
+    
+    
   }
 
 
@@ -62,6 +86,7 @@ namespace femus
       delete [] _phi_mapGD;
       delete [] _dphidxez_mapGD;
     }
+    
 
   }
 
@@ -72,8 +97,7 @@ namespace femus
 // evaluate shape functions at all quadrature points  TODO DEALLOCATE at destructor TODO FEFamilies TODO change HEX27 connectivity
 //-----------------------------------------------------------------------------------------------------
 
-  void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in, const std::string fe_in)
-  {
+  void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in, const std::string fe_in)  {
 
 // if (  (!strcmp(fe_in.c_str(),"disc_linear"))  || (!strcmp(fe_in.c_str(),"quadratic")) ) {  std::cout << "BEWARE, family not supported yet" << std::endl; return; }
 
@@ -155,7 +179,6 @@ namespace femus
 
 
 
-    return;
   }
 
 
@@ -331,11 +354,15 @@ namespace femus
 //BEGIN  build matrix sparsity pattern size and build prolungator matrix for single solution
 //-----------------------------------------------------------------------------------------------------
 
-  void elem_type::GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const
+  void elem_type::GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o, const char el_dofs[]) const
   {
 
+      unsigned n_elemdofs = 0;
+      if ( !strcmp(el_dofs, "fine") ) n_elemdofs = _nf;
+      else if ( !strcmp(el_dofs, "coarse") ) n_elemdofs = _nc;
+      
     if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
-      for(int i = 0; i < _nf; i++) {
+      for(int i = 0; i < n_elemdofs /*_nf*/; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
         int irow = meshf.GetSolutionDof(ielc, i0, i1, _SolType, &meshc);
@@ -373,13 +400,18 @@ namespace femus
   }
 
   void elem_type::BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc,
-                                    SparseMatrix* Projmat) const
+                                    SparseMatrix* Projmat, const char el_dofs[]) const
   {
-    if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+ 
+      unsigned n_elemdofs = 0;
+      if ( !strcmp(el_dofs, "fine") ) n_elemdofs = _nf;
+      else if ( !strcmp(el_dofs, "coarse") ) n_elemdofs = _nc;
+      
+      if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
 
       vector<int> jcols(_nc);
 
-      for(int i = 0; i < _nf; i++) {
+      for(int i = 0; i < n_elemdofs /*_nf*/; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
         int irow = meshf.GetSolutionDof(ielc, i0, i1, _SolType, &meshc);
@@ -467,118 +499,120 @@ namespace femus
 //END prolungator for solution printing
 //----------------------------------------------------------------------------------------------------
 
-
-
-  elem_type_1D::elem_type_1D(const char* geom_elem, const char* order, const char* order_gauss) :
-    elem_type(geom_elem, order_gauss)
-  {
-
-    basis* linearElement;
-
-    _dim = 1;
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-
-    //************ BEGIN FE and MG SETUP ******************
-    if(!strcmp(order, "linear")) 		 _SolType = 0;
-    else if(!strcmp(order, "quadratic")) 	 _SolType = 1;
-    else if(!strcmp(order, "biquadratic")) _SolType = 2;
-    else if(!strcmp(order, "constant"))    _SolType = 3;
-    else if(!strcmp(order, "disc_linear")) _SolType = 4;
-    else {
-      cout << order << " is not a valid option for " << geom_elem << endl;
-      exit(0);
-    }
-
-    if(!strcmp(geom_elem, "line")) {  //line
-      linearElement = new LineLinear;
-
-      if(_SolType == 0) _pt_basis = new LineLinear;
-      else if(_SolType == 1) _pt_basis = new LineBiquadratic;
-      else if(_SolType == 2) _pt_basis = new LineBiquadratic;
-      else if(_SolType == 3) _pt_basis = new line0;
-      else if(_SolType == 4) _pt_basis = new linepwLinear;
-      else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
-      }
-    }
-    else {
-      cout << geom_elem << " is not a valid option" << endl;
-      exit(0);
-    }
-
-    // get data from basis object
-    _nc 	   = _pt_basis->_nc;
-    _nf 	   = _pt_basis->_nf;
-    _nlag[0] = _pt_basis->_nlag0;
-    _nlag[1] = _pt_basis->_nlag1;
-    _nlag[2] = _pt_basis->_nlag2;
-    _nlag[3] = _pt_basis->_nlag3;
-
-
+  void elem_type::allocate_and_set_IND(const basis* pt_basis_in)  {
+      
     _IND = new const int * [_nc];
 
     for(int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->GetIND(i);
+      _IND[i] = pt_basis_in->GetIND(i);
     }
-
+    
+  }
+  
+  
+  void elem_type::allocate_coordinates_and_KVERT_IND()  {
+      
+    _X         = new const double * [_nf];
     _KVERT_IND = new const int * [_nf];
-    _X = new const double * [_nf];
+      
+  }
+  
+  
+  void elem_type::set_coordinates_and_KVERT_IND(const basis* pt_basis_in)  {
+       
+      for(int i = 0; i < _nf; i++) {
+      _KVERT_IND[i] = pt_basis_in->GetKVERT_IND(i);
+              _X[i] = pt_basis_in->GetX(i);
+    }
+    
+  } 
+  
+  
+  void elem_type::set_coarse_and_fine_elem_data(const basis* pt_basis_in)  {
+  
+    _nc 	 = pt_basis_in->_nc;
+    _nf 	 = pt_basis_in->_nf;
+    _nlag[0] = pt_basis_in->_nlag0;
+    _nlag[1] = pt_basis_in->_nlag1;
+    _nlag[2] = pt_basis_in->_nlag2;
+    _nlag[3] = pt_basis_in->_nlag3;
 
-    //******************************************************
-    if(_SolType <= 2) {
+    
+    allocate_and_set_IND(pt_basis_in);
+
+    allocate_coordinates_and_KVERT_IND();
+    
+  }
+  
+  
+  
+   void elem_type::set_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement_in) const  {
+       
+     if(_SolType <= 2) {
+         
       for(int i = 0; i < _nlag[3]; i++) {
-        double xm = 0.;
+          
+        std::vector<double> xm(_dim,0.);
         for(int k = 0; k <  _nlag[0]; k++) {
-          unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
-          unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
+            
+          unsigned element = *(linearElement_in->GetKVERT_IND(i) + 0);
+          std::vector< double > xv(_dim);
+          for(int d = 0; d < _dim; d++)  xv[d] = * (linearElement_in->GetXcoarse(linearElement_in->GetFine2CoarseVertexMapping(element, k)) + d);
+          
+          unsigned vertex = *(linearElement_in->GetKVERT_IND(i) + 1);
+          for(int d = 0; d < _dim; d++)  xm[d] += linearElement_in->eval_phi(linearElement_in->GetIND(k), linearElement_in->GetXcoarse(vertex)) * xv[d];
+            
         }
-        _pt_basis->SetX(i, 0, xm);
-
-        //std::cout << *(_pt_basis->GetX(i) + 0) << std::endl;
+        
+        for(int d = 0; d < _dim; d++)    pt_basis_in->SetX(i, d, xm[d]);
+ 
       }
+      
     }
 
+       
+  }
+
+  
+   void elem_type::set_element_prolongation(const basis* linearElement)  {
+
+       const double threshold_derivative_nonzero = 1.0e-14;
+       
+      int counter = 0;
+
+      std::vector<unsigned int> n_geom_elems_after_refinement = {2, 4, 8}; //this is valid for all six shapes we have: Line (1d); Quad, Tri (2d); Hex, Tet, Wedge (3d)
+      
     for(int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
-      _X[i] = _pt_basis->GetX(i);
-    }
-    //******************************************************
 
-    // local projection matrix evaluation
-    int counter = 0;
+      std::vector<double> jac(_dim + 1, 0.);
+      
+      if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear derivatives
+        for(int k = 0; k < _nlag[0]; k++) {
+            
+          //coordinates of the coarse vertices with respect to the fine elements
+          std::vector<double> xv(_dim);
+          for(int d = 0; d < _dim; d++)  xv[d] = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % n_geom_elems_after_refinement[_dim-1], k)) + d);
 
-    for(int i = 0; i < _nf; i++) {
-
-      double jac[2] = {0, 0};
-
-      if(_SolType == 4 && i / 2 == 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k <  _nlag[0]; k++) {
-          //coordinates of the coarse vertices with respect the fine elements
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 2,  k)) + 0);
-          jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
-        }
+          for(unsigned int ideriv = 0; ideriv < _dim; ideriv++) {
+          if( i / n_geom_elems_after_refinement[_dim-1] == (ideriv + 1) ) {
+              for(int d = 0; d < _dim; d++)  jac[d+1] += linearElement->eval_dphidxyz(ideriv, linearElement->GetIND(k), _X[i]) * xv[d];
+            }
+          } //ideriv
+          
+        } //k
       }
-
+      
       for(int j = 0; j < _nc; j++) {
-
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-
-
-        //std::cout << j << " "<< phi << std::endl;
-
-        if(_SolType == 4 && i / 2 == 1) {  //if piece_wise_linear derivatives
+        if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear
           phi = jac[j];
         }
-
-        if(fabs(phi) >= 1.0e-14) {
+        if(fabs(phi) >= threshold_derivative_nonzero) {
           counter++;
         }
       }
-    }
+      
+    } //_nf
 
     double* pt_d;
     int* pt_i;
@@ -593,28 +627,33 @@ namespace femus
 
     for(int i = 0; i < _nf; i++) {
 
-      double jac[2] = {0, 0};
+      std::vector<double> jac(_dim + 1, 0.);
 
-      if(_SolType == 4 && i / 2 == 1) {  //if piece_wise_linear derivatives
+      if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear derivatives
         for(int k = 0; k <  _nlag[0]; k++) {
-          //coordinates of the coarse vertices with respect the fine elements
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 2, k)) + 0);
-          jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
-        }
-        //std::cout << jac[0] << " " << jac[1] << std::endl;
+            
+          //coordinates of the coarse vertices with respect to the fine elements
+          std::vector<double> xv(_dim);
+          for(int d = 0; d < _dim; d++)  xv[d] = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % n_geom_elems_after_refinement[_dim-1], k)) + d);
+
+          for(unsigned int ideriv = 0; ideriv < _dim; ideriv++) {
+          if( i / n_geom_elems_after_refinement[_dim-1] == (ideriv + 1) ) {
+              for(int d = 0; d < _dim; d++)  jac[d+1] += linearElement->eval_dphidxyz(ideriv, linearElement->GetIND(k), _X[i]) * xv[d];
+            }
+          } //ideriv
+          
+        } //k
+        
       }
 
       _prol_val[i] = pt_d;
       _prol_ind[i] = pt_i;
-
       for(int j = 0; j < _nc; j++) {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-
-        if(_SolType == 4 && i / 2 == 1) {  //if piece_wise_linear derivatives
+        if(_SolType == 4 && i / n_geom_elems_after_refinement[_dim-1] >= 1) {  //if piece_wise_linear derivatives
           phi = jac[j];
         }
-
-        if(fabs(phi) >= 1.0e-14) {
+        if(fabs(phi) >= threshold_derivative_nonzero) {
           *(pt_d++) = phi;
           *(pt_i++) = j;
         }
@@ -623,6 +662,55 @@ namespace femus
 
     _prol_val[_nf] = pt_d;
     _prol_ind[_nf] = pt_i;
+
+  
+   }
+   
+    
+
+  elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
+  {
+
+    basis* linearElement;
+
+    _dim = 1;
+    _DPhiXiEtaZetaPtr.resize(_dim);
+    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
+
+    //************ BEGIN FE and MG SETUP ******************
+
+
+    if(!strcmp(geom_elem, "line")) {  //line
+      linearElement = new LineLinear;
+
+      if(_SolType == 0) _pt_basis = new LineLinear;
+      else if(_SolType == 1) _pt_basis = new LineBiquadratic;
+      else if(_SolType == 2) _pt_basis = new LineBiquadratic;
+      else if(_SolType == 3) _pt_basis = new line0;
+      else if(_SolType == 4) _pt_basis = new linepwLinear;
+      else {
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
+      }
+    }
+    else {
+      cout << geom_elem << " is not a valid option" << endl;
+      abort();
+    }
+
+    // get data from basis object
+    set_coarse_and_fine_elem_data(_pt_basis);
+
+    //***********************************************************
+    // construction of coordinates
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
+
+    set_coordinates_and_KVERT_IND(_pt_basis);
+    //***********************************************************
+
+    // local projection matrix evaluation
+    set_element_prolongation(linearElement);
 
     // shape function and its derivatives evaluated at Gauss'points
     int n_gauss = _gauss.GetGaussPointsNumber();
@@ -701,20 +789,16 @@ namespace femus
 
 
 
-
-
-
-
 //=====================
-    EvaluateShapeAtQP(geom_elem, order);
+    EvaluateShapeAtQP(geom_elem, fe_order);
 
     delete linearElement;
 
   }
 
 
-  elem_type_2D::elem_type_2D(const char* geom_elem, const char* order, const char* order_gauss):
-    elem_type(geom_elem, order_gauss)
+  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order, const char* order_gauss):
+    elem_type(geom_elem, fe_order, order_gauss)
   {
 
     basis* linearElement;
@@ -725,15 +809,7 @@ namespace femus
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
 
     //************ BEGIN FE and MG SETUP ******************
-    if(!strcmp(order, "linear")) 	 _SolType = 0;
-    else if(!strcmp(order, "quadratic"))   _SolType = 1;
-    else if(!strcmp(order, "biquadratic")) _SolType = 2;
-    else if(!strcmp(order, "constant"))    _SolType = 3;
-    else if(!strcmp(order, "disc_linear")) _SolType = 4;
-    else {
-      cout << order << " is not a valid option for " << geom_elem << endl;
-      abort();
-    }
+
 
     if(!strcmp(geom_elem, "quad")) {  //QUAD
       linearElement = new QuadLinear;
@@ -744,7 +820,7 @@ namespace femus
       else if(_SolType == 3) _pt_basis = new quad0;
       else if(_SolType == 4) _pt_basis = new quadpwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
         abort();
       }
     }
@@ -757,7 +833,7 @@ namespace femus
       else if(_SolType == 3) _pt_basis = new tri0;
       else if(_SolType == 4) _pt_basis = new tripwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
         abort();
       }
     }
@@ -767,140 +843,17 @@ namespace femus
     }
 
     // get data from basis object
-    _nc 	   = _pt_basis->_nc;
-    _nf 	   = _pt_basis->_nf;
-    _nlag[0] = _pt_basis->_nlag0;
-    _nlag[1] = _pt_basis->_nlag1;
-    _nlag[2] = _pt_basis->_nlag2;
-    _nlag[3] = _pt_basis->_nlag3;
-
-    _IND = new const int * [_nc];
-
-    for(int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->GetIND(i);
-    }
-
-    _KVERT_IND = new const int * [_nf];
-    _X = new const double * [_nf];
-
-
+    set_coarse_and_fine_elem_data(_pt_basis);
 
     //***********************************************************
     // construction of coordinates
-    if(_SolType <= 2) {
-      for(int i = 0; i < _nlag[3]; i++) {
-        double xm = 0., ym = 0.;
-        for(int k = 0; k <  _nlag[0]; k++) {
-          unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
-          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
-          unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
-          ym += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
-        }
-        _pt_basis->SetX(i, 0, xm);
-        _pt_basis->SetX(i, 1, ym);
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
 
-        //std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << std::endl;
-      }
-    }
-
-
-
-    for(int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
-      _X[i] = _pt_basis->GetX(i);
-    }
-
+    set_coordinates_and_KVERT_IND(_pt_basis);
     //***********************************************************
 
     // local projection matrix evaluation
-    int counter = 0;
-
-    for(int i = 0; i < _nf; i++) {
-
-      double jac[3] = {0, 0, 0};
-
-      if(_SolType == 4 && i / 4 >= 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k <  _nlag[0]; k++) {
-          //coordinates of the coarse vertices with respect the fine elements
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 0);
-          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 1);
-          if(i / 4 == 1) {
-            jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
-            jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
-          }
-          else if(i / 4 == 2) {
-            jac[1] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * xv;
-            jac[2] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * yv;
-          }
-        }
-      }
-
-      for(int j = 0; j < _nc; j++) {
-        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-
-        if(_SolType == 4 && i / 4 >= 1) {  //if piece_wise_linear derivatives
-          phi = jac[j];
-        }
-
-        if(fabs(phi) >= 1.0e-14) {
-          counter++;
-        }
-      }
-    }
-
-    double* pt_d;
-    int* pt_i;
-
-    _prol_val = new double * [_nf + 1];
-    _prol_ind = new int * [_nf + 1];
-    _mem_prol_val = new double [counter];
-    _mem_prol_ind = new int [counter];
-
-    pt_d = _mem_prol_val;
-    pt_i = _mem_prol_ind;
-
-    for(int i = 0; i < _nf; i++) {
-
-      double jac[3] = {0, 0, 0};
-
-      if(_SolType == 4 && i / 4 >= 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k <  _nlag[0]; k++) {
-          //coordinates of the coarse vertices with respect the fine elements
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 0);
-          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 1);
-          if(i / 4 == 1) {
-            jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
-            jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
-          }
-          else if(i / 4 == 2) {
-            jac[1] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * xv;
-            jac[2] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * yv;
-          }
-        }
-        //std::cout << jac[0] << " " << jac[1] << " " << jac[2] << std::endl;
-      }
-
-      _prol_val[i] = pt_d;
-      _prol_ind[i] = pt_i;
-
-      for(int j = 0; j < _nc; j++) {
-        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-
-        if(_SolType == 4 && i / 4 >= 1) {  //if piece_wise_linear derivatives
-          phi = jac[j];
-        }
-
-        if(fabs(phi) >= 1.0e-14) {
-          *(pt_d++) = phi;
-          *(pt_i++) = j;
-        }
-      }
-    }
-
-    _prol_val[_nf] = pt_d;
-    _prol_ind[_nf] = pt_i;
+    set_element_prolongation(linearElement);
 
     // shape function and its derivatives evaluated at Gauss'points
     int n_gauss = _gauss.GetGaussPointsNumber();
@@ -920,7 +873,6 @@ namespace femus
 
     _d2phidxi2_memory  = new double [n_gauss * _nc];
     _d2phideta2_memory = new double [n_gauss * _nc];
-
     _d2phidxideta_memory  = new double [n_gauss * _nc];
 
     for(unsigned i = 0; i < n_gauss; i++) {
@@ -934,7 +886,7 @@ namespace femus
       _d2phidxideta[i]  = &_d2phidxideta_memory[i * _nc];
 
     }
-
+    
     const double* ptx[2] = {_gauss.GetGaussWeightsPointer() + n_gauss, _gauss.GetGaussWeightsPointer() + 2 * n_gauss};
 
     for(unsigned i = 0; i < n_gauss; i++) {
@@ -956,7 +908,25 @@ namespace femus
 
     }
 
-    //std::cout << std::endl;
+    
+    // boundary
+    // here I will only leave the memory allocation; the evaluations go in the ShapeAtBoundary function
+    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    _phi_bdry = new double*[n_gauss_bdry];
+    _dphidxi_bdry  = new double*[n_gauss_bdry];
+    _dphideta_bdry = new double*[n_gauss_bdry];
+    _phi_memory_bdry = new double [n_gauss_bdry * _nc];
+    _dphidxi_memory_bdry  = new double [n_gauss_bdry * _nc];
+    _dphideta_memory_bdry = new double [n_gauss_bdry * _nc];
+    
+     for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      _phi_bdry[i] = &_phi_memory_bdry[i * _nc];
+      _dphidxi_bdry[i]  = &_dphidxi_memory_bdry[i * _nc];
+      _dphideta_bdry[i] = &_dphideta_memory_bdry[i * _nc];
+     }
+     
+
 
     if(_SolType < 3) {
       basis* linearLine = new LineLinear;
@@ -1016,7 +986,7 @@ namespace femus
 
 //
 //=====================
-    EvaluateShapeAtQP(geom_elem, order);
+    EvaluateShapeAtQP(geom_elem, fe_order);
 
     //std::cout << std::endl;
 
@@ -1024,9 +994,10 @@ namespace femus
 
 
   }
+  
 
-  elem_type_3D::elem_type_3D(const char* geom_elem, const char* order, const char* order_gauss) :
-    elem_type(geom_elem, order_gauss)
+  elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
   {
 
     _dim = 3;
@@ -1038,15 +1009,7 @@ namespace femus
     basis* linearElement;
 
     //************ BEGIN FE and MG SETUP ******************
-    if(!strcmp(order, "linear")) 	 _SolType = 0;
-    else if(!strcmp(order, "quadratic")) 	 _SolType = 1;
-    else if(!strcmp(order, "biquadratic")) _SolType = 2;
-    else if(!strcmp(order, "constant"))    _SolType = 3;
-    else if(!strcmp(order, "disc_linear")) _SolType = 4;
-    else {
-      cout << order << " is not a valid option for " << geom_elem << endl;
-      exit(0);
-    }
+
 
     if(!strcmp(geom_elem, "hex")) {  //HEX
 
@@ -1058,8 +1021,8 @@ namespace femus
       else if(_SolType == 3) _pt_basis = new hex0;
       else if(_SolType == 4) _pt_basis = new hexpwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
       }
     }
     else if(!strcmp(geom_elem, "wedge")) {  //WEDGE
@@ -1071,8 +1034,8 @@ namespace femus
       else if(_SolType == 3) _pt_basis = new wedge0;
       else if(_SolType == 4) _pt_basis = new wedgepwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
       }
     }
     else if(!strcmp(geom_elem, "tet")) {  //TETRAHEDRA
@@ -1084,164 +1047,27 @@ namespace femus
       else if(_SolType == 3) _pt_basis = new tet0;
       else if(_SolType == 4) _pt_basis = new tetpwLinear;
       else {
-        cout << order << " is not a valid option for " << geom_elem << endl;
-        exit(0);
+        cout << fe_order << " is not a valid option for " << geom_elem << endl;
+        abort();
       }
     }
     else {
       cout << geom_elem << " is not a valid option" << endl;
-      exit(0);
+      abort();
     }
 
     // get data from basis object
-    _nc 	   = _pt_basis->_nc;
-    _nf 	   = _pt_basis->_nf;
-    _nlag[0] = _pt_basis->_nlag0;
-    _nlag[1] = _pt_basis->_nlag1;
-    _nlag[2] = _pt_basis->_nlag2;
-    _nlag[3] = _pt_basis->_nlag3;
+    set_coarse_and_fine_elem_data(_pt_basis);
 
-
-    _IND = new const int * [_nc];
-
-    for(int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->GetIND(i);
-    }
-
-    _KVERT_IND = new const int * [_nf];
-    _X = new const double * [_nf];
-
-    // ****************************************************
+    //***********************************************************
     // construction of coordinates
-    if(_SolType <= 2) {
-      for(int i = 0; i < _nlag[3]; i++) {
-        double xm = 0., ym = 0., zm = 0.;
-        for(int k = 0; k <  _nlag[0]; k++) {
-          unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
-          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
-          double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 2);
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
 
-          unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
-          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
-          ym += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
-          zm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * zv;
-        }
-        _pt_basis->SetX(i, 0, xm);
-        _pt_basis->SetX(i, 1, ym);
-        _pt_basis->SetX(i, 2, zm);
-
-        //std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << " " << *(_pt_basis->GetX(i) + 2) << std::endl;
-      }
-    }
-
-    // ****************************************************
-
-    for(int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
-      _X[i] = _pt_basis->GetX(i);
-    }
-
-    for(int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
-      _X[i] = _pt_basis->GetX(i);
-    }
+    set_coordinates_and_KVERT_IND(_pt_basis);
+    //***********************************************************
 
     // local projection matrix evaluation
-    int counter = 0;
-
-    for(int i = 0; i < _nf; i++) {
-
-      double jac[4] = {0, 0, 0, 0};
-      if(_SolType == 4 && i / 8 >= 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k < _nlag[0]; k++) {
-          //coordinates of the coarse vertices with respect to the fine elements
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 0);
-          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 1);
-          double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 2);
-          if(i / 8 == 1) {
-            jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
-            jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
-            jac[3] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * zv;
-          }
-          else if(i / 8 == 2) {
-            jac[1] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * xv;
-            jac[2] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * yv;
-            jac[3] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * zv;
-          }
-          else if(i / 8 == 3) {
-            jac[1] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * xv;
-            jac[2] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * yv;
-            jac[3] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * zv;
-          }
-        }
-      }
-      for(int j = 0; j < _nc; j++) {
-        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-        if(_SolType == 4 && i / 8 >= 1) {  //if piece_wise_linear
-          phi = jac[j];
-        }
-        if(fabs(phi) >= 1.0e-14) {
-          counter++;
-        }
-      }
-    }
-
-    double* pt_d;
-    int* pt_i;
-
-    _prol_val = new double * [_nf + 1];
-    _prol_ind = new int * [_nf + 1];
-    _mem_prol_val = new double [counter];
-    _mem_prol_ind = new int [counter];
-
-    pt_d = _mem_prol_val;
-    pt_i = _mem_prol_ind;
-
-    for(int i = 0; i < _nf; i++) {
-
-      double jac[4] = {0, 0, 0, 0};
-      if(_SolType == 4 && i / 8 >= 1) {  //if piece_wise_linear derivatives
-        for(int k = 0; k <  _nlag[0]; k++) {
-          //coordinates of the coarse vertices with respect to the fine elements
-          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 0);
-          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 1);
-          double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 2);
-          if(i / 8 == 1) {
-            jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
-            jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
-            jac[3] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * zv;
-          }
-          else if(i / 8 == 2) {
-            jac[1] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * xv;
-            jac[2] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * yv;
-            jac[3] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * zv;
-          }
-          else if(i / 8 == 3) {
-            jac[1] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * xv;
-            jac[2] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * yv;
-            jac[3] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * zv;
-          }
-        }
-        //std::cout << jac[0] << " " << jac[1] << " " << jac[2] << " " << jac[3] << std::endl;
-      }
-
-      _prol_val[i] = pt_d;
-      _prol_ind[i] = pt_i;
-      for(int j = 0; j < _nc; j++) {
-        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-        if(_SolType == 4 && i / 8 >= 1) {  //if piece_wise_linear derivatives
-          phi = jac[j];
-        }
-        if(fabs(phi) >= 1.0e-14) {
-          *(pt_d++) = phi;
-          *(pt_i++) = j;
-        }
-      }
-    }
-
-    _prol_val[_nf] = pt_d;
-    _prol_ind[_nf] = pt_i;
+    set_element_prolongation(linearElement);
 
     // shape function and its derivatives evaluated at Gauss'points
     int n_gauss = _gauss.GetGaussPointsNumber();
@@ -1436,7 +1262,7 @@ namespace femus
     }
 
 //=====================
-    EvaluateShapeAtQP(geom_elem, order);
+    EvaluateShapeAtQP(geom_elem, fe_order);
 
     //std::cout << std::endl;
 
@@ -1511,7 +1337,6 @@ namespace femus
 
   }
 
-//---------------------------------------------------------------------------------------------------------
 
   //---------------------------------------------------------------------------------------------------------
 
@@ -1644,6 +1469,7 @@ namespace femus
 
   }
 
+
 //---------------------------------------------------------------------------------------------------------
 
   template <class type>
@@ -1652,7 +1478,7 @@ namespace femus
                                    boost::optional< vector < type > & > nablaphi) const
   {
 
-//     bool hermitianMatrix = true;
+//     bool hermitianMatrix = true;phi_x
 //     if( &nablaphi == NULL ) {
 //       hermitianMatrix = false;
 //     }
@@ -1839,6 +1665,7 @@ namespace femus
 
     //TODO warning the surface gradient is missing!!!!!!!!!!!!!!!
   }
+  
 //---------------------------------------------------------------------------------------------------------
   template <class type>
   void elem_type_3D::GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
@@ -1888,6 +1715,168 @@ namespace femus
 
 
 
+//---------------------------------------------------------------------------------------------------------
+  template <class type>
+  void elem_type_2D::Jacobian_at_point(const vector < vector < double > >& vt, 
+                                       const vector < double >& pos_in, 
+                                       vector < double >& pos_out) const {
+      
+      
+/*    vector <double> phi(_nc);
+    vector <double> gradphi(_nc * 2);
+
+    vector <double> dphidxi(_nc);
+    vector <double> dphideta(_nc);
+
+       
+    for(int j = 0; j < _nc; j++) {
+           phi[j] = _pt_basis->eval_phi(_IND[j], &xi[0]);
+       dphidxi[j] = _pt_basis->eval_dphidx(_IND[j], &xi[0]);
+      dphideta[j] = _pt_basis->eval_dphidy(_IND[j], &xi[0]);
+     }
+                                           
+                                           
+                                           
+    type Jac[2][2] = {{0, 0}, {0, 0}};
+    type JacI[2][2];
+    
+    
+     for(int inode = 0; inode < _nc; inode++) {
+      Jac[0][0] += (*dxi) * vt[0][inode];
+      Jac[0][1] += (*dxi) * vt[1][inode];
+      Jac[1][0] += (*deta) * vt[0][inode];
+      Jac[1][1] += (*deta) * vt[1][inode];
+    }*/    
+      
+                                               
+  }
+
+//---------------------------------------------------------------------------------------------------------
+
+  void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, 
+                                           const vector < vector < double> > & vt_bdry,  
+                                           const unsigned& jface, 
+                                           const unsigned& ig_bdry, 
+                                           vector < double >& phi, 
+                                           vector < double >& gradphi) const {
+                                       
+
+//********* EVALUATION STAGE **********************
+                                       
+    //check that our volume element shape is a quadrilateral, doesn't work for triangles for now
+    std::vector<int> face_orient_ref(_dim);     std::fill(face_orient_ref.begin(), face_orient_ref.end(), 0.);
+    std::vector<double> face_orient_real(_dim);    std::fill(face_orient_real.begin(), face_orient_real.end(), 0.);
+    double xi_factor;
+        
+    if      (jface == 0) { face_orient_ref[0]  = 1;  face_orient_ref[1] =  0; xi_factor = -1; }
+    else if (jface == 1) { face_orient_ref[0]  = 0;  face_orient_ref[1] =  1; xi_factor = +1; }
+    else if (jface == 2) { face_orient_ref[0] =  1;  face_orient_ref[1] =  0; xi_factor = +1; }
+    else if (jface == 3) { face_orient_ref[0]  = 0;  face_orient_ref[1] =  1; xi_factor = -1; }
+    
+    face_orient_real[0] = vt_bdry[0][1] - vt_bdry[0][0]; 
+    face_orient_real[1] = vt_bdry[1][1] - vt_bdry[1][0];
+    
+    double magn = 0.;
+    for (unsigned d = 0; d < _dim; d++) magn += face_orient_real[d]*face_orient_real[d]; 
+        
+     magn = sqrt(magn);
+    
+    for (unsigned d = 0; d < _dim; d++) { face_orient_real[d] /= magn; }
+    
+    double cosine_theta = 0.; 
+    for (unsigned d = 0; d < _dim; d++) cosine_theta += face_orient_real[d]*face_orient_ref[d];
+
+    
+    
+    //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
+    //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
+    //we should access the bdry element and compute the abscissa using the coordinates of it
+    //here what we have to do is to locate the reference boundary element in the reference volume element
+    //Notice that the SIGN of the direction is also important
+    //we need to understand:
+    // 1) where my boundary element is located in the reference volume element
+    // 2) in what direction it is oriented
+    
+    //here we compute for ALL quadrature points and for ALL dofs the test functions
+    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    const double* pt_one_dim[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
+    
+    std::vector < std::vector<double> > xi_qps(n_gauss_bdry);
+    for (unsigned qp = 0; qp < n_gauss_bdry; qp++) { xi_qps[qp].resize(_dim); }
+    
+std::cout << "Inside  ig = " << ig_bdry << " ";
+for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
+        
+      double xi_one_dim[1];
+      for (unsigned d = 0; d < 1; d++) {
+        xi_one_dim[d] = *pt_one_dim[d];
+        pt_one_dim[d]++;
+      }
+
+//here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
+      std::vector <double> xi_vol(2);
+             xi_vol[1-abs(face_orient_ref[0])] = cosine_theta * xi_one_dim[0]; 
+             xi_vol[abs(face_orient_ref[0])]   = xi_factor * 1.;
+      
+             
+      for (int dof = 0; dof < _nc; dof++) {
+             _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &xi_vol[0]);
+         _dphidxi_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &xi_vol[0]);
+        _dphideta_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &xi_vol[0]);
+      }
+      
+             xi_qps[qp] = xi_vol;
+             
+    }
+    
+             
+      for (unsigned d = 0; d < _dim; d++) std::cout << xi_qps[ig_bdry][d] << " ";
+std::cout << std::endl;
+    
+//********* END EVALUATION STAGE **********************
+    
+
+    phi.resize(_nc);
+    gradphi.resize(_nc * 2);
+
+    double Jac[2][2] = {{0, 0}, {0, 0}};
+    double JacInv[2][2];
+    const double* dxi = _dphidxi_bdry[ig_bdry];
+    const double* deta = _dphideta_bdry[ig_bdry];
+    for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
+      Jac[0][0] += (*dxi) * vt_vol[0][inode];  // d x/d csi
+      Jac[0][1] += (*dxi) * vt_vol[1][inode];  // d y/d csi
+      Jac[1][0] += (*deta) * vt_vol[0][inode]; // d x/d eta
+      Jac[1][1] += (*deta) * vt_vol[1][inode]; // d y/d eta
+    }
+    double det = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
+
+    JacInv[0][0] = Jac[1][1] / det;
+    JacInv[0][1] = -Jac[0][1] / det;
+    JacInv[1][0] = -Jac[1][0] / det;
+    JacInv[1][1] = Jac[0][0] / det;
+    
+    
+    //Use the Jacobian here to go from the REAL back to the CANONICAL coordinates
+    
+
+    dxi  = _dphidxi_bdry[ig_bdry];
+    deta = _dphideta_bdry[ig_bdry];
+
+    for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
+
+      phi[inode] = _phi_bdry[ig_bdry][inode];
+
+      gradphi[2 * inode + 0] = (*dxi) * JacInv[0][0] + (*deta) * JacInv[0][1];
+      gradphi[2 * inode + 1] = (*dxi) * JacInv[1][0] + (*deta) * JacInv[1][1];
+
+    }
+    
+  }
+  
+  
+  
 //---------------------------------------------------------------------------------------------------------
   template <class type>
   void elem_type_3D::Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,

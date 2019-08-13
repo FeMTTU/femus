@@ -1815,7 +1815,6 @@ namespace femus {
       }
     }
 
-//<<<<<<< HEAD
     xi.resize(dim);
     for(unsigned k = 0; k < dim; k++) {
       xi[k] = XI[ieltype][jmin][k];

@@ -1,11 +1,14 @@
 
+#include "MultiLevelSolution.hpp"
+
+
 using namespace femus;
 
 double beta = 0.25;
 double Gamma = 0.5;
 double gravity[3] = {0., -9.81, 0.};
-double scalingFactor1 =1.e-2;
-double scalingFactor2 =1.e-6;
+double scalingFactor1 =1.e-5;
+double scalingFactor2 =1.e-9;
 double NeumannFactor = .0;
 Line* linea;
 

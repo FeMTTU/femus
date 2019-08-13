@@ -21,6 +21,8 @@ IF(SLEPC_FOUND)
   ADD_SUBDIRECTORY(lock_exchange_zlevel_split/)
 
   ADD_SUBDIRECTORY(lock_exchange_zlevel_2matrices/)
+  
+  ADD_SUBDIRECTORY(LE_zlevel_poster/)
 
   ADD_SUBDIRECTORY(overflow_isopycnal/)
 
@@ -29,4 +31,12 @@ IF(SLEPC_FOUND)
   ADD_SUBDIRECTORY(overflow_zlevel/)
 
   ADD_SUBDIRECTORY(tracer/)
+  
+  ADD_SUBDIRECTORY(tracer_firstTest/)
+
+  ADD_SUBDIRECTORY(tracer_secondTest/)
+  
+  ADD_SUBDIRECTORY(tracer_secondTest_splitting/)
+  
+  ADD_SUBDIRECTORY(tracer_and_velocity/)
 ENDIF(SLEPC_FOUND)

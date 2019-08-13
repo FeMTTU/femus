@@ -15,7 +15,7 @@
 #include "VBTypeEnum.hpp"
 #include "Files.hpp"
 #include "XDMFWriter.hpp"
-#include "FEElemBase.hpp"
+#include "GeomElemBase.hpp"
 
 // LibMesh
 #ifdef HAVE_LIBMESH
@@ -39,7 +39,7 @@ GenCase::GenCase(const unsigned nolevels, const unsigned dim, const GeomElType g
 {
 
    _feelems.resize(QL);
-  for (int fe=0; fe<QL; fe++) _feelems[fe] = FEElemBase::build(_geomelem_id[get_dim()-1].c_str(),fe);
+  for (int fe=0; fe<QL; fe++) _feelems[fe] = GeomElemBase::build(_geomelem_id[get_dim()-1].c_str(),fe);
  
 }
 
@@ -55,7 +55,7 @@ GenCase::~GenCase() {
 
     //clean
   //remember that the CHILD destructor is not called here. This is because 
-  //these things are of FEElemBase type
+  //these things are of GeomElemBase type
   //TODO Do I have to put a delete [] or only delete? Do standard vectors have an overloading of the "delete" operator?
   for (int fe=0; fe<QL; fe++) delete _feelems[fe];
   
@@ -2950,5 +2950,6 @@ void GenCase::ReadRest(const std::string& name, SystemTwo * mysys) {
 
 
 } //end namespace femus
+
 
 

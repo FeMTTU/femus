@@ -29,17 +29,12 @@ namespace femus {
 // ExplicitSystem implementation
 ImplicitSystem::ImplicitSystem (MultiLevelProblem& ml_probl,
 				const std::string& name_in,
-				const unsigned int number_in,const MgSmoother & smoother_type) :
+				const unsigned int number_in,const LinearEquationSolverType & smoother_type) :
   ExplicitSystem (ml_probl, name_in, number_in,smoother_type)
 {
 }
 
 ImplicitSystem::~ImplicitSystem() {
-  this->clear(); 
-}
-
-void ImplicitSystem::clear() {
-  
 }
 
 void ImplicitSystem::init() {

@@ -9,6 +9,7 @@
  **/
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -82,7 +83,7 @@ int main(int argc, char** args)
 
   // ******* Set Preconditioner *******
 
-  system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetLinearEquationSolverType(FEMuS_ASM);
   
   system.init();
 
@@ -104,7 +105,8 @@ int main(int argc, char** args)
   system.SetElementBlockNumber(1);
 
   system.SetMgType(V_CYCLE);
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
