@@ -172,3 +172,24 @@ Then, Groups of Mesh elements
   we can define Groups of Edges, or Faces, or Volumes (Groups of Nodes for the extremes of a 1d domain)
   
   The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
+
+  
+##################################
+###### SALOME - SHAPER MODULE ####
+##################################
+
+This is a new module that in the long run is supposed to replace the role of the GEOM module.
+In the meantime, you can perform drawing operations in the Shaper module and then you can do "Export to Geom" 
+if you want to then do the meshing.
+
+Notice: things that are exported to Geom are those that appear under the "Results" of a Part.
+If you have no object in the Results, nothing will be exported to Geometry.
+
+To draw stuff in Shaper, first create a Part.
+Then, it's not so clear how to start setting points... Should I use Construction, or Sketch... or Build...
+
+Ok, it seems like:
+ - Sketch is for drawing things "imprecisely", as if it was a real sketch, without specifying precise coordinates and so on.
+ - Construction allows to put precise information
+ 
+ 

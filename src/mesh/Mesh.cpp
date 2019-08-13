@@ -118,11 +118,26 @@ namespace femus {
     {},
     {{ -1. / 9., -1. / 9., -1. / 9., 4. / 9., 4. / 9., 4. / 9.}}
   };
+  
 
+  
   /**
-   *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file (Now only the Gambit Neutral File)
+   *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file
    **/
   void Mesh::ReadCoarseMesh (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag) {
+      
+      
+      const bool read_groups = true; //by default groups are read
+      
+      ReadCoarseMesh(name, Lref, type_elem_flag, read_groups);
+  
+  }
+  
+  
+  /**
+   *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file
+   **/
+  void Mesh::ReadCoarseMesh (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups) {
 
     SetIfHomogeneous (true);
 
@@ -131,15 +146,16 @@ namespace femus {
     _level = 0;
 
     if (name.rfind (".neu") < name.size()) {
-      GambitIO (*this).read (name, _coords, Lref, type_elem_flag);
+      GambitIO (*this).read (name, _coords, Lref, type_elem_flag, read_groups);
     }
     else if (name.rfind (".med") < name.size()) {
-      MED_IO (*this).read (name, _coords, Lref, type_elem_flag);
+      MED_IO (*this).read (name, _coords, Lref, type_elem_flag, read_groups);
     }
     else {
       std::cerr << " ERROR: Unrecognized file extension: " << name
                 << "\n   I understand the following:\n\n"
                 << "     *.neu -- Gambit Neutral File\n"
+                << "     *.med -- MED File\n"
                 << std::endl;
       exit (1);
     }
@@ -197,7 +213,9 @@ namespace femus {
     _amrRestriction.resize (3);
 
     PrintInfo();
-  };
+  }
+  
+  
 
   /**
    *  This function generates the coarse Box Mesh level using the built-in generator

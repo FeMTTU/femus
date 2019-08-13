@@ -53,8 +53,10 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
 
 //   mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+  
+  const bool read_groups = false;
   std::string infile("./input/Mesh_1.med");
-  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",scalingFactor, read_groups);
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
  
@@ -76,7 +78,7 @@ int main(int argc, char** args) {
     // ******* End print mesh *******
   
   // add variables to mlSol
-  mlSol.AddSolution("d_s", LAGRANGE,SECOND/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
+  mlSol.AddSolution("d_s", LAGRANGE, SECOND/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
   
   mlSol.Initialize("All");    // initialize all variables to zero
   
@@ -92,8 +94,13 @@ int main(int argc, char** args) {
 // *************************************
  // this problem is defined on an open boundary mesh, and the boundary mesh can change 
  // as a function of the fracture propagation criterion.
- // Therefore, all the structures may need to be re-allocated after that
+ // Therefore, all the structures may need to be re-allocated after that.
+  
+ // For now, let us start without propagation and set up the dense matrix.
+  
  // The workflow is:
+  
+ // Read the mesh -> if you don't put the groups with boundary conditions, it doesn't read them... how can I fix this? 
   
  // Fill the dense matrix, and solve it
   

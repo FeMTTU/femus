@@ -126,7 +126,7 @@ namespace femus
 
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
-  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag) {
+  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups) {
 
     Mesh& mesh = GetMesh();
     mesh.SetLevel(0);
@@ -147,6 +147,14 @@ namespace femus
 // node coordinates
             set_node_coordinates(file_id, mesh_menus[j], coords, Lref);
     
+// Connectivities
+      for(unsigned i = 0; i < mesh.GetDimension(); i++) {
+            set_elem_connectivity(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
+      }
+      
+
+      if (read_groups == true)  {
+          
 // Groups of the mesh ===============
      std::vector< GroupInfo >     group_info = get_group_vector_flags_per_mesh(file_id,mesh_menus[j]);
     
@@ -155,18 +163,18 @@ namespace femus
           }
           
     
-// dimension loop
+// Group ownership ===============
       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
-
-            set_elem_connectivity(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
-
          set_elem_group_ownership(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], group_info);
-      
       }
              
 
+// Boundary ===============
     if (mesh.GetDimension() > 1) find_boundary_faces_and_set_face_flags(file_id, mesh_menus[j], geom_elem_per_dimension[mesh.GetDimension() -1 -1], group_info);
     
+      }
+      
+      
     }
     
     
