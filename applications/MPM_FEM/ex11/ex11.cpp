@@ -14,12 +14,14 @@ using namespace femus;
 
 SparseMatrix *Proj;
 
+
+
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0;
 
   //if (facename == 2)
-   // dirichlet = false;
+  // dirichlet = false;
 
   return dirichlet;
 }
@@ -32,6 +34,8 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob);
 void ProjectSolutionIntoGradient (MultiLevelProblem& ml_prob);
 
 std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol);
+std::pair < double, double > GetErrorNormWithProjection (MultiLevelSolution* mlSol);
+
 
 int main (int argc, char** args) {
 
@@ -43,9 +47,9 @@ int main (int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  
-  mlMsh.GenerateCoarseBoxMesh(2., 0, 0, -0.5, 0.5, 0., 0., 0., 0., EDGE3, "seventh");
-  
+
+  mlMsh.GenerateCoarseBoxMesh (2., 0, 0, -0.5, 0.5, 0., 0., 0., 0., EDGE3, "seventh");
+
   //mlMsh.ReadCoarseMesh ("./input/square_quad.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
@@ -60,7 +64,7 @@ int main (int argc, char** args) {
   unsigned maxNumberOfMeshes;
 
   if (dim == 1) {
-    maxNumberOfMeshes = 5;
+    maxNumberOfMeshes = 10;
   }
   else if (dim == 2) {
     maxNumberOfMeshes = 7;
@@ -128,7 +132,7 @@ int main (int argc, char** args) {
       systemP[dim] = &mlProb.add_system < LinearImplicitSystem > ("Pu");
       systemP[dim]->AddSolutionToSystemPDE ("u");
       systemP[dim]->init();
-             
+
       BuidProjection (mlProb);
 
       LinearImplicitSystem& system0 = mlProb.add_system < LinearImplicitSystem > ("auxiliary");
@@ -142,21 +146,22 @@ int main (int argc, char** args) {
       NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Poisson");
       system.AddSolutionToSystemPDE ("u");
       system.init();
-      
-      
-      
+
+
+
       // attach the assembling function to system
-      system.SetAssembleFunction (AssembleWithProjection);
-      //system.SetAssembleFunction (AssembleStandardProblem);
+      //system.SetAssembleFunction (AssembleWithProjection);
+      system.SetAssembleFunction (AssembleStandardProblem);
 
       // initilaize and solve the system
 
       system.SetOuterSolver (PREONLY);
       system.MGsolve();
-         
-      ProjectSolutionIntoGradient (mlProb);  
-      
 
+      ProjectSolutionIntoGradient (mlProb);
+
+
+      //std::pair< double , double > norm = GetErrorNormWithProjection (&mlSol);
       std::pair< double , double > norm = GetErrorNorm (&mlSol);
       l2Norm[i][j]  = norm.first;
       semiNorm[i][j] = norm.second;
@@ -171,7 +176,7 @@ int main (int argc, char** args) {
       vtkIO.Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i + j * 10);
 
       delete Proj;
-      
+
     }
   }
 
@@ -234,34 +239,34 @@ int main (int argc, char** args) {
 
 double GetExactSolutionValue (const std::vector < double >& x) {
   double pi = acos (-1.);
-  if(x.size() == 1){  
+  if (x.size() == 1) {
     return cos (pi * x[0]);
   }
-  else{
-    return cos (pi * x[0]) * cos (pi * x[1]);    
+  else {
+    return cos (pi * x[0]) * cos (pi * x[1]);
   }
 };
 
 
 void GetExactSolutionGradient (const std::vector < double >& x, vector < double >& solGrad) {
   double pi = acos (-1.);
-  if(x.size() == 1){
+  if (x.size() == 1) {
     solGrad[0]  = -pi * sin (pi * x[0]);
   }
-  else{
+  else {
     solGrad[0]  = -pi * sin (pi * x[0]) * cos (pi * x[1]);
-    solGrad[1] = -pi * cos (pi * x[0]) * sin (pi * x[1]); 
+    solGrad[1] = -pi * cos (pi * x[0]) * sin (pi * x[1]);
   }
 };
 
 
 double GetExactSolutionLaplace (const std::vector < double >& x) {
   double pi = acos (-1.);
-  if(x.size() == 1){
+  if (x.size() == 1) {
     return -pi * pi * cos (pi * x[0]);     // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
   }
-  else{
-    return -2.*pi * pi * cos (pi * x[0]) * cos (pi * x[1]);     // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);  
+  else {
+    return -2.*pi * pi * cos (pi * x[0]) * cos (pi * x[1]);     // - pi*pi*cos(pi*x[0])*cos(pi*x[1]);
   }
 };
 
@@ -461,6 +466,127 @@ void AssembleStandardProblem (MultiLevelProblem& ml_prob) {
 }
 
 
+std::pair < double, double > GetErrorNormWithProjection (MultiLevelSolution* mlSol) {
+  unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
+  //  extract pointers to the several objects that we are going to use
+  Mesh*          msh          = mlSol->_mlMesh->GetLevel (level);   // pointer to the mesh (level) object
+  elem*          el         = msh->el;  // pointer to the elem object in msh (level)
+  Solution*    sol        = mlSol->GetSolutionLevel (level);   // pointer to the solution (level) object
+
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+
+//solution variable
+
+
+  std::string Uxname[3] = {"ux", "uy", "uz"};
+  std::vector < unsigned > soluIndex (dim + 1);
+  for (unsigned k = 0; k < dim; k++) {
+    soluIndex[k] = mlSol->GetIndex (Uxname[k].c_str());
+  }
+
+  soluIndex[dim] = mlSol->GetIndex ("u");   // get the position of "u" in the ml_sol object
+  unsigned soluType = mlSol->GetSolutionType (soluIndex[dim]);   // get the finite element type for "u"
+
+  std::vector < std::vector < double > >  solu (dim + 1); // local solution
+
+  vector < vector < double > > x (dim);   // local coordinates
+  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+  vector <double> phi;  // local test function
+  vector <double> phi_x; // local test function first order partial derivatives
+  double weight; // gauss point weight
+
+  // reserve memory for the local standar vectors
+
+  double seminorm = 0.;
+  double l2norm = 0.;
+
+// element loop: each process loops only on the elements that owns
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+
+    short unsigned ielGeom = msh->GetElementType (iel);
+    unsigned nDofs  = msh->GetElementDofNumber (iel, soluType);   // number of solution element dofs
+
+    // resize local arrays
+    for (int k = 0; k < dim; k++) {
+      x[k].resize (nDofs);
+      solu[k].resize (nDofs);
+    }
+    solu[dim].resize (nDofs);
+
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofs; i++) {
+      unsigned solDof = msh->GetSolutionDof (i, iel, soluType);   // global to global mapping between solution node and solution dof
+      for (unsigned k = 0; k < dim + 1; k++)
+        solu[k][i] = (*sol->_Sol[soluIndex[k]]) (solDof);     // global extraction and local storage for the solution
+    }
+
+    // local storage of coordinates
+    for (unsigned i = 0; i < nDofs; i++) {
+      unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
+
+      for (unsigned k = 0; k < dim; k++) {
+        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
+      }
+    }
+
+    // *** Gauss point loop ***
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+      // *** get gauss point weight, test function and test function partial derivatives ***
+      msh->_finiteElement[ielGeom][soluType]->Jacobian (x, ig, weight, phi, phi_x);
+
+      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+      double soluGauss = 0;
+      vector < double > soluGauss_x (dim, 0.);
+      vector < double > xGauss (dim, 0.);
+
+      for (unsigned i = 0; i < nDofs; i++) {
+        soluGauss += phi[i] * solu[dim][i];
+
+        for (unsigned k = 0; k < dim; k++) {
+          soluGauss_x[k] += phi[i] * solu[k][i];
+          xGauss[k] += x[k][i] * phi[i];
+        }
+      }
+
+      vector <double> solGrad (dim);
+      GetExactSolutionGradient (xGauss, solGrad);
+
+      for (unsigned j = 0; j < dim ; j++) {
+        seminorm   += ( (soluGauss_x[j] - solGrad[j]) * (soluGauss_x[j] - solGrad[j])) * weight;
+      }
+
+      double exactSol = GetExactSolutionValue (xGauss);
+      l2norm += (exactSol - soluGauss) * (exactSol - soluGauss) * weight;
+    } // end gauss point loop
+  } //end element loop for each process
+
+// add the norms of all processes
+  NumericVector* norm_vec;
+  norm_vec = NumericVector::build().release();
+  norm_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
+
+  norm_vec->set (iproc, l2norm);
+  norm_vec->close();
+  l2norm = norm_vec->l1_norm();
+
+  norm_vec->set (iproc, seminorm);
+  norm_vec->close();
+  seminorm = norm_vec->l1_norm();
+
+  delete norm_vec;
+
+  std::pair < double, double > norm;
+  norm.first  = sqrt (l2norm);
+  norm.second = sqrt (seminorm);
+
+  return norm;
+
+}
+
+
 std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
@@ -584,6 +710,7 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
   return norm;
 
 }
+
 
 
 void BuidProjection (MultiLevelProblem& ml_prob) {
@@ -752,8 +879,8 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
 
 void AssembleWithProjection (MultiLevelProblem& ml_prob) {
 
-  ProjectSolutionIntoGradient (ml_prob);  
-    
+  ProjectSolutionIntoGradient (ml_prob);
+
   adept::Stack& s = FemusInit::_adeptStack;
 
   MultiLevelSolution*  mlSol = ml_prob._ml_sol;
@@ -781,7 +908,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
     solIndex[k] = mlSol->GetIndex (Uxname[k].c_str());
   }
   solIndex[dim] = mlSol->GetIndex ("u");
-  
+
   unsigned solType = mlSol->GetSolutionType (solIndex[0]);
 
   vector < vector < double > > x (dim);
@@ -811,7 +938,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofs  = msh->GetElementDofNumber (iel, solType);
-   
+
     for (int k = 0; k < dim + 1; k++) {
       sol[k].resize (nDofs);
       aRes[k].assign (nDofs, 0.);
@@ -821,7 +948,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
       x[k].resize (nDofs);
     }
     sysDof.resize (nDofs * (dim + 1));
-    
+
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned solDof = msh->GetSolutionDof (i, iel, solType);
@@ -843,7 +970,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
       msh->_finiteElement[ielGeom][solType]->Jacobian (x, ig, weight, phi, phi_x);
       adept::adouble solu = 0.;
-      std::vector < adept::adouble > solux (dim,0.);
+      std::vector < adept::adouble > solux (dim, 0.);
       vector < double > xGauss (dim, 0.);
       for (unsigned i = 0; i < nDofs; i++) {
         solu += phi[i] * sol[dim][i];
@@ -852,12 +979,12 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
           xGauss[k] += x[k][i] * phi[i];
         }
       }
-      
+
       double exactSolValue = GetExactSolutionValue (xGauss);
       vector < double > exactSolGrad (dim);
       GetExactSolutionGradient (xGauss , exactSolGrad);
       double exactSolLaplace = GetExactSolutionLaplace (xGauss);
-      
+
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofs; i++) {
         for (unsigned k = 0; k < dim; k++) {
@@ -876,7 +1003,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
     }
     RES->add_vector_blocked (res, sysDof);
 
-    
+
     Jac.resize (nDofs * (dim + 1) * nDofs * (dim + 1));
     for (unsigned k = 0; k < dim + 1; k++) {
       s.independent (&sol[k][0], nDofs);
@@ -885,7 +1012,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
       s.dependent (&aRes[k][0], nDofs);
     }
     s.jacobian (&Jac[0], true);
-    
+
     K->add_matrix_blocked (Jac, sysDof, sysDof);
     s.clear_dependents();
     s.clear_independents();
@@ -900,18 +1027,18 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
 
   SparseMatrix *K1 = sys1->_KK; ;
   NumericVector* RES1  = sys1->_RES;
-  
+
   K1->matrix_PtAP (*Proj, *K, false);
-  RES1->matrix_mult_transpose ( *RES, *Proj);
-  
- // MatView((static_cast< PetscMatrix* > (K1))->mat(),PETSC_VIEWER_STDOUT_WORLD);
-//   
+  RES1->matrix_mult_transpose (*RES, *Proj);
+
+// MatView((static_cast< PetscMatrix* > (K1))->mat(),PETSC_VIEWER_STDOUT_WORLD);
+//
 //  VecView((static_cast< PetscVector* > (RES))->vec(),PETSC_VIEWER_STDOUT_WORLD);
-//   
+//
 //   VecView((static_cast< PetscVector* > (RES1))->vec(),PETSC_VIEWER_STDOUT_WORLD);
-  
-  
-  
+
+
+
 }
 
 void ProjectSolutionIntoGradient (MultiLevelProblem& ml_prob) {
