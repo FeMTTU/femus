@@ -35,7 +35,10 @@
 namespace femus
 {
 
- #define TYPE_FOR_FAM_FLAGS  int  //do not use "unsigned" because these numbers in MED are NEGATIVE!
+ #define TYPE_FOR_FAM_FLAGS  int  //do not use "unsigned": in fact, in MED 
+                                  // these numbers are NEGATIVE for elements,
+                                  //    while they are POSITIVE for nodes!
+ 
    
 // Auxiliary struct to store group information
   struct GroupInfo {
@@ -87,6 +90,8 @@ class MED_IO : public MeshInput<Mesh>
    
    void find_boundary_faces_and_set_face_flags(const hid_t&  file_id, const std::string mesh_menu, const GeomElemBase* geom_elem_per_dimension, const std::vector<GroupInfo> & group_info);
 
+   void find_boundary_nodes_and_set_node_flags(const hid_t&  file_id, const std::string mesh_menu, const std::vector<GroupInfo> & group_info);
+   
    void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
 
    const GroupInfo                get_group_flags_per_mesh(const std::string & group_names) const;

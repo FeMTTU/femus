@@ -166,10 +166,10 @@ In Mesh:
           To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
      --> Rename it to "Mesh" + something!!!
      
-Then, Groups of Mesh elements
+- Then, Groups of Mesh elements (must be named Group_X_Y)
 
   In order to enforce Boundary Conditions, Material Properties, and potentially other things too,
-  we can define Groups of Edges, or Faces, or Volumes (Groups of Nodes for the extremes of a 1d domain)
+  we have to define Groups of Edges, or Faces, or Volumes (Groups of Nodes for the extremes of a 1d domain)
   
   The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
 

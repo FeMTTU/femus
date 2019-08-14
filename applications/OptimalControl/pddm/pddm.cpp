@@ -6,9 +6,6 @@
 #include "NumericVector.hpp"
 
 
-#define NSUB_X  8
-#define NSUB_Y  8
-
 
 using namespace femus;
 
@@ -27,7 +24,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   if( x[0] < 0. + tolerance || x[0] > 1. - tolerance) {
       dirichlet = true;
-        value = 0;
+        value = 0.;
   }
   
   return dirichlet;
@@ -48,33 +45,35 @@ int main(int argc, char** args) {
         files.CheckIODirectories();
         files.RedirectCout();
 
+  // ======= Quad Rule ========================
+  std::string fe_quad_rule("seventh");
+
+    // ======= Mesh  ==================
   // define multilevel mesh
-  MultiLevelMesh mlMsh;
+  MultiLevelMesh ml_mesh;
   double scalingFactor = 1.;
 
-//   mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
   
-  const bool read_groups = false;
+  const bool read_groups = true; //with this we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   std::string infile("./input/Mesh_1.med");
-  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",scalingFactor, read_groups);
- /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-      probably in the furure it is not going to be an argument of this function   */
+  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups);
+//     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
   unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
-  mlMsh.PrintInfo();
+  ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
+  ml_mesh.PrintInfo();
 
-  // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution mlSol(&mlMsh);
+  // ======= Solution  ==================
+  MultiLevelSolution mlSol(&ml_mesh);
 
     // ******* Print mesh *******
 //   mlSol.SetWriter(VTK);  //   mlSol.GetWriter()->SetDebugOutput(true);
 //   mlSol.GetWriter()->Write(files.GetOutputPath(), "biquadratic");
 //   exit(0);
-//   mlMsh.SetWriter(VTK);  //this doesn't work and should be removed, no application uses it
-//   mlMsh.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic", meshToBePrinted);  
+//   ml_mesh.SetWriter(VTK);  //this doesn't work and should be removed, no application uses it
+//   ml_mesh.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic", meshToBePrinted);  
     // ******* End print mesh *******
   
   // add variables to mlSol
@@ -88,6 +87,7 @@ int main(int argc, char** args) {
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("d_s");
 
+    // ======= Problem ========================
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
 
@@ -102,18 +102,17 @@ int main(int argc, char** args) {
   
  // Read the mesh -> if you don't put the groups with boundary conditions, it doesn't read them... how can I fix this? 
   
- // Fill the dense matrix, and solve it
-  
- // we may start from reading a mesh file 
-  
- // check the propagation
+ // Fill the dense matrix, and solve it (collocation type BEM)
   
  // if propagation occurs, re-dimensionalize all the arrays
+ // let us start without propagation first
+ // and let us start with STEADY-STATE DDM
 // *************************************
   
 
   mlProb.SetFilesHandler(&files);
   
+    // ======= System ========================
  // add system  in mlProb as a Linear Implicit System
   LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Frac");
  
@@ -126,10 +125,11 @@ int main(int argc, char** args) {
   // initialize and solve the system
   system.SetMgType(F_CYCLE/*F_CYCLE*//*M_CYCLE*/); //it doesn't matter if I use only 1 level
   system.SetOuterSolver(GMRES);
-  system.init();
   
+  system.init();
   system.MGsolve();
   
+    // ======= Print ========================
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");

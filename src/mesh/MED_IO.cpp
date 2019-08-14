@@ -43,7 +43,7 @@ namespace femus
   const std::string MED_IO::mesh_ensemble           = "ENS_MAA";
   const std::string MED_IO::aux_zeroone             = "-0000000000000000001-0000000000000000001";
   const std::string MED_IO::elem_list               = "MAI";
-  const std::string MED_IO::group_fam               = "FAM";
+  const std::string MED_IO::group_fam               = "FAM";  //both for Elements, and for Nodes
   const std::string MED_IO::connectivity            = "NOD";
   const std::string MED_IO::node_or_elem_global_num = "NUM";  //we don't need to read these fields
   const std::string MED_IO::node_list               = "NOE";
@@ -168,10 +168,9 @@ namespace femus
          set_elem_group_ownership(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], group_info);
       }
              
-
 // Boundary ===============
-    if (mesh.GetDimension() > 1) find_boundary_faces_and_set_face_flags(file_id, mesh_menus[j], geom_elem_per_dimension[mesh.GetDimension() -1 -1], group_info);
-    
+    if (mesh.GetDimension() > 1)         find_boundary_faces_and_set_face_flags(file_id, mesh_menus[j], geom_elem_per_dimension[mesh.GetDimension() -1 -1], group_info);
+    else if (mesh.GetDimension() == 1)   find_boundary_nodes_and_set_node_flags(file_id, mesh_menus[j], group_info);
       }
       
       
@@ -260,13 +259,14 @@ namespace femus
     
     
    void MED_IO::find_boundary_faces_and_set_face_flags(const hid_t&  file_id, const std::string mesh_menu, const GeomElemBase* geom_elem_per_dimension,  const std::vector<GroupInfo> & group_info)  {
+  //basically you have certain elements on the boundary, and you have to find them in the list of all elements
 
 
-    //open the FAM and NOD fields of the boundary group
-
-        hsize_t dims_conn[2];                                   
        std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
-        std::string   conn_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + connectivity;        // NOD ***************************
+       
+    //open the NOD field of the boundary element list (for the connectivities)
+        hsize_t dims_conn[2];                                   
+        std::string   conn_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + connectivity; ///@todo these connectivities were read already, so perhaps we could use them instead of re-reading them
         hid_t dtset_conn     = H5Dopen(file_id, conn_name_dir.c_str(), H5P_DEFAULT);
         hid_t filespace_conn = H5Dget_space(dtset_conn);
         hid_t status_conn    = H5Sget_simple_extent_dims(filespace_conn, dims_conn, NULL);
@@ -275,8 +275,9 @@ namespace femus
         hid_t status2_conn = H5Dread(dtset_conn, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, conn_map.data() );
         H5Dclose(dtset_conn);
 
+    //open the FAM field of the boundary element list (for the group flags)
         hsize_t dims_fam[2];                                   
-        std::string fam_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + group_fam;        // FAM ***************************
+        std::string fam_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + group_fam;
         hid_t dtset_fam     = H5Dopen(file_id, fam_name_dir.c_str(), H5P_DEFAULT);
         hid_t filespace_fam = H5Dget_space(dtset_fam);
         hid_t status_fam    = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
@@ -287,18 +288,24 @@ namespace femus
         
         //check that all boundary faces were set in the mesh file
         for(unsigned i = 0; i < fam_map.size(); i++) { if (fam_map[i] == 0) { std::cout << "Some boundary face was not set in the mesh MED file" << std::endl; abort(); } }
-       
+
+
+      // loop over elements to find faces
        Mesh& mesh = GetMesh();
        
        unsigned count_found_face = 0;
-       //loop over the volume connectivity and find the boundary faces 
+       
+       //loop over the volume connectivity and find the boundary faces
+       
         for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
             
                    unsigned iel_geom_type = mesh.GetElementType(iel);
+                   
             for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
                 
                 unsigned n_nodes = _geom_elems[iel_geom_type]->get_face(f).size();
                 
+       // on one hand I construct the boundary face from the volume connectivity
                 std::vector<unsigned> face_nodes(n_nodes);
                 
                for(unsigned nd = 0; nd < n_nodes; nd++) {
@@ -307,10 +314,12 @@ namespace femus
                 
                }
                
+       // on the other I read it from the list of boundary faces
                //loop over all the bdry group elements
                
              std::vector<unsigned> face_nodes_bdry_group(n_nodes);
                for(unsigned k = 0; k < fam_map.size(); k++) {
+                   
                for(unsigned nd = 0; nd < n_nodes; nd++) {
                     face_nodes_bdry_group[nd] = conn_map[ k + nd*fam_map.size() ] - 1;
                   }
@@ -351,15 +360,16 @@ namespace femus
                             
                   if ( bool_union )  {
                       count_found_face++;
+
                       const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
 
-           int value =  get_user_flag_from_med_flag(group_info,med_flag);   //flag of the boundary portion
-               value = - (value + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the value in salome must be POSITIVE
+           int user_flag =  get_user_flag_from_med_flag(group_info,med_flag);   //flag of the boundary portion
+               user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE
                
-                      std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << value << std::endl; 
+                      std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl; 
 
 //       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
-      mesh.el->SetFaceElementIndex(iel,f,value);  //value is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
+      mesh.el->SetFaceElementIndex(iel,f,user_flag);  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
                       
                 }
                   // check any possible order of faces - end
@@ -373,12 +383,91 @@ namespace femus
                
                        std::cout << "Count found face " << count_found_face << std::endl;              
                if (count_found_face < fam_map.size()) { std::cout << "Found " << count_found_face << " faces out of " << fam_map.size() << std::endl;   abort();   }
-
                
+
    }
    
    
-  
+   
+   
+   void MED_IO::find_boundary_nodes_and_set_node_flags(const hid_t&  file_id, const std::string mesh_menu, const std::vector<GroupInfo> & group_info)  {
+       
+       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + node_list/*elem_list*/ + "/";  ///@todo here we have to loop
+       
+    //open the FAM field of NOE
+        hsize_t dims_fam[2];                                   
+        std::string fam_name_dir = my_mesh_name_dir /*+ geom_elem_per_dimension->get_name_med()*/ + "/" + group_fam;
+        hid_t dtset_fam     = H5Dopen(file_id, fam_name_dir.c_str(), H5P_DEFAULT);
+        hid_t filespace_fam = H5Dget_space(dtset_fam);
+        hid_t status_fam    = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
+
+        std::vector< TYPE_FOR_FAM_FLAGS > fam_map(dims_fam[0]);
+        hid_t status2_fam = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data() );
+        H5Dclose(dtset_fam);       
+       
+
+    // loop over elements to find faces (I guess I cannot loop over nodes directly)
+    // I have to loop over elements to then find faces of the elements, get the dof of those faces, and then with that dof go get the position in NOE/FAM 
+       
+       
+            // loop over elements to find faces
+       Mesh& mesh = GetMesh();
+       
+       unsigned count_found_face = 0;
+       //loop over the volume connectivity and find the boundary faces 
+       //the boundary faces of each volume element have already been constructed after the mesh reading
+       
+        for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
+            
+            
+//             unsigned iel_geom_type = mesh.GetElementType(iel);
+                               
+            for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
+                
+                unsigned n_nodes = 1 /*_geom_elems[iel_geom_type]->get_face(f).size()*/;
+                
+                std::vector<unsigned> face_nodes(n_nodes);
+                
+               for(unsigned nd = 0; nd < n_nodes; nd++) {
+                   unsigned nd_of_face = 1 /*_geom_elems[iel_geom_type]->get_face(f)[nd]*/;
+                   face_nodes[nd] = mesh.el->GetElementDofIndex(iel,nd_of_face);
+                
+               }
+               
+            
+
+            
+            // now I take this dof and read from NOE/FAM  
+            // If the group is different from zero 
+               for(unsigned k = 0; k < fam_map.size(); k++) {
+
+                      const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
+
+              if ( med_flag != 0 )  {
+                      
+           int user_flag =  get_user_flag_from_med_flag(group_info,med_flag);   //flag of the boundary portion
+               user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE
+               
+                      std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl; 
+
+//       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
+      mesh.el->SetFaceElementIndex(iel, f, user_flag);  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
+
+               }
+      
+      
+                } //end k  
+                
+           } //faces loop
+           
+      } 
+       
+       
+   }
+
+   
+
+   
   //  we loop over all elements and see which ones are of that group
   //  
    void MED_IO::set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu,  const int i, const GeomElemBase* geom_elem_per_dimension, const std::vector<GroupInfo> & group_info)  {
