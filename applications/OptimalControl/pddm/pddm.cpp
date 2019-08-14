@@ -22,7 +22,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   const double tolerance = 1.e-5;
   
-  if( x[0] < 0. + tolerance || x[0] > 1. - tolerance) {
+  if( x[0] < 0. + tolerance || x[0] > 1. - tolerance) { ///@todo I would like to set these from the mesh file as well!
       dirichlet = true;
         value = 0.;
   }
@@ -100,7 +100,7 @@ int main(int argc, char** args) {
   
  // The workflow is:
   
- // Read the mesh -> if you don't put the groups with boundary conditions, it doesn't read them... how can I fix this? 
+ // Read the mesh
   
  // Fill the dense matrix, and solve it (collocation type BEM)
   

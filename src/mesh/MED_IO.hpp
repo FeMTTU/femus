@@ -92,7 +92,12 @@ class MED_IO : public MeshInput<Mesh>
 
    void find_boundary_nodes_and_set_node_flags(const hid_t&  file_id, const std::string mesh_menu, const std::vector<GroupInfo> & group_info);
    
-   void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
+
+  bool  see_if_faces_from_different_lists_are_the_same( const GeomElemBase* geom_elem_per_dimension, 
+                                            const std::vector< unsigned > & face_nodes_from_vol_connectivity, 
+                                            const std::vector< unsigned > & face_nodes_from_bdry_group);
+  
+  void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
 
    const GroupInfo                get_group_flags_per_mesh(const std::string & group_names) const;
    
