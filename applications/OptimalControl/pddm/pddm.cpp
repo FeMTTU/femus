@@ -6,6 +6,8 @@
 #include "NumericVector.hpp"
 
 
+#define DIRECTION 0 //1
+
 
 using namespace femus;
 
@@ -22,7 +24,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   const double tolerance = 1.e-5;
   
-  if( x[0] < 0. + tolerance || x[0] > 1. - tolerance) { ///@todo I would like to set these from the mesh file as well!
+  if( x[DIRECTION] < 0. + tolerance || x[DIRECTION] > 1. - tolerance) { ///@todo I would like to set these from the mesh file as well!
       dirichlet = true;
         value = 0.;
   }
@@ -56,8 +58,10 @@ int main(int argc, char** args) {
   
   const bool read_groups = true; //with this we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   std::string infile("./input/Mesh_1.med");
+//   std::string infile("./input/Mesh_1_y.med");
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
+//     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
   unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
