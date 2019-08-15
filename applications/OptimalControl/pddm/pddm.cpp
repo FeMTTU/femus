@@ -322,6 +322,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	msh->_finiteElement[kelGeom][solFEType_u]   ->Jacobian   ( coords,     ig, weight, phi_u, phi_u_x, phi_u_xx);
 	msh->_finiteElement[kelGeom][solFEType_u]   ->JacobianSur( coords_ext, ig, weight, phi_u, phi_u_x, normal);
 	
+    ///@todo do the comparison between the area coming from Jacobian and from JacobianSur !!!
+    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	
 	for (unsigned i = 0; i < nDof_u; i++) {

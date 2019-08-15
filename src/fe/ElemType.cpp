@@ -1434,7 +1434,10 @@ namespace femus {
       phi[inode] = _phi[ig][inode];
     }
 
-  }
+    ///@todo warning the surface gradient is missing!!!!!!!!!!!!!!!
+
+      
+}
 
 //---------------------------------------------------------------------------------------------------------
 
@@ -1663,7 +1666,7 @@ namespace femus {
       phi[inode] = _phi[ig][inode];
     }
 
-    //TODO warning the surface gradient is missing!!!!!!!!!!!!!!!
+    ///@todo warning the surface gradient is missing!!!!!!!!!!!!!!!
   }
   
 
