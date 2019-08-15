@@ -669,41 +669,19 @@ namespace femus
 
       mesh.SetNumberOfNodes(n_nodes);
 
-      // SET NODE COORDINATES
-      coords[0].resize(n_nodes);
-      coords[1].resize(n_nodes);
-      coords[2].resize(n_nodes);
+      for(unsigned d = 0; d < 3; d++)      coords[d].resize(n_nodes);
 
       H5Dread(dtset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, xyz_med);
       H5Dclose(dtset);
 
-      if(mesh.GetDimension() == 3) {
+      for(unsigned d = 0; d < 3; d++)  {
         for(unsigned j = 0; j < n_nodes; j++) {
-          coords[0][j] = xyz_med[j] / Lref;
-          coords[1][j] = xyz_med[j + n_nodes] / Lref;
-          coords[2][j] = xyz_med[j + 2 * n_nodes] / Lref;
-        }
-      }
-
-      else if(mesh.GetDimension() == 2) {
-        for(unsigned j = 0; j < n_nodes; j++) {
-          coords[0][j] = xyz_med[j] / Lref;
-          coords[1][j] = xyz_med[j + n_nodes] / Lref;
-          coords[2][j] = 0.;
-        }
-      }
-
-      else if(mesh.GetDimension() == 1) {
-        for(unsigned j = 0; j < n_nodes; j++) {
-          coords[0][j] = xyz_med[j] / Lref;
-          coords[1][j] = 0.;
-          coords[2][j] = 0.;
-        }
-      }
-
+            coords[d][j] = xyz_med[j + d * n_nodes] / Lref;
+          }
+       }
+          
       delete[] xyz_med;
 
-      //   // end read NODAL COORDINATES ************* C
    }
   
   

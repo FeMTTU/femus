@@ -6,7 +6,7 @@
 #include "NumericVector.hpp"
 
 
-#define DIRECTION 0 //1
+#define DIRECTION 1 //1
 
 
 using namespace femus;
@@ -56,9 +56,9 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
 
   
-  const bool read_groups = true; //with this we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
-  std::string infile("./input/Mesh_1.med");
-//   std::string infile("./input/Mesh_1_y.med");
+  const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
+//   std::string infile("./input/Mesh_1.med");
+  std::string infile("./input/Mesh_1_y.med");
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
@@ -169,13 +169,22 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id();
 
  //***************************************************  
-  vector < vector < double > > x(dim);    // local coordinates
+  vector < vector < double > > coords(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
   for (unsigned i = 0; i < dim; i++) {
-    x[i].reserve(maxSize);
+    coords[i].reserve(maxSize);
   }
  //***************************************************   
 
+ // stuff for the surface jacobian ***************************************************   
+  vector < vector < double > > coords_ext(dim+1);    // local coordinates
+  for (unsigned i = 0; i < dim; i++) {
+    coords_ext[i].reserve(maxSize);
+  } 
+  std::vector<double> normal(dim+1,0.);
+ //***************************************************   
+
+ 
  //******************** quadrature *******************************  
   double weight; 
   
@@ -212,14 +221,9 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
  //********* WHOLE SET OF VARIABLES ****************** 
 
-  vector< int > l2GMap_AllVars; // local to global mapping
-  l2GMap_AllVars.reserve(n_vars*maxSize);
-  
-  vector< double > Res; // local redidual vector
-  Res.reserve(n_vars*maxSize);
-
-  vector < double > Jac;
-  Jac.reserve( n_vars*maxSize * n_vars*maxSize);
+  vector< int > l2GMap_AllVars; l2GMap_AllVars.reserve(n_vars*maxSize); // local to global mapping
+  vector< double >         Res;            Res.reserve(n_vars*maxSize);  // local redidual vector
+  vector < double >        Jac;            Jac.reserve(n_vars*maxSize * n_vars*maxSize);
  //***************************************************  
 
   
@@ -230,7 +234,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   
   if (assembleMatrix)  KK->zero();
 
-    
+
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -238,13 +242,15 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
  //******************** GEOMETRY ********************* 
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);
-    for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
+    
+    for (int i = 0; i < dim; i++)  coords[i].resize(nDofx);
+    
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);  
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);
+        coords[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);
       }
     }
 
@@ -253,13 +259,36 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
     for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofx; i++) {
-         elem_center[j] += x[j][i];
+         elem_center[j] += coords[j][i];
        }
     }
     
    for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
  //***************************************************  
-  
+
+ 
+ //***************************************************  
+    for (int i = 0; i < dim+1; i++)  coords_ext[i].resize(nDofx);
+    
+     for (unsigned i = 0; i < nDofx; i++) {
+      for (unsigned jdim = 0; jdim < dim + 1; jdim++) {
+          coords_ext[jdim][i]  = 0.;      
+          
+       }
+     }
+     
+     for (unsigned i = 0; i < nDofx; i++) {
+      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);  
+
+      for (unsigned jdim = 0; jdim < dim+1; jdim++) {
+        coords_ext[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);
+//           coords_ext[jdim][i]  = coords[jdim][i];      
+       }
+     }
+ //***************************************************  
+ 
+ 
+ 
  //**************** state **************************** 
     unsigned nDof_u     = msh->GetElementDofNumber(iel, solFEType_u);
     sol_u    .resize(nDof_u);
@@ -276,14 +305,9 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     unsigned nDof_AllVars = nDof_u; 
     int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
-    Res.resize(nDof_AllVars);
-    std::fill(Res.begin(), Res.end(), 0.);
-
-    Jac.resize(nDof_AllVars * nDof_AllVars);
-    std::fill(Jac.begin(), Jac.end(), 0.);
-    
-    l2GMap_AllVars.resize(0);
-    l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_u.begin(),l2GMap_u.end());
+    Res.resize(nDof_AllVars);                  std::fill(Res.begin(), Res.end(), 0.);
+    Jac.resize(nDof_AllVars * nDof_AllVars);   std::fill(Jac.begin(), Jac.end(), 0.);
+    l2GMap_AllVars.resize(0);                  l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_u.begin(),l2GMap_u.end());
  //*************************************************** 
     
  //========= gauss value quantities ==================   
@@ -295,7 +319,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	msh->_finiteElement[kelGeom][solFEType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
+	msh->_finiteElement[kelGeom][solFEType_u]   ->Jacobian   ( coords,     ig, weight, phi_u, phi_u_x, phi_u_xx);
+	msh->_finiteElement[kelGeom][solFEType_u]   ->JacobianSur( coords_ext, ig, weight, phi_u, phi_u_x, normal);
 	
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	
