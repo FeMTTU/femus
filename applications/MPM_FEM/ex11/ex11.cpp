@@ -57,8 +57,8 @@ int main (int argc, char** args) {
 
   //mlMsh.GenerateCoarseBoxMesh (2., 0, 0, -0.5, 0.5, 0., 0., 0., 0., EDGE3, "seventh");
 
-  //mlMsh.ReadCoarseMesh ("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/square_tri.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/square_quad.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/square_tri.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
@@ -118,7 +118,7 @@ int main (int argc, char** args) {
         mlSol.AddSolution (Uxname[k].c_str(), LAGRANGE, feOrder[j]);
       }
 
-      mlSol.AddSolution ("d2", LAGRANGE, feOrder[j]);
+      mlSol.AddSolution ("dmax", LAGRANGE, feOrder[j]);
       mlSol.AddSolution ("weight", LAGRANGE, feOrder[j], 0);
 
       mlSol.Initialize ("All");
@@ -722,6 +722,8 @@ std::pair < double, double > GetErrorNormWithProjection (MultiLevelSolution* mlS
 
 void BuidProjection (MultiLevelProblem& ml_prob) {
 
+  double scale = 4.;
+
   adept::Stack& s = FemusInit::_adeptStack;
 
   MultiLevelSolution*  mlSol = ml_prob._ml_sol;
@@ -761,17 +763,18 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
 
   vector< int > sysDof;
   vector <double> phi;
+  vector <double> phi2;
   vector <double> phi_x;
   double weight;
 
   unsigned    iproc = msh->processor_id();
 
-  unsigned soldIndex = mlSol->GetIndex ("d2");
+  unsigned soldmIndex = mlSol->GetIndex ("dmax");
   unsigned solwIndex = mlSol->GetIndex ("weight");
 
-  unsigned solType = mlSol->GetSolutionType (soldIndex);
+  unsigned solType = mlSol->GetSolutionType (soldmIndex);
 
-  sol->_Sol[soldIndex]->zero();
+  sol->_Sol[soldmIndex]->zero();
   sol->_Sol[solwIndex]->zero();
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -802,21 +805,21 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
         d = sqrt (d);
         if (d > dmax) dmax = d;
       }
-      sol->_Sol[soldIndex]->add (sysDof[i], dmax);
+      sol->_Sol[soldmIndex]->add (sysDof[i], dmax);
       sol->_Sol[solwIndex]->add (sysDof[i], 1.);
     }
   } //end element loop for each process*/
-  sol->_Sol[soldIndex]->close();
+  sol->_Sol[soldmIndex]->close();
   sol->_Sol[solwIndex]->close();
 
   for (unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
     double solw = (*sol->_Sol[solwIndex]) (i);
-    double sold = (*sol->_Sol[soldIndex]) (i);
-    sol->_Sol[soldIndex]->set (i, sold / solw);
+    double soldm = (*sol->_Sol[soldmIndex]) (i);
+    sol->_Sol[soldmIndex]->set (i, soldm / solw);
   }
-  sol->_Sol[soldIndex]->close();
+  sol->_Sol[soldmIndex]->close();
 
-  std::vector < double > sold2;
+  std::vector < double > soldm2;
   sol->_Sol[solwIndex]->zero();
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -826,11 +829,11 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     for (int k = 0; k < dim; k++) {
       x[k].resize (nDofs);
     }
-    sold2.resize (nDofs);
+    soldm2.resize (nDofs);
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned solDof = msh->GetSolutionDof (i, iel, solType);
-      sold2[i] = pow (50. * (*sol->_Sol[soldIndex]) (solDof), 2.);
+      soldm2[i] = pow (scale * (*sol->_Sol[soldmIndex]) (solDof), 2.);
       sysDof[i] = msh->GetSolutionDof (i, iel, solType);
     }
     // local storage of coordinates
@@ -842,6 +845,7 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     }
 
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+      if (solType == 1) msh->_finiteElement[ielGeom][2]->Jacobian (x, ig, weight, phi2, phi_x);
       msh->_finiteElement[ielGeom][solType]->Jacobian (x, ig, weight, phi, phi_x);
 
 
@@ -861,7 +865,8 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
         }
 
         double value = phi[i] * weight;
-        if (solType == 1) value *= (1 - dist2 / sold2[i]);
+        //if (solType == 1) value *= (1 - dist2 / soldm2[i]) * (1 + dist2 / soldm2[i]);
+        if (solType == 1) value = phi2[i] * weight;
         sol->_Sol[solwIndex]->add (sysDof[i], value);
 
       } // end phi_i loop
@@ -896,7 +901,7 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     unsigned nDofs  = msh->GetElementDofNumber (iel, solType);
     solu.resize (nDofs);
     solw.resize (nDofs);
-    sold2.resize (nDofs);
+    soldm2.resize (nDofs);
     sysDof.resize (nDofs);
     for (int k = 0; k < dim; k++) {
       x[k].resize (nDofs);
@@ -906,7 +911,7 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned solDof = msh->GetSolutionDof (i, iel, solType);
-      sold2[i] = pow (50. * (*sol->_Sol[soldIndex]) (solDof), 2.);
+      soldm2[i] = pow (scale * (*sol->_Sol[soldmIndex]) (solDof), 2.);
       solu[i] = (*sol->_Sol[soluIndex]) (solDof);
       solw[i] = (*sol->_Sol[solwIndex]) (solDof);
       sysDof[i] = sysP[0]->GetSystemDof (soluIndex, soluPdeIndex, i, iel);
@@ -921,6 +926,8 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
 
     s.new_recording();
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+
+      if (solType == 1) msh->_finiteElement[ielGeom][2]->Jacobian (x, ig, weight, phi2, phi_x);
       msh->_finiteElement[ielGeom][solType]->Jacobian (x, ig, weight, phi, phi_x);
       std::vector < adept::adouble > solux_g (dim, 0.);
       for (unsigned i = 0; i < nDofs; i++) {
@@ -947,7 +954,8 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
 
         for (unsigned k = 0; k < dim; k++) {
           adept::adouble value = solux_g[k]  * phi[i] * weight / solw[i];
-          if (solType == 1) value *= (1 - dist2 / sold2[i]);
+//           if (solType == 1) value *= (1. - dist2 / soldm2[i]) * (1. + dist2 / soldm2[i]);
+          if (solType == 1) value = solux_g[k]  * phi2[i] * weight / solw[i];
           aRes[k][i] += value;
 
         }
