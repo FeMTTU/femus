@@ -118,7 +118,7 @@ int main (int argc, char** argv) {
   mlMsh.ReadCoarseMesh ("../input/d1_2e-4_d2_2e-3_h_2e-4.neu", "second", scalingFactor);
   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
-  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+//   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 //     numberOfUniformLevels = 1;
 
   unsigned dim = mlMsh.GetDimension();
@@ -136,11 +136,20 @@ int main (int argc, char** argv) {
 
   mlSol.Initialize ("u_exact", InitalValueU);
 
-  mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
-
   // ******* Set boundary conditions *******
+  mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
   mlSol.GenerateBdc ("All");
+  
+  // ******* Set volume constraints for the nonlocal *******
+  std::vector<unsigned> volumeConstraintFlags (2);
+  volumeConstraintFlags[0] = 5;
+  volumeConstraintFlags[1] = 6;
+  
+  unsigned soluIndex = mlSol.GetIndex ("u");
+  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, soluIndex, 0);
 
+  unsigned soluLocalIndex = mlSol.GetIndex ("u_local");
+  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, soluLocalIndex, 0);
 
   //BEGIN assemble and solve nonlocal problem
   MultiLevelProblem ml_prob (&mlSol);

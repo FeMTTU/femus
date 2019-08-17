@@ -88,8 +88,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors(); // get the noumber of processes (for parallel computation)
 
-  unsigned soluIndex;
-  soluIndex = mlSol->GetIndex ("u");   // get the position of "u" in the ml_sol object
+  unsigned soluIndex = mlSol->GetIndex ("u");   // get the position of "u" in the ml_sol object
   unsigned soluType = mlSol->GetSolutionType (soluIndex);   // get the finite element type for "u"
 
   unsigned soluPdeIndex;
@@ -151,36 +150,36 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   //BEGIN nonlocal assembly
   //loop to change _Bdc in the boundary elements and assign the BoundaryFunctionValue to their nodes
   //BEGIN
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-    short unsigned ielGroup = msh->GetElementGroup (iel);
-
-    if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
-
-      unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);
-      std::vector <double> dofCoordinates (dim);
-
-      for (unsigned i = 0; i < nDofu; i++) {
-        unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
-        unsigned xDof = msh->GetSolutionDof (i, iel, xType);
-        sol->_Bdc[soluIndex]->set (solDof, 0.);
-
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
-        }
-
-        double bdFunctionValue;
-        GetBoundaryFunctionValue (bdFunctionValue, dofCoordinates);
-        sol->_Sol[soluIndex]->set (solDof, bdFunctionValue);
-
-      }
-
-    }
-
-  }
-
-  sol->_Bdc[soluIndex]->close();
-  sol->_Sol[soluIndex]->close();
+//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+// 
+//     short unsigned ielGroup = msh->GetElementGroup (iel);
+// 
+//     if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
+// 
+//       unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);
+//       std::vector <double> dofCoordinates (dim);
+// 
+//       for (unsigned i = 0; i < nDofu; i++) {
+//         unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
+//         unsigned xDof = msh->GetSolutionDof (i, iel, xType);
+//         sol->_Bdc[soluIndex]->set (solDof, 0.);
+// 
+//         for (unsigned jdim = 0; jdim < dim; jdim++) {
+//           dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
+//         }
+// 
+//         double bdFunctionValue;
+//         GetBoundaryFunctionValue (bdFunctionValue, dofCoordinates);
+//         sol->_Sol[soluIndex]->set (solDof, bdFunctionValue);
+// 
+//       }
+// 
+//     }
+// 
+//   }
+// 
+//   sol->_Bdc[soluIndex]->close();
+//   sol->_Sol[soluIndex]->close();
   //END
 
   for (int kproc = 0; kproc < nprocs; kproc++) {
@@ -502,8 +501,7 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors(); // get the noumber of processes (for parallel computation)
 
-  unsigned soluIndex;
-  soluIndex = mlSol->GetIndex ("u_local");   // get the position of "u" in the ml_sol object
+  unsigned soluIndex = mlSol->GetIndex ("u_local");   // get the position of "u" in the ml_sol object
   unsigned soluType = mlSol->GetSolutionType (soluIndex);   // get the finite element type for "u"
 
   unsigned soluPdeIndex;
@@ -545,36 +543,36 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
 
   //BEGIN local assembly
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-    short unsigned ielGroup = msh->GetElementGroup (iel);
-
-    if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
-
-      unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);
-      std::vector <double> dofCoordinates (dim);
-
-      for (unsigned i = 0; i < nDofu; i++) {
-        unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
-        unsigned xDof = msh->GetSolutionDof (i, iel, xType);
-        sol->_Bdc[soluIndex]->set (solDof, 0.);
-
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
-        }
-
-        double bdFunctionValue;
-        GetBoundaryFunctionValue (bdFunctionValue, dofCoordinates);
-        sol->_Sol[soluIndex]->set (solDof, bdFunctionValue);
-
-      }
-
-    }
-
-  }
-
-  sol->_Bdc[soluIndex]->close();
-  sol->_Sol[soluIndex]->close();
+//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+// 
+//     short unsigned ielGroup = msh->GetElementGroup (iel);
+// 
+//     if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
+// 
+//       unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);
+//       std::vector <double> dofCoordinates (dim);
+// 
+//       for (unsigned i = 0; i < nDofu; i++) {
+//         unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
+//         unsigned xDof = msh->GetSolutionDof (i, iel, xType);
+//         sol->_Bdc[soluIndex]->set (solDof, 0.);
+// 
+//         for (unsigned jdim = 0; jdim < dim; jdim++) {
+//           dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
+//         }
+// 
+//         double bdFunctionValue;
+//         GetBoundaryFunctionValue (bdFunctionValue, dofCoordinates);
+//         sol->_Sol[soluIndex]->set (solDof, bdFunctionValue);
+// 
+//       }
+// 
+//     }
+// 
+//   }
+// 
+//   sol->_Bdc[soluIndex]->close();
+//   sol->_Sol[soluIndex]->close();
 
 
   // element loop: each process loops only on the elements that owns
