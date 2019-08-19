@@ -78,7 +78,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 2;
+unsigned numberOfUniformLevels = 4;
 
 int main (int argc, char** argv) {
 
@@ -174,7 +174,7 @@ int main (int argc, char** argv) {
   // ******* Set Preconditioner *******
   system.SetMgSmoother (GMRES_SMOOTHER);
 
-  system.SetSparsityPatternMinimumSize (500u);   //TODO tune
+  system.SetSparsityPatternMinimumSize (5000u);   //TODO tune
 
   system.init();
 

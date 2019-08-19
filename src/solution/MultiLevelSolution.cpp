@@ -619,9 +619,10 @@ namespace femus {
 
           double value;
           std::vector < double > xCord (3);
-          xCord[0] = (*msh->_topology->_Sol[0]) (solDof);
-          xCord[1] = (*msh->_topology->_Sol[1]) (solDof);
-          xCord[2] = (*msh->_topology->_Sol[2]) (solDof);
+          unsigned inode_coord_Metis = msh->GetSolutionDof (i, iel, 2);
+          xCord[0] = (*msh->_topology->_Sol[0]) (inode_coord_Metis);
+          xCord[1] = (*msh->_topology->_Sol[1]) (inode_coord_Metis);
+          xCord[2] = (*msh->_topology->_Sol[2]) (inode_coord_Metis);
           bool test = (_bdcFuncSetMLProb) ?
                       _SetBoundaryConditionFunctionMLProb (_mlBCProblem, xCord, _solName[solIndex], value, UINT_MAX, 0.) :
                       _SetBoundaryConditionFunction (xCord, _solName[solIndex], value, UINT_MAX, 0.);
