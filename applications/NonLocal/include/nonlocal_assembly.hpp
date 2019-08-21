@@ -85,7 +85,7 @@ void RectangleAndBallRelation (bool &theyIntersect, const std::vector<double> &b
 
 void RectangleAndBallRelation2 (bool & theyIntersect, const std::vector<double> &ballCenter, const double & ballRadius, const std::vector < std::vector < double> > &elementCoordinates, std::vector < std::vector < double> > &newCoordinates);
 
-const elem_type *fem = new const elem_type_2D ("quad", "linear", "second");   //to use a different quadrature rule in the inner integral
+const elem_type *fem = new const elem_type_1D ("line", "linear", "ninth");   //to use a different quadrature rule in the inner integral
 
 const elem_type *femQuadrature = new const elem_type_1D ("line", "linear", "ninth");   //to use a different quadrature rule in the inner integral
 

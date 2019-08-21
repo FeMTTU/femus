@@ -328,6 +328,9 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
   unsigned soluIndexLocal;
   soluIndexLocal = mlSol.GetIndex ("u_local");
 
+  unsigned soluIndexFine;
+  soluIndexFine = mlSolFine.GetIndex ("u_fine");
+
   unsigned    iproc = msh->processor_id();
   unsigned    nprocs = msh->n_processors();
 
@@ -507,7 +510,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
     for (unsigned i = 0; i < nDofFine; i++) {
       unsigned solDof = mshFine->GetSolutionDof (i, ielFine, soluType);
-      soluNonLocFine[i] = (*solFine->_Sol[soluIndex]) (solDof);
+      soluNonLocFine[i] = (*solFine->_Sol[soluIndexFine]) (solDof);
     }
 
     for (unsigned i = 0; i < nDofFine; i++) {
@@ -523,7 +526,10 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
     double weight; // gauss point weight
 
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < mshFine->_finiteElement[ielFineGeom][soluType]->GetGaussPointNumber(); ig++) {
+//     unsigned igNumber = mshFine->_finiteElement[ielFineGeom][soluType]->GetGaussPointNumber();
+    unsigned igNumber = femQuadrature->GetGaussPointNumber();
+    
+    for (unsigned ig = 0; ig < igNumber; ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
 //       mshFine->_finiteElement[ielFineGeom][soluType]->Jacobian (xFine, ig, weight, phi, phi_x);
       femQuadrature->Jacobian (xFine, ig, weight, phi, phi_x);
