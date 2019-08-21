@@ -6,25 +6,23 @@
 
 using namespace femus;
 
-double delta1 = /*1. / 32.*/ 0.0625 * 0.125 * 0.125/*1. / 4096*/ ; 
-double delta2 = /*1. / 16.*/ 0.0625 * 2. * 0.125 * 0.125/*1. / 4096 * 2.*/;
+double delta1 = pow(2., -4.); 
+double delta2 = pow(2., -3.);
 double kappa1 = 1.;
 double kappa2 = 3.;
 
 //parameters to play with
-double desiredMeshSize = /*1. / 4096*/ /*1. / 32.*/ 1. / 4096 * 2.;
-double desiredMeshSizeFine = /*1. / 4096.*/ 1. / 4096 * 0.5;
-double delta1MeshTemp =  /*1. / 4096*/  0.0625 * 0.125 * 0.125/* 1. / 32.*/;
-double delta2MeshTemp =  /*1. / 4096 * 2.*/  0.0625 * 2. * 0.125 * 0.125/*1. / 16.*/;
+double desiredMeshSize = pow(2., -5.);
+double desiredMeshSizeFine = pow(2., -12.);
 
 bool shiftExternalNodes = false;
-double delta1Mesh = (shiftExternalNodes) ? desiredMeshSize : delta1MeshTemp;
-double delta2Mesh = (shiftExternalNodes) ? desiredMeshSize : delta2MeshTemp;
+double delta1Mesh = (shiftExternalNodes) ? desiredMeshSize : delta1;
+double delta2Mesh = (shiftExternalNodes) ? desiredMeshSize : delta2;
 double delta1Shift = delta1Mesh - delta1;
 double delta2Shift =  delta2Mesh - delta2;
 
-double delta1MeshFine = (shiftExternalNodes) ? desiredMeshSizeFine : delta1MeshTemp;
-double delta2MeshFine = (shiftExternalNodes) ? desiredMeshSizeFine : delta2MeshTemp;
+double delta1MeshFine = (shiftExternalNodes) ? desiredMeshSizeFine : delta1;
+double delta2MeshFine = (shiftExternalNodes) ? desiredMeshSizeFine : delta2;
 double delta1ShiftFine = delta1MeshFine - delta1;
 double delta2ShiftFine =  delta2MeshFine - delta2;
 
