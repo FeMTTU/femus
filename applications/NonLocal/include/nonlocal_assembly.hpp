@@ -12,7 +12,7 @@ double kappa1 = 1.;
 double kappa2 = 3.;
 
 //parameters to play with
-double desiredMeshSize = pow(2., -5.);
+double desiredMeshSize = pow(2., -4.);
 double desiredMeshSizeFine = pow(2., -12.);
 
 bool shiftExternalNodes = false;
