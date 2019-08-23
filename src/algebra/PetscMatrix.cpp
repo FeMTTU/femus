@@ -117,14 +117,24 @@ namespace femus {
     int numprocs;
     MPI_Comm_size (MPI_COMM_WORLD, &numprocs);
 
+    std::cout << "matrix block structure:";
     std::vector < Mat > KK (dim);
     for (unsigned k = 0; k < dim; k++) {
-      KK[k] = (static_cast<PetscMatrix*> (P[k]))->mat();
+      if (k % (nc) == 0)  std::cout << std::endl;
+      if (P[k] != NULL) {
+        KK[k] = (static_cast<PetscMatrix*> (P[k]))->mat();
+        std::cout << "A_" << k / nc << k % nc << " ";
+      }
+      else {
+        KK[k] = PETSC_NULL;
+        std::cout << "  0  ";
+      }
     }
+    std::cout << std::endl << std::endl;
 
     if (dim != 1) {
       Mat nMat;
-      MatCreateNest (MPI_COMM_WORLD, dim, NULL, 1, NULL, &KK[0], &nMat);
+      MatCreateNest (MPI_COMM_WORLD, nr, NULL, nc, NULL, &KK[0], &nMat);
 
       if (numprocs == 1) {
         MatConvert (nMat, MATSEQAIJ, MAT_INITIAL_MATRIX, &_mat);
@@ -132,16 +142,16 @@ namespace femus {
       else {
         MatConvert (nMat, MATMPIAIJ, MAT_INITIAL_MATRIX, &_mat);
       }
-      
+
       MatDestroy (&nMat);
     }
-    else{
+    else {
       if (numprocs == 1) {
         MatConvert (KK[0], MATSEQAIJ, MAT_INITIAL_MATRIX, &_mat);
       }
       else {
         MatConvert (KK[0], MATMPIAIJ, MAT_INITIAL_MATRIX, &_mat);
-      }  
+      }
     }
 
     this->_is_initialized = true;
