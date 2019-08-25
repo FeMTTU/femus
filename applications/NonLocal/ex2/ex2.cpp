@@ -78,8 +78,8 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 2;
-unsigned numberOfUniformLevelsFine = 2;
+unsigned numberOfUniformLevels = 1;
+unsigned numberOfUniformLevelsFine = 1;
 
 int main (int argc, char** argv) {
 
