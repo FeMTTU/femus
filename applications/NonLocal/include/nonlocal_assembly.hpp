@@ -7,12 +7,12 @@
 using namespace femus;
 
 double delta1 = pow(2., -4.); 
-double delta2 = pow(2., -3.);
+double delta2 = pow(2., -4.);
 double kappa1 = 1.;
 double kappa2 = 3.;
 
 //parameters to play with
-double desiredMeshSize = pow(2., -4.);
+double desiredMeshSize = pow(2., -10.);
 double desiredMeshSizeFine = pow(2., -12.);
 
 bool shiftExternalNodes = false;
