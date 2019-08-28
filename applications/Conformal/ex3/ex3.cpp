@@ -364,6 +364,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
       // Compute components of the unit normal N.
       adept::adouble normal[DIM];
+      adept::adouble N3;
 //       normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
 //       normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
 //       normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
@@ -371,6 +372,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       normal[0] = 0.;
       normal[1] = 0.;
       normal[2] = 1.;
+      N3 = solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1];
 
       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
       adept::adouble V[DIM];
