@@ -20,7 +20,8 @@ void AssembleConformalMinimization (MultiLevelProblem&);  //stable and not bad
 void AssembleShearMinimization (MultiLevelProblem&);  //vastly inferior
 
 // anything on the order of 10 or above doesn't work...
-const double beta = 1.;
+const double beta = 0.00000000001;
+double inf = std::numeric_limits<double>::infinity();
 
 // IBVs.  No boundary, and IVs set to sphere (just need something).
 bool SetBoundaryCondition (const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
@@ -360,6 +361,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
       adept::adouble detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
       adept::adouble Area = weight * sqrt (detg);
+
       adept::adouble Area2 = weight;// Trick to give equal weight to each element.
 
       // Compute components of the unit normal N.
@@ -409,11 +411,19 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
           }
 
           aResDx[k][i] += term1 * Area2;
-          if (k == 0) {
-            aResDx[k][i] -= beta * (1/Area) * (solx_uv[1][1] * phix_uv[0][i] - solx_uv[1][0] * phix_uv[1][i]) * Area;
+
+          if(N3 > 0) {
+          //  std::cout << "test" << std::endl;
+            if (k == 0) {
+              aResDx[k][i] -= beta * (1/Area) * (solx_uv[1][1] * phix_uv[0][i] - solx_uv[1][0] * phix_uv[1][i]) * Area;
+            }
+            else {
+              aResDx[k][i] -= beta * (1/Area) * (-solx_uv[0][1] * phix_uv[0][i] + solx_uv[0][0] * phix_uv[1][i]) * Area;
+            }
           }
           else {
-            aResDx[k][i] -= beta * (1/Area) * (-solx_uv[0][1] * phix_uv[0][i] + solx_uv[0][0] * phix_uv[1][i]) * Area;
+            //std::cout << "test" << std::endl;
+            aResDx[k][i] += beta * 1e15 * Area; //?????????
           }
         }
       }
