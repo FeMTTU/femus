@@ -16,7 +16,8 @@
 #include "PetscMatrix.hpp"
 
 using namespace femus;
-const double mu = 0.5;
+const double mu1 = 0.8;
+const double mu2 = 0.2;
 
 void AssembleConformalMinimization (MultiLevelProblem&);  //stable and not bad
 
@@ -31,7 +32,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
       dirichlet = false;
     }
     if (4 == faceName || 3 == faceName ) {
-      value = (0.5 + 0.4 * cos ( (x[1] - 0.5) * acos (-1.))) * (0.5 - x[0]);
+      value = (0.5 + 0.45 * cos ( (x[1] - 0.5) * acos (-1.))) * (0.5 - x[0]);
     }
   }
   else if (!strcmp (solName, "Dx2")) {
@@ -367,18 +368,18 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       adept::adouble W[DIM];
       adept::adouble V[DIM];
 
-      W[0] = (1 - mu) * ( (1 - mu) * solx_uv[0][0] - (1 + mu) * solx_uv[1][1] );
-      W[1] = (1 - mu) * ( (1 - mu) * solx_uv[1][0] + (1 + mu) * solx_uv[0][1] );
+      V[0] = (1 - mu1) * solx_uv[0][0] - (1 + mu1) * solx_uv[1][1] + mu2 * (solx_uv[1][0] - solx_uv[0][1]);
+      V[1] = (1 - mu1) * solx_uv[1][0] + (1 + mu1) * solx_uv[0][1] - mu2 * (solx_uv[0][0] + solx_uv[1][1]);
 
-      V[0] = (1 + mu) * ( (1 + mu) * solx_uv[0][1] + (1 - mu) * solx_uv[1][0] );
-      V[1] = (1 + mu) * ( (1 + mu) * solx_uv[1][1] - (1 - mu) * solx_uv[0][0] );
+      //V[0] = (1 + mu) * ( (1 + mu) * solx_uv[0][1] + (1 - mu) * solx_uv[1][0] );
+      //V[1] = (1 + mu) * ( (1 + mu) * solx_uv[1][1] - (1 - mu) * solx_uv[0][0] );
 
       adept::adouble M[DIM][dim];
-      M[0][0] = W[0]; //- V[1];
-      M[1][0] = W[1]; //+ V[0];
+      M[0][0] = (1 - mu1) * V[0] - mu2 * V[1];
+      M[1][0] = (1 - mu1) * V[1] + mu2 * V[0];
 
-      M[0][1] = V[0]; //+ W[1];
-      M[1][1] = V[1]; //- W[0];
+      M[0][1] = (1 + mu1) * V[1] - mu2 * V[0];
+      M[1][1]= -(1 + mu1) * V[0] - mu2 * V[1]; //- W[0];
 
 
       // Implement the Conformal Minimization equations.
