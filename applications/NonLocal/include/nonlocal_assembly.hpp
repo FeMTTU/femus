@@ -50,10 +50,10 @@ std::vector <unsigned> elementSkipFlagsFine;
 // double a2 = 1./4.; 
 // double b2 = - 1./12.; 
 
-/*double a1 = 0.5; 
-double b1 = 0.; 
-double a2 = 0.5; 
-double b2 = 0.;*/ 
+// double a1 = 0.5; 
+// double b1 = 0.; 
+// double a2 = 0.5; 
+// double b2 = 0.; 
 
 double a1 = 1./16.; 
 double b1 = - 1./8.; 
