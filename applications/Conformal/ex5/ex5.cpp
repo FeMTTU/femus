@@ -1,4 +1,5 @@
-/* Attempting to fix the inversions.  This example builds a log barrier. */
+/* This example is for quasi-conformal minimization */
+/* mu controls the beltrami coefficient */
 
 #include "FemusInit.hpp"
 #include "MultiLevelSolution.hpp"
@@ -15,13 +16,9 @@
 #include "PetscMatrix.hpp"
 
 using namespace femus;
+const double mu = 0.5;
 
 void AssembleConformalMinimization (MultiLevelProblem&);  //stable and not bad
-void AssembleShearMinimization (MultiLevelProblem&);  //vastly inferior
-
-// anything on the order of 10 or above doesn't work...
-const double beta = 0.00000000001;
-double inf = std::numeric_limits<double>::infinity();
 
 // IBVs.  No boundary, and IVs set to sphere (just need something).
 bool SetBoundaryCondition (const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
@@ -29,28 +26,12 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
   bool dirichlet = true;
   value = 0.;
 
-//   if (!strcmp (solName, "Dx1")) {
-//     if (1 == faceName ) {
-//       dirichlet = false;
-//     }
-//     if (4 == faceName || 3 == faceName ) {
-//       value = (0.5 + 0.499 * cos ( (x[1] - 0.5) * acos (-1.))) * (0.5 - x[0]);
-//     }
-//   }
-//   else if (!strcmp (solName, "Dx2")) {
-//     if (2 == faceName) {
-//       dirichlet = false;
-//     }
-//   }
-
-
   if (!strcmp (solName, "Dx1")) {
-    if (1 == faceName || 3 == faceName) {
+    if (1 == faceName ) {
       dirichlet = false;
     }
-    if (4 == faceName) {
-       value = 0.5 * sin (1*(x[1] / 0.5 * acos (-1.)));
-      //dirichlet = false;
+    if (4 == faceName || 3 == faceName ) {
+      value = (0.5 + 0.4 * cos ( (x[1] - 0.5) * acos (-1.))) * (0.5 - x[0]);
     }
   }
   else if (!strcmp (solName, "Dx2")) {
@@ -59,8 +40,26 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
     }
   }
 
+
+//   if (!strcmp (solName, "Dx1")) {
+//     if (1 == faceName || 3 == faceName) {
+//       dirichlet = false;
+//     }
+//     if (4 == faceName) {
+//        //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
+//       value = 0.5 * sin ((x[1] / 0.5 * acos (-1.)));
+//       //dirichlet = false;
+//     }
+//   }
+//   else if (!strcmp (solName, "Dx2")) {
+//     if (2 == faceName) {
+//       dirichlet = false;
+//     }
+//   }
+//
   return dirichlet;
 }
+
 
 // Main program starts here.
 int main (int argc, char** args) {
@@ -104,7 +103,6 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("Dx2", LAGRANGE, SECOND, 0);
   mlSol.AddSolution ("Dx3", LAGRANGE, SECOND, 0);
 
-
   // Initialize the variables and attach boundary conditions.
   mlSol.Initialize ("All");
 
@@ -119,13 +117,14 @@ int main (int argc, char** args) {
   // Add solutions newDX, Lambda1 to system.
   system.AddSolutionToSystemPDE ("Dx1");
   system.AddSolutionToSystemPDE ("Dx2");
-  if (dim == 3) system.AddSolutionToSystemPDE ("Dx3");
 
   // Parameters for convergence and # of iterations.
   system.SetMaxNumberOfNonLinearIterations (200);
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system and initialize.
+  //system.SetAssembleFunction (AssembleShearMinimization);
+  //system.SetAssembleFunction (AssembleConformalMinimization);
   system.SetAssembleFunction (AssembleConformalMinimization);
   system.init();
 
@@ -155,12 +154,11 @@ int main (int argc, char** args) {
   return 0;
 }
 
-unsigned counter = 0;
-
 // Building the Conformal Minimization system.
 void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
+
 
   // call the adept stack object
   adept::Stack& s = FemusInit::_adeptStack;
@@ -185,7 +183,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
   // Convenience variables to keep track of the dimension.
   const unsigned  dim = msh->GetDimension();
-  const unsigned  DIM = 3;
+  const unsigned  DIM = 2;
 
   // Get the process_id (for parallel computation).
   unsigned iproc = msh->processor_id();
@@ -220,7 +218,6 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   std::vector < unsigned >  solDxIndex (DIM);
   solDxIndex[0] = mlSol->GetIndex ("Dx1");
   solDxIndex[1] = mlSol->GetIndex ("Dx2");
-  solDxIndex[2] = mlSol->GetIndex ("Dx3");
 
   // Extract finite element type for the solution.
   unsigned solType;
@@ -233,7 +230,6 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   std::vector < unsigned > solDxPdeIndex (dim);
   solDxPdeIndex[0] = mlPdeSys->GetSolPdeIndex ("Dx1");
   solDxPdeIndex[1] = mlPdeSys->GetSolPdeIndex ("Dx2");
-  if (dim == 3) solDxPdeIndex[2] = mlPdeSys->GetSolPdeIndex ("Dx3");
 
   // Local solution vectors for Nx and NDx.
   std::vector < std::vector < adept::adouble > > solDx (DIM);
@@ -334,17 +330,21 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       }
 
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
-      double solxHatg[DIM] = {0., 0., 0.};
-      adept::adouble solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      double solxHatg[DIM] = {0., 0.};
+      adept::adouble solx_uv[2][2] = {{0., 0.}, {0., 0.}};
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           solxHatg[K] += phix[i] * solxHat[K][i];
         }
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
-            solx_uv[K][j]   += phix_uv[j][i] * solx[K][i];
+            solx_uv[K][j] += phix_uv[j][i] * solx[K][i];
           }
         }
+        // for (unsigned i = 0; i < nxDofs; i++) {
+        //   solx_z[K] +=
+        //   solx_zBar[K] +=
+        // }
       }
 
       // Compute the metric, metric determinant, and area element.
@@ -361,73 +361,38 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
       adept::adouble detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
       adept::adouble Area = weight * sqrt (detg);
-
       adept::adouble Area2 = weight;// Trick to give equal weight to each element.
 
-      // Compute components of the unit normal N.
-      adept::adouble normal[DIM];
-      adept::adouble N3;
-//       normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
-//       normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
-//       normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
-
-      normal[0] = 0.;
-      normal[1] = 0.;
-      normal[2] = 1.;
-      N3 = solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1];
-
       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
-      adept::adouble V[DIM];
-      V[0] = solx_uv[0][1] - normal[1] * solx_uv[2][0] + normal[2] * solx_uv[1][0];
-      V[1] = solx_uv[1][1] - normal[2] * solx_uv[0][0] + normal[0] * solx_uv[2][0];
-      V[2] = solx_uv[2][1] - normal[0] * solx_uv[1][0] + normal[1] * solx_uv[0][0];
-
       adept::adouble W[DIM];
-      W[0] = (solx_uv[0][0] + normal[1] * solx_uv[2][1] - normal[2] * solx_uv[1][1]);
-      W[1] = (solx_uv[1][0] + normal[2] * solx_uv[0][1] - normal[0] * solx_uv[2][1]);
-      W[2] = (solx_uv[2][0] + normal[0] * solx_uv[1][1] - normal[1] * solx_uv[0][1]);
+      adept::adouble V[DIM];
+
+      W[0] = (1 - mu) * ( (1 - mu) * solx_uv[0][0] - (1 + mu) * solx_uv[1][1] );
+      W[1] = (1 - mu) * ( (1 - mu) * solx_uv[1][0] + (1 + mu) * solx_uv[0][1] );
+
+      V[0] = (1 + mu) * ( (1 + mu) * solx_uv[0][1] + (1 - mu) * solx_uv[1][0] );
+      V[1] = (1 + mu) * ( (1 + mu) * solx_uv[1][1] - (1 - mu) * solx_uv[0][0] );
 
       adept::adouble M[DIM][dim];
-      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2];
-      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0];
-      M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1];
+      M[0][0] = W[0]; //- V[1];
+      M[1][0] = W[1]; //+ V[0];
 
-      M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2];
-      M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
-      M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
-
-      // adept::adouble gEnergyValue = 0.;
-      // for (unsigned i = 0; i < DIM; i++) {
-      //   gEnergyValue += (V[i] * V[i] + W[i] * W[i]);
-      //   newEnergyValue += gEnergyValue * Area2;
-      // }
+      M[0][1] = V[0]; //+ W[1];
+      M[1][1] = V[1]; //- W[0];
 
 
+      // Implement the Conformal Minimization equations.
       for (unsigned k = 0; k < dim; k++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
           for (unsigned j = 0; j < dim; j++) {
-            term1 +=  M[k][j] * phix_uv[j][i];
+            term1 += 2 * M[k][j] * phix_uv[j][i];
           }
-
+          // Conformal energy equation (with trick).
           aResDx[k][i] += term1 * Area2;
-
-          if(N3 > 0) {
-          //  std::cout << "test" << std::endl;
-            if (k == 0) {
-              aResDx[k][i] -= beta * (1/Area) * (solx_uv[1][1] * phix_uv[0][i] - solx_uv[1][0] * phix_uv[1][i]) * Area;
-            }
-            else {
-              aResDx[k][i] -= beta * (1/Area) * (-solx_uv[0][1] * phix_uv[0][i] + solx_uv[0][0] * phix_uv[1][i]) * Area;
-            }
-          }
-          else {
-            //std::cout << "test" << std::endl;
-            aResDx[k][i] += beta * 1e15 * solx[k][i] * Area; //?????????
-          }
         }
       }
-    }
+    } // end GAUSS POINT LOOP
 
     //------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
@@ -462,11 +427,9 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     s.clear_independents();
     s.clear_dependents();
 
-
   } //end ELEMENT LOOP for each process.
 
   RES->close();
   KK->close();
-
 
 } // end AssembleConformalMinimization.
