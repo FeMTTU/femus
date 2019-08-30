@@ -81,7 +81,7 @@ int main(int argc, char** args) {
     // ******* End print mesh *******
   
   // add variables to mlSol
-  mlSol.AddSolution("d_s", LAGRANGE, SECOND/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
+  mlSol.AddSolution("d_s", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
   
   mlSol.Initialize("All");    // initialize all variables to zero
   
@@ -187,6 +187,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  
  //******************** quadrature *******************************  
   double weight; 
+  double weight_sur; 
+  vector <double> phi_u_sur;
+  vector <double> phi_u_x_sur; 
+  phi_u_sur.reserve(maxSize);
+  phi_u_x_sur.reserve(maxSize * (dim+1));
   
 
  //********************* unknowns *********************** 
@@ -313,36 +318,53 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //========= gauss value quantities ==================   
 	double sol_u_gss = 0.;
 	std::vector<double> sol_u_x_gss(dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
+	std::vector<double> sol_u_x_gss_sur(dim);     std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
  //===================================================   
 
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	msh->_finiteElement[kelGeom][solFEType_u]   ->Jacobian   ( coords,     ig, weight, phi_u, phi_u_x, phi_u_xx);
-	msh->_finiteElement[kelGeom][solFEType_u]   ->JacobianSur( coords_ext, ig, weight, phi_u, phi_u_x, normal);
+    msh->_finiteElement[kelGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx); //you need to change direction in Jacobian_type if it is along x,y,z
+	msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur( coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal);
+// 	msh->_finiteElement[kelGeom][solFEType_u]   ->JacobianSur( coords_ext, ig, weight, phi_u, phi_u_x, normal);
 	
     ///@todo do the comparison between the area coming from Jacobian and from JacobianSur !!!
-    
+//--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	
 	for (unsigned i = 0; i < nDof_u; i++) {
 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
                    for (unsigned d = 0; d < dim; d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * dim + d];
           }
+
+	std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
 	
+	for (unsigned i = 0; i < nDof_u; i++) {
+                   for (unsigned d = 0; d < dim; d++)   sol_u_x_gss_sur[d] += sol_u[i] * phi_u_x_sur[i * dim + d];
+          }
+//--------------    
+          
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
 	  
+//--------------    
 	      double laplace_res_du_u_i = 0.;
               for (unsigned kdim = 0; kdim < dim; kdim++) {
               if ( i < nDof_u )         laplace_res_du_u_i             +=  (phi_u_x   [i * dim + kdim] * sol_u_x_gss[kdim]);
 	      }
 	      
+	      double laplace_res_du_u_i_sur = 0.;
+              for (unsigned kdim = 0; kdim < dim; kdim++) {
+              if ( i < nDof_u )         laplace_res_du_u_i_sur             +=  (phi_u_x_sur   [i * dim + kdim] * sol_u_x_gss_sur[kdim]);
+	      }
+//--------------    
+	      
 //======================Residuals=======================
           // FIRST ROW
-	  if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
+// 	  if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
+	  if (i < nDof_u)                      Res[0      + i] += - weight_sur * ( phi_u_sur[i] * (  -1. ) - laplace_res_du_u_i_sur);
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -350,17 +372,23 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
             // *** phi_j loop ***
             for (unsigned j = 0; j < nDof_max; j++) {
 
+//--------------    
               double laplace_mat_du_u = 0.;
 
               for (unsigned kdim = 0; kdim < dim; kdim++) {
               if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u           += (phi_u_x   [i * dim + kdim] * phi_u_x   [j * dim + kdim]);
 	      }
+              double laplace_mat_du_u_sur = 0.;
+
+              for (unsigned kdim = 0; kdim < dim; kdim++) {
+              if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u_sur        += (phi_u_x_sur   [i * dim + kdim] * phi_u_x_sur   [j * dim + kdim]);
+	      }
+//--------------    
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
-	      if ( i < nDof_u && j < nDof_u )       
-		Jac[ (0 + i) * nDof_AllVars   +
-		(0 + j)                         ]  += weight * laplace_mat_du_u;
+	      if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight_sur * laplace_mat_du_u_sur;
+// 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_mat_du_u;
               
             } // end phi_j loop
           } // endif assemble_matrix

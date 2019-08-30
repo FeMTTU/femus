@@ -1435,8 +1435,12 @@ namespace femus {
     }
 
     ///@todo warning the surface gradient is missing!!!!!!!!!!!!!!!
+    const double* dfeta_redo = _dphidxi[ig];
+    gradphi.resize(_nc/* * 2*/);
+    for(int inode = 0; inode < _nc; inode++, dfeta_redo++) {
 
-      
+      gradphi[inode] = (*dfeta_redo) * 1./(det*det) * Jac[1/*0*/][0];
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------

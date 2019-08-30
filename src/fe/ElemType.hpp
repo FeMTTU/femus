@@ -301,14 +301,66 @@ namespace femus
         GetJacobian_type(vt, ig, Weight, jacobianMatrix);
       }
 
-     /* adept-adept */                        
+      template <class type, class type_mov>
+     void Jacobian_type_non_isoparametric(const elem_type * fe_elem_coords_in,
+                                                const vector < vector < type_mov > > & vt,
+                                                const unsigned & ig,
+                                                type_mov & Weight,
+                                                vector < double > & phi, 
+                                                vector < type >   & gradphi,
+                                                boost::optional< vector < type > & > nablaphi) const {
+                                                    
+// geometry part ==============
+   const elem_type_1D *   fe_elem_coords =  static_cast<const elem_type_1D*> (fe_elem_coords_in);                                                  
+                                                    
+    type_mov Jac = 0;
+    type_mov JacI;
+    const double* dxi_coords  = fe_elem_coords->_dphidxi[ig];
+
+    for(int inode = 0; inode < fe_elem_coords->_nc; inode++, dxi_coords++) {
+      Jac += (*dxi_coords) * vt[0][inode];
+    }
+
+    JacI = 1 / Jac;
+
+    Weight = Jac * _gauss.GetGaussWeightsPointer()[ig]; ///@todo is this 1?? In the old routine it is not there...
+// geometry part - end ==============
+
+    
+// function part ================
+    
+    const double* dxi  = _dphidxi[ig];
+    const double* dxi2 = _d2phidxi2[ig];
+
+    phi.resize(_nc);
+    gradphi.resize(_nc * 1);
+    if(nablaphi) nablaphi->resize(_nc * 1);
+
+    
+    for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
+
+      phi[inode] = _phi[ig][inode];
+      gradphi[inode] = (*dxi) * JacI;
+      if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI * JacI;
+
+    }
+
+
+
+}
+
+/* adept-adept */                        
      void Jacobian_non_isoparametric(const elem_type * fe_elem_coords_in,
                                           const vector < vector < adept::adouble > > & vt,
                                           const unsigned & ig,
                                           adept::adouble & Weight,
                                           vector < double > & phi,
                                           vector < adept::adouble >   & gradphi,
-                                          boost::optional< vector < adept::adouble > & > nablaphi) const { abort(); }
+                                          boost::optional< vector < adept::adouble > & > nablaphi) const {
+                                              
+        Jacobian_type_non_isoparametric< adept::adouble, adept::adouble >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, nablaphi);
+                                              
+      }
      
      /* adept-double */                        
      void Jacobian_non_isoparametric(const elem_type * fe_elem_coords_in,
@@ -317,7 +369,11 @@ namespace femus
                                                 double & Weight,
                                                 vector < double > & phi, 
                                                 vector < adept::adouble >   & gradphi,
-                                                boost::optional< vector < adept::adouble > & > nablaphi) const { abort(); }
+                                                boost::optional< vector < adept::adouble > & > nablaphi) const {
+                                                    
+        Jacobian_type_non_isoparametric< adept::adouble, double >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, nablaphi);
+                                        
+       }
          
      /* all double */                        
      void Jacobian_non_isoparametric(const elem_type * fe_elem_coords_in,
@@ -326,7 +382,11 @@ namespace femus
                                                 double & Weight,
                                                 vector < double > & phi, 
                                                 vector < double >   & gradphi,
-                                                boost::optional< vector < double > & > nablaphi) const { abort(); }
+                                                boost::optional< vector < double > & > nablaphi) const {
+                                                    
+        Jacobian_type_non_isoparametric< double, double >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, nablaphi);
+                                        
+       }
 
       /* all type minus a double */
       template <class type>
@@ -630,7 +690,7 @@ namespace femus
 
 
 
-};
+}
 
 
   private:
