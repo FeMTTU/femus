@@ -79,7 +79,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 }
 
 unsigned numberOfUniformLevels = 1;
-unsigned numberOfUniformLevelsFine = 1;
+unsigned numberOfUniformLevelsFine = 4;
 
 int main (int argc, char** argv) {
 
@@ -294,7 +294,7 @@ int main (int argc, char** argv) {
 
 // ******* Solution *******
 
-//   systemFine.MGsolve(); //TODO
+  systemFine.MGsolve(); //TODO
 
   //END assemble and solve nonlocal problem
 
