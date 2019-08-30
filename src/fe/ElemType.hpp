@@ -301,7 +301,34 @@ namespace femus
         GetJacobian_type(vt, ig, Weight, jacobianMatrix);
       }
 
-      template <class type, class type_mov>
+     template <class type_mov>
+     void Jacobian_geometry(const vector < vector < type_mov > > & vt,
+                            const unsigned & ig,
+                            std::vector < std::vector <type_mov> > & JacI,
+                            type_mov & Weight,
+                            const unsigned dim,
+                            const unsigned space_dim) const {
+         
+                             
+    JacI.resize(dim);
+    for (unsigned d = 0; d < dim; d++) JacI[d].resize(space_dim);
+
+    type_mov Jac = 0;
+    const double* dxi_coords  = _dphidxi[ig];
+
+    for(int inode = 0; inode < _nc; inode++, dxi_coords++) {
+      Jac += (*dxi_coords) * vt[0][inode];
+    }
+
+    JacI[0][0] = 1 / Jac;
+
+    Weight = Jac * _gauss.GetGaussWeightsPointer()[ig];
+         
+     }
+     
+     
+
+   template <class type, class type_mov>
      void Jacobian_type_non_isoparametric(const elem_type * fe_elem_coords_in,
                                                 const vector < vector < type_mov > > & vt,
                                                 const unsigned & ig,
@@ -310,24 +337,14 @@ namespace femus
                                                 vector < type >   & gradphi,
                                                 boost::optional< vector < type > & > nablaphi) const {
                                                     
-// geometry part ==============
-   const elem_type_1D *   fe_elem_coords =  static_cast<const elem_type_1D*> (fe_elem_coords_in);                                                  
                                                     
-    type_mov JacI;
+     std::vector < std::vector <type_mov> >  JacI;
+     
+// geometry part ================
+     const elem_type_1D *   fe_elem_coords_cast =  static_cast<const elem_type_1D*> (fe_elem_coords_in);
+     
+     fe_elem_coords_cast->Jacobian_geometry<type_mov>(vt, ig, JacI, Weight, 1/*dim*/, 1/*space_dim*/);
 
-    type_mov Jac = 0;
-    const double* dxi_coords  = fe_elem_coords->_dphidxi[ig];
-
-    for(int inode = 0; inode < fe_elem_coords->_nc; inode++, dxi_coords++) {
-      Jac += (*dxi_coords) * vt[0][inode];
-    }
-
-    JacI = 1 / Jac;
-
-    Weight = Jac * _gauss.GetGaussWeightsPointer()[ig];
-// geometry part - end ==============
-
-    
 // function part ================
     
     const double* dxi  = _dphidxi[ig];
@@ -341,11 +358,12 @@ namespace femus
     for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
 
       phi[inode] = _phi[ig][inode];
-      gradphi[inode] = (*dxi) * JacI;
-      if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI * JacI;
+      gradphi[inode] = (*dxi) * JacI[0][0];
+      if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI[0][0] * JacI[0][0];
 
     }
 
+// function part - end ================
 
 
 }
@@ -619,26 +637,23 @@ namespace femus
      }
 
      
-     template <class type, class type_mov>
-     void Jacobian_type_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                                const vector < vector < type_mov > > & vt,
-                                                const unsigned & ig,
-                                                type_mov & Weight,
-                                                vector < double > & phi, 
-                                                vector < type >   & gradphi,
-                                                boost::optional< vector < type > & > nablaphi) const {
+     template <class type_mov>
+     void Jacobian_geometry(const vector < vector < type_mov > > & vt,
+                            const unsigned & ig,
+                            std::vector < std::vector <type_mov> > & JacI,
+                            type_mov & Weight,
+                            const unsigned dim,
+                            const unsigned space_dim) const {
+                                                      
+    JacI.resize(dim);
+    for (unsigned d = 0; d < dim; d++) JacI[d].resize(space_dim);
                                                     
-// geometry part ==============
-   const elem_type_2D *   fe_elem_coords =  static_cast<const elem_type_2D*> (fe_elem_coords_in);                                                  
-                                                    
-    type_mov JacI[2][2];
-    
     type_mov Jac[2][2] = {{0, 0}, {0, 0}};
     
-    const double* dxi_coords  = fe_elem_coords->_dphidxi[ig];
-    const double* deta_coords = fe_elem_coords->_dphideta[ig];
+    const double* dxi_coords  = _dphidxi[ig];
+    const double* deta_coords = _dphideta[ig];
 
-    for(int inode = 0; inode < fe_elem_coords->_nc; inode++, dxi_coords++, deta_coords++) {
+    for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++) {
       Jac[0][0] += (*dxi_coords) * vt[0][inode];
       Jac[0][1] += (*dxi_coords) * vt[1][inode];
       Jac[1][0] += (*deta_coords) * vt[0][inode];
@@ -653,9 +668,28 @@ namespace femus
     JacI[1][1] =  Jac[0][0] / det;
 
     Weight = det * _gauss.GetGaussWeightsPointer()[ig];
-// geometry part - end ==============
-
     
+    
+     }
+     
+                                                      
+     template <class type, class type_mov>
+     void Jacobian_type_non_isoparametric(const elem_type * fe_elem_coords_in,
+                                                const vector < vector < type_mov > > & vt,
+                                                const unsigned & ig,
+                                                type_mov & Weight,
+                                                vector < double > & phi, 
+                                                vector < type >   & gradphi,
+                                                boost::optional< vector < type > & > nablaphi) const {
+                                                    
+
+// geometry part ================
+     std::vector < std::vector <type_mov> >  JacI;
+     
+   const elem_type_2D *   fe_elem_coords_cast =  static_cast<const elem_type_2D*> (fe_elem_coords_in);                                                  
+     
+   fe_elem_coords_cast->Jacobian_geometry<type_mov>(vt, ig, JacI, Weight, 2/*dim*/, 2/*space_dim*/);
+
 // function part ================
     
     const double* dxi  = _dphidxi[ig];
@@ -781,29 +815,22 @@ namespace femus
      void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
      
-     template <class type, class type_mov>
-     void Jacobian_type_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                                const vector < vector < type_mov > > & vt,
-                                                const unsigned & ig,
-                                                type_mov & Weight,
-                                                vector < double > & phi, 
-                                                vector < type >   & gradphi,
-                                                boost::optional< vector < type > & > nablaphi) const {
-                                                    
-// geometry part ==============
-   const elem_type_3D *   fe_elem_coords =  static_cast<const elem_type_3D*> (fe_elem_coords_in);                                                  
-                                                    
-    phi.resize(_nc);
-    gradphi.resize(_nc * 3);
-    if(nablaphi) nablaphi->resize(_nc * 6);
-
-
+     template <class type_mov>
+     void Jacobian_geometry(const vector < vector < type_mov > > & vt,
+                            const unsigned & ig,
+                            std::vector < std::vector <type_mov> > & JacI,
+                            type_mov & Weight,
+                            const unsigned dim,
+                            const unsigned space_dim) const {
+                                
+    JacI.resize(dim);
+    for (unsigned d = 0; d < dim; d++) JacI[d].resize(space_dim);
+                                
     type_mov Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-    type_mov JacI[3][3];
 
-    const double* dxi_coords = fe_elem_coords->_dphidxi[ig];
-    const double* deta_coords = fe_elem_coords->_dphideta[ig];
-    const double* dzeta_coords = fe_elem_coords->_dphidzeta[ig];
+    const double* dxi_coords = _dphidxi[ig];
+    const double* deta_coords = _dphideta[ig];
+    const double* dzeta_coords = _dphidzeta[ig];
 
     for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++, dzeta_coords++) {
       Jac[0][0] += (*dxi_coords) * vt[0][inode];
@@ -832,11 +859,29 @@ namespace femus
     JacI[2][2] = (-Jac[0][1] * Jac[1][0] + Jac[0][0] * Jac[1][1]) / det;
 
     Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+    
+    }
+     
+     
+     template <class type, class type_mov>
+     void Jacobian_type_non_isoparametric(const elem_type * fe_elem_coords_in,
+                                          const vector < vector < type_mov > > & vt,
+                                          const unsigned & ig,
+                                          type_mov & Weight,
+                                          vector < double > & phi,
+                                          vector < type >   & gradphi,
+                                          boost::optional< vector < type > & > nablaphi) const {
+                                                    
+// geometry part ==============
+     std::vector < std::vector <type_mov> >  JacI;
+     
+   const elem_type_3D *   fe_elem_coords_cast =  static_cast<const elem_type_3D*> (fe_elem_coords_in);                                                  
+     
+   fe_elem_coords_cast->Jacobian_geometry<type_mov>(vt, ig, JacI, Weight, 3/*dim*/, 3/*space_dim*/);
 // geometry part - end ==============
 
     
 // function part ================
-    
     const double* dxi = _dphidxi[ig];
     const double* deta = _dphideta[ig];
     const double* dzeta = _dphidzeta[ig];
@@ -848,6 +893,11 @@ namespace femus
     const double* detadzeta = _d2phidetadzeta[ig];
     const double* dzetadxi = _d2phidzetadxi[ig];
 
+    phi.resize(_nc);
+    gradphi.resize(_nc * 3);
+    if(nablaphi) nablaphi->resize(_nc * 6);
+    
+    
     for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
 
       phi[inode] = _phi[ig][inode];
