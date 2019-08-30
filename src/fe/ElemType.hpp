@@ -313,8 +313,9 @@ namespace femus
 // geometry part ==============
    const elem_type_1D *   fe_elem_coords =  static_cast<const elem_type_1D*> (fe_elem_coords_in);                                                  
                                                     
-    type_mov Jac = 0;
     type_mov JacI;
+
+    type_mov Jac = 0;
     const double* dxi_coords  = fe_elem_coords->_dphidxi[ig];
 
     for(int inode = 0; inode < fe_elem_coords->_nc; inode++, dxi_coords++) {
@@ -323,7 +324,7 @@ namespace femus
 
     JacI = 1 / Jac;
 
-    Weight = Jac * _gauss.GetGaussWeightsPointer()[ig]; ///@todo is this 1?? In the old routine it is not there...
+    Weight = Jac * _gauss.GetGaussWeightsPointer()[ig];
 // geometry part - end ==============
 
     
@@ -630,8 +631,10 @@ namespace femus
 // geometry part ==============
    const elem_type_2D *   fe_elem_coords =  static_cast<const elem_type_2D*> (fe_elem_coords_in);                                                  
                                                     
-    type_mov Jac[2][2] = {{0, 0}, {0, 0}};
     type_mov JacI[2][2];
+    
+    type_mov Jac[2][2] = {{0, 0}, {0, 0}};
+    
     const double* dxi_coords  = fe_elem_coords->_dphidxi[ig];
     const double* deta_coords = fe_elem_coords->_dphideta[ig];
 
@@ -777,6 +780,116 @@ namespace femus
 
      void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
+     
+     template <class type, class type_mov>
+     void Jacobian_type_non_isoparametric(const elem_type * fe_elem_coords_in,
+                                                const vector < vector < type_mov > > & vt,
+                                                const unsigned & ig,
+                                                type_mov & Weight,
+                                                vector < double > & phi, 
+                                                vector < type >   & gradphi,
+                                                boost::optional< vector < type > & > nablaphi) const {
+                                                    
+// geometry part ==============
+   const elem_type_3D *   fe_elem_coords =  static_cast<const elem_type_3D*> (fe_elem_coords_in);                                                  
+                                                    
+    phi.resize(_nc);
+    gradphi.resize(_nc * 3);
+    if(nablaphi) nablaphi->resize(_nc * 6);
+
+
+    type_mov Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+    type_mov JacI[3][3];
+
+    const double* dxi_coords = fe_elem_coords->_dphidxi[ig];
+    const double* deta_coords = fe_elem_coords->_dphideta[ig];
+    const double* dzeta_coords = fe_elem_coords->_dphidzeta[ig];
+
+    for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++, dzeta_coords++) {
+      Jac[0][0] += (*dxi_coords) * vt[0][inode];
+      Jac[0][1] += (*dxi_coords) * vt[1][inode];
+      Jac[0][2] += (*dxi_coords) * vt[2][inode];
+      Jac[1][0] += (*deta_coords) * vt[0][inode];
+      Jac[1][1] += (*deta_coords) * vt[1][inode];
+      Jac[1][2] += (*deta_coords) * vt[2][inode];
+      Jac[2][0] += (*dzeta_coords) * vt[0][inode];
+      Jac[2][1] += (*dzeta_coords) * vt[1][inode];
+      Jac[2][2] += (*dzeta_coords) * vt[2][inode];
+    }
+
+    type_mov det = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
+                    Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
+                    Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
+
+    JacI[0][0] = (-Jac[1][2] * Jac[2][1] + Jac[1][1] * Jac[2][2]) / det;
+    JacI[0][1] = (Jac[0][2] * Jac[2][1] - Jac[0][1] * Jac[2][2]) / det;
+    JacI[0][2] = (-Jac[0][2] * Jac[1][1] + Jac[0][1] * Jac[1][2]) / det;
+    JacI[1][0] = (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) / det;
+    JacI[1][1] = (-Jac[0][2] * Jac[2][0] + Jac[0][0] * Jac[2][2]) / det;
+    JacI[1][2] = (Jac[0][2] * Jac[1][0] - Jac[0][0] * Jac[1][2]) / det;
+    JacI[2][0] = (-Jac[1][1] * Jac[2][0] + Jac[1][0] * Jac[2][1]) / det;
+    JacI[2][1] = (Jac[0][1] * Jac[2][0] - Jac[0][0] * Jac[2][1]) / det;
+    JacI[2][2] = (-Jac[0][1] * Jac[1][0] + Jac[0][0] * Jac[1][1]) / det;
+
+    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+// geometry part - end ==============
+
+    
+// function part ================
+    
+    const double* dxi = _dphidxi[ig];
+    const double* deta = _dphideta[ig];
+    const double* dzeta = _dphidzeta[ig];
+
+    const double* dxi2 = _d2phidxi2[ig];
+    const double* deta2 = _d2phideta2[ig];
+    const double* dzeta2 = _d2phidzeta2[ig];
+    const double* dxideta = _d2phidxideta[ig];
+    const double* detadzeta = _d2phidetadzeta[ig];
+    const double* dzetadxi = _d2phidzetadxi[ig];
+
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
+
+      phi[inode] = _phi[ig][inode];
+
+      gradphi[3 * inode + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1] + (*dzeta) * JacI[0][2];
+      gradphi[3 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1] + (*dzeta) * JacI[1][2];
+      gradphi[3 * inode + 2] = (*dxi) * JacI[2][0] + (*deta) * JacI[2][1] + (*dzeta) * JacI[2][2];
+
+      if(nablaphi) {
+        (*nablaphi)[6 * inode + 0] =
+          ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[0][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[0][1] +
+          ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[0][2];
+        (*nablaphi)[6 * inode + 1] =
+          ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[1][0] +
+          ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[1][1] +
+          ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[1][2];
+        (*nablaphi)[6 * inode + 2] =
+          ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[2][0] +
+          ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[2][1] +
+          ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[2][2];
+        (*nablaphi)[6 * inode + 3] =
+          ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[1][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[1][1] +
+          ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[1][2];
+        (*nablaphi)[6 * inode + 4] =
+          ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[2][0] +
+          ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[2][1] +
+          ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[2][2];
+        (*nablaphi)[6 * inode + 5] =
+          ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[0][0] +
+          ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[0][1] +
+          ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[0][2];
+      }
+    }
+
+// function part - end ================
+
+
+}
+
+
      /* adept-adept */                        
      void Jacobian_non_isoparametric(const elem_type * fe_elem_coords_in,
                                           const vector < vector < adept::adouble > > & vt,
@@ -784,7 +897,11 @@ namespace femus
                                           adept::adouble & Weight,
                                           vector < double > & phi,
                                           vector < adept::adouble >   & gradphi,
-                                          boost::optional< vector < adept::adouble > & > nablaphi) const { abort(); }
+                                          boost::optional< vector < adept::adouble > & > nablaphi) const {
+                                              
+         Jacobian_type_non_isoparametric< adept::adouble, adept::adouble >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, nablaphi);
+   
+      }
      
      /* adept-double */                        
      void Jacobian_non_isoparametric(const elem_type * fe_elem_coords_in,
@@ -793,7 +910,11 @@ namespace femus
                                                 double & Weight,
                                                 vector < double > & phi, 
                                                 vector < adept::adouble >   & gradphi,
-                                                boost::optional< vector < adept::adouble > & > nablaphi) const { abort(); }
+                                                boost::optional< vector < adept::adouble > & > nablaphi) const {
+                                              
+         Jacobian_type_non_isoparametric< adept::adouble, double >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, nablaphi);
+   
+      }
          
      /* all double */                        
      void Jacobian_non_isoparametric(const elem_type * fe_elem_coords_in,
@@ -802,7 +923,11 @@ namespace femus
                                                 double & Weight,
                                                 vector < double > & phi, 
                                                 vector < double >   & gradphi,
-                                                boost::optional< vector < double > & > nablaphi) const { abort(); }
+                                                boost::optional< vector < double > & > nablaphi) const {
+                                              
+         Jacobian_type_non_isoparametric< double, double >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, nablaphi);
+   
+      }
                                                 
       /* templated: mixed type - double */
       template <class type>
