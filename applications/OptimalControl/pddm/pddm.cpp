@@ -326,9 +326,9 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
     msh->_finiteElement[kelGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx,dim,dim); //you need to change direction in Jacobian_type if it is along x,y,z
-	msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur( coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal);
-// 	msh->_finiteElement[kelGeom][solFEType_u]   ->JacobianSur( coords_ext, ig, weight, phi_u, phi_u_x, normal);
-	
+// 	msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur( coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal);
+    msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal,dim,dim);
+
     ///@todo do the comparison between the area coming from Jacobian and from JacobianSur !!!
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
