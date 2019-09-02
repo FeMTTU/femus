@@ -2,9 +2,9 @@
 ** GAMBIT NEUTRAL FILE
 d1_2e-7_d2_2e-6_h_2e-7_bis
 PROGRAM:                Gambit     VERSION:  2.3.16
-30 Aug 2019    23:50:01 
+ 2 Sep 2019    00:05:54 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
-       710       158         4         2         2         2
+       710       158         5         2         2         2
 ENDOFSECTION
    NODAL COORDINATES 2.3.16
          1   5.00000000000e-01   5.15625000000e-01
@@ -1037,22 +1037,21 @@ ENDOFSECTION
                      69     710
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          1 ELEMENTS:         22 MATERIAL:          4 NFLAGS:          1
+GROUP:          1 ELEMENTS:         18 MATERIAL:          4 NFLAGS:          1
                                5
        0
-     131     132     127     128     129     130     126      49      50      51
-      52      53      54      55      56     123     113     114     119     120
-     121     122
+     126      49      50      51      52      53      54      55      56     123
+     127     128     129     130     119     120     121     122
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          2 ELEMENTS:         48 MATERIAL:          4 NFLAGS:          1
+GROUP:          2 ELEMENTS:         46 MATERIAL:          4 NFLAGS:          1
                                6
        0
-     150     151     152     153     149     158     154     155     156     157
-     140     139     141     142     143     144     135     136     137     138
-     117     118       1       2       3       4       5       6       7       8
-       9      10      11      12      13      14      15      16     145     146
-     124     125     147     148     115     116     133     134
+     158     154     155     156     157     150     151     152     153     139
+     141     142     143     144     135     136     137     138     117     118
+       1       2       3       4       5       6       7       8       9      10
+      11      12      13      14      15      16     145     146     124     125
+     147     148     115     116     133     134
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
 GROUP:          3 ELEMENTS:         48 MATERIAL:          2 NFLAGS:          1
@@ -1072,6 +1071,12 @@ GROUP:          4 ELEMENTS:         40 MATERIAL:          2 NFLAGS:          1
       59      60      61      62      63      64      65      66      67      68
       69      70      71      72      73      74      75      76      77      78
       79      80      81      82      83      84      85      86      87      88
+ENDOFSECTION
+       ELEMENT GROUP 2.3.16
+GROUP:          5 ELEMENTS:          6 MATERIAL:          4 NFLAGS:          1
+                               9
+       0
+     149     131     132     140     113     114
 ENDOFSECTION
  BOUNDARY CONDITIONS 2.3.16
                                1       1      52       0       6
