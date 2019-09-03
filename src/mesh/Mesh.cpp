@@ -21,6 +21,7 @@
 #include "MeshMetisPartitioning.hpp"
 #include "GambitIO.hpp"
 #include "MED_IO.hpp"
+// #include "obj_io.hpp"
 #include "NumericVector.hpp"
 
 // C++ includes
@@ -133,9 +134,16 @@ namespace femus {
     if (name.rfind (".neu") < name.size()) {
       GambitIO (*this).read (name, _coords, Lref, type_elem_flag);
     }
+
+    // else if (name.rfind (".obj") < name.size()) {
+    //   obj_io (*this).read (name, _coords, Lref, type_elem_flag);
+    // }
+
+#ifdef HAVE_HDF5
     else if (name.rfind (".med") < name.size()) {
       MED_IO (*this).read (name, _coords, Lref, type_elem_flag);
     }
+#endif
     else {
       std::cerr << " ERROR: Unrecognized file extension: " << name
                 << "\n   I understand the following:\n\n"
@@ -444,7 +452,7 @@ namespace femus {
           if (jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
             imapping[j - 1] = jel;
             imapping[j] = iel;
-            newN = j;
+            newN = j - _elementOffset[isdom];
           }
         }
         n = newN;
@@ -1139,5 +1147,3 @@ namespace femus {
   }
 
 } //end namespace femus
-
-
