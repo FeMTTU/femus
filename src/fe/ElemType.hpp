@@ -363,19 +363,21 @@ namespace femus
 
      const elem_type_1D *   fe_elem_coords_cast =  static_cast<const elem_type_1D*> (fe_elem_coords_in);
      
-     fe_elem_coords_cast->JacobianSur_geometry<type_mov>(vt, ig, JacI, Weight, normal, dim, space_dim);
+     type_mov det;
+     
+     fe_elem_coords_cast->JacobianSur_geometry<type_mov>(vt, ig, JacI, det, normal, dim, space_dim);
 
     // function part ====================
+    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+    
     phi.resize(_nc);
 
     for(int inode = 0; inode < _nc; inode++) {
       phi[inode] = _phi[ig][inode];
     }
 
+    
     ///@todo warning the surface gradient is missing!!!!!!!!!!!!!!!
-    
-    type_mov det = Weight/_gauss.GetGaussWeightsPointer()[ig];
-    
     const double* dfeta_redo = _dphidxi[ig];
     gradphi.resize(_nc/* * 2*/);
     for(int inode = 0; inode < _nc; inode++, dfeta_redo++) {
@@ -387,14 +389,15 @@ namespace femus
 
 
 
+//return det without quadrature weight, pure geometric information
      template <class type_mov>
      void JacobianSur_geometry(const vector < vector < type_mov > > & vt,
-                            const unsigned & ig,
-                            std::vector < std::vector <type_mov> > & JacI,
-                            type_mov & Weight,
-                            vector < type_mov >& normal,
-                            const unsigned dim,
-                            const unsigned space_dim) const {
+                               const unsigned & ig,
+                               std::vector < std::vector <type_mov> > & JacI,
+                               type_mov & detJac,
+                               vector < type_mov >& normal,
+                               const unsigned dim,
+                               const unsigned space_dim) const {
                                 
     // geometry part ====================
     normal.resize(2);
@@ -427,14 +430,13 @@ namespace femus
     Jac[1][1] = -normal[1];
 
     //The determinant of that matrix is the area
-    type_mov det = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
+    detJac = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
 
-    JacI[0][0] =  Jac[1][1] / det;
-    JacI[0][1] = -Jac[0][1] / det;
-    JacI[1][0] = -Jac[1][0] / det;
-    JacI[1][1] =  Jac[0][0] / det;
+    JacI[0][0] =  Jac[1][1] / detJac;
+    JacI[0][1] = -Jac[0][1] / detJac;
+    JacI[1][0] = -Jac[1][0] / detJac;
+    JacI[1][1] =  Jac[0][0] / detJac;
 
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
                                 
     }
     
@@ -443,24 +445,32 @@ namespace femus
      void Jacobian_geometry(const vector < vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & JacI,
-                            type_mov & Weight,
+                            type_mov & detJac,
                             const unsigned dim,
                             const unsigned space_dim) const {
          
                              
-    JacI.resize(dim);
-    for (unsigned d = 0; d < dim; d++) JacI[d].resize(space_dim);
+    JacI.resize(space_dim);
+    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
 
-    type_mov Jac = 0;
+    std::vector < std::vector <type_mov> > Jac(dim);
+    
+    for (unsigned d = 0; d < dim; d++) { Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
+
+    for (unsigned d = 0; d < space_dim; d++) {
     const double* dxi_coords  = _dphidxi[ig];
+       for(int inode = 0; inode < _nc; inode++, dxi_coords++) {
+          Jac[0][d] += (*dxi_coords) * vt[d][inode];
+        }
+     }
+   
+    type_mov JtJ = 0.;
+    for (unsigned d = 0; d < space_dim; d++) JtJ += Jac[0][d]*Jac[0][d];
+    
 
-    for(int inode = 0; inode < _nc; inode++, dxi_coords++) {
-      Jac += (*dxi_coords) * vt[0][inode];
-    }
+    for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = 1 / JtJ * Jac[0][d];
 
-    JacI[0][0] = 1 / Jac;
-
-    Weight = Jac * _gauss.GetGaussWeightsPointer()[ig];
+    detJac = sqrt(JtJ)/*Jac[0][0]*/;  ///@todo shouldn't we take the absolute value??? I'd say we don't because it goes both on the lhs and on the rhs...
          
      }
      
@@ -482,22 +492,27 @@ namespace femus
 // geometry part ================
      const elem_type_1D *   fe_elem_coords_cast =  static_cast<const elem_type_1D*> (fe_elem_coords_in);
      
-     fe_elem_coords_cast->Jacobian_geometry<type_mov>(vt, ig, JacI, Weight, 1/*dim*/, 1/*space_dim*/);
+     type_mov detJac;
+   
+     fe_elem_coords_cast->Jacobian_geometry<type_mov>(vt, ig, JacI, detJac, dim, space_dim);
 
 // function part ================
+    Weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
     
     const double* dxi  = _dphidxi[ig];
     const double* dxi2 = _d2phidxi2[ig];
 
     phi.resize(_nc);
-    gradphi.resize(_nc * 1);
-    if(nablaphi) nablaphi->resize(_nc * 1);
+    gradphi.resize(_nc * space_dim /* 1*/);
+    if(nablaphi) nablaphi->resize(_nc * space_dim /*1*/);
 
     
     for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
 
       phi[inode] = _phi[ig][inode];
-      gradphi[inode] = (*dxi) * JacI[0][0];
+      gradphi[2 * inode + 0] = (*dxi) * JacI[0][0];
+      gradphi[2 * inode + 1] = (*dxi) * JacI[1][0];
+//       gradphi[inode] = (*dxi) * JacI[0][0];
       if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI[0][0] * JacI[0][0];
 
     }
@@ -805,9 +820,13 @@ namespace femus
      
      const elem_type_2D *   fe_elem_coords_cast =  static_cast<const elem_type_2D*> (fe_elem_coords_in);
 
-     fe_elem_coords_cast->JacobianSur_geometry<type_mov>(vt, ig, JacI, Weight, normal, dim, space_dim);
+     type_mov det;
+     
+     fe_elem_coords_cast->JacobianSur_geometry<type_mov>(vt, ig, JacI, det, normal, dim, space_dim);
     
     // function part ============
+    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+    
     phi.resize(_nc);
     
     for(int inode = 0; inode < _nc; inode++) {
@@ -914,14 +933,15 @@ namespace femus
      }
 
      
+//return det without quadrature weight, pure geometric information
      template <class type_mov>
      void JacobianSur_geometry(const vector < vector < type_mov > > & vt,
-                            const unsigned & ig,
-                            std::vector < std::vector <type_mov> > & JacI,
-                            type_mov & Weight,
-                            vector < type_mov >& normal,
-                            const unsigned dim,
-                            const unsigned space_dim) const {
+                               const unsigned & ig,
+                               std::vector < std::vector <type_mov> > & JacI,
+                               type_mov & detJac,
+                               vector < type_mov >& normal,
+                               const unsigned dim,
+                               const unsigned space_dim) const {
                 
 //     JacI is not filled here
                                 
@@ -957,26 +977,24 @@ namespace femus
     Jac[2][2] = normal[2];
 
     //the determinant of the matrix is the area
-    type_mov det = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
+    detJac = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
                 Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
                 Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
 
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
-
-                                
     }
                             
                             
+//return det without quadrature weight, pure geometric information
      template <class type_mov>
      void Jacobian_geometry(const vector < vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & JacI,
-                            type_mov & Weight,
+                            type_mov & detJac,
                             const unsigned dim,
                             const unsigned space_dim) const {
                                                       
-    JacI.resize(dim);
-    for (unsigned d = 0; d < dim; d++) JacI[d].resize(space_dim);
+    JacI.resize(space_dim);
+    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
                                                     
     type_mov Jac[2][2] = {{0, 0}, {0, 0}};
     
@@ -990,15 +1008,13 @@ namespace femus
       Jac[1][1] += (*deta_coords) * vt[1][inode];
     }
 
-    type_mov det = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
+    detJac = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
 
-    JacI[0][0] =  Jac[1][1] / det;
-    JacI[0][1] = -Jac[0][1] / det;
-    JacI[1][0] = -Jac[1][0] / det;
-    JacI[1][1] =  Jac[0][0] / det;
+    JacI[0][0] =  Jac[1][1] / detJac;
+    JacI[0][1] = -Jac[0][1] / detJac;
+    JacI[1][0] = -Jac[1][0] / detJac;
+    JacI[1][1] =  Jac[0][0] / detJac;
 
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
-    
     
      }
      
@@ -1020,9 +1036,12 @@ namespace femus
      
    const elem_type_2D *   fe_elem_coords_cast =  static_cast<const elem_type_2D*> (fe_elem_coords_in);                                                  
      
-   fe_elem_coords_cast->Jacobian_geometry<type_mov>(vt, ig, JacI, Weight, dim, space_dim);
+   type_mov detJac;
+   
+   fe_elem_coords_cast->Jacobian_geometry<type_mov>(vt, ig, JacI, detJac, dim, space_dim);
 
 // function part ================
+    Weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
     
     const double* dxi  = _dphidxi[ig];
     const double* deta = _dphideta[ig];
@@ -1147,16 +1166,17 @@ namespace femus
      void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
      
+//return det without quadrature weight, pure geometric information
      template <class type_mov>
      void Jacobian_geometry(const vector < vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & JacI,
-                            type_mov & Weight,
+                            type_mov & detJac,
                             const unsigned dim,
                             const unsigned space_dim) const {
                                 
-    JacI.resize(dim);
-    for (unsigned d = 0; d < dim; d++) JacI[d].resize(space_dim);
+    JacI.resize(space_dim);
+    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
                                 
     type_mov Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
@@ -1176,22 +1196,20 @@ namespace femus
       Jac[2][2] += (*dzeta_coords) * vt[2][inode];
     }
 
-    type_mov det = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
+    detJac = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
                     Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
                     Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
 
-    JacI[0][0] = (-Jac[1][2] * Jac[2][1] + Jac[1][1] * Jac[2][2]) / det;
-    JacI[0][1] = (Jac[0][2] * Jac[2][1] - Jac[0][1] * Jac[2][2]) / det;
-    JacI[0][2] = (-Jac[0][2] * Jac[1][1] + Jac[0][1] * Jac[1][2]) / det;
-    JacI[1][0] = (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) / det;
-    JacI[1][1] = (-Jac[0][2] * Jac[2][0] + Jac[0][0] * Jac[2][2]) / det;
-    JacI[1][2] = (Jac[0][2] * Jac[1][0] - Jac[0][0] * Jac[1][2]) / det;
-    JacI[2][0] = (-Jac[1][1] * Jac[2][0] + Jac[1][0] * Jac[2][1]) / det;
-    JacI[2][1] = (Jac[0][1] * Jac[2][0] - Jac[0][0] * Jac[2][1]) / det;
-    JacI[2][2] = (-Jac[0][1] * Jac[1][0] + Jac[0][0] * Jac[1][1]) / det;
+    JacI[0][0] = (-Jac[1][2] * Jac[2][1] + Jac[1][1] * Jac[2][2]) / detJac;
+    JacI[0][1] = (Jac[0][2] * Jac[2][1] - Jac[0][1] * Jac[2][2]) / detJac;
+    JacI[0][2] = (-Jac[0][2] * Jac[1][1] + Jac[0][1] * Jac[1][2]) / detJac;
+    JacI[1][0] = (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) / detJac;
+    JacI[1][1] = (-Jac[0][2] * Jac[2][0] + Jac[0][0] * Jac[2][2]) / detJac;
+    JacI[1][2] = (Jac[0][2] * Jac[1][0] - Jac[0][0] * Jac[1][2]) / detJac;
+    JacI[2][0] = (-Jac[1][1] * Jac[2][0] + Jac[1][0] * Jac[2][1]) / detJac;
+    JacI[2][1] = (Jac[0][1] * Jac[2][0] - Jac[0][0] * Jac[2][1]) / detJac;
+    JacI[2][2] = (-Jac[0][1] * Jac[1][0] + Jac[0][0] * Jac[1][1]) / detJac;
 
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
-    
     }
      
      
@@ -1210,12 +1228,16 @@ namespace femus
      std::vector < std::vector <type_mov> >  JacI;
      
    const elem_type_3D *   fe_elem_coords_cast =  static_cast<const elem_type_3D*> (fe_elem_coords_in);                                                  
-     
-   fe_elem_coords_cast->Jacobian_geometry<type_mov>(vt, ig, JacI, Weight, dim, space_dim);
+
+   type_mov detJac;
+   
+   fe_elem_coords_cast->Jacobian_geometry<type_mov>(vt, ig, JacI, detJac, dim, space_dim);
 // geometry part - end ==============
 
     
 // function part ================
+    Weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
+
     const double* dxi = _dphidxi[ig];
     const double* deta = _dphideta[ig];
     const double* dzeta = _dphidzeta[ig];

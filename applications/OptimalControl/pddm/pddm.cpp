@@ -174,14 +174,16 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   for (unsigned i = 0; i < dim; i++) {
     coords[i].reserve(maxSize);
   }
- //***************************************************   
-
+ //***************************************************
+ 
+  const unsigned space_dim = dim + 1;
+  
  // stuff for the surface jacobian ***************************************************   
-  vector < vector < double > > coords_ext(dim+1);    // local coordinates
+  vector < vector < double > > coords_ext(space_dim);    // local coordinates
   for (unsigned i = 0; i < dim; i++) {
     coords_ext[i].reserve(maxSize);
   } 
-  std::vector<double> normal(dim+1,0.);
+  std::vector<double> normal(space_dim,0.);
  //***************************************************   
 
  
@@ -191,7 +193,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   vector <double> phi_u_sur;
   vector <double> phi_u_x_sur; 
   phi_u_sur.reserve(maxSize);
-  phi_u_x_sur.reserve(maxSize * (dim+1));
+  phi_u_x_sur.reserve(maxSize * (space_dim));
   
 
  //********************* unknowns *********************** 
@@ -204,7 +206,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   vector <double> phi_u_xx;
 
   phi_u.reserve(maxSize);
-  phi_u_x.reserve(maxSize * dim);
+  phi_u_x.reserve(maxSize * space_dim);
   phi_u_xx.reserve(maxSize * dim2);
   
  
@@ -276,7 +278,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     for (int i = 0; i < dim+1; i++)  coords_ext[i].resize(nDofx);
     
      for (unsigned i = 0; i < nDofx; i++) {
-      for (unsigned jdim = 0; jdim < dim + 1; jdim++) {
+      for (unsigned jdim = 0; jdim < space_dim; jdim++) {
           coords_ext[jdim][i]  = 0.;      
           
        }
@@ -325,8 +327,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    msh->_finiteElement[kelGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx,dim,dim); //you need to change direction in Jacobian_type if it is along x,y,z
-// 	msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur( coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal);
+    msh->_finiteElement[kelGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx,dim,dim+1); //you need to change direction in Jacobian_type if it is along x,y,z
     msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal,dim,dim);
 
     ///@todo do the comparison between the area coming from Jacobian and from JacobianSur !!!
@@ -335,7 +336,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	
 	for (unsigned i = 0; i < nDof_u; i++) {
 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
-                   for (unsigned d = 0; d < dim; d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * dim + d];
+                   for (unsigned d = 0; d < space_dim; d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
           }
 
 	std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
@@ -351,8 +352,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	  
 //--------------    
 	      double laplace_res_du_u_i = 0.;
-              for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_u )         laplace_res_du_u_i             +=  (phi_u_x   [i * dim + kdim] * sol_u_x_gss[kdim]);
+              for (unsigned kdim = 0; kdim < space_dim; kdim++) {
+              if ( i < nDof_u )         laplace_res_du_u_i             +=  (phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim]);
 	      }
 	      
 	      double laplace_res_du_u_i_sur = 0.;
@@ -363,8 +364,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-// 	  if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
-	  if (i < nDof_u)                      Res[0      + i] += - weight_sur * ( phi_u_sur[i] * (  -1. ) - laplace_res_du_u_i_sur);
+	  if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
+// 	  if (i < nDof_u)                      Res[0      + i] += - weight_sur * ( phi_u_sur[i] * (  -1. ) - laplace_res_du_u_i_sur);
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -375,8 +376,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 //--------------    
               double laplace_mat_du_u = 0.;
 
-              for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u           += (phi_u_x   [i * dim + kdim] * phi_u_x   [j * dim + kdim]);
+              for (unsigned kdim = 0; kdim < space_dim; kdim++) {
+              if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u           += (phi_u_x   [i * space_dim + kdim] * phi_u_x   [j * space_dim + kdim]);
 	      }
               double laplace_mat_du_u_sur = 0.;
 
@@ -387,8 +388,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
-	      if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight_sur * laplace_mat_du_u_sur;
-// 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_mat_du_u;
+// 	      if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight_sur * laplace_mat_du_u_sur;
+		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_mat_du_u;
               
             } // end phi_j loop
           } // endif assemble_matrix
