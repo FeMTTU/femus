@@ -131,7 +131,7 @@ int main (int argc, char** args) {
   system.AddSolutionToSystemPDE ("Dx2");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations (200);
+  system.SetMaxNumberOfNonLinearIterations (20);
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system and initialize.
@@ -165,6 +165,8 @@ int main (int argc, char** args) {
 
   return 0;
 }
+
+unsigned counter = 0;
 
 // Building the Conformal Minimization system.
 void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
@@ -381,16 +383,26 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       adept::adouble XzBarXz_Bar[DIM];
 
       // Comment out for working code
-      adept::adouble mu[2];
+      
 
       XzBarXz_Bar[0] = (1./4.) * ( pow(solx_uv[0][0], 2) + pow(solx_uv[1][0], 2) - pow(solx_uv[0][1], 2) - pow(solx_uv[1][1], 2) );
       XzBarXz_Bar[1] = (1./2.) * ( solx_uv[0][0] * solx_uv[0][1] + solx_uv[1][0] * solx_uv[1][1] );
 
       // Comment out for working code
+      
+      adept::adouble mu[2]={0.,0.};
+      if( counter == 0) mu[0] = 0.8;
+      
       for (unsigned K = 0; K < DIM; K++) {
-        mu[K] += (1. / norm2Xz) * XzBarXz_Bar[K];
+        if(counter > 0 && norm2Xz.value() > 0.){
+          mu[K] += (1. / norm2Xz.value()) * XzBarXz_Bar[K].value();
+        }
+        //if(counter % 2 == 0) mu[K]*=1.01;
+        //else mu[K]/=1.01;
       }
-
+      
+      //std::cout << mu[0] <<" "<< mu[1]<<" ";
+      
       adept::adouble V[DIM];
       V[0] = (1 - mu[0]) * solx_uv[0][0] - (1 + mu[0]) * solx_uv[1][1] + mu[1] * (solx_uv[1][0] - solx_uv[0][1]);
       V[1] = (1 - mu[0]) * solx_uv[1][0] + (1 + mu[0]) * solx_uv[0][1] - mu[1] * (solx_uv[0][0] + solx_uv[1][1]);
@@ -459,5 +471,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
   RES->close();
   KK->close();
+  
+  counter++;
 
 } // end AssembleConformalMinimization.
+
