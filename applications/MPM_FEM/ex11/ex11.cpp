@@ -57,8 +57,8 @@ int main (int argc, char** args) {
 
   //mlMsh.GenerateCoarseBoxMesh (2., 0, 0, -0.5, 0.5, 0., 0., 0., 0., EDGE3, "seventh");
 
-  mlMsh.ReadCoarseMesh ("./input/square_quad.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("./input/square_tri.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/square_quad.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("./input/square_tri.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
@@ -118,7 +118,7 @@ int main (int argc, char** args) {
         mlSol.AddSolution (Uxname[k].c_str(), LAGRANGE, feOrder[j]);
       }
 
-      mlSol.AddSolution ("dmax", LAGRANGE, feOrder[j]);
+      //mlSol.AddSolution ("dmax", LAGRANGE, feOrder[j]);
       mlSol.AddSolution ("weight", LAGRANGE, feOrder[j], 0);
 
       mlSol.Initialize ("All");
@@ -763,19 +763,16 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
 
   vector< int > sysDof;
   vector <double> phi;
-  vector <double> phi2;
+  double* phi2;
   vector <double> phi_x;
   double weight;
 
   unsigned    iproc = msh->processor_id();
 
-  unsigned soldmIndex = mlSol->GetIndex ("dmax");
   unsigned solwIndex = mlSol->GetIndex ("weight");
-
-  unsigned solType = mlSol->GetSolutionType (soldmIndex);
-
-  sol->_Sol[soldmIndex]->zero();
+  unsigned solType = mlSol->GetSolutionType (solwIndex);
   sol->_Sol[solwIndex]->zero();
+
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
@@ -784,56 +781,9 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     for (int k = 0; k < dim; k++) {
       x[k].resize (nDofs);
     }
-    // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofs; i++) {
-      sysDof[i] = msh->GetSolutionDof (i, iel, solType);
-    }
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofs; i++) {
-      unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
-      for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
-      }
-    }
-    for (unsigned i = 0; i < nDofs; i++) {
-      double dmax = 0;
-      for (unsigned j = 0; j < nDofs; j++) {
-        double d = 0;
-        for (unsigned k = 0; k < dim; k++) {
-          d += (x[k][i] - x[k][j]) * (x[k][i] - x[k][j]);
-        }
-        d = sqrt (d);
-        if (d > dmax) dmax = d;
-      }
-      sol->_Sol[soldmIndex]->add (sysDof[i], dmax);
-      sol->_Sol[solwIndex]->add (sysDof[i], 1.);
-    }
-  } //end element loop for each process*/
-  sol->_Sol[soldmIndex]->close();
-  sol->_Sol[solwIndex]->close();
-
-  for (unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
-    double solw = (*sol->_Sol[solwIndex]) (i);
-    double soldm = (*sol->_Sol[soldmIndex]) (i);
-    sol->_Sol[soldmIndex]->set (i, soldm / solw);
-  }
-  sol->_Sol[soldmIndex]->close();
-
-  std::vector < double > soldm2;
-  sol->_Sol[solwIndex]->zero();
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-    short unsigned ielGeom = msh->GetElementType (iel);
-    unsigned nDofs  = msh->GetElementDofNumber (iel, solType);
-    sysDof.resize (nDofs);
-    for (int k = 0; k < dim; k++) {
-      x[k].resize (nDofs);
-    }
-    soldm2.resize (nDofs);
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned solDof = msh->GetSolutionDof (i, iel, solType);
-      soldm2[i] = pow (scale * (*sol->_Sol[soldmIndex]) (solDof), 2.);
       sysDof[i] = msh->GetSolutionDof (i, iel, solType);
     }
     // local storage of coordinates
@@ -845,9 +795,8 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     }
 
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
-      if (solType == 1) msh->_finiteElement[ielGeom][2]->Jacobian (x, ig, weight, phi2, phi_x);
       msh->_finiteElement[ielGeom][solType]->Jacobian (x, ig, weight, phi, phi_x);
-
+      phi2 = (solType != 1) ? msh->_finiteElement[ielGeom][solType]->GetPhi (ig) : msh->_finiteElement[ielGeom][2]->GetPhi (ig);
 
       vector < double > xGauss (dim, 0.);
       for (unsigned i = 0; i < nDofs; i++) {
@@ -855,20 +804,9 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
           xGauss[k] += x[k][i] * phi[i];
         }
       }
-
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofs; i++) {
-
-        double dist2 = 0.;
-        for (unsigned k = 0; k < dim; k++) {
-          dist2 += pow ( (xGauss[k] - x[k][i]), 2);
-        }
-
-        double value = phi[i] * weight;
-        //if (solType == 1) value *= (1 - dist2 / soldm2[i]) * (1 + dist2 / soldm2[i]);
-        if (solType == 1) value = phi2[i] * weight;
-        sol->_Sol[solwIndex]->add (sysDof[i], value);
-
+        sol->_Sol[solwIndex]->add (sysDof[i], phi2[i] * weight);
       } // end phi_i loop
     } // end gauss point loop
 
@@ -901,7 +839,6 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     unsigned nDofs  = msh->GetElementDofNumber (iel, solType);
     solu.resize (nDofs);
     solw.resize (nDofs);
-    soldm2.resize (nDofs);
     sysDof.resize (nDofs);
     for (int k = 0; k < dim; k++) {
       x[k].resize (nDofs);
@@ -911,7 +848,6 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned solDof = msh->GetSolutionDof (i, iel, solType);
-      soldm2[i] = pow (scale * (*sol->_Sol[soldmIndex]) (solDof), 2.);
       solu[i] = (*sol->_Sol[soluIndex]) (solDof);
       solw[i] = (*sol->_Sol[solwIndex]) (solDof);
       sysDof[i] = sysP[0]->GetSystemDof (soluIndex, soluPdeIndex, i, iel);
@@ -927,8 +863,8 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     s.new_recording();
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
 
-      if (solType == 1) msh->_finiteElement[ielGeom][2]->Jacobian (x, ig, weight, phi2, phi_x);
       msh->_finiteElement[ielGeom][solType]->Jacobian (x, ig, weight, phi, phi_x);
+      phi2 = (solType != 1) ? msh->_finiteElement[ielGeom][solType]->GetPhi (ig) : msh->_finiteElement[ielGeom][2]->GetPhi (ig);
       std::vector < adept::adouble > solux_g (dim, 0.);
       for (unsigned i = 0; i < nDofs; i++) {
         for (unsigned k = 0; k < dim; k++) {
@@ -936,28 +872,10 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
         }
       }
 
-      vector < double > xGauss (dim, 0.);
-      for (unsigned i = 0; i < nDofs; i++) {
-        for (unsigned k = 0; k < dim; k++) {
-          xGauss[k] += x[k][i] * phi[i];
-        }
-      }
-
-
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofs; i++) {
-
-        double dist2 = 0.;
         for (unsigned k = 0; k < dim; k++) {
-          dist2 += pow ( (xGauss[k] - x[k][i]), 2);
-        }
-
-        for (unsigned k = 0; k < dim; k++) {
-          adept::adouble value = solux_g[k]  * phi[i] * weight / solw[i];
-//           if (solType == 1) value *= (1. - dist2 / soldm2[i]) * (1. + dist2 / soldm2[i]);
-          if (solType == 1) value = solux_g[k]  * phi2[i] * weight / solw[i];
-          aRes[k][i] += value;
-
+          aRes[k][i] += solux_g[k] * phi2[i] * weight / solw[i];
         }
       } // end phi_i loop
     } // end gauss point loop
