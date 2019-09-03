@@ -46,12 +46,12 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
 //     }
 //   }
 
-//if (!strcmp (solName, "Dx1")) {
+// if (!strcmp (solName, "Dx1")) {
 //    if (1 == faceName || 3 == faceName) {
 //      dirichlet = false;
 //     }
 //     if (4 == faceName) {
-//       value = 0.5 * sin (x[1] / 0.5 * acos (-1.));
+//       value = 0.95 * sin (x[1] / 0.5 * acos (-1.));
 //     }
 //   }
 //   else if (!strcmp (solName, "Dx2")) {
@@ -122,6 +122,7 @@ int main (int argc, char** args) {
   double scalingFactor = 1.;
 
   //mlMsh.ReadCoarseMesh ("../input/squareTri.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/squareReg.neu", "seventh", scalingFactor);
   mlMsh.ReadCoarseMesh ("../input/square.neu", "seventh", scalingFactor);
 
   // Set number of mesh levels.
@@ -378,6 +379,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielGeom][solType]->Jacobian (solxHat, ig, weightHat, phiHat, phiHat_x);
       msh->_finiteElement[ielGeom][solType]->Jacobian (solx, ig, weight1, phi1, phi1_x);
 
+      double xg = 0;
+      
       std::vector < adept::adouble > solDxg (dim, 0.);
       std::vector < double > solUg (dim, 0.);
       std::vector < std::vector < adept::adouble > > gradSolDx (dim);
@@ -388,6 +391,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       }
 
       for (unsigned i = 0; i < nxDofs; i++) {
+        xg += solxHat[0][i] * phiHat[i];
         for (unsigned k = 0; k < dim; k++) {
           solUg[k] += solU[k][i] * phiHat[i];
           solDxg[k] += solDx[k][i] * phiHat[i];
@@ -560,7 +564,10 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
             term1 +=  M[k][j] * phi_uv[j][i];
           }
 
-          aResDx[k][i] += 1 * (term1 + dir[k] * penalty * solDxg[k] * phi[i]) * Area2;
+          adept::adouble term2 = 0.;
+          if(k==0) term2 = 0.02 * pow((0.5 - xg), 3) * gradSolDx[k][k] * phiHat_x[k + i*dim] * Area2;
+          
+          aResDx[k][i] += 1 * (term1 + 1 * dir[k] * penalty * solDxg[k] * phi[i]) * Area2 + 0. * term2;//1./weightHat;
 
         }
       }
