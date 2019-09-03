@@ -16,7 +16,8 @@
 #include "PetscMatrix.hpp"
 
 using namespace femus;
-const double mu[2] = {-0.2, 0.5};
+// Comment back in for working code
+//const double mu[2] = {0.8, 0.};
 
 
 void AssembleConformalMinimization (MultiLevelProblem&);  //stable and not bad
@@ -42,35 +43,35 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
   // }
 
 
-  // if (!strcmp (solName, "Dx1")) {
-  //   if (1 == faceName || 3 == faceName) {
-  //     dirichlet = false;
-  //   }
-  //   if (4 == faceName) {
-  //      //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
-  //     value = 0.5 * sin ((x[1] / 0.5 * acos (-1.)));
-  //     //dirichlet = false;
-  //   }
-  // }
-  // else if (!strcmp (solName, "Dx2")) {
-  //   if (2 == faceName) {
-  //     dirichlet = false;
-  //   }
-  // }
+  if (!strcmp (solName, "Dx1")) {
+    if (1 == faceName || 3 == faceName) {
+      dirichlet = false;
+    }
+    if (4 == faceName) {
+       //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
+      value = 0.5 * sin ((x[1] / 0.5 * acos (-1.)));
+      //dirichlet = false;
+    }
+  }
+  else if (!strcmp (solName, "Dx2")) {
+    if (2 == faceName) {
+      dirichlet = false;
+    }
+  }
 
-  if (!strcmp (solName, "Dx2")) {
-     if (2 == faceName || 4 == faceName) {
-       dirichlet = false;
-     }
-     if (1 == faceName) {
-       value = 0.5 * sin ((x[0] / 0.5 * acos (-1.)));
-     }
-   }
-   else if (!strcmp (solName, "Dx1")) {
-     if (3 == faceName) {
-       dirichlet = false;
-     }
-   }
+  // if (!strcmp (solName, "Dx2")) {
+  //    if (2 == faceName || 4 == faceName) {
+  //      dirichlet = false;
+  //    }
+  //    if (1 == faceName) {
+  //      value = 0.5 * sin ((x[0] / 0.5 * acos (-1.)));
+  //    }
+  //  }
+  //  else if (!strcmp (solName, "Dx1")) {
+  //    if (3 == faceName) {
+  //      dirichlet = false;
+  //    }
+  //  }
 
   return dirichlet;
 }
@@ -373,20 +374,27 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       adept::adouble detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
       adept::adouble Area = weight * sqrt (detg);
       adept::adouble Area2 = weight;// Trick to give equal weight to each element.
+
       adept::adouble norm2Xz = (1./4.) * ( pow( (solx_uv[0][0] + solx_uv[1][1]), 2) + pow( (solx_uv[1][0] - solx_uv[0][1]), 2) );
 
       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
-      adept::adouble XzXzBar[DIM];
+      adept::adouble XzBarXz_Bar[DIM];
+
+      // Comment out for working code
+      adept::adouble mu[2];
+
+      XzBarXz_Bar[0] = (1./4.) * ( pow(solx_uv[0][0], 2) + pow(solx_uv[1][0], 2) - pow(solx_uv[0][1], 2) - pow(solx_uv[1][1], 2) );
+      XzBarXz_Bar[1] = (1./2.) * ( solx_uv[0][0] * solx_uv[0][1] + solx_uv[1][0] * solx_uv[1][1] );
+
+      // Comment out for working code
+      for (unsigned K = 0; K < DIM; K++) {
+        mu[K] += (1. / norm2Xz) * XzBarXz_Bar[K];
+      }
+
       adept::adouble V[DIM];
-
-      XzXzBar[0] = (1./4.) * ( pow(solx_uv[0][0], 2) + pow(solx_uv[0][1], 2) - pow(solx_uv[1][0], 2) - pow(solx_uv[1][1], 2) );
-      XzXzBar[1] = (1./2.) * ( solx_uv[0][0] * solx_uv[1][0] + solx_uv[0][1] * solx_uv[1][1] );
-
-      //V[0] = (1 - mu1) * solx_uv[0][0] - (1 + mu1) * solx_uv[1][1] + mu2 * (solx_uv[1][0] - solx_uv[0][1]);
-      //V[1] = (1 - mu1) * solx_uv[1][0] + (1 + mu1) * solx_uv[0][1] - mu2 * (solx_uv[0][0] + solx_uv[1][1]);
-
       V[0] = (1 - mu[0]) * solx_uv[0][0] - (1 + mu[0]) * solx_uv[1][1] + mu[1] * (solx_uv[1][0] - solx_uv[0][1]);
       V[1] = (1 - mu[0]) * solx_uv[1][0] + (1 + mu[0]) * solx_uv[0][1] - mu[1] * (solx_uv[0][0] + solx_uv[1][1]);
+
 
       adept::adouble M[DIM][dim];
 
