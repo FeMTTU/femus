@@ -1,4 +1,4 @@
-/** tutorial/Ex12 Diffusion problem
+/** 
  * This example shows how to set and solve the weak form of the Poisson problem
  *          $$ \dfrac{\partial u}{ \partial t}\=\nabla \cdot (a(u)\nabla u)   $$
  *          $$ \nabla u.n=-\epsilon \text{ on} \partial B(0,1) $$
