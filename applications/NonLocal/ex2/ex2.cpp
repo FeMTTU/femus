@@ -171,9 +171,10 @@ int main (int argc, char** argv) {
   mlSolFine.GenerateBdc ("All");
 
   // ******* Set volume constraints for the nonlocal *******
-  std::vector<unsigned> volumeConstraintFlags (2);
+  std::vector<unsigned> volumeConstraintFlags (3);
   volumeConstraintFlags[0] = 5;
   volumeConstraintFlags[1] = 6;
+  volumeConstraintFlags[2] = 9;
 
   unsigned soluIndex = mlSol.GetIndex ("u");
   mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, soluIndex, 0);
@@ -298,7 +299,7 @@ int main (int argc, char** argv) {
 
 // ******* Solution *******
 
-  systemFine.MGsolve(); //TODO
+//   systemFine.MGsolve(); //TODO
 
   //END assemble and solve nonlocal problem
 

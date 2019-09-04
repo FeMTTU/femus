@@ -325,6 +325,11 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         if (ielGroup == 5 || ielGroup == 7) radius = delta1;      //if x is in Omega_1
 
         else if (ielGroup == 6 || ielGroup == 8) radius = delta2;      // if x is in Omega_2 
+        
+        else if (ielGroup == 9 && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) radius = delta1;      // use phi_11
+        
+        else if (ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) radius = delta2;   // use phi_22 
+                 
 
         bool coarseIntersectionTest = true;
 
@@ -396,7 +401,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 msh->_finiteElement[jelGeom][soluType]->Jacobian (x2, xg2Local, weightTemp, phi2y, phi_x);
 //                                 fem->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
 
-                if ( (ielGroup == 5 || ielGroup == 7) && (jelGroup == 5 || jelGroup == 7)) {       //both x and y are in Omega_1
+                if ( (ielGroup == 5 || ielGroup == 7) && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) {       //both x and y are in Omega_1
                   kernel = 0.75 * kappa1 / (delta1 * delta1 * delta1 * delta1) ;
                 }
 
@@ -408,7 +413,15 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                   kernel = 0.75 * kappa1 / (delta2 * delta2 * delta2 * delta2) ;
                 }
 
-                else if ( (ielGroup == 6 || ielGroup == 8) && (jelGroup == 6 || jelGroup == 8)) {      // both x and y are in Omega_2
+                else if ( (ielGroup == 6 || ielGroup == 8) && (jelGroup == 6 || jelGroup == 8 || jelGroup == 9)) {      // both x and y are in Omega_2
+                  kernel = 0.75 * kappa2 / (delta2 * delta2 * delta2 * delta2) ;
+                }
+                
+                else if ( ielGroup == 9 && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) {      // use phi_11
+                  kernel = 0.75 * kappa1 / (delta1 * delta1 * delta1 * delta1) ;
+                }
+                
+                else if ( ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) {      // use phi_22
                   kernel = 0.75 * kappa2 / (delta2 * delta2 * delta2 * delta2) ;
                 }
 
@@ -957,13 +970,13 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
         double kernel;
         double radius;
 
-        if ( (ielGroup == 5 || ielGroup == 7) && (jelGroup == 5 || jelGroup == 7)) radius = delta1;      //both x and y are in Omega_1
+        if (ielGroup == 5 || ielGroup == 7) radius = delta1;      //if x is in Omega_1
 
-        else if ( (ielGroup == 5 || ielGroup == 7) && (jelGroup == 6 || jelGroup == 8)) radius = delta1;      // x is in Omega_1 and y is in Omega_2
-
-        else if ( (ielGroup == 6 || ielGroup == 8) && (jelGroup == 5 || jelGroup == 7)) radius = delta2;      // x is in Omega_2 and y is in Omega_1
-
-        else if ( (ielGroup == 6 || ielGroup == 8) && (jelGroup == 6 || jelGroup == 8)) radius = delta2;      // both x and y are in Omega_2
+        else if (ielGroup == 6 || ielGroup == 8) radius = delta2;      // if x is in Omega_2 
+        
+        else if (ielGroup == 9 && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) radius = delta1;      // use phi_11
+        
+        else if (ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) radius = delta2;   // use phi_22 
 
         bool coarseIntersectionTest = true;
 
@@ -1035,7 +1048,7 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
                 msh->_finiteElement[jelGeom][soluType]->Jacobian (x2, xg2Local, weightTemp, phi2y, phi_x);
 //                                 fem->Jacobian ( x2, xg2Local, weightTemp, phi2y, phi_x );
 
-                if ( (ielGroup == 5 || ielGroup == 7) && (jelGroup == 5 || jelGroup == 7)) {       //both x and y are in Omega_1
+                if ( (ielGroup == 5 || ielGroup == 7) && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) {       //both x and y are in Omega_1
                   kernel = 0.75 * kappa1 / (delta1 * delta1 * delta1 * delta1) ;
                 }
 
@@ -1047,7 +1060,15 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
                   kernel = 0.75 * kappa1 / (delta2 * delta2 * delta2 * delta2) ;
                 }
 
-                else if ( (ielGroup == 6 || ielGroup == 8) && (jelGroup == 6 || jelGroup == 8)) {      // both x and y are in Omega_2
+                else if ( (ielGroup == 6 || ielGroup == 8) && (jelGroup == 6 || jelGroup == 8 || jelGroup == 9)) {      // both x and y are in Omega_2
+                  kernel = 0.75 * kappa2 / (delta2 * delta2 * delta2 * delta2) ;
+                }
+                
+                else if ( ielGroup == 9 && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) {      // use phi_11
+                  kernel = 0.75 * kappa1 / (delta1 * delta1 * delta1 * delta1) ;
+                }
+                
+                else if ( ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) {      // use phi_22
                   kernel = 0.75 * kappa2 / (delta2 * delta2 * delta2 * delta2) ;
                 }
 
