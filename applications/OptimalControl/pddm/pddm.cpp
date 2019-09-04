@@ -6,7 +6,7 @@
 #include "NumericVector.hpp"
 
 
-#define DIRECTION 1 //1
+#define DIRECTION 2 //0 x, 1 y, 2 z
 
 
 using namespace femus;
@@ -57,8 +57,11 @@ int main(int argc, char** args) {
 
   
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
-//   std::string infile("./input/Mesh_1.med");
-  std::string infile("./input/Mesh_1_y.med");
+  std::string infile("");
+  if (DIRECTION == 0) infile = "./input/Mesh_1_x.med";
+  else if (DIRECTION == 1) infile = "./input/Mesh_1_y.med";
+  else if (DIRECTION == 2) infile = "./input/Mesh_1_z.med";
+  
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
@@ -176,11 +179,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   }
  //***************************************************
  
-  const unsigned space_dim = dim + 1;
+  const unsigned space_dim = dim + DIRECTION;
   
  // stuff for the surface jacobian ***************************************************   
   vector < vector < double > > coords_ext(space_dim);    // local coordinates
-  for (unsigned i = 0; i < dim; i++) {
+  for (unsigned i = 0; i < coords_ext.size(); i++) {
     coords_ext[i].reserve(maxSize);
   } 
   std::vector<double> normal(space_dim,0.);
@@ -217,10 +220,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   unsigned solPdeIndex_u;
   solPdeIndex_u = mlPdeSys->GetSolPdeIndex("d_s");
 
-  vector < double >  sol_u; // local solution
-  sol_u.reserve(maxSize);
-  vector< int > l2GMap_u;
-  l2GMap_u.reserve(maxSize);
+  vector < double >  sol_u;     sol_u.reserve(maxSize);
+  vector< int > l2GMap_u;    l2GMap_u.reserve(maxSize);
  //***************************************************  
  //***************************************************  
 
@@ -261,24 +262,14 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
       }
     }
 
-   // elem average point 
-    vector < double > elem_center(dim);   
-    for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
-    for (unsigned j = 0; j < dim; j++) {  
-      for (unsigned i = 0; i < nDofx; i++) {
-         elem_center[j] += coords[j][i];
-       }
-    }
-    
-   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
  //***************************************************  
 
  
  //***************************************************  
-    for (int i = 0; i < dim+1; i++)  coords_ext[i].resize(nDofx);
+    for (int i = 0; i < coords_ext.size(); i++)  coords_ext[i].resize(nDofx);
     
      for (unsigned i = 0; i < nDofx; i++) {
-      for (unsigned jdim = 0; jdim < space_dim; jdim++) {
+      for (unsigned jdim = 0; jdim < coords_ext.size(); jdim++) {
           coords_ext[jdim][i]  = 0.;      
           
        }
@@ -287,7 +278,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
      for (unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);  
 
-      for (unsigned jdim = 0; jdim < dim+1; jdim++) {
+      for (unsigned jdim = 0; jdim < coords_ext.size(); jdim++) {
         coords_ext[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);
 //           coords_ext[jdim][i]  = coords[jdim][i];      
        }
@@ -319,7 +310,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     
  //========= gauss value quantities ==================   
 	double sol_u_gss = 0.;
-	std::vector<double> sol_u_x_gss(dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
+	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	std::vector<double> sol_u_x_gss_sur(dim);     std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
  //===================================================   
 
@@ -327,8 +318,9 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    msh->_finiteElement[kelGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx,dim,dim+1); //you need to change direction in Jacobian_type if it is along x,y,z
-    msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal,dim,dim);
+    msh->_finiteElement[kelGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+    
+// // //     msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, dim);
 
     ///@todo do the comparison between the area coming from Jacobian and from JacobianSur !!!
 //--------------    
@@ -336,14 +328,14 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	
 	for (unsigned i = 0; i < nDof_u; i++) {
 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
-                   for (unsigned d = 0; d < space_dim; d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
+                   for (unsigned d = 0; d < sol_u_x_gss.size(); d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
           }
 
-	std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
-	
-	for (unsigned i = 0; i < nDof_u; i++) {
-                   for (unsigned d = 0; d < dim; d++)   sol_u_x_gss_sur[d] += sol_u[i] * phi_u_x_sur[i * dim + d];
-          }
+// // // 	std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
+// // // 	
+// // // 	for (unsigned i = 0; i < nDof_u; i++) {
+// // //                    for (unsigned d = 0; d < dim; d++)   sol_u_x_gss_sur[d] += sol_u[i] * phi_u_x_sur[i * dim + d];
+// // //           }
 //--------------    
           
 //==========FILLING WITH THE EQUATIONS ===========
@@ -356,10 +348,10 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
               if ( i < nDof_u )         laplace_res_du_u_i             +=  (phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim]);
 	      }
 	      
-	      double laplace_res_du_u_i_sur = 0.;
-              for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_u )         laplace_res_du_u_i_sur             +=  (phi_u_x_sur   [i * dim + kdim] * sol_u_x_gss_sur[kdim]);
-	      }
+// // // 	      double laplace_res_du_u_i_sur = 0.;
+// // //               for (unsigned kdim = 0; kdim < dim; kdim++) {
+// // //               if ( i < nDof_u )         laplace_res_du_u_i_sur             +=  (phi_u_x_sur   [i * dim + kdim] * sol_u_x_gss_sur[kdim]);
+// // // 	      }
 //--------------    
 	      
 //======================Residuals=======================
@@ -379,11 +371,12 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
               for (unsigned kdim = 0; kdim < space_dim; kdim++) {
               if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u           += (phi_u_x   [i * space_dim + kdim] * phi_u_x   [j * space_dim + kdim]);
 	      }
-              double laplace_mat_du_u_sur = 0.;
-
-              for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u_sur        += (phi_u_x_sur   [i * dim + kdim] * phi_u_x_sur   [j * dim + kdim]);
-	      }
+	      
+// // //               double laplace_mat_du_u_sur = 0.;
+// // // 
+// // //               for (unsigned kdim = 0; kdim < dim; kdim++) {
+// // //               if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u_sur        += (phi_u_x_sur   [i * dim + kdim] * phi_u_x_sur   [j * dim + kdim]);
+// // // 	      }
 //--------------    
 
               //============ delta_state row ============================

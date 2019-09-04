@@ -470,7 +470,7 @@ namespace femus
 
     for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = 1 / JtJ * Jac[0][d];
 
-    detJac = sqrt(JtJ)/*Jac[0][0]*/;  ///@todo shouldn't we take the absolute value??? I'd say we don't because it goes both on the lhs and on the rhs...
+    detJac = sqrt(JtJ)/*Jac[0][0]*/;  ///@todo in the old implementation shouldn't we take the absolute value??? I'd say we don't because it goes both on the lhs and on the rhs...
          
      }
      
@@ -487,11 +487,12 @@ namespace femus
                                                 const unsigned space_dim) const {
                                                     
                                                     
-     std::vector < std::vector <type_mov> >  JacI;
      
 // geometry part ================
      const elem_type_1D *   fe_elem_coords_cast =  static_cast<const elem_type_1D*> (fe_elem_coords_in);
      
+     std::vector < std::vector <type_mov> >  JacI;
+
      type_mov detJac;
    
      fe_elem_coords_cast->Jacobian_geometry<type_mov>(vt, ig, JacI, detJac, dim, space_dim);
@@ -512,7 +513,7 @@ namespace femus
       phi[inode] = _phi[ig][inode];
        for (unsigned d = 0; d < space_dim; d++) gradphi[ inode * space_dim + d] = (*dxi) * JacI[d][0];
 //       gradphi[inode] = (*dxi) * JacI[0][0];
-      if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI[0][0] * JacI[0][0];
+      if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI[0][0] * JacI[0][0]; ///@todo generalize it
 
     }
 
