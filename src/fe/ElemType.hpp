@@ -370,27 +370,45 @@ namespace femus
     // function part ====================
     Weight = det * _gauss.GetGaussWeightsPointer()[ig];
     
-    phi.resize(_nc);
-
-    for(int inode = 0; inode < _nc; inode++) {
-      phi[inode] = _phi[ig][inode];
-    }
-
-    
     ///@todo warning the surface gradient is missing!!!!!!!!!!!!!!!
-    const double* dfeta_redo = _dphidxi[ig];
-    gradphi.resize(_nc/* * 2*/);
-    for(int inode = 0; inode < _nc; inode++, dfeta_redo++) {
+       
+    phi.resize(_nc);
+    gradphi.resize(_nc * space_dim);
+    
+     const double* dxi = _dphidxi[ig];
 
-//       gradphi[inode] = (*dfeta_redo) * 1./(det*det) * Jac[1][0];
-      gradphi[inode] = (*dfeta_redo) * 1./(det) * JacI[1][0] * (-1.);
+    for(int inode = 0; inode < _nc; inode++, dxi++) {
+        
+      phi[inode] = _phi[ig][inode];
+
+      for (unsigned d = 0; d < space_dim; d++) gradphi[ inode * space_dim + d] = (*dxi) * JacI[d][0];
+
     }
+    
 }
 
 
 
 //return det without quadrature weight, pure geometric information
-     template <class type_mov>
+//     std::vector < std::vector <type_mov> > Jac(dim);
+//     
+//     for (unsigned d = 0; d < dim; d++) { Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
+// 
+//     for (unsigned d = 0; d < space_dim; d++) {
+//     const double* dxi_coords  = _dphidxi[ig];
+//        for(int inode = 0; inode < _nc; inode++, dxi_coords++) {
+//           Jac[0][d] += (*dxi_coords) * vt[d][inode];
+//         }
+//      }
+//    
+//     type_mov JacJacT = 0.; //1x1
+//     for (unsigned d = 0; d < space_dim; d++) JacJacT += Jac[0][d]*Jac[0][d];
+//     
+//     for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT;
+// 
+//     detJac = sqrt(JacJacT)/*Jac[0][0]*/;  ///@todo in the old implementation shouldn't we take the absolute value??? I'd say we don't because it goes both on the lhs and on the rhs...
+
+    template <class type_mov>
      void JacobianSur_geometry(const vector < vector < type_mov > > & vt,
                                const unsigned & ig,
                                std::vector < std::vector <type_mov> > & JacI,
@@ -398,45 +416,57 @@ namespace femus
                                vector < type_mov >& normal,
                                const unsigned dim,
                                const unsigned space_dim) const {
+                                   
+// if you want to compute the normal to a 1d element, you need to know to what plane the boundary element belongs...                                   
                                 
     // geometry part ====================
-    normal.resize(2);
     
-    JacI.resize(2/*dim*/);
-    for (unsigned d = 0; d < 2/*dim*/; d++) JacI[d].resize(2/*space_dim*/);
-//     type_mov JacI[2][2];
+    JacI.resize(space_dim);
+    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
+
+    std::vector < std::vector <type_mov> > Jac(dim);
+    for (unsigned d = 0; d < dim; d++) { Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
+
+
+      for (unsigned d = 0; d < space_dim; d++) {
+    const double* dfdxi = _dphidxi[ig];
+    for(int inode = 0; inode < _nc; inode++, dfdxi++) {
+      Jac[0][d] += (*dfdxi) * vt[d][inode];   //in the other routine it is like this... be consistent
+         }
+      }
+      
     
-    type_mov Jac[2][2] = {{0., 0.}, {0., 0.}};
+//   normal module, also equal to the transformation area....
+    type_mov JacJacT = 0.; //1x1
+    for (unsigned d = 0; d < space_dim; d++) JacJacT += Jac[0][d]*Jac[0][d];
+    detJac = sqrt(JacJacT);
 
-    const double* dfeta = _dphidxi[ig];
+    for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT;
 
-    for(int inode = 0; inode < _nc; inode++, dfeta++) {
-      Jac[0][0] += (*dfeta) * vt[0][inode];
-      Jac[1][0] += (*dfeta) * vt[1][inode];
-    }
-
-//   normal module
-    type_mov modn = sqrt(Jac[0][0] * Jac[0][0] + Jac[1][0] * Jac[1][0]);
-
-    normal[0] =  Jac[1][0] / modn;
-    normal[1] = -Jac[0][0] / modn;
+//===== normal vector ======
+    normal.resize(2); ///@todo this must change based on how my domain is oriented
+    
+    normal[0] =  Jac[0][1] / detJac;
+    normal[1] = -Jac[0][0] / detJac;
 
     //The derivative of x with respect to eta (dx/deta) has the opposite sign with respect to the normal
     //obtained as cross product between (dx/deta , dy/deta, 0) x (0,0,1)
-    //The Jacobian has the structure
-    // |dx/deta  -nx|
-    // |dy/deta  -ny|
-    Jac[0][1] = -normal[0];
-    Jac[1][1] = -normal[1];
+//     (dx/deta , dy/deta, 0)  is the tangent vector (not normalized)
+//     (0,0,1) is the unit vector going out of the plane
+//     their cross product gives the (non-normalized) normal vector:    
+//       i       , j      , k    
+// det   dx/deta , dy/deta, 0    =   i (dy/deta)  -j (dx/deta) 
+//        0      , 0      , 1    
 
-    //The determinant of that matrix is the area
-    detJac = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
+// More: if you take the SCALAR TRIPLE PRODUCT of the (non-normalized) tangent, the unit normal and (0,0,1),
+// that has the meaning of VOLUME, but since two vectors out of three have length 1,
+// that is the same as taking the LENGTH of the segment.
 
-    JacI[0][0] =  Jac[1][1] / detJac;
-    JacI[0][1] = -Jac[0][1] / detJac;
-    JacI[1][0] = -Jac[1][0] / detJac;
-    JacI[1][1] =  Jac[0][0] / detJac;
+//       n_x    , n_y     , 0 
+// det   dx/deta , dy/deta, 0   =     n_x (dy/deta)  - n_y (dx/deta)   
+//        0      , 0      , 1 
 
+    
                                 
     }
     
@@ -448,8 +478,26 @@ namespace femus
                             type_mov & detJac,
                             const unsigned dim,
                             const unsigned space_dim) const {
-         
-                             
+//here the convention for the Jacobian is that the real coordinates are put along a COLUMN, so you have
+ //    J = [ d x_1/ d xi  |  d x_2/ d xi  | d x_3 / d xi  ]     (1x3 matrix)
+ // Then, if we denote differentials with D, we have
+ //  [ D x_1 |  D x_2 | D x_3 ] =  D \xi [ d x_1/ d xi  |  d x_2/ d xi  | d x_3 / d xi  ]                                
+
+ //  [ D x_1 |  D x_2 | D x_3 ] =   D \xi  J                               
+                                
+ //  [ D x_1 |  D x_2 | D x_3 ] J^T               =  D \xi  J  J^T                              
+
+ //  [ D x_1 |  D x_2 | D x_3 ] J^T (J  J^T)^{-1} =  D \xi                              
+                                
+ //  [ D x_1 |  D x_2 | D x_3 ] | d xi / dx_1 | =  D \xi                              
+ //                             | d xi / dx_2 |
+ //                             | d xi / dx_3 |   
+// 
+// | d xi / dx_1 | 
+// | d xi / dx_2 | =  J^T (J J^T)^{-1}
+// | d xi / dx_3 |                              
+
+                                
     JacI.resize(space_dim);
     for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
 
@@ -464,13 +512,12 @@ namespace femus
         }
      }
    
-    type_mov JtJ = 0.;
-    for (unsigned d = 0; d < space_dim; d++) JtJ += Jac[0][d]*Jac[0][d];
+    type_mov JacJacT = 0.; //1x1
+    for (unsigned d = 0; d < space_dim; d++) JacJacT += Jac[0][d]*Jac[0][d];
     
+    for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT;
 
-    for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = 1 / JtJ * Jac[0][d];
-
-    detJac = sqrt(JtJ)/*Jac[0][0]*/;  ///@todo in the old implementation shouldn't we take the absolute value??? I'd say we don't because it goes both on the lhs and on the rhs...
+    detJac = sqrt(JacJacT)/*Jac[0][0]*/;  ///@todo in the old implementation shouldn't we take the absolute value??? I'd say we don't because it goes both on the lhs and on the rhs...
          
      }
      
@@ -504,16 +551,17 @@ namespace femus
     const double* dxi2 = _d2phidxi2[ig];
 
     phi.resize(_nc);
-    gradphi.resize(_nc * space_dim /* 1*/);
-    if(nablaphi) nablaphi->resize(_nc * space_dim /*1*/);
+    gradphi.resize(_nc * space_dim);
+    if(nablaphi) nablaphi->resize(_nc * space_dim);   ///@todo fix this: once space_dim was only 1
 
     
     for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
 
       phi[inode] = _phi[ig][inode];
-       for (unsigned d = 0; d < space_dim; d++) gradphi[ inode * space_dim + d] = (*dxi) * JacI[d][0];
+      
+      for (unsigned d = 0; d < space_dim; d++) gradphi[ inode * space_dim + d] = (*dxi) * JacI[d][0];
 //       gradphi[inode] = (*dxi) * JacI[0][0];
-      if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI[0][0] * JacI[0][0]; ///@todo generalize it
+      if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI[0][0] * JacI[0][0]; ///@todo fix this
 
     }
 

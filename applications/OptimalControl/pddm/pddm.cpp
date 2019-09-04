@@ -280,7 +280,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
       for (unsigned jdim = 0; jdim < coords_ext.size(); jdim++) {
         coords_ext[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);
-//           coords_ext[jdim][i]  = coords[jdim][i];      
        }
      }
  //***************************************************  
@@ -320,7 +319,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
         // *** get gauss point weight, test function and test function partial derivatives ***
     msh->_finiteElement[kelGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
     
-// // //     msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, dim);
+    msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, space_dim);
 
     ///@todo do the comparison between the area coming from Jacobian and from JacobianSur !!!
 //--------------    
@@ -331,11 +330,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
                    for (unsigned d = 0; d < sol_u_x_gss.size(); d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
           }
 
-// // // 	std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
-// // // 	
-// // // 	for (unsigned i = 0; i < nDof_u; i++) {
-// // //                    for (unsigned d = 0; d < dim; d++)   sol_u_x_gss_sur[d] += sol_u[i] * phi_u_x_sur[i * dim + d];
-// // //           }
+	std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
+	
+	for (unsigned i = 0; i < nDof_u; i++) {
+                   for (unsigned d = 0; d < space_dim; d++)   sol_u_x_gss_sur[d] += sol_u[i] * phi_u_x_sur[i * space_dim + d];
+          }
 //--------------    
           
 //==========FILLING WITH THE EQUATIONS ===========
@@ -348,16 +347,16 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
               if ( i < nDof_u )         laplace_res_du_u_i             +=  (phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim]);
 	      }
 	      
-// // // 	      double laplace_res_du_u_i_sur = 0.;
-// // //               for (unsigned kdim = 0; kdim < dim; kdim++) {
-// // //               if ( i < nDof_u )         laplace_res_du_u_i_sur             +=  (phi_u_x_sur   [i * dim + kdim] * sol_u_x_gss_sur[kdim]);
-// // // 	      }
+	      double laplace_res_du_u_i_sur = 0.;
+              for (unsigned kdim = 0; kdim < space_dim; kdim++) {
+              if ( i < nDof_u )         laplace_res_du_u_i_sur             +=  (phi_u_x_sur   [i * space_dim + kdim] * sol_u_x_gss_sur[kdim]);
+	      }
 //--------------    
 	      
 //======================Residuals=======================
           // FIRST ROW
-	  if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
-// 	  if (i < nDof_u)                      Res[0      + i] += - weight_sur * ( phi_u_sur[i] * (  -1. ) - laplace_res_du_u_i_sur);
+// 	  if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
+	  if (i < nDof_u)                      Res[0      + i] += - weight_sur * ( phi_u_sur[i] * (  -1. ) - laplace_res_du_u_i_sur);
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -372,17 +371,17 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
               if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u           += (phi_u_x   [i * space_dim + kdim] * phi_u_x   [j * space_dim + kdim]);
 	      }
 	      
-// // //               double laplace_mat_du_u_sur = 0.;
-// // // 
-// // //               for (unsigned kdim = 0; kdim < dim; kdim++) {
-// // //               if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u_sur        += (phi_u_x_sur   [i * dim + kdim] * phi_u_x_sur   [j * dim + kdim]);
-// // // 	      }
+              double laplace_mat_du_u_sur = 0.;
+
+              for (unsigned kdim = 0; kdim < space_dim; kdim++) {
+              if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u_sur        += (phi_u_x_sur   [i * space_dim + kdim] * phi_u_x_sur   [j * space_dim + kdim]);
+	      }
 //--------------    
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
-// 	      if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight_sur * laplace_mat_du_u_sur;
-		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_mat_du_u;
+// 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_mat_du_u;
+	      if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight_sur * laplace_mat_du_u_sur;
               
             } // end phi_j loop
           } // endif assemble_matrix
