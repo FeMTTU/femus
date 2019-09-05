@@ -36,8 +36,8 @@ double InitalValueU (const std::vector < double >& x) {
 
 //      value = (x[0] < 0.) ? x[0] * x[0] * x[0] : 3 * x[0] * x[0] * x[0];
 
-  double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0];
-  double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0];
+  double u1 = (a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0]) * cos(x[1]);
+  double u2 = (a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0]) * cos(x[1]);
 
   value = (x[0] < 0.) ? u1 : u2;
 
@@ -60,14 +60,14 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 //     value = x[0] * x[0] * x[0] * x[0];
 //        value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 
-  double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0];
-  double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0];
+  double u1 = (a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0]) * cos(x[1]);
+  double u2 = (a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0]) * cos(x[1]);
 
   value = (x[0] < 0.) ? u1 : u2;
 
   if (facename == 2) {
     if (!strcmp (SolName, "u_local")) {
-      value = a1;
+      value = a1 * cos(x[1]);
     }
     else {
       dirichlet = false; //Neumann at the interface boundaries
@@ -79,7 +79,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 }
 
 unsigned numberOfUniformLevels = 1;
-unsigned numberOfUniformLevelsFine = 4;
+unsigned numberOfUniformLevelsFine = 1;
 
 int main (int argc, char** argv) {
 
@@ -121,25 +121,25 @@ int main (int argc, char** argv) {
 //    mlMsh.ReadCoarseMesh ("../input/d1_2e-4_d2_2e-3_h_2e-4.neu", "second", scalingFactor);
 //    mlMsh.ReadCoarseMesh ("../input/d1_2e-5_d2_2e-4_h_2e-5.neu", "second", scalingFactor);
 //    mlMsh.ReadCoarseMesh ("../input/d1_2e-6_d2_2e-5_h_2e-6.neu", "second", scalingFactor);
-//     mlMsh.ReadCoarseMesh ("../input/d1_2e-7_d2_2e-6_h_2e-7.neu", "second", scalingFactor);
-   //     mlMsh.ReadCoarseMesh ("../input/d1_2e-8_d2_2e-7_h_2e-8.neu", "second", scalingFactor);
+    mlMsh.ReadCoarseMesh ("../input/d1_2e-7_d2_2e-6_h_2e-7.neu", "second", scalingFactor);
+//        mlMsh.ReadCoarseMesh ("../input/d1_2e-8_d2_2e-7_h_2e-8.neu", "second", scalingFactor);
 //    mlMsh.ReadCoarseMesh ("../input/d1_2e-4_d2_2e-3_h_2e-4_bis.neu", "eighth", scalingFactor);
-   mlMsh.ReadCoarseMesh ("../input/d1_2e-5_d2_2e-4_h_2e-5_bis.neu", "eighth", scalingFactor);
+//    mlMsh.ReadCoarseMesh ("../input/d1_2e-5_d2_2e-4_h_2e-5_bis.neu", "eighth", scalingFactor);
 //    mlMsh.ReadCoarseMesh ("../input/d1_2e-6_d2_2e-5_h_2e-6_bis.neu", "eighth", scalingFactor);
 //   mlMsh.ReadCoarseMesh ("../input/d1_2e-7_d2_2e-6_h_2e-7_bis.neu", "eighth", scalingFactor);
-   //   mlMsh.ReadCoarseMesh ("../input/d1_2e-8_d2_2e-7_h_2e-8_bis.neu", "eighth", scalingFactor);
+//      mlMsh.ReadCoarseMesh ("../input/d1_2e-8_d2_2e-7_h_2e-8_bis.neu", "eighth", scalingFactor);
   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
-//   mlMshFine.ReadCoarseMesh ("../input/d1_2e-4_d2_2e-3_h_2e-4.neu", "second", scalingFactor);
+  mlMshFine.ReadCoarseMesh ("../input/d1_2e-4_d2_2e-3_h_2e-4.neu", "second", scalingFactor);
 //   mlMshFine.ReadCoarseMesh ("../input/d1_2e-5_d2_2e-4_h_2e-5.neu", "second", scalingFactor);
 //   mlMshFine.ReadCoarseMesh ("../input/d1_2e-6_d2_2e-5_h_2e-6.neu", "second", scalingFactor);
 //     mlMshFine.ReadCoarseMesh ("../input/d1_2e-7_d2_2e-6_h_2e-7.neu", "second", scalingFactor);
-  //     mlMshFine.ReadCoarseMesh ("../input/d1_2e-8_d2_2e-7_h_2e-8.neu", "second", scalingFactor);
+//       mlMshFine.ReadCoarseMesh ("../input/d1_2e-8_d2_2e-7_h_2e-8.neu", "second", scalingFactor);
 //    mlMshFine.ReadCoarseMesh ("../input/d1_2e-4_d2_2e-3_h_2e-4_bis.neu", "eighth", scalingFactor);
-   mlMshFine.ReadCoarseMesh ("../input/d1_2e-5_d2_2e-4_h_2e-5_bis.neu", "eighth", scalingFactor);
+//    mlMshFine.ReadCoarseMesh ("../input/d1_2e-5_d2_2e-4_h_2e-5_bis.neu", "eighth", scalingFactor);
 //    mlMshFine.ReadCoarseMesh ("../input/d1_2e-6_d2_2e-5_h_2e-6_bis.neu", "eighth", scalingFactor);
 //   mlMshFine.ReadCoarseMesh ("../input/d1_2e-7_d2_2e-6_h_2e-7_bis.neu", "eighth", scalingFactor);
-  //   mlMshFine.ReadCoarseMesh ("../input/d1_2e-8_d2_2e-7_h_2e-8_bis.neu", "eighth", scalingFactor);
+//     mlMshFine.ReadCoarseMesh ("../input/d1_2e-8_d2_2e-7_h_2e-8_bis.neu", "eighth", scalingFactor);
   mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine , NULL);
 
 //   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
@@ -560,14 +560,14 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
     vector <double> phi_x; // local test function first order partial derivatives
     double weight; // gauss point weight
 
-    unsigned igNumberFine = mshFine->_finiteElement[ielFineGeom][soluType]->GetGaussPointNumber();
-//     unsigned igNumberFine = femQuadrature->GetGaussPointNumber();
+//     unsigned igNumberFine = mshFine->_finiteElement[ielFineGeom][soluType]->GetGaussPointNumber();
+    unsigned igNumberFine = femQuadrature->GetGaussPointNumber();
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < igNumberFine; ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      mshFine->_finiteElement[ielFineGeom][soluType]->Jacobian (xFine, ig, weight, phi, phi_x);
-//       femQuadrature->Jacobian (xFine, ig, weight, phi, phi_x);
+//       mshFine->_finiteElement[ielFineGeom][soluType]->Jacobian (xFine, ig, weight, phi, phi_x);
+      femQuadrature->Jacobian (xFine, ig, weight, phi, phi_x);
 
       double soluNonLocCoarse_gss = 0.;
       double soluNonLocFine_gss = 0.;
@@ -657,8 +657,8 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
           vector <double> phi2;  // local test function
           vector <double> phi_x2; // local test function first order partial derivatives
           double weight2; // gauss point weight
-          msh->_finiteElement[ielGeomCoarse][soluType]->Jacobian (xCoarse, x_gss_fine_Local, weight2, phi2, phi_x2);
-//           femQuadrature->Jacobian (xCoarse, x_gss_fine_Local, weight2, phi2, phi_x2);
+//           msh->_finiteElement[ielGeomCoarse][soluType]->Jacobian (xCoarse, x_gss_fine_Local, weight2, phi2, phi_x2);
+          femQuadrature->Jacobian (xCoarse, x_gss_fine_Local, weight2, phi2, phi_x2);
 
           for (unsigned jdof = 0; jdof < nDofCoarse; jdof++) {
             soluNonLocCoarse_gss += soluNonLocCoarse[dofs[jdof]] * phi2[jdof];

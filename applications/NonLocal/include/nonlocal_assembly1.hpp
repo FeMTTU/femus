@@ -27,8 +27,8 @@ bool nonLocalAssembly = true;
 
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.2, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05, maxTest8: both 0.025, maxTest9: both 0.0125, maxTest10: both 0.00625
 
-double delta1 = pow(2., -5.); //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = pow(2., -4.);
+double delta1 = pow(2., -8.); //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = pow(2., -7.);
 // double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 double kappa1 = 1.;
 double kappa2 = 3.;
@@ -40,8 +40,8 @@ double b2 = - 1. / 24.;
 
 void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
 
-  double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0];
-  double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0];
+  double u1 = (a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0]) * cos(x[1]);
+  double u2 = (a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0]) * cos(x[1]);
 
   value = (x[0] < 0.) ? u1 : u2;
 
