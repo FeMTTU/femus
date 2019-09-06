@@ -46,19 +46,19 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
 //     }
 //   }
 
-// if (!strcmp (solName, "Dx1")) {
-//    if (1 == faceName || 3 == faceName) {
-//      dirichlet = false;
-//     }
-//     if (4 == faceName) {
-//       value = 0.95 * sin (x[1] / 0.5 * acos (-1.));
-//     }
-//   }
-//   else if (!strcmp (solName, "Dx2")) {
-//     if (2 == faceName) {
-//       dirichlet = false;
-//     }
-//   }
+if (!strcmp (solName, "Dx1")) {
+   if (1 == faceName || 3 == faceName) {
+     dirichlet = false;
+    }
+    if (4 == faceName) {
+      value = 0.5 * sin (x[1] / 0.5 * acos (-1.));
+    }
+  }
+  else if (!strcmp (solName, "Dx2")) {
+    if (2 == faceName) {
+      dirichlet = false;
+    }
+  }
 
 
   if (!strcmp (solName, "U1")) {
@@ -90,19 +90,19 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
 //   }
 
 
-  if (!strcmp (solName, "Dx1")) {
-    if (1 == faceName || 3 == faceName) {
-      dirichlet = false;
-    }
-    if (4 == faceName) {
-      value = 0;
-    }
-  }
-  else if (!strcmp (solName, "Dx2")) {
-    if (2 == faceName) {
-      dirichlet = false;
-    }
-  }
+//   if (!strcmp (solName, "Dx1")) {
+//     if (1 == faceName || 3 == faceName) {
+//       dirichlet = false;
+//     }
+//     if (4 == faceName) {
+//       value = 0;
+//     }
+//   }
+//   else if (!strcmp (solName, "Dx2")) {
+//     if (2 == faceName) {
+//       dirichlet = false;
+//     }
+//   }
 
   return dirichlet;
 }
@@ -176,7 +176,12 @@ int main (int argc, char** args) {
 
   system0.MGsolve();
 
-  UpdateMesh (mlSol);
+  //UpdateMesh (mlSol);
+  std::vector<std::string> mov_vars1;
+  mov_vars1.push_back ("U1");
+  mov_vars1.push_back ("U2");
+  mlSol.GetWriter()->SetMovingMesh (mov_vars1);
+  
 
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 1);
 
@@ -189,21 +194,24 @@ int main (int argc, char** args) {
   if (dim == 3) system1.AddSolutionToSystemPDE ("Dx3");
 
   // Parameters for convergence and # of iterations.
-  system1.SetMaxNumberOfNonLinearIterations (4);
+  system1.SetMaxNumberOfNonLinearIterations (1);
   system1.SetNonLinearConvergenceTolerance (1.e-10);
 
   system1.SetAssembleFunction (AssembleConformalMinimization);
   system1.init();
 
-  system1.MGsolve();
+  for(unsigned j=0;j<10;j++)  {
+  
+    system1.MGsolve();
 
-  mlSol.SetWriter (VTK);
-  std::vector<std::string> mov_vars1;
-  mov_vars1.push_back ("Dx1");
-  mov_vars1.push_back ("Dx2");
-  mlSol.GetWriter()->SetMovingMesh (mov_vars1);
+    mlSol.SetWriter (VTK);
+    std::vector<std::string> mov_vars2;
+    mov_vars2.push_back ("Dx1");
+    mov_vars2.push_back ("Dx2");
+    mlSol.GetWriter()->SetMovingMesh (mov_vars2);
 
-  mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 2);
+    mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 2+j);
+  }
 
   return 0;
 }
@@ -368,7 +376,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nxDofs; i++) {
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
       for (unsigned K = 0; K < DIM; K++) {
-        solxHat[K][i] = (*msh->_topology->_Sol[K]) (iXDof);
+        
+        solxHat[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + (counter != 0) * solDx[K][i].value();
         solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + solDx[K][i];
       }
     }
@@ -396,8 +405,12 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
           solUg[k] += solU[k][i] * phiHat[i];
           solDxg[k] += solDx[k][i] * phiHat[i];
           for (unsigned  j = 0; j < dim; j++) {
-
-            gradSolDx[k][j] += solDx[k][i] * phiHat_x[i * dim + j];
+            if(counter == 0){  
+              gradSolDx[k][j] += solDx[k][i] * phiHat_x[i * dim + j];
+            }
+            else{
+              gradSolDx[k][j] += solDx[k][i] * phi1_x[i * dim + j].value();
+            }
             gradSolU[k][j] += solU[k][i] * phiHat_x[i * dim + j];
           }
         }
@@ -565,9 +578,16 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
           }
 
           adept::adouble term2 = 0.;
-          if(k==0) term2 = 0.02 * pow((0.5 - xg), 3) * gradSolDx[k][k] * phiHat_x[k + i*dim] * Area2;
-          
-          aResDx[k][i] += 1 * (term1 + 1 * dir[k] * penalty * solDxg[k] * phi[i]) * Area2 + 0. * term2;//1./weightHat;
+          if(k==0){
+            if ( counter == 0 ){
+              term2 += /*45 * pow((0.5 - xg), 4)*/ 100000 * gradSolDx[k][k] * phiHat_x[k + i*dim] * pow(weightHat, 2./dim);
+            }
+            else{
+              term2 += /*45 * pow((0.5 - xg), 4)*/ 100000 * gradSolDx[k][k] * phi1_x[k + i*dim] * pow(weight1, 2./dim);
+            }
+            //term2 += /*45 * pow((0.5 - xg), 4) */ 0 * gradSolDx[k][1] * phiHat_x[1 + i*dim] * pow(weightHat, 2./dim);
+          }
+          aResDx[k][i] += 1 * (term1 + 0. * dir[k] * penalty * solDxg[k] * phi[i]) * Area2 +  term2;//1./weightHat;
 
         }
       }
