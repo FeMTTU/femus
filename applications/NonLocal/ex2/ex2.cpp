@@ -36,8 +36,12 @@ double InitalValueU (const std::vector < double >& x) {
 
 //      value = (x[0] < 0.) ? x[0] * x[0] * x[0] : 3 * x[0] * x[0] * x[0];
 
-  double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0] ;
-  double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0] ;
+//   double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0] ;
+//   double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0] ;
+
+  double u1 = (a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0]) * (1. + x[0] * x[0]) * cos (x[1]) ;
+  double u2 = (a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0]) * cos (x[0]) * cos (x[1]);
+
 
   value = (x[0] < 0.) ? u1 : u2;
 
@@ -60,14 +64,18 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 //     value = x[0] * x[0] * x[0] * x[0];
 //        value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 
-  double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0] ;
-  double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0] ;
+//   double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0] ;
+//   double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0] ;
+
+  double u1 = (a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0]) * (1. + x[0] * x[0]) * cos (x[1]) ;
+  double u2 = (a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0]) * cos (x[0]) * cos (x[1]);
 
   value = (x[0] < 0.) ? u1 : u2;
 
   if (facename == 2) {
     if (!strcmp (SolName, "u_local")) {
-      value = a1 ;
+//       value = a1 ;
+      value = a1 * cos (x[1]) ;
     }
     else {
       dirichlet = false; //Neumann at the interface boundaries
@@ -118,7 +126,7 @@ int main (int argc, char** argv) {
 //     mlMsh.ReadCoarseMesh ( "../input/martaTest4Coarser.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial1.neu", "second", scalingFactor );
 //     mlMsh.ReadCoarseMesh ( "../input/trial2.neu", "second", scalingFactor );
-   mlMsh.ReadCoarseMesh ("../input/d1_2e-4_d2_2e-3_h_2e-4.neu", "second", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/d1_2e-4_d2_2e-3_h_2e-4.neu", "second", scalingFactor);
 //    mlMsh.ReadCoarseMesh ("../input/d1_2e-5_d2_2e-4_h_2e-5.neu", "second", scalingFactor);
 //    mlMsh.ReadCoarseMesh ("../input/d1_2e-6_d2_2e-5_h_2e-6.neu", "second", scalingFactor);
 //     mlMsh.ReadCoarseMesh ("../input/d1_2e-7_d2_2e-6_h_2e-7.neu", "second", scalingFactor);
@@ -419,11 +427,14 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
         soluNonLoc_gss += phi[i] * soluNonLoc[i];
         soluLoc_gss += phi[i] * soluLoc[i];
         x_gss += phi[i] * x1[0][i]; // this is x at the Gauss point
-//                 y_gss += phi[i] * x1[1][i]; // this is y at the Gauss point
+        y_gss += phi[i] * x1[1][i]; // this is y at the Gauss point
       }
 
-      double u1 = a1 + b1 * x_gss - 1. / (2. * kappa1) * x_gss * x_gss;
-      double u2 = a2 + b2 * x_gss - 1. / (2. * kappa2) * x_gss * x_gss;
+//       double u1 = a1 + b1 * x_gss - 1. / (2. * kappa1) * x_gss * x_gss;
+//       double u2 = a2 + b2 * x_gss - 1. / (2. * kappa2) * x_gss * x_gss;
+
+      double u1 = (a1 + b1 * x_gss - 1. / (2. * kappa1) * x_gss * x_gss) * (1. + x_gss * x_gss) * cos (y_gss) ;
+      double u2 = (a2 + b2 * x_gss - 1. / (2. * kappa2) * x_gss * x_gss) * cos (x_gss) * cos (y_gss);
 
       soluExact_gss = (x_gss < 0.) ? u1 : u2;
 

@@ -27,8 +27,8 @@ bool nonLocalAssembly = true;
 
 //DELTA sizes: martaTest1: 0.4, martaTest2: 0.01, martaTest3: 0.53, martaTest4: 0.2, maxTest1: both 0.4, maxTest2: both 0.01, maxTest3: both 0.53, maxTest4: both 0.2, maxTest5: both 0.1, maxTest6: both 0.8,  maxTest7: both 0.05, maxTest8: both 0.025, maxTest9: both 0.0125, maxTest10: both 0.00625
 
-double delta1 = pow(2., -4.); //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
-double delta2 = pow(2., -3.);
+double delta1 = pow (2., -4.); //DELTA SIZES (w 2 refinements): interface: delta1 = 0.4, delta2 = 0.2, nonlocal_boundary_test.neu: 0.0625 * 4
+double delta2 = pow (2., -3.);
 // double epsilon = ( delta1 > delta2 ) ? delta1 : delta2;
 double kappa1 = 1.;
 double kappa2 = 3.;
@@ -40,8 +40,11 @@ double b2 = - 1. / 24.;
 
 void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
 
-  double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0] ;
-  double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0] ;
+  //   double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0] ;
+  //   double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0] ;
+
+  double u1 = (a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0]) * (1. + x[0] * x[0]) * cos (x[1]) ;
+  double u2 = (a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0]) * cos (x[0]) * cos (x[1]);
 
   value = (x[0] < 0.) ? u1 : u2;
 
@@ -153,33 +156,33 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   //loop to change _Bdc in the boundary elements and assign the BoundaryFunctionValue to their nodes
   //BEGIN
 //   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-// 
+//
 //     short unsigned ielGroup = msh->GetElementGroup (iel);
-// 
+//
 //     if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
-// 
+//
 //       unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);
 //       std::vector <double> dofCoordinates (dim);
-// 
+//
 //       for (unsigned i = 0; i < nDofu; i++) {
 //         unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
 //         unsigned xDof = msh->GetSolutionDof (i, iel, xType);
 //         sol->_Bdc[soluIndex]->set (solDof, 0.);
-// 
+//
 //         for (unsigned jdim = 0; jdim < dim; jdim++) {
 //           dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
 //         }
-// 
+//
 //         double bdFunctionValue;
 //         GetBoundaryFunctionValue (bdFunctionValue, dofCoordinates);
 //         sol->_Sol[soluIndex]->set (solDof, bdFunctionValue);
-// 
+//
 //       }
-// 
+//
 //     }
-// 
+//
 //   }
-// 
+//
 //   sol->_Bdc[soluIndex]->close();
 //   sol->_Sol[soluIndex]->close();
   //END
@@ -324,12 +327,12 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
         if (ielGroup == 5 || ielGroup == 7) radius = delta1;      //if x is in Omega_1
 
-        else if (ielGroup == 6 || ielGroup == 8) radius = delta2;      // if x is in Omega_2 
-        
+        else if (ielGroup == 6 || ielGroup == 8) radius = delta2;      // if x is in Omega_2
+
         else if (ielGroup == 9 && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) radius = delta1;      // use phi_11
-        
-        else if (ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) radius = delta2;   // use phi_22 
-                 
+
+        else if (ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) radius = delta2;   // use phi_22
+
 
         bool coarseIntersectionTest = true;
 
@@ -355,7 +358,15 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             if (iel == jel) {
               for (unsigned i = 0; i < nDof1; i++) {
 //                                 Res1[i] -= 0. * weight[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
-                Res1[i] -=  1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
+//                 Res1[i] -=  1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
+                if (xg1[ig][0] < 0.) {
+                  double resValue = cos (xg1[ig][1]) * (- 0.5 * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] - kappa1 / 8. * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] + 11. / 2. * xg1[ig][0] * xg1[ig][0] + kappa1 / 16. * xg1[ig][0] * xg1[ig][0] + kappa1 * 5. / 8. * xg1[ig][0] + 1. - 1. / 16. * kappa1);
+                  Res1[i] -=  resValue * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = cos(y) * ( - 0.5 * x^4 - kappa1 / 8 * x^3 + 11. / 2. * x^2 + kappa1 / 16. * x^2 + kappa1 * 5. / 8. * x + 1. - 1. / 16. * k1))
+                }
+                else {
+                  double resValue = cos (xg1[ig][1]) * (sin (xg1[ig][0]) * (-kappa2 / 12. - 2 * xg1[ig][0]) + cos (xg1[ig][0]) * (kappa2 / 8. + 1. - kappa2 / 12. * xg1[ig][0] - xg1[ig][0] * xg1[ig][0]));
+                  Res1[i] -=  resValue * weight1[ig]  * phi1x[ig][i];
+                }//Ax - f (so f = cos(y) * (sin(x) * (-k2 / 12. - 2 * x) + cos(x) * (k2 / 8. + 1. - k2 / 12. * x - x^2)))
 //                                 Res1[i] -=  - 6. * xg1[ig][0] * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 x)
                 // Res1[i] -=  - 6. * ( xg1[ig][0] + xg1[ig][1] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 (x + y))
 //                                 Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
@@ -416,12 +427,12 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 else if ( (ielGroup == 6 || ielGroup == 8) && (jelGroup == 6 || jelGroup == 8 || jelGroup == 9)) {      // both x and y are in Omega_2
                   kernel = 0.75 * kappa2 / (delta2 * delta2 * delta2 * delta2) ;
                 }
-                
-                else if ( ielGroup == 9 && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) {      // use phi_11
+
+                else if (ielGroup == 9 && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) {       // use phi_11
                   kernel = 0.75 * kappa1 / (delta1 * delta1 * delta1 * delta1) ;
                 }
-                
-                else if ( ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) {      // use phi_22
+
+                else if (ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) {       // use phi_22
                   kernel = 0.75 * kappa2 / (delta2 * delta2 * delta2 * delta2) ;
                 }
 
@@ -555,33 +566,33 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
   //BEGIN local assembly
 
 //   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-// 
+//
 //     short unsigned ielGroup = msh->GetElementGroup (iel);
-// 
+//
 //     if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
-// 
+//
 //       unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);
 //       std::vector <double> dofCoordinates (dim);
-// 
+//
 //       for (unsigned i = 0; i < nDofu; i++) {
 //         unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
 //         unsigned xDof = msh->GetSolutionDof (i, iel, xType);
 //         sol->_Bdc[soluIndex]->set (solDof, 0.);
-// 
+//
 //         for (unsigned jdim = 0; jdim < dim; jdim++) {
 //           dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
 //         }
-// 
+//
 //         double bdFunctionValue;
 //         GetBoundaryFunctionValue (bdFunctionValue, dofCoordinates);
 //         sol->_Sol[soluIndex]->set (solDof, bdFunctionValue);
-// 
+//
 //       }
-// 
+//
 //     }
-// 
+//
 //   }
-// 
+//
 //   sol->_Bdc[soluIndex]->close();
 //   sol->_Sol[soluIndex]->close();
 
@@ -655,7 +666,14 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
 
 //                 double srcTerm =  12. * x_gss[0] * x_gss[0] ; // so f = - 12 x^2
         //double srcTerm =  2. ; // so f = - 2
-        double srcTerm =  - 1. ; // so f = 1
+//         double srcTerm =  - 1. ; // so f = 1
+        double srcTerm;
+        if (x_gss[0] < 0.) {
+          srcTerm = - cos (x_gss[1]) * (- 0.5 * x_gss[0] * x_gss[0] * x_gss[0] * x_gss[0] - kappa1 / 8. * x_gss[0] * x_gss[0] * x_gss[0] + 11. / 2. * x_gss[0] * x_gss[0] + kappa1 / 16. * x_gss[0] * x_gss[0] + kappa1 * 5. / 8. * x_gss[0] + 1. - 1. / 16. * kappa1); // f = cos(y) * ( - 0.5 * x^4 - kappa1 / 8 * x^3 + 11. / 2. * x^2 + kappa1 / 16. * x^2 + kappa1 * 5. / 8. * x + 1. - 1. / 16. * k1)
+        }
+        else {
+          srcTerm =  - cos (x_gss[1]) * (sin (x_gss[0]) * (-kappa2 / 12. - 2 * x_gss[0]) + cos (x_gss[0]) * (kappa2 / 8. + 1. - kappa2 / 12. * x_gss[0] - x_gss[0] * x_gss[0])); //so f = cos(y) * (sin(x) * (-k2 / 12. - 2 * x) + cos(x) * (k2 / 8. + 1. - k2 / 12. * x - x^2))
+        }
         //double srcTerm =  0./*- GetExactSolutionLaplace(x_gss)*/ ;
         aRes[i] += (srcTerm * phi[i] + laplace) * weight;
 
@@ -801,33 +819,33 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
   //loop to change _Bdc in the boundary elements and assign the BoundaryFunctionValue to their nodes
   //BEGIN
 //   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-// 
+//
 //     short unsigned ielGroup = msh->GetElementGroup (iel);
-// 
+//
 //     if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
-// 
+//
 //       unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);
 //       std::vector <double> dofCoordinates (dim);
-// 
+//
 //       for (unsigned i = 0; i < nDofu; i++) {
 //         unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
 //         unsigned xDof = msh->GetSolutionDof (i, iel, xType);
 //         sol->_Bdc[soluIndex]->set (solDof, 0.);
-// 
+//
 //         for (unsigned jdim = 0; jdim < dim; jdim++) {
 //           dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
 //         }
-// 
+//
 //         double bdFunctionValue;
 //         GetBoundaryFunctionValue (bdFunctionValue, dofCoordinates);
 //         sol->_Sol[soluIndex]->set (solDof, bdFunctionValue);
-// 
+//
 //       }
-// 
+//
 //     }
-// 
+//
 //   }
-// 
+//
 //   sol->_Bdc[soluIndex]->close();
 //   sol->_Sol[soluIndex]->close();
   //END
@@ -972,11 +990,11 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
 
         if (ielGroup == 5 || ielGroup == 7) radius = delta1;      //if x is in Omega_1
 
-        else if (ielGroup == 6 || ielGroup == 8) radius = delta2;      // if x is in Omega_2 
-        
+        else if (ielGroup == 6 || ielGroup == 8) radius = delta2;      // if x is in Omega_2
+
         else if (ielGroup == 9 && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) radius = delta1;      // use phi_11
-        
-        else if (ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) radius = delta2;   // use phi_22 
+
+        else if (ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) radius = delta2;   // use phi_22
 
         bool coarseIntersectionTest = true;
 
@@ -1002,7 +1020,15 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
             if (iel == jel) {
               for (unsigned i = 0; i < nDof1; i++) {
 //                                 Res1[i] -= 0. * weight[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
-                Res1[i] -=  1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
+//                 Res1[i] -=  1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
+                if (xg1[ig][0] < 0.) {
+                  double resValue = cos (xg1[ig][1]) * (- 0.5 * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] - kappa1 / 8. * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] + 11. / 2. * xg1[ig][0] * xg1[ig][0] + kappa1 / 16. * xg1[ig][0] * xg1[ig][0] + kappa1 * 5. / 8. * xg1[ig][0] + 1. - 1. / 16. * kappa1);
+                  Res1[i] -=  resValue * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = cos(y) * ( - 0.5 * x^4 - kappa1 / 8 * x^3 + 11. / 2. * x^2 + kappa1 / 16. * x^2 + kappa1 * 5. / 8. * x + 1. - 1. / 16. * k1))
+                }
+                else {
+                  double resValue = cos (xg1[ig][1]) * (sin (xg1[ig][0]) * (-kappa2 / 12. - 2 * xg1[ig][0]) + cos (xg1[ig][0]) * (kappa2 / 8. + 1. - kappa2 / 12. * xg1[ig][0] - xg1[ig][0] * xg1[ig][0]));
+                  Res1[i] -=  resValue * weight1[ig]  * phi1x[ig][i];
+                }//Ax - f (so f = cos(y) * (sin(x) * (-k2 / 12. - 2 * x) + cos(x) * (k2 / 8. + 1. - k2 / 12. * x - x^2)))
 //                                 Res1[i] -=  - 6. * xg1[ig][0] * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 x)
                 // Res1[i] -=  - 6. * ( xg1[ig][0] + xg1[ig][1] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 (x + y))
 //                                 Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
@@ -1063,12 +1089,12 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
                 else if ( (ielGroup == 6 || ielGroup == 8) && (jelGroup == 6 || jelGroup == 8 || jelGroup == 9)) {      // both x and y are in Omega_2
                   kernel = 0.75 * kappa2 / (delta2 * delta2 * delta2 * delta2) ;
                 }
-                
-                else if ( ielGroup == 9 && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) {      // use phi_11
+
+                else if (ielGroup == 9 && (jelGroup == 5 || jelGroup == 7 || jelGroup == 9)) {       // use phi_11
                   kernel = 0.75 * kappa1 / (delta1 * delta1 * delta1 * delta1) ;
                 }
-                
-                else if ( ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) {      // use phi_22
+
+                else if (ielGroup == 9 && (jelGroup == 6 || jelGroup == 8)) {       // use phi_22
                   kernel = 0.75 * kappa2 / (delta2 * delta2 * delta2 * delta2) ;
                 }
 
@@ -1354,4 +1380,5 @@ void RectangleAndBallRelation2 (bool & theyIntersect, const std::vector<double> 
   }
 
 }
+
 
