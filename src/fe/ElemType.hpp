@@ -429,22 +429,23 @@ namespace femus
 
 
       for (unsigned d = 0; d < space_dim; d++) {
-    const double* dfdxi = _dphidxi[ig];
-    for(int inode = 0; inode < _nc; inode++, dfdxi++) {
-      Jac[0][d] += (*dfdxi) * vt[d][inode];   //in the other routine it is like this... be consistent
+    const double* dxi_coords = _dphidxi[ig];
+    for(int inode = 0; inode < _nc; inode++, dxi_coords++) {
+      Jac[0][d] += (*dxi_coords) * vt[d][inode];   //in the other routine it is like this... be consistent
          }
       }
       
     
-//   normal module, also equal to the transformation area....
-    type_mov JacJacT = 0.; //1x1
-    for (unsigned d = 0; d < space_dim; d++) JacJacT += Jac[0][d]*Jac[0][d];
-    detJac = sqrt(JacJacT);
+    //JacI
+    type_mov JacJacT[1][1]; JacJacT[0][0] = 0.; //1x1
+    for (unsigned d = 0; d < space_dim; d++) JacJacT[0][0] += Jac[0][d]*Jac[0][d];
+    detJac = sqrt(JacJacT[0][0]);
 
-    for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT;
+    for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT[0][0];
 
 //===== normal vector ======
-    normal.resize(2); ///@todo this must change based on how my domain is oriented
+ //   normal module, also equal to the transformation area....
+   normal.resize(2); ///@todo this must change based on how my domain is oriented
     
     normal[0] =  Jac[0][1] / detJac;
     normal[1] = -Jac[0][0] / detJac;
@@ -511,14 +512,16 @@ namespace femus
           Jac[0][d] += (*dxi_coords) * vt[d][inode];
         }
      }
-   
+     
+    //JacI
     type_mov JacJacT = 0.; //1x1
     for (unsigned d = 0; d < space_dim; d++) JacJacT += Jac[0][d]*Jac[0][d];
+    detJac = sqrt(JacJacT);
     
     for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT;
 
-    detJac = sqrt(JacJacT)/*Jac[0][0]*/;  ///@todo in the old implementation shouldn't we take the absolute value??? I'd say we don't because it goes both on the lhs and on the rhs...
-         
+  ///@todo in the old implementation shouldn't we take the absolute value??? I'd say we don't because it goes both on the lhs and on the rhs...
+             
      }
      
      
@@ -877,12 +880,17 @@ namespace femus
     
     phi.resize(_nc);
     
-    for(int inode = 0; inode < _nc; inode++) {
+    gradphi.resize(_nc * space_dim);  std::fill(gradphi.begin(),gradphi.end(),0.);
+    const double* dxi  = _dphidxi[ig];
+    const double* deta = _dphideta[ig];
+    
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++) {
+        
       phi[inode] = _phi[ig][inode];
-    }
-
-    ///@todo warning the surface gradient is missing!!!!!!!!!!!!!!!                                                  
-                                                  
+      
+      for (unsigned d = 0; d < space_dim; d++) gradphi[ inode * space_dim + d] = (*dxi) * JacI[d][0] + (*deta) * JacI[d][1];
+ 
+       }                                                  
                                                   
      }
      
@@ -991,44 +999,70 @@ namespace femus
                                const unsigned dim,
                                const unsigned space_dim) const {
                 
-//     JacI is not filled here
                                 
      normal.resize(3);
 
     type_mov Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
-    const double* dfx = _dphidxi[ig];
-    const double* dfy = _dphideta[ig];
+    const double* dxi_coords = _dphidxi[ig];
+    const double* deta_coords = _dphideta[ig];
 
-    for(int inode = 0; inode < _nc; inode++, dfx++, dfy++) {
-      Jac[0][0] += (*dfx) * vt[0][inode];
-      Jac[1][0] += (*dfx) * vt[1][inode];
-      Jac[2][0] += (*dfx) * vt[2][inode];
+    for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++) {
+      Jac[0][0] += (*dxi_coords) * vt[0][inode];
+      Jac[0][1] += (*dxi_coords) * vt[1][inode];
+      Jac[0][2] += (*dxi_coords) * vt[2][inode];
 
-      Jac[0][1] += (*dfy) * vt[0][inode];
-      Jac[1][1] += (*dfy) * vt[1][inode];
-      Jac[2][1] += (*dfy) * vt[2][inode];
+      Jac[1][0] += (*deta_coords) * vt[0][inode];
+      Jac[1][1] += (*deta_coords) * vt[1][inode];
+      Jac[1][2] += (*deta_coords) * vt[2][inode];
     }
 
     //   normal module
-    type_mov nx = Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0];
-    type_mov ny = Jac[0][1] * Jac[2][0] - Jac[2][1] * Jac[0][0];
-    type_mov nz = Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0];
+    type_mov nx = Jac[0][1] * Jac[1][2] - Jac[1][1] * Jac[0][2];
+    type_mov ny = Jac[1][0] * Jac[0][2] - Jac[1][2] * Jac[0][0];
+    type_mov nz = Jac[0][0] * Jac[1][1] - Jac[1][0] * Jac[0][1];
     type_mov invModn = 1. / sqrt(nx * nx + ny * ny + nz * nz);
 
     normal[0] = (nx) * invModn;
     normal[1] = (ny) * invModn;
     normal[2] = (nz) * invModn;
 
-    Jac[0][2] = normal[0];
-    Jac[1][2] = normal[1];
+    Jac[2][0] = normal[0];
+    Jac[2][1] = normal[1];
     Jac[2][2] = normal[2];
 
     //the determinant of the matrix is the area
     detJac = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
-                Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
-                Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
+              Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
+              Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
 
+    //JacI
+    type_mov JacJacT[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
+    type_mov JacJacT_inv[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
+    
+    for (unsigned i = 0; i < 2/*dim*/; i++)
+        for (unsigned j = 0; j < 2/*dim*/; j++)
+            for (unsigned k = 0; k < space_dim; k++) JacJacT[i][j] += Jac[i][k]*Jac[j][k];
+            
+    type_mov detJacJacT = (JacJacT[0][0] * JacJacT[1][1] - JacJacT[0][1] * JacJacT[1][0]);
+            
+    type_mov area = sqrt(detJacJacT);
+    
+    JacJacT_inv[0][0] =  JacJacT[1][1] / detJacJacT;
+    JacJacT_inv[0][1] = -JacJacT[0][1] / detJacJacT;
+    JacJacT_inv[1][0] = -JacJacT[1][0] / detJacJacT;
+    JacJacT_inv[1][1] =  JacJacT[0][0] / detJacJacT;
+        
+   //JacI
+    JacI.resize(space_dim);
+    for (unsigned d = 0; d < space_dim; d++) { JacI[d].resize(dim);  std::fill(JacI[d].begin(),JacI[d].end(),0.); }
+    
+    for (unsigned i = 0; i < space_dim; i++)
+        for (unsigned j = 0; j < dim; j++)
+            for (unsigned k = 0; k < dim; k++) JacI[i][j] += Jac[k][i]*JacJacT_inv[k][j];
+//     for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT;
+
+    
     }
                             
                             
@@ -1041,8 +1075,6 @@ namespace femus
                             const unsigned dim,
                             const unsigned space_dim) const {
                                                       
-    JacI.resize(space_dim);
-    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
                                                     
     type_mov Jac[2][2] = {{0, 0}, {0, 0}};
     
@@ -1057,6 +1089,10 @@ namespace femus
     }
 
     detJac = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
+
+   //JacI
+    JacI.resize(space_dim);
+    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
 
     JacI[0][0] =  Jac[1][1] / detJac;
     JacI[0][1] = -Jac[0][1] / detJac;
@@ -1091,17 +1127,16 @@ namespace femus
 // function part ================
     Weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
     
+    phi.resize(_nc);
+    
+    gradphi.resize(_nc * space_dim);  std::fill(gradphi.begin(),gradphi.end(),0.);
     const double* dxi  = _dphidxi[ig];
     const double* deta = _dphideta[ig];
-
+    
+    if(nablaphi) nablaphi->resize(_nc * 3);
     const double* dxi2 = _d2phidxi2[ig];
     const double* deta2 = _d2phideta2[ig];
     const double* dxideta = _d2phidxideta[ig];
-
-
-    phi.resize(_nc);
-    gradphi.resize(_nc * space_dim/*2*/);  std::fill(gradphi.begin(),gradphi.end(),0.);
-    if(nablaphi) nablaphi->resize(_nc * 3);
 
     
     for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
