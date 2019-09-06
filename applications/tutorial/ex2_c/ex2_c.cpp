@@ -585,6 +585,8 @@ void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
 }
 
 
+namespace femus {
+
 // here, the peculiarity of the application is not dealt with using virtuality, but with template specialization ---------------------------------
 
 // template specialization for double
@@ -657,6 +659,9 @@ void  assemble_jacobian< double, double >::compute_jacobian_inside_integration_l
 
 
 }
+
+
+} //end namespace
 
 //-------------------------------------------------------------
 
