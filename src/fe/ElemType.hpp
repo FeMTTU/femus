@@ -1100,7 +1100,7 @@ namespace femus
 
 
     phi.resize(_nc);
-    gradphi.resize(_nc * 2);
+    gradphi.resize(_nc * space_dim/*2*/);  std::fill(gradphi.begin(),gradphi.end(),0.);
     if(nablaphi) nablaphi->resize(_nc * 3);
 
     
@@ -1108,8 +1108,10 @@ namespace femus
 
       phi[inode] = _phi[ig][inode];
 
-      gradphi[2 * inode + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1];
-      gradphi[2 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1];
+      for (unsigned d = 0; d < space_dim; d++) gradphi[ inode * space_dim + d] = (*dxi) * JacI[d][0] + (*deta) * JacI[d][1];
+
+//       gradphi[inode * 2 + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1];
+//       gradphi[inode * 2 + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1];
 
       if(nablaphi) {
         (*nablaphi)[3 * inode + 0] =
