@@ -499,12 +499,10 @@ namespace femus
 // | d xi / dx_3 |                              
 
                                 
-    JacI.resize(space_dim);
-    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
-
     std::vector < std::vector <type_mov> > Jac(dim);
     
-    for (unsigned d = 0; d < dim; d++) { Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
+    for (unsigned d = 0; d < dim; d++) { 
+        Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
 
     for (unsigned d = 0; d < space_dim; d++) {
     const double* dxi_coords  = _dphidxi[ig];
@@ -514,6 +512,9 @@ namespace femus
      }
      
     //JacI
+    JacI.resize(space_dim);
+    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
+
     type_mov JacJacT = 0.; //1x1
     for (unsigned d = 0; d < space_dim; d++) JacJacT += Jac[0][d]*Jac[0][d];
     detJac = sqrt(JacJacT);
@@ -1053,14 +1054,12 @@ namespace femus
     JacJacT_inv[1][0] = -JacJacT[1][0] / detJacJacT;
     JacJacT_inv[1][1] =  JacJacT[0][0] / detJacJacT;
         
-   //JacI
     JacI.resize(space_dim);
     for (unsigned d = 0; d < space_dim; d++) { JacI[d].resize(dim);  std::fill(JacI[d].begin(),JacI[d].end(),0.); }
     
     for (unsigned i = 0; i < space_dim; i++)
         for (unsigned j = 0; j < dim; j++)
             for (unsigned k = 0; k < dim; k++) JacI[i][j] += Jac[k][i]*JacJacT_inv[k][j];
-//     for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT;
 
     
     }
@@ -1075,29 +1074,44 @@ namespace femus
                             const unsigned dim,
                             const unsigned space_dim) const {
                                                       
-                                                    
-    type_mov Jac[2][2] = {{0, 0}, {0, 0}};
+    std::vector < std::vector <type_mov> > Jac(dim);
     
+    for (unsigned d = 0; d < dim; d++) { 
+        Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
+
+    for (unsigned d = 0; d < space_dim; d++) {
     const double* dxi_coords  = _dphidxi[ig];
     const double* deta_coords = _dphideta[ig];
+       for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++) {
+          Jac[0][d] += (*dxi_coords)  * vt[d][inode];
+          Jac[1][d] += (*deta_coords) * vt[d][inode];
+        }
+     }
+     
 
-    for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++) {
-      Jac[0][0] += (*dxi_coords) * vt[0][inode];
-      Jac[0][1] += (*dxi_coords) * vt[1][inode];
-      Jac[1][0] += (*deta_coords) * vt[0][inode];
-      Jac[1][1] += (*deta_coords) * vt[1][inode];
-    }
-
-    detJac = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
-
-   //JacI
+     //JacI
+    type_mov JacJacT[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
+    type_mov JacJacT_inv[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
+    
+    for (unsigned i = 0; i < 2/*dim*/; i++)
+        for (unsigned j = 0; j < 2/*dim*/; j++)
+            for (unsigned k = 0; k < space_dim; k++) JacJacT[i][j] += Jac[i][k]*Jac[j][k];
+            
+    type_mov detJacJacT = (JacJacT[0][0] * JacJacT[1][1] - JacJacT[0][1] * JacJacT[1][0]);
+            
+    type_mov area = sqrt(detJacJacT);
+    
+    JacJacT_inv[0][0] =  JacJacT[1][1] / detJacJacT;
+    JacJacT_inv[0][1] = -JacJacT[0][1] / detJacJacT;
+    JacJacT_inv[1][0] = -JacJacT[1][0] / detJacJacT;
+    JacJacT_inv[1][1] =  JacJacT[0][0] / detJacJacT;
+        
     JacI.resize(space_dim);
-    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
-
-    JacI[0][0] =  Jac[1][1] / detJac;
-    JacI[0][1] = -Jac[0][1] / detJac;
-    JacI[1][0] = -Jac[1][0] / detJac;
-    JacI[1][1] =  Jac[0][0] / detJac;
+    for (unsigned d = 0; d < space_dim; d++) { JacI[d].resize(dim);  std::fill(JacI[d].begin(),JacI[d].end(),0.); }
+    
+    for (unsigned i = 0; i < space_dim; i++)
+        for (unsigned j = 0; j < dim; j++)
+            for (unsigned k = 0; k < dim; k++) JacI[i][j] += Jac[k][i]*JacJacT_inv[k][j];
 
     
      }

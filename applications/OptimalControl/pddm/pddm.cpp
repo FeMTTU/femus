@@ -69,7 +69,7 @@ int main(int argc, char** args) {
   else if (DOMAIN_DIM == 2) {
 //     if ( DIRECTION == 0)      infile = "./input/Mesh_2_yz.med";
 //     else if (DIRECTION == 1)  infile = "./input/Mesh_2_xz.med";
-    /*else if (DIRECTION == 2)*/  infile = "./input/Mesh_2_xy.med";
+    /*else if (DIRECTION == 2)*/  infile = "./input/Mesh_2_xz.med";
   }
   
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups);
@@ -323,7 +323,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-//     msh->_finiteElement[kelGeom][solFEType_u]->Jacobian(coords, ig, weight, phi_u, phi_u_x, phi_u_xx);
     msh->_finiteElement[kelGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
     
     msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, space_dim);
