@@ -6,9 +6,8 @@
 #include "NumericVector.hpp"
 
 
-#define DOMAIN_DIM 2
 
-#define DIRECTION 0 //0 x, 1 y, 2 z
+#define JACSUR 1
 
 
 using namespace femus;
@@ -26,7 +25,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   const double tolerance = 1.e-5;
   
-//   if( x[DIRECTION] < 0. + tolerance || x[DIRECTION] > 1. - tolerance) { ///@todo I would like to set these from the mesh file as well!
   if (face_name == 1) {
       dirichlet = true;
         value = 0.;
@@ -61,16 +59,14 @@ int main(int argc, char** args) {
   
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
   std::string infile("");
-  if (DOMAIN_DIM == 1) { 
-    if ( DIRECTION == 0) infile = "./input/Mesh_1_x.med";
-    else if (DIRECTION == 1) infile = "./input/Mesh_1_y.med";
-    else if (DIRECTION == 2) infile = "./input/Mesh_1_z.med";
-  }
-  else if (DOMAIN_DIM == 2) {
-//     if ( DIRECTION == 0)      infile = "./input/Mesh_2_yz.med";
-//     else if (DIRECTION == 1)  infile = "./input/Mesh_2_xz.med";
-    /*else if (DIRECTION == 2)*/  infile = "./input/Mesh_2_xz.med";
-  }
+   
+//     infile = "./input/Mesh_1_x.med";
+//     infile = "./input/Mesh_1_y.med";
+//     infile = "./input/Mesh_1_z.med";
+//     infile = "./input/Mesh_2_xy.med";
+//     infile = "./input/Mesh_2_xz.med";
+//     infile = "./input/Mesh_2_yz.med";
+//     infile = "./input/Mesh_3_xyz.med";
   
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
@@ -189,15 +185,14 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   }
  //***************************************************
  
-  const unsigned dim_max = 3;
   const unsigned space_dim = 3;
   
  // stuff for the surface jacobian ***************************************************   
-  vector < vector < double > > coords_ext(dim_max);    // local coordinates
+  vector < vector < double > > coords_ext(space_dim);    // local coordinates
   for (unsigned i = 0; i < coords_ext.size(); i++) {
     coords_ext[i].reserve(maxSize);
   } 
-  std::vector<double> normal(dim_max,0.);
+  std::vector<double> normal(space_dim,0.);
  //***************************************************   
 
  
@@ -257,13 +252,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //******************** GEOMETRY ********************* 
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);
     
-    for (int i = 0; i < dim; i++)  coords[i].resize(nDofx);
+    for (unsigned jdim = 0; jdim < coords.size(); jdim++) coords[jdim].resize(nDofx);
     
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);  
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
+      for (unsigned jdim = 0; jdim < coords.size(); jdim++) {
         coords[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);
       }
     }
@@ -316,7 +311,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //========= gauss value quantities ==================   
 	double sol_u_gss = 0.;
 	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
-	std::vector<double> sol_u_x_gss_sur(dim);     std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
+	std::vector<double> sol_u_x_gss_sur(space_dim);     std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
  //===================================================   
 
       // *** Gauss point loop ***
@@ -327,7 +322,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     
     msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, space_dim);
 
-    ///@todo do the comparison between the area coming from Jacobian and from JacobianSur !!!
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	
@@ -361,8 +355,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-	  if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
-// 	  if (i < nDof_u)                      Res[0      + i] += - weight_sur * ( phi_u_sur[i] * (  -1. ) - laplace_res_du_u_i_sur);
+#if JACSUR == 0
+          if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
+#elif JACSUR == 1           
+	  if (i < nDof_u)                          Res[0      + i] += - weight_sur * ( phi_u_sur[i] * (  -1. ) - laplace_res_du_u_i_sur);
+#endif
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -388,8 +385,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
+#if JACSUR == 0
 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_mat_du_u;
-// 	      if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight_sur * laplace_mat_du_u_sur;
+#elif JACSUR == 1           
+	      if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight_sur * laplace_mat_du_u_sur;
+#endif
               
             } // end phi_j loop
           } // endif assemble_matrix

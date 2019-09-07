@@ -196,3 +196,10 @@ Ok, it seems like:
 
  When you do a Sketch, remove the Interaction Style Switch (white mouse icon)
  
+##################################
+###### SALOME - ROTATIONS ########
+##################################
+
+If you have to rotate, do not do that in the Geometry, because then the Mesh will not follow.
+If you do it in the Mesh, the Geometry does not follow either.
+

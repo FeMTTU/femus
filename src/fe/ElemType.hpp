@@ -370,12 +370,10 @@ namespace femus
     // function part ====================
     Weight = det * _gauss.GetGaussWeightsPointer()[ig];
     
-    ///@todo warning the surface gradient is missing!!!!!!!!!!!!!!!
-       
     phi.resize(_nc);
-    gradphi.resize(_nc * space_dim);
     
-     const double* dxi = _dphidxi[ig];
+    gradphi.resize(_nc * space_dim);  std::fill(gradphi.begin(),gradphi.end(),0.);
+    const double* dxi = _dphidxi[ig];
 
     for(int inode = 0; inode < _nc; inode++, dxi++) {
         
@@ -419,14 +417,9 @@ namespace femus
                                    
 // if you want to compute the normal to a 1d element, you need to know to what plane the boundary element belongs...                                   
                                 
-    // geometry part ====================
-    
-    JacI.resize(space_dim);
-    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
-
+    //Jac =====================
     std::vector < std::vector <type_mov> > Jac(dim);
     for (unsigned d = 0; d < dim; d++) { Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
-
 
       for (unsigned d = 0; d < space_dim; d++) {
     const double* dxi_coords = _dphidxi[ig];
@@ -436,15 +429,18 @@ namespace femus
       }
       
     
-    //JacI
+    //JacI ====================
     type_mov JacJacT[1][1]; JacJacT[0][0] = 0.; //1x1
     for (unsigned d = 0; d < space_dim; d++) JacJacT[0][0] += Jac[0][d]*Jac[0][d];
     detJac = sqrt(JacJacT[0][0]);
 
+    JacI.resize(space_dim);
+    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
+
     for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT[0][0];
 
-//===== normal vector ======
- //   normal module, also equal to the transformation area....
+   //===== normal vector ======
+   //   normal module, also equal to the transformation area....
    normal.resize(2); ///@todo this must change based on how my domain is oriented
     
     normal[0] =  Jac[0][1] / detJac;
@@ -499,6 +495,7 @@ namespace femus
 // | d xi / dx_3 |                              
 
                                 
+    //Jac =================
     std::vector < std::vector <type_mov> > Jac(dim);
     
     for (unsigned d = 0; d < dim; d++) { 
@@ -511,15 +508,15 @@ namespace femus
         }
      }
      
-    //JacI
+    //JacI  =================
+    type_mov JacJacT[1][1];  JacJacT[0][0] = 0.; //1x1
+    for (unsigned d = 0; d < space_dim; d++) JacJacT[0][0] += Jac[0][d]*Jac[0][d];
+    detJac = sqrt(JacJacT[0][0]);
+    
     JacI.resize(space_dim);
     for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
 
-    type_mov JacJacT = 0.; //1x1
-    for (unsigned d = 0; d < space_dim; d++) JacJacT += Jac[0][d]*Jac[0][d];
-    detJac = sqrt(JacJacT);
-    
-    for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT;
+    for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT[0][0];
 
   ///@todo in the old implementation shouldn't we take the absolute value??? I'd say we don't because it goes both on the lhs and on the rhs...
              
@@ -555,7 +552,7 @@ namespace femus
     const double* dxi2 = _d2phidxi2[ig];
 
     phi.resize(_nc);
-    gradphi.resize(_nc * space_dim);
+    gradphi.resize(_nc * space_dim);  std::fill(gradphi.begin(),gradphi.end(),0.);
     if(nablaphi) nablaphi->resize(_nc * space_dim);   ///@todo fix this: once space_dim was only 1
 
     
@@ -564,7 +561,7 @@ namespace femus
       phi[inode] = _phi[ig][inode];
       
       for (unsigned d = 0; d < space_dim; d++) gradphi[ inode * space_dim + d] = (*dxi) * JacI[d][0];
-//       gradphi[inode] = (*dxi) * JacI[0][0];
+
       if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI[0][0] * JacI[0][0]; ///@todo fix this
 
     }
@@ -1000,9 +997,7 @@ namespace femus
                                const unsigned dim,
                                const unsigned space_dim) const {
                 
-                                
-     normal.resize(3);
-
+    //Jac ===================
     type_mov Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
     const double* dxi_coords = _dphidxi[ig];
@@ -1018,12 +1013,13 @@ namespace femus
       Jac[1][2] += (*deta_coords) * vt[2][inode];
     }
 
-    //   normal module
+    //   normal  ===================
     type_mov nx = Jac[0][1] * Jac[1][2] - Jac[1][1] * Jac[0][2];
     type_mov ny = Jac[1][0] * Jac[0][2] - Jac[1][2] * Jac[0][0];
     type_mov nz = Jac[0][0] * Jac[1][1] - Jac[1][0] * Jac[0][1];
     type_mov invModn = 1. / sqrt(nx * nx + ny * ny + nz * nz);
 
+    normal.resize(3);
     normal[0] = (nx) * invModn;
     normal[1] = (ny) * invModn;
     normal[2] = (nz) * invModn;
@@ -1037,7 +1033,7 @@ namespace femus
               Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
               Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
 
-    //JacI
+    //JacI ===================
     type_mov JacJacT[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
     type_mov JacJacT_inv[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
     
@@ -1074,6 +1070,7 @@ namespace femus
                             const unsigned dim,
                             const unsigned space_dim) const {
                                                       
+     //Jac ===============
     std::vector < std::vector <type_mov> > Jac(dim);
     
     for (unsigned d = 0; d < dim; d++) { 
@@ -1089,7 +1086,7 @@ namespace femus
      }
      
 
-     //JacI
+     //JacI ===============
     type_mov JacJacT[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
     type_mov JacJacT_inv[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
     
@@ -1099,7 +1096,7 @@ namespace femus
             
     type_mov detJacJacT = (JacJacT[0][0] * JacJacT[1][1] - JacJacT[0][1] * JacJacT[1][0]);
             
-    type_mov area = sqrt(detJacJacT);
+    detJac = sqrt(detJacJacT);
     
     JacJacT_inv[0][0] =  JacJacT[1][1] / detJacJacT;
     JacJacT_inv[0][1] = -JacJacT[0][1] / detJacJacT;
@@ -1349,7 +1346,7 @@ namespace femus
     const double* dzetadxi = _d2phidzetadxi[ig];
 
     phi.resize(_nc);
-    gradphi.resize(_nc * 3);
+    gradphi.resize(_nc * 3);  std::fill(gradphi.begin(),gradphi.end(),0.);
     if(nablaphi) nablaphi->resize(_nc * 6);
     
     
