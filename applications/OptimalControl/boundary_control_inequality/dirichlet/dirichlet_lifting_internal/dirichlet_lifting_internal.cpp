@@ -12,33 +12,39 @@
 
 using namespace femus;
 
-double InitialValueActFlag(const std::vector < double >& x) {
-  return 0.;
+
+
+double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+
+    double value = 0.;
+
+    if(!strcmp(name,"state")) {
+        value = 0.;
+    }
+    else if(!strcmp(name,"control")) {
+        value = 0.;
+    }
+    else if(!strcmp(name,"adjoint")) {
+        value = 0.;
+    }
+    else if(!strcmp(name,"mu")) {
+        value = 0.;
+    }
+    else if(!strcmp(name,"TargReg")) {
+        value = ElementTargetFlag(x);
+    }
+    else if(!strcmp(name,"ContReg")) {
+        value = ControlDomainFlag_internal_restriction(x);
+    }
+    else if(!strcmp(name,"act_flag")) {
+        value = 0.;
+    }
+
+
+    return value;
 }
 
-double InitialValueContReg(const std::vector < double >& x) {
-  return ControlDomainFlag_internal_restriction(x);
-}
 
-double InitialValueTargReg(const std::vector < double >& x) {
-  return ElementTargetFlag(x);
-}
-
-double InitialValueState(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueAdjoint(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueMu(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueControl(const std::vector < double >& x) {
-  return 0.;
-}
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
@@ -71,76 +77,76 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
 
-  // init Petsc-MPI communicator
+  // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
-    // ======= Files ========================
+  // ======= Files ========================
   Files files; 
         files.CheckIODirectories();
-	files.RedirectCout();
+        files.RedirectCout();
 
   // ======= Quad Rule ========================
   std::string fe_quad_rule("seventh");
   
-  // define multilevel mesh
-  MultiLevelMesh mlMsh;
-  double scalingFactor = 1.;
-
-//   mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+  // ======= Mesh  ==================
+  MultiLevelMesh ml_mesh;
+  
+//   ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
  
   std::string input_file = "square_parametric.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
-  mlMsh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+  ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
-  mlMsh.PrintInfo();
+  ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  ml_mesh.PrintInfo();
 
-  // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution mlSol(&mlMsh);
+    // ======= Solution ========================
+  MultiLevelSolution ml_sol(&ml_mesh);
 
-  // add variables to mlSol
-  mlSol.AddSolution("state", LAGRANGE, FIRST);
-  mlSol.AddSolution("control", LAGRANGE, FIRST);
-  mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
-  mlSol.AddSolution("mu", LAGRANGE, FIRST);  
-  mlSol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  mlSol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution("state", LAGRANGE, FIRST);
+  ml_sol.AddSolution("control", LAGRANGE, FIRST);
+  ml_sol.AddSolution("adjoint", LAGRANGE, FIRST);
+  ml_sol.AddSolution("mu", LAGRANGE, FIRST);  
+  ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   const unsigned int fake_time_dep_flag = 2;  //this is needed to be able to use _SolOld
   const std::string act_set_flag_name = "act_flag";
-  mlSol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   
-  mlSol.Initialize("All");    // initialize all varaibles to zero
-
-  mlSol.Initialize("state", InitialValueState);
-  mlSol.Initialize("control", InitialValueControl);
-  mlSol.Initialize("adjoint", InitialValueAdjoint);
-  mlSol.Initialize("mu", InitialValueMu);
-  mlSol.Initialize("TargReg", InitialValueTargReg);
-  mlSol.Initialize("ContReg", InitialValueContReg);
-  mlSol.Initialize(act_set_flag_name.c_str(), InitialValueActFlag);
-
-  // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.GenerateBdc("state");
-  mlSol.GenerateBdc("control");
-  mlSol.GenerateBdc("adjoint");
-  mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work...
-
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
+  // ======= Problem ========================
+  MultiLevelProblem ml_prob(&ml_sol);
   
-  mlProb.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-  mlProb.SetFilesHandler(&files);
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.SetFilesHandler(&files);
 
- // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = mlProb.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+  // ======= Solution: Initial Conditions ==================
+  ml_sol.Initialize("All");    // initialize all variables to zero
+
+  ml_sol.Initialize("state",       Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("control",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("adjoint",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("mu",          Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
+
+  // ======= Solution: Boundary Conditions ==================
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.GenerateBdc("state");
+  ml_sol.GenerateBdc("control");
+  ml_sol.GenerateBdc("adjoint");
+  ml_sol.GenerateBdc("mu");
+
+
+  // ======= System ==================
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
   
   system.SetActiveSetFlagName(act_set_flag_name);
 
@@ -152,8 +158,8 @@ int main(int argc, char** args) {
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleLiftRestrProblem);
   
-  mlSol.SetWriter(VTK);
-  mlSol.GetWriter()->SetDebugOutput(true);
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
   
   system.SetDebugNonlinear(true);
   system.SetDebugFunction(ComputeIntegral);
@@ -163,10 +169,10 @@ int main(int argc, char** args) {
   system.init();
   system.MGsolve();
   
-  // print solutions
+  // ======= Print ==================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
-  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
+  ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
 
   return 0;
 }
@@ -184,7 +190,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
 
-  MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
@@ -222,8 +228,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
  
   unsigned solIndex_u;
-  solIndex_u = mlSol->GetIndex("state");    // get the position of "state" in the ml_sol object
-  unsigned solType_u = mlSol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
+  solIndex_u = ml_sol->GetIndex("state");    // get the position of "state" in the ml_sol object
+  unsigned solType_u = ml_sol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
 
   unsigned solPdeIndex_u;
   solPdeIndex_u = mlPdeSys->GetSolPdeIndex("state");    // get the position of "state" in the pdeSys object
@@ -247,8 +253,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   phi_ctrl_xx.reserve(maxSize * dim2);
   
   unsigned solIndex_ctrl;
-  solIndex_ctrl = mlSol->GetIndex("control");
-  unsigned solType_ctrl = mlSol->GetSolutionType(solIndex_ctrl);
+  solIndex_ctrl = ml_sol->GetIndex("control");
+  unsigned solType_ctrl = ml_sol->GetSolutionType(solIndex_ctrl);
 
   unsigned solPdeIndex_ctrl;
   solPdeIndex_ctrl = mlPdeSys->GetSolPdeIndex("control");
@@ -273,8 +279,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  
   
   unsigned solIndex_adj;
-  solIndex_adj = mlSol->GetIndex("adjoint");    // get the position of "adjoint" in the ml_sol object
-  unsigned solType_adj = mlSol->GetSolutionType(solIndex_adj);    // get the finite element type for "adjoint"
+  solIndex_adj = ml_sol->GetIndex("adjoint");    // get the position of "adjoint" in the ml_sol object
+  unsigned solType_adj = ml_sol->GetSolutionType(solIndex_adj);    // get the finite element type for "adjoint"
 
   unsigned solPdeIndex_adj;
   solPdeIndex_adj = mlPdeSys->GetSolPdeIndex("adjoint");    // get the position of "adjoint" in the pdeSys object
@@ -297,20 +303,20 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   phi_mu_xx.reserve(maxSize * dim2);
     
   unsigned solIndex_mu;
-  solIndex_mu = mlSol->GetIndex("mu");    // get the position of "mu" in the ml_sol object
+  solIndex_mu = ml_sol->GetIndex("mu");    // get the position of "mu" in the ml_sol object
    
   unsigned solPdeIndex_mu;
   solPdeIndex_mu = mlPdeSys->GetSolPdeIndex("mu");
   
-  unsigned solType_mu = mlSol->GetSolutionType(solIndex_mu);    // get the finite element type for "mu"
+  unsigned solType_mu = ml_sol->GetSolutionType(solIndex_mu);    // get the finite element type for "mu"
   vector < double >  sol_mu;   sol_mu.reserve(maxSize);
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   
  //************** act flag **************************** 
    std::string act_flag_name = "act_flag";
-   unsigned int solIndex_act_flag = mlSol->GetIndex(act_flag_name.c_str());
-   unsigned int solFEType_act_flag = mlSol->GetSolutionType(solIndex_act_flag); 
+   unsigned int solIndex_act_flag = ml_sol->GetIndex(act_flag_name.c_str());
+   unsigned int solFEType_act_flag = ml_sol->GetSolutionType(solIndex_act_flag); 
       if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
         *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
       }
@@ -354,8 +360,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
     SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
-    SolIndex[ivar]	= mlSol->GetIndex        (Solname[ivar].c_str());
-    SolFEType[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
+    SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
+    SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
     vector < unsigned > Sol_n_el_dofs(n_unknowns);
@@ -888,7 +894,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   Mesh*                          msh = ml_prob._ml_msh->GetLevel(level);
 
-  MultiLevelSolution*          mlSol = ml_prob._ml_sol;
+  MultiLevelSolution*          ml_sol = ml_prob._ml_sol;
   Solution*                      sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
   const unsigned     dim = msh->GetDimension();                                 // get the domain dimension of the problem
@@ -924,8 +930,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
  
   unsigned solIndex_u;
-  solIndex_u = mlSol->GetIndex("state");
-  unsigned solType_u = mlSol->GetSolutionType(solIndex_u);
+  solIndex_u = ml_sol->GetIndex("state");
+  unsigned solType_u = ml_sol->GetSolutionType(solIndex_u);
 
   vector < double >  sol_u; // local solution
   sol_u.reserve(maxSize);
@@ -945,8 +951,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   phi_ctrl_xx.reserve(maxSize * dim2);
   
   unsigned solIndex_ctrl;
-  solIndex_ctrl = mlSol->GetIndex("control");
-  unsigned solType_ctrl = mlSol->GetSolutionType(solIndex_ctrl);
+  solIndex_ctrl = ml_sol->GetIndex("control");
+  unsigned solType_ctrl = ml_sol->GetSolutionType(solIndex_ctrl);
 
   vector < double >  sol_ctrl; // local solution
   sol_ctrl.reserve(maxSize);
@@ -969,8 +975,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  
   
 //  unsigned solIndex_udes;
-//   solIndex_udes = mlSol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
-//   unsigned solType_udes = mlSol->GetSolutionType(solIndex_udes);    // get the finite element type for "state"
+//   solIndex_udes = ml_sol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
+//   unsigned solType_udes = ml_sol->GetSolutionType(solIndex_udes);    // get the finite element type for "state"
 
   vector < double >  sol_udes; // local solution
   sol_udes.reserve(maxSize);

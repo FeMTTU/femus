@@ -133,13 +133,13 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
 
-    // init Petsc-MPI communicator
+  // ======= Init ========================
     FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
     // ======= Files ========================
     Files files;
-    files.CheckIODirectories();
-    files.RedirectCout();
+          files.CheckIODirectories();
+          files.RedirectCout();
 
     // ======= Quad Rule ========================
     std::string fe_quad_rule("seventh");
@@ -156,7 +156,8 @@ int main(int argc, char** args) {
 //     std::string mesh_file = "./input/ext_box_50.med";
 //     std::string mesh_file = "./input/ext_box_2.med";
 //     std::string mesh_file = "./input/ext_box_longer.med";
-    ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), scalingFactor);
+    const double Lref = 1.;
+    ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), Lref);
 
     //ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
     unsigned numberOfUniformLevels = 3;
@@ -186,6 +187,7 @@ int main(int argc, char** args) {
     ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
     ml_prob.SetFilesHandler(&files);
 
+  // ======= Solution: Initial Conditions ==================
     ml_sol.Initialize("All");    // initialize all variables to zero
 
     ml_sol.Initialize("state",       Solution_set_initial_conditions, & ml_prob);
@@ -197,13 +199,13 @@ int main(int argc, char** args) {
     ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
     ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
 
-    // attach the boundary condition function and generate boundary data
+  // ======= Solution: Boundary Conditions ==================
     ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
     ml_sol.GenerateBdc("state");
     ml_sol.GenerateBdc("control");
     ml_sol.GenerateBdc("adjoint");
     ml_sol.GenerateBdc("adjoint_ext");
-    ml_sol.GenerateBdc("mu");  //we need add this to make the matrix iterations work...
+    ml_sol.GenerateBdc("mu");
 
     // ======= System ========================
     NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
@@ -226,7 +228,7 @@ int main(int argc, char** args) {
     system.SetDebugFunction(ComputeIntegral);
     // system.SetMaxNumberOfNonLinearIterations(4);
 
-    // initilaize and solve the system
+    // initialize and solve the system
     system.init();
 //     system.assemble_call(2);
     system.MGsolve();

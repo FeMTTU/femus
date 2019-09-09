@@ -16,33 +16,40 @@
 
 using namespace femus;
 
-double InitialValueActFlag(const std::vector < double >& x) {
-  return 0.;
+
+
+double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+
+    double value = 0.;
+
+    if(!strcmp(name,"state")) {
+        value = 0.;
+    }
+    else if(!strcmp(name,"control")) {
+        value = 0.;
+    }
+    else if(!strcmp(name,"adjoint")) {
+        value = 0.;
+    }
+    else if(!strcmp(name,"mu")) {
+        value = 0.;
+    }
+    else if(!strcmp(name,"TargReg")) {
+        value = ElementTargetFlag(x);
+    }
+    else if(!strcmp(name,"ContReg")) {
+        value = ControlDomainFlag_bdry(x);
+    }
+    else if(!strcmp(name,"act_flag")) {
+        value = 0.;
+    }
+
+
+    return value;
 }
 
-double InitialValueContReg(const std::vector < double >& x) {
-  return ControlDomainFlag_bdry(x);
-}
 
-double InitialValueTargReg(const std::vector < double >& x) {
-  return ElementTargetFlag(x);
-}
 
-double InitialValueState(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueAdjoint(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueMu(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueControl(const std::vector < double >& x) {
-  return 0.;
-}
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
@@ -85,27 +92,27 @@ void AssembleOptSys(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
 
-  // init Petsc-MPI communicator
+  // ======= Init ========================
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
   // ======= Files ========================
   Files files; 
-  files.CheckIODirectories();
-  files.RedirectCout();
+        files.CheckIODirectories();
+        files.RedirectCout();
 
   // ======= Quad Rule ========================
   std::string fe_quad_rule("seventh");
 
-  // define multilevel mesh
-  MultiLevelMesh ml_msh;
+  // ======= Mesh  ==================
+  MultiLevelMesh ml_mesh;
 
-//   ml_msh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+//   ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
   
   std::string input_file = "square_parametric.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
-  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+  ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(), Lref);
 
   
    //1: bottom  //2: right  //3: top  //4: left
@@ -114,14 +121,13 @@ int main(int argc, char** args) {
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
-  ml_msh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-  ml_msh.EraseCoarseLevels(numberOfUniformLevels - 1);
-  ml_msh.PrintInfo();
+  ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  ml_mesh.PrintInfo();
 
-  // define the multilevel solution and attach the ml_msh object to it
-  MultiLevelSolution ml_sol(&ml_msh);
+  // ======= Solution  ==================
+  MultiLevelSolution ml_sol(&ml_mesh);
 
-  // add variables to ml_sol
   ml_sol.AddSolution("state", LAGRANGE, FIRST);
   ml_sol.AddSolution("control", LAGRANGE, FIRST);
   ml_sol.AddSolution("adjoint", LAGRANGE, FIRST);
@@ -133,31 +139,32 @@ int main(int argc, char** args) {
   ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
   
+  // ======= Problem  ==================
+  MultiLevelProblem ml_prob(&ml_sol);
+  
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.SetFilesHandler(&files);
+
+  // ======= Solution: Initial Conditions ==================
   ml_sol.Initialize("All");    // initialize all varaibles to zero
 
-  ml_sol.Initialize("state", InitialValueState);
-  ml_sol.Initialize("control", InitialValueControl);
-  ml_sol.Initialize("adjoint", InitialValueAdjoint);
-  ml_sol.Initialize("mu", InitialValueMu);
-  ml_sol.Initialize("TargReg", InitialValueTargReg);
-  ml_sol.Initialize("ContReg", InitialValueContReg);
-  ml_sol.Initialize(act_set_flag_name.c_str(), InitialValueActFlag);
+  ml_sol.Initialize("state",       Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("control",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("adjoint",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("mu",          Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
 
-  // attach the boundary condition function and generate boundary data
+  // ======= Solution: Boundary Conditions ==================
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   ml_sol.GenerateBdc("state");
   ml_sol.GenerateBdc("control");
   ml_sol.GenerateBdc("adjoint");
-  ml_sol.GenerateBdc("mu");  //we need add this to make the matrix iterations work...
+  ml_sol.GenerateBdc("mu");
 
-  // define the multilevel problem attach the ml_sol object to it
-  MultiLevelProblem mlProb(&ml_sol);
-  
-  mlProb.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-  mlProb.SetFilesHandler(&files);
-
- // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = mlProb.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+  // ======= System ========================
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
   
   system.SetActiveSetFlagName(act_set_flag_name);
 //   system.SetMaxNumberOfNonLinearIterations(50);
@@ -180,8 +187,7 @@ int main(int argc, char** args) {
   system.init();
   system.MGsolve();
   
- 
-  // print solutions
+  // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
   ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
