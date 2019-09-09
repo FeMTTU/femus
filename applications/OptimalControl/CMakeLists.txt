@@ -30,6 +30,6 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   ADD_SUBDIRECTORY(./nsopt/)
   ADD_SUBDIRECTORY(./solidopt/)
   ADD_SUBDIRECTORY(./frac_norm/)
-  ADD_SUBDIRECTORY(./pddm/)
+  ADD_SUBDIRECTORY(./00_laplacian_all_dims/)
   ADD_SUBDIRECTORY(./elliptic_nonlin/)
   
