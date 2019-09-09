@@ -51,7 +51,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
   bool dirichlet = true; //dirichlet
   value = 0.;
@@ -157,7 +157,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
   ml_sol.GenerateBdc("state");
   ml_sol.GenerateBdc("control");
   ml_sol.GenerateBdc("adjoint");
@@ -234,11 +234,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 
  //**************** geometry *********************************** 
+  constexpr unsigned int space_dim = 3;
+  
   unsigned solType_coords = 0; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-  vector < vector < double > > x(dim);
+  vector < vector < double > > coords_at_dofs(dim);
   vector < vector < double> >  coords_at_dofs_bdry(dim);
   for (unsigned i = 0; i < dim; i++) {
-         x[i].reserve(max_size);
+     coords_at_dofs[i].reserve(max_size);
 	 coords_at_dofs_bdry[i].reserve(max_size);
   }
   
@@ -409,13 +411,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
  //********************* GEOMETRY *********************
     unsigned nDofx = msh->GetElementDofNumber(iel, solType_coords);    // number of coordinate element dofs
-    for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
+    for (int i = 0; i < dim; i++)  coords_at_dofs[i].resize(nDofx);
     
     for (unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, solType_coords);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        coords_at_dofs[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
     
@@ -425,7 +427,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofx; i++) {
-         elem_center[j] += x[j][i];
+         elem_center[j] += coords_at_dofs[j][i];
        }
     }
     
@@ -645,7 +647,7 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
   //========= fill gauss value xyz ==================   
   
           if (ielGeom != QUAD) { std::cout << "VolumeShapeAtBoundary not implemented" << std::endl; abort(); } 
-		  msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->VolumeShapeAtBoundary(x,coords_at_dofs_bdry,jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+		  msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->VolumeShapeAtBoundary(coords_at_dofs,coords_at_dofs_bdry,jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
 //           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
 // 		      for (int iv = 0; iv < nDof_adj; iv++)  {
@@ -872,9 +874,10 @@ if ( i_vol == j_vol )  {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	msh->_finiteElement[ielGeom][SolFEType[pos_state]]  ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
-    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->Jacobian(x, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
-    msh->_finiteElement[ielGeom][solType_coords]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
+//     msh->_finiteElement[ielGeom][SolFEType[pos_state]]  ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+	msh->_finiteElement[ielGeom][SolFEType[pos_state]]  ->Jacobian(coords_at_dofs, ig, weight, phi_u, phi_u_x, phi_u_xx);
+    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->Jacobian(coords_at_dofs, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
+    msh->_finiteElement[ielGeom][solType_coords]->Jacobian(coords_at_dofs, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
           
 	sol_u_gss = 0.;
 	sol_adj_gss = 0.;

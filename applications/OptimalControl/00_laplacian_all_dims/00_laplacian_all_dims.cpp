@@ -5,6 +5,7 @@
 #include "LinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
+#include "CurrentElem.hpp"
 
 
 #define JACSUR 0
@@ -65,8 +66,8 @@ int main(int argc, char** args) {
 //     infile = "./input/Mesh_1_z.med";
 //     infile = "./input/Mesh_2_xy.med";
 //     infile = "./input/Mesh_2_xz.med";
-//     infile = "./input/Mesh_2_yz.med";
-    infile = "./input/Mesh_3_xyz.med";
+    infile = "./input/Mesh_2_yz.med";
+//     infile = "./input/Mesh_3_xyz.med";
   
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
@@ -177,25 +178,17 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id();
 
- //***************************************************  
-  vector < vector < double > > coords(dim);    // local coordinates
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-  for (unsigned i = 0; i < dim; i++) {
-    coords[i].reserve(maxSize);
-  }
- //***************************************************
- 
-  const unsigned space_dim = 3;
+  //=============== Geometry ========================================
+  unsigned xType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
   
- // stuff for the surface jacobian ***************************************************   
-  vector < vector < double > > coords_ext(space_dim);    // local coordinates
-  for (unsigned i = 0; i < coords_ext.size(); i++) {
-    coords_ext[i].reserve(maxSize);
-  } 
+  CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
+    
+  constexpr unsigned int space_dim = 3;
+  
   std::vector<double> normal(space_dim,0.);
- //***************************************************   
+ //***************************************************  
 
- 
+
  //******************** quadrature *******************************  
   double weight; 
   double weight_sur; 
@@ -247,45 +240,10 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned kelGeom = msh->GetElementType(iel);
+    geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
+        
+    short unsigned kelGeom = geom_element.geom_type();  //msh->GetElementType(iel);
 
- //******************** GEOMETRY ********************* 
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);
-    
-    for (unsigned jdim = 0; jdim < coords.size(); jdim++) coords[jdim].resize(nDofx);
-    
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);  
-
-      for (unsigned jdim = 0; jdim < coords.size(); jdim++) {
-        coords[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);
-      }
-    }
-
- //***************************************************  
-
- 
- //***************************************************  
-    for (int i = 0; i < coords_ext.size(); i++)  coords_ext[i].resize(nDofx);
-    
-     for (unsigned i = 0; i < nDofx; i++) {
-      for (unsigned jdim = 0; jdim < coords_ext.size(); jdim++) {
-          coords_ext[jdim][i]  = 0.;      
-          
-       }
-     }
-     
-     for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);  
-
-      for (unsigned jdim = 0; jdim < coords_ext.size(); jdim++) {
-        coords_ext[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);
-       }
-     }
- //***************************************************  
- 
- 
  
  //**************** state **************************** 
     unsigned nDof_u     = msh->GetElementDofNumber(iel, solFEType_u);
@@ -319,9 +277,9 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
 #if JACSUR == 0
-    msh->_finiteElement[kelGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+    msh->_finiteElement[kelGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[kelGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
 #elif JACSUR == 1           
-    msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[kelGeom][xType], coords_ext, ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, space_dim);
+    msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[kelGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, space_dim);
 #endif
 
 //--------------    
