@@ -139,16 +139,15 @@ You must open that script and change the INSTALLDIR variable with the path of th
 Another alternative to view the content of an HDF5 file is to use the 'h5dump' utility shipped with HDF5 (installed through PETSc, for instance)
 
 
-##################################
-###### SALOME ####################
-##################################
+#############################################
+###### SALOME - HOW TO MESH #################
+#############################################
 
  Use the NoteBook tab to define variables and parametrize your operations!
 
 - Geometry
 
-Draw points and lines
-Create faces
+Create faces (Draw points and lines if needed, or create Faces directly)
    --> Extract edges from a face (Explode)
    
 - Mesh 
@@ -166,13 +165,43 @@ In Mesh:
           To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
      --> Rename it to "Mesh" + something!!!
      
-- Then, Groups of Mesh elements (must be named Group_X_Y)
+- Then, Groups of Mesh elements 
+  (must be named Group_X_Y, where X is the flag given to the object and Y is the type of boundary condition (0 = Dirichlet, 1 = Neumann). What about the groups that are not for boundary conditions?)
 
   In order to enforce Boundary Conditions, Material Properties, and potentially other things too,
   we have to define Groups of Edges, or Faces, or Volumes (Groups of Nodes for the extremes of a 1d domain)
   
   The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
 
+#############################################
+###### SALOME - HOW TO MESH - 3D ############
+#############################################
+
+- If I want to create a mesh of a Box with 3 arbitrary mesh discretizations in the 3 directions,
+  what is the best way to do that?
+  
+- If your mesh can be thought of as an Extrusion of a 2D mesh, one way to do this 
+  is simply to do your 2D mesh and then to 
+
+I cannot creat a Submesh of a Submesh
+
+- Geometry
+  Create Volumes
+    ---> Extract Faces from a Volume
+    ---> Extract Edges from 2 faces in order to do Submesh of 3 edges in the x,y,z directions
+- Mesh 
+  I'd say I'll treat a Face like I do in 2D, and then do a Mapping to opposite Faces...
+  You don't want to do Automatic Hexahedralization or Tetrahedralization...
+  
+- Another method could perhaps be to create 1d meshes and Propagate their Hypothesis on opposite edges!
+  Global Algorithms:
+    3d: Hexahedron (i,j,k)
+    2d: Quadrangle mapping
+    1d: Wire discretization  - Here sometimes it gives trouble if you don't specify any "Number of Segments"...
+    
+    Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
+    
+    
   
 ##################################
 ###### SALOME - SHAPER MODULE ####
