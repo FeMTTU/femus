@@ -140,7 +140,7 @@ int main (int argc, char** args) {
         systemP[k]->AddSolutionToSystemPDE (Uxname[k].c_str());
         systemP[k]->init();
       }
-      systemP[dim] = &mlProb.add_system < LinearImplicitSystem > ("Pu");
+      systemP[dim] = &mlProb.add_system < LinearImplicitSystem > ("Pu");// this will be the Identity matrix
       systemP[dim]->AddSolutionToSystemPDE ("u");
       systemP[dim]->init();
 
@@ -798,12 +798,12 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielGeom][solType]->Jacobian (x, ig, weight, phi, phi_x);
       phi2 = (solType != 1) ? msh->_finiteElement[ielGeom][solType]->GetPhi (ig) : msh->_finiteElement[ielGeom][2]->GetPhi (ig);
 
-      vector < double > xGauss (dim, 0.);
-      for (unsigned i = 0; i < nDofs; i++) {
-        for (unsigned k = 0; k < dim; k++) {
-          xGauss[k] += x[k][i] * phi[i];
-        }
-      }
+//       vector < double > xGauss (dim, 0.);
+//       for (unsigned i = 0; i < nDofs; i++) {
+//         for (unsigned k = 0; k < dim; k++) {
+//           xGauss[k] += x[k][i] * phi[i];
+//         }
+//       }
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofs; i++) {
         sol->_Sol[solwIndex]->add (sysDof[i], phi2[i] * weight);
@@ -875,7 +875,7 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofs; i++) {
         for (unsigned k = 0; k < dim; k++) {
-          aRes[k][i] += solux_g[k] * phi2[i] * weight / solw[i];
+          aRes[k][i] += solux_g[k] * phi2[i] * weight / solw[i]; //smoothed gradient part.
         }
       } // end phi_i loop
     } // end gauss point loop

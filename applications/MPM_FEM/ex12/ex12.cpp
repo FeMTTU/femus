@@ -113,6 +113,8 @@ int main (int argc, char** args) {
     maxNumberOfMeshes = 2;
   }
 
+  std::cout<<"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
+  
   vector < double > l2Norm (maxNumberOfMeshes);
   vector < double > semiNorm (maxNumberOfMeshes);
 
@@ -775,10 +777,10 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofsU; i++) {
         for (unsigned k = 0; k < dim; k++) {
           for (unsigned l = 0; l < dim; l++) {  
-            aRes[dim2 + k][i] += 0.005 * (solux[k][l] + solux[l][k]) * phi_x[ i * dim + l] * weight; //regular diffusivity
+            //aRes[dim2 + k][i] += 0.005 * (solux[k][l] + solux[l][k]) * phi_x[ i * dim + l] * weight; //regular diffusivity
             //aRes[k * dim + l][i] += 0.005 * (solux[k][l] + solux[l][k]) * phi[i] * weight; //extended diffusivity
             
-            //aRes[dim2 + k][i] += 0.005 * (solUx[k][l] + solUx[l][k]) * phi_x[ i * dim + l] * weight; //mixed 1 diffusivity
+            aRes[dim2 + k][i] += 0.005 * (solUx[k][l] + solUx[l][k]) * phi_x[ i * dim + l] * weight; //mixed 1 diffusivity
             //aRes[k * dim + l][i] += 0.005 * (solux[k][l] + solux[l][k]) * phi[i] * weight; //mixed 2 diffusivity
                         
             aRes[dim2 + k][i] += phi[i] * solu[l] * solUx[k][l] * weight; //regular convection
