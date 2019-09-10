@@ -243,10 +243,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   std::vector<double> normal(space_dim,0.);
  //***************************************************  
 
-  vector < vector < double> >  coords_at_dofs_bdry(dim);
-  for (unsigned i = 0; i < dim; i++) {
-	 coords_at_dofs_bdry[i].reserve(max_size);
-  }
+//   vector < vector < double> >  coords_at_dofs_bdry(dim);
+//   for (unsigned i = 0; i < dim; i++) {
+// 	 coords_at_dofs_bdry[i].reserve(max_size);
+//   }
   
   vector < double > coord_at_qp_bdry(dim);
   
@@ -478,19 +478,22 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
           
 //========= compute coordinates of boundary nodes on each element ========================================== 
-		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
-	        for (unsigned idim = 0; idim < dim; idim++) {  coords_at_dofs_bdry[idim].resize(nve_bdry); }
-		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
-		for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
-		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-                  unsigned iDof = msh->GetSolutionDof(i_vol, iel, solType_coords);
-		  for(unsigned idim=0; idim<dim; idim++) {
-		      coords_at_dofs_bdry[idim][i_bdry]=(*msh->_topology->_Sol[idim])(iDof);
-		  }
-		}
+       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+
+       const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
+       const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
+
+// 	        for (unsigned idim = 0; idim < dim; idim++) {  coords_at_dofs_bdry[idim].resize(nve_bdry); }
+// 		for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
+// 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+//                   unsigned iDof = msh->GetSolutionDof(i_vol, iel, solType_coords);
+// 		  for(unsigned idim=0; idim<dim; idim++) {
+// 		      coords_at_dofs_bdry[idim][i_bdry]=(*msh->_topology->_Sol[idim])(iDof);
+// 		  }
+// 		}
 //==========================================================================================================   
  
-          std::vector < double > elem_center_bdry(dim, 0.);  elem_center_bdry =  face_elem_center(coords_at_dofs_bdry);
+          std::vector < double > elem_center_bdry(dim, 0.);  elem_center_bdry =  face_elem_center(geom_element.get_coords_at_dofs_bdry_3d());
 
 	    // look for boundary faces
             const int bdry_index = el->GetFaceElementIndex(iel,jface);
@@ -512,7 +515,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
         
   update_active_set_flag_for_current_nonlinear_iteration_bdry
-   (msh, sol, iel, jface, solType_coords, coords_at_dofs_bdry, sol_eldofs, Sol_n_el_dofs, 
+   (msh, sol, iel, jface, solType_coords, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
     pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
  
  // ===================================================
@@ -598,10 +601,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 std::cout << "Outside ig = " << ig_bdry << " ";
       for (unsigned d = 0; d < 1; d++) std::cout << xi_one_dim[d] << " ";
             
-		  msh->_finiteElement[felt_bdry][SolFEType[pos_state]]->JacobianSur(coords_at_dofs_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
-          msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]]->JacobianSur(coords_at_dofs_bdry,ig_bdry,weight_bdry,phi_u_bdry,phi_u_x_bdry,normal);
-		  msh->_finiteElement[felt_bdry][SolFEType[pos_adj]]->JacobianSur(coords_at_dofs_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
-		  msh->_finiteElement[felt_bdry][solType_coords]->JacobianSur(coords_at_dofs_bdry,ig_bdry,weight_bdry,phi_coords_bdry,phi_coords_x_bdry,normal);
+		  msh->_finiteElement[felt_bdry][SolFEType[pos_state]]->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
+          msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]] ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_u_bdry,phi_u_x_bdry,normal);
+		  msh->_finiteElement[felt_bdry][SolFEType[pos_adj]]  ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
+		  msh->_finiteElement[felt_bdry][solType_coords]      ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_coords_bdry,phi_coords_x_bdry,normal);
       
  //========= fill gauss value xyz ==================   
    // it is the JacobianSur function that defines the mapping between real quadrature points and reference quadrature points 
@@ -624,8 +627,8 @@ std::cout << "Outside ig = " << ig_bdry << " ";
       
    std::fill(coord_at_qp_bdry.begin(), coord_at_qp_bdry.end(), 0.);
     for (unsigned  d = 0; d < dim; d++) {
-        	for (unsigned i = 0; i < coords_at_dofs_bdry[d].size(); i++) {
-               coord_at_qp_bdry[d] += coords_at_dofs_bdry[d][i] * phi_coords_bdry[i];
+        	for (unsigned i = 0; i < geom_element.get_coords_at_dofs_bdry_3d()[d].size(); i++) {
+               coord_at_qp_bdry[d] += geom_element.get_coords_at_dofs_bdry_3d()[d][i] * phi_coords_bdry[i];
             }
 std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
     }
@@ -633,7 +636,7 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
   //========= fill gauss value xyz ==================   
   
           if (ielGeom != QUAD) { std::cout << "VolumeShapeAtBoundary not implemented" << std::endl; abort(); } 
-		  msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->VolumeShapeAtBoundary(geom_element.get_coords_at_dofs(),coords_at_dofs_bdry,jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+		  msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->VolumeShapeAtBoundary(geom_element.get_coords_at_dofs(),geom_element.get_coords_at_dofs_bdry_3d(),jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
 //           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
 // 		      for (int iv = 0; iv < nDof_adj; iv++)  {
@@ -649,7 +652,7 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
 		  double dx_dcurv_abscissa = 0.;
 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]]);
 		 double * myptr = myptr = myeltype->GetDPhiDXi(ig_bdry);
-		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dcurv_abscissa += myptr[inode] * coords_at_dofs_bdry[axis_direction_control_side][inode];
+		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dcurv_abscissa += myptr[inode] * geom_element.get_coords_at_dofs_bdry_3d()[axis_direction_control_side][inode];
   
 		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) {
                             for (int d = 0; d < dim; d++) {

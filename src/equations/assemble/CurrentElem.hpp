@@ -124,17 +124,21 @@ class CurrentElem {
    
    const vector < vector < real_num_mov > > & get_coords_at_dofs() const {  return _coords_at_dofs; }
    const vector < vector < real_num_mov > > & get_coords_at_dofs_3d() const {  return _coords_at_dofs_3d; }
+   const vector < vector < real_num_mov > > & get_coords_at_dofs_bdry_3d() const {  return _coords_at_dofs_bdry_3d; }
    
    const real_num_mov & get_coords_at_dofs(const unsigned int idim,  const unsigned int idof) const {  return _coords_at_dofs[idim][idof]; }
    const real_num_mov & get_coords_at_dofs_3d(const unsigned int idim,  const unsigned int idof) const {  return _coords_at_dofs_3d[idim][idof]; }
  
+  
+  void   set_coords_at_dofs_bdry_3d(const unsigned int iel, const unsigned int jface, const unsigned int solType_coords);
+
   private:
 
   std::vector < std::vector < real_num_mov > >  _coords_at_dofs;         // must be adept if the domain is moving, otherwise double
   std::vector < std::vector < real_num_mov > >  _coords_at_dofs_3d;      // must be adept if the domain is moving, otherwise double
   std::vector< real_num_mov > _elem_center_3d;                           // element center point
   
-    std::vector < std::vector < real_num_mov > >  _coords_at_dofs_3d_bdry;         // must be adept if the domain is moving, otherwise double
+    std::vector < std::vector < real_num_mov > >  _coords_at_dofs_bdry_3d;         // must be adept if the domain is moving, otherwise double
 
   const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
   /*const */unsigned _max_size_elem_dofs;                   // conservative: based on line3, quad9, hex27
@@ -149,8 +153,6 @@ class CurrentElem {
                             const unsigned int xType,
                             std::vector < std::vector < real_num_mov > > & coords_at_dofs_in, 
                             const unsigned int space_dim);
-  
-  void   set_coords_at_dofs_bdry(const unsigned int iel, const unsigned int jface, const unsigned int solType_coords);
 
 // === OLD =====================================================================================
   const std::vector<const elem_type*>  &  _elem_type;
@@ -205,8 +207,8 @@ template < typename real_num_mov >
   
   _elem_center_3d.resize(3);
         
-  _coords_at_dofs_3d_bdry.resize(space_dim);
-  for (unsigned i = 0; i < space_dim; i++)  _coords_at_dofs_3d_bdry[i].reserve(_max_size_elem_dofs);
+  _coords_at_dofs_bdry_3d.resize(space_dim);
+  for (unsigned i = 0; i < space_dim; i++)  _coords_at_dofs_bdry_3d[i].reserve(_max_size_elem_dofs);
   
     }
     
@@ -250,22 +252,21 @@ template < typename real_num_mov >
   
    
   template < typename real_num_mov >
-  void CurrentElem<real_num_mov>::set_coords_at_dofs_bdry(const unsigned int iel, const unsigned int jface, const unsigned int solType_coords) {
+  void CurrentElem<real_num_mov>::set_coords_at_dofs_bdry_3d(const unsigned int iel, const unsigned int jface, const unsigned int solType_coords) {
 
       constexpr unsigned int space_dim = 3;
       
     		unsigned nve_bdry = _mesh_new->GetElementFaceDofNumber(iel, jface, solType_coords);
             
-	        for (unsigned idim = 0; idim < space_dim; idim++) {  _coords_at_dofs_3d_bdry[idim].resize(nve_bdry); }
+	        for (unsigned idim = 0; idim < space_dim; idim++) {  _coords_at_dofs_bdry_3d[idim].resize(nve_bdry); }
 		const unsigned felt_bdry = _mesh_new->GetElementFaceType(iel, jface);    
 		for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
 		  unsigned int i_vol = _mesh_new->GetLocalFaceVertexIndex(iel, jface, i_bdry);
                   unsigned iDof = _mesh_new->GetSolutionDof(i_vol, iel, solType_coords);
 		  for(unsigned idim=0; idim < space_dim; idim++) {
-		      _coords_at_dofs_3d_bdry[idim][i_bdry] = (*_mesh_new->_topology->_Sol[idim])(iDof);
+		      _coords_at_dofs_bdry_3d[idim][i_bdry] = (*_mesh_new->_topology->_Sol[idim])(iDof);
 		  }
 		}  
-      
       
       
   }   
@@ -289,7 +290,6 @@ template < typename real_num_mov >
     
    for (unsigned j = 0; j < 3; j++) { _elem_center_3d[j] = _elem_center_3d[j]/nDofx; } 
       
-   return; 
   }    
 
 
