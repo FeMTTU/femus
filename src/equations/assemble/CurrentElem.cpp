@@ -43,7 +43,6 @@ template < typename real_num_mov >
   _el_conn.resize(elnodes);
   _el_conn_new.resize(elnodes);   
    _xx_nds.resize(_mesh.get_dim()*elnodes);
-    _el_xm.resize(_mesh.get_dim());  
 //========== Current "Geometric Element"  ========================
 
 //========== Current "Equation Element"  ========================
@@ -205,28 +204,7 @@ void CurrentElem<real_num_mov>::PrintOrientation() const {
 // The mesh is there to provide you with the list of ALL DOF OBJECTS for that element.
 
 
-// ========================================================
-///Compute the element center
 
-template < typename real_num_mov >
-  void CurrentElem<real_num_mov>::SetMidpoint() {
-
-    const uint mesh_dim = _mesh.get_dim();
-    const uint el_nnodes   = _el_conn.size();
-
-       for (uint idim=0; idim< mesh_dim; idim++)  _el_xm[idim]=0.;
-
-    for (uint idim=0; idim< mesh_dim; idim++) {
-       for (uint eln=0; eln<el_nnodes; eln++)    { 
-        const uint indxn = eln+idim*el_nnodes;
-	     _el_xm[idim]   +=   _xx_nds[indxn];
-       }
-     }
-
-  for (uint idim=0; idim< mesh_dim; idim++)   _el_xm[idim]= _el_xm[idim]/el_nnodes;
-  
-   return; 
-  }
 
    // =====================================================================================
 template < typename real_num_mov >

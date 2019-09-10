@@ -51,9 +51,7 @@ class CurrentElem {
       return _dim;
     }
     
-    inline const double*  GetMidpoint() const {
-      return &_el_xm[0];
-    }
+
     
     inline const uint*  GetConn() const {
       return &_el_conn[0];
@@ -88,7 +86,6 @@ class CurrentElem {
     
     void  SetDofobjConnCoords();
     
-    void  SetMidpoint();
     
     void  PrintOrientation() const;
     
@@ -117,7 +114,11 @@ class CurrentElem {
 
   
   // ========= NEW ===============================================================================
-  inline short unsigned int geom_type() const { return geom_elem_type; }
+   inline const std::vector< real_num_mov > & get_elem_center() const {    return _elem_center_3d;  }
+    
+   void  set_elem_center(const unsigned int iel, const unsigned int xType);
+    
+   inline short unsigned int geom_type() const { return geom_elem_type; }
   
    void set_coords_at_dofs_and_geom_type(const unsigned int dim,  const unsigned int xType);
    
@@ -129,8 +130,12 @@ class CurrentElem {
  
   private:
 
-  std::vector < std::vector < real_num_mov > >  _coords_at_dofs;      // must be adept if the domain is moving, otherwise double
+  std::vector < std::vector < real_num_mov > >  _coords_at_dofs;         // must be adept if the domain is moving, otherwise double
   std::vector < std::vector < real_num_mov > >  _coords_at_dofs_3d;      // must be adept if the domain is moving, otherwise double
+  std::vector< real_num_mov > _elem_center_3d;                           // element center point
+  
+    std::vector < std::vector < real_num_mov > >  _coords_at_dofs_3d_bdry;         // must be adept if the domain is moving, otherwise double
+
   const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
   /*const */unsigned _max_size_elem_dofs;                   // conservative: based on line3, quad9, hex27
   const Mesh * _mesh_new;
@@ -141,10 +146,11 @@ class CurrentElem {
   void   set_geom_type(const unsigned int iel) {    geom_elem_type = _mesh_new->GetElementType(iel); }
 
   void   set_coords_at_dofs(const unsigned int iel, 
-                                          const unsigned int xType,
-                                          std::vector < std::vector < real_num_mov > > & coords_at_dofs_in, 
-                                          const unsigned int space_dim);
+                            const unsigned int xType,
+                            std::vector < std::vector < real_num_mov > > & coords_at_dofs_in, 
+                            const unsigned int space_dim);
   
+  void   set_coords_at_dofs_bdry(const unsigned int iel, const unsigned int jface, const unsigned int solType_coords);
 
 // === OLD =====================================================================================
   const std::vector<const elem_type*>  &  _elem_type;
@@ -163,7 +169,6 @@ class CurrentElem {
    uint    _vol_iel_DofObj;     /// i need to put the element also.
    std::vector<uint>   _el_conn_new;
    std::vector<double> _xx_nds;              /// vector of the node coordinates for that element     [_spacedimension*NNDS];  // this must become a vect of vect
-   std::vector<double> _el_xm;               /// element center point                                [_spacedimension];
    const uint _mesh_vb;     //index for the mesh
 
    const uint _Level;  //the level to which the element belongs
@@ -197,8 +202,12 @@ template < typename real_num_mov >
         
   _coords_at_dofs_3d.resize(space_dim);
   for (unsigned i = 0; i < space_dim; i++)  _coords_at_dofs_3d[i].reserve(_max_size_elem_dofs);
+  
+  _elem_center_3d.resize(3);
         
-        
+  _coords_at_dofs_3d_bdry.resize(space_dim);
+  for (unsigned i = 0; i < space_dim; i++)  _coords_at_dofs_3d_bdry[i].reserve(_max_size_elem_dofs);
+  
     }
     
     
@@ -237,9 +246,53 @@ template < typename real_num_mov >
     
     
   }
+  
+  
+   
+  template < typename real_num_mov >
+  void CurrentElem<real_num_mov>::set_coords_at_dofs_bdry(const unsigned int iel, const unsigned int jface, const unsigned int solType_coords) {
+
+      constexpr unsigned int space_dim = 3;
+      
+    		unsigned nve_bdry = _mesh_new->GetElementFaceDofNumber(iel, jface, solType_coords);
+            
+	        for (unsigned idim = 0; idim < space_dim; idim++) {  _coords_at_dofs_3d_bdry[idim].resize(nve_bdry); }
+		const unsigned felt_bdry = _mesh_new->GetElementFaceType(iel, jface);    
+		for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
+		  unsigned int i_vol = _mesh_new->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+                  unsigned iDof = _mesh_new->GetSolutionDof(i_vol, iel, solType_coords);
+		  for(unsigned idim=0; idim < space_dim; idim++) {
+		      _coords_at_dofs_3d_bdry[idim][i_bdry] = (*_mesh_new->_topology->_Sol[idim])(iDof);
+		  }
+		}  
+      
+      
+      
+  }   
+  
+  
+// ========================================================
+///Compute the element center
+
+template < typename real_num_mov >
+  void CurrentElem<real_num_mov>::set_elem_center(const unsigned int iel, const unsigned int solType_coords) {
+
+  unsigned nDofx = _mesh_new->GetElementDofNumber(iel, solType_coords);
+
+  std::fill(_elem_center_3d.begin(), _elem_center_3d.end(), 0.);
     
+  for (unsigned j = 0; j < 3; j++) {  
+      for (unsigned i = 0; i < nDofx; i++) {
+         _elem_center_3d[j] += _coords_at_dofs_3d[j][i];
+       }
+    }
     
-    
+   for (unsigned j = 0; j < 3; j++) { _elem_center_3d[j] = _elem_center_3d[j]/nDofx; } 
+      
+   return; 
+  }    
+
+
 
 } //end namespace femus
 

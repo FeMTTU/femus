@@ -242,7 +242,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
     geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
         
-    short unsigned kelGeom = geom_element.geom_type();  //msh->GetElementType(iel);
+    short unsigned kelGeom = geom_element.geom_type();
 
  
  //**************** state **************************** 

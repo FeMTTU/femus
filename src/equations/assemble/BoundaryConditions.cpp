@@ -231,14 +231,14 @@ void BoundaryConditions::GenerateBdc() {
                 CurrentElem<double>       currelem(iel,isubd,Level,BB,_dofmap->_eqn,_dofmap->_mesh,_dofmap->_eqn->GetMLProb().GetElemType(),mymsh);
 
 	        currelem.SetDofobjConnCoords();
-                currelem.SetMidpoint();
+                currelem.set_elem_center(iel,BIQUADR_FE);
 
  	    for (uint ivar=0; ivar< _dofmap->_n_vars; ivar++)  bc_flag[ivar] = DEFAULT_BC_FLAG; //this is necessary here to re-clean!
 
       uint count = 0;
         for (uint i = 0; i < _dofmap->_eqn->GetUnknownQuantitiesVector().size(); i++) {
 	  std::vector<int>  bc_temp(_dofmap->_eqn->GetUnknownQuantitiesVector()[i]->_dim,DEFAULT_BC_FLAG);
-	  _dofmap->_eqn->GetUnknownQuantitiesVector()[i]->bc_flag_txyz(0.,currelem.GetMidpoint(),bc_temp);
+// 	  _dofmap->_eqn->GetUnknownQuantitiesVector()[i]->bc_flag_txyz(0.,currelem.get_elem_center(),bc_temp);
 	  for (uint j = 0; j < _dofmap->_eqn->GetUnknownQuantitiesVector()[i]->_dim; j++) {
 	    bc_flag[count] = bc_temp[j];
 	    count++;

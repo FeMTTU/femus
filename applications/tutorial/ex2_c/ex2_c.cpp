@@ -459,6 +459,7 @@ void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
 
 
         geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
+        short unsigned ielGeom = geom_element.geom_type();
 
         
         for (unsigned  u = 0; u < n_unknowns; u++) {
@@ -489,16 +490,16 @@ void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
         if (dim != 2) abort(); //only implemented in 2D now
 
         // *** Gauss point loop ***
-        for (unsigned ig = 0; ig < quad_rules[geom_element.geom_type()].GetGaussPointsNumber(); ig++) {
+        for (unsigned ig = 0; ig < quad_rules[ielGeom].GetGaussPointsNumber(); ig++) {
 
             //here we'll first compute the jacobian inverse and pass that one to the other routines
             // *** get gauss point weight, test function and test function partial derivatives ***
             for (unsigned  u = 0; u < n_unknowns; u++) {
-                 msh->_finiteElement[geom_element.geom_type()][unknowns_local[u].fe_type()] ->Jacobian_non_isoparametric( msh->_finiteElement[geom_element.geom_type()][xType], geom_element.get_coords_at_dofs(), ig, weight_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess(), dim, dim);
+                 msh->_finiteElement[ielGeom][unknowns_local[u].fe_type()] ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs(), ig, weight_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess(), dim, dim);
             }
 
 //       msh->_finiteElement[geom_element.geom_type()][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
-            msh->_finiteElement[geom_element.geom_type()][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, geom_element_phi_dof_qp.phi(), geom_element_phi_dof_qp.phi_grad(), geom_element_phi_dof_qp.phi_hess());
+            msh->_finiteElement[ielGeom][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, geom_element_phi_dof_qp.phi(), geom_element_phi_dof_qp.phi_grad(), geom_element_phi_dof_qp.phi_hess());
 
             // evaluate the solution, the solution derivatives and the coordinates in the gauss point
             real_num solu_gss = 0.;

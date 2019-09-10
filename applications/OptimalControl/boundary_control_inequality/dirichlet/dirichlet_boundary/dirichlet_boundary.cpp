@@ -233,14 +233,18 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   double weight_bdry = 0.;
 
 
- //**************** geometry *********************************** 
+  //=============== Geometry ========================================
+   unsigned solType_coords = 0; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+ 
+  CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
+    
   constexpr unsigned int space_dim = 3;
   
-  unsigned solType_coords = 0; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-  vector < vector < double > > coords_at_dofs(dim);
+  std::vector<double> normal(space_dim,0.);
+ //***************************************************  
+
   vector < vector < double> >  coords_at_dofs_bdry(dim);
   for (unsigned i = 0; i < dim; i++) {
-     coords_at_dofs[i].reserve(max_size);
 	 coords_at_dofs_bdry[i].reserve(max_size);
   }
   
@@ -407,47 +411,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
+    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+        
+    short unsigned ielGeom = geom_element.geom_type();
 
- //********************* GEOMETRY *********************
-    unsigned nDofx = msh->GetElementDofNumber(iel, solType_coords);    // number of coordinate element dofs
-    for (int i = 0; i < dim; i++)  coords_at_dofs[i].resize(nDofx);
-    
-    for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, solType_coords);    // global to global mapping between coordinates node and coordinate dof // via local to global solution node
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-        coords_at_dofs[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
-      }
-    }
-    
-
- //*******************elem average point**************
-    vector < double > elem_center(dim);   
-    for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
-  for (unsigned j = 0; j < dim; j++) {  
-      for (unsigned i = 0; i < nDofx; i++) {
-         elem_center[j] += coords_at_dofs[j][i];
-       }
-    }
-    
-   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
- //*************************************************** 
-  
-  
- //************* set target domain flag **************
-   int target_flag = 0;
-   target_flag = ElementTargetFlag(elem_center);
- //*************************************************** 
-   
-   
- //************ set control flag *********************
-  int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(elem_center);
-  std::vector<int> control_node_flag(nDofx,0);
-//   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
- //*************************************************** 
-    
     
         //all vars###################################################################
         for (unsigned  k = 0; k < n_unknowns; k++) {
@@ -462,6 +430,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
             }
         }
         //all vars###################################################################
+        
  
     unsigned int nDof_max          = ElementJacRes<double>::compute_max_n_dofs(Sol_n_el_dofs);
     
@@ -477,7 +446,24 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_AllVars.insert(L2G_dofmap_AllVars.end(),L2G_dofmap[k].begin(),L2G_dofmap[k].end());
  //***************************************************
 
-    
+      
+      
+  //************* set target domain flag **************
+   geom_element.set_elem_center(iel, solType_coords);
+
+   int target_flag = 0;
+   target_flag = ElementTargetFlag(geom_element.get_elem_center());
+ //*************************************************** 
+   
+
+ //************ set control flag *********************
+  int control_el_flag = 0;
+        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
+  std::vector<int> control_node_flag(Sol_n_el_dofs[pos_ctrl],0);
+ //*************************************************** 
+ 
+  
+  
  //===================================================   
 
 	// Perform face loop over elements that contain some control face
@@ -647,7 +633,7 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
   //========= fill gauss value xyz ==================   
   
           if (ielGeom != QUAD) { std::cout << "VolumeShapeAtBoundary not implemented" << std::endl; abort(); } 
-		  msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->VolumeShapeAtBoundary(coords_at_dofs,coords_at_dofs_bdry,jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+		  msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->VolumeShapeAtBoundary(geom_element.get_coords_at_dofs(),coords_at_dofs_bdry,jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
 //           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
 // 		      for (int iv = 0; iv < nDof_adj; iv++)  {
@@ -875,9 +861,9 @@ if ( i_vol == j_vol )  {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
 //     msh->_finiteElement[ielGeom][SolFEType[pos_state]]  ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
-	msh->_finiteElement[ielGeom][SolFEType[pos_state]]  ->Jacobian(coords_at_dofs, ig, weight, phi_u, phi_u_x, phi_u_xx);
-    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->Jacobian(coords_at_dofs, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
-    msh->_finiteElement[ielGeom][solType_coords]->Jacobian(coords_at_dofs, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
+	msh->_finiteElement[ielGeom][SolFEType[pos_state]] ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_u, phi_u_x, phi_u_xx);
+    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]   ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
+    msh->_finiteElement[ielGeom][solType_coords]       ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
           
 	sol_u_gss = 0.;
 	sol_adj_gss = 0.;
@@ -1242,7 +1228,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  //****** set control flag ***************************
   int control_el_flag = 0;
         control_el_flag = ControlDomainFlag_bdry(elem_center);
-  std::vector<int> control_node_flag(nDofx,0);
+  std::vector<int> control_node_flag(nDof_ctrl,0);
 //   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
  //***************************************************
 
