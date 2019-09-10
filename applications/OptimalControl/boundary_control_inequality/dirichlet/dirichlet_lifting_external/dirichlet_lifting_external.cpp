@@ -271,7 +271,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     const unsigned    iproc = msh->processor_id();
 
 //***************************************************
-
+  CurrentElem < double > geom_element(dim, msh); 
+  
     const int coords_fe_type = BIQUADR_FE;  //biquadratic
 
 //************** geometry (at dofs) *************************************
@@ -422,8 +423,11 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     // element loop: each process loops only on the elements that owns
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-        int group_flag         = msh->GetElementGroup(iel);
-        short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
+    geom_element.set_coords_at_dofs_and_geom_type(iel, coords_fe_type);
+        
+    short unsigned ielGeom = geom_element.geom_type();
+
+    int group_flag         = msh->GetElementGroup(iel);
 //    std::cout << " ======= grp_flag === " << group_flag << " ================== " << std::endl;
 //     int face_no         = msh->GetElementFaceNumber(iel);
 //     std::cout << " ======= face# === " << face_no << " ================== " << std::endl;
@@ -502,7 +506,11 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 
      for(unsigned jface = 0; jface < n_faces; jface++) {
             
-         //************** later try to avoid repeating this
+       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, coords_fe_type);
+ 
+       geom_element.set_elem_center_bdry_3d();
+
+       //************** later try to avoid repeating this
           compute_coordinates_bdry_one_face(coords_at_dofs_bdry, coords_fe_type, iel, jface, msh);
           
             unsigned nDofu_bdry    = msh->GetElementFaceDofNumber(iel,jface,SolFEType[pos_state]);
@@ -512,10 +520,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                 abort();
             }
          //************** later try to avoid repeating this - end
-            
-       std::vector < double > elem_center_bdry(dim);  elem_center_bdry =  face_elem_center(coords_at_dofs_bdry);
-        
-           interface_elem_flag[jface] = find_control_boundary_nodes(interface_node_flag, elem_center_bdry, nDofu_bdry, iel, jface, msh);
+                    
+           interface_elem_flag[jface] = find_control_boundary_nodes(interface_node_flag, geom_element.get_elem_center_bdry(), nDofu_bdry, iel, jface, msh);
     
         }
          //setting up control boundary region - end ***************************

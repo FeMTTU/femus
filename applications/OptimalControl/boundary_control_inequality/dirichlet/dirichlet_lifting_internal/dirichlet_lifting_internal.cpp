@@ -10,6 +10,8 @@
 #define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
 #include "../../param.hpp"
 
+#define FE_DOMAIN  2
+
 using namespace femus;
 
 
@@ -204,14 +206,14 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   
- //***************************************************  
-  vector < vector < double > > coords_at_dofs(dim);    // local coordinates
-  unsigned xType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-  for (unsigned i = 0; i < dim; i++) {
-    coords_at_dofs[i].reserve(maxSize);
-  }
- //***************************************************   
-
+  //=============== Geometry ========================================
+  unsigned solType_coords = FE_DOMAIN; //we do linear FE this time
+ 
+  CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
+    
+  constexpr unsigned int space_dim = 3;
+   //***************************************************  
+  
  //***************************************************  
   double weight; // gauss point weight
   
@@ -333,7 +335,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
  //***************************************************  
  //********* WHOLE SET OF VARIABLES ****************** 
-  const int solType_max = 2;  //biquadratic
 
   const int n_unknowns = 4;
  
@@ -382,35 +383,15 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
-
- //******************** GEOMETRY ********************* 
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-    for (int i = 0; i < dim; i++)  coords_at_dofs[i].resize(nDofx);
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);  // global to global mapping between coordinates node and coordinate dof
-
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-        coords_at_dofs[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
-      }
-    }
-
-   // elem average point 
-    vector < double > elem_center(dim);   
-    for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
-    for (unsigned j = 0; j < dim; j++) {  
-      for (unsigned i = 0; i < nDofx; i++) {
-         elem_center[j] += coords_at_dofs[j][i];
-       }
-    }
+    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+        
+    const short unsigned ielGeom = geom_element.geom_type();
     
-   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
- //***************************************************  
-  
- //****** set target domain flag ********************* 
+   geom_element.set_elem_center(iel, solType_coords);
+
+  //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ElementTargetFlag(elem_center);
+   target_flag = ElementTargetFlag(geom_element.get_elem_center());
  //*************************************************** 
    
     
@@ -476,7 +457,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
    
     for (unsigned i = 0; i < sol_actflag.size(); i++) {
         std::vector<double> node_coords_i(dim,0.);
-        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i];
+        for (unsigned d = 0; d < dim; d++) node_coords_i[d] = geom_element.get_coords_at_dofs()[d][i];
         ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
         ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
 
@@ -530,7 +511,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag_internal_restriction(elem_center);
+  control_el_flag = ControlDomainFlag_internal_restriction(geom_element.get_elem_center());
   std::vector<int> control_node_flag(nDof_ctrl,0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 
@@ -550,10 +531,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	msh->_finiteElement[ielGeom][solType_u]   ->Jacobian(coords_at_dofs, ig, weight, phi_u, phi_u_x, phi_u_xx);
-        msh->_finiteElement[ielGeom][solType_ctrl]->Jacobian(coords_at_dofs, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
-        msh->_finiteElement[ielGeom][solType_adj] ->Jacobian(coords_at_dofs, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
-	msh->_finiteElement[ielGeom][solType_mu]  ->Jacobian(coords_at_dofs, ig, weight, phi_mu, phi_mu_x, phi_mu_xx);
+	msh->_finiteElement[ielGeom][solType_u]   ->Jacobian(geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx);
+    msh->_finiteElement[ielGeom][solType_ctrl]->Jacobian(geom_element.get_coords_at_dofs_3d(), ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
+    msh->_finiteElement[ielGeom][solType_adj] ->Jacobian(geom_element.get_coords_at_dofs_3d(), ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
+	msh->_finiteElement[ielGeom][solType_mu]  ->Jacobian(geom_element.get_coords_at_dofs_3d(), ig, weight, phi_mu, phi_mu_x, phi_mu_xx);
 
 	
     sol_u_gss = 0.;
@@ -903,12 +884,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   const unsigned   iproc = msh->processor_id(); 
 
- //*************************************************** 
-  vector < vector < double > > x(dim);    // local coordinates
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-  for (unsigned i = 0; i < dim; i++) {
-    x[i].reserve(maxSize);
-  }
+ //********** Geometry ***************************************** 
+ unsigned solType_coords = FE_DOMAIN; //we do linear FE this time
+ 
+  CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
+    
+  constexpr unsigned int space_dim = 3;
  //*************************************************** 
 
  //*************************************************** 
@@ -985,13 +966,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  //*************************************************** 
  //*************************************************** 
 
-
- //*************************************************** 
- //********* WHOLE SET OF VARIABLES ****************** 
-  const int solType_max = 2;  //biquadratic
- //*************************************************** 
-
-  
  //********************* DATA ************************ 
   double u_des = DesiredTarget();
  //*************************************************** 
@@ -1003,41 +977,21 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
     
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
  
- //***************** GEOMETRY ************************ 
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-    for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+        
+    const short unsigned ielGeom = geom_element.geom_type();
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
-      }
-    }
+  //************* set target domain flag **************
+   geom_element.set_elem_center(iel, solType_coords);
 
-   // elem average point 
-    vector < double > elem_center(dim);   
-   for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
-   for (unsigned j = 0; j < dim; j++) {  
-      for (unsigned i = 0; i < nDofx; i++) {
-         elem_center[j] += x[j][i];
-       }
-    }
-    
-   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
- //*************************************************** 
-  
- //************** set target domain flag *************
    int target_flag = 0;
-   target_flag = ElementTargetFlag(elem_center);
+   target_flag = ElementTargetFlag(geom_element.get_elem_center());
  //*************************************************** 
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag_internal_restriction(elem_center);
+  control_el_flag = ControlDomainFlag_internal_restriction(geom_element.get_elem_center());
  //*************************************************** 
    
  //**************** state **************************** 
@@ -1089,9 +1043,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	    msh->_finiteElement[ielGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
-        msh->_finiteElement[ielGeom][solType_u/*solTypeudes*/]->Jacobian(x, ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
-        msh->_finiteElement[ielGeom][solType_ctrl]  ->Jacobian(x, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
+	    msh->_finiteElement[ielGeom][solType_u]               ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_u, phi_u_x, phi_u_xx);
+        msh->_finiteElement[ielGeom][solType_u/*solTypeudes*/]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
+        msh->_finiteElement[ielGeom][solType_ctrl]            ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
 
 	u_gss = 0.;  for (unsigned i = 0; i < nDof_u; i++) u_gss += sol_u[i] * phi_u[i];		
 	ctrl_gss = 0.; for (unsigned i = 0; i < nDof_ctrl; i++) ctrl_gss += sol_ctrl[i] * phi_ctrl[i];  

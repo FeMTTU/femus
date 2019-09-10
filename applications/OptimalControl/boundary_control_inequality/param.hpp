@@ -281,27 +281,6 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
     
     
 
- std::vector< double > face_elem_center(const std::vector< std::vector< double > > & coords_at_dofs_bdry) {
-     
-     const unsigned int dim = coords_at_dofs_bdry.size();
-     
-            std::vector < double > elem_center_bdry(dim);
-            
-            for (unsigned j = 0; j < dim; j++) {  elem_center_bdry[j] = 0.;  }
-            
-            
-            for (unsigned j = 0; j < dim; j++) {
-                for (unsigned i = 0; i < coords_at_dofs_bdry[j].size(); i++) {
-                    elem_center_bdry[j] += coords_at_dofs_bdry[j][i];
-                }
-            }
-            for (unsigned j = 0; j < dim; j++) {
-                elem_center_bdry[j] = elem_center_bdry[j]/coords_at_dofs_bdry[j].size();
-            }
-            
-            return elem_center_bdry;
-            
- }
  
  
 #endif

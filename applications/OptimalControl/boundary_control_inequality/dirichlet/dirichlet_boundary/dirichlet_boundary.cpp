@@ -14,6 +14,10 @@
 
 #include "../../param.hpp"
 
+
+#define FE_DOMAIN  0 //with 2 it doesn't work
+
+
 using namespace femus;
 
 
@@ -228,13 +232,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
- //*****************integration ********************************** 
+  //=============== Integration ========================================
   double weight = 0.;
   double weight_bdry = 0.;
 
 
   //=============== Geometry ========================================
-   unsigned solType_coords = 0; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+   unsigned solType_coords = FE_DOMAIN; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
  
   CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
     
@@ -242,11 +246,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
   std::vector<double> normal(space_dim,0.);
  //***************************************************  
-
-//   vector < vector < double> >  coords_at_dofs_bdry(dim);
-//   for (unsigned i = 0; i < dim; i++) {
-// 	 coords_at_dofs_bdry[i].reserve(max_size);
-//   }
   
   vector < double > coord_at_qp_bdry(dim);
   
@@ -388,8 +387,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 
  //*************************************************** 
-  const int solType_max = 2;  //biquadratic
- 
   std::vector< double > Res;   Res.reserve( n_unknowns*max_size);
   std::vector < double > Jac;  Jac.reserve( n_unknowns*max_size * n_unknowns*max_size);
  //*************************************************** 
@@ -413,7 +410,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
     geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
         
-    short unsigned ielGeom = geom_element.geom_type();
+    const short unsigned ielGeom = geom_element.geom_type();
 
 
     
@@ -477,23 +474,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
           
-//========= compute coordinates of boundary nodes on each element ========================================== 
-       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
-
        const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
        const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
-
-// 	        for (unsigned idim = 0; idim < dim; idim++) {  coords_at_dofs_bdry[idim].resize(nve_bdry); }
-// 		for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
-// 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-//                   unsigned iDof = msh->GetSolutionDof(i_vol, iel, solType_coords);
-// 		  for(unsigned idim=0; idim<dim; idim++) {
-// 		      coords_at_dofs_bdry[idim][i_bdry]=(*msh->_topology->_Sol[idim])(iDof);
-// 		  }
-// 		}
-//==========================================================================================================   
+       
+       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
  
-          std::vector < double > elem_center_bdry(dim, 0.);  elem_center_bdry =  face_elem_center(geom_element.get_coords_at_dofs_bdry_3d());
+       geom_element.set_elem_center_bdry_3d();
 
 	    // look for boundary faces
             const int bdry_index = el->GetFaceElementIndex(iel,jface);
@@ -506,7 +492,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               
  //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-	      bool  dir_bool = ml_sol->GetBdcFunction()(elem_center_bdry,Solname[pos_ctrl].c_str(),tau,face_in_rectangle_domain,0.);
+	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element.get_elem_center_bdry(),Solname[pos_ctrl].c_str(),tau,face_in_rectangle_domain,0.);
 
  //=================================================== 
 
@@ -1056,17 +1042,17 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
+  //=============== Geometry ========================================
+   unsigned solType_coords = FE_DOMAIN;
+ 
+  CurrentElem < double > geom_element(dim, msh);
+    
+  constexpr unsigned int space_dim = 3;
+  
+  std::vector<double> normal(space_dim,0.);
  //***************************************************
-   const int solType_coords = 0;
-  vector < vector < double > > x(dim);
-  vector < vector < double> >  coords_at_dofs_bdry(dim);
-  for (unsigned i = 0; i < dim; i++) {
-         x[i].reserve(max_size);
-	 coords_at_dofs_bdry[i].reserve(max_size);
-  }
- //*************************************************** 
 
- //*************************************************** 
+  //=============== Integration ========================================
   double weight; // gauss point weight
   double weight_bdry = 0.; // gauss point weight on the boundary
 
@@ -1130,13 +1116,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  //***************************************************
  //*************************************************** 
   
-
- //***************************************************
- //********* WHOLE SET OF VARIABLES ****************** 
-  const int solType_max = 2;  //biquadratic
- //***************************************************
-
-  
  //********** DATA *********************************** 
   double u_des = DesiredTarget();
  //*************************************************** 
@@ -1149,35 +1128,15 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
-    
- //********* GEOMETRY ********************************* 
-    unsigned nDofx = msh->GetElementDofNumber(iel, solType_coords);    // number of coordinate element dofs
-    for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, solType_coords);
+    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+        
+    const short unsigned ielGeom = geom_element.geom_type();
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
-      }
-    }
+  //************* set target domain flag **************
+   geom_element.set_elem_center(iel, solType_coords);
 
-   // elem average point 
-    vector < double > elem_center(dim);   
-    for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
-    for (unsigned j = 0; j < dim; j++) {  
-      for (unsigned i = 0; i < nDofx; i++) {
-         elem_center[j] += x[j][i];
-       }
-    }
-    
-   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
- //***************************************************
-  
- //****** set target domain flag ********************* 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(elem_center);
+   target_flag = ElementTargetFlag(geom_element.get_elem_center());
  //***************************************************
 
    
@@ -1230,7 +1189,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  // ==================================================
  //****** set control flag ***************************
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(elem_center);
+        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
   std::vector<int> control_node_flag(nDof_ctrl,0);
 //   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
  //***************************************************
@@ -1243,8 +1202,17 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 	       
 	  // loop on faces of the current element
 
-	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+	  for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
           
+       const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
+       const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
+       
+
+       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+ 
+       geom_element.set_elem_center_bdry_3d();
+
+       
 	    // look for boundary faces
             const int bdry_index = el->GetFaceElementIndex(iel,jface);
             
@@ -1255,34 +1223,22 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
 	      if(  face == FACE_FOR_CONTROL) { //control face
 
- //========= compute coordinates of boundary nodes on each element ========================================== 
-		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
-	        for (unsigned idim = 0; idim < dim; idim++) {  coords_at_dofs_bdry[idim].resize(nve_bdry); }
-		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
-		for(unsigned i=0; i < nve_bdry; i++) {
-		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
-                  unsigned iDof = msh->GetSolutionDof(i_vol, iel, solType_coords);
-		  for(unsigned idim=0; idim<dim; idim++) {
-		      coords_at_dofs_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
-		  }
-		}
- //========================================================================================================== 
-		
+	
 		//============ initialize gauss quantities on the boundary ==========================================
                 double sol_ctrl_bdry_gss = 0.;
                 std::vector<double> sol_ctrl_x_bdry_gss(dim);
 		//============ initialize gauss quantities on the boundary ==========================================
 		
-		for(unsigned ig_bdry=0; ig_bdry < ml_prob.GetQuadratureRule(felt_bdry).GetGaussPointsNumber(); ig_bdry++) {
+		for(unsigned ig_bdry = 0; ig_bdry < ml_prob.GetQuadratureRule(felt_bdry).GetGaussPointsNumber(); ig_bdry++) {
 		  
-		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(coords_at_dofs_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
+		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
           const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
 		  double dx_dcurv_abscissa = 0.;
 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
 		 double * myptr = myptr = myeltype->GetDPhiDXi(ig_bdry);
-		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dcurv_abscissa += myptr[inode] * coords_at_dofs_bdry[axis_direction_control_side][inode];
+		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dcurv_abscissa += myptr[inode] * geom_element.get_coords_at_dofs_bdry_3d()[axis_direction_control_side][inode];
   
 		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) {
                             for (int d = 0; d < dim; d++) {
@@ -1327,11 +1283,11 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	msh->_finiteElement[ielGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
-    msh->_finiteElement[ielGeom][solType_u/*solTypeTdes*/]->Jacobian(x, ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
+	msh->_finiteElement[ielGeom][solType_u]               ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_u, phi_u_x, phi_u_xx);
+    msh->_finiteElement[ielGeom][solType_u/*solTypeTdes*/]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
 
-	u_gss = 0.;  for (unsigned i = 0; i < nDof_u; i++) u_gss += sol_u[i] * phi_u[i];		
-	udes_gss  = 0.; for (unsigned i = 0; i < nDof_udes; i++)  udes_gss  += sol_udes[i]  * phi_udes[i];  
+	u_gss     = 0.;  for (unsigned i = 0; i < nDof_u; i++)        u_gss += sol_u[i]     * phi_u[i];
+	udes_gss  = 0.;  for (unsigned i = 0; i < nDof_udes; i++)  udes_gss += sol_udes[i]  * phi_udes[i];  
 
                integral_target += target_flag * weight * (u_gss  - udes_gss) * (u_gss - udes_gss);
 	  

@@ -114,9 +114,11 @@ class CurrentElem {
 
   
   // ========= NEW ===============================================================================
-   inline const std::vector< real_num_mov > & get_elem_center() const {    return _elem_center_3d;  }
+   inline const std::vector< real_num_mov > & get_elem_center_bdry() const {    return _elem_center_bdry_3d;  }
+   inline const std::vector< real_num_mov > & get_elem_center()      const {    return _elem_center_3d;  }
     
    void  set_elem_center(const unsigned int iel, const unsigned int xType);
+   void  set_elem_center_bdry_3d();
     
    inline short unsigned int geom_type() const { return geom_elem_type; }
   
@@ -135,16 +137,18 @@ class CurrentElem {
   private:
 
   std::vector < std::vector < real_num_mov > >  _coords_at_dofs;         // must be adept if the domain is moving, otherwise double
-  std::vector < std::vector < real_num_mov > >  _coords_at_dofs_3d;      // must be adept if the domain is moving, otherwise double
+  std::vector < std::vector < real_num_mov > >  _coords_at_dofs_3d;
   std::vector< real_num_mov > _elem_center_3d;                           // element center point
   
-    std::vector < std::vector < real_num_mov > >  _coords_at_dofs_bdry_3d;         // must be adept if the domain is moving, otherwise double
+  std::vector < std::vector < real_num_mov > >  _coords_at_dofs_bdry_3d;
+  std::vector< real_num_mov > _elem_center_bdry_3d;
 
   const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
   /*const */unsigned _max_size_elem_dofs;                   // conservative: based on line3, quad9, hex27
   const Mesh * _mesh_new;
   short unsigned int geom_elem_type;
   
+  static constexpr unsigned int _space_dim = 3;
   
 // private functions
   void   set_geom_type(const unsigned int iel) {    geom_elem_type = _mesh_new->GetElementType(iel); }
@@ -205,10 +209,14 @@ template < typename real_num_mov >
   _coords_at_dofs_3d.resize(space_dim);
   for (unsigned i = 0; i < space_dim; i++)  _coords_at_dofs_3d[i].reserve(_max_size_elem_dofs);
   
-  _elem_center_3d.resize(3);
-        
+  _elem_center_3d.resize(space_dim);
+
+  //bdry
   _coords_at_dofs_bdry_3d.resize(space_dim);
   for (unsigned i = 0; i < space_dim; i++)  _coords_at_dofs_bdry_3d[i].reserve(_max_size_elem_dofs);
+  
+    _elem_center_bdry_3d.resize(space_dim);
+
   
     }
     
@@ -292,7 +300,24 @@ template < typename real_num_mov >
       
   }    
 
-
+  
+template < typename real_num_mov >
+ void CurrentElem<real_num_mov>::set_elem_center_bdry_3d() {
+     
+            
+           std::fill(_elem_center_bdry_3d.begin(), _elem_center_bdry_3d.end(), 0.);
+            
+            for (unsigned j = 0; j < _space_dim; j++) {
+                for (unsigned i = 0; i <       _coords_at_dofs_bdry_3d[j].size(); i++) {
+                    _elem_center_bdry_3d[j] += _coords_at_dofs_bdry_3d[j][i];
+                }
+            }
+            
+            for (unsigned j = 0; j < _space_dim; j++) {
+                _elem_center_bdry_3d[j] = _elem_center_bdry_3d[j]/_coords_at_dofs_bdry_3d[j].size();
+            }
+                        
+ }
 
 } //end namespace femus
 
