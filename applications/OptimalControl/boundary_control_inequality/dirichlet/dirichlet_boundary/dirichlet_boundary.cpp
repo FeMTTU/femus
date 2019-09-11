@@ -18,6 +18,9 @@
 #define FE_DOMAIN  0 //with 2 it doesn't work
 
 ///@todo do a very weak impl of Laplacian
+///@todo Review the ordering for phi_ctrl_x_bdry
+///@todo implement VolumeShapeAtBoundary in 3d elems and triangles
+
 
 using namespace femus;
 
