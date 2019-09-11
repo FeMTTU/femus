@@ -107,13 +107,13 @@ int main (int argc, char** args) {
     maxNumberOfMeshes = 10;
   }
   else if (dim == 2) {
-    maxNumberOfMeshes = 7;
+    maxNumberOfMeshes = 2;
   }
   else {
     maxNumberOfMeshes = 2;
   }
 
-  std::cout<<"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
+ // std::cout<<"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
   
   vector < double > l2Norm (maxNumberOfMeshes);
   vector < double > semiNorm (maxNumberOfMeshes);
@@ -623,10 +623,15 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
 
   Proj = SparseMatrix::build().release();
   Proj->init (dim2 + dim + 1, dim + 1, P);
+  
+  double tolerance = 1.0e-14;
+  Proj->RemoveZeroEntries (tolerance);
 
-  //MatView ( (static_cast< PetscMatrix* > (Proj))->mat(), PETSC_VIEWER_STDOUT_WORLD);
+  MatView ( (static_cast< PetscMatrix* > (Proj))->mat(), PETSC_VIEWER_STDOUT_WORLD);
 
 }
+
+unsigned counter = 0;
 
 void AssembleWithProjection (MultiLevelProblem& ml_prob) {
 
@@ -745,7 +750,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielGeom][solTypeU]->Jacobian (x, ig, weight, phi, phi_x);
       phiP = msh->_finiteElement[ielGeom][solTypeP]->GetPhi (ig);
 
-      std::vector < adept::adouble > solu (dim, 0.);
+      std::vector < adept::adouble > solU (dim, 0.);
       std::vector < std::vector < adept::adouble > > solux (dim);
       std::vector < std::vector < adept::adouble > > solUx (dim);
       for (unsigned k = 0; k < dim; k++) {
@@ -756,11 +761,11 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofsU; i++) {
         for (unsigned k = 0; k < dim; k++) {
           for (unsigned l = 0; l < dim; l++) {
-            solUx[k][l] += phi[i] * sol[ k * dim + l][i]; //regular solution gradient
-            solux[k][l] += phi_x[i * dim + l] * sol[ dim2 + k][i]; //extended solution gradient
+            solUx[k][l] += phi[i] * sol[ k * dim + l][i]; //extended solution gradient 
+            solux[k][l] += phi_x[i * dim + l] * sol[ dim2 + k][i]; //regular solution gradient
             //gradSolV_gss[k][j] += solV[k][i] * phiV_x[i * dim + j];
           }
-          solu[k] += phi[i] * sol[dim2 + k][i];
+          solU[k] += phi[i] * sol[dim2 + k][i];
         }
       }
       adept::adouble solP = 0.;
@@ -773,31 +778,40 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
       //GetExactSolutionGradient (xGauss , exactSolGrad);
       //double exactSolLaplace = GetExactSolutionLaplace (xGauss);
 
+      double ReI = 0.001;
+      bool extended = true;
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofsU; i++) {
         for (unsigned k = 0; k < dim; k++) {
-          for (unsigned l = 0; l < dim; l++) {  
-            //aRes[dim2 + k][i] += 0.005 * (solux[k][l] + solux[l][k]) * phi_x[ i * dim + l] * weight; //regular diffusivity
-            //aRes[k * dim + l][i] += 0.005 * (solux[k][l] + solux[l][k]) * phi[i] * weight; //extended diffusivity
-            
-            aRes[dim2 + k][i] += 0.005 * (solUx[k][l] + solUx[l][k]) * phi_x[ i * dim + l] * weight; //mixed 1 diffusivity
-            //aRes[k * dim + l][i] += 0.005 * (solux[k][l] + solux[l][k]) * phi[i] * weight; //mixed 2 diffusivity
-                        
-            aRes[dim2 + k][i] += phi[i] * solu[l] * solUx[k][l] * weight; //regular convection
-            //aRes[dim2 + k][i] += phi[i] * solu[l] * solUx[k][l] * weight; //extended convection
+          if(extended){
+            for (unsigned l = 0; l < dim; l++) {  
+              aRes[k * dim + l][i] += ReI * (solux[k][l] + solux[l][k]) * phi[i] * weight; //extended diffusivity 
+              //aRes[dim2 + k][i] += ReI * (solUx[k][l] + solUx[l][k]) * phi_x[ i * dim + l] * weight; //mixed 1 diffusivity
+              //aRes[k * dim + l][i] += ReI * (solux[k][l] + solux[l][k]) * phi[i] * weight; //mixed 2 diffusivity
+              aRes[dim2 + k][i] += phi[i] * solU[l] * solux[k][l] * weight; //extended convection
+            }
+            aRes[k * dim + k][i] -= solP * phi[i] * weight; //extended gradient
           }
-          aRes[dim2 + k][i] -= solP * phi_x[ i * dim + k]  * weight; //regular gradient
-          //aRes[k * dim + k][i] -= solP * phi[i] * weight; //extended gradient
+          else{
+            for (unsigned l = 0; l < dim; l++) {  
+              aRes[dim2 + k][i] += ReI * (solux[k][l] + solux[l][k]) * phi_x[ i * dim + l] * weight; //regular diffusivity
+              aRes[dim2 + k][i] += phi[i] * solU[l] * solUx[k][l] * weight; //regular convection
+            }
+            aRes[dim2 + k][i] -= solP * phi_x[ i * dim + k]  * weight; //regular gradient
+          }
         }
       } // end phi_i loop
 
       for (unsigned i = 0; i < nDofsP; i++) {
         for (unsigned k = 0; k < dim; k++) {
-          aRes[dim2 + dim][i] -= phiP[i] * solux[k][k] * weight; //regular divergence  
-          //aRes[dim2 + dim][i] -= phiP[i] * solUx[k][k] * weight; //extended divergence
+          if(extended){
+            aRes[dim2 + dim][i] -= phiP[i] * solux[k][k] * weight; //extended divergence  
+          }
+          else{
+            aRes[dim2 + dim][i] -= phiP[i] * solUx[k][k] * weight; //regular divergence  
+          }
         }
       }
-      
     } // end gauss point loop
 
     res.resize ( (dim2 + dim) * nDofsU + nDofsP);
@@ -847,8 +861,11 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
   SparseMatrix *K1 = sys1->_KK; ;
   NumericVector* RES1  = sys1->_RES;
 
-  K1->matrix_PtAP (*Proj, *K, false);
+  bool mathReuse = (counter == 0) ? false : true;
+  K1->matrix_PtAP (*Proj, *K, mathReuse);
   RES1->matrix_mult_transpose (*RES, *Proj);
+  counter++;
+  
 
 //  MatView((static_cast< PetscMatrix* > (K1))->mat(),PETSC_VIEWER_STDOUT_WORLD);
 //

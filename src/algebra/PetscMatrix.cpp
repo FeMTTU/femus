@@ -155,8 +155,8 @@ namespace femus {
     }
 
     this->_is_initialized = true;
-    MatGetSize (_mat, &_n, &_m);
-    MatGetLocalSize (_mat, &_n_l, &_m_l);
+    MatGetSize (_mat, &_m, &_n);
+    MatGetLocalSize (_mat, &_m_l, &_n_l);
     _destroy_mat_on_exit = true;
 
   }
@@ -750,6 +750,66 @@ namespace femus {
       this->_is_initialized = true;
     }
     CHKERRABORT (MPI_COMM_WORLD, ierr);
+  }
+  
+  // // ============================================================  
+  
+  void PetscMatrix::RemoveZeroEntries(double & tolerance){
+    
+    int start,end;
+    MatGetOwnershipRange(_mat, &start, &end);
+    
+    std::vector < int > sizeDiag(end - start, 0);
+    std::vector < int > sizeOff(end - start, 0);
+    
+    std::vector < std::vector < int > > nCols(end - start);
+    std::vector < std::vector < double > > nVals(end - start);
+    
+    int n;
+    const int *cols;
+    const double *vals;
+    
+    for(int i = 0; i < end - start; i++){
+      
+      int row = i + start;
+      MatGetRow(_mat, row, &n, &cols, &vals);
+      
+      nCols[i].resize(n);
+      nVals[i].resize(n);
+    
+      unsigned k = 0;
+      for(unsigned j = 0; j < n; j++){
+        if( fabs ( vals[j] ) > tolerance) {
+          if( start <= cols[j] && cols[j] < end ){
+            sizeDiag[i]++;
+          }
+          else{
+            sizeOff[i]++;
+          }
+          nCols[i][k] = cols[j]; 
+          nVals[i][k] = vals[j]; 
+          k++;
+        }
+      }
+      MatRestoreRow(_mat, i, &n, &cols, &vals);
+      nCols[i].resize( sizeDiag[i] + sizeOff[i] );
+      nVals[i].resize( sizeDiag[i] + sizeOff[i] );
+    }
+    
+    MatDestroy (&_mat);
+    
+    MatCreate (MPI_COMM_WORLD, &_mat);
+    MatSetSizes (_mat, _m_l, _n_l, _m, _n);
+    MatSetType (_mat, MATMPIAIJ);
+    MatMPIAIJSetPreallocation (_mat, 1, &sizeDiag[0], 1, &sizeOff[0]);
+    
+    for(int i = 0; i < end - start; i++){
+      int row = i + start;
+      MatSetValuesBlocked (_mat, 1, &row, sizeDiag[i] + sizeOff[i], &nCols[i][0], &nVals[i][0], INSERT_VALUES);
+    }
+    
+    this->close();
+    
   }
 
 // // ============================================================
