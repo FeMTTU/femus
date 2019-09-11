@@ -112,7 +112,7 @@ int main (int argc, char** args) {
   for (unsigned simulation = 0; simulation < 1; simulation++) {
 
     //V0 = 0.06 * (simulation + 1) ;   // fraction of injection vs tumor
-      V0 = 0.5;
+      V0 = 0.8;
     // define the multilevel solution and attach the mlMsh object to it
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
 
@@ -570,6 +570,8 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
     }
 
     double K11 = (*sol->_Sol[ mlSol.GetIndex ("K11")]) (iel);
+    double K22 = (*sol->_Sol[ mlSol.GetIndex ("K22")]) (iel);
+    double K33 = (*sol->_Sol[ mlSol.GetIndex ("K33")]) (iel);
 //     double xc = 0.;
 //     double yc = 0.;
 //     double zc = 0.35;
@@ -579,10 +581,11 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
 //
 //
 //     if (r < 1.2 && K11 > 0.5) {
+//    (K11+K22+K33)/3 > 1
 
     if (x[0][nDofd - 1] > -0.6 && x[0][nDofd - 1] < 1.7 &&
         x[1][nDofd - 1] > -1.5 && x[1][nDofd - 1] < 1.5 &&
-        x[2][nDofd - 1] > -1.1 && x[0][nDofd - 1] < 2.2 && K11 > 0.6) {
+        x[2][nDofd - 1] > -1.1 && x[0][nDofd - 1] < 2.2 && (K11+K22+K33)/3. > 0.6) {
       // *** Element Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soldType]->GetGaussPointNumber(); ig++) {
         // *** get gauss point weight, test function and test function partial derivatives ***
@@ -619,6 +622,8 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
   double lInfinityNorm    = sol->_Sol[soluIndex]->linfty_norm();
 
   std::cout << "Max = " << lInfinityNorm << " Treshold = " << uT[2].second << std::endl;
+  
+
 
   bool stop = (lInfinityNorm < uT[2].second) ? true : false;
 
@@ -920,11 +925,14 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   unsigned counterAll;
   MPI_Allreduce (&trace, &traceAll, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce (&counter, &counterAll, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
-
+  
+  std::cout << "CounterAll is : " << counterAll << " " << std::endl;
+  std::cout << "Before TracaAll is : " << traceAll << " " << std::endl;
+  
   traceAll *= 1. / counterAll;
+  
 
-
-  std::cout << traceAll << " " << std::endl;
+  std::cout << "Now tracaAll is : " << traceAll << " " << std::endl;
 
   //exit(0);
 
