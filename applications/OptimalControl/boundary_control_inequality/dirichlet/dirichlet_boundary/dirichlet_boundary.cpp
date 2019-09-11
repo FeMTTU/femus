@@ -17,6 +17,7 @@
 
 #define FE_DOMAIN  0 //with 2 it doesn't work
 
+///@todo do a very weak impl of Laplacian
 
 using namespace femus;
 
@@ -254,9 +255,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   vector <double> phi_coords_xx; 
 
   phi_coords.reserve(max_size);
-  phi_coords_x.reserve(max_size * dim);
+  phi_coords_x.reserve(max_size * space_dim);
   phi_coords_xx.reserve(max_size * dim2);
   
+  //boundary shape functions
   vector <double> phi_coords_bdry;  
   vector <double> phi_coords_x_bdry; 
 
@@ -266,12 +268,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
  //********************* state *********************** 
  //*************************************************** 
-  vector <double> phi_u;  // local test function
-  vector <double> phi_u_x; // local test function first order partial derivatives
-  vector <double> phi_u_xx; // local test function second order partial derivatives
+  vector <double> phi_u;
+  vector <double> phi_u_x;
+  vector <double> phi_u_xx;
 
   phi_u.reserve(max_size);
-  phi_u_x.reserve(max_size * dim);
+  phi_u_x.reserve(max_size * space_dim);
   phi_u_xx.reserve(max_size * dim2);
   
   
@@ -288,12 +290,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
  //********************** adjoint ********************
  //*************************************************** 
-  vector <double> phi_adj;  // local test function
-  vector <double> phi_adj_x; // local test function first order partial derivatives
-  vector <double> phi_adj_xx; // local test function second order partial derivatives
+  vector <double> phi_adj;
+  vector <double> phi_adj_x;
+  vector <double> phi_adj_xx;
 
   phi_adj.reserve(max_size);
-  phi_adj_x.reserve(max_size * dim);
+  phi_adj_x.reserve(max_size * space_dim);
   phi_adj_xx.reserve(max_size * dim2);
  
 
@@ -302,10 +304,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   vector <double> phi_adj_x_bdry; 
 
   phi_adj_bdry.reserve(max_size);
-  phi_adj_x_bdry.reserve(max_size * dim);
+  phi_adj_x_bdry.reserve(max_size * space_dim);
   
-  vector <double> phi_adj_vol_at_bdry;  // local test function
-  vector <double> phi_adj_x_vol_at_bdry; // local test function first order partial derivatives
+  //volume shape functions at boundary
+  vector <double> phi_adj_vol_at_bdry;
+  vector <double> phi_adj_x_vol_at_bdry;
   phi_adj_vol_at_bdry.reserve(max_size);
   phi_adj_x_vol_at_bdry.reserve(max_size * dim);
   vector <double> sol_adj_x_vol_at_bdry_gss(dim);
@@ -496,8 +499,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
  //=================================================== 
 
-		
-
 
         
   update_active_set_flag_for_current_nonlinear_iteration_bdry
@@ -576,9 +577,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         //show the coordinate of the current ig_bdry point    
     const double* pt_one_dim[1] = {msh->_finiteElement[ielGeom][ SolFEType[pos_ctrl] ]->GetGaussRule_bdry()->GetGaussWeightsPointer() + 1*n_gauss_bdry };
     
-		for(unsigned ig_bdry=0; ig_bdry < n_gauss_bdry; ig_bdry++) {
+		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
     
-      double xi_one_dim[1];
+            
+		  msh->_finiteElement[felt_bdry][SolFEType[pos_state]]->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
+          msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]] ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_u_bdry,phi_u_x_bdry,normal);
+		  msh->_finiteElement[felt_bdry][SolFEType[pos_adj]]  ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
+		  msh->_finiteElement[felt_bdry][solType_coords]      ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_coords_bdry,phi_coords_x_bdry,normal);
+
+
+// **** printing ******
+    double xi_one_dim[1];
       for (unsigned j = 0; j < 1; j++) {
         xi_one_dim[j] = *pt_one_dim[j];
         pt_one_dim[j]++;
@@ -586,12 +595,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 std::cout << "Outside ig = " << ig_bdry << " ";
       for (unsigned d = 0; d < 1; d++) std::cout << xi_one_dim[d] << " ";
-            
-		  msh->_finiteElement[felt_bdry][SolFEType[pos_state]]->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
-          msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]] ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_u_bdry,phi_u_x_bdry,normal);
-		  msh->_finiteElement[felt_bdry][SolFEType[pos_adj]]  ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
-		  msh->_finiteElement[felt_bdry][solType_coords]      ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_coords_bdry,phi_coords_x_bdry,normal);
-      
+// **** printing ******
+
+
  //========= fill gauss value xyz ==================   
    // it is the JacobianSur function that defines the mapping between real quadrature points and reference quadrature points 
    // and that is the result of how the element is oriented (how the nodes are listed)
@@ -622,7 +628,7 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
   //========= fill gauss value xyz ==================   
   
           if (ielGeom != QUAD) { std::cout << "VolumeShapeAtBoundary not implemented" << std::endl; abort(); } 
-		  msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->VolumeShapeAtBoundary(geom_element.get_coords_at_dofs(),geom_element.get_coords_at_dofs_bdry_3d(),jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->VolumeShapeAtBoundary(geom_element.get_coords_at_dofs(),geom_element.get_coords_at_dofs_bdry_3d(),jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
 //           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
 // 		      for (int iv = 0; iv < nDof_adj; iv++)  {
@@ -840,8 +846,8 @@ if ( i_vol == j_vol )  {
 //========= gauss value quantities on the volume ==============  
 	double sol_u_gss = 0.;
 	double sol_adj_gss = 0.;
-	std::vector<double> sol_u_x_gss(dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
-	std::vector<double> sol_adj_x_gss(dim);   std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
+	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
+	std::vector<double> sol_adj_x_gss(space_dim);   std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
 //=============================================== 
  
  
@@ -849,10 +855,12 @@ if ( i_vol == j_vol )  {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-//     msh->_finiteElement[ielGeom][SolFEType[pos_state]]  ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], coords_ext, ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
-	msh->_finiteElement[ielGeom][SolFEType[pos_state]] ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_u, phi_u_x, phi_u_xx);
-    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]   ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
-    msh->_finiteElement[ielGeom][solType_coords]       ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
+	msh->_finiteElement[ielGeom][SolFEType[pos_state]]
+	->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]
+    ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_adj, phi_adj_x, phi_adj_xx, dim, space_dim);
+    msh->_finiteElement[ielGeom][solType_coords]
+    ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_coords, phi_coords_x, phi_coords_xx, dim, space_dim);
           
 	sol_u_gss = 0.;
 	sol_adj_gss = 0.;
@@ -861,12 +869,12 @@ if ( i_vol == j_vol )  {
 	
 	for (unsigned i = 0; i < Sol_n_el_dofs[pos_state]; i++) {
 	                                                sol_u_gss      += sol_eldofs[pos_state][i] * phi_u[i];
-                   for (unsigned d = 0; d < dim; d++)   sol_u_x_gss[d] += sol_eldofs[pos_state][i] * phi_u_x[i * dim + d];
+                   for (unsigned d = 0; d < space_dim; d++)   sol_u_x_gss[d] += sol_eldofs[pos_state][i] * phi_u_x[i * space_dim + d];
           }
 	
 	for (unsigned i = 0; i < Sol_n_el_dofs[pos_adj]; i++) {
 	                                                sol_adj_gss      += sol_eldofs[pos_adj][i] * phi_adj[i];
-                   for (unsigned d = 0; d < dim; d++)   sol_adj_x_gss[d] += sol_eldofs[pos_adj][i] * phi_adj_x[i * dim + d];
+                   for (unsigned d = 0; d < space_dim; d++)   sol_adj_x_gss[d] += sol_eldofs[pos_adj][i] * phi_adj_x[i * space_dim + d];
         }
 
 //==========FILLING WITH THE EQUATIONS ===========
@@ -875,9 +883,9 @@ if ( i_vol == j_vol )  {
 	  
               double laplace_rhs_du_adj_i = 0.;
               double laplace_rhs_dadj_u_i = 0.;
-              for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < Sol_n_el_dofs[pos_state] )      laplace_rhs_du_adj_i +=  phi_u_x   [i * dim + kdim] * sol_adj_x_gss[kdim];
-              if ( i < Sol_n_el_dofs[pos_adj] )    laplace_rhs_dadj_u_i +=  phi_adj_x [i * dim + kdim] * sol_u_x_gss[kdim];
+              for (unsigned kdim = 0; kdim < space_dim; kdim++) {
+              if ( i < Sol_n_el_dofs[pos_state] )  laplace_rhs_du_adj_i +=  phi_u_x   [i * space_dim + kdim] * sol_adj_x_gss[kdim];
+              if ( i < Sol_n_el_dofs[pos_adj] )    laplace_rhs_dadj_u_i +=  phi_adj_x [i * space_dim + kdim] * sol_u_x_gss[kdim];
 	      }
 	      
 //============ Volume residuals ==================	    
@@ -896,9 +904,9 @@ if ( i_vol == j_vol )  {
               double laplace_mat_dadj_u = 0.;
               double laplace_mat_du_adj = 0.;
 
-              for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < Sol_n_el_dofs[pos_adj] && j < Sol_n_el_dofs[pos_state] )     laplace_mat_dadj_u        +=  (phi_adj_x [i * dim + kdim] * phi_u_x   [j * dim + kdim]);
-              if ( i < Sol_n_el_dofs[pos_state]   && j < Sol_n_el_dofs[pos_adj] )   laplace_mat_du_adj        +=  (phi_u_x   [i * dim + kdim] * phi_adj_x [j * dim + kdim]);
+              for (unsigned kdim = 0; kdim < space_dim; kdim++) {
+              if ( i < Sol_n_el_dofs[pos_adj] && j < Sol_n_el_dofs[pos_state] )     laplace_mat_dadj_u        +=  (phi_adj_x [i * space_dim + kdim] * phi_u_x   [j * space_dim + kdim]);
+              if ( i < Sol_n_el_dofs[pos_state]   && j < Sol_n_el_dofs[pos_adj] )   laplace_mat_du_adj        +=  (phi_u_x   [i * space_dim + kdim] * phi_adj_x [j * space_dim + kdim]);
 		
 	      }
 
@@ -1062,9 +1070,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
  //*************** state ***************************** 
  //*************************************************** 
-  vector <double> phi_u;     phi_u.reserve(max_size);             // local test function
-  vector <double> phi_u_x;   phi_u_x.reserve(max_size * dim);     // local test function first order partial derivatives
-  vector <double> phi_u_xx;  phi_u_xx.reserve(max_size * dim2);   // local test function second order partial derivatives
+  vector <double> phi_u;     phi_u.reserve(max_size);
+  vector <double> phi_u_x;   phi_u_x.reserve(max_size * space_dim);
+  vector <double> phi_u_xx;  phi_u_xx.reserve(max_size * dim2);
 
  
   unsigned solIndex_u;
@@ -1081,12 +1089,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
  //************** desired ****************************
  //***************************************************
-  vector <double> phi_udes;  // local test function
-  vector <double> phi_udes_x; // local test function first order partial derivatives
-  vector <double> phi_udes_xx; // local test function second order partial derivatives
+  vector <double> phi_udes;
+  vector <double> phi_udes_x;
+  vector <double> phi_udes_xx;
 
     phi_udes.reserve(max_size);
-    phi_udes_x.reserve(max_size * dim);
+    phi_udes_x.reserve(max_size * space_dim);
     phi_udes_xx.reserve(max_size * dim2);
  
   
@@ -1283,8 +1291,10 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	msh->_finiteElement[ielGeom][solType_u]               ->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_u, phi_u_x, phi_u_xx);
-    msh->_finiteElement[ielGeom][solType_u/*solTypeTdes*/]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
+    msh->_finiteElement[ielGeom][solType_u]
+    ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+    msh->_finiteElement[ielGeom][solType_u/*solTypeTdes*/]
+    ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_udes, phi_udes_x, phi_udes_xx, dim, space_dim);
 
 	u_gss     = 0.;  for (unsigned i = 0; i < nDof_u; i++)        u_gss += sol_u[i]     * phi_u[i];
 	udes_gss  = 0.;  for (unsigned i = 0; i < nDof_udes; i++)  udes_gss += sol_udes[i]  * phi_udes[i];  
