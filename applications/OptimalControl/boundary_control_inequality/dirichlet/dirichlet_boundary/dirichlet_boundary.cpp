@@ -1231,13 +1231,15 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
                             for (int d = 0; d < space_dim; d++) {
 			      sol_ctrl_x_bdry_gss[d] += sol_ctrl[i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
 			    }
-		      }  
+		      }
+		      
+		      double laplace_ctrl_surface = 0.;  for (int d = 0; d < space_dim; d++) { laplace_ctrl_surface += sol_ctrl_x_bdry_gss[d] * sol_ctrl_x_bdry_gss[d]; }
 
                  //========= compute gauss quantities on the boundary ================================================
                   integral_alpha +=  weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
-                  integral_beta  +=  weight * (sol_ctrl_x_bdry_gss[AXIS_DIRECTION_CONTROL_SIDE] * sol_ctrl_x_bdry_gss[AXIS_DIRECTION_CONTROL_SIDE]);  //in 3D you'll need two directions
+                  integral_beta  +=  weight * laplace_ctrl_surface;
                  
-		}
+             }
 	      } //end face == 3
 	      
 	    } //end if boundary faces
