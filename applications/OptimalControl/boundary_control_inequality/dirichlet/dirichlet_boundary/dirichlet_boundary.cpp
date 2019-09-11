@@ -251,7 +251,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   std::vector<double> normal(space_dim,0.);
  //***************************************************  
   
-  vector < double > coord_at_qp_bdry(dim);
+  vector < double > coord_at_qp_bdry(space_dim);
   
   vector <double> phi_coords;
   vector <double> phi_coords_x;
@@ -266,7 +266,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   vector <double> phi_coords_x_bdry; 
 
   phi_coords_bdry.reserve(max_size);
-  phi_coords_x_bdry.reserve(max_size * dim);
+  phi_coords_x_bdry.reserve(max_size * space_dim);
  //*************************************************** 
 
  //********************* state *********************** 
@@ -285,7 +285,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   vector <double> phi_u_x_bdry; 
 
   phi_u_bdry.reserve(max_size);
-  phi_u_x_bdry.reserve(max_size * dim);
+  phi_u_x_bdry.reserve(max_size * space_dim);
   
  //***************************************************  
  //***************************************************  
@@ -308,6 +308,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   phi_adj_bdry.reserve(max_size);
   phi_adj_x_bdry.reserve(max_size * space_dim);
+
   
   //volume shape functions at boundary
   vector <double> phi_adj_vol_at_bdry;
@@ -325,7 +326,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   vector <double> phi_ctrl_x_bdry; 
 
   phi_ctrl_bdry.reserve(max_size);
-  phi_ctrl_x_bdry.reserve(max_size * dim);
+  phi_ctrl_x_bdry.reserve(max_size * space_dim);
  //*************************************************** 
 
   //************** act flag **************************** 
@@ -473,14 +474,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	if (control_el_flag == 1) {
 	  
 	  double tau=0.;
-	  vector<double> normal(dim,0);
-// 	  double normal_fixed[3] = {0.,1.,0};
+	  std::vector<double> normal(space_dim,0.);
 	       
 	  // loop on faces of the current element
 
 	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
           
-       const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
+       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
        const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
        
        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
@@ -571,11 +571,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //========= initialize gauss quantities on the boundary ============================================
                 double sol_ctrl_bdry_gss = 0.;
                 double sol_adj_bdry_gss = 0.;
-                std::vector<double> sol_ctrl_x_bdry_gss(dim);   std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
+                std::vector<double> sol_ctrl_x_bdry_gss(space_dim);   std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
 
 //========= initialize gauss quantities on the boundary ============================================
 		
-        const unsigned n_gauss_bdry = ml_prob.GetQuadratureRule(felt_bdry).GetGaussPointsNumber();
+        const unsigned n_gauss_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
         
         //show the coordinate of the current ig_bdry point    
     const double* pt_one_dim[1] = {msh->_finiteElement[ielGeom][ SolFEType[pos_ctrl] ]->GetGaussRule_bdry()->GetGaussWeightsPointer() + 1*n_gauss_bdry };
@@ -583,10 +583,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
     
             
-		  msh->_finiteElement[felt_bdry][SolFEType[pos_state]]->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
-          msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]] ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_u_bdry,phi_u_x_bdry,normal);
-		  msh->_finiteElement[felt_bdry][SolFEType[pos_adj]]  ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
-		  msh->_finiteElement[felt_bdry][solType_coords]      ->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_coords_bdry,phi_coords_x_bdry,normal);
+    msh->_finiteElement[ielGeom_bdry][SolFEType[pos_ctrl]] ->JacobianSur_non_isoparametric(
+    msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry, weight_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, normal, dim, space_dim);
+    
+    msh->_finiteElement[ielGeom_bdry][SolFEType[pos_state]]-> JacobianSur_non_isoparametric( 
+    msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry, weight_bdry, phi_u_bdry, phi_u_x_bdry, normal, dim, space_dim);
+
+    msh->_finiteElement[ielGeom_bdry][SolFEType[pos_adj]]  -> JacobianSur_non_isoparametric( 
+    msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal, dim, space_dim);
+
+    msh->_finiteElement[ielGeom_bdry][solType_coords]      -> JacobianSur_non_isoparametric( 
+    msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_coords_bdry,phi_coords_x_bdry, normal, dim, space_dim);
 
 
 // **** printing ******
@@ -640,22 +647,7 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
 //                 }
 //               }
 
-      
-      
-//========== temporary soln for surface gradient on a face parallel to the axes ===================
-          const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
-		  double dx_dcurv_abscissa = 0.;
-		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][SolFEType[pos_ctrl]]);
-		 double * myptr = myptr = myeltype->GetDPhiDXi(ig_bdry);
-		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dcurv_abscissa += myptr[inode] * geom_element.get_coords_at_dofs_bdry_3d()[axis_direction_control_side][inode];
-  
-		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) {
-                            for (int d = 0; d < dim; d++) {
-                              if (d == axis_direction_control_side ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dcurv_abscissa);
-                              else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
-                         }
-                     }
-//========== temporary soln for surface gradient on a face parallel to the axes ===================
+
 		  
 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_bdry_gss = 0.;
@@ -666,8 +658,8 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
 			
 			sol_adj_bdry_gss  +=  sol_eldofs[pos_adj][i_vol] * phi_adj_bdry[i_bdry];
 			sol_ctrl_bdry_gss +=  sol_eldofs[pos_ctrl][i_vol] * phi_ctrl_bdry[i_bdry];
-                            for (int d = 0; d < dim; d++) {
-			      sol_ctrl_x_bdry_gss[d] += sol_eldofs[pos_ctrl][i_vol] * phi_ctrl_x_bdry[i_bdry + d*nve_bdry];
+                            for (int d = 0; d < space_dim; d++) {
+			      sol_ctrl_x_bdry_gss[d] += sol_eldofs[pos_ctrl][i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
 			    }
 		      }
 		      
@@ -696,8 +688,8 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 
                  double lap_rhs_dctrl_ctrl_bdry_gss_i = 0.;
-                 for (unsigned d = 0; d < dim; d++) {
-                       if ( i_vol < Sol_n_el_dofs[pos_ctrl] )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * sol_ctrl_x_bdry_gss[d];
+                 for (unsigned d = 0; d < space_dim; d++) {
+                       if ( i_vol < Sol_n_el_dofs[pos_ctrl] )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_ctrl_x_bdry[i_bdry * space_dim + d] * sol_ctrl_x_bdry_gss[d];
                  }
                  
 //=============== construct control node flag field on the go  =========================================    
@@ -750,7 +742,7 @@ if ( i_vol == j_vol )  {
 
 //========block delta_control / control ========
               double  lap_mat_dctrl_ctrl_bdry_gss = 0.;
-		      for (unsigned d = 0; d < dim; d++) {  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * phi_ctrl_x_bdry[j_bdry + d*nve_bdry];    }
+		      for (unsigned d = 0; d < space_dim; d++) {  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_bdry[i_bdry * space_dim + d] * phi_ctrl_x_bdry[j_bdry * space_dim + d];    }
 
           
               Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i_vol, j_vol) ] 
@@ -818,23 +810,6 @@ if ( i_vol == j_vol )  {
 		    }   //end loop i_bdry // j_vol
 	      
 	      
-
-//========= debugging ==========================    
-//   std::cout << "====== phi values on boundary for gauss point " << ig_bdry << std::endl;
-//   
-//      for(unsigned i=0; i < nve_bdry; i ++) {
-//      std::cout << phi_ctrl_bdry[i] << " ";
-//      }
-//    std::cout << std::endl;
- 
-//   std::cout << "====== phi derivatives on boundary for gauss point " << ig_bdry << std::endl;
-//   
-//   for (unsigned d = 0; d < dim; d++) {
-//      for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry ++) {
-//      std::cout << phi_ctrl_x_bdry[i_bdry + d*nve_bdry] << " ";
-//      }
-//   }
-//========== debugging ==========================    
 
 		  }  //end i loop
 		}  //end ig_bdry loop
@@ -1118,7 +1093,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   vector <double> phi_ctrl_x_bdry; 
 
   phi_ctrl_bdry.reserve(max_size);
-  phi_ctrl_x_bdry.reserve(max_size * dim);
+  phi_ctrl_x_bdry.reserve(max_size * space_dim);
 
   unsigned solIndex_ctrl = ml_sol->GetIndex("control");
   unsigned solType_ctrl = ml_sol->GetSolutionType(solIndex_ctrl);
@@ -1215,7 +1190,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
 	  for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
           
-       const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
+       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
        const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
        
 
@@ -1237,28 +1212,14 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 	
 		//============ initialize gauss quantities on the boundary ==========================================
                 double sol_ctrl_bdry_gss = 0.;
-                std::vector<double> sol_ctrl_x_bdry_gss(dim);
+                std::vector<double> sol_ctrl_x_bdry_gss(space_dim);
 		//============ initialize gauss quantities on the boundary ==========================================
 		
-		for(unsigned ig_bdry = 0; ig_bdry < ml_prob.GetQuadratureRule(felt_bdry).GetGaussPointsNumber(); ig_bdry++) {
+		for(unsigned ig_bdry = 0; ig_bdry < ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber(); ig_bdry++) {
 		  
-		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
-
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
-          const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
-		  double dx_dcurv_abscissa = 0.;
-		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
-		 double * myptr = myptr = myeltype->GetDPhiDXi(ig_bdry);
-		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dcurv_abscissa += myptr[inode] * geom_element.get_coords_at_dofs_bdry_3d()[axis_direction_control_side][inode];
-  
-		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) {
-                            for (int d = 0; d < dim; d++) {
-                              if (d == axis_direction_control_side ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dcurv_abscissa);
-                              else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
-                         }
-                     }
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
-
+    msh->_finiteElement[ielGeom_bdry][solType_ctrl]
+    ->JacobianSur_non_isoparametric( msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, normal, dim, space_dim);
+    
 		  
 		 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_bdry_gss = 0.;
@@ -1267,8 +1228,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 			
 			sol_ctrl_bdry_gss +=  sol_ctrl[i_vol] * phi_ctrl_bdry[i_bdry];
-                            for (int d = 0; d < dim; d++) {
-			      sol_ctrl_x_bdry_gss[d] += sol_ctrl[i_vol] * phi_ctrl_x_bdry[i_bdry + d*nve_bdry];
+                            for (int d = 0; d < space_dim; d++) {
+			      sol_ctrl_x_bdry_gss[d] += sol_ctrl[i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
 			    }
 		      }  
 

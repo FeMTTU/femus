@@ -195,7 +195,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   vector <double> phi_u_sur;
   vector <double> phi_u_x_sur; 
   phi_u_sur.reserve(maxSize);
-  phi_u_x_sur.reserve(maxSize * (space_dim));
+  phi_u_x_sur.reserve(maxSize * space_dim);
   
 
  //********************* unknowns *********************** 
