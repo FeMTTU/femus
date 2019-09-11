@@ -405,12 +405,12 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
           solUg[k] += solU[k][i] * phiHat[i];
           solDxg[k] += solDx[k][i] * phiHat[i];
           for (unsigned  j = 0; j < dim; j++) {
-            if(counter == 0){  
+            //if(counter == 0){  
               gradSolDx[k][j] += solDx[k][i] * phiHat_x[i * dim + j];
-            }
-            else{
-              gradSolDx[k][j] += solDx[k][i] * phi1_x[i * dim + j].value();
-            }
+            //}
+            //else{
+              //gradSolDx[k][j] += solDx[k][i] * phi1_x[i * dim + j].value();
+            //}
             gradSolU[k][j] += solU[k][i] * phiHat_x[i * dim + j];
           }
         }
