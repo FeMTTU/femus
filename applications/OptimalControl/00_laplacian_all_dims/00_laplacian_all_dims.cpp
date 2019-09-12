@@ -1,3 +1,5 @@
+//Solve - \Delta u = 1
+
 #include "FemusInit.hpp"
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
@@ -66,8 +68,8 @@ int main(int argc, char** args) {
 //     infile = "./input/Mesh_1_z.med";
 //     infile = "./input/Mesh_2_xy.med";
 //     infile = "./input/Mesh_2_xz.med";
-    infile = "./input/Mesh_2_yz.med";
-//     infile = "./input/Mesh_3_xyz.med";
+//     infile = "./input/Mesh_2_yz.med";
+    infile = "./input/Mesh_3_xyz.med";
   
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
@@ -272,13 +274,19 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	std::vector<double> sol_u_x_gss_sur(space_dim);     std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
  //===================================================   
 
+//      std::vector < std::vector < double > >  JacI_qp;
+//      std::vector < std::vector < double > >  Jac_qp;
+//      double detJac_qp;
+     
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
 #if JACSUR == 0
+//     msh->_finiteElement[ielGeom][xType]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+// 	msh->_finiteElement[ielGeom][solFEType_u]->Jacobian(geom_element.get_coords_at_dofs_3d(),    ig, weight,    phi_u,    phi_u_x,    phi_u_xx);
     msh->_finiteElement[ielGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
-#elif JACSUR == 1           
+#elif JACSUR == 1
     msh->_finiteElement[ielGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, space_dim);
 #endif
 

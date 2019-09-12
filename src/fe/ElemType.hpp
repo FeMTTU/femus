@@ -35,7 +35,8 @@
 
 namespace femus
 {
-
+    
+    
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
@@ -81,7 +82,25 @@ namespace femus
 
       
 //==============================
-                               
+     /* adept */                        
+     virtual void Jacobian_geometry(const vector < vector < adept::adouble > > & vt,
+                            const unsigned & ig,
+                            std::vector < std::vector < adept::adouble > > & Jac,
+                            std::vector < std::vector < adept::adouble > > & JacI,
+                            adept::adouble & detJac,
+                            const unsigned dim,
+                            const unsigned space_dim) const = 0;
+                            
+     /* double */                        
+     virtual void Jacobian_geometry(const vector < vector < double > > & vt,
+                            const unsigned & ig,
+                            std::vector < std::vector < double > > & Jac,
+                            std::vector < std::vector < double > > & JacI,
+                            double & detJac,
+                            const unsigned dim,
+                            const unsigned space_dim) const = 0;
+                            
+                            
      /* adept-adept */                        
   virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
                                              const vector < vector < adept::adouble > > & vt,
@@ -349,7 +368,29 @@ namespace femus
                  compute_normal< adept::adouble >(Jac, normal);
      }
 
-
+     void Jacobian_geometry(const vector < vector < adept::adouble > > & vt,
+                            const unsigned & ig,
+                            std::vector < std::vector < adept::adouble > > & Jac,
+                            std::vector < std::vector < adept::adouble > > & JacI,
+                            adept::adouble & detJac,
+                            const unsigned dim,
+                            const unsigned space_dim) const {
+         
+              Jacobian_type_geometry(vt, ig, Jac, JacI, detJac, dim, space_dim);
+     }
+                            
+     /* double */                        
+     void Jacobian_geometry(const vector < vector < double > > & vt,
+                            const unsigned & ig,
+                            std::vector < std::vector < double > > & Jac,
+                            std::vector < std::vector < double > > & JacI,
+                            double & detJac,
+                            const unsigned dim,
+                            const unsigned space_dim) const {
+                                
+              Jacobian_type_geometry(vt, ig, Jac, JacI, detJac, dim, space_dim);
+     }
+                            
       template <class type>
       void GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
                             vector < vector < type > >& jacobianMatrix) const;
@@ -495,9 +536,9 @@ namespace femus
     template <class type_mov>
      void JacobianSur_type_geometry(const vector < vector < type_mov > > & vt,
                                const unsigned & ig,
+                               std::vector < std::vector <type_mov> > & Jac,
                                std::vector < std::vector <type_mov> > & JacI,
                                type_mov & detJac,
-                               vector < type_mov >& normal,
                                const unsigned dim,
                                const unsigned space_dim) const;
 
@@ -505,6 +546,7 @@ namespace femus
     template <class type_mov>
      void Jacobian_type_geometry(const vector < vector < type_mov > > & vt,
                             const unsigned & ig,
+                            std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
                             type_mov & detJac,
                             const unsigned dim,
@@ -663,7 +705,31 @@ namespace femus
                  compute_normal< adept::adouble >(Jac, normal);
      }
 
-
+     /* adept */                        
+     void Jacobian_geometry(const vector < vector < adept::adouble > > & vt,
+                            const unsigned & ig,
+                            std::vector < std::vector < adept::adouble > > & Jac,
+                            std::vector < std::vector < adept::adouble > > & JacI,
+                            adept::adouble & detJac,
+                            const unsigned dim,
+                            const unsigned space_dim) const {
+         
+              Jacobian_type_geometry(vt, ig, Jac, JacI, detJac, dim, space_dim);
+     }
+                            
+     /* double */                        
+     void Jacobian_geometry(const vector < vector < double > > & vt,
+                            const unsigned & ig,
+                            std::vector < std::vector < double > > & Jac,
+                            std::vector < std::vector < double > > & JacI,
+                            double & detJac,
+                            const unsigned dim,
+                            const unsigned space_dim) const {
+                                
+              Jacobian_type_geometry(vt, ig, Jac, JacI, detJac, dim, space_dim);
+     }
+     
+     
       template <class type>
       void GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
                             vector < vector < type > >& jacobianMatrix) const;
@@ -758,7 +824,7 @@ namespace femus
 //       d x/d eta , d y/d eta, d z/d eta    
     
     
-    ///@todo How are we guaranteed that this normal is OUTWARDS???
+    ///@todo How are we guaranteed that this normal is OUTWARDS??? For instance in 2d anticlockwise order of the edges guarantees outward normal. In 3d it must be the anticlockwise order of the edges of the boundary face taken from the volume... (if you look at the surface from outside, you must have dx/dxi and then dx/deta in anticlockwise order)
     const type_mov nx = Jac[0][1] * Jac[1][2] - Jac[1][1] * Jac[0][2];
     const type_mov ny = Jac[1][0] * Jac[0][2] - Jac[1][2] * Jac[0][0];
     const type_mov nz = Jac[0][0] * Jac[1][1] - Jac[1][0] * Jac[0][1];
@@ -770,7 +836,7 @@ namespace femus
     normal[2] = (nz) * invModn;
 
     
-// ======== COMPUTATION of ELEMENT AREA as TRIPLE PRODUCT of two tangent vector with UNIT normal vector 
+// ======== COMPUTATION of ELEMENT AREA as TRIPLE PRODUCT of two tangent vectors with UNIT normal vector 
 //     Jac[2][0] = normal[0];
 //     Jac[2][1] = normal[1];
 //     Jac[2][2] = normal[2];
@@ -799,9 +865,9 @@ namespace femus
      template <class type_mov>
      void JacobianSur_type_geometry(const vector < vector < type_mov > > & vt,
                                const unsigned & ig,
+                               std::vector < std::vector <type_mov> > & Jac,
                                std::vector < std::vector <type_mov> > & JacI,
                                type_mov & detJac,
-                               vector < type_mov >& normal,
                                const unsigned dim,
                                const unsigned space_dim) const;
                                
@@ -809,6 +875,7 @@ namespace femus
      template <class type_mov>
      void Jacobian_type_geometry(const vector < vector < type_mov > > & vt,
                             const unsigned & ig,
+                            std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
                             type_mov & detJac,
                             const unsigned dim,
@@ -1003,7 +1070,31 @@ namespace femus
            std::cout << "Normal non-defined for 3D objects" << std::endl; abort();
      }
       
-
+     /* adept */                        
+     void Jacobian_geometry(const vector < vector < adept::adouble > > & vt,
+                            const unsigned & ig,
+                            std::vector < std::vector < adept::adouble > > & Jac,
+                            std::vector < std::vector < adept::adouble > > & JacI,
+                            adept::adouble & detJac,
+                            const unsigned dim,
+                            const unsigned space_dim) const {
+         
+              Jacobian_type_geometry(vt, ig, Jac, JacI, detJac, dim, space_dim);
+     }
+                            
+     /* double */                        
+     void Jacobian_geometry(const vector < vector < double > > & vt,
+                            const unsigned & ig,
+                            std::vector < std::vector < double > > & Jac,
+                            std::vector < std::vector < double > > & JacI,
+                            double & detJac,
+                            const unsigned dim,
+                            const unsigned space_dim) const {
+                                
+              Jacobian_type_geometry(vt, ig, Jac, JacI, detJac, dim, space_dim);
+     }
+     
+     
       template <class type>
       void GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
                             vector < vector < type > >& jacobianMatrix) const;
@@ -1090,6 +1181,7 @@ namespace femus
      template <class type_mov>
      void Jacobian_type_geometry(const vector < vector < type_mov > > & vt,
                             const unsigned & ig,
+                            std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
                             type_mov & detJac,
                             const unsigned dim,
@@ -1260,7 +1352,7 @@ namespace femus
       void elem_type_1D::JacobianSur_type_non_isoparametric(const elem_type * fe_elem_coords_in,
                                               const vector < vector < type_mov > >& vt,
                                               const unsigned & ig, 
-                                              type_mov & Weight,
+                                              type_mov & weight,
                                               vector < double >& phi, 
                                               vector < type >& gradphi, 
                                               vector < type_mov >& normal,
@@ -1268,15 +1360,17 @@ namespace femus
                                               const unsigned space_dim) const  {
    
      std::vector < std::vector <type_mov> >  JacI;
+     std::vector < std::vector <type_mov> >  Jac;
+     type_mov detJac;
 
      const elem_type_1D *   fe_elem_coords_cast =  static_cast<const elem_type_1D*> (fe_elem_coords_in);
      
-     type_mov det;
+     fe_elem_coords_cast->JacobianSur_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
      
-     fe_elem_coords_cast->JacobianSur_type_geometry<type_mov>(vt, ig, JacI, det, normal, dim, space_dim);
+     compute_normal<type_mov>(Jac, normal);
 
     // function part ====================
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+    weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
     
     phi.resize(_nc);
     
@@ -1317,14 +1411,14 @@ namespace femus
     template <class type_mov>
      void elem_type_1D::JacobianSur_type_geometry(const vector < vector < type_mov > > & vt,
                                const unsigned & ig,
+                               std::vector < std::vector <type_mov> > & Jac,
                                std::vector < std::vector <type_mov> > & JacI,
                                type_mov & detJac,
-                               vector < type_mov >& normal,
                                const unsigned dim,
                                const unsigned space_dim) const {
                                    
     //Jac =====================
-    std::vector < std::vector <type_mov> > Jac(dim);
+    Jac.resize(dim);
     for (unsigned d = 0; d < dim; d++) { Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
 
       for (unsigned d = 0; d < space_dim; d++) {
@@ -1345,17 +1439,14 @@ namespace femus
 
     for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT[0][0];
 
-    
-    
-     compute_normal<type_mov>(Jac, normal);
-    
-                                
+                               
     }
     
     
      template <class type_mov>
      void elem_type_1D::Jacobian_type_geometry(const vector < vector < type_mov > > & vt,
                             const unsigned & ig,
+                            std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
                             type_mov & detJac,
                             const unsigned dim,
@@ -1381,7 +1472,7 @@ namespace femus
 
                                 
     //Jac =================
-    std::vector < std::vector <type_mov> > Jac(dim);
+    Jac.resize(dim);
     
     for (unsigned d = 0; d < dim; d++) { 
         Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
@@ -1425,10 +1516,10 @@ namespace femus
      const elem_type_1D *   fe_elem_coords_cast =  static_cast<const elem_type_1D*> (fe_elem_coords_in);
      
      std::vector < std::vector <type_mov> >  JacI;
-
+     std::vector < std::vector <type_mov> >  Jac;
      type_mov detJac;
    
-     fe_elem_coords_cast->Jacobian_type_geometry<type_mov>(vt, ig, JacI, detJac, dim, space_dim);
+     fe_elem_coords_cast->Jacobian_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
 
 // function part ================
     Weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
@@ -1468,7 +1559,7 @@ namespace femus
       void elem_type_2D::JacobianSur_type_non_isoparametric(const elem_type * fe_elem_coords_in,
                                               const vector < vector < type_mov > >& vt,
                                               const unsigned & ig, 
-                                              type_mov & Weight,
+                                              type_mov & weight,
                                               vector < double >& phi, 
                                               vector < type >& gradphi, 
                                               vector < type_mov >& normal,
@@ -1476,15 +1567,17 @@ namespace femus
                                                 const unsigned space_dim) const  {
 
      std::vector < std::vector <type_mov> >  JacI;
+     std::vector < std::vector <type_mov> >  Jac;
+     type_mov detJac;
      
      const elem_type_2D *   fe_elem_coords_cast =  static_cast<const elem_type_2D*> (fe_elem_coords_in);
-
-     type_mov det;
      
-     fe_elem_coords_cast->JacobianSur_type_geometry<type_mov>(vt, ig, JacI, det, normal, dim, space_dim);
+     fe_elem_coords_cast->JacobianSur_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
     
+     compute_normal<type_mov>(Jac, normal);
+     
     // function part ============
-    Weight = det * _gauss.GetGaussWeightsPointer()[ig];
+    weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
     
     phi.resize(_nc);
     
@@ -1508,55 +1601,30 @@ namespace femus
      template <class type_mov>
      void elem_type_2D::JacobianSur_type_geometry(const vector < vector < type_mov > > & vt,
                                const unsigned & ig,
+                               std::vector < std::vector <type_mov> > & Jac,
                                std::vector < std::vector <type_mov> > & JacI,
                                type_mov & detJac,
-                               vector < type_mov >& normal,
                                const unsigned dim,
                                const unsigned space_dim) const {
                 
     //Jac ===================
-    type_mov Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+    Jac.resize(2/*dim*/);
+    for (unsigned d = 0; d < 2/*dim*/; d++) { Jac[d].resize(3/*space_dim*/);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
 
+    
+  for (unsigned d = 0; d < 3/*space_dim*/; d++) {
+      
     const double* dxi_coords = _dphidxi[ig];
     const double* deta_coords = _dphideta[ig];
 
     for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++) {
-      Jac[0][0] += (*dxi_coords) * vt[0][inode];
-      Jac[0][1] += (*dxi_coords) * vt[1][inode];
-      Jac[0][2] += (*dxi_coords) * vt[2][inode];
-
-      Jac[1][0] += (*deta_coords) * vt[0][inode];
-      Jac[1][1] += (*deta_coords) * vt[1][inode];
-      Jac[1][2] += (*deta_coords) * vt[2][inode];
+      Jac[0][d] += (*dxi_coords)  * vt[d][inode];
+      Jac[1][d] += (*deta_coords) * vt[d][inode];
     }
-
-    //   normal  ===================
-//     Cross product
-//       i         , j        , k    
-// det   d x/d xi  , d y/d xi , d z/d xi    =   i (dy/dxi dz/deta - dz/dxi dy/deta)  -j (d x/d xi  d z/d eta - d z/d xi  d x/d eta) + k (d x/d xi d y/d eta - d y/d xi d x/d eta)
-//       d x/d eta , d y/d eta, d z/d eta    
     
-    
-    ///@todo How are we guaranteed that this normal is OUTWARDS???
-    type_mov nx = Jac[0][1] * Jac[1][2] - Jac[1][1] * Jac[0][2];
-    type_mov ny = Jac[1][0] * Jac[0][2] - Jac[1][2] * Jac[0][0];
-    type_mov nz = Jac[0][0] * Jac[1][1] - Jac[1][0] * Jac[0][1];
-    type_mov invModn = 1. / sqrt(nx * nx + ny * ny + nz * nz);
-
-    normal.resize(3);
-    normal[0] = (nx) * invModn;
-    normal[1] = (ny) * invModn;
-    normal[2] = (nz) * invModn;
-
-    Jac[2][0] = normal[0];
-    Jac[2][1] = normal[1];
-    Jac[2][2] = normal[2];
-
-    //the determinant of the matrix is the area  ///@todo This is the triple scalar product of three vectors following the right-hand rule, so it is for sure positive
-    detJac = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
-              Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
-              Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
-
+  }
+  
+  
     //JacI ===================
     type_mov JacJacT[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
     type_mov JacJacT_inv[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
@@ -1567,7 +1635,7 @@ namespace femus
             
     type_mov detJacJacT = (JacJacT[0][0] * JacJacT[1][1] - JacJacT[0][1] * JacJacT[1][0]); ///@todo How are sure that this is POSITIVE?
             
-    type_mov area = sqrt(abs(detJacJacT));
+    detJac = sqrt(abs(detJacJacT));
     
     JacJacT_inv[0][0] =  JacJacT[1][1] / detJacJacT;
     JacJacT_inv[0][1] = -JacJacT[0][1] / detJacJacT;
@@ -1581,7 +1649,6 @@ namespace femus
         for (unsigned j = 0; j < dim; j++)
             for (unsigned k = 0; k < dim; k++) JacI[i][j] += Jac[k][i]*JacJacT_inv[k][j];
 
-    
     }
                             
                             
@@ -1589,13 +1656,14 @@ namespace femus
      template <class type_mov>
      void elem_type_2D::Jacobian_type_geometry(const vector < vector < type_mov > > & vt,
                             const unsigned & ig,
+                            std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
                             type_mov & detJac,
                             const unsigned dim,
                             const unsigned space_dim) const {
                                                       
      //Jac ===============
-    std::vector < std::vector <type_mov> > Jac(dim);
+    Jac.resize(dim);
     
     for (unsigned d = 0; d < dim; d++) { 
         Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
@@ -1603,7 +1671,8 @@ namespace femus
     for (unsigned d = 0; d < space_dim; d++) {
     const double* dxi_coords  = _dphidxi[ig];
     const double* deta_coords = _dphideta[ig];
-       for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++) {
+    
+      for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++) {
           Jac[0][d] += (*dxi_coords)  * vt[d][inode];
           Jac[1][d] += (*deta_coords) * vt[d][inode];
         }
@@ -1651,13 +1720,13 @@ namespace femus
                                                     
 
 // geometry part ================
-     std::vector < std::vector <type_mov> >  JacI;
-     
    const elem_type_2D *   fe_elem_coords_cast =  static_cast<const elem_type_2D*> (fe_elem_coords_in);                                                  
-     
+
+   std::vector < std::vector <type_mov> >  JacI;
+   std::vector < std::vector <type_mov> >  Jac;
    type_mov detJac;
    
-   fe_elem_coords_cast->Jacobian_type_geometry<type_mov>(vt, ig, JacI, detJac, dim, space_dim);
+   fe_elem_coords_cast->Jacobian_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
 
 // function part ================
     Weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
@@ -1711,32 +1780,33 @@ namespace femus
      template <class type_mov>
      void elem_type_3D::Jacobian_type_geometry(const vector < vector < type_mov > > & vt,
                             const unsigned & ig,
+                            std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
                             type_mov & detJac,
                             const unsigned dim,
                             const unsigned space_dim) const {
                                 
+     //Jac ===============
+    Jac.resize(3/*dim*/);
+    for (unsigned d = 0; d < 3/*dim*/; d++) {
+        Jac[d].resize(3/*space_dim*/);   std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
+    
+    for (unsigned d = 0; d < 3/*dim*/; d++) {
+    const double * dxi_coords   = _dphidxi[ig];
+    const double * deta_coords  = _dphideta[ig];
+    const double * dzeta_coords = _dphidzeta[ig];
+
+    for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++, dzeta_coords++) {
+      Jac[0][d] += (*dxi_coords)   * vt[d][inode];
+      Jac[1][d] += (*deta_coords)  * vt[d][inode];
+      Jac[2][d] += (*dzeta_coords) * vt[d][inode];
+       }
+    }
+    
+     //JacI ===============
     JacI.resize(space_dim);
     for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
                                 
-    type_mov Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-
-    const double* dxi_coords = _dphidxi[ig];
-    const double* deta_coords = _dphideta[ig];
-    const double* dzeta_coords = _dphidzeta[ig];
-
-    for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++, dzeta_coords++) {
-      Jac[0][0] += (*dxi_coords) * vt[0][inode];
-      Jac[0][1] += (*dxi_coords) * vt[1][inode];
-      Jac[0][2] += (*dxi_coords) * vt[2][inode];
-      Jac[1][0] += (*deta_coords) * vt[0][inode];
-      Jac[1][1] += (*deta_coords) * vt[1][inode];
-      Jac[1][2] += (*deta_coords) * vt[2][inode];
-      Jac[2][0] += (*dzeta_coords) * vt[0][inode];
-      Jac[2][1] += (*dzeta_coords) * vt[1][inode];
-      Jac[2][2] += (*dzeta_coords) * vt[2][inode];
-    }
-
     detJac = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
                     Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
                     Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
@@ -1766,13 +1836,14 @@ namespace femus
                                                 const unsigned space_dim) const {
                                                     
 // geometry part ==============
-     std::vector < std::vector <type_mov> >  JacI;
      
    const elem_type_3D *   fe_elem_coords_cast =  static_cast<const elem_type_3D*> (fe_elem_coords_in);                                                  
 
+   std::vector < std::vector <type_mov> >  JacI;
+   std::vector < std::vector <type_mov> >  Jac;
    type_mov detJac;
    
-   fe_elem_coords_cast->Jacobian_type_geometry<type_mov>(vt, ig, JacI, detJac, dim, space_dim);
+   fe_elem_coords_cast->Jacobian_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
 // geometry part - end ==============
 
     
