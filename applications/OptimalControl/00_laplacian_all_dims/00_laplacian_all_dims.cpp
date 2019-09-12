@@ -242,7 +242,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
     geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
         
-    short unsigned kelGeom = geom_element.geom_type();
+    short unsigned ielGeom = geom_element.geom_type();
 
  
  //**************** state **************************** 
@@ -273,13 +273,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //===================================================   
 
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
 #if JACSUR == 0
-    msh->_finiteElement[kelGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[kelGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+    msh->_finiteElement[ielGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
 #elif JACSUR == 1           
-    msh->_finiteElement[kelGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[kelGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, space_dim);
+    msh->_finiteElement[ielGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, space_dim);
 #endif
 
 //--------------    

@@ -405,10 +405,11 @@ template < class type>
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < quad_rules[ielGeom].GetGaussPointsNumber(); ig++) {
+   
+        std::cout << "We need to revisit all these allocations of phi_u_x !!!"  << std::endl;
         
       // *** get gauss point weight, test function and test function partial derivatives ***
-     static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][soluType] )
-                                         ->Jacobian_type_non_isoparametric< type >( static_cast<const elem_type_2D*>( msh->_finiteElement[ielGeom][xType] ), x, ig, weight, phi, phi_x, phi_xx,dim,dim);
+     msh->_finiteElement[ielGeom][soluType]->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][xType], x, ig, weight, phi, phi_x, phi_xx,dim,dim);
 //       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
       msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
 

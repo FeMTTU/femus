@@ -586,13 +586,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     msh->_finiteElement[ielGeom_bdry][SolFEType[pos_ctrl]] ->JacobianSur_non_isoparametric(
     msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry, weight_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, normal, dim, space_dim);
     
-    msh->_finiteElement[ielGeom_bdry][SolFEType[pos_state]]-> JacobianSur_non_isoparametric( 
+    msh->_finiteElement[ielGeom_bdry][SolFEType[pos_state]]->JacobianSur_non_isoparametric( 
     msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry, weight_bdry, phi_u_bdry, phi_u_x_bdry, normal, dim, space_dim);
 
-    msh->_finiteElement[ielGeom_bdry][SolFEType[pos_adj]]  -> JacobianSur_non_isoparametric( 
+    msh->_finiteElement[ielGeom_bdry][SolFEType[pos_adj]]  ->JacobianSur_non_isoparametric( 
     msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal, dim, space_dim);
 
-    msh->_finiteElement[ielGeom_bdry][solType_coords]      -> JacobianSur_non_isoparametric( 
+    msh->_finiteElement[ielGeom_bdry][solType_coords]      ->JacobianSur_non_isoparametric( 
     msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_coords_bdry,phi_coords_x_bdry, normal, dim, space_dim);
 
 
