@@ -751,65 +751,83 @@ namespace femus {
     }
     CHKERRABORT (MPI_COMM_WORLD, ierr);
   }
-  
-  // // ============================================================  
-  
-  void PetscMatrix::RemoveZeroEntries(double & tolerance){
-    
-    int start,end;
-    MatGetOwnershipRange(_mat, &start, &end);
-    
-    std::vector < int > sizeDiag(end - start, 0);
-    std::vector < int > sizeOff(end - start, 0);
-    
-    std::vector < std::vector < int > > nCols(end - start);
-    std::vector < std::vector < double > > nVals(end - start);
-    
+
+  // // ============================================================
+
+  void PetscMatrix::RemoveZeroEntries (double & tolerance) {
+
+    int rowStart, rowEnd;
+    MatGetOwnershipRange (_mat, &rowStart, &rowEnd);
+    int colStart, colEnd;
+    MatGetOwnershipRangeColumn (_mat, &colStart, &colEnd);
+
+    std::vector < int > sizeDiag (rowEnd - rowStart, 0);
+    std::vector < int > sizeOff (rowEnd - rowStart, 0);
+
+    std::vector < std::vector < int > > nCols (rowEnd - rowStart);
+    std::vector < std::vector < double > > nVals (rowEnd - rowStart);
+
     int n;
     const int *cols;
     const double *vals;
-    
-    for(int i = 0; i < end - start; i++){
-      
-      int row = i + start;
-      MatGetRow(_mat, row, &n, &cols, &vals);
-      
-      nCols[i].resize(n);
-      nVals[i].resize(n);
-    
-      unsigned k = 0;
-      for(unsigned j = 0; j < n; j++){
-        if( fabs ( vals[j] ) > tolerance) {
-          if( start <= cols[j] && cols[j] < end ){
+
+    for (int i = 0; i < rowEnd - rowStart; i++) {
+
+      int row = rowStart + i;
+
+      MatGetRow (_mat, row, &n, &cols, &vals);
+
+      nCols[i].resize (n);
+      nVals[i].resize (n);
+
+      int k = 0;
+      for (int j = 0; j < n; j++) {
+        if (fabs (vals[j]) > tolerance) {
+          if (colStart <= cols[j] && cols[j] < colEnd) {
             sizeDiag[i]++;
           }
-          else{
+          else {
             sizeOff[i]++;
           }
-          nCols[i][k] = cols[j]; 
-          nVals[i][k] = vals[j]; 
+          nCols[i][k] = cols[j];
+          nVals[i][k] = vals[j];
           k++;
         }
       }
-      MatRestoreRow(_mat, i, &n, &cols, &vals);
-      nCols[i].resize( sizeDiag[i] + sizeOff[i] );
-      nVals[i].resize( sizeDiag[i] + sizeOff[i] );
+
+      MatRestoreRow (_mat, i, &n, &cols, &vals);
+      nCols[i].resize (sizeDiag[i] + sizeOff[i]);
+      nVals[i].resize (sizeDiag[i] + sizeOff[i]);
     }
-    
+
     MatDestroy (&_mat);
-    
+
     MatCreate (MPI_COMM_WORLD, &_mat);
     MatSetSizes (_mat, _m_l, _n_l, _m, _n);
-    MatSetType (_mat, MATMPIAIJ);
-    MatMPIAIJSetPreallocation (_mat, 1, &sizeDiag[0], 1, &sizeOff[0]);
-    
-    for(int i = 0; i < end - start; i++){
-      int row = i + start;
-      MatSetValuesBlocked (_mat, 1, &row, sizeDiag[i] + sizeOff[i], &nCols[i][0], &nVals[i][0], INSERT_VALUES);
+
+    int n_procs;
+    MPI_Comm_size (MPI_COMM_WORLD, &n_procs);
+
+    // create a sequential matrix on one processor
+    if (n_procs == 1) {
+      MatCreateSeqAIJ (MPI_COMM_WORLD, _m, _n, 0, &sizeDiag[0], &_mat);
+      MatSetFromOptions (_mat);
     }
-    
-    this->close();
-    
+    else {
+      MatSetType (_mat, MATMPIAIJ);
+      MatMPIAIJSetPreallocation (_mat, 0, &sizeDiag[0], 0, &sizeOff[0]);
+      MatSetFromOptions (_mat);
+    }
+
+    for (int i = 0; i < rowEnd - rowStart; i++) {
+      int row = rowStart + i;
+      int n = nCols[i].size();
+      MatSetValues (_mat, 1, &row, n, &nCols[i][0], &nVals[i][0], INSERT_VALUES);
+    }
+
+    MatAssemblyBegin (_mat, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd (_mat, MAT_FINAL_ASSEMBLY);
+
   }
 
 // // ============================================================

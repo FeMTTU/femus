@@ -107,7 +107,7 @@ int main (int argc, char** args) {
     maxNumberOfMeshes = 10;
   }
   else if (dim == 2) {
-    maxNumberOfMeshes = 2;
+    maxNumberOfMeshes = 7;
   }
   else {
     maxNumberOfMeshes = 2;
@@ -625,9 +625,9 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
   Proj->init (dim2 + dim + 1, dim + 1, P);
   
   double tolerance = 1.0e-14;
-  Proj->RemoveZeroEntries (tolerance);
+  //Proj->RemoveZeroEntries (tolerance);
 
-  MatView ( (static_cast< PetscMatrix* > (Proj))->mat(), PETSC_VIEWER_STDOUT_WORLD);
+  //MatView ( (static_cast< PetscMatrix* > (Proj))->mat(), PETSC_VIEWER_STDOUT_WORLD);
 
 }
 
