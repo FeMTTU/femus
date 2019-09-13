@@ -11,7 +11,7 @@
 
 using namespace femus;
 
-SparseMatrix *Proj;
+SparseMatrix *prol;
 
 // bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
 //   bool dirichlet = true; //dirichlet
@@ -107,13 +107,11 @@ int main (int argc, char** args) {
     maxNumberOfMeshes = 10;
   }
   else if (dim == 2) {
-    maxNumberOfMeshes = 7;
+    maxNumberOfMeshes = 3;
   }
   else {
     maxNumberOfMeshes = 2;
   }
-
- // std::cout<<"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
   
   vector < double > l2Norm (maxNumberOfMeshes);
   vector < double > semiNorm (maxNumberOfMeshes);
@@ -164,6 +162,15 @@ int main (int argc, char** args) {
 
     // define the multilevel problem attach the mlSol object to it
     MultiLevelProblem mlProb (&mlSol);
+    
+    
+    NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Poisson");
+    for (unsigned k = 0; k < dim; k++) {
+      system.AddSolutionToSystemPDE (Uname[k].c_str());
+    }
+    system.AddSolutionToSystemPDE ("P");
+    system.init();
+    
 
     std::vector < LinearImplicitSystem* > systemP (dim2 + dim + 1);
     std::string Pxname[3][3] = { {"Pux", "Puy", "Puz"}, {"Pvx", "Pvy", "Pvz"}, {"Pwx", "Pwy", "Pwz"}};
@@ -200,12 +207,7 @@ int main (int argc, char** args) {
     system0.AddSolutionToSystemPDE ("P");
     system0.init();
 
-    NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Poisson");
-    for (unsigned k = 0; k < dim; k++) {
-      system.AddSolutionToSystemPDE (Uname[k].c_str());
-    }
-    system.AddSolutionToSystemPDE ("P");
-    system.init();
+   
 
     // attach the assembling function to system
     system.SetAssembleFunction (AssembleWithProjection);
@@ -229,7 +231,7 @@ int main (int argc, char** args) {
     // vtkIO.Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, i);
     //vtkIO.Write (DEFAULT_OUTPUTDIR, "quadratic", variablesToBePrinted, i);
     vtkIO.Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
-    delete Proj;
+    delete prol;
   }
 
 
@@ -621,12 +623,16 @@ void BuidProjection (MultiLevelProblem& ml_prob) {
     }
   }
 
-  Proj = SparseMatrix::build().release();
-  Proj->init (dim2 + dim + 1, dim + 1, P);
+  prol = SparseMatrix::build().release();
+  prol->init (dim2 + dim + 1, dim + 1, P);
   
   double tolerance = 1.0e-14;
-  //Proj->RemoveZeroEntries (tolerance);
-
+  prol->RemoveZeroEntries (tolerance);
+  
+//   restr = SparseMatrix::build().release();
+//   restr->init (dim2 + dim + 1, dim + 1, P);
+//   restr->get_transpose(*restr);
+  
   //MatView ( (static_cast< PetscMatrix* > (Proj))->mat(), PETSC_VIEWER_STDOUT_WORLD);
 
 }
@@ -761,8 +767,8 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofsU; i++) {
         for (unsigned k = 0; k < dim; k++) {
           for (unsigned l = 0; l < dim; l++) {
-            solUx[k][l] += phi[i] * sol[ k * dim + l][i]; //extended solution gradient 
-            solux[k][l] += phi_x[i * dim + l] * sol[ dim2 + k][i]; //regular solution gradient
+            solux[k][l] += phi[i] * sol[ k * dim + l][i]; //extended solution gradient 
+            solUx[k][l] += phi_x[i * dim + l] * sol[ dim2 + k][i]; //regular solution gradient
             //gradSolV_gss[k][j] += solV[k][i] * phiV_x[i * dim + j];
           }
           solU[k] += phi[i] * sol[dim2 + k][i];
@@ -778,8 +784,8 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
       //GetExactSolutionGradient (xGauss , exactSolGrad);
       //double exactSolLaplace = GetExactSolutionLaplace (xGauss);
 
-      double ReI = 0.001;
-      bool extended = true;
+      double ReI = 0.005;
+      bool extended = false;
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofsU; i++) {
         for (unsigned k = 0; k < dim; k++) {
@@ -794,7 +800,7 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
           }
           else{
             for (unsigned l = 0; l < dim; l++) {  
-              aRes[dim2 + k][i] += ReI * (solux[k][l] + solux[l][k]) * phi_x[ i * dim + l] * weight; //regular diffusivity
+              aRes[dim2 + k][i] += ReI * (solUx[k][l] + solUx[l][k]) * phi_x[ i * dim + l] * weight; //regular diffusivity
               aRes[dim2 + k][i] += phi[i] * solU[l] * solUx[k][l] * weight; //regular convection
             }
             aRes[dim2 + k][i] -= solP * phi_x[ i * dim + k]  * weight; //regular gradient
@@ -839,13 +845,6 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
     s.dependent (&aRes[dim2 + dim][0], nDofsP);
 
     s.jacobian (&Jac[0], true);
-
-//     for(unsigned i = 0;i <( (dim2 + dim) * nDofsU + nDofsP);i++){
-//       for(unsigned j = 0;j <( (dim2 + dim) * nDofsU + nDofsP);j++){
-//          std::cout<<Jac[i*( (dim2 + dim) * nDofsU + nDofsP)+j]<<" "; 
-//       }
-//       std::cout<<std::endl;
-//     }
     
     K->add_matrix_blocked (Jac, sysDof, sysDof);
     s.clear_dependents();
@@ -862,19 +861,47 @@ void AssembleWithProjection (MultiLevelProblem& ml_prob) {
   NumericVector* RES1  = sys1->_RES;
 
   bool mathReuse = (counter == 0) ? false : true;
-  K1->matrix_PtAP (*Proj, *K, mathReuse);
-  RES1->matrix_mult_transpose (*RES, *Proj);
+  
+  K1->matrix_PtAP (*prol, *K, mathReuse);
+  RES1->matrix_mult_transpose (*RES, *prol);
+  
   counter++;
   
 
-//  MatView((static_cast< PetscMatrix* > (K1))->mat(),PETSC_VIEWER_STDOUT_WORLD);
+//   MatView((static_cast< PetscMatrix* > (K))->mat(),PETSC_VIEWER_STDOUT_WORLD);
 //
 //  VecView((static_cast< PetscVector* > (RES))->vec(),PETSC_VIEWER_STDOUT_WORLD);
 //
 //   VecView((static_cast< PetscVector* > (RES1))->vec(),PETSC_VIEWER_STDOUT_WORLD);
 
+  
+      PetscViewer    viewer;
+      PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+      PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+      PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+      MatView((static_cast< PetscMatrix* > (prol))->mat(),viewer);
+      
+      
+   
+      
+      PetscViewer    viewer0;
+      PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer0);
+      PetscObjectSetName((PetscObject)viewer0,"FSI matrix");
+      PetscViewerPushFormat(viewer0,PETSC_VIEWER_DRAW_LG);
+      MatView((static_cast< PetscMatrix* > (K))->mat(),viewer0);
+      
+     
+      
+      PetscViewer    viewer1;
+      PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer1);
+      PetscObjectSetName((PetscObject)viewer1,"FSI matrix");
+      PetscViewerPushFormat(viewer1,PETSC_VIEWER_DRAW_LG);
+      MatView((static_cast< PetscMatrix* > (K1))->mat(),viewer1);
+      
+//       double a;
+//       std::cin>>a;
 
-
+  
 }
 
 void ProjectSolutionIntoGradient (MultiLevelProblem& ml_prob) {
