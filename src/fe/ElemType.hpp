@@ -314,6 +314,8 @@ namespace femus
       
       virtual void allocate_and_fill_shape_at_quadrature_points() = 0;
       
+      virtual void allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss) = 0;
+      
       // ====================================
       // member data
       // ====================================
@@ -502,6 +504,8 @@ namespace femus
       
       
       void allocate_and_fill_shape_at_quadrature_points();
+      
+      void allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss);
       
 
        virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
@@ -839,6 +843,9 @@ namespace femus
      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
      
      void allocate_and_fill_shape_at_quadrature_points();
+      
+     void allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss);
+     
       
   void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
@@ -1209,6 +1216,8 @@ namespace femus
      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
      
      void allocate_and_fill_shape_at_quadrature_points();
+
+     void allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss);
 
      void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 

@@ -871,34 +871,11 @@ namespace femus {
        
    }
    
-
-  elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
-    elem_type(geom_elem, fe_order, order_gauss)
-  {
-
-    _dim = 1;
-
-    //************ BEGIN FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
-
-    // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
-
-    //***********************************************************
-    // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis,linearElement);
-
-    set_coordinates_and_KVERT_IND(_pt_basis);
-    //***********************************************************
-
-    // local projection matrix evaluation
-    set_element_prolongation(linearElement);
-
-    
-    allocate_and_fill_shape_at_quadrature_points();
-
-
-    if(_SolType < 3) {
+   
+   void elem_type_1D::allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss)  {
+   
+   
+       if(_SolType < 3) {
 
       unsigned nFaces = 2;
       _phiFace.resize(nFaces);
@@ -937,66 +914,15 @@ namespace femus {
       }
 
     }
-
-
-
-//=====================
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-//=====================
-    EvaluateShapeAtQP(geom_elem, fe_order);
-
-    delete linearElement;
-
-  }
-
-
-  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order, const char* order_gauss):
-    elem_type(geom_elem, fe_order, order_gauss)
-  {
-
-    _dim = 2;
-
-    //************ BEGIN FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
-
-    // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
-
-    //***********************************************************
-    // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis,linearElement);
-
-    set_coordinates_and_KVERT_IND(_pt_basis);
-    //***********************************************************
-
-    // local projection matrix evaluation
-    set_element_prolongation(linearElement);
-
-    
-    allocate_and_fill_shape_at_quadrature_points();
-
-    
-    
-    // boundary
-    // here I will only leave the memory allocation; the evaluations go in the ShapeAtBoundary function
-    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
-    
-    _phi_bdry = new double*[n_gauss_bdry];
-    _dphidxi_bdry  = new double*[n_gauss_bdry];
-    _dphideta_bdry = new double*[n_gauss_bdry];
-    _phi_memory_bdry = new double [n_gauss_bdry * _nc];
-    _dphidxi_memory_bdry  = new double [n_gauss_bdry * _nc];
-    _dphideta_memory_bdry = new double [n_gauss_bdry * _nc];
-    
-     for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_bdry[i] = &_phi_memory_bdry[i * _nc];
-      _dphidxi_bdry[i]  = &_dphidxi_memory_bdry[i * _nc];
-      _dphideta_bdry[i] = &_dphideta_memory_bdry[i * _nc];
-     }
-     
-
-
+   
+   
+   }
+   
+   
+   
+      void elem_type_2D::allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss)  {
+          
+          
     if(_SolType < 3) {
       basis* linearLine = new LineLinear;
 
@@ -1051,52 +977,13 @@ namespace femus {
       }
       delete linearLine;
     }
-
-
-//
-//=====================
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-    _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
-//=====================
-    EvaluateShapeAtQP(geom_elem, fe_order);
-
-    //std::cout << std::endl;
-
-    delete linearElement;
-
-
-  }
-  
-
-  elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
-    elem_type(geom_elem, fe_order, order_gauss)
-  {
-
-    _dim = 3;
-    
-    //************ BEGIN FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
-
-    // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
-
-    //***********************************************************
-    // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis,linearElement);
-
-    set_coordinates_and_KVERT_IND(_pt_basis);
-    //***********************************************************
-
-    // local projection matrix evaluation
-    set_element_prolongation(linearElement);
-
-    
-    allocate_and_fill_shape_at_quadrature_points();
     
     
-    
-    
+   }
+   
+      void elem_type_3D::allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss)  {
+          
+   
     //std::cout << std::endl;
     if(_SolType < 3) {
       basis* linearQuad = new QuadLinear;
@@ -1188,7 +1075,147 @@ namespace femus {
       }
       delete linearQuad;
       delete linearTri;
-    }
+    }          
+
+   }
+      
+      
+      
+
+  elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
+  {
+
+    _dim = 1;
+
+    //************ BEGIN FE and MG SETUP ******************
+    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
+
+    // get data from basis object
+    set_coarse_and_fine_elem_data(_pt_basis);
+
+    //***********************************************************
+    // construction of coordinates
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
+
+    set_coordinates_and_KVERT_IND(_pt_basis);
+    //***********************************************************
+
+    // local projection matrix evaluation
+    set_element_prolongation(linearElement);
+
+    
+    allocate_and_fill_shape_at_quadrature_points();
+
+    allocate_and_fill_shape_at_quadrature_points_on_faces(order_gauss);
+
+    
+//=====================
+    _DPhiXiEtaZetaPtr.resize(_dim);
+    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
+//=====================
+    EvaluateShapeAtQP(geom_elem, fe_order);
+
+    delete linearElement;
+
+  }
+  
+  
+
+
+  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order, const char* order_gauss):
+    elem_type(geom_elem, fe_order, order_gauss)
+  {
+
+    _dim = 2;
+
+    //************ BEGIN FE and MG SETUP ******************
+    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
+
+    // get data from basis object
+    set_coarse_and_fine_elem_data(_pt_basis);
+
+    //***********************************************************
+    // construction of coordinates
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
+
+    set_coordinates_and_KVERT_IND(_pt_basis);
+    //***********************************************************
+
+    // local projection matrix evaluation
+    set_element_prolongation(linearElement);
+
+    
+    allocate_and_fill_shape_at_quadrature_points();
+
+    allocate_and_fill_shape_at_quadrature_points_on_faces(order_gauss);
+    
+    
+    // boundary
+    // here I will only leave the memory allocation; the evaluations go in the ShapeAtBoundary function
+    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    _phi_bdry = new double*[n_gauss_bdry];
+    _dphidxi_bdry  = new double*[n_gauss_bdry];
+    _dphideta_bdry = new double*[n_gauss_bdry];
+    _phi_memory_bdry = new double [n_gauss_bdry * _nc];
+    _dphidxi_memory_bdry  = new double [n_gauss_bdry * _nc];
+    _dphideta_memory_bdry = new double [n_gauss_bdry * _nc];
+    
+     for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      _phi_bdry[i] = &_phi_memory_bdry[i * _nc];
+      _dphidxi_bdry[i]  = &_dphidxi_memory_bdry[i * _nc];
+      _dphideta_bdry[i] = &_dphideta_memory_bdry[i * _nc];
+     }
+     
+
+
+
+
+
+//
+//=====================
+    _DPhiXiEtaZetaPtr.resize(_dim);
+    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
+    _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
+//=====================
+    EvaluateShapeAtQP(geom_elem, fe_order);
+
+    //std::cout << std::endl;
+
+    delete linearElement;
+
+
+  }
+  
+
+  elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
+  {
+
+    _dim = 3;
+    
+    //************ BEGIN FE and MG SETUP ******************
+    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
+
+    // get data from basis object
+    set_coarse_and_fine_elem_data(_pt_basis);
+
+    //***********************************************************
+    // construction of coordinates
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
+
+    set_coordinates_and_KVERT_IND(_pt_basis);
+    //***********************************************************
+
+    // local projection matrix evaluation
+    set_element_prolongation(linearElement);
+
+    
+    allocate_and_fill_shape_at_quadrature_points();
+    
+    allocate_and_fill_shape_at_quadrature_points_on_faces(order_gauss);
+ 
 
 //=====================
     _DPhiXiEtaZetaPtr.resize(_dim);
