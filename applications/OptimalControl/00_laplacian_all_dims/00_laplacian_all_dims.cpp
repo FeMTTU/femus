@@ -8,6 +8,7 @@
 #include "NumericVector.hpp"
 
 #include "CurrentElem.hpp"
+#include "ElemType_Jac_templ.hpp"
 
 
 #define JACSUR 0
@@ -55,23 +56,27 @@ int main(int argc, char** args) {
   std::string fe_quad_rule("seventh");
 
     // ======= Mesh  ==================
+   std::vector<std::string> mesh_files;
+   
+   mesh_files.push_back("Mesh_1_x.med");
+   mesh_files.push_back("Mesh_1_y.med");
+   mesh_files.push_back("Mesh_1_z.med");
+   mesh_files.push_back("Mesh_2_xy.med");
+   mesh_files.push_back("Mesh_2_xz.med");
+   mesh_files.push_back("Mesh_2_yz.med");
+   mesh_files.push_back("Mesh_3_xyz.med");
+
+ for (unsigned int m = 0; m < mesh_files.size(); m++)  {
+   
   // define multilevel mesh
   MultiLevelMesh ml_mesh;
   double scalingFactor = 1.;
-
-  
+ 
   const bool read_groups = true; //with this being false, we don't read any group at all. Therefore, we cannot even read the boundary groups that specify what are the boundary faces, for the boundary conditions
-  std::string infile("");
-   
-//     infile = "./input/Mesh_1_x.med";
-//     infile = "./input/Mesh_1_y.med";
-//     infile = "./input/Mesh_1_z.med";
-//     infile = "./input/Mesh_2_xy.med";
-//     infile = "./input/Mesh_2_xz.med";
-//     infile = "./input/Mesh_2_yz.med";
-    infile = "./input/Mesh_3_xyz.med";
   
-  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups);
+  std::string mesh_file_tot = "./input/" + mesh_files[m];
+  
+  ml_mesh.ReadCoarseMesh(mesh_file_tot.c_str(), fe_quad_rule.c_str(), scalingFactor, read_groups);
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
@@ -151,8 +156,11 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("all");
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", variablesToBePrinted);
-
+  mlSol.GetWriter()->Write(mesh_files[m], files.GetOutputPath(), "biquadratic", variablesToBePrinted);
+  
+  }
+ 
+ 
   return 0;
 }
 
@@ -274,13 +282,16 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	std::vector<double> sol_u_x_gss_sur(space_dim);     std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
  //===================================================   
 
-//      std::vector < std::vector < double > >  JacI_qp;
-//      std::vector < std::vector < double > >  Jac_qp;
-//      double detJac_qp;
-     
+     std::vector < std::vector < double > >  JacI_qp;
+     std::vector < std::vector < double > >  Jac_qp;
+     double detJac_qp;
+//      elem_type_jac_templ<double, double, 3, 3>  elem_jac("hex","seventh"); 
+    
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
-	
+          
+// 	elem_jac.Jacobian_type_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+    
         // *** get gauss point weight, test function and test function partial derivatives ***
 #if JACSUR == 0
 //     msh->_finiteElement[ielGeom][xType]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);

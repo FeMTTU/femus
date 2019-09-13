@@ -204,13 +204,13 @@ namespace femus
 
       /** To be Added */
       virtual double* GetDPhiDEta(const unsigned& ig) const {
-        std::cout << "GetDPhiDEta does not apply for this element dimension\n";
+        std::cout << "GetDPhiDEta does not apply to this element dimension\n";
         abort();
       }
 
       /** To be Added */
       virtual double* GetDPhiDZeta(const unsigned& ig) const {
-        std::cout << "GetDPhiDZeta does not apply for this element dimension\n";
+        std::cout << "GetDPhiDZeta does not apply to this element dimension\n";
         abort();
       };
 
@@ -264,22 +264,6 @@ namespace femus
       inline unsigned  GetDim() const {
         return _dim;
       };
-
-      /** Set numbers of coarse and fine dofs for 1 element */
-      void set_coarse_and_fine_elem_data(const basis* pt_basis_in);
-      
-      void allocate_and_set_IND(const basis* pt_basis_in);
-
-      void allocate_coordinates_and_KVERT_IND();
-      
-      /** Set node coordinates and fine node indices */
-      void set_coordinates_and_KVERT_IND(const basis* pt_basis_in);
-      
-      /** Compute node coordinates in basis object */
-      void set_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
-   
-      /** Compute element prolongation operator */
-      void set_element_prolongation(const basis* linearElement);
       
      // member data
       static unsigned _refindex;
@@ -306,7 +290,33 @@ namespace femus
 
    protected:
 
+      // ====================================
+      // member functions
+      // ====================================
+      
+      virtual const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in) = 0;
+
+      /** Set numbers of coarse and fine dofs for 1 element */
+      void set_coarse_and_fine_elem_data(const basis* pt_basis_in);
+      
+      void allocate_and_set_IND(const basis* pt_basis_in);
+
+      void allocate_coordinates_and_KVERT_IND();
+      
+      /** Set node coordinates and fine node indices */
+      void set_coordinates_and_KVERT_IND(const basis* pt_basis_in);
+      
+      /** Compute node coordinates in basis object */
+      void set_coordinates_in_Basis_object(basis* pt_basis_in, const basis* linearElement) const;
+   
+      /** Compute element prolongation operator */
+      void set_element_prolongation(const basis* linearElement);
+      
+      
+      // ====================================
       // member data
+      // ====================================
+      
       unsigned _dim; /* Spatial dimension of the geometric element */
       int _nc, _nf, _nlag[4];  /* _nc: number of dofs of 1 element;  _nf: number of dofs in that element after refinement; 
                                   _nlag[0] = number of linear dofs in 1 element;
@@ -316,7 +326,7 @@ namespace femus
                                   */
       unsigned _SolType;       /* Finite Element Family flag */
       const double** _X;       /* [_nf][_dim] coordinates of the _nf nodes in the refined elements */ 
-      const int** _IND;        /* [_nc][_dim] */
+      const int** _IND;        /* [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
       const int** _KVERT_IND;  /* [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element*/
 
       double** _prol_val;
@@ -466,6 +476,10 @@ namespace femus
 
   private:
       
+      // ====================================
+      // member data
+      // ====================================
+      
       double** _phi;
       double* _phi_memory;
       double** _dphidxi;
@@ -478,6 +492,12 @@ namespace femus
       std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
       std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
 
+
+      // ====================================
+      // member functions
+      // ====================================
+      
+      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
       
       virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
       
@@ -811,6 +831,8 @@ namespace femus
      
   private:
       
+     const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
+      
   void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
      
@@ -992,6 +1014,9 @@ namespace femus
   void volume_shape_functions_at_reference_boundary_quadrature_points(const vector < vector < double> > & vt_bdry,  
                                            const unsigned jface) const;
                                            
+      // ====================================
+      // member data
+      // ====================================
       
       double** _phi;
       double* _phi_memory;
@@ -1174,6 +1199,7 @@ namespace femus
 
     private:
 
+     const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
 
      void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
@@ -1297,8 +1323,9 @@ namespace femus
       }
         
         
-        
-        
+      // ====================================
+      // member data
+      // ====================================
         
       double** _phi;
       double* _phi_memory;

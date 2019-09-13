@@ -48,6 +48,7 @@ equations/System.cpp
 equations/TimeLoop.cpp
 equations/TransientSystem.cpp
 fe/ElemType.cpp
+fe/ElemType_Jac_templ.cpp
 fe/Hexaedron.cpp
 fe/Line.cpp
 fe/Quadrilateral.cpp

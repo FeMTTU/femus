@@ -672,32 +672,12 @@ namespace femus {
     elem_type(geom_elem, fe_order, order_gauss)
   {
 
-    basis* linearElement;
-
     _dim = 1;
     _DPhiXiEtaZetaPtr.resize(_dim);
     _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
 
     //************ BEGIN FE and MG SETUP ******************
-
-
-    if(!strcmp(geom_elem, "line")) {  //line
-      linearElement = new LineLinear;
-
-      if(_SolType == 0) _pt_basis = new LineLinear;
-      else if(_SolType == 1) _pt_basis = new LineBiquadratic;
-      else if(_SolType == 2) _pt_basis = new LineBiquadratic;
-      else if(_SolType == 3) _pt_basis = new line0;
-      else if(_SolType == 4) _pt_basis = new linepwLinear;
-      else {
-        cout << fe_order << " is not a valid option for " << geom_elem << endl;
-        abort();
-      }
-    }
-    else {
-      cout << geom_elem << " is not a valid option" << endl;
-      abort();
-    }
+    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
 
     // get data from basis object
     set_coarse_and_fine_elem_data(_pt_basis);
@@ -801,46 +781,13 @@ namespace femus {
     elem_type(geom_elem, fe_order, order_gauss)
   {
 
-    basis* linearElement;
-
     _dim = 2;
     _DPhiXiEtaZetaPtr.resize(_dim);
     _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
 
     //************ BEGIN FE and MG SETUP ******************
-
-
-    if(!strcmp(geom_elem, "quad")) {  //QUAD
-      linearElement = new QuadLinear;
-
-      if(_SolType == 0) _pt_basis = new QuadLinear;
-      else if(_SolType == 1) _pt_basis = new QuadQuadratic;
-      else if(_SolType == 2) _pt_basis = new QuadBiquadratic;
-      else if(_SolType == 3) _pt_basis = new quad0;
-      else if(_SolType == 4) _pt_basis = new quadpwLinear;
-      else {
-        cout << fe_order << " is not a valid option for " << geom_elem << endl;
-        abort();
-      }
-    }
-    else if(!strcmp(geom_elem, "tri")) {  //TRIANGLE
-      linearElement = new TriLinear;
-
-      if(_SolType == 0) _pt_basis = new TriLinear;
-      else if(_SolType == 1) _pt_basis = new TriQuadratic;
-      else if(_SolType == 2) _pt_basis = new TriBiquadratic;
-      else if(_SolType == 3) _pt_basis = new tri0;
-      else if(_SolType == 4) _pt_basis = new tripwLinear;
-      else {
-        cout << fe_order << " is not a valid option for " << geom_elem << endl;
-        abort();
-      }
-    }
-    else {
-      cout << geom_elem << " is not a valid option" << endl;
-      abort();
-    }
+    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
 
     // get data from basis object
     set_coarse_and_fine_elem_data(_pt_basis);
@@ -1006,55 +953,9 @@ namespace femus {
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
     _DPhiXiEtaZetaPtr[2] = &elem_type::GetDPhiDZeta;
 
-    basis* linearElement;
-
+    
     //************ BEGIN FE and MG SETUP ******************
-
-
-    if(!strcmp(geom_elem, "hex")) {  //HEX
-
-      linearElement = new HexLinear;
-
-      if(_SolType == 0) _pt_basis = new HexLinear;
-      else if(_SolType == 1) _pt_basis = new HexQuadratic;
-      else if(_SolType == 2) _pt_basis = new HexBiquadratic;
-      else if(_SolType == 3) _pt_basis = new hex0;
-      else if(_SolType == 4) _pt_basis = new hexpwLinear;
-      else {
-        cout << fe_order << " is not a valid option for " << geom_elem << endl;
-        abort();
-      }
-    }
-    else if(!strcmp(geom_elem, "wedge")) {  //WEDGE
-      linearElement = new WedgeLinear;
-
-      if(_SolType == 0) _pt_basis = new WedgeLinear;
-      else if(_SolType == 1) _pt_basis = new WedgeQuadratic;
-      else if(_SolType == 2) _pt_basis = new WedgeBiquadratic;
-      else if(_SolType == 3) _pt_basis = new wedge0;
-      else if(_SolType == 4) _pt_basis = new wedgepwLinear;
-      else {
-        cout << fe_order << " is not a valid option for " << geom_elem << endl;
-        abort();
-      }
-    }
-    else if(!strcmp(geom_elem, "tet")) {  //TETRAHEDRA
-      linearElement = new TetLinear;
-
-      if(_SolType == 0) _pt_basis = new TetLinear;
-      else if(_SolType == 1) _pt_basis = new TetQuadratic;
-      else if(_SolType == 2) _pt_basis = new TetBiquadratic;
-      else if(_SolType == 3) _pt_basis = new tet0;
-      else if(_SolType == 4) _pt_basis = new tetpwLinear;
-      else {
-        cout << fe_order << " is not a valid option for " << geom_elem << endl;
-        abort();
-      }
-    }
-    else {
-      cout << geom_elem << " is not a valid option" << endl;
-      abort();
-    }
+    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
 
     // get data from basis object
     set_coarse_and_fine_elem_data(_pt_basis);
@@ -1270,6 +1171,135 @@ namespace femus {
 
   }
 
+  
+  const basis* elem_type_1D::set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in) { 
+        
+    basis* linearElement;
+
+    if(!strcmp(geom_elem, "line")) {  //line
+        
+      linearElement = new LineLinear;
+
+      if(_SolType == 0) _pt_basis = new LineLinear;
+      else if(_SolType == 1) _pt_basis = new LineBiquadratic;
+      else if(_SolType == 2) _pt_basis = new LineBiquadratic;
+      else if(_SolType == 3) _pt_basis = new line0;
+      else if(_SolType == 4) _pt_basis = new linepwLinear;
+      else {
+        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        abort();
+      }
+    }
+    else {
+      cout << geom_elem << " is not a valid option" << endl;
+      abort();
+    }
+    
+    
+    return linearElement;
+
+    }
+    
+
+  const basis* elem_type_2D::set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in) {
+        
+    basis* linearElement;
+
+    if(!strcmp(geom_elem, "quad")) {  //QUAD
+        
+      linearElement = new QuadLinear;
+
+      if(_SolType == 0) _pt_basis = new QuadLinear;
+      else if(_SolType == 1) _pt_basis = new QuadQuadratic;
+      else if(_SolType == 2) _pt_basis = new QuadBiquadratic;
+      else if(_SolType == 3) _pt_basis = new quad0;
+      else if(_SolType == 4) _pt_basis = new quadpwLinear;
+      else {
+        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        abort();
+      }
+    }
+    else if(!strcmp(geom_elem, "tri")) {  //TRIANGLE
+        
+      linearElement = new TriLinear;
+
+      if(_SolType == 0) _pt_basis = new TriLinear;
+      else if(_SolType == 1) _pt_basis = new TriQuadratic;
+      else if(_SolType == 2) _pt_basis = new TriBiquadratic;
+      else if(_SolType == 3) _pt_basis = new tri0;
+      else if(_SolType == 4) _pt_basis = new tripwLinear;
+      else {
+        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        abort();
+      }
+    }
+    else {
+      cout << geom_elem << " is not a valid option" << endl;
+      abort();
+    }
+    
+    return linearElement;
+    
+    }
+    
+
+  const basis* elem_type_3D::set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in) {
+  
+    basis* linearElement;
+    
+    if(!strcmp(geom_elem, "hex")) {  //HEX
+
+      linearElement = new HexLinear;
+
+      if(_SolType == 0) _pt_basis = new HexLinear;
+      else if(_SolType == 1) _pt_basis = new HexQuadratic;
+      else if(_SolType == 2) _pt_basis = new HexBiquadratic;
+      else if(_SolType == 3) _pt_basis = new hex0;
+      else if(_SolType == 4) _pt_basis = new hexpwLinear;
+      else {
+        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        abort();
+      }
+    }
+    else if(!strcmp(geom_elem, "wedge")) {  //WEDGE
+        
+      linearElement = new WedgeLinear;
+
+      if(_SolType == 0) _pt_basis = new WedgeLinear;
+      else if(_SolType == 1) _pt_basis = new WedgeQuadratic;
+      else if(_SolType == 2) _pt_basis = new WedgeBiquadratic;
+      else if(_SolType == 3) _pt_basis = new wedge0;
+      else if(_SolType == 4) _pt_basis = new wedgepwLinear;
+      else {
+        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        abort();
+      }
+    }
+    else if(!strcmp(geom_elem, "tet")) {  //TETRAHEDRA
+        
+      linearElement = new TetLinear;
+
+      if(_SolType == 0) _pt_basis = new TetLinear;
+      else if(_SolType == 1) _pt_basis = new TetQuadratic;
+      else if(_SolType == 2) _pt_basis = new TetBiquadratic;
+      else if(_SolType == 3) _pt_basis = new tet0;
+      else if(_SolType == 4) _pt_basis = new tetpwLinear;
+      else {
+        cout << FEType_in/*fe_order*/ << " is not a valid option for " << geom_elem << endl;
+        abort();
+      }
+    }
+    else {
+      cout << geom_elem << " is not a valid option" << endl;
+      abort();
+    }
+    
+    return linearElement;
+    
+ }
+
+ 
+ 
 //---------------------------------------------------------------------------------------------------------
 
   template <class type>
