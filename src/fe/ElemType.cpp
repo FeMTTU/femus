@@ -666,33 +666,10 @@ namespace femus {
   
    }
    
-    
-
-  elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
-    elem_type(geom_elem, fe_order, order_gauss)
-  {
-
-    _dim = 1;
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-
-    //************ BEGIN FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
-
-    // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
-
-    //***********************************************************
-    // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis,linearElement);
-
-    set_coordinates_and_KVERT_IND(_pt_basis);
-    //***********************************************************
-
-    // local projection matrix evaluation
-    set_element_prolongation(linearElement);
-
-    // shape function and its derivatives evaluated at Gauss'points
+   
+   void elem_type_1D::allocate_and_fill_shape_at_quadrature_points()  {
+       
+     // shape function and its derivatives evaluated at Gauss'points
     int n_gauss = _gauss.GetGaussPointsNumber();
 
     _phi = new double*[n_gauss];
@@ -725,83 +702,13 @@ namespace femus {
         _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j], x);
       }
     }
+    
 
-
-    if(_SolType < 3) {
-
-      unsigned nFaces = 2;
-      _phiFace.resize(nFaces);
-      _gradPhiFace.resize(nFaces);
-      _hessianPhiFace.resize(nFaces);
-
-      double xv[2] = { -1, 1};
-
-      for(int iface = 0; iface < nFaces; iface++) {
-        _phiFace[iface].resize(1);
-        _gradPhiFace[iface].resize(1);
-        _hessianPhiFace[iface].resize(1);
-
-        _phiFace[iface][0].resize(_nc);
-        _gradPhiFace[iface][0].resize(_nc);
-        _hessianPhiFace[iface][0].resize(_nc);
-
-        for(int j = 0; j < _nc; j++) {
-
-          _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xv[iface]);
-
-          //std::cout <<  _phiFace[iface][0][j] << " ";
-
-          _gradPhiFace[iface][0][j].resize(1);
-          _gradPhiFace[iface][0][j][0] = _pt_basis->eval_dphidx(_IND[j], &xv[iface]);
-
-          //std::cout <<  _gradPhiFace[iface][0][j][0] << " ";
-
-          _hessianPhiFace[iface][0][j].resize(1);
-          _hessianPhiFace[iface][0][j][0].resize(1);
-          _hessianPhiFace[iface][0][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], &xv[iface]);
-
-          //std::cout <<  _hessianPhiFace[iface][0][j][0][0] << " ";
-        }
-        //std::cout << std::endl;
-      }
-
-    }
-
-
-
-//=====================
-    EvaluateShapeAtQP(geom_elem, fe_order);
-
-    delete linearElement;
-
-  }
-
-
-  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order, const char* order_gauss):
-    elem_type(geom_elem, fe_order, order_gauss)
-  {
-
-    _dim = 2;
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-    _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
-
-    //************ BEGIN FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
-
-    // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
-
-    //***********************************************************
-    // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis,linearElement);
-
-    set_coordinates_and_KVERT_IND(_pt_basis);
-    //***********************************************************
-
-    // local projection matrix evaluation
-    set_element_prolongation(linearElement);
-
+   }
+    
+    
+   void elem_type_2D::allocate_and_fill_shape_at_quadrature_points()  {
+       
     // shape function and its derivatives evaluated at Gauss'points
     int n_gauss = _gauss.GetGaussPointsNumber();
 
@@ -854,122 +761,14 @@ namespace femus {
       }
 
     }
-
     
-    // boundary
-    // here I will only leave the memory allocation; the evaluations go in the ShapeAtBoundary function
-    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
     
-    _phi_bdry = new double*[n_gauss_bdry];
-    _dphidxi_bdry  = new double*[n_gauss_bdry];
-    _dphideta_bdry = new double*[n_gauss_bdry];
-    _phi_memory_bdry = new double [n_gauss_bdry * _nc];
-    _dphidxi_memory_bdry  = new double [n_gauss_bdry * _nc];
-    _dphideta_memory_bdry = new double [n_gauss_bdry * _nc];
-    
-     for (unsigned i = 0; i < n_gauss_bdry; i++) {
-      _phi_bdry[i] = &_phi_memory_bdry[i * _nc];
-      _dphidxi_bdry[i]  = &_dphidxi_memory_bdry[i * _nc];
-      _dphideta_bdry[i] = &_dphideta_memory_bdry[i * _nc];
-     }
-     
-
-
-    if(_SolType < 3) {
-      basis* linearLine = new LineLinear;
-
-
-      Gauss faceGaussPoint = Gauss("line", order_gauss);
-      const double* xi = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
-
-      basis* faceBasis = linearLine;
-
-      unsigned nFaces = _pt_basis->faceNumber[2];
-      _phiFace.resize(nFaces);
-      _gradPhiFace.resize(nFaces);
-      _hessianPhiFace.resize(nFaces);
-
-      for(int iface = 0; iface < nFaces; iface++) {
-        std::vector< double > xv(faceBasis -> _nc);
-        std::vector< double > yv(faceBasis -> _nc);
-        for(int jnode = 0; jnode < faceBasis -> _nc; jnode++) {
-          unsigned iDof = _pt_basis->GetFaceDof(iface, jnode);
-          xv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
-          yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
-        }
-        unsigned nGaussPts = faceGaussPoint.GetGaussPointsNumber();
-        _phiFace[iface].resize(nGaussPts);
-        _gradPhiFace[iface].resize(nGaussPts);
-        _hessianPhiFace[iface].resize(nGaussPts);
-        for(unsigned i = 0; i < nGaussPts; i++) {
-          double x[2] = {0., 0.};
-          for(int j = 0; j <  faceBasis -> _nc; j++) {
-            x[0] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi[i]) * xv[j] ;
-            x[1] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi[i]) * yv[j] ;
-          }
-          _phiFace[iface][i].resize(_nc);
-          _gradPhiFace[iface][i].resize(_nc);
-          _hessianPhiFace[iface][i].resize(_nc);
-          for(int j = 0; j < _nc; j++) {
-            _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x);
-
-            _gradPhiFace[iface][i][j].resize(2);
-            _gradPhiFace[iface][i][j][0] = _pt_basis->eval_dphidx(_IND[j], x);
-            _gradPhiFace[iface][i][j][1] = _pt_basis->eval_dphidy(_IND[j], x);
-
-            _hessianPhiFace[iface][i][j].resize(2);
-            _hessianPhiFace[iface][i][j][0].resize(2);
-            _hessianPhiFace[iface][i][j][1].resize(2);
-            _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x);
-            _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x);
-            _hessianPhiFace[iface][i][j][0][1] = _pt_basis->eval_d2phidxdy(_IND[j], x);
-            _hessianPhiFace[iface][i][j][1][0] = _hessianPhiFace[iface][i][j][1][0];
-          }
-        }
-      }
-      delete linearLine;
-    }
-
-
-//
-//=====================
-    EvaluateShapeAtQP(geom_elem, fe_order);
-
-    //std::cout << std::endl;
-
-    delete linearElement;
-
-
-  }
-  
-
-  elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
-    elem_type(geom_elem, fe_order, order_gauss)
-  {
-
-    _dim = 3;
-    _DPhiXiEtaZetaPtr.resize(_dim);
-    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
-    _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
-    _DPhiXiEtaZetaPtr[2] = &elem_type::GetDPhiDZeta;
-
-    
-    //************ BEGIN FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
-
-    // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
-
-    //***********************************************************
-    // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis,linearElement);
-
-    set_coordinates_and_KVERT_IND(_pt_basis);
-    //***********************************************************
-
-    // local projection matrix evaluation
-    set_element_prolongation(linearElement);
-
+   }
+   
+   
+   
+   void elem_type_3D::allocate_and_fill_shape_at_quadrature_points()  {
+       
     // shape function and its derivatives evaluated at Gauss'points
     int n_gauss = _gauss.GetGaussPointsNumber();
 
@@ -1068,7 +867,236 @@ namespace femus {
         d2phidzetadxisum += _d2phidzetadxi[i][j];
       }
     }
+       
+       
+   }
+   
 
+  elem_type_1D::elem_type_1D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
+  {
+
+    _dim = 1;
+
+    //************ BEGIN FE and MG SETUP ******************
+    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
+
+    // get data from basis object
+    set_coarse_and_fine_elem_data(_pt_basis);
+
+    //***********************************************************
+    // construction of coordinates
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
+
+    set_coordinates_and_KVERT_IND(_pt_basis);
+    //***********************************************************
+
+    // local projection matrix evaluation
+    set_element_prolongation(linearElement);
+
+    
+    allocate_and_fill_shape_at_quadrature_points();
+
+
+    if(_SolType < 3) {
+
+      unsigned nFaces = 2;
+      _phiFace.resize(nFaces);
+      _gradPhiFace.resize(nFaces);
+      _hessianPhiFace.resize(nFaces);
+
+      double xv[2] = { -1, 1};
+
+      for(int iface = 0; iface < nFaces; iface++) {
+        _phiFace[iface].resize(1);
+        _gradPhiFace[iface].resize(1);
+        _hessianPhiFace[iface].resize(1);
+
+        _phiFace[iface][0].resize(_nc);
+        _gradPhiFace[iface][0].resize(_nc);
+        _hessianPhiFace[iface][0].resize(_nc);
+
+        for(int j = 0; j < _nc; j++) {
+
+          _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xv[iface]);
+
+          //std::cout <<  _phiFace[iface][0][j] << " ";
+
+          _gradPhiFace[iface][0][j].resize(1);
+          _gradPhiFace[iface][0][j][0] = _pt_basis->eval_dphidx(_IND[j], &xv[iface]);
+
+          //std::cout <<  _gradPhiFace[iface][0][j][0] << " ";
+
+          _hessianPhiFace[iface][0][j].resize(1);
+          _hessianPhiFace[iface][0][j][0].resize(1);
+          _hessianPhiFace[iface][0][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], &xv[iface]);
+
+          //std::cout <<  _hessianPhiFace[iface][0][j][0][0] << " ";
+        }
+        //std::cout << std::endl;
+      }
+
+    }
+
+
+
+//=====================
+    _DPhiXiEtaZetaPtr.resize(_dim);
+    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
+//=====================
+    EvaluateShapeAtQP(geom_elem, fe_order);
+
+    delete linearElement;
+
+  }
+
+
+  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order, const char* order_gauss):
+    elem_type(geom_elem, fe_order, order_gauss)
+  {
+
+    _dim = 2;
+
+    //************ BEGIN FE and MG SETUP ******************
+    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
+
+    // get data from basis object
+    set_coarse_and_fine_elem_data(_pt_basis);
+
+    //***********************************************************
+    // construction of coordinates
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
+
+    set_coordinates_and_KVERT_IND(_pt_basis);
+    //***********************************************************
+
+    // local projection matrix evaluation
+    set_element_prolongation(linearElement);
+
+    
+    allocate_and_fill_shape_at_quadrature_points();
+
+    
+    
+    // boundary
+    // here I will only leave the memory allocation; the evaluations go in the ShapeAtBoundary function
+    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    _phi_bdry = new double*[n_gauss_bdry];
+    _dphidxi_bdry  = new double*[n_gauss_bdry];
+    _dphideta_bdry = new double*[n_gauss_bdry];
+    _phi_memory_bdry = new double [n_gauss_bdry * _nc];
+    _dphidxi_memory_bdry  = new double [n_gauss_bdry * _nc];
+    _dphideta_memory_bdry = new double [n_gauss_bdry * _nc];
+    
+     for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      _phi_bdry[i] = &_phi_memory_bdry[i * _nc];
+      _dphidxi_bdry[i]  = &_dphidxi_memory_bdry[i * _nc];
+      _dphideta_bdry[i] = &_dphideta_memory_bdry[i * _nc];
+     }
+     
+
+
+    if(_SolType < 3) {
+      basis* linearLine = new LineLinear;
+
+
+      Gauss faceGaussPoint = Gauss("line", order_gauss);
+      const double* xi = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
+
+      basis* faceBasis = linearLine;
+
+      unsigned nFaces = _pt_basis->faceNumber[2];
+      _phiFace.resize(nFaces);
+      _gradPhiFace.resize(nFaces);
+      _hessianPhiFace.resize(nFaces);
+
+      for(int iface = 0; iface < nFaces; iface++) {
+        std::vector< double > xv(faceBasis -> _nc);
+        std::vector< double > yv(faceBasis -> _nc);
+        for(int jnode = 0; jnode < faceBasis -> _nc; jnode++) {
+          unsigned iDof = _pt_basis->GetFaceDof(iface, jnode);
+          xv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
+          yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
+        }
+        unsigned nGaussPts = faceGaussPoint.GetGaussPointsNumber();
+        _phiFace[iface].resize(nGaussPts);
+        _gradPhiFace[iface].resize(nGaussPts);
+        _hessianPhiFace[iface].resize(nGaussPts);
+        for(unsigned i = 0; i < nGaussPts; i++) {
+          double x[2] = {0., 0.};
+          for(int j = 0; j <  faceBasis -> _nc; j++) {
+            x[0] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi[i]) * xv[j] ;
+            x[1] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi[i]) * yv[j] ;
+          }
+          _phiFace[iface][i].resize(_nc);
+          _gradPhiFace[iface][i].resize(_nc);
+          _hessianPhiFace[iface][i].resize(_nc);
+          for(int j = 0; j < _nc; j++) {
+            _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x);
+
+            _gradPhiFace[iface][i][j].resize(2);
+            _gradPhiFace[iface][i][j][0] = _pt_basis->eval_dphidx(_IND[j], x);
+            _gradPhiFace[iface][i][j][1] = _pt_basis->eval_dphidy(_IND[j], x);
+
+            _hessianPhiFace[iface][i][j].resize(2);
+            _hessianPhiFace[iface][i][j][0].resize(2);
+            _hessianPhiFace[iface][i][j][1].resize(2);
+            _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x);
+            _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x);
+            _hessianPhiFace[iface][i][j][0][1] = _pt_basis->eval_d2phidxdy(_IND[j], x);
+            _hessianPhiFace[iface][i][j][1][0] = _hessianPhiFace[iface][i][j][1][0];
+          }
+        }
+      }
+      delete linearLine;
+    }
+
+
+//
+//=====================
+    _DPhiXiEtaZetaPtr.resize(_dim);
+    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
+    _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
+//=====================
+    EvaluateShapeAtQP(geom_elem, fe_order);
+
+    //std::cout << std::endl;
+
+    delete linearElement;
+
+
+  }
+  
+
+  elem_type_3D::elem_type_3D(const char* geom_elem, const char* fe_order, const char* order_gauss) :
+    elem_type(geom_elem, fe_order, order_gauss)
+  {
+
+    _dim = 3;
+    
+    //************ BEGIN FE and MG SETUP ******************
+    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
+
+    // get data from basis object
+    set_coarse_and_fine_elem_data(_pt_basis);
+
+    //***********************************************************
+    // construction of coordinates
+    set_coordinates_in_Basis_object(_pt_basis,linearElement);
+
+    set_coordinates_and_KVERT_IND(_pt_basis);
+    //***********************************************************
+
+    // local projection matrix evaluation
+    set_element_prolongation(linearElement);
+
+    
+    allocate_and_fill_shape_at_quadrature_points();
+    
+    
+    
+    
     //std::cout << std::endl;
     if(_SolType < 3) {
       basis* linearQuad = new QuadLinear;
@@ -1162,6 +1190,11 @@ namespace femus {
       delete linearTri;
     }
 
+//=====================
+    _DPhiXiEtaZetaPtr.resize(_dim);
+    _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
+    _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
+    _DPhiXiEtaZetaPtr[2] = &elem_type::GetDPhiDZeta;
 //=====================
     EvaluateShapeAtQP(geom_elem, fe_order);
 

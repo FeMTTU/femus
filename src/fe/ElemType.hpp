@@ -312,6 +312,7 @@ namespace femus
       /** Compute element prolongation operator */
       void set_element_prolongation(const basis* linearElement);
       
+      virtual void allocate_and_fill_shape_at_quadrature_points() = 0;
       
       // ====================================
       // member data
@@ -499,7 +500,11 @@ namespace femus
       
       const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
       
-      virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
+      
+      void allocate_and_fill_shape_at_quadrature_points();
+      
+
+       virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
       
 
    template <class type, class type_mov>
@@ -832,6 +837,8 @@ namespace femus
   private:
       
      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
+     
+     void allocate_and_fill_shape_at_quadrature_points();
       
   void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
@@ -1200,6 +1207,8 @@ namespace femus
     private:
 
      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
+     
+     void allocate_and_fill_shape_at_quadrature_points();
 
      void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
