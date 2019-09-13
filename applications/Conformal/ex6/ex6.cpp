@@ -15,6 +15,8 @@
 #include "petscmat.h"
 #include "PetscMatrix.hpp"
 
+bool stopIterate = false;
+
 using namespace femus;
 // Comment back in for working code
 //const double mu[2] = {0.8, 0.};
@@ -47,7 +49,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
 
   if (!strcmp (solName, "Dx1")) {
     if (1 == faceName || 3 == faceName) {
-      dirichlet = false;
+      dirichlet = true;
     }
     if (4 == faceName) {
       //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
@@ -57,7 +59,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
   }
   else if (!strcmp (solName, "Dx2")) {
     if (2 == faceName) {
-      dirichlet = false;
+      dirichlet = true;
     }
   }
 
@@ -142,7 +144,7 @@ int main (int argc, char** args) {
   system.AddSolutionToSystemPDE ("Dx2");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations (200);
+  system.SetMaxNumberOfNonLinearIterations (20000);
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   system.init();
@@ -196,7 +198,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   // Pointers to the multilevel solution, solution (level) and equation (level).
   MultiLevelSolution *mlSol = ml_prob._ml_sol;
 
-  if (counter > 0) {
+  if (counter > 0 && !stopIterate) {
     UpdateMu (*mlSol);
   }
 
@@ -534,11 +536,14 @@ void UpdateMu (MultiLevelSolution& mlSol) {
   std::vector < unsigned > solmu (dim);
   solmu[0] = mlSol.GetIndex ("mu1");
   solmu[1] = mlSol.GetIndex ("mu2");
+  
+  unsigned solsmu1N = mlSol.GetIndex ("smu1N");
 
   unsigned solw1 = mlSol.GetIndex ("weight1");
   unsigned solType1 = mlSol.GetSolutionType (solmu[0]);
 
   unsigned iproc = msh->processor_id();
+  unsigned nprocs = msh->n_processors();
 
   std::vector<double> dof1;
 
@@ -678,155 +683,39 @@ void UpdateMu (MultiLevelSolution& mlSol) {
 
     double weight = (*sol->_Sol[solw1]) (i);
 
+    double mu[2];
     for (unsigned k = 0; k < dim; k++) {
-      double muk = (*sol->_Sol[solmu[k]]) (i);
-      sol->_Sol[solmu[k]]->set (i, muk / weight);
+      mu[k] = (*sol->_Sol[solmu[k]]) (i);
+      sol->_Sol[solmu[k]]->set (i, mu[k] / weight);
     }
+    sol->_Sol[solsmu1N]->set (i, sqrt( mu[0] * mu[0] + mu[1] * mu[1]) / weight);
   }
   for (unsigned k = 0; k < dim; k++) {
     sol->_Sol[solmu[k]]->close();
   }
-
-
-/////////////////////////////////////////////////
-
-  unsigned solsmu1N = mlSol.GetIndex ("smu1N");
-
-  unsigned solw2 = mlSol.GetIndex ("weight2");
-  unsigned solsmu2N = mlSol.GetIndex ("smu2N"); //smooth ni norm
-
-  unsigned solType2 = mlSol.GetSolutionType (solsmu2N);
-
-  std::vector<double> dof2;
-  std::vector<double> sol1;
-
-  sol->_Sol[solsmu2N]->zero();
-  sol->_Sol[solw2]->zero();
-
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-    short unsigned ielGeom = msh->GetElementType (iel);
-    unsigned nDofs1  = msh->GetElementDofNumber (iel, solType1);
-    unsigned nDofs2  = msh->GetElementDofNumber (iel, solType2);
-
-    sol1.resize (nDofs1);
-    dof2.resize (nDofs2);
-
-    for (int k = 0; k < dim; k++) {
-      x[k].resize (nDofs2);
-    }
-
-    for (unsigned i = 0; i < nDofs1; i++) {
-      unsigned idof = msh->GetSolutionDof (i, iel, solType1);
-      double muN = 0.;
-      for (unsigned k = 0; k < dim; k++) {
-        double muk = (*sol->_Sol[solmu[k]]) (idof);
-        muN += muk * muk;
-      }
-      sol1[i] = sqrt (muN);
-    }
-
-    // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofs2; i++) {
-      dof2[i] = msh->GetSolutionDof (i, iel, solType2);
-    }
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofs2; i++) {
-      unsigned xDof  = msh->GetSolutionDof (i, iel, 2);
-      for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
-      }
-    }
-
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType2]->GetGaussPointNumber(); ig++) {
-      msh->_finiteElement[ielGeom][solType2]->Jacobian (x, ig, weight2, phi2, phi2_x);
-
-      double *phi1 = msh->_finiteElement[ielGeom][solType1]->GetPhi (ig);
-      double sol1g = 0.;
-      for (unsigned i = 0; i < nDofs1; i++) {
-        sol1g += phi1[i] * sol1[i];
-      }
-
-      // *** phi_i loop ***
-      for (unsigned i = 0; i < nDofs2; i++) {
-        sol->_Sol[solw2]->add (dof2[i], phi2[i] * weight2);
-        sol->_Sol[solsmu2N]->add (dof2[i], sol1g * phi2[i] * weight2);
-      } // end phi_i loop
-    } // end gauss point loop
-
-  } //end element loop for each process*/
-  sol->_Sol[solw2]->close();
-  sol->_Sol[solsmu2N]->close();
-
-  for (unsigned i = msh->_dofOffset[solType2][iproc]; i < msh->_dofOffset[solType2][iproc + 1]; i++) {
-    double value = (*sol->_Sol[solsmu2N]) (i);
-    double weight = (*sol->_Sol[solw2]) (i);
-    sol->_Sol[solsmu2N]->set (i, value / weight);
-  }
-  sol->_Sol[solsmu2N]->close();
-
-/////////////////////////////////////////////////
-
-  std::vector<double> sol2;
-
-  sol->_Sol[solsmu1N]->zero();
-  sol->_Sol[solw1]->zero();
-
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-    short unsigned ielGeom = msh->GetElementType (iel);
-    unsigned nDofs1  = msh->GetElementDofNumber (iel, solType1);
-    unsigned nDofs2  = msh->GetElementDofNumber (iel, solType2);
-
-    sol2.resize (nDofs2);
-    dof1.resize (nDofs1);
-
-    for (int k = 0; k < dim; k++) {
-      x[k].resize (nDofs2);
-    }
-
-    for (unsigned i = 0; i < nDofs2; i++) {
-      unsigned idof = msh->GetSolutionDof (i, iel, solType2);
-      sol2[i] = (*sol->_Sol[solsmu2N]) (idof);
-    }
-
-    // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofs1; i++) {
-      dof1[i] = msh->GetSolutionDof (i, iel, solType1);
-    }
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofs2; i++) {
-      unsigned xDof  = msh->GetSolutionDof (i, iel, 2);
-      for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
-      }
-    }
-
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType2]->GetGaussPointNumber(); ig++) {
-      msh->_finiteElement[ielGeom][solType2]->Jacobian (x, ig, weight2, phi2, phi2_x);
-
-      double *phi1 = msh->_finiteElement[ielGeom][solType1]->GetPhi (ig);
-
-      double sol2g = 0.;
-      for (unsigned i = 0; i < nDofs2; i++) {
-        sol2g += phi2[i] * sol2[i];
-      }
-
-      // *** phi_i loop ***
-      for (unsigned i = 0; i < nDofs1; i++) {
-        sol->_Sol[solw1]->add (dof1[i], phi1[i] * weight2);
-        sol->_Sol[solsmu1N]->add (dof1[i], sol2g * phi1[i] * weight2);
-      } // end phi_i loop
-    } // end gauss point loop
-
-  } //end element loop for each process*/
-  sol->_Sol[solw1]->close();
   sol->_Sol[solsmu1N]->close();
+  
+  double norm = sol->_Sol[solsmu1N]->linfty_norm();
+  std::cout << norm << std::endl;
+  if ( norm < 0.5) stopIterate = true;
 
+  /////////////////////////////////////////////////
+   
+  double MuNormLocalSum = 0.;
   for (unsigned i = msh->_dofOffset[solType1][iproc]; i < msh->_dofOffset[solType1][iproc + 1]; i++) {
-
-    double weight = (*sol->_Sol[solw1]) (i);
-    double value = (*sol->_Sol[solsmu1N]) (i);
+    double muN = 0.;
+    for (unsigned k = 0; k < dim; k++) {
+      double muk = (*sol->_Sol[solmu[k]]) (i);
+      muN += muk * muk;
+    }
+    MuNormLocalSum += sqrt (muN);
+  }
+  
+  double MuNormAverage;
+  MPI_Allreduce(&MuNormLocalSum, &MuNormAverage, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MuNormAverage /= msh->_dofOffset[solType1][nprocs];
+  
+  for (unsigned i = msh->_dofOffset[solType1][iproc]; i < msh->_dofOffset[solType1][iproc + 1]; i++) {
 
     double mu[2];
     double normMu = 0.;
@@ -836,16 +725,14 @@ void UpdateMu (MultiLevelSolution& mlSol) {
     }
     normMu = sqrt (normMu);
     for (unsigned k = 0; k < dim; k++) {
-      sol->_Sol[solmu[k]]->set (i, value / weight * mu[k] / normMu);
+      sol->_Sol[solmu[k]]->set (i, MuNormAverage * mu[k] / normMu);
     }
-    sol->_Sol[solsmu1N]->set (i, value / weight);
+    
   }
 
   for (unsigned k = 0; k < dim; k++) {
     sol->_Sol[solmu[k]]->close();
   }
-
-  sol->_Sol[solsmu1N]->close();
 
 }
 
@@ -1024,6 +911,348 @@ void AssembleShearMinimization (MultiLevelProblem& ml_prob) {
   counter++;
 
   // ***************** END ASSEMBLY *******************
+}
+
+void UpdateMuOld (MultiLevelSolution& mlSol) {
+
+  //MultiLevelSolution*  mlSol = ml_prob._ml_sol;
+  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1u;
+
+  Solution* sol = mlSol.GetSolutionLevel (level);
+  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  elem* el = msh->el;
+
+  unsigned  dim = msh->GetDimension();
+
+  std::vector < unsigned > solDx (dim);
+  solDx[0] = mlSol.GetIndex ("Dx1");
+  solDx[1] = mlSol.GetIndex ("Dx2");
+  unsigned solTypeDx = mlSol.GetSolutionType (solDx[0]);
+
+  std::vector < unsigned > solmu (dim);
+  solmu[0] = mlSol.GetIndex ("mu1");
+  solmu[1] = mlSol.GetIndex ("mu2");
+  
+  unsigned solsmu1N = mlSol.GetIndex ("smu1N");
+
+  unsigned solw1 = mlSol.GetIndex ("weight1");
+  unsigned solType1 = mlSol.GetSolutionType (solmu[0]);
+
+  unsigned iproc = msh->processor_id();
+
+  std::vector<double> dof1;
+
+  double weight2;
+  std::vector <double> phi2;
+  std::vector <double> phi2_x;
+
+  std::vector < std::vector < double > > x (dim);
+
+  for (unsigned k = 0; k < dim; k++) {
+    sol->_Sol[solmu[k]]->zero();
+  }
+  sol->_Sol[solw1]->zero();
+
+
+  //For triangle elements
+  std::vector<double> phi_uv0;
+  std::vector<double> phi_uv1;
+  std::vector< double > stdVectorPhi;
+  std::vector< double > stdVectorPhi_uv;
+  std::vector < std::vector < double > > xT (2);
+  xT[0].resize (7);
+  xT[0][0] = -0.5;
+  xT[0][1] = 0.5;
+  xT[0][2] = 0.;
+  xT[0][3] = 0.;
+  xT[0][4] = 0.25;
+  xT[0][5] = -0.25;
+  xT[0][6] = 0.;
+
+  xT[1].resize (7);
+  xT[1][0] = 0.;
+  xT[1][1] = 0.;
+  xT[1][2] = sqrt (3.) / 2.;
+  xT[1][3] = 0.;
+  xT[1][4] = sqrt (3.) / 4.;
+  xT[1][5] = sqrt (3.) / 4.;
+  xT[1][6] = sqrt (3.) / 6.;
+
+
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    short unsigned ielGeom = msh->GetElementType (iel);
+    unsigned nDofs1  = msh->GetElementDofNumber (iel, solType1);
+    unsigned nDofsDx  = msh->GetElementDofNumber (iel, solTypeDx);
+
+    dof1.resize (nDofs1);
+
+    for (int k = 0; k < dim; k++) {
+      x[k].resize (nDofsDx);
+    }
+
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofs1; i++) {
+      dof1[i] = msh->GetSolutionDof (i, iel, solType1);
+    }
+    // local storage of coordinates
+    for (unsigned i = 0; i < nDofsDx; i++) {
+      unsigned idof = msh->GetSolutionDof (i, iel, solTypeDx);
+      unsigned xDof  = msh->GetSolutionDof (i, iel, 2);
+      for (unsigned k = 0; k < dim; k++) {
+        x[k][i] = (*msh->_topology->_Sol[k]) (xDof) + (*sol->_Sol[solDx[k]]) (idof);
+      }
+    }
+
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solTypeDx]->GetGaussPointNumber(); ig++) {
+
+      const double *phi;  // local test function
+      const double *phi_uv[dim]; // local test function first order partial derivatives
+      double weight; // gauss point weight
+
+      double *phi1 = msh->_finiteElement[ielGeom][solType1]->GetPhi (ig);
+
+      // Get Gauss point weight, test function, and first order derivatives.
+      if (ielGeom == QUAD) {
+        //phi = msh->_finiteElement[ielGeom][solTypeDx]->GetPhi (ig);
+        phi_uv[0] = msh->_finiteElement[ielGeom][solTypeDx]->GetDPhiDXi (ig);
+        phi_uv[1] = msh->_finiteElement[ielGeom][solTypeDx]->GetDPhiDEta (ig);
+        weight = msh->_finiteElement[ielGeom][solTypeDx]->GetGaussWeight (ig);
+      }
+
+      // Special adjustments for triangles.
+      else {
+        msh->_finiteElement[ielGeom][solTypeDx]->Jacobian (xT, ig, weight, stdVectorPhi, stdVectorPhi_uv);
+        phi_uv0.resize (nDofsDx);
+        phi_uv1.resize (nDofsDx);
+        for (unsigned i = 0; i < nDofsDx; i++) {
+          phi_uv0[i] = stdVectorPhi_uv[i * dim];
+          phi_uv1[i] = stdVectorPhi_uv[i * dim + 1];
+        }
+        phi_uv[0] = &phi_uv0[0];
+        phi_uv[1] = &phi_uv1[0];
+      }
+
+      // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
+      double solx_uv[2][2] = {{0., 0.}, {0., 0.}};
+      for (unsigned k = 0; k < dim; k++) {
+        for (int j = 0; j < dim; j++) {
+          for (unsigned i = 0; i < nDofsDx; i++) {
+            solx_uv[k][j] += phi_uv[j][i] * x[k][i];
+          }
+        }
+      }
+
+      double norm2Xz = (1. / 4.) * (pow ( (solx_uv[0][0] + solx_uv[1][1]), 2) + pow ( (solx_uv[1][0] - solx_uv[0][1]), 2));
+      double XzBarXz_Bar[2];
+
+      XzBarXz_Bar[0] = (1. / 4.) * (pow (solx_uv[0][0], 2) + pow (solx_uv[1][0], 2) - pow (solx_uv[0][1], 2) - pow (solx_uv[1][1], 2));
+      XzBarXz_Bar[1] = (1. / 2.) * (solx_uv[0][0] * solx_uv[0][1] + solx_uv[1][0] * solx_uv[1][1]);
+
+      // Comment out for working code
+
+      double mu[2] = {0., 0.};
+      for (unsigned k = 0; k < 2; k++) {
+        if (norm2Xz > 0.) {
+          mu[k] += (1. / norm2Xz) * XzBarXz_Bar[k];
+        }
+      }
+
+      for (unsigned i = 0; i < nDofs1; i++) {
+        sol->_Sol[solw1]->add (dof1[i], phi1[i] * weight);
+        for (unsigned k = 0; k < dim; k++) {
+          sol->_Sol[solmu[k]]->add (dof1[i], mu[k] * phi1[i] * weight);
+        }
+      } // end phi_i loop
+
+    } // end gauss point loop
+
+  } //end element loop for each process*/
+
+  for (unsigned k = 0; k < dim; k++) {
+    sol->_Sol[solmu[k]]->close();
+  }
+  sol->_Sol[solw1]->close();
+
+  for (unsigned i = msh->_dofOffset[solType1][iproc]; i < msh->_dofOffset[solType1][iproc + 1]; i++) {
+
+    double weight = (*sol->_Sol[solw1]) (i);
+
+    double mu[2];
+    for (unsigned k = 0; k < dim; k++) {
+      mu[k] = (*sol->_Sol[solmu[k]]) (i);
+      sol->_Sol[solmu[k]]->set (i, mu[k] / weight);
+    }
+    sol->_Sol[solsmu1N]->set (i, sqrt( mu[0] * mu[0] + mu[1] * mu[1]) / weight);
+  }
+  for (unsigned k = 0; k < dim; k++) {
+    sol->_Sol[solmu[k]]->close();
+  }
+  sol->_Sol[solsmu1N]->close();
+  
+  double norm = sol->_Sol[solsmu1N]->linfty_norm();
+  std::cout << norm << std::endl;
+  if ( norm < 0.5) stopIterate = true;
+
+/////////////////////////////////////////////////
+
+  
+
+  unsigned solw2 = mlSol.GetIndex ("weight2");
+  unsigned solsmu2N = mlSol.GetIndex ("smu2N"); //smooth ni norm
+
+  unsigned solType2 = mlSol.GetSolutionType (solsmu2N);
+
+  std::vector<double> dof2;
+  std::vector<double> sol1;
+
+  sol->_Sol[solsmu2N]->zero();
+  sol->_Sol[solw2]->zero();
+
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    short unsigned ielGeom = msh->GetElementType (iel);
+    unsigned nDofs1  = msh->GetElementDofNumber (iel, solType1);
+    unsigned nDofs2  = msh->GetElementDofNumber (iel, solType2);
+
+    sol1.resize (nDofs1);
+    dof2.resize (nDofs2);
+
+    for (int k = 0; k < dim; k++) {
+      x[k].resize (nDofs2);
+    }
+
+    for (unsigned i = 0; i < nDofs1; i++) {
+      unsigned idof = msh->GetSolutionDof (i, iel, solType1);
+      double muN = 0.;
+      for (unsigned k = 0; k < dim; k++) {
+        double muk = (*sol->_Sol[solmu[k]]) (idof);
+        muN += muk * muk;
+      }
+      sol1[i] = sqrt (muN);
+    }
+
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofs2; i++) {
+      dof2[i] = msh->GetSolutionDof (i, iel, solType2);
+    }
+    // local storage of coordinates
+    for (unsigned i = 0; i < nDofs2; i++) {
+      unsigned xDof  = msh->GetSolutionDof (i, iel, 2);
+      for (unsigned k = 0; k < dim; k++) {
+        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+      }
+    }
+
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType2]->GetGaussPointNumber(); ig++) {
+      msh->_finiteElement[ielGeom][solType2]->Jacobian (x, ig, weight2, phi2, phi2_x);
+
+      double *phi1 = msh->_finiteElement[ielGeom][solType1]->GetPhi (ig);
+      double sol1g = 0.;
+      for (unsigned i = 0; i < nDofs1; i++) {
+        sol1g += phi1[i] * sol1[i];
+      }
+
+      // *** phi_i loop ***
+      for (unsigned i = 0; i < nDofs2; i++) {
+        sol->_Sol[solw2]->add (dof2[i], phi2[i] * weight2);
+        sol->_Sol[solsmu2N]->add (dof2[i], sol1g * phi2[i] * weight2);
+      } // end phi_i loop
+    } // end gauss point loop
+
+  } //end element loop for each process*/
+  sol->_Sol[solw2]->close();
+  sol->_Sol[solsmu2N]->close();
+
+  for (unsigned i = msh->_dofOffset[solType2][iproc]; i < msh->_dofOffset[solType2][iproc + 1]; i++) {
+    double value = (*sol->_Sol[solsmu2N]) (i);
+    double weight = (*sol->_Sol[solw2]) (i);
+    sol->_Sol[solsmu2N]->set (i, value / weight);
+  }
+  sol->_Sol[solsmu2N]->close();
+
+/////////////////////////////////////////////////
+
+  std::vector<double> sol2;
+
+  sol->_Sol[solsmu1N]->zero();
+  sol->_Sol[solw1]->zero();
+
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    short unsigned ielGeom = msh->GetElementType (iel);
+    unsigned nDofs1  = msh->GetElementDofNumber (iel, solType1);
+    unsigned nDofs2  = msh->GetElementDofNumber (iel, solType2);
+
+    sol2.resize (nDofs2);
+    dof1.resize (nDofs1);
+
+    for (int k = 0; k < dim; k++) {
+      x[k].resize (nDofs2);
+    }
+
+    for (unsigned i = 0; i < nDofs2; i++) {
+      unsigned idof = msh->GetSolutionDof (i, iel, solType2);
+      sol2[i] = (*sol->_Sol[solsmu2N]) (idof);
+    }
+
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofs1; i++) {
+      dof1[i] = msh->GetSolutionDof (i, iel, solType1);
+    }
+    // local storage of coordinates
+    for (unsigned i = 0; i < nDofs2; i++) {
+      unsigned xDof  = msh->GetSolutionDof (i, iel, 2);
+      for (unsigned k = 0; k < dim; k++) {
+        x[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+      }
+    }
+
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType2]->GetGaussPointNumber(); ig++) {
+      msh->_finiteElement[ielGeom][solType2]->Jacobian (x, ig, weight2, phi2, phi2_x);
+
+      double *phi1 = msh->_finiteElement[ielGeom][solType1]->GetPhi (ig);
+
+      double sol2g = 0.;
+      for (unsigned i = 0; i < nDofs2; i++) {
+        sol2g += phi2[i] * sol2[i];
+      }
+
+      // *** phi_i loop ***
+      for (unsigned i = 0; i < nDofs1; i++) {
+        sol->_Sol[solw1]->add (dof1[i], phi1[i] * weight2);
+        sol->_Sol[solsmu1N]->add (dof1[i], sol2g * phi1[i] * weight2);
+      } // end phi_i loop
+    } // end gauss point loop
+
+  } //end element loop for each process*/
+  sol->_Sol[solw1]->close();
+  sol->_Sol[solsmu1N]->close();
+
+  for (unsigned i = msh->_dofOffset[solType1][iproc]; i < msh->_dofOffset[solType1][iproc + 1]; i++) {
+
+    double weight = (*sol->_Sol[solw1]) (i);
+    double value = (*sol->_Sol[solsmu1N]) (i);
+
+    double mu[2];
+    double normMu = 0.;
+    for (unsigned k = 0; k < dim; k++) {
+      mu[k] = (*sol->_Sol[solmu[k]]) (i);
+      normMu += mu[k] * mu[k];
+    }
+    normMu = sqrt (normMu);
+    for (unsigned k = 0; k < dim; k++) {
+      sol->_Sol[solmu[k]]->set (i, value / weight * mu[k] / normMu);
+    }
+    sol->_Sol[solsmu1N]->set (i, value / weight);
+  }
+
+  for (unsigned k = 0; k < dim; k++) {
+    sol->_Sol[solmu[k]]->close();
+  }
+
+  sol->_Sol[solsmu1N]->close();
+
 }
 
 
