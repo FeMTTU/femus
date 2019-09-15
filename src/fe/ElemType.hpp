@@ -314,7 +314,13 @@ namespace femus
       
       virtual void allocate_and_fill_shape_at_quadrature_points() = 0;
       
+      virtual void deallocate_shape_at_quadrature_points() = 0; /*they say you shouldn't call virtual function from constr/destr, so for now I am not using them in there*/
+      
       virtual void allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss) = 0;
+
+      virtual void allocate_volume_shape_at_boundary_quadrature_points() = 0;
+
+      virtual void deallocate_volume_shape_at_boundary_quadrature_points() = 0; /*they say you shouldn't call virtual function from constr/destr, so for now I am not using them in there*/
       
       // ====================================
       // member data
@@ -361,16 +367,11 @@ namespace femus
 
       /** destructor */
       ~elem_type_1D() {
-
-        delete [] _phi;
-        delete [] _phi_memory;
-        delete [] _dphidxi;
-        delete [] _dphidxi_memory;
-
-        delete [] _d2phidxi2;
-        delete [] _d2phidxi2_memory;
-
-      }
+          
+          deallocate_shape_at_quadrature_points();
+            
+          deallocate_volume_shape_at_boundary_quadrature_points();
+       }
       
       
      void compute_normal(const std::vector< std::vector< double > > & Jac, std::vector< double > & normal) const {
@@ -505,8 +506,13 @@ namespace femus
       
       void allocate_and_fill_shape_at_quadrature_points();
       
+      void deallocate_shape_at_quadrature_points();
+      
       void allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss);
       
+      void allocate_volume_shape_at_boundary_quadrature_points();
+
+      void deallocate_volume_shape_at_boundary_quadrature_points();
 
        virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
       
@@ -700,30 +706,11 @@ namespace femus
 
       /** destructor */
       ~elem_type_2D() {
-
-        delete [] _phi;
-        delete [] _phi_memory;
-        delete [] _dphidxi;
-        delete [] _dphidxi_memory;
-        delete [] _dphideta;
-        delete [] _dphideta_memory;
-
-        delete [] _d2phidxi2;
-        delete [] _d2phidxi2_memory;
-        delete [] _d2phideta2;
-        delete [] _d2phideta2_memory;
-
-        delete [] _d2phidxideta;
-        delete [] _d2phidxideta_memory;
-         
-        delete [] _phi_bdry;
-        delete [] _phi_memory_bdry;
-        delete [] _dphidxi_bdry;
-        delete [] _dphidxi_memory_bdry;
-        delete [] _dphideta_bdry;
-        delete [] _dphideta_memory_bdry;
-
-      }
+          
+          deallocate_shape_at_quadrature_points();
+            
+          deallocate_volume_shape_at_boundary_quadrature_points();
+       }
 
       
      void compute_normal(const std::vector< std::vector< double > > & Jac, std::vector< double > & normal) const {
@@ -844,8 +831,14 @@ namespace femus
      
      void allocate_and_fill_shape_at_quadrature_points();
       
+     void deallocate_shape_at_quadrature_points();
+      
      void allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss);
      
+     void allocate_volume_shape_at_boundary_quadrature_points();
+
+     void deallocate_volume_shape_at_boundary_quadrature_points();
+
       
   void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
@@ -1072,31 +1065,13 @@ namespace femus
         
       /** constructor */
       elem_type_3D(const char* solid, const char* order, const char* gauss_order);
+      
       /** destructor */
       ~elem_type_3D() {
-        delete [] _phi;
-        delete [] _phi_memory;
-        delete [] _dphidxi;
-        delete [] _dphidxi_memory;
-        delete [] _dphideta;
-        delete [] _dphideta_memory;
-        delete [] _dphidzeta;
-        delete [] _dphidzeta_memory;
-
-        delete [] _d2phidxi2;
-        delete [] _d2phidxi2_memory;
-        delete [] _d2phideta2;
-        delete [] _d2phideta2_memory;
-        delete [] _d2phidzeta2;
-        delete [] _d2phidzeta2_memory;
-
-        delete [] _d2phidxideta;
-        delete [] _d2phidxideta_memory;
-        delete [] _d2phidetadzeta;
-        delete [] _d2phidetadzeta_memory;
-        delete [] _d2phidzetadxi;
-        delete [] _d2phidzetadxi_memory;
-
+          
+          deallocate_shape_at_quadrature_points();
+            
+          deallocate_volume_shape_at_boundary_quadrature_points();
       }
       
       
@@ -1217,7 +1192,13 @@ namespace femus
      
      void allocate_and_fill_shape_at_quadrature_points();
 
+     void deallocate_shape_at_quadrature_points();
+     
      void allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss);
+     
+     void allocate_volume_shape_at_boundary_quadrature_points();
+
+     void deallocate_volume_shape_at_boundary_quadrature_points();
 
      void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 

@@ -66,6 +66,7 @@ namespace femus {
 
   elem_type::~elem_type()
   {
+
     delete [] _X;
     delete [] _KVERT_IND;
     delete [] _IND;
@@ -76,6 +77,7 @@ namespace femus {
     delete [] _mem_prol_ind;
 
     delete _pt_basis;
+    
 
     if(isMpGDAllocated) {
       for(int g = 0; g < GetGaussRule().GetGaussPointsNumber(); g++) {
@@ -87,7 +89,7 @@ namespace femus {
       delete [] _dphidxez_mapGD;
     }
     
-
+    
   }
 
 
@@ -1096,7 +1098,7 @@ namespace femus {
 
     //***********************************************************
     // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis,linearElement);
+    set_coordinates_in_Basis_object(_pt_basis, linearElement);
 
     set_coordinates_and_KVERT_IND(_pt_basis);
     //***********************************************************
@@ -1104,11 +1106,15 @@ namespace femus {
     // local projection matrix evaluation
     set_element_prolongation(linearElement);
 
+    delete linearElement;
+
     
     allocate_and_fill_shape_at_quadrature_points();
 
     allocate_and_fill_shape_at_quadrature_points_on_faces(order_gauss);
 
+    // boundary
+    allocate_volume_shape_at_boundary_quadrature_points();
     
 //=====================
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -1116,42 +1122,82 @@ namespace femus {
 //=====================
     EvaluateShapeAtQP(geom_elem, fe_order);
 
-    delete linearElement;
+  }
+  
+
+  
+  void elem_type_1D::deallocate_shape_at_quadrature_points() {
+      
+        delete [] _phi;
+        delete [] _phi_memory;
+        delete [] _dphidxi;
+        delete [] _dphidxi_memory;
+
+        delete [] _d2phidxi2;
+        delete [] _d2phidxi2_memory; 
+        
+  }
+  
+  
+  void elem_type_2D::deallocate_shape_at_quadrature_points() {
+
+        delete [] _phi;
+        delete [] _phi_memory;
+        delete [] _dphidxi;
+        delete [] _dphidxi_memory;
+        delete [] _dphideta;
+        delete [] _dphideta_memory;
+
+        delete [] _d2phidxi2;
+        delete [] _d2phidxi2_memory;
+        delete [] _d2phideta2;
+        delete [] _d2phideta2_memory;
+
+        delete [] _d2phidxideta;
+        delete [] _d2phidxideta_memory;
+      
+  }
+  
+  
+  void elem_type_3D::deallocate_shape_at_quadrature_points() {
+      
+        delete [] _phi;
+        delete [] _phi_memory;
+        delete [] _dphidxi;
+        delete [] _dphidxi_memory;
+        delete [] _dphideta;
+        delete [] _dphideta_memory;
+        delete [] _dphidzeta;
+        delete [] _dphidzeta_memory;
+
+        delete [] _d2phidxi2;
+        delete [] _d2phidxi2_memory;
+        delete [] _d2phideta2;
+        delete [] _d2phideta2_memory;
+        delete [] _d2phidzeta2;
+        delete [] _d2phidzeta2_memory;
+
+        delete [] _d2phidxideta;
+        delete [] _d2phidxideta_memory;
+        delete [] _d2phidetadzeta;
+        delete [] _d2phidetadzeta_memory;
+        delete [] _d2phidzetadxi;
+        delete [] _d2phidzetadxi_memory;
 
   }
   
   
+  void elem_type_1D::allocate_volume_shape_at_boundary_quadrature_points() { }
 
+  void elem_type_1D::deallocate_volume_shape_at_boundary_quadrature_points() { }
+  
+  void elem_type_3D::allocate_volume_shape_at_boundary_quadrature_points() { }
 
-  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order, const char* order_gauss):
-    elem_type(geom_elem, fe_order, order_gauss)
-  {
+  void elem_type_3D::deallocate_volume_shape_at_boundary_quadrature_points() { }
+  
+   
+   void elem_type_2D::allocate_volume_shape_at_boundary_quadrature_points() {
 
-    _dim = 2;
-
-    //************ BEGIN FE and MG SETUP ******************
-    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
-
-    // get data from basis object
-    set_coarse_and_fine_elem_data(_pt_basis);
-
-    //***********************************************************
-    // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis,linearElement);
-
-    set_coordinates_and_KVERT_IND(_pt_basis);
-    //***********************************************************
-
-    // local projection matrix evaluation
-    set_element_prolongation(linearElement);
-
-    
-    allocate_and_fill_shape_at_quadrature_points();
-
-    allocate_and_fill_shape_at_quadrature_points_on_faces(order_gauss);
-    
-    
-    // boundary
     // here I will only leave the memory allocation; the evaluations go in the ShapeAtBoundary function
     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
     
@@ -1168,23 +1214,61 @@ namespace femus {
       _dphideta_bdry[i] = &_dphideta_memory_bdry[i * _nc];
      }
      
+    }
 
 
+  void elem_type_2D::deallocate_volume_shape_at_boundary_quadrature_points() {
+      
+        delete [] _phi_bdry;
+        delete [] _phi_memory_bdry;
+        
+        delete [] _dphidxi_bdry;
+        delete [] _dphidxi_memory_bdry;
+        delete [] _dphideta_bdry;
+        delete [] _dphideta_memory_bdry;
+      
+  }
+  
+  
+  elem_type_2D::elem_type_2D(const char* geom_elem, const char* fe_order, const char* order_gauss):
+    elem_type(geom_elem, fe_order, order_gauss)
+  {
 
+    _dim = 2;
 
+    //************ BEGIN FE and MG SETUP ******************
+    const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
 
-//
+    // get data from basis object
+    set_coarse_and_fine_elem_data(_pt_basis);
+
+    //***********************************************************
+    // construction of coordinates
+    set_coordinates_in_Basis_object(_pt_basis, linearElement);
+
+    set_coordinates_and_KVERT_IND(_pt_basis);
+    //***********************************************************
+
+    // local projection matrix evaluation
+    set_element_prolongation(linearElement);
+
+    delete linearElement;
+
+    
+    allocate_and_fill_shape_at_quadrature_points();
+
+    allocate_and_fill_shape_at_quadrature_points_on_faces(order_gauss);
+    
+    // boundary
+    allocate_volume_shape_at_boundary_quadrature_points();
+    
+
 //=====================
     _DPhiXiEtaZetaPtr.resize(_dim);
     _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
 //=====================
     EvaluateShapeAtQP(geom_elem, fe_order);
-
-    //std::cout << std::endl;
-
-    delete linearElement;
-
 
   }
   
@@ -1203,7 +1287,7 @@ namespace femus {
 
     //***********************************************************
     // construction of coordinates
-    set_coordinates_in_Basis_object(_pt_basis,linearElement);
+    set_coordinates_in_Basis_object(_pt_basis, linearElement);
 
     set_coordinates_and_KVERT_IND(_pt_basis);
     //***********************************************************
@@ -1211,10 +1295,15 @@ namespace femus {
     // local projection matrix evaluation
     set_element_prolongation(linearElement);
 
+    delete linearElement;
+
     
     allocate_and_fill_shape_at_quadrature_points();
     
     allocate_and_fill_shape_at_quadrature_points_on_faces(order_gauss);
+
+    // boundary
+    allocate_volume_shape_at_boundary_quadrature_points();
  
 
 //=====================
@@ -1224,10 +1313,6 @@ namespace femus {
     _DPhiXiEtaZetaPtr[2] = &elem_type::GetDPhiDZeta;
 //=====================
     EvaluateShapeAtQP(geom_elem, fe_order);
-
-    //std::cout << std::endl;
-
-    delete linearElement;
 
   }
 
