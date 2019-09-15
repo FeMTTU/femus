@@ -704,7 +704,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
               ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[theta_index]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[theta_index],phi_hat_bd_x_dof_qp[theta_index],normal);
 		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
 		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[kdim + ctrl_pos_begin]]->JacobianSur(coords_hat_bd,ig_bd,weight_hat_bd_qp,phi_hat_bd_dof_qp[kdim + ctrl_pos_begin],phi_hat_bd_x_dof_qp[kdim + ctrl_pos_begin],normal);
-		      ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[kdim + adj_pos_begin]]->VolumeShapeAtBoundary(coords_hat,coords_hat_bd,jface,ig_bd,phi_hat_vol_at_bdry_dof[kdim + adj_pos_begin],phi_hat_x_vol_at_bdry_dof[kdim + adj_pos_begin]);
+		      ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[kdim + adj_pos_begin]]->fill_volume_shape_at_boundary_quadrature_points(coords_hat,coords_hat_bd,jface,ig_bd,phi_hat_vol_at_bdry_dof[kdim + adj_pos_begin],phi_hat_x_vol_at_bdry_dof[kdim + adj_pos_begin]);
             }
             
             

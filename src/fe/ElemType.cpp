@@ -49,9 +49,7 @@ namespace femus {
       abort();
     }  
       
-      
-    isMpGDAllocated = false;
-    
+          
       if ( !strcmp(geom_elem, "quad") || !strcmp(geom_elem, "tri") ) { //QUAD or TRI ///@todo delete in the destructor 
            _gauss_bdry = new  Gauss("line",order_gauss);
        }
@@ -78,109 +76,6 @@ namespace femus {
 
     delete _pt_basis;
     
-
-    if(isMpGDAllocated) {
-      for(int g = 0; g < GetGaussRule().GetGaussPointsNumber(); g++) {
-        delete [] _phi_mapGD[g];
-        delete [] _dphidxez_mapGD[g];
-      }
-
-      delete [] _phi_mapGD;
-      delete [] _dphidxez_mapGD;
-    }
-    
-    
-  }
-
-
-
-
-//----------------------------------------------------------------------------------------------------
-// evaluate shape functions at all quadrature points  TODO DEALLOCATE at destructor TODO FEFamilies TODO change HEX27 connectivity
-//-----------------------------------------------------------------------------------------------------
-
-  void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in, const std::string fe_in)  {
-
-// if (  (!strcmp(fe_in.c_str(),"disc_linear"))  || (!strcmp(fe_in.c_str(),"quadratic")) ) {  std::cout << "BEWARE, family not supported yet" << std::endl; return; }
-
-// ============== allocate canonical shape ==================================================================
-    _phi_mapGD = new double*[GetGaussRule().GetGaussPointsNumber()];// TODO valgrind, remember to DEALLOCATE THESE, e.g. with smart pointers
-    _dphidxez_mapGD = new double*[GetGaussRule().GetGaussPointsNumber()];
-
-    for(int g = 0; g < GetGaussRule().GetGaussPointsNumber(); g++) {
-      _phi_mapGD[g] = new double[GetNDofs()];
-      _dphidxez_mapGD[g] = new double[GetNDofs()*GetDim()];
-    }
-
-    isMpGDAllocated = true;
-// ============== allocate canonical shape ==================================================================
-
-
-// HEX 27 CASE ==========================================
-// HEX 27 CASE ==========================================
-// HEX 27 CASE ==========================================
-// from eu connectivity to my (=libmesh) connectivity
-    const unsigned from_femus_to_libmesh[27] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15, 24, 20, 21, 22, 23, 25, 26};
-//                                          0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26
-// from libmesh to eu connectivity
-    const unsigned from_libmesh_to_femus[27] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15, 21, 22, 23, 24, 20, 25, 26};
-
-    if((!strcmp(fe_in.c_str(), "biquadratic")) && GetDim() == 3  && (!strcmp(geomel_id_in.c_str(), "hex"))) {
-//             std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
-
-      for(int ig = 0; ig < GetGaussRule().GetGaussPointsNumber(); ig++) {
-
-        for(int idof = 0; idof < GetNDofs(); idof++) {
-//                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
-          _phi_mapGD[ig][idof] = GetPhi(ig)[ from_femus_to_libmesh[idof] ];
-// 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapGD[vb][ig][dof] << std::endl;
-
-// derivatives in canonical element
-          for(uint idim = 0; idim < GetDim(); idim++) {
-            double* dphi_g = (this->*(_DPhiXiEtaZetaPtr[idim]))(ig);      //how to access a pointer to member function
-            _dphidxez_mapGD[ig][ idof + idim * GetNDofs()] =  dphi_g[ from_femus_to_libmesh[idof] ];
-//           std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapGD[ig][ idof + idim*GetNDofs()]  << "                                      "  << std::endl;
-
-          }
-
-        }
-
-      }  // end gauss
-
-
-
-    }
-// HEX 27 CASE ==========================================
-// HEX 27 CASE ==========================================
-// HEX 27 CASE ==========================================
-
-// ALL THE OTHERS ==========================================
-// ALL THE OTHERS ==========================================
-// ALL THE OTHERS ==========================================
-
-    else {
-
-      for(int ig = 0; ig < GetGaussRule().GetGaussPointsNumber(); ig++) {
-
-        for(int idof = 0; idof < GetNDofs(); idof++) {
-          _phi_mapGD[ig][idof] = GetPhi(ig)[idof];
-
-// derivatives in canonical element
-          for(uint idim = 0; idim < GetDim(); idim++) {
-            double* dphi_g = (this->*(_DPhiXiEtaZetaPtr[idim]))(ig);   //how to access a pointer to member function
-            _dphidxez_mapGD[ig][ idof + idim * GetNDofs()] =  dphi_g[idof];
-
-          }
-
-        }
-
-      }  // end gauss
-
-
-    } //else HEX27
-
-
-
   }
 
 
@@ -1120,7 +1015,6 @@ namespace femus {
     _DPhiXiEtaZetaPtr.resize(_dim);
     _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
 //=====================
-    EvaluateShapeAtQP(geom_elem, fe_order);
 
   }
   
@@ -1268,7 +1162,6 @@ namespace femus {
     _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
 //=====================
-    EvaluateShapeAtQP(geom_elem, fe_order);
 
   }
   
@@ -1312,7 +1205,6 @@ namespace femus {
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
     _DPhiXiEtaZetaPtr[2] = &elem_type::GetDPhiDZeta;
 //=====================
-    EvaluateShapeAtQP(geom_elem, fe_order);
 
   }
 
@@ -1968,7 +1860,7 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 //---------------------------------------------------------------------------------------------------------
 //Compute volume jacobian and evaluate volume shape functions and derivatives at REAL boundary quadrature points
 
-  void elem_type_2D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, 
+  void elem_type_2D::fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > >& vt_vol, 
                                            const vector < vector < double> > & vt_bdry,  
                                            const unsigned& jface, 
                                            const unsigned& ig_bdry, 
@@ -2298,7 +2190,7 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 
 //---------------------------------------------------------------------------------------------------------
 
-  void elem_type_3D::VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, 
+  void elem_type_3D::fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > >& vt_vol, 
                                            const vector < vector < double> > & vt_bdry,  
                                            const unsigned& jface, 
                                            const unsigned& ig_bdry, 

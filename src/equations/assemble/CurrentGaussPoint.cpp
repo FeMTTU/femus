@@ -50,7 +50,7 @@ void CurrentGaussPoint<FM_DIM>::SetPhiElDofsFEVB_g(const uint qlflag, const uint
    
     for (uint eln=0; eln<el_nnodes; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
-              _phi_ndsQLVB_g[qlflag][eln] = _elem_type[qlflag]->GetPhi(qp,eln);
+//               _phi_ndsQLVB_g[qlflag][eln] = _elem_type[qlflag]->GetPhi(qp,eln);
          }
 
 return;
@@ -83,7 +83,7 @@ void  CurrentGaussPoint<FM_DIM>::SetDPhiDxyzElDofsFEVB_g(const uint qlflag, cons
          for (uint eln=0; eln<el_nnodes; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
   
-           for (uint idim=0; idim<ndim; idim++)  dphidxi_g[idim] = _elem_type[qlflag]->GetDPhiDxez(qp, eln + idim*el_nnodes);    /*->_dphidxez_mapVB[vbflag][lqp+idim*goffset];*/
+//            for (uint idim=0; idim<ndim; idim++)  dphidxi_g[idim] = _elem_type[qlflag]->GetDPhiDxez(qp, eln + idim*el_nnodes);    /*->_dphidxez_mapVB[vbflag][lqp+idim*goffset];*/
 	    
 	    for (uint idim=0; idim<ndim; idim++) {
 	    double sum = 0.;
@@ -154,7 +154,7 @@ void  CurrentGaussPoint<FM_DIM>::SetDPhiDxezetaElDofsFEVB_g(const uint qlflag, c
          for (uint eln=0; eln<elndof; eln++)    { 
               uint lqp=eln*el_ngauss+qp;
   
-	         _dphidxezeta_ndsQLVB_g[qlflag][eln+idim*elndof] = _elem_type[qlflag]->GetDPhiDxez(qp,eln + idim*elndof);  
+// 	         _dphidxezeta_ndsQLVB_g[qlflag][eln+idim*elndof] = _elem_type[qlflag]->GetDPhiDxez(qp,eln + idim*elndof);  
 	   }
 	 }
 

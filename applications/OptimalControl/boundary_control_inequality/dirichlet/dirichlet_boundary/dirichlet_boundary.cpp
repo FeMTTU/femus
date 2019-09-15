@@ -19,7 +19,7 @@
 
 ///@todo do a very weak impl of Laplacian
 ///@todo Review the ordering for phi_ctrl_x_bdry
-///@todo implement VolumeShapeAtBoundary in 3d elems and triangles
+///@todo implement fill_volume_shape_at_boundary_quadrature_points in 3d elems and triangles
 
 
 using namespace femus;
@@ -637,8 +637,8 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
     
   //========= fill gauss value xyz ==================   
   
-          if (ielGeom != QUAD) { std::cout << "VolumeShapeAtBoundary not implemented" << std::endl; abort(); } 
-    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->VolumeShapeAtBoundary(geom_element.get_coords_at_dofs(),geom_element.get_coords_at_dofs_bdry_3d(),jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+          if (ielGeom != QUAD) { std::cout << "fill_volume_shape_at_boundary_quadrature_points not implemented" << std::endl; abort(); } 
+    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->fill_volume_shape_at_boundary_quadrature_points(geom_element.get_coords_at_dofs(),geom_element.get_coords_at_dofs_bdry_3d(),jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
 //           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
 // 		      for (int iv = 0; iv < nDof_adj; iv++)  {

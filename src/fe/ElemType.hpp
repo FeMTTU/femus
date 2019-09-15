@@ -221,19 +221,7 @@ namespace femus
       /** @deprecated  Function pointer for DPhiDXEZ */
       typedef double* (elem_type::*_FunctionPointer)(const unsigned& ig) const;   //you need "elem_type::" for some reason
       std::vector<_FunctionPointer> _DPhiXiEtaZetaPtr;
-
-      /** @deprecated Evaluate shape functions at all quadrature points */
-      virtual void EvaluateShapeAtQP(const std::string geomel_id_in, const std::string fe_in);
-
-      /**  @deprecated Get shape functions */
-      inline const double GetPhi(const uint qp, const uint dof) const {
-        return _phi_mapGD[qp][dof];
-      }
-
-      /**  @deprecated Get shape function first derivatives */
-      inline const double GetDPhiDxez(const uint qp, const uint dof) const {
-        return _dphidxez_mapGD[qp][dof];
-      }
+// //             double* dphi_g = (this->*(_DPhiXiEtaZetaPtr[idim]))(ig);   //how to access a pointer to member function
 
       /** To be Added */
       inline const Gauss GetGaussRule() const {
@@ -280,7 +268,7 @@ namespace femus
  
       static const int _fe_new_to_old[NFE_FAMS];
   
-      virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const = 0;
+      virtual void fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const = 0;
 
       
       basis* GetBasis() const {
@@ -338,8 +326,8 @@ namespace femus
       const int** _IND;        /* [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
       const int** _KVERT_IND;  /* [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element*/
 
-      double** _prol_val;
-      int** _prol_ind;
+      double** _prol_val;      /* Prolongator value */
+      int** _prol_ind;         /* Prolongator index */
       double* _mem_prol_val;
       int* _mem_prol_ind;
       
@@ -349,10 +337,6 @@ namespace femus
       const Gauss _gauss;
             Gauss* _gauss_bdry;
 
-      /**  @deprecated */
-      bool isMpGDAllocated;
-      double**      _phi_mapGD;
-      double** _dphidxez_mapGD;
 
   };
 
@@ -514,7 +498,7 @@ namespace femus
 
       void deallocate_volume_shape_at_boundary_quadrature_points();
 
-       virtual void VolumeShapeAtBoundary(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
+       virtual void fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
       
 
    template <class type, class type_mov>
@@ -840,7 +824,7 @@ namespace femus
      void deallocate_volume_shape_at_boundary_quadrature_points();
 
       
-  void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+  void fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
      
     template <class type_mov>
@@ -1200,7 +1184,7 @@ namespace femus
 
      void deallocate_volume_shape_at_boundary_quadrature_points();
 
-     void VolumeShapeAtBoundary(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+     void fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
      
      template <class type_mov>
