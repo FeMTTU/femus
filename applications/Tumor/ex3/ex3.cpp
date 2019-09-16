@@ -797,7 +797,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   fin.open (filename.str().c_str());
   //fAD.open (fileAD.str().c_str());
   if (!fin.is_open()) {
-    std::cout << " The output file " << "./input/NewCorrectedTensorSPD.txt " << " cannot be opened.\n" << std::endl;
+    std::cout << " The input file " << "./input/NewCorrectedTensorSPD.txt " << " cannot be opened.\n" << std::endl;
     abort();
   }
 
