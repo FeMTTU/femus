@@ -109,10 +109,10 @@ int main (int argc, char** args) {
   // erase all the coarse mesh levels
   // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
 
-  for (unsigned simulation = 0; simulation < 1; simulation++) {
+  for (unsigned simulation = 0; simulation < 20; simulation++) {
 
-    //V0 = 0.06 * (simulation + 1) ;   // fraction of injection vs tumor
-      V0 = 0.8;
+    V0 = 0.05 * (simulation + 1) ;   
+    //V0 = 0.8;
     // define the multilevel solution and attach the mlMsh object to it
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
 
@@ -629,11 +629,11 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
 
   if ( (stop || last) && iproc == 0) {
     std::ofstream fout;
-    fout.open ("DoseResponseCurveNew1.csv", std::ofstream::app);
+    fout.open ("DoseResponseCurveNew.csv", std::ofstream::app);
     fout << V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
     fout.close();
 
-    fout.open ("DoseResponseCurveNew1.txt", std::ofstream::app);
+    fout.open ("DoseResponseCurveNew.txt", std::ofstream::app);
     fout << V0 << " " << volumeUTAll[0] / volumeAll << " " << volumeUTAll[1] / volumeAll << " " << volumeUTAll[2] / volumeAll << " " << std::endl;
     fout.close();
   }
@@ -788,7 +788,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   std::ostringstream filename;
   std::ostringstream fileAD;
   
-  filename << "/home/erdi/FEMuS/MyFEMuS/applications/Tumor/ex3/input/NewCorrectedTensorSPD.txt";
+  filename << "/home/ekara/FEMuS/MyFEMuS/applications/Tumor/ex3/input/NewCorrectedTensorSPD.txt";
   //fileAD << "/home/erdi/FEMuS/MyFEMuS/applications/Tumor/ex3/input/AxialDiffusivity.txt";
 
   std::ifstream fin;
@@ -926,13 +926,13 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   MPI_Allreduce (&trace, &traceAll, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce (&counter, &counterAll, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
   
-  std::cout << "CounterAll is : " << counterAll << " " << std::endl;
-  std::cout << "Before TracaAll is : " << traceAll << " " << std::endl;
+  //std::cout << "CounterAll is : " << counterAll << " " << std::endl;
+  ///std::cout << "Before TracaAll is : " << traceAll << " " << std::endl;
   
   traceAll *= 1. / counterAll;
   
 
-  std::cout << "Now tracaAll is : " << traceAll << " " << std::endl;
+  //std::cout << "Now tracaAll is : " << traceAll << " " << std::endl;
 
   //exit(0);
 
