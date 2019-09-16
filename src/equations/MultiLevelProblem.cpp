@@ -169,10 +169,8 @@ void MultiLevelProblem::clear ()
   
   _qrule.reserve(N_GEOM_ELS);
   
- static const std::vector < std::string > geom_els = {"hex", "tet", "wedge", "quad", "tri", "line"}; 
-  
-  for (int iel = 0; iel < geom_els.size(); iel++) {
-          Gauss qrule_temp(geom_els[iel].c_str(),quadr_order_in.c_str());
+  for (int iel = 0; iel < femus::geom_elems.size(); iel++) {
+          Gauss qrule_temp(femus::geom_elems[iel].c_str(),quadr_order_in.c_str());
          _qrule.push_back(qrule_temp);
            }
 

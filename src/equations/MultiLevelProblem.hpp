@@ -224,8 +224,8 @@ private:
     vector < map <unsigned,bool> > index;
     unsigned short _gridn;
 
-    std::vector< std::vector<const elem_type*> >  _elem_type;
-    std::vector<Gauss>                      _qrule;
+    std::vector< std::vector<const elem_type*> >  _elem_type;  ///@deprecated 
+    std::vector<Gauss>                      _qrule;            //over all Geom Elems
     const FemusInputParser<double>        * _phys;
     const QuantityMap                     * _qtymap;
     const MultiLevelMeshTwo               * _mesh;

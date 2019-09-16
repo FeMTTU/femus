@@ -110,7 +110,7 @@ int main(int argc, char** args) {
 
     // ======= Problem ========================
   // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
+  MultiLevelProblem ml_prob(&mlSol);
 
 // *************************************
  // this problem is defined on an open boundary mesh, and the boundary mesh can change 
@@ -131,11 +131,12 @@ int main(int argc, char** args) {
 // *************************************
   
 
-  mlProb.SetFilesHandler(&files);
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.SetFilesHandler(&files);
   
     // ======= System ========================
- // add system  in mlProb as a Linear Implicit System
-  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Frac");
+ // add system  in ml_prob as a Linear Implicit System
+  LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("Frac");
  
   system.AddSolutionToSystemPDE("d_s");
  
@@ -163,7 +164,6 @@ int main(int argc, char** args) {
  
   return 0;
 }
-
 
 
 
@@ -212,7 +212,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
   const int n_vars = mlPdeSys->GetSolPdeIndex().size();
   std::cout << "************" << n_vars << "************";
-  const int solType_max = 2;  //biquadratic
   vector <double> phi_u;
   vector <double> phi_u_x; 
   vector <double> phi_u_xx;
@@ -250,16 +249,25 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
      std::vector < std::vector < double > >  JacI_qp;
      std::vector < std::vector < double > >  Jac_qp;
      double detJac_qp;
-     
-//      elem_type_jac_templ<double, double, 1, 3>  elem_jac_1("line", "linear", "seventh"); 
-//      elem_type_jac_templ<double, double, 2, 3>  elem_jac_2("quad", "linear", "seventh"); 
-//      elem_type_jac_templ<double, double, 3, 3>  elem_jac_3("hex", "linear", "seventh"); 
-//      elem_type_jac_templ_base<double, double>  elem_jac_2("quad", "linear", "seventh"); 
-//      elem_type_jac_templ_base<double, double>  elem_jac_3("hex", "linear", "seventh"); 
-     elem_type_jac_templ_base<double, double> &  elem_jac_1_coords = elem_type_jac_templ_base<double, double>::build("line", "biquadratic", "seventh", 1, 3);  //you have to declare it as a REFERENCE to base, not as an object
-     elem_type_jac_templ_base<double, double> &  elem_jac_1 = elem_type_jac_templ_base<double, double>::build("line", "linear", "seventh", 1, 3);  //you have to declare it as a REFERENCE to base, not as an object
- 
-    
+  
+  clock_t start_evals = clock();
+  
+  //prepare Abstract quantities for all fe fams for all geom elems: perform all quadrature evaluations beforehand
+       std::vector < std::vector < const elem_type_jac_templ_base<double, double> *  > > elem_all( femus::geom_elems.size() );
+  
+         for (unsigned int g = 0; g < femus::geom_elems.size(); g++) {
+             elem_all[g].resize(femus::fe_fams.size());
+             const std::string quad_order = ml_prob.GetQuadratureRule(g).GetGaussOrderString();  ///@todo what if you choose different quadrature orders on different geom elems?
+
+         for (unsigned int fe = 0; fe < femus::fe_fams.size(); fe++) {
+            elem_all[g][fe] = elem_type_jac_templ_base<double, double>::build(femus::geom_elems[g], femus::fe_fams[fe], quad_order.c_str(), 3);          
+             
+           }
+         }
+       
+  clock_t end_evals = clock();
+   std::cout << " FE Evals time " << static_cast<double>(end_evals - start_evals) / CLOCKS_PER_SEC << std::endl;
+   
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -296,13 +304,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //===================================================   
 
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
           
         // *** get gauss point weight, test function and test function partial derivatives ***
 #if JACSUR == 0
-// 	elem_jac_1.Jacobian_geometry_templ(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
-// 	elem_jac_1.compute_normal(Jac_qp, normal);
-    elem_jac_1.Jacobian_non_isoparametric_templ( & elem_jac_1_coords, geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+// 	elem_all[ielGeom][solFEType_u]->Jacobian_geometry_templ(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+// 	elem_all[ielGeom][solFEType_u]->compute_normal(Jac_qp, normal);
+ elem_all[ielGeom][solFEType_u]->Jacobian_non_isoparametric_templ( elem_all[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
 // 	msh->_finiteElement[ielGeom][solFEType_u]->Jacobian(geom_element.get_coords_at_dofs_3d(),    ig, weight,    phi_u,    phi_u_x,    phi_u_xx);
 //     msh->_finiteElement[ielGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
 #elif JACSUR == 1
