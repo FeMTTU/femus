@@ -76,11 +76,6 @@ namespace femus
                                vector< vector < double > >& jacobianMatrix) const = 0;
 
 
-      virtual void compute_normal(const std::vector< std::vector< double > > & Jac, std::vector< double > & normal) const = 0;
-      
-      virtual void compute_normal(const std::vector< std::vector< adept::adouble > > & Jac, std::vector< adept::adouble > & normal) const = 0;
-
-      
 //==============================
      /* adept */                        
      virtual void Jacobian_geometry(const vector < vector < adept::adouble > > & vt,
@@ -358,14 +353,6 @@ namespace femus
        }
       
       
-     void compute_normal(const std::vector< std::vector< double > > & Jac, std::vector< double > & normal) const {
-                 compute_normal< double >(Jac, normal);
-     }
-     
-     void compute_normal(const std::vector< std::vector< adept::adouble > > & Jac, std::vector< adept::adouble > & normal) const {
-                 compute_normal< adept::adouble >(Jac, normal);
-     }
-
      void Jacobian_geometry(const vector < vector < adept::adouble > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector < adept::adouble > > & Jac,
@@ -462,7 +449,7 @@ namespace femus
         return _dphidxi[ig];
       }
 
-  private:
+  protected:
       
       // ====================================
       // member data
@@ -513,45 +500,6 @@ namespace femus
                                               const unsigned space_dim) const;
                                               
 
-    template <class type_mov>
-      void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const {
-    
-    // if you want to compute the normal to a 1d element, you need to know to what plane the boundary element belongs...                                   
-
-    constexpr unsigned int space_dim = 3;
-    
-    //JacI ====================
-    type_mov JacJacT[1][1]; JacJacT[0][0] = 0.; //1x1
-    for (unsigned d = 0; d < space_dim; d++) JacJacT[0][0] += Jac[0][d]*Jac[0][d];
-    type_mov detJac = sqrt(JacJacT[0][0]);
-                                
-   //   normal module, also equal to the transformation area....
-   normal.resize(space_dim); ///@todo this must change based on how my domain is oriented
-    
-    normal[0] =  Jac[0][1] / detJac;
-    normal[1] = -Jac[0][0] / detJac;
-    normal[2] = 0.;
-
-    //The derivative of x with respect to eta (dx/deta) has the opposite sign with respect to the normal
-    //obtained as cross product between (dx/deta , dy/deta, 0) x (0,0,1)
-//     (dx/deta , dy/deta, 0)  is the tangent vector (not normalized)
-//     (0,0,1) is the unit vector going out of the plane
-//     their cross product gives the (non-normalized) normal vector:    
-//       i       , j      , k    
-// det   dx/deta , dy/deta, 0    =   i (dy/deta)  -j (dx/deta) 
-//        0      , 0      , 1    
-
-// More: if you take the SCALAR TRIPLE PRODUCT of the (non-normalized) tangent, the unit normal and (0,0,1),
-// that has the meaning of VOLUME, but since two vectors out of three have length 1,
-// that is the same as taking the LENGTH of the segment.
-
-//       n_x    , n_y     , 0 
-// det   dx/deta , dy/deta, 0   =     n_x (dy/deta)  - n_y (dx/deta)   
-//        0      , 0      , 1 
-    
-      }
-      
-      
     template <class type_mov>
      void JacobianSur_type_geometry(const vector < vector < type_mov > > & vt,
                                const unsigned & ig,
@@ -697,14 +645,6 @@ namespace femus
        }
 
       
-     void compute_normal(const std::vector< std::vector< double > > & Jac, std::vector< double > & normal) const {
-                 compute_normal< double >(Jac, normal);
-     }
-     
-     void compute_normal(const std::vector< std::vector< adept::adouble > > & Jac, std::vector< adept::adouble > & normal) const {
-                 compute_normal< adept::adouble >(Jac, normal);
-     }
-
      /* adept */                        
      void Jacobian_geometry(const vector < vector < adept::adouble > > & vt,
                             const unsigned & ig,
@@ -809,7 +749,7 @@ namespace femus
       }
 
      
-  private:
+  protected:
       
      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
      
@@ -827,42 +767,6 @@ namespace femus
   void fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
      
-    template <class type_mov>
-       void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const {
-           
-//   normal  ===================
-//     Cross product
-//       i         , j        , k    
-// det   d x/d xi  , d y/d xi , d z/d xi    =   i (dy/dxi dz/deta - dz/dxi dy/deta)  -j (d x/d xi  d z/d eta - d z/d xi  d x/d eta) + k (d x/d xi d y/d eta - d y/d xi d x/d eta)
-//       d x/d eta , d y/d eta, d z/d eta    
-    
-    
-    ///@todo How are we guaranteed that this normal is OUTWARDS??? For instance in 2d anticlockwise order of the edges guarantees outward normal. In 3d it must be the anticlockwise order of the edges of the boundary face taken from the volume... (if you look at the surface from outside, you must have dx/dxi and then dx/deta in anticlockwise order)
-    const type_mov nx = Jac[0][1] * Jac[1][2] - Jac[1][1] * Jac[0][2];
-    const type_mov ny = Jac[1][0] * Jac[0][2] - Jac[1][2] * Jac[0][0];
-    const type_mov nz = Jac[0][0] * Jac[1][1] - Jac[1][0] * Jac[0][1];
-    const type_mov invModn = 1. / sqrt(nx * nx + ny * ny + nz * nz);
-
-    normal.resize(3);
-    normal[0] = (nx) * invModn;
-    normal[1] = (ny) * invModn;
-    normal[2] = (nz) * invModn;
-
-    
-// ======== COMPUTATION of ELEMENT AREA as TRIPLE PRODUCT of two tangent vectors with UNIT normal vector 
-//     Jac[2][0] = normal[0];
-//     Jac[2][1] = normal[1];
-//     Jac[2][2] = normal[2];
-// 
-//     //the determinant of the matrix is the area  ///@todo This is the triple scalar product of three vectors following the right-hand rule, so it is for sure positive
-//     detJac = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
-//               Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
-//               Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
-
-
-      }
-      
-      
       template <class type, class type_mov>
       void JacobianSur_type_non_isoparametric(const elem_type * fe_elem_coords_in,
                                               const vector < vector < type_mov > >& vt,
@@ -1059,15 +963,6 @@ namespace femus
       }
       
       
-   
-     void compute_normal(const std::vector< std::vector< double > > & Jac, std::vector< double > & normal) const {
-           std::cout << "Normal non-defined for 3D objects" << std::endl; abort();
-     }
-     
-     void compute_normal(const std::vector< std::vector< adept::adouble > > & Jac, std::vector< adept::adouble > & normal) const {
-           std::cout << "Normal non-defined for 3D objects" << std::endl; abort();
-     }
-      
      /* adept */                        
      void Jacobian_geometry(const vector < vector < adept::adouble > > & vt,
                             const unsigned & ig,
@@ -1170,7 +1065,7 @@ namespace femus
         return _dphidzeta[ig];
       }
 
-    private:
+    protected:
 
      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
      
@@ -1377,7 +1272,7 @@ namespace femus
      
      fe_elem_coords_cast->JacobianSur_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
      
-     compute_normal<type_mov>(Jac, normal);
+//      compute_normal<type_mov>(Jac, normal);
 
     // function part ====================
     weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
@@ -1573,8 +1468,8 @@ namespace femus
                                               vector < double >& phi, 
                                               vector < type >& gradphi, 
                                               vector < type_mov >& normal,
-                                                const unsigned dim,
-                                                const unsigned space_dim) const  {
+                                              const unsigned dim,
+                                              const unsigned space_dim) const  {
 
      std::vector < std::vector <type_mov> >  JacI;
      std::vector < std::vector <type_mov> >  Jac;
@@ -1584,7 +1479,7 @@ namespace femus
      
      fe_elem_coords_cast->JacobianSur_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
     
-     compute_normal<type_mov>(Jac, normal);
+//      compute_normal<type_mov>(Jac, normal);
      
     // function part ============
     weight = detJac * _gauss.GetGaussWeightsPointer()[ig];

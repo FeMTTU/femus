@@ -61,10 +61,10 @@ int main(int argc, char** args) {
    mesh_files.push_back("Mesh_1_x.med");
    mesh_files.push_back("Mesh_1_y.med");
    mesh_files.push_back("Mesh_1_z.med");
-   mesh_files.push_back("Mesh_2_xy.med");
-   mesh_files.push_back("Mesh_2_xz.med");
-   mesh_files.push_back("Mesh_2_yz.med");
-   mesh_files.push_back("Mesh_3_xyz.med");
+//    mesh_files.push_back("Mesh_2_xy.med");
+//    mesh_files.push_back("Mesh_2_xz.med");
+//    mesh_files.push_back("Mesh_2_yz.med");
+//    mesh_files.push_back("Mesh_3_xyz.med");
 
  for (unsigned int m = 0; m < mesh_files.size(); m++)  {
    
@@ -243,16 +243,28 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   vector < double >        Jac;            Jac.reserve(n_vars*maxSize * n_vars*maxSize);
  //***************************************************  
 
-  
+
   if (assembleMatrix)  KK->zero();
 
+  
+     std::vector < std::vector < double > >  JacI_qp;
+     std::vector < std::vector < double > >  Jac_qp;
+     double detJac_qp;
+     
+//      elem_type_jac_templ<double, double, 1, 3>  elem_jac_1("line", "linear", "seventh"); 
+//      elem_type_jac_templ<double, double, 2, 3>  elem_jac_2("quad", "linear", "seventh"); 
+//      elem_type_jac_templ<double, double, 3, 3>  elem_jac_3("hex", "linear", "seventh"); 
+     elem_type_jac_templ_base<double, double>  * elem_jac_1 = elem_type_jac_templ_base<double, double>::build("line", "linear", "seventh", 1, 3); 
+//      elem_type_jac_templ_base<double, double>  elem_jac_2("quad", "linear", "seventh"); 
+//      elem_type_jac_templ_base<double, double>  elem_jac_3("hex", "linear", "seventh"); 
+    
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
         
-    short unsigned ielGeom = geom_element.geom_type();
+    const short unsigned ielGeom = geom_element.geom_type();
 
  
  //**************** state **************************** 
@@ -282,18 +294,15 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	std::vector<double> sol_u_x_gss_sur(space_dim);     std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
  //===================================================   
 
-     std::vector < std::vector < double > >  JacI_qp;
-     std::vector < std::vector < double > >  Jac_qp;
-     double detJac_qp;
-//      elem_type_jac_templ<double, double, 3, 3>  elem_jac("hex","seventh"); 
-    
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
           
-// 	elem_jac.Jacobian_type_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
-    
         // *** get gauss point weight, test function and test function partial derivatives ***
 #if JACSUR == 0
+	elem_jac_1->Jacobian_geometry_templ(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+	elem_jac_1->compute_normal(Jac_qp, normal);
+// 	elem_jac_2.Jacobian_geometry_templ(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+// 	elem_jac_3.Jacobian_geometry_templ(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
 //     msh->_finiteElement[ielGeom][xType]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
 // 	msh->_finiteElement[ielGeom][solFEType_u]->Jacobian(geom_element.get_coords_at_dofs_3d(),    ig, weight,    phi_u,    phi_u_x,    phi_u_xx);
     msh->_finiteElement[ielGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
