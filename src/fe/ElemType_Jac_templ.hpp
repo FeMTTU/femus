@@ -41,7 +41,7 @@ namespace femus {
 
      virtual void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const = 0;
 
-     virtual void Jacobian_non_isoparametric_templ(const elem_type * fe_elem_coords_in,
+     virtual void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_mov> * fe_elem_coords_in,
                                                 const vector < vector < type_mov > > & vt,
                                                 const unsigned & ig,
                                                 type_mov & Weight,
@@ -53,24 +53,11 @@ namespace femus {
 
           
 // run-time selection
-      static elem_type_jac_templ_base<type, type_mov> * build(const std::string geom_elem, 
+      static elem_type_jac_templ_base<type, type_mov> & build(const std::string geom_elem, 
                                          const std::string fe_elem,
                                          const std::string order_gauss,
                                          const unsigned dimension,
                                          const unsigned space_dimension); 
-//       {
-//           
-//       switch(dimension) {
-//        
-//               case (1) : return *( new elem_type_jac_templ<type, type_mov, 1, 3>(geom_elem,  fe_elem, order_gauss) );
-//               case (2) : return *( new elem_type_jac_templ<type, type_mov, 2, 3>(geom_elem,  fe_elem, order_gauss) );
-//               case (3) : return *( new elem_type_jac_templ<type, type_mov, 3, 3>(geom_elem,  fe_elem, order_gauss) );
-//               default  : {std::cout << "Not implemented" << std::endl; abort(); }
-//           
-//           }
-//           
-//       }
-      
       
       };
  
@@ -102,7 +89,7 @@ namespace femus {
 
      void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const;
 
-     void Jacobian_non_isoparametric_templ(const elem_type * fe_elem_coords_in,
+     void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_mov> * fe_elem_coords_in,
                                                 const vector < vector < type_mov > > & vt,
                                                 const unsigned & ig,
                                                 type_mov & Weight,
@@ -120,7 +107,7 @@ namespace femus {
 // Each class was transformed into a templated one, and the virtuality of the dimensions  is implemented as template specialization
 // PARTIAL *CLASS* SPECIALIZATION! (function specialization can only be full)
   template <class type, class type_mov>
-   class  elem_type_jac_templ<type, type_mov, 1, 3>  : public elem_type_1D,  public elem_type_jac_templ_base<type, type_mov> /*: public elem_type_jac_templ_base<type, type_mov, 1, 3>*/  {
+   class  elem_type_jac_templ<type, type_mov, 1, 3>  : public elem_type_1D,  public elem_type_jac_templ_base<type, type_mov/*, 1, 3>*/>  {
        
    private: 
        
@@ -233,7 +220,7 @@ namespace femus {
 
 
      
-     void Jacobian_non_isoparametric_templ(const elem_type * fe_elem_coords_in,
+     void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_mov> * fe_elem_coords_in,
                                                 const vector < vector < type_mov > > & vt,
                                                 const unsigned & ig,
                                                 type_mov & Weight,
@@ -246,13 +233,13 @@ namespace femus {
                                                     
      
 // geometry part ================
-     const elem_type_1D *   fe_elem_coords_cast =  static_cast<const elem_type_1D*> (fe_elem_coords_in);
+//      const elem_type_1D *   fe_elem_coords_cast =  static_cast<const elem_type_1D*> (fe_elem_coords_in);
      
      std::vector < std::vector <type_mov> >  JacI;
      std::vector < std::vector <type_mov> >  Jac;
      type_mov detJac;
    
-     fe_elem_coords_cast->Jacobian_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
+     fe_elem_coords_in->Jacobian_geometry_templ(vt, ig, Jac, JacI, detJac, dim, space_dim);
 
 // function part ================
     Weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
@@ -390,7 +377,7 @@ namespace femus {
        
        
        
-void Jacobian_non_isoparametric_templ(const elem_type * fe_elem_coords_in,
+void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_mov> * fe_elem_coords_in,
                                                 const vector < vector < type_mov > > & vt,
                                                 const unsigned & ig,
                                                 type_mov & Weight,
@@ -402,13 +389,13 @@ void Jacobian_non_isoparametric_templ(const elem_type * fe_elem_coords_in,
                                                     
 
 // geometry part ================
-   const elem_type_2D *   fe_elem_coords_cast =  static_cast<const elem_type_2D*> (fe_elem_coords_in);                                                  
+//    const elem_type_2D *   fe_elem_coords_cast =  static_cast<const elem_type_2D*> (fe_elem_coords_in);                                                  
 
    std::vector < std::vector <type_mov> >  JacI;
    std::vector < std::vector <type_mov> >  Jac;
    type_mov detJac;
    
-   fe_elem_coords_cast->Jacobian_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
+   fe_elem_coords_in->Jacobian_geometry_templ(vt, ig, Jac, JacI, detJac, dim, space_dim);
 
 // function part ================
     Weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
@@ -524,7 +511,7 @@ void Jacobian_non_isoparametric_templ(const elem_type * fe_elem_coords_in,
      
      
    
-      void Jacobian_non_isoparametric_templ(const elem_type * fe_elem_coords_in,
+      void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_mov> * fe_elem_coords_in,
                                           const vector < vector < type_mov > > & vt,
                                           const unsigned & ig,
                                           type_mov & Weight,
@@ -536,13 +523,13 @@ void Jacobian_non_isoparametric_templ(const elem_type * fe_elem_coords_in,
                                                     
 // geometry part ==============
      
-   const elem_type_3D *   fe_elem_coords_cast =  static_cast<const elem_type_3D*> (fe_elem_coords_in);                                                  
+//    const elem_type_3D *   fe_elem_coords_cast =  static_cast<const elem_type_3D*> (fe_elem_coords_in);                                                  
 
    std::vector < std::vector <type_mov> >  JacI;
    std::vector < std::vector <type_mov> >  Jac;
    type_mov detJac;
    
-   fe_elem_coords_cast->Jacobian_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
+   fe_elem_coords_in->Jacobian_geometry_templ(vt, ig, Jac, JacI, detJac, dim, space_dim);
 // geometry part - end ==============
 
     
@@ -612,10 +599,10 @@ void Jacobian_non_isoparametric_templ(const elem_type * fe_elem_coords_in,
 
 
 
-
+///@todo I have to put it here because I need to know what the children are... do separate files if needed
 // run-time selection
  template <class type, class type_mov>
-       elem_type_jac_templ_base<type, type_mov> * elem_type_jac_templ_base<type, type_mov>::build(const std::string geom_elem, 
+       elem_type_jac_templ_base<type, type_mov> & elem_type_jac_templ_base<type, type_mov>::build(const std::string geom_elem, 
                                          const std::string fe_elem,
                                          const std::string order_gauss,
                                          const unsigned dimension,
@@ -623,9 +610,9 @@ void Jacobian_non_isoparametric_templ(const elem_type * fe_elem_coords_in,
           
       switch(dimension) {
        
-              case (1) : return  new elem_type_jac_templ<type, type_mov, 1, 3>(geom_elem,  fe_elem, order_gauss) ;
-              case (2) : return  new elem_type_jac_templ<type, type_mov, 2, 3>(geom_elem,  fe_elem, order_gauss) ;
-              case (3) : return  new elem_type_jac_templ<type, type_mov, 3, 3>(geom_elem,  fe_elem, order_gauss) ;
+              case (1) : return  *( new elem_type_jac_templ<type, type_mov, 1, 3>(geom_elem,  fe_elem, order_gauss) );
+              case (2) : return  *( new elem_type_jac_templ<type, type_mov, 2, 3>(geom_elem,  fe_elem, order_gauss) );
+              case (3) : return  *( new elem_type_jac_templ<type, type_mov, 3, 3>(geom_elem,  fe_elem, order_gauss) );
               default  : {std::cout << "Not implemented" << std::endl; abort(); }
           
           }

@@ -254,9 +254,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 //      elem_type_jac_templ<double, double, 1, 3>  elem_jac_1("line", "linear", "seventh"); 
 //      elem_type_jac_templ<double, double, 2, 3>  elem_jac_2("quad", "linear", "seventh"); 
 //      elem_type_jac_templ<double, double, 3, 3>  elem_jac_3("hex", "linear", "seventh"); 
-     elem_type_jac_templ_base<double, double>  * elem_jac_1 = elem_type_jac_templ_base<double, double>::build("line", "linear", "seventh", 1, 3); 
 //      elem_type_jac_templ_base<double, double>  elem_jac_2("quad", "linear", "seventh"); 
 //      elem_type_jac_templ_base<double, double>  elem_jac_3("hex", "linear", "seventh"); 
+     elem_type_jac_templ_base<double, double> &  elem_jac_1_coords = elem_type_jac_templ_base<double, double>::build("line", "biquadratic", "seventh", 1, 3);  //you have to declare it as a REFERENCE to base, not as an object
+     elem_type_jac_templ_base<double, double> &  elem_jac_1 = elem_type_jac_templ_base<double, double>::build("line", "linear", "seventh", 1, 3);  //you have to declare it as a REFERENCE to base, not as an object
+ 
     
 
   // element loop: each process loops only on the elements that owns
@@ -266,7 +268,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
         
     const short unsigned ielGeom = geom_element.geom_type();
 
- 
  //**************** state **************************** 
     unsigned nDof_u     = msh->GetElementDofNumber(iel, solFEType_u);
     sol_u    .resize(nDof_u);
@@ -299,13 +300,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
           
         // *** get gauss point weight, test function and test function partial derivatives ***
 #if JACSUR == 0
-	elem_jac_1->Jacobian_geometry_templ(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
-	elem_jac_1->compute_normal(Jac_qp, normal);
-// 	elem_jac_2.Jacobian_geometry_templ(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
-// 	elem_jac_3.Jacobian_geometry_templ(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
-//     msh->_finiteElement[ielGeom][xType]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+// 	elem_jac_1.Jacobian_geometry_templ(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+// 	elem_jac_1.compute_normal(Jac_qp, normal);
+    elem_jac_1.Jacobian_non_isoparametric_templ( & elem_jac_1_coords, geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
 // 	msh->_finiteElement[ielGeom][solFEType_u]->Jacobian(geom_element.get_coords_at_dofs_3d(),    ig, weight,    phi_u,    phi_u_x,    phi_u_xx);
-    msh->_finiteElement[ielGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+//     msh->_finiteElement[ielGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
 #elif JACSUR == 1
     msh->_finiteElement[ielGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, space_dim);
 #endif
