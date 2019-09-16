@@ -11,8 +11,6 @@
 #include "ElemType_Jac_templ.hpp"
 
 
-#define JACSUR 0
-
 
 using namespace femus;
 
@@ -65,10 +63,10 @@ int main(int argc, char** args) {
    mesh_files.push_back("Mesh_1_x.med");
    mesh_files.push_back("Mesh_1_y.med");
    mesh_files.push_back("Mesh_1_z.med");
-//    mesh_files.push_back("Mesh_2_xy.med");
-//    mesh_files.push_back("Mesh_2_xz.med");
-//    mesh_files.push_back("Mesh_2_yz.med");
-//    mesh_files.push_back("Mesh_3_xyz.med");
+   mesh_files.push_back("Mesh_2_xy.med");
+   mesh_files.push_back("Mesh_2_xz.med");
+   mesh_files.push_back("Mesh_2_yz.med");
+   mesh_files.push_back("Mesh_3_xyz.med");
    
 
 
@@ -140,7 +138,7 @@ int main(int argc, char** args) {
 
   ml_prob.SetFilesHandler(&files);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-  ml_prob.set_all_fe_all_types();
+  ml_prob.set_all_abstract_fe();
   
 //   std::vector < std::vector < const elem_type_jac_templ_base<double, double> *  > > elem_all = ml_prob.evaluate_all_fe<double, double>();
   
@@ -207,19 +205,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
     
   constexpr unsigned int space_dim = 3;
-  
-  std::vector<double> normal(space_dim,0.);
- //***************************************************  
+//***************************************************  
 
 
  //******************** quadrature *******************************  
   double weight; 
-  double weight_sur; 
-  vector <double> phi_u_sur;
-  vector <double> phi_u_x_sur; 
-  phi_u_sur.reserve(maxSize);
-  phi_u_x_sur.reserve(maxSize * space_dim);
-  
 
  //********************* unknowns *********************** 
  //***************************************************  
@@ -264,12 +254,9 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
      double detJac_qp;
   
   
-  
-  
-  //prepare Abstract quantities for all fe fams for all geom elems: perform all quadrature evaluations beforehand
-  std::vector < std::vector < const elem_type_jac_templ_base<double, double> *  > > elem_all_2;
-   
-  ml_prob.get_elem_all_fe(elem_all_2);
+  //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+  std::vector < std::vector < const elem_type_jac_templ_base<double, double> *  > > elem_all;
+  ml_prob.get_all_abstract_fe(elem_all);
   
   
 
@@ -304,22 +291,16 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //========= gauss value quantities ==================   
 	double sol_u_gss = 0.;
 	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
-	std::vector<double> sol_u_x_gss_sur(space_dim);     std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
  //===================================================   
 
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
           
         // *** get gauss point weight, test function and test function partial derivatives ***
-#if JACSUR == 0
 // 	elem_all[ielGeom][solFEType_u]->Jacobian_geometry_templ(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
-// 	elem_all[ielGeom][solFEType_u]->compute_normal(Jac_qp, normal);
- elem_all_2[ielGeom][solFEType_u]->Jacobian_non_isoparametric_templ( elem_all_2[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+ elem_all[ielGeom][solFEType_u]->Jacobian_non_isoparametric_templ( elem_all[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
 // 	msh->_finiteElement[ielGeom][solFEType_u]->Jacobian(geom_element.get_coords_at_dofs_3d(),    ig, weight,    phi_u,    phi_u_x,    phi_u_xx);
-//     msh->_finiteElement[ielGeom][solFEType_u]->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
-#elif JACSUR == 1
-    msh->_finiteElement[ielGeom][solFEType_u]->JacobianSur_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight_sur, phi_u_sur, phi_u_x_sur, normal, dim, space_dim);
-#endif
+
 
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
@@ -327,12 +308,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	for (unsigned i = 0; i < nDof_u; i++) {
 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
                    for (unsigned d = 0; d < sol_u_x_gss.size(); d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
-          }
-
-	std::fill(sol_u_x_gss_sur.begin(), sol_u_x_gss_sur.end(), 0.);
-	
-	for (unsigned i = 0; i < nDof_u; i++) {
-                   for (unsigned d = 0; d < space_dim; d++)   sol_u_x_gss_sur[d] += sol_u[i] * phi_u_x_sur[i * space_dim + d];
           }
 //--------------    
           
@@ -345,20 +320,12 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
               for (unsigned kdim = 0; kdim < space_dim; kdim++) {
               if ( i < nDof_u )         laplace_res_du_u_i             +=  (phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim]);
 	      }
-	      
-	      double laplace_res_du_u_i_sur = 0.;
-              for (unsigned kdim = 0; kdim < space_dim; kdim++) {
-              if ( i < nDof_u )         laplace_res_du_u_i_sur             +=  (phi_u_x_sur   [i * space_dim + kdim] * sol_u_x_gss_sur[kdim]);
-	      }
+   
 //--------------    
 	      
 //======================Residuals=======================
           // FIRST ROW
-#if JACSUR == 0
           if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
-#elif JACSUR == 1           
-	  if (i < nDof_u)                          Res[0      + i] += - weight_sur * ( phi_u_sur[i] * (  -1. ) - laplace_res_du_u_i_sur);
-#endif
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -374,22 +341,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
                                                                                        phi_u_x   [j * space_dim + kdim]);
 	      }
 	      
-              double laplace_mat_du_u_sur = 0.;
-
-              for (unsigned kdim = 0; kdim < space_dim; kdim++) {
-              if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u_sur        += (phi_u_x_sur   [i * space_dim + kdim] * 
-                                                                                        phi_u_x_sur   [j * space_dim + kdim]);
-	      }
 //--------------    
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
-#if JACSUR == 0
 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_mat_du_u;
-#elif JACSUR == 1           
-	      if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight_sur * laplace_mat_du_u_sur;
-#endif
-              
             } // end phi_j loop
           } // endif assemble_matrix
 

@@ -125,8 +125,9 @@ int main(int argc, char** args) {
   // ======= Problem ========================
   MultiLevelProblem ml_prob(&ml_sol);
   
-  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.SetFilesHandler(&files);
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.set_all_abstract_fe();
 
   // ======= Solution: Initial Conditions ==================
   ml_sol.Initialize("All");    // initialize all variables to zero

@@ -150,8 +150,9 @@ int main(int argc, char** args) {
   // ======= Problem  ==================
   MultiLevelProblem ml_prob(&ml_sol);
   
-  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.SetFilesHandler(&files);
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.set_all_abstract_fe();
 
   // ======= Solution: Initial Conditions ==================
   ml_sol.Initialize("All");    // initialize all varaibles to zero
@@ -324,9 +325,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //*************************************************** 
   vector <double> phi_ctrl_bdry;  
   vector <double> phi_ctrl_x_bdry; 
+  vector <double> phi_ctrl_xx_bdry_placeholder;
 
   phi_ctrl_bdry.reserve(max_size);
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
+  phi_ctrl_xx_bdry_placeholder.reserve(max_size * dim2);
  //*************************************************** 
 
   //************** act flag **************************** 
@@ -411,6 +414,15 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
   if (assembleMatrix)  KK->zero();
 
+     std::vector < std::vector < double > >  JacI_qp;
+     std::vector < std::vector < double > >  Jac_qp;
+     double detJac_qp;
+  
+  
+  //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+  std::vector < std::vector < const elem_type_jac_templ_base<double, double> *  > > elem_all;
+  ml_prob.get_all_abstract_fe(elem_all);
+  
     
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -582,18 +594,22 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     
 		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
     
+    elem_all[ielGeom_bdry][solType_coords]->Jacobian_geometry_templ(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_qp, normal);
+//  elem_all[ielGeom][solFEType_u]->Jacobian_non_isoparametric_templ( elem_all[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
             
-    msh->_finiteElement[ielGeom_bdry][SolFEType[pos_ctrl]] ->JacobianSur_non_isoparametric(
-    msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry, weight_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, normal, dim, space_dim);
+    elem_all[ielGeom_bdry][SolFEType[pos_ctrl]]->Jacobian_non_isoparametric_templ(
+    elem_all[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_ctrl_xx_bdry_placeholder, dim, space_dim);
     
-    msh->_finiteElement[ielGeom_bdry][SolFEType[pos_state]]->JacobianSur_non_isoparametric( 
-    msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry, weight_bdry, phi_u_bdry, phi_u_x_bdry, normal, dim, space_dim);
+    elem_all[ielGeom_bdry][SolFEType[pos_state]]->Jacobian_non_isoparametric_templ( 
+    elem_all[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_u_bdry, phi_u_x_bdry,  phi_ctrl_xx_bdry_placeholder, dim, space_dim);
 
-    msh->_finiteElement[ielGeom_bdry][SolFEType[pos_adj]]  ->JacobianSur_non_isoparametric( 
-    msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal, dim, space_dim);
+    elem_all[ielGeom_bdry][SolFEType[pos_adj]]->Jacobian_non_isoparametric_templ( 
+    elem_all[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_adj_bdry, phi_adj_x_bdry,  phi_ctrl_xx_bdry_placeholder, dim, space_dim);
 
-    msh->_finiteElement[ielGeom_bdry][solType_coords]      ->JacobianSur_non_isoparametric( 
-    msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(),ig_bdry,weight_bdry,phi_coords_bdry,phi_coords_x_bdry, normal, dim, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->Jacobian_non_isoparametric_templ(
+    elem_all[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_coords_bdry, phi_coords_x_bdry,  phi_ctrl_xx_bdry_placeholder, dim, space_dim);
+
 
 
 // **** printing ******
@@ -1091,9 +1107,11 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  //***************************************************
   vector <double> phi_ctrl_bdry;  
   vector <double> phi_ctrl_x_bdry; 
+  vector <double> phi_ctrl_xx_bdry_placeholder;
 
   phi_ctrl_bdry.reserve(max_size);
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
+  phi_ctrl_xx_bdry_placeholder.reserve(max_size * dim2);
 
   unsigned solIndex_ctrl = ml_sol->GetIndex("control");
   unsigned solType_ctrl = ml_sol->GetSolutionType(solIndex_ctrl);
@@ -1110,7 +1128,13 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   double integral_alpha  = 0.;
   double integral_beta   = 0.;
 
-    
+  
+
+  //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+  std::vector < std::vector < const elem_type_jac_templ_base<double, double> *  > > elem_all;
+  ml_prob.get_all_abstract_fe(elem_all);
+  
+  
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -1184,7 +1208,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   	if (control_el_flag == 1) {
 	  
 	  double tau=0.;
-	  vector<double> normal(dim,0);
 	       
 	  // loop on faces of the current element
 
@@ -1217,9 +1240,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 		
 		for(unsigned ig_bdry = 0; ig_bdry < ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber(); ig_bdry++) {
 		  
-    msh->_finiteElement[ielGeom_bdry][solType_ctrl]
-    ->JacobianSur_non_isoparametric( msh->_finiteElement[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, normal, dim, space_dim);
-    
+    elem_all[ielGeom_bdry][solType_ctrl]->Jacobian_non_isoparametric_templ(
+    elem_all[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_ctrl_xx_bdry_placeholder, dim, space_dim);
+
 		  
 		 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_bdry_gss = 0.;

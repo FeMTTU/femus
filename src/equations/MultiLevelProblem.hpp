@@ -214,25 +214,29 @@ public:
   std::map<std::string, System*> & get_systems_map() { return _systems; }
   
   
-  void get_elem_all_fe(std::vector < std::vector < const elem_type_jac_templ_base< double, double > *  > > & elem_all_in) const { elem_all_in = _elem_all_dd; }
-  void get_elem_all_fe(std::vector < std::vector < const elem_type_jac_templ_base< adept::adouble, double > *  > > & elem_all_in) const { elem_all_in = _elem_all_ad; }
-  void get_elem_all_fe(std::vector < std::vector < const elem_type_jac_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) const {  elem_all_in = _elem_all_aa;  }
+  void get_all_abstract_fe(std::vector < std::vector < const elem_type_jac_templ_base< double, double > *  > > & elem_all_in)                 const { elem_all_in = _elem_all_dd; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < const elem_type_jac_templ_base< adept::adouble, double > *  > > & elem_all_in)         const { elem_all_in = _elem_all_ad; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < const elem_type_jac_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) const { elem_all_in = _elem_all_aa; }
 
-  void set_all_fe_all_types() {
+  void set_all_abstract_fe() {
       
-       set_all_fe<double, double>(_elem_all_dd);
-       set_all_fe<adept::adouble, double>(_elem_all_ad);
-       set_all_fe<adept::adouble, adept::adouble>(_elem_all_aa);
+       set_all_abstract_fe<double, double>(_elem_all_dd);
+       set_all_abstract_fe<adept::adouble, double>(_elem_all_ad);
+       set_all_abstract_fe<adept::adouble, adept::adouble>(_elem_all_aa);
     
 }  
   
  template <class type, class type_mov>
-  void set_all_fe(std::vector < std::vector < const elem_type_jac_templ_base<type, type_mov> *  > > & elem_all_in) const {
+  void set_all_abstract_fe(std::vector < std::vector < const elem_type_jac_templ_base<type, type_mov> *  > > & elem_all_in) const {
 
-    clock_t start_evals = clock();
+//this function performs the initialization of all abstract FE families on all abstract Geometric Elements      
+      
+//     clock_t start_evals = clock();
   
   //prepare Abstract quantities for all fe fams for all geom elems: perform all quadrature evaluations beforehand
-       /*std::vector < std::vector < const elem_type_jac_templ_base<type, type_mov> *  > >*/ elem_all_in.resize( femus::geom_elems.size() );
+        elem_all_in.resize( femus::geom_elems.size() );
   
          for (unsigned int g = 0; g < femus::geom_elems.size(); g++) {
              elem_all_in[g].resize(femus::fe_fams.size());
@@ -240,12 +244,11 @@ public:
 
          for (unsigned int fe = 0; fe < femus::fe_fams.size(); fe++) {
             elem_all_in[g][fe] = elem_type_jac_templ_base<type, type_mov>::build(femus::geom_elems[g], femus::fe_fams[fe], quad_order.c_str(), 3);          
-             
            }
-         }
+       }
        
-  clock_t end_evals = clock();
-   std::cout << " FE Evals time " << static_cast<double>(end_evals - start_evals) / CLOCKS_PER_SEC << std::endl;
+//   clock_t end_evals = clock();
+//    std::cout << " FE Evals time " << static_cast<double>(end_evals - start_evals) / CLOCKS_PER_SEC << std::endl;
 
    
    }

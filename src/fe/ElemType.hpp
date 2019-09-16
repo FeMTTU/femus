@@ -95,39 +95,6 @@ namespace femus
                             const unsigned dim,
                             const unsigned space_dim) const = 0;
                             
-                            
-     /* adept-adept */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < adept::adouble > > & vt,
-                                             const unsigned & ig,
-                                             adept::adouble & Weight,
-                                             vector < double > & phi,
-                                             vector < adept::adouble >   & gradphi,
-                                             vector < adept::adouble >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const = 0;
-     
-     /* adept-double */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < double > > & vt,
-                                             const unsigned & ig,
-                                             double & Weight,
-                                             vector < double > & phi, 
-                                             vector < adept::adouble >   & gradphi,
-                                              vector < double >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const = 0;
-         
-     /* all double */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < double > > & vt,
-                                             const unsigned & ig,
-                                             double & Weight,
-                                             vector < double > & phi, 
-                                             vector < double >   & gradphi,
-                                             vector < double >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const = 0;
 
 //==============================
                                              
@@ -152,7 +119,7 @@ namespace femus
                                              boost::optional< vector < adept::adouble > & > nablaphi,
                                              const unsigned dim,
                                              const unsigned space_dim) const = 0;
-         
+
      /* all double */                        
      virtual void Jacobian_non_isoparametric(const elem_type * fe_elem_coords_in,
                                              const vector < vector < double > > & vt,
@@ -485,20 +452,8 @@ namespace femus
 
       void deallocate_volume_shape_at_boundary_quadrature_points();
 
-       virtual void fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
+      void fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
       
-
-   template <class type, class type_mov>
-      void JacobianSur_type_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                              const vector < vector < type_mov > >& vt,
-                                              const unsigned & ig, 
-                                              type_mov & Weight,
-                                              vector < double >& phi, 
-                                              vector < type >& gradphi, 
-                                              vector < type_mov >& normal,
-                                              const unsigned dim,
-                                              const unsigned space_dim) const;
-                                              
 
     template <class type_mov>
      void JacobianSur_type_geometry(const vector < vector < type_mov > > & vt,
@@ -532,52 +487,7 @@ namespace femus
                                                 const unsigned space_dim) const;
                                                 
 
-    /* adept-adept */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < adept::adouble > > & vt,
-                                             const unsigned & ig,
-                                             adept::adouble & Weight,
-                                             vector < double > & phi,
-                                             vector < adept::adouble >   & gradphi,
-                                             vector < adept::adouble >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const {
-                                              
-      JacobianSur_type_non_isoparametric< adept::adouble, adept::adouble >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, normal, dim, space_dim);
-                                                 
-   }
-     
-     /* adept-double */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < double > > & vt,
-                                             const unsigned & ig,
-                                             double & Weight,
-                                             vector < double > & phi, 
-                                             vector < adept::adouble >   & gradphi,
-                                              vector < double >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const  {
-                                              
-      JacobianSur_type_non_isoparametric< adept::adouble, double >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, normal, dim, space_dim);
-                                                 
-   }
-         
-     /* all double */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < double > > & vt,
-                                             const unsigned & ig,
-                                             double & Weight,
-                                             vector < double > & phi, 
-                                             vector < double >   & gradphi,
-                                             vector < double >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const  {
-                                              
-      JacobianSur_type_non_isoparametric< double, double >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, normal, dim, space_dim);
-                                                 
-   }
-   
-                                             
+                                           
  //================
                                              
 /* adept-adept */                        
@@ -764,31 +674,9 @@ namespace femus
      void deallocate_volume_shape_at_boundary_quadrature_points();
 
       
-  void fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+     void fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
-     
-      template <class type, class type_mov>
-      void JacobianSur_type_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                              const vector < vector < type_mov > >& vt,
-                                              const unsigned & ig, 
-                                              type_mov & Weight,
-                                              vector < double >& phi, 
-                                              vector < type >& gradphi, 
-                                              vector < type_mov >& normal,
-                                                const unsigned dim,
-                                                const unsigned space_dim) const;
-                                                
-                                                
-     template <class type_mov>
-     void JacobianSur_type_geometry(const vector < vector < type_mov > > & vt,
-                               const unsigned & ig,
-                               std::vector < std::vector <type_mov> > & Jac,
-                               std::vector < std::vector <type_mov> > & JacI,
-                               type_mov & detJac,
-                               const unsigned dim,
-                               const unsigned space_dim) const;
-                               
-                               
+
      template <class type_mov>
      void Jacobian_type_geometry(const vector < vector < type_mov > > & vt,
                             const unsigned & ig,
@@ -809,53 +697,7 @@ namespace femus
                                                 boost::optional< vector < type > & > nablaphi,
                                                 const unsigned dim,
                                                 const unsigned space_dim) const;                            
-                                                  
-     /* adept-adept */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < adept::adouble > > & vt,
-                                             const unsigned & ig,
-                                             adept::adouble & Weight,
-                                             vector < double > & phi,
-                                             vector < adept::adouble >   & gradphi,
-                                             vector < adept::adouble >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const {
-                                              
-      JacobianSur_type_non_isoparametric< adept::adouble, adept::adouble >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, normal, dim, space_dim);
-                                                 
-   }
-     
-     /* adept-double */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < double > > & vt,
-                                             const unsigned & ig,
-                                             double & Weight,
-                                             vector < double > & phi, 
-                                             vector < adept::adouble >   & gradphi,
-                                              vector < double >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const  {
-                                              
-      JacobianSur_type_non_isoparametric< adept::adouble, double >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, normal, dim, space_dim);
-                                                 
-   }
-         
-     /* all double */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < double > > & vt,
-                                             const unsigned & ig,
-                                             double & Weight,
-                                             vector < double > & phi, 
-                                             vector < double >   & gradphi,
-                                             vector < double >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const  {
-                                              
-      JacobianSur_type_non_isoparametric< double, double >(fe_elem_coords_in, vt, ig, Weight, phi, gradphi, normal, dim, space_dim);
-                                                 
-   }
-   
-                                             
+                                                                           
  //================
                                              
      /* adept-adept */     //adept, moving domain
@@ -1104,55 +946,6 @@ namespace femus
                                                 const unsigned space_dim) const;
         
         
-     /* adept-adept */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < adept::adouble > > & vt,
-                                             const unsigned & ig,
-                                             adept::adouble & Weight,
-                                             vector < double > & phi,
-                                             vector < adept::adouble >   & gradphi,
-                                             vector < adept::adouble >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const {
-                                              
-        std::cout << "Jacobian surface non-defined for elem_type_3D objects" << std::endl;
-        abort();
-                                                 
-   }
-     
-     /* adept-double */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < double > > & vt,
-                                             const unsigned & ig,
-                                             double & Weight,
-                                             vector < double > & phi, 
-                                             vector < adept::adouble >   & gradphi,
-                                              vector < double >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const  {
-                                              
-        std::cout << "Jacobian surface non-defined for elem_type_3D objects" << std::endl;
-        abort();
-                                                 
-   }
-         
-     /* all double */                        
-  virtual void JacobianSur_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                             const vector < vector < double > > & vt,
-                                             const unsigned & ig,
-                                             double & Weight,
-                                             vector < double > & phi, 
-                                             vector < double >   & gradphi,
-                                             vector < double >& normal,
-                                             const unsigned dim,
-                                             const unsigned space_dim) const  {
-                                              
-        std::cout << "Jacobian surface non-defined for elem_type_3D objects" << std::endl;
-        abort();
-                                                 
-   }
-   
-                                             
  //================
                                              
      /* adept-adept */                        
@@ -1252,102 +1045,7 @@ namespace femus
 //===========================================================
 //============== elem_type_1D ===============================
 //===========================================================
-  
-       template <class type, class type_mov>
-      void elem_type_1D::JacobianSur_type_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                              const vector < vector < type_mov > >& vt,
-                                              const unsigned & ig, 
-                                              type_mov & weight,
-                                              vector < double >& phi, 
-                                              vector < type >& gradphi, 
-                                              vector < type_mov >& normal,
-                                              const unsigned dim,
-                                              const unsigned space_dim) const  {
-   
-     std::vector < std::vector <type_mov> >  JacI;
-     std::vector < std::vector <type_mov> >  Jac;
-     type_mov detJac;
 
-     const elem_type_1D *   fe_elem_coords_cast =  static_cast<const elem_type_1D*> (fe_elem_coords_in);
-     
-     fe_elem_coords_cast->JacobianSur_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
-     
-//      compute_normal<type_mov>(Jac, normal);
-
-    // function part ====================
-    weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
-    
-    phi.resize(_nc);
-    
-    gradphi.resize(_nc * space_dim);  std::fill(gradphi.begin(),gradphi.end(),0.);
-    const double* dxi = _dphidxi[ig];
-
-    for(int inode = 0; inode < _nc; inode++, dxi++) {
-        
-      phi[inode] = _phi[ig][inode];
-
-      for (unsigned d = 0; d < space_dim; d++) gradphi[ inode * space_dim + d] = (*dxi) * JacI[d][0];
-
-    }
-    
-}
-
-
-
-//return det without quadrature weight, pure geometric information
-//     std::vector < std::vector <type_mov> > Jac(dim);
-//     
-//     for (unsigned d = 0; d < dim; d++) { Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
-// 
-//     for (unsigned d = 0; d < space_dim; d++) {
-//     const double* dxi_coords  = _dphidxi[ig];
-//        for(int inode = 0; inode < _nc; inode++, dxi_coords++) {
-//           Jac[0][d] += (*dxi_coords) * vt[d][inode];
-//         }
-//      }
-//    
-//     type_mov JacJacT = 0.; //1x1
-//     for (unsigned d = 0; d < space_dim; d++) JacJacT += Jac[0][d]*Jac[0][d];
-//     
-//     for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT;
-// 
-//     detJac = sqrt(JacJacT)/*Jac[0][0]*/;  ///@todo in the old implementation shouldn't we take the absolute value??? I'd say we don't because it goes both on the lhs and on the rhs...
-
-    template <class type_mov>
-     void elem_type_1D::JacobianSur_type_geometry(const vector < vector < type_mov > > & vt,
-                               const unsigned & ig,
-                               std::vector < std::vector <type_mov> > & Jac,
-                               std::vector < std::vector <type_mov> > & JacI,
-                               type_mov & detJac,
-                               const unsigned dim,
-                               const unsigned space_dim) const {
-                                   
-    //Jac =====================
-    Jac.resize(dim);
-    for (unsigned d = 0; d < dim; d++) { Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
-
-      for (unsigned d = 0; d < space_dim; d++) {
-    const double* dxi_coords = _dphidxi[ig];
-    for(int inode = 0; inode < _nc; inode++, dxi_coords++) {
-      Jac[0][d] += (*dxi_coords) * vt[d][inode];
-         }
-      }
-      
-    
-    //JacI ====================
-    type_mov JacJacT[1][1]; JacJacT[0][0] = 0.; //1x1
-    for (unsigned d = 0; d < space_dim; d++) JacJacT[0][0] += Jac[0][d]*Jac[0][d];
-    detJac = sqrt(JacJacT[0][0]);
-
-    JacI.resize(space_dim);
-    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
-
-    for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT[0][0];
-
-                               
-    }
-    
-    
      template <class type_mov>
      void elem_type_1D::Jacobian_type_geometry(const vector < vector < type_mov > > & vt,
                             const unsigned & ig,
@@ -1458,104 +1156,7 @@ namespace femus
 //===========================================================
 //============== elem_type_2D ===============================
 //===========================================================
-  
-  
-     template <class type, class type_mov>
-      void elem_type_2D::JacobianSur_type_non_isoparametric(const elem_type * fe_elem_coords_in,
-                                              const vector < vector < type_mov > >& vt,
-                                              const unsigned & ig, 
-                                              type_mov & weight,
-                                              vector < double >& phi, 
-                                              vector < type >& gradphi, 
-                                              vector < type_mov >& normal,
-                                              const unsigned dim,
-                                              const unsigned space_dim) const  {
-
-     std::vector < std::vector <type_mov> >  JacI;
-     std::vector < std::vector <type_mov> >  Jac;
-     type_mov detJac;
-     
-     const elem_type_2D *   fe_elem_coords_cast =  static_cast<const elem_type_2D*> (fe_elem_coords_in);
-     
-     fe_elem_coords_cast->JacobianSur_type_geometry<type_mov>(vt, ig, Jac, JacI, detJac, dim, space_dim);
-    
-//      compute_normal<type_mov>(Jac, normal);
-     
-    // function part ============
-    weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
-    
-    phi.resize(_nc);
-    
-    gradphi.resize(_nc * space_dim);  std::fill(gradphi.begin(),gradphi.end(),0.);
-    const double* dxi  = _dphidxi[ig];
-    const double* deta = _dphideta[ig];
-    
-    for(int inode = 0; inode < _nc; inode++, dxi++, deta++) {
-        
-      phi[inode] = _phi[ig][inode];
-      
-      for (unsigned d = 0; d < space_dim; d++) gradphi[ inode * space_dim + d] = (*dxi) * JacI[d][0] + (*deta) * JacI[d][1];
- 
-       }                                                  
-                                                  
-     }
-
-     
-     
-//return det without quadrature weight, pure geometric information
-     template <class type_mov>
-     void elem_type_2D::JacobianSur_type_geometry(const vector < vector < type_mov > > & vt,
-                               const unsigned & ig,
-                               std::vector < std::vector <type_mov> > & Jac,
-                               std::vector < std::vector <type_mov> > & JacI,
-                               type_mov & detJac,
-                               const unsigned dim,
-                               const unsigned space_dim) const {
-                
-    //Jac ===================
-    Jac.resize(2/*dim*/);
-    for (unsigned d = 0; d < 2/*dim*/; d++) { Jac[d].resize(3/*space_dim*/);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
-
-    
-  for (unsigned d = 0; d < 3/*space_dim*/; d++) {
-      
-    const double* dxi_coords = _dphidxi[ig];
-    const double* deta_coords = _dphideta[ig];
-
-    for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++) {
-      Jac[0][d] += (*dxi_coords)  * vt[d][inode];
-      Jac[1][d] += (*deta_coords) * vt[d][inode];
-    }
-    
-  }
-  
-  
-    //JacI ===================
-    type_mov JacJacT[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
-    type_mov JacJacT_inv[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
-    
-    for (unsigned i = 0; i < 2/*dim*/; i++)
-        for (unsigned j = 0; j < 2/*dim*/; j++)
-            for (unsigned k = 0; k < space_dim; k++) JacJacT[i][j] += Jac[i][k]*Jac[j][k];
-            
-    type_mov detJacJacT = (JacJacT[0][0] * JacJacT[1][1] - JacJacT[0][1] * JacJacT[1][0]); ///@todo How are sure that this is POSITIVE?
-            
-    detJac = sqrt(abs(detJacJacT));
-    
-    JacJacT_inv[0][0] =  JacJacT[1][1] / detJacJacT;
-    JacJacT_inv[0][1] = -JacJacT[0][1] / detJacJacT;
-    JacJacT_inv[1][0] = -JacJacT[1][0] / detJacJacT;
-    JacJacT_inv[1][1] =  JacJacT[0][0] / detJacJacT;
-        
-    JacI.resize(space_dim);
-    for (unsigned d = 0; d < space_dim; d++) { JacI[d].resize(dim);  std::fill(JacI[d].begin(),JacI[d].end(),0.); }
-    
-    for (unsigned i = 0; i < space_dim; i++)
-        for (unsigned j = 0; j < dim; j++)
-            for (unsigned k = 0; k < dim; k++) JacI[i][j] += Jac[k][i]*JacJacT_inv[k][j];
-
-    }
-                            
+          
                             
 //return det without quadrature weight, pure geometric information
      template <class type_mov>
