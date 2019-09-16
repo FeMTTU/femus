@@ -788,7 +788,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   std::ostringstream filename;
   std::ostringstream fileAD;
   
-  filename << "/home/ekara/FEMuS/MyFEMuS/applications/Tumor/ex3/input/NewCorrectedTensorSPD.txt";
+  filename << "./input/NewCorrectedTensorSPD.txt";
   //fileAD << "/home/erdi/FEMuS/MyFEMuS/applications/Tumor/ex3/input/AxialDiffusivity.txt";
 
   std::ifstream fin;
