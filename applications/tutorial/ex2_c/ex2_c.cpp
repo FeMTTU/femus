@@ -192,8 +192,8 @@ int main(int argc, char** args) {
     
     // ======= Problem ========================
     MultiLevelProblem ml_prob;
-    ml_prob.SetQuadratureRuleAllGeomElems(quad_rule_order);
     ml_prob.SetFilesHandler(&files);
+    ml_prob.SetQuadratureRuleAllGeomElems(quad_rule_order);
 
 
     // ======= Mesh ========================
