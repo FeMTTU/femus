@@ -1,4 +1,4 @@
-/** tutorial/Ex12 Diffusion problem
+/** 
  * This example shows how to set and solve the weak form of the Poisson problem
  *          $$ \dfrac{\partial u}{ \partial t}\=\nabla \cdot (a(u)\nabla u)   $$
  *          $$ \nabla u.n=-\epsilon \text{ on} \partial B(0,1) $$
@@ -109,10 +109,10 @@ int main (int argc, char** args) {
   // erase all the coarse mesh levels
   // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
 
-  for (unsigned simulation = 0; simulation < 1; simulation++) {
+  for (unsigned simulation = 0; simulation < 20; simulation++) {
 
-    //V0 = 0.06 * (simulation + 1) ;   // fraction of injection vs tumor
-      V0 = 0.8;
+    V0 = 0.05 * (simulation + 1) ;   
+    //V0 = 0.8;
     // define the multilevel solution and attach the mlMsh object to it
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
 
@@ -126,6 +126,7 @@ int main (int argc, char** args) {
     mlSol.AddSolution ("K22", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
     mlSol.AddSolution ("K23", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
     mlSol.AddSolution ("K33", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+    //mlSol.AddSolution ("AD", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
     mlSol.Initialize ("All");
     mlSol.Initialize ("u", InitalValueU3D);
@@ -628,11 +629,11 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
 
   if ( (stop || last) && iproc == 0) {
     std::ofstream fout;
-    fout.open ("DoseResponseCurveNew1.csv", std::ofstream::app);
+    fout.open ("DoseResponseCurveNew.csv", std::ofstream::app);
     fout << V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
     fout.close();
 
-    fout.open ("DoseResponseCurveNew1.txt", std::ofstream::app);
+    fout.open ("DoseResponseCurveNew.txt", std::ofstream::app);
     fout << V0 << " " << volumeUTAll[0] / volumeAll << " " << volumeUTAll[1] / volumeAll << " " << volumeUTAll[2] / volumeAll << " " << std::endl;
     fout.close();
   }
@@ -785,14 +786,18 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   Mesh     *msh   = mlSol._mlMesh->GetLevel (Level);
 
   std::ostringstream filename;
-  filename << "./input/CorrectedTensorDataSPD.txt";
+  std::ostringstream fileAD;
+  
+  filename << "/home/ekara/FEMuS/MyFEMuS/applications/Tumor/ex3/input/NewCorrectedTensorSPD.txt";
+  //fileAD << "/home/erdi/FEMuS/MyFEMuS/applications/Tumor/ex3/input/AxialDiffusivity.txt";
 
   std::ifstream fin;
+  //std::ifstream fAD;
 
-  //fin.open ("./input/MeanDiffData.txt");
   fin.open (filename.str().c_str());
+  //fAD.open (fileAD.str().c_str());
   if (!fin.is_open()) {
-    std::cout << std::endl << " The output file " << "./input/MeanDiffData.txt" << " cannot be opened.\n";
+    std::cout << " The output file " << "./input/NewCorrectedTensorSPD.txt " << " cannot be opened.\n" << std::endl;
     abort();
   }
 
@@ -808,13 +813,18 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   h3 = 5. / n3;
 
   std::string kname[6] = {"K11", "K12", "K13", "K22", "K23", "K33"};
+  std::string ADName = "AD";
 
   unsigned kIndex[6];
   for (unsigned i = 0; i < 6; i++) {
     kIndex[i] = mlSol.GetIndex (kname[i].c_str());
   }
+  //unsigned ADIndex;
+  //ADIndex = mlSol.GetIndex(ADName.c_str());
+  
 
   unsigned kType = mlSol.GetSolutionType (kIndex[0]);
+  //unsigned ADType = mlSol.GetSolutionType (ADIndex);
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   std::vector<double> x (dim);
@@ -831,6 +841,8 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
         for (unsigned l = 0; l < 6; l++) {
           fin >> K[l];
         }
+        //double AD;
+        //fAD >> AD;
         if (K[0] < Keps) K[0] = Keps;
         if (K[3] < Keps) K[3] = Keps;
         if (K[5] < Keps) K[5] = Keps;
@@ -854,6 +866,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
             if (K[3] < Keps) K[3] = Keps;
             if (K[5] < Keps) K[5] = Keps;
           }
+          //sol->_Sol[ADIndex]->set (iel, AD);
           for (unsigned l = 0; l < 6; l++) {
             sol->_Sol[kIndex[l]]->set (iel, K[l]);
           }
@@ -867,6 +880,8 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   for (unsigned l = 0; l < 6; l++) {
     sol->_Sol[kIndex[l]]->close();
   }
+  //fAD.close();
+  //sol->_Sol[ADIndex]->close();
 
   //rescale so that the average of all inSkull DTI traces is 1
 
@@ -911,13 +926,13 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   MPI_Allreduce (&trace, &traceAll, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce (&counter, &counterAll, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
   
-  std::cout << "CounterAll is : " << counterAll << " " << std::endl;
-  std::cout << "Before TracaAll is : " << traceAll << " " << std::endl;
+  //std::cout << "CounterAll is : " << counterAll << " " << std::endl;
+  ///std::cout << "Before TracaAll is : " << traceAll << " " << std::endl;
   
   traceAll *= 1. / counterAll;
   
 
-  std::cout << "Now tracaAll is : " << traceAll << " " << std::endl;
+  //std::cout << "Now tracaAll is : " << traceAll << " " << std::endl;
 
   //exit(0);
 
