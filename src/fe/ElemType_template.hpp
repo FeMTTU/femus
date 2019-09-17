@@ -31,7 +31,7 @@ namespace femus {
           
       public:      
           
-     virtual void Jacobian_geometry_templ(const std::vector < std::vector < type_mov > > & vt,
+     virtual void Jacobian_geometry(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
@@ -41,6 +41,14 @@ namespace femus {
 
      virtual void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const = 0;
 
+     virtual void shape_funcs_current_elem(const unsigned & ig,
+                                             const std::vector < std::vector <type_mov> > & JacI,
+                                             vector < double > & phi, 
+                                             vector < type >   & gradphi,
+                                             boost::optional< vector < type > & > nablaphi,
+                                             const unsigned dimension,
+                                             const unsigned space_dimension) const = 0;
+                                                
      virtual void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov> * fe_elem_coords_in,
                                                 const vector < vector < type_mov > > & vt,
                                                 const unsigned & ig,
@@ -78,7 +86,7 @@ namespace femus {
       
 
       
-     void Jacobian_geometry_templ(const std::vector < std::vector < type_mov > > & vt,
+     void Jacobian_geometry(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
@@ -98,6 +106,13 @@ namespace femus {
                                                 const unsigned dimension,
                                                 const unsigned space_dimension) const;
 
+     void shape_funcs_current_elem(const unsigned & ig,
+                                             const std::vector < std::vector <type_mov> > & JacI,
+                                             vector < double > & phi, 
+                                             vector < type >   & gradphi,
+                                             boost::optional< vector < type > & > nablaphi,
+                                             const unsigned dimension,
+                                             const unsigned space_dimension) const;
                                                 
   };
 
@@ -124,7 +139,7 @@ namespace femus {
           ~elem_type_templ(){ }
 
 
-     void Jacobian_geometry_templ(const std::vector < std::vector < type_mov > > & vt,
+     void Jacobian_geometry(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
@@ -155,7 +170,9 @@ namespace femus {
     Jac.resize(dim);
     
     for (unsigned d = 0; d < dim; d++) { 
-        Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
+        Jac[d].resize(space_dim);	
+        std::fill(Jac[d].begin(), Jac[d].end(), 0.); 
+    }
 
     for (unsigned d = 0; d < space_dim; d++) {
     const double* dxi_coords  = _dphidxi[ig];
@@ -238,7 +255,7 @@ namespace femus {
      std::vector < std::vector <type_mov> >  Jac;
      type_mov detJac;
    
-     fe_elem_coords_in->Jacobian_geometry_templ(vt, ig, Jac, JacI, detJac, dim, space_dim);
+     fe_elem_coords_in->Jacobian_geometry(vt, ig, Jac, JacI, detJac, dim, space_dim);
 
 // function part ================
     Weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
@@ -266,7 +283,37 @@ namespace femus {
 
 }  
       
-     
+
+      
+      
+     void shape_funcs_current_elem(const unsigned & ig,
+                                             const std::vector < std::vector <type_mov> > & JacI,
+                                             vector < double > & phi, 
+                                             vector < type >   & gradphi,
+                                             boost::optional< vector < type > & > nablaphi,
+                                             const unsigned dimension,
+                                             const unsigned space_dimension) const {
+                                                 
+    const double* dxi  = _dphidxi[ig];
+    const double* dxi2 = _d2phidxi2[ig];
+
+    phi.resize(_nc);
+    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.);
+    if(nablaphi) nablaphi->resize(_nc * space_dimension);   ///@todo fix this: once space_dim was only 1
+
+    
+    for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
+
+      phi[inode] = _phi[ig][inode];
+      
+      for (unsigned d = 0; d < space_dimension; d++) gradphi[ inode * space_dimension + d] = (*dxi) * JacI[d][0];
+
+      if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI[0][0] * JacI[0][0]; ///@todo fix this
+
+    }                                           
+                                                 
+                                                 
+  }
    
 };
 
@@ -286,7 +333,7 @@ namespace femus {
           
           
           
-     void Jacobian_geometry_templ(const std::vector < std::vector < type_mov > > & vt,
+     void Jacobian_geometry(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
@@ -298,7 +345,9 @@ namespace femus {
     Jac.resize(dim);
     
     for (unsigned d = 0; d < dim; d++) { 
-        Jac[d].resize(space_dim);	std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
+        Jac[d].resize(space_dim);	
+        std::fill(Jac[d].begin(), Jac[d].end(), 0.); 
+    }
 
     for (unsigned d = 0; d < space_dim; d++) {
     const double* dxi_coords  = _dphidxi[ig];
@@ -329,7 +378,10 @@ namespace femus {
     JacJacT_inv[1][1] =  JacJacT[0][0] / detJacJacT;
         
     JacI.resize(space_dim);
-    for (unsigned d = 0; d < space_dim; d++) { JacI[d].resize(dim);  std::fill(JacI[d].begin(),JacI[d].end(),0.); }
+    for (unsigned d = 0; d < space_dim; d++) { 
+        JacI[d].resize(dim);  
+        std::fill(JacI[d].begin(),JacI[d].end(),0.); 
+    }
     
     for (unsigned i = 0; i < space_dim; i++)
         for (unsigned j = 0; j < dim; j++)
@@ -394,7 +446,7 @@ void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov>
    std::vector < std::vector <type_mov> >  Jac;
    type_mov detJac;
    
-   fe_elem_coords_in->Jacobian_geometry_templ(vt, ig, Jac, JacI, detJac, dim, space_dim);
+   fe_elem_coords_in->Jacobian_geometry(vt, ig, Jac, JacI, detJac, dim, space_dim);
 
 // function part ================
     Weight = detJac * _gauss.GetGaussWeightsPointer()[ig];
@@ -437,7 +489,54 @@ void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov>
 
 }
         
-          
+ 
+ 
+      void shape_funcs_current_elem(const unsigned & ig,
+                                             const std::vector < std::vector <type_mov> > & JacI,
+                                             vector < double > & phi, 
+                                             vector < type >   & gradphi,
+                                             boost::optional< vector < type > & > nablaphi,
+                                             const unsigned dimension,
+                                             const unsigned space_dimension) const {
+                                                 
+
+    phi.resize(_nc);
+    
+    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.);
+    const double* dxi  = _dphidxi[ig];
+    const double* deta = _dphideta[ig];
+    
+    if(nablaphi) nablaphi->resize(_nc * 3);
+    const double* dxi2 = _d2phidxi2[ig];
+    const double* deta2 = _d2phideta2[ig];
+    const double* dxideta = _d2phidxideta[ig];
+
+    
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
+
+      phi[inode] = _phi[ig][inode];
+
+      for (unsigned d = 0; d < space_dimension; d++) gradphi[ inode * space_dimension + d] = (*dxi) * JacI[d][0] + (*deta) * JacI[d][1];
+
+//       gradphi[inode * 2 + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1];
+//       gradphi[inode * 2 + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1];
+
+      if(nablaphi) {
+        (*nablaphi)[3 * inode + 0] =
+          ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[0][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[0][1];
+        (*nablaphi)[3 * inode + 1] =
+          ((*dxi2)   * JacI[1][0] + (*dxideta) * JacI[1][1]) * JacI[1][0] +
+          ((*dxideta) * JacI[1][0] + (*deta2)  * JacI[1][1]) * JacI[1][1];
+        (*nablaphi)[3 * inode + 2] =
+          ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[1][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[1][1];
+      }
+    }
+
+ 
+    } 
+ 
    
 };
 
@@ -455,7 +554,7 @@ void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov>
           ~elem_type_templ(){}
    
    
-        void Jacobian_geometry_templ(const std::vector < std::vector < type_mov > > & vt,
+        void Jacobian_geometry(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
@@ -466,7 +565,9 @@ void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov>
      //Jac ===============
     Jac.resize(3/*dim*/);
     for (unsigned d = 0; d < 3/*dim*/; d++) {
-        Jac[d].resize(3/*space_dim*/);   std::fill(Jac[d].begin(), Jac[d].end(), 0.); }
+        Jac[d].resize(3/*space_dim*/);   
+        std::fill(Jac[d].begin(), Jac[d].end(), 0.); 
+    }
     
     for (unsigned d = 0; d < 3/*dim*/; d++) {
     const double * dxi_coords   = _dphidxi[ig];
@@ -528,7 +629,7 @@ void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov>
    std::vector < std::vector <type_mov> >  Jac;
    type_mov detJac;
    
-   fe_elem_coords_in->Jacobian_geometry_templ(vt, ig, Jac, JacI, detJac, dim, space_dim);
+   fe_elem_coords_in->Jacobian_geometry(vt, ig, Jac, JacI, detJac, dim, space_dim);
 // geometry part - end ==============
 
     
@@ -592,7 +693,74 @@ void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov>
 
 }
 
-  
+
+
+      void shape_funcs_current_elem(const unsigned & ig,
+                                             const std::vector < std::vector <type_mov> > & JacI,
+                                             vector < double > & phi, 
+                                             vector < type >   & gradphi,
+                                             boost::optional< vector < type > & > nablaphi,
+                                             const unsigned dimension,
+                                             const unsigned space_dimension) const {
+
+    const double* dxi = _dphidxi[ig];
+    const double* deta = _dphideta[ig];
+    const double* dzeta = _dphidzeta[ig];
+
+    const double* dxi2 = _d2phidxi2[ig];
+    const double* deta2 = _d2phideta2[ig];
+    const double* dzeta2 = _d2phidzeta2[ig];
+    const double* dxideta = _d2phidxideta[ig];
+    const double* detadzeta = _d2phidetadzeta[ig];
+    const double* dzetadxi = _d2phidzetadxi[ig];
+
+    phi.resize(_nc);
+    gradphi.resize(_nc * 3);  std::fill(gradphi.begin(),gradphi.end(),0.);
+    if(nablaphi) nablaphi->resize(_nc * 6);
+    
+    
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
+
+      phi[inode] = _phi[ig][inode];
+
+      gradphi[3 * inode + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1] + (*dzeta) * JacI[0][2];
+      gradphi[3 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1] + (*dzeta) * JacI[1][2];
+      gradphi[3 * inode + 2] = (*dxi) * JacI[2][0] + (*deta) * JacI[2][1] + (*dzeta) * JacI[2][2];
+
+      if(nablaphi) {
+        (*nablaphi)[6 * inode + 0] =
+          ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[0][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[0][1] +
+          ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[0][2];
+        (*nablaphi)[6 * inode + 1] =
+          ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[1][0] +
+          ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[1][1] +
+          ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[1][2];
+        (*nablaphi)[6 * inode + 2] =
+          ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[2][0] +
+          ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[2][1] +
+          ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[2][2];
+        (*nablaphi)[6 * inode + 3] =
+          ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[1][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[1][1] +
+          ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[1][2];
+        (*nablaphi)[6 * inode + 4] =
+          ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[2][0] +
+          ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[2][1] +
+          ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[2][2];
+        (*nablaphi)[6 * inode + 5] =
+          ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[0][0] +
+          ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[0][1] +
+          ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[0][2];
+      }
+    }
+
+
+                                                 
+}
+
+
+
 };
 
 

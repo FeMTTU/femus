@@ -594,7 +594,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     
 		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
     
-    elem_all[ielGeom_bdry][solType_coords]->Jacobian_geometry_templ(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
 	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_qp, normal);
 //  elem_all[ielGeom][solFEType_u]->Jacobian_non_isoparametric_templ( elem_all[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
             
