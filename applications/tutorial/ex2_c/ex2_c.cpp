@@ -111,7 +111,8 @@ template < class system_type, class real_num, class real_num_mov >
 void System_assemble_interface(MultiLevelProblem & ml_prob);
 
 template < class system_type, class real_num, class real_num_mov >
-void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
+void System_assemble_flexible(const std::vector < std::vector < const elem_type_jac_templ_base<real_num, real_num_mov> *  > > & elem_all,
+                              const std::vector<Gauss> & quad_rules,
                               MultiLevelMesh * ml_mesh,
                               MultiLevelSolution * ml_sol,
                               system_type * mlPdeSys,
@@ -194,6 +195,7 @@ int main(int argc, char** args) {
     MultiLevelProblem ml_prob;
     ml_prob.SetFilesHandler(&files);
     ml_prob.SetQuadratureRuleAllGeomElems(quad_rule_order);
+    ml_prob.set_all_abstract_fe();
 
 
     // ======= Mesh ========================
@@ -357,7 +359,12 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
 
     const unsigned current_system_number = ml_prob.get_current_system_number();
 
-    System_assemble_flexible< system_type, real_num, real_num_mov > (ml_prob.GetQuadratureRuleAllGeomElems(),
+   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+  std::vector < std::vector < const elem_type_jac_templ_base<real_num, real_num_mov> *  > > elem_all;
+  ml_prob.get_all_abstract_fe(elem_all);
+
+    System_assemble_flexible< system_type, real_num, real_num_mov > (elem_all,
+                                                                     ml_prob.GetQuadratureRuleAllGeomElems(),
                                                                      ml_prob._ml_msh,
                                                                      ml_prob._ml_sol,
                                                                      & ml_prob.get_system< system_type >(current_system_number),
@@ -376,7 +383,8 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
  **/
 
 template < class system_type, class real_num, class real_num_mov >
-void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
+void System_assemble_flexible(const std::vector < std::vector < const elem_type_jac_templ_base<real_num, real_num_mov> *  > > & elem_all,
+                              const std::vector<Gauss> & quad_rules,
                               MultiLevelMesh * ml_mesh_in,
                               MultiLevelSolution * ml_sol_in,
                               system_type * mlPdeSys,
@@ -451,8 +459,6 @@ void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
                           unknowns_local[0].sol_index());
      
 
-    
-
 
     // element loop: each process loops only on the elements that owns
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -495,7 +501,7 @@ void System_assemble_flexible(const std::vector<Gauss> & quad_rules,
             //here we'll first compute the jacobian inverse and pass that one to the other routines
             // *** get gauss point weight, test function and test function partial derivatives ***
             for (unsigned  u = 0; u < n_unknowns; u++) {
-                 msh->_finiteElement[ielGeom][unknowns_local[u].fe_type()] ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][xType], geom_element.get_coords_at_dofs(), ig, weight_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess(), dim, dim);
+                 elem_all[ielGeom][unknowns_local[u].fe_type()] ->Jacobian_non_isoparametric_templ( elem_all[ielGeom][xType], geom_element.get_coords_at_dofs(), ig, weight_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess(), dim, dim);
             }
 
 //       msh->_finiteElement[geom_element.geom_type()][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);

@@ -84,7 +84,8 @@ static  void output_convergence_order_all(const std::vector< Unknown > &  unknow
  
  
 
-static  std::vector< type > compute_error_norms(const std::vector<Gauss> & quad_rules,
+static  std::vector< type > compute_error_norms(const std::vector < std::vector < const elem_type_jac_templ_base<type, double> *  > > & elem_all,
+                                                const std::vector<Gauss> & quad_rules,
                                                 const MultiLevelSolution* ml_sol, 
                                                 const MultiLevelSolution* ml_sol_all_levels,
                                                 const std::string & unknown,
@@ -97,7 +98,8 @@ static  std::vector< type > compute_error_norms(const std::vector<Gauss> & quad_
  
 
      
-static  void compute_error_norms_per_unknown_per_level(const std::vector<Gauss> & quad_rules,
+static  void compute_error_norms_per_unknown_per_level(const std::vector < std::vector < const elem_type_jac_templ_base<type, double> *  > > & elem_all,
+                                                       const std::vector<Gauss> & quad_rules,
                                                        const MultiLevelSolution* ml_sol_single_level,
                                                        MultiLevelSolution* ml_sol_all_levels,
                                                        const std::vector< Unknown > &  unknowns,
@@ -148,6 +150,9 @@ template < class type>
                                                                                                  SetBoundaryCondition, 
                                                                                                  SetInitialCondition);
     
+  //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+  std::vector < std::vector < const elem_type_jac_templ_base<type, double> *  > > elem_all;
+  ml_prob.get_all_abstract_fe(elem_all);
             
        for (int lev = 0; lev < max_number_of_meshes; lev++) {
                   
@@ -160,7 +165,8 @@ template < class type>
                                                                                        lev);
             
 
-            FE_convergence::compute_error_norms_per_unknown_per_level ( ml_prob.GetQuadratureRuleAllGeomElems(),
+            FE_convergence::compute_error_norms_per_unknown_per_level ( elem_all,
+                                                                        ml_prob.GetQuadratureRuleAllGeomElems(),
                                                                         & ml_sol_single_level,
                                                                         & ml_sol_all_levels,
                                                                         unknowns,
@@ -287,7 +293,8 @@ template < class type>
  
 
 template < class type>
-/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms(const std::vector<Gauss> & quad_rules,
+/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms(const std::vector < std::vector < const elem_type_jac_templ_base<type, double> *  > > & elem_all,
+                                                                            const std::vector<Gauss> & quad_rules,
                                                                             const MultiLevelSolution* ml_sol,
                                                                             const MultiLevelSolution* ml_sol_all_levels,
                                                                             const std::string & unknown,
@@ -362,7 +369,6 @@ template < class type>
   phi_x.reserve(maxSize * dim);
   phi_xx.reserve(maxSize * dim2);
 
-
   
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -409,9 +415,8 @@ template < class type>
         std::cout << "We need to revisit all these allocations of phi_u_x !!!"  << std::endl;
         
       // *** get gauss point weight, test function and test function partial derivatives ***
-     msh->_finiteElement[ielGeom][soluType]->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][xType], x, ig, weight, phi, phi_x, phi_xx,dim,dim);
-//       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
-      msh->_finiteElement[ielGeom][xType]->Jacobian(x, ig, weight, phi_coords, phi_coords_x, phi_coords_xx);
+    elem_all[ielGeom][soluType]->Jacobian_non_isoparametric_templ(elem_all[ielGeom][xType], x, ig, weight, phi, phi_x, phi_xx,dim,dim);
+    elem_all[ielGeom][xType]->Jacobian_non_isoparametric_templ(elem_all[ielGeom][xType], x, ig, weight, phi, phi_x, phi_xx,dim,dim);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       type solu_gss = 0.;
@@ -508,7 +513,8 @@ if (conv_order_flag == 1)  return norms;
 
      
 template < class type>
-/*static*/  void FE_convergence< type >::compute_error_norms_per_unknown_per_level(const std::vector<Gauss> & quad_rules,
+/*static*/  void FE_convergence< type >::compute_error_norms_per_unknown_per_level(const std::vector < std::vector < const elem_type_jac_templ_base<type, double> *  > > & elem_all,
+                                                                                   const std::vector<Gauss> & quad_rules,
                                                                                    const MultiLevelSolution* ml_sol_single_level,
                                                                                    MultiLevelSolution* ml_sol_all_levels,
                                                                                    const std::vector< Unknown > &  unknowns,
@@ -528,7 +534,7 @@ template < class type>
             // =======  compute the error norm at the current level (i) ========================
             for (unsigned int u = 0; u < unknowns.size(); u++) {  //this loop could be inside the below function
                 
-            const std::vector< type > norm_out = FE_convergence::compute_error_norms (quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, ex_sol_in);
+            const std::vector< type > norm_out = FE_convergence::compute_error_norms (elem_all, quad_rules, ml_sol_single_level, ml_sol_all_levels, unknowns[u]._name, i, norm_flag, conv_order_flag, ex_sol_in);
 
               for (int n = 0; n < norms[u][i-1].size(); n++)      norms[u][i-1][n] = norm_out[n];
                                        

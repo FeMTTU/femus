@@ -849,12 +849,12 @@ if ( i_vol == j_vol )  {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	msh->_finiteElement[ielGeom][SolFEType[pos_state]]
-	->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
-    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]
-    ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_adj, phi_adj_x, phi_adj_xx, dim, space_dim);
-    msh->_finiteElement[ielGeom][solType_coords]
-    ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_coords, phi_coords_x, phi_coords_xx, dim, space_dim);
+    elem_all[ielGeom][SolFEType[pos_state]]->Jacobian_non_isoparametric_templ(
+    elem_all[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+    elem_all[ielGeom][SolFEType[pos_adj]]->Jacobian_non_isoparametric_templ(
+    elem_all[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_adj, phi_adj_x, phi_adj_xx, dim, space_dim);
+    elem_all[ielGeom][solType_coords]->Jacobian_non_isoparametric_templ(
+    elem_all[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_coords, phi_coords_x, phi_coords_xx, dim, space_dim);
           
 	sol_u_gss = 0.;
 	sol_adj_gss = 0.;
@@ -1280,10 +1280,10 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    msh->_finiteElement[ielGeom][solType_u]
-    ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
-    msh->_finiteElement[ielGeom][solType_u/*solTypeTdes*/]
-    ->Jacobian_non_isoparametric( msh->_finiteElement[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_udes, phi_udes_x, phi_udes_xx, dim, space_dim);
+    elem_all[ielGeom][solType_u]->Jacobian_non_isoparametric_templ(
+    elem_all[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+    elem_all[ielGeom][solType_u/*solTypeTdes*/]->Jacobian_non_isoparametric_templ(
+    elem_all[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_udes, phi_udes_x, phi_udes_xx, dim, space_dim);
 
 	u_gss     = 0.;  for (unsigned i = 0; i < nDof_u; i++)        u_gss += sol_u[i]     * phi_u[i];
 	udes_gss  = 0.;  for (unsigned i = 0; i < nDof_udes; i++)  udes_gss += sol_udes[i]  * phi_udes[i];  

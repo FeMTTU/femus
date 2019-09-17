@@ -1,7 +1,7 @@
 /*=========================================================================
 
 Program: FEMuS
-Module: MultiLevelProblem
+Module: MultiLevelSolution
 Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
 Copyright (c) FEMuS
