@@ -420,7 +420,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
   
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < const elem_type_jac_templ_base<double, double> *  > > elem_all;
+  std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
   
     
@@ -1131,7 +1131,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
 
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < const elem_type_jac_templ_base<double, double> *  > > elem_all;
+  std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
   
   

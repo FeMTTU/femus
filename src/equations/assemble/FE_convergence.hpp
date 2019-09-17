@@ -84,7 +84,7 @@ static  void output_convergence_order_all(const std::vector< Unknown > &  unknow
  
  
 
-static  std::vector< type > compute_error_norms(const std::vector < std::vector < const elem_type_jac_templ_base<type, double> *  > > & elem_all,
+static  std::vector< type > compute_error_norms(const std::vector < std::vector < const elem_type_templ_base<type, double> *  > > & elem_all,
                                                 const std::vector<Gauss> & quad_rules,
                                                 const MultiLevelSolution* ml_sol, 
                                                 const MultiLevelSolution* ml_sol_all_levels,
@@ -98,7 +98,7 @@ static  std::vector< type > compute_error_norms(const std::vector < std::vector 
  
 
      
-static  void compute_error_norms_per_unknown_per_level(const std::vector < std::vector < const elem_type_jac_templ_base<type, double> *  > > & elem_all,
+static  void compute_error_norms_per_unknown_per_level(const std::vector < std::vector < const elem_type_templ_base<type, double> *  > > & elem_all,
                                                        const std::vector<Gauss> & quad_rules,
                                                        const MultiLevelSolution* ml_sol_single_level,
                                                        MultiLevelSolution* ml_sol_all_levels,
@@ -151,7 +151,7 @@ template < class type>
                                                                                                  SetInitialCondition);
     
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < const elem_type_jac_templ_base<type, double> *  > > elem_all;
+  std::vector < std::vector < const elem_type_templ_base<type, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
             
        for (int lev = 0; lev < max_number_of_meshes; lev++) {
@@ -293,7 +293,7 @@ template < class type>
  
 
 template < class type>
-/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms(const std::vector < std::vector < const elem_type_jac_templ_base<type, double> *  > > & elem_all,
+/*static*/  std::vector< type > FE_convergence< type >::compute_error_norms(const std::vector < std::vector < const elem_type_templ_base<type, double> *  > > & elem_all,
                                                                             const std::vector<Gauss> & quad_rules,
                                                                             const MultiLevelSolution* ml_sol,
                                                                             const MultiLevelSolution* ml_sol_all_levels,
@@ -513,7 +513,7 @@ if (conv_order_flag == 1)  return norms;
 
      
 template < class type>
-/*static*/  void FE_convergence< type >::compute_error_norms_per_unknown_per_level(const std::vector < std::vector < const elem_type_jac_templ_base<type, double> *  > > & elem_all,
+/*static*/  void FE_convergence< type >::compute_error_norms_per_unknown_per_level(const std::vector < std::vector < const elem_type_templ_base<type, double> *  > > & elem_all,
                                                                                    const std::vector<Gauss> & quad_rules,
                                                                                    const MultiLevelSolution* ml_sol_single_level,
                                                                                    MultiLevelSolution* ml_sol_all_levels,

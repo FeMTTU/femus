@@ -6,7 +6,7 @@
 // #include "GaussPoints.hpp"
 #include "ElemType.hpp"
 
-// class elem_type_jac_templ;
+// class elem_type_templ;
 
 
 namespace femus {
@@ -27,7 +27,7 @@ namespace femus {
 
 
  template <class type, class type_mov>
-    class elem_type_jac_templ_base {
+    class elem_type_templ_base {
           
       public:      
           
@@ -41,7 +41,7 @@ namespace femus {
 
      virtual void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const = 0;
 
-     virtual void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_mov> * fe_elem_coords_in,
+     virtual void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov> * fe_elem_coords_in,
                                                 const vector < vector < type_mov > > & vt,
                                                 const unsigned & ig,
                                                 type_mov & Weight,
@@ -53,7 +53,7 @@ namespace femus {
 
           
 // run-time selection
-      static elem_type_jac_templ_base<type, type_mov> * build(const std::string geom_elem, /*dimension is contained in the Geometric Element*/
+      static elem_type_templ_base<type, type_mov> * build(const std::string geom_elem, /*dimension is contained in the Geometric Element*/
                                                               const std::string fe_fam,
                                                               const std::string order_gauss,
                                                               const unsigned space_dimension); 
@@ -65,15 +65,15 @@ namespace femus {
       
     
     template <class type, class type_mov, unsigned int dim, unsigned int space_dim>
-     class elem_type_jac_templ  : public elem_type_jac_templ_base<type, type_mov>  /*@todo rename it to _real_*/  {
+     class elem_type_templ  : public elem_type_templ_base<type, type_mov>  /*@todo rename it to _real_*/  {
       
   public: 
       
 
-      ~elem_type_jac_templ(){ }
+      ~elem_type_templ(){ }
      
-     elem_type_jac_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss) 
-//      : elem_type_jac_templ_base<type, type_mov, dim, space_dim>(geom_elem, order_gauss)
+     elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss) 
+//      : elem_type_templ_base<type, type_mov, dim, space_dim>(geom_elem, order_gauss)
      { }
       
 
@@ -88,7 +88,7 @@ namespace femus {
 
      void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const;
 
-     void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_mov> * fe_elem_coords_in,
+     void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov> * fe_elem_coords_in,
                                                 const vector < vector < type_mov > > & vt,
                                                 const unsigned & ig,
                                                 type_mov & Weight,
@@ -106,7 +106,7 @@ namespace femus {
 // Each class was transformed into a templated one, and the virtuality of the dimensions  is implemented as template specialization
 // PARTIAL *CLASS* SPECIALIZATION! (function specialization can only be full)
   template <class type, class type_mov>
-   class  elem_type_jac_templ<type, type_mov, 1, 3>  : public elem_type_1D,  public elem_type_jac_templ_base<type, type_mov/*, 1, 3>*/>  {
+   class  elem_type_templ<type, type_mov, 1, 3>  : public elem_type_1D,  public elem_type_templ_base<type, type_mov/*, 1, 3>*/>  {
        
    private: 
        
@@ -117,11 +117,11 @@ namespace femus {
              
              
              
-       elem_type_jac_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss) 
+       elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss) 
        : elem_type_1D(geom_elem.c_str(), fe_elem.c_str(), order_gauss.c_str() )
        {   }
      
-          ~elem_type_jac_templ(){ }
+          ~elem_type_templ(){ }
 
 
      void Jacobian_geometry_templ(const std::vector < std::vector < type_mov > > & vt,
@@ -219,7 +219,7 @@ namespace femus {
 
 
      
-     void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_mov> * fe_elem_coords_in,
+     void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov> * fe_elem_coords_in,
                                                 const vector < vector < type_mov > > & vt,
                                                 const unsigned & ig,
                                                 type_mov & Weight,
@@ -274,15 +274,15 @@ namespace femus {
 
 
   template <class type, class type_mov>
-   class  elem_type_jac_templ<type, type_mov, 2, 3>  : public elem_type_2D,  public elem_type_jac_templ_base<type, type_mov>   {
+   class  elem_type_templ<type, type_mov, 2, 3>  : public elem_type_2D,  public elem_type_templ_base<type, type_mov>   {
        
          public: 
 
-       elem_type_jac_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss) 
+       elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss) 
        : elem_type_2D(geom_elem.c_str(), fe_elem.c_str(), order_gauss.c_str() )
      { }
      
-          ~elem_type_jac_templ(){ }
+          ~elem_type_templ(){ }
           
           
           
@@ -376,7 +376,7 @@ namespace femus {
        
        
        
-void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_mov> * fe_elem_coords_in,
+void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov> * fe_elem_coords_in,
                                                 const vector < vector < type_mov > > & vt,
                                                 const unsigned & ig,
                                                 type_mov & Weight,
@@ -444,15 +444,15 @@ void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_
 
 
   template <class type, class type_mov>
-   class  elem_type_jac_templ<type, type_mov, 3, 3>   : public elem_type_3D,  public elem_type_jac_templ_base<type, type_mov>   {
+   class  elem_type_templ<type, type_mov, 3, 3>   : public elem_type_3D,  public elem_type_templ_base<type, type_mov>   {
        
          public: 
 
-       elem_type_jac_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss)
+       elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss)
        : elem_type_3D(geom_elem.c_str(), fe_elem.c_str(), order_gauss.c_str() )
      {}
      
-          ~elem_type_jac_templ(){}
+          ~elem_type_templ(){}
    
    
         void Jacobian_geometry_templ(const std::vector < std::vector < type_mov > > & vt,
@@ -510,7 +510,7 @@ void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_
      
      
    
-      void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_mov> * fe_elem_coords_in,
+      void Jacobian_non_isoparametric_templ(const elem_type_templ_base<type, type_mov> * fe_elem_coords_in,
                                           const vector < vector < type_mov > > & vt,
                                           const unsigned & ig,
                                           type_mov & Weight,
@@ -601,19 +601,19 @@ void Jacobian_non_isoparametric_templ(const elem_type_jac_templ_base<type, type_
 ///@todo I have to put it here because I need to know what the children are... do separate files if needed
 // run-time selection
  template <class type, class type_mov>
-       elem_type_jac_templ_base<type, type_mov> * elem_type_jac_templ_base<type, type_mov>::build(
+       elem_type_templ_base<type, type_mov> * elem_type_templ_base<type, type_mov>::build(
                                          const std::string geom_elem, 
                                          const std::string fe_fam,
                                          const std::string order_gauss,
                                          const unsigned space_dimension) {
 
        
-              if  ( geom_elem.compare("hex") == 0)     return  /**(*/ new elem_type_jac_templ<type, type_mov, 3, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
-              else if  (geom_elem.compare("tet") == 0)     return  /**(*/ new elem_type_jac_templ<type, type_mov, 3, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
-              else if  (geom_elem.compare("wedge") == 0)   return  /**(*/ new elem_type_jac_templ<type, type_mov, 3, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
-              else if  (geom_elem.compare("quad") == 0)    return  /**(*/ new elem_type_jac_templ<type, type_mov, 2, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
-              else if  (geom_elem.compare("tri") == 0)    return  /**(*/ new elem_type_jac_templ<type, type_mov, 2, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
-              else if  (geom_elem.compare("line") == 0)   return  /**(*/ new elem_type_jac_templ<type, type_mov, 1, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
+              if  ( geom_elem.compare("hex") == 0)     return  /**(*/ new elem_type_templ<type, type_mov, 3, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
+              else if  (geom_elem.compare("tet") == 0)     return  /**(*/ new elem_type_templ<type, type_mov, 3, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
+              else if  (geom_elem.compare("wedge") == 0)   return  /**(*/ new elem_type_templ<type, type_mov, 3, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
+              else if  (geom_elem.compare("quad") == 0)    return  /**(*/ new elem_type_templ<type, type_mov, 2, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
+              else if  (geom_elem.compare("tri") == 0)    return  /**(*/ new elem_type_templ<type, type_mov, 2, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
+              else if  (geom_elem.compare("line") == 0)   return  /**(*/ new elem_type_templ<type, type_mov, 1, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
               else {std::cout << "Not implemented" << std::endl; abort(); }
           
           
