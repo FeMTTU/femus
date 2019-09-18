@@ -10,7 +10,7 @@
 
 
 #define FACE_FOR_CONTROL             4  //we do control on the right (=2) face
-#define AXIS_DIRECTION_CONTROL_SIDE  1 //change this accordingly to the other variable above
+#define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
 
 #include "../../param.hpp"
 
@@ -19,7 +19,7 @@
 
 ///@todo do a very weak impl of Laplacian
 ///@todo Review the ordering for phi_ctrl_x_bdry
-///@todo implement fill_volume_shape_at_boundary_quadrature_points in 3d elems and triangles
+///@todo implement fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem in 3d elems and triangles
 
 
 using namespace femus;
@@ -325,11 +325,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //*************************************************** 
   vector <double> phi_ctrl_bdry;  
   vector <double> phi_ctrl_x_bdry; 
-  vector <double> phi_ctrl_xx_bdry_placeholder;
+  vector <double> phi_xx_bdry_placeholder;
 
   phi_ctrl_bdry.reserve(max_size);
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
-  phi_ctrl_xx_bdry_placeholder.reserve(max_size * dim2);
+  phi_xx_bdry_placeholder.reserve(max_size * dim2);
  //*************************************************** 
 
   //************** act flag **************************** 
@@ -414,15 +414,26 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
   if (assembleMatrix)  KK->zero();
 
-     std::vector < std::vector < double > >  JacI_qp;
-     std::vector < std::vector < double > >  Jac_qp;
-     double detJac_qp;
-  
-  
-  //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+ //*************************************************** 
+     std::vector < std::vector < double > >  JacI_qp(space_dim);
+     std::vector < std::vector < double > >  Jac_qp(dim);
+    for (unsigned d = 0; d < Jac_qp.size(); d++) {   Jac_qp[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_qp.size(); d++) { JacI_qp[d].resize(dim); }
+    
+    double detJac_qp;
+
+     std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
+     std::vector < std::vector < double > >  Jac_qp_bdry(dim-1);
+    for (unsigned d = 0; d < Jac_qp_bdry.size(); d++) {   Jac_qp_bdry[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_qp_bdry.size(); d++) { JacI_qp_bdry[d].resize(dim-1); }
+    
+    double detJac_qp_bdry;
+    
+    //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
-  
+//*************************************************** 
+ 
     
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -594,22 +605,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     
 		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
     
-    elem_all[ielGeom_bdry][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
-	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_qp, normal);
-//  elem_all[ielGeom][solFEType_u]->Jacobian_non_isoparametric_templ( elem_all[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
-            
-    elem_all[ielGeom_bdry][SolFEType[pos_ctrl]]->Jacobian_non_isoparametric_templ(
-    elem_all[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_ctrl_xx_bdry_placeholder, dim, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, dim - 1, space_dim);
+	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal);
     
-    elem_all[ielGeom_bdry][SolFEType[pos_state]]->Jacobian_non_isoparametric_templ( 
-    elem_all[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_u_bdry, phi_u_x_bdry,  phi_ctrl_xx_bdry_placeholder, dim, space_dim);
+    weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
 
-    elem_all[ielGeom_bdry][SolFEType[pos_adj]]->Jacobian_non_isoparametric_templ( 
-    elem_all[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_adj_bdry, phi_adj_x_bdry,  phi_ctrl_xx_bdry_placeholder, dim, space_dim);
-
-    elem_all[ielGeom_bdry][solType_coords]->Jacobian_non_isoparametric_templ(
-    elem_all[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_coords_bdry, phi_coords_x_bdry,  phi_ctrl_xx_bdry_placeholder, dim, space_dim);
-
+    elem_all[ielGeom_bdry][SolFEType[pos_ctrl]] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_xx_bdry_placeholder, dim - 1, space_dim);
+    elem_all[ielGeom_bdry][SolFEType[pos_state]]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry,  phi_xx_bdry_placeholder, dim - 1, space_dim);
+    elem_all[ielGeom_bdry][SolFEType[pos_adj]]  ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_adj_bdry, phi_adj_x_bdry,  phi_xx_bdry_placeholder, dim - 1, space_dim);
 
 
 // **** printing ******
@@ -653,8 +656,13 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
     
   //========= fill gauss value xyz ==================   
   
-          if (ielGeom != QUAD) { std::cout << "fill_volume_shape_at_boundary_quadrature_points not implemented" << std::endl; abort(); } 
-    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->fill_volume_shape_at_boundary_quadrature_points(geom_element.get_coords_at_dofs(),geom_element.get_coords_at_dofs_bdry_3d(),jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+          if (ielGeom != QUAD) { std::cout << "fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem not implemented" << std::endl; abort(); } 
+          
+    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(geom_element.get_coords_at_dofs(),geom_element.get_coords_at_dofs_bdry_3d(),jface,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+
+//     elem_all[ielGeom][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig_bdry, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+//     
+//     elem_all[ielGeom][SolFEType[pos_adj]]  ->shape_funcs_current_elem(ig_bdry, jface, JacI_qp, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry, phi_xx_bdry_placeholder, dim, space_dim);
 
 //           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
 // 		      for (int iv = 0; iv < nDof_adj; iv++)  {
@@ -849,12 +857,12 @@ if ( i_vol == j_vol )  {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[ielGeom][SolFEType[pos_state]]->Jacobian_non_isoparametric_templ(
-    elem_all[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
-    elem_all[ielGeom][SolFEType[pos_adj]]->Jacobian_non_isoparametric_templ(
-    elem_all[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_adj, phi_adj_x, phi_adj_xx, dim, space_dim);
-    elem_all[ielGeom][solType_coords]->Jacobian_non_isoparametric_templ(
-    elem_all[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_coords, phi_coords_x, phi_coords_xx, dim, space_dim);
+    elem_all[ielGeom][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+    weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
+
+    elem_all[ielGeom][SolFEType[pos_state]]->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+    elem_all[ielGeom][SolFEType[pos_adj]]  ->shape_funcs_current_elem(ig, JacI_qp, phi_adj, phi_adj_x, phi_adj_xx, dim, space_dim);
+
           
 	sol_u_gss = 0.;
 	sol_adj_gss = 0.;
@@ -1107,11 +1115,11 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  //***************************************************
   vector <double> phi_ctrl_bdry;  
   vector <double> phi_ctrl_x_bdry; 
-  vector <double> phi_ctrl_xx_bdry_placeholder;
+  vector <double> phi_xx_bdry_placeholder;
 
   phi_ctrl_bdry.reserve(max_size);
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
-  phi_ctrl_xx_bdry_placeholder.reserve(max_size * dim2);
+  phi_xx_bdry_placeholder.reserve(max_size * dim2);
 
   unsigned solIndex_ctrl = ml_sol->GetIndex("control");
   unsigned solType_ctrl = ml_sol->GetSolutionType(solIndex_ctrl);
@@ -1130,9 +1138,25 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   
 
-  //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+ //*************************************************** 
+     std::vector < std::vector < double > >  JacI_qp(space_dim);
+     std::vector < std::vector < double > >  Jac_qp(dim);
+    for (unsigned d = 0; d < Jac_qp.size(); d++) {   Jac_qp[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_qp.size(); d++) { JacI_qp[d].resize(dim); }
+    
+    double detJac_qp;
+
+     std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
+     std::vector < std::vector < double > >  Jac_qp_bdry(dim-1);
+    for (unsigned d = 0; d < Jac_qp_bdry.size(); d++) {   Jac_qp_bdry[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_qp_bdry.size(); d++) { JacI_qp_bdry[d].resize(dim-1); }
+    
+    double detJac_qp_bdry;
+    
+      //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
+ //*************************************************** 
   
   
   // element loop: each process loops only on the elements that owns
@@ -1240,8 +1264,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 		
 		for(unsigned ig_bdry = 0; ig_bdry < ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber(); ig_bdry++) {
 		  
-    elem_all[ielGeom_bdry][solType_ctrl]->Jacobian_non_isoparametric_templ(
-    elem_all[ielGeom_bdry][solType_coords], geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, weight_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_ctrl_xx_bdry_placeholder, dim, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, dim - 1, space_dim);
+    weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
+    elem_all[ielGeom_bdry][solType_ctrl] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_xx_bdry_placeholder, dim - 1, space_dim);
 
 		  
 		 //========== compute gauss quantities on the boundary ===============================================
@@ -1280,11 +1305,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[ielGeom][solType_u]->Jacobian_non_isoparametric_templ(
-    elem_all[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
-    elem_all[ielGeom][solType_u/*solTypeTdes*/]->Jacobian_non_isoparametric_templ(
-    elem_all[ielGeom][solType_coords], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_udes, phi_udes_x, phi_udes_xx, dim, space_dim);
+    elem_all[ielGeom][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+    weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
 
+    elem_all[ielGeom][solType_u]                 ->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
+    elem_all[ielGeom][solType_u/*solTypeTdes*/]  ->shape_funcs_current_elem(ig, JacI_qp, phi_udes, phi_udes_x, phi_udes_xx, dim, space_dim);
+    
 	u_gss     = 0.;  for (unsigned i = 0; i < nDof_u; i++)        u_gss += sol_u[i]     * phi_u[i];
 	udes_gss  = 0.;  for (unsigned i = 0; i < nDof_udes; i++)  udes_gss += sol_udes[i]  * phi_udes[i];  
 

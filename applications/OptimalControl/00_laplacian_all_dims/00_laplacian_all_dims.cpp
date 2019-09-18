@@ -249,6 +249,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   if (assembleMatrix)  KK->zero();
 
   
+ //***************************************************  
      std::vector < std::vector < double > >  JacI_qp(space_dim);
      std::vector < std::vector < double > >  Jac_qp(dim);
     for (unsigned d = 0; d < dim; d++) { Jac_qp[d].resize(space_dim); }
@@ -258,8 +259,9 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   
   
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all;
+  std::vector < std::vector < const elem_type_templ_base<real_num, real_num_mov> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
+ //***************************************************  
   
   
 
@@ -304,7 +306,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
     weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
 
-// elem_all[ielGeom][solFEType_u]->Jacobian_non_isoparametric_templ( elem_all[ielGeom][xType], geom_element.get_coords_at_dofs_3d(), ig, weight, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
 
 // 	msh->_finiteElement[ielGeom][solFEType_u]->Jacobian(geom_element.get_coords_at_dofs_3d(),    ig, weight,    phi_u,    phi_u_x,    phi_u_xx);
 

@@ -422,6 +422,19 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
 
     const assemble_jacobian< real_num, double > * unk_assemble_jac/* = assemble_jacobian_base::build(dim)*/;
 
+
+ //***************************************************  
+  constexpr unsigned int space_dim = 3;
+  const unsigned int dim_offset_grad = 3;
+
+  std::vector < std::vector < double > >  JacI_qp(space_dim);
+  std::vector < std::vector < double > >  Jac_qp(dim);
+    for (unsigned d = 0; d < dim; d++) { Jac_qp[d].resize(space_dim); }
+    for (unsigned d = 0; d < space_dim; d++) { JacI_qp[d].resize(dim); }
+    
+    double detJac_qp;
+ //*************************************************** 
+
     //=============== Integration ========================================
     real_num_mov weight_qp;    // must be adept if the domain is moving
 
@@ -429,17 +442,17 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
     unsigned xType = BIQUADR_FE;
 
     CurrentElem < real_num_mov > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
-            Phi < real_num_mov > geom_element_phi_dof_qp(dim);                   // must be adept if the domain is moving, otherwise double
+            Phi < real_num_mov > geom_element_phi_dof_qp(dim_offset_grad/*dim*/);                   // must be adept if the domain is moving, otherwise double
 
     //=============== Unknowns ========================================
 
     const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
 
     std::vector < UnknownLocal < real_num > >       unknowns_local(n_unknowns);                             //-- at dofs
-    std::vector <          Phi < real_num_mov > >   unknowns_phi_dof_qp(n_unknowns, Phi< real_num_mov >(dim));   //-- at dofs and quadrature points ---------------
+    std::vector <          Phi < real_num_mov > >   unknowns_phi_dof_qp(n_unknowns, Phi< real_num_mov >(dim_offset_grad/*dim*/));   //-- at dofs and quadrature points ---------------
 
     for(int u = 0; u < n_unknowns; u++) {
-        unknowns_local[u].initialize(dim, unknowns[u], ml_sol, mlPdeSys);
+        unknowns_local[u].initialize(dim_offset_grad/*dim*/, unknowns[u], ml_sol, mlPdeSys);
         assert(u == unknowns_local[u].pde_index());  //I would like this ivar order to coincide either with SolIndex or with SolPdeIndex, otherwise too many orders... it has to be  with SolPdeIndex, because SolIndex is related to the Solution object which can have more fields... This has to match the order of the unknowns[] argument
     }
 
@@ -458,8 +471,9 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
                           unknowns_local[0].pde_index(), 
                           unknowns_local[0].sol_index());
      
-
-
+ 
+  
+  
     // element loop: each process loops only on the elements that owns
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -498,27 +512,31 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
         // *** Gauss point loop ***
         for (unsigned ig = 0; ig < quad_rules[ielGeom].GetGaussPointsNumber(); ig++) {
 
-            //here we'll first compute the jacobian inverse and pass that one to the other routines
+      elem_all[ielGeom][xType]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+      weight_qp = detJac_qp * quad_rules[ielGeom].GetGaussWeightsPointer()[ig];
+            
             // *** get gauss point weight, test function and test function partial derivatives ***
             for (unsigned  u = 0; u < n_unknowns; u++) {
-                 elem_all[ielGeom][unknowns_local[u].fe_type()] ->Jacobian_non_isoparametric_templ( elem_all[ielGeom][xType], geom_element.get_coords_at_dofs(), ig, weight_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess(), dim, dim);
+     elem_all[ielGeom][unknowns_local[u].fe_type()]->shape_funcs_current_elem(ig, JacI_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess(), dim, space_dim);
+                
+//             msh->_finiteElement[ielGeom][unknowns_local[u].fe_type()]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess());
+                
             }
 
-//       msh->_finiteElement[geom_element.geom_type()][SolFEType[0]]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
-            msh->_finiteElement[ielGeom][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, geom_element_phi_dof_qp.phi(), geom_element_phi_dof_qp.phi_grad(), geom_element_phi_dof_qp.phi_hess());
+//             msh->_finiteElement[ielGeom][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, geom_element_phi_dof_qp.phi(), geom_element_phi_dof_qp.phi_grad(), geom_element_phi_dof_qp.phi_hess());
 
             // evaluate the solution, the solution derivatives and the coordinates in the gauss point
             real_num solu_gss = 0.;
-            std::vector < real_num > gradSolu_gss(dim, 0.);
-            std::vector < double >   gradSolu_exact_gss(dim, 0.);
+            std::vector < real_num > gradSolu_gss(dim_offset_grad, 0.);
+            std::vector < double >   gradSolu_exact_gss(dim_offset_grad, 0.);
 
             for (unsigned  u = 0; u < n_unknowns; u++) {
                 for (unsigned i = 0; i < unknowns_local[u].num_elem_dofs(); i++) {
                     solu_gss += unknowns_phi_dof_qp[u].phi(i) * unknowns_local[u].elem_dofs()[i];
 
-                    for (unsigned jdim = 0; jdim < dim; jdim++) {
-                        gradSolu_gss[jdim]       += unknowns_phi_dof_qp[u].phi_grad(i * dim + jdim) * unknowns_local[0].elem_dofs()[i];
-                        gradSolu_exact_gss[jdim] += unknowns_phi_dof_qp[u].phi_grad(i * dim + jdim) * sol_exact.elem_dofs()[i];
+                    for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
+                        gradSolu_gss[jdim]       += unknowns_phi_dof_qp[u].phi_grad(i * dim_offset_grad + jdim) * unknowns_local[0].elem_dofs()[i];
+                        gradSolu_exact_gss[jdim] += unknowns_phi_dof_qp[u].phi_grad(i * dim_offset_grad + jdim) * sol_exact.elem_dofs()[i];
                     }
                 }
             }
@@ -538,9 +556,9 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
                 real_num laplace = 0.;
                 real_num laplace_weak_exact = 0.;
 
-                for (unsigned jdim = 0; jdim < dim; jdim++) {
-                    laplace            +=  unknowns_phi_dof_qp[0].phi_grad(i * dim + jdim) * gradSolu_gss[jdim];
-                    laplace_weak_exact +=  unknowns_phi_dof_qp[0].phi_grad(i * dim + jdim) * gradSolu_exact_gss[jdim];
+                for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
+                    laplace            +=  unknowns_phi_dof_qp[0].phi_grad(i * dim_offset_grad + jdim) * gradSolu_gss[jdim];
+                    laplace_weak_exact +=  unknowns_phi_dof_qp[0].phi_grad(i * dim_offset_grad + jdim) * gradSolu_exact_gss[jdim];
                 }
 
 
@@ -569,7 +587,7 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
 
 
 
-                unk_assemble_jac->compute_jacobian_inside_integration_loop(i, dim, unk_num_elem_dofs_interface, sum_unk_num_elem_dofs_interface, unknowns_local, unknowns_phi_dof_qp, weight_qp, unk_element_jac_res.jac());
+                unk_assemble_jac->compute_jacobian_inside_integration_loop(i, dim_offset_grad, unk_num_elem_dofs_interface, sum_unk_num_elem_dofs_interface, unknowns_local, unknowns_phi_dof_qp, weight_qp, unk_element_jac_res.jac());
 
 
 

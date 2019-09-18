@@ -769,7 +769,7 @@ namespace femus {
    }
    
    
-   void elem_type_1D::allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss)  {
+   void elem_type_1D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
    
    
        if(_SolType < 3) {
@@ -817,7 +817,7 @@ namespace femus {
    
    
    
-      void elem_type_2D::allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss)  {
+      void elem_type_2D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
           
           
     if(_SolType < 3) {
@@ -878,7 +878,7 @@ namespace femus {
     
    }
    
-      void elem_type_3D::allocate_and_fill_shape_at_quadrature_points_on_faces(const char* order_gauss)  {
+      void elem_type_3D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
           
    
     //std::cout << std::endl;
@@ -1006,7 +1006,7 @@ namespace femus {
     
     allocate_and_fill_shape_at_quadrature_points();
 
-    allocate_and_fill_shape_at_quadrature_points_on_faces(order_gauss);
+    allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
 
     // boundary
     allocate_volume_shape_at_boundary_quadrature_points();
@@ -1151,7 +1151,7 @@ namespace femus {
     
     allocate_and_fill_shape_at_quadrature_points();
 
-    allocate_and_fill_shape_at_quadrature_points_on_faces(order_gauss);
+    allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
     
     // boundary
     allocate_volume_shape_at_boundary_quadrature_points();
@@ -1193,7 +1193,7 @@ namespace femus {
     
     allocate_and_fill_shape_at_quadrature_points();
     
-    allocate_and_fill_shape_at_quadrature_points_on_faces(order_gauss);
+    allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
 
     // boundary
     allocate_volume_shape_at_boundary_quadrature_points();
@@ -1835,7 +1835,7 @@ namespace femus {
 // rotate and translate ****************************
 //here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
  //we have to use a transformation that locates the 1d edge in one of the sides of my 2d elem
-    std::vector <double> ref_bdry_qp_coords_in_vol(2);
+    std::vector <double> ref_bdry_qp_coords_in_vol(_dim);
       
     for (unsigned d = 0; d < _dim; d++) ref_bdry_qp_coords_in_vol[d] =  rotation_vec[d]  + translation[d];
 // ****************************
@@ -1845,9 +1845,9 @@ namespace femus {
 for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
              
       for (int dof = 0; dof < _nc; dof++) {
-             _phi_bdry[qp][dof] = _pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]);
-         _dphidxi_bdry[qp][dof] = _pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
-        _dphideta_bdry[qp][dof] = _pt_basis->eval_dphidy(_IND[dof], &ref_bdry_qp_coords_in_vol[0]);
+            _phi_bdry[qp][dof] = _phiFace[jface][qp][dof]        ; //_pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_phiFace[jface][qp][dof]        - _phi_bdry[qp][dof]) > 1.e-3 ) abort();*/
+        _dphidxi_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][0] ; //_pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_gradPhiFace[jface][qp][dof][0] - _dphidxi_bdry[qp][dof]) > 1.e-3 ) abort();*/
+       _dphideta_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][1] ; //_pt_basis->eval_dphidy(_IND[dof], &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_gradPhiFace[jface][qp][dof][1] - _dphideta_bdry[qp][dof]) > 1.e-3 ) abort();*/
       }
       
  }
@@ -1860,7 +1860,7 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 //---------------------------------------------------------------------------------------------------------
 //Compute volume jacobian and evaluate volume shape functions and derivatives at REAL boundary quadrature points
 
-  void elem_type_2D::fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > >& vt_vol, 
+  void elem_type_2D::fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > >& vt_vol, 
                                            const vector < vector < double> > & vt_bdry,  
                                            const unsigned& jface, 
                                            const unsigned& ig_bdry, 
@@ -2190,7 +2190,7 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 
 //---------------------------------------------------------------------------------------------------------
 
-  void elem_type_3D::fill_volume_shape_at_boundary_quadrature_points(const vector < vector < double > >& vt_vol, 
+  void elem_type_3D::fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > >& vt_vol, 
                                            const vector < vector < double> > & vt_bdry,  
                                            const unsigned& jface, 
                                            const unsigned& ig_bdry, 

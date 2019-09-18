@@ -560,11 +560,11 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
                     msh->_finiteElement[felt_bdry][coords_fe_type]->JacobianSur(coords_at_dofs_bdry, ig_bdry, weight_qp_bdry, phi_fe_qp_bdry[coords_fe_type], phi_x_fe_qp_bdry[coords_fe_type], normal_qp);
 
                     if (ielGeom != QUAD) {
-                        std::cout << "fill_volume_shape_at_boundary_quadrature_points not implemented" << std::endl;
+                        std::cout << "fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem not implemented" << std::endl;
                         abort();
                     }
-                    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->fill_volume_shape_at_boundary_quadrature_points(coords_at_dofs, coords_at_dofs_bdry, jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
-                    msh->_finiteElement[ielGeom][SolFEType[pos_adj_ext]]->fill_volume_shape_at_boundary_quadrature_points(coords_at_dofs, coords_at_dofs_bdry, jface, ig_bdry, phi_adj_ext_vol_at_bdry, phi_adj_ext_x_vol_at_bdry);
+                    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(coords_at_dofs, coords_at_dofs_bdry, jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
+                    msh->_finiteElement[ielGeom][SolFEType[pos_adj_ext]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(coords_at_dofs, coords_at_dofs_bdry, jface, ig_bdry, phi_adj_ext_vol_at_bdry, phi_adj_ext_x_vol_at_bdry);
 
                     
 //=============== grad dot n for residual =========================================

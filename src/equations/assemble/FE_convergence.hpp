@@ -335,14 +335,29 @@ template < class type>
   unsigned soluType = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
   
+ //***************************************************  
+  constexpr unsigned int space_dim = 3;
+  const unsigned int dim_offset_grad = 3;
+
+ //***************************************************  
+   std::vector < std::vector < double > >  JacI_qp(space_dim);
+   std::vector < std::vector < double > >  Jac_qp(dim);
+    for (unsigned d = 0; d < dim; d++) { Jac_qp[d].resize(space_dim); }
+    for (unsigned d = 0; d < space_dim; d++) { JacI_qp[d].resize(dim); }
+    
+    double detJac_qp;
+ //***************************************************  
+   
+  
+
   // ======================================
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
   
   
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-  vector < vector < type > > x(dim);    // local coordinates
-  for (unsigned i = 0; i < dim; i++)   x[i].reserve(maxSize);
+  vector < vector < type > > x(dim_offset_grad);    // local coordinates
+  for (unsigned i = 0; i < x.size(); i++)   x[i].reserve(maxSize);
 
 //-----------------  
   vector < type > phi_coords;
@@ -350,7 +365,7 @@ template < class type>
   vector < type > phi_coords_xx;
 
   phi_coords.reserve(maxSize);
-  phi_coords_x.reserve(maxSize * dim);
+  phi_coords_x.reserve(maxSize * dim_offset_grad);
   phi_coords_xx.reserve(maxSize * dim2);
 
   vector < type > phi;
@@ -366,7 +381,7 @@ template < class type>
 
 
   phi.reserve(maxSize);
-  phi_x.reserve(maxSize * dim);
+  phi_x.reserve(maxSize * dim_offset_grad);
   phi_xx.reserve(maxSize * dim2);
 
   
@@ -383,7 +398,7 @@ template < class type>
     solu_exact_at_dofs.resize(nDofu);
     solu_coarser_prol.resize(nDofu);
 
-    for (int i = 0; i < dim; i++) {
+    for (int i = 0; i < x.size(); i++) {
       x[i].resize(nDofx);
     }
 
@@ -391,7 +406,7 @@ template < class type>
     for (unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
+      for (unsigned jdim = 0; jdim < dim_offset_grad/*dim*/; jdim++) {
         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);  // global extraction and local storage for the element coordinates
       }
     }
@@ -400,8 +415,8 @@ template < class type>
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
-        std::vector< type > x_at_node(dim,0.);
-        for (unsigned jdim = 0; jdim < dim; jdim++) x_at_node[jdim] = x[jdim][i];
+        std::vector< type > x_at_node(dim_offset_grad,0.);
+        for (unsigned jdim = 0; jdim < x_at_node.size(); jdim++) x_at_node[jdim] = x[jdim][i];
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);
                    solu[i]  =                                        (*sol->_Sol[soluIndex])(solDof);
       solu_coarser_prol[i]  = (*ml_sol_all_levels->GetSolutionLevel(current_level)->_Sol[soluIndex])(solDof);
@@ -415,29 +430,35 @@ template < class type>
         std::cout << "We need to revisit all these allocations of phi_u_x !!!"  << std::endl;
         
       // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[ielGeom][soluType]->Jacobian_non_isoparametric_templ(elem_all[ielGeom][xType], x, ig, weight, phi, phi_x, phi_xx,dim,dim);
-    elem_all[ielGeom][xType]->Jacobian_non_isoparametric_templ(elem_all[ielGeom][xType], x, ig, weight, phi, phi_x, phi_xx,dim,dim);
+	elem_all[ielGeom][xType]->Jacobian_geometry(x, ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+    elem_all[ielGeom][soluType]->shape_funcs_current_elem(ig, JacI_qp, phi, phi_x, phi_xx, dim, space_dim);
+    weight = detJac_qp * quad_rules[ielGeom].GetGaussWeightsPointer()[ig];
 
+    
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       type solu_gss = 0.;
       type exactSol_from_dofs_gss = 0.;
       type solu_coarser_prol_gss = 0.;
-      vector < type > gradSolu_gss(dim, 0.);
-      vector < type > gradSolu_exact_at_dofs_gss(dim, 0.);
-      vector < type > gradSolu_coarser_prol_gss(dim, 0.);
-      vector < type > x_gss(dim, 0.);
+      vector < type > gradSolu_gss(dim_offset_grad, 0.);
+      vector < type > gradSolu_exact_at_dofs_gss(dim_offset_grad, 0.);
+      vector < type > gradSolu_coarser_prol_gss(dim_offset_grad, 0.);
+      vector < type > x_gss(dim_offset_grad, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss                += phi[i] * solu[i];
         exactSol_from_dofs_gss  += phi[i] * solu_exact_at_dofs[i];
         solu_coarser_prol_gss   += phi[i] * solu_coarser_prol[i];
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          gradSolu_gss[jdim]                += phi_x[i * dim + jdim] * solu[i];
-          gradSolu_exact_at_dofs_gss[jdim]  += phi_x[i * dim + jdim] * solu_exact_at_dofs[i];
-          gradSolu_coarser_prol_gss[jdim]   += phi_x[i * dim + jdim] * solu_coarser_prol[i];
-          x_gss[jdim] += x[jdim][i] * phi_coords[i];
+        for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
+          gradSolu_gss[jdim]                += phi_x[i * dim_offset_grad + jdim] * solu[i];
+          gradSolu_exact_at_dofs_gss[jdim]  += phi_x[i * dim_offset_grad + jdim] * solu_exact_at_dofs[i];
+          gradSolu_coarser_prol_gss[jdim]   += phi_x[i * dim_offset_grad + jdim] * solu_coarser_prol[i];
         }
+        
+         for (unsigned jdim = 0; jdim < dim_offset_grad; jdim++) {
+           x_gss[jdim] += x[jdim][i] * phi_coords[i];
+          }
+
       }
 
 // H^0 ==============      
@@ -450,9 +471,9 @@ template < class type>
     
 // H^1 ==============      
     /*else*/ if (norm_flag == 1) {
-      vector < type > exactGradSol(dim,0.);    if (ex_sol_in != NULL) exactGradSol = ex_sol_in->gradient(x_gss);
+      vector < type > exactGradSol(dim_offset_grad,0.);    if (ex_sol_in != NULL) exactGradSol = ex_sol_in->gradient(x_gss);
 
-      for (unsigned j = 0; j < dim ; j++) {
+      for (unsigned j = 0; j < dim_offset_grad ; j++) {
         norms[1]               += ((gradSolu_gss[j] - exactGradSol[j])               * (gradSolu_gss[j]  - exactGradSol[j])) * weight;
         norms_exact_dofs[1]    += ((gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j]) * (gradSolu_gss[j] - gradSolu_exact_at_dofs_gss[j])) * weight;
         norms_inexact_dofs[1]  += ((gradSolu_gss[j] - gradSolu_coarser_prol_gss[j])  * (gradSolu_gss[j] - gradSolu_coarser_prol_gss[j]))  * weight;
