@@ -89,7 +89,9 @@ namespace femus {
   void GetClosestPointInReferenceElement(const std::vector< std::vector < double > > &xv, const std::vector <double> &x,
                                          const short unsigned &ieltype, std::vector < double > &xi);
 
-  void PrintLine(const std::string output_path, const std::vector < std::vector< std::vector<double> > > &xn, const bool &streamline = true, const unsigned &step = 0);
+  void PrintLine(const std::string output_path, const std::string filename, const std::vector < std::vector< std::vector<double> > > &xn, const unsigned &step);
+  
+
 }
 #endif
 
