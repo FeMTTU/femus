@@ -6,8 +6,8 @@ using namespace femus;
 
 double beta = 0.25;
 double Gamma = 0.5;
-double gravity[3] = {0., -9.81, 0.};
-double scalingFactor1 =1.e-5;
+double gravity[3] = {9810, 0., 0.};
+double scalingFactor1 =1.e-7;
 double scalingFactor2 =1.e-9;
 double NeumannFactor = .0;
 Line* solidLine;
@@ -196,7 +196,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   
   //pointers and references
   
-  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem> ("MPM_FEM");
+  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem> ("MPM_FSI");
   const unsigned  level = my_nnlin_impl_sys.GetLevelToAssemble();
   MultiLevelSolution* ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution* mysolution = ml_sol->GetSolutionLevel(level);     // pointer to the solution (level) object
@@ -992,7 +992,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
   
   //pointers and references
   
-  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem> ("MPM_FEM");
+  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem> ("MPM_FSI");
   //NonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<NonLinearImplicitSystem> ("MPM_FEM");
   const unsigned  level = my_nnlin_impl_sys.GetLevelToAssemble();
   MultiLevelSolution* ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object

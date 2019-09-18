@@ -18,8 +18,12 @@
 
 using namespace femus;
 
+  double L = 5.5e-05; //beam dimensions
+  double H = 1.e-05;
+
+
 double SetVariableTimeStep (const double time) {
-  double dt =  0.008;
+  double dt =  0.0001/*0.008*/;
   return dt;
 }
 
@@ -28,17 +32,35 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char name[], d
   value = 0.;
 
   if (!strcmp (name, "DX")) {
-    if (2 == facename || 4 == facename) {
-      test = 0;
-      value = 0;
-    }
-  }
-  else if (!strcmp (name, "DY")) {
     if (3 == facename) {
       test = 0;
       value = 0;
     }
   }
+  else if (!strcmp (name, "DY")) {
+    if (2 == facename || 4 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  
+    if (!strcmp (name, "VX")) {
+    if (2 == facename) {
+      test = 0;
+      value = 0;
+    }
+    else if (4 == facename) {
+        double U = 0.0333;
+        value = (U * time * time / sqrt((0.04-time*time)*(0.04-time*time)+(0.1*time)*(0.1*time))) * 4 * (H - x[1]) * x[1] / (H * H);
+    }
+  }
+  else if (!strcmp (name, "DY")) {
+    if (2 == facename || 4 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  
   else if (!strcmp (name, "M")) {
     if (1 == facename) {
       test = 0;
@@ -91,6 +113,10 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("DX", LAGRANGE, SECOND, 2);
   if (dim > 1) mlSol.AddSolution ("DY", LAGRANGE, SECOND, 2);
   if (dim > 2) mlSol.AddSolution ("DZ", LAGRANGE, SECOND, 2);
+  
+  mlSol.AddSolution ("VX", LAGRANGE, SECOND, 2);
+  if (dim > 1) mlSol.AddSolution ("VY", LAGRANGE, SECOND, 2);
+  if (dim > 2) mlSol.AddSolution ("VZ", LAGRANGE, SECOND, 2);
 
   mlSol.AddSolution ("M", LAGRANGE, SECOND, 2);
   mlSol.AddSolution ("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
@@ -103,6 +129,9 @@ int main (int argc, char** args) {
   mlSol.GenerateBdc ("DX", "Steady");
   if (dim > 1) mlSol.GenerateBdc ("DY", "Steady");
   if (dim > 2) mlSol.GenerateBdc ("DZ", "Steady");
+  mlSol.GenerateBdc ("VX", "Time_dependent");
+  if (dim > 1) mlSol.GenerateBdc ("VY", "Steady");
+  if (dim > 2) mlSol.GenerateBdc ("VZ", "Steady");
   mlSol.GenerateBdc ("M", "Steady");
 
   MultiLevelProblem ml_prob (&mlSol);
@@ -111,10 +140,13 @@ int main (int argc, char** args) {
   ml_prob.parameters.set<Solid> ("SolidFEM") = solid;
 
   // ******* Add MPM system to the MultiLevel problem *******
-  TransientNonlinearImplicitSystem& system = ml_prob.add_system < TransientNonlinearImplicitSystem > ("MPM_FEM");
+  TransientNonlinearImplicitSystem& system = ml_prob.add_system < TransientNonlinearImplicitSystem > ("MPM_FSI");
   system.AddSolutionToSystemPDE ("DX");
   if (dim > 1) system.AddSolutionToSystemPDE ("DY");
   if (dim > 2) system.AddSolutionToSystemPDE ("DZ");
+  system.AddSolutionToSystemPDE ("VX");
+  if (dim > 1) system.AddSolutionToSystemPDE ("VY");
+  if (dim > 2) system.AddSolutionToSystemPDE ("VZ");
 
   // ******* System MPM Assembly *******
   system.SetAssembleFunction (AssembleMPMSys);
@@ -178,13 +210,10 @@ int main (int argc, char** args) {
 
   //return 1;
 
-  double L = 5.5e-05;
-  double H = 1.e-05;
-
   double xc = 1e-04 + 0.5 * H;
   double yc = 0.;
 
-  double H0 = 5. / 5.* H; //0.15: 3ref, 0.2: 4 ref, 0.225: 5 ref
+  double H0 = /*5. / 5.*/ 3. / 5.* H; //0.15: 3ref, 0.2: 4 ref, 0.225: 5 ref
   double L0 = L - (H - H0) / 2.;
   unsigned rows = 20; // 20: 3 ref, 40: 4 ref, 80: 5 ref
   double DH = H0 / (rows - 1);
@@ -298,7 +327,7 @@ int main (int argc, char** args) {
   x.resize (0);
   mass.resize (0);
 
-  H = 4. * H;
+  H = 4. * H; //TODO tune the factor 4
   if (fabs (H - H0) > 1.0e-10) {
 
     double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
@@ -383,7 +412,7 @@ int main (int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput (true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
-  return 1;
+  //return 1;
 
 
 
@@ -394,8 +423,8 @@ int main (int argc, char** args) {
   unsigned n_timesteps = 1000;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
-    if (time_step >= 50) {
-      gravity[1]  = 0.;
+    if (time_step >= 3) {
+      gravity[0]  = 0.;
     }
 
     system.CopySolutionToOldSolution();
@@ -420,5 +449,6 @@ int main (int argc, char** args) {
   return 0;
 
 } //end main
+
 
 
