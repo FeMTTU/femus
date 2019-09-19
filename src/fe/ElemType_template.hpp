@@ -1,12 +1,11 @@
-#ifndef __femus_fe_ElemType_Jac_templ_hpp__
-#define __femus_fe_ElemType_Jac_templ_hpp__
+#ifndef __femus_fe_ElemType_templ_hpp__
+#define __femus_fe_ElemType_templ_hpp__
 
 
 
-// #include "GaussPoints.hpp"
 #include "ElemType.hpp"
+#include "ElemType_template_base.hpp"
 
-// class elem_type_templ;
 
 
 namespace femus {
@@ -25,53 +24,13 @@ namespace femus {
 // The templating wrt. Type and Type_Mov should be implemented without template specialization, but it should all be abstract
 // The templating wrt. Dim and Space_dim should be implemented with template specialization
 
+    
+// The original ElemType has two main parts: a part related to Multigrid, a part related to Quadrature. We should split them.
 
- template <class type, class type_mov>
-    class elem_type_templ_base {
-          
-      public:      
-          
-     virtual void Jacobian_geometry(const std::vector < std::vector < type_mov > > & vt,
-                            const unsigned & ig,
-                            std::vector < std::vector <type_mov> > & Jac,
-                            std::vector < std::vector <type_mov> > & JacI,
-                            type_mov & detJac,
-                            const unsigned dimension,
-                            const unsigned space_dimension) const = 0;
-
-     virtual void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const = 0;
-
-     virtual void shape_funcs_current_elem(const unsigned & ig,
-                                             const std::vector < std::vector <type_mov> > & JacI,
-                                             std::vector < double > & phi, 
-                                             std::vector < type >   & gradphi,
-                                             boost::optional< std::vector < type > & > nablaphi,
-                                             const unsigned dimension,
-                                             const unsigned space_dimension) const = 0;
-                                             
-    virtual void shape_funcs_volume_at_bdry_current_elem(const unsigned ig, 
-                                                         const unsigned jface, 
-                                                         const std::vector < std::vector <type_mov> > & JacI_qp, 
-                                                         std::vector < double > & phi_vol_at_bdry,
-                                                         std::vector < type >   & phi_x_vol_at_bdry, 
-                                                         boost::optional< std::vector < type > & > nablaphi_vol_at_bdry,
-                                                         const unsigned dimension,
-                                                         const unsigned space_dimension) const = 0;
-          
-// run-time selection
-      static elem_type_templ_base<type, type_mov> * build(const std::string geom_elem, /*dimension is contained in the Geometric Element*/
-                                                              const std::string fe_fam,
-                                                              const std::string order_gauss,
-                                                              const unsigned space_dimension); 
-      
-      };
- 
-      
-      
-      
+    
     
     template <class type, class type_mov, unsigned int dim, unsigned int space_dim>
-     class elem_type_templ  : public elem_type_templ_base<type, type_mov>  /*@todo rename it to _real_*/  {
+     class elem_type_templ  : public elem_type_templ_base<type, type_mov>  {
       
   public: 
       
@@ -602,31 +561,6 @@ namespace femus {
          }
          
 };
-
-
-
-
-///@todo I have to put it here because I need to know what the children are... do separate files if needed
-// run-time selection
- template <class type, class type_mov>
-       elem_type_templ_base<type, type_mov> * elem_type_templ_base<type, type_mov>::build(
-                                         const std::string geom_elem, 
-                                         const std::string fe_fam,
-                                         const std::string order_gauss,
-                                         const unsigned space_dimension) {
-
-       
-              if  ( geom_elem.compare("hex") == 0)     return  /**(*/ new elem_type_templ<type, type_mov, 3, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
-              else if  (geom_elem.compare("tet") == 0)     return  /**(*/ new elem_type_templ<type, type_mov, 3, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
-              else if  (geom_elem.compare("wedge") == 0)   return  /**(*/ new elem_type_templ<type, type_mov, 3, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
-              else if  (geom_elem.compare("quad") == 0)    return  /**(*/ new elem_type_templ<type, type_mov, 2, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
-              else if  (geom_elem.compare("tri") == 0)    return  /**(*/ new elem_type_templ<type, type_mov, 2, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
-              else if  (geom_elem.compare("line") == 0)   return  /**(*/ new elem_type_templ<type, type_mov, 1, 3>(geom_elem,  fe_fam, order_gauss) /*)*/;
-              else {std::cout << "Not implemented" << std::endl; abort(); }
-          
-          
-      }
-
 
 
     
