@@ -14,7 +14,7 @@ namespace femus
 ///@todo I have to put it here because I need to know what the children are... do separate files if needed
 // run-time selection
 // Since this is a TEMPLATED build function, I cannot put it in the cpp so easily...
-// The only possibility is that I do EXPLICIT INSTANTIATION    
+// The only possibility is that I do EXPLICIT INSTANTIATION (see below)    
  template <class type, class type_mov>
        elem_type_templ_base<type, type_mov> * elem_type_templ_base<type, type_mov>::build(
                                          const std::string geom_elem, 

@@ -622,6 +622,9 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
 
 }
 
+
+
+
 void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofrefinements){
 
   std::cout<<"END_COMPUTATION\n"<<std::flush;
