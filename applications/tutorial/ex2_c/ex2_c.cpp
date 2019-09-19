@@ -465,7 +465,7 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
     //=============== Quantities that are not unknowns ========================================
     
      UnknownLocal < double >  sol_exact;
-     sol_exact.initialize(dim, 
+     sol_exact.initialize(dim_offset_grad, 
                           unknowns_local[0].name(), 
                           unknowns_local[0].fe_type(), 
                           unknowns_local[0].pde_index(), 
@@ -479,7 +479,8 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
 
 
         geom_element.set_coords_at_dofs_and_geom_type(iel, xType);
-        short unsigned ielGeom = geom_element.geom_type();
+        
+        const short unsigned ielGeom = geom_element.geom_type();
 
         
         for (unsigned  u = 0; u < n_unknowns; u++) {
@@ -516,14 +517,12 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
       weight_qp = detJac_qp * quad_rules[ielGeom].GetGaussWeightsPointer()[ig];
             
             // *** get gauss point weight, test function and test function partial derivatives ***
-            for (unsigned  u = 0; u < n_unknowns; u++) {
-     elem_all[ielGeom][unknowns_local[u].fe_type()]->shape_funcs_current_elem(ig, JacI_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess(), dim, space_dim);
-                
-//             msh->_finiteElement[ielGeom][unknowns_local[u].fe_type()]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess());
-                
-            }
+     for (unsigned  u = 0; u < n_unknowns; u++) {
+         elem_all[ielGeom][unknowns_local[u].fe_type()]->shape_funcs_current_elem(ig, JacI_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess(), dim, space_dim);
+     }
 
-//             msh->_finiteElement[ielGeom][xType]->Jacobian(geom_element.get_coords_at_dofs(), ig, weight_qp, geom_element_phi_dof_qp.phi(), geom_element_phi_dof_qp.phi_grad(), geom_element_phi_dof_qp.phi_hess());
+     elem_all[ielGeom][xType]->shape_funcs_current_elem(ig, JacI_qp, geom_element_phi_dof_qp.phi(), geom_element_phi_dof_qp.phi_grad(), geom_element_phi_dof_qp.phi_hess(), dim, space_dim);
+     
 
             // evaluate the solution, the solution derivatives and the coordinates in the gauss point
             real_num solu_gss = 0.;
@@ -544,7 +543,7 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
 
             std::vector < double > x_gss(dim, 0.);
             for (unsigned i = 0; i < geom_element.get_coords_at_dofs()[0].size(); i++) {
-                for (unsigned jdim = 0; jdim < dim; jdim++) {
+                for (unsigned jdim = 0; jdim < x_gss.size(); jdim++) {
                     x_gss[jdim] += geom_element.get_coords_at_dofs(jdim,i) * geom_element_phi_dof_qp.phi(i);
                 }
             }
