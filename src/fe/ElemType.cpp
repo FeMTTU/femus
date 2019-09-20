@@ -1009,7 +1009,7 @@ namespace femus {
     allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
 
     // boundary
-    allocate_volume_shape_at_boundary_quadrature_points();
+    allocate_volume_shape_at_reference_boundary_quadrature_points();
     
 //=====================
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -1081,18 +1081,72 @@ namespace femus {
   }
   
   
-  void elem_type_1D::allocate_volume_shape_at_boundary_quadrature_points() { }
+  void elem_type_1D::allocate_volume_shape_at_reference_boundary_quadrature_points() {
+      
+    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    _phi_bdry = new double*[n_gauss_bdry];
+    _dphidxi_bdry  = new double*[n_gauss_bdry];
+    _phi_memory_bdry = new double [n_gauss_bdry * _nc];
+    _dphidxi_memory_bdry  = new double [n_gauss_bdry * _nc];
+    
+     for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      _phi_bdry[i] = &_phi_memory_bdry[i * _nc];
+      _dphidxi_bdry[i]  = &_dphidxi_memory_bdry[i * _nc];
+     }
+     
+}
 
-  void elem_type_1D::deallocate_volume_shape_at_boundary_quadrature_points() { }
+  void elem_type_1D::deallocate_volume_shape_at_reference_boundary_quadrature_points() { 
+      
+        delete [] _phi_bdry;
+        delete [] _phi_memory_bdry;
+        
+        delete [] _dphidxi_bdry;
+        delete [] _dphidxi_memory_bdry;
+
+}
   
-  void elem_type_3D::allocate_volume_shape_at_boundary_quadrature_points() { }
+  void elem_type_3D::allocate_volume_shape_at_reference_boundary_quadrature_points() {
+      
+     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    _phi_bdry = new double*[n_gauss_bdry];
+    _dphidxi_bdry  = new double*[n_gauss_bdry];
+    _dphideta_bdry = new double*[n_gauss_bdry];
+    _dphidzeta_bdry = new double*[n_gauss_bdry];
+    _phi_memory_bdry = new double [n_gauss_bdry * _nc];
+    _dphidxi_memory_bdry  = new double [n_gauss_bdry * _nc];
+    _dphideta_memory_bdry = new double [n_gauss_bdry * _nc];
+    _dphidzeta_memory_bdry = new double [n_gauss_bdry * _nc];
+    
+     for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      _phi_bdry[i] = &_phi_memory_bdry[i * _nc];
+      _dphidxi_bdry[i]   = & _dphidxi_memory_bdry[i * _nc];
+      _dphideta_bdry[i]  = & _dphideta_memory_bdry[i * _nc];
+      _dphidzeta_bdry[i] = & _dphidzeta_memory_bdry[i * _nc];
+     }
+      
+}
 
-  void elem_type_3D::deallocate_volume_shape_at_boundary_quadrature_points() { }
+
+  void elem_type_3D::deallocate_volume_shape_at_reference_boundary_quadrature_points() { 
+      
+        delete [] _phi_bdry;
+        delete [] _phi_memory_bdry;
+        
+        delete [] _dphidxi_bdry;
+        delete [] _dphidxi_memory_bdry;
+        delete [] _dphideta_bdry;
+        delete [] _dphideta_memory_bdry;
+        delete [] _dphidzeta_bdry;
+        delete [] _dphidzeta_memory_bdry;
+      
+}
   
    
-   void elem_type_2D::allocate_volume_shape_at_boundary_quadrature_points() {
+   void elem_type_2D::allocate_volume_shape_at_reference_boundary_quadrature_points() {
 
-    // here I will only leave the memory allocation; the evaluations go in the ShapeAtBoundary function
     int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
     
     _phi_bdry = new double*[n_gauss_bdry];
@@ -1111,7 +1165,7 @@ namespace femus {
     }
 
 
-  void elem_type_2D::deallocate_volume_shape_at_boundary_quadrature_points() {
+  void elem_type_2D::deallocate_volume_shape_at_reference_boundary_quadrature_points() {
       
         delete [] _phi_bdry;
         delete [] _phi_memory_bdry;
@@ -1154,7 +1208,7 @@ namespace femus {
     allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
     
     // boundary
-    allocate_volume_shape_at_boundary_quadrature_points();
+    allocate_volume_shape_at_reference_boundary_quadrature_points();
     
 
 //=====================
@@ -1196,7 +1250,7 @@ namespace femus {
     allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
 
     // boundary
-    allocate_volume_shape_at_boundary_quadrature_points();
+    allocate_volume_shape_at_reference_boundary_quadrature_points();
  
 
 //=====================
@@ -1336,112 +1390,150 @@ namespace femus {
  }
 
  
+  void elem_type_1D::fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const {
+      
+    const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+
+ //evaluate volume shape functions and derivatives at reference boundary gauss points             
+for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
+             
+      for (int dof = 0; dof < _nc; dof++) {
+            _phi_bdry[qp][dof] = _phiFace[jface][qp][dof]        ; //_pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_phiFace[jface][qp][dof]        - _phi_bdry[qp][dof]) > 1.e-3 ) abort();*/
+        _dphidxi_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][0] ; //_pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_gradPhiFace[jface][qp][dof][0] - _dphidxi_bdry[qp][dof]) > 1.e-3 ) abort();*/
+        }
+      
+     }
+    
+
+  }
+  
+  
+  
+  void elem_type_3D::fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const {
+      
+    const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+
+ //evaluate volume shape functions and derivatives at reference boundary gauss points             
+for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
+             
+      for (int dof = 0; dof < _nc; dof++) {
+            _phi_bdry[qp][dof] = _phiFace[jface][qp][dof]        ; //_pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_phiFace[jface][qp][dof]        - _phi_bdry[qp][dof]) > 1.e-3 ) abort();*/
+        _dphidxi_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][0] ; //_pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_gradPhiFace[jface][qp][dof][0] - _dphidxi_bdry[qp][dof]) > 1.e-3 ) abort();*/
+       _dphideta_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][1] ; //_pt_basis->eval_dphidy(_IND[dof], &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_gradPhiFace[jface][qp][dof][1] - _dphideta_bdry[qp][dof]) > 1.e-3 ) abort();*/
+      _dphidzeta_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][2] ;
+      }
+      
+    }
+    
+      
+ }
  
 
 //---------------------------------------------------------------------------------------------------------
-  void elem_type_2D::volume_shape_functions_at_reference_boundary_quadrature_points(
-      const vector < vector < double> > & vt_bdry,  
-      const unsigned  jface) const {
+  void elem_type_2D::fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const {
 
-//********* EVALUATION OF REFERENCE POINTS **********************
-//first of all I have to place the boundary gauss points in one of the faces of the volume
-          
-        
-    ///@todo check that our volume element shape is a quadrilateral, doesn't work for triangles for now
-                                               
-    std::vector<int> normal_ref(_dim);         std::fill(normal_ref.begin(), normal_ref.end(), 0.);
-    std::vector<double> normal_real(_dim);     std::fill(normal_real.begin(), normal_real.end(), 0.);
-    std::vector<double> tangent_real(_dim);     std::fill(tangent_real.begin(), tangent_real.end(), 0.);
-    std::vector <double> translation(_dim);        std::fill(translation.begin(), translation.end(), 0.);
-        
-// normals of the reference faces
-    if      (jface == 0) {  normal_ref[0] =  0;  normal_ref[1] = -1; }
-    else if (jface == 1) {  normal_ref[0] =  1;  normal_ref[1] =  0; }
-    else if (jface == 2) {  normal_ref[0] =  0;  normal_ref[1] =  1; }
-    else if (jface == 3) {  normal_ref[0] = -1;  normal_ref[1] =  0; }
+// // // //********* EVALUATION OF REFERENCE POINTS **********************
+// // // //first of all I have to place the boundary gauss points in one of the faces of the volume
+// // //           
+// // //         
+// // //     ///@todo check that our volume element shape is a quadrilateral, doesn't work for triangles for now
+// // //                                                
+// // //     std::vector<int> normal_ref(_dim);         std::fill(normal_ref.begin(), normal_ref.end(), 0.);
+// // //     std::vector<double> normal_real(_dim);     std::fill(normal_real.begin(), normal_real.end(), 0.);
+// // //     std::vector<double> tangent_real(_dim);     std::fill(tangent_real.begin(), tangent_real.end(), 0.);
+// // //     std::vector <double> translation(_dim);        std::fill(translation.begin(), translation.end(), 0.);
+// // //         
+// // // // normals of the reference faces
+// // //     if      (jface == 0) {  normal_ref[0] =  0;  normal_ref[1] = -1; }
+// // //     else if (jface == 1) {  normal_ref[0] =  1;  normal_ref[1] =  0; }
+// // //     else if (jface == 2) {  normal_ref[0] =  0;  normal_ref[1] =  1; }
+// // //     else if (jface == 3) {  normal_ref[0] = -1;  normal_ref[1] =  0; }
+// // //     
+// // //     
+// // // // translation to the face
+// // //     for (unsigned d = 0; d < _dim; d++) { translation[d] = normal_ref[d]; }
+// // //     
+// // // // tangent computation ******
+// // //    tangent_real[0] = (vt_bdry[0][1] - vt_bdry[0][0]);
+// // //    tangent_real[1] = (vt_bdry[1][1] - vt_bdry[1][0]);
+// // // //****************************
+// // // 
+// // //    
+// // // // normal computation from the tangent ******
+// // //    //rotation by 90 degrees clockwise
+// // //    normal_real[0] =   tangent_real[1];
+// // //    normal_real[1] = - tangent_real[0];
+// // //     
+// // //     double magn = 0.;
+// // //     for (unsigned d = 0; d < _dim; d++) magn += normal_real[d] * normal_real[d]; 
+// // //         
+// // //      magn = sqrt(magn);
+// // //     
+// // //     for (unsigned d = 0; d < _dim; d++) { normal_real[d] /= magn; }
+// // // //****************************
+// // //     
+// // // // angle between reference normal and real normal ******
+// // //     double cosine_theta = 0.; 
+// // //     for (unsigned d = 0; d < _dim; d++) cosine_theta += normal_real[d] * normal_ref[d];
+// // //      
+// // //     //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
+// // //     //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
+// // //     //we should access the bdry element and compute the abscissa using the coordinates of it
+// // //     //here what we have to do is to locate the reference boundary element in the reference volume element
+// // //     //Notice that the SIGN of the direction is also important
+// // //     //we need to understand:
+// // //     // 1) where my boundary element is located in the reference volume element
+// // //     // 2) in what direction it is oriented
+// // // //****************************
+// // // 
+// // //     
+// // // //here we compute at ALL quadrature points... it should be only for the current quadrature point...
+// // //     
+// // //     const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+// // //     
+// // //     const double* pt_one_dim[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
+// // //    
+// // //     
+// // // // one-dim vector ****************************
+// // //       double xi_one_dim[2];
+// // //       for (unsigned d = 0; d < 1; d++) {
+// // //         xi_one_dim[d] = *pt_one_dim[d];
+// // //         pt_one_dim[d]++;
+// // //       }
+// // //       
+// // //       xi_one_dim[1] = 0.; //placing along xi direction (eta = 0) ///@todo fix this here wrt the normal_ref above
+// // // //****************************
+// // //       
+// // // // rotation matrix ****************************
+// // //     double rotation[2][2] = {{0, 0}, {0, 0}};
+// // // 
+// // //     const double theta = acos(cosine_theta);
+// // //     
+// // //     rotation[0][0] =  cosine_theta;
+// // //     rotation[0][1] = - sin( theta );
+// // //     rotation[1][0] =   sin( theta );
+// // //     rotation[1][1] =  cosine_theta;
+// // //     
+// // //  
+// // //   std::vector <double> rotation_vec(_dim); std::fill(rotation_vec.begin(), rotation_vec.end(), 0.);
+// // //       
+// // //    for (unsigned k = 0; k < _dim; k++)  
+// // //      for (unsigned d = 0; d < _dim; d++)  rotation_vec[k] +=  rotation[k][d] * xi_one_dim[d]; 
+// // // //****************************
+// // // 
+// // //      
+// // //      
+// // // // rotate and translate ****************************
+// // // //here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
+// // //  //we have to use a transformation that locates the 1d edge in one of the sides of my 2d elem
+// // //     std::vector <double> ref_bdry_qp_coords_in_vol(_dim);
+// // //       
+// // //     for (unsigned d = 0; d < _dim; d++) ref_bdry_qp_coords_in_vol[d] =  rotation_vec[d]  + translation[d];
+// // // // ****************************
     
     
-// translation to the face
-    for (unsigned d = 0; d < _dim; d++) { translation[d] = normal_ref[d]; }
     
-// tangent computation ******
-   tangent_real[0] = (vt_bdry[0][1] - vt_bdry[0][0]);
-   tangent_real[1] = (vt_bdry[1][1] - vt_bdry[1][0]);
-//****************************
-
-   
-// normal computation from the tangent ******
-   //rotation by 90 degrees clockwise
-   normal_real[0] =   tangent_real[1];
-   normal_real[1] = - tangent_real[0];
-    
-    double magn = 0.;
-    for (unsigned d = 0; d < _dim; d++) magn += normal_real[d] * normal_real[d]; 
-        
-     magn = sqrt(magn);
-    
-    for (unsigned d = 0; d < _dim; d++) { normal_real[d] /= magn; }
-//****************************
-    
-// angle between reference normal and real normal ******
-    double cosine_theta = 0.; 
-    for (unsigned d = 0; d < _dim; d++) cosine_theta += normal_real[d] * normal_ref[d];
-     
-    //here the fact is that the abscissa of the gauss_bdry rule is one-dimensional, 
-    //but at this stage we don't know what the direction of the abscissa is (x, y, or general)
-    //we should access the bdry element and compute the abscissa using the coordinates of it
-    //here what we have to do is to locate the reference boundary element in the reference volume element
-    //Notice that the SIGN of the direction is also important
-    //we need to understand:
-    // 1) where my boundary element is located in the reference volume element
-    // 2) in what direction it is oriented
-//****************************
-
-    
-//here we compute at ALL quadrature points... it should be only for the current quadrature point...
-    
-    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
-    
-    const double* pt_one_dim[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
-   
-    
-// one-dim vector ****************************
-      double xi_one_dim[2];
-      for (unsigned d = 0; d < 1; d++) {
-        xi_one_dim[d] = *pt_one_dim[d];
-        pt_one_dim[d]++;
-      }
-      
-      xi_one_dim[1] = 0.; //placing along xi direction (eta = 0) ///@todo fix this here wrt the normal_ref above
-//****************************
-      
-// rotation matrix ****************************
-    double rotation[2][2] = {{0, 0}, {0, 0}};
-
-    const double theta = acos(cosine_theta);
-    
-    rotation[0][0] =  cosine_theta;
-    rotation[0][1] = - sin( theta );
-    rotation[1][0] =   sin( theta );
-    rotation[1][1] =  cosine_theta;
-    
- 
-  std::vector <double> rotation_vec(_dim); std::fill(rotation_vec.begin(), rotation_vec.end(), 0.);
-      
-   for (unsigned k = 0; k < _dim; k++)  
-     for (unsigned d = 0; d < _dim; d++)  rotation_vec[k] +=  rotation[k][d] * xi_one_dim[d]; 
-//****************************
-
-     
-     
-// rotate and translate ****************************
-//here we want to compute the reference gauss point in the volume that corresponds to the real gauss point related to ig_bdry
- //we have to use a transformation that locates the 1d edge in one of the sides of my 2d elem
-    std::vector <double> ref_bdry_qp_coords_in_vol(_dim);
-      
-    for (unsigned d = 0; d < _dim; d++) ref_bdry_qp_coords_in_vol[d] =  rotation_vec[d]  + translation[d];
-// ****************************
-    
+    const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
 
  //evaluate volume shape functions and derivatives at reference boundary gauss points             
 for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
@@ -1470,7 +1562,7 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
                                            vector < double >& gradphi) const {
                                        
 
-    volume_shape_functions_at_reference_boundary_quadrature_points(vt_bdry, jface);
+    fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*vt_bdry,*/ jface);
 
     phi.resize(_nc);
     gradphi.resize(_nc * 2);

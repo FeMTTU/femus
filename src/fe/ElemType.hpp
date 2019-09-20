@@ -213,9 +213,11 @@ namespace femus
       
       virtual void allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss) = 0;
 
-      virtual void allocate_volume_shape_at_boundary_quadrature_points() = 0;
+      virtual void allocate_volume_shape_at_reference_boundary_quadrature_points() = 0;
 
-      virtual void deallocate_volume_shape_at_boundary_quadrature_points() = 0; /*they say you shouldn't call virtual function from constr/destr, so for now I am not using them in there*/
+      virtual void deallocate_volume_shape_at_reference_boundary_quadrature_points() = 0; /*they say you shouldn't call virtual function from constr/destr, so for now I am not using them in there*/
+      
+      virtual void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const = 0;
       
       // ====================================
       // member data
@@ -261,7 +263,7 @@ namespace femus
           
           deallocate_shape_at_quadrature_points();
             
-          deallocate_volume_shape_at_boundary_quadrature_points();
+          deallocate_volume_shape_at_reference_boundary_quadrature_points();
        }
       
 
@@ -342,6 +344,27 @@ namespace femus
   protected:
       
       // ====================================
+      // member functions
+      // ====================================
+      
+      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
+      
+      
+      void allocate_and_fill_shape_at_quadrature_points();
+      
+      void deallocate_shape_at_quadrature_points();
+      
+      void allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss);
+      
+      void allocate_volume_shape_at_reference_boundary_quadrature_points();
+
+      void deallocate_volume_shape_at_reference_boundary_quadrature_points();
+
+      void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const;
+          
+      void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
+            
+      // ====================================
       // member data
       // ====================================
       
@@ -357,26 +380,12 @@ namespace femus
       std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
       std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
 
-
-      // ====================================
-      // member functions
-      // ====================================
+        // values at boundary gauss points
+      double **_phi_bdry;
+      double *_phi_memory_bdry;
+      double **_dphidxi_bdry;
+      double *_dphidxi_memory_bdry;
       
-      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
-      
-      
-      void allocate_and_fill_shape_at_quadrature_points();
-      
-      void deallocate_shape_at_quadrature_points();
-      
-      void allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss);
-      
-      void allocate_volume_shape_at_boundary_quadrature_points();
-
-      void deallocate_volume_shape_at_boundary_quadrature_points();
-
-      void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
-            
   };
 
 
@@ -393,7 +402,7 @@ namespace femus
           
           deallocate_shape_at_quadrature_points();
             
-          deallocate_volume_shape_at_boundary_quadrature_points();
+          deallocate_volume_shape_at_reference_boundary_quadrature_points();
        }
 
       
@@ -486,16 +495,15 @@ namespace femus
       
      void allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss);
      
-     void allocate_volume_shape_at_boundary_quadrature_points();
+     void allocate_volume_shape_at_reference_boundary_quadrature_points();
 
-     void deallocate_volume_shape_at_boundary_quadrature_points();
+     void deallocate_volume_shape_at_reference_boundary_quadrature_points();
 
       
      void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
       
-     void volume_shape_functions_at_reference_boundary_quadrature_points(const vector < vector < double> > & vt_bdry,  
-                                           const unsigned jface) const;
+     void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const;
                                            
       // ====================================
       // member data
@@ -547,7 +555,7 @@ namespace femus
           
           deallocate_shape_at_quadrature_points();
             
-          deallocate_volume_shape_at_boundary_quadrature_points();
+          deallocate_volume_shape_at_reference_boundary_quadrature_points();
       }
       
       
@@ -639,10 +647,12 @@ namespace femus
      
      void allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss);
      
-     void allocate_volume_shape_at_boundary_quadrature_points();
+     void allocate_volume_shape_at_reference_boundary_quadrature_points();
 
-     void deallocate_volume_shape_at_boundary_quadrature_points();
+     void deallocate_volume_shape_at_reference_boundary_quadrature_points();
 
+     void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const;
+     
      void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
      
@@ -687,7 +697,6 @@ namespace femus
       double *_dphideta_memory_bdry;
       double **_dphidzeta_bdry;
       double *_dphidzeta_memory_bdry;
-      ///@todo do the same also in elem_type_1D
  
       
       
