@@ -54,20 +54,22 @@ namespace femus
                            std::vector < std::vector <type_mov> > & Jac,
                            const unsigned space_dimension) const = 0;
 
-     virtual /*inline*/ void jac_jacT(const unsigned & ig,
-                          const std::vector < std::vector <type_mov> > & Jac,
+     virtual /*inline*/ void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
                           std::vector < std::vector <type_mov> > & JacJacT,
                           const unsigned space_dimension) const = 0;
 
-     virtual /*inline*/ void jac_jacT_inv(const unsigned & ig,
-                          const std::vector < std::vector <type_mov> > & JacJacT,
+     virtual /*inline*/ void jac_jacT_inv(const std::vector < std::vector <type_mov> > & JacJacT,
                           std::vector < std::vector <type_mov> > & JacJacT_inv,
                           const unsigned space_dimension) const = 0;
 
-     virtual /*inline*/ void area_transf(const unsigned & ig,
-                          const std::vector < std::vector <type_mov> > & JacJacT,
+     virtual /*inline*/ void area_transf(const std::vector < std::vector <type_mov> > & JacJacT,
                           type_mov & area,
                           const unsigned space_dimension) const = 0;
+
+     virtual /*inline*/ void jacobian_inv(const std::vector < std::vector <type_mov> > & Jac,
+                                          const std::vector < std::vector <type_mov> > & JacJacT_inv,
+                                          std::vector < std::vector <type_mov> > & Jac_inv,
+                                          const unsigned space_dimension) const = 0;
 
       };    
 
