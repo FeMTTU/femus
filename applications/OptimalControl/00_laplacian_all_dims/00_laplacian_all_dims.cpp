@@ -303,7 +303,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
         // *** get gauss point weight, test function and test function partial derivatives ***
 // 	msh->_finiteElement[ielGeom][solFEType_u]->Jacobian(geom_element.get_coords_at_dofs_3d(),    ig, weight,    phi_u,    phi_u_x,    boost::none /*phi_u_xx*/);
           
-	elem_all[ielGeom][xType]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
+	elem_all[ielGeom][xType]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
     elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, boost::none /*phi_u_xx*/, space_dim);
     weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
 

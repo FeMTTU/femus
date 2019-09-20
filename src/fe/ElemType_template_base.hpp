@@ -17,7 +17,7 @@ namespace femus
           
       public:      
                                    
-     virtual void Jacobian_geometry(const std::vector < std::vector < type_mov > > & vt,
+     virtual void JacJacInv(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
@@ -46,7 +46,29 @@ namespace femus
                                                               const std::string fe_fam,
                                                               const std::string order_gauss,
                                                               const unsigned space_dimension); 
-      
+    protected:
+        
+     virtual void jacobian(const std::vector < std::vector < type_mov > > & vt,
+                           const unsigned & ig,
+                           const std::vector < double ** > & dphidxi,
+                           std::vector < std::vector <type_mov> > & Jac,
+                           const unsigned space_dimension) const = 0;
+
+     virtual void jac_jacT(const unsigned & ig,
+                          const std::vector < std::vector <type_mov> > & Jac,
+                          std::vector < std::vector <type_mov> > & JacJacT,
+                          const unsigned space_dimension) const = 0;
+
+     virtual void jac_jacT_inv(const unsigned & ig,
+                          const std::vector < std::vector <type_mov> > & Jac,
+                          std::vector < std::vector <type_mov> > & JacJacT,
+                          const unsigned space_dimension) const {};
+
+     virtual void area_transf(const unsigned & ig,
+                          const std::vector < std::vector <type_mov> > & JacJacT,
+                          type_mov & detJac,
+                          const unsigned space_dimension) const {};
+
       };    
 
       

@@ -513,7 +513,7 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
         // *** Gauss point loop ***
         for (unsigned ig = 0; ig < quad_rules[ielGeom].GetGaussPointsNumber(); ig++) {
 
-      elem_all[ielGeom][xType]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
+      elem_all[ielGeom][xType]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
       weight_qp = detJac_qp * quad_rules[ielGeom].GetGaussWeightsPointer()[ig];
             
             // *** get gauss point weight, test function and test function partial derivatives ***

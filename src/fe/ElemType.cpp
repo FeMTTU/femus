@@ -1619,12 +1619,12 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
 //     if(nablaphi) nablaphi->resize(_nc * 6);
 
 
+     //Jac ===============
     double Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-    double JacInv[3][3];
 
-    const double* dxi = _dphidxi_bdry[ig_bdry];
-    const double* deta = _dphideta_bdry[ig_bdry];
-    const double* dzeta = _dphidzeta_bdry[ig_bdry];
+    const double * dxi = _dphidxi_bdry[ig_bdry];
+    const double * deta = _dphideta_bdry[ig_bdry];
+    const double * dzeta = _dphidzeta_bdry[ig_bdry];
 
     for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
       Jac[0][0] += (*dxi) * vt_vol[0][inode];
@@ -1642,6 +1642,9 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
                 Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
                 Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
 
+     //JacI ===============
+    double JacInv[3][3];
+    
     JacInv[0][0] = (-Jac[1][2] * Jac[2][1] + Jac[1][1] * Jac[2][2]) / det;
     JacInv[0][1] = (Jac[0][2] * Jac[2][1] - Jac[0][1] * Jac[2][2]) / det;
     JacInv[0][2] = (-Jac[0][2] * Jac[1][1] + Jac[0][1] * Jac[1][2]) / det;
@@ -1652,6 +1655,10 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
     JacInv[2][1] = (Jac[0][1] * Jac[2][0] - Jac[0][0] * Jac[2][1]) / det;
     JacInv[2][2] = (-Jac[0][1] * Jac[1][0] + Jac[0][0] * Jac[1][1]) / det;
 
+    
+     //==============================
+     //==============================
+     //==============================
     //Use the Jacobian here to go from the REAL back to the CANONICAL coordinates
  
     dxi = _dphidxi_bdry[ig_bdry];
@@ -1673,32 +1680,7 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
       gradphi[3 * inode + 1] = (*dxi) * JacInv[1][0] + (*deta) * JacInv[1][1] + (*dzeta) * JacInv[1][2];
       gradphi[3 * inode + 2] = (*dxi) * JacInv[2][0] + (*deta) * JacInv[2][1] + (*dzeta) * JacInv[2][2];
 
-//       if(nablaphi) {
-//         (*nablaphi)[6 * inode + 0] =
-//           ((*dxi2)    * JacInv[0][0] + (*dxideta)  * JacInv[0][1] + (*dzetadxi) * JacInv[0][2]) * JacInv[0][0] +
-//           ((*dxideta) * JacInv[0][0] + (*deta2)    * JacInv[0][1] + (*detadzeta) * JacInv[0][2]) * JacInv[0][1] +
-//           ((*dzetadxi) * JacInv[0][0] + (*detadzeta) * JacInv[0][1] + (*dzeta2)   * JacInv[0][2]) * JacInv[0][2];
-//         (*nablaphi)[6 * inode + 1] =
-//           ((*dxi2)    * JacInv[1][0] + (*dxideta)  * JacInv[1][1] + (*dzetadxi) * JacInv[1][2]) * JacInv[1][0] +
-//           ((*dxideta) * JacInv[1][0] + (*deta2)    * JacInv[1][1] + (*detadzeta) * JacInv[1][2]) * JacInv[1][1] +
-//           ((*dzetadxi) * JacInv[1][0] + (*detadzeta) * JacInv[1][1] + (*dzeta2)   * JacInv[1][2]) * JacInv[1][2];
-//         (*nablaphi)[6 * inode + 2] =
-//           ((*dxi2)    * JacInv[2][0] + (*dxideta)  * JacInv[2][1] + (*dzetadxi) * JacInv[2][2]) * JacInv[2][0] +
-//           ((*dxideta) * JacInv[2][0] + (*deta2)    * JacInv[2][1] + (*detadzeta) * JacInv[2][2]) * JacInv[2][1] +
-//           ((*dzetadxi) * JacInv[2][0] + (*detadzeta) * JacInv[2][1] + (*dzeta2)   * JacInv[2][2]) * JacInv[2][2];
-//         (*nablaphi)[6 * inode + 3] =
-//           ((*dxi2)    * JacInv[0][0] + (*dxideta)  * JacInv[0][1] + (*dzetadxi) * JacInv[0][2]) * JacInv[1][0] +
-//           ((*dxideta) * JacInv[0][0] + (*deta2)    * JacInv[0][1] + (*detadzeta) * JacInv[0][2]) * JacInv[1][1] +
-//           ((*dzetadxi) * JacInv[0][0] + (*detadzeta) * JacInv[0][1] + (*dzeta2)   * JacInv[0][2]) * JacInv[1][2];
-//         (*nablaphi)[6 * inode + 4] =
-//           ((*dxi2)    * JacInv[1][0] + (*dxideta)  * JacInv[1][1] + (*dzetadxi) * JacInv[1][2]) * JacInv[2][0] +
-//           ((*dxideta) * JacInv[1][0] + (*deta2)    * JacInv[1][1] + (*detadzeta) * JacInv[1][2]) * JacInv[2][1] +
-//           ((*dzetadxi) * JacInv[1][0] + (*detadzeta) * JacInv[1][1] + (*dzeta2)   * JacInv[1][2]) * JacInv[2][2];
-//         (*nablaphi)[6 * inode + 5] =
-//           ((*dxi2)    * JacInv[2][0] + (*dxideta)  * JacInv[2][1] + (*dzetadxi) * JacInv[2][2]) * JacInv[0][0] +
-//           ((*dxideta) * JacInv[2][0] + (*deta2)    * JacInv[2][1] + (*detadzeta) * JacInv[2][2]) * JacInv[0][1] +
-//           ((*dzetadxi) * JacInv[2][0] + (*detadzeta) * JacInv[2][1] + (*dzeta2)   * JacInv[2][2]) * JacInv[0][2];
-//       }
+
     }
     
   }
