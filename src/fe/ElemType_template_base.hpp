@@ -16,7 +16,7 @@ namespace femus
     class elem_type_templ_base {
           
       public:      
-          
+                                   
      virtual void Jacobian_geometry(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,

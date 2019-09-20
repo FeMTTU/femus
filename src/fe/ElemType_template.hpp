@@ -42,7 +42,6 @@ namespace femus {
      { }
       
 
-      
      void Jacobian_geometry(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,
@@ -417,8 +416,8 @@ namespace femus {
      {}
      
           ~elem_type_templ(){}
-   
-   
+          
+          
         void Jacobian_geometry(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,
@@ -428,31 +427,55 @@ namespace femus {
                                                                 
      constexpr unsigned int dim = 3;                           
      //Jac ===============
-    Jac.resize(3/*dim*/);
-    for (unsigned d = 0; d < 3/*dim*/; d++) {
-        Jac[d].resize(3/*space_dim*/);   
-        std::fill(Jac[d].begin(), Jac[d].end(), 0.); 
-    }
+//     Jac.resize(3/*dim*/);
+//     for (unsigned d = 0; d < 3/*dim*/; d++) {
+// //         Jac[d].resize(3/*space_dim*/);   
+//         std::fill(Jac[d].begin(), Jac[d].end(), 0.); 
+//     }
+        std::fill(Jac[0].begin(), Jac[0].end(), 0.); 
+        std::fill(Jac[1].begin(), Jac[1].end(), 0.); 
+        std::fill(Jac[2].begin(), Jac[2].end(), 0.); 
     
-    for (unsigned d = 0; d < 3/*dim*/; d++) {
+// Jac[0][0] = 0.;
+// Jac[0][1] = 0.; 
+// Jac[0][2] = 0.; 
+// Jac[1][0] = 0.; 
+// Jac[1][1] = 0.; 
+// Jac[1][2] = 0.; 
+// Jac[2][0] = 0.; 
+// Jac[2][1] = 0.; 
+// Jac[2][2] = 0.; 
+    
+    
+//     for (unsigned d = 0; d < 3/*dim*/; d++) {
     const double * dxi_coords   = _dphidxi[ig];
     const double * deta_coords  = _dphideta[ig];
     const double * dzeta_coords = _dphidzeta[ig];
 
     for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++, dzeta_coords++) {
-      Jac[0][d] += (*dxi_coords)   * vt[d][inode];
-      Jac[1][d] += (*deta_coords)  * vt[d][inode];
-      Jac[2][d] += (*dzeta_coords) * vt[d][inode];
+      Jac[0][0] += (*dxi_coords) * vt[0][inode];
+      Jac[0][1] += (*dxi_coords) * vt[1][inode];
+      Jac[0][2] += (*dxi_coords) * vt[2][inode];
+      Jac[1][0] += (*deta_coords) * vt[0][inode];
+      Jac[1][1] += (*deta_coords) * vt[1][inode];
+      Jac[1][2] += (*deta_coords) * vt[2][inode];
+      Jac[2][0] += (*dzeta_coords) * vt[0][inode];
+      Jac[2][1] += (*dzeta_coords) * vt[1][inode];
+      Jac[2][2] += (*dzeta_coords) * vt[2][inode];
+      
+//       Jac[0][d] += (*dxi_coords)   * vt[d][inode];
+//       Jac[1][d] += (*deta_coords)  * vt[d][inode];
+//       Jac[2][d] += (*dzeta_coords) * vt[d][inode];
        }
-    }
+//     }
     
      //JacI ===============
-    JacI.resize(space_dim);
-    for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
+//     JacI.resize(space_dim);
+//     for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
                                 
     detJac = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
-                    Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
-                    Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
+              Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
+              Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
 
     JacI[0][0] = (-Jac[1][2] * Jac[2][1] + Jac[1][1] * Jac[2][2]) / detJac;
     JacI[0][1] = (Jac[0][2] * Jac[2][1] - Jac[0][1] * Jac[2][2]) / detJac;
@@ -494,7 +517,7 @@ namespace femus {
     const double* dzetadxi = _d2phidzetadxi[ig];
 
     phi.resize(_nc);
-    gradphi.resize(_nc * 3);  std::fill(gradphi.begin(),gradphi.end(),0.);
+    gradphi.resize(_nc * 3);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
     if(nablaphi) nablaphi->resize(_nc * 6);
     
     
