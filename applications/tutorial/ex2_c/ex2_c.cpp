@@ -513,15 +513,15 @@ void System_assemble_flexible(const std::vector < std::vector < const elem_type_
         // *** Gauss point loop ***
         for (unsigned ig = 0; ig < quad_rules[ielGeom].GetGaussPointsNumber(); ig++) {
 
-      elem_all[ielGeom][xType]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+      elem_all[ielGeom][xType]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
       weight_qp = detJac_qp * quad_rules[ielGeom].GetGaussWeightsPointer()[ig];
             
             // *** get gauss point weight, test function and test function partial derivatives ***
      for (unsigned  u = 0; u < n_unknowns; u++) {
-         elem_all[ielGeom][unknowns_local[u].fe_type()]->shape_funcs_current_elem(ig, JacI_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess(), dim, space_dim);
+         elem_all[ielGeom][unknowns_local[u].fe_type()]->shape_funcs_current_elem(ig, JacI_qp, unknowns_phi_dof_qp[u].phi(), unknowns_phi_dof_qp[u].phi_grad(), unknowns_phi_dof_qp[u].phi_hess(), space_dim);
      }
 
-     elem_all[ielGeom][xType]->shape_funcs_current_elem(ig, JacI_qp, geom_element_phi_dof_qp.phi(), geom_element_phi_dof_qp.phi_grad(), geom_element_phi_dof_qp.phi_hess(), dim, space_dim);
+     elem_all[ielGeom][xType]->shape_funcs_current_elem(ig, JacI_qp, geom_element_phi_dof_qp.phi(), geom_element_phi_dof_qp.phi_grad(), geom_element_phi_dof_qp.phi_hess(), space_dim);
      
 
             // evaluate the solution, the solution derivatives and the coordinates in the gauss point

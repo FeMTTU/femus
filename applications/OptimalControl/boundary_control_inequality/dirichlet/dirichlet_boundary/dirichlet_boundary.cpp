@@ -605,14 +605,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     
 		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
     
-    elem_all[ielGeom_bdry][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, dim - 1, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
 	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal);
     
     weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
 
-    elem_all[ielGeom_bdry][SolFEType[pos_ctrl]] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_xx_bdry_placeholder, dim - 1, space_dim);
-    elem_all[ielGeom_bdry][SolFEType[pos_state]]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry,  phi_xx_bdry_placeholder, dim - 1, space_dim);
-    elem_all[ielGeom_bdry][SolFEType[pos_adj]]  ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_adj_bdry, phi_adj_x_bdry,  phi_xx_bdry_placeholder, dim - 1, space_dim);
+    elem_all[ielGeom_bdry][SolFEType[pos_ctrl]] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_xx_bdry_placeholder, space_dim);
+    elem_all[ielGeom_bdry][SolFEType[pos_state]]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry,  phi_xx_bdry_placeholder, space_dim);
+    elem_all[ielGeom_bdry][SolFEType[pos_adj]]  ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_adj_bdry, phi_adj_x_bdry,  phi_xx_bdry_placeholder, space_dim);
 
 
 // **** printing ******
@@ -857,11 +857,11 @@ if ( i_vol == j_vol )  {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[ielGeom][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+    elem_all[ielGeom][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
     weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
 
-    elem_all[ielGeom][SolFEType[pos_state]]->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
-    elem_all[ielGeom][SolFEType[pos_adj]]  ->shape_funcs_current_elem(ig, JacI_qp, phi_adj, phi_adj_x, phi_adj_xx, dim, space_dim);
+    elem_all[ielGeom][SolFEType[pos_state]]->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, space_dim);
+    elem_all[ielGeom][SolFEType[pos_adj]]  ->shape_funcs_current_elem(ig, JacI_qp, phi_adj, phi_adj_x, phi_adj_xx, space_dim);
 
           
 	sol_u_gss = 0.;
@@ -1264,9 +1264,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 		
 		for(unsigned ig_bdry = 0; ig_bdry < ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber(); ig_bdry++) {
 		  
-    elem_all[ielGeom_bdry][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, dim - 1, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
     weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
-    elem_all[ielGeom_bdry][solType_ctrl] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_xx_bdry_placeholder, dim - 1, space_dim);
+    elem_all[ielGeom_bdry][solType_ctrl] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_xx_bdry_placeholder, space_dim);
 
 		  
 		 //========== compute gauss quantities on the boundary ===============================================
@@ -1305,11 +1305,11 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[ielGeom][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
+    elem_all[ielGeom][solType_coords]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
     weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
 
-    elem_all[ielGeom][solType_u]                 ->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
-    elem_all[ielGeom][solType_u/*solTypeTdes*/]  ->shape_funcs_current_elem(ig, JacI_qp, phi_udes, phi_udes_x, phi_udes_xx, dim, space_dim);
+    elem_all[ielGeom][solType_u]                 ->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, space_dim);
+    elem_all[ielGeom][solType_u/*solTypeTdes*/]  ->shape_funcs_current_elem(ig, JacI_qp, phi_udes, phi_udes_x, phi_udes_xx, space_dim);
     
 	u_gss     = 0.;  for (unsigned i = 0; i < nDof_u; i++)        u_gss += sol_u[i]     * phi_u[i];
 	udes_gss  = 0.;  for (unsigned i = 0; i < nDof_udes; i++)  udes_gss += sol_udes[i]  * phi_udes[i];  

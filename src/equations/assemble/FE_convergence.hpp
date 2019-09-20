@@ -426,12 +426,10 @@ template < class type>
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < quad_rules[ielGeom].GetGaussPointsNumber(); ig++) {
-   
-        std::cout << "We need to revisit all these allocations of phi_u_x !!!"  << std::endl;
-        
+
       // *** get gauss point weight, test function and test function partial derivatives ***
-	elem_all[ielGeom][xType]->Jacobian_geometry(x, ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
-    elem_all[ielGeom][soluType]->shape_funcs_current_elem(ig, JacI_qp, phi, phi_x, phi_xx, dim, space_dim);
+	elem_all[ielGeom][xType]->Jacobian_geometry(x, ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
+    elem_all[ielGeom][soluType]->shape_funcs_current_elem(ig, JacI_qp, phi, phi_x, phi_xx, space_dim);
     weight = detJac_qp * quad_rules[ielGeom].GetGaussWeightsPointer()[ig];
 
     
