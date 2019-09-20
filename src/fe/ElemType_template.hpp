@@ -42,23 +42,23 @@ namespace femus {
      { }
       
 
-     void JacJacInv(const std::vector < std::vector < type_mov > > & vt,
+     inline void JacJacInv(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
                             type_mov & detJac,
                             const unsigned space_dimension) const;
 
-     void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const;
+     inline void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const;
 
-     void shape_funcs_current_elem(const unsigned & ig,
+     inline void shape_funcs_current_elem(const unsigned & ig,
                                              const std::vector < std::vector <type_mov> > & JacI,
                                              vector < double > & phi, 
                                              vector < type >   & gradphi,
                                              boost::optional< vector < type > & > nablaphi,
                                              const unsigned space_dimension) const;
                                              
-     void shape_funcs_volume_at_bdry_current_elem(const unsigned ig, 
+     inline void shape_funcs_volume_at_bdry_current_elem(const unsigned ig, 
                                                          const unsigned jface, 
                                                          const std::vector < std::vector <type_mov> > & JacI_qp, 
                                                          std::vector < double > & phi_vol_at_bdry,
@@ -68,25 +68,25 @@ namespace femus {
 
      private:
 
-     void jacobian(const std::vector < std::vector < type_mov > > & vt,
+     inline void jacobian(const std::vector < std::vector < type_mov > > & vt,
                            const unsigned & ig,
                            const std::vector < double ** > & dphidxi,
                            std::vector < std::vector <type_mov> > & Jac,
                            const unsigned space_dimension) const;
 
-     void jac_jacT(const unsigned & ig,
+     inline void jac_jacT(const unsigned & ig,
                           const std::vector < std::vector <type_mov> > & Jac,
                           std::vector < std::vector <type_mov> > & JacJacT,
                           const unsigned space_dimension) const;
 
-     void jac_jacT_inv(const unsigned & ig,
+     inline void jac_jacT_inv(const unsigned & ig,
                           const std::vector < std::vector <type_mov> > & Jac,
                           std::vector < std::vector <type_mov> > & JacJacT,
                           const unsigned space_dimension) const;
 
-     void area_transf(const unsigned & ig,
+     inline void area_transf(const unsigned & ig,
                           const std::vector < std::vector <type_mov> > & JacJacT,
-                          type_mov & detJac,
+                          type_mov & area,
                           const unsigned space_dimension) const;
 
                            
@@ -101,11 +101,28 @@ namespace femus {
        
    private: 
        
-       
-     void jac_jacT(const unsigned & ig,
-                          const std::vector < std::vector <type_mov> > & Jac,
-                          std::vector < std::vector <type_mov> > & JacJacT,
+   void area_transf(const unsigned & ig,
+                          const std::vector < std::vector <type_mov> > & JacJacT,
+                          type_mov & area,
                           const unsigned space_dimension) const {
+
+      area = sqrt(JacJacT[0][0]);
+
+  }
+                          
+    void jac_jacT_inv(const unsigned & ig,
+                          const std::vector < std::vector <type_mov> > & JacJacT,
+                          std::vector < std::vector <type_mov> > & JacJacT_inv,
+                          const unsigned space_dimension) const {
+
+    /*const type_mov*/ JacJacT_inv[0][0] = 1. / JacJacT[0][0];
+                           
+    }
+                          
+     void jac_jacT(const unsigned & ig,
+                   const std::vector < std::vector <type_mov> > & Jac,
+                   std::vector < std::vector <type_mov> > & JacJacT,
+                   const unsigned space_dimension) const {
                               
 //     type_mov JacJacT[1][1];
     JacJacT[0][0] = 0.; //1x1
@@ -199,13 +216,18 @@ namespace femus {
     //JacJacT  =================
     type_mov JacJacT[1][1];  JacJacT[0][0] = 0.; //1x1
     for (unsigned d = 0; d < space_dim; d++) JacJacT[0][0] += Jac[0][d]*Jac[0][d];
+    
+    //area  =================
     detJac = sqrt(JacJacT[0][0]);
+    
+    //JacJacT_inv  =================
+    const type_mov JacJacT_inv = 1. / JacJacT[0][0];
     
     //JacI  =================
     JacI.resize(space_dim);
     for (unsigned d = 0; d < space_dim; d++) JacI[d].resize(dim);
 
-    for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * 1. / JacJacT[0][0];
+    for (unsigned d = 0; d < space_dim; d++) JacI[d][0] = Jac[0][d] * JacJacT_inv;
 
   ///@todo in the old implementation shouldn't we take the absolute value??? I'd say we don't because it goes both on the lhs and on the rhs...
              
@@ -304,7 +326,19 @@ namespace femus {
        
    private: 
        
-     void jacobian(const std::vector < std::vector < type_mov > > & vt,
+  void area_transf(const unsigned & ig,
+                          const std::vector < std::vector <type_mov> > & JacJacT,
+                          type_mov & area,
+                          const unsigned space_dimension) const {
+                              
+    type_mov detJacJacT = (JacJacT[0][0] * JacJacT[1][1] - JacJacT[0][1] * JacJacT[1][0]);
+            
+    area = sqrt(abs(detJacJacT));
+                              
+    }
+                          
+                          
+  void jacobian(const std::vector < std::vector < type_mov > > & vt,
                            const unsigned & ig,
                            const std::vector < double ** > & dphidxi,
                            std::vector < std::vector <type_mov> > & Jac,
@@ -348,6 +382,21 @@ namespace femus {
    }
    
 
+     void jac_jacT_inv(const unsigned & ig,
+                          const std::vector < std::vector <type_mov> > & JacJacT,
+                          std::vector < std::vector <type_mov> > & JacJacT_inv,
+                          const unsigned space_dimension) const {
+                                                            
+    const type_mov detJacJacT = (JacJacT[0][0] * JacJacT[1][1] - JacJacT[0][1] * JacJacT[1][0]);
+            
+    JacJacT_inv[0][0] =  JacJacT[1][1] / detJacJacT;
+    JacJacT_inv[0][1] = -JacJacT[0][1] / detJacJacT;
+    JacJacT_inv[1][0] = -JacJacT[1][0] / detJacJacT;
+    JacJacT_inv[1][1] =  JacJacT[0][0] / detJacJacT;
+        
+   }
+   
+   
    public: 
 
        elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss) 
@@ -525,7 +574,30 @@ namespace femus {
 
    private:
        
-            void jac_jacT(const unsigned & ig,
+  void area_transf(const unsigned & ig,
+                          const std::vector < std::vector <type_mov> > & Jac,
+                          type_mov & area,
+                          const unsigned space_dimension) const {
+                              
+  //here you don't pass JacJacT, but more simply just Jac                         
+                              
+    area = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
+            Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
+            Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
+    
+  }
+                          
+                          
+   void jac_jacT_inv(const unsigned & ig,
+                          const std::vector < std::vector <type_mov> > & JacJacT,
+                          std::vector < std::vector <type_mov> > & JacJacT_inv,
+                          const unsigned space_dimension) const {
+                              
+       std::cout << "Not needed with 3d in 3d space"; abort();                              
+
+       }
+                                                            
+      void jac_jacT(const unsigned & ig,
                           const std::vector < std::vector <type_mov> > & Jac,
                           std::vector < std::vector <type_mov> > & JacJacT,
                           const unsigned space_dimension) const {
@@ -535,14 +607,6 @@ namespace femus {
        }
                           
        
-         public: 
-
-       elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss)
-       : elem_type_3D(geom_elem.c_str(), fe_elem.c_str(), order_gauss.c_str() )
-     {}
-     
-          ~elem_type_templ(){}
-          
      void jacobian(const std::vector < std::vector < type_mov > > & vt,
                            const unsigned & ig,
                            const std::vector < double ** > & dphidxi,
@@ -587,6 +651,16 @@ namespace femus {
                                
                                
     }
+    
+    
+         public: 
+
+       elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss)
+       : elem_type_3D(geom_elem.c_str(), fe_elem.c_str(), order_gauss.c_str() )
+     {}
+     
+          ~elem_type_templ(){}
+          
                            
                                
   void JacJacInv(const std::vector < std::vector < type_mov > > & vt,
