@@ -183,6 +183,8 @@ namespace femus
       }
 
 
+      virtual void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const = 0;
+      
    protected:
 
       // ====================================
@@ -217,7 +219,6 @@ namespace femus
 
       virtual void deallocate_volume_shape_at_reference_boundary_quadrature_points() = 0; /*they say you shouldn't call virtual function from constr/destr, so for now I am not using them in there*/
       
-      virtual void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const = 0;
       
       // ====================================
       // member data
@@ -341,6 +342,8 @@ namespace femus
         return _dphidxi[ig];
       }
 
+      void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const;
+          
   protected:
       
       // ====================================
@@ -360,8 +363,6 @@ namespace femus
 
       void deallocate_volume_shape_at_reference_boundary_quadrature_points();
 
-      void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const;
-          
       void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const { std::cout << "Not implemented"; abort(); };
             
       // ====================================
@@ -381,10 +382,10 @@ namespace femus
       std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
 
         // values at boundary gauss points
-      double **_phi_bdry;
-      double *_phi_memory_bdry;
-      double **_dphidxi_bdry;
-      double *_dphidxi_memory_bdry;
+      double **_phi_vol_at_bdry;
+      double *_phi_memory_vol_at_bdry;
+      double **_dphidxi_vol_at_bdry;
+      double *_dphidxi_memory_vol_at_bdry;
       
   };
 
@@ -485,6 +486,8 @@ namespace femus
       }
 
      
+     void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const;
+                                           
   protected:
       
      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
@@ -503,8 +506,6 @@ namespace femus
      void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
       
-     void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(/*const vector < vector < double> > & vt_bdry,  */const unsigned jface) const;
-                                           
       // ====================================
       // member data
       // ====================================
@@ -529,12 +530,12 @@ namespace femus
       std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
       
         // values at boundary gauss points
-      double **_phi_bdry;
-      double *_phi_memory_bdry;
-      double **_dphidxi_bdry;
-      double *_dphidxi_memory_bdry;
-      double **_dphideta_bdry;
-      double *_dphideta_memory_bdry;
+      double **_phi_vol_at_bdry;
+      double *_phi_memory_vol_at_bdry;
+      double **_dphidxi_vol_at_bdry;
+      double *_dphidxi_memory_vol_at_bdry;
+      double **_dphideta_vol_at_bdry;
+      double *_dphideta_memory_vol_at_bdry;
 
 
   };
@@ -637,6 +638,8 @@ namespace femus
         return _dphidzeta[ig];
       }
 
+     void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const;
+     
     protected:
 
      const basis* set_FE_family_and_linear_element(const char* geom_elem, unsigned int FEType_in);
@@ -651,8 +654,6 @@ namespace femus
 
      void deallocate_volume_shape_at_reference_boundary_quadrature_points();
 
-     void fill_volume_shape_at_reference_boundary_quadrature_points_per_face(const unsigned  jface) const;
-     
      void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > >& vt_vol, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
 
      
@@ -689,14 +690,14 @@ namespace femus
       std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
       
         // values at boundary gauss points
-      double **_phi_bdry;
-      double *_phi_memory_bdry;
-      double **_dphidxi_bdry;
-      double *_dphidxi_memory_bdry;
-      double **_dphideta_bdry;
-      double *_dphideta_memory_bdry;
-      double **_dphidzeta_bdry;
-      double *_dphidzeta_memory_bdry;
+      double **_phi_vol_at_bdry;
+      double *_phi_memory_vol_at_bdry;
+      double **_dphidxi_vol_at_bdry;
+      double *_dphidxi_memory_vol_at_bdry;
+      double **_dphideta_vol_at_bdry;
+      double *_dphideta_memory_vol_at_bdry;
+      double **_dphidzeta_vol_at_bdry;
+      double *_dphidzeta_memory_vol_at_bdry;
  
       
       

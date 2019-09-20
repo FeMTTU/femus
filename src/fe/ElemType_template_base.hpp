@@ -17,6 +17,14 @@ namespace femus
           
       public:      
                                    
+     virtual /*inline*/ void JacJacInv_vol_at_bdry_new(const std::vector < std::vector < type_mov > > & vt,
+                            const unsigned & ig,
+                            const unsigned jface, 
+                            std::vector < std::vector <type_mov> > & Jac,
+                            std::vector < std::vector <type_mov> > & JacI,
+                            type_mov & detJac,
+                            const unsigned space_dimension) const = 0;
+
      virtual /*inline*/ void JacJacInv(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,
@@ -26,6 +34,16 @@ namespace femus
 
      virtual /*inline*/ void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const = 0;
 
+     virtual /*inline*/ void shape_funcs_current_elem_flexible(const unsigned & ig,
+                                             const std::vector < std::vector <type_mov> > & JacI,
+                                               double **     phi_ref,
+                           const std::vector < double ** > & dphidxi_ref,
+                           const std::vector < double ** > & d2phidxi2_ref,
+                                             std::vector < double > & phi, 
+                                             std::vector < type >   & gradphi,
+                                             boost::optional< std::vector < type > & > nablaphi,
+                                             const unsigned space_dimension) const = 0;
+                                             
      virtual /*inline*/ void shape_funcs_current_elem(const unsigned & ig,
                                              const std::vector < std::vector <type_mov> > & JacI,
                                              std::vector < double > & phi, 
@@ -33,7 +51,7 @@ namespace femus
                                              boost::optional< std::vector < type > & > nablaphi,
                                              const unsigned space_dimension) const = 0;
                                              
-    virtual /*inline*/ void shape_funcs_volume_at_bdry_current_elem(const unsigned ig, 
+    virtual /*inline*/ void shape_funcs_vol_at_bdry_current_elem(const unsigned ig, 
                                                          const unsigned jface, 
                                                          const std::vector < std::vector <type_mov> > & JacI_qp, 
                                                          std::vector < double > & phi_vol_at_bdry,
@@ -48,7 +66,7 @@ namespace femus
                                                               const unsigned space_dimension); 
     protected:
         
-     virtual /*inline*/ void jacobian(const std::vector < std::vector < type_mov > > & vt,
+     virtual /*inline*/ void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
                            const unsigned & ig,
                            const std::vector < double ** > & dphidxi,
                            std::vector < std::vector <type_mov> > & Jac,

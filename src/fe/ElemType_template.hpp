@@ -35,12 +35,19 @@ namespace femus {
   public: 
       
 
-      ~elem_type_templ(){ }
-     
      elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss) 
 //      : elem_type_templ_base<type, type_mov, dim, space_dim>(geom_elem, order_gauss)
      { }
       
+     ~elem_type_templ(){ }
+
+     inline void JacJacInv_vol_at_bdry_new(const std::vector < std::vector < type_mov > > & vt,
+                            const unsigned & ig,
+                            const unsigned jface, 
+                            std::vector < std::vector <type_mov> > & Jac,
+                            std::vector < std::vector <type_mov> > & JacI,
+                            type_mov & detJac,
+                            const unsigned space_dimension) const;
 
      inline void JacJacInv(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
@@ -51,6 +58,16 @@ namespace femus {
 
      inline void compute_normal(const std::vector< std::vector< type_mov > > & Jac, std::vector< type_mov > & normal) const;
 
+     inline void shape_funcs_current_elem_flexible(const unsigned & ig,
+                                             const std::vector < std::vector <type_mov> > & JacI,
+                                               double **     phi_ref,
+                           const std::vector < double ** > & dphidxi_ref,
+                           const std::vector < double ** > & d2phidxi2_ref,
+                                             std::vector < double > & phi, 
+                                             std::vector < type >   & gradphi,
+                                             boost::optional< std::vector < type > & > nablaphi,
+                                             const unsigned space_dimension) const;
+
      inline void shape_funcs_current_elem(const unsigned & ig,
                                              const std::vector < std::vector <type_mov> > & JacI,
                                              vector < double > & phi, 
@@ -58,7 +75,7 @@ namespace femus {
                                              boost::optional< vector < type > & > nablaphi,
                                              const unsigned space_dimension) const;
                                              
-     inline void shape_funcs_volume_at_bdry_current_elem(const unsigned ig, 
+     inline void shape_funcs_vol_at_bdry_current_elem(const unsigned ig, 
                                                          const unsigned jface, 
                                                          const std::vector < std::vector <type_mov> > & JacI_qp, 
                                                          std::vector < double > & phi_vol_at_bdry,
@@ -68,7 +85,7 @@ namespace femus {
 
      private:
 
-     inline void jacobian(const std::vector < std::vector < type_mov > > & vt,
+     inline void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
                           const unsigned & ig,
                           const std::vector < double ** > & dphidxi,
                           std::vector < std::vector <type_mov> > & Jac,
@@ -142,7 +159,7 @@ namespace femus {
    }
                             
                             
-     void jacobian(const std::vector < std::vector < type_mov > > & vt,
+     void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
                    const unsigned & ig,
                    const std::vector < double ** > & dphidxi,
                    std::vector < std::vector <type_mov> > & Jac,
@@ -182,6 +199,38 @@ namespace femus {
 
                            
                            
+     void JacJacInv_vol_at_bdry_new(const std::vector < std::vector < type_mov > > & vt,
+                            const unsigned & ig,
+                            const unsigned jface, 
+                            std::vector < std::vector <type_mov> > & Jac,
+                            std::vector < std::vector <type_mov> > & Jac_inv,
+                            type_mov & detJac,
+                            const unsigned space_dim) const {
+                                
+fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
+
+//create the vector of pointers
+    std::vector < double ** > dphidxi(1);  
+    dphidxi[0] = _dphidxi_vol_at_bdry;
+    
+            jacobian_flexible(vt, ig, dphidxi, Jac, space_dim);
+
+    std::vector < std::vector <type_mov> > JacJacT(1); JacJacT[0].resize(1);  
+    
+            jac_jacT(Jac, JacJacT, space_dim);                                
+
+            area_transf( JacJacT, detJac, space_dim);
+
+            
+    std::vector < std::vector <type_mov> > JacJacT_inv(1); JacJacT[0].resize(1);
+
+     jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
+     
+     jacobian_inv( Jac, JacJacT_inv, Jac_inv, space_dim);
+    
+     }
+     
+                            
      void JacJacInv(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             std::vector < std::vector <type_mov> > & Jac,
@@ -283,6 +332,41 @@ namespace femus {
     
       }
       
+
+     inline void shape_funcs_current_elem_flexible(const unsigned & ig,
+                                             const std::vector < std::vector <type_mov> > & JacI,
+                                               double **    phi_ref,
+                           const std::vector < double ** > & dphidxi_ref,
+                           const std::vector < double ** > & d2phidxi2_ref,
+                                             std::vector < double > & phi, 
+                                             std::vector < type >   & gradphi,
+                                             boost::optional< std::vector < type > & > nablaphi,
+                                             const unsigned space_dimension) const {
+                                                 
+    const double * dxi  =   dphidxi_ref[0][ig];
+// //     const double * dxi2 = d2phidxi2_ref[0][ig];
+
+    phi.resize(_nc);
+    gradphi.resize(_nc * space_dimension);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
+    if(nablaphi) nablaphi->resize(_nc * space_dimension);   ///@todo fix this: once space_dim was only 1
+
+    
+    for(int inode = 0; inode < _nc; inode++, dxi++/*, dxi2++*/) {
+
+      phi[inode] = phi_ref[ig][inode];
+      
+      for (unsigned d = 0; d < space_dimension; d++) gradphi[ inode * space_dimension + d] = (*dxi) * JacI[d][0];
+
+// //       if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI[0][0] * JacI[0][0]; ///@todo fix this
+
+    }                                           
+                                                      
+                                                 
+                                                 
+                                                 
+    }
+    
+    
       
      void shape_funcs_current_elem(const unsigned & ig,
                                              const std::vector < std::vector <type_mov> > & JacI,
@@ -295,7 +379,7 @@ namespace femus {
     const double* dxi2 = _d2phidxi2[ig];
 
     phi.resize(_nc);
-    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.);
+    gradphi.resize(_nc * space_dimension);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
     if(nablaphi) nablaphi->resize(_nc * space_dimension);   ///@todo fix this: once space_dim was only 1
 
     
@@ -314,16 +398,27 @@ namespace femus {
  
  
  
-     void shape_funcs_volume_at_bdry_current_elem(const unsigned ig, 
+     void shape_funcs_vol_at_bdry_current_elem(const unsigned ig, 
                                                          const unsigned jface, 
                                                          const std::vector < std::vector <type_mov> > & JacI_qp, 
-                                                         std::vector < double > & phi_vol_at_bdry,
-                                                         std::vector < type >   & phi_x_vol_at_bdry, 
-                                                         boost::optional< std::vector < type > & > nablaphi_vol_at_bdry,
+                                                         std::vector < double > & phi,
+                                                         std::vector < type >   & gradphi, 
+                                                         boost::optional< std::vector < type > & > nablaphi,
                                                          const unsigned space_dimension) const {
  //1d                                                            
-         abort();                                                    
-                                                             
+           
+fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
+
+//create the vector of pointers
+    double ** phi_ref = _phi_vol_at_bdry;
+    std::vector < double ** > dphidxi_ref(1);  
+    dphidxi_ref[0] = _dphidxi_vol_at_bdry;
+
+    std::vector < double ** > d2phidxi2_ref(6);  
+    
+ shape_funcs_current_elem_flexible(ig, JacI_qp, phi_ref, dphidxi_ref, d2phidxi2_ref,  phi, gradphi, nablaphi, space_dimension);     
+    
+    
          }
  
  
@@ -367,7 +462,7 @@ namespace femus {
     }
                           
                           
-  void jacobian(const std::vector < std::vector < type_mov > > & vt,
+  void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
                            const unsigned & ig,
                            const std::vector < double ** > & dphidxi,
                            std::vector < std::vector <type_mov> > & Jac,
@@ -433,6 +528,39 @@ namespace femus {
           ~elem_type_templ(){ }
           
           
+     void JacJacInv_vol_at_bdry_new(const std::vector < std::vector < type_mov > > & vt,
+                            const unsigned & ig,
+                            const unsigned jface, 
+                            std::vector < std::vector <type_mov> > & Jac,
+                            std::vector < std::vector <type_mov> > & Jac_inv,
+                            type_mov & detJac,
+                            const unsigned space_dim) const {
+                                
+fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
+
+//create the vector of pointers
+    std::vector < double ** > dphidxi(2);  
+    dphidxi[0] = _dphidxi_vol_at_bdry;
+    dphidxi[1] = _dphideta_vol_at_bdry;
+    
+    
+            jacobian_flexible(vt, ig, dphidxi, Jac, space_dim);
+
+    std::vector < std::vector <type_mov> > JacJacT(2); JacJacT[0].resize(2); JacJacT[1].resize(2);  
+    
+            jac_jacT(Jac, JacJacT, space_dim);                                
+
+            area_transf( JacJacT, detJac, space_dim);
+
+            
+    std::vector < std::vector <type_mov> > JacJacT_inv(2); JacJacT_inv[0].resize(2); JacJacT_inv[1].resize(2);
+
+     jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
+     
+     jacobian_inv( Jac, JacJacT_inv, Jac_inv, space_dim);
+    
+     }
+     
                            
      void JacJacInv(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
@@ -531,7 +659,57 @@ namespace femus {
       }
 
  
- 
+     inline void shape_funcs_current_elem_flexible(const unsigned & ig,
+                                             const std::vector < std::vector <type_mov> > & JacI,
+                                               double **    phi_ref,
+                           const std::vector < double ** > & dphidxi_ref,
+                           const std::vector < double ** > & d2phidxi2_ref,
+                                             std::vector < double > & phi, 
+                                             std::vector < type >   & gradphi,
+                                             boost::optional< std::vector < type > & > nablaphi,
+                                             const unsigned space_dimension) const {
+                                                 
+     const double* dxi  = dphidxi_ref[0][ig];
+    const double* deta  = dphidxi_ref[1][ig];
+    
+// //     const double* dxi2    = d2phidxi2_ref[0]/*_d2phidxi2*/[ig];
+// //     const double* deta2   = d2phidxi2_ref[1]/*_d2phideta2*/[ig];
+// //     const double* dxideta = d2phidxi2_ref[2]/*_d2phidxideta*/[ig];
+    
+    phi.resize(_nc);
+    
+    gradphi.resize(_nc * space_dimension);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
+    if(nablaphi) nablaphi->resize(_nc * 3);
+
+    
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++/*, dxi2++, deta2++, dxideta++*/) {
+
+      phi[inode] = phi_ref[ig][inode];
+
+      for (unsigned d = 0; d < space_dimension; d++) gradphi[ inode * space_dimension + d] = (*dxi) * JacI[d][0] + (*deta) * JacI[d][1];
+
+//       gradphi[inode * 2 + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1];
+//       gradphi[inode * 2 + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1];
+
+// //       if(nablaphi) {
+// //         (*nablaphi)[3 * inode + 0] =
+// //           ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[0][0] +
+// //           ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[0][1];
+// //         (*nablaphi)[3 * inode + 1] =
+// //           ((*dxi2)   * JacI[1][0] + (*dxideta) * JacI[1][1]) * JacI[1][0] +
+// //           ((*dxideta) * JacI[1][0] + (*deta2)  * JacI[1][1]) * JacI[1][1];
+// //         (*nablaphi)[3 * inode + 2] =
+// //           ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[1][0] +
+// //           ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[1][1];
+// //       }
+      
+    }                                                
+                                                 
+                                                 
+                                                 
+     }
+                                             
+                                             
       void shape_funcs_current_elem(const unsigned & ig,
                                              const std::vector < std::vector <type_mov> > & JacI,
                                              vector < double > & phi, 
@@ -540,16 +718,17 @@ namespace femus {
                                              const unsigned space_dimension) const {
                                                  
 
-    phi.resize(_nc);
-    
-    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.);
     const double* dxi  = _dphidxi[ig];
     const double* deta = _dphideta[ig];
     
-    if(nablaphi) nablaphi->resize(_nc * 3);
     const double* dxi2 = _d2phidxi2[ig];
     const double* deta2 = _d2phideta2[ig];
     const double* dxideta = _d2phidxideta[ig];
+    
+    phi.resize(_nc);
+    
+    gradphi.resize(_nc * space_dimension);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
+    if(nablaphi) nablaphi->resize(_nc * 3);
 
     
     for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
@@ -579,16 +758,29 @@ namespace femus {
  
    
    
-    void shape_funcs_volume_at_bdry_current_elem(const unsigned ig, 
-                                                         const unsigned jface, 
-                                                         const std::vector < std::vector <type_mov> > & JacI_qp, 
-                                                         std::vector < double > & phi_vol_at_bdry,
-                                                         std::vector < type >   & phi_x_vol_at_bdry, 
-                                                         boost::optional< std::vector < type > & > nablaphi_vol_at_bdry,
-                                                         const unsigned space_dimension) const {
+    void shape_funcs_vol_at_bdry_current_elem(const unsigned ig,
+                                                 const unsigned jface,
+                                                 const std::vector < std::vector <type_mov> > & JacI_qp, 
+                                                 std::vector < double > & phi,
+                                                 std::vector < type >   & gradphi,
+                                                 boost::optional< std::vector < type > & > nablaphi,
+                                                 const unsigned space_dimension) const {
+                                                     
  //2d                                                            
-         abort();                                                    
-                                                             
+    
+ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
+
+//create the vector of pointers
+    double ** phi_ref = _phi_vol_at_bdry;
+    std::vector < double ** > dphidxi_ref(2);  
+    dphidxi_ref[0] = _dphidxi_vol_at_bdry;
+    dphidxi_ref[1] = _dphideta_vol_at_bdry;
+
+    std::vector < double ** > d2phidxi2_ref(6);  
+    
+ shape_funcs_current_elem_flexible(ig, JacI_qp, phi_ref, dphidxi_ref, d2phidxi2_ref,  phi, gradphi, nablaphi, space_dimension);    
+    
+    
          }
    
    
@@ -664,7 +856,7 @@ namespace femus {
        }
                           
        
-   void jacobian(const std::vector < std::vector < type_mov > > & vt,
+   void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
                            const unsigned & ig,
                            const std::vector < double ** > & dphidxi,
                            std::vector < std::vector <type_mov> > & Jac,
@@ -720,6 +912,41 @@ namespace femus {
           ~elem_type_templ(){}
           
                            
+     void JacJacInv_vol_at_bdry_new(const std::vector < std::vector < type_mov > > & vt,
+                            const unsigned & ig,
+                            const unsigned jface, 
+                            std::vector < std::vector <type_mov> > & Jac,
+                            std::vector < std::vector <type_mov> > & Jac_inv,
+                            type_mov & detJac,
+                            const unsigned space_dim) const {
+                                
+fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
+
+//create the vector of pointers
+    std::vector < double ** > dphidxi(3);  
+    dphidxi[0] = _dphidxi_vol_at_bdry;
+    dphidxi[1] = _dphideta_vol_at_bdry;
+    dphidxi[2] = _dphidzeta_vol_at_bdry;
+  
+    
+            jacobian_flexible(vt, ig, dphidxi, Jac, space_dim);
+
+    std::vector < std::vector <type_mov> > JacJacT;  
+    
+            jac_jacT(Jac, JacJacT, space_dim);                                
+
+            area_transf( JacJacT, detJac, space_dim);
+
+            
+    std::vector < std::vector <type_mov> > JacJacT_inv;
+
+     jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
+     
+     jacobian_inv( Jac, JacJacT_inv, Jac_inv, space_dim);
+    
+     }
+     
+     
                                
   void JacJacInv(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
@@ -801,7 +1028,78 @@ namespace femus {
      }
      
      
+     inline void shape_funcs_current_elem_flexible(const unsigned & ig,
+                                             const std::vector < std::vector <type_mov> > & JacI,
+                                               double **    phi_ref,
+                           const std::vector < double ** > & dphidxi_ref,
+                           const std::vector < double ** > & d2phidxi2_ref,
+                                             std::vector < double > & phi, 
+                                             std::vector < type >   & gradphi,
+                                             boost::optional< std::vector < type > & > nablaphi,
+                                             const unsigned space_dimension) const {
+                                                 
+    const double * dxi   =  /*_dphidxi*/ dphidxi_ref[0][ig];
+    const double * deta  = /*_dphideta*/ dphidxi_ref[1][ig];
+    const double * dzeta =/*_dphidzeta*/ dphidxi_ref[2][ig];
 
+// //     const double * dxi2      = /*_d2phidxi2*/      d2phidxi2_ref[0][ig];
+// //     const double * deta2     = /*_d2phideta2*/     d2phidxi2_ref[1][ig];
+// //     const double * dzeta2    = /*_d2phidzeta2*/    d2phidxi2_ref[2][ig];
+// //     const double * dxideta   = /*_d2phidxideta*/   d2phidxi2_ref[3][ig];
+// //     const double * detadzeta = /*_d2phidetadzeta*/ d2phidxi2_ref[4][ig];
+// //     const double * dzetadxi  = /*_d2phidzetadxi*/  d2phidxi2_ref[5][ig];
+
+    phi.resize(_nc);
+    gradphi.resize(_nc * 3);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
+    if(nablaphi) nablaphi->resize(_nc * 6);
+    
+    
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++/*, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++*/) {
+
+      phi[inode] = phi_ref[ig][inode];
+
+      gradphi[3 * inode + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1] + (*dzeta) * JacI[0][2];
+      gradphi[3 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1] + (*dzeta) * JacI[1][2];
+      gradphi[3 * inode + 2] = (*dxi) * JacI[2][0] + (*deta) * JacI[2][1] + (*dzeta) * JacI[2][2];
+
+//       if(nablaphi) {
+//         (*nablaphi)[6 * inode + 0] =
+//           ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[0][0] +
+//           ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[0][1] +
+//           ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[0][2];
+//         (*nablaphi)[6 * inode + 1] =
+//           ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[1][0] +
+//           ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[1][1] +
+//           ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[1][2];
+//         (*nablaphi)[6 * inode + 2] =
+//           ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[2][0] +
+//           ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[2][1] +
+//           ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[2][2];
+//         (*nablaphi)[6 * inode + 3] =
+//           ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[1][0] +
+//           ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[1][1] +
+//           ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[1][2];
+//         (*nablaphi)[6 * inode + 4] =
+//           ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[2][0] +
+//           ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[2][1] +
+//           ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[2][2];
+//         (*nablaphi)[6 * inode + 5] =
+//           ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[0][0] +
+//           ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[0][1] +
+//           ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[0][2];
+//       }
+
+      }
+
+
+                                                 
+                                                 
+                                                 
+                                                 
+     }
+     
+     
+                                             
       void shape_funcs_current_elem(const unsigned & ig,
                                              const std::vector < std::vector <type_mov> > & JacI,
                                              vector < double > & phi, 
@@ -866,15 +1164,28 @@ namespace femus {
 }
 
 
-     void shape_funcs_volume_at_bdry_current_elem(const unsigned ig, 
+     void shape_funcs_vol_at_bdry_current_elem(const unsigned ig, 
                                                          const unsigned jface, 
                                                          const std::vector < std::vector <type_mov> > & JacI_qp, 
-                                                         std::vector < double > & phi_vol_at_bdry,
-                                                         std::vector < type >   & phi_x_vol_at_bdry, 
-                                                         boost::optional< std::vector < type > & > nablaphi_vol_at_bdry,
+                                                         std::vector < double > & phi,
+                                                         std::vector < type >   & gradphi, 
+                                                         boost::optional< std::vector < type > & > nablaphi,
                                                          const unsigned space_dimension) const {
  //3d                                                            
-         abort();                                                    
+fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
+
+//create the vector of pointers
+    double ** phi_ref = _phi_vol_at_bdry;
+    std::vector < double ** > dphidxi_ref(3);  
+    dphidxi_ref[0] = _dphidxi_vol_at_bdry;
+    dphidxi_ref[1] = _dphideta_vol_at_bdry;
+    dphidxi_ref[2] = _dphidzeta_vol_at_bdry;
+
+    std::vector < double ** > d2phidxi2_ref(6);  
+    
+ shape_funcs_current_elem_flexible(ig, JacI_qp, phi_ref, dphidxi_ref, d2phidxi2_ref,  phi, gradphi, nablaphi, space_dimension); 
+    
+    
                                                              
          }
          
