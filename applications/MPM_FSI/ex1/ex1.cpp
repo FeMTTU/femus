@@ -18,8 +18,7 @@
 
 using namespace femus;
 
-  double L = 5.5e-05; //beam dimensions
-  double H = 1.e-05;
+
 
 
 double SetVariableTimeStep (const double time) {
@@ -30,6 +29,8 @@ double SetVariableTimeStep (const double time) {
 bool SetBoundaryCondition (const std::vector < double >& x, const char name[], double& value, const int facename, const double time) {
   bool test = 1; //dirichlet
   value = 0.;
+
+  double H = 0.0001;
 
   if (!strcmp (name, "DX")) {
     if (3 == facename) {
@@ -43,24 +44,26 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char name[], d
       value = 0;
     }
   }
-  
-    if (!strcmp (name, "VX")) {
+  else if (!strcmp (name, "VX")) {
     if (2 == facename) {
       test = 0;
       value = 0;
     }
     else if (4 == facename) {
-        double U = 0.0333;
-        value = (U * time * time / sqrt((0.04-time*time)*(0.04-time*time)+(0.1*time)*(0.1*time))) * 4 * (H - x[1]) * x[1] / (H * H);
+      double U = 0.0333;
+      value = (U * time * time / sqrt ( (0.04 - time * time) * (0.04 - time * time) + (0.1 * time) * (0.1 * time))) * 4 * (H - x[1]) * x[1] / (H * H);
     }
   }
-  else if (!strcmp (name, "DY")) {
-    if (2 == facename || 4 == facename) {
+  else if (!strcmp (name, "VY")) {
+    if (2 == facename) {
       test = 0;
       value = 0;
     }
   }
-  
+  else if (!strcmp (name, "P")) {
+    test = 0;
+    value = 0;
+  }
   else if (!strcmp (name, "M")) {
     if (1 == facename) {
       test = 0;
@@ -89,6 +92,7 @@ int main (int argc, char** args) {
   double rhof = 1000;
   double nu = 0.4;
   double E = 1.74 * 1.e6;
+  double muf = 3.5 * 1.0e-3;
 
   beta = 0.3;
   Gamma = 0.5;
@@ -97,8 +101,8 @@ int main (int argc, char** args) {
   Parameter par (Lref, Uref);
 
   // Generate Solid Object
-  Solid solid;
-  solid = Solid (par, E, nu, rhos, "Neo-Hookean");
+  Solid solid(par, E, nu, rhos, "Neo-Hookean");
+  Fluid fluid(par, muf, rhof, "Newtonian");
 
   mlMsh.ReadCoarseMesh ("../input/fsi_bnc_2D.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
@@ -113,10 +117,12 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("DX", LAGRANGE, SECOND, 2);
   if (dim > 1) mlSol.AddSolution ("DY", LAGRANGE, SECOND, 2);
   if (dim > 2) mlSol.AddSolution ("DZ", LAGRANGE, SECOND, 2);
-  
+
   mlSol.AddSolution ("VX", LAGRANGE, SECOND, 2);
   if (dim > 1) mlSol.AddSolution ("VY", LAGRANGE, SECOND, 2);
   if (dim > 2) mlSol.AddSolution ("VZ", LAGRANGE, SECOND, 2);
+  
+  mlSol.AddSolution ("P", DISCONTINUOUS_POLYNOMIAL, FIRST, 0);
 
   mlSol.AddSolution ("M", LAGRANGE, SECOND, 2);
   mlSol.AddSolution ("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
@@ -132,12 +138,14 @@ int main (int argc, char** args) {
   mlSol.GenerateBdc ("VX", "Time_dependent");
   if (dim > 1) mlSol.GenerateBdc ("VY", "Steady");
   if (dim > 2) mlSol.GenerateBdc ("VZ", "Steady");
+  mlSol.GenerateBdc ("P", "Steady");
   mlSol.GenerateBdc ("M", "Steady");
-
+  
   MultiLevelProblem ml_prob (&mlSol);
 
   ml_prob.parameters.set<Solid> ("SolidMPM") = solid;
   ml_prob.parameters.set<Solid> ("SolidFEM") = solid;
+  ml_prob.parameters.set<Fluid> ("FluidFEM") = fluid;
 
   // ******* Add MPM system to the MultiLevel problem *******
   TransientNonlinearImplicitSystem& system = ml_prob.add_system < TransientNonlinearImplicitSystem > ("MPM_FSI");
@@ -147,13 +155,14 @@ int main (int argc, char** args) {
   system.AddSolutionToSystemPDE ("VX");
   if (dim > 1) system.AddSolutionToSystemPDE ("VY");
   if (dim > 2) system.AddSolutionToSystemPDE ("VZ");
+  system.AddSolutionToSystemPDE ("P");
 
-  // ******* System MPM Assembly *******
+  // ******* System MPM-FSI Assembly *******
   system.SetAssembleFunction (AssembleMPMSys);
+  //system.SetAssembleFunction (AssembleMPMSysOld);
   //system.SetAssembleFunction(AssembleFEM);
   // ******* set MG-Solver *******
   system.SetMgType (V_CYCLE);
-
 
   system.SetAbsoluteLinearConvergenceTolerance (1.0e-10);
   system.SetMaxNumberOfLinearIterations (1);
@@ -210,7 +219,10 @@ int main (int argc, char** args) {
 
   //return 1;
 
-  double xc = 1e-04 + 0.5 * H;
+  double L = 3.5e-05; //beam dimensions
+  double H = 0.55e-05;
+
+  double xc = 0.98e-04 + 0.5 * H;
   double yc = 0.;
 
   double H0 = /*5. / 5.*/ 3. / 5.* H; //0.15: 3ref, 0.2: 4 ref, 0.225: 5 ref
@@ -226,8 +238,6 @@ int main (int argc, char** args) {
 
   x.resize (size);
   markerType.resize (size);
-
-
 
   for (unsigned j = 0; j < size; j++) {
     x[j].assign (dim, 0.);
@@ -304,6 +314,7 @@ int main (int argc, char** args) {
         y1 -= DL1;
       }
       mass.resize (x.size(), rhos * DL * DH);
+      markerType.resize(x.size(), VOLUME);
     }
   }
 
@@ -311,8 +322,6 @@ int main (int argc, char** args) {
   for (unsigned i = 0; i < mass.size(); i++) {
     totalMass += mass[i];
   }
-
-
 
   std::cout << totalMass << " " << rhos * H * L << std::endl;
 
@@ -326,6 +335,7 @@ int main (int argc, char** args) {
 
   x.resize (0);
   mass.resize (0);
+  markerType.resize(0);
 
   H = 4. * H; //TODO tune the factor 4
   if (fabs (H - H0) > 1.0e-10) {
@@ -379,6 +389,7 @@ int main (int argc, char** args) {
         y1 -= DL1;
       }
       mass.resize (x.size(), rhos * DL * DH);
+      markerType.resize(x.size(), VOLUME);
     }
   }
 
@@ -415,12 +426,8 @@ int main (int argc, char** args) {
   //return 1;
 
 
-
-
-  std::vector < std::vector < std::vector < double > > > line (1);
-
   system.AttachGetTimeIntervalFunction (SetVariableTimeStep);
-  unsigned n_timesteps = 1000;
+  unsigned n_timesteps = 100;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     if (time_step >= 3) {
@@ -435,10 +442,11 @@ int main (int argc, char** args) {
 
     GridToParticlesProjection (ml_prob, *solidLine);
 
-    solidLine->GetLine (line[0]);
-    PrintLine (DEFAULT_OUTPUTDIR, "solidLine", line, time_step);
-
-
+    solidLine->GetLine (lineS[0]);
+    PrintLine (DEFAULT_OUTPUTDIR, "solidLine", lineS, time_step);
+    
+    fluidLine->GetLine (lineF[0]);
+    PrintLine (DEFAULT_OUTPUTDIR, "fluidLine", lineF, time_step);
 
   }
 
