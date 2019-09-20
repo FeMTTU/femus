@@ -315,8 +315,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   vector <double> phi_adj_vol_at_bdry;
   vector <double> phi_adj_x_vol_at_bdry;
   phi_adj_vol_at_bdry.reserve(max_size);
-  phi_adj_x_vol_at_bdry.reserve(max_size * dim);
-  vector <double> sol_adj_x_vol_at_bdry_gss(dim);
+  phi_adj_x_vol_at_bdry.reserve(max_size * space_dim);
+  vector <double> sol_adj_x_vol_at_bdry_gss(space_dim);
  //*************************************************** 
  //*************************************************** 
 
@@ -656,16 +656,16 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
     
   //========= fill gauss value xyz ==================   
          
-    msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(geom_element.get_coords_at_dofs(), geom_element.get_coords_at_dofs_bdry_3d(), jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
+//     msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(geom_element.get_coords_at_dofs(), geom_element.get_coords_at_dofs_bdry_3d(), jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
 
-//     elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_qp, JacI_qp, detJac_qp, space_dim);
-//     elem_all[ielGeom][SolFEType[pos_adj]]->shape_funcs_vol_at_bdry_current_elem(ig_bdry, jface, JacI_qp_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry, boost::none, space_dim);
+    elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_qp/*not_needed_here*/, JacI_qp/*not_needed_here*/, detJac_qp/*not_needed_here*/, space_dim);
+    elem_all[ielGeom][SolFEType[pos_adj]]->shape_funcs_vol_at_bdry_current_elem(ig_bdry, jface, JacI_qp, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry, boost::none, space_dim);
      
 
 //           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
 // 		      for (int iv = 0; iv < nDof_adj; iv++)  {
 //                   for (int d = 0; d < dim; d++) {
-//                        std::cout << " " <<   phi_adj_x_vol_at_bdry[iv * dim + d];
+//                        std::cout << " " <<   phi_adj_x_vol_at_bdry[iv * space_dim + d];
 //                 }
 //               }
 
@@ -690,15 +690,15 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
            std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
 		      for (int iv = 0; iv < Sol_n_el_dofs[pos_adj]; iv++)  {
 			
-                            for (int d = 0; d < dim; d++) {
+                            for (int d = 0; d < space_dim; d++) {
 //    std::cout << " ivol " << iv << std::endl;
 //    std::cout << " adj dofs " << sol_adj[iv] << std::endl;
-			      sol_adj_x_vol_at_bdry_gss[d] += sol_eldofs[pos_adj][iv] * phi_adj_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
+			      sol_adj_x_vol_at_bdry_gss[d] += sol_eldofs[pos_adj][iv] * phi_adj_x_vol_at_bdry[iv * space_dim + d];//notice that the convention of the orders x y z is different from vol to bdry
 			    }
 		      }  
 		      
     double grad_adj_dot_n_res = 0.;
-        for(unsigned d=0; d<dim; d++) {
+        for(unsigned d=0; d < space_dim; d++) {
 	  grad_adj_dot_n_res += sol_adj_x_vol_at_bdry_gss[d] * normal[d];  
 	}
 //=============== grad dot n  for residual =========================================       
@@ -813,8 +813,8 @@ if ( i_vol == j_vol )  {
 		      
   //=============== grad dot n  =========================================    
     double grad_adj_dot_n_mat = 0.;
-        for(unsigned d=0; d<dim; d++) {
-	  grad_adj_dot_n_mat += phi_adj_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
+        for(unsigned d=0; d< space_dim; d++) {
+	  grad_adj_dot_n_mat += phi_adj_x_vol_at_bdry[j * space_dim + d] * normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
 	}
 //=============== grad dot n  =========================================    
 

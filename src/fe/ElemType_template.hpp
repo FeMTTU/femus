@@ -347,7 +347,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 // //     const double * dxi2 = d2phidxi2_ref[0][ig];
 
     phi.resize(_nc);
-    gradphi.resize(_nc * space_dimension);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
+    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.); //we need to set to zero because now all our gradients have length 3
     if(nablaphi) nablaphi->resize(_nc * space_dimension);   ///@todo fix this: once space_dim was only 1
 
     
@@ -379,7 +379,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     const double* dxi2 = _d2phidxi2[ig];
 
     phi.resize(_nc);
-    gradphi.resize(_nc * space_dimension);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
+    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.); //we need to set to zero because now all our gradients have length 3
     if(nablaphi) nablaphi->resize(_nc * space_dimension);   ///@todo fix this: once space_dim was only 1
 
     
@@ -678,7 +678,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     
     phi.resize(_nc);
     
-    gradphi.resize(_nc * space_dimension);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
+    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.);
     if(nablaphi) nablaphi->resize(_nc * 3);
 
     
@@ -727,7 +727,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     
     phi.resize(_nc);
     
-    gradphi.resize(_nc * space_dimension);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
+    gradphi.resize(_nc * space_dimension);  std::fill(gradphi.begin(),gradphi.end(),0.);
     if(nablaphi) nablaphi->resize(_nc * 3);
 
     
@@ -1050,7 +1050,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 // //     const double * dzetadxi  = /*_d2phidzetadxi*/  d2phidxi2_ref[5][ig];
 
     phi.resize(_nc);
-    gradphi.resize(_nc * 3);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
+    gradphi.resize(_nc * 3);  std::fill(gradphi.begin(),gradphi.end(),0.);
     if(nablaphi) nablaphi->resize(_nc * 6);
     
     
@@ -1119,7 +1119,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     const double* dzetadxi = _d2phidzetadxi[ig];
 
     phi.resize(_nc);
-    gradphi.resize(_nc * 3);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/
+    gradphi.resize(_nc * 3);  /*std::fill(gradphi.begin(),gradphi.end(),0.);*/ //here we can save the setting to zero because all positions will be filled
     if(nablaphi) nablaphi->resize(_nc * 6);
     
     
