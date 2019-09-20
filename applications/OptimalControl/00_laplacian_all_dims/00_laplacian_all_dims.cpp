@@ -200,7 +200,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id();
 
   //=============== Geometry ========================================
-  unsigned xType = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+  unsigned xType = 0/*BIQUADR_FE*/; // the FE for the domain need not be biquadratic
   
   CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
     
@@ -302,6 +302,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
           
         // *** get gauss point weight, test function and test function partial derivatives ***
+          
 	elem_all[ielGeom][xType]->Jacobian_geometry(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, dim, space_dim);
     elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, dim, space_dim);
     weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
