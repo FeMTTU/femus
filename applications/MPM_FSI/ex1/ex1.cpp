@@ -22,7 +22,7 @@ using namespace femus;
 
 
 double SetVariableTimeStep (const double time) {
-  double dt =  0.0001/*0.008*/;
+  double dt =  0.01/*0.008*/;
   return dt;
 }
 
@@ -92,7 +92,7 @@ int main (int argc, char** args) {
   double rhof = 1000;
   double nu = 0.4;
   double E = 1.74 * 1.e6;
-  double muf = 3.5 * 1.0e-3;
+  double muf = 3.5 * 1.0e-2;
 
   beta = 0.3;
   Gamma = 0.5;

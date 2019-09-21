@@ -6,9 +6,10 @@ using namespace femus;
 
 double beta = 0.25;
 double Gamma = 0.5;
-double gravity[3] = {9810, 0., 0.};
-double scalingFactor1 = 1.e-7;
-double scalingFactor2 = 1.e-9;
+//double gravity[3] = {9810, 0., 0.};
+double gravity[3] = {0, 0., 0.};
+double scalingFactor1 = 1.e-2;
+double scalingFactor2 = 1.e-3;
 double NeumannFactor = .0;
 Line* solidLine;
 Line* fluidLine;
@@ -49,13 +50,13 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
   vector < double > phi;
   vector < double > phiHat;
-  vector < adept::adouble> gradphi;
+  vector < adept::adouble> gradPhi;
   vector < double > gradPhiHat;
 
   phi.reserve (maxSize);
   phiHat.reserve (maxSize);
 
-  gradphi.reserve (maxSize * dim);
+  gradPhi.reserve (maxSize * dim);
   gradPhiHat.reserve (maxSize * dim);
 
   vector <vector < adept::adouble> > vx (dim); //vx is coordX in assembly of ex30
@@ -133,7 +134,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
     short unsigned ielt = mymsh->GetElementType (iel);
 
-    unsigned material = mymsh->GetElementMaterial (iel);
+    double  MPMmaterial = (*mysolution->_Sol[indexSolMat]) (iel);
 
     unsigned nDofsDV = mymsh->GetElementDofNumber (iel, solType);   // number of solution element dofs
     unsigned nDofsP = mymsh->GetElementDofNumber (iel, solTypeP);   // number of solution element dofs
@@ -197,24 +198,31 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
     for (unsigned ig = 0; ig < mymsh->_finiteElement[ielt][solType]->GetGaussPointNumber(); ig++) {
 
       mymsh->_finiteElement[ielt][solType]->Jacobian (vxHat, ig, weightHat, phiHat, gradPhiHat);
-
+      mymsh->_finiteElement[ielt][solType]->Jacobian (vx, ig, weight, phi, gradPhi);
 
       vector < adept::adouble > solVg (dim, 0.);
+      vector < adept::adouble > solVgOld (dim, 0.);
+
+      vector < adept::adouble > solDg (dim, 0.);
+      vector < adept::adouble > solDgOld (dim, 0.);
 
       vector < vector < adept::adouble > > gradSolDgHat (dim);
-      vector < vector < adept::adouble > > gradSolVgHat (dim);
+      vector < vector < adept::adouble > > gradSolVg (dim);
 
       for (unsigned  k = 0; k < dim; k++) {
         gradSolDgHat[k].assign (dim, 0);
-        gradSolVgHat[k].assign (dim, 0);
+        gradSolVg[k].assign (dim, 0);
       }
 
       for (unsigned i = 0; i < nDofsDV; i++) {
         for (unsigned j = 0; j < dim; j++) {
           solVg[j] += phiHat[i] * solV[j][i];
+          solDg[j] += phiHat[i] * solD[j][i];
+          solVgOld[j] += phiHat[i] * solVOld[j][i];
+          solDgOld[j] += phiHat[i] * solDOld[j][i];
           for (unsigned  k = 0; k < dim; k++) {
             gradSolDgHat[k][j] += gradPhiHat[i * dim + j] * solD[k][i];
-            gradSolVgHat[k][j] += gradPhiHat[i * dim + j] * solV[k][i];
+            gradSolVg[k][j] += gradPhi[i * dim + j] * solV[k][i];
           }
         }
       }
@@ -225,54 +233,64 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
         solPg += phiP[i] * solP[i];
       }
 
-      if (material == 2) {
-        unsigned idofMat = mymsh->GetSolutionDof (0, iel, solTypeMat);
-        double  MPMmaterial = (*mysolution->_Sol[indexSolMat]) (idofMat);
-        double scalingFactor = 0;// / (1. + 100. * distance);
-        if (MPMmaterial < 5) scalingFactor = scalingFactor1;
-        else if (MPMmaterial < 9) scalingFactor = scalingFactor2;
 
-        for (unsigned i = 0; i < nDofsDV; i++) {
-
-          for (unsigned k = 0; k < dim; k++) {
-            adept::adouble softStiffness = 0.;
-            adept::adouble wlaplace1D = 0;
-
-            for (unsigned  j = 0; j < dim; j++) {
-              softStiffness +=  muMpm * gradPhiHat[i * dim + j] * (gradSolDgHat[k][j] + gradSolDgHat[j][k]);
-              wlaplace1D  += gradPhiHat[i * dim + j] * (gradSolDgHat[k][j] + gradSolDgHat[j][k]);
-            }
-
-            wlaplace1D += 10. * gradPhiHat[i * dim + k] * gradSolDgHat[k][k];
-
-            if (MPMmaterial >= 2) {
-              aRhsD[k][i] += - softStiffness * weightHat * scalingFactor;
-            }
-            else if (!solidFlag[i]) {
-              aRhsD[k][i] +=  wlaplace1D * weightHat;
-              //aRhsD[k][i] += phiHat[i] * solD[k][i] * weightHat;
-            }
-          }
-        }
-      }
+      double scalingFactor = 0;// / (1. + 100. * distance);
+      if (MPMmaterial < 5) scalingFactor = scalingFactor1;
+      else if (MPMmaterial < 9) scalingFactor = scalingFactor2;
 
       for (unsigned i = 0; i < nDofsDV; i++) {
-        vector < adept::adouble > wlaplaceV (dim, 0.);
 
         for (unsigned k = 0; k < dim; k++) {
-          adept::adouble wlaplace = 0.;
-          adept::adouble advection = 0.;
-          for (unsigned j = 0; j < dim; j++) {
-            wlaplace  +=  gradPhiHat[i * dim + j] * (gradSolVgHat[k][j] + gradSolVgHat[j][k]);
-            advection  +=  phiHat[i] * solVg[j] * gradSolVgHat[k][j];
+          adept::adouble  softStiffness  = 0.;
+          adept::adouble  wlaplace1D  = 0.;
+          for (unsigned  j = 0; j < dim; j++) {
+            softStiffness +=  muMpm * gradPhiHat[i * dim + j] * (gradSolDgHat[k][j] + gradSolDgHat[j][k]);
+            wlaplace1D +=  gradPhiHat[i * dim + j] * (gradSolDgHat[k][j] + gradSolDgHat[j][k]);
           }
-          aRhsV[k][i] += (-advection - muFluid * wlaplace + gradPhiHat[i * dim + k] * solPg) * weightHat;
+          wlaplace1D +=  10. * gradPhiHat[i * dim + k] * gradSolDgHat[k][k];
+          if (MPMmaterial >= 2) {
+            aRhsD[k][i] += - softStiffness * weightHat * scalingFactor;
+          }
+          else if (!solidFlag[i]) {
+            aRhsD[k][i] += - wlaplace1D * weightHat * scalingFactor;
+          }
         }
       }
 
-      for (unsigned i = 0; i < nDofsP; i++) {
-        for (unsigned  k = 0; k < dim; k++) {
-          aRhsP[i] += phiP[i] * gradSolVgHat[k][k] * weightHat;
+      if (MPMmaterial == 0) {
+        for (unsigned i = 0; i < nDofsDV; i++) {
+          vector < adept::adouble > wlaplaceV (dim, 0.);
+
+          for (unsigned k = 0; k < dim; k++) {
+            adept::adouble wlaplace = 0.;
+            adept::adouble advection = 0.;
+            for (unsigned j = 0; j < dim; j++) {
+              wlaplace  +=  gradPhi[i * dim + j] * (gradSolVg[k][j] + gradSolVg[j][k]);
+              advection  +=  phi[i] * ( solVg[j] - (solDg[k] - solDgOld[k])/dt ) * gradSolVg[k][j];
+            }
+            if (!solidFlag[i]) {
+              aRhsV[k][i] += (-(solVg[k] - solVgOld[k])/dt - advection - muFluid * wlaplace + gradPhi[i * dim + k] * solPg) * weight;
+            }
+            else {
+              aRhsD[k][i] += (-(solVg[k] - solVgOld[k])/dt -advection - muFluid * wlaplace + gradPhi[i * dim + k] * solPg) * weight;
+            }
+          }
+        }
+
+        for (unsigned i = 0; i < nDofsP; i++) {
+          for (unsigned  k = 0; k < dim; k++) {
+            aRhsP[i] += phiP[i] * gradSolVg[k][k] * weight;
+          }
+        }
+      }
+      else {
+        for (unsigned i = 0; i < nDofsDV; i++) {
+          for (unsigned k = 0; k < dim; k++) {
+            aRhsV[k][i] += phiHat[i] * (solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt) * weightHat;
+          }
+        }
+        for (unsigned i = 0; i < nDofsP; i++) {
+          aRhsP[i] += phiP[i] * solP[i] * weightHat;
         }
       }
 
@@ -429,7 +447,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
         }
       }
 
-      mymsh->_finiteElement[ielt][solType]->Jacobian (vx, xi, weight, phi, gradphi); //function to evaluate at the particles
+      mymsh->_finiteElement[ielt][solType]->Jacobian (vx, xi, weight, phi, gradPhi); //function to evaluate at the particles
 
 
       // displacement and velocity
@@ -511,7 +529,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
         for (unsigned j = 0.; j < dim; j++) {
           for (unsigned k = 0.; k < dim; k++) {
-            CauchyDIR[j] += gradphi[i * dim + k] * Cauchy[j][k];
+            CauchyDIR[j] += gradPhi[i * dim + k] * Cauchy[j][k];
           }
         }
 
@@ -1822,5 +1840,9 @@ void AssembleMPMSysOldOld (MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
 
 }
+
+
+
+
 
 
