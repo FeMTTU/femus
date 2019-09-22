@@ -26,11 +26,13 @@ double SetVariableTimeStep (const double time) {
   return dt;
 }
 
-bool SetBoundaryCondition (const std::vector < double >& x, const char name[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition (const std::vector < double >& x, const char name[], double& value, const int facename, const double t) {
   bool test = 1; //dirichlet
   value = 0.;
 
-  double H = 0.0001;
+  double H = 1.e-4;
+  double U = 0.05;
+  double t2 = t * t;
 
   if (!strcmp (name, "DX")) {
     if (3 == facename) {
@@ -50,8 +52,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char name[], d
       value = 0;
     }
     else if (4 == facename) {
-      double U = 0.0333;
-      value = (U * time * time / sqrt ( (0.04 - time * time) * (0.04 - time * time) + (0.1 * time) * (0.1 * time))) * 4 * (H - x[1]) * x[1] / (H * H);
+      value = (U * t2 / sqrt (pow ( (0.04 - t2), 2.) + pow ( (0.1 * t), 2.))) * 4. * (H - x[1]) * x[1] / (H * H);
     }
   }
   else if (!strcmp (name, "VY")) {
@@ -88,11 +89,11 @@ int main (int argc, char** args) {
 
   double Lref = 1.;
   double Uref = 1.;
-  double rhos = 10000;
+  double rhos = 7850;
   double rhof = 1000;
-  double nu = 0.4;
-  double E = 1.74 * 1.e6;
-  double muf = 3.5 * 1.0e-2;
+  double nu = 0.3;
+  double E = 2.e05;
+  double muf = 1.0e-3;
 
   beta = 0.3;
   Gamma = 0.5;
@@ -101,8 +102,8 @@ int main (int argc, char** args) {
   Parameter par (Lref, Uref);
 
   // Generate Solid Object
-  Solid solid(par, E, nu, rhos, "Neo-Hookean");
-  Fluid fluid(par, muf, rhof, "Newtonian");
+  Solid solid (par, E, nu, rhos, "Neo-Hookean");
+  Fluid fluid (par, muf, rhof, "Newtonian");
 
   mlMsh.ReadCoarseMesh ("../input/fsi_bnc_2D.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
@@ -121,7 +122,7 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("VX", LAGRANGE, SECOND, 2);
   if (dim > 1) mlSol.AddSolution ("VY", LAGRANGE, SECOND, 2);
   if (dim > 2) mlSol.AddSolution ("VZ", LAGRANGE, SECOND, 2);
-  
+
   mlSol.AddSolution ("P", DISCONTINUOUS_POLYNOMIAL, FIRST, 0);
 
   mlSol.AddSolution ("M", LAGRANGE, SECOND, 2);
@@ -140,7 +141,7 @@ int main (int argc, char** args) {
   if (dim > 2) mlSol.GenerateBdc ("VZ", "Steady");
   mlSol.GenerateBdc ("P", "Steady");
   mlSol.GenerateBdc ("M", "Steady");
-  
+
   MultiLevelProblem ml_prob (&mlSol);
 
   ml_prob.parameters.set<Solid> ("SolidMPM") = solid;
@@ -314,7 +315,7 @@ int main (int argc, char** args) {
         y1 -= DL1;
       }
       mass.resize (x.size(), rhos * DL * DH);
-      markerType.resize(x.size(), VOLUME);
+      markerType.resize (x.size(), VOLUME);
     }
   }
 
@@ -335,7 +336,7 @@ int main (int argc, char** args) {
 
   x.resize (0);
   mass.resize (0);
-  markerType.resize(0);
+  markerType.resize (0);
 
   H = 4. * H; //TODO tune the factor 4
   if (fabs (H - H0) > 1.0e-10) {
@@ -389,7 +390,7 @@ int main (int argc, char** args) {
         y1 -= DL1;
       }
       mass.resize (x.size(), rhos * DL * DH);
-      markerType.resize(x.size(), VOLUME);
+      markerType.resize (x.size(), VOLUME);
     }
   }
 
@@ -440,11 +441,11 @@ int main (int argc, char** args) {
 
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
-    GridToParticlesProjection (ml_prob, *solidLine);
+    GridToParticlesProjection (ml_prob, *solidLine, *fluidLine);
 
     solidLine->GetLine (lineS[0]);
     PrintLine (DEFAULT_OUTPUTDIR, "solidLine", lineS, time_step);
-    
+
     fluidLine->GetLine (lineF[0]);
     PrintLine (DEFAULT_OUTPUTDIR, "fluidLine", lineF, time_step);
 
