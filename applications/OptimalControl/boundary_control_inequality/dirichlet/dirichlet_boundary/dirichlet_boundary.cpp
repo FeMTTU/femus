@@ -19,8 +19,7 @@
 
 ///@todo do a very weak impl of Laplacian
 ///@todo Review the ordering for phi_ctrl_x_bdry
-///@todo implement fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem in 3d elems and triangles
-
+///@todo check computation of 2nd derivatives
 
 using namespace femus;
 
@@ -61,28 +60,37 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 
 bool Solution_set_boundary_conditions(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
-  bool dirichlet = true; //dirichlet
+  bool dirichlet; // = true; //dirichlet
   value = 0.;
 
   if(!strcmp(name,"control")) {
-  if (faceName == FACE_FOR_CONTROL) {
-  if (x[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + 1.e-5)    
-    dirichlet = false;
-  }
-  }
-
-  if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u = q)
-  if (faceName == FACE_FOR_CONTROL) {
-  if (x[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + 1.e-5)    
-    dirichlet = false;
-  }
       
-}
-
-  if(!strcmp(name,"mu")) {
-//       value = 0.;
-    dirichlet = false;
+  if (faceName == FACE_FOR_CONTROL) {
+     if (x[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + 1.e-5)  { dirichlet = false; }
+     else { dirichlet = true;  }
   }
+  else { dirichlet = true;  }
+  
+  }
+
+  else if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u = q)
+      
+  if (faceName == FACE_FOR_CONTROL) {
+      
+     if (x[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + 1.e-5) { dirichlet = false; }
+     else { dirichlet = true;  }
+  }
+  else { dirichlet = true;  }
+      
+  }
+
+  else if(!strcmp(name,"mu")) {
+      
+    dirichlet = false;
+
+  }
+  
+  else { dirichlet = true; }
   
 //     if(!strcmp(name,"adjoint")) { 
 //     dirichlet = false;
@@ -114,14 +122,15 @@ int main(int argc, char** args) {
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
 
-//   ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
   
   std::string input_file = "square_parametric.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
+  
+  
   ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(), Lref);
-
+//   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, NSUB_Z, 0., 1., 0., 1., 0., 1., HEX27, fe_quad_rule.c_str());
   
    //1: bottom  //2: right  //3: top  //4: left
   
@@ -144,7 +153,7 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   const unsigned int fake_time_dep_flag = 2;
   const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
 
   
   // ======= Problem  ==================
@@ -249,7 +258,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     
   constexpr unsigned int space_dim = 3;
   
-  std::vector<double> normal(space_dim,0.);
+  std::vector<double> normal(space_dim, 0.);
  //***************************************************  
   
   vector < double > coord_at_qp_bdry(space_dim);
@@ -658,7 +667,7 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
          
 //     msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(geom_element.get_coords_at_dofs(), geom_element.get_coords_at_dofs_bdry_3d(), jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
 
-    elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_qp/*not_needed_here*/, JacI_qp/*not_needed_here*/, detJac_qp/*not_needed_here*/, space_dim);
+    elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_qp/*not_needed_here*/, JacI_qp, detJac_qp/*not_needed_here*/, space_dim);
     elem_all[ielGeom][SolFEType[pos_adj]]->shape_funcs_vol_at_bdry_current_elem(ig_bdry, jface, JacI_qp, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry, boost::none, space_dim);
      
 
@@ -690,10 +699,8 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
            std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
 		      for (int iv = 0; iv < Sol_n_el_dofs[pos_adj]; iv++)  {
 			
-                            for (int d = 0; d < space_dim; d++) {
-//    std::cout << " ivol " << iv << std::endl;
-//    std::cout << " adj dofs " << sol_adj[iv] << std::endl;
-			      sol_adj_x_vol_at_bdry_gss[d] += sol_eldofs[pos_adj][iv] * phi_adj_x_vol_at_bdry[iv * space_dim + d];//notice that the convention of the orders x y z is different from vol to bdry
+         for (int d = 0; d < space_dim; d++) {
+			      sol_adj_x_vol_at_bdry_gss[d] += sol_eldofs[pos_adj][iv] * phi_adj_x_vol_at_bdry[iv * space_dim + d];
 			    }
 		      }  
 		      
@@ -1038,13 +1045,13 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
-  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*                     el = msh->el;  // pointer to the elem object in msh (level)
+  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
+  elem*                     el = msh->el;
 
-  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
+  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  const unsigned  dim = msh->GetDimension();
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
@@ -1057,7 +1064,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
     
   constexpr unsigned int space_dim = 3;
   
-  std::vector<double> normal(space_dim,0.);
+  std::vector<double> normal(space_dim, 0.);
  //***************************************************
 
   //=============== Integration ========================================
@@ -1102,7 +1109,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 //   solIndexTdes = ml_sol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
 //   unsigned solTypeTdes = ml_sol->GetSolutionType(solIndexTdes);    // get the finite element type for "state"
 
-  vector < double >  sol_udes; // local solution
+  vector < double >  sol_udes;
   sol_udes.reserve(max_size);
 
   double udes_gss = 0.;
@@ -1173,29 +1180,29 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
    
  //*********** state ********************************* 
-    unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);    // number of solution element dofs
+    unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);
     sol_u    .resize(nDof_u);
    // local storage of global mapping and solution
     for (unsigned i = 0; i < sol_u.size(); i++) {
-      unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);    // global to global mapping between solution node and solution dof
-      sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);      // global extraction and local storage for the solution
+      unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);
+      sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
     }
  //*********** state ********************************* 
 
 
  //*********** cont ********************************** 
-    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);    // number of solution element dofs
+    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);
     sol_ctrl    .resize(nDof_ctrl);
     for (unsigned i = 0; i < sol_ctrl.size(); i++) {
-      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);    // global to global mapping between solution node and solution dof
-      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);      // global extraction and local storage for the solution
+      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);
+      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);
     } 
 
  //*********** cont ********************************** 
  
  
  //*********** udes ********************************** 
-    unsigned nDof_udes  = msh->GetElementDofNumber(iel, solType_u);    // number of solution element dofs
+    unsigned nDof_udes  = msh->GetElementDofNumber(iel, solType_u);
     sol_udes    .resize(nDof_udes);
     for (unsigned i = 0; i < sol_udes.size(); i++) {
             sol_udes[i] = u_des;  //dof value

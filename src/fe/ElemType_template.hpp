@@ -99,7 +99,7 @@ namespace femus {
                               std::vector < std::vector <type_mov> > & JacJacT,
                               const unsigned space_dimension) const;
 
-     inline void area_transf(const std::vector < std::vector <type_mov> > & JacJacT,
+     inline void measure_transf(const std::vector < std::vector <type_mov> > & JacJacT,
                              type_mov & area,
                              const unsigned space_dimension) const;
 
@@ -132,7 +132,7 @@ namespace femus {
   }
   
                               
-  void area_transf(const std::vector < std::vector <type_mov> > & JacJacT,
+  void measure_transf(const std::vector < std::vector <type_mov> > & JacJacT,
                     type_mov & area,
                     const unsigned space_dimension) const {
 
@@ -219,7 +219,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     
             jac_jacT(Jac, JacJacT, space_dim);                                
 
-            area_transf( JacJacT, detJac, space_dim);
+            measure_transf( JacJacT, detJac, space_dim);
 
             
     std::vector < std::vector <type_mov> > JacJacT_inv(1); JacJacT[0].resize(1);
@@ -451,7 +451,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
   }
   
                                   
-  void area_transf(const std::vector < std::vector <type_mov> > & JacJacT,
+  void measure_transf(const std::vector < std::vector <type_mov> > & JacJacT,
                    type_mov & area,
                    const unsigned space_dimension) const {
                               
@@ -550,7 +550,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     
             jac_jacT(Jac, JacJacT, space_dim);                                
 
-            area_transf( JacJacT, detJac, space_dim);
+            measure_transf( JacJacT, detJac, space_dim);
 
             
     std::vector < std::vector <type_mov> > JacJacT_inv(2); JacJacT_inv[0].resize(2); JacJacT_inv[1].resize(2);
@@ -826,7 +826,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 
   }                                  
                                   
-  void area_transf(const std::vector < std::vector <type_mov> > & Jac,
+  void measure_transf(const std::vector < std::vector <type_mov> > & Jac,
                    type_mov & area,
                    const unsigned space_dimension) const {
                               
@@ -931,16 +931,16 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     
             jacobian_flexible(vt, ig, dphidxi, Jac, space_dim);
 
-    std::vector < std::vector <type_mov> > JacJacT;  
+    std::vector < std::vector <type_mov> > JacJacT;
     
-            jac_jacT(Jac, JacJacT, space_dim);                                
+//             jac_jacT(Jac, JacJacT, space_dim);                                
 
-            area_transf( JacJacT, detJac, space_dim);
+            measure_transf( Jac/*JacJacT*/, detJac, space_dim);  //here you have to pass Jac instead of JacJac
 
             
     std::vector < std::vector <type_mov> > JacJacT_inv;
 
-     jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
+//      jac_jacT_inv(JacJacT, JacJacT_inv, space_dim); /*not needed*/ 
      
      jacobian_inv( Jac, JacJacT_inv, Jac_inv, space_dim);
     

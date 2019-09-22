@@ -80,7 +80,7 @@ namespace femus
                           std::vector < std::vector <type_mov> > & JacJacT_inv,
                           const unsigned space_dimension) const = 0;
 
-     virtual /*inline*/ void area_transf(const std::vector < std::vector <type_mov> > & JacJacT,
+     virtual /*inline*/ void measure_transf(const std::vector < std::vector <type_mov> > & JacJacT,
                           type_mov & area,
                           const unsigned space_dimension) const = 0;
 
