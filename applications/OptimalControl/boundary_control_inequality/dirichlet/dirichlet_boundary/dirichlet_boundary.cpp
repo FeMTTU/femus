@@ -9,7 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             2
+#define FACE_FOR_CONTROL             6
 
 #include "../../param.hpp"
 
@@ -124,8 +124,8 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-  std::string input_file = "square_parametric.med";
-//   std::string input_file = "Mesh_3_groups.med";
+//   std::string input_file = "square_parametric.med";
+  std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
@@ -141,7 +141,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 6;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);

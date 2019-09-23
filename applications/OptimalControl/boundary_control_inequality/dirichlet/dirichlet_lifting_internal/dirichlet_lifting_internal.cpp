@@ -6,8 +6,8 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 
-#define FACE_FOR_CONTROL 2  //we do control on the right (=2) face
-#define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
+#define FACE_FOR_CONTROL   3
+
 #include "../../param.hpp"
 
 #define FE_DOMAIN  2
@@ -56,7 +56,7 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
   if(!strcmp(name,"control")) {
       value = 0.;
     if (faceName == FACE_FOR_CONTROL) {
-        if (x[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + 1.e-5)    
+        if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)    
             dirichlet = false;
     }
   }
@@ -92,9 +92,7 @@ int main(int argc, char** args) {
   
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
-  
-//   ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
- 
+   
   std::string input_file = "square_parametric.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
