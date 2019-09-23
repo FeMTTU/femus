@@ -32,7 +32,7 @@ namespace femus {
     public:
 
       const int _nc, _nf, _nlag0, _nlag1, _nlag2, _nlag3;
-      int faceNumber[3];
+      int faceNumber[3]; /*this is to handle 3d elements with faces of different types (wedges, pyramides, ...)*/
 
       basis(const int &nc, const int &nf, const int &nlag0, const int &nlag1, const int &nlag2, const int &nlag3,
 	    const int  &faceNumber0,const int  &faceNumber1, const int  &faceNumber2):

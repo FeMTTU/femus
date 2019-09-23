@@ -175,7 +175,12 @@ namespace femus
  
       static const int _fe_new_to_old[NFE_FAMS];
   
-      virtual void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > > &vt, const vector < vector < double> > & vt_bdry,  const unsigned& jface, const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const = 0;
+      virtual void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > > &vt,
+                                                                                         const vector < vector < double> > & vt_bdry, 
+                                                                                         const unsigned & jface, 
+                                                                                         const unsigned & ig,
+                                                                                         vector < double > & phi,
+                                                                                         vector < double > & gradphi) const = 0;
 
       
       basis* GetBasis() const {
@@ -377,9 +382,9 @@ namespace femus
       double** _d2phidxi2;
       double* _d2phidxi2_memory;
 
-      std::vector < std::vector < std::vector < double > > > _phiFace;
-      std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
-      std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
+      std::vector < std::vector < std::vector < double > > > _phiFace;  //for each face, for each Gauss point on the face, for each shape function of the volume
+      std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta)
+      std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta), for each reference direction (xi, eta, zeta) again
 
         // values at boundary gauss points
       double **_phi_vol_at_bdry;

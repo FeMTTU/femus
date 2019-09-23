@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ###
-### This file is generated automatically by SALOME v9.2.1 with dump python functionality
+### This file is generated automatically by SALOME v9.3.0 with dump python functionality
 ###
 
 import sys
@@ -80,6 +80,9 @@ import  SMESH, SALOMEDS
 from salome.smesh import smeshBuilder
 
 smesh = smeshBuilder.New()
+#smesh.SetEnablePublish( False ) # Set to False to avoid publish in study if not needed or in some particular situations:
+                                 # multiples meshes built in parallel, complex and numerous mesh edition (performance)
+
 Mesh_1 = smesh.Mesh(Face_1)
 Regular_1D = Mesh_1.Segment(geom=Edge_2)
 Number_of_Segments_1 = Regular_1D.NumberOfSegments("n_x",None,[])
@@ -92,13 +95,26 @@ Quadrangle_2D = Mesh_1.Quadrangle(algo=smeshBuilder.QUADRANGLE)
 Regular_1D_2 = Mesh_1.Segment()
 isDone = Mesh_1.Compute()
 Mesh_1.ConvertToQuadratic(0, Mesh_1,True)
-Group_4_0 = Mesh_1.GroupOnGeom(Edge_1,'Edge_1',SMESH.EDGE)
-Group_4_0.SetName( 'Group_4_0' )
-Group_1_0 = Mesh_1.GroupOnGeom(Edge_2,'Group_1',SMESH.EDGE)
-Group_1_0.SetName( 'Group_1_0' )
+Group_1_0 = Mesh_1.GroupOnGeom(Edge_1,'Edge_1',SMESH.EDGE)
+Group_1_0.SetName( 'Group_4_0' )
+Group_3_0 = Mesh_1.GroupOnGeom(Edge_2,'Group_1',SMESH.EDGE)
+Group_3_0.SetName( 'Group_1_0' )
 Group_2_0 = Mesh_1.GroupOnGeom(Edge_4,'Group_2_0',SMESH.EDGE)
-Group_3_0 = Mesh_1.GroupOnGeom(Edge_3,'Group_3_0',SMESH.EDGE)
+Group_4_0 = Mesh_1.GroupOnGeom(Edge_3,'Group_3_0',SMESH.EDGE)
 Group_12_0 = Mesh_1.GroupOnGeom(Face_1,'Group_12_0',SMESH.FACE)
+Group_4_0.SetColor( SALOMEDS.Color( 1, 0.666667, 0 ))
+Group_2_0.SetColor( SALOMEDS.Color( 1, 0.666667, 0 ))
+Group_3_0.SetColor( SALOMEDS.Color( 1, 0.666667, 0 ))
+Group_12_0.SetColor( SALOMEDS.Color( 1, 0.666667, 0 ))
+[ Group_1_0, Group_3_0, Group_2_0, Group_4_0, Group_12_0 ] = Mesh_1.GetGroups()
+Group_1_0.SetColor( SALOMEDS.Color( 1, 0.666667, 0 ))
+Group_1_0.SetName( 'Group_1_0_n' )
+Group_2_0.SetName( 'Group_3_0_n' )
+Group_4_0.SetName( 'Group_4_0' )
+Group_2_0.SetName( 'Group_2_0_n' )
+Group_3_0.SetName( 'Group_3_0' )
+Group_2_0.SetName( 'Group_2_0' )
+Group_1_0.SetName( 'Group_1_0' )
 Sub_mesh_1 = Regular_1D.GetSubMesh()
 Sub_mesh_2 = Regular_1D_1.GetSubMesh()
 
@@ -106,16 +122,16 @@ Sub_mesh_2 = Regular_1D_1.GetSubMesh()
 ## Set names of Mesh objects
 smesh.SetName(Regular_1D.GetAlgorithm(), 'Regular_1D')
 smesh.SetName(Quadrangle_2D.GetAlgorithm(), 'Quadrangle_2D')
+smesh.SetName(Propagation_of_1D_Hyp, 'Propagation of 1D Hyp. on Opposite Edges_1')
+smesh.SetName(Propagation_of_1D_Hyp_1, 'Propagation of 1D Hyp. on Opposite Edges_2')
+smesh.SetName(Number_of_Segments_1, 'Number of Segments_1')
 smesh.SetName(Group_12_0, 'Group_12_0')
+smesh.SetName(Number_of_Segments_2, 'Number of Segments_2')
 smesh.SetName(Mesh_1.GetMesh(), 'Mesh_1')
-smesh.SetName(Group_4_0, 'Group_4_0')
 smesh.SetName(Group_1_0, 'Group_1_0')
 smesh.SetName(Group_2_0, 'Group_2_0')
 smesh.SetName(Group_3_0, 'Group_3_0')
-smesh.SetName(Propagation_of_1D_Hyp_1, 'Propagation of 1D Hyp. on Opposite Edges_2')
-smesh.SetName(Propagation_of_1D_Hyp, 'Propagation of 1D Hyp. on Opposite Edges_1')
-smesh.SetName(Number_of_Segments_1, 'Number of Segments_1')
-smesh.SetName(Number_of_Segments_2, 'Number of Segments_2')
+smesh.SetName(Group_4_0, 'Group_4_0')
 smesh.SetName(Sub_mesh_2, 'Sub-mesh_2')
 smesh.SetName(Sub_mesh_1, 'Sub-mesh_1')
 

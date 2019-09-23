@@ -833,6 +833,7 @@ namespace femus {
           
           
     if(_SolType < 3) {
+        
       basis* linearLine = new LineLinear;
 
 
@@ -880,11 +881,12 @@ namespace femus {
             _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x);
             _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x);
             _hessianPhiFace[iface][i][j][0][1] = _pt_basis->eval_d2phidxdy(_IND[j], x);
-            _hessianPhiFace[iface][i][j][1][0] = _hessianPhiFace[iface][i][j][1][0];
+            _hessianPhiFace[iface][i][j][1][0] = _hessianPhiFace[iface][i][j][0][1];
           }
         }
       }
       delete linearLine;
+      
     }
     
     
@@ -893,8 +895,8 @@ namespace femus {
       void elem_type_3D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
           
    
-    //std::cout << std::endl;
     if(_SolType < 3) {
+        
       basis* linearQuad = new QuadLinear;
       basis* linearTri = new TriLinear;
 
@@ -902,7 +904,7 @@ namespace femus {
       Gauss quadGaussPoint = Gauss("quad", order_gauss);
       Gauss triGaussPoint = Gauss("tri", order_gauss);
 
-      Gauss* faceGauss[2];
+      Gauss* faceGauss[2]; //two types: either Quadrilateral or Triangle
       faceGauss[0] = &quadGaussPoint;
       faceGauss[1] = &triGaussPoint;
 
@@ -984,6 +986,7 @@ namespace femus {
       }
       delete linearQuad;
       delete linearTri;
+      
     }          
 
    }
@@ -997,7 +1000,7 @@ namespace femus {
 
     _dim = 1;
 
-    //************ BEGIN FE and MG SETUP ******************
+    //************ FE and MG SETUP ******************
     const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
 
     // get data from basis object
@@ -1016,12 +1019,14 @@ namespace femus {
     delete linearElement;
 
     
+    //************ FE and QUADRATURE EVALUATIONS ******************
     allocate_and_fill_shape_at_quadrature_points();
 
     allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
 
     // boundary
     allocate_volume_shape_at_reference_boundary_quadrature_points();
+
     
 //=====================
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -1196,7 +1201,7 @@ namespace femus {
 
     _dim = 2;
 
-    //************ BEGIN FE and MG SETUP ******************
+    //************ FE and MG SETUP ******************
     const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
 
     // get data from basis object
@@ -1215,6 +1220,7 @@ namespace femus {
     delete linearElement;
 
     
+    //************ FE and QUADRATURE EVALUATIONS ******************
     allocate_and_fill_shape_at_quadrature_points();
 
     allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
@@ -1238,7 +1244,7 @@ namespace femus {
 
     _dim = 3;
     
-    //************ BEGIN FE and MG SETUP ******************
+    //************ FE and MG SETUP ******************
     const basis* linearElement = set_FE_family_and_linear_element(geom_elem, _SolType);
 
     // get data from basis object
@@ -1257,6 +1263,7 @@ namespace femus {
     delete linearElement;
 
     
+    //************ FE and QUADRATURE EVALUATIONS ******************
     allocate_and_fill_shape_at_quadrature_points();
     
     allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(order_gauss);
@@ -1410,8 +1417,8 @@ namespace femus {
 for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
              
       for (int dof = 0; dof < _nc; dof++) {
-            _phi_vol_at_bdry[qp][dof] = _phiFace[jface][qp][dof]        ; //_pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_phiFace[jface][qp][dof]        - _phi_vol_at_bdry[qp][dof]) > 1.e-3 ) abort();*/
-        _dphidxi_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][0] ; //_pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_gradPhiFace[jface][qp][dof][0] - _dphidxi_vol_at_bdry[qp][dof]) > 1.e-3 ) abort();*/
+            _phi_vol_at_bdry[qp][dof] = _phiFace[jface][qp][dof]        ;
+        _dphidxi_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][0] ;
         }
       
      }
@@ -1425,13 +1432,12 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
       
     const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
 
- //evaluate volume shape functions and derivatives at reference boundary gauss points             
 for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
              
       for (int dof = 0; dof < _nc; dof++) {
-            _phi_vol_at_bdry[qp][dof] = _phiFace[jface][qp][dof]        ; //_pt_basis->eval_phi(_IND[dof],    &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_phiFace[jface][qp][dof]        - _phi_vol_at_bdry[qp][dof]) > 1.e-3 ) abort();*/
-        _dphidxi_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][0] ; //_pt_basis->eval_dphidx(_IND[dof], &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_gradPhiFace[jface][qp][dof][0] - _dphidxi_vol_at_bdry[qp][dof]) > 1.e-3 ) abort();*/
-       _dphideta_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][1] ; //_pt_basis->eval_dphidy(_IND[dof], &ref_bdry_qp_coords_in_vol[0]); /*if ( abs(_gradPhiFace[jface][qp][dof][1] - _dphideta_vol_at_bdry[qp][dof]) > 1.e-3 ) abort();*/
+            _phi_vol_at_bdry[qp][dof] = _phiFace[jface][qp][dof]        ;
+        _dphidxi_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][0] ;
+       _dphideta_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][1] ;
       _dphidzeta_vol_at_bdry[qp][dof] = _gradPhiFace[jface][qp][dof][2] ;
       }
       
@@ -1547,7 +1553,6 @@ for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
     
     const int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
 
- //evaluate volume shape functions and derivatives at reference boundary gauss points             
 for (unsigned qp = 0; qp < n_gauss_bdry; qp++) {
              
       for (int dof = 0; dof < _nc; dof++) {

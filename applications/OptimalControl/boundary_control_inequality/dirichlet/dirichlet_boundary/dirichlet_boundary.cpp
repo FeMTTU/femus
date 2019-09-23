@@ -9,8 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             2  //we do control on the right (=2) face
-#define AXIS_DIRECTION_CONTROL_SIDE  1  //change this accordingly to the other variable above
+#define FACE_FOR_CONTROL             2
 
 #include "../../param.hpp"
 
@@ -19,7 +18,7 @@
 
 ///@todo do a very weak impl of Laplacian
 ///@todo Review the ordering for phi_ctrl_x_bdry
-///@todo check computation of 2nd derivatives
+///@todo check computation of 2nd derivatives in elem_type_template
 
 using namespace femus;
 
@@ -66,7 +65,8 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
   if(!strcmp(name,"control")) {
       
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + 1.e-5)  { dirichlet = false; }
+     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)
+     { dirichlet = false; }
      else { dirichlet = true;  }
   }
   else { dirichlet = true;  }
@@ -77,7 +77,8 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
       
   if (faceName == FACE_FOR_CONTROL) {
       
-     if (x[AXIS_DIRECTION_CONTROL_SIDE] > GAMMA_CONTROL_LOWER - 1.e-5 && x[AXIS_DIRECTION_CONTROL_SIDE] < GAMMA_CONTROL_UPPER + 1.e-5) { dirichlet = false; }
+     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5) 
+     { dirichlet = false; }
      else { dirichlet = true;  }
   }
   else { dirichlet = true;  }
@@ -123,8 +124,8 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-//   std::string input_file = "square_parametric.med";
-  std::string input_file = "Mesh_3_groups.med";
+  std::string input_file = "square_parametric.med";
+//   std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
@@ -135,12 +136,12 @@ int main(int argc, char** args) {
      ///@todo seems like GenerateCoarseBoxMesh doesn't assign flags to faces correctly, 
      //so I created a .med file with the following flags:
      //1: x = x_min  //2: x = x_max  //3: y = y_min  //4: y = y_max //5: z = z_min //6: z = z_max
+     //1: x = x_min  //2: x = x_max  //3: y = y_min  //4: y = y_max                                (in 2d) in the new .med file
   
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
- /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-      probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 2/*6*/;
+
+  unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
