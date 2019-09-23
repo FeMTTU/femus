@@ -12,7 +12,7 @@
 //******************************************* Desired Target  and RHS function*******************************************************
 
  double force[3] = {0.,0.,0.};
- double Vel_desired[3] = {0.,0.,1.};
+ double Vel_desired[3] = {0.,1.,0.};
 
 //*********************** Sets the regularization parameters *******************************************************
 
@@ -37,9 +37,9 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ********************************** 
   int target_flag = 0;
 
-    if ( sqrt(elem_center[0] * elem_center[0] + elem_center[1] * elem_center[1]) < 0.5 + 1.e-5  &&
-	  elem_center[2] > 0.75 - 1.e-5  &&  elem_center[2] < 1.0  + 1.e-5
-  ) //target for cylinder
+//     if ( sqrt(elem_center[0] * elem_center[0] + elem_center[1] * elem_center[1]) < 0.5 + 1.e-5  &&
+// 	  elem_center[2] > 0.75 - 1.e-5  &&  elem_center[2] < 1.0  + 1.e-5
+//   ) //target for cylinder
 
 //     if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
 // 	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5 /*&&
@@ -51,16 +51,16 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 //   ) //target on left 
    
 //     if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
-// 	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5 /*&&
+// 	      elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5 
 //   ) //target on top
 
 //    if ( elem_center[0] > 0.75  - 1.e-5  &&  elem_center[0] < 1.0   + 1.e-5  && 
 //         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
 //   ) //target on right 
    
-//     if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
-// 	  elem_center[1] > 0.   - 1.e-5  &&  elem_center[1] < 0.25  + 1.e-5
-//   ) //target on bottom
+    if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
+	  elem_center[1] > 0.   - 1.e-5  &&  elem_center[1] < 0.25  + 1.e-5
+  ) //target on bottom
   
 //     if (  elem_center[0] > 0. - 1.e-5  &&  elem_center[0] < 0.25  + 1.e-5  && 
 // 	  elem_center[1] > 0.75   - 1.e-5  &&  elem_center[1] < 1.0  + 1.e-5

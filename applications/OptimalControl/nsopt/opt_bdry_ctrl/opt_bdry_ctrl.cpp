@@ -19,11 +19,11 @@
 
 
 
-#define CTRL_FACE_IDX  3
+#define FACE_FOR_CONTROL  4
 
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
-#define no_of_ref 1     //mesh refinements
+#define no_of_ref 4     //mesh refinements
 
 #define NO_OF_L2_NORMS 9   //U,V,P,UADJ,VADJ,PADJ,GX,GY,THETA
 #define NO_OF_H1_NORMS 6    //U,V,UADJ,VADJ,GX, GY
@@ -43,29 +43,57 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
    value = 0.;
  
 
-                if (!strcmp(SolName, "GX"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
-                if (!strcmp(SolName, "GY"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
-                if (!strcmp(SolName, "GZ"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
+                if (!strcmp(SolName, "GX"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
+                if (!strcmp(SolName, "GY"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
+                if (!strcmp(SolName, "GZ"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
                 if (!strcmp(SolName, "THETA"))    { dirichlet = false; }
       
 #if exact_sol_flag == 0
-                if (!strcmp(SolName, "U"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
-                if (!strcmp(SolName, "V"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
+                if (!strcmp(SolName, "U"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
+                if (!strcmp(SolName, "V"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
 #endif
-                if (!strcmp(SolName, "W"))       { if (facename == CTRL_FACE_IDX) dirichlet = false; }
+                if (!strcmp(SolName, "W"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
      
 #if exact_sol_flag == 1
   //b.c. for manufactured lid driven cavity
   double pi = acos(-1.);
-                if (!strcmp(SolName, "U"))       { if (facename == CTRL_FACE_IDX) value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]); }
-                if (!strcmp(SolName, "V"))       { if (facename == CTRL_FACE_IDX) value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]); }
+                if (!strcmp(SolName, "U"))       { if (facename == FACE_FOR_CONTROL) value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]); }
+                if (!strcmp(SolName, "V"))       { if (facename == FACE_FOR_CONTROL) value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]); }
  #endif
                
   return dirichlet;
 
 }
 
+double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
 
+    double value = 0.;
+
+//     if(!strcmp(name,"state")) {
+//         value = 0.;
+//     }
+//     else if(!strcmp(name,"control")) {
+//         value = 0.;
+//     }
+//     else if(!strcmp(name,"adjoint")) {
+//         value = 0.;
+//     }
+//     else if(!strcmp(name,"mu")) {
+//         value = 0.;
+//     }
+     if(!strcmp(name,"TargReg")) {
+        value = ElementTargetFlag(x);
+    }
+//     else if(!strcmp(name,"ContReg")) {
+//         value = ControlDomainFlag_bdry(x);
+//     }
+//     else if(!strcmp(name,"act_flag")) {
+//         value = 0.;
+//     }
+
+
+    return value;
+}
 // //============== initial conditions =========
 // double SetInitialCondition(const MultiLevelProblem * ml_prob, const std::vector <double> &x, const char SolName[]) {
 //   
@@ -86,11 +114,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob);
 
 void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
-double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated);
+double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_sol, Solution* sol_coarser_prolongated);
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
 void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes, int loop_i );
+
 
 int main(int argc, char** args) {
   
@@ -123,10 +152,16 @@ int main(int argc, char** args) {
   
 // *************************
 	
-//   MultiLevelMesh mlMsh;
-//  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
-    mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
-    mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+  std::string input_file = "square_parametric.med";
+//   std::string input_file = "Mesh_3_groups.med";
+  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+  const std::string infile = mystream.str();
+  
+  //   MultiLevelMesh mlMsh;
+ mlMsh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+ mlMsh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+//     mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+//     mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
     
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes;
@@ -146,27 +181,29 @@ int main(int argc, char** args) {
 //      mlMsh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
         
         //store the fine solution  ==================
-            MultiLevelSolution * mlSol_all_levels;
-            mlSol_all_levels = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
-         // add variables to mlSol_all_levels
+            MultiLevelSolution * ml_sol_all_levels;
+            ml_sol_all_levels = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+         // add variables to ml_sol_all_levels
         // state =====================  
-            mlSol_all_levels->AddSolution("U", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("V", LAGRANGE, SECOND);
-            if (dim == 3) mlSol_all_levels->AddSolution("W", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("P", LAGRANGE, FIRST);
+            ml_sol_all_levels->AddSolution("U", LAGRANGE, SECOND);
+            ml_sol_all_levels->AddSolution("V", LAGRANGE, SECOND);
+            if (dim == 3) ml_sol_all_levels->AddSolution("W", LAGRANGE, SECOND);
+            ml_sol_all_levels->AddSolution("P", LAGRANGE, FIRST);
         // adjoint =====================  
-            mlSol_all_levels->AddSolution("UADJ", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("VADJ", LAGRANGE, SECOND);
-            if (dim == 3) mlSol_all_levels->AddSolution("WADJ", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("PADJ", LAGRANGE, FIRST);
+            ml_sol_all_levels->AddSolution("UADJ", LAGRANGE, SECOND);
+            ml_sol_all_levels->AddSolution("VADJ", LAGRANGE, SECOND);
+            if (dim == 3) ml_sol_all_levels->AddSolution("WADJ", LAGRANGE, SECOND);
+            ml_sol_all_levels->AddSolution("PADJ", LAGRANGE, FIRST);
         // boundary condition =====================
-            mlSol_all_levels->AddSolution("GX", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("GY", LAGRANGE, SECOND);
-            if (dim == 3) mlSol_all_levels->AddSolution("GZ", LAGRANGE, SECOND);
-            mlSol_all_levels->AddSolution("THETA", DISCONTINUOUS_POLYNOMIAL, ZERO);
-            mlSol_all_levels->Initialize("All");
-            mlSol_all_levels->AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
-            mlSol_all_levels->GenerateBdc("All");
+            ml_sol_all_levels->AddSolution("GX", LAGRANGE, SECOND);
+            ml_sol_all_levels->AddSolution("GY", LAGRANGE, SECOND);
+            if (dim == 3) ml_sol_all_levels->AddSolution("GZ", LAGRANGE, SECOND);
+            ml_sol_all_levels->AddSolution("THETA", DISCONTINUOUS_POLYNOMIAL, ZERO);
+            ml_sol_all_levels->AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+            
+            ml_sol_all_levels->Initialize("All");
+            ml_sol_all_levels->AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
+            ml_sol_all_levels->GenerateBdc("All");
 
          for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
@@ -180,47 +217,52 @@ int main(int argc, char** args) {
   // print mesh info
   mlMsh.PrintInfo();
 
-  MultiLevelSolution mlSol(&mlMsh);
+  MultiLevelSolution ml_sol(&mlMsh);
 
-  // add variables to mlSol
+  // add variables to ml_sol
   // state =====================  
-  mlSol.AddSolution("U", LAGRANGE, SECOND);
-  mlSol.AddSolution("V", LAGRANGE, SECOND);
-  if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
-  mlSol.AddSolution("P", LAGRANGE, FIRST);
+  ml_sol.AddSolution("U", LAGRANGE, SECOND);
+  ml_sol.AddSolution("V", LAGRANGE, SECOND);
+  if (dim == 3) ml_sol.AddSolution("W", LAGRANGE, SECOND);
+  ml_sol.AddSolution("P", LAGRANGE, FIRST);
   // adjoint =====================  
-  mlSol.AddSolution("UADJ", LAGRANGE, SECOND);
-  mlSol.AddSolution("VADJ", LAGRANGE, SECOND);
-  if (dim == 3) mlSol.AddSolution("WADJ", LAGRANGE, SECOND);
-  mlSol.AddSolution("PADJ", LAGRANGE, FIRST);
+  ml_sol.AddSolution("UADJ", LAGRANGE, SECOND);
+  ml_sol.AddSolution("VADJ", LAGRANGE, SECOND);
+  if (dim == 3) ml_sol.AddSolution("WADJ", LAGRANGE, SECOND);
+  ml_sol.AddSolution("PADJ", LAGRANGE, FIRST);
   // boundary condition =====================
-  mlSol.AddSolution("GX", LAGRANGE, SECOND);
-  mlSol.AddSolution("GY", LAGRANGE, SECOND);
-  if (dim == 3) mlSol.AddSolution("GZ", LAGRANGE, SECOND);
-  mlSol.AddSolution("THETA", DISCONTINUOUS_POLYNOMIAL, ZERO);
+  ml_sol.AddSolution("GX", LAGRANGE, SECOND);
+  ml_sol.AddSolution("GY", LAGRANGE, SECOND);
+  if (dim == 3) ml_sol.AddSolution("GZ", LAGRANGE, SECOND);
+  ml_sol.AddSolution("THETA", DISCONTINUOUS_POLYNOMIAL, ZERO);
   // control ===================== 
+  ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   
+   // ======= Problem  ==================
+  MultiLevelProblem ml_prob(&ml_sol); 
+
+  ml_prob.SetFilesHandler(&files);
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+  ml_prob.set_all_abstract_fe();
+    
+  
+  // ======= Solution: Initial Conditions ==================
+   ml_sol.Initialize("All");    // initialize all varaibles to zero
+   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+
+//   ml_sol.Initialize("GX", SetInitialCondition,&ml_prob);
+//   ml_sol.Initialize("GY", SetInitialCondition,&ml_prob);
+  
+  
+  // ======= Solution: Boundary Conditions ==================
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
+  ml_sol.GenerateBdc("All");
   
 
-   mlSol.Initialize("All");    // initialize all varaibles to zero
-
-//   mlSol.Initialize("GX", SetInitialCondition,&mlProb);
-//   mlSol.Initialize("GY", SetInitialCondition,&mlProb);
-  
-  
-  // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
-  mlSol.GenerateBdc("All");
-  
-   // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
-
-    mlProb.parameters.set<Fluid>("Fluid") = fluid;
-    mlProb.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-    mlProb.SetFilesHandler(&files);
  
-  // add system OptBdryCtrl in mlProb as a NonLinear Implicit System
-  NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOpt");
+  // add system OptBdryCtrl in ml_prob as a NonLinear Implicit System
+  NonLinearImplicitSystem& system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");
 
   // ST ===================
   system_opt.AddSolutionToSystemPDE("U");
@@ -248,8 +290,8 @@ int main(int argc, char** args) {
     system_opt.ClearVariablesToBeSolved();
     system_opt.AddVariableToBeSolved("All");
   
-    mlSol.SetWriter(VTK);
-    mlSol.GetWriter()->SetDebugOutput(true);
+    ml_sol.SetWriter(VTK);
+    ml_sol.GetWriter()->SetDebugOutput(true);
     
     system_opt.SetDebugNonlinear(true);
     system_opt.SetDebugFunction(ComputeIntegral);
@@ -263,10 +305,10 @@ int main(int argc, char** args) {
     if ( i > 0 ) {
         
 //prolongation of coarser  
-      mlSol_all_levels->RefineSolution(i);
-      Solution* sol_coarser_prolongated = mlSol_all_levels->GetSolutionLevel(i);
+      ml_sol_all_levels->RefineSolution(i);
+      Solution* sol_coarser_prolongated = ml_sol_all_levels->GetSolutionLevel(i);
   
-      double* norm = GetErrorNorm(mlProb,&mlSol,sol_coarser_prolongated);
+      double* norm = GetErrorNorm(ml_prob,&ml_sol,sol_coarser_prolongated);
     
       for(int j = 0; j < NO_OF_L2_NORMS+NO_OF_H1_NORMS; j++)       comp_conv[i-1][j] = norm[j];
   
@@ -277,10 +319,10 @@ int main(int argc, char** args) {
 // 
        const unsigned level_index_current = 0;
       //@todo there is a duplicate function in MLSol: GetSolutionLevel() and GetLevel()
-       const unsigned n_vars = mlSol.GetSolutionLevel(level_index_current)->_Sol.size();
+       const unsigned n_vars = ml_sol.GetSolutionLevel(level_index_current)->_Sol.size();
        
         for(unsigned short j = 0; j < n_vars; j++) {  
-               *(mlSol_all_levels->GetLevel(i)->_Sol[j]) = *(mlSol.GetSolutionLevel(level_index_current)->_Sol[j]);
+               *(ml_sol_all_levels->GetLevel(i)->_Sol[j]) = *(ml_sol.GetSolutionLevel(level_index_current)->_Sol[j]);
         }
         
  
@@ -288,13 +330,13 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
-  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,"biquadratic", variablesToBePrinted, i);
+  ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,"biquadratic", variablesToBePrinted, i);
  
   //Destroy all the new systems
-//   mlProb.clear();
+//   ml_prob.clear();
   }
 
-//  delete mlSol_all_levels; 
+//  delete ml_sol_all_levels; 
 
 #if compute_conv_flag == 1
   std::cout << "=======================================================================" << std::endl;
@@ -416,7 +458,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   LinearEquationSolver*  pdeSys	 = mlPdeSys._LinSolver[level];   
   const char* pdename            = mlPdeSys.name().c_str();
   
-  MultiLevelSolution* mlSol = ml_prob._ml_sol;
+  MultiLevelSolution* ml_sol = ml_prob._ml_sol;
   
   Mesh*		 msh    = ml_prob._ml_msh->GetLevel(level);
   elem*		 el	= msh->el;
@@ -487,8 +529,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
     SolPdeIndex[ivar]	= mlPdeSys.GetSolPdeIndex(Solname[ivar].c_str());
-    SolIndex[ivar]	= mlSol->GetIndex        (Solname[ivar].c_str());
-    SolFEType[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
+    SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
+    SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
   vector < double > Sol_n_el_dofs(n_unknowns);
@@ -716,12 +758,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  // look for boundary faces
 	  if(el->GetFaceElementIndex(iel,jface) < 0) {
 	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
-	      if(  face == CTRL_FACE_IDX) { //control face
+	      if(  face == FACE_FOR_CONTROL) { //control face
 //=================================================== 
 		   //we use the dirichlet flag to say: if dirichlet == true, we set 1 on the diagonal. if dirichlet == false, we put the boundary equation
 		  std::vector<bool> dir_bool(dim);
 		  for(unsigned idim=0; idim<dim; idim++) {
-		      dir_bool[idim] = false; //mlSol->GetBdcFunction()(xyz_bdc,ctrl_name[idim].c_str(),tau,face,0.);
+		      dir_bool[idim] = false; //ml_sol->GetBdcFunction()(xyz_bdc,ctrl_name[idim].c_str(),tau,face,0.);
 		  }
 	  
 //=================================================== 
@@ -1303,7 +1345,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   const Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*  mlSol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  MultiLevelSolution*  ml_sol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
   
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
@@ -1334,12 +1376,12 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 //STATE######################################################################
   //velocity *******************************
   vector < unsigned > solVIndex(dim);
-  solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
-  solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
+  solVIndex[0] = ml_sol->GetIndex("U");    // get the position of "U" in the ml_sol object
+  solVIndex[1] = ml_sol->GetIndex("V");    // get the position of "V" in the ml_sol object
 
-  if (dim == 3) solVIndex[2] = mlSol->GetIndex("W");      // get the position of "V" in the ml_sol object
+  if (dim == 3) solVIndex[2] = ml_sol->GetIndex("W");      // get the position of "V" in the ml_sol object
 
-  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+  unsigned solVType = ml_sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
   
   vector < vector < double > >  solV(dim);    // local solution
   vector <double >  V_gss(dim, 0.);    //  solution
@@ -1366,11 +1408,11 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
 //CONTROL_@bdry######################################################################
   vector < unsigned > solVctrlIndex(dim);
-  solVctrlIndex[0] = mlSol->GetIndex("GX");    // get the position of "U" in the ml_sol object
-  solVctrlIndex[1] = mlSol->GetIndex("GY");    // get the position of "V" in the ml_sol object
-  if (dim == 3) solVctrlIndex[2] = mlSol->GetIndex("GZ");      // get the position of "V" in the ml_sol object
+  solVctrlIndex[0] = ml_sol->GetIndex("GX");    // get the position of "U" in the ml_sol object
+  solVctrlIndex[1] = ml_sol->GetIndex("GY");    // get the position of "V" in the ml_sol object
+  if (dim == 3) solVctrlIndex[2] = ml_sol->GetIndex("GZ");      // get the position of "V" in the ml_sol object
 
-  unsigned solVctrlType = mlSol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
+  unsigned solVctrlType = ml_sol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
   
   vector < vector < double > >  solVctrl(dim);    // local solution
   vector < double >   Vctrl_gss(dim, 0.);    //  solution
@@ -1392,8 +1434,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   
 //Theta value ######################################################################
    unsigned solThetaIndex;
-   solThetaIndex = mlSol->GetIndex("THETA");
-   unsigned solThetaType = mlSol->GetSolutionType(solThetaIndex);
+   solThetaIndex = ml_sol->GetIndex("THETA");
+   unsigned solThetaType = ml_sol->GetSolutionType(solThetaIndex);
    double solTheta = (*sol->_Sol[solThetaIndex])(0)/*0.*/;
 // 		     solTheta = (*sol->_Sol[solThetaIndex])(0);
 //Theta value ######################################################################
@@ -1542,12 +1584,12 @@ double integral_g_dot_n = 0.;
 	if(el->GetFaceElementIndex(iel,jface) < 0) {
 	   unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
 
-	   if(  face == CTRL_FACE_IDX) { //control face
+	   if(  face == FACE_FOR_CONTROL) { //control face
 // //=================================================== 
 // 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
 // 	    std::vector<bool> dir_bool; dir_bool.resize(dim);
 // 	    for(unsigned idim=0; idim<dim; idim++) {
-// 		dir_bool[idim] = mlSol->GetBdcFunction()(xyz_bdc,ctrl_name[idim].c_str(),tau,face,0.);
+// 		dir_bool[idim] = ml_sol->GetBdcFunction()(xyz_bdc,ctrl_name[idim].c_str(),tau,face,0.);
 // 	    }
 	  
 //=================================================== 
@@ -1672,15 +1714,15 @@ double integral_g_dot_n = 0.;
 }
 
 
-double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSol, Solution* sol_coarser_prolongated) {
+double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_sol, Solution* sol_coarser_prolongated) {
   
     static double ErrorNormArray[NO_OF_L2_NORMS+NO_OF_H1_NORMS];
     
-  unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
+  unsigned level = ml_sol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
-  Mesh*     msh = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh*     msh = ml_sol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
   elem*     el  = msh->el;  // pointer to the elem object in msh (level)
-  Solution* sol = mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  Solution* sol = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
   
@@ -1733,8 +1775,8 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-    SolIndex[ivar]	= mlSol->GetIndex        (Solname[ivar].c_str());
-    SolFEType[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
+    SolIndex[ivar]	= ml_sol->GetIndex        (Solname[ivar].c_str());
+    SolFEType[ivar]	= ml_sol->GetSolutionType(SolIndex[ivar]);
   }
 
   vector < double > Sol_n_el_dofs(n_unknowns);
