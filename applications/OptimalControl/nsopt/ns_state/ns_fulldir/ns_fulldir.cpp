@@ -11,7 +11,7 @@
 #include "Parameter.hpp"
 #include "Files.hpp"
 
-#include   "../nsopt_params.hpp"
+#include   "../../nsopt_params.hpp"
 
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
