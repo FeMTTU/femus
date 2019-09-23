@@ -9,7 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             6
+#define FACE_FOR_CONTROL             1
 
 #include "../../param.hpp"
 
@@ -19,6 +19,8 @@
 ///@todo do a very weak impl of Laplacian
 ///@todo Review the ordering for phi_ctrl_x_bdry
 ///@todo check computation of 2nd derivatives in elem_type_template
+///@todo Rather fast way to add inequality constraint to a problem
+///@todo Parallel run with PDAS method
 
 using namespace femus;
 
@@ -187,7 +189,7 @@ int main(int argc, char** args) {
   ml_sol.GenerateBdc("mu");
 
   // ======= System ========================
-  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("LiftRestr");
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("BoundaryControl");
   
   system.SetActiveSetFlagName(act_set_flag_name);
 //   system.SetMaxNumberOfNonLinearIterations(50);
@@ -231,7 +233,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("BoundaryControl");
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -614,8 +616,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		
         const unsigned n_gauss_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
         
-        //show the coordinate of the current ig_bdry point    
-    const double* pt_one_dim[1] = {msh->_finiteElement[ielGeom][ SolFEType[pos_ctrl] ]->GetGaussRule_bdry()->GetGaussWeightsPointer() + 1*n_gauss_bdry };
     
 		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
     
@@ -627,18 +627,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     elem_all[ielGeom_bdry][SolFEType[pos_ctrl]] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_xx_bdry_placeholder, space_dim);
     elem_all[ielGeom_bdry][SolFEType[pos_state]]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry,  phi_xx_bdry_placeholder, space_dim);
     elem_all[ielGeom_bdry][SolFEType[pos_adj]]  ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_adj_bdry, phi_adj_x_bdry,  phi_xx_bdry_placeholder, space_dim);
-
-
-// **** printing ******
-    double xi_one_dim[1];
-      for (unsigned j = 0; j < 1; j++) {
-        xi_one_dim[j] = *pt_one_dim[j];
-        pt_one_dim[j]++;
-      }
-
-std::cout << "Outside ig = " << ig_bdry << " ";
-      for (unsigned d = 0; d < 1; d++) std::cout << xi_one_dim[d] << " ";
-// **** printing ******
 
 
  //========= fill gauss value xyz ==================   
@@ -1047,7 +1035,7 @@ if ( i_vol == j_vol )  {
 void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   
-  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystemWithPrimalDualActiveSetMethod> ("BoundaryControl");
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);

@@ -137,7 +137,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
   MultiLevelProblem ml_prob(&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
   ml_prob.SetQuadratureRuleAllGeomElems("fifth");
-  ml_prob.SetElemTypeAllDims();
+//   ml_prob.SetElemTypeAllDims();
   ml_prob.SetInputParser(&physics_map);
   ml_prob.SetQtyMap(&qty_map);
 

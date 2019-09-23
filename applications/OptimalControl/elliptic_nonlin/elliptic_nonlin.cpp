@@ -134,12 +134,12 @@ int main(int argc, char** args) {
   ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               
 
     // ======= Problem ========================
-  MultiLevelProblem ml_prob(&ml_sol);  // define the multilevel problem attach the ml_sol object to it
+  MultiLevelProblem ml_prob(&ml_sol);
 
-  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.SetFilesHandler(&files);
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   
-    // ======= Initial values ========================
+    // ======= Solution: Initial values ========================
   ml_sol.Initialize("All");    // initialize all variables to zero
 
 //   ml_sol.Initialize("All", SetInitialCondition, &ml_prob); //unfortunately if I do this it sets all to zero //I would like to do an attach function similar to the BC
@@ -151,7 +151,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize("ContReg", SetInitialCondition, &ml_prob);
   ml_sol.Initialize(act_set_flag_name.c_str(),  SetInitialCondition, &ml_prob);
 
-    // ======= Boundary Conditions ========================
+    // ======= Solution: Boundary Conditions ========================
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);  // attach the boundary condition function and generate boundary data
 
 //   ml_sol.GenerateBdc("All");  //this would do it also for the non-equation-related variables

@@ -179,25 +179,6 @@ void MultiLevelProblem::clear ()
 
 
 
- void MultiLevelProblem::SetElemTypeAllDims() {
-
-  const unsigned int all_dims = _ml_msh->GetLevel(LEV_PICK)->GetDimension();
-
-  // =======FEElems =====  //remember to delete the FE at the end
-  const std::string  FEFamily[QL] = {"biquadratic","linear","constant"};
-  _elem_type.resize(all_dims);
-  for (int idim=0;idim < all_dims; idim++)   _elem_type[idim].resize(QL);
-
-  for (int idim=0;idim < all_dims; idim++) {
-    for (int fe=0; fe<QL; fe++) {
-       _elem_type[idim][fe] = _ml_msh->_finiteElement[ _mesh->_geomelem_flag[idim] ][ elem_type::_fe_old_to_new[fe] ];
-     }
-    }
-
-   return;
-}
-
-
 
 
 } //end namespace femus

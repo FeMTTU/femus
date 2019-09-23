@@ -171,10 +171,7 @@ namespace femus
 
       void GetSparsityPatternSize(const Mesh& Mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const;
 
-      static const unsigned _fe_old_to_new[QL];
- 
-      static const int _fe_new_to_old[NFE_FAMS];
-  
+   
       virtual void fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(const vector < vector < double > > &vt,
                                                                                          const vector < vector < double> > & vt_bdry, 
                                                                                          const unsigned & jface, 
@@ -250,8 +247,12 @@ namespace femus
 
 //  Gauss
       const Gauss _gauss;
-            Gauss* _gauss_bdry;
+            Gauss* _gauss_bdry; ///@todo this must become a vector because for a Wedge there are 2 boundary quadrature rules, since there are 2 types of geom elems
 
+//  FE values at quadrature points on faces
+      std::vector < std::vector < std::vector < double > > > _phiFace;  //for each face, for each Gauss point on the face, for each shape function of the volume
+      std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta)
+      std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta), for each reference direction (xi, eta, zeta) again
 
   };
 
@@ -382,9 +383,6 @@ namespace femus
       double** _d2phidxi2;
       double* _d2phidxi2_memory;
 
-      std::vector < std::vector < std::vector < double > > > _phiFace;  //for each face, for each Gauss point on the face, for each shape function of the volume
-      std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta)
-      std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta), for each reference direction (xi, eta, zeta) again
 
         // values at boundary gauss points
       double **_phi_vol_at_bdry;
@@ -530,11 +528,7 @@ namespace femus
       double** _d2phidxideta;
       double* _d2phidxideta_memory;
 
-      std::vector < std::vector < std::vector < double > > > _phiFace;
-      std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
-      std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
-      
-        // values at boundary gauss points
+      // values at boundary gauss points ///@todo probably remove
       double **_phi_vol_at_bdry;
       double *_phi_memory_vol_at_bdry;
       double **_dphidxi_vol_at_bdry;
@@ -689,10 +683,6 @@ namespace femus
       double* _d2phidetadzeta_memory;
       double** _d2phidzetadxi;
       double* _d2phidzetadxi_memory;
-
-      std::vector < std::vector < std::vector < double > > > _phiFace;
-      std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
-      std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
       
         // values at boundary gauss points
       double **_phi_vol_at_bdry;

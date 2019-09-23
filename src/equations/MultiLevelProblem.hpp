@@ -190,8 +190,6 @@ public:
   inline const Gauss & GetQuadratureRule(const unsigned geom_elem_type) const { return _qrule[geom_elem_type]; }
 
   void SetQuadratureRuleAllGeomElems(const std::string quadr_order_in);
-
-  void SetElemTypeAllDims();
   
     /** Input Parser */
   inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
