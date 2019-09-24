@@ -20,7 +20,7 @@
 ///@todo Review the ordering for phi_ctrl_x_bdry
 ///@todo check computation of 2nd derivatives in elem_type_template
 ///@todo Rather fast way to add inequality constraint to a problem
-///@todo Parallel run with PDAS method
+///@todo Parallel run with PDAS method: seems like I am getting coordinates from the other process, is that a problem?
 ///@todo If I have a mesh that has 1 element only at the coarse level, can I run it in parallel? I need to factorize the ReadCoarseMesh function
 ///@todo merge elliptic_nonlin in here
 
@@ -128,7 +128,8 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-  std::string input_file = "square_parametric.med";
+  std::string input_file = "square_4x5.med";
+//   std::string input_file = "square_parametric.med";
 //   std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
@@ -146,7 +147,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 5;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
