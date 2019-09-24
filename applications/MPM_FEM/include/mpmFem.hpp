@@ -1,4 +1,3 @@
-
 #include "MultiLevelSolution.hpp"
 
 
@@ -7,8 +6,8 @@ using namespace femus;
 double beta = 0.25;
 double Gamma = 0.5;
 double gravity[3] = {0., -9.81, 0.};
-double scalingFactor1 =1.e-5;
-double scalingFactor2 =1.e-9;
+double scalingFactor1 =1.e-6;
+double scalingFactor2 =1.e-10;
 double NeumannFactor = .0;
 Line* linea;
 
@@ -353,8 +352,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         SolDd[k][i] = (*mysolution->_Sol[indexSolD[k]])(idof);      // global extraction and local storage for the solution
         SolDdOld[k][i] = (*mysolution->_SolOld[indexSolD[k]])(idof);      // global extraction and local storage for the solution
         sysDof[i + k * nDofsD] = myLinEqSolver->GetSystemDof(indexSolD[k], indexPdeD[k], i, iel);    // global to global mapping between solution node and pdeSys dof
-        vx_hat[k][i] = (*mymsh->_topology->_Sol[k])(idofX);
-        vx[k][i] = vx_hat[k][i] + SolDd[k][i];
+        vx_hat[k][i] = (*mymsh->_topology->_Sol[k])(idofX); 
+        vx[k][i] = vx_hat[k][i] + SolDd[k][i]; //TODO this has to be moved after the s.new_recording();
         if( material == 4 ) {
           SolVdOld[k][i] = (*mysolution->_Sol[indexSolV[k]])(idof);
           SolAdOld[k][i] = (*mysolution->_Sol[indexSolA[k]])(idof);
@@ -400,8 +399,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         for(unsigned i = 0; i < nDofsD; i++) {
           vector < adept::adouble > softStiffness(dim, 0.);
           
-          for(unsigned j = 0; j < dim; j++) {
-            for(unsigned  k = 0; k < dim; k++) {
+          for(unsigned j = 0; j < dim; j++) { //TODO swap these 2 for loops
+            for(unsigned  k = 0; k < dim; k++) { //TODO
               softStiffness[k]   +=  mu * gradphi_hat[i * dim + j] * (GradSolDgssHat[k][j] + GradSolDgssHat[j][k]);
             }
           }

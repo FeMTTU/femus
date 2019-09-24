@@ -1,3 +1,4 @@
+#pragma once
 
 #include "MultiLevelSolution.hpp"
 #include "PetscMatrix.hpp"
@@ -259,20 +260,18 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
       if (MPMmaterial == 0) {
         for (unsigned i = 0; i < nDofsDV; i++) {
-          vector < adept::adouble > wlaplaceV (dim, 0.);
-
           for (unsigned k = 0; k < dim; k++) {
             adept::adouble wlaplace = 0.;
             adept::adouble advection = 0.;
             for (unsigned j = 0; j < dim; j++) {
               wlaplace  +=  gradPhi[i * dim + j] * (gradSolVg[k][j] + gradSolVg[j][k]);
-              advection  +=  phi[i] * ( solVg[j] - (solDg[k] - solDgOld[k])/dt ) * gradSolVg[k][j];
+              advection  +=  phi[i] * ( solVg[j] - (solDg[j] - solDgOld[j])/dt ) * gradSolVg[k][j];
             }
             if (!solidFlag[i]) {
-              aRhsV[k][i] += (-(solVg[k] - solVgOld[k])/dt - advection - muFluid * wlaplace + gradPhi[i * dim + k] * solPg) * weight;
+              aRhsV[k][i] += (- rhoFluid * (solVg[k] - solVgOld[k])/dt - rhoFluid * advection - muFluid * wlaplace + gradPhi[i * dim + k] * solPg) * weight;
             }
             else {
-              aRhsD[k][i] += (-(solVg[k] - solVgOld[k])/dt -advection - muFluid * wlaplace + gradPhi[i * dim + k] * solPg) * weight;
+              aRhsD[k][i] += (- rhoFluid * (solVg[k] - solVgOld[k])/dt - rhoFluid * advection - muFluid * wlaplace + gradPhi[i * dim + k] * solPg) * weight;
             }
           }
         }
