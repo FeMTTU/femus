@@ -1,5 +1,3 @@
-#pragma once
-
 #include "MultiLevelSolution.hpp"
 #include "PetscMatrix.hpp"
 
