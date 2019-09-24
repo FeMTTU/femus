@@ -160,9 +160,14 @@ public:
     /** To be Added */
     void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
 
-    /** Generate mesh functions */
+    void Partition();
+    
+    void InitializeTopologyStructures();
+  
+    /** Only file reading */
+    void ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups);
 
-    /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
+      /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
     void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
 
     /** This function generates the coarse mesh level, $l_0$, from an input mesh file, with option to not read groups */

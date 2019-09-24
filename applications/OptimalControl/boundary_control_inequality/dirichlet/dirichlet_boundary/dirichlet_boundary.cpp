@@ -21,6 +21,8 @@
 ///@todo check computation of 2nd derivatives in elem_type_template
 ///@todo Rather fast way to add inequality constraint to a problem
 ///@todo Parallel run with PDAS method
+///@todo If I have a mesh that has 1 element only at the coarse level, can I run it in parallel? I need to factorize the ReadCoarseMesh function
+///@todo merge elliptic_nonlin in here
 
 using namespace femus;
 
@@ -126,14 +128,15 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-//   std::string input_file = "square_parametric.med";
-  std::string input_file = "Mesh_3_groups.med";
+  std::string input_file = "square_parametric.med";
+//   std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
   
   
   ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(), Lref);
+  
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, NSUB_Z, 0., 1., 0., 1., 0., 1., HEX27, fe_quad_rule.c_str());  
      ///@todo seems like GenerateCoarseBoxMesh doesn't assign flags to faces correctly, 
      //so I created a .med file with the following flags:
@@ -143,7 +146,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);

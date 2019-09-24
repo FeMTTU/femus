@@ -118,8 +118,22 @@ namespace femus {
     {},
     {{ -1. / 9., -1. / 9., -1. / 9., 4. / 9., 4. / 9., 4. / 9.}}
   };
+
+
   
 
+  void Mesh::Partition() {
+      
+    std::vector < unsigned > partition;
+    partition.reserve (GetNumberOfNodes());
+    partition.resize (GetNumberOfElements());
+    MeshMetisPartitioning meshMetisPartitioning (*this);
+    meshMetisPartitioning.DoPartition (partition, false);
+    FillISvector (partition);
+    partition.resize (0);
+    
+  }
+  
   
   /**
    *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file
@@ -134,16 +148,8 @@ namespace femus {
   }
   
   
-  /**
-   *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file
-   **/
-  void Mesh::ReadCoarseMesh (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups) {
-
-    SetIfHomogeneous (true);
-
-    _coords.resize (3);
-
-    _level = 0;
+  void Mesh::ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups) {
+      
 
     if (name.rfind (".neu") < name.size()) {
       GambitIO (*this).read (name, _coords, Lref, type_elem_flag, read_groups);
@@ -157,8 +163,26 @@ namespace femus {
                 << "     *.neu -- Gambit Neutral File\n"
                 << "     *.med -- MED File\n"
                 << std::endl;
-      exit (1);
+      abort();
     }
+    
+  }
+    
+  /**
+   *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file
+   **/
+  void Mesh::ReadCoarseMesh (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups) {
+
+    SetIfHomogeneous (true);
+
+    _coords.resize (3);
+
+    _level = 0;
+
+    
+    ReadCoarseMeshFile(name, Lref, type_elem_flag, read_groups);
+
+    
 
     BiquadraticNodesNotInGambit();
 
@@ -167,21 +191,33 @@ namespace femus {
     //el->SetNodeNumber(_nnodes);
 
 
-
-    std::vector < unsigned > partition;
-    partition.reserve (GetNumberOfNodes());
-    partition.resize (GetNumberOfElements());
-    MeshMetisPartitioning meshMetisPartitioning (*this);
-    meshMetisPartitioning.DoPartition (partition, false);
-    FillISvector (partition);
-    partition.resize (0);
-
+    Partition();
+    
+    
     el->BuildElementNearVertex();
-
 
 
     Buildkel();
 
+    
+    InitializeTopologyStructures();
+    
+
+    el->BuildElementNearElement();
+
+    el->ScatterElementQuantities();
+    el->ScatterElementDof();
+    el->ScatterElementNearFace();
+
+    _amrRestriction.resize (3);
+
+    PrintInfo();
+  }
+  
+
+  
+  void Mesh::InitializeTopologyStructures() {
+      
     _topology = new Solution (this);
 
     _topology->AddSolution ("X", LAGRANGE, SECOND, 1, 0);
@@ -203,18 +239,8 @@ namespace femus {
 
     _topology->AddSolution ("solidMrk", LAGRANGE, SECOND, 1, 0);
     AllocateAndMarkStructureNode();
-
-    el->BuildElementNearElement();
-
-    el->ScatterElementQuantities();
-    el->ScatterElementDof();
-    el->ScatterElementNearFace();
-
-    _amrRestriction.resize (3);
-
-    PrintInfo();
+    
   }
-  
   
 
   /**
@@ -247,41 +273,19 @@ namespace femus {
     el->SetMaterialElementCounter (materialElementCounter);
 
 
-    std::vector < unsigned > partition;
-    partition.reserve (GetNumberOfNodes());
-    partition.resize (GetNumberOfElements());
-    MeshMetisPartitioning meshMetisPartitioning (*this);
-    meshMetisPartitioning.DoPartition (partition, false);
-    FillISvector (partition);
-    partition.resize (0);
+    Partition();
+    
 
     el->BuildElementNearVertex();
 
     Buildkel();
 
-    _topology = new Solution (this);
+    
+    InitializeTopologyStructures();
 
-    _topology->AddSolution ("X", LAGRANGE, SECOND, 1, 0);
-    _topology->AddSolution ("Y", LAGRANGE, SECOND, 1, 0);
-    _topology->AddSolution ("Z", LAGRANGE, SECOND, 1, 0);
-
-    _topology->ResizeSolutionVector ("X");
-    _topology->ResizeSolutionVector ("Y");
-    _topology->ResizeSolutionVector ("Z");
-
-    _topology->GetSolutionName ("X") = _coords[0];
-    _topology->GetSolutionName ("Y") = _coords[1];
-    _topology->GetSolutionName ("Z") = _coords[2];
-
-    _topology->AddSolution ("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
-
-    _topology->ResizeSolutionVector ("AMR");
-
-    _topology->AddSolution ("solidMrk", LAGRANGE, SECOND, 1 , 0);
-    AllocateAndMarkStructureNode();
 
     el->BuildElementNearElement();
-    el->DeleteElementNearVertex();
+    el->DeleteElementNearVertex();  ///@todo check why it is needed here and not in the other similar function
 
     el->ScatterElementQuantities();
     el->ScatterElementDof();
