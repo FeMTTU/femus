@@ -1815,14 +1815,13 @@ namespace femus {
       }
     }
 
-//<<<<<<< HEAD
     xi.resize(dim);
     for(unsigned k = 0; k < dim; k++) {
       xi[k] = XI[ieltype][jmin][k];
     }
   }
 
-  void PrintLine(const std::string output_path, const std::vector < std::vector< std::vector<double> > > &xn, const bool &streamline, const unsigned &step) {
+  void PrintLine(const std::string output_path, const std::string file, const std::vector < std::vector< std::vector<double> > > &xn, const unsigned &step) {
 
     // *********** open vtu files *************
     std::ofstream fout;
@@ -1831,10 +1830,7 @@ namespace femus {
     Files files;
     files.CheckDir(output_path, dirnamePVTK);
     
-    
-    
-
-    std::string filename_prefix = (streamline) ? "streamline" : "line";
+    std::string filename_prefix = file;
 
     std::ostringstream filename;
     filename << output_path << "/./" << filename_prefix << "." << step << ".vtu";

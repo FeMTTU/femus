@@ -78,7 +78,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -147,7 +147,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (GMRES_SMOOTHER);
+  system.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   system.init();
 
@@ -184,12 +184,13 @@ int main (int argc, char** argv) {
   systemSG.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  systemSG.SetMgSmoother (GMRES_SMOOTHER);
+  systemSG.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   systemSG.init();
 
   // ******* Set Smoother *******
-  systemSG.SetSolverFineGrids (GMRES);
+  // systemSG.SetSolverFineGrids (GMRES);
+  systemSG.SetSolverFineGrids (RICHARDSON);
 
   systemSG.SetPreconditionerFineGrids (ILU_PRECOND);
 
@@ -229,7 +230,7 @@ int main (int argc, char** argv) {
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
   //END
 
-
+/*
   //BEGIN Define the instances of the problem for HISTOGRAM and KDE
   MultiLevelMesh mlMshHisto;
   MultiLevelMesh mlMshHistoFinest;
@@ -260,10 +261,10 @@ int main (int argc, char** argv) {
   MultiLevelSolution mlSolHisto (&mlMshHisto);
   MultiLevelSolution mlSolHistoFinest (&mlMshHistoFinest);
 
-  mlSolHisto.AddSolution ("HISTO", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSolHisto.AddSolution ("HISTO", DISCONTINUOUS_POLYNOMIAL, ZERO);
   mlSolHisto.AddSolution ("PROPOSED", LAGRANGE, FIRST);
 
-  mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINUOUS_POLYNOMIAL, ZERO);
 
   mlSolHisto.Initialize ("All");
 
@@ -298,6 +299,7 @@ int main (int argc, char** argv) {
   mlSolHistoFinest.GetWriter()->Write (DEFAULT_OUTPUTDIR, "histo_finer", print_vars_3, 0);
   //END
 
+ */ 
   return 0;
 
 } //end main

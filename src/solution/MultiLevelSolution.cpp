@@ -39,21 +39,11 @@ namespace femus {
   using std::endl;
 
 //---------------------------------------------------------------------------------------------------
-  MultiLevelSolution::~MultiLevelSolution() {
+  MultiLevelSolution::~MultiLevelSolution()  {
 
-    for (unsigned i = 0; i < _gridn; i++) {
-      _solution[i]->FreeSolutionVectors();
-      delete _solution[i];
-    }
+    clear();
 
-    for (unsigned i = 0; i < _solName.size(); i++) delete [] _solName[i];
-
-    for (unsigned i = 0; i < _solName.size(); i++) delete [] _bdcType[i];
-
-    if (_writer != NULL) delete _writer;
-
-
-  };
+  }
 
 //---------------------------------------------------------------------------------------------------
   MultiLevelSolution::MultiLevelSolution (MultiLevelMesh* ml_msh) :
@@ -76,6 +66,31 @@ namespace femus {
     _writer = NULL;
 
   }
+  
+  
+//---------------------------------------------------------------------------------------------------
+// this is the destructor that can be called explicitly, instead of the automatic destructor
+ void MultiLevelSolution::clear() {
+      
+    for(unsigned i = 0; i < _gridn; i++) {
+      _solution[i]->FreeSolutionVectors();
+      delete _solution[i];
+    }
+
+    for(unsigned i = 0; i < _solName.size(); i++) delete [] _solName[i];
+
+    for(unsigned i = 0; i < _solName.size(); i++) delete [] _bdcType[i];
+    
+    if(_writer != NULL) delete _writer;
+ 
+      
+      
+  }
+  
+  
+  
+  
+  
 
   void MultiLevelSolution::AddSolutionLevel() {
     // add level solution
@@ -163,7 +178,21 @@ namespace femus {
   }
 
 
+  void MultiLevelSolution::ResizeSolution_par(const unsigned new_size)  {
 
+      for(unsigned ig = 0; ig < _solution.size(); ig++) {
+
+    for(unsigned s = 0; s < _solType.size(); s++) {
+
+     _solution[ig]->ResizeSolution_par(new_size);
+
+    }
+  }
+
+      
+}
+  
+  
 //---------------------------------------------------------------------------------------------------
   void MultiLevelSolution::AssociatePropertyToSolution (const char solution_name[], const char solution_property[],
                                                         const bool& bool_property) {
@@ -296,7 +325,6 @@ namespace femus {
   }
 
 
-
 //---------------------------------------------------------------------------------------------------
   unsigned MultiLevelSolution::GetIndex (const char name[]) const {
     unsigned index = 0;
@@ -327,7 +355,8 @@ namespace femus {
     }
 
     return _solType[index];
-  }
+  }  
+
 
 //---------------------------------------------------------------------------------------------------
   void MultiLevelSolution::AttachSetBoundaryConditionFunction (BoundaryFuncMLProb SetBoundaryConditionFunction_in) {
@@ -416,7 +445,8 @@ namespace femus {
       cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine"
            << endl;
 
-      exit (1);
+      abort();
+
     }
 
     if (_bdcFuncSetMLProb == true && ml_prob != NULL) {
@@ -433,7 +463,8 @@ namespace femus {
     unsigned i_start;
     unsigned i_end;
 
-    if (!strcmp (name, "All")) {
+    if(!strcmp(name, "All")  || !strcmp(name, "all") || !strcmp(name, "ALL")) {
+
       i_start = 0;
       i_end = _solType.size();
 
@@ -878,8 +909,51 @@ namespace femus {
   }
 
 
-  void MultiLevelSolution::CopySolutionToOldSolution() {
-    for (unsigned short i = 0; i < _gridn; i++) {
+
+    void MultiLevelSolution::CoarsenSolutionByOneLevel_wrong(const unsigned &grid_fine)  {
+
+    Mesh *msh = _mlMesh->GetLevel(grid_fine);
+    const unsigned grid_coarse = grid_fine - 1;
+    
+    for(unsigned k = 0; k < _solType.size(); k++) {
+
+      unsigned solType = _solType[k];
+      _solution[grid_coarse]->_Sol[k]->matrix_mult_transpose( *(_solution[grid_fine]->_Sol[k]), *(msh->GetCoarseToFineProjectionRestrictionOnCoarse(solType)) );
+      _solution[grid_coarse]->_Sol[k]->close();
+    }
+    
+  }
+
+    void MultiLevelSolution::CoarsenSolutionByOneLevel(const unsigned &grid_fine)  {
+        
+     const unsigned grid_coarse = grid_fine - 1;
+     Mesh *msh = _mlMesh->GetLevel(grid_coarse);
+     
+        //loop over the coarse elements
+        //loop over the dofs of each coarse element
+        //loop over the children elements of that coarse element
+        //find the child element to which the coarse dof belongs, and find the child dof
+        //set the _Sol in the coarse dofs to the fine dofs
+        
+    }
+  
+  /** Copies from another MLSol object from a given level to some other level.
+      One should also check that they belong to the same underlying mesh structure */
+  void MultiLevelSolution::fill_at_level_from_level(const unsigned lev_out, const unsigned lev_in, const MultiLevelSolution & ml_sol_in)  {
+      
+      assert(_solType.size() == ml_sol_in.GetSolutionSize());
+      
+          for(unsigned k = 0; k < _solType.size(); k++) {
+              *(_solution[lev_out]->_Sol[k]) = *(ml_sol_in.GetSolutionLevel(lev_in)->_Sol[k]);
+          }
+          
+  }
+
+  
+  
+  void MultiLevelSolution::CopySolutionToOldSolution()
+  {
+    for(unsigned short i = 0; i < _gridn; i++) {
       _solution[i]->CopySolutionToOldSolution();
     }
   }

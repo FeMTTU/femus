@@ -197,10 +197,10 @@ int main(int argc, char **args)
   if (!dimension2D) ml_sol.PairSolution("W", "DZ"); // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 1);
+  ml_sol.AddSolution("P", DISCONTINUOUS_POLYNOMIAL, FIRST, 1);
   ml_sol.AssociatePropertyToSolution("P", "Pressure", false); // Add this line
 
-  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+  ml_sol.AddSolution("lmbd", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -267,7 +267,7 @@ int main(int argc, char **args)
 
   // ******* Set Preconditioner *******
 
-  system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetLinearEquationSolverType(FEMuS_ASM);
 
   system.init();
 
@@ -367,7 +367,7 @@ int main(int argc, char **args)
 
   linea[0]->GetStreamLine(streamline, 0);
   linea[0]->GetStreamLine(streamline, 1);
-  PrintLine(DEFAULT_OUTPUTDIR, streamline, true, 0);
+  PrintLine(DEFAULT_OUTPUTDIR, "streamline", streamline, 0);
 
   std::vector <double> data;
 
@@ -424,7 +424,7 @@ int main(int argc, char **args)
     for (int i = 0; i < linea.size(); i++) {
       linea[i]->GetStreamLine(streamline, i + 1);
     }
-    PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
+    PrintLine(DEFAULT_OUTPUTDIR, "streamline", streamline, time_step + 1);
 
 
   }

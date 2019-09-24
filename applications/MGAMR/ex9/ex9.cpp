@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -129,8 +130,8 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(ASM_SMOOTHER);
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
   
@@ -218,8 +219,9 @@ int main(int argc, char** args) {
     std::cout << "iteration = " <<i<<std::endl;
     
     //mlSol.Initialize("All");
+    system.SetOuterSolver(PREONLY);
+    system.MGsolve();
     
-    system.MLsolve();
     mlSol.GenerateBdc("All");
     std::ofstream fout;
     if(i==0){

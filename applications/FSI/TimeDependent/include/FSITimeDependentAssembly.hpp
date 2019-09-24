@@ -2,6 +2,7 @@
 #define __femus_include_IncompressibleFSIAssembly_hpp__
 
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "adept.h"
 
 

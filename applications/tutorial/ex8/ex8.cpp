@@ -13,6 +13,7 @@
  *  \author Eugenio Aulisa
  */
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -79,7 +80,7 @@ int main(int argc, char** args) {
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
@@ -104,8 +105,8 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  //system.SetMgSmoother(ASM_SMOOTHER); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
-  system.SetMgSmoother(GMRES_SMOOTHER); // GMRES
+  //system.SetLinearEquationSolverType(FEMuS_ASM); // GMRES with ADDITIVE SWRARTZ METHOD (domain decomposition)
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT); // GMRES
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
@@ -123,17 +124,18 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(GMRES);// do not touch
   //system.SetSolverFineGrids(MINRES);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);// for ASM_SMOOTHER you can use MLU_PRECOND
+  system.SetPreconditionerFineGrids(ILU_PRECOND);// for FEMuS_ASM you can use MLU_PRECOND
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40); //PETSC GMRES tolerances
   //system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
 
-  system.SetNumberOfSchurVariables(1); // option for ASM_SMOOTHER fot "P"
-  system.SetElementBlockNumber(4); // option for ASM_SMOOTHER
+  system.SetNumberOfSchurVariables(1); // option for FEMuS_ASM fot "P"
+  system.SetElementBlockNumber(4); // option for FEMuS_ASM
 
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

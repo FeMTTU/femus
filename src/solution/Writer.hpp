@@ -25,6 +25,7 @@
 #include <iostream>
 #include "ParallelObject.hpp"
 #include "WriterEnum.hpp"
+#include "iostream"
 
 namespace femus {
 
@@ -52,6 +53,16 @@ namespace femus {
 
     /** write output function */
     virtual void Write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0)  = 0;
+    
+    /** write output function with arbitrary level */
+    virtual void Write(const unsigned my_level, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0) { abort(); };
+  
+    /** write output function with fixed level and arbitrary initial string */
+    virtual void Write(const std::string init_string, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0) { abort(); };
+  
+    /** write output function with arbitrary level and arbitrary initial string! */
+    virtual void Write(const unsigned my_level, const std::string init_string, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0) { abort(); };
+  
     /** set moving mesh */
     void SetMovingMesh(std::vector<std::string>& movvars_in);
 
@@ -61,8 +72,8 @@ namespace femus {
     /** runtime selection of writer for MLmesh */
     static std::unique_ptr<Writer> build(const WriterEnum format, MultiLevelMesh * ml_mesh);
 
-    virtual void SetDebugOutput( bool value ){
-      std::cout<<"Warning this writer type does not have debug printing"<<std::endl;
+    virtual void SetDebugOutput( bool value ) {
+      std::cout << "Warning this writer type does not have debug printing" << std::endl;
     };
 
     void SetGraphVariable(const std::string &GraphVaraible);

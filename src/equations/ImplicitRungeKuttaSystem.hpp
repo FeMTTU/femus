@@ -46,12 +46,10 @@ namespace femus {
       ImplicitRungeKuttaSystem (MultiLevelProblem& ml_probl,
                                 const std::string& name,
                                 const unsigned int number,
-                                const MgSmoother & smoother_type);
+                                const LinearEquationSolverType & smoother_type);
 
       /** Destructor. */
       virtual ~ImplicitRungeKuttaSystem ();
-
-      virtual void clear ();
 
       void AddSolutionToSystemPDE (const char solname[]);
 
@@ -67,9 +65,6 @@ namespace femus {
       }
 
       void UpdateSolution();
-
-      /** calling the parent solve */
-      void MLsolve();
 
       /** calling the parent solve */
       void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
@@ -109,7 +104,7 @@ namespace femus {
     MultiLevelProblem& ml_probl,
     const std::string& name,
     const unsigned int number,
-    const MgSmoother & smoother_type) :
+    const LinearEquationSolverType & smoother_type) :
     TransientSystem<Base> (ml_probl, name, number, smoother_type),
     _RK (1),
     _RKScheme(LEGENDRE1),
@@ -124,18 +119,13 @@ namespace femus {
   /** Destructor. */
   template <class Base>
   ImplicitRungeKuttaSystem<Base>::~ImplicitRungeKuttaSystem() {
-    this->clear();
-  }
-
-  template <class Base>
-  void ImplicitRungeKuttaSystem<Base>::clear() {
     _RK = 1;
     _solName.resize (0);
     _solKiName.resize (0);
     _solIndex.resize (0);
     _solKiIndex.resize (0);
     _solRKType.resize(0);
-    TransientSystem<Base>::clear();
+    
   }
 
   template <class Base>
@@ -196,30 +186,6 @@ namespace femus {
     _solRKType[index] = type;
     
   }
-  
-
-  template <class Base>
-  void ImplicitRungeKuttaSystem<Base>::MLsolve() {
-
-    TransientSystem<Base>::SetUpForSolve();
-
-    SetIntermediateTimes();
-
-
-    for (unsigned i = 0; i < _solIndex.size(); i++) {
-      if (!strcmp (this->_ml_sol->GetBdcType (_solIndex[i]), "Time_dependent")) {
-        this->_ml_sol->GenerateRKBdc (_solIndex[i], _solKiIndex[i], 0, _itime, _time0, this->_dt, _Ai);
-      }
-    }
-
-    // call the parent MLsolver
-    Base::_MLsolver = true;
-    Base::_MGsolver = false;
-
-    Base::solve();
-
-    UpdateSolution();
-  }
 
   template <class Base>
   void ImplicitRungeKuttaSystem<Base>::MGsolve (const MgSmootherType& mgSmootherType) {
@@ -234,11 +200,7 @@ namespace femus {
       }
     }
 
-    // call the parent MLsolver
-    Base::_MLsolver = false;
-    Base::_MGsolver = true;
-
-    Base::solve (mgSmootherType);
+    Base::MGsolve (mgSmootherType);
 
     UpdateSolution();
   }
@@ -334,6 +296,8 @@ namespace femus {
     GetbAi();
   }
   
+  // This idea is used to update the algebraic variable using RK in DAE problems.
+  // Refer to http://www.ams.org/journals/mcom/2006-75-254/S0025-5718-05-01809-0/S0025-5718-05-01809-0.pdfS
   template <class Base>
   void ImplicitRungeKuttaSystem<Base>::GetbAi(){
     _bAi.assign(_RK, 0.);

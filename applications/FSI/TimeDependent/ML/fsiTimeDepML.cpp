@@ -254,7 +254,7 @@ int main(int argc,char **args) {
   if (!dimension2D) ml_sol.PairSolution("W","DZ"); // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,2);
+  ml_sol.AddSolution("P",DISCONTINUOUS_POLYNOMIAL,FIRST,2);
   ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
 
   // ******* Initialize solution *******
@@ -335,8 +335,8 @@ int main(int argc,char **args) {
 
 
   // ******* Set Preconditioner *******
-  if(Gmres) 		system.SetMgSmoother(GMRES_SMOOTHER);
-  else if(Asm) 		system.SetMgSmoother(ASM_SMOOTHER);
+  if(Gmres) 		system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  else if(Asm) 		system.SetLinearEquationSolverType(FEMuS_ASM);
 
   system.init();
 
@@ -402,7 +402,8 @@ int main(int argc,char **args) {
 
     system.CopySolutionToOldSolution();
 
-    system.MLsolve();
+    system.SetOuterSolver(PREONLY);
+    system.MGsolve();
 
 
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);

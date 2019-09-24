@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -82,7 +83,7 @@ int main(int argc, char** args) {
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND,2);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST,2);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST,2);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
@@ -159,7 +160,7 @@ int main(int argc, char** args) {
   FS2.reserve(2);
   FS2.push_back(&FS_NS);
   FS2.push_back(&FS_T);
-  FieldSplitTree FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
+  FieldSplitTree FS_NST( RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
   //FieldSplitTree FS_NST( GMRES, FS_SCHUR_PRECOND, FS2, "Benard");
 
 //   std::vector < unsigned > fieldUV(2);
@@ -193,9 +194,9 @@ int main(int argc, char** args) {
 
 
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz preconditioner
-  //system.SetMgSmoother(ASM_SMOOTHER); // Field-Split preconditioned
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT); // Additive Swartz preconditioner
+  //system.SetLinearEquationSolverType(FEMuS_ASM); // Field-Split preconditioned
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);

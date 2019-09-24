@@ -224,10 +224,10 @@ int main(int argc, char **args)
   if (!dimension2D) ml_sol.PairSolution("W", "DZ"); // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AddSolution("PS", DISCONTINUOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PS", "Pressure", false); // Add this line
 
-  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+  ml_sol.AddSolution("lmbd", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -316,7 +316,7 @@ int main(int argc, char **args)
 
   // ******* Set Preconditioner *******
 
-  system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetLinearEquationSolverType(FEMuS_ASM);
 
   system.init();
 
@@ -474,7 +474,7 @@ int main(int argc, char **args)
 
       output_path << "./output/particles-" << configuration << "-" << diam;
 
-      PrintLine(output_path.str(), streamline, true, 0);
+      PrintLine(output_path.str(), "streamline", streamline, 0);
     }
   }
 
@@ -554,7 +554,7 @@ int main(int argc, char **args)
         std::ostringstream output_path;
         output_path << "./output/particles-" << configuration << "-" << diam;
 
-        PrintLine(output_path.str(), streamline, true, time_step + 1);
+        PrintLine(output_path.str(), "streamline", streamline, time_step + 1);
 
         data[time_step][0] = time_step / 16.;
         //data[time_step][0] = time_step / (64*1.4);

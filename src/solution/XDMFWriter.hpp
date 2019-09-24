@@ -23,6 +23,8 @@
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"
 
+#ifdef HAVE_HDF5
+
 namespace femus {
 
   class DofMap;
@@ -164,6 +166,6 @@ namespace femus {
 
 } //end namespace femus
 
-
+#endif
 
 #endif

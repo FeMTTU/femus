@@ -32,7 +32,7 @@ FM_PETSC_DIR_REL=petsc
 FM_PETSC_DIR_ABS=$SOFTWARE_DIR/$FM_PETSC_DIR_REL
 export PETSC_DIR=$FM_PETSC_DIR_ABS
 
-myarchs=(linux-opt linux-dbg)
+myarchs=(arch-linux2-cxx-opt arch-linux2-cxx-dbg)
 debugflag=(0 1)
 
 

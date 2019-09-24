@@ -17,6 +17,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "ImplicitRungeKuttaSystem.hpp"
 #include "TransientSystem.hpp"
@@ -38,7 +39,8 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x,
 MultiLevelProblem::MultiLevelProblem( MultiLevelSolution *ml_sol):
 				      _ml_sol(ml_sol),
 				      _ml_msh(ml_sol->_mlMesh),
-				      _gridn(_ml_msh->GetNumberOfLevels())
+				      _gridn(_ml_msh->GetNumberOfLevels()),
+				      _files(NULL)
 {
 
 }
@@ -111,51 +113,7 @@ System & MultiLevelProblem::add_system (const std::string& sys_type,
 }
 
 
-template <typename T_sys>
-inline
-const T_sys & MultiLevelProblem::get_system (const unsigned int num) const
-{
-  assert(num < this->n_systems());
 
-  const_system_iterator       pos = _systems.begin();
-  const const_system_iterator end = _systems.end();
-
-  for (; pos != end; ++pos)
-    if (pos->second->number() == num)
-      break;
-
-  // Check for errors
-  if (pos == end)
-  {
-    std::cerr << "ERROR: no system number " << num << " found!" << std::endl;
-  }
-
-  // Attempt dynamic cast
-  return *static_cast<T_sys*>(pos->second);
-}
-
-template <typename T_sys>
-inline
-T_sys & MultiLevelProblem::get_system (const unsigned int num)
-{
-  assert(num < this->n_systems());
-
-  const_system_iterator       pos = _systems.begin();
-  const const_system_iterator end = _systems.end();
-
-  for (; pos != end; ++pos)
-    if (pos->second->number() == num)
-      break;
-
-  // Check for errors
-  if (pos == end)
-  {
-    std::cerr << "ERROR: no system number " << num << " found!" << std::endl;
-  }
-
-  // Attempt dynamic cast
-  return *static_cast<T_sys*>(pos->second);
-}
 
 void MultiLevelProblem::clear ()
 {

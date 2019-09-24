@@ -25,7 +25,7 @@ FM_PETSC_DIR_REL=petsc
 FM_PETSC_DIR_ABS=$SOFTWARE_DIR/$FM_PETSC_DIR_REL
 export PETSC_DIR=$FM_PETSC_DIR_ABS
 
-export PETSC_ARCH=linux-opt  #let us only install libmesh with optimized petsc
+export PETSC_ARCH=arch-linux2-cxx-opt  #let us only install libmesh with optimized petsc
 
 
 #######################################################################
@@ -58,9 +58,9 @@ git clone https://github.com/giorgiobornia/libmesh.git  ${FM_LIBMESH_DIR_REL}/${
 
 mkdir -p ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_INSTALL}-petsc-${PETSC_ARCH}
 cd  ${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_BUILD}
-git checkout gambit_format
+# git checkout gambit_format
 echo =========== Compile
-./configure --disable-cxx11 --with-methods="opt dbg" --prefix=$SOFTWARE_DIR/${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_INSTALL}-petsc-${PETSC_ARCH}
+./configure --with-methods="opt dbg" --prefix=$SOFTWARE_DIR/${FM_LIBMESH_DIR_REL}/${FM_LIBMESH_INSTALL}-petsc-${PETSC_ARCH}
 # this script should be clever enough to find the external packages in petsc
 make -j $(( $(nproc)-1 ))
 make install

@@ -7,7 +7,7 @@ enum MgType {
     M_CYCLE
 };
 
-enum MgSmootherType{
+enum MgSmootherType {
     FULL=0,
     MULTIPLICATIVE,
     ADDITIVE,

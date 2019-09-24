@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -99,9 +100,9 @@ int main(int argc, char** args) {
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
-  system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetOuterKSPSolver("cg"); 
- // system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetOuterSolver(CG); 
+ // system.SetLinearEquationSolverType(FEMuS_ASM);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
   

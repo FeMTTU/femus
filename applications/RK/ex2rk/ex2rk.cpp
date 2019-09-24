@@ -13,6 +13,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -89,7 +90,7 @@ int main (int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels, numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -110,7 +111,7 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("DY", LAGRANGE, SECOND,  2);
   if (dim == 3) mlSol.AddSolution ("DZ", LAGRANGE, SECOND, 2);
 
-  mlSol.AddSolution ("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution ("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   //  Taylor-hood
   //  mlSol.AddSolution("U", LAGRANGE, SERENDIPITY);
@@ -143,29 +144,89 @@ int main (int argc, char** args) {
   // add system Poisson in mlProb as a Linear Implicit System
   ImplicitRungeKuttaNonlinearImplicitSystem & system = mlProb.add_system < ImplicitRungeKuttaNonlinearImplicitSystem > ("NS");
 
-  system.SetImplicitRungeKuttaScheme (PIPPO3);
+  //system.SetImplicitRungeKuttaScheme (CROUZEIX2);
+  system.SetImplicitRungeKuttaScheme (DIRK3);
 
-  // add solution "u" to system
-  system.AddSolutionToSystemPDE ("U");
-  system.AddSolutionToSystemPDE ("V");
-  if (dim == 3) system.AddSolutionToSystemPDE ("W");
-
-  system.AddSolutionToSystemPDE ("DX");
-  system.AddSolutionToSystemPDE ("DY");
-  if (dim == 3) system.AddSolutionToSystemPDE ("DZ");
-
+  std::vector < std::string > solVName (3), solDName (3);
+  solVName[0] = "U";
+  solVName[1] = "V";
+  solVName[2] = "W";
+  solDName[0] = "DX";
+  solDName[1] = "DY";
+  solDName[2] = "DZ";
+  
+  for(unsigned k=0; k < dim; k++){
+    system.AddSolutionToSystemPDE ( solVName[k].c_str());
+  }
+  for(unsigned k=0; k < dim; k++){
+    system.AddSolutionToSystemPDE ( solDName[k].c_str());
+  }
   system.AddSolutionToSystemPDE ("P");
   system.SetRKVariableType ("P", false);
+    
+  
+  std::vector < std::vector < std::string > > solVkName(dim), solDkName(dim);
+  for(unsigned k = 0; k<dim; k++){ 
+    solVkName[k] = system.GetSolkiNames( solVName[k].c_str() );
+    solDkName[k] = system.GetSolkiNames( solDName[k].c_str() );
+  }
+  const std::vector < std::string > solPkName = system.GetSolkiNames ("P");
+  
+  unsigned RK = system.GetRungeKuttaStages();
+    
+  FieldSplitTree **VDP;
+  VDP = new FieldSplitTree * [RK];
+  std::vector < FieldSplitTree *> VDPAll;
+  VDPAll.reserve(RK);
+  
+  std::vector < std::vector < unsigned > > fieldVDP(RK);
+  std::vector < std::vector < unsigned > > solutionTypeVDP(RK);
+ 
+  for(unsigned i = 0; i < RK; i++){
+    fieldVDP[i].resize(2 * dim + 1);
+    solutionTypeVDP[i].resize(2 * dim + 1);
+    for(unsigned k = 0; k < dim; k++){
+      fieldVDP[i][k] = system.GetSolPdeIndex(solVkName[k][i].c_str());
+      solutionTypeVDP[i][k] = mlSol.GetSolutionType(solVkName[k][i].c_str());
+    }
+    for(unsigned k = 0; k < dim; k++){
+      fieldVDP[i][dim + k] = system.GetSolPdeIndex(solDkName[k][i].c_str());
+      solutionTypeVDP[i][dim + k] = mlSol.GetSolutionType(solDkName[k][i].c_str());
+    }
+    fieldVDP[i][2 * dim] = system.GetSolPdeIndex(solPkName[i].c_str());
+    solutionTypeVDP[i][2 * dim ] = mlSol.GetSolutionType(solPkName[i].c_str());
 
+    char name[10];
+    sprintf (name, "VDPi%d", i);
+    VDP[i]= new FieldSplitTree (PREONLY, MLU_PRECOND, fieldVDP[i], solutionTypeVDP[i], name);  
+    VDPAll.push_back(VDP[i]);  
+  }
+  
+  FieldSplitTree FS(PREONLY, FIELDSPLIT_MULTIPLICATIVE_PRECOND, VDPAll, "RK");
+  FS.SetRichardsonScaleFactor(1.);
+
+  system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT, INCLUDE_COARSE_LEVEL_TRUE);   // Field-Split preconditioned
+  
   // attach the assembling function to system
   system.SetAssembleFunction (AssembleBoussinesqAppoximation_AD);
-
+ 
   // initilaize and solve the system
   system.init();
+ 
+  system.SetSolverCoarseGrid(RICHARDSON);
+  system.SetRichardsonScaleFactor(1.);
 
+  //system.SetSolverCoarseGrid(PREONLY);
+  
+  system.SetOuterSolver(PREONLY);
+  
+  system.SetTolerances(1.e-10, 1.e-10, 1.e+50, 10, 10); //GMRES tolerances
+  
   system.AttachGetTimeIntervalFunction (GetTimeStep);
-  const unsigned int n_timesteps = 100;
+  const unsigned int n_timesteps = 2;
 
+  system.SetFieldSplitTree(&FS);
+  
   // ******* Print solution *******
   mlSol.SetWriter (VTK);
   mlSol.GetWriter()->SetDebugOutput (false);
@@ -193,6 +254,11 @@ int main (int argc, char** args) {
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
 
+  for (unsigned i = 0; i < RK; i++) {
+    delete VDP[i];
+  }
+  delete [] VDP;
+  
   return 0;
 }
 

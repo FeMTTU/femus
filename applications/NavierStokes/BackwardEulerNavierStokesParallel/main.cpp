@@ -1,4 +1,6 @@
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
+#include "MultiLevelMesh.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
 #include "Fluid.hpp"
@@ -55,7 +57,7 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("U",LAGRANGE,SECOND,2);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,2);
   // the pressure variable should be the last for the Schur decomposition
-  ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
+  ml_sol.AddSolution("P",DISCONTINUOUS_POLYNOMIAL,FIRST,1);
   ml_sol.AssociatePropertyToSolution("P","Pressure");
 
   //Initialize (update Init(...) function)
@@ -110,7 +112,8 @@ int main(int argc,char **args) {
     // Solving Navier-Stokes system
     std::cout << std::endl;
     std::cout << " *********** Navier-Stokes ************  " << std::endl;
-    ml_prob.get_system("Navier-Stokes").MLsolve();
+    ml_prob.get_system("Navier-Stokes").SetOuterSolver(PREONLY);
+    ml_prob.get_system("Navier-Stokes").MGsolve();
 
     //update Solution
     ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes").CopySolutionToOldSolution();

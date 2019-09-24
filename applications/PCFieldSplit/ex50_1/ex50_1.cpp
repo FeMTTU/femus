@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -126,13 +127,13 @@ int main(int argc, char** args)
   mlSol.AddSolution("B1", LAGRANGE, SECOND);
   mlSol.AddSolution("B2", LAGRANGE, SECOND);
 //  mlSol.AddSolution("R",  LAGRANGE, FIRST);
-  mlSol.AddSolution("R",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("R",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("R", "Pressure");
 
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
 
@@ -195,10 +196,11 @@ int main(int argc, char** args)
   FS2.push_back(&FS_NS); // Navier-stokes block Second
 
   FieldSplitTree FS_MHD(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "MHD");
+  FS_MHD.SetRichardsonScaleFactor(.6);
 
   //END buid fieldSplitTree
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Field-Split preconditioner
-  // system.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz preconditioner
+  system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT); // Field-Split preconditioner
+  // system.SetLinearEquationSolverType(FEMuS_ASM);  // Additive Swartz preconditioner
   // ILU preconditioner
 
   // attach the assembling function to system

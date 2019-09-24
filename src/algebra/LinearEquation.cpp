@@ -36,18 +36,18 @@ namespace femus {
 
 //--------------------------------------------------------------------------------
 
-LinearEquation::LinearEquation(Solution *other_solution){
-  _solution = other_solution;
-  _msh = _solution->GetMesh();
-  _EPS = NULL;
-  _EPSC = NULL;
-  _RES = NULL;
-  _RESC = NULL;
-  _KK = NULL;
-  _KKamr = NULL;
-  _sparsityPatternMinimumSize = 1u;
-  _numberOfGlobalVariables = 0u;
-}
+  LinearEquation::LinearEquation (Solution *other_solution) {
+    _solution = other_solution;
+    _msh = _solution->GetMesh();
+    _EPS = NULL;
+    _EPSC = NULL;
+    _RES = NULL;
+    _RESC = NULL;
+    _KK = NULL;
+    _KKamr = NULL;
+    _sparsityPatternMinimumSize = 1u;
+    _numberOfGlobalVariables = 0u;
+  }
 
 //--------------------------------------------------------------------------------
   LinearEquation::~LinearEquation() { }
@@ -195,40 +195,37 @@ LinearEquation::LinearEquation(Solution *other_solution){
     int KK_UNIT_SIZE_ = pow (5, dim);
     int KK_size = KKIndex[KKIndex.size() - 1u];
     int KK_local_size = KKoffset[KKIndex.size() - 1][processor_id()] - KKoffset[0][processor_id()];
-        
-    if( _sparsityPatternMinimumSize != 1u){
-      
+
+    if (_sparsityPatternMinimumSize != 1u) {
+
       unsigned maxSize = (_sparsityPatternMinimumSize < KK_local_size) ? _sparsityPatternMinimumSize : KK_local_size;
-      for(unsigned i=0; i< d_nnz.size();i++){
-        d_nnz[i] = ( d_nnz[i] > maxSize) ? d_nnz[i] : maxSize;
+      for (unsigned i = 0; i < d_nnz.size(); i++) {
+        d_nnz[i] = (d_nnz[i] > maxSize) ? d_nnz[i] : maxSize;
       }
       maxSize = (_sparsityPatternMinimumSize < KK_size - KK_local_size) ? _sparsityPatternMinimumSize : KK_size - KK_local_size;
-      for(unsigned i=0; i< o_nnz.size();i++){
-        o_nnz[i] = (o_nnz[i] > _sparsityPatternMinimumSize ) ? o_nnz[i]:maxSize;;
+      for (unsigned i = 0; i < o_nnz.size(); i++) {
+        o_nnz[i] = (o_nnz[i] > _sparsityPatternMinimumSize) ? o_nnz[i] : maxSize;;
       }
     }
-    
-    if(_iproc == 0){
-      for(unsigned k = 0; k<_numberOfGlobalVariables;k++){
-        d_nnz[k] = KK_local_size;
-        if (_nprocs > 0) {
-          o_nnz[k] =  KK_size - KK_local_size;
-        }
-      }
-    }
-    
-    
-    _KK = SparseMatrix::build().release();
-    _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
-    _KKamr = SparseMatrix::build().release();
-    
 
-   
+    if (_iproc == 0) {
+      unsigned globalVariableStart = KKoffset[KKIndex.size() - 2][0];
+      for (unsigned k = globalVariableStart; k < globalVariableStart + _numberOfGlobalVariables; k++) {  
+        d_nnz[k] = KK_local_size;
+        o_nnz[k] = KK_size - KK_local_size;
+      }
+    }
+
+    _KK = SparseMatrix::build().release();
+    _KK->init (KK_size, KK_size, KK_local_size, KK_local_size, d_nnz, o_nnz);
+
+    _KKamr = SparseMatrix::build().release();
+
   }
 
-void LinearEquation::SetSparsityPatternMinimumSize(const unsigned &maximumSize){
-  _sparsityPatternMinimumSize = (maximumSize < 2u) ? 1u : maximumSize;
-}
+  void LinearEquation::SetSparsityPatternMinimumSize (const unsigned &maximumSize) {
+    _sparsityPatternMinimumSize = (maximumSize < 2u) ? 1u : maximumSize;
+  }
 
 //--------------------------------------------------------------------------------
   void LinearEquation::AddLevel() {
@@ -277,6 +274,13 @@ void LinearEquation::SetSparsityPatternMinimumSize(const unsigned &maximumSize){
 
     if (_RESC)
       delete _RESC;
+
+    _EPS = NULL;
+    _EPSC = NULL;
+    _RES = NULL;
+    _RESC = NULL;
+    _KK = NULL;
+    _KKamr = NULL;
 
   }
 
@@ -400,8 +404,8 @@ void LinearEquation::SetSparsityPatternMinimumSize(const unsigned &maximumSize){
     d_nnz.resize (owned_dofs);
     o_nnz.resize (owned_dofs);
 
-    int d_max = owned_dofs + 1;
-    int o_max = KKIndex[KKIndex.size() - 1u] - owned_dofs + 1;
+    int d_max = owned_dofs + _numberOfGlobalVariables;
+    int o_max = KKIndex[KKIndex.size() - 1u] - owned_dofs + _numberOfGlobalVariables;
 
     for (int i = 0; i < owned_dofs; i++) {
       d_nnz[i] = static_cast <int> ( (*sizeDnBM_d) (IndexStart + i)) + BlgToMe_d[i].size() + _numberOfGlobalVariables;
@@ -414,6 +418,8 @@ void LinearEquation::SetSparsityPatternMinimumSize(const unsigned &maximumSize){
     delete sizeDnBM_d;
   }
 }
+
+
 
 
 

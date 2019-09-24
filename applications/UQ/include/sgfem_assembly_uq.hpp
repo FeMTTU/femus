@@ -1,4 +1,6 @@
 #include "UqQuadratureTypeEnum.hpp"
+#include "MultiLevelSolution.hpp"
+
 using namespace femus;
 
 //THIS IS THE MOST UPDATED ASSEMBLY FOR SGM SIMULATIONS OF POISSON's EQUATION with HERMITE or LEGENDRE POLYNOMIALS

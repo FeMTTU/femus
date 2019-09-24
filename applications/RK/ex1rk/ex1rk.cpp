@@ -1,7 +1,6 @@
 
 /** tutorial/Ex14
  * This example shows how to set and solve the weak form of the Bistable Equation
->>>>>>> 137150e40fff16af420ad8fc7bb9d8ebac4df18f
  *          $$ \dfrac{\partial u}{ \partial t}-\epsilon \nabla \cdot u=u-u^3  \text{in} \Omega $$
  *          $$ \nabla u.n=0 \text{ on} \partial \Omega $$
  *          $$ u= u_{0} in \Omega x {t=0} $$
@@ -12,6 +11,7 @@
  **/
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -105,7 +105,7 @@ int main (int argc, char** args) {
   //system.SetImplicitRungeKuttaScheme (LEGENDRE3);
   //system.SetImplicitRungeKuttaScheme (NORSET3);
   //system.SetImplicitRungeKuttaScheme (CROUZEIX2);
-  system.SetImplicitRungeKuttaScheme (PIPPO3);
+  system.SetImplicitRungeKuttaScheme (DIRK3);
 
   system.AddSolutionToSystemPDE ("u");
 

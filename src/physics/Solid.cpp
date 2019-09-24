@@ -57,7 +57,7 @@ Solid::Solid(Parameter& par, const double young_module, const double poisson_coe
     _penalty = false;
     _mass_penalty=false;
   }
-  if (!strcmp(model,"Saint-Venant-Penalty")) {
+  else if (!strcmp(model,"Saint-Venant-Penalty")) {
     _model = 0;
     _penalty = true;
     _mass_penalty=false;

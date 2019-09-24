@@ -42,7 +42,7 @@ public:
     NewmarkTransientSystem (MultiLevelProblem& ml_probl,
                             const std::string& name,
                             const unsigned int number,
-                            const MgSmoother & smoother_type);
+                            const LinearEquationSolverType & smoother_type);
 
     /** Destructor. */
     virtual ~NewmarkTransientSystem ();
@@ -70,7 +70,7 @@ NewmarkTransientSystem<Base>::NewmarkTransientSystem(
             MultiLevelProblem& ml_probl,
             const std::string& name,
             const unsigned int number, 
-            const MgSmoother & smoother_type):
+            const LinearEquationSolverType & smoother_type):
             TransientSystem<Base>(ml_probl, name, number, smoother_type),
 		   _gamma(0.5),
 		   _delta(0.5)

@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: VTKWriter
- Authors: Eugenio Aulisa, Simone Bnà
+ Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
  Copyright (c) FEMTTU
  All rights reserved.
@@ -17,6 +17,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "VTKWriter.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include <b64/b64.h>
@@ -44,10 +45,41 @@ namespace femus {
   }
 
   VTKWriter::~VTKWriter(){}
+  
 
+   void VTKWriter::Write(const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+       
+    std::string filename_prefix;
+    if( _ml_sol != NULL ) filename_prefix = "sol";
+    else filename_prefix = "mesh";
+    
+       Write(_gridn, filename_prefix, output_path, order, vars, time_step );
+   }
+   
 
-  void VTKWriter::Write( const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
-
+  void VTKWriter::Write(const unsigned my_level, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+       
+    std::string filename_prefix;
+    if( _ml_sol != NULL ) filename_prefix = "sol";
+    else filename_prefix = "mesh";
+    
+       Write(my_level, filename_prefix, output_path, order, vars, time_step );
+   }
+   
+   
+   
+  void VTKWriter::Write(const std::string filename_prefix, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+       
+       Write(_gridn, filename_prefix, output_path, order, vars, time_step );
+   }
+   
+  
+  void VTKWriter::Write(const unsigned my_level, const std::string filename_prefix, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+      
+    std::ostringstream level_name_stream;    
+    level_name_stream << ".level" << my_level;
+    std::string level_name(level_name_stream.str());   
+       
     // *********** open vtu files *************
     std::ofstream fout;
 
@@ -62,12 +94,9 @@ namespace femus {
     else if( !strcmp( order, "quadratic" ) ) 	 index = 1; //quadratic
     else if( !strcmp( order, "biquadratic" ) ) index = 2; //biquadratic
 
-    std::string filename_prefix;
-    if( _ml_sol != NULL ) filename_prefix = "sol";
-    else filename_prefix = "mesh";
 
     std::ostringstream filename;
-    filename << output_path << "/" << dirnamePVTK << filename_prefix << ".level" << _gridn << "." << _iproc << "." << time_step << "." << order << ".vtu";
+    filename << output_path << "/" << dirnamePVTK << filename_prefix << level_name << "." << _iproc << "." << time_step << "." << order << ".vtu";
 
     fout.open( filename.str().c_str() );
     if( !fout.is_open() ) {
@@ -87,7 +116,7 @@ namespace femus {
     }
     else {
       std::ostringstream Pfilename;
-      Pfilename << output_path << "/" << filename_prefix << ".level" << _gridn << "." << time_step << "." << order << ".pvtu";
+      Pfilename << output_path << "/" << filename_prefix << level_name << "." << time_step << "." << order << ".pvtu";
       Pfout.open( Pfilename.str().c_str() );
       if( Pfout.is_open() ) {
         std::cout << std::endl << " The output is printed to file " << Pfilename.str() << " in parallel VTK-XML (64-based) format" << std::endl;
@@ -104,13 +133,13 @@ namespace femus {
     Pfout << "  <PUnstructuredGrid GhostLevel=\"0\">" << std::endl;
     for( int jproc = 0; jproc < _nprocs; jproc++ ) {
       Pfout << "    <Piece Source=\"" << dirnamePVTK
-            << filename_prefix << ".level" << _gridn << "." << jproc << "." << time_step << "." << order << ".vtu"
+            << filename_prefix << level_name << "." << jproc << "." << time_step << "." << order << ".vtu"
             << "\"/>" << std::endl;
     }
     // ****************************************
 
-    Mesh* mesh = _ml_mesh->GetLevel( _gridn - 1 );
-    Solution* solution = _ml_sol->GetSolutionLevel( _gridn - 1 );
+    Mesh* mesh = _ml_mesh->GetLevel( my_level - 1 );
+    Solution* solution = _ml_sol->GetSolutionLevel( my_level - 1 );
 
     //count the own node dofs on all levels
     unsigned nvt = mesh->_ownSize[index][_iproc];
