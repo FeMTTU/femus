@@ -875,93 +875,154 @@ unsigned getNumberOfLayers (const double &a, const double &fac, const bool inver
   return n;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void GetParticlesToNodeFlag(MultiLevelSolution &mlSol, Line & solidLine, Line & fluidLine){
+    
+    const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+    Mesh* msh = mlSol._mlMesh->GetLevel (level);
+    Solution* sol  = mlSol.GetSolutionLevel (level);
+    
+    unsigned solIndexNodeFlag, solTypeNodeFlag, solIndexNodeDistF, solIndexNodeDistS;
+    solIndexNodeFlag = sol->GetIndex ("NodeFlag"); 
+    solTypeNodeFlag = sol->GetSolutionType (solIndexNodeFlag);
+    
+    solIndexNodeDistF = sol->GetIndex ("NodeDistF"); 
+    solIndexNodeDistS = sol->GetIndex ("NodeDistS"); 
+
+    sol->_Sol[solIndexNodeFlag]->zero(); // zero will mean fluid node
+    
+    const unsigned  dim = msh->GetDimension();
+    unsigned    iproc = msh->processor_id();
+    
+    for (unsigned idof = msh->_dofOffset[solTypeNodeFlag][iproc]; idof < msh->_dofOffset[solTypeNodeFlag][iproc + 1]; idof++) {
+        
+        sol->_Sol[solIndexNodeDistF]->set(idof, 1.e8);
+        sol->_Sol[solIndexNodeDistS]->set(idof, 1.e8);
+
+    }
+  
+    sol->_Sol[solIndexNodeDistS]->close();
+    sol->_Sol[solIndexNodeDistF]->close();
+    
+    //BEGIN loop on solid particles
+    std::vector<unsigned> markerOffsetSolid = solidLine.GetMarkerOffset();
+    unsigned markerOffset1 = markerOffsetSolid[iproc];
+    unsigned markerOffset2 = markerOffsetSolid[iproc + 1];
+    std::vector<Marker*> particlesSolid = solidLine.GetParticles();
+
+    unsigned ielOld = UINT_MAX;
+
+    for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
+      //element of particle iMarker
+      unsigned iel = particlesSolid[iMarker]->GetMarkerElement();
+      if (iel != UINT_MAX) {
+        short unsigned ielt;
+        unsigned nDofs;
+        vector <vector < double> > vxHat (dim); 
+
+      if (iel != ielOld) {
+        ielt = msh->GetElementType (iel);
+        nDofs = msh->GetElementDofNumber (iel, solTypeNodeFlag);
+        for (int k = 0; k < dim; k++) {
+          vxHat[k].resize (nDofs);
+        }
+
+        for (unsigned inode = 0; inode < nDofs; inode++) {
+          unsigned idofX = msh->GetSolutionDof (inode, iel, 2); //local 2 global solution
+          for (int k = 0; k < dim; k++) {
+            vxHat[k][inode] = (*msh->_topology->_Sol[k]) (idofX);
+          }
+        }
+
+      }
+      
+      std::vector<double> particleCoords(dim);
+      particleCoords = particlesSolid[iMarker]->GetIprocMarkerCoordinates();
+      
+      for (unsigned inode = 0; inode < nDofs; inode++) {
+            unsigned idof = msh->GetSolutionDof (inode, iel, solTypeNodeFlag);
+            double currentMinDistS = (*sol->_Sol[solIndexNodeDistS]) (idof);
+            double newDist = 0.;
+            for (unsigned k = 0; k < dim; k++) {
+                    newDist  += (vxHat[k][inode] - particleCoords[k]) * (vxHat[k][inode] - particleCoords[k]);
+            }
+            newDist  = sqrt(newDist);
+            std::cout.precision (16);
+//             std::cout<<"newDist = " << newDist << " , " << "currentMinDistS = " << currentMinDistS << std::endl;
+            if(newDist  < currentMinDistS){
+                    sol->_Sol[solIndexNodeDistS]->set (idof, newDist);
+            }
+      }
+      }
+    }
+          sol->_Sol[solIndexNodeDistS]->close();
+    //END  
+    
+    //BEGIN loop on the fluid particles
+    std::vector<unsigned> markerOffsetFluid = fluidLine.GetMarkerOffset();
+    markerOffset1 = markerOffsetFluid[iproc];
+    markerOffset2 = markerOffsetFluid[iproc + 1];
+    std::vector<Marker*> particlesFluid = fluidLine.GetParticles();
+
+    ielOld = UINT_MAX;
+
+    for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
+      //element of particle iMarker
+      unsigned iel = particlesFluid[iMarker]->GetMarkerElement();
+      if (iel != UINT_MAX) {
+        short unsigned ielt;
+        unsigned nDofs;
+        vector <vector < double> > vxHat (dim); 
+
+      if (iel != ielOld) {
+        ielt = msh->GetElementType (iel);
+        nDofs = msh->GetElementDofNumber (iel, solTypeNodeFlag);
+        for (int k = 0; k < dim; k++) {
+          vxHat[k].resize (nDofs);
+        }
+
+        for (unsigned inode = 0; inode < nDofs; inode++) {
+          unsigned idofX = msh->GetSolutionDof (inode, iel, 2); //local 2 global solution
+          for (int k = 0; k < dim; k++) {
+            vxHat[k][inode] = (*msh->_topology->_Sol[k]) (idofX);
+          }
+        }
+
+      }
+      
+      std::vector<double> particleCoords(dim);
+      particleCoords=particlesFluid[iMarker]->GetIprocMarkerCoordinates();
+      
+      for (unsigned inode = 0; inode < nDofs; inode++) {
+            unsigned idof = msh->GetSolutionDof (inode, iel, solTypeNodeFlag);
+            double currentMinDistF = (*sol->_Sol[solIndexNodeDistF]) (idof);
+            double newDist = 0.;
+            for (unsigned k = 0; k < dim; k++) {
+                    newDist  += (vxHat[k][inode] - particleCoords[k]) * (vxHat[k][inode] - particleCoords[k]);
+            }
+            newDist  = sqrt(newDist);
+            if(newDist  < currentMinDistF){
+                    sol->_Sol[solIndexNodeDistF]->set (idof, newDist);
+            }
+      }
+      }
+    }
+         sol->_Sol[solIndexNodeDistF]->close();
+         
+         //END
+    
+    for (unsigned idof = msh->_dofOffset[solTypeNodeFlag][iproc]; idof < msh->_dofOffset[solTypeNodeFlag][iproc + 1]; idof++) {
+        
+        double minDistSolid = (*sol->_Sol[solIndexNodeDistS])(idof);
+        double minDistFluid = (*sol->_Sol[solIndexNodeDistF])(idof);
+        
+//         std::cout<<"minDistFluid = " << minDistFluid << " , " << "minDistSolid = " << minDistSolid << std::endl;
+        
+        if (minDistSolid < minDistFluid) sol->_Sol[solIndexNodeFlag]->set(idof, 1);
+    
+
+  }
+  
+  sol->_Sol[solIndexNodeFlag]->close();
+    
+  
+}

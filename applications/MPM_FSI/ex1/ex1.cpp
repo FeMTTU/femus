@@ -126,11 +126,14 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("P", DISCONTINUOUS_POLYNOMIAL, FIRST, 0);
 
   mlSol.AddSolution ("M", LAGRANGE, SECOND, 2);
-  mlSol.AddSolution ("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+  mlSol.AddSolution ("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false); 
+  mlSol.AddSolution ("NodeFlag", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution ("NodeDistF", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution ("NodeDistS", LAGRANGE, SECOND, 2);
 
   mlSol.Initialize ("All");
-
-  mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
+  
+   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
 
   // ******* Set boundary conditions *******
   mlSol.GenerateBdc ("DX", "Steady");
@@ -438,6 +441,8 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
 
     system.MGsolve();
+   
+    GetParticlesToNodeFlag(mlSol, *solidLine, *fluidLine);
 
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
