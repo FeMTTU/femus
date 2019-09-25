@@ -213,7 +213,7 @@ int main(int argc, char** args) {
   system.SetDebugNonlinear(true);
   system.SetDebugFunction(ComputeIntegral);  //weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
    
-  // initialize and solve the system
+//   // initialize and solve the system
   system.init();
   system.MGsolve();
   
