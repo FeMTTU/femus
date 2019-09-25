@@ -441,8 +441,6 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
 
     system.MGsolve();
-   
-    GetParticlesToNodeFlag(mlSol, *solidLine, *fluidLine);
 
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
