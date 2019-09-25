@@ -2,8 +2,8 @@
 #define __femus_equations_CurrentQuantity_hpp__
 
 #include <vector>
-#include "VBTypeEnum.hpp"
-#include "CurrentGaussPoint.hpp"
+#include "CurrentElem.hpp"
+
 
 
 namespace femus {
@@ -12,8 +12,6 @@ namespace femus {
 //  class CurrentElem<double>; 
  class SystemTwo;
  class Quantity;
- class CurrentGaussPointBase;
-
 
  //Remember that you need to allocate the operators before if you use them
  
@@ -21,7 +19,7 @@ namespace femus {
     
   public:
     
-     CurrentQuantity(const CurrentGaussPointBase &);
+     CurrentQuantity(const CurrentElem<double> & curr_el_in);
 
     
     //TODO all these function are of the SET type (this is how I should call them), that is why they are NOT CONST
@@ -73,7 +71,6 @@ namespace femus {
     
   protected:
         
-    const CurrentGaussPointBase & _currGP;
     const CurrentElem<double> & _currEl;
     
   };

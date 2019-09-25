@@ -138,6 +138,7 @@ int main(int argc, char** args) {
   
   ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(), Lref);
   
+//   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, 0, 0., 1., 0., 1., 0., 0., QUAD9, fe_quad_rule.c_str());  
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, NSUB_Z, 0., 1., 0., 1., 0., 1., HEX27, fe_quad_rule.c_str());  
      ///@todo seems like GenerateCoarseBoxMesh doesn't assign flags to faces correctly, 
      //so I created a .med file with the following flags:
@@ -241,15 +242,15 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
-  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*                     el = msh->el;  // pointer to the elem object in msh (level)
+  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
+  elem*                     el = msh->el;
+  
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
+  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
-  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
-
-  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix*             KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
-  NumericVector*           RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
+  SparseMatrix*             KK = pdeSys->_KK;
+  NumericVector*           RES = pdeSys->_RES;
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)

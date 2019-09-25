@@ -1,7 +1,6 @@
 #include "OptLoop.hpp"
 
 #include "MultiLevelProblem.hpp"
-#include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"
 #include "CurrentQuantity.hpp"
 #include "Quantity.hpp"
@@ -100,24 +99,24 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
     CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()));
+    //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()));
 
   //==========
-    CurrentQuantity Tempold(currgp);
+    CurrentQuantity Tempold(currelem);
     Tempold._SolName = "Qty_Temperature";
     Tempold._qtyptr   =  eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Temperature");
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
   //==========
-    CurrentQuantity Tlift(currgp);
+    CurrentQuantity Tlift(currelem);
     Tlift._SolName = "Qty_TempLift";
     Tlift._qtyptr   =  eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_TempLift");
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
  //===========
-    CurrentQuantity Tdes(currgp);
+    CurrentQuantity Tdes(currelem);
     Tdes._SolName = "Qty_TempDes";
     Tdes._dim      = Tempold._dim;
     Tdes._FEord    = Tempold._FEord;
@@ -125,7 +124,7 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     Tdes.Allocate();
 
 //========= DOMAIN MAPPING
-    CurrentQuantity xyz(currgp);
+    CurrentQuantity xyz(currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
@@ -149,11 +148,11 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
      for (uint fe = 0; fe < QL; fe++)     {
-       currgp.SetPhiElDofsFEVB_g (fe,qp);
-       currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
+//        currgp.SetPhiElDofsFEVB_g (fe,qp);
+//        currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
     }
 
-   const double  Jac_g = currgp.JacVectVV_g(xyz);
+   const double  Jac_g = 1.;// currgp.JacVectVV_g(xyz);
    const double  wgt_g = eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()).GetGaussWeight(qp);
 
  Tempold.val_g();
@@ -231,19 +230,19 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
     for (int iel=0; iel < (nel_e - nel_b); iel++) {
 
     CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()));
+    //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()));
 
 //======Functions in the integrand ============
 
       //==========
-    CurrentQuantity Tlift(currgp);
+    CurrentQuantity Tlift(currelem);
     Tlift._qtyptr   =  eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_TempLift");
     Tlift._SolName = "Qty_TempLift";
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //========= DOMAIN MAPPING
-    CurrentQuantity xyz(currgp);
+    CurrentQuantity xyz(currelem);
     xyz._dim      = space_dim;
     xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
@@ -261,11 +260,11 @@ double ComputeNormControl (const uint Level, const MultiLevelMeshTwo* mesh, cons
   for (uint qp = 0; qp < el_ngauss; qp++) {
 
      for (uint fe = 0; fe < QL; fe++)     {
-       currgp.SetPhiElDofsFEVB_g (fe,qp);
-       currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
+//        currgp.SetPhiElDofsFEVB_g (fe,qp);
+//        currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
     }
 
-      const double  Jac_g = currgp.JacVectVV_g(xyz);
+      const double  Jac_g = 1.;//currgp.JacVectVV_g(xyz);
       const double  wgt_g = eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()).GetGaussWeight(qp);
 
   Tlift.val_g();

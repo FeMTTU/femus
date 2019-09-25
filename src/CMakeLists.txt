@@ -33,8 +33,6 @@ equations/assemble/Assemble_jacobian.cpp
 equations/assemble/Assemble_unknown.cpp
 equations/assemble/BoundaryConditions.cpp
 equations/assemble/CurrentElem.cpp
-equations/assemble/CurrentGaussPoint.cpp
-equations/assemble/CurrentGaussPointBase.cpp
 equations/assemble/CurrentQuantity.cpp
 equations/assemble/SystemTwo.cpp
 equations/ExplicitSystem.cpp

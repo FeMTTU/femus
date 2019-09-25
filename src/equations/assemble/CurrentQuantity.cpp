@@ -16,8 +16,9 @@ namespace femus {
 
 
 
-     CurrentQuantity::CurrentQuantity(const CurrentGaussPointBase & currgp_in)
-     : _currGP(currgp_in),_currEl(currgp_in.GetCurrentElem()) {  }
+     CurrentQuantity::CurrentQuantity(const CurrentElem<double> & curr_el_in)
+     : _currEl(curr_el_in) 
+     {  }
 
    
     //============================
@@ -49,9 +50,9 @@ namespace femus {
           for (uint idim=0; idim<3; idim++) {
 	   uint idimp1 = (idim+1)%3;
 	   uint idimp2 = (idim+2)%3;
-	  _curl_g3D[idim] += 
-	  (_currGP._dphidxyz_ndsQLVB_g3D[ord][eln+idimp1*el_nnodes] * _val_dofs3D[eln+idimp2*el_ndof_q] 
-	 - _currGP._dphidxyz_ndsQLVB_g3D[ord][eln+idimp2*el_nnodes] * _val_dofs3D[eln+idimp1*el_ndof_q]); 
+// 	  _curl_g3D[idim] += 
+// 	  (_currGP._dphidxyz_ndsQLVB_g3D[ord][eln+idimp1*el_nnodes] * _val_dofs3D[eln+idimp2*el_ndof_q] 
+// 	 - _currGP._dphidxyz_ndsQLVB_g3D[ord][eln+idimp2*el_nnodes] * _val_dofs3D[eln+idimp1*el_ndof_q]); 
            }
 	    //end curl
 
@@ -93,7 +94,7 @@ return;
 
 	  const uint indxdim=eln+idim*el_ndof;
 
-              _grad_g[ivar][idim] += _currGP._dphidxyz_ndsQLVB_g[fe_order][indxdim]*_val_dofs[indxvar];
+//               _grad_g[ivar][idim] += _currGP._dphidxyz_ndsQLVB_g[fe_order][indxdim]*_val_dofs[indxvar];
 	       
 	    }
 	    }
@@ -121,7 +122,7 @@ const uint FEord = _FEord;
 	  
 	       const uint indx=eln+ivar*el_ndof;
 	  
-              _val_g[ivar] += _currGP._phi_ndsQLVB_g[FEord][eln]*_val_dofs[indx];
+//               _val_g[ivar] += _currGP._phi_ndsQLVB_g[FEord][eln]*_val_dofs[indx];
 	       
 	    }
 

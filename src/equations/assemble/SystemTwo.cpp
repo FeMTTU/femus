@@ -33,7 +33,6 @@
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"
 #include "CurrentElem.hpp"
-#include "CurrentGaussPoint.hpp"
 
 #include "SparseMatrix.hpp"
 #include "NumericVector.hpp"
