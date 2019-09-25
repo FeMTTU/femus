@@ -15,15 +15,16 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
+#define FACE_FOR_CONTROL  3
+#define AXIS_DIRECTION_CONTROL_SIDE (FACE_FOR_CONTROL==3||FACE_FOR_CONTROL==4?0:1)  // 0 = x-axis for FACE_FOR_CONTROL 3 and 4,        1=y-axis for FACE_FOR_CONTROL 1 and 2
 #include   "../nsopt_params.hpp"
 
 
 
-#define FACE_FOR_CONTROL  4
 
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
-#define no_of_ref 4     //mesh refinements
+#define no_of_ref 2     //mesh refinements
 
 #define NO_OF_L2_NORMS 9   //U,V,P,UADJ,VADJ,PADJ,GX,GY,THETA
 #define NO_OF_H1_NORMS 6    //U,V,UADJ,VADJ,GX, GY
@@ -69,28 +70,12 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 
     double value = 0.;
 
-//     if(!strcmp(name,"state")) {
-//         value = 0.;
-//     }
-//     else if(!strcmp(name,"control")) {
-//         value = 0.;
-//     }
-//     else if(!strcmp(name,"adjoint")) {
-//         value = 0.;
-//     }
-//     else if(!strcmp(name,"mu")) {
-//         value = 0.;
-//     }
      if(!strcmp(name,"TargReg")) {
         value = ElementTargetFlag(x);
     }
-//     else if(!strcmp(name,"ContReg")) {
-//         value = ControlDomainFlag_bdry(x);
-//     }
-//     else if(!strcmp(name,"act_flag")) {
-//         value = 0.;
-//     }
-
+    else if(!strcmp(name,"ContReg")) {
+        value = ControlDomainFlag_bdry(x);
+    }
 
     return value;
 }
@@ -200,6 +185,7 @@ int main(int argc, char** args) {
             if (dim == 3) ml_sol_all_levels->AddSolution("GZ", LAGRANGE, SECOND);
             ml_sol_all_levels->AddSolution("THETA", DISCONTINUOUS_POLYNOMIAL, ZERO);
             ml_sol_all_levels->AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+            ml_sol_all_levels->AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
             
             ml_sol_all_levels->Initialize("All");
             ml_sol_all_levels->AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
@@ -237,6 +223,7 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("THETA", DISCONTINUOUS_POLYNOMIAL, ZERO);
   // control ===================== 
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   
    // ======= Problem  ==================
   MultiLevelProblem ml_prob(&ml_sol); 
@@ -250,6 +237,7 @@ int main(int argc, char** args) {
   // ======= Solution: Initial Conditions ==================
    ml_sol.Initialize("All");    // initialize all varaibles to zero
    ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
 
 //   ml_sol.Initialize("GX", SetInitialCondition,&ml_prob);
 //   ml_sol.Initialize("GY", SetInitialCondition,&ml_prob);
@@ -688,7 +676,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
    
  //************ set control flag *********************
     int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag(elem_center);
+        control_el_flag = ControlDomainFlag_bdry(elem_center);
     std::vector< std::vector<int> > control_node_flag(dim);
 	    for(unsigned idim=0; idim<dim; idim++) {
 	          control_node_flag[idim].resize(nDofsGctrl);
@@ -789,20 +777,22 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		      ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]->JacobianSur(coordX_bd,ig_bd,weight_bd,phi_bd_gss_fe[SolFEType[ctrl_pos_begin]],phi_x_bd_gss_fe[SolFEType[ctrl_pos_begin]],normal);
 		      ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[adj_pos_begin]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(coordX,coordX_bd,jface,ig_bd,phi_vol_at_bdry_fe[SolFEType[adj_pos_begin]],phi_x_vol_at_bdry_fe[SolFEType[adj_pos_begin]]);
 
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
-		    double dx_dxi = 0.;
-		    const elem_type_1D* myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]);
-		    const double* myptr = myeltype->GetDPhiDXi(ig_bd);
-		    for (int inode = 0; inode < nve_bd; inode++) {
-			  dx_dxi += myptr[inode] * coordX_bd[0][inode];
-		    }  
-		    for (int inode = 0; inode < nve_bd; inode++) {
-			  for (int d = 0; d < dim; d++) {
-                if (d == 0 )     phi_x_bd_gss_fe[SolFEType[ctrl_pos_begin]][inode + d*nve_bd] = myptr[inode]* (1./ dx_dxi);
-                else             phi_x_bd_gss_fe[SolFEType[ctrl_pos_begin]][inode + d*nve_bd] = 0.;
-			  }
-		    }
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
+//========== temporary soln for surface gradient on a face parallel to the any AXIS_DIRECTION_CONTROL_SIDE axis ===================
+           const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
+		  double dx_dcurv_abscissa = 0.;
+		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]);
+		 const double * myptr = myptr = myeltype->GetDPhiDXi(ig_bd);
+		      for (int inode = 0; inode < nve_bd; inode++) dx_dcurv_abscissa += myptr[inode] * coordX_bd[axis_direction_control_side][inode];
+  
+		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
+		      for (int inode = 0; inode < nve_bd; inode++) {
+                            for (int d = 0; d < coordX_bd.size(); d++) {
+                              if (d == axis_direction_control_side ) phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][inode + d*nve_bd] = myptr[inode]* (1./ dx_dcurv_abscissa);
+                              else  phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][inode + d*nve_bd] = 0.;
+                         }
+                     }
+            }
+//========== temporary soln for surface gradient on a face parallel to the AXIS_DIRECTION_CONTROL_SID axis ===================
 		  
 //========== compute gauss quantities on the boundary ===============================================
 		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
@@ -1562,7 +1552,7 @@ double integral_g_dot_n = 0.;
  
  //************ set control flag *********************
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag(elem_center);
+        control_el_flag = ControlDomainFlag_bdry(elem_center);
   std::vector< std::vector<int> > control_node_flag(dim);
 	    for(unsigned idim=0; idim<dim; idim++) {
 	      control_node_flag[idim].resize(nDofsVctrl);
@@ -1615,21 +1605,24 @@ double integral_g_dot_n = 0.;
 	    for(unsigned ig_bd=0; ig_bd < ml_prob.GetQuadratureRule(felt_bd).GetGaussPointsNumber(); ig_bd++) {
 		ml_prob._ml_msh->_finiteElement[felt_bd][solVctrlType]->JacobianSur(coordX_bd,ig_bd,weight_bd,phiVctrl_gss_bd,phiVctrl_x_gss_bd,normal);
 		  
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
-		double dx_dxi = 0.;
-		const elem_type_1D* myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bd][solVctrlType]);
-		const double* myptr = myeltype->GetDPhiDXi(ig_bd);
-		for (int inode = 0; inode < nve_bd; inode++) {
-		      dx_dxi += myptr[inode] * coordX_bd[0][inode];
-		}  
-		for (int inode = 0; inode < nve_bd; inode++) {
-                     for (int d = 0; d < dim; d++) {
-                          if (d == 0 ) phiVctrl_x_gss_bd[inode + d*nve_bd] = myptr[inode]* (1./ dx_dxi);
-                          else  phiVctrl_x_gss_bd[inode + d*nve_bd] = 0.;
-                     }
-                }
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  
+//========== temporary soln for surface gradient on a face parallel to the any AXIS_DIRECTION_CONTROL_SIDE axis ===================
+           const unsigned int axis_direction_control_side = AXIS_DIRECTION_CONTROL_SIDE;
+		  double dx_dcurv_abscissa = 0.;
+		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bd][solVctrlType]);
+		 const double * myptr = myptr = myeltype->GetDPhiDXi(ig_bd);
+		      for (int inode = 0; inode < nve_bd; inode++) dx_dcurv_abscissa += myptr[inode] * coordX_bd[axis_direction_control_side][inode];
+  
+		    for (unsigned  kdim = 0; kdim < dim; kdim++) {
+		      for (int inode = 0; inode < nve_bd; inode++) {
+                            for (int d = 0; d < coordX_bd.size(); d++) {
+                              if (d == axis_direction_control_side ) phiVctrl_x_gss_bd[inode + d*nve_bd] = myptr[inode]* (1./ dx_dcurv_abscissa);
+                              else  phiVctrl_x_gss_bd[inode + d*nve_bd] = 0.;
+                         }
+                     }
+            }
+//========== temporary soln for surface gradient on a face parallel to the AXIS_DIRECTION_CONTROL_SID axis ===================
+
 //========== compute gauss quantities on the boundary ===============================================
     for (unsigned  k = 0; k < dim; k++) {
 	  Vctrl_bd_qp[k] = 0.;

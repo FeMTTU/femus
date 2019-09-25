@@ -11,6 +11,9 @@
 #include "Parameter.hpp"
 #include "Files.hpp"
 
+#define FACE_FOR_CONTROL  1
+
+
 #include   "../../nsopt_params.hpp"
 
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
