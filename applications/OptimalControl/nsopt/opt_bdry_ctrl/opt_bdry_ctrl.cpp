@@ -15,7 +15,7 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define FACE_FOR_CONTROL  3
+#define FACE_FOR_CONTROL  2
 #define AXIS_DIRECTION_CONTROL_SIDE (FACE_FOR_CONTROL==3||FACE_FOR_CONTROL==4?0:1)  // 0 = x-axis for FACE_FOR_CONTROL 3 and 4,        1=y-axis for FACE_FOR_CONTROL 1 and 2
 #include   "../nsopt_params.hpp"
 
