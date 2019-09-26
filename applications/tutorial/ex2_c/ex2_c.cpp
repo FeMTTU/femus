@@ -360,7 +360,7 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
     const unsigned current_system_number = ml_prob.get_current_system_number();
 
    //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < const elem_type_templ_base<real_num, real_num_mov> *  > > elem_all;
+  std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
 
     System_assemble_flexible< system_type, real_num, real_num_mov > (elem_all,
@@ -383,7 +383,7 @@ void System_assemble_interface(MultiLevelProblem& ml_prob) {
  **/
 
 template < class system_type, class real_num, class real_num_mov >
-void System_assemble_flexible(const std::vector < std::vector < const elem_type_templ_base<real_num, real_num_mov> *  > > & elem_all,
+void System_assemble_flexible(const std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > & elem_all,
                               const std::vector<Gauss> & quad_rules,
                               MultiLevelMesh * ml_mesh_in,
                               MultiLevelSolution * ml_sol_in,

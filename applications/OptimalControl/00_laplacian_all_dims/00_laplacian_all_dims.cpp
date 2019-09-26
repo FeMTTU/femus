@@ -61,12 +61,12 @@ int main(int argc, char** args) {
    std::vector<std::string> mesh_files;
    
    mesh_files.push_back("Mesh_1_x.med");
-   mesh_files.push_back("Mesh_1_y.med");
-   mesh_files.push_back("Mesh_1_z.med");
-   mesh_files.push_back("Mesh_2_xy.med");
-   mesh_files.push_back("Mesh_2_xz.med");
-   mesh_files.push_back("Mesh_2_yz.med");
-   mesh_files.push_back("Mesh_3_xyz.med");
+//    mesh_files.push_back("Mesh_1_y.med");
+//    mesh_files.push_back("Mesh_1_z.med");
+//    mesh_files.push_back("Mesh_2_xy.med");
+//    mesh_files.push_back("Mesh_2_xz.med");
+//    mesh_files.push_back("Mesh_2_yz.med");
+//    mesh_files.push_back("Mesh_3_xyz.med");
    
 
 
@@ -84,7 +84,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -200,7 +200,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id();
 
   //=============== Geometry ========================================
-  unsigned xType = 0/*BIQUADR_FE*/; // the FE for the domain need not be biquadratic
+  unsigned xType = BIQUADR_FE; // the FE for the domain need not be biquadratic
   
   CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
     
@@ -258,7 +258,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     real_num_mov detJac_qp;
 
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < const elem_type_templ_base<real_num, real_num_mov> *  > > elem_all;
+  std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
  //***************************************************  
   

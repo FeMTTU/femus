@@ -14,7 +14,7 @@
 #include "../../param.hpp"
 
 
-#define FE_DOMAIN  0 //with 2 it doesn't work
+#define FE_DOMAIN  2 //with 0 it only works in serial: that's because when you fetch the dofs from _topology you get the wrong indices
 
 ///@todo do a very weak impl of Laplacian
 ///@todo Review the ordering for phi_ctrl_x_bdry
@@ -136,7 +136,7 @@ int main(int argc, char** args) {
   const double Lref = 1.;
   
   
-  ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(), Lref);
+  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref);
   
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, 0, 0., 1., 0., 1., 0., 0., QUAD9, fe_quad_rule.c_str());  
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, NSUB_Z, 0., 1., 0., 1., 0., 1., HEX27, fe_quad_rule.c_str());  
@@ -264,7 +264,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 
   //=============== Geometry ========================================
-   unsigned solType_coords = FE_DOMAIN; //we do linear FE this time // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+   unsigned solType_coords = FE_DOMAIN;
  
   CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
     
@@ -451,7 +451,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     double detJac_qp_bdry;
     
     //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all;
+  std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
 //*************************************************** 
  
@@ -668,14 +668,6 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
     elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_qp/*not_needed_here*/, JacI_qp, detJac_qp/*not_needed_here*/, space_dim);
     elem_all[ielGeom][SolFEType[pos_adj]]->shape_funcs_vol_at_bdry_current_elem(ig_bdry, jface, JacI_qp, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry, boost::none, space_dim);
      
-
-//           std::cout << "elem " << iel << " ig_bdry " << ig_bdry;
-// 		      for (int iv = 0; iv < nDof_adj; iv++)  {
-//                   for (int d = 0; d < dim; d++) {
-//                        std::cout << " " <<   phi_adj_x_vol_at_bdry[iv * space_dim + d];
-//                 }
-//               }
-
 
 		  
 //========== compute gauss quantities on the boundary ===============================================
@@ -1157,7 +1149,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
     double detJac_qp_bdry;
     
       //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all;
+  std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
  //*************************************************** 
   

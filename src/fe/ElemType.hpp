@@ -254,6 +254,10 @@ namespace femus
       std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta)
       std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta), for each reference direction (xi, eta, zeta) again
 
+// // //         std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof  
+// // //                                                                                 ///@todo unfortunately I cannot put this only once in the father, because it is not found...
+// // //         std::vector < std::vector <  std::vector < double > > > _dphidxi_vol_at_bdry_templ;
+        
   };
 
 
@@ -385,10 +389,10 @@ namespace femus
 
 
         // values at boundary gauss points
-      double **_phi_vol_at_bdry;
-      double *_phi_memory_vol_at_bdry;
-      double **_dphidxi_vol_at_bdry;
-      double *_dphidxi_memory_vol_at_bdry;
+      double ** _phi_vol_at_bdry;
+      double * _phi_memory_vol_at_bdry;
+      double ** _dphidxi_vol_at_bdry;
+      double * _dphidxi_memory_vol_at_bdry;
       
   };
 
@@ -529,12 +533,12 @@ namespace femus
       double* _d2phidxideta_memory;
 
       // values at boundary gauss points ///@todo probably remove
-      double **_phi_vol_at_bdry;
-      double *_phi_memory_vol_at_bdry;
-      double **_dphidxi_vol_at_bdry;
-      double *_dphidxi_memory_vol_at_bdry;
-      double **_dphideta_vol_at_bdry;
-      double *_dphideta_memory_vol_at_bdry;
+      double ** _phi_vol_at_bdry;
+      double *  _phi_memory_vol_at_bdry;
+      double ** _dphidxi_vol_at_bdry;
+      double *  _dphidxi_memory_vol_at_bdry;
+      double ** _dphideta_vol_at_bdry;
+      double *  _dphideta_memory_vol_at_bdry;
 
 
   };
@@ -685,14 +689,14 @@ namespace femus
       double* _d2phidzetadxi_memory;
       
         // values at boundary gauss points
-      double **_phi_vol_at_bdry;
-      double *_phi_memory_vol_at_bdry;
-      double **_dphidxi_vol_at_bdry;
-      double *_dphidxi_memory_vol_at_bdry;
-      double **_dphideta_vol_at_bdry;
-      double *_dphideta_memory_vol_at_bdry;
-      double **_dphidzeta_vol_at_bdry;
-      double *_dphidzeta_memory_vol_at_bdry;
+      double ** _phi_vol_at_bdry;
+      double *  _phi_memory_vol_at_bdry;
+      double ** _dphidxi_vol_at_bdry;
+      double *  _dphidxi_memory_vol_at_bdry;
+      double ** _dphideta_vol_at_bdry;
+      double *  _dphideta_memory_vol_at_bdry;
+      double ** _dphidzeta_vol_at_bdry;
+      double *  _dphidzeta_memory_vol_at_bdry;
  
       
       

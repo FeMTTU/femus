@@ -212,12 +212,20 @@ public:
   std::map<std::string, System*> & get_systems_map() { return _systems; }
   
   
-  void get_all_abstract_fe(std::vector < std::vector < const elem_type_templ_base< double, double > *  > > & elem_all_in)                 const { elem_all_in = _elem_all_dd; }
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 /*const*/ { elem_all_in = _elem_all_dd; }
   
-  void get_all_abstract_fe(std::vector < std::vector < const elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         const { elem_all_in = _elem_all_ad; }
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         /*const*/ { elem_all_in = _elem_all_ad; }
   
-  void get_all_abstract_fe(std::vector < std::vector < const elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) const { elem_all_in = _elem_all_aa; }
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) /*const*/ { elem_all_in = _elem_all_aa; }
 
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 const { elem_all_in = _elem_all_dd; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         const { elem_all_in = _elem_all_ad; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) const { elem_all_in = _elem_all_aa; }
+
+  
+  
   void set_all_abstract_fe() {
       
        set_all_abstract_fe<double, double>(_elem_all_dd);
@@ -227,7 +235,7 @@ public:
 }  
   
  template <class type, class type_mov>
-  void set_all_abstract_fe(std::vector < std::vector < const elem_type_templ_base<type, type_mov> *  > > & elem_all_in) const {
+  void set_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base<type, type_mov> *  > > & elem_all_in) const {
 
 //this function performs the initialization of all abstract FE families on all abstract Geometric Elements      
       
@@ -272,9 +280,9 @@ private:
     unsigned int _current_system_number;
 
     // attempt to handle templated classes from non-templated class
-    std::vector< std::vector< const elem_type_templ_base< double, double > * > >  _elem_all_dd;
-    std::vector< std::vector< const elem_type_templ_base< adept::adouble, double > * > >  _elem_all_ad;
-    std::vector< std::vector< const elem_type_templ_base< adept::adouble, adept::adouble > * > >  _elem_all_aa;
+    std::vector< std::vector< /*const*/ elem_type_templ_base< double, double > * > >  _elem_all_dd;
+    std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, double > * > >  _elem_all_ad;
+    std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > * > >  _elem_all_aa;
     
     
     

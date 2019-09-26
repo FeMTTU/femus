@@ -36,10 +36,13 @@ namespace femus {
       
 
      elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss) 
-//      : elem_type_templ_base<type, type_mov, dim, space_dim>(geom_elem, order_gauss)
+     : elem_type_templ_base<type, type_mov/*, dim, space_dim*/>(geom_elem, order_gauss)
      { }
       
      ~elem_type_templ(){ }
+
+     void fill_dphidxi_at_quadrature_points() ;     
+     void fill_dphidxi_at_quadrature_points_vol_at_bdry() ;     
 
      inline void JacJacInv_vol_at_bdry_new(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
@@ -47,7 +50,7 @@ namespace femus {
                             std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & JacI,
                             type_mov & detJac,
-                            const unsigned space_dimension) const;
+                            const unsigned space_dimension) /*const*/;
 
      inline void JacJacInv(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
@@ -87,7 +90,7 @@ namespace femus {
 
      inline void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
                           const unsigned & ig,
-                          const std::vector < double ** > & dphidxi,
+                          const std::vector < std::vector < std::vector < double > > > & dphidxi,
                           std::vector < std::vector <type_mov> > & Jac,
                           const unsigned space_dimension) const;
 
@@ -107,6 +110,7 @@ namespace femus {
                               const std::vector < std::vector <type_mov> > & JacJacT_inv,
                               std::vector < std::vector <type_mov> > & Jac_inv,
                               const unsigned space_dimension) const;
+                              
                           
   };
 
@@ -161,7 +165,7 @@ namespace femus {
                             
      void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
                    const unsigned & ig,
-                   const std::vector < double ** > & dphidxi,
+                   const std::vector < std::vector < std::vector < double > > > & dphidxi,
                    std::vector < std::vector <type_mov> > & Jac,
                    const unsigned space_dimension) const {
                                
@@ -176,9 +180,9 @@ namespace femus {
     }
 
     for (unsigned d = 0; d < space_dimension; d++) {
-    const double* dxi_coords  = /*_dphidxi*/dphidxi[0][ig];
-       for(int inode = 0; inode < _nc; inode++, dxi_coords++) {
-          Jac[0][d] += (*dxi_coords) * vt[d][inode];
+//     const double* dxi_coords  = /*_dphidxi*/dphidxi[0][ig];
+       for(int inode = 0; inode < _nc; inode++/*, dxi_coords++*/) {
+          Jac[0][d] += /*(*dxi_coords) */ dphidxi[0][ig][inode] * vt[d][inode];
         }
      }
                                     
@@ -186,14 +190,70 @@ namespace femus {
          }
 
          
-   public: 
+       
+        std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof  
+                                                                                ///@todo unfortunately I cannot put this only once in the father, because it is not found...
+        std::vector < std::vector <  std::vector < double > > > _dphidxi_vol_at_bdry_templ;
 
+
+   void    fill_dphidxi_at_quadrature_points() {
+       
+              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
+ 
+                  _dphidxi_templ.resize(_dim);
+           
+               for(unsigned d = 0; d < _dim; d++) {
+                    _dphidxi_templ[d].resize(n_gauss);
+               for(unsigned iq = 0; iq < n_gauss; iq++) {
+                      _dphidxi_templ[d][iq].resize(_nc);
+                    }
+                 }
+               
+               
+            for(unsigned iq = 0; iq < n_gauss; iq++) {
+                for(unsigned dof = 0; dof < _nc; dof++) {
+                    _dphidxi_templ[0][iq][dof] = _dphidxi[iq][dof];
+                   }
+               }
+         
              
+       }
+
+       
+    void   fill_dphidxi_at_quadrature_points_vol_at_bdry() {
+        
+              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
+ 
+                  _dphidxi_vol_at_bdry_templ.resize(_dim);  ///@todo I get a very weird segmentation fault here!
+           
+               for(unsigned d = 0; d < _dim; d++) {
+                    _dphidxi_vol_at_bdry_templ[d].resize(n_gauss);
+               for(unsigned iq = 0; iq < n_gauss; iq++) {
+                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
+                    }
+                 }
+               
+               
+            for(unsigned iq = 0; iq < n_gauss; iq++) {
+                for(unsigned dof = 0; dof < _nc; dof++) {
+                    _dphidxi_vol_at_bdry_templ[0][iq][dof] = _dphidxi_vol_at_bdry[iq][dof];
+                   }
+               }
+         
+             
+       }
+
+
+      public: 
              
              
        elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss) 
        : elem_type_1D(geom_elem.c_str(), fe_elem.c_str(), order_gauss.c_str() )
-       {   }
+       { 
+           
+         fill_dphidxi_at_quadrature_points();
+               
+    }
      
           ~elem_type_templ(){ }
 
@@ -205,15 +265,17 @@ namespace femus {
                             std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & Jac_inv,
                             type_mov & detJac,
-                            const unsigned space_dim) const {
+                            const unsigned space_dim)  {
                                 
-fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
+          fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 
-//create the vector of pointers
-    std::vector < double ** > dphidxi(1);  
-    dphidxi[0] = _dphidxi_vol_at_bdry;
-    
-            jacobian_flexible(vt, ig, dphidxi, Jac, space_dim);
+// //create the vector of pointers
+//     std::vector < double ** > dphidxi(1);  
+//     dphidxi[0] = _dphidxi_vol_at_bdry;
+
+          fill_dphidxi_at_quadrature_points_vol_at_bdry();
+   
+            jacobian_flexible(vt, ig, _dphidxi_vol_at_bdry_templ, Jac, space_dim);
 
     std::vector < std::vector <type_mov> > JacJacT(1); JacJacT[0].resize(1);  
     
@@ -464,13 +526,13 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                           
   void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
                            const unsigned & ig,
-                           const std::vector < double ** > & dphidxi,
+                           const std::vector < std::vector < std::vector < double > > > & dphidxi,
                            std::vector < std::vector <type_mov> > & Jac,
                            const unsigned space_dimension) const {
 
      constexpr unsigned int dim = 2;                           
-     //Jac ===============
-    Jac.resize(dim);
+
+     Jac.resize(dim);
     
     for (unsigned d = 0; d < dim; d++) { 
         Jac[d].resize(space_dimension);	
@@ -478,12 +540,12 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     }
 
     for (unsigned d = 0; d < space_dimension; d++) {
-    const double* dxi_coords  = /*_dphidxi*/ dphidxi[0][ig];
-    const double* deta_coords = /*_dphideta*/dphidxi[1][ig];
+//     const double* dxi_coords  = /*_dphidxi*/ dphidxi[0][ig];
+//     const double* deta_coords = /*_dphideta*/dphidxi[1][ig];
     
-      for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++) {
-          Jac[0][d] += (*dxi_coords)  * vt[d][inode];
-          Jac[1][d] += (*deta_coords) * vt[d][inode];
+      for(int inode = 0; inode < _nc; inode++/*, dxi_coords++, deta_coords++*/) {
+          Jac[0][d] += /*(*dxi_coords) */ dphidxi[0][ig][inode] * vt[d][inode];
+          Jac[1][d] += /*(*deta_coords)*/ dphidxi[1][ig][inode] * vt[d][inode];
         }
      }                               
 
@@ -518,12 +580,71 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
         
    }
    
-   
+        std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof
+        std::vector < std::vector <  std::vector < double > > > _dphidxi_vol_at_bdry_templ;
+
+        
+        
+   void    fill_dphidxi_at_quadrature_points() {
+       
+              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
+ 
+                  _dphidxi_templ.resize(_dim);
+           
+               for(unsigned d = 0; d < _dim; d++) {
+                    _dphidxi_templ[d].resize(n_gauss);
+               for(unsigned iq = 0; iq < n_gauss; iq++) {
+                      _dphidxi_templ[d][iq].resize(_nc);
+                    }
+                 }
+               
+               
+            for(unsigned iq = 0; iq < n_gauss; iq++) {
+                for(unsigned dof = 0; dof < _nc; dof++) {
+                    _dphidxi_templ[0][iq][dof] = _dphidxi[iq][dof];
+                    _dphidxi_templ[1][iq][dof] = _dphideta[iq][dof];
+                   }
+               }
+         
+             
+       }
+
+       
+    void   fill_dphidxi_at_quadrature_points_vol_at_bdry()  {
+        
+              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
+ 
+                  _dphidxi_vol_at_bdry_templ.resize(_dim);
+           
+               for(unsigned d = 0; d < _dim; d++) {
+                    _dphidxi_vol_at_bdry_templ[d].resize(n_gauss);
+               for(unsigned iq = 0; iq < n_gauss; iq++) {
+                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
+                    }
+                 }
+               
+               
+            for(unsigned iq = 0; iq < n_gauss; iq++) {
+                for(unsigned dof = 0; dof < _nc; dof++) {
+                    _dphidxi_vol_at_bdry_templ[0][iq][dof] = _dphidxi_vol_at_bdry[iq][dof];
+                    _dphidxi_vol_at_bdry_templ[1][iq][dof] = _dphideta_vol_at_bdry[iq][dof];
+                   }
+               }
+         
+             
+       }
+       
+       
    public: 
 
        elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss) 
        : elem_type_2D(geom_elem.c_str(), fe_elem.c_str(), order_gauss.c_str() )
-     { }
+     { 
+         
+          fill_dphidxi_at_quadrature_points();
+         
+         
+    }
      
           ~elem_type_templ(){ }
           
@@ -534,17 +655,18 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                             std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & Jac_inv,
                             type_mov & detJac,
-                            const unsigned space_dim) const {
+                            const unsigned space_dim) {
                                 
-fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
+    fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 
-//create the vector of pointers
-    std::vector < double ** > dphidxi(2);  
-    dphidxi[0] = _dphidxi_vol_at_bdry;
-    dphidxi[1] = _dphideta_vol_at_bdry;
+// //create the vector of pointers
+//     std::vector < double ** > dphidxi_ref(2);  ///@todo I cannot do a std::vector of double**: there must be some problem in construction
+//     dphidxi_ref[0] = _dphidxi_vol_at_bdry;
+//     dphidxi_ref[1] = _dphideta_vol_at_bdry;
     
-    
-            jacobian_flexible(vt, ig, dphidxi, Jac, space_dim);
+    fill_dphidxi_at_quadrature_points_vol_at_bdry();
+               
+            jacobian_flexible(vt, ig,  _dphidxi_vol_at_bdry_templ, Jac, space_dim);
 
     std::vector < std::vector <type_mov> > JacJacT(2); JacJacT[0].resize(2); JacJacT[1].resize(2);  
     
@@ -858,7 +980,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
        
    void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
                            const unsigned & ig,
-                           const std::vector < double ** > & dphidxi,
+                           const std::vector < std::vector < std::vector < double > > > & dphidxi,
                            std::vector < std::vector <type_mov> > & Jac,
                            const unsigned space_dimension) const {
                                
@@ -877,20 +999,20 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 
     
 //     for (unsigned d = 0; d < 3/*dim*/; d++) {
-    const double * dxi_coords   = /*_dphidxi*/  dphidxi[0][ig];
-    const double * deta_coords  = /*_dphideta*/ dphidxi[1][ig];
-    const double * dzeta_coords = /*_dphidzeta*/dphidxi[2][ig];
+//     const double * dxi_coords   = /*_dphidxi*/  dphidxi[0][ig];
+//     const double * deta_coords  = /*_dphideta*/ dphidxi[1][ig];
+//     const double * dzeta_coords = /*_dphidzeta*/dphidxi[2][ig];
 
-    for(int inode = 0; inode < _nc; inode++, dxi_coords++, deta_coords++, dzeta_coords++) {
-      Jac[0][0] += (*dxi_coords) * vt[0][inode];
-      Jac[0][1] += (*dxi_coords) * vt[1][inode];
-      Jac[0][2] += (*dxi_coords) * vt[2][inode];
-      Jac[1][0] += (*deta_coords) * vt[0][inode];
-      Jac[1][1] += (*deta_coords) * vt[1][inode];
-      Jac[1][2] += (*deta_coords) * vt[2][inode];
-      Jac[2][0] += (*dzeta_coords) * vt[0][inode];
-      Jac[2][1] += (*dzeta_coords) * vt[1][inode];
-      Jac[2][2] += (*dzeta_coords) * vt[2][inode];
+    for(int inode = 0; inode < _nc; inode++/*, dxi_coords++, deta_coords++, dzeta_coords++*/) {
+      Jac[0][0] += /*(*dxi_coords)  */ dphidxi[0][ig][inode] * vt[0][inode];
+      Jac[0][1] += /*(*dxi_coords)  */ dphidxi[0][ig][inode] * vt[1][inode];
+      Jac[0][2] += /*(*dxi_coords)  */ dphidxi[0][ig][inode] * vt[2][inode];
+      Jac[1][0] += /*(*deta_coords) */ dphidxi[1][ig][inode] * vt[0][inode];
+      Jac[1][1] += /*(*deta_coords) */ dphidxi[1][ig][inode] * vt[1][inode];
+      Jac[1][2] += /*(*deta_coords) */ dphidxi[1][ig][inode] * vt[2][inode];
+      Jac[2][0] += /*(*dzeta_coords)*/ dphidxi[2][ig][inode] * vt[0][inode];
+      Jac[2][1] += /*(*dzeta_coords)*/ dphidxi[2][ig][inode] * vt[1][inode];
+      Jac[2][2] += /*(*dzeta_coords)*/ dphidxi[2][ig][inode] * vt[2][inode];
       
 //       Jac[0][d] += (*dxi_coords)   * vt[d][inode];
 //       Jac[1][d] += (*deta_coords)  * vt[d][inode];
@@ -901,13 +1023,72 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                                
     }
     
-    
+        std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof
+        std::vector < std::vector <  std::vector < double > > > _dphidxi_vol_at_bdry_templ;
+
+
+   void    fill_dphidxi_at_quadrature_points() {
+       
+              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
+ 
+                  _dphidxi_templ.resize(_dim);
+           
+               for(unsigned d = 0; d < _dim; d++) {
+                    _dphidxi_templ[d].resize(n_gauss);
+               for(unsigned iq = 0; iq < n_gauss; iq++) {
+                      _dphidxi_templ[d][iq].resize(_nc);
+                    }
+                 }
+               
+               
+            for(unsigned iq = 0; iq < n_gauss; iq++) {
+                for(unsigned dof = 0; dof < _nc; dof++) {
+                    _dphidxi_templ[0][iq][dof] = _dphidxi[iq][dof];
+                    _dphidxi_templ[1][iq][dof] = _dphideta[iq][dof];
+                    _dphidxi_templ[2][iq][dof] = _dphidzeta[iq][dof];
+                   }
+               }
+         
+             
+       }
+
+       
+    void   fill_dphidxi_at_quadrature_points_vol_at_bdry() {
+        
+              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
+ 
+                  _dphidxi_vol_at_bdry_templ.resize(_dim);
+           
+               for(unsigned d = 0; d < _dim; d++) {
+                    _dphidxi_vol_at_bdry_templ[d].resize(n_gauss);
+               for(unsigned iq = 0; iq < n_gauss; iq++) {
+                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
+                    }
+                 }
+               
+               
+            for(unsigned iq = 0; iq < n_gauss; iq++) {
+                for(unsigned dof = 0; dof < _nc; dof++) {
+                    _dphidxi_vol_at_bdry_templ[0][iq][dof] = _dphidxi_vol_at_bdry[iq][dof];
+                    _dphidxi_vol_at_bdry_templ[1][iq][dof] = _dphideta_vol_at_bdry[iq][dof];
+                    _dphidxi_vol_at_bdry_templ[2][iq][dof] = _dphidzeta_vol_at_bdry[iq][dof];
+                   }
+               }
+         
+             
+       }
+       
          public: 
 
              
+             
        elem_type_templ(const std::string geom_elem, const std::string fe_elem, const std::string order_gauss)
        : elem_type_3D(geom_elem.c_str(), fe_elem.c_str(), order_gauss.c_str() )
-         {}
+         {
+             
+            fill_dphidxi_at_quadrature_points();
+            
+        }
      
           ~elem_type_templ(){}
           
@@ -918,18 +1099,20 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                             std::vector < std::vector <type_mov> > & Jac,
                             std::vector < std::vector <type_mov> > & Jac_inv,
                             type_mov & detJac,
-                            const unsigned space_dim) const {
+                            const unsigned space_dim)  {
                                 
-fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
+      fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
 
-//create the vector of pointers
-    std::vector < double ** > dphidxi(3);  
-    dphidxi[0] = _dphidxi_vol_at_bdry;
-    dphidxi[1] = _dphideta_vol_at_bdry;
-    dphidxi[2] = _dphidzeta_vol_at_bdry;
+// //create the vector of pointers
+//     std::vector < double ** > dphidxi_ref(3);  
+//     dphidxi_ref[0] = _dphidxi_vol_at_bdry;
+//     dphidxi_ref[1] = _dphideta_vol_at_bdry;
+//     dphidxi_ref[2] = _dphidzeta_vol_at_bdry;
   
-    
-            jacobian_flexible(vt, ig, dphidxi, Jac, space_dim);
+      fill_dphidxi_at_quadrature_points_vol_at_bdry();
+      
+      
+            jacobian_flexible(vt, ig, _dphidxi_vol_at_bdry_templ, Jac, space_dim);
 
     std::vector < std::vector <type_mov> > JacJacT;
     
