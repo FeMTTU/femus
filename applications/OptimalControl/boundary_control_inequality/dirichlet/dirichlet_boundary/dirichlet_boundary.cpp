@@ -14,7 +14,7 @@
 #include "../../param.hpp"
 
 
-#define FE_DOMAIN  0 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
+#define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
 
 ///@todo do a very weak impl of Laplacian
 ///@todo Review the ordering for phi_ctrl_x_bdry
@@ -24,6 +24,7 @@
 ///@todo If I have a mesh that has 1 element only at the coarse level, can I run it in parallel? I need to factorize the ReadCoarseMesh function
 ///@todo merge elliptic_nonlin in here
 ///@todo What if I did a Point domain, could I solve ODEs in time like this? :)
+///@todo Re-double check that things are fine in elem_type_template, probably remove _gauss_bdry!
 
 using namespace femus;
 
@@ -225,6 +226,7 @@ int main(int argc, char** args) {
 
   return 0;
 }
+
 
 void el_dofs_unknowns(const Solution*                sol,
                       const Mesh * msh,
@@ -515,10 +517,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     const short unsigned ielGeom = geom_element.geom_type();
 
 
-   el_dofs_unknowns(sol,
-                        msh,
-                        pdeSys,
-                        iel,
+   el_dofs_unknowns(sol, msh, pdeSys, iel,
                         SolFEType,
                         SolIndex,
                         SolPdeIndex,
@@ -588,7 +587,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
        geom_element.set_elem_center_bdry_3d();
 
 	    // look for boundary faces
-            const int bdry_index = el->GetFaceElementIndex(iel,jface);
+            const int bdry_index = el->GetFaceElementIndex(iel, jface);
             
 	    if( bdry_index < 0) {
 	      unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
@@ -1020,14 +1019,36 @@ if (assembleMatrix) KK->close();
     
 //    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 //        
-//        
-//        	// Perform face loop over elements that contain some control face
+//      geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+//       
+//     el_dofs_unknowns(sol, msh, pdeSys, iel,
+//                         SolFEType,
+//                         SolIndex,
+//                         SolPdeIndex,
+//                         Sol_n_el_dofs, 
+//                         sol_eldofs,  
+//                         L2G_dofmap);
+// 
+//    geom_element.set_elem_center(iel, solType_coords);
+// 
+//  //************ set control flag *********************
+//   int control_el_flag = 0;
+//         control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
+//   std::vector<int> control_node_flag(Sol_n_el_dofs[pos_ctrl],0);
+// //  *************************************************** 
+// 
+// // Perform face loop over elements that contain some control face
 // 	if (control_el_flag == 1) {
 // 
 //     	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+// 
+//        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+// // 	    look for boundary faces
+//             const int bdry_index = el->GetFaceElementIndex(iel, jface);
 //    
 // 	    if( bdry_index < 0) {
-//             
+//             	      unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+// 
 // 	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
 // 
 //        update_active_set_flag_for_current_nonlinear_iteration_bdry
@@ -1058,7 +1079,7 @@ if (assembleMatrix) KK->close();
 //     }
 // 
 //    }
-//    
+   
    
   // ***************** INSERT PART - END *******************
 RES->close();
