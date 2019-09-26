@@ -148,7 +148,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -375,10 +375,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //***************************************************
 //********* WHOLE SET OF VARIABLES ******************
     const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
+    const unsigned int n_quantities = ml_sol->GetSolutionSize();
 
-    enum Sol_pos {pos_state=0, pos_ctrl, pos_adj, pos_mu}; //these are known at compile-time 
+    enum Pos_in_matrix {pos_state=0, pos_ctrl, pos_adj, pos_mu}; //these are known at compile-time 
                     ///@todo these are the positions in the MlSol object or in the Matrix? I'd say the matrix, but we have to check where we use it...
 
+    enum Pos_in_Sol {soln_state=0, soln_ctrl, soln_adj, soln_mu, soln_targreg, soln_contreg, soln_actflag}; //these are known at compile-time 
+                    
     assert(pos_state   == mlPdeSys->GetSolPdeIndex("state"));
     assert(pos_ctrl    == mlPdeSys->GetSolPdeIndex("control"));
     assert(pos_adj     == mlPdeSys->GetSolPdeIndex("adjoint"));
@@ -391,16 +394,32 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     Solname[2] = "adjoint";
     Solname[3] = "mu";
 
-    vector < unsigned > SolPdeIndex(n_unknowns);
+    vector < std::string > Solname_quantities(n_quantities);
+    
+        for(unsigned ivar=0; ivar < Solname_quantities.size(); ivar++) {
+            Solname_quantities[ivar] = ml_sol->GetSolutionName(ivar);
+        }
+        
     vector < unsigned > SolIndex(n_unknowns);
     vector < unsigned > SolFEType(n_unknowns);
+    vector < unsigned > SolPdeIndex(n_unknowns);
 
+    vector < unsigned > SolIndex_quantities(n_quantities);
+    vector < unsigned > SolFEType_quantities(n_quantities);
+    vector < unsigned > Sol_n_el_dofs_quantities(n_quantities);
+ 
+  
 
     for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-        SolPdeIndex[ivar] = mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
         SolIndex[ivar]    = ml_sol->GetIndex        (Solname[ivar].c_str());
         SolFEType[ivar]   = ml_sol->GetSolutionType(SolIndex[ivar]);
+        SolPdeIndex[ivar] = mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
     }
+    
+    for(unsigned ivar=0; ivar < n_quantities; ivar++) {
+        SolIndex_quantities[ivar]    = ml_sol->GetIndex        (Solname_quantities[ivar].c_str());
+        SolFEType_quantities[ivar]   = ml_sol->GetSolutionType(SolIndex_quantities[ivar]);
+    }    
 
     vector < unsigned > Sol_n_el_dofs(n_unknowns);
 
@@ -525,7 +544,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
           
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
-       const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
+       
+       std::vector<unsigned int> Sol_el_n_dofs_current_face(n_quantities); ///@todo the active flag is not an unknown!
+
+       for (unsigned  k = 0; k < Sol_el_n_dofs_current_face.size(); k++) {
+                 if (SolFEType_quantities[k] < 3) Sol_el_n_dofs_current_face[k] = msh->GetElementFaceDofNumber(iel, jface, SolFEType_quantities[k]);  //@todo fix this absence
+       }
+       
+       const unsigned nDof_max_bdry = ElementJacRes<double>::compute_max_n_dofs(Sol_el_n_dofs_current_face);
        
        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
  
@@ -672,17 +698,23 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
 		  
 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_bdry_gss = 0.;
-		  sol_adj_bdry_gss = 0.;
                   std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
-		      for (int i_bdry = 0; i_bdry < nve_bdry/*_nc*/; i_bdry++)  {
+		      for (int i_bdry = 0; i_bdry < Sol_n_el_dofs_quantities[soln_ctrl]; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 			
-			sol_adj_bdry_gss  +=  sol_eldofs[pos_adj][i_vol] * phi_adj_bdry[i_bdry];
 			sol_ctrl_bdry_gss +=  sol_eldofs[pos_ctrl][i_vol] * phi_ctrl_bdry[i_bdry];
                             for (int d = 0; d < space_dim; d++) {
-			      sol_ctrl_x_bdry_gss[d] += sol_eldofs[pos_ctrl][i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
+			      sol_ctrl_x_bdry_gss[d] += sol_eldofs[soln_ctrl/*pos_ctrl*/][i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
 			    }
 		      }
+		      
+		      
+		  sol_adj_bdry_gss = 0.;
+		      for (int i_bdry = 0; i_bdry < Sol_n_el_dofs_quantities[soln_adj]; i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+			
+			sol_adj_bdry_gss  +=  sol_eldofs[soln_adj/*pos_adj*/][i_vol] * phi_adj_bdry[i_bdry];
+              }		      
 		      
 //=============== grad dot n for residual ========================================= 
 //     compute gauss quantities on the boundary through VOLUME interpolation
@@ -703,7 +735,7 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
 //========== compute gauss quantities on the boundary ================================================
 
 		  // *** phi_i loop ***
-		  for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
+		  for(unsigned i_bdry=0; i_bdry < nDof_max_bdry; i_bdry++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 
                  double lap_rhs_dctrl_ctrl_bdry_gss_i = 0.;
@@ -738,7 +770,7 @@ std::cout <<  "real qp_" << d << " " << coord_at_qp_bdry[d];
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i_vol) ]  += 0.; 
 //============ Bdry Residuals ==================    
 		    
-		    for(unsigned j_bdry=0; j_bdry < nve_bdry; j_bdry ++) {
+		    for(unsigned j_bdry=0; j_bdry < nDof_max_bdry; j_bdry ++) {
 		         unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
 
 //============ Bdry Jacobians ==================	
@@ -1233,7 +1265,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 	  for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
           
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
-       const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
+       const unsigned nve_bdry_ctrl = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
        
 
        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
@@ -1267,7 +1299,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 		 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_bdry_gss = 0.;
                   std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
-		      for (int i_bdry = 0; i_bdry < nve_bdry/*_nc*/; i_bdry++)  {
+		      for (int i_bdry = 0; i_bdry < nve_bdry_ctrl; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 			
 			sol_ctrl_bdry_gss +=  sol_ctrl[i_vol] * phi_ctrl_bdry[i_bdry];

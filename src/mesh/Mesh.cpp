@@ -1032,7 +1032,7 @@ namespace femus {
 
   /** Only for parallel */
   unsigned Mesh::GetElementFaceDofNumber (const unsigned& iel, const unsigned jface, const unsigned& type) const {
-    assert (type < 3);
+    assert (type < 3);  ///@todo relax this
     return el->GetNFACENODES (GetElementType (iel), jface, type);
   }
 

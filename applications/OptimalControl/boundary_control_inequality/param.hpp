@@ -300,7 +300,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                                                              const unsigned int solFEType_act_flag,
                                                              const unsigned int solIndex_act_flag) {
      
-		const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_coords);
+		const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface, solFEType_act_flag);
         
         const unsigned dim = coords_at_dofs.size();
         
