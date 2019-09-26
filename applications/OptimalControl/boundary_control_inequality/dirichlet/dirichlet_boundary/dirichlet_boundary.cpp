@@ -14,7 +14,7 @@
 #include "../../param.hpp"
 
 
-#define FE_DOMAIN  2 //with 0 it only works in serial: that's because when you fetch the dofs from _topology you get the wrong indices
+#define FE_DOMAIN  2 //with 0 it only works in serial, with 2 now it doesn't work in serial...: that's because when you fetch the dofs from _topology you get the wrong indices
 
 ///@todo do a very weak impl of Laplacian
 ///@todo Review the ordering for phi_ctrl_x_bdry

@@ -193,7 +193,7 @@ namespace femus {
        
         std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof  
                                                                                 ///@todo unfortunately I cannot put this only once in the father, because it is not found...
-        std::vector < std::vector <  std::vector < double > > > _dphidxi_vol_at_bdry_templ;
+        std::vector < std::vector <  std::vector < double > > > _dphidxi_vol_at_bdry_templ; //for every Volume Direction, for every Boundary Quadrature Point, for every Volume Dof  
 
 
    void    fill_dphidxi_at_quadrature_points() {
@@ -217,24 +217,25 @@ namespace femus {
                }
          
              
+              const unsigned int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+ 
+                  _dphidxi_vol_at_bdry_templ.resize(_dim);  ///@todo I get a very weird segmentation fault here!
+           
+               for(unsigned d = 0; d < _dim; d++) {
+                    _dphidxi_vol_at_bdry_templ[d].resize(n_gauss_bdry);
+               for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
+                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
+                    }
+                 }
+               
        }
 
        
     void   fill_dphidxi_at_quadrature_points_vol_at_bdry() {
         
-              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
- 
-                  _dphidxi_vol_at_bdry_templ.resize(_dim);  ///@todo I get a very weird segmentation fault here!
-           
-               for(unsigned d = 0; d < _dim; d++) {
-                    _dphidxi_vol_at_bdry_templ[d].resize(n_gauss);
-               for(unsigned iq = 0; iq < n_gauss; iq++) {
-                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
-                    }
-                 }
+              const unsigned int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
                
-               
-            for(unsigned iq = 0; iq < n_gauss; iq++) {
+            for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
                 for(unsigned dof = 0; dof < _nc; dof++) {
                     _dphidxi_vol_at_bdry_templ[0][iq][dof] = _dphidxi_vol_at_bdry[iq][dof];
                    }
@@ -607,24 +608,27 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                }
          
              
+              const unsigned int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+ 
+                  _dphidxi_vol_at_bdry_templ.resize(_dim);
+           
+               for(unsigned d = 0; d < _dim; d++) {
+                    _dphidxi_vol_at_bdry_templ[d].resize(n_gauss_bdry);
+               for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
+                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
+                    }
+                 }
+                 
+                 
        }
 
        
     void   fill_dphidxi_at_quadrature_points_vol_at_bdry()  {
         
-              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
- 
-                  _dphidxi_vol_at_bdry_templ.resize(_dim);
-           
-               for(unsigned d = 0; d < _dim; d++) {
-                    _dphidxi_vol_at_bdry_templ[d].resize(n_gauss);
-               for(unsigned iq = 0; iq < n_gauss; iq++) {
-                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
-                    }
-                 }
                
+              const unsigned int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
                
-            for(unsigned iq = 0; iq < n_gauss; iq++) {
+            for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
                 for(unsigned dof = 0; dof < _nc; dof++) {
                     _dphidxi_vol_at_bdry_templ[0][iq][dof] = _dphidxi_vol_at_bdry[iq][dof];
                     _dphidxi_vol_at_bdry_templ[1][iq][dof] = _dphideta_vol_at_bdry[iq][dof];
@@ -668,7 +672,10 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                
             jacobian_flexible(vt, ig,  _dphidxi_vol_at_bdry_templ, Jac, space_dim);
 
-    std::vector < std::vector <type_mov> > JacJacT(2); JacJacT[0].resize(2); JacJacT[1].resize(2);  
+    std::vector < std::vector <type_mov> > JacJacT(2); 
+    
+    JacJacT[0].resize(2); 
+    JacJacT[1].resize(2);  
     
             jac_jacT(Jac, JacJacT, space_dim);                                
 
@@ -1049,25 +1056,26 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                    }
                }
          
+              const unsigned int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+ 
+                  _dphidxi_vol_at_bdry_templ.resize(_dim);
+           
+               for(unsigned d = 0; d < _dim; d++) {
+                    _dphidxi_vol_at_bdry_templ[d].resize(n_gauss_bdry);
+               for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
+                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
+                    }
+                 }
              
        }
 
        
     void   fill_dphidxi_at_quadrature_points_vol_at_bdry() {
         
-              const unsigned int n_gauss = _gauss.GetGaussPointsNumber();
- 
-                  _dphidxi_vol_at_bdry_templ.resize(_dim);
-           
-               for(unsigned d = 0; d < _dim; d++) {
-                    _dphidxi_vol_at_bdry_templ[d].resize(n_gauss);
-               for(unsigned iq = 0; iq < n_gauss; iq++) {
-                      _dphidxi_vol_at_bdry_templ[d][iq].resize(_nc);
-                    }
-                 }
                
+              const unsigned int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
                
-            for(unsigned iq = 0; iq < n_gauss; iq++) {
+            for(unsigned iq = 0; iq < n_gauss_bdry; iq++) {
                 for(unsigned dof = 0; dof < _nc; dof++) {
                     _dphidxi_vol_at_bdry_templ[0][iq][dof] = _dphidxi_vol_at_bdry[iq][dof];
                     _dphidxi_vol_at_bdry_templ[1][iq][dof] = _dphideta_vol_at_bdry[iq][dof];
