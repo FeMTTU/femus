@@ -32,7 +32,7 @@
  
 //******************************** switch between stokes and navier stokes *********************************************
  
- int advection_flag = 1;
+ int advection_flag = 0;
  int advection_Picard = 0;
  
 //  Newton: advection_flag = 1; advection_Picard = 0;
