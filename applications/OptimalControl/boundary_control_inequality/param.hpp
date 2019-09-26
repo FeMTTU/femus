@@ -33,6 +33,9 @@
 #define  C_COMPL 1.
 
 
+namespace femus {
+
+
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
@@ -216,11 +219,11 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                                                              const femus::Solution* sol,
                                                              const unsigned int iel,
                                                              const std::vector < std::vector < double > > & coords_at_dofs,
-                                                             const std::vector < std::vector < double > > sol_eldofs,
+                                                             const std::vector < std::vector < double > > sol_eldofs,  ///@todo why not a reference?
                                                              const std::vector < unsigned int > & Sol_n_el_dofs,
                                                              const unsigned int pos_mu,
                                                              const unsigned int pos_ctrl,
-                                                             const unsigned int c_compl,
+                                                             const double c_compl,
                                                                    std::vector < double > & ctrl_lower,
                                                                    std::vector < double > & ctrl_upper,
                                                                    std::vector < double > & sol_actflag,
@@ -287,13 +290,12 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                                                              const femus::Solution* sol,
                                                              const unsigned int iel,
                                                              const unsigned int jface,
-                                                             const unsigned int solType_coords,
                                                              const std::vector < std::vector < double > > & coords_at_dofs,
-                                                             const std::vector < std::vector < double > > sol_eldofs,
+                                                             const std::vector < std::vector < double > > sol_eldofs,  ///@todo why not a reference?
                                                              const std::vector < unsigned int > & Sol_n_el_dofs,
                                                              const unsigned int pos_mu,
                                                              const unsigned int pos_ctrl,
-                                                             const unsigned int c_compl,
+                                                             const double c_compl,
                                                                    std::vector < double > & ctrl_lower,
                                                                    std::vector < double > & ctrl_upper,
                                                                    std::vector < double > & sol_actflag,
@@ -305,7 +307,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
         const unsigned dim = coords_at_dofs.size();
         
          // 0: inactive; 1: active_a; 2: active_b
-        assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);
+        assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);///@todo More appropriately, 
             sol_actflag.resize(nve_bdry/*nDof_mu*/);
             ctrl_lower.resize(nve_bdry/*nDof_mu*/);
             ctrl_upper.resize(nve_bdry/*nDof_mu*/);
@@ -338,8 +340,81 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
     
     }
     
-    
-
  
+ 
+ void node_insertion_bdry(const unsigned int iel,
+                         const unsigned int jface,
+                         const   Mesh* msh,
+                         const     vector < vector < int > > & L2G_dofmap,
+                         const double c_compl,
+                         const double ineq_flag,
+                         const unsigned int pos_mu,
+                         const unsigned int pos_ctrl,
+                         const std::vector < std::vector < double > > & sol_eldofs,
+                         const std::vector < unsigned int > & Sol_n_el_dofs,
+                         std::vector < double > & sol_actflag,
+                         const unsigned int solFEType_act_flag,
+                         const std::vector < double > & ctrl_lower,
+                         const std::vector < double > & ctrl_upper,
+                         SparseMatrix*             KK,
+                         NumericVector* RES
+                        ) {
+
+ //============= delta_mu row ===============================
+      std::vector<double> Res_mu (Sol_n_el_dofs[pos_mu]); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
+      
+      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+//     for (unsigned i = 0; i < sol_actflag.size(); i++) {
+      if (sol_actflag[i_bdry] == 0){  //inactive
+         Res_mu [i_vol] = - ineq_flag * ( 1. * sol_eldofs[pos_mu][i_vol] - 0. ); 
+// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+      }
+      else if (sol_actflag[i_bdry] == 1){  //active_a 
+	 Res_mu [i_vol] = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_lower[i_bdry]);
+      }
+      else if (sol_actflag[i_bdry] == 2){  //active_b 
+	Res_mu [i_vol]  =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_upper[i_bdry]);
+      }
+    }
+
+    
+    RES->insert(Res_mu,  L2G_dofmap[pos_mu]);    
+ //============= delta_mu row - end ===============================
+    
+ //============= delta_mu-delta_ctrl row ===============================
+ //auxiliary volume vector for act flag
+ unsigned nDof_actflag_vol  = msh->GetElementDofNumber(iel, solFEType_act_flag);
+ std::vector<double> sol_actflag_vol(nDof_actflag_vol); 
+
+
+ for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) if (sol_actflag[i_bdry] != 0 ) sol_actflag[i_bdry] = ineq_flag * c_compl;    
+ 
+ std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+    }
+ 
+ KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_ctrl], sol_actflag_vol);
+ //============= delta_mu-delta_ctrl row - end ===============================
+
+ //============= delta_mu-delta_mu row ===============================
+  for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) sol_actflag[i_bdry] =  ineq_flag * (1 - sol_actflag[i_bdry]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
+
+ std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
+    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
+    }
+  
+  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag_vol );
+ //============= delta_mu-delta_mu row - end ===============================
+  
+
+}
+
+
+} //end namespace
  
 #endif

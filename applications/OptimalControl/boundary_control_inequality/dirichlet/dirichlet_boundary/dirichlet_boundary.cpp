@@ -14,7 +14,7 @@
 #include "../../param.hpp"
 
 
-#define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
+#define FE_DOMAIN  0 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
 
 ///@todo do a very weak impl of Laplacian
 ///@todo Review the ordering for phi_ctrl_x_bdry
@@ -129,8 +129,8 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-  std::string input_file = "square_4x5.med";
-//   std::string input_file = "square_parametric.med";
+//   std::string input_file = "square_4x5.med";
+  std::string input_file = "square_parametric.med";
 //   std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
@@ -149,7 +149,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -226,6 +226,34 @@ int main(int argc, char** args) {
   return 0;
 }
 
+void el_dofs_unknowns(const Solution*                sol,
+                      const Mesh * msh,
+                      const  LinearEquationSolver* pdeSys,
+                      const unsigned int iel,
+                      const    vector < unsigned > & SolFEType,
+                      const vector < unsigned > & SolIndex,
+                      const vector < unsigned > & SolPdeIndex,
+                      vector < unsigned > & Sol_n_el_dofs, 
+                      vector < vector < double > > & sol_eldofs,  
+                      vector < vector < int > > & L2G_dofmap ) {
+    
+    assert(Sol_n_el_dofs.size() == sol_eldofs.size());
+    
+        //all vars###################################################################
+        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
+            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+            Sol_n_el_dofs[k] = ndofs_unk;
+            sol_eldofs[k].resize(ndofs_unk);
+            L2G_dofmap[k].resize(ndofs_unk);
+            for (unsigned i = 0; i < ndofs_unk; i++) {
+                unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
+                sol_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
+                L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
+            }
+        }
+        //all vars###################################################################
+
+}
 
 
 //This Opt system is characterized by the following ways of setting matrix values:
@@ -487,22 +515,20 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     const short unsigned ielGeom = geom_element.geom_type();
 
 
-    
-        //all vars###################################################################
-        for (unsigned  k = 0; k < n_unknowns; k++) {
-            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-            Sol_n_el_dofs[k] = ndofs_unk;
-            sol_eldofs[k].resize(ndofs_unk);
-            L2G_dofmap[k].resize(ndofs_unk);
-            for (unsigned i = 0; i < ndofs_unk; i++) {
-                unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
-                sol_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
-                L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
-            }
-        }
-        //all vars###################################################################
+   el_dofs_unknowns(sol,
+                        msh,
+                        pdeSys,
+                        iel,
+                        SolFEType,
+                        SolIndex,
+                        SolPdeIndex,
+                        Sol_n_el_dofs, 
+                        sol_eldofs,  
+                        L2G_dofmap);
+  
         
  
+ //***************************************************
     unsigned int nDof_max          = ElementJacRes<double>::compute_max_n_dofs(Sol_n_el_dofs);
     
     unsigned int sum_Sol_n_el_dofs = ElementJacRes<double>::compute_sum_n_dofs(Sol_n_el_dofs);
@@ -579,69 +605,27 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
         
   update_active_set_flag_for_current_nonlinear_iteration_bdry
-   (msh, sol, iel, jface, solType_coords, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
+   (msh, sol, iel, jface, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
     pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
  
- // ===================================================
- //node-based insertion on the boundary ===============
- // ===================================================
-    
- //============= delta_mu row ===============================
-      std::vector<double> Res_mu (Sol_n_el_dofs[pos_mu]); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
-      
-      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
-	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-//     for (unsigned i = 0; i < sol_actflag.size(); i++) {
-      if (sol_actflag[i_bdry] == 0){  //inactive
-         Res_mu [i_vol] = - ineq_flag * ( 1. * sol_eldofs[pos_mu][i_vol] - 0. ); 
-// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
-      }
-      else if (sol_actflag[i_bdry] == 1){  //active_a 
-	 Res_mu [i_vol] = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_lower[i_bdry]);
-      }
-      else if (sol_actflag[i_bdry] == 2){  //active_b 
-	Res_mu [i_vol]  =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_upper[i_bdry]);
-      }
-    }
 
-    
-    RES->insert(Res_mu,  L2G_dofmap[pos_mu]);    
- //============= delta_mu row - end ===============================
-    
- //============= delta_mu-delta_ctrl row ===============================
- //auxiliary volume vector for act flag
- unsigned nDof_actflag_vol  = msh->GetElementDofNumber(iel, solFEType_act_flag);
- std::vector<double> sol_actflag_vol(nDof_actflag_vol); 
+  node_insertion_bdry(iel, jface, 
+                      msh,
+                      L2G_dofmap,
+                      c_compl,
+                      ineq_flag,
+                      pos_mu,
+                      pos_ctrl,
+                      sol_eldofs,
+                      Sol_n_el_dofs,
+                       sol_actflag,
+                       solFEType_act_flag,
+                        ctrl_lower,
+                        ctrl_upper,
+                        KK,
+                        RES
+                        );
 
-
- for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) if (sol_actflag[i_bdry] != 0 ) sol_actflag[i_bdry] = ineq_flag * c_compl;    
- 
- std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
-    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
-       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
-    }
- 
- KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_ctrl], sol_actflag_vol);
- //============= delta_mu-delta_ctrl row - end ===============================
-
- //============= delta_mu-delta_mu row ===============================
-  for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) sol_actflag[i_bdry] =  ineq_flag * (1 - sol_actflag[i_bdry]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
-
- std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
-    for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
-       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-       sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
-    }
-  
-  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag_vol );
- //============= delta_mu-delta_mu row - end ===============================
-  
-
- // =========================================================
- //node-based insertion on the boundary - end ===============
- // =========================================================
-    
  
 //========= initialize gauss quantities on the boundary ============================================
                 double sol_ctrl_bdry_gss = 0.;
@@ -1028,6 +1012,59 @@ if ( i_vol == j_vol )  {
     
   // ***************** END ASSEMBLY *******************
 
+RES->close();
+if (assembleMatrix) KK->close();
+  // ***************** INSERT PART - BEGIN *******************
+    
+    
+    
+//    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+//        
+//        
+//        	// Perform face loop over elements that contain some control face
+// 	if (control_el_flag == 1) {
+// 
+//     	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+//    
+// 	    if( bdry_index < 0) {
+//             
+// 	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
+// 
+//        update_active_set_flag_for_current_nonlinear_iteration_bdry
+//    (msh, sol, iel, jface, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
+//     pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
+//  
+// 
+//   node_insertion_bdry(iel, jface, 
+//                       msh,
+//                       L2G_dofmap,
+//                       c_compl,
+//                       ineq_flag,
+//                       pos_mu,
+//                       pos_ctrl,
+//                       sol_eldofs,
+//                       Sol_n_el_dofs,
+//                        sol_actflag,
+//                        solFEType_act_flag,
+//                         ctrl_lower,
+//                         ctrl_upper,
+//                         KK,
+//                         RES
+//                         );
+//   
+//           }
+//         }
+//       }
+//     }
+// 
+//    }
+//    
+   
+  // ***************** INSERT PART - END *******************
+RES->close();
+if (assembleMatrix) KK->close();
+    
+    
     if (assembleMatrix) KK->close();
     std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
     KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
