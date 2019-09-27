@@ -360,26 +360,41 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                          NumericVector* RES
                         ) {
 
+// Create the L2G boundary maps from the volume ones
+  std::vector < int > L2G_dofmap_mu_bdry(sol_actflag.size());
+  std::vector < int > L2G_dofmap_ctrl_bdry(sol_actflag.size());
+
+      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+  L2G_dofmap_mu_bdry[i_bdry]   = L2G_dofmap[pos_mu][i_vol];
+  L2G_dofmap_ctrl_bdry[i_bdry] = L2G_dofmap[pos_ctrl][i_vol];
+      }
+      
  //============= delta_mu row ===============================
-      std::vector<double> Res_mu (Sol_n_el_dofs[pos_mu]); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
+      std::vector<double> Res_mu_bdry (sol_actflag.size());     std::fill(Res_mu_bdry.begin(),Res_mu_bdry.end(), 0.);
+      std::vector<double> Res_mu (Sol_n_el_dofs[pos_mu]);       std::fill(Res_mu.begin(),Res_mu.end(), 0.);
       
       for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
 	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-//     for (unsigned i = 0; i < sol_actflag.size(); i++) {
-      if (sol_actflag[i_bdry] == 0){  //inactive
-         Res_mu [i_vol] = - ineq_flag * ( 1. * sol_eldofs[pos_mu][i_vol] - 0. ); 
-// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+        
+      if (sol_actflag[i_bdry] == 0) {  //inactive
+         Res_mu [i_vol]      = - ineq_flag * ( 1. * sol_eldofs[pos_mu][i_vol] - 0. ); 
+         Res_mu_bdry[i_bdry] = - ineq_flag * ( 1. * sol_eldofs[pos_mu][i_vol] - 0. ); 
       }
-      else if (sol_actflag[i_bdry] == 1){  //active_a 
-	 Res_mu [i_vol] = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_lower[i_bdry]);
-      }
-      else if (sol_actflag[i_bdry] == 2){  //active_b 
-	Res_mu [i_vol]  =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_upper[i_bdry]);
+      else if (sol_actflag[i_bdry] == 1) {  //active_a 
+	 Res_mu [i_vol]      = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_lower[i_bdry]);
+     Res_mu_bdry[i_bdry] = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_lower[i_bdry]);
+          
+    }
+      else if (sol_actflag[i_bdry] == 2) {  //active_b 
+	Res_mu [i_vol]      =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_upper[i_bdry]);
+    Res_mu_bdry[i_bdry] =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_upper[i_bdry]);
       }
     }
 
     
-    RES->insert(Res_mu,  L2G_dofmap[pos_mu]);    
+//     RES->insert(Res_mu,  L2G_dofmap[pos_mu]);    
+    RES->insert(Res_mu_bdry,  L2G_dofmap_mu_bdry);    
  //============= delta_mu row - end ===============================
     
  //============= delta_mu-delta_ctrl row ===============================
@@ -396,11 +411,15 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
        sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
     }
  
- KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_ctrl], sol_actflag_vol);
+//  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_ctrl], sol_actflag_vol);
+ KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_ctrl_bdry, sol_actflag);
  //============= delta_mu-delta_ctrl row - end ===============================
 
  //============= delta_mu-delta_mu row ===============================
  // Attention: this equation goes in contrast with \mu = 0 on \Omega \setminus \Gamma_c
+ // In fact, here we shouldn't insert all VOLUME values, but only the BOUNDARY ones
+ // The best way is to then do a L2G_map ON THE BOUNDARY only
+ 
   for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) sol_actflag[i_bdry] =  ineq_flag * (1 - sol_actflag[i_bdry]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
 
  std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);
@@ -409,7 +428,8 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
        sol_actflag_vol[i_vol] = sol_actflag[i_bdry];
     }
   
-  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag_vol );
+//   KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag_vol );
+  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_mu_bdry, sol_actflag);
  //============= delta_mu-delta_mu row - end ===============================
   
 

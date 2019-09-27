@@ -26,8 +26,9 @@
 ///@todo What if I did a Point domain, could I solve ODEs in time like this? :)
 ///@todo Re-double check that things are fine in elem_type_template, probably remove _gauss_bdry!
 ///@todo See if with Petsc you can enforce Dirichlet conditions using NEGATIVE indices
-
-
+///@todo Do Parallel ComputeIntegral
+///@todo Remove the prints, possible cause of slowing down (maybe do assert)
+///@todo The \mu/actflag pieces are now basically separated, except for setting to zero on Omega minus Gamma_c (such as is done for control)
 
 using namespace femus;
 
@@ -133,8 +134,8 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-//   std::string input_file = "square_4x5.med";
-  std::string input_file = "square_parametric.med";
+  std::string input_file = "square_4x5.med";
+//   std::string input_file = "square_parametric.med";
 //   std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
@@ -483,7 +484,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   double u_des = DesiredTarget();
   double alpha = ALPHA_CTRL_BDRY;
   double beta  = BETA_CTRL_BDRY;
-  double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
+  double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c and zero mu outside Gamma_c
   double penalty_strong_bdry = 1.e20;  // penalty for boundary equation on Gamma_c
   double penalty_ctrl = 1.e10;         //penalty for u=q
  //*************************************************** 
@@ -603,31 +604,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element.get_elem_center_bdry(),Solname[pos_ctrl].c_str(),tau,face_in_rectangle_domain,0.);
 
  //=================================================== 
-
-
         
-  update_active_set_flag_for_current_nonlinear_iteration_bdry
-   (msh, sol, iel, jface, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
-    pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
- 
-
-  node_insertion_bdry(iel, jface, 
-                      msh,
-                      L2G_dofmap,
-                      c_compl,
-                      ineq_flag,
-                      pos_mu,
-                      pos_ctrl,
-                      sol_eldofs,
-                      Sol_n_el_dofs,
-                       sol_actflag,
-                       solFEType_act_flag,
-                        ctrl_lower,
-                        ctrl_upper,
-                        KK,
-                        RES
-                        );
-
  
 //========= initialize gauss quantities on the boundary ============================================
                 double sol_ctrl_bdry_gss = 0.;
@@ -1011,7 +988,7 @@ unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
   // ***************** END ASSEMBLY *******************
 
 RES->close();
-if (assembleMatrix) KK->close();
+if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
 
 
 //   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
@@ -1048,22 +1025,22 @@ if (assembleMatrix) KK->close();
 
 	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
 
-//        update_active_set_flag_for_current_nonlinear_iteration_bdry
-//    (msh, sol, iel, jface, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
-//     pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
-//  
-// 
-//   node_insertion_bdry(iel, jface, 
-//                       msh,
-//                       L2G_dofmap,
-//                       c_compl,
-//                       ineq_flag,
-//                       pos_mu, pos_ctrl,
-//                       sol_eldofs, Sol_n_el_dofs,
-//                       sol_actflag, solFEType_act_flag,
-//                       ctrl_lower, ctrl_upper,
-//                       KK, RES
-//                       );
+       update_active_set_flag_for_current_nonlinear_iteration_bdry
+   (msh, sol, iel, jface, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
+    pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
+ 
+
+  node_insertion_bdry(iel, jface, 
+                      msh,
+                      L2G_dofmap,
+                      c_compl,
+                      ineq_flag,
+                      pos_mu, pos_ctrl,
+                      sol_eldofs, Sol_n_el_dofs,
+                      sol_actflag, solFEType_act_flag,
+                      ctrl_lower, ctrl_upper,
+                      KK, RES
+                      );
   
              }
           }
@@ -1079,7 +1056,7 @@ if (assembleMatrix) KK->close();
    
   // ***************** INSERT PART - END *******************
 RES->close();
-if (assembleMatrix) KK->close();
+if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
     
     
     if (assembleMatrix) KK->close();
