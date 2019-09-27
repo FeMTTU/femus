@@ -109,10 +109,10 @@ int main (int argc, char** args) {
   // erase all the coarse mesh levels
   // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
 
-  for (unsigned simulation = 0; simulation < 20; simulation++) {
+  for (unsigned simulation = 0; simulation < 1; simulation++) {
 
-    V0 = 0.05 * (simulation + 1) ;   
-    //V0 = 0.8;
+    //V0 = 0.05 * (simulation + 1) ;   
+    V0 = 0.5;
     // define the multilevel solution and attach the mlMsh object to it
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
 
@@ -399,7 +399,7 @@ void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob) {
           }
 
           // *** phi_i loop ***
-          double eps = 5.;
+          double eps = 0.002;
           for (unsigned i = 0; i < faceDofs; i++) {
             unsigned inode = msh->GetLocalFaceVertexIndex (iel, jface, i);
             aRes[inode] +=  phi[i] * eps * (1.0 * solu_gss + 0. * soluOld_gss) * weight;
@@ -788,7 +788,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   std::ostringstream filename;
   std::ostringstream fileAD;
   
-  filename << "/home/ekara/FEMuS/MyFEMuS/applications/Tumor/ex3/input/NewCorrectedTensorSPD.txt";
+  filename << "./input/NewCorrectedTensorSPD.txt";
   //fileAD << "/home/erdi/FEMuS/MyFEMuS/applications/Tumor/ex3/input/AxialDiffusivity.txt";
 
   std::ifstream fin;
