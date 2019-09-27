@@ -400,6 +400,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
  //============= delta_mu-delta_ctrl row - end ===============================
 
  //============= delta_mu-delta_mu row ===============================
+ // Attention: this equation goes in contrast with \mu = 0 on \Omega \setminus \Gamma_c
   for (unsigned i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++) sol_actflag[i_bdry] =  ineq_flag * (1 - sol_actflag[i_bdry]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
 
  std::fill(sol_actflag_vol.begin(), sol_actflag_vol.end(), 0.);

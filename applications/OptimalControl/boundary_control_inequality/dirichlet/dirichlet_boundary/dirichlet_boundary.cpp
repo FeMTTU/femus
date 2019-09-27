@@ -25,6 +25,9 @@
 ///@todo merge elliptic_nonlin in here
 ///@todo What if I did a Point domain, could I solve ODEs in time like this? :)
 ///@todo Re-double check that things are fine in elem_type_template, probably remove _gauss_bdry!
+///@todo See if with Petsc you can enforce Dirichlet conditions using NEGATIVE indices
+
+
 
 using namespace femus;
 
@@ -150,7 +153,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -539,7 +542,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     std::fill(Jac.begin(), Jac.end(), 0.);
     
     L2G_dofmap_AllVars.resize(0);
-      for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_AllVars.insert(L2G_dofmap_AllVars.end(),L2G_dofmap[k].begin(),L2G_dofmap[k].end());
+      for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_AllVars.insert(L2G_dofmap_AllVars.end(), L2G_dofmap[k].begin(), L2G_dofmap[k].end());
  //***************************************************
 
       
@@ -590,7 +593,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
             const int bdry_index = el->GetFaceElementIndex(iel, jface);
             
 	    if( bdry_index < 0) {
-	      unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+	      const unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
 	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
@@ -879,7 +882,7 @@ if ( i_vol == j_vol )  {
 //============ Volume residuals ==================	    
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)  - laplace_rhs_du_adj_i ); 
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i) ]  += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs[pos_ctrl][i] - 0.)  );
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i) ]   += - weight * (-1) * (laplace_rhs_dadj_u_i);
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i) ]   += - weight * (-1.) * (laplace_rhs_dadj_u_i);
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mu,i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs[pos_mu][i] - 0.)  );
 //============  Volume Residuals ==================	    
 	      
@@ -1013,72 +1016,65 @@ if ( i_vol == j_vol )  {
 
 RES->close();
 if (assembleMatrix) KK->close();
-  // ***************** INSERT PART - BEGIN *******************
-    
-    
-    
-//    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-//        
-//      geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
-//       
-//     el_dofs_unknowns(sol, msh, pdeSys, iel,
-//                         SolFEType,
-//                         SolIndex,
-//                         SolPdeIndex,
-//                         Sol_n_el_dofs, 
-//                         sol_eldofs,  
-//                         L2G_dofmap);
-// 
-//    geom_element.set_elem_center(iel, solType_coords);
-// 
-//  //************ set control flag *********************
-//   int control_el_flag = 0;
-//         control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
-//   std::vector<int> control_node_flag(Sol_n_el_dofs[pos_ctrl],0);
-// //  *************************************************** 
-// 
-// // Perform face loop over elements that contain some control face
-// 	if (control_el_flag == 1) {
-// 
-//     	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
-// 
-//        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
-// // 	    look for boundary faces
-//             const int bdry_index = el->GetFaceElementIndex(iel, jface);
-//    
-// 	    if( bdry_index < 0) {
-//             	      unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
-// 
-// 	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
-// 
-//        update_active_set_flag_for_current_nonlinear_iteration_bdry
-//    (msh, sol, iel, jface, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
-//     pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
-//  
-// 
-//   node_insertion_bdry(iel, jface, 
-//                       msh,
-//                       L2G_dofmap,
-//                       c_compl,
-//                       ineq_flag,
-//                       pos_mu,
-//                       pos_ctrl,
-//                       sol_eldofs,
-//                       Sol_n_el_dofs,
-//                        sol_actflag,
-//                        solFEType_act_flag,
-//                         ctrl_lower,
-//                         ctrl_upper,
-//                         KK,
-//                         RES
-//                         );
-//   
-//           }
-//         }
-//       }
-//     }
-// 
-//    }
+
+
+// //   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
+// //  // One very important thing to consider: we have some PENALTIES that were set before during the SUMMATION part.
+// //  // Now, if we do INSERT, we may end up OVERWRITING certain values, SUCH AS THOSE PENALTIES!!!
+// //     
+// //     
+// //    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+// //        
+// //      geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+// //       
+// //     el_dofs_unknowns(sol, msh, pdeSys, iel,
+// //                         SolFEType, SolIndex, SolPdeIndex,
+// //                         Sol_n_el_dofs, sol_eldofs, L2G_dofmap);
+// // 
+// //    geom_element.set_elem_center(iel, solType_coords);
+// // 
+// //  //************ set control flag *********************
+// //   int control_el_flag = 0;
+// //         control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
+// // //  *************************************************** 
+// // 
+// // // Perform face loop over elements that contain some control face
+// // 	if (control_el_flag == 1) {
+// // 
+// //     	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+// // 
+// //        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+// // // 	    look for boundary faces
+// //             const int bdry_index = el->GetFaceElementIndex(iel, jface);
+// //    
+// // 	    if( bdry_index < 0) {
+// //             	      const unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+// // 
+// // 	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
+// // 
+// //        update_active_set_flag_for_current_nonlinear_iteration_bdry
+// //    (msh, sol, iel, jface, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
+// //     pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
+// //  
+// // 
+// //   node_insertion_bdry(iel, jface, 
+// //                       msh,
+// //                       L2G_dofmap,
+// //                       c_compl,
+// //                       ineq_flag,
+// //                       pos_mu, pos_ctrl,
+// //                       sol_eldofs, Sol_n_el_dofs,
+// //                       sol_actflag, solFEType_act_flag,
+// //                       ctrl_lower, ctrl_upper,
+// //                       KK, RES
+// //                       );
+// //   
+// //              }
+// //           }
+// //        }
+// //      }
+// // 
+// //    }
    
    
   // ***************** INSERT PART - END *******************
@@ -1294,8 +1290,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  //****** set control flag ***************************
   int control_el_flag = 0;
         control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
-  std::vector<int> control_node_flag(nDof_ctrl,0);
-//   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
  //***************************************************
 
   
