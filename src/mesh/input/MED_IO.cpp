@@ -128,6 +128,8 @@ namespace femus
   /// @todo why pass coords other than get it through the Mesh class pointer?
   void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups) {
 
+    _print_info = false;  
+      
     Mesh& mesh = GetMesh();
     mesh.SetLevel(0);
 
@@ -239,7 +241,7 @@ namespace femus
             if ( fam_map[k] == group_info._med_flag )   {
                 group_found = true;
                 group_size++;
-                std::cout << "Current flag " << fam_map[k] << " matches " << group_info._med_flag << " " << elem_types[j] << std::endl; 
+                if(_print_info) { std::cout << "Current flag " << fam_map[k] << " matches " << group_info._med_flag << " " << elem_types[j] << std::endl; }
                 group_info._geom_el = get_geom_elem_from_med_name(elem_types_str);
             }
         
@@ -336,7 +338,7 @@ namespace femus
            int user_flag =  get_user_flag_from_med_flag(group_info,med_flag);   //flag of the boundary portion
                user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE
                
-                      std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl; 
+                   if(_print_info) {   std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl; }
 
 //       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
                 mesh.el->SetFaceElementIndex(iel,f,user_flag);  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
@@ -351,7 +353,7 @@ namespace femus
          
        }// end volume elements
                
-                       std::cout << "Count found faces " << count_found_face << std::endl;              
+                       if(_print_info) { std::cout << "Count found faces " << count_found_face << std::endl;  }            
                if (count_found_face < fam_map.size()) { std::cout << "Found " << count_found_face << " faces out of " << fam_map.size() << ", not enough: missing certain boundary conditions." << std::endl;   abort();   }
                
 
@@ -787,7 +789,7 @@ namespace femus
     try {
         
       int str_pos = begin_pos_to_investigate;
-      std::cout << "Start searching in string " << string_in << " from the character " << string_in.at(str_pos) << " in position " << str_pos <<  std::endl;
+      if(_print_info) { std::cout << "Start searching in string " << string_in << " from the character " << string_in.at(str_pos) << " in position " << str_pos <<  std::endl; }
 
       std::vector<int> two_adj_underscores_pos(2,0);
 
@@ -820,7 +822,7 @@ namespace femus
             int string_to_extract_pos    = delimiting_positions.first + 1;
             int string_to_extract_length = delimiting_positions.second - delimiting_positions.first - 1;
       
-      std::cout <<  string_to_extract_pos << " " << string_to_extract_length << " " << string_in.substr(string_to_extract_pos,string_to_extract_length).c_str() << " " << std::endl;    
+      if(_print_info) { std::cout <<  string_to_extract_pos << " " << string_to_extract_length << " " << string_in.substr(string_to_extract_pos,string_to_extract_length).c_str() << " " << std::endl;  }
 
       const int flag = atoi( string_in.substr(string_to_extract_pos,string_to_extract_length).c_str() );
       

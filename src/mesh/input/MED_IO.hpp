@@ -138,6 +138,8 @@ class MED_IO : public MeshInput<Mesh>
    static const uint max_length;
 
    std::vector< GeomElemBase* > _geom_elems;
+
+   bool _print_info;
    
 };
 

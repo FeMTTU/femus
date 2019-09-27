@@ -786,8 +786,6 @@ if ( i_vol == j_vol )  {
 	}
 //=============== grad dot n  =========================================    
 
-  //std::cout << " gradadjdotn " << grad_adj_dot_n_mat << std::endl;
-  
 		      
 //==========block delta_control/adjoint ========
 		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_ctrl, pos_adj, i_vol, j) ]  += 
@@ -911,36 +909,8 @@ if ( i_vol == j_vol )  {
         
       } // end gauss point loop
 
-      
-// 	if (control_el_flag == 1) {
-// 	  
-//     std::cout << " ========== " << iel << " deltaq/q ================== " << std::endl;      
-//          for (unsigned i = 0; i < nDof_max; i++) {
-//             for (unsigned j = 0; j < nDof_max; j++) {
-// 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (Sol_n_el_dofs[pos_state] + i) * sum_Sol_n_el_dofs + (Sol_n_el_dofs[pos_state] + j) ];
-// 	     }
-// 	      std::cout << std::endl;
-// 	   }
-// 
-//     std::cout << " ========== " << iel << " deltaq/lambda ================== " << std::endl;      
-//          for (unsigned i = 0; i < nDof_max; i++) {
-//             for (unsigned j = 0; j < nDof_max; j++) {
-// 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (Sol_n_el_dofs[pos_state] + i) * sum_Sol_n_el_dofs + (Sol_n_el_dofs[pos_state] + nDof_ctrl + j) ];
-// 	     }
-// 	      std::cout << std::endl;
-// 	   }
-// 	   
-// 	   
-// 	}
-    
-//     std::vector<double> Res_ctrl (nDof_ctrl); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
-//     for (unsigned i = 0; i < sol_ctrl.size(); i++){
-//      if ( control_el_flag == 1){
-// 	Res[Sol_n_el_dofs[pos_state] + i] = - ( - Res[Sol_n_el_dofs[pos_state] + i] + sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
-// 	Res_ctrl[i] = Res[Sol_n_el_dofs[pos_state] + i];
-//       }
-//     }
-//     
+  
+
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
@@ -953,8 +923,8 @@ if ( i_vol == j_vol )  {
     
     //========== dof-based part, without summation
  
-    assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 10, 5);
-    assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 10, 5);
+// //     assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 10, 5);
+// //     assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 10, 5);
   
   } //end element loop for each process
   
@@ -1059,16 +1029,16 @@ RES->close();
 if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
     
     
-    if (assembleMatrix) KK->close();
-    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-    KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
-
-    RES->close();
-    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-    std::filebuf res_fb;
-    res_fb.open (res_out.str().c_str(),std::ios::out);
-    std::ostream  res_file_stream(&res_fb);
-    RES->print(res_file_stream);
+//     if (assembleMatrix) KK->close();
+//     std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+//     KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
+// 
+//     RES->close();
+//     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+//     std::filebuf res_fb;
+//     res_fb.open (res_out.str().c_str(),std::ios::out);
+//     std::ostream  res_file_stream(&res_fb);
+//     RES->print(res_file_stream);
 
 
   return;
@@ -1363,10 +1333,20 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   double total_integral = 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta;
   
-  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
-  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
-  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
+  
+  ////////////////////////////////////////
+       std::cout << "integral on processor: " << total_integral << std::endl;
+
+   double J = 0.;
+      MPI_Allreduce( &total_integral, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );  //THIS IS THE RIGHT ONE!!
+
+
+    std::cout << "@@@@@@@@@@@@@@@@ functional value: " << J << std::endl;
+  
+//   std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
+//   std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
+//   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
+//   std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
  
 return;
   
