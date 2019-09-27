@@ -266,7 +266,7 @@ namespace femus {
         Solution*                sol = this->GetMLProb()._ml_sol->GetSolutionLevel (_levelToAssemble);   // pointer to the solution (level) object
         unsigned int solIndex_act_flag = this->GetMLProb()._ml_sol->GetIndex (_active_flag_name.c_str());
 
-        int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare (* (sol->_Sol[solIndex_act_flag])));
+        int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare (* (sol->_Sol[solIndex_act_flag])));     ///@todo perhaps this one slows things down in parallel!!!
         bool compare_bool = false;
         if (compare_return == -1) compare_bool = true;
         if (compare_bool && (_nonliniteration  > 0)) {

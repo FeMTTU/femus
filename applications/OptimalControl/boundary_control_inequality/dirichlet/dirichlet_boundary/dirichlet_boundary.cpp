@@ -19,8 +19,7 @@
 ///@todo do a very weak impl of Laplacian
 ///@todo Review the ordering for phi_ctrl_x_bdry
 ///@todo check computation of 2nd derivatives in elem_type_template
-///@todo Rather fast way to add inequality constraint to a problem
-///@todo Parallel run with PDAS method: seems like I am getting coordinates from the other process, is that a problem?
+///@todo Implement rather fast way to add inequality constraint to a problem
 ///@todo If I have a mesh that has 1 element only at the coarse level, can I run it in parallel? I need to factorize the ReadCoarseMesh function
 ///@todo merge elliptic_nonlin in here
 ///@todo What if I did a Point domain, could I solve ODEs in time like this? :)
@@ -29,6 +28,10 @@
 ///@todo Do Parallel ComputeIntegral
 ///@todo Remove the prints, possible cause of slowing down (maybe do assert)
 ///@todo The \mu/actflag pieces are now basically separated, except for setting to zero on Omega minus Gamma_c (such as is done for control)
+///@todo put assembleMatrix everywhere there is a filling of the matrix!
+///@todo I tried the assembly alone and it seems fine (well, actually there are problems in parallel...). The problem seems to be in the Solve part... am I doing something weird there?
+///@todo the compare function is probably responsible for parallel slowing down!
+
 
 using namespace femus;
 
@@ -154,7 +157,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -222,6 +225,7 @@ int main(int argc, char** args) {
 //   // initialize and solve the system
   system.init();
   system.MGsolve();
+//   system.assemble_call(1);
   
   // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;
@@ -232,35 +236,10 @@ int main(int argc, char** args) {
 }
 
 
-void el_dofs_unknowns(const Solution*                sol,
-                      const Mesh * msh,
-                      const  LinearEquationSolver* pdeSys,
-                      const unsigned int iel,
-                      const    vector < unsigned > & SolFEType,
-                      const vector < unsigned > & SolIndex,
-                      const vector < unsigned > & SolPdeIndex,
-                      vector < unsigned > & Sol_n_el_dofs, 
-                      vector < vector < double > > & sol_eldofs,  
-                      vector < vector < int > > & L2G_dofmap ) {
-    
-    assert(Sol_n_el_dofs.size() == sol_eldofs.size());
-    
-        //all vars###################################################################
-        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
-            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-            Sol_n_el_dofs[k] = ndofs_unk;
-            sol_eldofs[k].resize(ndofs_unk);
-            L2G_dofmap[k].resize(ndofs_unk);
-            for (unsigned i = 0; i < ndofs_unk; i++) {
-                unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
-                sol_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
-                L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
-            }
-        }
-        //all vars###################################################################
 
-}
 
+  
+  
 
 //This Opt system is characterized by the following ways of setting matrix values:
 // Add_values (Mat or Vec) in the volume loop
@@ -301,6 +280,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
+  constexpr bool print_algebra_global = false;
+  constexpr bool print_algebra_local = false;
+  
+  
   //=============== Integration ========================================
   double weight = 0.;
   double weight_bdry = 0.;
@@ -313,7 +296,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     
   constexpr unsigned int space_dim = 3;
   
-  std::vector<double> normal(space_dim, 0.);
+  std::vector< double > normal(space_dim, 0.);
  //***************************************************  
   
   vector < double > coord_at_qp_bdry(space_dim);
@@ -392,21 +375,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //*************************************************** 
 
   //************** act flag **************************** 
-  std::string act_flag_name = "act_flag";
-  unsigned int solIndex_act_flag = ml_sol->GetIndex(act_flag_name.c_str());
-  unsigned int solFEType_act_flag = ml_sol->GetSolutionType(solIndex_act_flag); 
-     if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
-       *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
-     }
-  
+  unsigned int solIndex_act_flag; 
+  unsigned int solFEType_act_flag;
+  store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag, solFEType_act_flag);
   
   
   //********* variables for ineq constraints *****************
-  const int ineq_flag = INEQ_FLAG;
-  const double c_compl = C_COMPL;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(max_size); //flag for active set
   vector < double >  ctrl_lower;   ctrl_lower.reserve(max_size);
   vector < double >  ctrl_upper;   ctrl_upper.reserve(max_size);
+  const int ineq_flag = INEQ_FLAG;
+  const double c_compl = C_COMPL;
   //***************************************************  
   
   
@@ -581,7 +560,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
        std::vector<unsigned int> Sol_el_n_dofs_current_face(n_quantities); ///@todo the active flag is not an unknown!
 
        for (unsigned  k = 0; k < Sol_el_n_dofs_current_face.size(); k++) {
-                 if (SolFEType_quantities[k] < 3) Sol_el_n_dofs_current_face[k] = msh->GetElementFaceDofNumber(iel, jface, SolFEType_quantities[k]);  //@todo fix this absence
+                 if (SolFEType_quantities[k] < 3) Sol_el_n_dofs_current_face[k] = msh->GetElementFaceDofNumber(iel, jface, SolFEType_quantities[k]);  ///@todo fix this absence
        }
        
        const unsigned nDof_max_bdry = ElementJacRes<double>::compute_max_n_dofs(Sol_el_n_dofs_current_face);
@@ -601,7 +580,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               
  //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element.get_elem_center_bdry(),Solname[pos_ctrl].c_str(),tau,face_in_rectangle_domain,0.);
+	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element.get_elem_center_bdry(), Solname[pos_ctrl].c_str(), tau, face_in_rectangle_domain, 0.);
 
  //=================================================== 
         
@@ -627,12 +606,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     elem_all[ielGeom_bdry][SolFEType[pos_state]]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry,  phi_xx_bdry_placeholder, space_dim);
     elem_all[ielGeom_bdry][SolFEType[pos_adj]]  ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_adj_bdry, phi_adj_x_bdry,  phi_xx_bdry_placeholder, space_dim);
 
-         
-//     msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(geom_element.get_coords_at_dofs(), geom_element.get_coords_at_dofs_bdry_3d(), jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
 
     elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_qp/*not_needed_here*/, JacI_qp, detJac_qp/*not_needed_here*/, space_dim);
     elem_all[ielGeom][SolFEType[pos_adj]]->shape_funcs_vol_at_bdry_current_elem(ig_bdry, jface, JacI_qp, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry, boost::none, space_dim);
      
+//     msh->_finiteElement[ielGeom][SolFEType[pos_adj]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(geom_element.get_coords_at_dofs(), geom_element.get_coords_at_dofs_bdry_3d(), jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
 
 		  
 //========== compute gauss quantities on the boundary ===============================================
@@ -698,8 +676,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //============ Bdry Residuals ==================	
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i_vol) ] +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_eldofs[pos_state][i_vol] - sol_eldofs[pos_ctrl][i_vol] )
                     - control_node_flag[i_vol] *  weight_bdry * (grad_adj_dot_n_res * phi_u_bdry[i_bdry]);   // u = q
-//                                      Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_ctrl[i_vol] - sol_adj[i_vol] );   // q = lambda for testing
-		
+
+
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
                                                                                 (    alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							                           +  beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
@@ -737,39 +715,8 @@ if ( i_vol == j_vol )  {
           
               Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_ctrl, pos_ctrl, i_vol, j_vol) ] 
 			+=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry] 
-			                                              + beta *  lap_mat_dctrl_ctrl_bdry_gss);
-
-/*//==========block delta_control/adjoint ========
-		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj)   
-		     Jac[ 
-			(nDof_u + i_vol) * sum_Sol_n_el_dofs  +
-		        (nDof_u + nDof_ctrl + j_vol)             ]  += control_node_flag[i_vol] * (-1) *
-		        (
-			  weight_bdry * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry]
-// 			  weight_bdry * phi_adj_bdry[j_bdry] * phi_ctrl_bdry[i_bdry]  // for neumann boundary condition
-			  
-			);    */  
-		    
-
-//============ boundary control eqn ============	    
-
-//============ q = lambda for testing ==========	    
-
-//      // block delta_control / control ========
-//    
-//    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl && i_vol == j_vol) {
-//               Jac[  
-// 		    (nDof_u + i_vol) * sum_Sol_n_el_dofs +
-// 	            (nDof_u + j_vol) ] 
-// 			+=   control_node_flag[i_vol] * penalty_strong_bdry;
-// 	      }
-//      // block delta_control/adjoint ========
-// 		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj && i_vol == j_vol)   
-// 		     Jac[ 
-// 			(nDof_u + i_vol) * sum_Sol_n_el_dofs  +
-// 		        (nDof_u + nDof_ctrl + j_vol)             ]  += - control_node_flag[i_vol] * penalty_strong_bdry; //weight_bdry * phi_ctrl_bdry[i_bdry] * phi_adj_bdry[j_bdry];      
-// 		    
-//============ q = lambda for testing ==========	    
+			                                              + beta *  lap_mat_dctrl_ctrl_bdry_gss);   
+    
 		   
 //============ End Bdry Jacobians ==================	
 //============ End Bdry Jacobians ==================	
@@ -923,9 +870,12 @@ if ( i_vol == j_vol )  {
     
     //========== dof-based part, without summation
  
-// //     assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 10, 5);
-// //     assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 10, 5);
-  
+     if (print_algebra_local) {
+         assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 10, 5);
+     }
+     
+     
   } //end element loop for each process
   
 
@@ -945,11 +895,10 @@ unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
 
   for (unsigned i = 0; i < positions_ctrl_in_Res.size(); i++) {
     positions_ctrl_in_Res[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
-    positions_mu_in_Sol[i] = (*sol->_Sol[ SolIndex[pos_mu] ]).first_local_index()/*pdeSys->KKoffset[mu_index][iproc]*/ + i;  //this should not come from pdeSys but from Sol ///@todo put the Dof range for Sol //actually I can take it from the Numeric Vector!
+    positions_mu_in_Sol[i] = (*sol->_Sol[ SolIndex[pos_mu] ]).first_local_index()/*pdeSys->KKoffset[mu_index][iproc]*/ + i;
+    //this should not come from pdeSys but from Sol ///@todo put the Dof range for Sol //actually I can take it from the Numeric Vector!
 //                 unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);  //this is only if I am on an ELEMENT loop, but here I am in a NODE loop
     
-//     std::cout << " " << (*sol->_Sol[ SolIndex[pos_mu] ]).first_local_index() << std::endl;
-//     std::cout << " " << (*sol->_Sol[ SolIndex[pos_mu] ]).last_local_index() << std::endl;
     one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[ SolIndex[pos_mu] ])(positions_mu_in_Sol[i]/*i*//*position_mu_i*/) ;
     }
     RES->add_vector_blocked(one_times_mu, positions_ctrl_in_Res);
@@ -1009,7 +958,8 @@ if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
                       sol_eldofs, Sol_n_el_dofs,
                       sol_actflag, solFEType_act_flag,
                       ctrl_lower, ctrl_upper,
-                      KK, RES
+                      KK, RES,
+                      assembleMatrix
                       );
   
              }
@@ -1019,7 +969,7 @@ if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
 
 
      //============= delta_ctrl-delta_mu row ===============================
- KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_ctrl],  L2G_dofmap[pos_mu], ineq_flag * 1.);
+ if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_ctrl],  L2G_dofmap[pos_mu], ineq_flag * 1.); }
 
    }
    
@@ -1029,17 +979,20 @@ RES->close();
 if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
     
     
-//     if (assembleMatrix) KK->close();
-//     std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-//     KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
-// 
-//     RES->close();
-//     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-//     std::filebuf res_fb;
-//     res_fb.open (res_out.str().c_str(),std::ios::out);
-//     std::ostream  res_file_stream(&res_fb);
-//     RES->print(res_file_stream);
+  if (print_algebra_global) {
+    if (assembleMatrix) KK->close();
+    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
 
+    RES->close();
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    std::filebuf res_fb;
+    res_fb.open (res_out.str().c_str(),std::ios::out);
+    std::ostream  res_file_stream(&res_fb);
+    RES->print(res_file_stream);
+  }
+     
+     
 
   return;
 }

@@ -50,7 +50,12 @@ public:
     /** Set the active set flag name */
     void SetActiveSetFlagName(const std::string & name_in ) {
         _active_flag_name = name_in;
-    };
+    }
+    
+    /** Set the active set flag name */
+    std::string GetActiveSetFlagName() const {
+        return _active_flag_name;
+    }
     
     /** Solves the system. */
     virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);

@@ -4,7 +4,7 @@
 
 
 #include "Mesh.hpp"
-
+#include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
@@ -357,7 +357,8 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                          const std::vector < double > & ctrl_lower,
                          const std::vector < double > & ctrl_upper,
                          SparseMatrix*             KK,
-                         NumericVector* RES
+                         NumericVector* RES,
+                          const bool assembleMatrix
                         ) {
 
 // Create the L2G boundary maps from the volume ones
@@ -412,7 +413,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
     }
  
 //  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_ctrl], sol_actflag_vol);
- KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_ctrl_bdry, sol_actflag);
+ if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_ctrl_bdry, sol_actflag); }
  //============= delta_mu-delta_ctrl row - end ===============================
 
  //============= delta_mu-delta_mu row ===============================
@@ -429,12 +430,59 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
     }
   
 //   KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag_vol );
-  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_mu_bdry, sol_actflag);
+  if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_mu_bdry, L2G_dofmap_mu_bdry, sol_actflag);  }
  //============= delta_mu-delta_mu row - end ===============================
   
 
 }
 
+
+
+void el_dofs_unknowns(const Solution*                sol,
+                      const Mesh * msh,
+                      const  LinearEquationSolver* pdeSys,
+                      const unsigned int iel,
+                      const    vector < unsigned > & SolFEType,
+                      const vector < unsigned > & SolIndex,
+                      const vector < unsigned > & SolPdeIndex,
+                      vector < unsigned > & Sol_n_el_dofs, 
+                      vector < vector < double > > & sol_eldofs,  
+                      vector < vector < int > > & L2G_dofmap ) {
+    
+    assert(Sol_n_el_dofs.size() == sol_eldofs.size());
+    
+        //all vars###################################################################
+        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
+            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+            Sol_n_el_dofs[k] = ndofs_unk;
+            sol_eldofs[k].resize(ndofs_unk);
+            L2G_dofmap[k].resize(ndofs_unk);
+            for (unsigned i = 0; i < ndofs_unk; i++) {
+                unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);
+                sol_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);
+                L2G_dofmap[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);
+            }
+        }
+        //all vars###################################################################
+
+}
+
+
+  void store_act_flag_in_old(  const NonLinearImplicitSystemWithPrimalDualActiveSetMethod* mlPdeSys,
+                               const MultiLevelSolution *    ml_sol,
+                              Solution *                sol,
+                             unsigned int & solIndex_act_flag,
+                             unsigned int & solFEType_act_flag) {
+      
+      
+  const std::string act_flag_name = mlPdeSys->GetActiveSetFlagName();
+  solIndex_act_flag = ml_sol->GetIndex(act_flag_name.c_str());
+  solFEType_act_flag = ml_sol->GetSolutionType(solIndex_act_flag); 
+     if(sol->GetSolutionTimeOrder(solIndex_act_flag) == 2) {
+       *(sol->_SolOld[solIndex_act_flag]) = *(sol->_Sol[solIndex_act_flag]);
+     }
+     
+  }
 
 } //end namespace
  
