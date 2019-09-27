@@ -153,7 +153,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -976,12 +976,6 @@ if ( i_vol == j_vol )  {
     
     //========== dof-based part, without summation
  
-
-
-    
- //============= delta_ctrl-delta_mu row ===============================
- KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_ctrl],  L2G_dofmap[pos_mu], ineq_flag * 1.);
-  
     assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 10, 5);
     assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 10, 5);
   
@@ -989,7 +983,8 @@ if ( i_vol == j_vol )  {
   
 
   
-  unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
+    // ***********************************
+unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
   unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
 
   unsigned int ctrl_size_iproc = pdeSys->KKoffset[ctrl_index + 1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
@@ -1009,8 +1004,9 @@ if ( i_vol == j_vol )  {
 //     std::cout << " " << (*sol->_Sol[ SolIndex[pos_mu] ]).first_local_index() << std::endl;
 //     std::cout << " " << (*sol->_Sol[ SolIndex[pos_mu] ]).last_local_index() << std::endl;
     one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[ SolIndex[pos_mu] ])(positions_mu_in_Sol[i]/*i*//*position_mu_i*/) ;
-  }
+    }
     RES->add_vector_blocked(one_times_mu, positions_ctrl_in_Res);
+  // ************************************
     
   // ***************** END ASSEMBLY *******************
 
@@ -1018,63 +1014,67 @@ RES->close();
 if (assembleMatrix) KK->close();
 
 
-// //   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
-// //  // One very important thing to consider: we have some PENALTIES that were set before during the SUMMATION part.
-// //  // Now, if we do INSERT, we may end up OVERWRITING certain values, SUCH AS THOSE PENALTIES!!!
-// //     
-// //     
-// //    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-// //        
-// //      geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
-// //       
-// //     el_dofs_unknowns(sol, msh, pdeSys, iel,
-// //                         SolFEType, SolIndex, SolPdeIndex,
-// //                         Sol_n_el_dofs, sol_eldofs, L2G_dofmap);
-// // 
-// //    geom_element.set_elem_center(iel, solType_coords);
-// // 
-// //  //************ set control flag *********************
-// //   int control_el_flag = 0;
-// //         control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
-// // //  *************************************************** 
-// // 
-// // // Perform face loop over elements that contain some control face
-// // 	if (control_el_flag == 1) {
-// // 
-// //     	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
-// // 
-// //        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
-// // // 	    look for boundary faces
-// //             const int bdry_index = el->GetFaceElementIndex(iel, jface);
-// //    
-// // 	    if( bdry_index < 0) {
-// //             	      const unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
-// // 
-// // 	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
-// // 
-// //        update_active_set_flag_for_current_nonlinear_iteration_bdry
-// //    (msh, sol, iel, jface, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
-// //     pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
-// //  
-// // 
-// //   node_insertion_bdry(iel, jface, 
-// //                       msh,
-// //                       L2G_dofmap,
-// //                       c_compl,
-// //                       ineq_flag,
-// //                       pos_mu, pos_ctrl,
-// //                       sol_eldofs, Sol_n_el_dofs,
-// //                       sol_actflag, solFEType_act_flag,
-// //                       ctrl_lower, ctrl_upper,
-// //                       KK, RES
-// //                       );
-// //   
-// //              }
-// //           }
-// //        }
-// //      }
-// // 
-// //    }
+//   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
+ // One very important thing to consider: we have some PENALTIES that were set before during the SUMMATION part.
+ // Now, if we do INSERT, we may end up OVERWRITING certain values, SUCH AS THOSE PENALTIES!!!
+    
+    
+   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+       
+     geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+      
+    el_dofs_unknowns(sol, msh, pdeSys, iel,
+                        SolFEType, SolIndex, SolPdeIndex,
+                        Sol_n_el_dofs, sol_eldofs, L2G_dofmap);
+
+   geom_element.set_elem_center(iel, solType_coords);
+
+ //************ set control flag *********************
+  int control_el_flag = 0;
+        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
+//  *************************************************** 
+
+// Perform face loop over elements that contain some control face
+	if (control_el_flag == 1) {
+
+    	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+
+       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+// 	    look for boundary faces
+            const int bdry_index = el->GetFaceElementIndex(iel, jface);
+   
+	    if( bdry_index < 0) {
+            	      const unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+
+	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
+
+//        update_active_set_flag_for_current_nonlinear_iteration_bdry
+//    (msh, sol, iel, jface, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
+//     pos_mu, pos_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
+//  
+// 
+//   node_insertion_bdry(iel, jface, 
+//                       msh,
+//                       L2G_dofmap,
+//                       c_compl,
+//                       ineq_flag,
+//                       pos_mu, pos_ctrl,
+//                       sol_eldofs, Sol_n_el_dofs,
+//                       sol_actflag, solFEType_act_flag,
+//                       ctrl_lower, ctrl_upper,
+//                       KK, RES
+//                       );
+  
+             }
+          }
+       }
+     }
+
+
+     //============= delta_ctrl-delta_mu row ===============================
+ KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_ctrl],  L2G_dofmap[pos_mu], ineq_flag * 1.);
+
+   }
    
    
   // ***************** INSERT PART - END *******************
