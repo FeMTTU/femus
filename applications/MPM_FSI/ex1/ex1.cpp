@@ -127,9 +127,9 @@ int main (int argc, char** args) {
 
   mlSol.AddSolution ("M", LAGRANGE, SECOND, 2);
   mlSol.AddSolution ("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false); 
-  mlSol.AddSolution ("NodeFlag", LAGRANGE, SECOND, 2);
-  mlSol.AddSolution ("NodeDistF", LAGRANGE, SECOND, 2);
-  mlSol.AddSolution ("NodeDistS", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution ("NodeFlag", LAGRANGE, SECOND, 0, false);
+  mlSol.AddSolution ("NodeDist", LAGRANGE, SECOND, 0, false);
+  //mlSol.AddSolution ("NodeDistS", LAGRANGE, SECOND, 2);
 
   mlSol.Initialize ("All");
   
@@ -409,9 +409,12 @@ int main (int argc, char** args) {
   fluidLine->GetLine (lineF[0]);
   PrintLine (DEFAULT_OUTPUTDIR, "fluidLine", lineF, 0);
 
-
-  solidLine->GetParticlesToGridMaterial();
-
+   
+  fluidLine->GetParticlesToGridMaterial (false);
+  solidLine->GetParticlesToGridMaterial (true);
+  GetParticlesToNodeFlag1(mlSol, *solidLine, *fluidLine);
+   
+  
   // ******* Print solution *******
   mlSol.SetWriter (VTK);
 
