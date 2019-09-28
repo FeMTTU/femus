@@ -930,7 +930,7 @@ namespace femus
 
     Mesh& mesh = GetMesh();
     uint mydim = 1;  //this is the initial value, then it will be updated below
-    mesh.SetDimension(mydim);
+    mesh.SetDimension(mydim);  //this is basically the MANIFOLD DIMENSION of the domain
 
 
     std::vector<char*> elem_types(n_fem_type);
@@ -963,8 +963,8 @@ namespace femus
 
       const std::vector< GeomElemBase* >  geom_elem_per_dimension = get_geom_elem_type_per_dimension(file_id, my_mesh_name_dir);
 
-       if(mesh.GetDimension() != n_fem_type) { std::cout << "Mismatch between dimension and number of element types" << std::endl;   abort();  }
-
+//        if(mesh.GetDimension() != n_fem_type) { std::cout << "Mismatch between dimension and number of element types" << std::endl;   abort();  }
+// ///@todo removed this check to allow 2d object in 3d
       
     return geom_elem_per_dimension;
   }

@@ -71,6 +71,7 @@ mesh/geom_elements/GeomElemTet4.cpp
 mesh/geom_elements/GeomElemTet10.cpp
 mesh/geom_elements/GeomElemTri3.cpp
 mesh/geom_elements/GeomElemTri6.cpp
+mesh/geom_elements/GeomElemTri7.cpp
 mesh/geom_elements/GeomElemEdge2.cpp
 mesh/geom_elements/GeomElemEdge3.cpp
 mesh/Elem.cpp

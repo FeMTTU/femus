@@ -17,7 +17,8 @@ int main(int argc,char **args) {
 //   std::string input_file = "turek_FSI1.neu";
 //    std::string input_file = "cyl.med";
 //    std::string input_file = "horse2.med";
-   std::string input_file = "knot.neu";
+//    std::string input_file = "knot.neu";
+   std::string input_file = "Mesh_dome.med";
 //   std::string input_file = "Quad9_Four_boundaries_groups.med";
 //   std::string input_file = "Quad9_Nine_without_groups.med";
 //   std::string input_file = "Tri6_Two_boundaries.med"; 
@@ -35,9 +36,9 @@ int main(int argc,char **args) {
   MultiLevelMesh ml_msh;
   
   const int n_sub = 1;
-  ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
+//   ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
   
-//   ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
   
   ml_msh.PrintInfo();
   
@@ -50,7 +51,13 @@ int main(int argc,char **args) {
   
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
-
+  
+//       std::vector < std::string > surfaceVariables;
+//       surfaceVariables.push_back("X");
+//       surfaceVariables.push_back("Y");
+//       surfaceVariables.push_back("Z");
+// 
+//     ml_sol.GetWriter()->SetSurfaceVariables(surfaceVariables);
   
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
