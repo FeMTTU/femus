@@ -52,18 +52,18 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
   vector < double > phi;
   vector < double > phiHat;
-  vector < double > phiPres;
+  vector < double > phiP;
   vector < adept::adouble> gradPhi;
   vector < double > gradPhiHat;
-  vector < adept::adouble> gradPhiPres;
+  //vector < adept::adouble> gradPhiPres;
 
   phi.reserve (maxSize);
   phiHat.reserve (maxSize);
-  phiPres.reserve (maxSize);
+  //phiPres.reserve (maxSize);
 
   gradPhi.reserve (maxSize * dim);
   gradPhiHat.reserve (maxSize * dim);
-  gradPhiPres.reserve (maxSize * dim);
+  //gradPhiPres.reserve (maxSize * dim);
 
   vector <vector < adept::adouble> > vx (dim); //vx is coordX in assembly of ex30
   vector <vector < double> > vxHat (dim);
@@ -86,7 +86,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
   adept::adouble weight;
   double weightHat;
-  adept::adouble weightPres;
+  //adept::adouble weightPres;
 
   //reading parameters for MPM body
   double rhoMpm = ml_prob.parameters.get<Solid> ("SolidMPM").get_density();
@@ -127,9 +127,10 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
   unsigned indexSolMat = mlSol->GetIndex ("Mat");
   unsigned solTypeMat = mlSol->GetSolutionType ("Mat");
-  unsigned indexSolM = mlSol->GetIndex ("M");
+  //unsigned indexSolM = mlSol->GetIndex ("M");
+  unsigned indexSolM = mlSol->GetIndex ("NodeFlag");
 
-  unsigned indexNodeFlag = mlSol->GetIndex ("NodeFlag");
+  //unsigned indexNodeFlag = mlSol->GetIndex ("NodeFlag");
 
   vector < bool > solidFlag;
 
@@ -243,30 +244,38 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
       }
 
 
-      double scalingFactor = 0;// / (1. + 100. * distance);
-      if (MPMmaterial < 5) scalingFactor = scalingFactor1;
-      else if (MPMmaterial < 9) scalingFactor = scalingFactor2;
+      //double scalingFactor = 0;// / (1. + 100. * distance);
+      //if (MPMmaterial < 5) scalingFactor = scalingFactor1;
+      //else if (MPMmaterial < 9) scalingFactor = scalingFactor2;
 
       for (unsigned i = 0; i < nDofsDV; i++) {
 
         for (unsigned k = 0; k < dim; k++) {
-          adept::adouble  softStiffness  = 0.;
+          //adept::adouble  softStiffness  = 0.;
+          adept::adouble  wlaplace1V  = 0.;  
           adept::adouble  wlaplace1D  = 0.;
           for (unsigned  j = 0; j < dim; j++) {
-            softStiffness +=  muMpm * gradPhiHat[i * dim + j] * (gradSolDgHat[k][j] + gradSolDgHat[j][k]);
+            //softStiffness +=  muMpm * gradPhiHat[i * dim + j] * (gradSolDgHat[k][j] + gradSolDgHat[j][k]);
+            wlaplace1V +=  gradPhi[i * dim + j] * (gradSolVg[k][j] + gradSolVg[j][k]);
             wlaplace1D +=  gradPhiHat[i * dim + j] * (gradSolDgHat[k][j] + gradSolDgHat[j][k]);
           }
           wlaplace1D +=  10. * gradPhiHat[i * dim + k] * gradSolDgHat[k][k];
-          if (MPMmaterial >= 2) {
-            aRhsD[k][i] += - softStiffness * weightHat * scalingFactor;
+//           if (MPMmaterial >= 2) {
+//             aRhsD[k][i] += - softStiffness * weightHat * scalingFactor;
+//           }
+          if (!solidFlag[i]) { //kinematic equation in the fluid nodes
+            aRhsD[k][i] += - wlaplace1D * weightHat;
           }
-          else if (!solidFlag[i]) {
-            aRhsD[k][i] += - wlaplace1D * weightHat * scalingFactor;
+          else { //kinematic equation in the solid nodes
+            //aRhsV[k][i] += - wlaplace1V * weight;
+            aRhsV[k][i] += phiHat[i] * (solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt) * weightHat;  
+            //aRhsV[k][i] += phiHat[i] * (solVg[k] - (solDg[k] - solDgOld[k]) / dt) * weightHat;
+            //aRhsV[k][i] += phiHat[i] * (0.5 * (solVg[k] + solVgOld[k]) - (solDg[k] - solDgOld[k]) / dt) * weightHat;
           }
         }
       }
 
-      if (MPMmaterial == 0) {
+      if (MPMmaterial == 0) { //only cells that are completely fluid
         for (unsigned i = 0; i < nDofsDV; i++) {
           for (unsigned k = 0; k < dim; k++) {
             adept::adouble wlaplace = 0.;
@@ -283,21 +292,19 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
             }
           }
         }
+      }
 
-        for (unsigned i = 0; i < nDofsP; i++) {
-          for (unsigned  k = 0; k < dim; k++) {
+      for (unsigned i = 0; i < nDofsP; i++) {
+        for (unsigned  k = 0; k < dim; k++) {
+          if (MPMmaterial > 0) {  //all cells that are not completely MPM solid
+            aRhsP[i] += phiP[i] * solP[i] * weightHat;
+          }
+          else {//if (MPMmaterial == 0) {
             aRhsP[i] += phiP[i] * gradSolVg[k][k] * weight;
           }
-        }
-      }
-      else {
-        for (unsigned i = 0; i < nDofsDV; i++) {
-          for (unsigned k = 0; k < dim; k++) {
-            aRhsV[k][i] += phiHat[i] * (solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt) * weightHat;
-          }
-        }
-        for (unsigned i = 0; i < nDofsP; i++) {
-          aRhsP[i] += phiP[i] * solP[i] * weightHat;
+          //else {
+          //aRhsP[i] += phiP[i] * (gradSolVg[k][k] + 10000 * solP[i]) * weight;
+          //}
         }
       }
 
@@ -351,9 +358,6 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
   //END building "soft" stiffness matrix
 
 
-  //GetParticlesToNodeFlag (*mlSol, *solidLine, *fluidLine);
-
-
   //BEGIN loop on solid particles (used as Gauss points)
 
   std::vector<unsigned> markerOffsetSolid = solidLine->GetMarkerOffset();
@@ -365,36 +369,48 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
   unsigned ielOld = UINT_MAX;
 
+  std::vector < unsigned > sysDofsAllD;
+  std::vector < unsigned > sysDofsAllV;
+
   for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
     //element of particle iMarker
     unsigned iel = particlesSolid[iMarker]->GetMarkerElement();
     if (iel != UINT_MAX) {
       short unsigned ielt;
-      unsigned nDofsD;
+      unsigned nDofs;
+      double  MPMmaterial;
+      if (iel != ielOld) { //update element related quantities only if we are in a different element
 
-      //update element related quantities only if we are in a different element
-      if (iel != ielOld) {
+        MPMmaterial = (*mysolution->_Sol[indexSolMat]) (iel);
 
         ielt = msh->GetElementType (iel);
-        nDofsD = msh->GetElementDofNumber (iel, solType);
+        nDofs = msh->GetElementDofNumber (iel, solType);
 
+        solidFlag.resize (nDofs);
         for (unsigned k = 0; k < dim; k++) {
-          solD[k].resize (nDofsD);
-          solDOld[k].resize (nDofsD);
-          aRhsD[k].assign (nDofsD, 0.);
-          vx[k].resize (nDofsD);
-          vxHat[k].resize (nDofsD);
+          solD[k].resize (nDofs);
+          solDOld[k].resize (nDofs);
+          aRhsD[k].assign (nDofs, 0.);
+          aRhsV[k].assign (nDofs, 0.);
+          vx[k].resize (nDofs);
+          vxHat[k].resize (nDofs);
         }
-        sysDofsAll.resize (dim * nDofsD);
+        sysDofsAllD.resize (dim * nDofs);
+        sysDofsAllV.resize (dim * nDofs);
 
         //BEGIN copy of the value of Sol at the dofs idof of the element iel
-        for (unsigned i = 0; i < nDofsD; i++) {
+        for (unsigned i = 0; i < nDofs; i++) {
+
           unsigned idof = msh->GetSolutionDof (i, iel, solType); //local 2 global solution
+
+          solidFlag[i] = ( (*mysolution->_Sol[indexSolM]) (idof) > 0.5) ? true : false;
+
           unsigned idofX = msh->GetSolutionDof (i, iel, 2); //local 2 global coordinates
           for (unsigned k = 0; k < dim; k++) {
             solDOld[k][i] = (*mysolution->_SolOld[indexSolD[k]]) (idof);
             solD[k][i] = (*mysolution->_Sol[indexSolD[k]]) (idof) - solDOld[k][i];
-            sysDofsAll[k * nDofsD + i ] = myLinEqSolver->GetSystemDof (indexSolD[k], indexPdeD[k], i, iel);
+            sysDofsAllD[k * nDofs + i ] = myLinEqSolver->GetSystemDof (indexSolD[k], indexPdeD[k], i, iel);
+            sysDofsAllV[k * nDofs + i ] = myLinEqSolver->GetSystemDof (indexSolV[k], indexPdeV[k], i, iel);
 
             vxHat[k][i] = (*msh->_topology->_Sol[k]) (idofX) + solDOld[k][i];
           }
@@ -425,8 +441,8 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
 
       for (int k = 0; k < dim; k++) {
-        solD1[k].resize (nDofsD);
-        for (unsigned inode = 0; inode < nDofsD; inode++) {
+        solD1[k].resize (nDofs);
+        for (unsigned inode = 0; inode < nDofs; inode++) {
           solD1[k][inode] = solD[k][inode];
         }
       }
@@ -450,7 +466,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
       }
 
       for (int k = 0; k < dim; k++) {
-        for (unsigned i = 0; i < nDofsD; i++) {
+        for (unsigned i = 0; i < nDofs; i++) {
           vx[k][i] = vxHat[k][i] + solD1[k][i];
         }
       }
@@ -467,7 +483,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
       }
 
       for (int j = 0; j < dim; j++) {
-        for (unsigned i = 0; i < nDofsD; i++) {
+        for (unsigned i = 0; i < nDofs; i++) {
           SolDp[j] += phi[i] * solD[j][i];
           for (int k = 0; k < dim; k++) {
             gradSolDpHat[j][k] +=  gradPhiHat[i * dim + k] * solD1[j][i];
@@ -531,7 +547,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
       //END computation of the Cauchy Stress
 
       //BEGIN redidual Solid Momentum in moving domain
-      for (unsigned i = 0; i < nDofsD; i++) {
+      for (unsigned i = 0; i < nDofs; i++) {
 
         adept::adouble CauchyDIR[3] = {0., 0., 0.};
 
@@ -541,10 +557,19 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
           }
         }
 
-        for (unsigned k = 0; k < dim; k++) {
-          aRhsD[k][i] += (phi[i] * gravity[k] - J_hat * CauchyDIR[k] / rhoMpm
-                          - phi[i] * (1. / (beta * dt * dt) * SolDp[k] - 1. / (beta * dt) * SolVpOld[k] - (1. - 2.* beta) / (2. * beta) * SolApOld[k])
-                         ) * mass;
+        if (solidFlag[i]) { // add momentum contribution to a solid node
+          for (unsigned k = 0; k < dim; k++) {
+            aRhsD[k][i] += (phi[i] * gravity[k] - J_hat * CauchyDIR[k] / rhoMpm
+                            - phi[i] * (1. / (beta * dt * dt) * SolDp[k] - 1. / (beta * dt) * SolVpOld[k] - (1. - 2.* beta) / (2. * beta) * SolApOld[k])
+                           ) * mass;
+          }
+        }
+        else { // add momentum contribution to a fluid node
+          for (unsigned k = 0; k < dim; k++) {
+            aRhsV[k][i] += (phi[i] * gravity[k] - J_hat * CauchyDIR[k] / rhoMpm
+                            - phi[i] * (1. / (beta * dt * dt) * SolDp[k] - 1. / (beta * dt) * SolVpOld[k] - (1. - 2.* beta) / (2. * beta) * SolApOld[k])
+                           ) * mass;
+          }
         }
       }
       //END redidual Solid Momentum in moving domain
@@ -552,33 +577,53 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
       if (iMarker == markerOffset2 - 1 || iel != particlesSolid[iMarker + 1]->GetMarkerElement()) {
 
-        rhs.resize (nDofsD * dim);
+        rhs.resize (nDofs * dim);
         //copy adouble aRhsD into double Rhs
         for (unsigned k = 0; k < dim; k++) {
-          rhs.resize (nDofsD); //TODO mi sa che questo va tolto
-
-          for (unsigned i = 0; i < nDofsD; i++) {
-            rhs[k * nDofsD + i] = -aRhsD[k][i].value();
+          for (unsigned i = 0; i < nDofs; i++) {
+            rhs[k * nDofs + i] = -aRhsD[k][i].value();
           }
-
         }
-        myRES->add_vector_blocked (rhs, sysDofsAll);
+        myRES->add_vector_blocked (rhs, sysDofsAllD);
 
 
         //Store equations
         for (int k = 0; k < dim; k++) {
-          s.dependent (&aRhsD[k][0], nDofsD);
-          s.independent (&solD[k][0], nDofsD);
+          s.dependent (&aRhsD[k][0], nDofs);
+          s.independent (&solD[k][0], nDofs);
         }
 
-        Jac.resize ( (dim * nDofsD) * (dim * nDofsD));
+        Jac.resize ( (dim * nDofs) * (dim * nDofs));
 
         s.jacobian (&Jac[0], true);
 
-        myKK->add_matrix_blocked (Jac, sysDofsAll, sysDofsAll);
+        myKK->add_matrix_blocked (Jac, sysDofsAllD, sysDofsAllD);
         s.clear_independents();
         s.clear_dependents();
 
+        if (MPMmaterial < 9) { // add this contribution only if this is an inteface element
+          rhs.resize (nDofs * dim);
+          for (unsigned k = 0; k < dim; k++) {
+            for (unsigned i = 0; i < nDofs; i++) {
+              rhs[k * nDofs + i] = -aRhsV[k][i].value();
+            }
+          }
+          myRES->add_vector_blocked (rhs, sysDofsAllV);
+
+
+          //Store equations
+          for (int k = 0; k < dim; k++) {
+            s.dependent (&aRhsV[k][0], nDofs);
+            s.independent (&solD[k][0], nDofs);
+          }
+
+          Jac.resize ( (dim * nDofs) * (dim * nDofs));
+          s.jacobian (&Jac[0], true);
+
+          myKK->add_matrix_blocked (Jac, sysDofsAllV, sysDofsAllD);
+          s.clear_independents();
+          s.clear_dependents();
+        }
       }
       //END local to global assembly
 
@@ -621,6 +666,8 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
           sysDofsAll.resize (nDofsAll);
 
+          solidFlag.resize (nDofsDV);
+
           for (unsigned k = 0; k < dim; k++) {
             solD[k].resize (nDofsDV);
             solDOld[k].resize (nDofsDV);
@@ -629,15 +676,15 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
             aRhsD[k].assign (nDofsDV, 0.);
             aRhsV[k].assign (nDofsDV, 0.);
             vx[k].resize (nDofsDV);
-            vxHat[k].resize (nDofsDV);
           }
-
           solP.resize (nDofsP);
           aRhsP.assign (nDofsP, 0.);
 
 
           for (unsigned i = 0; i < nDofsDV; i++) {
             unsigned idof = msh->GetSolutionDof (i, iel, solType);
+
+            solidFlag[i] = ( (*mysolution->_Sol[indexSolM]) (idof) > 0.5) ? true : false;
 
             for (unsigned  k = 0; k < dim; k++) {
               solD[k][i] = (*mysolution->_Sol[indexSolD[k]]) (idof);
@@ -664,44 +711,32 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
         for (unsigned i = 0; i < nDofsDV; i++) {
           unsigned idofX = msh->GetSolutionDof (i, iel, 2);
           for (unsigned  k = 0; k < dim; k++) {
-            vxHat[k][i] = (*msh->_topology->_Sol[k]) (idofX);
-            vx[k][i] = vxHat[k][i] + solD[k][i];
+            vx[k][i] = (*msh->_topology->_Sol[k]) (idofX) + solD[k][i];
           }
         }
 
         // the local coordinates of the particles are the Gauss points in this context
         std::vector <double> xi = particlesFluid[iMarker]->GetMarkerLocalCoordinates();
-        msh->_finiteElement[ielt][solType]->Jacobian (vxHat, xi, weightHat, phiHat, gradPhiHat);
-
-        vector<vector < adept::adouble > > gradSolDpHat (dim);
-        vector<vector < adept::adouble > > gradSolVpHat (dim);
-
-        for (int j = 0; j < dim; j++) {
-          gradSolDpHat[j].assign (dim, 0.);
-          gradSolVpHat[j].assign (dim, 0.);
-          for (unsigned i = 0; i < nDofsDV; i++) {
-            for (int k = 0; k < dim; k++) {
-              gradSolDpHat[j][k] +=  gradPhiHat[i * dim + k] * solD[j][i];
-              gradSolVpHat[j][k] +=  gradPhiHat[i * dim + k] * solV[j][i];
-            }
-          }
-        }
+        double mass = particlesFluid[iMarker]->GetMarkerMass();
 
         msh->_finiteElement[ielt][solType]->Jacobian (vx, xi, weight, phi, gradPhi);
 
 
-        std::vector <double> SolDpOld (dim);  //TODO we should use these bu the marker function does not want adept variables
-        particlesFluid[iMarker]->GetMarkerDisplacement (SolDpOld);
-
-        std::vector <double> SolVpOld (dim); //TODO
-        particlesFluid[iMarker]->GetMarkerVelocity (SolVpOld);
+        //std::vector <double> SolVpOld (dim);
+        //     particlesFluid[iMarker]->GetMarkerVelocity (SolVpOld);//TODO
 
         //BEGIN evaluates SolDp at the particle iMarker
         vector<adept::adouble> solDp (dim, 0.);
-        vector<adept::adouble> solDpOld (dim, 0.);
+        vector<double> solDpOld (dim, 0.);
         vector<adept::adouble> solVp (dim, 0.);
-        vector<adept::adouble> solVpOld (dim, 0.);
+        vector<double> solVpOld (dim, 0.);
         adept::adouble solPp = 0.;
+
+        vector<vector < adept::adouble > > gradSolVp (dim);
+
+        for (int j = 0; j < dim; j++) {
+          gradSolVp[j].assign (dim, 0.);
+        }
 
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nDofsDV; i++) {
@@ -709,42 +744,47 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
             solDpOld[j] += phi[i] * solDOld[j][i];
             solVp[j] += phi[i] * solV[j][i];
             solVpOld[j] += phi[i] * solVOld[j][i];
+            for (int k = 0; k < dim; k++) {
+              gradSolVp[j][k] +=  gradPhi[i * dim + k] * solV[j][i];
+            }
           }
         }
-        //END evaluates SolDp at the particle iMarker
-
-
-        msh->_finiteElement[ielt][solTypeP]->Jacobian (vx, xi, weightPres, phiPres, gradPhiPres);
+        msh->_finiteElement[ielt][solTypeP]->GetPhi (phiP, xi);
         for (unsigned i = 0; i < nDofsP; i++) {
-          solPp += phiPres[i] * solP[i];
+          solPp += phiP[i] * solP[i];
+        }
+
+        adept::adouble divV = 0.;
+        for (unsigned k = 0; k < dim; k++) {
+           divV +=  gradSolVp[k][k];
         }
 
         for (unsigned i = 0; i < nDofsDV; i++) {
-          unsigned idof = msh->GetSolutionDof (i, iel, solType); //local 2 global solution
-          if ( (*mysolution->_Sol[indexNodeFlag]) (idof) == 0) { //fluid node
-
-            for (unsigned i = 0; i < nDofsDV; i++) {
-              for (unsigned k = 0; k < dim; k++) {
-                adept::adouble wlaplace = 0.;
-                adept::adouble advection = 0.;
-                for (unsigned j = 0; j < dim; j++) {
-                  wlaplace  +=  gradPhi[i * dim + j] * (gradSolVpHat[k][j] + gradSolVpHat[j][k]); //TODO check that Hat is correct
-                  advection  +=  phi[i] * (solVp[j] - (solDp[j] - solDpOld[j]) / dt) * gradSolVpHat[k][j];
-                }
-                aRhsV[k][i] += (- rhoFluid * (solVp[k] - solVpOld[k]) / dt - rhoFluid * advection - muFluid * wlaplace + gradPhi[i * dim + k] * solPp) * weight;
-                aRhsD[k][i] += phiHat[i] * (solVp[k] - (solDp[k] - solDpOld[k]) / dt) * weightHat;
-              }
+          for (unsigned k = 0; k < dim; k++) {
+            adept::adouble wlaplace = 0.;
+            adept::adouble advection = 0.;
+            for (unsigned j = 0; j < dim; j++) {
+              wlaplace  +=  gradPhi[i * dim + j] * (gradSolVp[k][j] + gradSolVp[j][k]);
+              advection  +=  phi[i] * (solVp[j] - (solDp[j] - solDpOld[j]) / dt) * gradSolVp[k][j];
+            }
+            if (!solidFlag[i]) {
+              aRhsV[k][i] += (- (solVp[k] - solVpOld[k]) / dt - advection - muFluid / rhoFluid * wlaplace + gradPhi[i * dim + k] * /*(2./3.) * divV*/ solPp / rhoFluid) * mass;
+            }
+            else {
+              aRhsD[k][i] += (- (solVp[k] - solVpOld[k]) / dt - advection - muFluid / rhoFluid * wlaplace + gradPhi[i * dim + k] * /*(2./3.) * divV*/ solPp / rhoFluid) * mass;
             }
           }
-
-
-//         for (unsigned i = 0; i < nDofsP; i++) {  //TODO
-//           for (unsigned  k = 0; k < dim; k++) {
-//             aRhsP[i] += phiP[i] * gradSolVg[k][k] * weight;
-//           }
-//         }
-
         }
+
+
+        for (unsigned i = 0; i < nDofsP; i++) {
+           // aRhsP[i] += phiP[i] * divV * mass / rhoFluid;
+          for (unsigned  k = 0; k < dim; k++) {
+            aRhsP[i] += phiP[i] * gradSolVp[k][k] * mass / rhoFluid;
+          }
+        }
+
+
         if (iMarker == markerOffset2 - 1 || iel != particlesFluid[iMarker + 1]->GetMarkerElement()) {
 
           rhs.resize (nDofsAll); //resize
@@ -798,7 +838,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
       break;
     }
   }
-  //END loop on particles
+//END loop on particles
 
   myRES->close();
   myKK->close();
@@ -813,10 +853,10 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 //   double a;
 //   std::cin >> a;
 
-  // *************************************
+// *************************************
   end_time = clock();
   AssemblyTime += (end_time - start_time);
-  // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
+// ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
 
 }
 
@@ -1306,7 +1346,7 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
         idof.resize (nDofs);
         for (unsigned i = 0; i < nDofs; i++) {
           idof[i] = msh->GetSolutionDof (i, iel, solType);
-          sol->_Sol[solIndexNodeFlag]->set (idof[i], 1.);
+//           sol->_Sol[solIndexNodeFlag]->set (idof[i], 1.);
           unsigned idofX = msh->GetSolutionDof (i, iel, 2); //local 2 global solution
           for (int k = 0; k < dim; k++) {
             vxHat[k][i] = (*msh->_topology->_Sol[k]) (idofX);
@@ -1323,9 +1363,14 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
           newDist  += pow ( (vxHat[k][i] - particleCoords[k]), 2.);
         }
         newDist  = sqrt (newDist);
+        if (newDist  < 1.562e-06 ) {    
+          sol->_Sol[solIndexNodeFlag]->set (idof[i], 1.);  
+        }
         if (newDist  < currentMinDist) {
           sol->_Sol[solIndexNodeDist]->set (idof[i], newDist);
         }
+        
+        
       }
       ielOld = iel;
     }
@@ -1337,57 +1382,76 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
   sol->_Sol[solIndexNodeFlag]->close();
   //END
 
-  //BEGIN loop on the fluid particles
-  markerOffset = fluidLine.GetMarkerOffset();
-  std::vector<Marker*> particlesFluid = fluidLine.GetParticles();
-  ielOld = UINT_MAX;
+//   //BEGIN loop on the fluid particles
+//   markerOffset = fluidLine.GetMarkerOffset();
+//   std::vector<Marker*> particlesFluid = fluidLine.GetParticles();
+//   ielOld = UINT_MAX;
+// 
+//   for (unsigned iMarker = markerOffset[iproc]; iMarker < markerOffset[iproc + 1]; iMarker++) {
+//     unsigned iel = particlesFluid[iMarker]->GetMarkerElement();
+//     if (iel != UINT_MAX) {
+//       if ( (*sol->_Sol[indexSolMat]) (iel) != 0) { //only if it is an interface element
+//         short unsigned ielt;
+//         unsigned nDofs;
+//         if (iel != ielOld) {
+//           ielt = msh->GetElementType (iel);
+//           nDofs = msh->GetElementDofNumber (iel, solType);
+//           for (int k = 0; k < dim; k++) {
+//             vxHat[k].resize (nDofs);
+//           }
+//           idof.resize (nDofs);
+//           for (unsigned i = 0; i < nDofs; i++) {
+//             idof[i] = msh->GetSolutionDof (i, iel, solType);
+//             unsigned idofX = msh->GetSolutionDof (i, iel, 2); //local 2 global solution
+//             for (int k = 0; k < dim; k++) {
+//               vxHat[k][i] = (*msh->_topology->_Sol[k]) (idofX);
+//             }
+//           }
+//         }
+//         std::vector<double> particleCoords (dim);
+//         particleCoords = particlesFluid[iMarker]->GetIprocMarkerCoordinates();
+// 
+//         for (unsigned i = 0; i < nDofs; i++) {
+//           double currentMinDist = (*sol->_Sol[solIndexNodeDist]) (idof[i]);
+//           double newDist = 0.;
+//           for (unsigned k = 0; k < dim; k++) {
+//             newDist  += pow ( (vxHat[k][i] - particleCoords[k]), 2.);
+//           }
+//           newDist  = sqrt (newDist);
+//           if (newDist  < currentMinDist) {
+//             sol->_Sol[solIndexNodeFlag]->set (idof[i], 0.);
+//             sol->_Sol[solIndexNodeDist]->set (idof[i], newDist);
+//           }
+//         }
+//       }
+//       ielOld = iel;
+//     }
+//     else {
+//       break;
+//     }
+//   }
+//   sol->_Sol[solIndexNodeDist]->closeWithMinValues();
+//   sol->_Sol[solIndexNodeFlag]->closeWithMinValues();
+//  //END
 
-  for (unsigned iMarker = markerOffset[iproc]; iMarker < markerOffset[iproc + 1]; iMarker++) {
-    unsigned iel = particlesFluid[iMarker]->GetMarkerElement();
-    if (iel != UINT_MAX) {
-      if ( (*sol->_Sol[indexSolMat]) (iel) != 0) { //only if it is an interface element
-        short unsigned ielt;
-        unsigned nDofs;
-        if (iel != ielOld) {
-          ielt = msh->GetElementType (iel);
-          nDofs = msh->GetElementDofNumber (iel, solType);
-          for (int k = 0; k < dim; k++) {
-            vxHat[k].resize (nDofs);
-          }
-          idof.resize (nDofs);
-          for (unsigned i = 0; i < nDofs; i++) {
-            idof[i] = msh->GetSolutionDof (i, iel, solType);
-            unsigned idofX = msh->GetSolutionDof (i, iel, 2); //local 2 global solution
-            for (int k = 0; k < dim; k++) {
-              vxHat[k][i] = (*msh->_topology->_Sol[k]) (idofX);
-            }
-          }
-        }
-        std::vector<double> particleCoords (dim);
-        particleCoords = particlesFluid[iMarker]->GetIprocMarkerCoordinates();
-
-        for (unsigned i = 0; i < nDofs; i++) {
-          double currentMinDist = (*sol->_Sol[solIndexNodeDist]) (idof[i]);
-          double newDist = 0.;
-          for (unsigned k = 0; k < dim; k++) {
-            newDist  += pow ( (vxHat[k][i] - particleCoords[k]), 2.);
-          }
-          newDist  = sqrt (newDist);
-          if (newDist  < currentMinDist) {
-            sol->_Sol[solIndexNodeFlag]->set (idof[i], 0.);
-            sol->_Sol[solIndexNodeDist]->set (idof[i], newDist);
-          }
-        }
-      }
-      ielOld = iel;
-    }
-    else {
-      break;
-    }
-  }
-  sol->_Sol[solIndexNodeDist]->closeWithMinValues();
-  sol->_Sol[solIndexNodeFlag]->closeWithMinValues();
-  //END
+//   //BEGIN loop on elements (to initialize the "soft" stiffness matrix)
+//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+// 
+//     short unsigned ielt = msh->GetElementType (iel);
+// 
+//     double  MPMmaterial = (*sol->_Sol[indexSolMat]) (iel);
+// 
+//     if (MPMmaterial == 0) {
+//       unsigned nDofs = msh->GetElementDofNumber (iel, solType);   // number of solution element dofs
+// 
+//       for (unsigned i = 0; i < nDofs; i++) {
+//         unsigned idof = msh->GetSolutionDof (i, iel, solType);
+// 
+//         sol->_Sol[solIndexNodeFlag]->set (idof, 0.);
+//       }
+//     }
+//   }
+//   sol->_Sol[solIndexNodeFlag]->close();
 
 }
 

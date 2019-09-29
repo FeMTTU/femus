@@ -22,7 +22,7 @@ using namespace femus;
 
 
 double SetVariableTimeStep (const double time) {
-  double dt =  0.01/*0.008*/;
+  double dt =  0.005/*0.008*/;
   return dt;
 }
 
@@ -83,7 +83,7 @@ int main (int argc, char** args) {
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 10000.;
-  unsigned numberOfUniformLevels = 4; //for refinement in 3D
+  unsigned numberOfUniformLevels = 5; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -123,7 +123,7 @@ int main (int argc, char** args) {
   if (dim > 1) mlSol.AddSolution ("VY", LAGRANGE, SECOND, 2);
   if (dim > 2) mlSol.AddSolution ("VZ", LAGRANGE, SECOND, 2);
 
-  mlSol.AddSolution ("P", DISCONTINUOUS_POLYNOMIAL, FIRST, 0);
+  mlSol.AddSolution ("P", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
 
   mlSol.AddSolution ("M", LAGRANGE, SECOND, 2);
   mlSol.AddSolution ("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false); 
@@ -341,11 +341,11 @@ int main (int argc, char** args) {
   mass.resize (0);
   markerType.resize (0);
 
-  H = 4. * H; //TODO tune the factor 4
+  double H1 = 4. * H; //TODO tune the factor 4
   if (fabs (H - H0) > 1.0e-10) {
 
     double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
-    unsigned NL = getNumberOfLayers (0.5 * (H - H0) / DH, factor, false);
+    unsigned NL = getNumberOfLayers (0.5 * (H1 - H0) / DH, factor, false);
     std::cout << NL << std::endl;
 
     double xs = xc - 0.5 * H0;
@@ -392,16 +392,16 @@ int main (int argc, char** args) {
         counter++;
         y1 -= DL1;
       }
-      mass.resize (x.size(), rhos * DL * DH);
+      mass.resize (x.size(), rhof * DL * DH);
       markerType.resize (x.size(), VOLUME);
     }
   }
 
-  totalMass = 0;
+  totalMass = 0.;
   for (unsigned i = 0; i < mass.size(); i++) {
     totalMass += mass[i];
   }
-  std::cout << totalMass << " " << rhof * H * L << std::endl;
+  std::cout << totalMass << " " << rhof * (( 4 * H * (L + 1.5 * H) )- ( H * L )) << std::endl;
 
   fluidLine = new Line (x, mass, markerType, mlSol.GetLevel (numberOfUniformLevels - 1), solType);
 
@@ -445,8 +445,6 @@ int main (int argc, char** args) {
 
     system.MGsolve();
 
-    mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
-
     GridToParticlesProjection (ml_prob, *solidLine, *fluidLine);
 
     solidLine->GetLine (lineS[0]);
@@ -455,6 +453,8 @@ int main (int argc, char** args) {
     fluidLine->GetLine (lineF[0]);
     PrintLine (DEFAULT_OUTPUTDIR, "fluidLine", lineF, time_step);
 
+    mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+    
   }
 
 
