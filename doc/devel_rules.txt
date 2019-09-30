@@ -232,3 +232,30 @@ Ok, it seems like:
 If you have to rotate, do not do that in the Geometry, because then the Mesh will not follow.
 If you do it in the Mesh, the Geometry does not follow either.
 
+##################################
+###### SALOME - SPLIT EDGES/FACES ########
+##################################
+
+The tool for this is: Partition then Explode. At first it seems like with Partition no split happens, but then if you do Explode you will get all the pieces
+It seems like Cut is not the right tool for splitting
+
+Pay attention to the difference between Common and Intersection
+
+
+########################################
+###### SALOME - QUADRILATERAL MESH of a CIRCLE/SEMISPHERE ######
+########################################
+
+For a circle, just do a square in the middle, then divide the circumference into for parts,
+join the angles of the squares with the vertices of these parts and you are done.
+
+For the semisphere, if you try the same it doesn't work, because the faces that are constructed
+do not belong to the original semisphere...
+
+So the idea seems to be NOT the following:
+ - make curved edges on the semisphere
+ - use them to create curved faces
+ 
+ The other way to go is to directly create subfaces by Partition of the semisphere!
+ 
+ First you split, then you join...
