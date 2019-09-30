@@ -173,6 +173,12 @@ In Mesh:
   
   The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
 
+ #############################################
+###### SALOME - HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES #################
+############################################# 
+
+When you explode adjacent faces, the edges are called differently... we should identify them
+
 #############################################
 ###### SALOME - HOW TO MESH - 3D ############
 #############################################
@@ -246,6 +252,12 @@ Pay attention to the difference between Common and Intersection
 ###### SALOME - QUADRILATERAL MESH of a CIRCLE/SEMISPHERE ######
 ########################################
 
+Divided Disk or Divided Cylinder do exactly what you are looking for!!!
+
+Partition a semisphere using a Divided Disk!
+
+Beware: it is essential that a vertex of the inner square is aligned with the "meridian arc" that is intrinsic in the generation of a Sphere surface!
+
 For a circle, just do a square in the middle, then divide the circumference into for parts,
 join the angles of the squares with the vertices of these parts and you are done.
 
@@ -255,7 +267,29 @@ do not belong to the original semisphere...
 So the idea seems to be NOT the following:
  - make curved edges on the semisphere
  - use them to create curved faces
+  So, try to avoid starting from the Edges and instead keep yourself at the level of Faces.
+  Then only at the end you will Explode to get the Edges (that you may need later for submeshes)
+  
+  Also, try not to cut too much, because if you do so you may have multiple edges on one side and then it is not so easy to mesh...
  
  The other way to go is to directly create subfaces by Partition of the semisphere!
  
  First you split, then you join...
+ 
+ Now:
+ 
+ - Fuse doesn't work with non-planar faces...
+ - Glue Edges is to put together coincident edges, but not to remove them
+ - It seems like the right option is Sewing, then Union faces, then Explode to get the edges for the submeshes
+ - The only problem is that now one face does not have 4 edges, but one side can be made of multiple edges,
+   and that creates problems in the mapping algorithm. So, it's all about making 1 edge
+   
+   
+########################################
+###### SALOME - QUESTIONS ######
+########################################   
+
+- What is the difference between Regular Faces and Free Faces in the Mesh algorithms?
+
+- Is it possible to merge items obtained by Explode command? If I have 5 edges exploding from a quadrangular face,
+  where 2 of them form one of the actual 4 edges, can I merge them so that the face looks to have 4 items instead?
