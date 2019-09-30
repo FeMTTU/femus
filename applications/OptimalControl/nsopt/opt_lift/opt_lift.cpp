@@ -20,6 +20,9 @@
 #include "Files.hpp"
 #include "paral.hpp"//to get iproc HAVE_MPI is inside here
 
+#define FACE_FOR_CONTROL  3
+
+
 #include   "../nsopt_params.hpp"
 
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
@@ -44,7 +47,7 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
 #if exact_sol_flag == 0
 // b.c. for lid-driven cavity problem, wall u_top = 1 = shear_force, v_top = 0 and u=v=0 on other 3 walls ; rhs_f = body_force = {0,0}
 // TOP ==========================  
-      if (facename == 2) 
+      if (facename == FACE_FOR_CONTROL) 
      {
        if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
   else if (!strcmp(SolName, "VCTRL"))    { dirichlet = false; } 
@@ -57,7 +60,7 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
   //b.c. for manufactured lid driven cavity
 // TOP ==========================  
    double pi = acos(-1.);
-     if (facename == 3) {
+     if (facename == FACE_FOR_CONTROL) {
        if (!strcmp(SolName, "UCTRL"))    { value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);} //lid - driven
   else if (!strcmp(SolName, "VCTRL"))    { value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);} 
   	
