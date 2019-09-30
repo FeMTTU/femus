@@ -144,12 +144,15 @@ int main(int argc, char** args) {
 // *************************
 	
 //   std::string input_file = "square_parametric.med";
-  std::string input_file = "Mesh_3_groups.med";
+  std::string input_file = "square_4x5.med";
+//   std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   
   //   MultiLevelMesh mlMsh;
  mlMsh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+ mlMsh.RefineMesh(2, 2, NULL);
+ mlMsh.EraseCoarseLevels(2-1);
  mlMsh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
 //     mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
 //     mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
@@ -438,7 +441,25 @@ void laplace_stateVel(const std::vector < double >& x, vector < double >& lap_st
 //state---------------------------------------------
 
 
- 
+//************** how to retrieve theta from proc0 ************************************* 
+const double get_theta_value(const unsigned int nprocs, const Solution * sol, const unsigned int sol_theta_index) {
+NumericVector* local_theta_vec;
+
+          local_theta_vec = NumericVector::build().release();
+        local_theta_vec->init(*sol->_Sol[sol_theta_index]);
+        sol->_Sol[sol_theta_index]->localize(*local_theta_vec);
+        
+        PetscScalar* values;
+        VecGetArray(static_cast<PetscVector*>(local_theta_vec)->vec(), &values);
+        double theta_value = values[0];
+        if (nprocs == 1) {
+            if ( (*sol->_Sol[sol_theta_index])(0) != theta_value) abort();
+        }
+        
+        return theta_value;
+}
+//*************************************************** 
+        
 
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
      
@@ -671,12 +692,15 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     double detJac_qp_bdry;
     
     //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-  std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all;
+  std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
 //*************************************************** 
  
-    
   
+//************** how to retrieve theta from proc0 ************************************* 
+ double solTheta = get_theta_value(msh->n_processors(), sol, SolIndex[theta_index]);
+//*************************************************** 
+
   // ****************** element loop *******************
  
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -915,7 +939,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
                                                                                           beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
                                                                                         + gamma_val* lap_res_dctrl_ctrl_bd
                                                                                         - IRe * grad_dot_n_adj_res[kdim]  * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
-                                                                                        - (*sol->_Sol[SolIndex[theta_index]])(0) * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry] * normal[kdim]      //*sol->_Sol[SolIndex[theta_index]])(0) finds the global value from KKDof pos(72, 169,etc), SolVAReldof_theta gets the value in the boundary point which will be zero. Theta is just a const
+                                                                                        - /*(*sol->_Sol[SolIndex[theta_index]])(0)*/solTheta * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry] * normal[kdim]      //*sol->_Sol[SolIndex[theta_index]])(0) finds the global value from KKDof pos(72, 169,etc), SolVAReldof_theta gets the value in the boundary point which will be zero. Theta is just a const
                                                                                         );	    
 		      }//kdim  
 
@@ -1039,14 +1063,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk < /*n_vars*/ n_unknowns; unk++) {
 	    SolVAR_qp[unk] = 0.;
-	    for(unsigned ivar2=0; ivar2<space_dim; ivar2++){ 
+	    for(unsigned ivar2=0; ivar2 < space_dim; ivar2++){ 
 		gradSolVAR_qp[unk][ivar2] = 0.; 
 	    }
 	  
 	    for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
                         SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i]             * SolVAR_eldofs[SolPdeIndex[unk]][i];
-		for(unsigned ivar2=0; ivar2<space_dim; ivar2++) {       
-		    gradSolVAR_qp[unk][ivar2]  += phi_x_gss_fe[ SolFEType[unk] ][i*space_dim+ivar2] * SolVAR_eldofs[SolPdeIndex[unk]][i]; 
+		for(unsigned ivar2 = 0; ivar2 < space_dim; ivar2++) {       
+		    gradSolVAR_qp[unk][ivar2]  += phi_x_gss_fe[ SolFEType[unk] ][i * space_dim + ivar2] * SolVAR_eldofs[SolPdeIndex[unk]][i]; 
 		}
 	    }//ndofsunk
 	  
@@ -1465,10 +1489,13 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 //CONTROL_@bdry######################################################################
   
 //Theta value ######################################################################
-   unsigned solThetaIndex;
-   solThetaIndex = ml_sol->GetIndex("THETA");
-   unsigned solThetaType = ml_sol->GetSolutionType(solThetaIndex);
-   double solTheta = (*sol->_Sol[solThetaIndex])(0)/*0.*/;
+   const unsigned solThetaIndex = ml_sol->GetIndex("THETA");
+   const unsigned solThetaType = ml_sol->GetSolutionType(solThetaIndex);
+   
+//    double solTheta = (*sol->_Sol[solThetaIndex])(0)/*0.*/;
+   //************** how to retrieve theta from proc0 ************************************* 
+ double solTheta = get_theta_value(msh->n_processors(), sol, solThetaIndex);
+//*************************************************** 
 // 		     solTheta = (*sol->_Sol[solThetaIndex])(0);
 //Theta value ######################################################################
 
