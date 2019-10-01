@@ -187,6 +187,42 @@ int main (int argc, char** args) {
   system.SetPreconditionerFineGrids (ILU_PRECOND);
 
   system.SetTolerances (1.e-10, 1.e-15, 1.e+50, 40, 40);
+  
+  
+  
+    // ******* Add MPM system to the MultiLevel problem *******
+    NonLinearImplicitSystem& system2 = ml_prob.add_system < NonLinearImplicitSystem > ("DISP");
+    system2.AddSolutionToSystemPDE("DX");
+    if(dim > 1)system2.AddSolutionToSystemPDE("DY");
+    if(dim > 2) system2.AddSolutionToSystemPDE("DZ");
+      
+    // ******* System MPM Assembly *******
+    system2.SetAssembleFunction(AssembleSolidDisp);
+    //system2.SetAssembleFunction(AssembleFEM);
+    // ******* set MG-Solver *******
+    system2.SetMgType(V_CYCLE);
+      
+      
+    system2.SetAbsoluteLinearConvergenceTolerance(1.0e-10);
+    system2.SetMaxNumberOfLinearIterations(1);
+    system2.SetNonLinearConvergenceTolerance(1.e-9);
+    system2.SetMaxNumberOfNonLinearIterations(1);
+      
+    system2.SetNumberPreSmoothingStep(1);
+    system2.SetNumberPostSmoothingStep(1);
+      
+    // ******* Set Preconditioner *******
+    system2.SetLinearEquationSolverType(FEMuS_DEFAULT);
+      
+    system2.init();
+      
+    // ******* Set Smoother *******
+    system2.SetSolverFineGrids(GMRES);
+      
+    system2.SetPreconditionerFineGrids(ILU_PRECOND);
+      
+    system2.SetTolerances(1.e-10, 1.e-15, 1.e+50, 2, 2);
+  
 
 //   unsigned rows = 2*60;
 //   unsigned columns = 2*120;
@@ -223,8 +259,8 @@ int main (int argc, char** args) {
 
   //return 1;
 
-  double L = 3.5e-05; //beam dimensions
-  double H = 0.55e-05;
+  double L = 50e-06; //beam dimensions
+  double H = 5e-06;
 
   double xc = 0.98e-04 + 0.5 * H;
   double yc = 0.;
@@ -444,6 +480,7 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
 
     system.MGsolve();
+    system2.MGsolve();
 
     GridToParticlesProjection (ml_prob, *solidLine, *fluidLine);
 
