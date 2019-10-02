@@ -67,6 +67,7 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("Mesh_2_xz.med");
 //    mesh_files.push_back("Mesh_2_yz.med");
 //    mesh_files.push_back("Mesh_3_xyz.med");
+   mesh_files.push_back("dome_tri.med");
    mesh_files.push_back("dome_quad.med");
    mesh_files.push_back("disk_quad.med");
    
@@ -164,11 +165,12 @@ int main(int argc, char** args) {
   
     // ======= Print ========================
   // print solutions
+  const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(mesh_files[m], files.GetOutputPath(), "biquadratic", variablesToBePrinted);
+  mlSol.GetWriter()->Write(mesh_files[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
   
   }
  
