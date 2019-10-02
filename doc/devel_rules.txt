@@ -301,6 +301,7 @@ So the idea seems to be NOT the following:
 
 - To remove Extra Edges on a Face, you first have to create an auxiliary volume, and then do Repair-> Remove extra edges from that volume,
   then that face will be fixed!
+  Another trick is to put the Face in a Compound. There it works!
 
 - When you convert a mesh to quadratic/biquadratic, do it on a Mesh that is ATTACHED to a Geometry, because it is with the geometry that new nodes are added! 
   Otherwise nothing happens!

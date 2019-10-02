@@ -86,6 +86,14 @@ namespace femus {
                                                          boost::optional< std::vector < type > & > nablaphi_vol_at_bdry,
                                                          const unsigned space_dimension) const;                                        
 
+     inline void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
+                          std::vector < std::vector <type_mov> > & JacJacT,
+                          const unsigned space_dimension) const;
+
+     inline void jac_jacT_inv(const std::vector < std::vector <type_mov> > & JacJacT,
+                              std::vector < std::vector <type_mov> > & JacJacT_inv,
+                              const unsigned space_dimension) const;
+
      private:
 
      inline void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
@@ -93,14 +101,6 @@ namespace femus {
                           const std::vector < std::vector < std::vector < double > > > & dphidxi,
                           std::vector < std::vector <type_mov> > & Jac,
                           const unsigned space_dimension) const;
-
-     inline void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
-                          std::vector < std::vector <type_mov> > & JacJacT,
-                          const unsigned space_dimension) const;
-
-     inline void jac_jacT_inv(const std::vector < std::vector <type_mov> > & Jac,
-                              std::vector < std::vector <type_mov> > & JacJacT,
-                              const unsigned space_dimension) const;
 
      inline void measure_transf(const std::vector < std::vector <type_mov> > & JacJacT,
                              type_mov & area,
@@ -144,25 +144,7 @@ namespace femus {
 
   }
                           
-    void jac_jacT_inv(const std::vector < std::vector <type_mov> > & JacJacT,
-                      std::vector < std::vector <type_mov> > & JacJacT_inv,
-                      const unsigned space_dimension) const {
-
-    /*const type_mov*/ JacJacT_inv[0][0] = 1. / JacJacT[0][0];
-                           
-    }
-                          
-     void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
-                   std::vector < std::vector <type_mov> > & JacJacT,
-                   const unsigned space_dimension) const {
-                              
-//     type_mov JacJacT[1][1];
-    JacJacT[0][0] = 0.; //1x1
-    for (unsigned d = 0; d < space_dimension; d++) JacJacT[0][0] += Jac[0][d]*Jac[0][d];
-    
-   }
-                            
-                            
+                   
      void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
                    const unsigned & ig,
                    const std::vector < std::vector < std::vector < double > > > & dphidxi,
@@ -259,7 +241,25 @@ namespace femus {
           ~elem_type_templ(){ }
 
                            
+     void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
+                   std::vector < std::vector <type_mov> > & JacJacT,
+                   const unsigned space_dimension) const {
+                              
+//     type_mov JacJacT[1][1];
+    JacJacT[0][0] = 0.; //1x1
+    for (unsigned d = 0; d < space_dimension; d++) JacJacT[0][0] += Jac[0][d]*Jac[0][d];
+    
+   }
+                            
+                            
+    void jac_jacT_inv(const std::vector < std::vector <type_mov> > & JacJacT,
+                      std::vector < std::vector <type_mov> > & JacJacT_inv,
+                      const unsigned space_dimension) const {
+
+    /*const type_mov*/ JacJacT_inv[0][0] = 1. / JacJacT[0][0];
                            
+    }
+                                  
      void JacJacInv_vol_at_bdry_new(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             const unsigned jface, 
@@ -553,33 +553,6 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
   }
        
        
-     void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
-                   std::vector < std::vector <type_mov> > & JacJacT,
-                   const unsigned space_dimension) const {
-
-//     type_mov JacJacT[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
-    
-    for (unsigned i = 0; i < 2/*dim*/; i++) std::fill( JacJacT[i].begin(), JacJacT[i].end(), 0.);
-    
-    for (unsigned i = 0; i < 2/*dim*/; i++)
-        for (unsigned j = 0; j < 2/*dim*/; j++)
-            for (unsigned k = 0; k < space_dimension; k++) JacJacT[i][j] += Jac[i][k]*Jac[j][k];
-                              
-   }
-   
-
-     void jac_jacT_inv(const std::vector < std::vector <type_mov> > & JacJacT,
-                          std::vector < std::vector <type_mov> > & JacJacT_inv,
-                          const unsigned space_dimension) const {
-                                                            
-    const type_mov detJacJacT = (JacJacT[0][0] * JacJacT[1][1] - JacJacT[0][1] * JacJacT[1][0]);
-            
-    JacJacT_inv[0][0] =  JacJacT[1][1] / detJacJacT;
-    JacJacT_inv[0][1] = -JacJacT[0][1] / detJacJacT;
-    JacJacT_inv[1][0] = -JacJacT[1][0] / detJacJacT;
-    JacJacT_inv[1][1] =  JacJacT[0][0] / detJacJacT;
-        
-   }
    
         std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof
         std::vector < std::vector <  std::vector < double > > > _dphidxi_vol_at_bdry_templ;
@@ -653,7 +626,37 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
           ~elem_type_templ(){ }
           
           
-     void JacJacInv_vol_at_bdry_new(const std::vector < std::vector < type_mov > > & vt,
+     void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
+                   std::vector < std::vector <type_mov> > & JacJacT,
+                   const unsigned space_dimension) const {
+
+//     type_mov JacJacT[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
+    
+    for (unsigned i = 0; i < 2/*dim*/; i++) std::fill( JacJacT[i].begin(), JacJacT[i].end(), 0.);
+    
+    for (unsigned i = 0; i < 2/*dim*/; i++)
+        for (unsigned j = 0; j < 2/*dim*/; j++)
+            for (unsigned k = 0; k < space_dimension; k++) JacJacT[i][j] += Jac[i][k]*Jac[j][k];
+                              
+   }
+   
+
+
+     void jac_jacT_inv(const std::vector < std::vector <type_mov> > & JacJacT,
+                          std::vector < std::vector <type_mov> > & JacJacT_inv,
+                          const unsigned space_dimension) const {
+                                                            
+    const type_mov detJacJacT = (JacJacT[0][0] * JacJacT[1][1] - JacJacT[0][1] * JacJacT[1][0]);
+            
+    JacJacT_inv[0][0] =  JacJacT[1][1] / detJacJacT;
+    JacJacT_inv[0][1] = -JacJacT[0][1] / detJacJacT;
+    JacJacT_inv[1][0] = -JacJacT[1][0] / detJacJacT;
+    JacJacT_inv[1][1] =  JacJacT[0][0] / detJacJacT;
+        
+   }
+   
+   
+   void JacJacInv_vol_at_bdry_new(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             const unsigned jface, 
                             std::vector < std::vector <type_mov> > & Jac,
@@ -967,23 +970,8 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
     
   }
                           
-                          
-   void jac_jacT_inv(const std::vector < std::vector <type_mov> > & JacJacT,
-                     std::vector < std::vector <type_mov> > & JacJacT_inv,
-                     const unsigned space_dimension) const {
-                              
-       std::cout << "Not needed with 3d in 3d space"; abort();                              
 
-       }
                                                             
-   void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
-                          std::vector < std::vector <type_mov> > & JacJacT,
-                          const unsigned space_dimension) const {
-                              
-       std::cout << "Not needed with 3d in 3d space"; abort();                              
-
-       }
-                          
        
    void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
                            const unsigned & ig,
@@ -1101,7 +1089,24 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
           ~elem_type_templ(){}
           
                            
-     void JacJacInv_vol_at_bdry_new(const std::vector < std::vector < type_mov > > & vt,
+   void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
+                          std::vector < std::vector <type_mov> > & JacJacT,
+                          const unsigned space_dimension) const {
+                              
+       std::cout << "Not needed with 3d in 3d space"; abort();                              
+
+       }
+                          
+                          
+   void jac_jacT_inv(const std::vector < std::vector <type_mov> > & JacJacT,
+                     std::vector < std::vector <type_mov> > & JacJacT_inv,
+                     const unsigned space_dimension) const {
+                              
+       std::cout << "Not needed with 3d in 3d space"; abort();                              
+
+       }
+       
+   void JacJacInv_vol_at_bdry_new(const std::vector < std::vector < type_mov > > & vt,
                             const unsigned & ig,
                             const unsigned jface, 
                             std::vector < std::vector <type_mov> > & Jac,

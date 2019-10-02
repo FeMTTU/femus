@@ -67,13 +67,6 @@ namespace femus
                                                           const std::string fe_fam,
                                                           const std::string order_gauss,
                                                           const unsigned space_dimension); 
-    protected:
-        
-     virtual /*inline*/ void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
-                                               const unsigned & ig,
-                                               const std::vector < std::vector < std::vector < double > > > & dphidxi,
-                                               std::vector < std::vector <type_mov> > & Jac,
-                                               const unsigned space_dimension) const = 0;
 
      virtual /*inline*/ void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
                                       std::vector < std::vector <type_mov> > & JacJacT,
@@ -82,6 +75,14 @@ namespace femus
      virtual /*inline*/ void jac_jacT_inv(const std::vector < std::vector <type_mov> > & JacJacT,
                                           std::vector < std::vector <type_mov> > & JacJacT_inv,
                                           const unsigned space_dimension) const = 0;
+                                         
+    protected:
+        
+     virtual /*inline*/ void jacobian_flexible(const std::vector < std::vector < type_mov > > & vt,
+                                               const unsigned & ig,
+                                               const std::vector < std::vector < std::vector < double > > > & dphidxi,
+                                               std::vector < std::vector <type_mov> > & Jac,
+                                               const unsigned space_dimension) const = 0;
 
      virtual /*inline*/ void measure_transf(const std::vector < std::vector <type_mov> > & JacJacT,
                                             type_mov & area,

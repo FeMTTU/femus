@@ -69,8 +69,8 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("Mesh_3_xyz.med");
 //    mesh_files.push_back("dome_tri.med");
    mesh_files.push_back("dome_quad.med");
-//    mesh_files.push_back("disk_quad.med");
-   mesh_files.push_back("dome_quad_clean.med");
+   mesh_files.push_back("disk_quad.med");
+   mesh_files.push_back("dome_tri.med");
    
 
 
@@ -166,7 +166,7 @@ int main(int argc, char** args) {
   
     // ======= Print ========================
   // print solutions
-  const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
+  const std::string print_order = "linear"; //"linear", "quadratic", "biquadratic"
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
   mlSol.SetWriter(VTK);
@@ -262,6 +262,12 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     for (unsigned d = 0; d < space_dim; d++) { JacI_qp[d].resize(dim); }
     
     real_num_mov detJac_qp;
+    
+    std::vector < std::vector < real_num_mov > >  JacJacT(dim);
+    for (unsigned d = 0; d < dim; d++) { JacJacT[d].resize(dim); }
+
+    std::vector < std::vector < real_num_mov > >  JacJacT_inv(dim);
+    for (unsigned d = 0; d < dim; d++) { JacJacT_inv[d].resize(dim); }
 
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < /*const*/ elem_type_templ_base<real_num, real_num_mov> *  > > elem_all;
@@ -313,7 +319,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
     elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, boost::none /*phi_u_xx*/, space_dim);
 
-
+    elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
+    elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	
@@ -329,15 +336,26 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	  
 //--------------    
 	      double laplace_res_du_u_i = 0.;
-              for (unsigned kdim = 0; kdim < space_dim; kdim++) {
-              if ( i < nDof_u )         laplace_res_du_u_i             +=  (phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim]);
-	      }
-   
+              if ( i < nDof_u ) {
+                  for (unsigned kdim = 0; kdim < space_dim; kdim++) {
+                       laplace_res_du_u_i             +=  (phi_u_x   [i * space_dim + kdim] * sol_u_x_gss[kdim]);
+	             }
+              }
+              
+	      double laplace_beltrami_res_du_u_i = 0.;
+          if ( i < nDof_u ) {    
+          for (unsigned kdim = 0; kdim < dim; kdim++) {
+            for (unsigned ldim = 0; ldim < dim; ldim++) {
+                       laplace_beltrami_res_du_u_i             +=  (phi_u_x   [i * space_dim + kdim] * JacJacT_inv[kdim][ldim] * sol_u_x_gss[ldim]);
+            }
+         }
+       }
 //--------------    
 	      
 //======================Residuals=======================
           // FIRST ROW
-          if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
+//           if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
+          if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -346,18 +364,31 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
             for (unsigned j = 0; j < nDof_max; j++) {
 
 //--------------    
-              double laplace_mat_du_u = 0.;
+              double laplace_mat_du_u_i_j = 0.;
 
-              for (unsigned kdim = 0; kdim < space_dim; kdim++) {
-              if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u           += (phi_u_x   [i * space_dim + kdim] *
+              if ( i < nDof_u && j < nDof_u ) {
+                  for (unsigned kdim = 0; kdim < space_dim; kdim++) {
+                         laplace_mat_du_u_i_j           += (phi_u_x   [i * space_dim + kdim] *
                                                                                        phi_u_x   [j * space_dim + kdim]);
-	      }
+	              }
+             }
 	      
-//--------------    
+              double laplace_beltrami_mat_du_u_i_j = 0.;
+              if ( i < nDof_u && j < nDof_u ) {
+          for (unsigned kdim = 0; kdim < dim; kdim++) {
+            for (unsigned ldim = 0; ldim < dim; ldim++) {
+                       laplace_beltrami_mat_du_u_i_j             +=  (phi_u_x   [i * space_dim + kdim] * JacJacT_inv[kdim][ldim] * phi_u_x   [j * space_dim + ldim]);
+            }
+         }
+                  
+                  
+              }
+              //--------------    
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
-		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_mat_du_u;
+// 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_mat_du_u_i_j;
+		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_beltrami_mat_du_u_i_j; ///@todo On a flat domain, shouldn't this coincide with the standard Laplacian?
             } // end phi_j loop
           } // endif assemble_matrix
 
