@@ -289,7 +289,16 @@ So the idea seems to be NOT the following:
 ###### SALOME - QUESTIONS ######
 ########################################   
 
+- To remove Extra Edges on a Face, you first have to create an auxiliary volume, and then do Repair-> Remove extra edges from that volume,
+  then that face will be fixed!
+
+- When you convert a mesh to quadratic/biquadratic, do it on a Mesh that is ATTACHED to a Geometry, because it is with the geometry that new nodes are added! 
+  Otherwise nothing happens!
+
 - What is the difference between Regular Faces and Free Faces in the Mesh algorithms?
 
 - Is it possible to merge items obtained by Explode command? If I have 5 edges exploding from a quadrangular face,
   where 2 of them form one of the actual 4 edges, can I merge them so that the face looks to have 4 items instead?
+    
+  Possible answer: I think the way to go in these cases is to do, after Explode, a "Create Group" in the Geometry.
+    That group should appear as a "child" of the Geometry object you will then mesh. I can try this to double check.
