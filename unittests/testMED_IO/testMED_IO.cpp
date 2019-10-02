@@ -12,13 +12,20 @@ using namespace femus;
 
 int main(int argc,char **args) {
 
+  // ======= Init ========================
   FemusInit init(argc,args,MPI_COMM_WORLD);
+
+  // ======= Files ========================
+  Files files; 
+        files.CheckIODirectories();
+        files.RedirectCout();
 
 //   std::string input_file = "turek_FSI1.neu";
 //    std::string input_file = "cyl.med";
 //    std::string input_file = "horse2.med";
 //    std::string input_file = "knot.neu";
-   std::string input_file = "Mesh_dome.med";
+//    std::string input_file = "dome_tri.med";
+   std::string input_file = "dome_quad.med";
 //   std::string input_file = "Quad9_Four_boundaries_groups.med";
 //   std::string input_file = "Quad9_Nine_without_groups.med";
 //   std::string input_file = "Tri6_Two_boundaries.med"; 
@@ -59,17 +66,24 @@ int main(int argc,char **args) {
 // 
 //     ml_sol.GetWriter()->SetSurfaceVariables(surfaceVariables);
   
+  const std::string output_dir = files.GetOutputPath();
+//   const std::string output_dir = DEFAULT_OUTPUTDIR;
+  
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",variablesToBePrinted);
-  ml_sol.SetWriter(XDMF); 
-  ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",variablesToBePrinted);
+  ml_sol.GetWriter()->Write(output_dir, "linear", variablesToBePrinted);
+  ml_sol.GetWriter()->Write(output_dir, "quadratic", variablesToBePrinted);
+  ml_sol.GetWriter()->Write(output_dir, "biquadratic", variablesToBePrinted);
+//   ml_sol.SetWriter(XDMF); 
+//   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
+//   ml_sol.GetWriter()->Write(output_dir, "linear", variablesToBePrinted);
+//   ml_sol.GetWriter()->Write(output_dir, "quadratic", variablesToBePrinted);
+//   ml_sol.GetWriter()->Write(output_dir, "biquadratic", variablesToBePrinted);
 
 // recent versions of Paraview do not read the GMV format
 //   ml_sol.SetWriter(GMV);  
 //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
-//   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",variablesToBePrinted);
+//   ml_sol.GetWriter()->Write(output_dir,"biquadratic",variablesToBePrinted);
 
   
   return 0;
