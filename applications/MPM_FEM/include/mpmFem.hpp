@@ -68,7 +68,7 @@ void AssembleSolidDisp(MultiLevelProblem& ml_prob) {
   myKK->zero();
   myRES->zero();
   
-  //BEGIN loop on elements (to initialize the "soft" stiffness matrix)
+  //BEGIN loop on elements (for Laplace problem for u^reset)
   for(int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
     
     short unsigned ielt = mymsh->GetElementType(iel);
@@ -174,7 +174,7 @@ void AssembleSolidDisp(MultiLevelProblem& ml_prob) {
     s.clear_independents();
     s.clear_dependents();
   }
-  //END building "soft" stiffness matrix
+  //END loop on elements (for Laplace problem for u^reset)
   
   myRES->close();
   myKK->close();
@@ -401,7 +401,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           
           for(unsigned j = 0; j < dim; j++) { //TODO swap these 2 for loops
             for(unsigned  k = 0; k < dim; k++) { //TODO
-              softStiffness[k]   +=  mu * gradphi_hat[i * dim + j] * (GradSolDgssHat[k][j] + GradSolDgssHat[j][k]);
+              softStiffness[k]   +=  mu * gradphi_hat[i * dim + j] * (GradSolDgssHat[k][j] + GradSolDgssHat[j][k]); //TODO this should use gradphi in the reference, so vx + SolDdOld
             }
           }
           for(unsigned  k = 0; k < dim; k++) {

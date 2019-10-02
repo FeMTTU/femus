@@ -30,8 +30,8 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char name[], d
   bool test = 1; //dirichlet
   value = 0.;
 
-  double H = 1.e-4;
-  double U = 0.05;
+  double H = 1.e-4; //channel length
+  double U = 0.05; //TODO it is not clear if it is 0.05 or 0.0333
   double t2 = t * t;
 
   if (!strcmp (name, "DX")) {
@@ -127,8 +127,8 @@ int main (int argc, char** args) {
 
   mlSol.AddSolution ("M", LAGRANGE, SECOND, 2);
   mlSol.AddSolution ("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false); 
-  mlSol.AddSolution ("NodeFlag", LAGRANGE, SECOND, 0, false);
-  mlSol.AddSolution ("NodeDist", LAGRANGE, SECOND, 0, false);
+  mlSol.AddSolution ("NodeFlag", LAGRANGE, SECOND, 0, false); //TODO see who this is
+  mlSol.AddSolution ("NodeDist", LAGRANGE, SECOND, 0, false); //TODO see who this is
   //mlSol.AddSolution ("NodeDistS", LAGRANGE, SECOND, 2);
 
   mlSol.Initialize ("All");
@@ -223,10 +223,11 @@ int main (int argc, char** args) {
 
   //return 1;
 
-  double L = 3.5e-05; //beam dimensions
-  double H = 0.55e-05;
+  double L = 5.e-05; //beam dimensions
+  double H = 5.e-06;
 
-  double xc = 0.98e-04 + 0.5 * H;
+//   double xc = 1.e-04 + 0.5 * H ; //should be this one to do COMSOL benchmark
+  double xc = 0.98e-04 + 0.5 * H; //we are using this not to have markers on edges of elements from the beginning
   double yc = 0.;
 
   double H0 = /*5. / 5.*/ 3. / 5.* H; //0.15: 3ref, 0.2: 4 ref, 0.225: 5 ref
@@ -401,7 +402,7 @@ int main (int argc, char** args) {
   for (unsigned i = 0; i < mass.size(); i++) {
     totalMass += mass[i];
   }
-  std::cout << totalMass << " " << rhof * (( 4 * H * (L + 1.5 * H) )- ( H * L )) << std::endl;
+  std::cout << totalMass << " " << rhof * (( H1 * (L + (H1 - H) * 0.5 * H) )- ( H * L )) << std::endl; 
 
   fluidLine = new Line (x, mass, markerType, mlSol.GetLevel (numberOfUniformLevels - 1), solType);
 

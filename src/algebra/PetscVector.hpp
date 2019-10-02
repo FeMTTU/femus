@@ -624,9 +624,11 @@ namespace femus {
     else {
       int ierr = 0;
 
-      ierr = VecGhostUpdateBegin (_vec, MIN_VALUES, SCATTER_REVERSE);
+//       ierr = VecGhostUpdateBegin (_vec, MIN_VALUES, SCATTER_REVERSE);
+      ierr = VecGhostUpdateBegin (_vec, INSERT_VALUES, SCATTER_REVERSE);
       CHKERRABORT (MPI_COMM_WORLD, ierr);
-      ierr = VecGhostUpdateEnd (_vec, MIN_VALUES, SCATTER_REVERSE);
+//       ierr = VecGhostUpdateEnd (_vec, MIN_VALUES, SCATTER_REVERSE);
+      ierr = VecGhostUpdateEnd (_vec, INSERT_VALUES, SCATTER_REVERSE);
       CHKERRABORT (MPI_COMM_WORLD, ierr);
 
       ierr = VecGhostUpdateBegin (_vec, INSERT_VALUES, SCATTER_FORWARD);

@@ -55,30 +55,27 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
   vector < double > phiP;
   vector < adept::adouble> gradPhi;
   vector < double > gradPhiHat;
-  //vector < adept::adouble> gradPhiPres;
 
   phi.reserve (maxSize);
   phiHat.reserve (maxSize);
-  //phiPres.reserve (maxSize);
 
   gradPhi.reserve (maxSize * dim);
   gradPhiHat.reserve (maxSize * dim);
-  //gradPhiPres.reserve (maxSize * dim);
 
-  vector <vector < adept::adouble> > vx (dim); //vx is coordX in assembly of ex30
+  vector <vector < adept::adouble> > vx (dim); 
   vector <vector < double> > vxHat (dim);
 
   vector< vector< adept::adouble > > solD (dim);     // local solution (displacement)
   vector< vector< adept::adouble > > solV (dim);     // local solution (velocity)
-  vector< adept::adouble > solP;     // local solution (velocity)
+  vector< adept::adouble > solP;     // local solution (pressure)
 
-  vector< vector< double > > solDOld (dim);     // local solution (displacement)
+  vector< vector< double > > solDOld (dim);     
   vector< vector< double > > solVOld (dim);
 
-  vector< double > rhs;    // local redidual vector
-  vector< vector< adept::adouble > > aRhsD (dim);    // local redidual vector
-  vector< vector< adept::adouble > > aRhsV (dim);    // local redidual vector
-  vector< adept::adouble > aRhsP;    // local redidual vector
+  vector< double > rhs;    
+  vector< vector< adept::adouble > > aRhsD (dim);    
+  vector< vector< adept::adouble > > aRhsV (dim);   
+  vector< adept::adouble > aRhsP;   
 
   std::vector <unsigned> sysDofsAll;
 
@@ -86,9 +83,8 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
   adept::adouble weight;
   double weightHat;
-  //adept::adouble weightPres;
 
-  //reading parameters for MPM body
+  //reading parameters for MPM solid
   double rhoMpm = ml_prob.parameters.get<Solid> ("SolidMPM").get_density();
   double EMpm = ml_prob.parameters.get<Solid> ("SolidMPM").get_young_module();
   double muMpm = ml_prob.parameters.get<Solid> ("SolidMPM").get_lame_shear_modulus();
@@ -96,7 +92,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
   double lambdaMpm = ml_prob.parameters.get<Solid> ("SolidMPM").get_lame_lambda();
   double KMmp = EMpm / (3.* (1. - 2. * nuMpm)); //bulk modulus
 
-  //reading parameters for fluid FEM domain
+  //reading parameters for FEM fluid
   double rhoFluid = ml_prob.parameters.get<Fluid> ("FluidFEM").get_density();
   double muFluid = ml_prob.parameters.get<Fluid> ("FluidFEM").get_viscosity();
 
@@ -107,7 +103,6 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
   //variable-name handling
   const char varname[10][5] = {"DX", "DY", "DZ", "VX", "VY", "VZ"};
-
 
   vector <unsigned> indexSolD (dim);
   vector <unsigned> indexSolV (dim);
@@ -139,18 +134,17 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
   myKK->zero();
   myRES->zero();
 
-  //BEGIN loop on elements (to initialize the "soft" stiffness matrix)
+  //BEGIN loop on fluid elements 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielt = msh->GetElementType (iel);
 
     double  MPMmaterial = (*mysolution->_Sol[indexSolMat]) (iel);
 
-    unsigned nDofsDV = msh->GetElementDofNumber (iel, solType);   // number of solution element dofs
-    unsigned nDofsP = msh->GetElementDofNumber (iel, solTypeP);   // number of solution element dofs
+    unsigned nDofsDV = msh->GetElementDofNumber (iel, solType);   
+    unsigned nDofsP = msh->GetElementDofNumber (iel, solTypeP);   
 
     unsigned nDofsAll = 2 * dim * nDofsDV + nDofsP;
-    // resize local arrays
     sysDofsAll.resize (nDofsAll);
 
     solidFlag.resize (nDofsDV);
@@ -259,7 +253,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
             wlaplace1V +=  gradPhi[i * dim + j] * (gradSolVg[k][j] + gradSolVg[j][k]);
             wlaplace1D +=  gradPhiHat[i * dim + j] * (gradSolDgHat[k][j] + gradSolDgHat[j][k]);
           }
-          wlaplace1D +=  10. * gradPhiHat[i * dim + k] * gradSolDgHat[k][k];
+          wlaplace1D +=  10. * gradPhiHat[i * dim + k] * gradSolDgHat[k][k]; //TODO this should be looked into
 //           if (MPMmaterial >= 2) {
 //             aRhsD[k][i] += - softStiffness * weightHat * scalingFactor;
 //           }
@@ -355,7 +349,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
     s.clear_dependents();
 
   }
-  //END building "soft" stiffness matrix
+  //END loop on fluid elements 
 
 
   //BEGIN loop on solid particles (used as Gauss points)
@@ -1221,7 +1215,8 @@ void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line &
       break;
     }
   }
-  sol->_Sol[solIndexNodeDistS]->closeWithMinValues();
+//   sol->_Sol[solIndexNodeDistS]->closeWithMinValues();
+sol->_Sol[solIndexNodeDistS]->close();
   //END
 
   //BEGIN loop on the fluid particles
@@ -1277,8 +1272,8 @@ void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line &
       break;
     }
   }
-  sol->_Sol[solIndexNodeDistF]->closeWithMinValues();
-
+//   sol->_Sol[solIndexNodeDistF]->closeWithMinValues();
+sol->_Sol[solIndexNodeDistF]->close();
   //END
 
   for (unsigned idof = msh->_dofOffset[solTypeNodeFlag][iproc]; idof < msh->_dofOffset[solTypeNodeFlag][iproc + 1]; idof++) {
@@ -1378,7 +1373,8 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
       break;
     }
   }
-  sol->_Sol[solIndexNodeDist]->closeWithMinValues();
+//   sol->_Sol[solIndexNodeDist]->closeWithMinValues();
+  sol->_Sol[solIndexNodeDist]->close();
   sol->_Sol[solIndexNodeFlag]->close();
   //END
 
