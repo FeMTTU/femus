@@ -305,7 +305,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
             aRhsP[i] += phiP[i] * (gradSolVg[k][k] + 1 * solP[i]) * weight;
           }
           else {//if (MPMmaterial == 0) {
-            aRhsP[i] += phiP[i] * gradSolVg[k][k] * weight;
+            aRhsP[i] += phiP[i] *  gradSolVg[k][k] * weight;
           }
 //           else {
 //           aRhsP[i] += phiP[i] * (gradSolVg[k][k] + 10000 * solP[i]) * weight;
