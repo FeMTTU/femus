@@ -67,7 +67,8 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("Mesh_2_xz.med");
 //    mesh_files.push_back("Mesh_2_yz.med");
 //    mesh_files.push_back("Mesh_3_xyz.med");
-   mesh_files.push_back("Mesh_dome.med");
+   mesh_files.push_back("dome_quad.med");
+   mesh_files.push_back("disk_quad.med");
    
 
 
@@ -91,7 +92,6 @@ int main(int argc, char** args) {
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
   ml_mesh.PrintInfo();
 
-  exit(1);
   
   // ======= Solution  ==================
   MultiLevelSolution mlSol(&ml_mesh);

@@ -156,13 +156,18 @@ Create SubMesh of Mesh over the wanted SubGeometry
    --> Hypothesis: Propagation of 1D Hypothesis
 
 In Mesh:
-   2D: Quadrangle Mapping
+--   2D: Quadrangle Mapping
    1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
+
+-- Convert each mesh to the order you need (linear/quadratic/biquadratic)
+  You have to do this operation BEFORE creating a CompoundMesh,
+  because the compound mesh does not have an underlying geometry to use 
    
-   Build CompoundMesh to merge the meshes
+-- Build CompoundMesh to merge the meshes
      --> Check the Boundary of the CompoundMesh!!! 
-     ---> You need to remove previous boundary elements that now are inside the new domain!
+     ---> You need to remove the boundary elements of the previous separate pieces that are now inside the new domain!
           To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
+          Unfortunately you don't see this operation as a new object in the Mesh menu
      --> Rename it to "Mesh" + something!!!
      
 - Then, Groups of Mesh elements 
