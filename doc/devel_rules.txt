@@ -306,7 +306,7 @@ So the idea seems to be NOT the following:
 - When you convert a mesh to quadratic/biquadratic, do it on a Mesh that is ATTACHED to a Geometry, because it is with the geometry that new nodes are added! 
   Otherwise nothing happens!
 
-- What is the difference between Regular Faces and Free Faces in the Mesh algorithms?
+- What is the difference between Regular Faces and Free Faces in the Mesh algorithms? For instance, the Disk only shows algorithms for Free faces...
 
 - Is it possible to merge items obtained by Explode command? If I have 5 edges exploding from a quadrangular face,
   where 2 of them form one of the actual 4 edges, can I merge them so that the face looks to have 4 items instead?

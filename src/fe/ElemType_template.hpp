@@ -41,6 +41,8 @@ namespace femus {
       
      ~elem_type_templ(){ }
 
+     const double get_dphidxi_ref(const unsigned idim, const unsigned qp, const unsigned dof);
+
      void fill_dphidxi_at_quadrature_points() ;     
      void fill_dphidxi_at_quadrature_points_vol_at_bdry() ;     
 
@@ -173,8 +175,6 @@ namespace femus {
 
          
        
-        std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof  
-                                                                                ///@todo unfortunately I cannot put this only once in the father, because it is not found...
         std::vector < std::vector <  std::vector < double > > > _dphidxi_vol_at_bdry_templ; //for every Volume Direction, for every Boundary Quadrature Point, for every Volume Dof  
 
 
@@ -240,13 +240,19 @@ namespace femus {
      
           ~elem_type_templ(){ }
 
-                           
+
+    const double get_dphidxi_ref(const unsigned idim, const unsigned qp, const unsigned dof)  {
+     
+        return _dphidxi_templ[idim][qp][dof];
+        
+    }
+    
+          
      void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
                    std::vector < std::vector <type_mov> > & JacJacT,
                    const unsigned space_dimension) const {
                               
-//     type_mov JacJacT[1][1];
-    JacJacT[0][0] = 0.; //1x1
+    JacJacT[0][0] = 0.;
     for (unsigned d = 0; d < space_dimension; d++) JacJacT[0][0] += Jac[0][d]*Jac[0][d];
     
    }
@@ -256,7 +262,7 @@ namespace femus {
                       std::vector < std::vector <type_mov> > & JacJacT_inv,
                       const unsigned space_dimension) const {
 
-    /*const type_mov*/ JacJacT_inv[0][0] = 1. / JacJacT[0][0];
+     JacJacT_inv[0][0] = 1. / JacJacT[0][0];
                            
     }
                                   
@@ -554,7 +560,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
        
        
    
-        std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof
+//         std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof
         std::vector < std::vector <  std::vector < double > > > _dphidxi_vol_at_bdry_templ;
 
         
@@ -626,11 +632,16 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
           ~elem_type_templ(){ }
           
           
-     void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
+    const double get_dphidxi_ref(const unsigned idim, const unsigned qp, const unsigned dof)  {
+     
+        return _dphidxi_templ[idim][qp][dof];
+        
+    }
+    
+    void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
                    std::vector < std::vector <type_mov> > & JacJacT,
                    const unsigned space_dimension) const {
 
-//     type_mov JacJacT[2/*dim*/][2/*dim*/] = {{0., 0.}, {0., 0.}};
     
     for (unsigned i = 0; i < 2/*dim*/; i++) std::fill( JacJacT[i].begin(), JacJacT[i].end(), 0.);
     
@@ -1018,7 +1029,7 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
                                
     }
     
-        std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof
+//         std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof
         std::vector < std::vector <  std::vector < double > > > _dphidxi_vol_at_bdry_templ;
 
 
@@ -1089,7 +1100,13 @@ fill_volume_shape_at_reference_boundary_quadrature_points_per_face(jface);
           ~elem_type_templ(){}
           
                            
-   void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
+    const double get_dphidxi_ref(const unsigned idim, const unsigned qp, const unsigned dof)  {
+     
+        return _dphidxi_templ[idim][qp][dof];
+        
+    }
+    
+    void jac_jacT(const std::vector < std::vector <type_mov> > & Jac,
                           std::vector < std::vector <type_mov> > & JacJacT,
                           const unsigned space_dimension) const {
                               

@@ -254,9 +254,10 @@ namespace femus
       std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta)
       std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace; //for each face, for each Gauss point on the face, for each shape function of the volume, for each reference direction (xi, eta, zeta), for each reference direction (xi, eta, zeta) again
 
-// // //         std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof  
-// // //                                                                                 ///@todo unfortunately I cannot put this only once in the father, because it is not found...
 // // //         std::vector < std::vector <  std::vector < double > > > _dphidxi_vol_at_bdry_templ;
+     std::vector < std::vector <  std::vector < double > > > _dphidxi_templ; //for every Direction, for every Quadrature Point, for every Dof  
+                                                                                ///@todo unfortunately I cannot put this only once in the templated father, because it is not found...
+                                                                                /// But, if I put it in this templated father, it works... Why?
         
   };
 

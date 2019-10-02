@@ -16,7 +16,11 @@ namespace femus
     class elem_type_templ_base {
           
       public:
-          
+
+     elem_type_templ_base(){};
+         
+     virtual const double get_dphidxi_ref(const unsigned idim, const unsigned qp, const unsigned dof) = 0;
+
      virtual void fill_dphidxi_at_quadrature_points() = 0;     
      virtual void fill_dphidxi_at_quadrature_points_vol_at_bdry() = 0;     
                                    
@@ -92,6 +96,7 @@ namespace femus
                                           const std::vector < std::vector <type_mov> > & JacJacT_inv,
                                           std::vector < std::vector <type_mov> > & Jac_inv,
                                           const unsigned space_dimension) const = 0;
+                                          
     
       };    
 
