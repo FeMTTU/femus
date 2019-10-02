@@ -67,9 +67,10 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("Mesh_2_xz.med");
 //    mesh_files.push_back("Mesh_2_yz.med");
 //    mesh_files.push_back("Mesh_3_xyz.med");
-   mesh_files.push_back("dome_tri.med");
+//    mesh_files.push_back("dome_tri.med");
    mesh_files.push_back("dome_quad.med");
-   mesh_files.push_back("disk_quad.med");
+//    mesh_files.push_back("disk_quad.med");
+   mesh_files.push_back("dome_quad_clean.med");
    
 
 

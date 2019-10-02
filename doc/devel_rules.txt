@@ -294,6 +294,11 @@ So the idea seems to be NOT the following:
 ###### SALOME - QUESTIONS ######
 ########################################   
 
+- Operations in the Mesh such as "Convert to/from quadratic", "Remove elements" and others
+  are not shown as stages in the Mesh menu in Object Browser
+
+- Intersection vs. Common: the first does it with Edges, the second does it with Volumes, basically...
+
 - To remove Extra Edges on a Face, you first have to create an auxiliary volume, and then do Repair-> Remove extra edges from that volume,
   then that face will be fixed!
 
