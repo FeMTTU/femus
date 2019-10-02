@@ -223,8 +223,8 @@ int main (int argc, char** args) {
 
   //return 1;
 
-  double L = 3.5e-05; //beam dimensions
-  double H = 0.55e-05;
+  double L = 50e-06; //beam dimensions
+  double H = 5e-06;
 
   double xc = 0.98e-04 + 0.5 * H;
   double yc = 0.;
@@ -269,7 +269,8 @@ int main (int argc, char** args) {
 
   if (fabs (H - H0) > 1.0e-10) {
 
-    double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers.
+    //double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers.
+    double factor = 1.; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers.  
     unsigned NL = getNumberOfLayers (0.5 * (H - H0) / DH, factor);
     std::cout << NL << std::endl;
 
@@ -344,7 +345,8 @@ int main (int argc, char** args) {
   double H1 = 4. * H; //TODO tune the factor 4
   if (fabs (H - H0) > 1.0e-10) {
 
-    double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
+//     double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
+    double factor = 1.; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
     unsigned NL = getNumberOfLayers (0.5 * (H1 - H0) / DH, factor, false);
     std::cout << NL << std::endl;
 
@@ -445,13 +447,17 @@ int main (int argc, char** args) {
 
     system.MGsolve();
 
+    mlSol.GetWriter()->Write ("./output1", "biquadratic", print_vars, time_step);
+    
     GridToParticlesProjection (ml_prob, *solidLine, *fluidLine);
 
     solidLine->GetLine (lineS[0]);
     PrintLine (DEFAULT_OUTPUTDIR, "solidLine", lineS, time_step);
+    PrintLine ("./output1", "solidLine", lineS, time_step);
 
     fluidLine->GetLine (lineF[0]);
     PrintLine (DEFAULT_OUTPUTDIR, "fluidLine", lineF, time_step);
+    PrintLine ("./output1", "fluidLine", lineF, time_step);
 
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
     
