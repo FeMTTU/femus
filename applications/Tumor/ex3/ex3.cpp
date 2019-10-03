@@ -41,16 +41,27 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
 double Keps = 1.0e-08;
 double V0;
 
+
+
+
 double InitalValueU3D (const std::vector < double >& x) {
-  double xc = 0.5;
-  double yc = 0.;
-  double zc = 0.;
-  double r = sqrt ( (x[0] - xc) * (x[0] - xc) + (x[1] - yc) * (x[1] - yc) + (x[2] - zc) * (x[2] - zc));
+  static int j = 0;
+  //std::cout<< "J value is: " << j << std::endl;
+  std::vector <double>  xc={0,1.2};     //xc = {0,0,0,0,0,0,0,0,0,0,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9};
+  std::vector <double>  yc={-0.9,-0.5};     //yc = {-0.9,-0.5,0.3,0.9,-0.9,-0.9,-0.9,-0.5,-0.5,-0.5,0,0,0,0,0,0,0.4,0.4,0.4,-0.9};
+  std::vector <double>  zc={0,0.9};     //zc = {0,0,0,0,0.4,-0.6,-1.2,0.4,-0.6,-1.2,-0.4,-0.4,-0.4,-1.2,-1.2,-1.2,-0.4,-0.4,-0.4,-0.4};
+  //original=(0.5,0,0), xcentered = (0.5,-0.3,-0.5), ycentered = (-0.3,0,-0.6), zcentered = (-0.3,-0.3,-0.6), badcentered = (0,0.7,0.6)
+  //double xc = 0;
+  //double yc = 0.7;
+  //double zc = 0.6;
+  //double r = sqrt ( (x[0] - xc) * (x[0] - xc) + (x[1] - yc) * (x[1] - yc) + (x[2] - zc) * (x[2] - zc));
+  double r = sqrt ( (x[0] - xc[j]) * (x[0] - xc[j]) + (x[1] - yc[j]) * (x[1] - yc[j]) + (x[2] - zc[j]) * (x[2] - zc[j]));
   double r2 = r * r;
   double R = 1.; //radius of the tumor
   double R2 = R * R;
   double R3 = R2 * R;
   double Vb;
+  j++;
   if (R == 1.) {
     Vb = 1.1990039070212866;
   }
@@ -64,9 +75,9 @@ double InitalValueU3D (const std::vector < double >& x) {
     std::cout << "wrong R, evaluate the integral \n $Vb = 4 \\pi \\int_0^{R} ( 1 - \\frac{R^2}{ R^2 - \\rho^2} \\rho^2 d\\rho$" << std::endl;
     exit (0);
   }
-
   if (r2 > R2) return 0.;
   return (V0 * M_PI * 4. / 3.* R3) / Vb * exp ( (1. - R2 / (R2 - r2)));
+  
 }
 
 double InitalValueD (const std::vector < double >& x) {
@@ -108,11 +119,14 @@ int main (int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
   // erase all the coarse mesh levels
   // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
-
-  for (unsigned simulation = 0; simulation < 1; simulation++) {
-
+ std::vector <double> doses ={0.0100000,0.01170000,0.0128074,0.01375,0.0163183,0.0207917,0.0264914,
+     0.0337537,0.0430067,0.05,0.2,0.3,0.43,0.47,0.57,0.68,0.83,0.91,1.1,1.6,2.3,2.8,3.6};
+    
+  //for (unsigned simulation = 0; simulation < doses.size() ; simulation++) {
+    for (unsigned simulation = 0; simulation < 2 ; simulation++) {
     //V0 = 0.05 * (simulation + 1) ;   
-    V0 = 0.5;
+    //V0 = doses[simulation];
+    V0 = 0.09;
     // define the multilevel solution and attach the mlMsh object to it
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
 
@@ -151,7 +165,7 @@ int main (int argc, char** args) {
 
     // time loop parameter
     system.AttachGetTimeIntervalFunction (GetTimeStep);
-    const unsigned int n_timesteps = 60;
+    const unsigned int n_timesteps = 2;
 
     system.SetMaxNumberOfNonLinearIterations (1);
     system.SetMaxNumberOfLinearIterations (1);
@@ -629,11 +643,11 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
 
   if ( (stop || last) && iproc == 0) {
     std::ofstream fout;
-    fout.open ("DoseResponseCurveNew.csv", std::ofstream::app);
+    fout.open ("DoseResponseCurve.csv", std::ofstream::app);
     fout << V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
     fout.close();
 
-    fout.open ("DoseResponseCurveNew.txt", std::ofstream::app);
+    fout.open ("DoseResponseCurve.txt", std::ofstream::app);
     fout << V0 << " " << volumeUTAll[0] / volumeAll << " " << volumeUTAll[1] / volumeAll << " " << volumeUTAll[2] / volumeAll << " " << std::endl;
     fout.close();
   }
