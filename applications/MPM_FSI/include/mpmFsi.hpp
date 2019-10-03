@@ -1231,7 +1231,8 @@ void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line &
       break;
     }
   }
-  sol->_Sol[solIndexNodeDistS]->closeWithMinValues();
+//   sol->_Sol[solIndexNodeDistS]->closeWithMinValues();
+  sol->_Sol[solIndexNodeDistS]->close();
   //END
 
   //BEGIN loop on the fluid particles
@@ -1287,7 +1288,8 @@ void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line &
       break;
     }
   }
-  sol->_Sol[solIndexNodeDistF]->closeWithMinValues();
+//   sol->_Sol[solIndexNodeDistF]->closeWithMinValues();
+sol->_Sol[solIndexNodeDistF]->close();
 
   //END
 
@@ -1388,7 +1390,8 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
       break;
     }
   }
-  sol->_Sol[solIndexNodeDist]->closeWithMinValues();
+//   sol->_Sol[solIndexNodeDist]->closeWithMinValues();
+sol->_Sol[solIndexNodeDist]->close();
   sol->_Sol[solIndexNodeFlag]->close();
   //END
 

@@ -483,7 +483,7 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
 
     system.MGsolve();
-    system2.MGsolve();
+//     system2.MGsolve();
 
     mlSol.GetWriter()->Write ("./output1", "biquadratic", print_vars, time_step);
     
