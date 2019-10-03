@@ -45,23 +45,22 @@ double V0;
 
 
 double InitalValueU3D (const std::vector < double >& x) {
-  static int j = 0;
-  //std::cout<< "J value is: " << j << std::endl;
-  std::vector <double>  xc={0,1.2};     //xc = {0,0,0,0,0,0,0,0,0,0,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9};
-  std::vector <double>  yc={-0.9,-0.5};     //yc = {-0.9,-0.5,0.3,0.9,-0.9,-0.9,-0.9,-0.5,-0.5,-0.5,0,0,0,0,0,0,0.4,0.4,0.4,-0.9};
-  std::vector <double>  zc={0,0.9};     //zc = {0,0,0,0,0.4,-0.6,-1.2,0.4,-0.6,-1.2,-0.4,-0.4,-0.4,-1.2,-1.2,-1.2,-0.4,-0.4,-0.4,-0.4};
+
+  //std::cout<< "J value is: " << j << std::endl;  
+  //std::vector <double>  xc={0,1.2};     //xc = {0,0,0,0,0,0,0,0,0,0,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9};
+  //std::vector <double>  yc={-0.9,-0.5};     //yc = {-0.9,-0.5,0.3,0.9,-0.9,-0.9,-0.9,-0.5,-0.5,-0.5,0,0,0,0,0,0,0.4,0.4,0.4,-0.9};
+  //std::vector <double>  zc={0,0.9};     //zc = {0,0,0,0,0.4,-0.6,-1.2,0.4,-0.6,-1.2,-0.4,-0.4,-0.4,-1.2,-1.2,-1.2,-0.4,-0.4,-0.4,-0.4};
   //original=(0.5,0,0), xcentered = (0.5,-0.3,-0.5), ycentered = (-0.3,0,-0.6), zcentered = (-0.3,-0.3,-0.6), badcentered = (0,0.7,0.6)
-  //double xc = 0;
-  //double yc = 0.7;
-  //double zc = 0.6;
-  //double r = sqrt ( (x[0] - xc) * (x[0] - xc) + (x[1] - yc) * (x[1] - yc) + (x[2] - zc) * (x[2] - zc));
-  double r = sqrt ( (x[0] - xc[j]) * (x[0] - xc[j]) + (x[1] - yc[j]) * (x[1] - yc[j]) + (x[2] - zc[j]) * (x[2] - zc[j]));
+  double xc = 0.5;
+  double yc = 0.;
+  double zc = 0.;
+  double r = sqrt ( (x[0] - xc) * (x[0] - xc) + (x[1] - yc) * (x[1] - yc) + (x[2] - zc) * (x[2] - zc));
+  //double r = sqrt ( (x[0] - xc[j]) * (x[0] - xc[j]) + (x[1] - yc[j]) * (x[1] - yc[j]) + (x[2] - zc[j]) * (x[2] - zc[j]));
   double r2 = r * r;
   double R = 1.; //radius of the tumor
   double R2 = R * R;
   double R3 = R2 * R;
   double Vb;
-  j++;
   if (R == 1.) {
     Vb = 1.1990039070212866;
   }
@@ -126,7 +125,7 @@ int main (int argc, char** args) {
     for (unsigned simulation = 0; simulation < 2 ; simulation++) {
     //V0 = 0.05 * (simulation + 1) ;   
     //V0 = doses[simulation];
-    V0 = 0.09;
+    V0 = 1.5;
     // define the multilevel solution and attach the mlMsh object to it
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
 
@@ -165,7 +164,7 @@ int main (int argc, char** args) {
 
     // time loop parameter
     system.AttachGetTimeIntervalFunction (GetTimeStep);
-    const unsigned int n_timesteps = 2;
+    const unsigned int n_timesteps = 60;
 
     system.SetMaxNumberOfNonLinearIterations (1);
     system.SetMaxNumberOfLinearIterations (1);
