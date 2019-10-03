@@ -71,6 +71,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
   vector< vector< adept::adouble > > solD (dim);     // local solution (displacement)
   vector< vector< adept::adouble > > solV (dim);     // local solution (velocity)
   vector< adept::adouble > solP;     // local solution (velocity)
+  vector< double > solPOld; 
 
   vector< vector< double > > solDOld (dim);     // local solution (displacement)
   vector< vector< double > > solVOld (dim);
@@ -168,6 +169,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
       vxHat[k].resize (nDofsDV);
     }
     solP.resize (nDofsP);
+    solPOld.resize (nDofsP);
     aRhsP.assign (nDofsP, 0.);
 
     bool test = false;
@@ -192,6 +194,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofsP; i++) {
       unsigned idof = msh->GetSolutionDof (i, iel, solTypeP);
       solP[i] = (*mysolution->_Sol[indexSolP]) (idof);
+      solPOld[i] = (*mysolution->_SolOld[indexSolP]) (idof);
       sysDofsAll[i + (2 * dim) * nDofsDV] = myLinEqSolver->GetSystemDof (indexSolP, indexPdeP, i, iel);
     }
 
@@ -241,8 +244,10 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
       double *phiP = msh->_finiteElement[ielt][solTypeP]->GetPhi (ig);
       adept::adouble solPg = 0.;
+      adept::adouble solPgOld = 0.;
       for (unsigned i = 0; i < nDofsP; i++) {
         solPg += phiP[i] * solP[i];
+        solPgOld += phiP[i] * solPOld[i];
       }
 
 
@@ -268,7 +273,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
           if (!solidFlag[i]) { //kinematic equation in the fluid nodes
             //aRhsD[k][i] += phiHat[i] * (solV[k][i]/100 - (solD[k][i] - solDOld[k][i]) / dt) * weightHat;
 
-            double stiffness = (MPMmaterial == 0) ? 1. : 1.e5;
+            double stiffness = (MPMmaterial == 0) ? 1. : 1000;
             aRhsD[k][i] += - stiffness * wlaplace1D * weightHat;
           }
           else { //kinematic equation in the solid nodes
@@ -302,7 +307,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofsP; i++) {
         for (unsigned  k = 0; k < dim; k++) {
           if (MPMmaterial > 0) { // || test) {  //all cells that are not completely MPM solid
-            aRhsP[i] += phiP[i] * (gradSolVg[k][k] + 1 * solP[i]) * weight;
+            aRhsP[i] += phiP[i] * (gradSolVg[k][k] + 0.001 * (solPg-solPgOld)/dt) * weight;
           }
           else {//if (MPMmaterial == 0) {
             aRhsP[i] += phiP[i] *  gradSolVg[k][k] * weight;
@@ -773,10 +778,10 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
               advection  +=  phi[i] * (solVp[j] - (solDp[j] - solDpOld[j]) / dt) * gradSolVp[k][j];
             }
             if (!solidFlag[i]) { // This is for diagonal dominance
-              aRhsV[k][i] += (- (solVp[k] - solVpOld[k]) / dt - advection - muFluid / rhoFluid * wlaplace + gradPhi[i * dim + k] * /*(2./3.) * divV*/ solPp / rhoFluid) * mass;
+              aRhsV[k][i] += (- (solVp[k] - solVpOld[k]) / dt - advection + muFluid / rhoFluid * ( - wlaplace + gradPhi[i * dim + k] * (2./3.) * divV) + gradPhi[i * dim + k] * solPp / rhoFluid) * mass;
             }
             else { // This is for the coupling with the solid
-              aRhsD[k][i] += (- (solVp[k] - solVpOld[k]) / dt - advection - muFluid / rhoFluid * wlaplace + gradPhi[i * dim + k] * /*(2./3.) * divV*/ solPp / rhoFluid) * mass;
+              aRhsD[k][i] += (- (solVp[k] - solVpOld[k]) / dt - advection + muFluid / rhoFluid * ( - wlaplace + gradPhi[i * dim + k] * (2./3.) * divV) + gradPhi[i * dim + k] * solPp / rhoFluid) * mass;
             }
           }
         }

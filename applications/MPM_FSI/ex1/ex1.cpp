@@ -123,7 +123,7 @@ int main (int argc, char** args) {
   if (dim > 1) mlSol.AddSolution ("VY", LAGRANGE, SECOND, 2);
   if (dim > 2) mlSol.AddSolution ("VZ", LAGRANGE, SECOND, 2);
 
-  mlSol.AddSolution ("P", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
+  mlSol.AddSolution ("P", DISCONTINUOUS_POLYNOMIAL, ZERO, 2);
 
   mlSol.AddSolution ("M", LAGRANGE, SECOND, 2);
   mlSol.AddSolution ("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false); 
