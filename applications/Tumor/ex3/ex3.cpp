@@ -43,13 +43,15 @@ double V0;
 
 
 
-
+unsigned jInitialPosition = 0;
 double InitalValueU3D (const std::vector < double >& x) {
-
-  //std::cout<< "J value is: " << j << std::endl;  
+    
+  unsigned j = jInitialPosition;
+  //std::cout<< "J value is: " << j << std::endl;
   //std::vector <double>  xc={0,1.2};     //xc = {0,0,0,0,0,0,0,0,0,0,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9};
   //std::vector <double>  yc={-0.9,-0.5};     //yc = {-0.9,-0.5,0.3,0.9,-0.9,-0.9,-0.9,-0.5,-0.5,-0.5,0,0,0,0,0,0,0.4,0.4,0.4,-0.9};
   //std::vector <double>  zc={0,0.9};     //zc = {0,0,0,0,0.4,-0.6,-1.2,0.4,-0.6,-1.2,-0.4,-0.4,-0.4,-1.2,-1.2,-1.2,-0.4,-0.4,-0.4,-0.4};
+
   //original=(0.5,0,0), xcentered = (0.5,-0.3,-0.5), ycentered = (-0.3,0,-0.6), zcentered = (-0.3,-0.3,-0.6), badcentered = (0,0.7,0.6)
   double xc = 0.5;
   double yc = 0.;
@@ -61,6 +63,7 @@ double InitalValueU3D (const std::vector < double >& x) {
   double R2 = R * R;
   double R3 = R2 * R;
   double Vb;
+
   if (R == 1.) {
     Vb = 1.1990039070212866;
   }
@@ -123,6 +126,7 @@ int main (int argc, char** args) {
     
   //for (unsigned simulation = 0; simulation < doses.size() ; simulation++) {
     for (unsigned simulation = 0; simulation < 2 ; simulation++) {
+    jInitialPosition = simulation; 
     //V0 = 0.05 * (simulation + 1) ;   
     //V0 = doses[simulation];
     V0 = 1.5;
@@ -810,7 +814,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   fin.open (filename.str().c_str());
   //fAD.open (fileAD.str().c_str());
   if (!fin.is_open()) {
-    std::cout << " The output file " << "./input/NewCorrectedTensorSPD.txt " << " cannot be opened.\n" << std::endl;
+    std::cout << " The input file " << "./input/NewCorrectedTensorSPD.txt " << " cannot be opened.\n" << std::endl;
     abort();
   }
 

@@ -79,12 +79,12 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -131,7 +131,7 @@ int main(int argc, char** args) {
 
   // initilaize and solve the system
   system.init();
-  system.SetOuterSolver(PREONLY);
+  //system.SetOuterSolver(PREONLY);
   system.MGsolve();
 
   // print solutions
@@ -360,7 +360,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         solP_gss += phiP[i] * solP[i];
       }
 
-      double nu = .005;
+      double nu = 1;
 
       // *** phiV_i loop ***
       for (unsigned i = 0; i < nDofsV; i++) {
