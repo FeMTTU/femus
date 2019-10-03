@@ -187,6 +187,42 @@ int main (int argc, char** args) {
   system.SetPreconditionerFineGrids (ILU_PRECOND);
 
   system.SetTolerances (1.e-10, 1.e-15, 1.e+50, 40, 40);
+  
+  
+  
+    // ******* Add MPM system to the MultiLevel problem *******
+    NonLinearImplicitSystem& system2 = ml_prob.add_system < NonLinearImplicitSystem > ("DISP");
+    system2.AddSolutionToSystemPDE("DX");
+    if(dim > 1)system2.AddSolutionToSystemPDE("DY");
+    if(dim > 2) system2.AddSolutionToSystemPDE("DZ");
+      
+    // ******* System MPM Assembly *******
+//     system2.SetAssembleFunction(AssembleSolidDisp);
+    //system2.SetAssembleFunction(AssembleFEM);
+    // ******* set MG-Solver *******
+    system2.SetMgType(V_CYCLE);
+      
+      
+    system2.SetAbsoluteLinearConvergenceTolerance(1.0e-10);
+    system2.SetMaxNumberOfLinearIterations(1);
+    system2.SetNonLinearConvergenceTolerance(1.e-9);
+    system2.SetMaxNumberOfNonLinearIterations(1);
+      
+    system2.SetNumberPreSmoothingStep(1);
+    system2.SetNumberPostSmoothingStep(1);
+      
+    // ******* Set Preconditioner *******
+    system2.SetLinearEquationSolverType(FEMuS_DEFAULT);
+      
+    system2.init();
+      
+    // ******* Set Smoother *******
+    system2.SetSolverFineGrids(GMRES);
+      
+    system2.SetPreconditionerFineGrids(ILU_PRECOND);
+      
+    system2.SetTolerances(1.e-10, 1.e-15, 1.e+50, 2, 2);
+  
 
 //   unsigned rows = 2*60;
 //   unsigned columns = 2*120;
@@ -270,7 +306,8 @@ int main (int argc, char** args) {
 
   if (fabs (H - H0) > 1.0e-10) {
 
-    double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers.
+    //double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers.
+    double factor = 1.; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers.  
     unsigned NL = getNumberOfLayers (0.5 * (H - H0) / DH, factor);
     std::cout << NL << std::endl;
 
@@ -345,7 +382,8 @@ int main (int argc, char** args) {
   double H1 = 4. * H; //TODO tune the factor 4
   if (fabs (H - H0) > 1.0e-10) {
 
-    double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
+//     double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
+    double factor = 1.; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
     unsigned NL = getNumberOfLayers (0.5 * (H1 - H0) / DH, factor, false);
     std::cout << NL << std::endl;
 
@@ -445,14 +483,19 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
 
     system.MGsolve();
+    system2.MGsolve();
 
+    mlSol.GetWriter()->Write ("./output1", "biquadratic", print_vars, time_step);
+    
     GridToParticlesProjection (ml_prob, *solidLine, *fluidLine);
 
     solidLine->GetLine (lineS[0]);
     PrintLine (DEFAULT_OUTPUTDIR, "solidLine", lineS, time_step);
+    PrintLine ("./output1", "solidLine", lineS, time_step);
 
     fluidLine->GetLine (lineF[0]);
     PrintLine (DEFAULT_OUTPUTDIR, "fluidLine", lineF, time_step);
+    PrintLine ("./output1", "fluidLine", lineF, time_step);
 
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
     
