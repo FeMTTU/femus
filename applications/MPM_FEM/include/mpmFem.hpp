@@ -221,8 +221,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   
   vector < double > phi;
   vector < double > phi_hat;
+  vector < double > phi_tilde;
   vector < adept::adouble> gradphi;
   vector < double > gradphi_hat;
+  vector < double > gradphi_tilde;
   
   phi.reserve(max_size);
   phi_hat.reserve(max_size);
@@ -232,6 +234,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   
   vector <vector < adept::adouble> > vx(dim); //vx is coordX in assembly of ex30
   vector <vector < double> > vx_hat(dim);
+  vector <vector < double> > vx_tilde(dim);
   
   vector< vector< adept::adouble > > SolDd(dim);      // local solution (displacement)
   vector< vector< double > > SolDdOld(dim);      // local solution (displacement)
@@ -249,6 +252,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   
   adept::adouble weight;
   double weight_hat = 0.;
+  double weight_tilde = 0.;
   
   //reading parameters for MPM body
   double density_MPM = ml_prob.parameters.get<Solid> ("SolidMPM").get_density();
@@ -328,6 +332,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       SolDdOld[k].resize(nDofsD);
       vx[k].resize(nDofsD);
       vx_hat[k].resize(nDofsD);
+      vx_tilde[k].resize(nDofsD);
       if( material == 4 ) {
         SolVdOld[k].resize(nDofsD);
         SolAdOld[k].resize(nDofsD);
@@ -353,7 +358,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         SolDdOld[k][i] = (*mysolution->_SolOld[indexSolD[k]])(idof);      // global extraction and local storage for the solution
         sysDof[i + k * nDofsD] = myLinEqSolver->GetSystemDof(indexSolD[k], indexPdeD[k], i, iel);    // global to global mapping between solution node and pdeSys dof
         vx_hat[k][i] = (*mymsh->_topology->_Sol[k])(idofX); 
-        vx[k][i] = vx_hat[k][i] + SolDd[k][i]; //TODO this has to be moved after the s.new_recording();
+        vx_tilde[k][i] = vx_hat[k][i] + SolDdOld[k][i]; 
         if( material == 4 ) {
           SolVdOld[k][i] = (*mysolution->_Sol[indexSolV[k]])(idof);
           SolAdOld[k][i] = (*mysolution->_Sol[indexSolA[k]])(idof);
@@ -364,18 +369,28 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
     // start a new recording of all the operations involving adept::adouble variables
     if(assembleMatrix) s.new_recording();
     
+    for(unsigned i = 0; i < nDofsD; i++) {
+      for(unsigned  k = 0; k < dim; k++) {
+        vx[k][i] = vx_hat[k][i] + SolDd[k][i]; 
+      }
+    }
+    
     // *** Gauss point loop ***
     for(unsigned ig = 0; ig < mymsh->_finiteElement[ielt][solType]->GetGaussPointNumber(); ig++) {
       
       
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, ig, weight_hat, phi_hat, gradphi_hat);
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_tilde, ig, weight_tilde, phi_tilde, gradphi_tilde);
       
       vector < double > Xg(dim, 0);
       vector < vector < adept::adouble > > GradSolDgssHat(dim);
+      vector < vector < adept::adouble > > GradSolDgssTilde(dim);
       
       for(unsigned  k = 0; k < dim; k++) {
         GradSolDgssHat[k].resize(dim);
         std::fill(GradSolDgssHat[k].begin(), GradSolDgssHat[k].end(), 0);
+        GradSolDgssTilde[k].resize(dim);
+        std::fill(GradSolDgssTilde[k].begin(), GradSolDgssTilde[k].end(), 0);
       }
       
       for(unsigned i = 0; i < nDofsD; i++) {
@@ -383,6 +398,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           Xg[j] += phi[i] * vx_hat[j][i];
           for(unsigned  k = 0; k < dim; k++) {
             GradSolDgssHat[k][j] += gradphi_hat[i * dim + j] * SolDd[k][i];
+            GradSolDgssTilde[k][j] += gradphi_tilde[i * dim + j] * SolDd[k][i];
           }
         }
       }
@@ -399,14 +415,14 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         for(unsigned i = 0; i < nDofsD; i++) {
           vector < adept::adouble > softStiffness(dim, 0.);
           
-          for(unsigned j = 0; j < dim; j++) { //TODO swap these 2 for loops
-            for(unsigned  k = 0; k < dim; k++) { //TODO
-              softStiffness[k]   +=  mu * gradphi_hat[i * dim + j] * (GradSolDgssHat[k][j] + GradSolDgssHat[j][k]); //TODO this should use gradphi in the reference, so vx + SolDdOld
+          for(unsigned k = 0; k < dim; k++) { 
+            for(unsigned  j = 0; j < dim; j++) { 
+              softStiffness[k]   +=  mu * gradphi_tilde[i * dim + j] * (GradSolDgssTilde[k][j] + GradSolDgssTilde[j][k]);
             }
           }
           for(unsigned  k = 0; k < dim; k++) {
             if(MPMmaterial >= 2){
-              aRhs[k][i] += - softStiffness[k] * weight_hat * scalingFactor;
+              aRhs[k][i] += - softStiffness[k] * weight_tilde * scalingFactor;
             }
             else if( !solidFlag[i] ){
               aRhs[k][i] += phi_hat[i] * SolDd[k][i] * weight_hat;
