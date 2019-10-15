@@ -15,6 +15,7 @@ Line* fluidLine;
 
 void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line & fluidLine);
 void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line & fluidLine);
+void GetPressureNeighbor (MultiLevelSolution &mlSol, Line & solidLine, Line & fluidLine);
 
 void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
@@ -172,7 +173,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
     solPOld.resize (nDofsP);
     aRhsP.assign (nDofsP, 0.);
 
-   
+
     unsigned counter = 0;
     for (unsigned i = 0; i < nDofsDV; i++) {
       unsigned idof = msh->GetSolutionDof (i, iel, solType);
@@ -191,8 +192,8 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
         sysDofsAll[i + (k + dim) * nDofsDV] = myLinEqSolver->GetSystemDof (indexSolV[k], indexPdeV[k], i, iel);
       }
     }
-    
-     bool test = (counter >= nDofsDV-1) ? true : false;
+
+    bool test = (counter >= nDofsDV - 1) ? true : false;
 
     for (unsigned i = 0; i < nDofsP; i++) {
       unsigned idof = msh->GetSolutionDof (i, iel, solTypeP);
@@ -310,15 +311,15 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofsP; i++) {
         for (unsigned  k = 0; k < dim; k++) {
           if (MPMmaterial == nDofsDV || test) {  //all cells that are completely MPM solid
-            aRhsP[i] += phiP[i] * (solPg ) * weight;
+            aRhsP[i] += phiP[i] * (solPg) * weight;
           }
           else if (MPMmaterial == 0) {
             aRhsP[i] += phiP[i] *  gradSolVg[k][k] * weight;
           }
-          else {
-            aRhsP[i] += phiP[i] *  (gradSolVg[k][k] + solPg * 0.01) * weight;
-          }
-          
+//           else {
+//             aRhsP[i] += phiP[i] * (gradSolVg[k][k] + solPg * 0.01) * weight;
+//           }
+
 //           else {
 //           aRhsP[i] += phiP[i] * (gradSolVg[k][k] + 10000 * solP[i]) * weight;
 //           }
@@ -640,19 +641,19 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
         myKK->add_matrix_blocked (Jac, sysDofsAllD, sysDofsAllD);
         s.clear_independents();
         s.clear_dependents();
-        
+
         //BEGIN PRESSURE BLOCK
-        
+
         rhs.resize (nDofsP);
         for (unsigned i = 0; i < nDofsP; i++) {
           rhs[i] = -aRhsP[i].value();
         }
         myRES->add_vector_blocked (rhs, sysDofsP);
-    
+
         s.dependent (&aRhsP[0], nDofsP);
         s.independent (&solP[0], nDofsP);
-        
-        Jac.resize ( nDofsP * nDofsP);
+
+        Jac.resize (nDofsP * nDofsP);
 
         s.jacobian (&Jac[0], true);
 
@@ -708,15 +709,19 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
   for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
     //element of particle iMarker
     unsigned iel = particlesFluid[iMarker]->GetMarkerElement();
+    
+    short unsigned ielt;
+    unsigned nDofsDV;
+    unsigned nDofsP;
+    unsigned nDofsAll;
+    
+    unsigned counter = 0;
+    bool test;
+    
     if (iel != UINT_MAX) {
 
       if ( (*mysolution->_Sol[indexSolMat]) (iel) > 0) {
-
-        short unsigned ielt;
-        unsigned nDofsDV;
-        unsigned nDofsP;
-        unsigned nDofsAll;
-
+     
         //update element related quantities only if we are in a different element
         if (iel != ielOld) {
 
@@ -741,11 +746,13 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
           solP.resize (nDofsP);
           aRhsP.assign (nDofsP, 0.);
 
-
+          
+          counter = 0;
           for (unsigned i = 0; i < nDofsDV; i++) {
             unsigned idof = msh->GetSolutionDof (i, iel, solType);
 
             solidFlag[i] = ( (*mysolution->_Sol[indexSolM]) (idof) > 0.5) ? true : false;
+            if(solidFlag[i]) counter++;
 
             for (unsigned  k = 0; k < dim; k++) {
               solD[k][i] = (*mysolution->_Sol[indexSolD[k]]) (idof);
@@ -757,6 +764,8 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
               sysDofsAll[i + k * nDofsDV] = myLinEqSolver->GetSystemDof (indexSolD[k], indexPdeD[k], i, iel);
               sysDofsAll[i + (k + dim) * nDofsDV] = myLinEqSolver->GetSystemDof (indexSolV[k], indexPdeV[k], i, iel);
             }
+            
+            test = (counter >= nDofsDV - 1) ? true : false;
           }
 
           for (unsigned i = 0; i < nDofsP; i++) {
@@ -839,9 +848,10 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
           }
         }
 
-
-        for (unsigned i = 0; i < nDofsP; i++) {
-          //aRhsP[i] += phiP[i] * divV * mass / rhoFluid;
+        if(!test){
+          for (unsigned i = 0; i < nDofsP; i++) {
+            aRhsP[i] += phiP[i] * divV * mass / rhoFluid;
+          }
         }
 
 
@@ -1516,9 +1526,49 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
 //   }
 //   sol->_Sol[solIndexNodeFlag]->close();
 
+  GetPressureNeighbor(mlSol, solidLine, fluidLine);
+  
 }
 
 
 
+void GetPressureNeighbor (MultiLevelSolution &mlSol, Line & solidLine, Line & fluidLine) {
 
+  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  Solution* sol  = mlSol.GetSolutionLevel (level);
+
+  unsigned solIndexPNs = sol->GetIndex ("PNs");
+  unsigned solType = sol->GetSolutionType (solIndexPNs);
+
+  unsigned solIndexPNe = sol->GetIndex ("PNe");
+  unsigned indexSolMat = sol->GetIndex ("Mat");
+  unsigned solTypeMat = sol->GetSolutionType (indexSolMat);
+
+  (*sol->_Sol[solIndexPNs]) = -1.;
+  (*sol->_Sol[solIndexPNe]) = -1.;
+
+  const unsigned  dim = msh->GetDimension();
+  unsigned    iproc = msh->processor_id();
+
+
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    short unsigned ielt = msh->GetElementType (iel);
+
+    double  MPMmaterial = (*sol->_Sol[indexSolMat]) (iel);
+
+    if (MPMmaterial == 0) {
+      unsigned nDofs = msh->GetElementDofNumber (iel, solType);   // number of solution element dofs
+
+      for (unsigned i = 0; i < nDofs; i++) {
+        unsigned idof = msh->GetSolutionDof (i, iel, solType);
+
+        sol->_Sol[solIndexPNs]->set (idof, iel);
+      }
+    }
+  }
+  sol->_Sol[solIndexPNs]->close();
+
+}
 

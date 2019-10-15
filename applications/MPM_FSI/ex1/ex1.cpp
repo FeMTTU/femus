@@ -129,6 +129,9 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false); 
   mlSol.AddSolution ("NodeFlag", LAGRANGE, SECOND, 0, false); //TODO see who this is
   mlSol.AddSolution ("NodeDist", LAGRANGE, SECOND, 0, false); //TODO see who this is
+  
+  mlSol.AddSolution ("PNs", LAGRANGE, SECOND, 0, false); //TODO see who this is
+  mlSol.AddSolution ("PNe", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
   //mlSol.AddSolution ("NodeDistS", LAGRANGE, SECOND, 2);
 
   mlSol.Initialize ("All");
