@@ -325,7 +325,6 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 //           }
         }
       }
-
     } // end gauss point loop
 
 
@@ -709,19 +708,19 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
   for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
     //element of particle iMarker
     unsigned iel = particlesFluid[iMarker]->GetMarkerElement();
-    
+
     short unsigned ielt;
     unsigned nDofsDV;
     unsigned nDofsP;
     unsigned nDofsAll;
-    
+
     unsigned counter = 0;
     bool test;
-    
+
     if (iel != UINT_MAX) {
 
       if ( (*mysolution->_Sol[indexSolMat]) (iel) > 0) {
-     
+
         //update element related quantities only if we are in a different element
         if (iel != ielOld) {
 
@@ -746,13 +745,13 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
           solP.resize (nDofsP);
           aRhsP.assign (nDofsP, 0.);
 
-          
+
           counter = 0;
           for (unsigned i = 0; i < nDofsDV; i++) {
             unsigned idof = msh->GetSolutionDof (i, iel, solType);
 
             solidFlag[i] = ( (*mysolution->_Sol[indexSolM]) (idof) > 0.5) ? true : false;
-            if(solidFlag[i]) counter++;
+            if (solidFlag[i]) counter++;
 
             for (unsigned  k = 0; k < dim; k++) {
               solD[k][i] = (*mysolution->_Sol[indexSolD[k]]) (idof);
@@ -764,7 +763,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
               sysDofsAll[i + k * nDofsDV] = myLinEqSolver->GetSystemDof (indexSolD[k], indexPdeD[k], i, iel);
               sysDofsAll[i + (k + dim) * nDofsDV] = myLinEqSolver->GetSystemDof (indexSolV[k], indexPdeV[k], i, iel);
             }
-            
+
             test = (counter >= nDofsDV - 1) ? true : false;
           }
 
@@ -848,10 +847,57 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
           }
         }
 
-        if(!test){
+        if (!test) {
           for (unsigned i = 0; i < nDofsP; i++) {
             aRhsP[i] += phiP[i] * divV * mass / rhoFluid;
           }
+
+          unsigned icase;
+          std::vector < double > xi1 (dim);
+
+          if (xi[0] <= 0) {
+            if (xi[1] <= 0) {
+              icase = 0;
+              xi1[0] = 2.* (xi[0] + 0.5);
+              xi1[1] = 2.* (xi[1] + 0.5);
+            }
+            else {
+              icase = 3;
+              xi1[0] = 2.* (xi[0] + 0.5);
+              xi1[1] = 2.* (xi[1] - 0.5);
+            }
+          }
+          else {
+            if (xi[1] <= 0) {
+              icase = 1;
+              xi1[0] = 2.* (xi[0] - 0.5);
+              xi1[1] = 2.* (xi[1] + 0.5);
+            }
+            else {
+              icase = 2;
+              xi1[0] = 2.* (xi[0] - 0.5);
+              xi1[1] = 2.* (xi[1] - 0.5);
+            }
+          }
+          unsigned imap[4][4] = {
+            {0, 4, 8, 7},
+            {4, 1, 5, 8},
+            {8, 5, 2, 6},
+            {7, 8, 6, 3}
+          };
+          std::vector < std::vector < adept::adouble > > vx1 (dim);
+          std::vector < std::vector < adept::adouble > > solV1 (dim);
+          for (unsigned k = 0; k < dim; k++) {
+            vx1[k].resize (4);
+            solV1[k].resize (4);
+            for (unsigned j = 0; j < 4; j++) {
+              vx1[k][j] = vx[k][imap[icase][j]];
+              solV1[k][j] = solV[k][imap[icase][j]];
+            }
+          }
+          
+          msh->_finiteElement[ielt][0]->Jacobian (vx1, xi1, weight, phi, gradPhi);
+
         }
 
 
@@ -1526,8 +1572,8 @@ void GetParticlesToNodeFlag1 (MultiLevelSolution &mlSol, Line & solidLine, Line 
 //   }
 //   sol->_Sol[solIndexNodeFlag]->close();
 
-  GetPressureNeighbor(mlSol, solidLine, fluidLine);
-  
+  GetPressureNeighbor (mlSol, solidLine, fluidLine);
+
 }
 
 
