@@ -157,7 +157,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -172,9 +172,11 @@ int main(int argc, char** args) {
   ml_sol.AddSolution("mu", LAGRANGE, FIRST);  
   ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  //MU
   const unsigned int fake_time_dep_flag = 2;
   const std::string act_set_flag_name = "act_flag";
   ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  //MU
 
   
   // ======= Problem  ==================
@@ -193,7 +195,8 @@ int main(int argc, char** args) {
   ml_sol.Initialize("mu",          Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);   //MU
+
 
   // ======= Solution: Boundary Conditions ==================
   ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
@@ -205,7 +208,7 @@ int main(int argc, char** args) {
   // ======= System ========================
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("BoundaryControl");
   
-  system.SetActiveSetFlagName(act_set_flag_name);
+  system.SetActiveSetFlagName(act_set_flag_name);    //MU
 //   system.SetMaxNumberOfNonLinearIterations(50);
 
   system.AddSolutionToSystemPDE("state");  
@@ -374,7 +377,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   phi_xx_bdry_placeholder.reserve(max_size * dim2);
  //*************************************************** 
 
-  //************** act flag **************************** 
+  //MU
+  //************** act flag ****************************   
   unsigned int solIndex_act_flag; 
   unsigned int solFEType_act_flag;
   store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag, solFEType_act_flag);
@@ -387,6 +391,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   const int ineq_flag = INEQ_FLAG;
   const double c_compl = C_COMPL;
   //***************************************************  
+  //MU
   
   
 //***************************************************
@@ -805,7 +810,7 @@ if ( i_vol == j_vol )  {
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)  - laplace_rhs_du_adj_i ); 
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i) ]  += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs[pos_ctrl][i] - 0.)  );
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i) ]   += - weight * (-1.) * (laplace_rhs_dadj_u_i);
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mu,i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs[pos_mu][i] - 0.)  );
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mu,i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs[pos_mu][i] - 0.)  );  //MU
 //============  Volume Residuals ==================	    
 	      
 	      
@@ -847,7 +852,7 @@ if ( i_vol == j_vol )  {
 	      
 	      //============= delta_mu row ===============================
 	        if ( i==j )   
-		  Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mu, pos_mu, i, j) ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));  
+		  Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mu, pos_mu, i, j) ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    //MU
           
 	         } // end phi_j loop
            } // endif assemble_matrix
@@ -879,32 +884,20 @@ if ( i_vol == j_vol )  {
   } //end element loop for each process
   
 
-  
-    // ***********************************
-unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
-  unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
+  //MU
+add_one_times_mu_res_ctrl_bdry(iproc,
+                               ineq_flag,
+                               "control",
+                               "mu",
+                               pos_mu,
+                               SolIndex,
+                               sol,
+                               mlPdeSys,
+                               pdeSys,
+                               RES);
 
-  unsigned int ctrl_size_iproc = pdeSys->KKoffset[ctrl_index + 1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
-  unsigned int mu_size_iproc = (*sol->_Sol[ SolIndex[pos_mu] ]).last_local_index() - (*sol->_Sol[ SolIndex[pos_mu] ]).first_local_index(); // pdeSys->KKoffset[mu_index + 1][iproc] - pdeSys->KKoffset[mu_index][iproc];
-
-  assert(ctrl_size_iproc == mu_size_iproc);
-
-  std::vector<double>  one_times_mu(ctrl_size_iproc, 0.);
-  std::vector<int>    positions_ctrl_in_Res(ctrl_size_iproc);
-  std::vector<int>    positions_mu_in_Sol(mu_size_iproc);      
-
-  for (unsigned i = 0; i < positions_ctrl_in_Res.size(); i++) {
-    positions_ctrl_in_Res[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
-    positions_mu_in_Sol[i] = (*sol->_Sol[ SolIndex[pos_mu] ]).first_local_index()/*pdeSys->KKoffset[mu_index][iproc]*/ + i;
-    //this should not come from pdeSys but from Sol ///@todo put the Dof range for Sol //actually I can take it from the Numeric Vector!
-//                 unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);  //this is only if I am on an ELEMENT loop, but here I am in a NODE loop
     
-    one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[ SolIndex[pos_mu] ])(positions_mu_in_Sol[i]/*i*//*position_mu_i*/) ;
-    }
-    RES->add_vector_blocked(one_times_mu, positions_ctrl_in_Res);
-  // ************************************
-    
-  // ***************** END ASSEMBLY *******************
+  // ***************** END ASSEMBLY - ADD PART *******************
 
 RES->close();
 if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
@@ -914,7 +907,8 @@ if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
  // One very important thing to consider: we have some PENALTIES that were set before during the SUMMATION part.
  // Now, if we do INSERT, we may end up OVERWRITING certain values, SUCH AS THOSE PENALTIES!!!
     
-    
+     //MU
+
    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
        
      geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);

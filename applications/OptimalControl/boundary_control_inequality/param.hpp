@@ -437,7 +437,46 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 }
 
 
+///@todo This is being added to a weak form?
+ void add_one_times_mu_res_ctrl_bdry(const unsigned iproc,
+                         const double ineq_flag,
+                         const std::string control_name,  /*"control"*/
+                         const std::string mu_name,       /*"mu"*/
+                         const unsigned int pos_mu,
+//                          const unsigned int pos_ctrl,
+                         const vector < unsigned > & SolIndex,
+                         const Solution*                sol,
+                         const NonLinearImplicitSystemWithPrimalDualActiveSetMethod * mlPdeSys,
+                         const  LinearEquationSolver* pdeSys,
+                         NumericVector* RES) {
+     
+unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
+  unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
 
+  unsigned int ctrl_size_iproc = pdeSys->KKoffset[ctrl_index + 1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
+  unsigned int mu_size_iproc = (*sol->_Sol[ SolIndex[pos_mu] ]).last_local_index() - (*sol->_Sol[ SolIndex[pos_mu] ]).first_local_index(); // pdeSys->KKoffset[mu_index + 1][iproc] - pdeSys->KKoffset[mu_index][iproc];
+
+  assert(ctrl_size_iproc == mu_size_iproc);
+
+  std::vector<double>  one_times_mu(ctrl_size_iproc, 0.);
+  std::vector<int>    positions_ctrl_in_Res(ctrl_size_iproc);
+  std::vector<int>    positions_mu_in_Sol(mu_size_iproc);      
+
+  for (unsigned i = 0; i < positions_ctrl_in_Res.size(); i++) {
+    positions_ctrl_in_Res[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
+    positions_mu_in_Sol[i] = (*sol->_Sol[ SolIndex[pos_mu] ]).first_local_index()/*pdeSys->KKoffset[mu_index][iproc]*/ + i;
+    //this should not come from pdeSys but from Sol ///@todo put the Dof range for Sol //actually I can take it from the Numeric Vector!
+//                 unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);  //this is only if I am on an ELEMENT loop, but here I am in a NODE loop
+    
+    one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[ SolIndex[pos_mu] ])(positions_mu_in_Sol[i]/*i*//*position_mu_i*/) ;
+    }
+    RES->add_vector_blocked(one_times_mu, positions_ctrl_in_Res);
+    
+ }
+ 
+ 
+
+ 
 void el_dofs_unknowns(const Solution*                sol,
                       const Mesh * msh,
                       const  LinearEquationSolver* pdeSys,

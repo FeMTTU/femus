@@ -98,6 +98,20 @@ unsigned System::GetSolPdeIndex(const char solname[]) {
 }
 
 
+const unsigned System::GetSolPdeIndex(const char solname[]) const {
+  //unsigned ipde=GetPdeIndex(pdename);
+  unsigned index=0;
+  while (strcmp(_ml_sol->GetSolutionName(_SolSystemPdeIndex[index]),solname)) {
+    index++;
+    if (index==_SolSystemPdeIndex.size()) {
+      std::cout<<"error! invalid name entry" << std::endl;
+      abort();
+    }
+  }
+  return index;
+}
+
+
  void System::set_unknown_list_for_assembly(const std::vector< Unknown > unknown_in ) {
     _unknown_list_for_assembly = unknown_in; 
  }
