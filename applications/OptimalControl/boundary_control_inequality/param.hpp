@@ -346,14 +346,14 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                          const unsigned int jface,
                          const   Mesh* msh,
                          const     vector < vector < int > > & L2G_dofmap,
-                         const double c_compl,
-                         const double ineq_flag,
                          const unsigned int pos_mu,
                          const unsigned int pos_ctrl,
                          const std::vector < std::vector < double > > & sol_eldofs,
                          const std::vector < unsigned int > & Sol_n_el_dofs,
                          std::vector < double > & sol_actflag,
                          const unsigned int solFEType_act_flag,
+                         const double ineq_flag,
+                         const double c_compl,
                          const std::vector < double > & ctrl_lower,
                          const std::vector < double > & ctrl_upper,
                          SparseMatrix*             KK,
@@ -440,18 +440,16 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 ///@todo This is being added to a weak form?
  void add_one_times_mu_res_ctrl_bdry(const unsigned iproc,
                          const double ineq_flag,
-                         const std::string control_name,  /*"control"*/
-                         const std::string mu_name,       /*"mu"*/
+                         const unsigned int pos_ctrl,
                          const unsigned int pos_mu,
-//                          const unsigned int pos_ctrl,
                          const vector < unsigned > & SolIndex,
                          const Solution*                sol,
                          const NonLinearImplicitSystemWithPrimalDualActiveSetMethod * mlPdeSys,
                          const  LinearEquationSolver* pdeSys,
                          NumericVector* RES) {
      
-unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
-  unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
+ const unsigned int ctrl_index = pos_ctrl;
+ const unsigned int mu_index = pos_mu;
 
   unsigned int ctrl_size_iproc = pdeSys->KKoffset[ctrl_index + 1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
   unsigned int mu_size_iproc = (*sol->_Sol[ SolIndex[pos_mu] ]).last_local_index() - (*sol->_Sol[ SolIndex[pos_mu] ]).first_local_index(); // pdeSys->KKoffset[mu_index + 1][iproc] - pdeSys->KKoffset[mu_index][iproc];

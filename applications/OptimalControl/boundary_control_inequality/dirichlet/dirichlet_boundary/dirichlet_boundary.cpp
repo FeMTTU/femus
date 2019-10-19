@@ -166,19 +166,22 @@ int main(int argc, char** args) {
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
 
-  ml_sol.AddSolution("state", LAGRANGE, FIRST);
-  ml_sol.AddSolution("control", LAGRANGE, FIRST);
-  ml_sol.AddSolution("adjoint", LAGRANGE, FIRST);
-  ml_sol.AddSolution("mu", LAGRANGE, FIRST);  //MU
-  ml_sol.AddSolution("TargReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  ml_sol.AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution("state",   LAGRANGE, SECOND/*FIRST*/);
+  ml_sol.AddSolution("control", LAGRANGE, SECOND/*FIRST*/);
+  ml_sol.AddSolution("adjoint", LAGRANGE, SECOND/*FIRST*/);
+  ml_sol.AddSolution("mu",      LAGRANGE, SECOND/*FIRST*/);  //MU
+  ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   //MU
   const unsigned int fake_time_dep_flag = 2;
   const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, SECOND/*FIRST*/, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   //MU
 
-  
+  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
+  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
+  if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name.c_str())) abort();
+      
   // ======= Problem  ==================
   MultiLevelProblem ml_prob(&ml_sol);
   
@@ -379,9 +382,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   //MU
   //************** act flag ****************************   
-  unsigned int solIndex_act_flag; 
-  unsigned int solFEType_act_flag;
-  store_act_flag_in_old(mlPdeSys, ml_sol, sol, solIndex_act_flag, solFEType_act_flag);
+  unsigned int solIndex_act_flag_sol; 
+  unsigned int solFEType_act_flag_sol;
+  store_act_flag_in_old(mlPdeSys, ml_sol, sol,
+                        solIndex_act_flag_sol, //this becomes a vector
+                        solFEType_act_flag_sol //remove this one, only Index
+                       );
   
   
   //********* variables for ineq constraints *****************
@@ -399,43 +405,49 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
     const unsigned int n_quantities = ml_sol->GetSolutionSize();
 
+//***************************************************
     enum Pos_in_matrix {pos_mat_state = 0, pos_mat_ctrl, pos_mat_adj, pos_mat_mu}; //these are known at compile-time 
                     ///@todo these are the positions in the MlSol object or in the Matrix? I'd say the matrix, but we have to check where we use it...
 
-    enum Pos_in_Sol {pos_sol_state = 0, pos_sol_ctrl, pos_sol_adj, pos_sol_mu, pos_sol_targreg, pos_sol_contreg, pos_sol_actflag}; //these are known at compile-time 
                     
     assert(pos_mat_state   == mlPdeSys->GetSolPdeIndex("state"));
     assert(pos_mat_ctrl    == mlPdeSys->GetSolPdeIndex("control"));
     assert(pos_mat_adj     == mlPdeSys->GetSolPdeIndex("adjoint"));
     assert(pos_mat_mu      == mlPdeSys->GetSolPdeIndex("mu"));
+//***************************************************
 
+    vector < std::string > Solname_Mat(n_unknowns);  //this coincides with Pos_in_matrix
+    Solname_Mat[0] = "state";
+    Solname_Mat[1] = "control";
+    Solname_Mat[2] = "adjoint";
+    Solname_Mat[3] = "mu";
 
-    vector < std::string > Solname(n_unknowns);  //this coincides with Pos_in_Sol
-    Solname[0] = "state";
-    Solname[1] = "control";
-    Solname[2] = "adjoint";
-    Solname[3] = "mu";
+ //***************************************************
+   enum Pos_in_Sol {pos_sol_state = 0, pos_sol_ctrl, pos_sol_adj, pos_sol_mu, pos_sol_targreg, pos_sol_contreg, pos_sol_actflag}; //these are known at compile-time 
 
+        assert(pos_sol_actflag = solIndex_act_flag_sol);
+//***************************************************
+    
     vector < std::string > Solname_quantities(n_quantities);
     
         for(unsigned ivar=0; ivar < Solname_quantities.size(); ivar++) {
             Solname_quantities[ivar] = ml_sol->GetSolutionName(ivar);
         }
         
-    vector < unsigned > SolIndex(n_unknowns);
-    vector < unsigned > SolFEType(n_unknowns);
-    vector < unsigned > SolPdeIndex(n_unknowns);
+    vector < unsigned > SolIndex_Mat(n_unknowns);      //should have Sol order
+    vector < unsigned > SolFEType_Mat(n_unknowns);       //should have Mat order
+    vector < unsigned > SolPdeIndex(n_unknowns);     //should have Mat order, of course
 
-    vector < unsigned > SolIndex_quantities(n_quantities);
-    vector < unsigned > SolFEType_quantities(n_quantities);
-    vector < unsigned > Sol_n_el_dofs_quantities(n_quantities);
+    vector < unsigned > SolIndex_quantities(n_quantities);      //should have Sol order
+    vector < unsigned > SolFEType_quantities(n_quantities);     //should have Sol order
+    vector < unsigned > Sol_n_el_dofs_quantities(n_quantities); //should have Sol order
  
   
 
     for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-        SolIndex[ivar]    = ml_sol->GetIndex        (Solname[ivar].c_str());
-        SolFEType[ivar]   = ml_sol->GetSolutionType(SolIndex[ivar]);
-        SolPdeIndex[ivar] = mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
+        SolIndex_Mat[ivar]    = ml_sol->GetIndex        (Solname_Mat[ivar].c_str());
+        SolFEType_Mat[ivar]   = ml_sol->GetSolutionType(SolIndex_Mat[ivar]);
+        SolPdeIndex[ivar] = mlPdeSys->GetSolPdeIndex(Solname_Mat[ivar].c_str());
     }
     
     for(unsigned ivar=0; ivar < n_quantities; ivar++) {
@@ -443,24 +455,24 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         SolFEType_quantities[ivar]   = ml_sol->GetSolutionType(SolIndex_quantities[ivar]);
     }    
 
-    vector < unsigned > Sol_n_el_dofs(n_unknowns);
+    vector < unsigned > Sol_n_el_dofs_Mat(n_unknowns);    //should have Mat order
 
 //***************************************************
     //----------- quantities (at dof objects) ------------------------------
-    std::vector< int >       L2G_dofmap_AllVars;
-    L2G_dofmap_AllVars.reserve( n_unknowns * max_size );
-    vector < vector < int > >     L2G_dofmap(n_unknowns);
+    std::vector< int >       L2G_dofmap_Mat_AllVars;
+    L2G_dofmap_Mat_AllVars.reserve( n_unknowns * max_size );
+    vector < vector < int > >     L2G_dofmap_Mat(n_unknowns);     //should have Mat order
     for(int i = 0; i < n_unknowns; i++) {
-        L2G_dofmap[i].reserve(max_size);
+        L2G_dofmap_Mat[i].reserve(max_size);
     }
     
-    vector < vector < double > >  sol_eldofs(n_unknowns);
-    for(int k = 0; k < n_unknowns; k++) {        sol_eldofs[k].reserve(max_size);    }
+    vector < vector < double > >  sol_eldofs_Mat(n_unknowns);  //should have Mat order
+    for(int k = 0; k < n_unknowns; k++) {        sol_eldofs_Mat[k].reserve(max_size);    }
 
 
  //*************************************************** 
-  std::vector< double > Res;   Res.reserve( n_unknowns*max_size);
-  std::vector < double > Jac;  Jac.reserve( n_unknowns*max_size * n_unknowns*max_size);
+  std::vector< double > Res;   Res.reserve( n_unknowns*max_size);                         //should have Mat order
+  std::vector < double > Jac;  Jac.reserve( n_unknowns*max_size * n_unknowns*max_size);   //should have Mat order
  //*************************************************** 
 
  
@@ -506,19 +518,19 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 
    el_dofs_unknowns(sol, msh, pdeSys, iel,
-                        SolFEType,
-                        SolIndex,
+                        SolFEType_Mat,
+                        SolIndex_Mat,
                         SolPdeIndex,
-                        Sol_n_el_dofs, 
-                        sol_eldofs,  
-                        L2G_dofmap);
+                        Sol_n_el_dofs_Mat, 
+                        sol_eldofs_Mat,  
+                        L2G_dofmap_Mat);
   
         
  
  //***************************************************
-    unsigned int nDof_max          = ElementJacRes<double>::compute_max_n_dofs(Sol_n_el_dofs);
+    unsigned int nDof_max          = ElementJacRes<double>::compute_max_n_dofs(Sol_n_el_dofs_Mat);
     
-    unsigned int sum_Sol_n_el_dofs = ElementJacRes<double>::compute_sum_n_dofs(Sol_n_el_dofs);
+    unsigned int sum_Sol_n_el_dofs = ElementJacRes<double>::compute_sum_n_dofs(Sol_n_el_dofs_Mat);
 
     Res.resize(sum_Sol_n_el_dofs);
     std::fill(Res.begin(), Res.end(), 0.);
@@ -526,8 +538,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     Jac.resize(sum_Sol_n_el_dofs * sum_Sol_n_el_dofs);
     std::fill(Jac.begin(), Jac.end(), 0.);
     
-    L2G_dofmap_AllVars.resize(0);
-      for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_AllVars.insert(L2G_dofmap_AllVars.end(), L2G_dofmap[k].begin(), L2G_dofmap[k].end());
+    L2G_dofmap_Mat_AllVars.resize(0);
+      for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_Mat_AllVars.insert(L2G_dofmap_Mat_AllVars.end(), L2G_dofmap_Mat[k].begin(), L2G_dofmap_Mat[k].end());
  //***************************************************
 
       
@@ -543,7 +555,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //************ set control flag *********************
   int control_el_flag = 0;
         control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
-  std::vector<int> control_node_flag(Sol_n_el_dofs[pos_mat_ctrl],0);
+  std::vector<int> control_node_flag(Sol_n_el_dofs_Mat[pos_mat_ctrl],0);
  //*************************************************** 
  
   
@@ -585,7 +597,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               
  //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element.get_elem_center_bdry(), Solname[pos_mat_ctrl].c_str(), tau, face_in_rectangle_domain, 0.);
+	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl].c_str(), tau, face_in_rectangle_domain, 0.);
 
  //=================================================== 
         
@@ -607,15 +619,15 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     
     weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
 
-    elem_all[ielGeom_bdry][SolFEType[pos_mat_ctrl]] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_xx_bdry_placeholder, space_dim);
-    elem_all[ielGeom_bdry][SolFEType[pos_mat_state]]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry,  phi_xx_bdry_placeholder, space_dim);
-    elem_all[ielGeom_bdry][SolFEType[pos_mat_adj]]  ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_adj_bdry, phi_adj_x_bdry,  phi_xx_bdry_placeholder, space_dim);
+    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, phi_xx_bdry_placeholder, space_dim);
+    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_state]]->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry,  phi_xx_bdry_placeholder, space_dim);
+    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_adj]]  ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_adj_bdry, phi_adj_x_bdry,  phi_xx_bdry_placeholder, space_dim);
 
 
     elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_qp/*not_needed_here*/, JacI_qp, detJac_qp/*not_needed_here*/, space_dim);
-    elem_all[ielGeom][SolFEType[pos_mat_adj]]->shape_funcs_vol_at_bdry_current_elem(ig_bdry, jface, JacI_qp, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry, boost::none, space_dim);
+    elem_all[ielGeom][SolFEType_quantities[pos_sol_adj]]->shape_funcs_vol_at_bdry_current_elem(ig_bdry, jface, JacI_qp, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry, boost::none, space_dim);
      
-//     msh->_finiteElement[ielGeom][SolFEType[pos_mat_adj]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(geom_element.get_coords_at_dofs(), geom_element.get_coords_at_dofs_bdry_3d(), jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
+//     msh->_finiteElement[ielGeom][SolFEType_quantities[pos_sol_adj]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(geom_element.get_coords_at_dofs(), geom_element.get_coords_at_dofs_bdry_3d(), jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
 
 		  
 //========== compute gauss quantities on the boundary ===============================================
@@ -624,9 +636,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		      for (int i_bdry = 0; i_bdry < Sol_n_el_dofs_quantities[pos_sol_ctrl]; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 			
-			sol_ctrl_bdry_gss +=  sol_eldofs[pos_mat_ctrl][i_vol] * phi_ctrl_bdry[i_bdry];
+			sol_ctrl_bdry_gss +=  sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_bdry[i_bdry];
                             for (int d = 0; d < space_dim; d++) {
-			      sol_ctrl_x_bdry_gss[d] += sol_eldofs[pos_sol_ctrl/*pos_mat_ctrl*/][i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
+			      sol_ctrl_x_bdry_gss[d] += sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
 			    }
 		      }
 		      
@@ -635,16 +647,16 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		      for (int i_bdry = 0; i_bdry < Sol_n_el_dofs_quantities[pos_sol_adj]; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 			
-			sol_adj_bdry_gss  +=  sol_eldofs[pos_sol_adj/*pos_mat_adj*/][i_vol] * phi_adj_bdry[i_bdry];
+			sol_adj_bdry_gss  +=  sol_eldofs_Mat[pos_mat_adj][i_vol] * phi_adj_bdry[i_bdry];
               }		      
 		      
 //=============== grad dot n for residual ========================================= 
 //     compute gauss quantities on the boundary through VOLUME interpolation
            std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
-		      for (int iv = 0; iv < Sol_n_el_dofs[pos_mat_adj]; iv++)  {
+		      for (int iv = 0; iv < Sol_n_el_dofs_Mat[pos_mat_adj]; iv++)  {
 			
          for (int d = 0; d < space_dim; d++) {
-			      sol_adj_x_vol_at_bdry_gss[d] += sol_eldofs[pos_mat_adj][iv] * phi_adj_x_vol_at_bdry[iv * space_dim + d];
+			      sol_adj_x_vol_at_bdry_gss[d] += sol_eldofs_Mat[pos_mat_adj][iv] * phi_adj_x_vol_at_bdry[iv * space_dim + d];
 			    }
 		      }  
 		      
@@ -662,7 +674,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
                  double lap_rhs_dctrl_ctrl_bdry_gss_i = 0.;
                  for (unsigned d = 0; d < space_dim; d++) {
-                       if ( i_vol < Sol_n_el_dofs[pos_mat_ctrl] )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_ctrl_x_bdry[i_bdry * space_dim + d] * sol_ctrl_x_bdry_gss[d];
+                       if ( i_vol < Sol_n_el_dofs_Mat[pos_mat_ctrl] )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_ctrl_x_bdry[i_bdry * space_dim + d] * sol_ctrl_x_bdry_gss[d];
                  }
                  
 //=============== construct control node flag field on the go  =========================================    
@@ -679,17 +691,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 		 
 //============ Bdry Residuals ==================	
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mat_state,i_vol) ] +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_eldofs[pos_mat_state][i_vol] - sol_eldofs[pos_mat_ctrl][i_vol] )
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_state,i_vol) ] +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_eldofs_Mat[pos_mat_state][i_vol] - sol_eldofs_Mat[pos_mat_ctrl][i_vol] )
                     - control_node_flag[i_vol] *  weight_bdry * (grad_adj_dot_n_res * phi_u_bdry[i_bdry]);   // u = q
 
 
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
                                                                                 (    alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							                           +  beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							                           - grad_adj_dot_n_res * phi_ctrl_bdry[i_bdry]
 // 							                           -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss // for Neumann control
 							                         );  //boundary optimality condition
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mat_adj,i_vol) ]  += 0.; 
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_adj,i_vol) ]  += 0.; 
 //============ Bdry Residuals ==================    
 		    
 		    for(unsigned j_bdry=0; j_bdry < nDof_max_bdry; j_bdry ++) {
@@ -703,8 +715,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //============ u = q ===========================	    
                  
 if ( i_vol == j_vol )  {
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i_vol, j_vol) ] += penalty_ctrl * ( control_node_flag[i_vol]);
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_ctrl, i_vol, j_vol) ]  += penalty_ctrl * ( control_node_flag[i_vol]) * (-1.);
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i_vol, j_vol) ] += penalty_ctrl * ( control_node_flag[i_vol]);
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_ctrl, i_vol, j_vol) ]  += penalty_ctrl * ( control_node_flag[i_vol]) * (-1.);
 		}
 //============ u = q ===========================
 
@@ -718,7 +730,7 @@ if ( i_vol == j_vol )  {
 		      for (unsigned d = 0; d < space_dim; d++) {  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_bdry[i_bdry * space_dim + d] * phi_ctrl_x_bdry[j_bdry * space_dim + d];    }
 
           
-              Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i_vol, j_vol) ] 
+              Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i_vol, j_vol) ] 
 			+=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry] 
 			                                              + beta *  lap_mat_dctrl_ctrl_bdry_gss);   
     
@@ -740,12 +752,12 @@ if ( i_vol == j_vol )  {
 
 		      
 //==========block delta_control/adjoint ========
-		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_adj, i_vol, j) ]  += 
-		     control_node_flag[i_vol] * (-1) * weight_bdry * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry];    		      
+		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_adj, i_vol, j) ]  += 
+		     control_node_flag[i_vol] * (-1.) * weight_bdry * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry];    		      
 
 //==========block delta_state/adjoint ========
-		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i_vol, j) ] += 
-		     control_node_flag[i_vol] * (1) * weight_bdry * grad_adj_dot_n_mat * phi_u_bdry[i_bdry];  
+		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i_vol, j) ] += 
+		     control_node_flag[i_vol] * (1.) * weight_bdry * grad_adj_dot_n_mat * phi_u_bdry[i_bdry];  
 		      
 		    }   //end loop i_bdry // j_vol
 	      
@@ -776,8 +788,8 @@ if ( i_vol == j_vol )  {
     elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
     weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
 
-    elem_all[ielGeom][SolFEType[pos_mat_state]]->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, space_dim);
-    elem_all[ielGeom][SolFEType[pos_mat_adj]]  ->shape_funcs_current_elem(ig, JacI_qp, phi_adj, phi_adj_x, phi_adj_xx, space_dim);
+    elem_all[ielGeom][SolFEType_quantities[pos_sol_state]]->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, space_dim);
+    elem_all[ielGeom][SolFEType_quantities[pos_sol_adj]]  ->shape_funcs_current_elem(ig, JacI_qp, phi_adj, phi_adj_x, phi_adj_xx, space_dim);
 
           
 	sol_u_gss = 0.;
@@ -785,14 +797,14 @@ if ( i_vol == j_vol )  {
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
 	
-	for (unsigned i = 0; i < Sol_n_el_dofs[pos_mat_state]; i++) {
-	                                                sol_u_gss      += sol_eldofs[pos_mat_state][i] * phi_u[i];
-                   for (unsigned d = 0; d < space_dim; d++)   sol_u_x_gss[d] += sol_eldofs[pos_mat_state][i] * phi_u_x[i * space_dim + d];
+	for (unsigned i = 0; i < Sol_n_el_dofs_Mat[pos_mat_state]; i++) {
+	                                                sol_u_gss      += sol_eldofs_Mat[pos_mat_state][i] * phi_u[i];
+                   for (unsigned d = 0; d < space_dim; d++)   sol_u_x_gss[d] += sol_eldofs_Mat[pos_mat_state][i] * phi_u_x[i * space_dim + d];
           }
 	
-	for (unsigned i = 0; i < Sol_n_el_dofs[pos_mat_adj]; i++) {
-	                                                sol_adj_gss      += sol_eldofs[pos_mat_adj][i] * phi_adj[i];
-                   for (unsigned d = 0; d < space_dim; d++)   sol_adj_x_gss[d] += sol_eldofs[pos_mat_adj][i] * phi_adj_x[i * space_dim + d];
+	for (unsigned i = 0; i < Sol_n_el_dofs_Mat[pos_mat_adj]; i++) {
+	                                                sol_adj_gss      += sol_eldofs_Mat[pos_mat_adj][i] * phi_adj[i];
+                   for (unsigned d = 0; d < space_dim; d++)   sol_adj_x_gss[d] += sol_eldofs_Mat[pos_mat_adj][i] * phi_adj_x[i * space_dim + d];
         }
 
 //==========FILLING WITH THE EQUATIONS ===========
@@ -802,15 +814,15 @@ if ( i_vol == j_vol )  {
               double laplace_rhs_du_adj_i = 0.;
               double laplace_rhs_dadj_u_i = 0.;
               for (unsigned kdim = 0; kdim < space_dim; kdim++) {
-              if ( i < Sol_n_el_dofs[pos_mat_state] )  laplace_rhs_du_adj_i +=  phi_u_x   [i * space_dim + kdim] * sol_adj_x_gss[kdim];
-              if ( i < Sol_n_el_dofs[pos_mat_adj] )    laplace_rhs_dadj_u_i +=  phi_adj_x [i * space_dim + kdim] * sol_u_x_gss[kdim];
+              if ( i < Sol_n_el_dofs_Mat[pos_mat_state] )  laplace_rhs_du_adj_i +=  phi_u_x   [i * space_dim + kdim] * sol_adj_x_gss[kdim];
+              if ( i < Sol_n_el_dofs_Mat[pos_mat_adj] )    laplace_rhs_dadj_u_i +=  phi_adj_x [i * space_dim + kdim] * sol_u_x_gss[kdim];
 	      }
 	      
 //============ Volume residuals ==================	    
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mat_state,i) ] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)  - laplace_rhs_du_adj_i ); 
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mat_ctrl,i) ]  += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs[pos_mat_ctrl][i] - 0.)  );
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mat_adj,i) ]   += - weight * (-1.) * (laplace_rhs_dadj_u_i);
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_mat_mu,i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs[pos_mat_mu][i] - 0.)  );  //MU
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_state,i) ] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)  - laplace_rhs_du_adj_i ); 
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i) ]  += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs_Mat[pos_mat_ctrl][i] - 0.)  );
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_adj,i) ]   += - weight * (-1.) * (laplace_rhs_dadj_u_i);
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_mu,i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs_Mat[pos_mat_mu][i] - 0.)  );  //MU
 //============  Volume Residuals ==================	    
 	      
 	      
@@ -823,36 +835,31 @@ if ( i_vol == j_vol )  {
               double laplace_mat_du_adj = 0.;
 
               for (unsigned kdim = 0; kdim < space_dim; kdim++) {
-              if ( i < Sol_n_el_dofs[pos_mat_adj] && j < Sol_n_el_dofs[pos_mat_state] )     laplace_mat_dadj_u        +=  (phi_adj_x [i * space_dim + kdim] * phi_u_x   [j * space_dim + kdim]);
-              if ( i < Sol_n_el_dofs[pos_mat_state]   && j < Sol_n_el_dofs[pos_mat_adj] )   laplace_mat_du_adj        +=  (phi_u_x   [i * space_dim + kdim] * phi_adj_x [j * space_dim + kdim]);
+              if ( i < Sol_n_el_dofs_Mat[pos_mat_adj] && j < Sol_n_el_dofs_Mat[pos_mat_state] )     laplace_mat_dadj_u        +=  (phi_adj_x [i * space_dim + kdim] * phi_u_x   [j * space_dim + kdim]);
+              if ( i < Sol_n_el_dofs_Mat[pos_mat_state]   && j < Sol_n_el_dofs_Mat[pos_mat_adj] )   laplace_mat_du_adj        +=  (phi_u_x   [i * space_dim + kdim] * phi_adj_x [j * space_dim + kdim]);
 		
 	      }
 
               //============ delta_state row ============================
               // BLOCK delta_state / state
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i, j) ]  += weight  * target_flag *  phi_u[i] * phi_u[j];   
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i, j) ]  += weight  * target_flag *  phi_u[i] * phi_u[j];   
               //BLOCK delta_state / adjoint
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i, j) ]  += weight * (-1) * laplace_mat_du_adj;
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i, j) ]  += weight * (-1) * laplace_mat_du_adj;
 	      
 	      
               //=========== delta_control row ===========================
               //enforce control zero outside the control boundary
 	      if ( i==j )
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i, j) ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    /*weight * phi_adj[i]*phi_adj[j]*/
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i, j) ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    /*weight * phi_adj[i]*phi_adj[j]*/
               
 	      //=========== delta_adjoint row ===========================
 	      // BLOCK delta_adjoint / state
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mat_adj, pos_mat_state, i, j) ]  += weight * (-1) * laplace_mat_dadj_u;
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_adj, pos_mat_state, i, j) ]  += weight * (-1) * laplace_mat_dadj_u;
 
-              // BLOCK delta_adjoint / adjoint
-// 	      if ( i < Sol_n_el_dofs[pos_mat_adj] && j < Sol_n_el_dofs[pos_mat_adj] )
-// 		Jac[    
-// 		(Sol_n_el_dofs[pos_mat_state] + nDof_ctrl + i) * sum_Sol_n_el_dofs  +
-// 		(Sol_n_el_dofs[pos_mat_state] + nDof_ctrl + j)               ]  += 0.;     //weight * phi_adj[i]*phi_adj[j];
 	      
 	      //============= delta_mu row ===============================
 	        if ( i==j )   
-		  Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, sum_Sol_n_el_dofs, pos_mat_mu, pos_mat_mu, i, j) ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    //MU
+		  Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_mu, pos_mat_mu, i, j) ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    //MU
           
 	         } // end phi_j loop
            } // endif assemble_matrix
@@ -866,18 +873,18 @@ if ( i_vol == j_vol )  {
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
-    RES->add_vector_blocked(Res, L2G_dofmap_AllVars);
+    RES->add_vector_blocked(Res, L2G_dofmap_Mat_AllVars);
 
     if (assembleMatrix) {
-      KK->add_matrix_blocked(Jac, L2G_dofmap_AllVars, L2G_dofmap_AllVars);
+      KK->add_matrix_blocked(Jac, L2G_dofmap_Mat_AllVars, L2G_dofmap_Mat_AllVars);
     }
     
     
     //========== dof-based part, without summation
  
      if (print_algebra_local) {
-         assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs, 10, 5);
-         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs, 10, 5);
+         assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, Sol_n_el_dofs_Mat, 10, 5);
      }
      
      
@@ -887,10 +894,9 @@ if ( i_vol == j_vol )  {
   //MU
 add_one_times_mu_res_ctrl_bdry(iproc,
                                ineq_flag,
-                               "control",
-                               "mu",
+                               pos_mat_ctrl,
                                pos_mat_mu,
-                               SolIndex,
+                               SolIndex_Mat,
                                sol,
                                mlPdeSys,
                                pdeSys,
@@ -914,8 +920,8 @@ if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
      geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
       
     el_dofs_unknowns(sol, msh, pdeSys, iel,
-                        SolFEType, SolIndex, SolPdeIndex,
-                        Sol_n_el_dofs, sol_eldofs, L2G_dofmap);
+                        SolFEType_Mat, SolIndex_Mat, SolPdeIndex,
+                        Sol_n_el_dofs_Mat, sol_eldofs_Mat, L2G_dofmap_Mat);
 
    geom_element.set_elem_center(iel, solType_coords);
 
@@ -939,18 +945,31 @@ if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
 	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
 
        update_active_set_flag_for_current_nonlinear_iteration_bdry
-   (msh, sol, iel, jface, geom_element.get_coords_at_dofs_bdry_3d(), sol_eldofs, Sol_n_el_dofs, 
-    pos_mat_mu, pos_mat_ctrl, c_compl, ctrl_lower, ctrl_upper, sol_actflag, solFEType_act_flag, solIndex_act_flag);
+   (msh, sol,
+    iel, jface,
+    geom_element.get_coords_at_dofs_bdry_3d(), 
+    sol_eldofs_Mat, 
+    Sol_n_el_dofs_Mat, 
+    pos_mat_mu,               //this becomes a vector
+    pos_mat_ctrl,             //this becomes a vector
+    c_compl, 
+    ctrl_lower, ctrl_upper,   //this becomes a vector
+    sol_actflag,              //this becomes a vector
+    solFEType_act_flag_sol, //remove this one, only Index
+    solIndex_act_flag_sol);   //this becomes a vector
  
 
   node_insertion_bdry(iel, jface, 
                       msh,
-                      L2G_dofmap,
-                      c_compl,
+                      L2G_dofmap_Mat,
+                      pos_mat_mu, 
+                      pos_mat_ctrl,
+                      sol_eldofs_Mat,
+                      Sol_n_el_dofs_Mat,
+                      sol_actflag, 
+                      solFEType_act_flag_sol,  //remove this one, only Index
                       ineq_flag,
-                      pos_mat_mu, pos_mat_ctrl,
-                      sol_eldofs, Sol_n_el_dofs,
-                      sol_actflag, solFEType_act_flag,
+                      c_compl,
                       ctrl_lower, ctrl_upper,
                       KK, RES,
                       assembleMatrix
@@ -963,7 +982,7 @@ if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
 
 
      //============= delta_ctrl-delta_mu row ===============================
- if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mat_ctrl],  L2G_dofmap[pos_mat_mu], ineq_flag * 1.); }
+ if (assembleMatrix) { KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap_Mat[pos_mat_ctrl],  L2G_dofmap_Mat[pos_mat_mu], ineq_flag * 1.); }   //this becomes a vector
 
    }
    
