@@ -425,7 +425,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //***************************************************
    enum Pos_in_Sol {pos_sol_state = 0, pos_sol_ctrl, pos_sol_adj, pos_sol_mu, pos_sol_targreg, pos_sol_contreg, pos_sol_actflag}; //these are known at compile-time 
 
-        assert(pos_sol_actflag = solIndex_act_flag_sol);
+        assert(pos_sol_actflag == solIndex_act_flag_sol);
 //***************************************************
     
     vector < std::string > Solname_quantities(n_quantities);

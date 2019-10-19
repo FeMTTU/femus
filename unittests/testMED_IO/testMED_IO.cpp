@@ -20,12 +20,12 @@ int main(int argc,char **args) {
         files.CheckIODirectories();
         files.RedirectCout();
 
-//   std::string input_file = "turek_FSI1.neu";
+  std::string input_file = "turek_FSI1.neu";
 //    std::string input_file = "cyl.med";
 //    std::string input_file = "horse2.med";
 //    std::string input_file = "knot.neu";
 //    std::string input_file = "dome_tri.med";
-   std::string input_file = "dome_quad.med";
+//    std::string input_file = "dome_quad.med";
 //   std::string input_file = "Quad9_Four_boundaries_groups.med";
 //   std::string input_file = "Quad9_Nine_without_groups.med";
 //   std::string input_file = "Tri6_Two_boundaries.med"; 
