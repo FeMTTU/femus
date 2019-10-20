@@ -159,9 +159,11 @@ In Mesh:
 --   2D: Quadrangle Mapping
    1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
 
--- Convert each mesh to the order you need (linear/quadratic/biquadratic)
+-- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
   You have to do this operation BEFORE creating a CompoundMesh,
   because the compound mesh does not have an underlying geometry to use 
+   
+  You have to do ONE BY ONE, you cannot do by selecting all meshes at once!!! 
    
 -- Build CompoundMesh to merge the meshes
      --> Check the Boundary of the CompoundMesh!!! 
@@ -243,7 +245,9 @@ Ok, it seems like:
  
  - If you built a Point as a Construction in the Partset and you want to REMOVE it, you have to click on "Partset" and say "Activate". 
    Then you can right-click and finally "Delete" is active. Then, Deactivate again to continue drawing
- 
+
+ - Pay attention sometimes when you Dump study, it seems like you may lose the Shaper part!!!  
+   
 ##################################
 ###### SALOME - ROTATIONS ########
 ##################################

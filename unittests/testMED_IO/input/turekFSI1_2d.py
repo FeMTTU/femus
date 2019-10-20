@@ -12,7 +12,6 @@ import salome_notebook
 notebook = salome_notebook.NoteBook()
 sys.path.insert(0, r'/home/gbornia/software/femus/unittests/testMED_IO/input')
 
-
 ###
 ### SHAPER component
 ###
@@ -377,8 +376,6 @@ Export_19 = model.exportToXAO(Part_1_doc, '/tmp/shaper_11pqooll.xao', model.sele
 Export_20 = model.exportToXAO(Part_1_doc, '/tmp/shaper_uxsu3g40.xao', model.selection("FACE", "face_around_circle_s"), 'XAO')
 model.do()
 model.end()
-
-
 ###
 ### GEOM component
 ###
@@ -785,10 +782,35 @@ status = Mesh_20.AddHypothesis(num_segs_outflow,Edge_63)
 status = Mesh_20.AddHypothesis(Propagation_of_1D_Hyp,Edge_63)
 isDone = Mesh_20.Compute()
 Mesh_1.ConvertToQuadratic(0, Mesh_1,True)
+Mesh_2.ConvertToQuadratic(0, Mesh_2,True)
+Mesh_3.ConvertToQuadratic(0, Mesh_3,True)
+Mesh_4.ConvertToQuadratic(0, Mesh_4,True)
+Mesh_5.ConvertToQuadratic(0, Mesh_5,True)
+Mesh_6.ConvertToQuadratic(0, Mesh_6,True)
+Mesh_7.ConvertToQuadratic(0, Mesh_7,True)
+Mesh_8.ConvertToQuadratic(0, Mesh_8,True)
+Mesh_9.ConvertToQuadratic(0, Mesh_9,True)
+Mesh_10.ConvertToQuadratic(0, Mesh_10,True)
+Mesh_11.ConvertToQuadratic(0, Mesh_11,True)
+Mesh_12.ConvertToQuadratic(0, Mesh_12,True)
+Mesh_13.ConvertToQuadratic(0, Mesh_13,True)
+Mesh_14.ConvertToQuadratic(0, Mesh_14,True)
+Mesh_15.ConvertToQuadratic(0, Mesh_15,True)
+Mesh_16.ConvertToQuadratic(0, Mesh_16,True)
+Mesh_17.ConvertToQuadratic(0, Mesh_17,True)
+Mesh_18.ConvertToQuadratic(0, Mesh_18,True)
+Mesh_19.ConvertToQuadratic(0, Mesh_19,True)
+Mesh_20.ConvertToQuadratic(0, Mesh_20,True)
 Mesh_Compound_1 = smesh.Concatenate( [ Mesh_1.GetMesh(), Mesh_2.GetMesh(), Mesh_3.GetMesh(), Mesh_4.GetMesh(), Mesh_5.GetMesh(), Mesh_6.GetMesh(), Mesh_7.GetMesh(), Mesh_8.GetMesh(), Mesh_9.GetMesh(), Mesh_10.GetMesh(), Mesh_11.GetMesh(), Mesh_12.GetMesh(), Mesh_13.GetMesh(), Mesh_14.GetMesh(), Mesh_15.GetMesh(), Mesh_16.GetMesh(), Mesh_17.GetMesh(), Mesh_18.GetMesh(), Mesh_19.GetMesh(), Mesh_20.GetMesh() ], 1, 1, 1e-05, False )
-smesh.SetName(Mesh_Compound_1, 'Mesh_Compound_1')
+smesh.SetName(Mesh_Compound_1, 'Compound_Mesh_1')
 try:
   Mesh_Compound_1.ExportMED(r'/home/gbornia/software/femus/unittests/testMED_IO/input/turek1.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=0)
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+smesh.SetName(Mesh_Compound_1, 'Mesh_Compound_1')
+try:
+  Mesh_Compound_1.ExportMED(r'/home/gbornia/software/femus/unittests/testMED_IO/input/turek1.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=1)
   pass
 except:
   print('ExportMED() failed. Invalid file name?')
@@ -850,11 +872,11 @@ smesh.SetName(Sub_mesh_9, 'Sub-mesh_9')
 smesh.SetName(Sub_mesh_11, 'Sub-mesh_11')
 smesh.SetName(Sub_mesh_12, 'Sub-mesh_12')
 smesh.SetName(Sub_mesh_17, 'Sub-mesh_17')
+smesh.SetName(num_segs_beam_horiz_outside_square, 'num_segs_beam_horiz_outside_square')
+smesh.SetName(num_segs_square_around_circle_south_east, 'num_segs_square_around_circle_south_east')
 smesh.SetName(num_segs_square_around_circle_north_east, 'num_segs_square_around_circle_north-east')
 smesh.SetName(num_segs_beam_vertical, 'num_segs_beam_vertical')
-smesh.SetName(num_segments_radial, 'num_segments_radial')
-smesh.SetName(num_segs_circle_north_east, 'num_segs_circle_north-east')
-smesh.SetName(num_segs_square_around_circle_south_east, 'num_segs_square_around_circle_south_east')
+smesh.SetName(num_segs_outflow, 'num_segs_outflow')
 smesh.SetName(Sub_mesh_25, 'Sub-mesh_25')
 smesh.SetName(Sub_mesh_26, 'Sub-mesh_26')
 smesh.SetName(Sub_mesh_3, 'Sub-mesh_3')
@@ -869,15 +891,15 @@ smesh.SetName(Sub_mesh_39, 'Sub-mesh_39')
 smesh.SetName(Sub_mesh_15, 'Sub-mesh_15')
 smesh.SetName(Sub_mesh_24, 'Sub-mesh_24')
 smesh.SetName(Sub_mesh_16, 'Sub-mesh_16')
-smesh.SetName(num_segs_beam_horiz_outside_square, 'num_segs_beam_horiz_outside_square')
 smesh.SetName(num_segs_sum_composite_trick, 'num_segs_sum_composite_trick')
-smesh.SetName(Propagation_of_Node, 'Propagation of Node Distribution on Opposite Edges_1')
-smesh.SetName(num_segments_tang_north_south_west, 'num_segments_tang_north-south-west')
-smesh.SetName(Propagation_of_1D_Hyp, 'Propagation of 1D Hyp. on Opposite Edges_1')
-smesh.SetName(num_segs_outflow, 'num_segs_outflow')
 smesh.SetName(num_placeholder, 'num_placeholder')
+smesh.SetName(Propagation_of_Node, 'Propagation of Node Distribution on Opposite Edges_1')
 smesh.SetName(num_segs_precyl, 'num_segs_precyl')
 smesh.SetName(num_segs_above_below_cyl, 'num_segs_above_below_cyl')
+smesh.SetName(num_segments_tang_north_south_west, 'num_segments_tang_north-south-west')
+smesh.SetName(Propagation_of_1D_Hyp, 'Propagation of 1D Hyp. on Opposite Edges_1')
+smesh.SetName(num_segs_circle_north_east, 'num_segs_circle_north-east')
+smesh.SetName(num_segments_radial, 'num_segments_radial')
 smesh.SetName(Mesh_16.GetMesh(), 'Mesh_16')
 smesh.SetName(Mesh_17.GetMesh(), 'Mesh_17')
 smesh.SetName(Mesh_8.GetMesh(), 'Mesh_8')
