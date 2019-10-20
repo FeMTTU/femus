@@ -20,7 +20,8 @@ int main(int argc,char **args) {
         files.CheckIODirectories();
         files.RedirectCout();
 
-  std::string input_file = "turek_FSI1.neu";
+//   std::string input_file = "turek_FSI1.neu";
+  std::string input_file = "turek1.med";
 //    std::string input_file = "cyl.med";
 //    std::string input_file = "horse2.med";
 //    std::string input_file = "knot.neu";
@@ -44,8 +45,8 @@ int main(int argc,char **args) {
   
   const int n_sub = 1;
 //   ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
-  
-  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+  const bool read_groups = false;
+  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref,read_groups);
   
   ml_msh.PrintInfo();
   
