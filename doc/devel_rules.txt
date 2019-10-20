@@ -178,6 +178,10 @@ In Mesh:
   
   The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
 
+- AAA: I think I found how to do the "quadrangle-mapping" mesh of a face where one side has multiple edges coming from Explode!!! 
+  I just do the same, but I specify "Composite wire discretization" instead of "Wire discretization"!!!
+
+  
  #############################################
 ###### SALOME - HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES #################
 ############################################# 
@@ -223,6 +227,7 @@ In the meantime, you can:
   - perform drawing operations in the Shaper module 
   - do "Export to Geom" if you want to then do the meshing.
 
+At the beginning you start with a "Partset" that contains 7 elements (Origin, axes, ...) that cannot be deleted  
 To draw stuff in Shaper, first create a Part with "New Part".
 
 Notice: things that are exported to Geom are those that appear under the "Results" of a Part.
@@ -235,6 +240,9 @@ Ok, it seems like:
  - Construction allows to put precise information
 
  When you do a Sketch, remove the Interaction Style Switch (white mouse icon)
+ 
+ - If you built a Point as a Construction in the Partset and you want to REMOVE it, you have to click on "Partset" and say "Activate". 
+   Then you can right-click and finally "Delete" is active. Then, Deactivate again to continue drawing
  
 ##################################
 ###### SALOME - ROTATIONS ########
