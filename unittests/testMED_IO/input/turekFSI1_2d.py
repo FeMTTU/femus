@@ -801,16 +801,26 @@ Mesh_17.ConvertToQuadratic(0, Mesh_17,True)
 Mesh_18.ConvertToQuadratic(0, Mesh_18,True)
 Mesh_19.ConvertToQuadratic(0, Mesh_19,True)
 Mesh_20.ConvertToQuadratic(0, Mesh_20,True)
-Mesh_Compound_1 = smesh.Concatenate( [ Mesh_1.GetMesh(), Mesh_2.GetMesh(), Mesh_3.GetMesh(), Mesh_4.GetMesh(), Mesh_5.GetMesh(), Mesh_6.GetMesh(), Mesh_7.GetMesh(), Mesh_8.GetMesh(), Mesh_9.GetMesh(), Mesh_10.GetMesh(), Mesh_11.GetMesh(), Mesh_12.GetMesh(), Mesh_13.GetMesh(), Mesh_14.GetMesh(), Mesh_15.GetMesh(), Mesh_16.GetMesh(), Mesh_17.GetMesh(), Mesh_18.GetMesh(), Mesh_19.GetMesh(), Mesh_20.GetMesh() ], 1, 1, 1e-05, False )
-smesh.SetName(Mesh_Compound_1, 'Compound_Mesh_1')
+Mesh_Compound_1_removed_inner_edges = smesh.Concatenate( [ Mesh_1.GetMesh(), Mesh_2.GetMesh(), Mesh_3.GetMesh(), Mesh_4.GetMesh(), Mesh_5.GetMesh(), Mesh_6.GetMesh(), Mesh_7.GetMesh(), Mesh_8.GetMesh(), Mesh_9.GetMesh(), Mesh_10.GetMesh(), Mesh_11.GetMesh(), Mesh_12.GetMesh(), Mesh_13.GetMesh(), Mesh_14.GetMesh(), Mesh_15.GetMesh(), Mesh_16.GetMesh(), Mesh_17.GetMesh(), Mesh_18.GetMesh(), Mesh_19.GetMesh(), Mesh_20.GetMesh() ], 1, 1, 1e-05, False )
+smesh.SetName(Mesh_Compound_1_removed_inner_edges, 'Compound_Mesh_1')
 try:
-  Mesh_Compound_1.ExportMED(r'/home/gbornia/software/femus/unittests/testMED_IO/input/turek1.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=0)
+  Mesh_Compound_1_removed_inner_edges.ExportMED(r'/home/gbornia/software/femus/unittests/testMED_IO/input/turek1.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=0)
   pass
 except:
   print('ExportMED() failed. Invalid file name?')
-smesh.SetName(Mesh_Compound_1, 'Mesh_Compound_1')
+smesh.SetName(Mesh_Compound_1_removed_inner_edges, 'Mesh_Compound_1')
 try:
-  Mesh_Compound_1.ExportMED(r'/home/gbornia/software/femus/unittests/testMED_IO/input/turek1.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=1)
+  Mesh_Compound_1_removed_inner_edges.ExportMED(r'/home/gbornia/software/femus/unittests/testMED_IO/input/turek1.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=1)
+  pass
+except:
+  print('ExportMED() failed. Invalid file name?')
+aCriteria = []
+aCriterion = smesh.GetCriterion(SMESH.EDGE,SMESH.FT_FreeBorders,SMESH.FT_Undefined,0,SMESH.FT_LogicalNOT)
+aCriteria.append(aCriterion)
+isDone = Mesh_Compound_1_removed_inner_edges.RemoveElements( [ 1, 2, 3, 4, 5, 6, 7, 8, 21, 27, 33, 34, 35, 36, 37, 38, 39, 40, 41, 54, 55, 56, 57, 58, 59, 60, 77, 78, 79, 96, 97, 98, 99, 100, 101, 102, 119, 120, 121, 122, 123, 124, 139, 140, 147, 156, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 269, 270, 277, 294, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391 ] )
+smesh.SetName(Mesh_Compound_1_removed_inner_edges, 'Mesh_Compound_1')
+try:
+  Mesh_Compound_1_removed_inner_edges.ExportMED(r'/home/gbornia/software/femus/unittests/testMED_IO/input/turek1.med',auto_groups=0,minor=40,overwrite=1,meshPart=None,autoDimension=0)
   pass
 except:
   print('ExportMED() failed. Invalid file name?')
@@ -928,7 +938,7 @@ smesh.SetName(Sub_mesh_22, 'Sub-mesh_22')
 smesh.SetName(Sub_mesh_21, 'Sub-mesh_21')
 smesh.SetName(Sub_mesh_41, 'Sub-mesh_41')
 smesh.SetName(Sub_mesh_42, 'Sub-mesh_42')
-smesh.SetName(Mesh_Compound_1.GetMesh(), 'Mesh_Compound_1')
+smesh.SetName(Mesh_Compound_1_removed_inner_edges.GetMesh(), 'Mesh_Compound_1_removed_inner_edges')
 smesh.SetName(Mesh_20.GetMesh(), 'Mesh_20')
 smesh.SetName(Mesh_19.GetMesh(), 'Mesh_19')
 smesh.SetName(Mesh_18.GetMesh(), 'Mesh_18')
