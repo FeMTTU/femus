@@ -301,6 +301,15 @@ So the idea seems to be NOT the following:
  - The only problem is that now one face does not have 4 edges, but one side can be made of multiple edges,
    and that creates problems in the mapping algorithm. So, it's all about making 1 edge
    
+########################################
+###### SALOME - BOUNDARY CONDITIONS ########
+#######################################
+
+ I think it's best if I do the groups on the initial meshes (before doing the Compound)
+  because there I can do "Group on geometry",
+while a Compound does not have an associated Geometry to it
+ (alternatively, one could do Group on Filter maybe)
+
    
 ########################################
 ###### SALOME - QUESTIONS ######

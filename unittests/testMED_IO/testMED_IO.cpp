@@ -22,7 +22,7 @@ int main(int argc,char **args) {
 
  std::vector< std::string >  input_files;
  input_files.push_back("turek_FSI1.med");
-//   std::string input_file = "turek_FSI1.neu";
+ input_files.push_back("turek_FSI1.neu");
 //   std::string input_file = "turek1.med";
 //    std::string input_file = "cyl.med";
 //    std::string input_file = "horse2.med";
