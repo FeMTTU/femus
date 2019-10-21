@@ -218,7 +218,7 @@ I cannot creat a Submesh of a Submesh
     
     Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
     
-    
+- Do extrusion only of faces to avoid generation of extra edges    
   
 ##################################
 ###### SALOME - SHAPER MODULE ####
