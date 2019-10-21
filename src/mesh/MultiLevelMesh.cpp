@@ -182,13 +182,14 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
 {
     
   const bool read_groups = true; //by default groups are read
+  const bool read_boundary_groups = true; //by default boundary groups are read
   
-    ReadCoarseMesh(mesh_file, GaussOrder, Lref, read_groups);
+    ReadCoarseMesh(mesh_file, GaussOrder, Lref, read_groups, read_boundary_groups);
    
 }
 
 
-void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups)
+void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups)
 {
     _gridn0 = 1;
 
@@ -198,7 +199,7 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
     //coarse mesh
     _level0[0] = new Mesh();
     std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
-    _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag, read_groups);
+    _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag, read_groups, read_boundary_groups);
 
     BuildElemType(GaussOrder);
 

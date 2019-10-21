@@ -72,11 +72,9 @@ class MED_IO : public MeshInput<Mesh>
 //   ~MED_IO();
   
   /**
-   * Reads in a mesh in the neutral gambit *.neu format
-   * from the ASCII file given by name.
-   *
+   * Reads in a mesh in the  *.med format
    */
-  virtual void read (const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups);
+  virtual void read (const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups, const bool read_boundary_groups);
 
  private:
      

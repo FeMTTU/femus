@@ -7,7 +7,7 @@
 
 using namespace femus;
 
-// Test for SalomeIO reading
+// Test for mesh file reading
 
 
 int main(int argc,char **args) {
@@ -20,7 +20,9 @@ int main(int argc,char **args) {
         files.CheckIODirectories();
         files.RedirectCout();
 
-  std::string input_file = "turek_FSI1.neu";
+ std::vector< std::string >  input_files;
+ input_files.push_back("turek_FSI1.med");
+//   std::string input_file = "turek_FSI1.neu";
 //   std::string input_file = "turek1.med";
 //    std::string input_file = "cyl.med";
 //    std::string input_file = "horse2.med";
@@ -33,7 +35,10 @@ int main(int argc,char **args) {
 //   std::string input_file = "Hex27_One_boundaries_groups.med";
 //   std::string input_file = "Tet10_Twelve_boundaries.med"; ///@todo there seems to be an error in the output computation of biquadratic nodes
 //   std::string input_file = "OneTet10.med";
-  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
+ 
+        for(unsigned m = 0; m < input_files.size(); m++) {
+            
+  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_files[m];
   const std::string infile = mystream.str();
 
   //Nondimensional
@@ -45,8 +50,9 @@ int main(int argc,char **args) {
   
   const int n_sub = 1;
 //   ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
-  const bool read_groups = false;
-  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref,read_groups);
+  const bool read_groups = true;
+  const bool read_boundary_groups = false;
+  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref,read_groups, read_boundary_groups);
   
   ml_msh.PrintInfo();
   
@@ -70,11 +76,15 @@ int main(int argc,char **args) {
   const std::string output_dir = files.GetOutputPath();
 //   const std::string output_dir = DEFAULT_OUTPUTDIR;
   
+  
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
-  ml_sol.GetWriter()->Write(output_dir, "linear", variablesToBePrinted);
-  ml_sol.GetWriter()->Write(output_dir, "quadratic", variablesToBePrinted);
-  ml_sol.GetWriter()->Write(output_dir, "biquadratic", variablesToBePrinted);
+
+
+  ml_sol.GetWriter()->Write(input_files[m], output_dir, "linear", variablesToBePrinted);
+  ml_sol.GetWriter()->Write(input_files[m], output_dir, "quadratic", variablesToBePrinted);
+  ml_sol.GetWriter()->Write(input_files[m], output_dir, "biquadratic", variablesToBePrinted);
+  
 //   ml_sol.SetWriter(XDMF); 
 //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
 //   ml_sol.GetWriter()->Write(output_dir, "linear", variablesToBePrinted);
@@ -84,7 +94,11 @@ int main(int argc,char **args) {
 // recent versions of Paraview do not read the GMV format
 //   ml_sol.SetWriter(GMV);  
 //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
-//   ml_sol.GetWriter()->Write(output_dir,"biquadratic",variablesToBePrinted);
+//   ml_sol.GetWriter()->Write(output_dir,"biquadratic",variablesToBePrinted);  
+            
+        }
+        
+
 
   
   return 0;

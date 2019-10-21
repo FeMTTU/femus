@@ -126,7 +126,7 @@ namespace femus
 
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
-  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups) {
+  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
 
     _print_info = false;  
       
@@ -156,7 +156,7 @@ namespace femus
 
       
 
-      if (read_groups == true)  {
+      if (read_groups == true || read_boundary_groups == true )  {
           
 // Groups of the mesh ===============
      std::vector< GroupInfo >     group_info = get_group_vector_flags_per_mesh(file_id,mesh_menus[j]);
@@ -165,16 +165,20 @@ namespace femus
               compute_group_geom_elem_and_size(file_id, mesh_menus[j],group_info[i]);
           }
           
-    
-// Group ownership ===============
+// Groups ===============
+    if (read_groups == true) {
       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
          set_elem_group_ownership(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], group_info);
       }
-             
-// Boundary ===============
+    }
+    
+// Boundary groups ===============
+      if (read_boundary_groups == true)  {
     if (mesh.GetDimension() > 1)         find_boundary_faces_and_set_face_flags(file_id, mesh_menus[j], geom_elem_per_dimension[mesh.GetDimension() -1 -1], group_info);
     else if (mesh.GetDimension() == 1)   find_boundary_nodes_and_set_node_flags(file_id, mesh_menus[j], group_info);
       }
+          
+    }
       
       
     }
@@ -501,7 +505,7 @@ namespace femus
         
 // ****************** Volume *******************************************    
            if ( i == (mesh.GetDimension() - 1 ) ) { //volume
-    std::vector < unsigned > materialElementCounter(3,0);  //I think this counts who is fluid, who is solid, who whatever else, need to double check with the Gambit input files
+    std::vector < unsigned > materialElementCounter(3,0);  ///@todo I think this counts who is fluid, who is solid, who whatever else, need to double check with the Gambit input files
     const unsigned group_property_fluid_probably          = 2;
     const unsigned group_property_something_else_probably = 3;
     const unsigned group_property_solid_probably          = 4;
@@ -514,9 +518,12 @@ namespace femus
             if ( i > 0 )  {
             if ( i == group_info[gv]._geom_el->get_dimension() - 1 ) {
         for(unsigned g = 0; g < fam_map.size()/*group_info[gv]._size*//*number_of_group_elements*/; g++) {
-            if (fam_map[g] == group_info[gv]._med_flag)   mesh.el->SetElementGroup(g, /*fam_map[g]*/ group_info[gv]._user_defined_flag /*gr_integer_name*/);  //I think that 1 is set later as the default  group number
+            if (fam_map[g] == group_info[gv]._med_flag)   {
+                mesh.el->SetElementGroup(g,  group_info[gv]._user_defined_flag /*fam_map[g]*/ /*gr_integer_name*/);  //I think that 1 is set later as the default  group number
+                mesh.el->SetElementMaterial(g, group_info[gv]._user_defined_property );
 //         mesh.el->SetElementMaterial(elem_indices[g] - 1 - n_elements_b_bb, group_info[gv]._user_defined_property /*gr_material*/);
-// 	
+            }
+
          if(group_info[gv]._user_defined_property/*gr_material*/ == group_property_fluid_probably          ) materialElementCounter[0] += 1;
 	else if(group_info[gv]._user_defined_property/*gr_material*/ == group_property_something_else_probably ) materialElementCounter[1] += 1;
 	else                                                            materialElementCounter[2] += 1;

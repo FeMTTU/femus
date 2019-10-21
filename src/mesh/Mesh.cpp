@@ -142,20 +142,21 @@ namespace femus {
       
       
       const bool read_groups = true; //by default groups are read
+      const bool read_boundary_groups = true; //by default boundary groups are read
       
-      ReadCoarseMesh(name, Lref, type_elem_flag, read_groups);
+      ReadCoarseMesh(name, Lref, type_elem_flag, read_groups, read_boundary_groups);
   
   }
   
   
-  void Mesh::ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups) {
+  void Mesh::ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
       
 
     if (name.rfind (".neu") < name.size()) {
-      GambitIO (*this).read (name, _coords, Lref, type_elem_flag, read_groups);
+      GambitIO (*this).read (name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
     }
     else if (name.rfind (".med") < name.size()) {
-      MED_IO (*this).read (name, _coords, Lref, type_elem_flag, read_groups);
+      MED_IO (*this).read (name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
     }
     else {
       std::cerr << " ERROR: Unrecognized file extension: " << name
@@ -171,7 +172,7 @@ namespace femus {
   /**
    *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file
    **/
-  void Mesh::ReadCoarseMesh (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups) {
+  void Mesh::ReadCoarseMesh (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
 
     SetIfHomogeneous (true);
 
@@ -180,7 +181,7 @@ namespace femus {
     _level = 0;
 
     
-    ReadCoarseMeshFile(name, Lref, type_elem_flag, read_groups);
+    ReadCoarseMeshFile(name, Lref, type_elem_flag, read_groups, read_boundary_groups);
 
     
 
