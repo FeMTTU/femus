@@ -306,6 +306,13 @@ So the idea seems to be NOT the following:
 ###### SALOME - QUESTIONS ######
 ########################################   
 
+- When you do Extrusion, it also generates the Groups of Volumes from Groups of Faces! It puts a suffix "_extruded"
+
+- When you remove inner edges in a compound mesh and then you dump the script and reload it, the mesh is corrupted! 
+On the other hand, if instead of dumping the script I save the study it is NOT corrupted! So, I will stick with saving the study for now.
+
+- Other times, you dump the script and the Shaper is gone!! It is a current bug! Up to now, you need to activate Shaper before any dumping. Sorry.
+
 - Operations in the Mesh such as "Convert to/from quadratic", "Remove elements" and others
   are not shown as stages in the Mesh menu in Object Browser
 

@@ -1,3 +1,17 @@
+#!/usr/bin/env python
+
+###
+### This file is generated automatically by SALOME v9.3.0 with dump python functionality
+###
+
+import sys
+import salome
+
+salome.salome_init()
+import salome_notebook
+notebook = salome_notebook.NoteBook()
+sys.path.insert(0, r'/home/gbornia/software/femus/unittests/testMED_IO/input')
+
 ###
 ### SHAPER component
 ###
@@ -362,3 +376,7 @@ Export_19 = model.exportToXAO(Part_1_doc, '/tmp/shaper_11pqooll.xao', model.sele
 Export_20 = model.exportToXAO(Part_1_doc, '/tmp/shaper_uxsu3g40.xao', model.selection("FACE", "face_around_circle_s"), 'XAO')
 model.do()
 model.end()
+
+
+if salome.sg.hasDesktop():
+  salome.sg.updateObjBrowser()

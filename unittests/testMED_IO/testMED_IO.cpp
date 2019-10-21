@@ -20,8 +20,8 @@ int main(int argc,char **args) {
         files.CheckIODirectories();
         files.RedirectCout();
 
-//   std::string input_file = "turek_FSI1.neu";
-  std::string input_file = "turek1.med";
+  std::string input_file = "turek_FSI1.neu";
+//   std::string input_file = "turek1.med";
 //    std::string input_file = "cyl.med";
 //    std::string input_file = "horse2.med";
 //    std::string input_file = "knot.neu";
