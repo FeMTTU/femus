@@ -517,7 +517,7 @@ namespace femus
 
             if ( i > 0 )  {
             if ( i == group_info[gv]._geom_el->get_dimension() - 1 ) {
-        for(unsigned g = 0; g < fam_map.size()/*group_info[gv]._size*//*number_of_group_elements*/; g++) {
+        for(/*unsigned*/ int g = 0; g < fam_map.size()/*group_info[gv]._size*//*number_of_group_elements*/; g++) {
             if (fam_map[g] == group_info[gv]._med_flag)   {
                 mesh.el->SetElementGroup(g,  group_info[gv]._user_defined_flag /*fam_map[g]*/ /*gr_integer_name*/);  //I think that 1 is set later as the default  group number
                 mesh.el->SetElementMaterial(g, group_info[gv]._user_defined_property );

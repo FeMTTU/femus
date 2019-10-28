@@ -21,8 +21,9 @@ int main(int argc,char **args) {
         files.RedirectCout();
 
  std::vector< std::string >  input_files;
- input_files.push_back("turek_FSI1.med");
- input_files.push_back("turek_FSI1.neu");
+//  input_files.push_back("turek_FSI1.med");
+ input_files.push_back("turek_FSI1_all.med");
+//  input_files.push_back("turek_FSI1.neu");
 //   std::string input_file = "turek1.med";
 //    std::string input_file = "cyl.med";
 //    std::string input_file = "horse2.med";
@@ -51,7 +52,7 @@ int main(int argc,char **args) {
   const int n_sub = 1;
 //   ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
   const bool read_groups = true;
-  const bool read_boundary_groups = false;
+  const bool read_boundary_groups = true;
   ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref,read_groups, read_boundary_groups);
   
   ml_msh.PrintInfo();
