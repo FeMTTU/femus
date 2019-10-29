@@ -124,11 +124,13 @@ namespace femus {
 
   void Mesh::Partition() {
       
+    const bool flag_for_ncommon_in_metis = false;  
+      
     std::vector < unsigned > partition;
     partition.reserve (GetNumberOfNodes());
     partition.resize (GetNumberOfElements());
     MeshMetisPartitioning meshMetisPartitioning (*this);
-    meshMetisPartitioning.DoPartition (partition, false);
+    meshMetisPartitioning.DoPartition (partition, flag_for_ncommon_in_metis);
     FillISvector (partition);
     partition.resize (0);
     
@@ -432,46 +434,48 @@ namespace femus {
     }
     // std::cout << "AAAAAAAAAAAAAAAAAAAA\n";
     for (int isdom = 0; isdom < _nprocs; isdom++) {
-//       for (unsigned i = _elementOffset[isdom]; i < _elementOffset[isdom + 1] - 1; i++) {
-//         unsigned iel = imapping[i];
-//         unsigned ielMat = el->GetElementMaterial (iel);
-//         unsigned ielGroup = el->GetElementGroup (iel);
-//         for (unsigned j = i + 1; j < _elementOffset[isdom + 1]; j++) {
-//           unsigned jel = imapping[j];
-//           unsigned jelMat = el->GetElementMaterial (jel);
-//           unsigned jelGroup = el->GetElementGroup (jel);
-//           if (jelMat < ielMat || (jelMat == ielMat && jelGroup < ielGroup || (jelGroup == ielGroup && iel > jel))) {
-//             imapping[i] = jel;
-//             imapping[j] = iel;
-//             iel = jel;
-//             ielMat = jelMat;
-//             ielGroup = jelGroup;
-//           }
-//         }
-//       }
-      unsigned jel, iel;
-      short unsigned jelMat, jelGroup, ielMat, ielGroup;
-
-      unsigned n = _elementOffset[isdom + 1u] - _elementOffset[isdom];
-      while (n > 1) {
-        unsigned newN = 0u;
-        for (unsigned j = _elementOffset[isdom] + 1u; j < _elementOffset[isdom] + n ; j++) {
-          jel = imapping[j];
-          jelMat = el->GetElementMaterial (jel);
-          jelGroup = el->GetElementGroup (jel);
-
-          iel = imapping[j - 1];
-          ielMat = el->GetElementMaterial (iel);
-          ielGroup = el->GetElementGroup (iel);
-
-          if (jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
-            imapping[j - 1] = jel;
+        
+      for (unsigned i = _elementOffset[isdom]; i < _elementOffset[isdom + 1] - 1; i++) {
+        unsigned iel = imapping[i];
+        unsigned ielMat = el->GetElementMaterial (iel);
+        unsigned ielGroup = el->GetElementGroup (iel);
+        for (unsigned j = i + 1; j < _elementOffset[isdom + 1]; j++) {
+          unsigned jel = imapping[j];
+          unsigned jelMat = el->GetElementMaterial (jel);
+          unsigned jelGroup = el->GetElementGroup (jel);
+          if (jelMat < ielMat || (jelMat == ielMat && jelGroup < ielGroup || (jelGroup == ielGroup && iel > jel))) {
+            imapping[i] = jel;
             imapping[j] = iel;
-            newN = j;
+            iel = jel;
+            ielMat = jelMat;
+            ielGroup = jelGroup;
           }
         }
-        n = newN;
       }
+        
+// // //       unsigned jel, iel;
+// // //       short unsigned jelMat, jelGroup, ielMat, ielGroup;
+// // // 
+// // //       unsigned n = _elementOffset[isdom + 1u] - _elementOffset[isdom];
+// // //       while (n > 1) {
+// // //         unsigned newN = 0u;
+// // //         for (unsigned j = _elementOffset[isdom] + 1u; j < _elementOffset[isdom] + n ; j++) {
+// // //           jel = imapping[j];
+// // //           jelMat = el->GetElementMaterial (jel);
+// // //           jelGroup = el->GetElementGroup (jel);
+// // // 
+// // //           iel = imapping[j - 1];
+// // //           ielMat = el->GetElementMaterial (iel);
+// // //           ielGroup = el->GetElementGroup (iel);
+// // // 
+// // //           if (jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
+// // //             imapping[j - 1] = jel;
+// // //             imapping[j] = iel;
+// // //             newN = j;
+// // //           }
+// // //         }
+// // //         n = newN;
+// // //       }
 
     }
 
