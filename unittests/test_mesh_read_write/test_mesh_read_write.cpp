@@ -49,7 +49,7 @@ int main(int argc,char **args) {
 
   MultiLevelMesh ml_msh;
   
-  const int n_sub = 1;
+//   const int n_sub = 1;
 //   ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
   const bool read_groups = true;
   const bool read_boundary_groups = true;
@@ -58,7 +58,7 @@ int main(int argc,char **args) {
   ml_msh.PrintInfo();
   
   // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution ml_sol(&ml_msh);
+  MultiLevelSolution ml_sol(&ml_msh); //I think I cannot read the mesh alone, I need to attach at least one solution
 
   // add variables to ml_sol
   ml_sol.AddSolution("u", LAGRANGE, FIRST);

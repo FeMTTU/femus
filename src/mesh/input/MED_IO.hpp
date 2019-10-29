@@ -44,7 +44,7 @@ namespace femus
   struct GroupInfo {
       TYPE_FOR_FAM_FLAGS _med_flag;
       int _user_defined_flag;
-      int _user_defined_property;
+      unsigned int _user_defined_property;
       GeomElemBase* _geom_el;
       int _size;
   };

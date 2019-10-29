@@ -472,6 +472,7 @@ namespace femus {
         }
         n = newN;
       }
+
     }
 
     for (unsigned i = 0; i < GetNumberOfElements(); i++) {
