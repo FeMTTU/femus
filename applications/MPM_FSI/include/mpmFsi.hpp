@@ -581,9 +581,9 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
         adept::adouble CauchyDIR[3] = {0., 0., 0.};
 
-        for (unsigned j = 0.; j < dim; j++) {
-          for (unsigned k = 0.; k < dim; k++) {
-            CauchyDIR[j] += gradPhi[i * dim + k] * Cauchy[j][k];
+        for (unsigned k = 0.; k < dim; k++) {
+          for (unsigned j = 0.; j < dim; j++) {
+            CauchyDIR[k] += gradPhi[i * dim + j] * Cauchy[k][j];
           }
         }
 
@@ -1617,4 +1617,6 @@ void GetPressureNeighbor (MultiLevelSolution &mlSol, Line & solidLine, Line & fl
   sol->_Sol[solIndexPNs]->close();
 
 }
+
+
 
