@@ -392,7 +392,7 @@ int main (int argc, char** args) {
       x[counter][1] = y1;
       
       tangent[counter][0][0] = 0.;
-      tangent[counter][0][1] = +DL1;
+      tangent[counter][0][1] = DL1;
       
       counter++;
       y1 -= DL1;
@@ -488,6 +488,7 @@ int main (int argc, char** args) {
 
 
   fluidLine->GetParticlesToGridMaterial (false);
+  interfaceLine->GetParticlesToGridMaterial (false);
   solidLine->GetParticlesToGridMaterial (true);
   GetParticlesToNodeFlag (mlSol, *solidLine, *fluidLine);
 
@@ -525,11 +526,15 @@ int main (int argc, char** args) {
 
     mlSol.GetWriter()->Write ("./output1", "biquadratic", print_vars, time_step);
 
-    GridToParticlesProjection (ml_prob, *solidLine, *fluidLine);
+    GridToParticlesProjection (ml_prob, *solidLine, *fluidLine, *interfaceLine);
 
     solidLine->GetLine (lineS[0]);
     PrintLine (DEFAULT_OUTPUTDIR, "solidLine", lineS, time_step);
     PrintLine ("./output1", "solidLine", lineS, time_step);
+    
+    interfaceLine->GetLine (lineI[0]);
+    PrintLine (DEFAULT_OUTPUTDIR, "interfaceLine", lineI, time_step);
+    PrintLine ("./output1", "interfaceLine", lineI, time_step);
 
     fluidLine->GetLine (lineF[0]);
     PrintLine (DEFAULT_OUTPUTDIR, "fluidLine", lineF, time_step);
