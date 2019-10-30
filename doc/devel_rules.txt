@@ -54,6 +54,15 @@ FEMuS includes,
 - Put the mesh file in the input/ directory
 - Set the filename in the main file
 
+####### How to run in parallel with threads instead of cores ##########
+
+"nproc" gives the number of threads. If your CPU has 2 threads per core, "mpirun -n " works up to nproc/2
+
+To overcome this, do
+
+"mpirun --map-by socket:OVERSUBSCRIBE -n ..."
+
+
 ####### How to schedule a suite of runs ##########
 - Script
 
