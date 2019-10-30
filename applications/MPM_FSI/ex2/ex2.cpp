@@ -338,7 +338,7 @@ int main (int argc, char** args) {
   //BEGIN interface markers
   {
     x.resize (0);
-    mass.resize (0);
+    std::vector < std::vector < std::vector < double > > > tangent;
     markerType.resize (0);
 
     double xs = xc - 0.5 * H0;
@@ -351,8 +351,12 @@ int main (int argc, char** args) {
     double DH1 = H0 / (rows - 1);
 
     x.resize (2 * columns + (rows - 2));
+    tangent.resize(2 * columns + (rows - 2));
+    
     for (unsigned s = 0; s < x.size(); s++) {
       x[s].resize (dim, 0.);
+      tangent[s].resize(1);
+      tangent[s][0].resize(dim,0.);
     }
     double x1 = xs;
     double y1 = ys;
@@ -360,33 +364,48 @@ int main (int argc, char** args) {
     for (unsigned j = 0; j < columns; j++) {
       x[counter][0] = x1;
       x[counter][1] = y1;
+      
+      tangent[counter][0][0] = 0.;
+      tangent[counter][0][1] = -DL1;
+      
       counter++;
       y1 += DL1;
+      
     }
     x1 += DH1;
     y1 -= DL1;
     for (unsigned j = 1; j < rows; j++) {
       x[counter][0] = x1;
       x[counter][1] = y1;
+      
+      tangent[counter][0][0] = -DH1;
+      tangent[counter][0][1] = 0.;
+      
       counter++;
       x1 += DH1;
+      
     }
     x1 -= DH1;
     y1 -= DL1;
     for (unsigned j = 1; j < columns; j++) {
       x[counter][0] = x1;
       x[counter][1] = y1;
+      
+      tangent[counter][0][0] = 0.;
+      tangent[counter][0][1] = +DL1;
+      
       counter++;
       y1 -= DL1;
     }
-    mass.assign (x.size(), rhos * DL1 * DH1);
-    markerType.assign (x.size(), VOLUME);
+    
+    markerType.assign (x.size(), INTERFACE);
 
-   
+    solType = 2;
+    interfaceLine = new Line (x, tangent, markerType, mlSol.GetLevel (numberOfUniformLevels - 1), solType); 
+    
   }
 
-  solType = 2;
-  interfaceLine = new Line (x, mass, markerType, mlSol.GetLevel (numberOfUniformLevels - 1), solType);
+  
 
   std::vector < std::vector < std::vector < double > > > lineI (1);
   interfaceLine->GetLine (lineI[0]);

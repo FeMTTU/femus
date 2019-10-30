@@ -114,6 +114,35 @@ namespace femus {
     }
     Reorder (particles);
   }
+  
+  Line::Line (const std::vector < std::vector < double > > x,
+              const std::vector < std::vector < std::vector < double > > > &tangent,
+              const std::vector <MarkerType>& markerType,
+              Solution* sol, const unsigned& solType) {
+
+    _sol = sol;
+    _mesh = _sol->GetMesh();
+
+    _time.assign (10, 0);
+
+    _size = x.size();
+
+    std::vector < Marker*> particles (_size);
+
+    _dim = _mesh->GetDimension();
+
+    _markerOffset.resize (_nprocs + 1);
+    _markerOffset[_nprocs] = _size;
+
+    _particles.resize (_size);
+    _printList.resize (_size);
+
+    for (unsigned j = 0; j < _size; j++) {
+      particles[j] = new Marker (x[j], 0., markerType[j], _sol, solType, true);
+      particles[j]->SetMarkerTangent (tangent[j]);  
+    }
+    Reorder (particles);
+  }
 
   void Line::Reorder (std::vector < Marker*> &particles) {
 
