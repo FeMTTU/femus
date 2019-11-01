@@ -1,3 +1,17 @@
+\documentclass[10pt]{book}
+
+\usepackage[utf8]{inputenc}
+
+%opening
+\title{Documentation - draft}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+
 SOME RULES FOR DEVELOPING FEMUS - draft
 
 - Use .hpp for header files and .cpp for source files
@@ -19,10 +33,10 @@ FEMuS includes,
 - Try to put the includes EXPLICITLY WHERE THEY HAVE TO BE, 
   and not thinking that somewhere some include will lead me to the file i need...
 
-- In the SCRIPTS, almost all the variables have a FM_ or FEMUS_ prefix.
+- In the SCRIPTS, almost all the variables have a FM\_ or FEMUS\_ prefix.
  The variables without this prefix are like this because 
  they are defined for external packages
- For instance, PETSC_DIR and PETSC_ARCH are used to COMPILE PETSC.
+ For instance, PETSC\_DIR and PETSC\_ARCH are used to COMPILE PETSC.
  
  - when you create a NEW HEADER, make sure you change the INCLUDE GUARD.
  Then, make sure you add the new files to git.
@@ -34,11 +48,13 @@ FEMuS includes,
 
  - data encapsulation, please
  
-##############################
-###### APPLICATION ###########
-##############################
+ 
+\part{Application}
 
-######## How to SETUP a NEW APPLICATION of the LIBRARY (will do a script probably) #############
+
+
+ \section{How to SETUP a NEW APPLICATION of the LIBRARY (will do a script probably)}
+
 - Create a folder in the Applications directory with your main function and your src/header files
 - Write the Cmakelists.txt file for it
 - Add the reference to the application in the Cmakelists.txt of the package library
@@ -47,14 +63,17 @@ FEMuS includes,
 - now go to the binary directory and type make to generate the library
 - then enter your application folder and run make to generate your executable
 
-######## How to IMPLEMENT A NEW APPLICATION #############
+ \section{How to IMPLEMENT A NEW APPLICATION}
+
 - Follow the examples
 
-###### How to change the mesh file of an application ###########
+\section{How to change the mesh file of an application}
+
 - Put the mesh file in the input/ directory
 - Set the filename in the main file
 
-####### How to run in parallel with threads instead of cores ##########
+ \section{How to run in parallel with threads instead of cores}
+
 
 "nproc" gives the number of threads. If your CPU has 2 threads per core, "mpirun -n " works up to nproc/2
 
@@ -63,17 +82,20 @@ To overcome this, do
 "mpirun --map-by socket:OVERSUBSCRIBE -n ..."
 
 
-####### How to schedule a suite of runs ##########
+ \section{How to schedule a suite of runs}
+
 - Script
 
-###### When you change the input file in the repo folder (NOT IN THE BINARY FOLDER) then you have to RERUN CMAKE !!! #############
+ \section{When you change the input file in the repo folder (NOT IN THE BINARY FOLDER) then you have to RERUN CMAKE !!!}
+ 
 
-####### How to RESTART a run of an application ##########
+ \section{How to RESTART a run of an application}
+ 
 - THE WHOLE RUN is in a single "time" DIRECTORY...
   so to restart we will EXCLUSIVELY READ from THAT DIRECTORY
 
-- Set the folder from which to restart in the file run_to_restart_from
-- set the ITERATION NUMBER in the "initial_step" variable in the configuration file IN THE FOLDER OF THE CONSIDERED RUN!
+- Set the folder from which to restart in the file run\_to\_restart\_from
+- set the ITERATION NUMBER in the "initial\_step" variable in the configuration file IN THE FOLDER OF THE CONSIDERED RUN!
 - set the other parameters like "nsteps"
 
 - We must be very careful.
@@ -84,9 +106,8 @@ To overcome this, do
 
 
 
-##################################
-###### GIT CHEAT SHEET ###########
-##################################
+\part{Git Cheat Sheet}
+
 
 - First golden rule: using the manual never hurts.
 
@@ -101,7 +122,7 @@ To overcome this, do
 
   (this shows you more than you see with "git config -e"
   because it also reads other git configuration files,
-  such as $HOME/.gitconfig)
+  such as \$HOME/.gitconfig)
 
 - To contribute:
   Create a personal github account 
@@ -113,9 +134,9 @@ To overcome this, do
   The maintainers will decide what to do with the pull request and possibly it will be merged to master
   Periodically, sync the master in the fork with the master in the main femus repository
 
-##################################
 
-WORKFLOW for updating the master in the FORK from the master in the MAIN REPO
+\section{WORKFLOW for updating the master in the FORK from the master in the MAIN REPO}
+
 
 In github:
 
@@ -136,9 +157,9 @@ From command line:
 
 To be added
 
-##################################
 
-How to install HDFVIEW
+\section{How to install HDFVIEW}
+
 
 Follow the instruction in the HDFVIEW website
 
@@ -147,10 +168,10 @@ You must open that script and change the INSTALLDIR variable with the path of th
 
 Another alternative to view the content of an HDF5 file is to use the 'h5dump' utility shipped with HDF5 (installed through PETSc, for instance)
 
+\part{Salome}
 
-#############################################
-###### SALOME - HOW TO MESH #################
-#############################################
+ \chapter{How To Mesh}
+
 
  Use the NoteBook tab to define variables and parametrize your operations!
 
@@ -182,7 +203,7 @@ In Mesh:
      --> Rename it to "Mesh" + something!!!
      
 - Then, Groups of Mesh elements 
-  (must be named Group_X_Y, where X is the flag given to the object and Y is the type of boundary condition (0 = Dirichlet, 1 = Neumann). What about the groups that are not for boundary conditions?)
+  (must be named \verb|Group_X_Y|, where X is the flag given to the object and Y is the type of boundary condition (0 = Dirichlet, 1 = Neumann). What about the groups that are not for boundary conditions?)
 
   In order to enforce Boundary Conditions, Material Properties, and potentially other things too,
   we have to define Groups of Edges, or Faces, or Volumes (Groups of Nodes for the extremes of a 1d domain)
@@ -193,21 +214,31 @@ In Mesh:
   I just do the same, but I specify "Composite wire discretization" instead of "Wire discretization"!!!
 
   
- #############################################
-###### SALOME - HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES #################
-############################################# 
+\chapter{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
+
 
 When you explode adjacent faces, the edges are called differently... we should identify them
 
-#############################################
-###### SALOME - HOW TO MESH - 3D ############
-#############################################
+
+ \chapter{HOW TO CHANGE THE MESH BY CHANGING THE GEOMETRY}
+
+
+ There is a command called "Move node", perhaps it helps avoiding to remesh everything if I go back and change the Geometry instead...
+
+ 
+\chapter{COPY MESH}
+
+ 
+ It seems that Copy Mesh does not copy groups as well
+ 
+ 
+
+\chapter{HOW TO MESH - 3D}
+
 
 - If I want to create a mesh of a Box with 3 arbitrary mesh discretizations in the 3 directions,
   what is the best way to do that?
   
-- If your mesh can be thought of as an Extrusion of a 2D mesh, one way to do this 
-  is simply to do your 2D mesh and then to 
 
 I cannot creat a Submesh of a Submesh
 
@@ -227,11 +258,20 @@ I cannot creat a Submesh of a Submesh
     
     Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
     
-- Do extrusion only of faces to avoid generation of extra edges    
+
+    
+\section{MESH EXTRUSION}
+
+
+- If your mesh can be thought of as an Extrusion of a 2D mesh, one way to do this 
+  is simply to do your 2D mesh and then extrude it
   
-##################################
-###### SALOME - SHAPER MODULE ####
-##################################
+- Do extrusion only of faces to avoid generation of extra edges    
+
+- "Scale factors" refer to the TRANSVERSAL direction, not the orthogonal one
+
+ \chapter{SHAPER MODULE}
+
 
 This is a new module that in the long run is supposed to replace the role of the GEOM module.
 In the meantime, you can:
@@ -257,16 +297,14 @@ Ok, it seems like:
 
  - Pay attention sometimes when you Dump study, it seems like you may lose the Shaper part!!!  
    
-##################################
-###### SALOME - ROTATIONS ########
-##################################
+ \chapter{ROTATIONS}
+
 
 If you have to rotate, do not do that in the Geometry, because then the Mesh will not follow.
 If you do it in the Mesh, the Geometry does not follow either.
 
-##################################
-###### SALOME - SPLIT EDGES/FACES ########
-##################################
+\chapter{SPLIT EDGES/FACES}
+
 
 The tool for this is: Partition then Explode. At first it seems like with Partition no split happens, but then if you do Explode you will get all the pieces
 It seems like Cut is not the right tool for splitting
@@ -274,9 +312,7 @@ It seems like Cut is not the right tool for splitting
 Pay attention to the difference between Common and Intersection
 
 
-########################################
-###### SALOME - QUADRILATERAL MESH of a CIRCLE/SEMISPHERE ######
-########################################
+\chapter{QUADRILATERAL MESH of a CIRCLE/SEMISPHERE}
 
 Divided Disk or Divided Cylinder do exactly what you are looking for!!!
 
@@ -310,9 +346,9 @@ So the idea seems to be NOT the following:
  - The only problem is that now one face does not have 4 edges, but one side can be made of multiple edges,
    and that creates problems in the mapping algorithm. So, it's all about making 1 edge
    
-########################################
-###### SALOME - BOUNDARY CONDITIONS ########
-#######################################
+   
+ \chapter{SALOME - BOUNDARY CONDITIONS}
+
 
  I think it's best if I do the groups on the initial meshes (before doing the Compound)
   because there I can do "Group on geometry",
@@ -320,11 +356,12 @@ while a Compound does not have an associated Geometry to it
  (alternatively, one could do Group on Filter maybe)
 
    
-########################################
-###### SALOME - QUESTIONS ######
-########################################   
+ \chapter{SALOME - QUESTIONS}
 
-- When you do Extrusion, it also generates the Groups of Volumes from Groups of Faces! It puts a suffix "_extruded"
+
+- When I remove a Group, can I ask to remove also the elements of that group from the Mesh???
+
+- When you do Extrusion, it also generates the Groups of Volumes from Groups of Faces! It puts a suffix \verb|_extruded|
 
 - When you remove inner edges in a compound mesh and then you dump the script and reload it, the mesh is corrupted! 
 On the other hand, if instead of dumping the script I save the study it is NOT corrupted! So, I will stick with saving the study for now.
@@ -350,3 +387,6 @@ On the other hand, if instead of dumping the script I save the study it is NOT c
     
   Possible answer: I think the way to go in these cases is to do, after Explode, a "Create Group" in the Geometry.
     That group should appear as a "child" of the Geometry object you will then mesh. I can try this to double check.
+
+    
+\end{document}
