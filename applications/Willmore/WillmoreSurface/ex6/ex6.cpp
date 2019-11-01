@@ -102,7 +102,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh("../input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/sphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
@@ -113,7 +113,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  mlMsh.ReadCoarseMesh ("../input/duckpoint85.med", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/duckpoint85.med", "seventh", scalingFactor);
 
   // Set number of mesh levels.
   unsigned numberOfUniformLevels = 2;
@@ -232,7 +232,7 @@ int main (int argc, char** args) {
   system2.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system2 and initialize.
-  system2.SetAssembleFunction (AssembleConformalMinimization);
+  system2.SetAssembleFunction (AssembleO2ConformalMinimization);
   system2.init();
 
   mlSol.SetWriter (VTK);
@@ -2323,6 +2323,50 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       adept::adouble Area = weight * sqrt (detg);
       double Area2 = weight; // Trick to give equal weight to each element.
 
+      // Computing the metric inverse
+      adept::adouble gi[dim][dim];
+      gi[0][0] =  g[1][1] / detg;
+      gi[0][1] = -g[0][1] / detg;
+      gi[1][0] = -g[1][0] / detg;
+      gi[1][1] =  g[0][0] / detg;
+
+      // Computing the "reduced Jacobian" g^{ij}X_j .
+      adept::adouble Jir[dim][DIM] = {{0., 0., 0.}, {0., 0., 0.}};
+      for (unsigned i = 0; i < dim; i++) {
+        for (unsigned J = 0; J < DIM; J++) {
+          for (unsigned k = 0; k < dim; k++) {
+            Jir[i][J] += gi[i][k] * solx_uv[J][k];
+          }
+        }
+      }
+
+      // Initializing tangential gradients of X and W (new, middle, old).
+      adept::adouble solNx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      adept::adouble solx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+
+      // Computing tangential gradients defined above.
+      for (unsigned I = 0; I < DIM; I++) {
+        for (unsigned J = 0; J < DIM; J++) {
+          for (unsigned k = 0; k < dim; k++) {
+            solNx_Xtan[I][J] += solNx_uv[I][k] * Jir[k][J];
+            solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
+          }
+        }
+      }
+
+      // Define and compute gradients of test functions for X.
+      std::vector < adept::adouble > phix_Xtan[DIM];
+
+      for (unsigned J = 0; J < DIM; J++) {
+        phix_Xtan[J].assign (nxDofs, 0.);
+
+        for (unsigned inode  = 0; inode < nxDofs; inode++) {
+          for (unsigned k = 0; k < dim; k++) {
+            phix_Xtan[J][inode] += phix_uv[k][inode] * Jir[k][J];
+          }
+        }
+      }
+
       // Compute components of the unit normal N.
       adept::adouble normal[DIM];
       normal[0] = (solx_uv[1][0] * solx_uv[2][1]
@@ -2344,13 +2388,50 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
 
       adept::adouble M[DIM][dim];
-      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2];
-      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0];
-      M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1];
+      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2] + (1. / sqrt(detg) ) * (
+        (solNx_uv[1][0] * solNx_uv[1][1] + solNx_uv[2][0] * solNx_uv[2][1]) * V[0]
+      - (solNx_uv[1][1] * solNx_uv[1][1] + solNx_uv[2][1] * solNx_uv[2][1]) * W[0]
+      + solNx_uv[0][1] * (solNx_uv[1][1] * W[1] + solNx_uv[2][1] * W[2])
+      - solNx_uv[0][0] * (solNx_uv[1][1] * V[1] + solNx_uv[2][1] * V[2])
+    );
+      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0] + (1. / sqrt(detg) ) * (
+        (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[2][0] * solNx_uv[2][1]) * V[1]
+      - (solNx_uv[0][1] * solNx_uv[0][1] + solNx_uv[2][1] * solNx_uv[2][1]) * W[1]
+      + solNx_uv[1][1] * (solNx_uv[0][1] * W[0] + solNx_uv[2][1] * W[2])
+      - solNx_uv[1][0] * (solNx_uv[0][1] * V[0] + solNx_uv[2][1] * V[2])
+    );
+      M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1] + (1. / sqrt(detg) ) * (
+        (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[1][0] * solNx_uv[1][1]) * V[2]
+      - (solNx_uv[0][1] * solNx_uv[0][1] + solNx_uv[1][1] * solNx_uv[1][1]) * W[2]
+      + solNx_uv[2][1] * (solNx_uv[0][1] * W[0] + solNx_uv[1][1] * W[1])
+      - solNx_uv[2][0] * (solNx_uv[0][1] * V[0] + solNx_uv[1][1] * V[1])
+    );
+      M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2] + (1. / sqrt(detg) ) * (
+        (solNx_uv[1][0] * solNx_uv[1][1] + solNx_uv[2][0] * solNx_uv[2][1]) * W[0]
+      - (solNx_uv[1][0] * solNx_uv[1][0] + solNx_uv[2][0] * solNx_uv[2][0]) * V[0]
+      + solNx_uv[0][0] * (solNx_uv[1][0] * V[1] + solNx_uv[2][0] * V[2])
+      - solNx_uv[0][1] * (solNx_uv[1][0] * W[1] + solNx_uv[2][0] * W[2])
+    );
+      M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0] + (1. / sqrt(detg) ) * (
+        (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[2][0] * solNx_uv[2][1]) * W[1]
+      - (solNx_uv[0][0] * solNx_uv[0][0] + solNx_uv[2][0] * solNx_uv[2][0]) * V[1]
+      + solNx_uv[1][0] * (solNx_uv[0][0] * V[0] + solNx_uv[2][0] * V[2])
+      - solNx_uv[1][1] * (solNx_uv[0][0] * W[0] + solNx_uv[2][0] * W[2])
+    );
+      M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1] + (1. / sqrt(detg) ) * (
+        (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[1][0] * solNx_uv[1][1]) * W[2]
+      - (solNx_uv[0][0] * solNx_uv[0][0] + solNx_uv[1][0] * solNx_uv[1][0]) * V[2]
+      + solNx_uv[2][0] * (solNx_uv[0][0] * V[0] + solNx_uv[1][0] * V[1])
+      - solNx_uv[2][1] * (solNx_uv[0][0] * W[0] + solNx_uv[1][0] * W[1])
+    );
 
-      M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2];
-      M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
-      M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
+    adept::adouble G = 0;
+    G = normal[0] * (solNx_uv[2][1] * W[1] - solNx_uv[2][0] * V[1]
+                   + solNx_uv[1][0] * V[2] - solNx_uv[1][1] * W[2])
+      + normal[1] * (solNx_uv[0][1] * W[2] - solNx_uv[0][0] * V[2]
+                   + solNx_uv[2][0] * V[0] - solNx_uv[2][1] * W[0])
+      + normal[2] * (solNx_uv[1][1] * W[0] - solNx_uv[1][0] * V[0]
+                   + solNx_uv[0][0] * V[1] - solNx_uv[0][1] * W[1]);
 
       // Compute new X minus old X dot N, for "reparametrization".
       adept::adouble DnXmDxdotN = 0.;
@@ -2358,17 +2439,34 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
         DnXmDxdotN += (solDxg[K] - solNDxg[K]) * normal[K];
       }
 
+      // // Implement the curvature equation Y = \Delta X .
+      // for (unsigned K = 0; K < DIM; K++) {
+      //   for (unsigned i = 0; i < nxDofs; i++) {
+      //     adept::adouble term2 = 0.;
+      //
+      //     for (unsigned J = 0; J < DIM; J++) {
+      //       term2 +=  solNx_Xtan[K][J] * phix_Xtan[J][i];
+      //     }
+      //     aResx[K][i] += (solYg[K] * phix[i] + term1) * Area;
+      //   }
+
       // Implement the Conformal Minimization equations.
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
+          adept::adouble gxgp = 0.;
 
           for (unsigned j = 0; j < dim; j++) {
             term1 +=  M[K][j] * phix_uv[j][i];
           }
 
+          for (unsigned J = 0; J < DIM; J++) {
+            gxgp +=  solNx_Xtan[K][J] * phix_Xtan[J][i];
+          }
+
           // Conformal energy equation (with trick).
           aResNDx[K][i] += term1 * Area2
+                           + G * gxgp * Area2
                            + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
                            + solLg * phix[i] * normal[K] * Area;  //no2
         }
