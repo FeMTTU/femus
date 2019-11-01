@@ -170,107 +170,8 @@ Another alternative to view the content of an HDF5 file is to use the 'h5dump' u
 
 \part{Salome}
 
- \chapter{How To Mesh}
 
-
- Use the NoteBook tab to define variables and parametrize your operations!
-
-- Geometry
-
-Create faces (Draw points and lines if needed, or create Faces directly)
-   --> Extract edges from a face (Explode)
-   
-- Mesh 
-Create Mesh object (only initialize)
-Create SubMesh of Mesh over the wanted SubGeometry
-   --> Hypothesis: Propagation of 1D Hypothesis
-
-In Mesh:
---   2D: Quadrangle Mapping
-   1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
-
--- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
-  You have to do this operation BEFORE creating a CompoundMesh,
-  because the compound mesh does not have an underlying geometry to use 
-   
-  You have to do ONE BY ONE, you cannot do by selecting all meshes at once!!! 
-   
--- Build CompoundMesh to merge the meshes
-     --> Check the Boundary of the CompoundMesh!!! 
-     ---> You need to remove the boundary elements of the previous separate pieces that are now inside the new domain!
-          To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
-          Unfortunately you don't see this operation as a new object in the Mesh menu
-     --> Rename it to "Mesh" + something!!!
-     
-- Then, Groups of Mesh elements 
-  (must be named \verb|Group_X_Y|, where X is the flag given to the object and Y is the type of boundary condition (0 = Dirichlet, 1 = Neumann). What about the groups that are not for boundary conditions?)
-
-  In order to enforce Boundary Conditions, Material Properties, and potentially other things too,
-  we have to define Groups of Edges, or Faces, or Volumes (Groups of Nodes for the extremes of a 1d domain)
-  
-  The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
-
-- AAA: I think I found how to do the "quadrangle-mapping" mesh of a face where one side has multiple edges coming from Explode!!! 
-  I just do the same, but I specify "Composite wire discretization" instead of "Wire discretization"!!!
-
-  
-\chapter{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
-
-
-When you explode adjacent faces, the edges are called differently... we should identify them
-
-
- \chapter{HOW TO CHANGE THE MESH BY CHANGING THE GEOMETRY}
-
-
- There is a command called "Move node", perhaps it helps avoiding to remesh everything if I go back and change the Geometry instead...
-
- 
-\chapter{COPY MESH}
-
- 
- It seems that Copy Mesh does not copy groups as well
- 
- 
-
-\chapter{HOW TO MESH - 3D}
-
-
-- If I want to create a mesh of a Box with 3 arbitrary mesh discretizations in the 3 directions,
-  what is the best way to do that?
-  
-
-I cannot creat a Submesh of a Submesh
-
-- Geometry
-  Create Volumes
-    ---> Extract Faces from a Volume
-    ---> Extract Edges from 2 faces in order to do Submesh of 3 edges in the x,y,z directions
-- Mesh 
-  I'd say I'll treat a Face like I do in 2D, and then do a Mapping to opposite Faces...
-  You don't want to do Automatic Hexahedralization or Tetrahedralization...
-  
-- Another method could perhaps be to create 1d meshes and Propagate their Hypothesis on opposite edges!
-  Global Algorithms:
-    3d: Hexahedron (i,j,k)
-    2d: Quadrangle mapping
-    1d: Wire discretization  - Here sometimes it gives trouble if you don't specify any "Number of Segments"...
-    
-    Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
-    
-
-    
-\section{MESH EXTRUSION}
-
-
-- If your mesh can be thought of as an Extrusion of a 2D mesh, one way to do this 
-  is simply to do your 2D mesh and then extrude it
-  
-- Do extrusion only of faces to avoid generation of extra edges    
-
-- "Scale factors" refer to the TRANSVERSAL direction, not the orthogonal one
-
- \chapter{SHAPER MODULE}
+ \chapter{SHAPER Module}
 
 
 This is a new module that in the long run is supposed to replace the role of the GEOM module.
@@ -297,13 +198,15 @@ Ok, it seems like:
 
  - Pay attention sometimes when you Dump study, it seems like you may lose the Shaper part!!!  
    
- \chapter{ROTATIONS}
+ \chapter{GEOMETRY Module}
+ 
+ \section{ROTATIONS}
 
 
 If you have to rotate, do not do that in the Geometry, because then the Mesh will not follow.
 If you do it in the Mesh, the Geometry does not follow either.
 
-\chapter{SPLIT EDGES/FACES}
+\section{SPLIT EDGES/FACES}
 
 
 The tool for this is: Partition then Explode. At first it seems like with Partition no split happens, but then if you do Explode you will get all the pieces
@@ -311,8 +214,55 @@ It seems like Cut is not the right tool for splitting
 
 Pay attention to the difference between Common and Intersection
 
+ \chapter{MESH Module}
 
-\chapter{QUADRILATERAL MESH of a CIRCLE/SEMISPHERE}
+\section{Basic procedure}
+
+ Use the NoteBook tab to define variables and parametrize your operations!
+
+\subsection{Geometry}
+
+
+Create faces (Draw points and lines if needed, or create Faces directly)
+   --> Extract edges from a face (Explode)
+   
+\subsection{Mesh}
+ 
+Create Mesh object (only initialize)
+Create SubMesh of Mesh over the wanted SubGeometry
+   --> Hypothesis: Propagation of 1D Hypothesis
+
+In Mesh:
+--   2D: Quadrangle Mapping
+   1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
+
+-- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
+  You have to do this operation BEFORE creating a CompoundMesh,
+  because the compound mesh does not have an underlying geometry to use 
+   
+  You have to do ONE BY ONE, you cannot do by selecting all meshes at once!!! 
+   
+-- Build CompoundMesh to merge the meshes
+     --> Check the Boundary of the CompoundMesh!!! 
+     ---> You need to remove the boundary elements of the previous separate pieces that are now inside the new domain!
+          To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
+          Unfortunately you don't see this operation as a new object in the Mesh menu
+     --> Rename it to "Mesh" + something!!!
+     
+\subsection{Groups of Mesh elements}
+ 
+  (must be named \verb|Group_X_Y|, where X is the flag given to the object and Y is the type of boundary condition (0 = Dirichlet, 1 = Neumann). What about the groups that are not for boundary conditions?)
+
+  In order to enforce Boundary Conditions, Material Properties, and potentially other things too,
+  we have to define Groups of Edges, or Faces, or Volumes (Groups of Nodes for the extremes of a 1d domain)
+  
+  The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
+
+- AAA: I think I found how to do the "quadrangle-mapping" mesh of a face where one side has multiple edges coming from Explode!!! 
+  I just do the same, but I specify "Composite wire discretization" instead of "Wire discretization"!!!
+
+  
+\section{QUADRILATERAL MESH of a CIRCLE/SEMISPHERE}
 
 Divided Disk or Divided Cylinder do exactly what you are looking for!!!
 
@@ -346,8 +296,82 @@ So the idea seems to be NOT the following:
  - The only problem is that now one face does not have 4 edges, but one side can be made of multiple edges,
    and that creates problems in the mapping algorithm. So, it's all about making 1 edge
    
+\section{When you do a 3d mesh, not only will you have Volumes and Faces, but also the Edges of the ``Bounding Box''}
+
+  You can leave the edges where they are, because in 3d only Volumes and Faces will be read from the code
+ 
+
+\section{Basic procedure - 3D}
+
+
+- If I want to create a mesh of a Box with 3 arbitrary mesh discretizations in the 3 directions,
+  what is the best way to do that?
+  
+
+I cannot creat a Submesh of a Submesh
+
+- Geometry
+  Create Volumes
+    ---> Extract Faces from a Volume
+    ---> Extract Edges from 2 faces in order to do Submesh of 3 edges in the x,y,z directions
+- Mesh 
+  I'd say I'll treat a Face like I do in 2D, and then do a Mapping to opposite Faces...
+  You don't want to do Automatic Hexahedralization or Tetrahedralization...
+  
+- Another method could perhaps be to create 1d meshes and Propagate their Hypothesis on opposite edges!
+  Global Algorithms:
+    3d: Hexahedron (i,j,k)
+    2d: Quadrangle mapping
+    1d: Wire discretization  - Here sometimes it gives trouble if you don't specify any "Number of Segments"...
+    
+    Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
+    
+
+    
+\subsection{MESH EXTRUSION}
+
+
+- If your mesh can be thought of as an Extrusion of a 2D mesh, one way to do this 
+  is simply to do your 2D mesh and then extrude it
+  
+- Do extrusion only of faces to avoid generation of extra edges    
+
+- "Scale factors" refer to the TRANSVERSAL direction, not the orthogonal one
+
+
+
+\section{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
+
+
+When you explode adjacent faces, the edges are called differently... we should identify them
+
+
+ \section{Change the Geometry in the Mesh with ``Move node''}
+
+
+ There is a command called "Move node", perhaps it helps avoiding to remesh everything if I go back and change the Geometry instead...
+
+ - 
+ 
+ \section{Free Nodes or Orphan Nodes; Free Edges}
+
+\section{Translate Mesh}
+
+ 
+ Copy Mesh of course does not do the trick, you need ``Translation''
+ 
+ ``Offset'' of a mesh does not work for Quadratic mesh
+ 
+ ``Translation'' of a mesh works with ``Create a new mesh'' and ``Copy groups'' creates a translated copy
+
+ 
+\section{Stretch elements}
+
+  ``Scale transform'' does the trick
+
+  
    
- \chapter{SALOME - BOUNDARY CONDITIONS}
+ \section{BOUNDARY CONDITIONS}
 
 
  I think it's best if I do the groups on the initial meshes (before doing the Compound)
@@ -356,7 +380,7 @@ while a Compound does not have an associated Geometry to it
  (alternatively, one could do Group on Filter maybe)
 
    
- \chapter{SALOME - QUESTIONS}
+ \chapter{Questions}
 
 
 - When I remove a Group, can I ask to remove also the elements of that group from the Mesh???
