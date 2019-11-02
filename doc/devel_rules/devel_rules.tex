@@ -244,6 +244,7 @@ In Mesh:
    
 -- Build CompoundMesh to merge the meshes
      --> Check the Boundary of the CompoundMesh!!! 
+     ---> When you do a Compound, the double nodes are MERGED, but the inner edges or inner faces are not REMOVED! So, you have to remove them manually!!!
      ---> You need to remove the boundary elements of the previous separate pieces that are now inside the new domain!
           To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
           Unfortunately you don't see this operation as a new object in the Mesh menu
@@ -260,6 +261,9 @@ In Mesh:
 
 - AAA: I think I found how to do the "quadrangle-mapping" mesh of a face where one side has multiple edges coming from Explode!!! 
   I just do the same, but I specify "Composite wire discretization" instead of "Wire discretization"!!!
+
+- You can use Filters to define Groups of Mesh Elements
+
 
   
 \section{QUADRILATERAL MESH of a CIRCLE/SEMISPHERE}
@@ -353,7 +357,6 @@ When you explode adjacent faces, the edges are called differently... we should i
 
  - 
  
- \section{Free Nodes or Orphan Nodes; Free Edges}
 
 \section{Translate Mesh}
 
@@ -379,7 +382,20 @@ When you explode adjacent faces, the edges are called differently... we should i
 while a Compound does not have an associated Geometry to it
  (alternatively, one could do Group on Filter maybe)
 
-   
+ \section{Mesh controls}
+ 
+  You want to check that there are 
+  
+  - no Free Nodes or Orphan Nodes (nodes that don't belong to any element)
+  
+  - no Double Nodes
+  
+  - no Inner Edges (only Free Borders, i.e., edges that are at the boundary of the domain)
+  
+  
+
+ 
+
  \chapter{Questions}
 
 

@@ -19,11 +19,21 @@ int main(int argc,char **args) {
   Files files; 
         files.CheckIODirectories();
         files.RedirectCout();
+        
+// fsi 3d - one layer
+// volumes: 66
+// faces:  66*2 + 42 = 132 + 42 = 174
+// edges: 42*2 + 4 = 88
+// 
+// Total mesh:
+// volumes: 264
+// faces:  66*2  + 42*4 =  132 + 168 = 300     
 
  std::vector< std::string >  input_files;
  input_files.push_back("turek_FSI1.neu");
  input_files.push_back("turek_FSI1.med");
- input_files.push_back("turek_FSI1_coarsest.med");
+ input_files.push_back("turek_FSI1_3d.med");
+ input_files.push_back("turek_FSI1_coarsest_not_yet_expanded_at_inflow.med");
 //  input_files.push_back("turek_FSI1_no_bc.neu");
 //    std::string input_file = "cyl.med";
 //    std::string input_file = "horse2.med";
