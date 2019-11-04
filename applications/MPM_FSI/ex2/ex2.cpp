@@ -170,7 +170,7 @@ int main (int argc, char** args) {
   system.SetAbsoluteLinearConvergenceTolerance (1.0e-10);
   system.SetMaxNumberOfLinearIterations (1);
   system.SetNonLinearConvergenceTolerance (1.e-9);
-  system.SetMaxNumberOfNonLinearIterations (20);
+  system.SetMaxNumberOfNonLinearIterations (2);
 
   system.SetNumberPreSmoothingStep (1);
   system.SetNumberPostSmoothingStep (1);
