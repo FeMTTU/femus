@@ -274,7 +274,9 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
             }
             else {
               //aRhsD[k][i] += phiHat[i] * (-0.00000000 * wlaplace1D + solVg[k] - (solDg[k] - solDgOld[k]) / dt) * weightHat;
-              aRhsD[k][i] += phiHat[i] * (-wlaplace1V /*+ solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt*/) * weightHat;
+              //aRhsD[k][i] += phiHat[i] * (-muf * wlaplace1V + solP/*+ solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt*/) * weightHat;
+              
+              aRhsD[k][i] += (- muFluid * wlaplace1V + gradPhi[i * dim + k] * solPg) * weight;
             }
           }
           else { //kinematic equation in the solid nodes
@@ -308,7 +310,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
             aRhsP[i] += phiP[i] * (solPg) * weight;
           }
           else if (MPMmaterial > 0) {  //all cells that are completely MPM solid
-            aRhsP[i] += phiP[i] * (gradSolVg[k][k] + (solPg-solPgOld) / dt) * weight;
+            aRhsP[i] += phiP[i] * (gradSolVg[k][k] + 0.01 * (solPg - solPgOld) / dt) * weight;
           }
           else{// if (MPMmaterial == 0) {
             aRhsP[i] += phiP[i] *  gradSolVg[k][k] * weight;

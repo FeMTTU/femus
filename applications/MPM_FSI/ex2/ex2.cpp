@@ -22,7 +22,7 @@ using namespace femus;
 
 
 double SetVariableTimeStep (const double time) {
-  double dt =  0.005/*0.008*/;
+  double dt =  0.0025/*0.008*/;
   return dt;
 }
 
@@ -512,7 +512,7 @@ int main (int argc, char** args) {
 
 
   system.AttachGetTimeIntervalFunction (SetVariableTimeStep);
-  unsigned n_timesteps = 100;
+  unsigned n_timesteps = 200;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     if (time_step >= 3) {
