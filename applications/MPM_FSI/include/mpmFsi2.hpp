@@ -276,7 +276,8 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
               //aRhsD[k][i] += phiHat[i] * (-0.00000000 * wlaplace1D + solVg[k] - (solDg[k] - solDgOld[k]) / dt) * weightHat;
               //aRhsD[k][i] += phiHat[i] * (-muf * wlaplace1V + solP/*+ solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt*/) * weightHat;
               
-              aRhsD[k][i] += (- muFluid * wlaplace1V + gradPhi[i * dim + k] * solPg) * weight;
+              aRhsD[k][i] += (- muFluid * wlaplace1V + gradPhi[i * dim + k] * solPg + 
+                              phiHat[i] * (solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt)) * weight;
             }
           }
           else { //kinematic equation in the solid nodes
