@@ -250,7 +250,10 @@ int main(int argc,char **args) {
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
 
-
+  const bool solve_system = true;
+  
+  if(solve_system) {
+      
   // ******* Add FSI system to the MultiLevel problem *******
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
   system.AddSolutionToSystemPDE("DX");
@@ -341,6 +344,10 @@ int main(int argc,char **args) {
     PetscPrintf(PETSC_COMM_WORLD, "4: Memory maximum usage after solve: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
   }
 
+  
+  } //end solve system
+  
+  
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
 
