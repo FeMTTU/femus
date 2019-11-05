@@ -2395,10 +2395,10 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       - solNx_uv[0][0] * (solNx_uv[1][1] * V[1] + solNx_uv[2][1] * V[2])
     );
       M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0] + (1. / sqrt(detg) ) * (
-        (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[2][0] * solNx_uv[2][1]) * V[1]
-      - (solNx_uv[0][1] * solNx_uv[0][1] + solNx_uv[2][1] * solNx_uv[2][1]) * W[1]
-      + solNx_uv[1][1] * (solNx_uv[0][1] * W[0] + solNx_uv[2][1] * W[2])
-      - solNx_uv[1][0] * (solNx_uv[0][1] * V[0] + solNx_uv[2][1] * V[2])
+        (solNx_uv[2][0] * solNx_uv[2][1] + solNx_uv[0][0] * solNx_uv[0][1]) * V[1]
+      - (solNx_uv[2][1] * solNx_uv[2][1] + solNx_uv[0][1] * solNx_uv[0][1]) * W[1]
+      + solNx_uv[1][1] * (solNx_uv[2][1] * W[2] + solNx_uv[0][1] * W[0])
+      - solNx_uv[1][0] * (solNx_uv[2][1] * V[2] + solNx_uv[0][1] * V[0])
     );
       M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1] + (1. / sqrt(detg) ) * (
         (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[1][0] * solNx_uv[1][1]) * V[2]
@@ -2407,31 +2407,28 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       - solNx_uv[2][0] * (solNx_uv[0][1] * V[0] + solNx_uv[1][1] * V[1])
     );
       M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2] + (1. / sqrt(detg) ) * (
-        (solNx_uv[1][0] * solNx_uv[1][1] + solNx_uv[2][0] * solNx_uv[2][1]) * W[0]
+        (solNx_uv[1][1] * solNx_uv[1][0] + solNx_uv[2][1] * solNx_uv[2][0]) * W[0]
       - (solNx_uv[1][0] * solNx_uv[1][0] + solNx_uv[2][0] * solNx_uv[2][0]) * V[0]
       + solNx_uv[0][0] * (solNx_uv[1][0] * V[1] + solNx_uv[2][0] * V[2])
       - solNx_uv[0][1] * (solNx_uv[1][0] * W[1] + solNx_uv[2][0] * W[2])
     );
       M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0] + (1. / sqrt(detg) ) * (
-        (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[2][0] * solNx_uv[2][1]) * W[1]
-      - (solNx_uv[0][0] * solNx_uv[0][0] + solNx_uv[2][0] * solNx_uv[2][0]) * V[1]
-      + solNx_uv[1][0] * (solNx_uv[0][0] * V[0] + solNx_uv[2][0] * V[2])
-      - solNx_uv[1][1] * (solNx_uv[0][0] * W[0] + solNx_uv[2][0] * W[2])
+        (solNx_uv[2][1] * solNx_uv[2][0] + solNx_uv[0][1] * solNx_uv[0][0] ) * W[1]
+      - (solNx_uv[2][0] * solNx_uv[2][0] + solNx_uv[0][0] * solNx_uv[0][0] ) * V[1]
+      + solNx_uv[1][0] * (solNx_uv[2][0] * V[2] + solNx_uv[0][0] * V[0])
+      - solNx_uv[1][1] * (solNx_uv[2][0] * W[2] + solNx_uv[0][0] * W[0])
     );
       M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1] + (1. / sqrt(detg) ) * (
-        (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[1][0] * solNx_uv[1][1]) * W[2]
+        (solNx_uv[0][1] * solNx_uv[0][0] + solNx_uv[1][1] * solNx_uv[1][0]) * W[2]
       - (solNx_uv[0][0] * solNx_uv[0][0] + solNx_uv[1][0] * solNx_uv[1][0]) * V[2]
       + solNx_uv[2][0] * (solNx_uv[0][0] * V[0] + solNx_uv[1][0] * V[1])
       - solNx_uv[2][1] * (solNx_uv[0][0] * W[0] + solNx_uv[1][0] * W[1])
     );
 
     adept::adouble G = 0;
-    G = normal[0] * (solNx_uv[2][1] * W[1] - solNx_uv[2][0] * V[1]
-                   + solNx_uv[1][0] * V[2] - solNx_uv[1][1] * W[2])
-      + normal[1] * (solNx_uv[0][1] * W[2] - solNx_uv[0][0] * V[2]
-                   + solNx_uv[2][0] * V[0] - solNx_uv[2][1] * W[0])
-      + normal[2] * (solNx_uv[1][1] * W[0] - solNx_uv[1][0] * V[0]
-                   + solNx_uv[0][0] * V[1] - solNx_uv[0][1] * W[1]);
+    G = normal[0] * (solNx_uv[2][1] * W[1] - solNx_uv[2][0] * V[1] + solNx_uv[1][0] * V[2] - solNx_uv[1][1] * W[2])
+      + normal[1] * (solNx_uv[0][1] * W[2] - solNx_uv[0][0] * V[2] + solNx_uv[2][0] * V[0] - solNx_uv[2][1] * W[0])
+      + normal[2] * (solNx_uv[1][1] * W[0] - solNx_uv[1][0] * V[0] + solNx_uv[0][0] * V[1] - solNx_uv[0][1] * W[1]);
 
       // Compute new X minus old X dot N, for "reparametrization".
       adept::adouble DnXmDxdotN = 0.;
