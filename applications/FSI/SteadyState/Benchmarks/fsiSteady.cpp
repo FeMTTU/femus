@@ -21,9 +21,9 @@
 using namespace std;
 using namespace femus;
 
-void PrintMumpsInfo(const char *stdOutfile, char* infile, const unsigned &numofrefinements);
-void PrintConvergenceInfo(const char *stdOutfile, char* infile, const unsigned &numofrefinements);
-void PrintMultigridTime(const char *stdOutfile, char* infile, const unsigned &numofrefinements);
+void PrintMumpsInfo(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements);
+void PrintConvergenceInfo(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements);
+void PrintMultigridTime(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements);
 
 void ComputeQoI(const MultiLevelProblem& ml_prob, const unsigned level, const MonolithicFSINonLinearImplicitSystem* mlPdeSys);
 
@@ -33,26 +33,19 @@ void ComputeQoI(const MultiLevelProblem& ml_prob, const unsigned level, const Mo
 
 
 
-int main(int argc,char **args) {
+int main(int argc, char **args) {
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
 
-  // ======= Files ========================
-  Files files; 
-        files.CheckIODirectories();
-        files.RedirectCout();
-
-  // ======= Quad Rule ========================
-  std::string fe_quad_rule = "fifth";
-
   // ===============================
   // process options
+  char output_time[256] = "";
   int dimension=2;
-  char infile[256] = "";
+  char mesh_file[256] = "";
   char stdOutfile[256] = "";
   char outer_ksp_solver[256] = "gmres";
-  size_t len_infile_name = 256;
+  size_t len_mesh_file_name = 256;
   double Lref=1., Uref=1., rhof=1., muf=1., rhos=1., ni=0., E=1.;
   int numofmeshlevels = 1;
   int numofrefinements = 1;
@@ -92,13 +85,13 @@ int main(int argc,char **args) {
   PetscOptionsInt("-nrefinement", "The number of refinements", "fsiSteady.cpp", numofrefinements , &numofrefinements, NULL);
   printf(" nrefinement: %i\n", numofrefinements);
 
-  PetscOptionsString("-input", "The name of the input file", "fsiSteady.cpp", "./mesh.neu", infile, len_infile_name, NULL);
-  printf(" input: %s\n", infile);
+  PetscOptionsString("-input", "The name of the input file", "fsiSteady.cpp", "./mesh.neu", mesh_file, len_mesh_file_name, NULL);
+  printf(" input: %s\n", mesh_file);
 
-  PetscOptionsString("-std_output", "The name of the redirected standard output file", "fsiSteady.cpp", "", stdOutfile, len_infile_name, NULL);
+  PetscOptionsString("-std_output", "The name of the redirected standard output file", "fsiSteady.cpp", "", stdOutfile, len_mesh_file_name, NULL);
   printf(" redirected standard output: %s\n", stdOutfile);
 
-  PetscOptionsString("-ic_bdc", "The name of the file with bdc and ic functions", "fsiSteady.cpp", "", bdcfilename, len_infile_name, NULL);
+  PetscOptionsString("-ic_bdc", "The name of the file with bdc and ic functions", "fsiSteady.cpp", "", bdcfilename, len_mesh_file_name, NULL);
   printf(" ic_bdc: %s\n", bdcfilename);
 
   PetscOptionsReal("-rhof", "The density of the fluid", "fsiSteady.cpp", rhof, &rhof, NULL);
@@ -137,7 +130,7 @@ int main(int argc,char **args) {
   PetscOptionsInt("-asm_block", "The asm block dimension", "fsiSteady.cpp", asm_block, &asm_block, NULL);
   printf(" asm_block: %i\n", asm_block);
 
-  PetscOptionsString("-outer_ksp_solver", "The outer ksp solver", "fsiSteady.cpp", "gmres", outer_ksp_solver, len_infile_name, NULL);
+  PetscOptionsString("-outer_ksp_solver", "The outer ksp solver", "fsiSteady.cpp", "gmres", outer_ksp_solver, len_mesh_file_name, NULL);
   printf(" outer_ksp_solver: %s\n", outer_ksp_solver);
 
   PetscOptionsInt("-npre", "The number of presmoothing step", "fsiSteady.cpp", npre, &npre, NULL);
@@ -152,10 +145,33 @@ int main(int argc,char **args) {
   PetscOptionsInt("-max_outer_solver_iter", "The maximum outer solver iterations", "fsiSteady.cpp", max_outer_solver_iter, &max_outer_solver_iter, NULL);
   printf(" max_outer_solver_iter: %i\n", max_outer_solver_iter);
 
+   PetscOptionsString("-output_time", "The name of the redirected standard output file", "fsiSteady.cpp", "", output_time, len_mesh_file_name, NULL);
+  printf(" Output time folder: %s\n", output_time);
+  
   printf("\n");
 
-  PetscOptionsEnd();
+ PetscOptionsEnd();
   
+
+  
+  // ======= Files ========================
+  std::cout << "This is the command line" << std::endl;
+  
+  for (int i = 0; i < argc; ++i)         std::cout << args[i] << " "; 
+  std::cout << std::endl << std::endl;
+  
+  Files files; 
+//         files.CheckIODirectories();
+//         files.RedirectCout();
+// std::string output_path = files.GetOutputPath();
+//   const std::string output_file_to_parse = files.GetOutputTime() + stdOutfile;
+// std::string output_path = DEFAULT_OUTPUTDIR;
+std::string output_path = output_time;
+  const std::string output_file_to_parse = output_path + stdOutfile;
+
+  // ======= Quad Rule ========================
+  std::string fe_quad_rule = "fifth";
+
   
 
   // *********** loading external functions *******************
@@ -207,7 +223,7 @@ int main(int argc,char **args) {
 
   // ******* Init multilevel mesh from mesh.neu file *******
 
-  MultiLevelMesh ml_msh(numofrefinements, numofrefinements, infile, fe_quad_rule.c_str(), Lref, NULL);
+  MultiLevelMesh ml_msh(numofrefinements, numofrefinements, mesh_file, fe_quad_rule.c_str(), Lref, NULL);
 
   ml_msh.EraseCoarseLevels(numofrefinements - numofmeshlevels);
 
@@ -284,7 +300,7 @@ int main(int argc,char **args) {
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
 
-  const bool solve_system = false;
+  const bool solve_system = true;
   
   if (solve_system) {
       
@@ -395,7 +411,7 @@ int main(int argc,char **args) {
   print_vars.push_back("All");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
-  ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,"biquadratic",print_vars);
+  ml_sol.GetWriter()->Write(output_path,"biquadratic",print_vars);
 
   if(mem_infos) {
     PetscMemoryGetCurrentUsage(&memory_current_usage);
@@ -414,19 +430,18 @@ int main(int argc,char **args) {
   
   ComputeQoI(ml_prob, numofmeshlevels - 1, NULL);
   
-//   const std::string output_file_to_parse = stdOutfile;
-  const std::string output_file_to_parse = files.GetOutputPath() + "run_p0.log";
-  
-  if(strcmp (stdOutfile,"") != 0){
-    PrintMumpsInfo(output_file_to_parse.c_str(), infile, numofrefinements);
-    PrintConvergenceInfo(output_file_to_parse.c_str(), infile, numofrefinements);
-    PrintMultigridTime(output_file_to_parse.c_str(), infile, numofrefinements);
+  if(strcmp (output_file_to_parse.c_str(), "") != 0) {
+    PrintMumpsInfo(output_file_to_parse.c_str(), mesh_file, numofrefinements);
+    PrintConvergenceInfo(output_file_to_parse.c_str(), mesh_file, numofrefinements);
+    PrintMultigridTime(output_file_to_parse.c_str(), mesh_file, numofrefinements);
   }
 
   return 0;
 }
 
-void PrintMumpsInfo(const char *stdOutfile, char* infile, const unsigned &numofrefinements){
+//this routine is printing to the run output file first, 
+// and then printing another file by processing the run output file
+void PrintMumpsInfo(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements){
 
   std::cout<<"END_COMPUTATION\n"<<std::flush;
 
@@ -440,10 +455,10 @@ void PrintMumpsInfo(const char *stdOutfile, char* infile, const unsigned &numofr
 
   std::ofstream outf;
   char outFileName[100];
-  if(strcmp (infile,"./input/turek_FSI1.neu") == 0){
+  if(strcmp (mesh_file,"./input/turek_FSI1.neu") == 0){
     sprintf(outFileName, "turek_hron_FSI1_mumps_info.txt");
   }
-  else if(strcmp (infile,"./input/richter3d.neu") == 0){
+  else if(strcmp (mesh_file,"./input/richter3d.neu") == 0){
     sprintf(outFileName, "richter3d_mumps_info.txt");
   }
   else{
@@ -497,7 +512,7 @@ void PrintMumpsInfo(const char *stdOutfile, char* infile, const unsigned &numofr
 
 
 
-void PrintConvergenceInfo(const char *stdOutfile, char* infile, const unsigned &numofrefinements){
+void PrintConvergenceInfo(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements){
 
   std::cout<<"END_COMPUTATION\n"<<std::flush;
 
@@ -511,10 +526,10 @@ void PrintConvergenceInfo(const char *stdOutfile, char* infile, const unsigned &
 
   std::ofstream outf;
   char outFileName[100];
-  if(strcmp (infile,"./input/turek_FSI1.neu") == 0){
+  if(strcmp (mesh_file,"./input/turek_FSI1.neu") == 0){
     sprintf(outFileName, "turek_hron_FSI1_convergence_info.txt");
   }
-  else if(strcmp (infile,"./input/richter3d.neu") == 0){
+  else if(strcmp (mesh_file,"./input/richter3d.neu") == 0){
     sprintf(outFileName, "richter3d_convergence_info.txt");
   }
   else{
@@ -578,7 +593,7 @@ void PrintConvergenceInfo(const char *stdOutfile, char* infile, const unsigned &
 
 }
 
-void PrintMultigridTime(const char *stdOutfile, char* infile, const unsigned &numofrefinements){
+void PrintMultigridTime(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements){
 
   std::cout<<"END_COMPUTATION\n"<<std::flush;
 
@@ -593,10 +608,10 @@ void PrintMultigridTime(const char *stdOutfile, char* infile, const unsigned &nu
   std::ofstream outf;
   char outFileName[100];
 
-  if(strcmp (infile,"./input/turek_FSI1.neu") == 0){
+  if(strcmp (mesh_file,"./input/turek_FSI1.neu") == 0){
     sprintf(outFileName, "turek_hron_FSI1_multigrid_time.txt");
   }
-  else if(strcmp (infile,"./input/richter3d.neu") == 0){
+  else if(strcmp (mesh_file,"./input/richter3d.neu") == 0){
     sprintf(outFileName, "richter3d_multigrid_time.txt");
   }
   else{
