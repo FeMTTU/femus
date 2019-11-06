@@ -2388,37 +2388,37 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
 
       adept::adouble M[DIM][dim];
-      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2] + (1. / sqrt(detg) ) * (
+      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2] + /*0*(1. / sqrt(detg) ) **/ (
         (solNx_uv[1][0] * solNx_uv[1][1] + solNx_uv[2][0] * solNx_uv[2][1]) * V[0]
       - (solNx_uv[1][1] * solNx_uv[1][1] + solNx_uv[2][1] * solNx_uv[2][1]) * W[0]
       + solNx_uv[0][1] * (solNx_uv[1][1] * W[1] + solNx_uv[2][1] * W[2])
       - solNx_uv[0][0] * (solNx_uv[1][1] * V[1] + solNx_uv[2][1] * V[2])
     );
-      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0] + (1. / sqrt(detg) ) * (
+      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0] + /*0*(1. / sqrt(detg) ) **/ (
         (solNx_uv[2][0] * solNx_uv[2][1] + solNx_uv[0][0] * solNx_uv[0][1]) * V[1]
       - (solNx_uv[2][1] * solNx_uv[2][1] + solNx_uv[0][1] * solNx_uv[0][1]) * W[1]
       + solNx_uv[1][1] * (solNx_uv[2][1] * W[2] + solNx_uv[0][1] * W[0])
       - solNx_uv[1][0] * (solNx_uv[2][1] * V[2] + solNx_uv[0][1] * V[0])
     );
-      M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1] + (1. / sqrt(detg) ) * (
+      M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1] + /*0*(1. / sqrt(detg) ) **/ (
         (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[1][0] * solNx_uv[1][1]) * V[2]
       - (solNx_uv[0][1] * solNx_uv[0][1] + solNx_uv[1][1] * solNx_uv[1][1]) * W[2]
       + solNx_uv[2][1] * (solNx_uv[0][1] * W[0] + solNx_uv[1][1] * W[1])
       - solNx_uv[2][0] * (solNx_uv[0][1] * V[0] + solNx_uv[1][1] * V[1])
     );
-      M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2] + (1. / sqrt(detg) ) * (
+      M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2] + /*0*(1. / sqrt(detg) ) **/ (
         (solNx_uv[1][1] * solNx_uv[1][0] + solNx_uv[2][1] * solNx_uv[2][0]) * W[0]
       - (solNx_uv[1][0] * solNx_uv[1][0] + solNx_uv[2][0] * solNx_uv[2][0]) * V[0]
       + solNx_uv[0][0] * (solNx_uv[1][0] * V[1] + solNx_uv[2][0] * V[2])
       - solNx_uv[0][1] * (solNx_uv[1][0] * W[1] + solNx_uv[2][0] * W[2])
     );
-      M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0] + (1. / sqrt(detg) ) * (
+      M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0] + /*0*(1. / sqrt(detg) ) **/ (
         (solNx_uv[2][1] * solNx_uv[2][0] + solNx_uv[0][1] * solNx_uv[0][0] ) * W[1]
       - (solNx_uv[2][0] * solNx_uv[2][0] + solNx_uv[0][0] * solNx_uv[0][0] ) * V[1]
       + solNx_uv[1][0] * (solNx_uv[2][0] * V[2] + solNx_uv[0][0] * V[0])
       - solNx_uv[1][1] * (solNx_uv[2][0] * W[2] + solNx_uv[0][0] * W[0])
     );
-      M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1] + (1. / sqrt(detg) ) * (
+      M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1] + /*0*(1. / sqrt(detg) ) **/ (
         (solNx_uv[0][1] * solNx_uv[0][0] + solNx_uv[1][1] * solNx_uv[1][0]) * W[2]
       - (solNx_uv[0][0] * solNx_uv[0][0] + solNx_uv[1][0] * solNx_uv[1][0]) * V[2]
       + solNx_uv[2][0] * (solNx_uv[0][0] * V[0] + solNx_uv[1][0] * V[1])
@@ -2463,7 +2463,7 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
 
           // Conformal energy equation (with trick).
           aResNDx[K][i] += term1 * Area2
-                           + G * gxgp * Area2
+                           + G * gxgp * Area
                            + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
                            + solLg * phix[i] * normal[K] * Area;  //no2
         }
