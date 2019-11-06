@@ -1,7 +1,17 @@
 \documentclass[10pt]{book}
 
 \usepackage[utf8]{inputenc}
-
+ 
+ %%%%% COMMENT IT BEFORE PRINTING
+\usepackage[pdftex,
+            pagebackref=true,
+            colorlinks=true,
+            linkcolor=blue,
+            unicode,
+            hidelinks
+           ]{hyperref}
+           
+           
 %opening
 \title{Documentation - draft}
 \author{}
@@ -11,15 +21,21 @@
 
 \maketitle
 
+ \setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+\tableofcontents 
+\addcontentsline{toc}{chapter}{Table of Contents}
 
-SOME RULES FOR DEVELOPING FEMUS - draft
+
+
+\part{Some programming practices}
 
 - Use .hpp for header files and .cpp for source files
 
 - Use std::cout, do not use printf for output.
 
 - If a function must be performed by only one processor (processor 0),
-then write an ifproc INSIDE the FUNCTION.
+then write an ifproc INSIDE the FUNCTION (not outside).
 
 - Divide the includes in 
 FEMuS includes,
@@ -27,8 +43,6 @@ FEMuS includes,
  other external libraries' includes.
 
 - Always put include guards in header files.
-
-- Write the function names with CapitalLettersLikeThisAndNotWithUnderscores.
 
 - Try to put the includes EXPLICITLY WHERE THEY HAVE TO BE, 
   and not thinking that somewhere some include will lead me to the file i need...
@@ -106,6 +120,335 @@ To overcome this, do
 
 
 
+\part{Application: main stages}
+
+  
+   \chapter{Main blocks}
+
+
+ 
+ - Mesh generation
+ 
+   Mesh Partitioning for parallel (Metis)
+ 
+ - Solution on a Mesh
+
+ - Problem with Solution unknown (certain unknowns, certain not)
+ 
+ Solution: Boundary conditions
+ 
+ Solution: Initial conditions
+ 
+ Space discretization (and quadrature)
+ 
+ Time discretization (i.e. quadrature in time)
+ 
+ - System of a Problem (Nonlinear loop, Linear Solver, Preconditioner, etc.)
+ 
+ - Final output
+ 
+ 
+ 
+ 
+
+  
+  MultilevelMesh
+  
+  MultilevelSolution(MultilevelMesh)
+  
+   MultilevelProblem(MultilevelSolution)
+
+   System
+   
+   MultilevelProblem.add(System)
+   
+   System.solve() --> with this process, the MultilevelSolution (which is accessed by System through MultilevelProblem) is updated
+   
+   
+ \chapter{Init}
+
+   \section{Parallel initialization}
+   
+   \section{Input parser}
+   
+ 
+ 
+ 
+ \chapter{ Mesh }
+
+    
+ If you choose LINEAR for the MESH DISCRETIZATION, it only works in SERIAL! It could actually work if the MESH was LINEAR...
+ 
+ For now, the Mesh must be BI/TRI-QUADRATIC. Could it be Tri7, or does it have to be Tri6??? We have to test.
+ 
+ 
+   
+     \section{MultilevelMesh}
+   
+  EraseCoarseLevels: it shifts the level vector, 
+   so if you start with 5 levels and you want to remove the first 3,
+   it shifts 4 and 5 to the 1st and 2nd position 
+   
+   \section{Mesh}
+   
+ \section{Elem}
+  
+  The Elem class contains the \textbf{list} of all elements
+  
+  
+  
+  
+\begin{verbatim}
+//         7------14-------6
+//        /|              /|
+//       / |             / |
+//     15  |   25      13  |
+//     /  19      22   /  18
+//    /    |          /    |
+//   4------12-------5     |
+//   | 23  |   26    | 21  |
+//   |     3------10-|-----2
+//   |    /          |    /
+//  16   /  20      17   /
+//   | 11      24    |  9
+//   | /             | /
+//   |/              |/
+//   0-------8-------1
+
+
+
+
+//            3
+//           /|\
+//          / | \
+//         /  |  \
+//        9   |   8
+//       /    |    \
+//      /     |     \
+//     /      7      \
+//    2-------|5------1
+//     \      |      /
+//      \     |     /
+//       \    |    /
+//        6   |   4
+//         \  |  /
+//          \ | /
+//           \|/
+//            0
+
+//           5
+//          /|\
+//         / | \
+//        /  |  \
+//      11   |  10
+//      /   14    \
+//     /     |     \
+//    /      |      \
+//   3--------9------4
+//   |  17   |  16   |
+//   |       2       |
+//   |      / \      |
+//   |     /   \     |
+//  12    / 15  \   13
+//   |   8       7   |
+//   |  /         \  |
+//   | /           \ |
+//   |/             \|
+//   0-------6-------1
+
+//      3-----6-----2
+//      |           |
+//      |           |
+//      7     8     5
+//      |           |
+//      |           |
+//      0-----4-----1
+
+
+//      2
+//      | \
+//      |   \
+//      5     4
+//      |   6   \
+//      |         \
+//      0-----3----1
+
+
+//
+//	0-----2-----1
+//
+\end{verbatim}
+  
+  
+  \section{Geometric Elements}
+  
+  
+  \section{MeshInput}
+
+  These mesh files also set FLAGS to faces
+  
+    \subsection{From function (MeshGeneration)}
+    
+    \subsection{Gambit IO}
+    
+    \subsection{MED IO}
+    
+    
+    
+  \section{MeshPartitioning}
+  
+  
+  \subsubsection{Elem and Node splitting}
+ 
+ In a FE code you have you must do a partition of Elements and Nodes among the processes.
+
+ Elements only belong to one process
+ 
+ Nodes belong to one process but then they are also Ghosted (for the other processes that ``own'' them)
+ 
+    \subsection{MeshMetisPartitioning}
+
+  The Metis library is responsible for that
+
+  
+  The Elements are reordered, so that 
+  
+  the 1st range goes to proc 0, the 2nd range goes to proc 1, and so on...
+  
+  
+    \subsection{MeshASMPartitioning}
+  
+
+  
+  \section{MeshRefinement}
+
+  \chapter{Solution (Quantities, Equations, Operators)}
+
+
+  \section{MultilevelSolution}
+   
+   Only MultilevelSolution has a Writer object. This writer will write from the FINEST level available.
+   
+   Solution does not have a Writer.
+   
+   Similarly, MultilevelMesh has a Writer, but not Mesh.
+  
+   However, currently the Writer in MultilevelMesh does not work.
+   
+
+   - The values of variables are taken from the MultilevelSolution object..
+     That's where the absolute values are stored, otherwise it is only about delta x in the nonlinear loops
+
+     
+  \section{MultilevelSolution: Boundary conditions}
+
+  
+  They are set through a function pointer.
+  
+  They are associated to the Solution and not to the Equation.
+  
+  In this way you can set BCs also for Solutions that are not Unknowns of an Equation
+
+   \subsection{Dirichlet}
+  
+  -  Dirichlet boundary conditions are set AFTER the ASSEMBLY process,
+     by setting a Dirichlet row to zero and putting 1 in the diagonal,
+     and by setting the corresponding Residual to ZERO at those rows
+  
+   \subsection{Neumann}
+   
+    They are set by implementing a boundary integral
+    
+    
+    
+  
+  
+  \section{MultilevelSolution: Initial conditions}
+  
+  \subsubsection{Check that boundary values and initial values at the boundary are CONSISTENT}
+
+  
+  \section{Output: Writer}
+
+  
+  \chapter{Problem}
+
+  
+    \section{MultilevelProblem}
+
+  Everything in the Assemble function (and in other parts too) is accessed through this class
+  
+Il problema deve essere dotato dei dati CONDIVISIBILI tra tutte le EQUAZIONI:
+   - parametri fisici / di visualizzazione
+   - puntatori alle equazioni
+   - puntatori ai punti di gauss per l'integrazione
+   - puntatore al MESH
+   - NUMERO DI LIVELLI del multigriglia
+
+Io ci aggiungerei anche 
+   - MGpar, parametri del MG disponibili per tutte le equazioni.
+   
+\section{ Quadrature }
+
+You put it here so that many systems can share it
+
+Clearly, if you have terms with different polynomial degrees,
+you pick for the quadrature the ones that guarantees exactness for the highest-degree polynomial
+  
+\section{FE Abstract Families (with precomputed Quadrature evaluations)}
+  
+  \chapter{System(s) (of a Problem)}
+
+
+  
+     After the MGsolve or MLsolve or solve function is called,
+   the MultilevelSolution vector is updated and ready to be printed to file...
+   
+   But where exactly is it updated?
+   Also, the print routines only print at the FINE level,
+   so is MultilevelSolution updated only at the FINE level or at ALL levels???
+   
+   Ok, what happens is that the MultilevelSolution object contains a VECTOR (based on number of levels) of Solution objects,
+   and THIS is the vector that the Writer uses need to access if I want to retrieve my values!!!
+   
+   
+   System: the System class has a 
+   
+   std::vector of Mesh pointers and a 
+   
+   std::vector of Solution pointers,
+   
+   and it also has pointers to MultilevelSolution and MultilevelMesh...
+   
+   MultilevelMesh, in turn, has a std::vector of Mesh pointers in it;
+   
+   MultilevelSolution, in turn, has a std::vector of Solution pointers in it
+   
+   
+   - Every Mesh should be SINGLE-LEVEL, but it has a \_ProjCoarseToFine object, so it is not really single-level...
+      
+
+\chapter{Solvers and preconditioners}
+
+
+
+ \section{Linear Equation Solver (child of Linear Equation)}
+ 
+ This is to handle $ A e = - r $
+ 
+ The LinearImplicitSystem has a vector of LinearEquationSolver objects (one for each mesh level)
+ 
+ Every LinearEquationSolver has a Solver (which somehow tends to be called Smoother often times) and a Preconditioner
+ 
+ 
+  
+ \section{ML vs. MG solver}
+
+ In MG you pass the Smoother, while in ML you don't.
+ 
+ 
+ 
+ 
 \part{Git Cheat Sheet}
 
 
@@ -157,16 +500,6 @@ From command line:
 
 To be added
 
-
-\section{How to install HDFVIEW}
-
-
-Follow the instruction in the HDFVIEW website
-
-At the end of the build process, you should have an hdfview.sh script inside the bin directory of your build.
-You must open that script and change the INSTALLDIR variable with the path of this build (by default, /usr/local is in it)
-
-Another alternative to view the content of an HDF5 file is to use the 'h5dump' utility shipped with HDF5 (installed through PETSc, for instance)
 
 \part{Salome}
 
@@ -428,5 +761,18 @@ On the other hand, if instead of dumping the script I save the study it is NOT c
   Possible answer: I think the way to go in these cases is to do, after Explode, a "Create Group" in the Geometry.
     That group should appear as a "child" of the Geometry object you will then mesh. I can try this to double check.
 
+
+ \part{Hdfview}
+
+
+Follow the instruction in the HDFVIEW website
+
+At the end of the build process, you should have an hdfview.sh script inside the bin directory of your build.
+You must open that script and change the INSTALLDIR variable with the path of this build (by default, /usr/local is in it)
+
+Another alternative to view the content of an HDF5 file is to use the 'h5dump' utility shipped with HDF5 (installed through PETSc, for instance)
+
+   
+    
     
 \end{document}

@@ -11,18 +11,42 @@
 #include "../include/FSISteadyStateAssembly.hpp"
 #include <dlfcn.h>
 
+#include "CurrentElem.hpp"
+
+#define FACE_FOR_QOI             4   
+
+#define FE_DOMAIN  2
+
+
 using namespace std;
 using namespace femus;
 
-void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
-void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
-void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofrefinements);
+void PrintMumpsInfo(const char *stdOutfile, char* infile, const unsigned &numofrefinements);
+void PrintConvergenceInfo(const char *stdOutfile, char* infile, const unsigned &numofrefinements);
+void PrintMultigridTime(const char *stdOutfile, char* infile, const unsigned &numofrefinements);
+
+void ComputeQoI(const MultiLevelProblem& ml_prob, const unsigned level, const MonolithicFSINonLinearImplicitSystem* mlPdeSys);
+
+///@todo I believe I have to review how the computation of the normal is performed
+///@todo let the files be read from each run folder
+
+
+
 
 int main(int argc,char **args) {
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
 
+  // ======= Files ========================
+  Files files; 
+        files.CheckIODirectories();
+        files.RedirectCout();
+
+  // ======= Quad Rule ========================
+  std::string fe_quad_rule = "fifth";
+
+  // ===============================
   // process options
   int dimension=2;
   char infile[256] = "";
@@ -32,7 +56,6 @@ int main(int argc,char **args) {
   double Lref=1., Uref=1., rhof=1., muf=1., rhos=1., ni=0., E=1.;
   int numofmeshlevels = 1;
   int numofrefinements = 1;
-  std::string gauss_integration_order = "fifth";
   char bdcfilename[256] = "";
   int numlineariter = 1;
   int numnonlineariter = 15;
@@ -132,8 +155,10 @@ int main(int argc,char **args) {
   printf("\n");
 
   PetscOptionsEnd();
+  
+  
 
-  // loading external functions
+  // *********** loading external functions *******************
   cout << " Loading lib bdcfilename...";
   void *handle = dlopen (bdcfilename, RTLD_LAZY);
   if (!handle) {
@@ -176,10 +201,13 @@ int main(int argc,char **args) {
   else {
     cout << " done" << endl;
   }
+  // *********** loading external functions - end *******************
+  
+  
 
   // ******* Init multilevel mesh from mesh.neu file *******
 
-  MultiLevelMesh ml_msh(numofrefinements, numofrefinements, infile, gauss_integration_order.c_str(), Lref, NULL);
+  MultiLevelMesh ml_msh(numofrefinements, numofrefinements, infile, fe_quad_rule.c_str(), Lref, NULL);
 
   ml_msh.EraseCoarseLevels(numofrefinements - numofmeshlevels);
 
@@ -245,14 +273,20 @@ int main(int argc,char **args) {
 
   // ******* Define the FSI Multilevel Problem *******
   MultiLevelProblem ml_prob(&ml_sol);
+  
+  ml_prob.SetFilesHandler(&files);
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.set_all_abstract_fe();
+  
+  
   // Add fluid object
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
 
-  const bool solve_system = true;
+  const bool solve_system = false;
   
-  if(solve_system) {
+  if (solve_system) {
       
   // ******* Add FSI system to the MultiLevel problem *******
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
@@ -351,7 +385,6 @@ int main(int argc,char **args) {
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
 
-
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
@@ -362,7 +395,7 @@ int main(int argc,char **args) {
   print_vars.push_back("All");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+  ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,"biquadratic",print_vars);
 
   if(mem_infos) {
     PetscMemoryGetCurrentUsage(&memory_current_usage);
@@ -374,18 +407,26 @@ int main(int argc,char **args) {
   // ******* Clear all systems *******
   ml_prob.clear();
 
-  // close the library
+  // ******* close the library *******
   dlclose(handle);
+  
+  // ******* Postprocessing *******
+  
+  ComputeQoI(ml_prob, numofmeshlevels - 1, NULL);
+  
+//   const std::string output_file_to_parse = stdOutfile;
+  const std::string output_file_to_parse = files.GetOutputPath() + "run_p0.log";
+  
   if(strcmp (stdOutfile,"") != 0){
-    PrintMumpsInfo(stdOutfile, infile, numofrefinements);
-    PrintConvergenceInfo(stdOutfile, infile, numofrefinements);
-    PrintMultigridTime(stdOutfile, infile, numofrefinements);
+    PrintMumpsInfo(output_file_to_parse.c_str(), infile, numofrefinements);
+    PrintConvergenceInfo(output_file_to_parse.c_str(), infile, numofrefinements);
+    PrintMultigridTime(output_file_to_parse.c_str(), infile, numofrefinements);
   }
 
   return 0;
 }
 
-void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements){
+void PrintMumpsInfo(const char *stdOutfile, char* infile, const unsigned &numofrefinements){
 
   std::cout<<"END_COMPUTATION\n"<<std::flush;
 
@@ -456,7 +497,7 @@ void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinem
 
 
 
-void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements){
+void PrintConvergenceInfo(const char *stdOutfile, char* infile, const unsigned &numofrefinements){
 
   std::cout<<"END_COMPUTATION\n"<<std::flush;
 
@@ -537,7 +578,7 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
 
 }
 
-void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofrefinements){
+void PrintMultigridTime(const char *stdOutfile, char* infile, const unsigned &numofrefinements){
 
   std::cout<<"END_COMPUTATION\n"<<std::flush;
 
@@ -619,3 +660,220 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
 
 }
 
+
+
+
+
+void ComputeQoI(const MultiLevelProblem& ml_prob, const unsigned level, const MonolithicFSINonLinearImplicitSystem* mlPdeSys)    {
+  
+  
+//   const MonolithicFSINonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system< MonolithicFSINonLinearImplicitSystem > ("Fluid-Structure-Interaction");
+//   const unsigned level = mlPdeSys->GetLevelToAssemble();
+
+  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
+  elem*                     el = msh->el;
+
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
+  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
+
+  const unsigned  dim = msh->GetDimension();
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+
+  //=============== Geometry ========================================
+   unsigned solType_coords = FE_DOMAIN;
+ 
+  CurrentElem < double > geom_element(dim, msh);
+    
+  constexpr unsigned int space_dim = 3;
+  
+  std::vector<double> normal(space_dim, 0.);
+ //***************************************************
+
+  //=============== Integration ========================================
+  double weight = 0.;
+  double weight_bdry = 0.; // gauss point weight on the boundary
+
+  
+ //*************** state ***************************** 
+ //*************************************************** 
+  vector <double> phi_u;     phi_u.reserve(max_size);
+  vector <double> phi_u_x;   phi_u_x.reserve(max_size * space_dim);
+  vector <double> phi_u_xx;  phi_u_xx.reserve(max_size * dim2);
+
+ 
+  unsigned solIndex_u;
+  solIndex_u = ml_sol->GetIndex("U");    // get the position of "state" in the ml_sol object
+  unsigned solType_u = ml_sol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
+
+  vector < double >  sol_u; // local solution
+  sol_u.reserve(max_size);
+  
+  double u_gss = 0.;
+ //*************************************************** 
+ //***************************************************
+ //***************************************************
+  vector <double> phi_u_bdry;  
+  vector <double> phi_u_x_bdry; 
+
+  phi_u_bdry.reserve(max_size);
+  phi_u_x_bdry.reserve(max_size * space_dim);
+
+
+  
+  double integral_volume = 0.;
+  double integral_bdry   = 0.;
+
+  
+
+ //*************************************************** 
+     std::vector < std::vector < double > >  JacI_qp(space_dim);
+     std::vector < std::vector < double > >  Jac_qp(dim);
+    for (unsigned d = 0; d < Jac_qp.size(); d++) {   Jac_qp[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_qp.size(); d++) { JacI_qp[d].resize(dim); }
+    
+    double detJac_qp;
+
+     std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
+     std::vector < std::vector < double > >  Jac_qp_bdry(dim-1);
+    for (unsigned d = 0; d < Jac_qp_bdry.size(); d++) {   Jac_qp_bdry[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_qp_bdry.size(); d++) { JacI_qp_bdry[d].resize(dim-1); }
+    
+    double detJac_qp_bdry;
+    
+      //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+  std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all;
+  ml_prob.get_all_abstract_fe(elem_all);
+ //*************************************************** 
+  
+  
+  // element loop: each process loops only on the elements that owns
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+        
+    const short unsigned ielGeom = geom_element.geom_type();
+
+   
+ //*********** state ********************************* 
+    unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);
+    sol_u    .resize(nDof_u);
+   // local storage of global mapping and solution
+    for (unsigned i = 0; i < sol_u.size(); i++) {
+      unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);
+      sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
+    }
+ //*********** state ********************************* 
+
+ 
+ //********** ALL VARS ******************************* 
+    int nDof_max    =  nDof_u;   //  TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
+    
+ //***************************************************
+
+	       
+	  // loop on faces of the current element
+
+	  for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+          
+       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
+       const unsigned nve_bdry_u = msh->GetElementFaceDofNumber(iel,jface,solType_u);
+       
+
+       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+ 
+       geom_element.set_elem_center_bdry_3d();
+
+       
+	    // look for boundary faces
+            const int bdry_index = el->GetFaceElementIndex(iel,jface);
+            
+	    if( bdry_index < 0) {
+	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+	      
+		
+// 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
+	      if(  face == FACE_FOR_QOI) { //control face
+
+	
+		//============ initialize gauss quantities on the boundary ==========================================
+                double sol_u_bdry_gss = 0.;
+                std::vector<double> sol_u_x_bdry_gss(space_dim);
+		//============ initialize gauss quantities on the boundary ==========================================
+		
+		for(unsigned ig_bdry = 0; ig_bdry < ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber(); ig_bdry++) {
+		  
+    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
+    weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
+    elem_all[ielGeom_bdry][solType_u] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry, boost::none, space_dim);
+
+		  
+		 //========== compute gauss quantities on the boundary ===============================================
+		  sol_u_bdry_gss = 0.;
+                  std::fill(sol_u_x_bdry_gss.begin(), sol_u_x_bdry_gss.end(), 0.);
+		      for (int i_bdry = 0; i_bdry < nve_bdry_u; i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+			
+			sol_u_bdry_gss +=  sol_u[i_vol] * phi_u_bdry[i_bdry];
+                            for (int d = 0; d < space_dim; d++) {
+			      sol_u_x_bdry_gss[d] += sol_u[i_vol] * phi_u_x_bdry[i_bdry * space_dim + d];
+			    }
+		      }
+		      
+		      double laplace_ctrl_surface = 0.;  for (int d = 0; d < space_dim; d++) { laplace_ctrl_surface += sol_u_x_bdry_gss[d] * sol_u_x_bdry_gss[d]; }
+
+                 //========= compute gauss quantities on the boundary ================================================
+                  integral_bdry +=  weight_bdry */* sol_u_bdry_gss * sol_u_bdry_gss*/ 1.; 
+                 
+             }
+	      } //end face == 3
+	      
+	    } //end if boundary faces
+	  }  // loop over element faces   
+
+//=====================================================================================================================  
+//=====================================================================================================================  
+//=====================================================================================================================  
+  
+  
+   
+      // *** Gauss point loop ***
+      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+	
+        // *** get gauss point weight, test function and test function partial derivatives ***
+    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
+    weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
+
+    elem_all[ielGeom][solType_u]                 ->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, space_dim);
+    
+	u_gss     = 0.;  
+    for (unsigned i = 0; i < nDof_u; i++)        u_gss += sol_u[i]     * phi_u[i];
+
+               integral_volume +=  weight * (u_gss) * (u_gss);
+	  
+      } // end gauss point loop
+      
+  } //end element loop
+
+  double total_integral = integral_bdry;
+  
+  
+  ////////////////////////////////////////
+       std::cout << "integral on processor: " << total_integral << std::endl;
+
+   double J = 0.;
+      MPI_Allreduce( &total_integral, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );  //THIS IS THE RIGHT ONE!!
+
+
+    std::cout << "@@@@@@@@@@@@@@@@ functional value: " << J << std::endl;
+  
+//   std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
+//   std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
+//   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
+//   std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
+ 
+return;
+  
+}

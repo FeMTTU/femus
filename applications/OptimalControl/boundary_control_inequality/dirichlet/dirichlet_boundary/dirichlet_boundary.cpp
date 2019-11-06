@@ -1261,8 +1261,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 		      double laplace_ctrl_surface = 0.;  for (int d = 0; d < space_dim; d++) { laplace_ctrl_surface += sol_ctrl_x_bdry_gss[d] * sol_ctrl_x_bdry_gss[d]; }
 
                  //========= compute gauss quantities on the boundary ================================================
-                  integral_alpha +=  weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
-                  integral_beta  +=  weight * laplace_ctrl_surface;
+                  integral_alpha +=  weight_bdry * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
+                  integral_beta  +=  weight_bdry * laplace_ctrl_surface;
                  
              }
 	      } //end face == 3
