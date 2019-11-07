@@ -62,7 +62,50 @@ FEMuS includes,
 
  - data encapsulation, please
  
+  \chapter{Debugging, parallel}
  
+ Put yourself in the simplest case
+ 
+ First of all, check that the coarse mesh has enough elements: if the coarse mesh only has 1 element, then Metis does not work
+ 
+ Then, try to only run Mesh and Printing, by commenting the solution of your System. See how the Metis partitions are printed.
+ 
+ Fine, it works.
+ 
+  \subsubsection{Use valgrind!!!}
+
+ \subsubsection{Command}
+
+ mpiexec -n 1 femus-dbg -start\_in\_debugger
+
+ \subsubsection{Segfaults}
+
+If you use -info it tells you a lot of things about PETSC calls.
+-log\_trace, -info, -log\_summary
+
+Finding a segmentation fault shouldn't be too difficult with valgrind or gdb
+
+(see also this link:
+http://www.cprogramming.com/debugging/segfaults.html )
+
+Di solito guardi uno dei puntatori nella riga in cui si 
+blocca e magari e' un puntatore non inizializzato,
+oppure e' un puntatore a NULL, 
+oppure e' un puntatore che e' stato deallocato,
+oppure sto dereferenziando un puntatore al di fuori del suo range,
+oppure qualcosa altro ma poco...
+
+Per quanto riguarda le PETSC puo' essere molto lungo riuscire 
+a trovare un segmentation fault, perche' dovresti 
+andare a vedere DENTRO LE STRUTTURE (Mat, Vec sono strutture di C)
+e guardare di quegli elementi qual e' quello 
+che causa il segmentation fault.
+
+Per fare questo conviene USARE LE PETSC in DEBUG MODE 
+e vedere quale output ti danno;
+cosi' vedi le chiamate all'interno della libreria petsc.
+
+
 \part{Application}
 
 

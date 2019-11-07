@@ -21,9 +21,9 @@
 using namespace std;
 using namespace femus;
 
-void PrintMumpsInfo(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements);
-void PrintConvergenceInfo(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements);
-void PrintMultigridTime(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements);
+void PrintMumpsInfo      (const std::string output_path, const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements);
+void PrintConvergenceInfo(const std::string output_path, const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements);
+void PrintMultigridTime  (const std::string output_path, const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements);
 
 void ComputeQoI(const MultiLevelProblem& ml_prob, const unsigned level, const MonolithicFSINonLinearImplicitSystem* mlPdeSys);
 
@@ -40,16 +40,17 @@ int main(int argc, char **args) {
 
   // ===============================
   // process options
-  char output_time[256] = "";
+#define MAX_CHAR_LENGTH 256
+  char output_time[MAX_CHAR_LENGTH] = "";
   int dimension=2;
-  char mesh_file[256] = "";
-  char stdOutfile[256] = "";
-  char outer_ksp_solver[256] = "gmres";
-  size_t len_mesh_file_name = 256;
+  char mesh_file[MAX_CHAR_LENGTH] = "";
+  char stdOutfile[MAX_CHAR_LENGTH] = "";
+  char outer_ksp_solver[MAX_CHAR_LENGTH] = "gmres";
+  size_t len_mesh_file_name = MAX_CHAR_LENGTH;
   double Lref=1., Uref=1., rhof=1., muf=1., rhos=1., ni=0., E=1.;
   int numofmeshlevels = 1;
   int numofrefinements = 1;
-  char bdcfilename[256] = "";
+  char bdcfilename[MAX_CHAR_LENGTH] = "";
   int numlineariter = 1;
   int numnonlineariter = 15;
   double lin_tol = 1.e-04;
@@ -167,7 +168,9 @@ int main(int argc, char **args) {
 //   const std::string output_file_to_parse = files.GetOutputTime() + stdOutfile;
 // std::string output_path = DEFAULT_OUTPUTDIR;
 std::string output_path = output_time;
+output_path.append("/");
   const std::string output_file_to_parse = output_path + stdOutfile;
+  std::cout << output_file_to_parse << std::endl;
 
   // ======= Quad Rule ========================
   std::string fe_quad_rule = "fifth";
@@ -222,8 +225,9 @@ std::string output_path = output_time;
   
 
   // ******* Init multilevel mesh from mesh.neu file *******
-
-  MultiLevelMesh ml_msh(numofrefinements, numofrefinements, mesh_file, fe_quad_rule.c_str(), Lref, NULL);
+  const std::string mesh_file_folder = "./input/";
+  const std::string mesh_file_path = mesh_file_folder + mesh_file;
+  MultiLevelMesh ml_msh(numofrefinements, numofrefinements, mesh_file_path.c_str(), fe_quad_rule.c_str(), Lref, NULL);
 
   ml_msh.EraseCoarseLevels(numofrefinements - numofmeshlevels);
 
@@ -429,46 +433,43 @@ std::string output_path = output_time;
   // ******* Postprocessing *******
   
   ComputeQoI(ml_prob, numofmeshlevels - 1, NULL);
-  
+
   if(strcmp (output_file_to_parse.c_str(), "") != 0) {
-    PrintMumpsInfo(output_file_to_parse.c_str(), mesh_file, numofrefinements);
-    PrintConvergenceInfo(output_file_to_parse.c_str(), mesh_file, numofrefinements);
-    PrintMultigridTime(output_file_to_parse.c_str(), mesh_file, numofrefinements);
+    PrintMumpsInfo      (output_path, output_file_to_parse.c_str(), mesh_file, numofrefinements);
+    PrintConvergenceInfo(output_path, output_file_to_parse.c_str(), mesh_file, numofrefinements);
+    PrintMultigridTime  (output_path, output_file_to_parse.c_str(), mesh_file, numofrefinements);
   }
 
   return 0;
 }
 
-//this routine is printing to the run output file first, 
-// and then printing another file by processing the run output file
-void PrintMumpsInfo(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements){
+//these routines are printing another file by processing the run output file
+void PrintMumpsInfo(const std::string output_path, const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements){
 
-  std::cout<<"END_COMPUTATION\n"<<std::flush;
+  const std::string routine_file_suffix = "_mumps_info.txt";
+  
+  char output_path_char[MAX_CHAR_LENGTH]; strcpy(output_path_char, output_path.c_str());
+  
+  std::cout << "END_COMPUTATION\n" << std::flush;
 
   std::ifstream inf;
   inf.open(stdOutfile);
   if (!inf) {
-    std::cout<<"Redirected standard output file not found\n";
-    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+    std::cout << "Redirected standard output file not found\n";
+    std::cout << "add option -std_output std_out_filename > std_out_filename\n";
     return;
   }
 
   std::ofstream outf;
-  char outFileName[100];
-  if(strcmp (mesh_file,"./input/turek_FSI1.neu") == 0){
-    sprintf(outFileName, "turek_hron_FSI1_mumps_info.txt");
-  }
-  else if(strcmp (mesh_file,"./input/richter3d.neu") == 0){
-    sprintf(outFileName, "richter3d_mumps_info.txt");
-  }
-  else{
-    sprintf(outFileName, "generic_mumps_info.txt");
-  }
-
+  char outFileName[MAX_CHAR_LENGTH];
+  
+  std::ostringstream info_file_stream; info_file_stream << mesh_file << routine_file_suffix;
+  sprintf(outFileName, strcat(output_path_char, info_file_stream.str().c_str()));
+  
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
-  outf << "Number_of_refinements="<<numofrefinements<<std::endl;
-  outf << "Nonlinear_Iteration,RINFOG(7),RINFOG(8),RINFOG(9),RINFOG(10),RINFOG(11),INFOG(19),E5*B5*E5/D5+F5*C5*F5/D5";
+  outf << "Number_of_refinements = " << numofrefinements << std::endl;
+  outf << "Nonlinear_Iteration, RINFOG(7), RINFOG(8), RINFOG(9), RINFOG(10), RINFOG(11), INFOG(19), E5*B5*E5/D5+F5*C5*F5/D5";
 
   std::string str1;
   inf >> str1;
@@ -512,9 +513,13 @@ void PrintMumpsInfo(const char *stdOutfile, const char* mesh_file, const unsigne
 
 
 
-void PrintConvergenceInfo(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements){
+void PrintConvergenceInfo(const std::string output_path, const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements){
 
-  std::cout<<"END_COMPUTATION\n"<<std::flush;
+    const std::string routine_file_suffix = "_convergence_info.txt";
+    
+   char output_path_char[MAX_CHAR_LENGTH]; strcpy(output_path_char, output_path.c_str());
+
+   std::cout << "END_COMPUTATION\n" << std::flush;
 
   std::ifstream inf;
   inf.open(stdOutfile);
@@ -525,24 +530,20 @@ void PrintConvergenceInfo(const char *stdOutfile, const char* mesh_file, const u
   }
 
   std::ofstream outf;
-  char outFileName[100];
-  if(strcmp (mesh_file,"./input/turek_FSI1.neu") == 0){
-    sprintf(outFileName, "turek_hron_FSI1_convergence_info.txt");
-  }
-  else if(strcmp (mesh_file,"./input/richter3d.neu") == 0){
-    sprintf(outFileName, "richter3d_convergence_info.txt");
-  }
-  else{
-    sprintf(outFileName, "generic_convergence_info.txt");
-  }
+  char outFileName[MAX_CHAR_LENGTH];
+  
+  std::ostringstream info_file_stream; info_file_stream << mesh_file << routine_file_suffix;
+  sprintf(outFileName, strcat(output_path_char, info_file_stream.str().c_str()));
+
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
-  outf << "Number_of_refinements="<<numofrefinements<<std::endl;
-  outf << "Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
+  outf << "Number_of_refinements = " << numofrefinements << std::endl;
+  outf << "Nonlinear_Iteration, resid_norm0, resid_normN, N, convergence";
 
   std::string str1;
   inf >> str1;
+  
   while (str1.compare("END_COMPUTATION") != 0) {
 
     if (str1.compare("Nonlinear") == 0) {
@@ -574,9 +575,9 @@ void PrintConvergenceInfo(const char *stdOutfile, const char* mesh_file, const u
                 inf >> str1;
               }
             }
-            outf <<","<< normN;
+            outf << "," << normN;
             if(counter != 0){
-              outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
+              outf << "," << counter << "," << pow(normN/norm0,1./counter);
             }
             else{
               outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
@@ -593,30 +594,27 @@ void PrintConvergenceInfo(const char *stdOutfile, const char* mesh_file, const u
 
 }
 
-void PrintMultigridTime(const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements){
+void PrintMultigridTime(const std::string output_path, const char *stdOutfile, const char* mesh_file, const unsigned &numofrefinements){
 
-  std::cout<<"END_COMPUTATION\n"<<std::flush;
+  const std::string routine_file_suffix = "_multigrid_time.txt";
+    
+  char output_path_char[MAX_CHAR_LENGTH]; strcpy(output_path_char, output_path.c_str());
+
+  std::cout << "END_COMPUTATION\n" << std::flush;
 
   std::ifstream inf;
   inf.open(stdOutfile);
   if (!inf) {
-    std::cout<<"Redirected standard output file not found\n";
-    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+    std::cout << "Redirected standard output file not found\n";
+    std::cout << "add option -std_output std_out_filename > std_out_filename\n";
     return;
   }
 
   std::ofstream outf;
-  char outFileName[100];
+  char outFileName[MAX_CHAR_LENGTH];
 
-  if(strcmp (mesh_file,"./input/turek_FSI1.neu") == 0){
-    sprintf(outFileName, "turek_hron_FSI1_multigrid_time.txt");
-  }
-  else if(strcmp (mesh_file,"./input/richter3d.neu") == 0){
-    sprintf(outFileName, "richter3d_multigrid_time.txt");
-  }
-  else{
-    sprintf(outFileName, "generic_multigrid_time.txt");
-  }
+  std::ostringstream info_file_stream; info_file_stream << mesh_file << routine_file_suffix;
+  sprintf(outFileName, strcat(output_path_char, info_file_stream.str().c_str()));
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl;
