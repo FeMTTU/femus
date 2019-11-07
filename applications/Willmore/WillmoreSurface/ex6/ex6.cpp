@@ -29,7 +29,7 @@ using namespace femus;
 
 // Toggle for setting volume and area constraints, as well as sign of N.
 bool volumeConstraint = true;
-bool areaConstraint = false;
+bool areaConstraint = true;
 const double normalSign = -1.;
 
 // Penalty parameter for conformal minimization (eps).
@@ -52,7 +52,7 @@ void AssembleSphereConformalMinimization (MultiLevelProblem&);  //inferior
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
   //return 0.0001;
-  double dt0 = 25.;
+  double dt0 = .05;
   //double dt0 = 0.00000032; // spot
   double s = 1.;
   double n = 2;
@@ -109,12 +109,12 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  mlMsh.ReadCoarseMesh ("../input/ducky.med", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/moai.med", "seventh", scalingFactor);
 
   // Set number of mesh levels.
   unsigned numberOfUniformLevels = 1;
@@ -1712,19 +1712,20 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
+          adept::adouble term1new = 0.;
 
           for (unsigned j = 0; j < dim; j++) {
-            // for (unsigned l = 0; l < dim; l++) {
-            //   term1new += gi[j][l] * M[K][j] * phix_uv[l][i];
-            // }
+            for (unsigned l = 0; l < dim; l++) {
+              term1new += gi[j][l] * M[K][j] * phix_uv[l][i];
+            }
             term1 +=  M[K][j] * phix_uv[j][i];
-            // term1 += Q[K][j] * phix_uv[j][i];
+            //term1 += Q[K][j] * phix_uv[j][i];
           }
 
           // Conformal energy equation (with trick).
-          aResNDx[K][i] += term1 * Area2
+          aResNDx[K][i] += term1new * Area
                            // + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
-                           + solL[0] * phix[i] * normal[K] * Area2;
+                           + solL[0] * phix[i] * normal[K] * Area; //2 occasionally better???
         }
       }
 
@@ -2411,37 +2412,37 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
 
       adept::adouble M[DIM][dim];
-      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2] + /*0*(1. / sqrt(detg) ) **/ (
+      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2] + (1. / sqrt(detg) ) * (
         (solNx_uv[1][0] * solNx_uv[1][1] + solNx_uv[2][0] * solNx_uv[2][1]) * V[0]
       - (solNx_uv[1][1] * solNx_uv[1][1] + solNx_uv[2][1] * solNx_uv[2][1]) * W[0]
       + solNx_uv[0][1] * (solNx_uv[1][1] * W[1] + solNx_uv[2][1] * W[2])
       - solNx_uv[0][0] * (solNx_uv[1][1] * V[1] + solNx_uv[2][1] * V[2])
     );
-      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0] + /*0*(1. / sqrt(detg) ) **/ (
+      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0] + (1. / sqrt(detg) ) * (
         (solNx_uv[2][0] * solNx_uv[2][1] + solNx_uv[0][0] * solNx_uv[0][1]) * V[1]
       - (solNx_uv[2][1] * solNx_uv[2][1] + solNx_uv[0][1] * solNx_uv[0][1]) * W[1]
       + solNx_uv[1][1] * (solNx_uv[2][1] * W[2] + solNx_uv[0][1] * W[0])
       - solNx_uv[1][0] * (solNx_uv[2][1] * V[2] + solNx_uv[0][1] * V[0])
     );
-      M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1] + /*0*(1. / sqrt(detg) ) **/ (
+      M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1] + (1. / sqrt(detg) ) * (
         (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[1][0] * solNx_uv[1][1]) * V[2]
       - (solNx_uv[0][1] * solNx_uv[0][1] + solNx_uv[1][1] * solNx_uv[1][1]) * W[2]
       + solNx_uv[2][1] * (solNx_uv[0][1] * W[0] + solNx_uv[1][1] * W[1])
       - solNx_uv[2][0] * (solNx_uv[0][1] * V[0] + solNx_uv[1][1] * V[1])
     );
-      M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2] + /*0*(1. / sqrt(detg) ) **/ (
+      M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2] + (1. / sqrt(detg) ) * (
         (solNx_uv[1][1] * solNx_uv[1][0] + solNx_uv[2][1] * solNx_uv[2][0]) * W[0]
       - (solNx_uv[1][0] * solNx_uv[1][0] + solNx_uv[2][0] * solNx_uv[2][0]) * V[0]
       + solNx_uv[0][0] * (solNx_uv[1][0] * V[1] + solNx_uv[2][0] * V[2])
       - solNx_uv[0][1] * (solNx_uv[1][0] * W[1] + solNx_uv[2][0] * W[2])
     );
-      M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0] + /*0*(1. / sqrt(detg) ) **/ (
+      M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0] + (1. / sqrt(detg) ) * (
         (solNx_uv[2][1] * solNx_uv[2][0] + solNx_uv[0][1] * solNx_uv[0][0] ) * W[1]
       - (solNx_uv[2][0] * solNx_uv[2][0] + solNx_uv[0][0] * solNx_uv[0][0] ) * V[1]
       + solNx_uv[1][0] * (solNx_uv[2][0] * V[2] + solNx_uv[0][0] * V[0])
       - solNx_uv[1][1] * (solNx_uv[2][0] * W[2] + solNx_uv[0][0] * W[0])
     );
-      M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1] + /*0*(1. / sqrt(detg) ) **/ (
+      M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1] + (1. / sqrt(detg) ) * (
         (solNx_uv[0][1] * solNx_uv[0][0] + solNx_uv[1][1] * solNx_uv[1][0]) * W[2]
       - (solNx_uv[0][0] * solNx_uv[0][0] + solNx_uv[1][0] * solNx_uv[1][0]) * V[2]
       + solNx_uv[2][0] * (solNx_uv[0][0] * V[0] + solNx_uv[1][0] * V[1])
@@ -2474,9 +2475,13 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
+          adept::adouble term1new = 0.;
           adept::adouble gxgp = 0.;
 
           for (unsigned j = 0; j < dim; j++) {
+            for (unsigned l = 0; l < dim; l++) {
+              term1new = gi[l][j] * M[K][l] * phix_uv[j][i];
+            }
             term1 +=  M[K][j] * phix_uv[j][i];
           }
 
@@ -2485,7 +2490,7 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
           }
 
           // Conformal energy equation (with trick).
-          aResNDx[K][i] += term1 * Area2
+          aResNDx[K][i] += term1new * Area
                            + G * gxgp * Area
                            + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
                            + solLg * phix[i] * normal[K] * Area;  //no2
