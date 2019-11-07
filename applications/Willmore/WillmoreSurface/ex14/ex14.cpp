@@ -28,7 +28,7 @@ const double ap[3] = {1, 0., 0.};
 using namespace femus;
 
 // Toggle for setting volume and area constraints, as well as sign of N.
-const bool volumeConstraint = false;
+const bool volumeConstraint = true;
 const bool areaConstraint = false;
 const double normalSign = -1.;
 
@@ -50,7 +50,8 @@ double GetTimeStep (const double t) {
   // if(time==0) return 5.0e-7;
   //return 0.0001;
   //double dt0 = .00002;
-  double dt0 = .0005;
+  // double dt0 = 0.67;
+  double dt0 = 0.25;
   double s = 1.;
   double n = 0.3;
   return dt0 * pow (1. + t / pow (dt0, s), n);
@@ -93,7 +94,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("./input/sphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidV1.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("./input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/horseShoe.neu", "seventh", scalingFactor);
@@ -102,6 +103,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("./input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("./input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/hand.med", "seventh", scalingFactor);
 
   // Set number of mesh levels.
   unsigned numberOfUniformLevels = 1;
@@ -172,7 +174,7 @@ int main (int argc, char** args) {
 
   // Parameters for convergence and # of iterations for Willmore.
   system.SetMaxNumberOfNonLinearIterations (20);
-  system.SetNonLinearConvergenceTolerance (1.e-12);
+  system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Add solutions X, Y, W to P-Willmore system.
   system.AddSolutionToSystemPDE ("Dx1");
@@ -232,7 +234,7 @@ int main (int argc, char** args) {
 
   // // First, solve system2 to "conformalize" the initial mesh.
   CopyDisplacement (mlSol, true);
-  system2.MGsolve();
+  //system2.MGsolve();
 
   // Then, solve system0 to compute initial curvatures.
   CopyDisplacement (mlSol, false);

@@ -52,11 +52,12 @@ void AssembleSphereConformalMinimization (MultiLevelProblem&);  //inferior
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
   //return 0.0001;
-  double dt0 = 0.1;
+  double dt0 = 25.;
   //double dt0 = 0.00000032; // spot
   double s = 1.;
   double n = 2;
-  return dt0 * pow (1. + t / pow (dt0, s), n);
+  //return dt0 * pow (1. + t / pow (dt0, s), n);
+  return dt0;
 }
 
 // IBVs.  No boundary, and IVs set to sphere (just need something).
@@ -102,7 +103,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh("../input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/sphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
@@ -113,10 +114,10 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  //mlMsh.ReadCoarseMesh ("../input/duckpoint85.med", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/ducky.med", "seventh", scalingFactor);
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -206,7 +207,7 @@ int main (int argc, char** args) {
 
   // Parameters for convergence and # of iterations for Willmore.
   system.SetMaxNumberOfNonLinearIterations (15);
-  system.SetNonLinearConvergenceTolerance (1.e-12);
+  system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to P-Willmore system.
   system.SetAssembleFunction (AssemblePWillmore);
@@ -232,7 +233,7 @@ int main (int argc, char** args) {
   system2.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system2 and initialize.
-  system2.SetAssembleFunction (AssembleO2ConformalMinimization);
+  system2.SetAssembleFunction (AssembleConformalMinimization);
   system2.init();
 
   mlSol.SetWriter (VTK);
@@ -1639,6 +1640,13 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       double Area = weight * sqrt (detg);
       double Area2 = weight; // Trick to give equal weight to each element.
 
+      // Compute the metric inverse.
+      double gi[dim][dim];
+      gi[0][0] =  g[1][1] / detg;
+      gi[0][1] = -g[0][1] / detg;
+      gi[1][0] = -g[1][0] / detg;
+      gi[1][1] =  g[0][0] / detg;
+
       // Compute components of the unit normal N.
       double normal[DIM];
       normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
@@ -1665,28 +1673,40 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
       M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
 
+      adept::adouble Q[DIM][dim];
+      Q[0][0] = gi[1][1] * W[0] - gi[0][0] * normal[2] * V[1] + gi[0][0] * normal[1] * V[2]
+            + gi[0][1] * (normal[2] * W[1] - normal[1] * W[2] - V[0]);
+
+      Q[1][0] = gi[1][1] * W[1] - gi[0][0] * normal[0] * V[2] + gi[0][0] * normal[2] * V[0]
+            + gi[0][1] * (normal[0] * W[2] - normal[2] * W[0] - V[1]);
+
+      Q[1][0] = gi[1][1] * W[2] - gi[0][0] * normal[1] * V[0] + gi[0][0] * normal[0] * V[1]
+            + gi[0][1] * (normal[1] * W[0] - normal[0] * W[1] - V[2]);
+
+      Q[0][1] = gi[0][0] * V[0] + gi[1][1] * normal[2] * W[1] - gi[1][1] * normal[1] * W[2]
+            - gi[0][1] * (normal[2] * V[1] - normal[1] * V[2] + W[0]);
+
+      Q[1][1] = gi[0][0] * V[1] + gi[1][1] * normal[0] * W[2] - gi[1][1] * normal[2] * W[0]
+            - gi[0][1] * (normal[0] * V[2] - normal[2] * V[0] + W[1]);
+
+      Q[2][1] = gi[0][0] * V[2] + gi[1][1] * normal[1] * W[0] - gi[1][1] * normal[0] * W[1]
+            - gi[0][1] * (normal[1] * V[0] - normal[0] * V[1] + W[2]);
+
       // Compute new X minus old X dot N, for "reparametrization".
       adept::adouble DnXmDxdotN = 0.;
       for (unsigned K = 0; K < DIM; K++) {
         DnXmDxdotN += (solDxg[K] - solNDxg[K]) * normal[K];
       }
 
-      // Compute the metric inverse.
-      double gi[dim][dim];
-      gi[0][0] =  g[1][1] / detg;
-      gi[0][1] = -g[0][1] / detg;
-      gi[1][0] = -g[1][0] / detg;
-      gi[1][1] =  g[0][0] / detg;
-
-      // Compute the "reduced Jacobian" g^{ij}X_j .
-      double Jir[2][3] = {{0., 0., 0.}, {0., 0., 0.}};
-      for (unsigned i = 0; i < dim; i++) {
-        for (unsigned J = 0; J < DIM; J++) {
-          for (unsigned k = 0; k < dim; k++) {
-            Jir[i][J] += gi[i][k] * solx_uv[J][k];
-          }
-        }
-      }
+      // // Compute the "reduced Jacobian" g^{ij}X_j .
+      // double Jir[2][3] = {{0., 0., 0.}, {0., 0., 0.}};
+      // for (unsigned i = 0; i < dim; i++) {
+      //   for (unsigned J = 0; J < DIM; J++) {
+      //     for (unsigned k = 0; k < dim; k++) {
+      //       Jir[i][J] += gi[i][k] * solx_uv[J][k];
+      //     }
+      //   }
+      // }
 
       // Implement the Conformal Minimization equations.
       for (unsigned K = 0; K < DIM; K++) {
@@ -1694,14 +1714,17 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
           adept::adouble term1 = 0.;
 
           for (unsigned j = 0; j < dim; j++) {
+            // for (unsigned l = 0; l < dim; l++) {
+            //   term1new += gi[j][l] * M[K][j] * phix_uv[l][i];
+            // }
             term1 +=  M[K][j] * phix_uv[j][i];
-            //term1 +=  X_uv[K][j] * phix_uv[j][i];
+            // term1 += Q[K][j] * phix_uv[j][i];
           }
 
           // Conformal energy equation (with trick).
           aResNDx[K][i] += term1 * Area2
-                           + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
-                           + solL[0] * phix[i] * normal[K] * Area;
+                           // + timederiv * (solNDxg[K] - solDxg[K]) * phix[i] * Area2
+                           + solL[0] * phix[i] * normal[K] * Area2;
         }
       }
 
