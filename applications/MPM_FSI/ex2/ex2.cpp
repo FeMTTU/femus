@@ -22,7 +22,7 @@ using namespace femus;
 
 
 double SetVariableTimeStep (const double time) {
-  double dt =  0.0025/*0.008*/;
+  double dt =  0.005/*0.008*/;
   return dt;
 }
 
@@ -83,7 +83,7 @@ int main (int argc, char** args) {
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 10000.;
-  unsigned numberOfUniformLevels = 5; //for refinement in 3D
+  unsigned numberOfUniformLevels = 6; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -123,7 +123,7 @@ int main (int argc, char** args) {
   if (dim > 1) mlSol.AddSolution ("VY", LAGRANGE, SECOND, 2);
   if (dim > 2) mlSol.AddSolution ("VZ", LAGRANGE, SECOND, 2);
 
-  mlSol.AddSolution ("P", DISCONTINUOUS_POLYNOMIAL, ZERO, 2);
+  mlSol.AddSolution ("P", DISCONTINUOUS_POLYNOMIAL, FIRST, 2);
 
   mlSol.AddSolution ("M", LAGRANGE, SECOND, 2);
   mlSol.AddSolution ("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
@@ -512,7 +512,7 @@ int main (int argc, char** args) {
 
 
   system.AttachGetTimeIntervalFunction (SetVariableTimeStep);
-  unsigned n_timesteps = 200;
+  unsigned n_timesteps = 100;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     if (time_step >= 3) {
