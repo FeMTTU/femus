@@ -1653,6 +1653,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
       normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
 
+
       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
       adept::adouble V[DIM];
       V[0] = solNx_uv[0][1] - normal[1] * solNx_uv[2][0] + normal[2] * solNx_uv[1][0];
@@ -2086,8 +2087,7 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
   adept::Stack& s = FemusInit::_adeptStack;
 
   //  Extract pointers to the several objects that we are going to use.
-  NonLinearImplicitSystem* mlPdeSys =
-    &ml_prob.get_system< NonLinearImplicitSystem> ("nProj");
+  NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system< NonLinearImplicitSystem> ("nProj");   // pointer to the linear implicit system named "Poisson"
 
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
@@ -2113,7 +2113,6 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
 
   // Setting the reference elements to be equilateral triangles.
   std::vector < std::vector < double > > xT (2);
-
   xT[0].resize (3);
   xT[0][0] = -0.5;
   xT[0][1] = 0.5;
@@ -2195,8 +2194,7 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
   RES->zero(); // Zero all the entries of the Global Residual
 
   // ELEMENT LOOP: each process loops only on the elements that it owns.
-  for (int iel = msh->_elementOffset[iproc];
-       iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     // Numer of solution element dofs.
     short unsigned ielGeom = msh->GetElementType (iel);
@@ -2207,7 +2205,6 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
     for (unsigned K = 0; K < DIM; K++) {
 
       xhat[K].resize (nxDofs);
-      xc[K].assign (nxDofs, 0.);
 
       solDx[K].resize (nxDofs);
       solx[K].resize (nxDofs);
@@ -2218,6 +2215,7 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       solL.resize (nLDofs);
     }
 
+    // Resize local arrays
     SYSDOF.resize (DIM * nxDofs + nLDofs);
     Res.resize (DIM * nxDofs + nLDofs);
 
@@ -2225,7 +2223,6 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       aResNDx[K].assign (nxDofs, 0.);
     }
     aResL.assign (nLDofs, 0.);
-
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nxDofs; i++) {
@@ -2261,38 +2258,42 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
     // start a new recording of all the operations involving adept variables.
     s.new_recording();
 
-    // begin GAUSS POINT LOOP
-    for (unsigned ig = 0; ig < msh->
-         _finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+    // *** Gauss point loop ***
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
 
       const double *phix;  // local test function
       const double *phiL;  // local test function
-      const double *phix_uv[dim]; // first order derivatives in (u,v)
+      const double *phix_uv[dim]; // local test function first order partial derivatives
 
       double weight; // gauss point weight
 
       // Get Gauss point weight, test function, and first order derivatives.
       if (ielGeom == QUAD) {
         phix = msh->_finiteElement[ielGeom][solType]->GetPhi (ig);
+        phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
+
         phix_uv[0] = msh->_finiteElement[ielGeom][solType]->GetDPhiDXi (ig);
         phix_uv[1] = msh->_finiteElement[ielGeom][solType]->GetDPhiDEta (ig);
+
         weight = msh->_finiteElement[ielGeom][solType]->GetGaussWeight (ig);
-        phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
       }
 
       // Special adjustments for triangles.
       else {
-        msh->_finiteElement[ielGeom][solType]->Jacobian (xT, ig,
-                                                         weight, stdVectorPhi, stdVectorPhi_uv);
+        msh->_finiteElement[ielGeom][solType]->Jacobian (xT, ig, weight, stdVectorPhi, stdVectorPhi_uv);
+
         phix = &stdVectorPhi[0];
+///////// WHAT ABOUT PHIL? ////////////////////
 
         phi_uv0.resize (nxDofs);
         phi_uv1.resize (nxDofs);
+
 
         for (unsigned i = 0; i < nxDofs; i++) {
           phi_uv0[i] = stdVectorPhi_uv[i * dim];
           phi_uv1[i] = stdVectorPhi_uv[i * dim + 1];
         }
+
         phix_uv[0] = &phi_uv0[0];
         phix_uv[1] = &phi_uv1[0];
 
@@ -2304,32 +2305,30 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       double solDxg[3] = {0., 0., 0.};
       adept::adouble solNDxg[3] = {0., 0., 0.};
 
-      adept::adouble solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble solNx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-
-
 
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           solDxg[K] += phix[i] * solDx[K][i];
           solNDxg[K] += phix[i] * solNDx[K][i];
         }
-
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
-            solx_uv[K][j]    += phix_uv[j][i] * (xhat[K][i] + 0.5 * (solDx[K][i] + solNDx[K][i]));
-            solNx_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + (solNDx[K][i]));
+            solx_uv[K][j]    += phix_uv[j][i] * solx[K][i];
+            solNx_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + solNDx[K][i]);
           }
         }
       }
 
+      ///////// ADDED THIS /////////
       adept::adouble solLg = 0.;
       for (unsigned i = 0; i < nLDofs; i++) {
         solLg += phiL[i] * solL[i];
       }
 
       // Compute the metric, metric determinant, and area element.
-      adept::adouble g[dim][dim] = {{0., 0.}, {0., 0.}};
+      double g[dim][dim] = {{0., 0.}, {0., 0.}};
       for (unsigned i = 0; i < dim; i++) {
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned K = 0; K < DIM; K++) {
@@ -2337,16 +2336,22 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
           }
         }
       }
-      adept::adouble detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
-      adept::adouble Area = weight * sqrt (detg);
+      double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
+      double Area = weight * sqrt (detg);
       double Area2 = weight; // Trick to give equal weight to each element.
 
-      // Computing the metric inverse
-      adept::adouble gi[dim][dim];
+      // Compute the metric inverse.
+      double gi[dim][dim];
       gi[0][0] =  g[1][1] / detg;
       gi[0][1] = -g[0][1] / detg;
       gi[1][0] = -g[1][0] / detg;
       gi[1][1] =  g[0][0] / detg;
+
+      // Compute components of the unit normal N.
+      double normal[DIM];
+      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
+      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
+      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
 
       // Computing the "reduced Jacobian" g^{ij}X_j .
       adept::adouble Jir[dim][DIM] = {{0., 0., 0.}, {0., 0., 0.}};
@@ -2359,20 +2364,15 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       }
 
       // Initializing tangential gradients of X and W (new, middle, old).
-      adept::adouble solNx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
       adept::adouble solx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-
-      // Computing tangential gradients defined above.
       for (unsigned I = 0; I < DIM; I++) {
         for (unsigned J = 0; J < DIM; J++) {
           for (unsigned k = 0; k < dim; k++) {
-            solNx_Xtan[I][J] += solNx_uv[I][k] * Jir[k][J];
-            solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
-          }
+            solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];        }
         }
       }
 
-      // Define and compute gradients of test functions for X.
+      // Define and compute gradients of test functions for X and W.
       std::vector < adept::adouble > phix_Xtan[DIM];
 
       for (unsigned J = 0; J < DIM; J++) {
@@ -2384,15 +2384,6 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
           }
         }
       }
-
-      // Compute components of the unit normal N.
-      adept::adouble normal[DIM];
-      normal[0] = (solx_uv[1][0] * solx_uv[2][1]
-                   - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
-      normal[1] = (solx_uv[2][0] * solx_uv[0][1]
-                   - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
-      normal[2] = (solx_uv[0][0] * solx_uv[1][1]
-                   - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
 
       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
       adept::adouble V[DIM];
@@ -2445,29 +2436,29 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
 
 
       adept::adouble Q[DIM][dim];
-      Q[0][0] =  gi[1][1] * W[0]
-               + gi[0][0] * (normal[1] * V[2] - normal[2] * V[1])
-               + gi[0][1] * (normal[2] * W[1] - normal[1] * W[2] - V[0]);
+      Q[0][0] = (gi[1][1] * W[0]
+                 + gi[0][0] * (normal[1] * V[2] - normal[2] * V[1])
+                 + gi[0][1] * (normal[2] * W[1] - normal[1] * W[2] - V[0]));
 
-      Q[1][0] =  gi[1][1] * W[1]
-               + gi[0][0] * (normal[2] * V[0] - normal[0] * V[2])
-               + gi[0][1] * (normal[0] * W[2] - normal[2] * W[0] - V[1]);
+      Q[1][0] = (gi[1][1] * W[1]
+                 + gi[0][0] * (normal[2] * V[0] - normal[0] * V[2])
+                 + gi[0][1] * (normal[0] * W[2] - normal[2] * W[0] - V[1]));
 
-      Q[2][0] =  gi[1][1] * W[2]
-               + gi[0][0] * (normal[0] * V[1] - normal[1] * V[0])
-               + gi[0][1] * (normal[1] * W[0] - normal[0] * W[1] - V[2]);
+      Q[2][0] = (gi[1][1] * W[2]
+                 + gi[0][0] * (normal[0] * V[1] - normal[1] * V[0])
+                 + gi[0][1] * (normal[1] * W[0] - normal[0] * W[1] - V[2]));
 
-      Q[0][1] =  gi[0][0] * V[0]
-               + gi[1][1] * (normal[2] * W[1] - normal[1] * W[2])
-               + gi[0][1] * (normal[1] * V[2] - normal[2] * V[1] - W[0]);
+      Q[0][1] = (gi[0][0] * V[0]
+                 + gi[1][1] * (normal[2] * W[1] - normal[1] * W[2])
+                 + gi[0][1] * (normal[1] * V[2] - normal[2] * V[1] - W[0]));
 
-      Q[1][1] =  gi[0][0] * V[1]
-               + gi[1][1] * (normal[0] * W[2] - normal[2] * W[0])
-               + gi[0][1] * (normal[2] * V[0] - normal[0] * V[2] - W[1]);
+      Q[1][1] = (gi[0][0] * V[1]
+                 + gi[1][1] * (normal[0] * W[2] - normal[2] * W[0])
+                 + gi[0][1] * (normal[2] * V[0] - normal[0] * V[2] - W[1]));
 
-      Q[2][1] =  gi[0][0] * V[2]
-               + gi[1][1] * (normal[1] * W[0] - normal[0] * W[1])
-               + gi[0][1] * (normal[0] * V[1] - normal[1] * V[0] - W[2]);
+      Q[2][1] = (gi[0][0] * V[2]
+                 + gi[1][1] * (normal[1] * W[0] - normal[0] * W[1])
+                 + gi[0][1] * (normal[0] * V[1] - normal[1] * V[0] - W[2]));
 
       adept::adouble L[DIM][dim];
       L[0][0] = gi[0][0] * ( solNx_uv[0][0] * (solNx_uv[1][1] * V[1] + solNx_uv[2][1] * V[2])
@@ -2569,11 +2560,11 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
           }
 
           for (unsigned J = 0; J < DIM; J++) {
-            gxgp +=  solNx_Xtan[K][J] * phix_Xtan[J][i];
+            gxgp +=  solx_Xtan[K][J] * phix_Xtan[J][i];
           }
 
           // Conformal energy equation (with trick).
-          aResNDx[K][i] += (M1 /* - M2 + M3nog * gxgp */) * Area
+          aResNDx[K][i] += (M1 /* - M2 + M3nog * gxgp */ ) * Area
                            + solLg * phix[i] * normal[K] * Area;  //no2
         }
       }
