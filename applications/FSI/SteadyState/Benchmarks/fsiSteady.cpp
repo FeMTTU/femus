@@ -693,7 +693,7 @@ void ComputeQoI(const MultiLevelProblem& ml_prob, const unsigned level, const Mo
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  unsigned    iproc = msh->processor_id();
 
   //=============== Geometry ========================================
    unsigned solType_coords = FE_DOMAIN;
@@ -706,8 +706,8 @@ void ComputeQoI(const MultiLevelProblem& ml_prob, const unsigned level, const Mo
  //***************************************************
 
   //=============== Integration ========================================
-  double weight = 0.;
-  double weight_bdry = 0.; // gauss point weight on the boundary
+  double weight_vol = 0.;
+  double weight_bdry = 0.;
 
   
  //*************** state ***************************** 
@@ -725,21 +725,28 @@ void ComputeQoI(const MultiLevelProblem& ml_prob, const unsigned level, const Mo
   sol_u.reserve(max_size);
   
   double u_gss = 0.;
+  
  //*************************************************** 
  //***************************************************
  //***************************************************
-  vector <double> phi_u_bdry;  
+  vector <double> phi_u_bdry;  //make this a vector of dim
   vector <double> phi_u_x_bdry; 
 
   phi_u_bdry.reserve(max_size);
   phi_u_x_bdry.reserve(max_size * space_dim);
 
-
+  //volume shape functions at boundary
+  vector <double> phi_u_vol_at_bdry;
+  vector <double> phi_u_x_vol_at_bdry;
+  phi_u_vol_at_bdry.reserve(max_size);
+  phi_u_x_vol_at_bdry.reserve(max_size * space_dim);
+  vector <double> sol_u_x_vol_at_bdry_gss(space_dim);
+ //***************************************************
+  
   
   double integral_volume = 0.;
   double integral_bdry   = 0.;
 
-  
 
  //*************************************************** 
      std::vector < std::vector < double > >  JacI_qp(space_dim);
@@ -821,6 +828,9 @@ void ComputeQoI(const MultiLevelProblem& ml_prob, const unsigned level, const Mo
     elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
     weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
     elem_all[ielGeom_bdry][solType_u] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry, phi_u_x_bdry, boost::none, space_dim);
+    
+    elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_qp/*not_needed_here*/, JacI_qp, detJac_qp/*not_needed_here*/, space_dim);
+    elem_all[ielGeom][solType_coords]->shape_funcs_vol_at_bdry_current_elem(ig_bdry, jface, JacI_qp, phi_u_vol_at_bdry, phi_u_x_vol_at_bdry, boost::none, space_dim);
 
 		  
 		 //========== compute gauss quantities on the boundary ===============================================
@@ -835,10 +845,19 @@ void ComputeQoI(const MultiLevelProblem& ml_prob, const unsigned level, const Mo
 			    }
 		      }
 		      
-		      double laplace_ctrl_surface = 0.;  for (int d = 0; d < space_dim; d++) { laplace_ctrl_surface += sol_u_x_bdry_gss[d] * sol_u_x_bdry_gss[d]; }
-
+//     compute gauss quantities on the boundary through VOLUME interpolation
+           std::fill(sol_u_x_vol_at_bdry_gss.begin(), sol_u_x_vol_at_bdry_gss.end(), 0.);
+		      for (int iv = 0; iv < nDof_u; iv++)  {
+			
+         for (int d = 0; d < space_dim; d++) {
+			      sol_u_x_vol_at_bdry_gss[d] += sol_u[iv] * phi_u_x_vol_at_bdry[iv * space_dim + d];
+			    }
+		      } 
+		      
+		      double laplace_u_surface = 0.;  for (int d = 0; d < space_dim; d++) { laplace_u_surface += sol_u_x_bdry_gss[d] * sol_u_x_bdry_gss[d]; }
                  //========= compute gauss quantities on the boundary ================================================
-                  integral_bdry +=  weight_bdry */* sol_u_bdry_gss * sol_u_bdry_gss*/ 1.; 
+
+                 integral_bdry +=  weight_bdry */* sol_u_bdry_gss * sol_u_bdry_gss*/ 1.; 
                  
              }
 	      } //end face == 3
@@ -853,18 +872,18 @@ void ComputeQoI(const MultiLevelProblem& ml_prob, const unsigned level, const Mo
   
    
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+      for (unsigned ig_vol = 0; ig_vol < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig_vol++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
-    weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
+    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig_vol, Jac_qp, JacI_qp, detJac_qp, space_dim);
+    weight_vol = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig_vol];
 
-    elem_all[ielGeom][solType_u]                 ->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, space_dim);
+    elem_all[ielGeom][solType_u]                 ->shape_funcs_current_elem(ig_vol, JacI_qp, phi_u, phi_u_x, phi_u_xx, space_dim);
     
 	u_gss     = 0.;  
     for (unsigned i = 0; i < nDof_u; i++)        u_gss += sol_u[i]     * phi_u[i];
 
-               integral_volume +=  weight * (u_gss) * (u_gss);
+               integral_volume +=  weight_vol * (u_gss) * (u_gss);
 	  
       } // end gauss point loop
       
