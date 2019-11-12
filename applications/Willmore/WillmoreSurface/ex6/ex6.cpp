@@ -28,7 +28,7 @@ const double ap[3] = {1, 0., 0.};
 using namespace femus;
 
 // Toggle for setting volume and area constraints, as well as sign of N.
-bool firstTime= true;
+bool firstTime = true;
 double surface0 = 0.;
 double volume0 = 0.;
 bool volumeConstraint = true;
@@ -38,7 +38,7 @@ const double normalSign = -1.;
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta).
 // Trick for system2 (timederiv).
-const double eps = 1e-4;
+const double eps = 1e-5;
 const double delta = 0.005;
 const double timederiv = 0.;
 
@@ -237,7 +237,7 @@ int main (int argc, char** args) {
   system2.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system2 and initialize.
-  system2.SetAssembleFunction (AssembleO2ConformalMinimizationEA);
+  system2.SetAssembleFunction (AssembleO2ConformalMinimization);
   system2.init();
 
   mlSol.SetWriter (VTK);
@@ -253,8 +253,7 @@ int main (int argc, char** args) {
 
   // and this?
   mlSol.GetWriter()->SetDebugOutput (false);
-  mlSol.GetWriter()->Write ("./output1",
-                            "linear", variablesToBePrinted, 0);
+  mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, 0);
 
   // First, solve system2 to "conformalize" the initial mesh.
   CopyDisplacement (mlSol, true);
@@ -1358,19 +1357,19 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   // Get data from each process running in parallel.
   double surfaceAll;
   MPI_Reduce (&surface, &surfaceAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  if(firstTime) surface0 = surfaceAll;
-  std::cout << "SURFACE = " << surfaceAll << " SURFACE0 = " << surface0 <<  " error = "<< (surface0 - surfaceAll)/surface0 << std::endl;
+  if (firstTime) surface0 = surfaceAll;
+  std::cout << "SURFACE = " << surfaceAll << " SURFACE0 = " << surface0 <<  " error = " << (surface0 - surfaceAll) / surface0 << std::endl;
 
   double volumeAll;
   MPI_Reduce (&volume, &volumeAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  if(firstTime) volume0 = volumeAll;
-  std::cout << "VOLUME = " << volumeAll << " VOLUME0 = " << volume0 <<  " error = "<< (volume0 - volumeAll)/volume0 << std::endl;
+  if (firstTime) volume0 = volumeAll;
+  std::cout << "VOLUME = " << volumeAll << " VOLUME0 = " << volume0 <<  " error = " << (volume0 - volumeAll) / volume0 << std::endl;
 
   double energyAll;
   MPI_Reduce (&energy, &energyAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   std::cout << "ENERGY = " << energyAll << std::endl;
 
-  
+
   firstTime = false;
 //   VecView ( (static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_SELF);
 //   MatView ( (static_cast<PetscMatrix*> (KK))->mat(), PETSC_VIEWER_STDOUT_SELF);
@@ -2265,6 +2264,74 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
 
     // start a new recording of all the operations involving adept variables.
     s.new_recording();
+    
+    if (ielGeom == TRI) {
+      xT[0][1] = 0.5;
+      std::vector < unsigned > ENVN (3);
+      std::vector < double > angle (3);
+      
+      for (unsigned j = 0; j < 3; j++) {
+        unsigned jnode  = msh->GetSolutionDof (j, iel, xType);
+        ENVN[j] = el->GetElementNearVertexNumber (jnode);
+        angle[j] = 2 * M_PI / ENVN[j];
+      }
+      
+      
+      double scale;
+      if( ENVN[0] < ENVN[1] && ENVN[0] < ENVN[2]){
+        scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
+        angle[1] *= scale;
+        angle[2] *= scale;
+      }
+      else if(ENVN[0] < ENVN[1] && ENVN[0] == ENVN[2]){
+        angle[1] = M_PI - 2. * angle[0];
+      }
+      else if( ENVN[0] <= ENVN[1]  && ENVN[0] > ENVN[2]){
+        scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
+        angle[1] *= scale;
+        angle[0] *= scale;  
+          
+      }
+      else if(ENVN[0] == ENVN[1] && ENVN[0] < ENVN[2]){
+        angle[2] = M_PI - 2. * angle[0];
+      }
+      else if(ENVN[0] == ENVN[1] && ENVN[0] == ENVN[2]){
+        angle[0] = angle[1] = angle[2] =  M_PI/3.;
+      }
+      else if(ENVN[0] > ENVN[1] && ENVN[0] <= ENVN[2]){
+        scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
+        angle[0] *= scale;
+        angle[2] *= scale;
+      }
+      else if(ENVN[0] > ENVN[1] && ENVN[0] > ENVN[2]){
+        if(ENVN[1] < ENVN[2]){
+          scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
+          angle[0] *= scale;
+          angle[2] *= scale;
+        }
+        else if(ENVN[1] == ENVN[2]){
+          angle[0] = M_PI - 2. * angle[1];
+        }
+        else if(ENVN[1] > ENVN[2]){
+          scale = (M_PI - angle[2]) / (angle[0] + angle [1]);
+          angle[0] *= scale;
+          angle[1] *= scale;
+       }
+      }
+      
+    
+      double l = xT[0][1] - xT[0][0];
+      double d = l * sin (angle[0]) * sin (angle[1]) / sin (angle[0] + angle[1]);
+      scale = sqrt ( (sqrt (3.) / 2.) / (l * d));
+      l = l * scale;
+      d = d * scale;
+      xT[0][1] = xT[0][0] + l;
+      xT[0][2] = xT[0][0] + d / tan (angle[0]);
+      xT[1][2] = d;
+
+      //std::cout << l << " " << d<<" "<< angle[0] << " " << angle[1] <<" "<< angle[2] << " " << l * d <<" "<< xT[0][2]<< " " << xT[1][2]<<  std::endl;
+    }
+
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
@@ -2314,6 +2381,7 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       adept::adouble solNDxg[3] = {0., 0., 0.};
 
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      adept::adouble solMx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble solNx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
 
       for (unsigned K = 0; K < DIM; K++) {
@@ -2324,6 +2392,7 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
             solx_uv[K][j]    += phix_uv[j][i] * solx[K][i];
+            solMx_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + 0.5 * (solDx[K][i] + solNDx[K][i]));
             solNx_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + solNDx[K][i]);
           }
         }
@@ -2361,6 +2430,11 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
       normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
 
+      adept::adouble normalMSqrtDetg[DIM];
+      normalMSqrtDetg[0] = (solMx_uv[1][0] * solMx_uv[2][1] - solMx_uv[2][0] * solMx_uv[1][1]);
+      normalMSqrtDetg[1] = (solMx_uv[2][0] * solMx_uv[0][1] - solMx_uv[0][0] * solMx_uv[2][1]);
+      normalMSqrtDetg[2] = (solMx_uv[0][0] * solMx_uv[1][1] - solMx_uv[1][0] * solMx_uv[0][1]);
+
       // Computing the "reduced Jacobian" g^{ij}X_j .
       adept::adouble Jir[dim][DIM] = {{0., 0., 0.}, {0., 0., 0.}};
       for (unsigned i = 0; i < dim; i++) {
@@ -2376,7 +2450,8 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       for (unsigned I = 0; I < DIM; I++) {
         for (unsigned J = 0; J < DIM; J++) {
           for (unsigned k = 0; k < dim; k++) {
-            solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];        }
+            solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
+          }
         }
       }
 
@@ -2444,103 +2519,69 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
 
 
       adept::adouble Q[DIM][dim];
-      Q[0][0] = (gi[1][1] * W[0]
+      Q[0][0] = (+ gi[1][1] * W[0]
                  + gi[0][0] * (normal[1] * V[2] - normal[2] * V[1])
                  + gi[0][1] * (normal[2] * W[1] - normal[1] * W[2] - V[0]));
 
-      Q[1][0] = (gi[1][1] * W[1]
+      Q[1][0] = (+ gi[1][1] * W[1]
                  + gi[0][0] * (normal[2] * V[0] - normal[0] * V[2])
                  + gi[0][1] * (normal[0] * W[2] - normal[2] * W[0] - V[1]));
 
-      Q[2][0] = (gi[1][1] * W[2]
+      Q[2][0] = (+ gi[1][1] * W[2]
                  + gi[0][0] * (normal[0] * V[1] - normal[1] * V[0])
                  + gi[0][1] * (normal[1] * W[0] - normal[0] * W[1] - V[2]));
 
-      Q[0][1] = (gi[0][0] * V[0]
+      Q[0][1] = (+ gi[0][0] * V[0]
                  + gi[1][1] * (normal[2] * W[1] - normal[1] * W[2])
                  + gi[0][1] * (normal[1] * V[2] - normal[2] * V[1] - W[0]));
 
-      Q[1][1] = (gi[0][0] * V[1]
+      Q[1][1] = (+ gi[0][0] * V[1]
                  + gi[1][1] * (normal[0] * W[2] - normal[2] * W[0])
                  + gi[0][1] * (normal[2] * V[0] - normal[0] * V[2] - W[1]));
 
-      Q[2][1] = (gi[0][0] * V[2]
+      Q[2][1] = (+ gi[0][0] * V[2]
                  + gi[1][1] * (normal[1] * W[0] - normal[0] * W[1])
                  + gi[0][1] * (normal[0] * V[1] - normal[1] * V[0] - W[2]));
 
       adept::adouble L[DIM][dim];
-      L[0][0] = gi[0][0] * ( solNx_uv[0][0] * (solNx_uv[1][1] * V[1] + solNx_uv[2][1] * V[2])
-                         -  (solNx_uv[1][0] *  solNx_uv[1][1] + solNx_uv[2][0] * solNx_uv[2][1]) * V[0] )
-              - gi[1][1] * ( solNx_uv[0][1] * (solNx_uv[1][1] * W[1] + solNx_uv[2][1] * W[2])
-                         -  (solNx_uv[1][1] *  solNx_uv[1][1] + solNx_uv[2][1] * solNx_uv[2][1]) * W[0] )
-              + gi[0][1] * ( solNx_uv[0][1] * (solNx_uv[1][1] * V[1] + solNx_uv[2][1] * V[2])
-                         +  (solNx_uv[1][0] *  solNx_uv[1][1] + solNx_uv[2][0] * solNx_uv[2][1]) * W[0]
-                         -   solNx_uv[0][0] * (solNx_uv[1][1] * W[1] + solNx_uv[2][1] * W[2])
-                         -  (solNx_uv[1][1] *  solNx_uv[1][1] + solNx_uv[2][1] * solNx_uv[2][1]) * V[0] );
+      L[0][0] = (+ gi[0][0] * (+ solNx_uv[0][0] * (solNx_uv[1][1] * V[1] + solNx_uv[2][1] * V[2]) - (solNx_uv[1][0] * solNx_uv[1][1] + solNx_uv[2][0] * solNx_uv[2][1]) * V[0])
+                 - gi[1][1] * (+ solNx_uv[0][1] * (solNx_uv[1][1] * W[1] + solNx_uv[2][1] * W[2]) - (solNx_uv[1][1] * solNx_uv[1][1] + solNx_uv[2][1] * solNx_uv[2][1]) * W[0])
+                 + gi[0][1] * (+ solNx_uv[0][1] * (solNx_uv[1][1] * V[1] + solNx_uv[2][1] * V[2]) + (solNx_uv[1][0] * solNx_uv[1][1] + solNx_uv[2][0] * solNx_uv[2][1]) * W[0]
+                               - solNx_uv[0][0] * (solNx_uv[1][1] * W[1] + solNx_uv[2][1] * W[2]) - (solNx_uv[1][1] * solNx_uv[1][1] + solNx_uv[2][1] * solNx_uv[2][1]) * V[0]));
 
-      L[1][0] = gi[0][0] * ( solNx_uv[1][0] * (solNx_uv[0][1] * V[0] + solNx_uv[2][1] * V[2])
-                         -  (solNx_uv[0][0] *  solNx_uv[0][1] + solNx_uv[2][0] * solNx_uv[2][1]) * V[1] )
-              - gi[1][1] * ( solNx_uv[1][1] * (solNx_uv[0][1] * W[0] + solNx_uv[2][1] * W[2])
-                         -  (solNx_uv[0][1] *  solNx_uv[0][1] + solNx_uv[2][1] * solNx_uv[2][1]) * W[1] )
-              + gi[0][1] * ( solNx_uv[1][1] * (solNx_uv[0][1] * V[0] + solNx_uv[2][1] * V[2])
-                         +  (solNx_uv[0][0] *  solNx_uv[0][1] + solNx_uv[2][0] * solNx_uv[2][1]) * W[1]
-                         -   solNx_uv[1][0] * (solNx_uv[0][1] * W[0] + solNx_uv[2][1] * W[2])
-                         -  (solNx_uv[0][1] *  solNx_uv[0][1] + solNx_uv[2][1] * solNx_uv[2][1]) * V[1] );
+      L[1][0] = (+ gi[0][0] * (+ solNx_uv[1][0] * (solNx_uv[2][1] * V[2] + solNx_uv[0][1] * V[0]) - (solNx_uv[2][0] * solNx_uv[2][1] + solNx_uv[0][0] * solNx_uv[0][1]) * V[1])
+                 - gi[1][1] * (+ solNx_uv[1][1] * (solNx_uv[2][1] * W[2] + solNx_uv[0][1] * W[0]) - (solNx_uv[2][1] * solNx_uv[2][1] + solNx_uv[0][1] * solNx_uv[0][1]) * W[1])
+                 + gi[0][1] * (+ solNx_uv[1][1] * (solNx_uv[2][1] * V[2] + solNx_uv[0][1] * V[0]) + (solNx_uv[2][0] * solNx_uv[2][1] + solNx_uv[0][0] * solNx_uv[0][1]) * W[1]
+                               - solNx_uv[1][0] * (solNx_uv[2][1] * W[2] + solNx_uv[0][1] * W[0]) - (solNx_uv[2][1] * solNx_uv[2][1] + solNx_uv[0][1] * solNx_uv[0][1]) * V[1]));
 
-      L[2][0] = gi[0][0] * ( solNx_uv[2][0] * (solNx_uv[0][1] * V[0] + solNx_uv[1][1] * V[1])
-                         -  (solNx_uv[0][0] *  solNx_uv[0][1] + solNx_uv[1][0] * solNx_uv[1][1]) * V[2] )
-              - gi[1][1] * ( solNx_uv[2][1] * (solNx_uv[0][1] * W[0] + solNx_uv[1][1] * W[1])
-                         -  (solNx_uv[0][1] *  solNx_uv[0][1] + solNx_uv[1][1] * solNx_uv[1][1]) * W[2] )
-              + gi[0][1] * ( solNx_uv[2][1] * (solNx_uv[0][1] * V[0] + solNx_uv[1][1] * V[1])
-                         +  (solNx_uv[0][0] *  solNx_uv[0][1] + solNx_uv[1][0] * solNx_uv[1][1]) * W[2]
-                         -   solNx_uv[2][0] * (solNx_uv[0][1] * W[0] + solNx_uv[1][1] * W[1])
-                         -  (solNx_uv[0][1] *  solNx_uv[0][1] + solNx_uv[1][1] * solNx_uv[1][1]) * V[2] );
+      L[2][0] = (+ gi[0][0] * (+ solNx_uv[2][0] * (solNx_uv[0][1] * V[0] + solNx_uv[1][1] * V[1]) - (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[1][0] * solNx_uv[1][1]) * V[2])
+                 - gi[1][1] * (+ solNx_uv[2][1] * (solNx_uv[0][1] * W[0] + solNx_uv[1][1] * W[1]) - (solNx_uv[0][1] * solNx_uv[0][1] + solNx_uv[1][1] * solNx_uv[1][1]) * W[2])
+                 + gi[0][1] * (+ solNx_uv[2][1] * (solNx_uv[0][1] * V[0] + solNx_uv[1][1] * V[1]) + (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[1][0] * solNx_uv[1][1]) * W[2]
+                               - solNx_uv[2][0] * (solNx_uv[0][1] * W[0] + solNx_uv[1][1] * W[1]) - (solNx_uv[0][1] * solNx_uv[0][1] + solNx_uv[1][1] * solNx_uv[1][1]) * V[2]));
 
-      L[0][1] = gi[1][1] * ( solNx_uv[0][1] * (solNx_uv[1][0] * W[1] + solNx_uv[2][0] * W[2])
-                         -  (solNx_uv[1][1] *  solNx_uv[1][0] + solNx_uv[2][1] * solNx_uv[2][0]) * W[0] )
-              - gi[0][0] * ( solNx_uv[0][0] * (solNx_uv[1][0] * V[1] + solNx_uv[2][0] * V[2])
-                         -  (solNx_uv[1][0] *  solNx_uv[1][0] + solNx_uv[2][0] * solNx_uv[2][0]) * V[0] )
-              + gi[0][1] * ( solNx_uv[0][0] * (solNx_uv[1][0] * W[1] + solNx_uv[2][0] * W[2])
-                         +  (solNx_uv[1][1] *  solNx_uv[1][0] + solNx_uv[2][1] * solNx_uv[2][0]) * V[0]
-                         -   solNx_uv[0][1] * (solNx_uv[1][0] * V[1] + solNx_uv[2][0] * V[2])
-                         -  (solNx_uv[1][0] *  solNx_uv[1][0] + solNx_uv[2][0] * solNx_uv[2][0]) * W[0] );
+      L[0][1] = (+ gi[1][1] * (+ solNx_uv[0][1] * (solNx_uv[1][0] * W[1] + solNx_uv[2][0] * W[2]) - (solNx_uv[1][1] * solNx_uv[1][0] + solNx_uv[2][1] * solNx_uv[2][0]) * W[0])
+                 - gi[0][0] * (+ solNx_uv[0][0] * (solNx_uv[1][0] * V[1] + solNx_uv[2][0] * V[2]) - (solNx_uv[1][0] * solNx_uv[1][0] + solNx_uv[2][0] * solNx_uv[2][0]) * V[0])
+                 + gi[0][1] * (+ solNx_uv[0][0] * (solNx_uv[1][0] * W[1] + solNx_uv[2][0] * W[2]) + (solNx_uv[1][1] * solNx_uv[1][0] + solNx_uv[2][1] * solNx_uv[2][0]) * V[0]
+                               - solNx_uv[0][1] * (solNx_uv[1][0] * V[1] + solNx_uv[2][0] * V[2]) - (solNx_uv[1][0] * solNx_uv[1][0] + solNx_uv[2][0] * solNx_uv[2][0]) * W[0]));
 
-      L[1][1] = gi[1][1] * ( solNx_uv[1][1] * (solNx_uv[0][0] * W[0] + solNx_uv[2][0] * W[2])
-                         -  (solNx_uv[0][1] *  solNx_uv[0][0] + solNx_uv[2][1] * solNx_uv[2][0]) * W[1] )
-              - gi[0][0] * ( solNx_uv[1][0] * (solNx_uv[0][0] * V[0] + solNx_uv[2][0] * V[2])
-                         -  (solNx_uv[0][0] *  solNx_uv[0][0] + solNx_uv[2][0] * solNx_uv[2][0]) * V[1] )
-              + gi[0][1] * ( solNx_uv[1][0] * (solNx_uv[0][0] * W[0] + solNx_uv[2][0] * W[2])
-                         +  (solNx_uv[0][1] *  solNx_uv[0][0] + solNx_uv[2][1] * solNx_uv[2][0]) * V[1]
-                         -   solNx_uv[1][1] * (solNx_uv[0][0] * V[0] + solNx_uv[2][0] * V[2])
-                         -  (solNx_uv[0][0] *  solNx_uv[0][0] + solNx_uv[2][0] * solNx_uv[2][0]) * W[1] );
+      L[1][1] = (+ gi[1][1] * (+ solNx_uv[1][1] * (solNx_uv[2][0] * W[2] + solNx_uv[0][0] * W[0]) - (solNx_uv[2][1] * solNx_uv[2][0] + solNx_uv[0][1] * solNx_uv[0][0]) * W[1])
+                 - gi[0][0] * (+ solNx_uv[1][0] * (solNx_uv[2][0] * V[2] + solNx_uv[0][0] * V[0]) - (solNx_uv[2][0] * solNx_uv[2][0] + solNx_uv[0][0] * solNx_uv[0][0]) * V[1])
+                 + gi[0][1] * (+ solNx_uv[1][0] * (solNx_uv[2][0] * W[2] + solNx_uv[0][0] * W[0]) + (solNx_uv[2][1] * solNx_uv[2][0] + solNx_uv[0][1] * solNx_uv[0][0]) * V[1]
+                               - solNx_uv[1][1] * (solNx_uv[2][0] * V[2] + solNx_uv[0][0] * V[0]) - (solNx_uv[2][0] * solNx_uv[2][0] + solNx_uv[0][0] * solNx_uv[0][0]) * W[1]));
 
-      L[2][1] = gi[1][1] * ( solNx_uv[2][1] * (solNx_uv[0][0] * W[0] + solNx_uv[1][0] * W[1])
-                         -  (solNx_uv[0][1] *  solNx_uv[0][0] + solNx_uv[1][1] * solNx_uv[1][0]) * W[2] )
-              - gi[0][0] * ( solNx_uv[2][0] * (solNx_uv[0][0] * V[0] + solNx_uv[1][0] * V[1])
-                         -  (solNx_uv[0][0] *  solNx_uv[0][0] + solNx_uv[1][0] * solNx_uv[1][0]) * V[2] )
-              + gi[0][1] * ( solNx_uv[2][0] * (solNx_uv[0][0] * W[0] + solNx_uv[1][0] * W[1])
-                         +  (solNx_uv[0][1] *  solNx_uv[0][0] + solNx_uv[1][1] * solNx_uv[1][0]) * V[2]
-                         -   solNx_uv[2][1] * (solNx_uv[0][0] * V[0] + solNx_uv[1][0] * V[1])
-                         -  (solNx_uv[0][0] *  solNx_uv[0][0] + solNx_uv[1][0] * solNx_uv[1][0]) * W[2] );
+      L[2][1] = (+ gi[1][1] * (+ solNx_uv[2][1] * (solNx_uv[0][0] * W[0] + solNx_uv[1][0] * W[1]) - (solNx_uv[0][1] * solNx_uv[0][0] + solNx_uv[1][1] * solNx_uv[1][0]) * W[2])
+                 - gi[0][0] * (+ solNx_uv[2][0] * (solNx_uv[0][0] * V[0] + solNx_uv[1][0] * V[1]) - (solNx_uv[0][0] * solNx_uv[0][0] + solNx_uv[1][0] * solNx_uv[1][0]) * V[2])
+                 + gi[0][1] * (+ solNx_uv[2][0] * (solNx_uv[0][0] * W[0] + solNx_uv[1][0] * W[1]) + (solNx_uv[0][1] * solNx_uv[0][0] + solNx_uv[1][1] * solNx_uv[1][0]) * V[2]
+                               - solNx_uv[2][1] * (solNx_uv[0][0] * V[0] + solNx_uv[1][0] * V[1]) - (solNx_uv[0][0] * solNx_uv[0][0] + solNx_uv[1][0] * solNx_uv[1][0]) * W[2]));
 
       adept::adouble P[DIM][dim];
-      P[0][0] = gi[0][0] * (normal[2] * V[1] - normal[1] * V[2])
-              - gi[0][1] * (normal[2] * W[1] - normal[1] * W[2]);
+      P[0][0] = gi[0][0] * (normal[2] * V[1] - normal[1] * V[2]) - gi[0][1] * (normal[2] * W[1] - normal[1] * W[2]);
+      P[1][0] = gi[0][0] * (normal[0] * V[2] - normal[2] * V[0]) - gi[0][1] * (normal[0] * W[2] - normal[2] * W[0]);
+      P[2][0] = gi[0][0] * (normal[1] * V[0] - normal[0] * V[1]) - gi[0][1] * (normal[1] * W[0] - normal[0] * W[1]);
 
-      P[1][0] = gi[0][0] * (normal[0] * V[2] - normal[2] * V[0])
-              - gi[0][1] * (normal[0] * W[2] - normal[2] * W[0]);
-
-      P[2][0] = gi[0][0] * (normal[1] * V[0] - normal[0] * V[1])
-              - gi[0][1] * (normal[1] * W[0] - normal[0] * W[1]);
-
-      P[0][1] = gi[1][1] * (normal[1] * W[2] - normal[2] * W[1])
-              - gi[0][1] * (normal[1] * V[2] - normal[2] * V[1]);
-
-      P[1][1] = gi[1][1] * (normal[2] * W[0] - normal[0] * W[2])
-              - gi[0][1] * (normal[2] * V[0] - normal[0] * V[2]);
-
-      P[2][1] = gi[1][1] * (normal[0] * W[1] - normal[1] * W[0])
-              - gi[0][1] * (normal[0] * V[1] - normal[1] * V[0]);
+      P[0][1] = gi[1][1] * (normal[1] * W[2] - normal[2] * W[1]) - gi[0][1] * (normal[1] * V[2] - normal[2] * V[1]);
+      P[1][1] = gi[1][1] * (normal[2] * W[0] - normal[0] * W[2]) - gi[0][1] * (normal[2] * V[0] - normal[0] * V[2]);
+      P[2][1] = gi[1][1] * (normal[0] * W[1] - normal[1] * W[0]) - gi[0][1] * (normal[0] * V[1] - normal[1] * V[0]);
 
       // adept::adouble G = 0;
       // G = normal[0] * (solNx_uv[2][1] * W[1] - solNx_uv[2][0] * V[1] + solNx_uv[1][0] * V[2] - solNx_uv[1][1] * W[2])
@@ -2548,9 +2589,16 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       //     + normal[2] * (solNx_uv[1][1] * W[0] - solNx_uv[1][0] * V[0] + solNx_uv[0][0] * V[1] - solNx_uv[0][1] * W[1]);
 
       // Compute new X minus old X dot N, for "reparametrization".
-      adept::adouble DnXmDxdotN = 0.;
+      adept::adouble DnXmDxdotNSqrtDetg = 0.;
       for (unsigned K = 0; K < DIM; K++) {
-        DnXmDxdotN += (solDxg[K] - solNDxg[K]) * normal[K];
+        DnXmDxdotNSqrtDetg += (solDxg[K] - solNDxg[K]) * normalMSqrtDetg[K];
+      }
+
+      adept::adouble M3nog = 0.;
+      for (unsigned K = 0; K < DIM; K++) {
+        for (unsigned j = 0; j < dim; j++) {
+          M3nog +=  sqrt (detg) * P[K][j] * solNx_uv[K][j];
+        }
       }
 
       // Implement the Conformal Minimization equations.
@@ -2558,28 +2606,26 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
         for (unsigned i = 0; i < nxDofs; i++) {
           adept::adouble M1 = 0.;
           adept::adouble M2 = 0.;
-          adept::adouble M3nog = 0.;
-          adept::adouble gxgp = 0.;
 
           for (unsigned j = 0; j < dim; j++) {
             M1 +=  Q[K][j] * phix_uv[j][i];
-            M2 +=  (1. / sqrt(detg)) * L[K][j] * phix_uv[j][i];
-            M3nog +=  P[K][j] * solNx_uv[K][j];
+            M2 +=  /*(1. / sqrt(detg)) **/ L[K][j] * phix_uv[j][i];
           }
 
+          adept::adouble gxgp = 0.;
           for (unsigned J = 0; J < DIM; J++) {
             gxgp +=  solx_Xtan[K][J] * phix_Xtan[J][i];
           }
 
           // Conformal energy equation (with trick).
-          aResNDx[K][i] += (M1 /* - M2 + M3nog * gxgp */ ) * Area
-                           + solLg * phix[i] * normal[K] * Area;  //no2
+          aResNDx[K][i] += (M1  /*- M2 + M3nog * gxgp*/) * Area
+                           + solLg * phix[i] * normalMSqrtDetg[K] * Area2;  //no2
         }
       }
 
       // Lagrange multiplier equation (with trick).
       for (unsigned i = 0; i < nLDofs; i++) {
-        aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area; // no2
+        aResL[i] += phiL[i] * (DnXmDxdotNSqrtDetg * Area2 + eps * solL[i] * Area); // no2
       }
 
     } // end GAUSS POINT LOOP
@@ -3429,13 +3475,13 @@ void AssembleO2ConformalMinimizationEA (MultiLevelProblem& ml_prob) {
       W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
 
       adept::adouble M[DIM][dim];
-      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2] + /*(1. / sqrt (detg)) * */(
+      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2] + /*(1. / sqrt (detg)) * */ (
                   (solNx_uv[1][0] * solNx_uv[1][1] + solNx_uv[2][0] * solNx_uv[2][1]) * V[0]
                   - (solNx_uv[1][1] * solNx_uv[1][1] + solNx_uv[2][1] * solNx_uv[2][1]) * W[0]
                   + solNx_uv[0][1] * (solNx_uv[1][1] * W[1] + solNx_uv[2][1] * W[2])
                   - solNx_uv[0][0] * (solNx_uv[1][1] * V[1] + solNx_uv[2][1] * V[2])
                 );
-      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0] + /*(1. / sqrt (detg)) * */(
+      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0] + /*(1. / sqrt (detg)) * */ (
                   (solNx_uv[2][0] * solNx_uv[2][1] + solNx_uv[0][0] * solNx_uv[0][1]) * V[1]
                   - (solNx_uv[2][1] * solNx_uv[2][1] + solNx_uv[0][1] * solNx_uv[0][1]) * W[1]
                   + solNx_uv[1][1] * (solNx_uv[2][1] * W[2] + solNx_uv[0][1] * W[0])
@@ -3566,3 +3612,4 @@ void AssembleO2ConformalMinimizationEA (MultiLevelProblem& ml_prob) {
   KK->close();
 
 } // end AssembleO2ConformalMinimization.
+
