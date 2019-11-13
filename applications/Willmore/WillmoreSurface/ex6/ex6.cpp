@@ -39,7 +39,7 @@ const double normalSign = -1.;
 // Trick for system0 (delta).
 // Trick for system2 (timederiv).
 const double eps = 1e-5;
-const double delta = 0.00;
+const double delta = 0.005;
 const double delta1 = 0.05;
 const double timederiv = 0.;
 
