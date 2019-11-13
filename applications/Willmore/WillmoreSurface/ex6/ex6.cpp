@@ -39,7 +39,8 @@ const double normalSign = -1.;
 // Trick for system0 (delta).
 // Trick for system2 (timederiv).
 const double eps = 1e-5;
-const double delta = 0.005;
+const double delta = 0.00;
+const double delta1 = 0.05;
 const double timederiv = 0.;
 
 // Declaration of systems.
@@ -113,12 +114,14 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  //mlMsh.ReadCoarseMesh ("../input/moo.med", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/moo.med", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/moai.med", "seventh", scalingFactor);
+
 
   // Set number of mesh levels.
   unsigned numberOfUniformLevels = 1;
@@ -1053,10 +1056,13 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       // Initialize derivatives of x and W (new, middle, old) at the Gauss points.
       adept::adouble solxNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble solWNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      adept::adouble solYNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble solW_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      adept::adouble solY_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       double solxOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       double solWOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      double solYOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
 
 
       for (unsigned K = 0; K < DIM; K++) {
@@ -1089,6 +1095,14 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             solWNew_uv[K][j] += phiW_uv[j][i] * solW[K][i];
             solW_uv[K][j] += phiW_uv[j][i] * 0.5 * (solW[K][i] + solWOld[K][i]);
             solWOld_uv[K][j] += phiW_uv[j][i] * solWOld[K][i];
+          }
+        }
+
+        for (int j = 0; j < dim; j++) {
+          for (unsigned i = 0; i < nWDofs; i++) {
+            solYNew_uv[K][j] += phiW_uv[j][i] * solY[K][i];
+            solY_uv[K][j] += phiW_uv[j][i] * 0.5 * (solY[K][i] + solYOld[K][i]);
+            solYOld_uv[K][j] += phiW_uv[j][i] * solYOld[K][i];
           }
         }
       }
@@ -1161,6 +1175,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       adept::adouble solW_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
       adept::adouble solWOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
+      adept::adouble solYNew_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      adept::adouble solY_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      adept::adouble solYOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+
       // Computing tangential gradients defined above.
       for (unsigned I = 0; I < DIM; I++) {
         for (unsigned J = 0; J < DIM; J++) {
@@ -1172,6 +1190,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             solWNew_Xtan[I][J] += solWNew_uv[I][k] * Jir[k][J];
             solW_Xtan[I][J] += solW_uv[I][k] * Jir[k][J];
             solWOld_Xtan[I][J] += solWOld_uv[I][k] * Jir[k][J];
+
+            solYNew_Xtan[I][J] += solYNew_uv[I][k] * Jir[k][J];
+            solY_Xtan[I][J] += solY_uv[I][k] * Jir[k][J];
+            solYOld_Xtan[I][J] += solYOld_uv[I][k] * Jir[k][J];
           }
         }
       }
@@ -1201,11 +1223,13 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
+          adept::adouble term2 = 0.;
 
           for (unsigned J = 0; J < DIM; J++) {
             term1 +=  solxNew_Xtan[K][J] * phix_Xtan[J][i];
+            term2 +=  solY_Xtan[K][J] * phix_Xtan[J][i];
           }
-          aResx[K][i] += (solYg[K] * phix[i] + term1) * Area;
+          aResx[K][i] += (solYg[K] * phix[i] + term1 + delta1 * term2) * Area;
         }
 
         // Implement the equation relating Y and W.
@@ -2264,62 +2288,55 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
 
     // start a new recording of all the operations involving adept variables.
     s.new_recording();
-    
+
     if (ielGeom == TRI) {
+
       xT[0][1] = 0.5;
       std::vector < unsigned > ENVN (3);
       std::vector < double > angle (3);
-      
+
       for (unsigned j = 0; j < 3; j++) {
         unsigned jnode  = msh->GetSolutionDof (j, iel, xType);
         ENVN[j] = el->GetElementNearVertexNumber (jnode);
         angle[j] = 2 * M_PI / ENVN[j];
       }
-      
-      
+
+      unsigned type = 3; // there are 2 or 3 leading angles
+      if (ENVN[0] < ENVN[1]) { // 0 leads on 1
+        if (ENVN[0] < ENVN[2]) type = 0; // 0 is leading angle
+        else if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
+      }
+      else if (ENVN[0] > ENVN[1]) { // 1 leads on 0
+        if (ENVN[1] < ENVN[2]) type = 1; // 1 is leading angle
+        else if (ENVN[1] > ENVN[2]) type = 2; // 2 is leading angle
+      }
+      else { // 0 equals 1
+        if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
+      }
+
       double scale;
-      if( ENVN[0] < ENVN[1] && ENVN[0] < ENVN[2]){
+      if (type == 0) {
         scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
         angle[1] *= scale;
         angle[2] *= scale;
       }
-      else if(ENVN[0] < ENVN[1] && ENVN[0] == ENVN[2]){
-        angle[1] = M_PI - 2. * angle[0];
-      }
-      else if( ENVN[0] <= ENVN[1]  && ENVN[0] > ENVN[2]){
-        scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
-        angle[1] *= scale;
-        angle[0] *= scale;  
-          
-      }
-      else if(ENVN[0] == ENVN[1] && ENVN[0] < ENVN[2]){
-        angle[2] = M_PI - 2. * angle[0];
-      }
-      else if(ENVN[0] == ENVN[1] && ENVN[0] == ENVN[2]){
-        angle[0] = angle[1] = angle[2] =  M_PI/3.;
-      }
-      else if(ENVN[0] > ENVN[1] && ENVN[0] <= ENVN[2]){
+      else if (type == 1) {
         scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
         angle[0] *= scale;
         angle[2] *= scale;
       }
-      else if(ENVN[0] > ENVN[1] && ENVN[0] > ENVN[2]){
-        if(ENVN[1] < ENVN[2]){
-          scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
-          angle[0] *= scale;
-          angle[2] *= scale;
-        }
-        else if(ENVN[1] == ENVN[2]){
-          angle[0] = M_PI - 2. * angle[1];
-        }
-        else if(ENVN[1] > ENVN[2]){
-          scale = (M_PI - angle[2]) / (angle[0] + angle [1]);
-          angle[0] *= scale;
-          angle[1] *= scale;
-       }
+      else if (type == 2) {
+        scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
+        angle[1] *= scale;
+        angle[0] *= scale;
       }
-      
-    
+      else {
+        scale = M_PI / (angle[0] + angle[1] + angle[2]);
+        angle[0] *= scale;
+        angle[1] *= scale;
+        angle[2] *= scale;
+      }
+
       double l = xT[0][1] - xT[0][0];
       double d = l * sin (angle[0]) * sin (angle[1]) / sin (angle[0] + angle[1]);
       scale = sqrt ( (sqrt (3.) / 2.) / (l * d));
@@ -2392,7 +2409,7 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
             solx_uv[K][j]    += phix_uv[j][i] * solx[K][i];
-            solMx_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + 0.5 * (solDx[K][i] + solNDx[K][i]));
+            solMx_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + 0.5 * (1. * solDx[K][i] + 1.* solNDx[K][i]));
             solNx_uv[K][j]   += phix_uv[j][i] * (xhat[K][i] + solNDx[K][i]);
           }
         }
