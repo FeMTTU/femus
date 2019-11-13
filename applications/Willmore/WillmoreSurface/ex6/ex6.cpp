@@ -39,8 +39,9 @@ const double normalSign = -1.;
 // Trick for system0 (delta).
 // Trick for system2 (timederiv).
 const double eps = 1e-5;
-const double delta =  0.05;
-const double delta1 = 0.05;
+const double delta =  0.005;
+const double delta1 = 0.0;
+const double delta2 = .0;
 const double timederiv = 0.;
 
 // Declaration of systems.
@@ -114,17 +115,17 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  mlMsh.ReadCoarseMesh ("../input/moo.med", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/moo.med", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/moai.med", "seventh", scalingFactor);
 
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -289,8 +290,7 @@ int main (int argc, char** args) {
     system.MGsolve();
 
     if (time_step % 1 == 0) {
-      // mlSol.GetWriter()->Write ("./output1", "linear",
-      //                           variablesToBePrinted, (time_step + 1) / printInterval);
+      mlSol.GetWriter()->Write ("./output1", "linear",variablesToBePrinted, (time_step + 1) / printInterval);
 
       CopyDisplacement (mlSol, true);
       system2.MGsolve();
@@ -2301,41 +2301,83 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
         angle[j] = 2 * M_PI / ENVN[j];
       }
 
-      unsigned type = 3; // there are 2 or 3 leading angles
-      if (ENVN[0] < ENVN[1]) { // 0 leads on 1
-        if (ENVN[0] < ENVN[2]) type = 0; // 0 is leading angle
-        else if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
-      }
-      else if (ENVN[0] > ENVN[1]) { // 1 leads on 0
-        if (ENVN[1] < ENVN[2]) type = 1; // 1 is leading angle
-        else if (ENVN[1] > ENVN[2]) type = 2; // 2 is leading angle
-      }
-      else { // 0 equals 1
-        if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
-      }
-
       double scale;
-      if (type == 0) {
+      if( ENVN[0] < ENVN[1] && ENVN[0] < ENVN[2]){
         scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
         angle[1] *= scale;
         angle[2] *= scale;
       }
-      else if (type == 1) {
+      else if(ENVN[0] < ENVN[1] && ENVN[0] == ENVN[2]){
+        angle[1] = M_PI - 2. * angle[0];
+      }
+      else if( ENVN[0] <= ENVN[1]  && ENVN[0] > ENVN[2]){
+        scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
+        angle[1] *= scale;
+        angle[0] *= scale;  
+        
+      }
+      else if(ENVN[0] == ENVN[1] && ENVN[0] < ENVN[2]){
+        angle[2] = M_PI - 2. * angle[0];
+      }
+      else if(ENVN[0] == ENVN[1] && ENVN[0] == ENVN[2]){
+        angle[0] = angle[1] = angle[2] =  M_PI/3.;
+      }
+      else if(ENVN[0] > ENVN[1] && ENVN[0] <= ENVN[2]){
         scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
         angle[0] *= scale;
         angle[2] *= scale;
       }
-      else if (type == 2) {
-        scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
-        angle[1] *= scale;
-        angle[0] *= scale;
+      else if(ENVN[0] > ENVN[1] && ENVN[0] > ENVN[2]){
+        if(ENVN[1] < ENVN[2]){
+          scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
+          angle[0] *= scale;
+          angle[2] *= scale;
+        }
+        else if(ENVN[1] == ENVN[2]){
+          angle[0] = M_PI - 2. * angle[1];
+        }
+        else if(ENVN[1] > ENVN[2]){
+          scale = (M_PI - angle[2]) / (angle[0] + angle [1]);
+          angle[0] *= scale;
+          angle[1] *= scale;
+        }
       }
-      else {
-        scale = M_PI / (angle[0] + angle[1] + angle[2]);
-        angle[0] *= scale;
-        angle[1] *= scale;
-        angle[2] *= scale;
-      }
+      
+//       unsigned type = 3; // there are 2 or 3 leading angles
+//       if (ENVN[0] < ENVN[1]) { // 0 leads on 1
+//         if (ENVN[0] < ENVN[2]) type = 0; // 0 is leading angle
+//         else if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
+//       }
+//       else if (ENVN[0] > ENVN[1]) { // 1 leads on 0
+//         if (ENVN[1] < ENVN[2]) type = 1; // 1 is leading angle
+//         else if (ENVN[1] > ENVN[2]) type = 2; // 2 is leading angle
+//       }
+//       else { // 0 equals 1
+//         if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
+//       }
+// 
+//       double scale;
+//       if (type == 0) {
+//         scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
+//         angle[1] *= scale;
+//         angle[2] *= scale;
+//       }
+//       else if (type == 1) {
+//         scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
+//         angle[0] *= scale;
+//         angle[2] *= scale;
+//       }
+//       else if (type == 2) {
+//         scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
+//         angle[1] *= scale;
+//         angle[0] *= scale;
+//       }
+//       else {
+//         scale = M_PI / (angle[0] + angle[1] + angle[2]);
+//         angle[0] *= scale;
+//         angle[1] *= scale;
+//         angle[2] *= scale;
+//       }
 
       double l = xT[0][1] - xT[0][0];
       double d = l * sin (angle[0]) * sin (angle[1]) / sin (angle[0] + angle[1]);
@@ -2464,10 +2506,12 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
 
       // Initializing tangential gradients of X and W (new, middle, old).
       adept::adouble solx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      adept::adouble solNx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
       for (unsigned I = 0; I < DIM; I++) {
         for (unsigned J = 0; J < DIM; J++) {
           for (unsigned k = 0; k < dim; k++) {
             solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
+            solNx_Xtan[I][J] += solNx_uv[I][k] * Jir[k][J];
           }
         }
       }
@@ -2631,11 +2675,11 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
 
           adept::adouble gxgp = 0.;
           for (unsigned J = 0; J < DIM; J++) {
-            gxgp +=  solx_Xtan[K][J] * phix_Xtan[J][i];
+            gxgp +=  solNx_Xtan[K][J] * phix_Xtan[J][i];
           }
 
           // Conformal energy equation (with trick).
-          aResNDx[K][i] += (M1  /*- M2 + M3nog * gxgp*/) * Area
+          aResNDx[K][i] += (M1  +  delta2 * gxgp /*- M2 + M3nog * gxgp*/) * Area
                            + solLg * phix[i] * normalMSqrtDetg[K] * Area2;  //no2
         }
       }
