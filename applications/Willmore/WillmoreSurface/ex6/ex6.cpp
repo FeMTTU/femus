@@ -1226,10 +1226,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           adept::adouble term2 = 0.;
 
           for (unsigned J = 0; J < DIM; J++) {
-            term1 +=  solxNew_Xtan[K][J] * phix_Xtan[J][i];
+            term1 +=  solxNew_Xtan[K][J] * phix_Xtan[J][i]; // the field x is new (i + 1) but differentiated on the surface at (i+1/2)
             term2 +=  solY_Xtan[K][J] * phix_Xtan[J][i];
           }
-          aResx[K][i] += (solYg[K] * phix[i] + term1 + delta1 * term2) * Area;
+          aResx[K][i] += (solYg[K] * phix[i] + term1 + delta1 * term2) * Area; // delta 1 smooth things out (stability trick) to be used for bad surfaces,
         }
 
         // Implement the equation relating Y and W.
@@ -1247,15 +1247,21 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           adept::adouble term5 = 0.;
 
           for (unsigned J = 0; J < DIM; J++) {
-            term0 +=  solWNew_Xtan[K][J] * phiW_Xtan[J][i];
+            term0 +=  solWNew_Xtan[K][J] * phiW_Xtan[J][i]; // the field W is new (i + 1) but differentiated on the surface at (i + 1/2)
             term1 +=  solx_Xtan[K][J] * phiW_Xtan[J][i];
             term2 +=  solW_Xtan[J][J];
 
             adept::adouble term4 = 0.;
-            for (unsigned L = 0; L < DIM; L++) {
-              term4 += solxOld_Xtan[L][J] * solWOld_Xtan[L][K] + solxOld_Xtan[L][K] * solWOld_Xtan[L][J];
+            for (unsigned L = 0; L < DIM; L++) { // the fields W and x are old (i) but differentiated on the surface at (i + 1/2)
+              term4 += solxOld_Xtan[L][J] * solWOld_Xtan[L][K] + solxOld_Xtan[L][K] * solWOld_Xtan[L][J]; 
             }
-            term3 += phiW_Xtan[J][i] * term4;
+            term3 += phiW_Xtan[J][i] * term4; 
+            /* this is the trick we learned from Dzuik: basically in magnitude term3 = 2 term0, so -term0 + term3 = + term0 = 1/2 term3, 
+             but the stability sign comes from -term0, for this reason term0 is taken more implicitly (i + 1), and term3/term4 is semiexplicit (i),
+             It is shockingly how everything works and any small change causes the solver to crash */
+            /* unless we show it numerically that this time scheme is second order (and I am not sure it is) we cannot claim it in the paper. 
+             The fact that we have a lot of non linearities involved makes a the proof very difficult. 
+             We may try to assume that the surface is known exactly in time and see what comes out of this integration scheme*/
           }
 
           // P-Willmore equation
