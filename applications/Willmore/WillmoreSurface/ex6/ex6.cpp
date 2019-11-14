@@ -42,9 +42,17 @@ const double eps = 1e-5;
 const double delta =  0.005;
 const double delta1 = 0.0;
 const double delta2 = .0;
+unsigned time_step = 0;
+unsigned conformalTriangleType = 1;
 const double timederiv = 0.;
 
 // Declaration of systems.
+
+double max (const double &a , const double &b) {
+  return (a > b) ? a : b;
+}
+
+
 void CopyDisplacement (MultiLevelSolution &mlSol,  const bool &forward);
 void AssembleInit (MultiLevelProblem&);
 void AssemblePWillmore (MultiLevelProblem&);
@@ -285,12 +293,12 @@ int main (int argc, char** args) {
   unsigned printInterval = 1u;
 
   // Main algorithm loop.
-  for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
+  for (time_step = 0; time_step < numberOfTimeSteps; time_step++) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
     if (time_step % 1 == 0) {
-      mlSol.GetWriter()->Write ("./output1", "linear",variablesToBePrinted, (time_step + 1) / printInterval);
+      mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
 
       CopyDisplacement (mlSol, true);
       system2.MGsolve();
@@ -684,7 +692,7 @@ void AssembleInit (MultiLevelProblem& ml_prob) {
             term2 +=  solY_Xtan[K][J] * phiY_Xtan[J][i];
           }
           // This is a trick to smooth the initial data.
-          aResY[K][i] += (solYg[K] * phiY[i] + delta * term2 + term1) * Area;
+          aResY[K][i] += (solYg[K] * phiY[i] + delta * max (exp (-0.1 * time_step), 0.01) * term2 + term1) * Area; //broke aound 96
         }
 
         //  Solve the equation W = |Y|^{p-2}Y .
@@ -1253,14 +1261,14 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
             adept::adouble term4 = 0.;
             for (unsigned L = 0; L < DIM; L++) { // the fields W and x are old (i) but differentiated on the surface at (i + 1/2)
-              term4 += solxOld_Xtan[L][J] * solWOld_Xtan[L][K] + solxOld_Xtan[L][K] * solWOld_Xtan[L][J]; 
+              term4 += solxOld_Xtan[L][J] * solWOld_Xtan[L][K] + solxOld_Xtan[L][K] * solWOld_Xtan[L][J];
             }
-            term3 += phiW_Xtan[J][i] * term4; 
-            /* this is the trick we learned from Dzuik: basically in magnitude term3 = 2 term0, so -term0 + term3 = + term0 = 1/2 term3, 
+            term3 += phiW_Xtan[J][i] * term4;
+            /* this is the trick we learned from Dzuik: basically in magnitude term3 = 2 term0, so -term0 + term3 = + term0 = 1/2 term3,
              but the stability sign comes from -term0, for this reason term0 is taken more implicitly (i + 1), and term3/term4 is semiexplicit (i),
              It is shockingly how everything works and any small change causes the solver to crash */
-            /* unless we show it numerically that this time scheme is second order (and I am not sure it is) we cannot claim it in the paper. 
-             The fact that we have a lot of non linearities involved makes a the proof very difficult. 
+            /* unless we show it numerically that this time scheme is second order (and I am not sure it is) we cannot claim it in the paper.
+             The fact that we have a lot of non linearities involved makes a the proof very difficult.
              We may try to assume that the surface is known exactly in time and see what comes out of this integration scheme*/
           }
 
@@ -2308,82 +2316,85 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
       }
 
       double scale;
-      if( ENVN[0] < ENVN[1] && ENVN[0] < ENVN[2]){
-        scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
-        angle[1] *= scale;
-        angle[2] *= scale;
-      }
-      else if(ENVN[0] < ENVN[1] && ENVN[0] == ENVN[2]){
-        angle[1] = M_PI - 2. * angle[0];
-      }
-      else if( ENVN[0] <= ENVN[1]  && ENVN[0] > ENVN[2]){
-        scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
-        angle[1] *= scale;
-        angle[0] *= scale;  
-        
-      }
-      else if(ENVN[0] == ENVN[1] && ENVN[0] < ENVN[2]){
-        angle[2] = M_PI - 2. * angle[0];
-      }
-      else if(ENVN[0] == ENVN[1] && ENVN[0] == ENVN[2]){
-        angle[0] = angle[1] = angle[2] =  M_PI/3.;
-      }
-      else if(ENVN[0] > ENVN[1] && ENVN[0] <= ENVN[2]){
-        scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
-        angle[0] *= scale;
-        angle[2] *= scale;
-      }
-      else if(ENVN[0] > ENVN[1] && ENVN[0] > ENVN[2]){
-        if(ENVN[1] < ENVN[2]){
+      if(conformalTriangleType == 1){ //this works with moo two levels
+        if (ENVN[0] < ENVN[1] && ENVN[0] < ENVN[2]) {
+          scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
+          angle[1] *= scale;
+          angle[2] *= scale;
+        }
+        else if (ENVN[0] < ENVN[1] && ENVN[0] == ENVN[2]) {
+          angle[1] = M_PI - 2. * angle[0];
+        }
+        else if (ENVN[0] <= ENVN[1]  && ENVN[0] > ENVN[2]) {
+          scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
+          angle[1] *= scale;
+          angle[0] *= scale;
+
+        }
+        else if (ENVN[0] == ENVN[1] && ENVN[0] < ENVN[2]) {
+          angle[2] = M_PI - 2. * angle[0];
+        }
+        else if (ENVN[0] == ENVN[1] && ENVN[0] == ENVN[2]) {
+          angle[0] = angle[1] = angle[2] =  M_PI / 3.;
+        }
+        else if (ENVN[0] > ENVN[1] && ENVN[0] <= ENVN[2]) {
           scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
           angle[0] *= scale;
           angle[2] *= scale;
         }
-        else if(ENVN[1] == ENVN[2]){
-          angle[0] = M_PI - 2. * angle[1];
-        }
-        else if(ENVN[1] > ENVN[2]){
-          scale = (M_PI - angle[2]) / (angle[0] + angle [1]);
-          angle[0] *= scale;
-          angle[1] *= scale;
+        else if (ENVN[0] > ENVN[1] && ENVN[0] > ENVN[2]) {
+          if (ENVN[1] < ENVN[2]) {
+            scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
+            angle[0] *= scale;
+            angle[2] *= scale;
+          }
+          else if (ENVN[1] == ENVN[2]) {
+            angle[0] = M_PI - 2. * angle[1];
+          }
+          else if (ENVN[1] > ENVN[2]) {
+            scale = (M_PI - angle[2]) / (angle[0] + angle [1]);
+            angle[0] *= scale;
+            angle[1] *= scale;
+          }
         }
       }
-      
-//       unsigned type = 3; // there are 2 or 3 leading angles
-//       if (ENVN[0] < ENVN[1]) { // 0 leads on 1
-//         if (ENVN[0] < ENVN[2]) type = 0; // 0 is leading angle
-//         else if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
-//       }
-//       else if (ENVN[0] > ENVN[1]) { // 1 leads on 0
-//         if (ENVN[1] < ENVN[2]) type = 1; // 1 is leading angle
-//         else if (ENVN[1] > ENVN[2]) type = 2; // 2 is leading angle
-//       }
-//       else { // 0 equals 1
-//         if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
-//       }
-// 
-//       double scale;
-//       if (type == 0) {
-//         scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
-//         angle[1] *= scale;
-//         angle[2] *= scale;
-//       }
-//       else if (type == 1) {
-//         scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
-//         angle[0] *= scale;
-//         angle[2] *= scale;
-//       }
-//       else if (type == 2) {
-//         scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
-//         angle[1] *= scale;
-//         angle[0] *= scale;
-//       }
-//       else {
-//         scale = M_PI / (angle[0] + angle[1] + angle[2]);
-//         angle[0] *= scale;
-//         angle[1] *= scale;
-//         angle[2] *= scale;
-//       }
+      else { //this works with mao
+        unsigned type = 3; // there are 2 or 3 leading angles
+        if (ENVN[0] < ENVN[1]) { // 0 leads on 1
+          if (ENVN[0] < ENVN[2]) type = 0; // 0 is leading angle
+          else if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
+        }
+        else if (ENVN[0] > ENVN[1]) { // 1 leads on 0
+          if (ENVN[1] < ENVN[2]) type = 1; // 1 is leading angle
+          else if (ENVN[1] > ENVN[2]) type = 2; // 2 is leading angle
+        }
+        else { // 0 equals 1
+          if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
+        }
+
+        double scale;
+        if (type == 0) {
+          scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
+          angle[1] *= scale;
+          angle[2] *= scale;
+        }
+        else if (type == 1) {
+          scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
+          angle[0] *= scale;
+          angle[2] *= scale;
+        }
+        else if (type == 2) {
+          scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
+          angle[1] *= scale;
+          angle[0] *= scale;
+        }
+        else {
+          scale = M_PI / (angle[0] + angle[1] + angle[2]);
+          angle[0] *= scale;
+          angle[1] *= scale;
+          angle[2] *= scale;
+        }
+      }
 
       double l = xT[0][1] - xT[0][0];
       double d = l * sin (angle[0]) * sin (angle[1]) / sin (angle[0] + angle[1]);
@@ -3679,4 +3690,5 @@ void AssembleO2ConformalMinimizationEA (MultiLevelProblem& ml_prob) {
   KK->close();
 
 } // end AssembleO2ConformalMinimization.
+
 
