@@ -52,7 +52,6 @@ double max (const double &a , const double &b) {
   return (a > b) ? a : b;
 }
 
-
 void CopyDisplacement (MultiLevelSolution &mlSol,  const bool &forward);
 void AssembleInit (MultiLevelProblem&);
 void AssemblePWillmore (MultiLevelProblem&);
@@ -61,6 +60,10 @@ void AssembleShearMinimization (MultiLevelProblem&);  //vastly inferior
 void AssembleO2ConformalMinimization (MultiLevelProblem&);  //vastly superior.. when convergent
 void AssembleO2ConformalMinimizationEA (MultiLevelProblem& ml_prob);
 void AssembleSphereConformalMinimization (MultiLevelProblem&);  //inferior
+
+void ChangeTriangleConfiguration1 (const std::vector<unsigned> & ENVN, std::vector <double> &angle);
+void ChangeTriangleConfiguration2 (const std::vector<unsigned> & ENVN, std::vector <double> &angle);
+
 
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
@@ -2315,90 +2318,20 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
         angle[j] = 2 * M_PI / ENVN[j];
       }
 
-      double scale;
-      if(conformalTriangleType == 1){ //this works with moo two levels
-        if (ENVN[0] < ENVN[1] && ENVN[0] < ENVN[2]) {
-          scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
-          angle[1] *= scale;
-          angle[2] *= scale;
-        }
-        else if (ENVN[0] < ENVN[1] && ENVN[0] == ENVN[2]) {
-          angle[1] = M_PI - 2. * angle[0];
-        }
-        else if (ENVN[0] <= ENVN[1]  && ENVN[0] > ENVN[2]) {
-          scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
-          angle[1] *= scale;
-          angle[0] *= scale;
 
-        }
-        else if (ENVN[0] == ENVN[1] && ENVN[0] < ENVN[2]) {
-          angle[2] = M_PI - 2. * angle[0];
-        }
-        else if (ENVN[0] == ENVN[1] && ENVN[0] == ENVN[2]) {
-          angle[0] = angle[1] = angle[2] =  M_PI / 3.;
-        }
-        else if (ENVN[0] > ENVN[1] && ENVN[0] <= ENVN[2]) {
-          scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
-          angle[0] *= scale;
-          angle[2] *= scale;
-        }
-        else if (ENVN[0] > ENVN[1] && ENVN[0] > ENVN[2]) {
-          if (ENVN[1] < ENVN[2]) {
-            scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
-            angle[0] *= scale;
-            angle[2] *= scale;
-          }
-          else if (ENVN[1] == ENVN[2]) {
-            angle[0] = M_PI - 2. * angle[1];
-          }
-          else if (ENVN[1] > ENVN[2]) {
-            scale = (M_PI - angle[2]) / (angle[0] + angle [1]);
-            angle[0] *= scale;
-            angle[1] *= scale;
-          }
-        }
+      if (conformalTriangleType == 1) { //this works with moo two levels
+        ChangeTriangleConfiguration1 (ENVN, angle);
       }
-      else { //this works with mao
-        unsigned type = 3; // there are 2 or 3 leading angles
-        if (ENVN[0] < ENVN[1]) { // 0 leads on 1
-          if (ENVN[0] < ENVN[2]) type = 0; // 0 is leading angle
-          else if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
-        }
-        else if (ENVN[0] > ENVN[1]) { // 1 leads on 0
-          if (ENVN[1] < ENVN[2]) type = 1; // 1 is leading angle
-          else if (ENVN[1] > ENVN[2]) type = 2; // 2 is leading angle
-        }
-        else { // 0 equals 1
-          if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
-        }
-
-        double scale;
-        if (type == 0) {
-          scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
-          angle[1] *= scale;
-          angle[2] *= scale;
-        }
-        else if (type == 1) {
-          scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
-          angle[0] *= scale;
-          angle[2] *= scale;
-        }
-        else if (type == 2) {
-          scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
-          angle[1] *= scale;
-          angle[0] *= scale;
-        }
-        else {
-          scale = M_PI / (angle[0] + angle[1] + angle[2]);
-          angle[0] *= scale;
-          angle[1] *= scale;
-          angle[2] *= scale;
-        }
+      else if (conformalTriangleType == 2) { //this works with mao
+        ChangeTriangleConfiguration2 (ENVN, angle);
+      }
+      else { //no change
+        angle.assign (3, M_PI / 3.);
       }
 
       double l = xT[0][1] - xT[0][0];
       double d = l * sin (angle[0]) * sin (angle[1]) / sin (angle[0] + angle[1]);
-      scale = sqrt ( (sqrt (3.) / 2.) / (l * d));
+      double scale = sqrt ( (sqrt (3.) / 2.) / (l * d));
       l = l * scale;
       d = d * scale;
       xT[0][1] = xT[0][0] + l;
@@ -2434,7 +2367,7 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
         msh->_finiteElement[ielGeom][solType]->Jacobian (xT, ig, weight, stdVectorPhi, stdVectorPhi_uv);
 
         phix = &stdVectorPhi[0];
-///////// WHAT ABOUT PHIL? ////////////////////
+        phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
 
         phi_uv0.resize (nxDofs);
         phi_uv1.resize (nxDofs);
@@ -2448,7 +2381,7 @@ void AssembleO2ConformalMinimization (MultiLevelProblem& ml_prob) {
         phix_uv[0] = &phi_uv0[0];
         phix_uv[1] = &phi_uv1[0];
 
-        phiL = msh->_finiteElement[ielGeom][solLType]->GetPhi (ig);
+        
 
       }
 
@@ -3691,4 +3624,85 @@ void AssembleO2ConformalMinimizationEA (MultiLevelProblem& ml_prob) {
 
 } // end AssembleO2ConformalMinimization.
 
+void ChangeTriangleConfiguration1 (const std::vector<unsigned> & ENVN, std::vector <double> &angle) {
+  double scale;
+  if (ENVN[0] < ENVN[1] && ENVN[0] < ENVN[2]) {
+    scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
+    angle[1] *= scale;
+    angle[2] *= scale;
+  }
+  else if (ENVN[0] < ENVN[1] && ENVN[0] == ENVN[2]) {
+    angle[1] = M_PI - 2. * angle[0];
+  }
+  else if (ENVN[0] <= ENVN[1]  && ENVN[0] > ENVN[2]) {
+    scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
+    angle[1] *= scale;
+    angle[0] *= scale;
 
+  }
+  else if (ENVN[0] == ENVN[1] && ENVN[0] < ENVN[2]) {
+    angle[2] = M_PI - 2. * angle[0];
+  }
+  else if (ENVN[0] == ENVN[1] && ENVN[0] == ENVN[2]) {
+    angle[0] = angle[1] = angle[2] =  M_PI / 3.;
+  }
+  else if (ENVN[0] > ENVN[1] && ENVN[0] <= ENVN[2]) {
+    scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
+    angle[0] *= scale;
+    angle[2] *= scale;
+  }
+  else if (ENVN[0] > ENVN[1] && ENVN[0] > ENVN[2]) {
+    if (ENVN[1] < ENVN[2]) {
+      scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
+      angle[0] *= scale;
+      angle[2] *= scale;
+    }
+    else if (ENVN[1] == ENVN[2]) {
+      angle[0] = M_PI - 2. * angle[1];
+    }
+    else if (ENVN[1] > ENVN[2]) {
+      scale = (M_PI - angle[2]) / (angle[0] + angle [1]);
+      angle[0] *= scale;
+      angle[1] *= scale;
+    }
+  }
+}
+
+
+void ChangeTriangleConfiguration2 (const std::vector<unsigned> & ENVN, std::vector <double> &angle) {
+  unsigned type = 3; // there are 2 or 3 leading angles
+  if (ENVN[0] < ENVN[1]) { // 0 leads on 1
+    if (ENVN[0] < ENVN[2]) type = 0; // 0 is leading angle
+    else if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
+  }
+  else if (ENVN[0] > ENVN[1]) { // 1 leads on 0
+    if (ENVN[1] < ENVN[2]) type = 1; // 1 is leading angle
+    else if (ENVN[1] > ENVN[2]) type = 2; // 2 is leading angle
+  }
+  else { // 0 equals 1
+    if (ENVN[0] > ENVN[2]) type = 2; // 2 is leading angle
+  }
+
+  double scale;
+  if (type == 0) {
+    scale = (M_PI - angle[0]) / (angle[1] + angle [2]);
+    angle[1] *= scale;
+    angle[2] *= scale;
+  }
+  else if (type == 1) {
+    scale = (M_PI - angle[1]) / (angle[0] + angle [2]);
+    angle[0] *= scale;
+    angle[2] *= scale;
+  }
+  else if (type == 2) {
+    scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
+    angle[1] *= scale;
+    angle[0] *= scale;
+  }
+  else {
+    scale = M_PI / (angle[0] + angle[1] + angle[2]);
+    angle[0] *= scale;
+    angle[1] *= scale;
+    angle[2] *= scale;
+  }
+}
