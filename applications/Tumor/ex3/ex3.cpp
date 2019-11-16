@@ -44,20 +44,22 @@ double V0;
 
 
 unsigned jInitialPosition = 0;
+std::vector <double>  xc = {0,0,0,0,0,0,0,0,0,0,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9};
+std::vector <double>  yc = {-0.9,-0.5,0.3,0.9,-0.9,-0.9,-0.9,-0.5,-0.5,-0.5,0,0,0,0,0,0,0.4,0.4,0.4,-0.9};
+std::vector <double>  zc = {0,0,0,0,0.4,-0.6,-1.2,0.4,-0.6,-1.2,-0.4,-0.4,-0.4,-1.2,-1.2,-1.2,-0.4,-0.4,-0.4,-0.4};
+
+
 double InitalValueU3D (const std::vector < double >& x) {
     
   unsigned j = jInitialPosition;
   //std::cout<< "J value is: " << j << std::endl;
-  //std::vector <double>  xc={0,1.2};     //xc = {0,0,0,0,0,0,0,0,0,0,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9};
-  //std::vector <double>  yc={-0.9,-0.5};     //yc = {-0.9,-0.5,0.3,0.9,-0.9,-0.9,-0.9,-0.5,-0.5,-0.5,0,0,0,0,0,0,0.4,0.4,0.4,-0.9};
-  //std::vector <double>  zc={0,0.9};     //zc = {0,0,0,0,0.4,-0.6,-1.2,0.4,-0.6,-1.2,-0.4,-0.4,-0.4,-1.2,-1.2,-1.2,-0.4,-0.4,-0.4,-0.4};
 
   //original=(0.5,0,0), xcentered = (0.5,-0.3,-0.5), ycentered = (-0.3,0,-0.6), zcentered = (-0.3,-0.3,-0.6), badcentered = (0,0.7,0.6)
-  double xc = 0.5;
-  double yc = 0.;
-  double zc = 0.;
-  double r = sqrt ( (x[0] - xc) * (x[0] - xc) + (x[1] - yc) * (x[1] - yc) + (x[2] - zc) * (x[2] - zc));
-  //double r = sqrt ( (x[0] - xc[j]) * (x[0] - xc[j]) + (x[1] - yc[j]) * (x[1] - yc[j]) + (x[2] - zc[j]) * (x[2] - zc[j]));
+  //double xc = 0.5;
+  //double yc = 0.;
+  //double zc = 0.;
+  //double r = sqrt ( (x[0] - xc) * (x[0] - xc) + (x[1] - yc) * (x[1] - yc) + (x[2] - zc) * (x[2] - zc));
+  double r = sqrt ( (x[0] - xc[j]) * (x[0] - xc[j]) + (x[1] - yc[j]) * (x[1] - yc[j]) + (x[2] - zc[j]) * (x[2] - zc[j]));
   double r2 = r * r;
   double R = 1.; //radius of the tumor
   double R2 = R * R;
@@ -124,8 +126,10 @@ int main (int argc, char** args) {
  std::vector <double> doses ={0.0100000,0.01170000,0.0128074,0.01375,0.0163183,0.0207917,0.0264914,
      0.0337537,0.0430067,0.05,0.2,0.3,0.43,0.47,0.57,0.68,0.83,0.91,1.1,1.6,2.3,2.8,3.6};
     
-  //for (unsigned simulation = 0; simulation < doses.size() ; simulation++) {
-    for (unsigned simulation = 0; simulation < 2 ; simulation++) {
+  for (unsigned simulation = 0; simulation < 1 ; simulation++) {
+     unsigned l_base = xc.size();
+    //for (unsigned simulation = 0; simulation < l_base ; simulation++) {
+        
     jInitialPosition = simulation; 
     //V0 = 0.05 * (simulation + 1) ;   
     //V0 = doses[simulation];
@@ -589,16 +593,6 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
     double K11 = (*sol->_Sol[ mlSol.GetIndex ("K11")]) (iel);
     double K22 = (*sol->_Sol[ mlSol.GetIndex ("K22")]) (iel);
     double K33 = (*sol->_Sol[ mlSol.GetIndex ("K33")]) (iel);
-//     double xc = 0.;
-//     double yc = 0.;
-//     double zc = 0.35;
-//     double r = sqrt ( (x[0][nDofd - 1] - xc) * (x[0][nDofd - 1] - xc)
-//                       + (x[1][nDofd - 1] - yc) * (x[1][nDofd - 1] - yc)
-//                       + (x[2][nDofd - 1] - zc) * (x[2][nDofd - 1] - zc));
-//
-//
-//     if (r < 1.2 && K11 > 0.5) {
-//    (K11+K22+K33)/3 > 1
 
     if (x[0][nDofd - 1] > -0.6 && x[0][nDofd - 1] < 1.7 &&
         x[1][nDofd - 1] > -1.5 && x[1][nDofd - 1] < 1.5 &&
@@ -646,12 +640,14 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
 
   if ( (stop || last) && iproc == 0) {
     std::ofstream fout;
+    unsigned j = jInitialPosition;
+    
     fout.open ("DoseResponseCurve.csv", std::ofstream::app);
-    fout << V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+    fout << xc[j] <<","<<  yc[j] <<","<< zc[j] << ","<<  V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
     fout.close();
 
     fout.open ("DoseResponseCurve.txt", std::ofstream::app);
-    fout << V0 << " " << volumeUTAll[0] / volumeAll << " " << volumeUTAll[1] / volumeAll << " " << volumeUTAll[2] / volumeAll << " " << std::endl;
+    fout << xc[j] <<","<<  yc[j] <<","<< zc[j] << ","<<  V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
     fout.close();
   }
   return stop;
