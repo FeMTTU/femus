@@ -925,7 +925,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
       //if (r < 1.3) {
       double traceIel = ( (*sol->_Sol[kIndex[0]]) (iel) + (*sol->_Sol[kIndex[3]]) (iel)
                           + (*sol->_Sol[kIndex[5]]) (iel)) / 3.;
-      if (traceIel > 0.00002) {
+      if (traceIel > 0.002) {
         trace += traceIel;
         counter++;
       }
