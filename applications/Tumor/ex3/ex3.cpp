@@ -44,9 +44,9 @@ double V0;
 
 
 unsigned jInitialPosition = 0;
-std::vector <double>  xc = {0,0,0,0,0,0,0,0,0,0,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9};
-std::vector <double>  yc = {-0.9,-0.5,0.3,0.9,-0.9,-0.9,-0.9,-0.5,-0.5,-0.5,0,0,0,0,0,0,0.4,0.4,0.4,-0.9};
-std::vector <double>  zc = {0,0,0,0,0.4,-0.6,-1.2,0.4,-0.6,-1.2,-0.4,-0.4,-0.4,-1.2,-1.2,-1.2,-0.4,-0.4,-0.4,-0.4};
+//std::vector <double>  xc = {0,0,0,0,0,0,0,0,0,0,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9};
+//std::vector <double>  yc = {-0.9,-0.5,0.3,0.9,-0.9,-0.9,-0.9,-0.5,-0.5,-0.5,0,0,0,0,0,0,0.4,0.4,0.4,-0.9};
+//std::vector <double>  zc = {0,0,0,0,0.4,-0.6,-1.2,0.4,-0.6,-1.2,-0.4,-0.4,-0.4,-1.2,-1.2,-1.2,-0.4,-0.4,-0.4,-0.4};
 
 
 double InitalValueU3D (const std::vector < double >& x) {
@@ -55,11 +55,11 @@ double InitalValueU3D (const std::vector < double >& x) {
   //std::cout<< "J value is: " << j << std::endl;
 
   //original=(0.5,0,0), xcentered = (0.5,-0.3,-0.5), ycentered = (-0.3,0,-0.6), zcentered = (-0.3,-0.3,-0.6), badcentered = (0,0.7,0.6)
-  //double xc = 0.5;
-  //double yc = 0.;
-  //double zc = 0.;
-  //double r = sqrt ( (x[0] - xc) * (x[0] - xc) + (x[1] - yc) * (x[1] - yc) + (x[2] - zc) * (x[2] - zc));
-  double r = sqrt ( (x[0] - xc[j]) * (x[0] - xc[j]) + (x[1] - yc[j]) * (x[1] - yc[j]) + (x[2] - zc[j]) * (x[2] - zc[j]));
+  double xc = 0.5;
+  double yc = 0.0;
+  double zc = 0.0;
+  double r = sqrt ( (x[0] - xc) * (x[0] - xc) + (x[1] - yc) * (x[1] - yc) + (x[2] - zc) * (x[2] - zc));
+  //double r = sqrt ( (x[0] - xc[j]) * (x[0] - xc[j]) + (x[1] - yc[j]) * (x[1] - yc[j]) + (x[2] - zc[j]) * (x[2] - zc[j]));
   double r2 = r * r;
   double R = 1.; //radius of the tumor
   double R2 = R * R;
@@ -123,11 +123,11 @@ int main (int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
   // erase all the coarse mesh levels
   // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
- std::vector <double> doses ={0.0100000,0.01170000,0.0128074,0.01375,0.0163183,0.0207917,0.0264914,
-     0.0337537,0.0430067,0.05,0.2,0.3,0.43,0.47,0.57,0.68,0.83,0.91,1.1,1.6,2.3,2.8,3.6};
-    
+ //std::vector <double> doses = {0.0100000,0.01170000,0.0128074,0.01375,0.0163183,0.0207917,0.0264914,
+  //   0.0337537,0.0430067,0.05,0.2,0.3,0.43,0.47,0.57,0.68,0.83,0.91,1.1,1.5,2.3,2.8,3.6,3.775, 3.95,4.125,4.3,4.475,4.65,4.825,5};
+     
   for (unsigned simulation = 0; simulation < 1 ; simulation++) {
-     unsigned l_base = xc.size();
+    // unsigned l_base = xc.size();
     //for (unsigned simulation = 0; simulation < l_base ; simulation++) {
         
     jInitialPosition = simulation; 
@@ -420,7 +420,7 @@ void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob) {
           }
 
           // *** phi_i loop ***
-          double eps = 0.002;
+          double eps = 0.0002;
           for (unsigned i = 0; i < faceDofs; i++) {
             unsigned inode = msh->GetLocalFaceVertexIndex (iel, jface, i);
             aRes[inode] +=  phi[i] * eps * (1.0 * solu_gss + 0. * soluOld_gss) * weight;
@@ -643,11 +643,14 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & l
     unsigned j = jInitialPosition;
     
     fout.open ("DoseResponseCurve.csv", std::ofstream::app);
-    fout << xc[j] <<","<<  yc[j] <<","<< zc[j] << ","<<  V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+    //fout << xc[j] <<","<<  yc[j] <<","<< zc[j] << ","<<  V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+    fout <<  V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+
     fout.close();
 
     fout.open ("DoseResponseCurve.txt", std::ofstream::app);
-    fout << xc[j] <<","<<  yc[j] <<","<< zc[j] << ","<<  V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+    //fout << xc[j] <<","<<  yc[j] <<","<< zc[j] << ","<<  V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+    fout << V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
     fout.close();
   }
   return stop;
@@ -802,6 +805,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   std::ostringstream fileAD;
   
   filename << "./input/NewCorrectedTensorSPD.txt";
+  //filename << "./input/NewCorrectedTensorSPD_0_1.txt";
   //fileAD << "/home/erdi/FEMuS/MyFEMuS/applications/Tumor/ex3/input/AxialDiffusivity.txt";
 
   std::ifstream fin;
@@ -826,7 +830,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   h3 = 5. / n3;
 
   std::string kname[6] = {"K11", "K12", "K13", "K22", "K23", "K33"};
-  std::string ADName = "AD";
+  //std::string ADName = "AD";
 
   unsigned kIndex[6];
   for (unsigned i = 0; i < 6; i++) {
@@ -913,12 +917,6 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
     }
 
 
-//     double xc = 0.4;
-//     double yc = 0.;
-//     double zc = 0.;
-//     double r = sqrt ( (x[0] - xc) * (x[0] - xc)
-//                       + (x[1] - yc) * (x[1] - yc)
-//                       + (x[2] - zc) * (x[2] - zc));
 
     if (x[0] > -0.6 && x[0] < 1.7 &&
         x[1] > -1.5 && x[1] < 1.5 &&
@@ -927,7 +925,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
       //if (r < 1.3) {
       double traceIel = ( (*sol->_Sol[kIndex[0]]) (iel) + (*sol->_Sol[kIndex[3]]) (iel)
                           + (*sol->_Sol[kIndex[5]]) (iel)) / 3.;
-      if (traceIel > 0.002) {
+      if (traceIel > 0.00002) {
         trace += traceIel;
         counter++;
       }
