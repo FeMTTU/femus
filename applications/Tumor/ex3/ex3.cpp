@@ -804,17 +804,26 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
   std::ostringstream filename;
   std::ostringstream fileAD;
   
-  filename << "./input/NewCorrectedTensorSPD.txt";
+  double treshold = 0.;
+  filename << "./input/NewCorrectedTensorSPD1.txt";
+  treshold = 0.002;
+  
+//   filename << "./input/NewCorrectedTensorSPD2.txt";
+//   treshold = 0.0002;
+ 
+//   filename << "./input/NewCorrectedTensorSPD3.txt";
+//   treshold = 0.00002;
+  
+  
   //filename << "./input/NewCorrectedTensorSPD_0_1.txt";
   //fileAD << "/home/erdi/FEMuS/MyFEMuS/applications/Tumor/ex3/input/AxialDiffusivity.txt";
 
   std::ifstream fin;
-  //std::ifstream fAD;
 
   fin.open (filename.str().c_str());
-  //fAD.open (fileAD.str().c_str());
+  
   if (!fin.is_open()) {
-    std::cout << " The input file " << "./input/NewCorrectedTensorSPD.txt " << " cannot be opened.\n" << std::endl;
+    std::cout << " The input file " << filename.str().c_str() << " cannot be opened.\n" << std::endl;
     abort();
   }
 
@@ -925,7 +934,7 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
       //if (r < 1.3) {
       double traceIel = ( (*sol->_Sol[kIndex[0]]) (iel) + (*sol->_Sol[kIndex[3]]) (iel)
                           + (*sol->_Sol[kIndex[5]]) (iel)) / 3.;
-      if (traceIel > 0.00002) {
+      if (traceIel > treshold) {
         trace += traceIel;
         counter++;
       }
