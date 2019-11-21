@@ -43,7 +43,7 @@ const double normalSign = -1.;
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta).
 // const double eps = 1e-5;
-const double delta =  0.005;
+const double delta =  0.00;
 const double delta1 = 0.0;
 const double delta2 = .0;
 unsigned time_step = 0;
@@ -69,7 +69,7 @@ void ChangeTriangleConfiguration2 (const std::vector<unsigned> & ENVN, std::vect
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
   //return 0.0001;
-  double dt0 = .000001;
+  double dt0 = .5; //0.000001;
   //double dt0 = 0.00000032; // spot
   double s = 1.;
   double n = 2;
@@ -122,11 +122,11 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
-  scalingFactor = 3.;  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  //scalingFactor = 3.;  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
@@ -136,7 +136,7 @@ int main (int argc, char** args) {
 
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -309,7 +309,7 @@ int main (int argc, char** args) {
 
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();
-      //system0.MGsolve();
+      system0.MGsolve();
     }
 
     if ( (time_step + 1) % printInterval == 0)

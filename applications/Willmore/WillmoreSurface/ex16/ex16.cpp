@@ -36,14 +36,14 @@ using namespace femus;
 bool firstTime = true;
 double surface0 = 0.;
 double volume0 = 0.;
-bool volumeConstraint = true;
-bool areaConstraint = true;
+bool volumeConstraint = false;
+bool areaConstraint = false;
 const double normalSign = -1.;
 
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta).
 // const double eps = 1e-5;
-const double delta =  0.005;
+const double delta =  0.000;
 const double delta1 = 0.0;
 const double delta2 = .0;
 unsigned time_step = 0;
@@ -69,7 +69,7 @@ void ChangeTriangleConfiguration2 (const std::vector<unsigned> & ENVN, std::vect
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
   //return 0.0001;
-  double dt0 = .0001;
+  double dt0 = .0003;
   //double dt0 = 0.00000032; // spot
   double s = 1.;
   double n = 2;
@@ -124,19 +124,19 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
-  scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  //scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
   //mlMsh.ReadCoarseMesh ("../input/moo.med", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/moai.med", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/superknot.med", "seventh", scalingFactor);
 
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -252,7 +252,7 @@ int main (int argc, char** args) {
   system2.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system2 and initialize.
-  system2.SetAssembleFunction (AssembleO2ConformalMinimization);
+  system2.SetAssembleFunction (AssembleConformalMinimization);
   system2.init();
 
   mlSol.SetWriter (VTK);
@@ -309,7 +309,7 @@ int main (int argc, char** args) {
 
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();
-      //system0.MGsolve();
+      system0.MGsolve();
     }
 
     if ( (time_step + 1) % printInterval == 0)
@@ -1298,12 +1298,15 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
         // Lagrange multiplier (area) equation.
         if (areaConstraint) {
-          //aResLambda2 += ( -YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
-          adept::adouble term1t = 0.;
-          for (unsigned J = 0; J < DIM; J++) {
-            term1t +=  solx_Xtan[K][J] * (solxNew_Xtan[K][J] - solxOld_Xtan[K][J]) ;
-          }
-          aResLambda2 += term1t * Area;
+          aResLambda2 += ( -YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+          // aResLambda2 += - ( solYNewg[K] - solYOldg[K]) * normal[K] * Area;
+
+          // adept::adouble term1t = 0.;
+          // for (unsigned J = 0; J < DIM; J++) {
+          //   term1t +=  solx_Xtan[K][J] * (solxNew_Xtan[K][J] - solxOld_Xtan[K][J]) ;
+          //   //term1t += 0.5 * (solxNewg[K] * solYOldg[K] + solxOldg[K] * solYNewg[K]) - solxOldg[K] * solYOldg[K];
+          // }
+          // aResLambda2 += term1t * Area;
 
         }
       }
