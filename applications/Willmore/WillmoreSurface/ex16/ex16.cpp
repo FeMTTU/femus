@@ -21,7 +21,7 @@
 #include "PetscMatrix.hpp"
 
 
-const double eps = 1e-5;
+const double eps = 0*1e-5;
 
 #include "../include/conformalOther.hpp"
 
@@ -36,8 +36,8 @@ using namespace femus;
 bool firstTime = true;
 double surface0 = 0.;
 double volume0 = 0.;
-bool volumeConstraint = false;
-bool areaConstraint = false;
+bool volumeConstraint = true;
+bool areaConstraint = true;
 const double normalSign = -1.;
 
 // Penalty parameter for conformal minimization (eps).
@@ -69,11 +69,11 @@ void ChangeTriangleConfiguration2 (const std::vector<unsigned> & ENVN, std::vect
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
   //return 0.0001;
-  double dt0 = .0003;
-  //double dt0 = 0.00000032; // spot
-  double s = 1.;
-  double n = 2;
-  //return dt0 * pow (1. + t / pow (dt0, s), n);
+  //double dt0 = .001;
+  double dt0 = 0.001; // spot
+//   double s = 0.2;
+//   double n = 2;
+//   return dt0 * pow (1. + t / pow (dt0, s), n);
   return dt0;
 }
 
@@ -124,7 +124,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
+  scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   //scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
@@ -136,7 +136,7 @@ int main (int argc, char** args) {
 
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -197,7 +197,7 @@ int main (int argc, char** args) {
   system0.AddSolutionToSystemPDE ("W3");
 
   // Parameters for convergence and # of iterations.
-  system0.SetMaxNumberOfNonLinearIterations (5);
+  system0.SetMaxNumberOfNonLinearIterations (1);
   system0.SetNonLinearConvergenceTolerance (1.e-12);
 
   // Add the assembling function to system0 and initialize.
@@ -225,7 +225,7 @@ int main (int argc, char** args) {
   }
 
   // Parameters for convergence and # of iterations for Willmore.
-  system.SetMaxNumberOfNonLinearIterations (15);
+  system.SetMaxNumberOfNonLinearIterations (1);
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to P-Willmore system.
@@ -248,7 +248,7 @@ int main (int argc, char** args) {
   system2.AddSolutionToSystemPDE ("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system2.SetMaxNumberOfNonLinearIterations (40);
+  system2.SetMaxNumberOfNonLinearIterations (1);
   system2.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system2 and initialize.
@@ -309,7 +309,7 @@ int main (int argc, char** args) {
 
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();
-      system0.MGsolve();
+      //system0.MGsolve();
     }
 
     if ( (time_step + 1) % printInterval == 0)
@@ -1187,7 +1187,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       adept::adouble solxOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
       adept::adouble solWNew_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-      adept::adouble solW_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      //adept::adouble solW_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
       adept::adouble solWOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
       adept::adouble solYNew_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
@@ -1266,11 +1266,11 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             term0 += solWNew_Xtan[K][J] * phiW_Xtan[J][i]; // the field W is new (i + 1) but differentiated on the surface at (i + 1/2)
             termLambda2 += solx_Xtan[K][J] * phiW_Xtan[J][i];
             term1 += solxNew_Xtan[K][J] * phiW_Xtan[J][i];
-            term2 += solW_Xtan[J][J];
+            term2 += solWNew_Xtan[J][J];
 
             adept::adouble term4 = 0.;
             for (unsigned L = 0; L < DIM; L++) { // the fields W and x are old (i) but differentiated on the surface at (i + 1/2)
-              term4 += solxOld_Xtan[L][J] * solW_Xtan[L][K] + solxOld_Xtan[L][K] * solW_Xtan[L][J];
+              term4 += solxOld_Xtan[L][J] * solWOld_Xtan[L][K] + solxOld_Xtan[L][K] * solWOld_Xtan[L][J];
             }
             term3 += phiW_Xtan[J][i] * term4;
             /* this is the trick we learned from Dzuik: basically in magnitude term3 = 2 term0, so -term0 + term3 = + term0 = 1/2 term3,
