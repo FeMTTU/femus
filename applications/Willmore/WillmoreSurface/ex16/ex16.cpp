@@ -21,7 +21,7 @@
 #include "PetscMatrix.hpp"
 
 
-const double eps = 0*1e-5;
+const double eps = 1e-5;
 
 #include "../include/conformalOther.hpp"
 
@@ -65,12 +65,13 @@ void ChangeTriangleConfiguration1 (const std::vector<unsigned> & ENVN, std::vect
 void ChangeTriangleConfiguration2 (const std::vector<unsigned> & ENVN, std::vector <double> &angle);
 
 
+double dt0 = 0.00005;
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
   //return 0.0001;
   //double dt0 = .001;
-  double dt0 = 0.001; // spot
+  //dt0 = 0.00005; // spot
 //   double s = 0.2;
 //   double n = 2;
 //   return dt0 * pow (1. + t / pow (dt0, s), n);
@@ -124,9 +125,9 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
-  scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
+  //scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
-  //scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
@@ -301,6 +302,7 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
+    dt0 *= 1.01;
     if (time_step % 1 == 0) {
       mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
 
@@ -309,7 +311,7 @@ int main (int argc, char** args) {
 
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();
-      //system0.MGsolve();
+      system0.MGsolve();
     }
 
     if ( (time_step + 1) % printInterval == 0)
