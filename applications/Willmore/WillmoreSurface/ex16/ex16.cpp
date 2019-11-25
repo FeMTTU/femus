@@ -42,7 +42,6 @@ const double normalSign = -1.;
 
 // Penalty parameter for conformal minimization (eps).
 // Trick for system0 (delta).
-// const double eps = 1e-5;
 const double delta =  0.000;
 const double delta1 = 0.0;
 const double delta2 = .0;
@@ -58,6 +57,7 @@ double max (const double &a , const double &b) {
 void CopyDisplacement (MultiLevelSolution &mlSol,  const bool &forward);
 void AssembleInit (MultiLevelProblem&);
 void AssemblePWillmore (MultiLevelProblem&);
+void AssemblePWillmore2 (MultiLevelProblem& ml_prob);
 
 void AssembleO2ConformalMinimization (MultiLevelProblem&);  //vastly superior.. when convergent
 
@@ -127,7 +127,8 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
   //scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
-  scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  scalingFactor = 1.;
+  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
@@ -230,7 +231,7 @@ int main (int argc, char** args) {
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to P-Willmore system.
-  system.SetAssembleFunction (AssemblePWillmore);
+  system.SetAssembleFunction (AssemblePWillmore2);
 
   // Attach time step function to P-Willmore sysyem.
   system.AttachGetTimeIntervalFunction (GetTimeStep);
@@ -1300,7 +1301,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
         // Lagrange multiplier (area) equation.
         if (areaConstraint) {
-          aResLambda2 += ( -YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+          aResLambda2 += (-YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
           // aResLambda2 += - ( solYNewg[K] - solYOldg[K]) * normal[K] * Area;
 
           // adept::adouble term1t = 0.;
@@ -2082,3 +2083,639 @@ void ChangeTriangleConfiguration2 (const std::vector<unsigned> & ENVN, std::vect
     angle[2] *= scale;
   }
 }
+
+
+// Building the P-Willmore assembly function.
+void AssemblePWillmore2 (MultiLevelProblem& ml_prob) {
+  //  ml_prob is the global object from/to where get/set all the data
+  //  level is the level of the PDE system to be assembled
+
+  // Call the adept stack object.
+  // Extract pointers to the several objects that we are going to use.
+  TransientNonlinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<TransientNonlinearImplicitSystem> ("PWillmore");   // pointer to the linear implicit system named "Poisson"
+
+  // Define level and time variable.
+  double dt = mlPdeSys->GetIntervalTime();
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
+
+  // Point to the mesh and element objects.
+  Mesh *msh = ml_prob._ml_msh->GetLevel (level);
+  elem *el = msh->el;
+
+  // Point to mlSol, solution (level), and equation (level) objects.
+  MultiLevelSolution *mlSol = ml_prob._ml_sol;
+  Solution *sol = ml_prob._ml_sol->GetSolutionLevel (level);
+  LinearEquationSolver *pdeSys = mlPdeSys->_LinSolver[level];
+
+  // Point to the global stiffness mtx and residual vectors in pdeSys (level).
+  SparseMatrix *KK = pdeSys->_KK;
+  NumericVector *RES = pdeSys->_RES;
+
+  // Convenience variables to encode the dimension.
+  const unsigned dim = 2;
+  const unsigned DIM = 3;
+
+  // Get the process_id (for parallel computation).
+  unsigned iproc = msh->processor_id();
+
+  // Extract the solution vector; get solDx positions in the ml_sol object.
+  unsigned solDxIndex[DIM];
+  solDxIndex[0] = mlSol->GetIndex ("Dx1");
+  solDxIndex[1] = mlSol->GetIndex ("Dx2");
+  solDxIndex[2] = mlSol->GetIndex ("Dx3");
+
+  // Extract the finite element type for solx.
+  unsigned solxType;
+  solxType = mlSol->GetSolutionType (solDxIndex[0]);
+
+  // Get positions of solDx in the pdeSys object.
+  unsigned solDxPdeIndex[DIM];
+  solDxPdeIndex[0] = mlPdeSys->GetSolPdeIndex ("Dx1");
+  solDxPdeIndex[1] = mlPdeSys->GetSolPdeIndex ("Dx2");
+  solDxPdeIndex[2] = mlPdeSys->GetSolPdeIndex ("Dx3");
+
+  // Define solx and solxOld.
+  std::vector < double > solx[DIM];
+  std::vector < double > solxOld[DIM];
+
+  // Get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC).
+  unsigned xType = 2;
+
+  // Get positions of Y in the ml_sol object.
+  unsigned solYIndex[DIM];
+  solYIndex[0] = mlSol->GetIndex ("Y1");
+  solYIndex[1] = mlSol->GetIndex ("Y2");
+  solYIndex[2] = mlSol->GetIndex ("Y3");
+
+  // Extract the finite element type for Y.
+  unsigned solYType;
+  solYType = mlSol->GetSolutionType (solYIndex[0]);
+
+  // Get positions of Y in the pdeSys object.
+  unsigned solYPdeIndex[DIM];
+  solYPdeIndex[0] = mlPdeSys->GetSolPdeIndex ("Y1");
+  solYPdeIndex[1] = mlPdeSys->GetSolPdeIndex ("Y2");
+  solYPdeIndex[2] = mlPdeSys->GetSolPdeIndex ("Y3");
+
+  // Define solY and solYOld.
+  std::vector < double > solY[DIM];
+  std::vector < double > solYOld[DIM];
+
+  // Get positions of W in the ml_sol object.
+  unsigned solWIndex[DIM];
+  solWIndex[0] = mlSol->GetIndex ("W1");
+  solWIndex[1] = mlSol->GetIndex ("W2");
+  solWIndex[2] = mlSol->GetIndex ("W3");
+
+  // Extract the finite element type for W.
+  unsigned solWType;
+  solWType = mlSol->GetSolutionType (solWIndex[0]);
+
+  // Get positions of W in the pdeSys object.
+  unsigned solWPdeIndex[DIM];
+  solWPdeIndex[0] = mlPdeSys->GetSolPdeIndex ("W1");
+  solWPdeIndex[1] = mlPdeSys->GetSolPdeIndex ("W2");
+  solWPdeIndex[2] = mlPdeSys->GetSolPdeIndex ("W3");
+
+  // Define local W, WOld solutions.
+  std::vector < double > solW[DIM];
+  std::vector < double > solWOld[DIM];
+
+  // Local-to-global pdeSys dofs.
+  std::vector< unsigned > SYSDOF;
+
+  // Define local residual vectors.
+  vector < double > Res;
+  std::vector< double > aResx[3];
+  std::vector< double > aResY[3];
+  std::vector< double > aResW[3];
+
+  // Local (column-ordered) Jacobian matrix
+  vector < double > Jac;
+
+  KK->zero();  // Set to zero all the entries of the Global Matrix
+  RES->zero(); // Set to zero all the entries of the Global Residual
+
+
+  // Setting up solLambda1 (vol) and solLambda2 (area).
+  unsigned solLambaPdeIndex;
+
+  double solLambda1 = 0.;
+  double aResLambda1;
+  unsigned lambda1PdeDof;
+
+  double solLambda2 = 0.;
+  double aResLambda2;
+  unsigned lambda2PdeDof;
+
+  if (volumeConstraint || areaConstraint) {
+    unsigned solLambdaIndex;
+    solLambdaIndex = mlSol->GetIndex ("Lambda");
+    solLambaPdeIndex = mlPdeSys->GetSolPdeIndex ("Lambda");
+
+    if (volumeConstraint) {
+      double lambda1;
+      if (iproc == 0) {
+        lambda1 = (*sol->_Sol[solLambdaIndex]) (0); // global to local solution
+        lambda1PdeDof = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, 0);
+      }
+      MPI_Bcast (&lambda1, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast (&lambda1PdeDof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+      solLambda1 = lambda1;
+    }
+
+    if (areaConstraint) {
+      double lambda2;
+      if (iproc == 0) {
+        lambda2 = (*sol->_Sol[solLambdaIndex]) (volumeConstraint); // global to local solution
+        lambda2PdeDof = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, volumeConstraint);
+      }
+      MPI_Bcast (&lambda2, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Bcast (&lambda2PdeDof, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+      solLambda2 = lambda2;
+    }
+
+    std::vector < double > value (2);
+    std::vector < int > row (1);
+    std::vector < int > columns (2);
+    value[0] = 1;
+    value[1] = -1;
+    columns[1] = (volumeConstraint) ? lambda1PdeDof : lambda2PdeDof;
+
+    // For equations other than Lagrange multiplier:
+    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+      if (iel > volumeConstraint * areaConstraint) {
+        row[0] = pdeSys->GetSystemDof (solLambdaIndex, solLambaPdeIndex, 0, iel);
+        columns[0] = row[0];
+        KK->add_matrix_blocked (value, row, columns);
+      }
+    }
+  }
+
+  // Initialize area, volume, P-Willmore energy.
+  double surface = 0.;
+  double volume = 0.;
+  double energy = 0.;
+
+
+
+  // ELEMENT LOOP: each process loops only on the elements that it owns.
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    // Number of solution element dofs.
+    short unsigned ielGeom = msh->GetElementType (iel);
+    unsigned nxDofs  = msh->GetElementDofNumber (iel, solxType);
+    unsigned nYDofs  = msh->GetElementDofNumber (iel, solYType);
+    unsigned nWDofs  = msh->GetElementDofNumber (iel, solWType);
+
+    // Resize solution vectors.
+    for (unsigned K = 0; K < DIM; K++) {
+      solx[K].resize (nxDofs);
+      solxOld[K].resize (nxDofs);
+      solY[K].resize (nYDofs);
+      solYOld[K].resize (nYDofs);
+      solW[K].resize (nWDofs);
+      solWOld[K].resize (nWDofs);
+    }
+
+    // Convenience variable for keeping track of problem size.
+    unsigned sizeAll = DIM * (nxDofs + nYDofs +  nWDofs) + volumeConstraint + areaConstraint;
+
+    // Resize local arrays.
+    SYSDOF.resize (sizeAll);
+
+    Res.assign (sizeAll, 0.);
+    Jac.assign (sizeAll * sizeAll, 0.);
+
+    for (unsigned K = 0; K < DIM; K++) {
+      aResx[K].assign (nxDofs, 0.);  //resize and set to zero
+      aResY[K].assign (nYDofs, 0.);  //resize and set to zero
+      aResW[K].assign (nWDofs, 0.);  //resize and zet to zero
+    }
+    aResLambda1 = 0.;
+    aResLambda2 = 0.;
+
+    // Loop which handles local storage of global mapping and solution X.
+    for (unsigned i = 0; i < nxDofs; i++) {
+
+      // Global-to-local mapping between solution node and solution dof.
+      unsigned iDDof = msh->GetSolutionDof (i, iel, solxType);
+      unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
+
+      for (unsigned K = 0; K < DIM; K++) {
+        solxOld[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + (*sol->_SolOld[solDxIndex[K]]) (iDDof);
+        solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + (*sol->_Sol[solDxIndex[K]]) (iDDof);
+
+        // Global-to-global mapping between solution node and pdeSys dof.
+        SYSDOF[K * nxDofs + i] = pdeSys->GetSystemDof (solDxIndex[K], solDxPdeIndex[K], i, iel);
+      }
+    }
+
+    // Loop which handles local storage of global mapping and solution Y.
+    for (unsigned i = 0; i < nYDofs; i++) {
+
+      // Global-to-local mapping between solution node and solution dof.
+      unsigned iYDof = msh->GetSolutionDof (i, iel, solYType);
+      for (unsigned K = 0; K < DIM; K++) {
+
+        // Global-to-local solutions.
+        solYOld[K][i] = (*sol->_SolOld[solYIndex[K]]) (iYDof);
+        solY[K][i] = (*sol->_Sol[solYIndex[K]]) (iYDof);
+
+        // Global-to-global mapping between solution node and pdeSys dof.
+        SYSDOF[DIM * nxDofs + K * nYDofs + i] =
+          pdeSys->GetSystemDof (solYIndex[K], solYPdeIndex[K], i, iel);
+      }
+    }
+
+    // Loop which handles local storage of global mapping and solution W.
+    for (unsigned i = 0; i < nWDofs; i++) {
+
+      // Global-to-local mapping between solution node and solution dof.
+      unsigned iWDof = msh->GetSolutionDof (i, iel, solWType);
+      for (unsigned K = 0; K < DIM; K++) {
+
+        // Global-to-local solutions.
+        solWOld[K][i] = (*sol->_SolOld[solWIndex[K]]) (iWDof);
+        solW[K][i] = (*sol->_Sol[solWIndex[K]]) (iWDof);
+
+        // Global-to-global mapping between solution node and pdeSys dof.
+        SYSDOF[DIM * (nxDofs + nYDofs) + K * nWDofs + i] =
+          pdeSys->GetSystemDof (solWIndex[K], solWPdeIndex[K], i, iel);
+      }
+    }
+
+    // Conditions for local storage of global Lagrange multipliers.
+    if (volumeConstraint) {
+      SYSDOF[sizeAll - 1u - areaConstraint ] = lambda1PdeDof;
+    }
+
+    if (areaConstraint) {
+      SYSDOF[sizeAll - 1u ] = lambda2PdeDof;
+    }
+
+    // begin GAUSS POINT LOOP
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solxType]->GetGaussPointNumber(); ig++) {
+
+      const double *phix;  // local test function
+      const double *phix_uv[dim]; // first order derivatives in (u,v)
+
+      const double *phiY;  // local test function
+
+      const double *phiW;  // local test function
+      const double *phiW_uv[dim]; // first order derivatives in (u,v)
+
+      double weight; // gauss point weight
+
+      //Extract Gauss point weight, test functions, and their partial derivatives.
+      // "0" is derivative in u, "1" is derivative in v.
+      weight = msh->_finiteElement[ielGeom][solxType]->GetGaussWeight (ig);
+
+      phix = msh->_finiteElement[ielGeom][solxType]->GetPhi (ig);
+      phix_uv[0] = msh->_finiteElement[ielGeom][solxType]->GetDPhiDXi (ig);
+      phix_uv[1] = msh->_finiteElement[ielGeom][solxType]->GetDPhiDEta (ig);
+
+      phiY = msh->_finiteElement[ielGeom][solYType]->GetPhi (ig);
+
+      phiW = msh->_finiteElement[ielGeom][solWType]->GetPhi (ig);
+      phiW_uv[0] = msh->_finiteElement[ielGeom][solWType]->GetDPhiDXi (ig);
+      phiW_uv[1] = msh->_finiteElement[ielGeom][solWType]->GetDPhiDEta (ig);
+
+      // Initialize quantities xNew, xOld, Y, W at the Gauss points.
+      double solxNewg[3] = {0., 0., 0.};
+      double solxOldg[3] = {0., 0., 0.};
+      double solYNewg[3] = {0., 0., 0.};
+      double solYOldg[3] = {0., 0., 0.};
+      double solWNewg[3] = {0., 0., 0.};
+
+      // Initialize derivatives of x and W (new, middle, old) at the Gauss points.
+      double solxNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      double solWNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+
+      double solxOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      double solWOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+
+      for (unsigned K = 0; K < DIM; K++) {
+        for (unsigned i = 0; i < nxDofs; i++) {
+          solxNewg[K] += phix[i] * solx[K][i];
+          solxOldg[K] += phix[i] * solxOld[K][i];
+        }
+        for (unsigned i = 0; i < nYDofs; i++) {
+          solYNewg[K] += phiY[i] * solY[K][i];
+          solYOldg[K] += phiY[i] * solYOld[K][i];
+        }
+        for (unsigned i = 0; i < nWDofs; i++) {
+          solWNewg[K] += phiW[i] * solW[K][i];
+        }
+
+        for (int j = 0; j < dim; j++) {
+          for (unsigned i = 0; i < nxDofs; i++) {
+            solxNew_uv[K][j] += phix_uv[j][i] * solx[K][i];
+            solxOld_uv[K][j] += phix_uv[j][i] * solxOld[K][i];
+          }
+        }
+
+        for (int j = 0; j < dim; j++) {
+          for (unsigned i = 0; i < nWDofs; i++) {
+            solWNew_uv[K][j] += phiW_uv[j][i] * solW[K][i];
+            solWOld_uv[K][j] += phiW_uv[j][i] * solWOld[K][i];
+          }
+        }
+      }
+
+      // Computing the metric, metric determinant, and area element.
+      double g[dim][dim] = {{0., 0.}, {0., 0.}};
+      for (unsigned i = 0; i < dim; i++) {
+        for (unsigned j = 0; j < dim; j++) {
+          for (unsigned K = 0; K < DIM; K++) {
+            g[i][j] += solxOld_uv[K][i] * solxOld_uv[K][j];
+          }
+        }
+      }
+      double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
+      double Area = weight * sqrt (detg);
+
+      // Computing the unit normal vector N.
+      double normal[DIM];
+      normal[0] = normalSign * (solxOld_uv[1][0] * solxOld_uv[2][1]
+                                - solxOld_uv[2][0] * solxOld_uv[1][1]) / sqrt (detg);
+      normal[1] = normalSign * (solxOld_uv[2][0] * solxOld_uv[0][1]
+                                - solxOld_uv[0][0] * solxOld_uv[2][1]) / sqrt (detg);
+      normal[2] = normalSign * (solxOld_uv[0][0] * solxOld_uv[1][1]
+                                - solxOld_uv[1][0] * solxOld_uv[0][1]) / sqrt (detg);
+
+      // Computing Y.N and |Y|^2, which are essentially 2H and 4H^2.
+      double YdotN = 0.;
+      double YdotY = 0.;
+      for (unsigned K = 0; K < DIM; K++) {
+        YdotN += solYOldg[K] * normal[K];
+        YdotY += solYOldg[K] * solYOldg[K];
+      }
+      double signYdotN = (YdotN >= 0.) ? 1. : -1.;
+
+      // Some necessary quantities when working with polynomials.
+      double sumP1 = 0.;
+      double sumP2 = 0.;
+      double sumP3 = 0.;
+      for (unsigned p = 0; p < 3; p++) {
+        double signP = (P[p] % 2u == 0) ? 1. : signYdotN;
+        sumP1 += signP * ap[p] * P[p] * pow (YdotY, (P[p] - 2.) / 2.);
+        sumP2 += signP * ap[p] * (1. - P[p]) * pow (YdotY , P[p] / 2.);
+        sumP3 += signP * ap[p] * pow (YdotY, P[p] / 2.);
+      }
+
+      // Computing the metric inverse
+      double gi[dim][dim];
+      gi[0][0] =  g[1][1] / detg;
+      gi[0][1] = -g[0][1] / detg;
+      gi[1][0] = -g[1][0] / detg;
+      gi[1][1] =  g[0][0] / detg;
+
+      // Computing the "reduced Jacobian" g^{ij}X_j .
+      double Jir[dim][DIM] = {{0., 0., 0.}, {0., 0., 0.}};
+      for (unsigned i = 0; i < dim; i++) {
+        for (unsigned J = 0; J < DIM; J++) {
+          for (unsigned k = 0; k < dim; k++) {
+            Jir[i][J] += gi[i][k] * solxOld_uv[J][k];
+          }
+        }
+      }
+
+      // Initializing tangential gradients of X and W (new, middle, old).
+      double solxNew_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      double solxOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+
+      double solWNew_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      double solWOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+
+      // Computing tangential gradients defined above.
+      for (unsigned I = 0; I < DIM; I++) {
+        for (unsigned J = 0; J < DIM; J++) {
+          for (unsigned k = 0; k < dim; k++) {
+            solxNew_Xtan[I][J] += solxNew_uv[I][k] * Jir[k][J];
+            solxOld_Xtan[I][J] += solxOld_uv[I][k] * Jir[k][J];
+
+            solWNew_Xtan[I][J] += solWNew_uv[I][k] * Jir[k][J];
+            solWOld_Xtan[I][J] += solWOld_uv[I][k] * Jir[k][J];
+
+          }
+        }
+      }
+
+      // Define and compute tangential gradients of test functions for X and W.
+      std::vector < double > phiW_Xtan[DIM];
+      std::vector < double > phix_Xtan[DIM];
+
+      for (unsigned J = 0; J < DIM; J++) {
+        phix_Xtan[J].assign (nxDofs, 0.);
+        phiW_Xtan[J].assign (nWDofs, 0.);
+
+        for (unsigned inode  = 0; inode < nxDofs; inode++) {
+          for (unsigned k = 0; k < dim; k++) {
+            phix_Xtan[J][inode] += phix_uv[k][inode] * Jir[k][J];
+          }
+        }
+
+        for (unsigned inode  = 0; inode < nWDofs; inode++) {
+          for (unsigned k = 0; k < dim; k++) {
+            phiW_Xtan[J][inode] += phiW_uv[k][inode] * Jir[k][J];
+          }
+        }
+      }
+
+      // Implement the curvature equation Y = \Delta X .
+      for (unsigned K = 0; K < DIM; K++) {
+        for (unsigned i = 0; i < nxDofs; i++) {
+          unsigned irow = K * nxDofs + i;
+          unsigned istart = irow * sizeAll;
+
+          double term1 = 0.;
+          for (unsigned J = 0; J < DIM; J++) {
+            term1 +=  phix_Xtan[J][i] * solxNew_Xtan[K][J]; // the field x is new (i + 1) but differentiated on the surface at (i)
+          }
+          Res[irow] -= (solYNewg[K] * phix[i] + term1) * Area;
+
+          unsigned jstart = istart + K * nxDofs;
+          for (unsigned j = 0; j < nxDofs; j++) {
+            term1 = 0.;
+            for (unsigned J = 0; J < DIM; J++) {
+              term1 += phix_Xtan[J][i] * phix_Xtan[J][j];
+            }
+            Jac [jstart + j] += term1 * Area;
+          }
+
+          jstart = istart + DIM * nxDofs + K * nYDofs;
+          for (unsigned j = 0; j < nYDofs; j++) {
+            Jac [jstart + j] += phix[i] * phiY[j] * Area;
+          }
+
+        }
+
+        // Implement the equation relating Y and W.
+        for (unsigned i = 0; i < nYDofs; i++) {
+          unsigned irow = DIM * nxDofs + K * nYDofs + i;
+          unsigned istart = irow * sizeAll;
+          
+          Res[irow] -= (solWNewg[K] - sumP1 * solYNewg[K]) * phiY[i] * Area;
+
+          unsigned jstart = istart + DIM * nxDofs + K * nYDofs;
+          for (unsigned j = 0; j < nYDofs; j++) {
+            Jac[jstart + j] += - phiY[i] * sumP1 * phiY[j] * Area;
+          }
+
+          jstart = istart + DIM * (nxDofs + nYDofs) + K * nWDofs;
+          for (unsigned j = 0; j < nWDofs; j++) {
+            Jac[jstart + j] += phiY[i] * phiW[j] * Area;
+          }
+
+        }
+
+        //BEGIN P-Willmore equation.
+        for (unsigned i = 0; i < nWDofs; i++) {
+          double term0 = 0.;
+          double termLambda2 = 0.;
+          double term1 = 0.;
+          double term2 = 0.;
+          double term3 = 0.;
+          double term4;
+         
+          for (unsigned J = 0; J < DIM; J++) {
+            term0 += solWNew_Xtan[K][J] * phiW_Xtan[J][i]; // the field W is new (i + 1) but differentiated on the surface at (i)
+            termLambda2 += solxOld_Xtan[K][J] * phiW_Xtan[J][i];
+            term1 += solxNew_Xtan[K][J] * phiW_Xtan[J][i];
+            term2 += solWNew_Xtan[J][J];
+            term4 = 0.;
+            for (unsigned L = 0; L < DIM; L++) { // the fields W and x are old (i) differentiated on the surface at (i)
+              term4 += solxOld_Xtan[L][J] * solWOld_Xtan[L][K] + solxOld_Xtan[L][K] * solWOld_Xtan[L][J];
+            }
+            term3 += phiW_Xtan[J][i] * term4;
+            /* this is the trick we learned from Dzuik: basically in magnitude term3 = 2 term0, so -term0 + term3 = + term0 = 1/2 term3,
+             but the stability sign comes from -term0, for this reason term0 is taken more implicitly (i + 1), and term3/term4 is semiexplicit (i),
+             It is shockingly how everything works and any small change causes the solver to crash */
+          }
+          unsigned irow = DIM * (nxDofs + nYDofs) + K * nWDofs + i;
+          unsigned istart = irow * sizeAll;
+          
+          Res[irow] -= ( ( (solLambda1 /*- YdotN * solLambda2*/) * normal[K] + (solxNewg[K] - solxOldg[K])  / dt) * phiW[i]
+                         + solLambda2 * termLambda2
+                         - term0
+                         + sumP2 * term1
+                         - term2 * phiW_Xtan[K][i]
+                         + term3
+                       ) * Area;
+
+          unsigned jstart = istart + K * nxDofs;  
+          for (unsigned j = 0; j < nxDofs; j++) {
+            double term1 = 0.;
+            for (unsigned J = 0; J < DIM; J++) {
+              term1 += phix_Xtan[J][i] * phiW_Xtan[J][j];
+            }
+            Jac [jstart + j] += (phiW[i] * phix[j] / dt + sumP2 * term1) * Area;
+          }             
+                       
+          jstart = istart + DIM * (nxDofs + nYDofs) + K * nWDofs;             
+          for (unsigned j = 0; j < nWDofs; j++) {
+            double term0 = 0.;
+            for (unsigned J = 0; J < DIM; J++) {
+              term0 += phiW_Xtan[J][i] * phiW_Xtan[J][j];
+              unsigned jcol = DIM * (nxDofs + nYDofs) + J * nWDofs + j;
+              Jac[istart + jcol] += - phiW_Xtan[K][i] * phiW_Xtan[J][j] * Area;
+            }
+            Jac[jstart + j] += - term0 * Area;
+          }
+
+          if (volumeConstraint) {
+            unsigned jcol = sizeAll - 1u - areaConstraint;
+            Jac [istart + jcol] += phiW[i] * normal[K] * Area;
+          }
+          if (areaConstraint) {
+            unsigned jcol = sizeAll - 1u;
+            Jac [istart + jcol] += termLambda2 * Area;
+          }
+        }
+        //END P-Willmore equation.
+
+        // Lagrange multiplier (volume) equation Dx.N = 0.
+        if (volumeConstraint) {
+          unsigned irow = sizeAll - 1u - areaConstraint;
+          unsigned istart = irow * sizeAll;
+          Res[irow] -= ( (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+          unsigned jstart = istart +  K * nxDofs;
+          double term0 = normal[K] * Area;
+          for (unsigned j = 0; j < nxDofs; j++) {
+            Jac [jstart + j] += term0 * Area;
+          }
+        }
+
+        // Lagrange multiplier (area) equation.
+        if (areaConstraint) {
+          unsigned irow = sizeAll - 1u;
+          unsigned istart = irow * sizeAll;
+          Res[irow] -= (-YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+          unsigned jstart = istart +  K * nxDofs;
+          double term0 = -YdotN * normal[K] * Area;
+          for (unsigned j = 0; j < nxDofs; j++) {
+            Jac [jstart + j] += term0 * phix[j];
+          }
+
+          // aResLambda2 += - ( solYNewg[K] - solYOldg[K]) * normal[K] * Area;
+
+          // double term1t = 0.;
+          // for (unsigned J = 0; J < DIM; J++) {
+          //   term1t +=  solx_Xtan[K][J] * (solxNew_Xtan[K][J] - solxOld_Xtan[K][J]) ;
+          //   //term1t += 0.5 * (solxNewg[K] * solYOldg[K] + solxOldg[K] * solYNewg[K]) - solxOldg[K] * solYOldg[K];
+          // }
+          // aResLambda2 += term1t * Area;
+
+        }
+      }
+
+      // Compute new surface area, volume, and P-Willmore energy.
+      for (unsigned K = 0; K < DIM; K++) {
+        surface += Area;
+      }
+      for (unsigned K = 0; K < DIM; K++) {
+        volume += normalSign * (solxNewg[K] * normal[K]) * Area;
+      }
+      energy += sumP3 * Area;
+
+    } // end GAUSS POINT LOOP.
+
+    //------------------------------------------------------------------------
+    // Add the local Matrix/Vector into the global Matrix/Vector
+    RES->add_vector_blocked (Res, SYSDOF);
+    KK->add_matrix_blocked (Jac, SYSDOF, SYSDOF);
+  } // End ELEMENT LOOP for each process.
+
+  RES->close();
+  KK->close();
+
+  // Get data from each process running in parallel.
+  double surfaceAll;
+  MPI_Reduce (&surface, &surfaceAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  if (firstTime) surface0 = surfaceAll;
+  std::cout << "SURFACE = " << surfaceAll << " SURFACE0 = " << surface0 <<  " error = " << (surface0 - surfaceAll) / surface0 << std::endl;
+
+  double volumeAll;
+  MPI_Reduce (&volume, &volumeAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  if (firstTime) volume0 = volumeAll;
+  std::cout << "VOLUME = " << volumeAll << " VOLUME0 = " << volume0 <<  " error = " << (volume0 - volumeAll) / volume0 << std::endl;
+
+  double energyAll;
+  MPI_Reduce (&energy, &energyAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  std::cout << "ENERGY = " << energyAll << std::endl;
+
+
+  firstTime = false;
+//   VecView ( (static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_SELF);
+//   MatView ( (static_cast<PetscMatrix*> (KK))->mat(), PETSC_VIEWER_STDOUT_SELF);
+
+//     PetscViewer    viewer;
+//     PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+//     PetscObjectSetName ( (PetscObject) viewer, "PWilmore matrix");
+//     PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
+//     MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
+//     double a;
+//     std::cin >> a;
+
+} // end AssemblePWillmore.
