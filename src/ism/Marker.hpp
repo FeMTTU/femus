@@ -188,6 +188,12 @@ namespace femus {
         }
       }
 
+      void SetMarkerTangentGlobal (const std::vector < std::vector <double> >  &tangent) {
+        if(_iproc == _mproc){
+          SetMarkerTangent (tangent);
+        }  
+      }
+      
       void SetMarkerTangent (const std::vector < std::vector <double> >  &tangent) {
         if (_markerType == INTERFACE) {
           for (unsigned k = 0; k < _dim - 1; k++) {
