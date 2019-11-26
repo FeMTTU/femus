@@ -1532,7 +1532,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         if (volumeConstraint) {
           unsigned irow = sizeAll - 1u - areaConstraint;
           unsigned istart = irow * sizeAll;
-          Res[irow] -= 0 * ( (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+          Res[irow] -= ( (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
           unsigned jstart = istart +  K * nxDofs;
           double term0 = normal[K] * Area;
           for (unsigned j = 0; j < nxDofs; j++) {
@@ -1544,7 +1544,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         if (areaConstraint) {
           unsigned irow = sizeAll - 1u;
           unsigned istart = irow * sizeAll;
-          Res[irow] -= 0 * (-YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+          Res[irow] -= (-YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
           unsigned jstart = istart +  K * nxDofs;
           double term0 = -YdotN * normal[K] * Area;
           for (unsigned j = 0; j < nxDofs; j++) {
