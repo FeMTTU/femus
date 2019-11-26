@@ -99,7 +99,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
   //variable-name handling
   const char varname[10][5] = {"DX", "DY", "DZ", "VX", "VY", "VZ"};
 
-  double dmax = 3.125e-06 * sqrt(2.)/2;
+  double dmax = 3.125e-06 * sqrt (2.) / 2;
   vector <double> nodeDist;
 
   vector <unsigned> indexSolD (dim);
@@ -123,7 +123,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
   unsigned indexSolM = mlSol->GetIndex ("NodeFlag");
   unsigned indexSolM1 = mlSol->GetIndex ("M");
-  
+
   double  indexNodeDist = mlSol->GetIndex ("NodeDist");
 
 
@@ -158,7 +158,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
     solidFlag.resize (nDofs);
     solidFlag1.resize (nDofs);
-    nodeDist.resize(nDofs); 
+    nodeDist.resize (nDofs);
     for (unsigned  k = 0; k < dim; k++) {
       solD[k].resize (nDofs);
       solDOld[k].resize (nDofs);
@@ -181,12 +181,12 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
       unsigned idof = msh->GetSolutionDof (i, iel, solType);
 
       solidFlag[i] = ( (*mysolution->_Sol[indexSolM]) (idof) > 0.5) ? true : false;
-      
+
       solidFlag1[i] = ( (*mysolution->_Sol[indexSolM1]) (idof) > 0.5) ? true : false;
       if (solidFlag1[i]) counter++;
-      
 
-      nodeDist[i] =(*mysolution->_Sol[indexNodeDist]) (idof);
+
+      nodeDist[i] = (*mysolution->_Sol[indexNodeDist]) (idof);
 
       for (unsigned  k = 0; k < dim; k++) {
         solD[k][i] = (*mysolution->_Sol[indexSolD[k]]) (idof);
@@ -273,21 +273,26 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
             wlaplace1V +=  gradPhi[i * dim + j] * (gradSolVg[k][j] + gradSolVg[j][k]);
             wlaplace1D +=  gradPhiHat[i * dim + j] * (gradSolDgHat[k][j] + gradSolDgHat[j][k]);
           }
-          if (!solidFlag[i]) { //kinematic equation in the fluid nodes
-            double stiffness = (MPMmaterial == 0) ? .00000000000000001 : 0.000001;
-            //aRhsD[k][i] += - stiffness * wlaplace1D * weightHat;
-            if (!solidFlag1[i]) {
-              aRhsD[k][i] += - stiffness * wlaplace1D * weightHat;
-            }
-            else {
-              //aRhsD[k][i] += phiHat[i] * (-0.00000000 * wlaplace1D + solVg[k] - (solDg[k] - solDgOld[k]) / dt) * weightHat;
-              //aRhsD[k][i] += phiHat[i] * (-muf * wlaplace1V + solP/*+ solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt*/) * weightHat;
-              
-              //std::cout << nodeDist[i]/dmax <<" ";
-              
-              aRhsD[k][i] += ( (- muFluid * wlaplace1V + gradPhi[i * dim + k] * solPg) * (nodeDist[i]/dmax) + 
-                              phiHat[i] * (solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt)) * weight;
-            }
+
+//           if (!solidFlag[i]) { //kinematic equation in the fluid nodes
+//             double stiffness = (MPMmaterial == 0) ? .00000000000000001 : 0.000001;
+//             //aRhsD[k][i] += - stiffness * wlaplace1D * weightHat;
+//             if (!solidFlag1[i]) {
+//               aRhsD[k][i] += - stiffness * wlaplace1D * weightHat;
+//             }
+//             else {
+//               //aRhsD[k][i] += phiHat[i] * (-0.00000000 * wlaplace1D + solVg[k] - (solDg[k] - solDgOld[k]) / dt) * weightHat;
+//               //aRhsD[k][i] += phiHat[i] * (-muf * wlaplace1V + solP/*+ solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt*/) * weightHat;
+//
+//               //std::cout << nodeDist[i]/dmax <<" ";
+//
+//               aRhsD[k][i] += ( (- muFluid * wlaplace1V + gradPhi[i * dim + k] * solPg) * (nodeDist[i]/dmax) +
+//                               phiHat[i] * (solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt)) * weight;
+//             }
+//           }
+          if (!solidFlag1[i]) {
+            double stiffness = (MPMmaterial == 0) ? 1 : 1;
+            aRhsD[k][i] +=  - stiffness * wlaplace1D * weightHat;
           }
           else { //kinematic equation in the solid nodes
             aRhsV[k][i] += phiHat[i] * (solV[k][i] - (solD[k][i] - solDOld[k][i]) / dt) * weightHat;
@@ -304,7 +309,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
               wlaplace  +=  gradPhi[i * dim + j] * (gradSolVg[k][j] + gradSolVg[j][k]);
               advection  +=  phi[i] * (solVg[j] - (solDg[j] - solDgOld[j]) / dt) * gradSolVg[k][j];
             }
-            if (!solidFlag[i]) {
+            if (!solidFlag1[i]) {
               aRhsV[k][i] += (- rhoFluid * (solVg[k] - solVgOld[k]) / dt - rhoFluid * advection - muFluid * wlaplace + gradPhi[i * dim + k] * solPg) * weight;
             }
             else {
@@ -316,18 +321,23 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
       for (unsigned i = 0; i < nDofsP; i++) {
         for (unsigned  k = 0; k < dim; k++) {
-          if (MPMmaterial == nDofs) {  //all cells that are completely MPM solid
-            aRhsP[i] += phiP[i] * (solPg) * weight;
-          }
-          else if (MPMmaterial > 0 || test) {  //all cells that are completely MPM solid
-            aRhsP[i] += phiP[i] * (gradSolVg[k][k] + 0.01 * (solPg - solPgOld) / dt) * weight;
-          }
-          else{// if (MPMmaterial == 0) {
+//           if (MPMmaterial == nDofs) {  //all cells that are completely MPM solid
+//             aRhsP[i] += phiP[i] * (solPg) * weight;
+//           }
+//           else if (MPMmaterial > 0 || test) {  //all cells that are completely MPM solid
+//             aRhsP[i] += phiP[i] * (gradSolVg[k][k] + 0.01 * (solPg - solPgOld) / dt) * weight;
+//           }
+//           else { // if (MPMmaterial == 0) {
+//             aRhsP[i] += phiP[i] *  gradSolVg[k][k] * weight;
+//           }
+          
+          if (MPMmaterial == 0) {
             aRhsP[i] += phiP[i] *  gradSolVg[k][k] * weight;
           }
-//           else {
-//             aRhsP[i] += phiP[i] * (gradSolVg[k][k] + solPg * 0.01) * weight;
-//           }
+          else {  //all cells that are completely MPM solid
+            aRhsP[i] += phiP[i] * (solPg) * weight;
+          }
+          
         }
       }
     } // end gauss point loop
@@ -433,7 +443,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
             }
           }
 
-          if (solidFlag[i]) { // This is for diagonal dominance
+          if (solidFlag1[i]) { // This is for diagonal dominance
             for (unsigned k = 0; k < dim; k++) {
               aRhsD[k][i] += (phi[i] * gravity[k] - J_hat * CauchyDIR[k] / rhoMpm
                               - phi[i] * (1. / (beta * dt * dt) * SolDp[k] - 1. / (beta * dt) * SolVpOld[k] - (1. - 2.* beta) / (2. * beta) * SolApOld[k])
@@ -517,17 +527,17 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
               Dlaplace  +=  gradPhi[i * dim + j] * (gradSolDp[k][j] + gradSolDp[j][k]);
               advection  +=  phi[i] * (solVp[j] - (solDp[j] - solDpOld[j]) / dt) * gradSolVp[k][j];
             }
-            if (!solidFlag[i]) { // This is for diagonal dominance
-              aRhsV[k][i] += (- (solVp[k] - solVpOld[k]) / dt - advection +
-                              muFluid / rhoFluid * (- Vlaplace + gradPhi[i * dim + k] * (2. / 3.) * divV) 
-                              - 0.01 * muMpm / rhoFluid * Dlaplace +
-                              gradPhi[i * dim + k] * solPp / rhoFluid) * mass;
+            if (!solidFlag1[i]) { // This is for diagonal dominance
+              aRhsV[k][i] += (/*- (solVp[k] - solVpOld[k]) / dt - advection +
+                              muFluid / rhoFluid * (- Vlaplace + gradPhi[i * dim + k] * (2. / 3.) * divV)*/
+                              - 0.01 * muMpm / rhoFluid * Dlaplace /*+
+                              gradPhi[i * dim + k] * solPp / rhoFluid*/) * mass;
             }
             else { // This is for the coupling with the solid
-              aRhsD[k][i] += (- (solVp[k] - solVpOld[k]) / dt - advection +
-                              muFluid / rhoFluid * (- Vlaplace + gradPhi[i * dim + k] * (2. / 3.) * divV) 
-                              - 0.01 * muMpm / rhoFluid * Dlaplace +
-                              gradPhi[i * dim + k] * solPp / rhoFluid) * mass;
+              aRhsD[k][i] += (/*- (solVp[k] - solVpOld[k]) / dt - advection +
+                              muFluid / rhoFluid * (- Vlaplace + gradPhi[i * dim + k] * (2. / 3.) * divV)*/
+                              - 0.01 * muMpm / rhoFluid * Dlaplace /*+
+                              gradPhi[i * dim + k] * solPp / rhoFluid*/) * mass;
             }
           }
         }
@@ -1175,7 +1185,7 @@ void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line &
 //   markerOffset = fluidLine.GetMarkerOffset();
 //   std::vector<Marker*> particlesFluid = fluidLine.GetParticles();
 //   ielOld = UINT_MAX;
-// 
+//
 //   for (unsigned iMarker = markerOffset[iproc]; iMarker < markerOffset[iproc + 1]; iMarker++) {
 //     unsigned iel = particlesFluid[iMarker]->GetMarkerElement();
 //     if (iel != UINT_MAX) {
@@ -1199,7 +1209,7 @@ void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line &
 //         }
 //         std::vector<double> particleCoords (dim);
 //         particleCoords = particlesFluid[iMarker]->GetIprocMarkerCoordinates();
-// 
+//
 //         for (unsigned i = 0; i < nDofs; i++) {
 //           double currentMinDist = (*sol->_Sol[solIndexNodeDist]) (idof[i]);
 //           double newDist = 0.;

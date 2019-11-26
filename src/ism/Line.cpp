@@ -139,7 +139,7 @@ namespace femus {
 
     for (unsigned j = 0; j < _size; j++) {
       particles[j] = new Marker (x[j], 0., markerType[j], _sol, solType, true);
-      particles[j]->SetMarkerTangent (tangent[j]);  
+      particles[j]->SetMarkerTangentGlobal (tangent[j]);  
     }
     Reorder (particles);
   }
