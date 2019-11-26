@@ -205,7 +205,7 @@ int main (int argc, char** args) {
   }
 
   // Parameters for convergence and # of iterations for Willmore.
-  system.SetMaxNumberOfNonLinearIterations (1);
+  system.SetMaxNumberOfNonLinearIterations (2);
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to P-Willmore system.
@@ -270,7 +270,7 @@ int main (int argc, char** args) {
   for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
-
+    
     dt0 *= 1.02;
     if(dt0 > 0.005) dt0 = 0.005;
     
@@ -1278,6 +1278,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
       // Initialize derivatives of x and W (new, middle, old) at the Gauss points.
       double solxNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       double solWNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
 
       double solxOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
@@ -1299,6 +1300,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
             solxNew_uv[K][j] += phix_uv[j][i] * solx[K][i];
+            solx_uv[K][j] += phix_uv[j][i] * 0.5 * ( solx[K][i] + solxOld[K][i]);
             solxOld_uv[K][j] += phix_uv[j][i] * solxOld[K][i];
           }
         }
@@ -1316,7 +1318,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < dim; i++) {
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned K = 0; K < DIM; K++) {
-            g[i][j] += solxOld_uv[K][i] * solxOld_uv[K][j];
+            g[i][j] += solx_uv[K][i] * solx_uv[K][j];
           }
         }
       }
@@ -1325,12 +1327,12 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
       // Computing the unit normal vector N.
       double normal[DIM];
-      normal[0] = normalSign * (solxOld_uv[1][0] * solxOld_uv[2][1]
-                                - solxOld_uv[2][0] * solxOld_uv[1][1]) / sqrt (detg);
-      normal[1] = normalSign * (solxOld_uv[2][0] * solxOld_uv[0][1]
-                                - solxOld_uv[0][0] * solxOld_uv[2][1]) / sqrt (detg);
-      normal[2] = normalSign * (solxOld_uv[0][0] * solxOld_uv[1][1]
-                                - solxOld_uv[1][0] * solxOld_uv[0][1]) / sqrt (detg);
+      normal[0] = normalSign * (solx_uv[1][0] * solx_uv[2][1]
+                                - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
+      normal[1] = normalSign * (solx_uv[2][0] * solx_uv[0][1]
+                                - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
+      normal[2] = normalSign * (solx_uv[0][0] * solx_uv[1][1]
+                                - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
 
       // Computing Y.N and |Y|^2, which are essentially 2H and 4H^2.
       double YdotN = 0.;
@@ -1364,7 +1366,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < dim; i++) {
         for (unsigned J = 0; J < DIM; J++) {
           for (unsigned k = 0; k < dim; k++) {
-            Jir[i][J] += gi[i][k] * solxOld_uv[J][k];
+            Jir[i][J] += gi[i][k] * solx_uv[J][k];
           }
         }
       }
@@ -1372,6 +1374,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       // Initializing tangential gradients of X and W (new, middle, old).
       double solxNew_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
       double solxOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      double solx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
       double solWNew_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
       double solWOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
@@ -1383,6 +1386,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             solxNew_Xtan[I][J] += solxNew_uv[I][k] * Jir[k][J];
             solxOld_Xtan[I][J] += solxOld_uv[I][k] * Jir[k][J];
 
+            solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
+            
             solWNew_Xtan[I][J] += solWNew_uv[I][k] * Jir[k][J];
             solWOld_Xtan[I][J] += solWOld_uv[I][k] * Jir[k][J];
 
@@ -1469,7 +1474,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
           for (unsigned J = 0; J < DIM; J++) {
             term0 += solWNew_Xtan[K][J] * phiW_Xtan[J][i]; // the field W is new (i + 1) but differentiated on the surface at (i)
-            termLambda2 += solxOld_Xtan[K][J] * phiW_Xtan[J][i];
+            termLambda2 += solx_Xtan[K][J] * phiW_Xtan[J][i];
             term1 += solxNew_Xtan[K][J] * phiW_Xtan[J][i];
             term2 += solWNew_Xtan[J][J];
             term4 = 0.;
@@ -1527,7 +1532,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         if (volumeConstraint) {
           unsigned irow = sizeAll - 1u - areaConstraint;
           unsigned istart = irow * sizeAll;
-          Res[irow] -= ( (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+          Res[irow] -= 0 * ( (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
           unsigned jstart = istart +  K * nxDofs;
           double term0 = normal[K] * Area;
           for (unsigned j = 0; j < nxDofs; j++) {
@@ -1539,7 +1544,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         if (areaConstraint) {
           unsigned irow = sizeAll - 1u;
           unsigned istart = irow * sizeAll;
-          Res[irow] -= (-YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
+          Res[irow] -= 0 * (-YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
           unsigned jstart = istart +  K * nxDofs;
           double term0 = -YdotN * normal[K] * Area;
           for (unsigned j = 0; j < nxDofs; j++) {
