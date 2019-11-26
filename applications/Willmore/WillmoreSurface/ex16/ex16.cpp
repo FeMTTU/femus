@@ -161,7 +161,7 @@ int main (int argc, char** args) {
   mlSol.GenerateBdc ("All");
 
   MultiLevelProblem mlProb (&mlSol);
- 
+
   LinearImplicitSystem& systemY = mlProb.add_system < LinearImplicitSystem > ("InitY");
 
   // Add solutions Y to systemY.
@@ -270,10 +270,10 @@ int main (int argc, char** args) {
   for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    
+
     dt0 *= 1.02;
-    if(dt0 > 0.005) dt0 = 0.005;
-    
+    if (dt0 > 0.005) dt0 = 0.005;
+
     if (time_step % 1 == 0) {
       mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
 
@@ -1145,6 +1145,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   double volume = 0.;
   double energy = 0.;
 
+  double surfaceA = 0.;
+
 
 
   // ELEMENT LOOP: each process loops only on the elements that it owns.
@@ -1300,7 +1302,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
             solxNew_uv[K][j] += phix_uv[j][i] * solx[K][i];
-            solx_uv[K][j] += phix_uv[j][i] * 0.5 * ( solx[K][i] + solxOld[K][i]);
+            solx_uv[K][j] += phix_uv[j][i] * 0.5 * (solx[K][i] + solxOld[K][i]);
             solxOld_uv[K][j] += phix_uv[j][i] * solxOld[K][i];
           }
         }
@@ -1333,6 +1335,23 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
                                 - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
       normal[2] = normalSign * (solx_uv[0][0] * solx_uv[1][1]
                                 - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
+
+
+      double normalN[DIM];
+      normalN[0] = normalSign * (solxNew_uv[1][0] * solxNew_uv[2][1]
+                                 - solxNew_uv[2][0] * solxNew_uv[1][1]) / sqrt (detg);
+      normalN[1] = normalSign * (solxNew_uv[2][0] * solxNew_uv[0][1]
+                                 - solxNew_uv[0][0] * solxNew_uv[2][1]) / sqrt (detg);
+      normalN[2] = normalSign * (solxNew_uv[0][0] * solxNew_uv[1][1]
+                                 - solxNew_uv[1][0] * solxNew_uv[0][1]) / sqrt (detg);
+
+      double normalO[DIM];
+      normalO[0] = normalSign * (solxOld_uv[1][0] * solxOld_uv[2][1]
+                                 - solxOld_uv[2][0] * solxOld_uv[1][1]) / sqrt (detg);
+      normalO[1] = normalSign * (solxOld_uv[2][0] * solxOld_uv[0][1]
+                                 - solxOld_uv[0][0] * solxOld_uv[2][1]) / sqrt (detg);
+      normalO[2] = normalSign * (solxOld_uv[0][0] * solxOld_uv[1][1]
+                                 - solxOld_uv[1][0] * solxOld_uv[0][1]) / sqrt (detg);
 
       // Computing Y.N and |Y|^2, which are essentially 2H and 4H^2.
       double YdotN = 0.;
@@ -1387,7 +1406,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
             solxOld_Xtan[I][J] += solxOld_uv[I][k] * Jir[k][J];
 
             solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
-            
+
             solWNew_Xtan[I][J] += solWNew_uv[I][k] * Jir[k][J];
             solWOld_Xtan[I][J] += solWOld_uv[I][k] * Jir[k][J];
 
@@ -1544,29 +1563,40 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         if (areaConstraint) {
           unsigned irow = sizeAll - 1u;
           unsigned istart = irow * sizeAll;
-          Res[irow] -= (-YdotN * (solxNewg[K] - solxOldg[K]) * normal[K]) * Area;
-          unsigned jstart = istart +  K * nxDofs;
-          double term0 = -YdotN * normal[K] * Area;
-          for (unsigned j = 0; j < nxDofs; j++) {
-            Jac [jstart + j] += term0 * phix[j];
+
+//           Res[irow] -= ( (-YdotN * (solxNewg[K] - solxOldg[K]) + (normalN[K] - normalO[K])) * normal[K]) * Area;
+//           unsigned jstart = istart +  K * nxDofs;
+//           double term0 = -YdotN * normal[K] * Area;
+//           for (unsigned j = 0; j < nxDofs; j++) {
+//             Jac [jstart + j] += term0 * phix[j];
+//           }
+       
+          double term1 = 0.;
+          double term1d = 0.;
+          for (unsigned J = 0; J < DIM; J++) {
+            term1 += solx_Xtan[K][J] * solx_Xtan[K][J];
+            term1d += solx_Xtan[K][J] * (solxNew_Xtan[K][J] - solxOld_Xtan[K][J]);
           }
-
-          // aResLambda2 += - ( solYNewg[K] - solYOldg[K]) * normal[K] * Area;
-
-          // double term1t = 0.;
-          // for (unsigned J = 0; J < DIM; J++) {
-          //   term1t +=  solx_Xtan[K][J] * (solxNew_Xtan[K][J] - solxOld_Xtan[K][J]) ;
-          //   //term1t += 0.5 * (solxNewg[K] * solYOldg[K] + solxOldg[K] * solYNewg[K]) - solxOldg[K] * solYOldg[K];
-          // }
-          // aResLambda2 += term1t * Area;
+          //aResLambda2 += term1t * Area;
+          surfaceA += 1. / DIM * (term1 + normal[K] * normal[K]) * Area;
+          
+          Res[irow] -= ( term1d + 0*(normalN[K] - normalO[K]) * normal[K] ) * Area;
+          unsigned jstart = istart +  K * nxDofs;
+          
+          for (unsigned j = 0; j < nxDofs; j++) {
+            double term0 = 0.;
+            for (unsigned J = 0; J < DIM; J++) {
+              term0 += solx_Xtan[K][J] * phix_Xtan[J][j];
+            }
+            Jac [jstart + j] += term0 * Area;
+          }
 
         }
       }
 
       // Compute new surface area, volume, and P-Willmore energy.
-      for (unsigned K = 0; K < DIM; K++) {
-        surface += Area;
-      }
+      surface += Area;
+
       for (unsigned K = 0; K < DIM; K++) {
         volume += normalSign * (solxNewg[K] * normal[K]) * Area;
       }
@@ -1587,6 +1617,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   double surfaceAll;
   MPI_Reduce (&surface, &surfaceAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   if (firstTime) surface0 = surfaceAll;
+  std::cout << "SURFACE = " << surfaceAll << " SURFACE0 = " << surface0 <<  " error = " << (surface0 - surfaceAll) / surface0 << std::endl;
+  MPI_Reduce (&surfaceA, &surfaceAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   std::cout << "SURFACE = " << surfaceAll << " SURFACE0 = " << surface0 <<  " error = " << (surface0 - surfaceAll) / surface0 << std::endl;
 
   double volumeAll;
@@ -1611,7 +1643,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 //     double a;
 //     std::cin >> a;
 
-} 
+}
 //END Assemble System PWillmore
 
 //BEGIN Assemble SystemY
@@ -1895,9 +1927,8 @@ void AssembleSystemY (MultiLevelProblem& ml_prob) {
       }
 
       // Compute new surface area, volume, and P-Willmore energy.
-      for (unsigned K = 0; K < DIM; K++) {
-        surface += Area;
-      }
+      surface += Area;
+
       for (unsigned K = 0; K < DIM; K++) {
         volume += normalSign * (solxg[K] * normal[K]) * Area;
       }
@@ -1931,7 +1962,7 @@ void AssembleSystemY (MultiLevelProblem& ml_prob) {
 
 
   firstTime = false;
-} 
+}
 //END Assemble SystemY
 
 
@@ -2195,5 +2226,6 @@ void AssembleSystemW (MultiLevelProblem& ml_prob) {
 
   RES->close();
   KK->close();
-} 
+}
 //END Assemble SystemW
+
