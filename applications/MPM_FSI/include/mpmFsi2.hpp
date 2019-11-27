@@ -1395,8 +1395,11 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
   for (unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
     unsigned cnt = static_cast < unsigned > ( (*sol->_Sol[indexNodeFlag]) (i) + 0.5);
     if (cnt == 0) {
-      std::cout << "projection failed\n";
-      abort();
+      std::cout << "projection failed\n"; //abort();
+      std::cout << "balotto trick initiated AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+      for (unsigned k = 0; k < dim; k++) {
+        sol->_Sol[indexSolV[k]]->set (i, (*sol->_SolOld[indexSolV[k]]) (i));
+      }
     }
     else if (cnt > 1) {
       counter -= (cnt - 1);
