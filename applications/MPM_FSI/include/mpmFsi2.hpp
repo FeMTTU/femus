@@ -1255,7 +1255,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
   vector< vector< double > > solD (dim);     // local solution (displacement)
   vector< vector< double > > solDOld (dim);     // local solution (displacement)
   vector< vector< double > > solV (dim);     // local solution (velocity)
-  vector< vector< double > > solVNew (dim);     // local solution (velocity)
+  //vector< vector< double > > solVNew (dim);     // local solution (velocity)
   vector< bool > nodeFlag;     // local solution (velocity)
   vector< unsigned > idof;     // local solution (velocity)
 
@@ -1283,6 +1283,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
 
   for (unsigned k = 0; k < dim; k++) {
     (*sol->_SolOld[indexSolV[k]]) = (*sol->_Sol[indexSolV[k]]);
+    sol->_Sol[indexSolV[k]]->zero();
   }
 
   unsigned counter = 0;
@@ -1298,7 +1299,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
       solD[k].resize (nDofs);
       solDOld[k].resize (nDofs);
       solV[k].resize (nDofs);
-      solVNew[k].assign (nDofs, 0.);
+      //solVNew[k].assign (nDofs, 0.);
       vx[k].resize (nDofs);
     }
     nodeFlag.resize (nDofs);
@@ -1353,8 +1354,6 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
           }
         }
 
-
-
         if (insideHull) { //rough test
           if (!aPIsInitialized) {
             aPIsInitialized = true;
@@ -1367,7 +1366,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
           GetClosestPointInReferenceElement (vx, xp[i], ielType, xi);
           GetInverseMapping (solType, ielType, aP, xp[i], xi);
 
-          bool insideDomain = CheckIfPointIsInsideReferenceDomain (xi, ielType, 1.e-6); // fine testing
+          bool insideDomain = CheckIfPointIsInsideReferenceDomain (xi, ielType, 1.e-3); // fine testing
 
           if (insideDomain) {
             sol->_Sol[indexNodeFlag]->add (idof[i], 1.);
@@ -1375,10 +1374,11 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
             //std::cout << iel << " " << i << "  ";
             counter++;
             for (unsigned k = 0; k < dim; k++) {
+              double solVk = 0.;  
               for (unsigned j = 0; j < nDofs; j++)    {
-                solVNew[k][i] += phi[j] * solV[k][j];
+                solVk += phi[j] * solV[k][j];
               }
-              sol->_Sol[indexSolV[k]]->add (idof[i], solVNew[k][i]);
+              sol->_Sol[indexSolV[k]]->add (idof[i], solVk);
             }
           }
         }
@@ -1404,7 +1404,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
     else if (cnt > 1) {
       counter -= (cnt - 1);
       for (unsigned k = 0; k < dim; k++) {
-        double velk = (*sol->_SolOld[indexSolV[k]]) (i) / (cnt - 1);
+        double velk = (*sol->_SolOld[indexSolV[k]]) (i) / cnt;
         sol->_Sol[indexSolV[k]]->set (i, velk);
       }
     }
