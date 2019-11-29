@@ -1251,6 +1251,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
   const unsigned dim = msh->GetDimension();
 
   unsigned iproc  = msh->processor_id();
+  unsigned nprocs = msh->n_processors();
 
   vector< vector< double > > solD (dim);     // local solution (displacement)
   vector< vector< double > > solDOld (dim);     // local solution (displacement)
@@ -1287,6 +1288,8 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
   }
 
   unsigned counter = 0;
+
+  std::vector < std::vector < std::vector <double > > > aP (3);
 
   //BEGIN loop on elements
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -1327,7 +1330,6 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
       }
     }
 
-    std::vector < std::vector < std::vector <double > > > aP (3);
     bool aPIsInitialized = false;
 
     double r;
@@ -1364,17 +1366,31 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
           }
           std::vector <double> xi;
           GetClosestPointInReferenceElement (vx, xp[i], ielType, xi);
-          GetInverseMapping (solType, ielType, aP, xp[i], xi);
+          
+          bool inverseMapping = GetInverseMapping (solType, ielType, aP, xp[i], xi, 100);
+          if(!inverseMapping){
+            std::cout << "InverseMapping failed at " << iel << " " << idof[i] << std::endl;    
+          }
+          
 
           bool insideDomain = CheckIfPointIsInsideReferenceDomain (xi, ielType, 1.e-3); // fine testing
+          
+//           if( idof[i] == 939) {
+//             std::cout << iel << " " << xp[i][0] << " " << xp[i][1] << " "<< xi[0]<< " " <<xi[1]<<std::endl;
+//             for(unsigned jnode = 0; jnode < nDofs; jnode++){
+//               std::cout.precision(14);
+//               std::cout << idof[jnode] << " " << vx[0][jnode] <<" " << vx[1][jnode] << std::endl;
+//               std::cout.precision(7);
+//             }
+//           }
 
-          if (insideDomain) {
+          if (inverseMapping && insideDomain) {
             sol->_Sol[indexNodeFlag]->add (idof[i], 1.);
             msh->_finiteElement[ielType][solType]->GetPhi (phi, xi);
             //std::cout << iel << " " << i << "  ";
             counter++;
             for (unsigned k = 0; k < dim; k++) {
-              double solVk = 0.;  
+              double solVk = 0.;
               for (unsigned j = 0; j < nDofs; j++)    {
                 solVk += phi[j] * solV[k][j];
               }
@@ -1392,10 +1408,12 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
     sol->_Sol[indexSolV[k]]->close();
   }
 
+  unsigned c0 = 0;
   for (unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
     unsigned cnt = static_cast < unsigned > ( (*sol->_Sol[indexNodeFlag]) (i) + 0.5);
     if (cnt == 0) {
-      std::cout << "projection failed\n"; //abort();
+      c0++;
+      std::cout << "projection failed at " << i <<" \n"; //abort();
       std::cout << "balotto trick initiated AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
       for (unsigned k = 0; k < dim; k++) {
         sol->_Sol[indexSolV[k]]->set (i, (*sol->_SolOld[indexSolV[k]]) (i));
@@ -1410,11 +1428,166 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
     }
   }
 
+  unsigned counterAll;
+  MPI_Reduce (&counter, &counterAll, 1, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD);
+  std::cout << "COUNTER = " << counterAll << " " << msh->GetTotalNumberOfDofs (solType) << std::endl;
+
+  idof.resize (c0);
+  vector< double > xp0 (c0 * dim);
+  
+  unsigned c1 = 0;
+  for (unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
+    if (static_cast < unsigned > ( (*sol->_Sol[indexNodeFlag]) (i) + 0.5) == 0) {
+      idof[c1] = i;
+      for (unsigned k = 0; k < dim; k++) {
+        xp0[c1 * dim + k] = (*msh->_topology->_Sol[k]) (i);
+      }
+      c1++;
+      if (c1 == c0) break;
+    }
+  }
+
+  vector< double > xp1;
+  for (unsigned jproc = 0; jproc < nprocs; jproc++) {
+    c1 = c0;
+    MPI_Bcast (&c1, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
+    if (c1) {
+      xp1.resize (c1 * dim);
+      if (iproc == jproc) {
+        for (unsigned i = 0; i < c1; i++) {
+          for (unsigned k = 0; k < dim; k++) {
+            xp1[i * dim + k] = xp0[i * dim + k];
+          }
+        }
+      }
+      MPI_Bcast (&xp1[0], c1 * dim, MPI_DOUBLE, jproc, PETSC_COMM_WORLD);
+
+      for (unsigned i = 0; i < c1; i++) {
+        std::vector < double > xp (dim);
+        for (unsigned k = 0; k < dim; k++) {
+          xp[k] = xp1[i * dim + k];
+        }
+        Marker p (xp, 1, VOLUME, sol, solType, true, 1.);
+        unsigned mproc = p.GetMarkerProc (sol);
+        if (iproc == mproc) {
+          unsigned jel = p.GetMarkerElement();
+          short unsigned jelType = msh->GetElementType (jel);
+          unsigned nDofs = msh->GetElementDofNumber (jel, solType);   // number of solution element dofs
+
+          for (unsigned  k = 0; k < dim; k++) {
+            solV[k].resize (nDofs);
+            vx[k].resize (nDofs);
+          }
+
+          for (unsigned j = 0; j < nDofs; j++) {
+            unsigned jdof = msh->GetSolutionDof (j, jel, solType);
+            unsigned jdofX = msh->GetSolutionDof (j, jel, 2);
+            for (unsigned  k = 0; k < dim; k++) {
+              solV[k][j] = (*sol->_SolOld[indexSolV[k]]) (jdof); //velocity to be projected
+              vx[k][j] = (*msh->_topology->_Sol[k]) (jdofX) + (*sol->_Sol[indexSolD[k]]) (jdof); // coordinates of the deformed configuration
+            }
+          }
+
+          for (unsigned jtype = 0; jtype < solType + 1; jtype++) {
+            ProjectNodalToPolynomialCoefficients (aP[jtype], vx, jelType, jtype) ;
+          }
+          std::vector <double> xi;
+          GetClosestPointInReferenceElement (vx, xp, jelType, xi);
+          GetInverseMapping (solType, jelType, aP, xp, xi);
+          msh->_finiteElement[jelType][solType]->GetPhi (phi, xi);
+
+          std::vector < double > vel (dim, 0.);
+          for (unsigned k = 0; k < dim; k++) {
+            for (unsigned j = 0; j < nDofs; j++)    {
+              vel[k] += phi[j] * solV[k][j];
+            }
+          }
+          MPI_Send (&vel[0], dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
+
+        }
+        if (iproc == jproc) {
+          std::vector < double > vel (dim);
+          MPI_Recv (&vel[0], dim, MPI_DOUBLE, mproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+          for (unsigned k = 0; k < dim; k++) {
+            sol->_Sol[indexSolV[k]]->set (idof[i], vel[k]);
+          }
+          counter++;
+        }
+      }
+    }
+  }
+
+
+//   for (unsigned jproc = 0; jproc < nprocs; jproc++) {
+//     for (unsigned i = msh->_dofOffset[solType][jproc]; i < msh->_dofOffset[solType][jproc + 1]; i++) {
+//       unsigned globalSearch = 0;
+//       std::vector < double > xp (dim);
+//       if (iproc == jproc) {
+//         if (static_cast < unsigned > ( (*sol->_Sol[indexNodeFlag]) (i) + 0.5) == 0) {
+//           globalSearch = 1;
+//           for (unsigned k = 0; k < dim; k++) {
+//             xp[k] = (*msh->_topology->_Sol[k]) (i);
+//           }
+//         }
+//       }
+//       MPI_Bcast (& globalSearch, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
+//
+//       if (globalSearch) {
+//         MPI_Bcast (&xp[0], dim, MPI_DOUBLE, jproc, PETSC_COMM_WORLD);
+//         Marker p (xp, 1, VOLUME, sol, solType, true, 1.);
+//         unsigned mproc = p.GetMarkerProc (sol);
+//         if (iproc == mproc) {
+//           unsigned iel = p.GetMarkerElement();
+//           short unsigned ielType = msh->GetElementType (iel);
+//           unsigned nDofs = msh->GetElementDofNumber (iel, solType);   // number of solution element dofs
+//
+//           for (unsigned  k = 0; k < dim; k++) {
+//             solV[k].resize (nDofs);
+//             vx[k].resize (nDofs);
+//           }
+//
+//           for (unsigned i = 0; i < nDofs; i++) {
+//             unsigned idof = msh->GetSolutionDof (i, iel, solType);
+//             unsigned idofX = msh->GetSolutionDof (i, iel, 2);
+//             for (unsigned  k = 0; k < dim; k++) {
+//               solV[k][i] = (*sol->_SolOld[indexSolV[k]]) (idof);
+//               vx[k][i] = (*msh->_topology->_Sol[k]) (idofX) + (*sol->_Sol[indexSolD[k]]) (idof); // coordinates of the deformed configuration
+//             }
+//           }
+//
+//           for (unsigned jtype = 0; jtype < solType + 1; jtype++) {
+//             ProjectNodalToPolynomialCoefficients (aP[jtype], vx, ielType, jtype) ;
+//           }
+//           std::vector <double> xi;
+//           GetClosestPointInReferenceElement (vx, xp, ielType, xi);
+//           GetInverseMapping (solType, ielType, aP, xp, xi);
+//           msh->_finiteElement[ielType][solType]->GetPhi (phi, xi);
+//
+//           std::vector < double > vel (dim, 0.);
+//           for (unsigned k = 0; k < dim; k++) {
+//             for (unsigned j = 0; j < nDofs; j++)    {
+//               vel[k] += phi[j] * solV[k][j];
+//             }
+//           }
+//           MPI_Send (&vel[0], dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
+//
+//         }
+//         if (iproc == jproc) {
+//           std::vector < double > vel (dim);
+//           MPI_Recv (&vel[0], dim, MPI_DOUBLE, mproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+//           for (unsigned k = 0; k < dim; k++) {
+//             sol->_Sol[indexSolV[k]]->set (i, vel[k]);
+//           }
+//           counter++;
+//         }
+//       }
+//     }
+//   }
+
   for (unsigned k = 0; k < dim; k++) {
     sol->_Sol[indexSolV[k]]->close();
   }
 
-  unsigned counterAll;
   MPI_Reduce (&counter, &counterAll, 1, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD);
   std::cout << "COUNTER = " << counterAll << " " << msh->GetTotalNumberOfDofs (solType) << std::endl;
 

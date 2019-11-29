@@ -30,8 +30,8 @@ namespace femus {
 
   class Marker : public ParallelObject {
     public:
-      Marker (std::vector < double > x, const double &mass, const MarkerType &markerType, Solution *sol, const unsigned & solType, const bool &debug = false) {
-        double s1 = 0.;
+      Marker (std::vector < double > x, const double &mass, const MarkerType &markerType, Solution *sol, const unsigned & solType, const bool &debug = false, const double &s1 = 0.) {
+        //double s1 = 0.;
         _x = x;
         _markerType = markerType;
         _solType = solType;
