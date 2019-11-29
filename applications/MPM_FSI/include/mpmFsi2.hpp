@@ -483,67 +483,115 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
         double mass = particlesFluid[iFmarker]->GetMarkerMass();
 
         msh->_finiteElement[ielt][solType]->Jacobian (vx, xi, weight, phi, gradPhi);
+        msh->_finiteElement[ielt][solType]->Jacobian (vxHat, xi, weightHat, phiHat, gradPhiHat);
 
         //BEGIN evaluates SolDp at the particle iFmarker
         vector<adept::adouble> solDp (dim, 0.);
-        vector<double> solDpOld (dim, 0.);
-        vector<adept::adouble> solVp (dim, 0.);
+//         vector<double> solDpOld (dim, 0.);
+//         vector<adept::adouble> solVp (dim, 0.);
         vector<double> solVpOld (dim, 0.);
 
 
-        vector<vector < adept::adouble > > gradSolVp (dim);
-        vector<vector < adept::adouble > > gradSolDp (dim);
+//         vector<vector < adept::adouble > > gradSolVp (dim);
+//         vector<vector < adept::adouble > > gradSolDp (dim);
+        vector<vector < adept::adouble > > gradSolDpHat (dim);
 
         for (int j = 0; j < dim; j++) {
-          gradSolVp[j].assign (dim, 0.);
-          gradSolDp[j].assign (dim, 0.);
+//           gradSolVp[j].assign (dim, 0.);
+//           gradSolDp[j].assign (dim, 0.);
+          gradSolDpHat[j].assign (dim, 0.);
         }
 
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nDofs; i++) {
             solDp[j] += phi[i] * solD[j][i];
-            solDpOld[j] += phi[i] * solDOld[j][i];
-            solVp[j] += phi[i] * solV[j][i];
+//             solDpOld[j] += phi[i] * solDOld[j][i];
+//             solVp[j] += phi[i] * solV[j][i];
             solVpOld[j] += phi[i] * solVOld[j][i];
             for (int k = 0; k < dim; k++) {
-              gradSolVp[j][k] +=  gradPhi[i * dim + k] * solV[j][i];
-              gradSolDp[j][k] +=  gradPhi[i * dim + k] * solD[j][i];
+//               gradSolVp[j][k] +=  gradPhi[i * dim + k] * solV[j][i];
+//               gradSolDp[j][k] +=  gradPhi[i * dim + k] * solD[j][i];
+              gradSolDpHat[j][k] += gradPhiHat[i * dim + k] * solD[j][i];
             }
           }
         }
 
-        adept::adouble solPp = 0.;
-        msh->_finiteElement[ielt][solTypeP]->GetPhi (phiP, xi);
-        for (unsigned i = 0; i < nDofsP; i++) {
-          solPp += phiP[i] * solP[i];
+//         adept::adouble solPp = 0.;
+//         msh->_finiteElement[ielt][solTypeP]->GetPhi (phiP, xi);
+//         for (unsigned i = 0; i < nDofsP; i++) {
+//           solPp += phiP[i] * solP[i];
+//         }
+
+//         adept::adouble divV = 0.;
+//         for (unsigned k = 0; k < dim; k++) {
+//           divV +=  gradSolVp[k][k];
+//         }
+
+        adept::adouble F[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
+        adept::adouble B[3][3];
+        adept::adouble Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
+        adept::adouble Cauchy[3][3];
+
+        for (unsigned j = 0; j < dim; j++) {
+          for (unsigned k = 0; k < dim; k++) {
+            F[j][k] += gradSolDpHat[j][k];
+          }
+        }
+        adept::adouble J_hat =  F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
+                                - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
+
+        for (unsigned i = 0; i < 3; i++) {
+          for (int j = 0; j < 3; j++) {
+            B[i][j] = 0.;
+            for (unsigned k = 0; k < 3; k++) {
+              //left Cauchy-Green deformation tensor or Finger tensor (B = F*F^T)
+              B[i][j] += F[i][k] * F[j][k];
+            }
+          }
         }
 
-        adept::adouble divV = 0.;
-        for (unsigned k = 0; k < dim; k++) {
-          divV +=  gradSolVp[k][k];
+        adept::adouble I1_B = B[0][0] + B[1][1] + B[2][2];
+
+        for (unsigned j = 0; j < 3; j++) {
+          for (unsigned k = 0; k < 3; k++) {
+            Cauchy[j][k] = 100. * lambdaMpm * log (J_hat) / J_hat * Id2th[j][k] + muMpm / J_hat * (B[j][k] - Id2th[j][k]); //alternative formulation
+          }
         }
+        //END computation of the Cauchy Stress
+
 
         for (unsigned i = 0; i < nDofs; i++) {
-          for (unsigned k = 0; k < dim; k++) {
-            adept::adouble Vlaplace = 0.;
-            adept::adouble Dlaplace = 0.;
-            adept::adouble advection = 0.;
-            for (unsigned j = 0; j < dim; j++) {
-              Vlaplace  +=  gradPhi[i * dim + j] * (gradSolVp[k][j] + gradSolVp[j][k]);
-              Dlaplace  +=  gradPhi[i * dim + j] * (gradSolDp[k][j] + gradSolDp[j][k]);
-              advection  +=  phi[i] * (solVp[j] - (solDp[j] - solDpOld[j]) / dt) * gradSolVp[k][j];
+
+          adept::adouble CauchyDIR[3] = {0., 0., 0.};
+          for (unsigned j = 0.; j < dim; j++) {
+            for (unsigned k = 0.; k < dim; k++) {
+              CauchyDIR[j] += gradPhi[i * dim + k] * Cauchy[j][k];
             }
+          }
+
+          for (unsigned k = 0; k < dim; k++) {
+
+//             adept::adouble Vlaplace = 0.;
+//             adept::adouble Dlaplace = 0.;
+//             adept::adouble advection = 0.;
+//             for (unsigned j = 0; j < dim; j++) {
+//               Vlaplace  +=  gradPhi[i * dim + j] * (gradSolVp[k][j] + gradSolVp[j][k]);
+//               Dlaplace  +=  gradPhi[i * dim + j] * (gradSolDp[k][j] + gradSolDp[j][k]);
+//               advection  +=  phi[i] * (solVp[j] - (solDp[j] - solDpOld[j]) / dt) * gradSolVp[k][j];
+//             }
             if (!solidFlag1[i]) { // This is for diagonal dominance
-              aRhsV[k][i] += (/*- (solVp[k] - solVpOld[k]) / dt - advection +
+              aRhsV[k][i] += (- phi[i] * (solDp[k] / dt - solVpOld[k]) / dt /*- advection +
                               muFluid / rhoFluid * (- Vlaplace + gradPhi[i * dim + k] * (2. / 3.) * divV)*/
-                               - 0.01 * muMpm / rhoFluid * Dlaplace /*+
-                              gradPhi[i * dim + k] * solPp / rhoFluid*/) * mass;
+                              //- 0.01 * muMpm / rhoFluid * Dlaplace
+                              /*+gradPhi[i * dim + k] * solPp / rhoFluid*/
+                              - J_hat * 0.01 * CauchyDIR[k] / rhoFluid) * mass;
             }
             else { // This is for the coupling with the solid
-              aRhsD[k][i] += (/*- (solVp[k] - solVpOld[k]) / dt - advection +
+              aRhsD[k][i] += (- phi[i] * (solDp[k] / dt - solVpOld[k]) / dt /* - advection +
                               muFluid / rhoFluid * (- Vlaplace + gradPhi[i * dim + k] * (2. / 3.) * divV)*/
-                               - 0.01 * muMpm / rhoFluid * Dlaplace /*+
-                              gradPhi[i * dim + k] * solPp / rhoFluid*/) * mass;
+                              // - 0.01 * muMpm / rhoFluid * Dlaplace
+                              /*+gradPhi[i * dim + k] * solPp / rhoFluid*/
+                              - J_hat * 0.01 * CauchyDIR[k] / rhoFluid) * mass;
             }
           }
         }
@@ -1366,15 +1414,15 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
           }
           std::vector <double> xi;
           GetClosestPointInReferenceElement (vx, xp[i], ielType, xi);
-          
+
           bool inverseMapping = GetInverseMapping (solType, ielType, aP, xp[i], xi, 100);
-          if(!inverseMapping){
-            std::cout << "InverseMapping failed at " << iel << " " << idof[i] << std::endl;    
+          if (!inverseMapping) {
+            std::cout << "InverseMapping failed at " << iel << " " << idof[i] << std::endl;
           }
-          
+
 
           bool insideDomain = CheckIfPointIsInsideReferenceDomain (xi, ielType, 1.e-3); // fine testing
-          
+
 //           if( idof[i] == 939) {
 //             std::cout << iel << " " << xp[i][0] << " " << xp[i][1] << " "<< xi[0]<< " " <<xi[1]<<std::endl;
 //             for(unsigned jnode = 0; jnode < nDofs; jnode++){
@@ -1413,7 +1461,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
     unsigned cnt = static_cast < unsigned > ( (*sol->_Sol[indexNodeFlag]) (i) + 0.5);
     if (cnt == 0) {
       c0++;
-      std::cout << "projection failed at " << i <<" \n"; //abort();
+      std::cout << "projection failed at " << i << " \n"; //abort();
       std::cout << "balotto trick initiated AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
       for (unsigned k = 0; k < dim; k++) {
         sol->_Sol[indexSolV[k]]->set (i, (*sol->_SolOld[indexSolV[k]]) (i));
@@ -1434,7 +1482,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
 
   idof.resize (c0);
   vector< double > xp0 (c0 * dim);
-  
+
   unsigned c1 = 0;
   for (unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
     if (static_cast < unsigned > ( (*sol->_Sol[indexNodeFlag]) (i) + 0.5) == 0) {
@@ -1488,12 +1536,12 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
             }
           }
 
-          for (unsigned jtype = 0; jtype < solType + 1; jtype++) {
-            ProjectNodalToPolynomialCoefficients (aP[jtype], vx, jelType, jtype) ;
-          }
-          std::vector <double> xi;
-          GetClosestPointInReferenceElement (vx, xp, jelType, xi);
-          GetInverseMapping (solType, jelType, aP, xp, xi);
+//           for (unsigned jtype = 0; jtype < solType + 1; jtype++) {
+//             ProjectNodalToPolynomialCoefficients (aP[jtype], vx, jelType, jtype) ;
+//           }
+           std::vector <double> xi = p.GetMarkerLocalCoordinates();
+//           GetClosestPointInReferenceElement (vx, xp, jelType, xi);
+//           GetInverseMapping (solType, jelType, aP, xp, xi);
           msh->_finiteElement[jelType][solType]->GetPhi (phi, xi);
 
           std::vector < double > vel (dim, 0.);
@@ -1592,5 +1640,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
   std::cout << "COUNTER = " << counterAll << " " << msh->GetTotalNumberOfDofs (solType) << std::endl;
 
 }
+
+
 
 
