@@ -16,6 +16,7 @@ void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line &
 void GetPressureNeighbor (MultiLevelSolution &mlSol, Line & solidLine, Line & fluidLine);
 
 void ProjectGridVelocity (MultiLevelSolution &mlSol);
+void ProjectGridVelocity2 (MultiLevelSolution &mlSol);
 
 void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
@@ -743,7 +744,7 @@ void AssembleMPMSys (MultiLevelProblem& ml_prob) {
     s.independent (&solP[0], nDofsP);
 
     // get the and store jacobian matrix (row-major)
-    s.jacobian (&Jac[0] , true);
+    s.jacobian (&Jac[0], true);
     myKK->add_matrix_blocked (Jac, sysDofsAll, sysDofsAll);
 
     s.clear_independents();
@@ -1059,6 +1060,7 @@ void GridToParticlesProjection (MultiLevelProblem & ml_prob, Line & solidLine, L
   //END loop on fluid particles
 
   ProjectGridVelocity (*mlSol);
+//   ProjectGridVelocity2 (*mlSol);
 
   //BEGIN loop on elements to update grid velocity and acceleration
   for (unsigned idof = msh->_dofOffset[solType][iproc]; idof < msh->_dofOffset[solType][iproc + 1]; idof++) {
@@ -1366,15 +1368,15 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
           }
           std::vector <double> xi;
           GetClosestPointInReferenceElement (vx, xp[i], ielType, xi);
-          
+
           bool inverseMapping = GetInverseMapping (solType, ielType, aP, xp[i], xi, 100);
-          if(!inverseMapping){
-            std::cout << "InverseMapping failed at " << iel << " " << idof[i] << std::endl;    
+          if (!inverseMapping) {
+            std::cout << "InverseMapping failed at " << iel << " " << idof[i] << std::endl;
           }
-          
+
 
           bool insideDomain = CheckIfPointIsInsideReferenceDomain (xi, ielType, 1.e-3); // fine testing
-          
+
 //           if( idof[i] == 939) {
 //             std::cout << iel << " " << xp[i][0] << " " << xp[i][1] << " "<< xi[0]<< " " <<xi[1]<<std::endl;
 //             for(unsigned jnode = 0; jnode < nDofs; jnode++){
@@ -1413,7 +1415,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
     unsigned cnt = static_cast < unsigned > ( (*sol->_Sol[indexNodeFlag]) (i) + 0.5);
     if (cnt == 0) {
       c0++;
-      std::cout << "projection failed at " << i <<" \n"; //abort();
+      std::cout << "projection failed at " << i << " \n"; //abort();
       std::cout << "balotto trick initiated AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
       for (unsigned k = 0; k < dim; k++) {
         sol->_Sol[indexSolV[k]]->set (i, (*sol->_SolOld[indexSolV[k]]) (i));
@@ -1434,7 +1436,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
 
   idof.resize (c0);
   vector< double > xp0 (c0 * dim);
-  
+
   unsigned c1 = 0;
   for (unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
     if (static_cast < unsigned > ( (*sol->_Sol[indexNodeFlag]) (i) + 0.5) == 0) {
@@ -1502,12 +1504,12 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
               vel[k] += phi[j] * solV[k][j];
             }
           }
-          MPI_Send (&vel[0], dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
+          MPI_Send (&vel[0], dim, MPI_DOUBLE, jproc, 1, PETSC_COMM_WORLD);
 
         }
         if (iproc == jproc) {
           std::vector < double > vel (dim);
-          MPI_Recv (&vel[0], dim, MPI_DOUBLE, mproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+          MPI_Recv (&vel[0], dim, MPI_DOUBLE, mproc, 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
           for (unsigned k = 0; k < dim; k++) {
             sol->_Sol[indexSolV[k]]->set (idof[i], vel[k]);
           }
@@ -1594,3 +1596,126 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
 }
 
 
+void ProjectGridVelocity2 (MultiLevelSolution &mlSol) {
+
+  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  Solution* sol  = mlSol.GetSolutionLevel (level);
+  const unsigned dim = msh->GetDimension();
+
+  unsigned iproc  = msh->processor_id();
+  unsigned nprocs = msh->n_processors();
+
+  vector< vector< double > > solV (dim);     // local solution (velocity)
+  vector< unsigned > idof;
+
+  vector < double > phi;
+
+  //variable-name handling
+  const char varname[10][5] = {"DX", "DY", "DZ", "VX", "VY", "VZ"};
+
+  vector <unsigned> indexSolV (dim);
+
+  for (unsigned ivar = 0; ivar < dim; ivar++) {
+    indexSolV[ivar] = mlSol.GetIndex (&varname[ivar + 3][0]);
+  }
+
+  unsigned solType = mlSol.GetSolutionType (&varname[0][0]);
+  unsigned solXType = 2;
+
+  for (unsigned k = 0; k < dim; k++) {
+    (*sol->_SolOld[indexSolV[k]]) = (*sol->_Sol[indexSolV[k]]);
+    sol->_Sol[indexSolV[k]]->zero();
+  }
+
+  unsigned numberOfNodes = 0;
+  for (unsigned jproc = 0; jproc < nprocs; jproc++) {
+    numberOfNodes += (msh->_dofOffset[solXType][jproc + 1]) - (msh->_dofOffset[solXType][jproc]);
+  }
+
+  std::vector<std::vector<double>> particleCoordAndMore (numberOfNodes);
+  for (unsigned i = 0; i < numberOfNodes; i++) {
+    particleCoordAndMore[i].assign (dim + 1, 0.);
+  }
+
+
+  for (unsigned i = msh->_dofOffset[solXType][iproc]; i < msh->_dofOffset[solXType][iproc + 1]; i++) {
+    for (unsigned k = 0; k < dim; k++) {
+      particleCoordAndMore[i][k] = (*msh->_topology->_Sol[k]) (i);
+    }
+    particleCoordAndMore[i][dim] = iproc; //proc that contains dof i
+  }
+
+//   std::cout<<"iproc = " << iproc << std::endl;
+//   for (unsigned isize = 0; isize < numberOfNodes; isize++) {
+//       std::cout<<"particleCoordAndMore[ " << isize << "][" << 0 << " ]=" << particleCoordAndMore[isize][0] << std::endl;
+//       std::cout<<"particleCoordAndMore[ " << isize << "][" << 1 << " ]=" << particleCoordAndMore[isize][1] << std::endl;
+//       std::cout<<"particleCoordAndMore[ " << isize << "][" << 2 << " ]=" << particleCoordAndMore[isize][2] << std::endl;
+//       std::cout<<"-------------------------------------------------------------------------------"<<std::endl;
+// }
+
+  for (unsigned isize = 0; isize < numberOfNodes; isize++) {
+    for (unsigned k = 0; k < dim; k++) {
+      double value = 0.;
+      MPI_Allreduce (&particleCoordAndMore[isize][k], &value, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      particleCoordAndMore[isize][k] = value;
+    }
+    double value = 0.;
+    MPI_Allreduce (&particleCoordAndMore[isize][dim], &value, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    particleCoordAndMore[isize][dim] = value;
+  }
+
+//     std::cout<<"iproc = " << iproc << std::endl;
+//   for (unsigned isize = 0; isize < numberOfNodes; isize++) {
+//       std::cout<<"particleCoordAndMore[ " << isize << "][" << 0 << " ]=" << particleCoordAndMore[isize][0] << std::endl;
+//       std::cout<<"particleCoordAndMore[ " << isize << "][" << 1 << " ]=" << particleCoordAndMore[isize][1] << std::endl;
+//       std::cout<<"particleCoordAndMore[ " << isize << "][" << 2 << " ]=" << particleCoordAndMore[isize][2] << std::endl;
+//       std::cout<<"-------------------------------------------------------------------------------"<<std::endl;
+// }
+
+  for (unsigned isize = 0; isize < numberOfNodes; isize++) {
+    std::vector<double> markerCoords (dim, 0);
+    for (unsigned k = 0; k < dim; k++) {
+      markerCoords[k] = particleCoordAndMore[isize][k];
+    }
+    Marker p (markerCoords, 1, VOLUME, sol, solType, true, 1.);
+    unsigned mproc = p.GetMarkerProc (sol);
+    unsigned elem = p.GetMarkerElement();
+
+    unsigned dofproc = static_cast < unsigned > (particleCoordAndMore[isize][dim]);
+
+    std::vector<double>VtoAdd (dim, 0.);
+
+    if (iproc == mproc) {
+      short unsigned ielType = msh->GetElementType (elem);
+      unsigned nDofs = msh->GetElementDofNumber (elem, solType);   // number of solution element dofs
+      for (unsigned  k = 0; k < dim; k++) {
+        solV[k].resize (nDofs);
+      }
+      idof.resize (nDofs);
+      for (unsigned i = 0; i < nDofs; i++) {
+        idof[i] = msh->GetSolutionDof (i, elem, solType);
+        for (unsigned  k = 0; k < dim; k++) {
+          solV[k][i] = (*sol->_SolOld[indexSolV[k]]) (idof[i]);
+        }
+      }
+      std::vector<double> xi;
+      xi = p.GetMarkerLocalCoordinates();
+      msh->_finiteElement[ielType][solType]->GetPhi (phi, xi);
+      for (unsigned k = 0; k < dim; k++) {
+        for (unsigned i = 0; i < nDofs; i++) {
+          VtoAdd[k] += phi[i] * solV[k][i];
+        }
+      }
+
+      MPI_Send (&VtoAdd[0], dim, MPI_DOUBLE, dofproc, 1, PETSC_COMM_WORLD);
+    }
+
+    if (iproc == dofproc) {
+      MPI_Recv (&VtoAdd[0], dim, MPI_DOUBLE, mproc, 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+      for (unsigned k = 0; k < dim; k++) {
+        sol->_Sol[indexSolV[k]]->add (isize, VtoAdd[k]);
+      }
+    }
+  }
+}
