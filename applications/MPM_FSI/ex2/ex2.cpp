@@ -14,7 +14,7 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
-#include "../include/mpmFsi2.hpp"
+#include "../include/mpmFsi3.hpp"
 
 using namespace femus;
 
@@ -106,7 +106,7 @@ int main (int argc, char** args) {
   Fluid fluid (par, muf, rhof, "Newtonian");
 
   mlMsh.ReadCoarseMesh ("../input/fsi_bnc_2D.neu", "fifth", scalingFactor);
-  mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+  mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
   numberOfUniformLevels = 1;
@@ -130,8 +130,8 @@ int main (int argc, char** args) {
   mlSol.AddSolution ("NodeFlag", LAGRANGE, SECOND, 0, false); //TODO see who this is
   mlSol.AddSolution ("NodeDist", LAGRANGE, SECOND, 0, false); //TODO see who this is
 
-  mlSol.SetIfFSI(true);
-  
+  mlSol.SetIfFSI (true);
+
   mlSol.Initialize ("All");
 
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
@@ -354,12 +354,12 @@ int main (int argc, char** args) {
     double DH1 = H0 / (rows - 1);
 
     x.resize (2 * columns + (rows - 2));
-    tangent.resize(2 * columns + (rows - 2));
-    
+    tangent.resize (2 * columns + (rows - 2));
+
     for (unsigned s = 0; s < x.size(); s++) {
       x[s].resize (dim, 0.);
-      tangent[s].resize(1);
-      tangent[s][0].resize(dim,0.);
+      tangent[s].resize (1);
+      tangent[s][0].resize (dim, 0.);
     }
     double x1 = xs;
     double y1 = ys;
@@ -367,48 +367,48 @@ int main (int argc, char** args) {
     for (unsigned j = 0; j < columns; j++) {
       x[counter][0] = x1;
       x[counter][1] = y1;
-      
+
       tangent[counter][0][0] = 0.;
       tangent[counter][0][1] = -DL1;
-      
+
       counter++;
       y1 += DL1;
-      
+
     }
     x1 += DH1;
     y1 -= DL1;
     for (unsigned j = 1; j < rows; j++) {
       x[counter][0] = x1;
       x[counter][1] = y1;
-      
+
       tangent[counter][0][0] = -DH1;
       tangent[counter][0][1] = 0.;
-      
+
       counter++;
       x1 += DH1;
-      
+
     }
     x1 -= DH1;
     y1 -= DL1;
     for (unsigned j = 1; j < columns; j++) {
       x[counter][0] = x1;
       x[counter][1] = y1;
-      
+
       tangent[counter][0][0] = 0.;
       tangent[counter][0][1] = DL1;
-      
+
       counter++;
       y1 -= DL1;
     }
-    
+
     markerType.assign (x.size(), INTERFACE);
 
     solType = 2;
-    interfaceLine = new Line (x, tangent, markerType, mlSol.GetLevel (numberOfUniformLevels - 1), solType); 
-    
+    interfaceLine = new Line (x, tangent, markerType, mlSol.GetLevel (numberOfUniformLevels - 1), solType);
+
   }
 
-  
+
 
   std::vector < std::vector < std::vector < double > > > lineI (1);
   interfaceLine->GetLine (lineI[0]);
@@ -528,7 +528,7 @@ int main (int argc, char** args) {
 
     system.MGsolve();
 //     system2.MGsolve();
-    
+
     solidLine->GetLine (lineS[0]);
     PrintLine ("./output1", "solidLine", lineS, time_step);
     interfaceLine->GetLine (lineI[0]);
@@ -536,7 +536,7 @@ int main (int argc, char** args) {
     fluidLine->GetLine (lineF[0]);
     PrintLine ("./output1", "fluidLine", lineF, time_step);
     mlSol.GetWriter()->Write ("./output1", "biquadratic", print_vars, time_step);
-    
+
     GridToParticlesProjection (ml_prob, *solidLine, *fluidLine, *interfaceLine);
 
     solidLine->GetLine (lineS[0]);
