@@ -1358,8 +1358,6 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
           xp[i][k] = (*msh->_topology->_Sol[k]) (idofX); // coordinates of the reference configuration;
           vx[k][i] = xp[i][k] + (*sol->_Sol[indexSolD[k]]) (idof[i]); // coordinates of the deformed configuration
         }
-
-
         nodeFlag[i] = ( (*sol->_Sol[indexNodeFlag]) (idof[i]) > 0.5) ? true : false;
       }
     }
@@ -1409,15 +1407,6 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
 
           bool insideDomain = CheckIfPointIsInsideReferenceDomain (xi, ielType, 1.e-3); // fine testing
 
-//           if( idof[i] == 939) {
-//             std::cout << iel << " " << xp[i][0] << " " << xp[i][1] << " "<< xi[0]<< " " <<xi[1]<<std::endl;
-//             for(unsigned jnode = 0; jnode < nDofs; jnode++){
-//               std::cout.precision(14);
-//               std::cout << idof[jnode] << " " << vx[0][jnode] <<" " << vx[1][jnode] << std::endl;
-//               std::cout.precision(7);
-//             }
-//           }
-
           if (inverseMapping && insideDomain) {
             sol->_Sol[indexNodeFlag]->add (idof[i], 1.);
             msh->_finiteElement[ielType][solType]->GetPhi (phi, xi);
@@ -1444,14 +1433,14 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
 
   unsigned c0 = 0;
   for (unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
-    unsigned cnt = static_cast < unsigned > ( (*sol->_Sol[indexNodeFlag]) (i) + 0.5);
+    unsigned cnt = static_cast < unsigned > ( floor( (*sol->_Sol[indexNodeFlag]) (i) + 0.5 ) );
     if (cnt == 0) {
       c0++;
     }
     else if (cnt > 1) {
       counter -= (cnt - 1);
       for (unsigned k = 0; k < dim; k++) {
-        double velk = (*sol->_SolOld[indexSolV[k]]) (i) / cnt;
+        double velk = (*sol->_Sol[indexSolV[k]]) (i) / cnt;
         sol->_Sol[indexSolV[k]]->set (i, velk);
       }
     }
@@ -1466,7 +1455,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
 
   unsigned c1 = 0;
   for (unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
-    if (static_cast < unsigned > ( (*sol->_Sol[indexNodeFlag]) (i) + 0.5) == 0) {
+    if (static_cast < unsigned > ( floor( (*sol->_Sol[indexNodeFlag]) (i) + 0.5) ) == 0) {
       idof[c1] = i;
       for (unsigned k = 0; k < dim; k++) {
         xp0[c1 * dim + k] = (*msh->_topology->_Sol[k]) (i);

@@ -22,7 +22,7 @@ using namespace femus;
 
 
 double SetVariableTimeStep (const double time) {
-  double dt =  0.005/*0.008*/;
+  double dt =  0.01/*0.008*/;
   return dt;
 }
 
@@ -83,7 +83,7 @@ int main (int argc, char** args) {
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 10000.;
-  unsigned numberOfUniformLevels = 6; //for refinement in 3D
+  unsigned numberOfUniformLevels = 5; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
