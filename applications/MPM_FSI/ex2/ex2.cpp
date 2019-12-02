@@ -22,7 +22,7 @@ using namespace femus;
 
 
 double SetVariableTimeStep (const double time) {
-  double dt =  0.01/*0.008*/;
+  double dt =  0.005/*0.008*/;
   return dt;
 }
 
@@ -83,7 +83,7 @@ int main (int argc, char** args) {
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 10000.;
-  unsigned numberOfUniformLevels = 5; //for refinement in 3D
+  unsigned numberOfUniformLevels = 7; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -231,9 +231,9 @@ int main (int argc, char** args) {
   double xc = 0.98e-04 + 0.5 * H; //we are using this not to have markers on edges of elements from the beginning
   double yc = 0.;
 
-  double H0 = /*5. / 5.*/ 3. / 5.* H; //0.15: 3ref, 0.2: 4 ref, 0.225: 5 ref
+  double H0 = /*5. / 5.*/ 4. / 5.* H; //0.15: 3ref, 0.2: 4 ref, 0.225: 5 ref
   double L0 = L - (H - H0) / 2.;
-  unsigned rows = 20; // 20: 3 ref, 40: 4 ref, 80: 5 ref
+  unsigned rows = 25; // 20: 3 ref, 40: 4 ref, 80: 5 ref
   double DH = H0 / (rows - 1);
   unsigned columns = static_cast < unsigned > (ceil (L0 / DH)) + 1;
   double DL = L0 / (columns - 1);
@@ -268,8 +268,8 @@ int main (int argc, char** args) {
 
   if (fabs (H - H0) > 1.0e-10) {
 
-    //double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers.
-    double factor = 1.; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers.
+    double factor = 1.3;//1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers.
+    //double factor = 1.; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers.
     unsigned NL = getNumberOfLayers (0.5 * (H - H0) / DH, factor);
     std::cout << NL << std::endl;
 
@@ -424,8 +424,8 @@ int main (int argc, char** args) {
   double H1 = 4. * H; //TODO tune the factor 4
   if (fabs (H - H0) > 1.0e-10) {
 
-//     double factor = 1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
-    double factor = 1.; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
+    double factor = 1.148; //1.148; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
+    //double factor = 1.; //1.148: 3 ref, 1.224: 5 ref, 1.2: 4 ref --> 21 layers. //TODO
     unsigned NL = getNumberOfLayers (0.5 * (H1 - H0) / DH, factor, false);
     std::cout << NL << std::endl;
 
