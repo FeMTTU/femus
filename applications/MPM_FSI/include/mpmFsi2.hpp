@@ -12,11 +12,118 @@ Line* solidLine;
 Line* interfaceLine;
 Line* fluidLine;
 
+const double faceNormal[6][6][3] = {
+  {{0., -1., 0.}, {1., 0., 0.}, {0., 1., 0.}, { -1., 0., 0.}, {0., 0., -1.}, {0., 0., 1.}},
+  {{0., 0., -1}, {0., -1., 0.}, {1. / sqrt (3.), 1. / sqrt (3.), 1. / sqrt (3.) }, { -1., 0., 0.}},
+  {{0., -1., 0.}, {1. / sqrt (2.), 1. / sqrt (2.), 0.}, { -1., 0., 0.}, {0., 0., -1}, {0., 0., 1}},
+  {{0., -1.}, {1., 0.}, {0., 1.}, { -1., 0.}},
+  {{0., -1.}, {1. / sqrt (2.), 1. / sqrt (2.) }, { -1., 0.}},
+  {{ -1}, {1}}
+};
+
+const unsigned faceNumber[6] = {6, 4, 5, 4, 3, 2};
+
+const unsigned facePointNumber[6][3] = {{}, {}, {}, {5, 9, 9}, {4, 7, 7}, {}}; //facePointNumber[elemType][solType]
+
+const unsigned facePoints[6][3][9] = { //facePointNumber[elemType][solType][localFaceIndex]
+  {{ }},
+  {{ }},
+  {{ }},
+  { { 0, 1, 2, 3, 0}, { 0, 4, 1, 5, 2, 6, 3, 7, 0 }, { 0, 4, 1, 5, 2, 6, 3, 7, 0 } },
+  { {0, 1, 2, 0}, { 0, 3, 1, 4, 2, 5, 0 }, { 0, 3, 1, 4, 2, 5, 0 } },
+  { }
+};
+
+const unsigned trianglesPerFace[6][3][6] = { //trainglesPerFace[elementType][solType][numberOfTrianglesPerFace]
+  {{4, 4, 4, 4, 4, 4}, {8, 8, 8, 8, 8, 8}, {8, 8, 8, 8, 8, 8}},
+  {{1, 1, 1, 1}, {6, 6, 6, 6}, {6, 6, 6, 6}},
+  {{4, 4, 4, 1, 1}, {8, 8, 8, 6, 6}, {8, 8, 8, 6, 6}},
+  {{4}, {8}, {8}},
+  {{1}, {6}, {6}},
+  {}
+};
+
+const unsigned faceTriangleNodes[6][3][6][8][4] = { // elementType - solType - number of faces - number of triangles per faces - 3 vertices of the triangle (the first is counted twice)
+
+  { { {{0, 1, 20, 0}, {1, 5, 20, 1}, {5, 4, 20, 5}, {4, 0, 20, 4}},  //hex
+      {{1, 2, 21, 1}, {2, 6, 21, 2}, {6, 5, 21, 6}, {5, 1, 21, 5}},
+      {{2, 3, 22, 2}, {3, 7, 22, 3}, {7, 6, 22, 7}, {6, 2, 22, 6}},
+      {{3, 0, 23, 3}, {0, 4, 23, 0}, {4, 7, 23, 4}, {7, 3, 23, 7}},
+      {{0, 3, 24, 0}, {3, 2, 24, 3}, {2, 1, 24, 2}, {1, 0, 24, 1}},
+      {{4, 5, 25, 4}, {5, 6, 25, 5}, {6, 7, 25, 6}, {7, 4, 25, 7}}
+    },
+    { {{0, 8, 20, 0}, {8, 1, 20, 8}, {1, 17, 20, 1}, {17, 5, 20, 17}, {5, 12, 20, 5}, {12, 4, 20, 12}, {4, 16, 20, 4 }, {16, 0, 20, 16}},
+      {{1, 9, 21, 1}, {9, 2, 21, 9}, {2, 18, 21, 2}, {18, 6, 21, 18}, {6, 13, 21, 6}, {13, 5, 21, 13}, {5, 17, 21, 5}, {17, 1, 21, 17}},
+      {{2, 10, 22, 2}, {10, 3, 22, 10}, {3, 19, 22, 3}, {19, 7, 22, 19}, {7, 14, 22, 7}, {14, 6, 22, 14}, {6, 18, 22, 6}, {18, 2, 22, 18}},
+      {{3, 11, 23, 3}, {11, 0, 23, 11}, {0, 16, 23, 0}, {16, 4, 23, 16}, {4, 15, 23, 4}, {15, 7, 23, 15}, {7, 19, 23, 7}, {19, 3, 23, 19}},
+      {{0, 11, 24, 0}, {11, 3, 24, 11}, {3, 10, 24, 3}, {10, 2, 24, 10}, {2, 9, 24, 2}, {9, 1, 24, 9}, {1, 8, 24, 1}, {8, 0, 24, 8}},
+      {{4, 12, 25, 4}, {12, 5, 25, 12}, {5, 13, 25, 5}, {13, 6, 25, 13}, {6, 14, 25, 6}, {14, 7, 25, 14}, {7, 15, 25, 7}, {15, 4, 25, 15}}
+    },
+    { {{0, 8, 20, 0}, {8, 1, 20, 8}, {1, 17, 20, 1}, {17, 5, 20, 17}, {5, 12, 20, 5}, {12, 4, 20, 12}, {4, 16, 20, 4 }, {16, 0, 20, 16}},
+      {{1, 9, 21, 1}, {9, 2, 21, 9}, {2, 18, 21, 2}, {18, 6, 21, 18}, {6, 13, 21, 6}, {13, 5, 21, 13}, {5, 17, 21, 5}, {17, 1, 21, 17}},
+      {{2, 10, 22, 2}, {10, 3, 22, 10}, {3, 19, 22, 3}, {19, 7, 22, 19}, {7, 14, 22, 7}, {14, 6, 22, 14}, {6, 18, 22, 6}, {18, 2, 22, 18}},
+      {{3, 11, 23, 3}, {11, 0, 23, 11}, {0, 16, 23, 0}, {16, 4, 23, 16}, {4, 15, 23, 4}, {15, 7, 23, 15}, {7, 19, 23, 7}, {19, 3, 23, 19}},
+      {{0, 11, 24, 0}, {11, 3, 24, 11}, {3, 10, 24, 3}, {10, 2, 24, 10}, {2, 9, 24, 2}, {9, 1, 24, 9}, {1, 8, 24, 1}, {8, 0, 24, 8}},
+      {{4, 12, 25, 4}, {12, 5, 25, 12}, {5, 13, 25, 5}, {13, 6, 25, 13}, {6, 14, 25, 6}, {14, 7, 25, 14}, {7, 15, 25, 7}, {15, 4, 25, 15}}
+    }
+  },
+  { { {{0, 2, 1, 0}},   //tet
+      {{0, 1, 3, 0}},
+      {{1, 2, 3, 1}},
+      {{2, 0, 3, 2}}
+    },
+    { {{0, 6, 10, 0}, {6, 2, 10, 6}, {2, 5, 10, 2}, {5, 1, 10, 5}, {1, 4, 10, 1}, {4, 0, 10, 4}},
+      {{0, 4, 11, 0}, {4, 1, 11, 4}, {1, 8, 11, 1}, {8, 3, 11, 8}, {3, 7, 11, 3}, {7, 0, 11, 7}},
+      {{1, 5, 12, 1}, {5, 2, 12, 5}, {2, 9, 12, 2}, {9, 3, 12, 9}, {3, 8, 12, 3}, {8, 1, 12, 8}},
+      {{2, 6, 13, 2}, {6, 0, 13, 6}, {0, 7, 13, 0}, {7, 3, 13, 7}, {3, 9, 13, 3}, {9, 2, 13, 9}}
+    },
+    { {{0, 6, 10, 0}, {6, 2, 10, 6}, {2, 5, 10, 2}, {5, 1, 10, 5}, {1, 4, 10, 1}, {4, 0, 10, 4}},
+      {{0, 4, 11, 0}, {4, 1, 11, 4}, {1, 8, 11, 1}, {8, 3, 11, 8}, {3, 7, 11, 3}, {7, 0, 11, 7}},
+      {{1, 5, 12, 1}, {5, 2, 12, 5}, {2, 9, 12, 2}, {9, 3, 12, 9}, {3, 8, 12, 3}, {8, 1, 12, 8}},
+      {{2, 6, 13, 2}, {6, 0, 13, 6}, {0, 7, 13, 0}, {7, 3, 13, 7}, {3, 9, 13, 3}, {9, 2, 13, 9}}
+    }
+  },
+  { { {{0, 1, 15, 0}, {1, 4, 15, 1}, {4, 3, 15, 4}, {3, 0, 15, 3}},  //wedge
+      {{1, 2, 16, 1}, {2, 5, 16, 2}, {5, 4, 16, 5}, {4, 1, 16, 4}},
+      {{2, 0, 17, 2}, {0, 3, 17, 0}, {3, 5, 17, 3}, {5, 2, 17, 5}},
+      {{0, 2, 1, 0}},
+      {{3, 4, 5, 3}}
+    },
+    { {{0, 6, 15, 0 }, {6, 1, 15, 6}, {1, 13, 15, 1}, {13, 4, 15, 13}, {4, 9, 15, 4}, {9, 3, 15, 9}, {3, 12, 15, 3}, {12, 0, 15, 12}},
+      {{1, 7, 16, 1}, {7, 2, 16, 7}, {2, 14, 16, 2}, {14, 5, 16, 14}, {5, 10, 16, 5}, {10, 4, 16, 10}, {4, 13, 16, 4}, {13, 1, 16, 13}},
+      {{2, 8, 17, 2}, {8, 0, 17, 8}, {0, 12, 17, 0}, {12, 3, 17, 12}, {3, 11, 17, 3}, {11, 5, 17, 11}, {5, 14, 17, 5}, {14, 2, 17, 14}},
+      {{0, 8, 18, 0}, {8, 2, 18, 8}, {2, 7, 18, 2}, {7, 1, 18, 7}, {1, 6, 18, 1}, {6, 0, 18, 6}},
+      {{3, 9, 19, 3}, {9, 4, 19, 9}, {4, 10, 19, 4}, {10, 5, 19, 10}, {5, 11, 19, 5}, {11, 3, 19, 11}}
+    },
+    { {{0, 6, 15, 0 }, {6, 1, 15, 6}, {1, 13, 15, 1}, {13, 4, 15, 13}, {4, 9, 15, 4}, {9, 3, 15, 9}, {3, 12, 15, 3}, {12, 0, 15, 12}},
+      {{1, 7, 16, 1}, {7, 2, 16, 7}, {2, 14, 16, 2}, {14, 5, 16, 14}, {5, 10, 16, 5}, {10, 4, 16, 10}, {4, 13, 16, 4}, {13, 1, 16, 13}},
+      {{2, 8, 17, 2}, {8, 0, 17, 8}, {0, 12, 17, 0}, {12, 3, 17, 12}, {3, 11, 17, 3}, {11, 5, 17, 11}, {5, 14, 17, 5}, {14, 2, 17, 14}},
+      {{0, 8, 18, 0}, {8, 2, 18, 8}, {2, 7, 18, 2}, {7, 1, 18, 7}, {1, 6, 18, 1}, {6, 0, 18, 6}},
+      {{3, 9, 19, 3}, {9, 4, 19, 9}, {4, 10, 19, 4}, {10, 5, 19, 10}, {5, 11, 19, 5}, {11, 3, 19, 11}}
+    }
+  },
+  { { {{0, 1, 8, 0}, {1, 2, 8, 1}, {2, 3, 8, 1}, {3, 0, 8, 3}}, //quad
+      {{0, 4, 8, 0}, {4, 1, 8, 4}, {1, 5, 8, 1}, {5, 2, 8, 5}, {2, 6, 8, 2}, {6, 3, 8, 6}, {3, 7, 8, 3}, {7, 0, 8, 7}},
+      {{0, 4, 8, 0}, {4, 1, 8, 4}, {1, 5, 8, 1}, {5, 2, 8, 5}, {2, 6, 8, 2}, {6, 3, 8, 6}, {3, 7, 8, 3}, {7, 0, 8, 7}}
+    }
+  },
+  { { {{0, 1, 2, 0}},
+      {{0, 3, 6, 0}, {3, 1, 6, 3}, {1, 4, 6, 1}, {4, 2, 6, 4}, {2, 5, 6, 2}, {5, 0, 6, 5}},
+      {{0, 3, 6, 0}, {3, 1, 6, 3}, {1, 4, 6, 1}, {4, 2, 6, 4}, {2, 5, 6, 2}, {5, 0, 6, 5}}
+    }
+  },
+  {{{{}}}},
+};
+
 void GetParticlesToNodeFlag (MultiLevelSolution &mlSol, Line & solidLine, Line & fluidLine);
 void GetPressureNeighbor (MultiLevelSolution &mlSol, Line & solidLine, Line & fluidLine);
 
 void ProjectGridVelocity (MultiLevelSolution &mlSol);
 void ProjectGridVelocity2 (MultiLevelSolution &mlSol);
+
+bool CheckInclusion2D (Solution* sol, const unsigned &elemToCheck, const unsigned &previousElem, std::vector <std::vector <double>> & xElement, std::vector <double> & xToCheck);
+bool CheckInclusion3D (Solution* sol, const unsigned &elemToCheck, const unsigned &previousElem, const std::vector <std::vector <double>> & xElement, const std::vector <double> & xToCheck);
+void FindLocalCoordinates (std::vector<double> & xi, std::vector < std::vector < std::vector < double > > >  & aX, const bool & pcElemUpdate, MultiLevelSolution &  mlSol, const unsigned &elemToCheck, const std::vector <double> &xToCheck, const std::vector<std::vector<double>> & xElement);
 
 void AssembleMPMSys (MultiLevelProblem& ml_prob) {
 
@@ -1059,8 +1166,11 @@ void GridToParticlesProjection (MultiLevelProblem & ml_prob, Line & solidLine, L
   }
   //END loop on fluid particles
 
+  clock_t project_time = clock();
   ProjectGridVelocity (*mlSol);
 //   ProjectGridVelocity2 (*mlSol);
+  std::cout << std::endl << " total projection time : " << std::setw (11) << std::setprecision (6) << std::fixed
+            << static_cast<double> ( (clock() - project_time)) / CLOCKS_PER_SEC << " s" << std::endl;
 
   //BEGIN loop on elements to update grid velocity and acceleration
   for (unsigned idof = msh->_dofOffset[solType][iproc]; idof < msh->_dofOffset[solType][iproc + 1]; idof++) {
@@ -1332,76 +1442,108 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
       }
     }
 
-    bool aPIsInitialized = false;
-
-    double r;
-    std::vector <double> xc;
-    GetConvexHullSphere (vx, xc, r, 0.0001); // get the ball that circumscribe the element
-    double r2 = r * r;
-
-    std::vector < std::vector< double > > xe; // get the box that encloses the element
-    GetBoundingBox (vx, xe, 0.0001);
-
-    for (unsigned i = 0; i < nDofs; i++) { // loop on the nodes of the reference elements now considered as independent points
-      if (!nodeFlag[i]) {
-        double d2 = 0.;
-        for (int k = 0; k < dim; k++) {
-          d2 += (xp[i][k] - xc[k]) * (xp[i][k] - xc[k]);
-        }
-        bool insideHull = true;
-        if (d2 > r2) {
-          insideHull = false;
-        }
-        for (unsigned k = 0; k < dim; k++) {
-          if (xp[i][k] < xe[k][0] || xp[i][k] > xe[k][1]) {
-            insideHull = false;
-          }
-        }
-
-        if (insideHull) { //rough test
-          if (!aPIsInitialized) {
-            aPIsInitialized = true;
-            std::vector < std::vector <double> > x1 (dim);
-            for (unsigned jtype = 0; jtype < solType + 1; jtype++) {
-              ProjectNodalToPolynomialCoefficients (aP[jtype], vx, ielType, jtype) ;
-            }
-          }
-          std::vector <double> xi;
-          GetClosestPointInReferenceElement (vx, xp[i], ielType, xi);
-
-          bool inverseMapping = GetInverseMapping (solType, ielType, aP, xp[i], xi, 100);
-          if (!inverseMapping) {
-            std::cout << "InverseMapping failed at " << iel << " " << idof[i] << std::endl;
-          }
-
-
-          bool insideDomain = CheckIfPointIsInsideReferenceDomain (xi, ielType, 1.e-3); // fine testing
-
-//           if( idof[i] == 939) {
-//             std::cout << iel << " " << xp[i][0] << " " << xp[i][1] << " "<< xi[0]<< " " <<xi[1]<<std::endl;
-//             for(unsigned jnode = 0; jnode < nDofs; jnode++){
-//               std::cout.precision(14);
-//               std::cout << idof[jnode] << " " << vx[0][jnode] <<" " << vx[1][jnode] << std::endl;
-//               std::cout.precision(7);
+    //BEGIN old
+//     bool aPIsInitialized = false;
+//
+//     double r;
+//     std::vector <double> xc;
+//     GetConvexHullSphere (vx, xc, r, 0.0001); // get the ball that circumscribe the element
+//     double r2 = r * r;
+//
+//     std::vector < std::vector< double > > xe; // get the box that encloses the element
+//     GetBoundingBox (vx, xe, 0.0001);
+//
+//     for (unsigned i = 0; i < nDofs; i++) { // loop on the nodes of the reference elements now considered as independent points
+//       if (!nodeFlag[i]) {
+//
+//         double d2 = 0.;
+//         for (int k = 0; k < dim; k++) {
+//           d2 += (xp[i][k] - xc[k]) * (xp[i][k] - xc[k]);
+//         }
+//         bool insideHull = true;
+//         if (d2 > r2) {
+//           insideHull = false;
+//         }
+//         for (unsigned k = 0; k < dim; k++) {
+//           if (xp[i][k] < xe[k][0] || xp[i][k] > xe[k][1]) {
+//             insideHull = false;
+//           }
+//         }
+//
+//         if (insideHull) { //rough test
+//
+//           if (!aPIsInitialized) {
+//             aPIsInitialized = true;
+//             std::vector < std::vector <double> > x1 (dim);
+//             for (unsigned jtype = 0; jtype < solType + 1; jtype++) {
+//               ProjectNodalToPolynomialCoefficients (aP[jtype], vx, ielType, jtype) ;
 //             }
 //           }
+//           std::vector <double> xi;
+//           GetClosestPointInReferenceElement (vx, xp[i], ielType, xi);
+//
+//           bool inverseMapping = GetInverseMapping (solType, ielType, aP, xp[i], xi, 100);
+//           if (!inverseMapping) {
+//             std::cout << "InverseMapping failed at " << iel << " " << idof[i] << std::endl;
+//           }
+//
+//           bool insideDomain = CheckIfPointIsInsideReferenceDomain (xi, ielType, 1.e-3); // fine testing
+//
+// //           if( idof[i] == 939) {
+// //             std::cout << iel << " " << xp[i][0] << " " << xp[i][1] << " "<< xi[0]<< " " <<xi[1]<<std::endl;
+// //             for(unsigned jnode = 0; jnode < nDofs; jnode++){
+// //               std::cout.precision(14);
+// //               std::cout << idof[jnode] << " " << vx[0][jnode] <<" " << vx[1][jnode] << std::endl;
+// //               std::cout.precision(7);
+// //             }
+// //           }
+//
+// //           std::cout << std::endl << " inclusion CPU time : " << std::setw (11) << std::setprecision (6) << std::fixed
+// //                     << static_cast<double> ( (clock() - inclusion_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+//
+//           if (inverseMapping && insideDomain) {
+//             sol->_Sol[indexNodeFlag]->add (idof[i], 1.);
+//             msh->_finiteElement[ielType][solType]->GetPhi (phi, xi);
+//             //std::cout << iel << " " << i << "  ";
+//             counter++;
+//             for (unsigned k = 0; k < dim; k++) {
+//               double solVk = 0.;
+//               for (unsigned j = 0; j < nDofs; j++)    {
+//                 solVk += phi[j] * solV[k][j];
+//               }
+//               sol->_Sol[indexSolV[k]]->add (idof[i], solVk);
+//             }
+//           }
+//         }
+//       }
+//     }
+    //END old
 
-          if (inverseMapping && insideDomain) {
-            sol->_Sol[indexNodeFlag]->add (idof[i], 1.);
-            msh->_finiteElement[ielType][solType]->GetPhi (phi, xi);
-            //std::cout << iel << " " << i << "  ";
-            counter++;
-            for (unsigned k = 0; k < dim; k++) {
-              double solVk = 0.;
-              for (unsigned j = 0; j < nDofs; j++)    {
-                solVk += phi[j] * solV[k][j];
-              }
-              sol->_Sol[indexSolV[k]]->add (idof[i], solVk);
+    //BEGIN new
+    bool pcElemUpdate = true;
+    std::vector < std::vector < std::vector < double > > > aX;
+    for (unsigned i = 0; i < nDofs; i++) {
+      if (!nodeFlag[i]) {
+        bool pointIsInDeformedElement = (dim == 2) ? CheckInclusion2D (sol, iel, UINT_MAX, vx, xp[i]) : CheckInclusion3D (sol, iel, UINT_MAX, vx, xp[i]);
+        if (pointIsInDeformedElement) {
+          sol->_Sol[indexNodeFlag]->add (idof[i], 1.);
+          std::vector <double> xi;
+          clock_t local_coords_time = clock();
+          FindLocalCoordinates (xi, aX, pcElemUpdate, mlSol, iel, xp[i], vx);
+          pcElemUpdate = false;
+          msh->_finiteElement[ielType][solType]->GetPhi (phi, xi);
+          counter++;
+          for (unsigned k = 0; k < dim; k++) {
+            double solVk = 0.;
+            for (unsigned j = 0; j < nDofs; j++)    {
+              solVk += phi[j] * solV[k][j];
             }
+            sol->_Sol[indexSolV[k]]->add (idof[i], solVk);
           }
         }
       }
     }
+    //END new
   }
 
   sol->_Sol[indexNodeFlag]->close();
@@ -1415,8 +1557,8 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
     unsigned cnt = static_cast < unsigned > ( (*sol->_Sol[indexNodeFlag]) (i) + 0.5);
     if (cnt == 0) {
       c0++;
-      std::cout << "projection failed at " << i << " \n"; //abort();
-      std::cout << "balotto trick initiated AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+//       std::cout << "projection failed at " << i << " \n"; //abort();
+//       std::cout << "balotto trick initiated AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
       for (unsigned k = 0; k < dim; k++) {
         sol->_Sol[indexSolV[k]]->set (i, (*sol->_SolOld[indexSolV[k]]) (i));
       }
@@ -1424,7 +1566,7 @@ void ProjectGridVelocity (MultiLevelSolution &mlSol) {
     else if (cnt > 1) {
       counter -= (cnt - 1);
       for (unsigned k = 0; k < dim; k++) {
-        double velk = (*sol->_SolOld[indexSolV[k]]) (i) / cnt;
+        double velk = (*sol->_Sol[indexSolV[k]]) (i) / cnt;
         sol->_Sol[indexSolV[k]]->set (i, velk);
       }
     }
@@ -1718,4 +1860,436 @@ void ProjectGridVelocity2 (MultiLevelSolution &mlSol) {
       }
     }
   }
+}
+
+bool CheckInclusion2D (Solution* sol, const unsigned &elemToCheck, const unsigned &previousElem,  std::vector <std::vector <double>> & xElement,  std::vector <double> &xToCheck) {
+
+  unsigned solXType = 2;
+  const unsigned dim = sol->GetMesh()->GetDimension();
+
+  bool markerIsInElement = false;
+  bool nextElementFound = false;
+  short unsigned currentElementType = sol->GetMesh()->GetElementType (elemToCheck);
+  double epsilon  = 10.e-10;
+  double epsilon2  = epsilon * epsilon;
+  double t;
+
+  std::vector<double> xc (dim, 0); //stores the coordinates of the face node of elemToCheck
+  unsigned faceNodeLocalIndex = (currentElementType == 3) ? 8 : 6;
+  for (unsigned k = 0; k < dim; k++) {
+    xc[k] = xElement[k][faceNodeLocalIndex] - xToCheck[k]; // coordinates are translated so that the point to check is the new origin
+  }
+
+  if (xc[0]*xc[0] < epsilon2 && xc[1]*xc[1] < epsilon2) {
+    //   std::cout << "the marker is the central face node" << std::endl;
+    markerIsInElement = true; //the marker is xc
+  }
+  else {
+    unsigned faceNodeNumber = facePointNumber[currentElementType][solXType];
+    std::vector< std::vector < double > > xv (dim);  //stores the coordinates of the vertices and midpoints of the element, the first and the last are the same
+    for (unsigned k = 0; k < dim; k++) {
+      xv[k].reserve (faceNodeNumber);
+      xv[k].resize (faceNodeNumber - 1);
+    }
+    for (unsigned i = 0; i < faceNodeNumber - 1; i++) {
+//       unsigned inodeDof  = sol->GetMesh()->GetSolutionDof (facePoints[currentElementType][solXType][i], elemToCheck, 2);
+      for (unsigned k = 0; k < dim; k++) {
+        xv[k][i] = xElement[k][facePoints[currentElementType][solXType][i]] - xToCheck[k];
+      }
+    }
+
+    std::vector<double> r (dim, 0);  //coordinates of the intersection point between the line of the edges and the line that connects the marker and the face node
+    for (unsigned k = 0; k < dim; k++) {
+      xv[k].resize (faceNodeNumber);
+      xv[k][faceNodeNumber - 1] = xv[k][0];
+    }
+
+    //BEGIN look for face intersection
+
+    // rescaling coordinates to properly handle different scales of meshes
+
+    double length = 0.;
+    double sum = 0.;
+
+    for (unsigned i = 0; i < faceNodeNumber - 1; i++) {
+      for (unsigned k = 0; k < dim; k++) {
+        sum += (xv[k][i + 1] - xv[k][i]) * (xv[k][i + 1] - xv[k][i]);
+      }
+
+      length += sqrt (sum);
+    }
+
+    length /= faceNodeNumber;
+
+    for (unsigned k = 0; k < dim; k++) {
+      xc[k] /= length;
+      for (unsigned i = 0; i < faceNodeNumber; i++) {
+        xv[k][i] /= length;
+      }
+    }
+
+    for (unsigned i = 0 ; i < faceNodeNumber - 1; i++) {
+
+      // let's find the plane passing through the points xv[][i], xv[][i+1] and xv[][2] = xv[][i] but with z = length .
+      double A = (xv[1][i + 1] - xv[1][i]);
+      double B = - (xv[0][i + 1] - xv[0][i]);
+
+      //std::cout << "A= " << A << " , " <<"B= " << B <<std::endl;
+
+      double tBottom = (A * xc[0] + B * xc[1]) ;
+      double tTop = A * xv[0][i] + B * xv[1][i];
+      //std::cout << "tBottom = " << tBottom << " , " << "A= " << A << " , " <<  "B= " << B << " , " << "xv[1][" << i << "] =" << xv[1][i] << " , " <<  "tTop = " <<   tTop << std::endl;
+
+      if (fabs (tBottom) >= epsilon || fabs (tTop) < epsilon) {
+        //now let's find the coordinates of the intersection point r
+        t = tTop / tBottom ;
+        //std::cout << "t = " << t << std::endl;
+
+        for (unsigned k = 0; k < dim; k++) {
+          r[k] = t * xc[k];
+          //std::cout << "r[" << k << "] = " << r[k] <<std::endl;
+        }
+
+        if (t < 1.) {  //if not, it means the point r is far away from the marker, and we don't want to go in that direction
+
+          std::vector< std::vector < double > > xvr (dim);
+
+          for (unsigned k = 0; k < dim; k++) {
+            xvr[k].reserve (9);
+          }
+
+          for (unsigned k = 0; k < dim; k++) {
+            xvr[k].resize (faceNodeNumber);
+          }
+
+          //now we have to determine if r is inside edge i
+          for (unsigned j = 0; j < faceNodeNumber; j++) {
+            for (unsigned k = 0; k < dim; k++) {
+              xvr[k][j] = xv[k][j] - r[k];     //transate again the reference frame so that the origin is r
+            }
+          }
+
+
+          if ( (xvr[0][i] * xvr[0][i]  + xvr[1][i] * xvr[1][i]) < epsilon2 ||
+               (xvr[0][i + 1]*xvr[0][i + 1] + xvr[1][i + 1]*xvr[1][i + 1]) < epsilon2) {
+            // std::cout << "intersection on a vertex of the edge" << std::endl;
+
+            if (fabs (t) < epsilon || t < 0) { //this means the marker is on one of the edges
+
+              // if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is one of the nodes" << std::endl;
+
+              // if(t < 0) std::cout << "setting markerIsInElement = true because r is one of the nodes" << std::endl;
+
+              markerIsInElement = true;
+              break;
+            }
+            else {
+              unsigned nodeIndex = (solXType == 0) ? i : i / 2;
+              unsigned nextElem = (sol->GetMesh()->el->GetFaceElementIndex (elemToCheck, nodeIndex) - 1);
+              if (nextElem != previousElem) {
+                nextElementFound = true;
+              }
+              break;
+            }
+
+          }
+
+          else if (xvr[0][i]*xvr[0][i + 1] < 0 || xvr[1][i]*xvr[1][i + 1] < 0) {
+            // std::cout << "intersection on an edge" << std::endl;
+
+            if (fabs (t) < epsilon || t < 0) { //this means the marker is on one of the edges
+
+              //  if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges " << std::endl;
+
+              // if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges " << std::endl;
+
+              markerIsInElement = true;
+              break;
+            }
+            else {
+              unsigned nodeIndex = (solXType == 0) ? i : i / 2;
+              unsigned nextElem = (sol->GetMesh()->el->GetFaceElementIndex (elemToCheck, nodeIndex) - 1);
+              if (nextElem != previousElem) {
+                nextElementFound = true;
+              }
+              break;
+            }
+          }
+        } // closes the " if t < 1 "
+      } // closes if
+    } //closes the for on the nodes
+    //END look for face intersection
+  }// closes the else before the for
+
+  if (nextElementFound == true) markerIsInElement = false;
+
+  return markerIsInElement;
+
+}
+
+bool CheckInclusion3D (Solution* sol, const unsigned &elemToCheck, const unsigned &previousElem, const std::vector <std::vector <double>> & xElement, const std::vector <double> &xToCheck) {
+
+  const unsigned dim = sol->GetMesh()->GetDimension();
+  unsigned solXType = 2;
+
+  unsigned nDofs = sol->GetMesh()->GetElementDofNumber (elemToCheck, solXType);
+  unsigned nFaceDofs = (solXType == 2) ? nDofs - 1 : nDofs;
+  bool markerIsInElement = false;
+  bool nextElementFound = false;
+  short unsigned currentElementType = sol->GetMesh()->GetElementType (elemToCheck);
+  double epsilon  = 10.e-10;
+  double epsilon2  = epsilon * epsilon;
+  double t;
+
+  std::vector<double> xc (dim, 0); //stores the coordinates of the central node of elemToCheck
+  unsigned centralNodeLocalIndex;
+
+  if (currentElementType == 0) centralNodeLocalIndex = 26;
+  else if (currentElementType == 1) centralNodeLocalIndex = 14;
+  else if (currentElementType == 2) centralNodeLocalIndex = 20;
+
+  for (unsigned k = 0; k < dim; k++) {
+    xc[k] = xElement[k][centralNodeLocalIndex] - xToCheck[k]; // coordinates are translated so that the marker is the new origin
+    //std::cout << " xc[" << k << "]= " <<xc[k] <<std::endl;
+  }
+
+  if (xc[0]*xc[0] < epsilon2 && xc[1]*xc[1] < epsilon2 && xc[2]*xc[2] < epsilon2) {
+    //   std::cout << "the marker is the central element node" << std::endl;
+    markerIsInElement = true; //the marker is xc
+  }
+
+  else {
+
+    for (unsigned iface = 0; iface < sol->GetMesh()->GetElementFaceNumber (elemToCheck); iface++) {
+
+      // std::cout << "iface = " << iface << std::endl;
+
+      for (unsigned itri = 0; itri < trianglesPerFace[currentElementType][solXType][iface]; itri ++) {
+
+        //  std::cout << "itri = " << itri << std::endl;
+
+        std::vector<double> xcc (dim, 0); // will store the coordinates of the center scaled
+
+        unsigned scalarCount = 0;
+        std::vector<double> r (dim, 0);  //coordinates of the intersection point between the plane of itri and the line through the element center point and the marker
+        std::vector< std::vector < double > > xv (dim);  //stores the coordinates of the nodes of the triangle itri
+
+        // fill in the coordinates of the vertices of itri
+        for (unsigned k = 0; k < dim; k++) {
+          xv[k].reserve (4);
+        }
+        for (unsigned k = 0; k < dim; k++) {
+          xv[k].resize (4);
+        }
+
+        for (unsigned i = 0; i < 4; i++) {
+//           unsigned itriDof  = sol->GetMesh()->GetSolutionDof (faceTriangleNodes[currentElementType][solXType][iface][itri][i], elemToCheck, 2);
+          // std::cout << "itriDof = " << itriDof << std::endl;
+          for (unsigned k = 0; k < dim; k++) {
+            xv[k][i] = xElement[k][faceTriangleNodes[currentElementType][solXType][iface][itri][i]] - xToCheck[k]; // coordinates are translated so that the marker is the new origin
+          }
+        }
+
+        // rescaling coordinates to properly handle different scales of meshes
+        double length = 0.;
+        double sum = 0.;
+        for (unsigned i = 0; i < 3; i++) {
+          for (unsigned k = 0; k < dim; k++) {
+            sum += (xv[k][i + 1] - xv[k][i]) * (xv[k][i + 1] - xv[k][i]);
+          }
+          length += sqrt (sum);
+        }
+
+        length /= 4;
+
+        for (unsigned k = 0; k < dim; k++) {
+          xcc[k] = xc[k] / length;
+          //std::cout << " xcc[" << k << "]= " <<xcc[k] <<std::endl;
+          for (unsigned i = 0; i < 4; i++) {
+            xv[k][i] /= length;
+          }
+        }
+
+
+        // let's find the plane passing through the vertices of the triangle itri
+        double A = - (xv[1][2] - xv[1][0]) * (xv[2][1] - xv[2][0]) + (xv[2][2] - xv[2][0]) * (xv[1][1] - xv[1][0]);
+        double B = - (xv[2][2] - xv[2][0]) * (xv[0][1] - xv[0][0]) + (xv[0][2] - xv[0][0]) * (xv[2][1] - xv[2][0]);
+        double C = - (xv[0][2] - xv[0][0]) * (xv[1][1] - xv[1][0]) + (xv[1][2] - xv[1][0]) * (xv[0][1] - xv[0][0]);
+
+        //std::cout << "A= " << A << " , " <<"B= " << B << " , " << "C = " << C << " , " <<std::endl;
+
+        double tBottom = (A * xcc[0] + B * xcc[1] + C * xcc[2]);
+        double tTop = A * xv[0][0] + B * xv[1][0] + C * xv[2][0];
+
+        //std::cout << " tTop = " << tTop <<std::endl;
+        //std::cout << " tBottom = " << tBottom <<std::endl;
+
+        if (fabs (tBottom) < epsilon && fabs (tTop) >= epsilon) {
+          // std::cout << "The plane of face" << itri << "does not intersect the line" <<std::endl;
+          break; // must exit the loop on itri
+        }
+
+        else { //now let's find the coordinates of the intersection point r
+          t = tTop / tBottom ;
+          //std::cout << "t = " << t << std::endl;
+
+          for (unsigned k = 0; k < dim; k++) {
+            r[k] = t * xcc[k];
+            // std::cout << "r[" << k << "] = " << r[k] <<std::endl;
+          }
+
+          if (t < 1) {  //if not, it means the point r is far away from the marker, and we don't want to go in that direction
+
+            for (unsigned i = 0; i < 4; i++) { //now we have to determine if r is inside itri
+              for (unsigned k = 0; k < dim; k++) {
+                xv[k][i] = xv[k][i] - r[k];     //translate again the reference frame so that the origin is r
+              }
+            }
+
+            for (unsigned i = 0; i < 3; i++) {
+              double q0 = xv[1][i] * (xv[2][i] - xv[2][i + 1]) + xv[2][i] * (xv[1][i + 1] - xv[1][i]);
+              double q1 = xv[2][i] * (xv[0][i] - xv[0][i + 1]) + xv[0][i] * (xv[2][i + 1] - xv[2][i]);
+              double q2 = xv[0][i] * (xv[1][i] - xv[1][i + 1]) + xv[1][i] * (xv[0][i + 1] - xv[0][i]);
+
+              // std::cout << "q0 = " << q0 << " , " << "q1 = " << q1 << " , " << " q2 = " << q2 <<  std::endl;
+
+              double  scalarProduct = q0 * A + q1 * B + q2 * C;
+
+              //   std::cout << "fabs(scalarProduct) = " << fabs(scalarProduct) << std::endl;
+
+              if (scalarProduct > epsilon) {
+                //   std::cout << "r is outside triangle " << itri <<  std::endl;
+                break;
+
+              }
+              else if (fabs (scalarProduct) < epsilon) {  //scalarProduct == 0
+
+                if ( (xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
+                     (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
+                  //    std::cout << "intersection on a vertex of itri" << std::endl;
+                  if (fabs (t) < epsilon || t < 0) { //this means the marker is on one of the faces
+
+                    //     if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is one vertex of triangle " << itri << std::endl;
+                    //     if(t < 0) std::cout << "setting markerIsInElement = true because r is one vertex of triangle " << itri << std::endl;
+
+                    markerIsInElement = true;
+                    break;
+                  }
+                  else {
+                    //     std::cout << "r is in triangle " << itri << std::endl;
+                    unsigned nextElem = (sol->GetMesh()->el->GetFaceElementIndex (elemToCheck, iface) - 1);
+                    if (nextElem != previousElem) {
+                      nextElementFound = true;
+                    }
+                    break;
+                  }
+                }
+                else if (xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
+                  //   std::cout << "intersection on an edge of itri" << std::endl;
+                  if (fabs (t) < epsilon || t < 0) { //this means the marker is on one of the faces
+
+                    //    if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
+                    //    if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
+
+                    markerIsInElement = true;
+                    break;
+                  }
+                  else {
+                    //     std::cout << "r is in triangle " << itri << std::endl;
+                    unsigned nextElem = (sol->GetMesh()->el->GetFaceElementIndex (elemToCheck, iface) - 1);
+                    if (nextElem != previousElem) {
+                      nextElementFound = true;
+                    }
+                    break;
+                  }
+                }
+              }
+              else if (scalarProduct < 0) {
+                //    std::cout << " scalarProduct = " << scalarProduct << std::endl;
+                scalarCount++;
+              }
+            } // closes the for loop
+          } // closes " if t < 1 "
+        } // closes the "else" on tBottom = 0
+
+
+        if (scalarCount == 3) {
+          if (fabs (t) < epsilon || t < 0) { //this means the marker is on one of the faces
+
+            //   if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
+            //  if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
+
+            markerIsInElement = true;
+            break;
+          }
+          else {
+            //    std::cout << "r is in triangle " << itri << std::endl;
+            unsigned nextElem = (sol->GetMesh()->el->GetFaceElementIndex (elemToCheck, iface) - 1);
+            if (nextElem != previousElem) {
+              nextElementFound = true;
+            }
+            break;
+          }
+        }
+        if (markerIsInElement == true) {
+          break;
+        }
+        if (nextElementFound == true) {
+          break;
+        }
+      } //end for on itri
+
+      if (markerIsInElement == true) {
+        break;
+      }
+      if (nextElementFound == true) {
+        break;
+      }
+    } //end for on iface
+  } // end of the first else
+
+  if (nextElementFound == true) {
+    markerIsInElement = false;
+  }
+
+  return markerIsInElement;
+
+}
+
+void FindLocalCoordinates (std::vector<double> & xi, std::vector < std::vector < std::vector < double > > >  & aX, const bool & pcElemUpdate, MultiLevelSolution & mlSol, const unsigned &elementToCheck, const std::vector <double> &xToCheck, const std::vector<std::vector<double>> & xElement) {
+
+  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  Solution* sol  = mlSol.GetSolutionLevel (level);
+  const unsigned dim = msh->GetDimension();
+  unsigned solXType = 2;
+
+  short unsigned elemType = sol->GetMesh()->GetElementType (elementToCheck);
+  unsigned nDofs = sol->GetMesh()->GetElementDofNumber (elementToCheck, solXType);
+
+  if (pcElemUpdate) {
+
+    //BEGIN projection nodal to polynomial coefficients
+    aX.resize (solXType + 1);
+    for (unsigned j = 0; j < solXType + 1; j++) {
+      ProjectNodalToPolynomialCoefficients (aX[j], xElement, elemType, j);
+    }
+    //END projection nodal to polynomial coefficients
+  }
+
+  GetClosestPointInReferenceElement (xElement, xToCheck, elemType, xi);
+
+  //BEGIN Inverse mapping loop
+  for (unsigned j = 0; j < solXType; j++) {
+
+    std::vector < double > phi;
+    std::vector < std::vector < double > > gradPhi;
+    bool convergence = false;
+    while (!convergence) {
+      GetPolynomialShapeFunctionGradient (phi, gradPhi, xi, elemType, solXType);
+      convergence = GetNewLocalCoordinates (xi, xToCheck, phi, gradPhi, aX[solXType]);
+    }
+  }
+  //END Inverse mapping loop
+
 }
