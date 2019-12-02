@@ -14,7 +14,7 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
-#include "../include/mpmFsi2.hpp"
+#include "../include/mpmFsi3.hpp"
 
 using namespace femus;
 
@@ -22,7 +22,7 @@ using namespace femus;
 
 
 double SetVariableTimeStep (const double time) {
-  double dt =  0.005/*0.008*/;
+  double dt =  0.01/*0.008*/;
   return dt;
 }
 
