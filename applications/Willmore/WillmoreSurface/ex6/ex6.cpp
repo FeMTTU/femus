@@ -64,7 +64,7 @@ void AssembleO2ConformalMinimization (MultiLevelProblem&);  //vastly superior.. 
 void ChangeTriangleConfiguration1 (const std::vector<unsigned> & ENVN, std::vector <double> &angle);
 void ChangeTriangleConfiguration2 (const std::vector<unsigned> & ENVN, std::vector <double> &angle);
 
-double dt0 = 0.00005;
+double dt0 = 0.1;
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
@@ -122,11 +122,11 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
-  scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  //scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
@@ -136,7 +136,7 @@ int main (int argc, char** args) {
 
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -229,7 +229,7 @@ int main (int argc, char** args) {
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to P-Willmore system.
-  system.SetAssembleFunction (AssemblePWillmore2);
+  system.SetAssembleFunction (AssemblePWillmore);
 
   // Attach time step function to P-Willmore sysyem.
   system.AttachGetTimeIntervalFunction (GetTimeStep);
@@ -252,7 +252,7 @@ int main (int argc, char** args) {
   system2.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system2 and initialize.
-  system2.SetAssembleFunction (AssembleConformalMinimization);
+  system2.SetAssembleFunction (AssembleO2ConformalMinimization);
   system2.init();
 
   mlSol.SetWriter (VTK);
@@ -302,10 +302,11 @@ int main (int argc, char** args) {
     system.MGsolve();
 
     dt0 *= 1.1;
-    
+    if(dt0 > .75) dt0 = .75;
+
     if (time_step % 1 == 0) {
       mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
-      
+
       CopyDisplacement (mlSol, true);
       system2.MGsolve();
 
@@ -2381,20 +2382,20 @@ void AssemblePWillmore2 (MultiLevelProblem& ml_prob) {
       // Initialize quantities xNew, xOld, Y, W at the Gauss points.
       adept::adouble solxNewg[3] = {0., 0., 0.};
       double solxOldg[3] = {0., 0., 0.};
-      
+
       adept::adouble solYNewg[3] = {0., 0., 0.};
       double solYOldg[3] = {0., 0., 0.};
-       
+
       adept::adouble solWNewg[3] = {0., 0., 0.};
-      
+
 
       // Initialize derivatives of x and W (new, middle, old) at the Gauss points.
       adept::adouble solxNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble solWNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       adept::adouble solYNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-      
+
       adept::adouble solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-      
+
       double solxOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       double solWOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
 
