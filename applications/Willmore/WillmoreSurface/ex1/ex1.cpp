@@ -64,24 +64,6 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   value = 0.;
   return dirichlet;
 }
-double InitalValueY1 (const std::vector < double >& x) {
-  return -2. * x[0];
-}
-double InitalValueY2 (const std::vector < double >& x) {
-  return -2. * x[1];
-}
-double InitalValueY3 (const std::vector < double >& x) {
-  return -2. * x[2];
-}
-double InitalValueW1 (const std::vector < double >& x) {
-  return -2. * P[2] * pow (2., P[2] - 2) * x[0];
-}
-double InitalValueW2 (const std::vector < double >& x) {
-  return -2. * P[2] * pow (2., P[2] - 2) * x[1];
-}
-double InitalValueW3 (const std::vector < double >& x) {
-  return -2. * P[2] * pow (2., P[2] - 2) * x[2];
-}
 
 
 // Main program starts here.
@@ -157,13 +139,7 @@ int main (int argc, char** args) {
 
   // Initialize the variables and attach boundary conditions.
   mlSol.Initialize ("All");
-  mlSol.Initialize ("W1", InitalValueW1);
-  mlSol.Initialize ("W2", InitalValueW2);
-  mlSol.Initialize ("W3", InitalValueW3);
-  mlSol.Initialize ("Y1", InitalValueY1);
-  mlSol.Initialize ("Y2", InitalValueY2);
-  mlSol.Initialize ("Y3", InitalValueY3);
-
+ 
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
   mlSol.GenerateBdc ("All");
 

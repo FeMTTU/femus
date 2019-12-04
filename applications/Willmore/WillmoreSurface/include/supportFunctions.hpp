@@ -84,7 +84,6 @@ void ChangeTriangleConfiguration1 (const std::vector<unsigned> & ENVN, std::vect
     scale = (M_PI - angle[2]) / (angle[1] + angle [0]);
     angle[1] *= scale;
     angle[0] *= scale;
-
   }
   else if (ENVN[0] == ENVN[1] && ENVN[0] < ENVN[2]) {
     angle[2] = M_PI - 2. * angle[0];

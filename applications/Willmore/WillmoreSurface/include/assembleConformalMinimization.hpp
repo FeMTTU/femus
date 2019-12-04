@@ -258,8 +258,6 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         phix_uv[0] = &phi_uv0[0];
         phix_uv[1] = &phi_uv1[0];
 
-
-
       }
 
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
