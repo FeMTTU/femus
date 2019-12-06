@@ -1307,5 +1307,315 @@ namespace femus {
 
   }
 
+  
+  
+  
+ #define FE_DOMAIN  2
+
+ #define POS_U   0
+
+  
+  void ComputeQoI_face(const MultiLevelProblem& ml_prob, const unsigned level, const unsigned face_qoi, const unsigned stress_component, const MonolithicFSINonLinearImplicitSystem* mlPdeSys)    {
+  
+  
+//   const MonolithicFSINonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system< MonolithicFSINonLinearImplicitSystem > ("Fluid-Structure-Interaction");
+//   const unsigned level = mlPdeSys->GetLevelToAssemble();
+
+  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
+  elem*                     el = msh->el;
+
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
+  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
+
+  const unsigned  dim = msh->GetDimension();
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+  unsigned    iproc = msh->processor_id();
+
+  //=============== Geometry ========================================
+   unsigned solType_coords = FE_DOMAIN;
+ 
+  CurrentElem < double > geom_element(dim, msh);
+    
+  constexpr unsigned int space_dim = 3;
+  
+  std::vector< double > normal(space_dim, 0.);
+ //***************************************************
+
+  //=============== Integration ========================================
+  double weight_vol = 0.;
+  double weight_bdry = 0.;
+
+
+  std::vector< std::vector< double > > deform_tensor_qp(dim);
+   for (unsigned d = 0; d < deform_tensor_qp.size(); d++) {   deform_tensor_qp[d].resize(dim); }
+  
+ //*************** unknowns ***************************** 
+ //*************************************************** 
+  vector < vector < double > > phi_u(dim);     
+  vector < vector < double > > phi_u_x(dim);   
+ 
+   for (unsigned d = 0; d < dim; d++) {
+       phi_u[d].reserve(max_size);
+       phi_u_x[d].reserve(max_size * space_dim);
+   }
+ 
+ std::vector < std::string >  var_names(dim);
+ var_names[0] = "U";
+ var_names[1] = "V";
+ if (dim == 3) var_names[2] =  "W";
+ 
+  std::vector <  unsigned > solIndex_u(dim); 
+  std::vector <  unsigned > solType_u(dim); 
+  std::vector <  unsigned > nDof_u(dim); 
+  
+     for (unsigned d = 0; d < dim; d++) {
+         solIndex_u[d] = ml_sol->GetIndex(var_names[d].c_str());            // get the position of "state" in the ml_sol object
+         solType_u[d]  = ml_sol->GetSolutionType(solIndex_u[d]);    // get the finite element type for "state"
+    }
+
+  vector < vector < double > > sol_u(dim); // local solution
+   for (unsigned d = 0; d < dim; d++) {  sol_u[d].reserve(max_size);   }
+  
+ //*************************************************** 
+ //***************************************************
+ //***************************************************
+  vector < vector < double > > phi_u_bdry(dim);
+  vector < vector < double > > phi_u_x_bdry(dim); 
+
+   for (unsigned d = 0; d < dim; d++) {   
+       phi_u_bdry[d].reserve(max_size);
+       phi_u_x_bdry[d].reserve(max_size * space_dim);
+   }
+   
+  //volume shape functions at boundary
+  vector < vector < double > > phi_u_vol_at_bdry(dim);
+  vector < vector < double > > phi_u_x_vol_at_bdry(dim);
+  for (unsigned d = 0; d < dim; d++) {   
+       phi_u_vol_at_bdry[d].reserve(max_size);
+     phi_u_x_vol_at_bdry[d].reserve(max_size * space_dim);
+  }
+   
+  vector < vector < double > > sol_u_x_vol_at_bdry_gss(dim);
+  for (unsigned d = 0; d < dim; d++) {
+      sol_u_x_vol_at_bdry_gss[d].resize(space_dim);
+  }
+ //***************************************************
+  
+  
+  double integral_volume = 0.;
+  std:vector < double > integral_norm_stress_component(dim, 0.);
+  
+
+ //*************************************************** 
+     std::vector < std::vector < double > >  JacI_qp(space_dim);
+     std::vector < std::vector < double > >  Jac_qp(dim);
+    for (unsigned d = 0; d < Jac_qp.size(); d++) {   Jac_qp[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_qp.size(); d++) { JacI_qp[d].resize(dim); }
+    
+    double detJac_qp;
+
+     std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
+     std::vector < std::vector < double > >  Jac_qp_bdry(dim-1);
+    for (unsigned d = 0; d < Jac_qp_bdry.size(); d++) {   Jac_qp_bdry[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_qp_bdry.size(); d++) { JacI_qp_bdry[d].resize(dim-1); }
+    
+    double detJac_qp_bdry;
+    
+      //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+  std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all;
+  ml_prob.get_all_abstract_fe(elem_all);
+ //*************************************************** 
+  
+  
+  // element loop: each process loops only on the elements that owns
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+        
+    const short unsigned ielGeom = geom_element.geom_type();
+
+   
+ //*********** state ********************************* 
+   for (unsigned d = 0; d < dim; d++) {   
+    nDof_u[d]     = msh->GetElementDofNumber(iel, solType_u[d]);
+    sol_u[d]    .resize(nDof_u[d]);
+   // local storage of global mapping and solution
+    for (unsigned i = 0; i < sol_u[d].size(); i++) {
+      unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u[d]);
+      sol_u[d][i] = (*sol->_Sol[solIndex_u[d]])(solDof_u);
+     }
+   }
+ //*********** state ********************************* 
+
+ 
+ //********** ALL VARS ******************************* 
+    int nDof_max    = msh->GetElementDofNumber(iel, solType_u[POS_U]);   //  TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
+    
+ //***************************************************
+
+	       
+	  // loop on faces of the current element
+
+	  for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+          
+       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
+       const unsigned nve_bdry_u = msh->GetElementFaceDofNumber(iel,jface,solType_u[POS_U]);
+       
+
+       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+ 
+       geom_element.set_elem_center_bdry_3d();
+
+       
+	    // look for boundary faces
+            const int bdry_index = el->GetFaceElementIndex(iel,jface);
+            
+	    if( bdry_index < 0) {
+	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+	      
+		
+// 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
+	      if(  face == face_qoi) { //control face
+
+	
+		//============ initialize gauss quantities on the boundary ==========================================
+                std::vector< double > sol_u_bdry_gss(dim);
+                std::vector< std::vector< double > > sol_u_x_bdry_gss(dim);
+                       std::fill( sol_u_bdry_gss.begin(), sol_u_bdry_gss.end(), 0.); 
+                   for (unsigned d = 0; d < dim; d++) {
+                       sol_u_x_bdry_gss[d].resize(dim);
+                       std::fill( sol_u_x_bdry_gss[d].begin(), sol_u_x_bdry_gss[d].end(), 0.); 
+                }
+		//============ initialize gauss quantities on the boundary ==========================================
+		
+		for(unsigned ig_bdry = 0; ig_bdry < ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber(); ig_bdry++) {
+		  
+    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
+	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal);
+
+    weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
+    
+  for (unsigned d = 0; d < dim; d++) {
+      elem_all[ielGeom_bdry][solType_u[d]] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry[d], phi_u_x_bdry[d], boost::none, space_dim);
+  }
+    
+    elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_qp/*not_needed_here*/, JacI_qp, detJac_qp/*not_needed_here*/, space_dim);
+    
+  for (unsigned d = 0; d < dim; d++) {
+    elem_all[ielGeom][solType_u[d]]->shape_funcs_vol_at_bdry_current_elem(ig_bdry, jface, JacI_qp, phi_u_vol_at_bdry[d], phi_u_x_vol_at_bdry[d], boost::none, space_dim);
+  }
+  
+		  
+		 //========== compute gauss quantities on the boundary ===============================================
+          for (unsigned d = 0; d < dim; d++) {
+		    sol_u_bdry_gss[d] = 0.;
+                  std::fill(sol_u_x_bdry_gss[d].begin(), sol_u_x_bdry_gss[d].end(), 0.);
+          }
+          
+          
+	 for (int i_bdry = 0; i_bdry < nve_bdry_u; i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+			
+         for (int e = 0; e < dim; e++) {
+			sol_u_bdry_gss[e] +=  sol_u[e][i_vol] * phi_u_bdry[e][i_bdry];
+                            for (int d = 0; d < dim; d++) {
+			      sol_u_x_bdry_gss[e][d] += sol_u[e][i_vol] * phi_u_x_bdry[e][i_bdry * space_dim + d];
+			    }
+         }
+	  }
+         //========= compute gauss quantities on the boundary ================================================
+
+//     compute gauss quantities on the boundary through VOLUME interpolation
+          for (unsigned d = 0; d < dim; d++) {
+              std::fill(sol_u_x_vol_at_bdry_gss[d].begin(), sol_u_x_vol_at_bdry_gss[d].end(), 0.);
+           }
+           
+         for (int e = 0; e < dim; e++) {
+		      for (int iv = 0; iv < nDof_u[e]; iv++)  {
+			
+            for (int d = 0; d < dim; d++) {
+			      sol_u_x_vol_at_bdry_gss[e][d] += sol_u[e][iv] * phi_u_x_vol_at_bdry[e][iv * space_dim + d];
+			    }
+		       }
+		       
+           }
+              
+		      
+       for (unsigned d = 0; d < deform_tensor_qp.size(); d++) {   std::fill( deform_tensor_qp[d].begin(), deform_tensor_qp[d].end(), 0.); }
+       
+       for (unsigned d = 0; d < deform_tensor_qp.size(); d++) {
+           for (unsigned e = 0; e < deform_tensor_qp[d].size(); e++) {
+               deform_tensor_qp[d][e] = 0.5 * (sol_u_x_vol_at_bdry_gss[d][e] + sol_u_x_vol_at_bdry_gss[e][d]);
+           }
+       }
+       
+    //--------       
+       for (unsigned d = 0; d < dim; d++) {
+           
+          double norm_stress = 0.;
+          
+            for (unsigned e = 0; e < dim; e++) {
+                  norm_stress += deform_tensor_qp[d][e] * normal[e]; 
+               }
+//     compute gauss quantities on the boundary through VOLUME interpolation
+
+
+                 integral_norm_stress_component[d] +=  weight_bdry */* sol_u_bdry_gss * sol_u_bdry_gss*/ norm_stress; 
+                 
+          }
+    //--------       
+            
+           }
+	      } //end face == 3
+	      
+	    } //end if boundary faces
+	  }  // loop over element faces   
+
+//=====================================================================================================================  
+//=====================================================================================================================  
+//=====================================================================================================================  
+  
+  
+   
+      // *** Gauss point loop ***
+      for (unsigned ig_vol = 0; ig_vol < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig_vol++) {
+	
+        // *** get gauss point weight, test function and test function partial derivatives ***
+    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig_vol, Jac_qp, JacI_qp, detJac_qp, space_dim);
+    weight_vol = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig_vol];
+
+  for (unsigned d = 0; d < dim; d++) {
+    elem_all[ielGeom][solType_u[d]]                 ->shape_funcs_current_elem(ig_vol, JacI_qp, phi_u[d], phi_u_x[d], boost::none, space_dim);
+  }
+  
+               integral_volume +=  weight_vol * 1.;
+	  
+      } // end gauss point loop
+      
+  } //end element loop
+
+  
+  ////////////////////////////////////////
+  for (unsigned d = 0; d < dim; d++) {
+      
+       std::cout << "integral on processor: " << integral_norm_stress_component[d] << std::endl;
+
+   std::vector<double> J(dim, 0.);
+   
+      MPI_Allreduce( &integral_norm_stress_component[d], &J[d], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );  //THIS IS THE RIGHT ONE!!
+
+    std::cout << "@@@@@@@@@@@@@@@@ functional value: " << J[d] << std::endl;
+  }
+  
+//   std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
+ 
+return;
+  
+}
+
+  
+  
 
 }
