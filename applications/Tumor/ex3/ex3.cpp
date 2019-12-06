@@ -940,21 +940,20 @@ void GetKFromFileANISO (MultiLevelSolution &mlSol) {
       }
     }
   }
+  std::cout <<"Trace is: " << trace <<"counter is :"<< counter <<std::endl;
 
   double traceAll = 0.;
   unsigned counterAll;
   MPI_Allreduce (&trace, &traceAll, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce (&counter, &counterAll, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
   
-  //std::cout << "CounterAll is : " << counterAll << " " << std::endl;
-  ///std::cout << "Before TracaAll is : " << traceAll << " " << std::endl;
+  std::cout << "TraceAll is : " << traceAll << "--" << " CounterAll = "<< counterAll <<std::endl;
   
   traceAll *= 1. / counterAll;
   
 
-  //std::cout << "Now tracaAll is : " << traceAll << " " << std::endl;
+  std::cout << "TraceAll after is : " << traceAll << "--" << " CounterAll after = "<< counterAll <<std::endl;
 
-  //exit(0);
 
   for (int iel = msh->_dofOffset[kType][iproc]; iel < msh->_dofOffset[kType][iproc + 1]; iel++) {
     for (unsigned j = 0; j < 6; j++) {
