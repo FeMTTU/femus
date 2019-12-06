@@ -10,7 +10,7 @@ SET(EXEC_FILE "fsisteady")
 
 femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})
 
-FILE(COPY ./run_fsi1_turek.sh DESTINATION ${PROJECT_BINARY_DIR})
-FILE(COPY ./run_fsi_richter.sh DESTINATION ${PROJECT_BINARY_DIR})
+FILE(COPY ./run_fsi_2d.sh DESTINATION ${PROJECT_BINARY_DIR})
+FILE(COPY ./run_fsi_3d.sh DESTINATION ${PROJECT_BINARY_DIR})
 
 
