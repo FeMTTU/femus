@@ -40,7 +40,7 @@ bool areaConstraint = true;
 
 void AssemblePWillmore (MultiLevelProblem& ml_prob);
 
-double dt0 = 0.00005;
+double dt0 = 5e-10;
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
@@ -90,7 +90,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  //mlMsh.ReadCoarseMesh ("../input/moo.med", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/spot.med", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/superknot.med", "seventh", scalingFactor);
 
 
@@ -123,7 +123,7 @@ int main (int argc, char** args) {
   if (volumeConstraint || areaConstraint) {
     mlSol.AddSolution ("Lambda", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
   }
-  
+
   mlSol.AddSolution ("ENVN", LAGRANGE, FIRST, 0, false);
 
   // Add variables "nDx" and "Lambda1" for the conformal system.
@@ -137,7 +137,7 @@ int main (int argc, char** args) {
 
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
   mlSol.GenerateBdc ("All");
-  
+
   GetElementNearVertexNumber (mlSol);
 
   MultiLevelProblem mlProb (&mlSol);
@@ -232,7 +232,7 @@ int main (int argc, char** args) {
 
   // First, solve system2 to "conformalize" the initial mesh.
   CopyDisplacement (mlSol, true);
-  system2.MGsolve();
+  //system2.MGsolve();
 
   // Then, solve system0 to compute initial curvatures.
   CopyDisplacement (mlSol, false);
@@ -871,7 +871,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 //           for (unsigned j = 0; j < nxDofs; j++) {
 //             Jac [jstart + j] += term0 * phix[j];
 //           }
-       
+
           double term1 = 0.;
           double term1d = 0.;
           for (unsigned J = 0; J < DIM; J++) {
@@ -880,10 +880,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           }
           //aResLambda2 += term1t * Area;
           surfaceA += 1. / DIM * (term1 + normal[K] * normal[K]) * Area;
-          
+
           Res[irow] -= ( term1d + 0*(normalN[K] - normalO[K]) * normal[K] ) * Area;
           unsigned jstart = istart +  K * nxDofs;
-          
+
           for (unsigned j = 0; j < nxDofs; j++) {
             double term0 = 0.;
             for (unsigned J = 0; J < DIM; J++) {
@@ -946,4 +946,3 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
 }
 //END Assemble System PWillmore
-
