@@ -30,7 +30,7 @@ bool firstTime = true;
 double surface0 = 0.;
 double volume0 = 0.;
 unsigned conformalTriangleType = 1;
-const double eps = 1e-5;
+const double eps = 1e-4;
 bool volumeConstraint = true;
 bool areaConstraint = true;
 
@@ -40,7 +40,7 @@ bool areaConstraint = true;
 
 void AssemblePWillmore (MultiLevelProblem& ml_prob);
 
-double dt0 = 5e-10;
+double dt0 = 5e-4;
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
@@ -90,12 +90,12 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  mlMsh.ReadCoarseMesh ("../input/spot.med", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/stupid.med", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/superknot.med", "seventh", scalingFactor);
 
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -232,7 +232,7 @@ int main (int argc, char** args) {
 
   // First, solve system2 to "conformalize" the initial mesh.
   CopyDisplacement (mlSol, true);
-  //system2.MGsolve();
+  system2.MGsolve();
 
   // Then, solve system0 to compute initial curvatures.
   CopyDisplacement (mlSol, false);
@@ -258,7 +258,11 @@ int main (int argc, char** args) {
       mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
 
       CopyDisplacement (mlSol, true);
-      system2.MGsolve();
+      //system2.MGsolve();
+
+      if(time_step == 0){
+        system2.MGsolve();
+      }
 
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();

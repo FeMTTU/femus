@@ -396,17 +396,18 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
 //       double V1[DIM] = {0., 0., 0.};
-// 
+//
 //       double W1[DIM] = {0., 0., 0.};
 
       double Q1[DIM][dim] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      double normalMSqrtDetg1[DIM] = {0, 0, 0};
 
       for (unsigned j = 0; j < nxDofs; j++) {
 
 //         V1[0] += phix_uv[1][j] * solNx[0][j] + normal[2] * phix_uv[0][j] * solNx[1][j] - normal[1] * phix_uv[0][j] * solNx[2][j];
 //         V1[1] += - normal[2] * phix_uv[0][j] * solNx[0][j] + phix_uv[1][j] * solNx[1][j] + normal[0] * phix_uv[0][j] * solNx[2][j];
 //         V1[2] += + normal[1] * phix_uv[0][j] * solNx[0][j] - normal[0] * phix_uv[0][j] * solNx[1][j] + phix_uv[1][j] * solNx[2][j];
-// 
+//
 //         W1[0] +=  phix_uv[0][j] * solNx[0][j] - normal[2] * phix_uv[1][j] * solNx[1][j] + normal[1] * phix_uv[1][j] * solNx[2][j];
 //         W1[1] += normal[2] * phix_uv[1][j] * solNx[0][j] + phix_uv[0][j] * solNx[1][j] - normal[0] * phix_uv[1][j] * solNx[2][j];
 //         W1[2] += - normal[1] * phix_uv[1][j] * solNx[0][j] + normal[0] * phix_uv[1][j] * solNx[1][j] + phix_uv[0][j] * solNx[2][j];
@@ -461,6 +462,15 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
                       ( (+gi[0][0] + gi[1][1] * (normal[0] * normal[0] + normal[1] * normal[1]))          * phix_uv[1][j] +
                         (-gi[0][1] * (normal[2] * normal[2]))                                             * phix_uv[0][j]) * solNx[2][j]
                     );
+
+        normalMSqrtDetg1[0] = (solMx_uv[2][1] * phix_uv[0][j] - solMx_uv[2][0] * phix_uv[1][j]) * solNx[1][j] -
+                              (solMx_uv[1][1] * phix_uv[0][j] - solMx_uv[1][0] * phix_uv[1][j]) * solNx[2][j];
+
+        normalMSqrtDetg1[1] = (solMx_uv[0][1] * phix_uv[0][j] - solMx_uv[0][0] * phix_uv[1][j]) * solNx[2][j] -
+                              (solMx_uv[2][1] * phix_uv[0][j] - solMx_uv[2][0] * phix_uv[1][j]) * solNx[0][j];
+
+        normalMSqrtDetg1[2] = (solMx_uv[1][1] * phix_uv[0][j] - solMx_uv[1][0] * phix_uv[1][j]) * solNx[0][j] -
+                              (solMx_uv[0][1] * phix_uv[0][j] - solMx_uv[0][0] * phix_uv[1][j]) * solNx[1][j];
 
       }
 
@@ -545,5 +555,3 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
   KK->close();
 
 } // end AssembleO2ConformalMinimization.
-
-
