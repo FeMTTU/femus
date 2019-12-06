@@ -234,6 +234,22 @@ To overcome this, do
    
    \section{Mesh}
    
+    \subsection{Boundary mesh}
+    
+    Whenever you want to retrieve the Boundary of a Mesh,
+    you need to loop over each mesh element
+    and then loop over its \textit{faces}.
+    
+    If the FaceElementIndex is $ < 0 $, then it is a \textit{boundary} face.
+    
+    When the FaceElementIndex is stored, the flag that is on the mesh file is made NEGATIVE and then we subtract $ 1 $
+    
+    \subsection{Interface mesh}
+    
+    If I wanted some \textbf{interface} faces, not on the boundary, I should set their FaceElementIndex to be $ > 0 $.
+    How does this affect the rest of the code?
+    
+  
  \section{Elem}
   
   The Elem class contains the \textbf{list} of all elements

@@ -1470,10 +1470,10 @@ namespace femus {
 
        
 	    // look for boundary faces
-            const int bdry_index = el->GetFaceElementIndex(iel,jface);
+            const int bdry_index = msh->el->GetFaceElementIndex(iel,jface);
             
 	    if( bdry_index < 0) {
-	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface) + 1);
 	      
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
