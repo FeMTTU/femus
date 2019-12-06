@@ -52,7 +52,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
   unsigned solENVNIndex = mlSol->GetIndex ("ENVN");
   unsigned solENVNType = mlSol->GetSolutionType (solENVNIndex);
-  
+
   // Extract positions of Dx in ml_sol object.
   unsigned solDxIndex[DIM];
   solDxIndex[0] = mlSol->GetIndex ("Dx1");
@@ -65,6 +65,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
   // Local solution vectors for X, Dx, Xhat, XC.
   std::vector < double > solx[DIM];
+  std::vector < double > solNx[DIM];
   std::vector < double > solDx[DIM];
   std::vector < double > xhat[DIM];
   std::vector < double > xc[DIM];
@@ -86,7 +87,6 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
   // Local solution vectors for Nx and NDx.
   std::vector < adept::adouble > solNDx[DIM];
-  std::vector < adept::adouble > solNx[DIM];
 
   // Get the position of "Lambda1" in the ml_sol object.
   unsigned solLIndex;
@@ -133,6 +133,8 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
       solDx[K].resize (nxDofs);
       solx[K].resize (nxDofs);
 
+      solNx[K].resize (nxDofs);
+
       solNDx[K].resize (nxDofs);
       solNx[K].resize (nxDofs);
 
@@ -160,6 +162,7 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
         solDx[K][i] = (*sol->_Sol[solDxIndex[K]]) (iDDof);
         solx[K][i] = xhat[K][i] + solDx[K][i];
         solNDx[K][i] = (*sol->_Sol[solNDxIndex[K]]) (iDDof);
+        solNx[K][i] = xhat[K][i] + solNDx[K][i].value();
 
         // Global-to-global mapping between NDx solution node and pdeSys dof.
         SYSDOF[ K * nxDofs + i] =
@@ -390,6 +393,86 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
                  + gi[1][1] * (normal[1] * W[0] - normal[0] * W[1])
                  + gi[0][1] * (normal[0] * V[1] - normal[1] * V[0] - W[2]));
 
+
+      // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
+//       double V1[DIM] = {0., 0., 0.};
+// 
+//       double W1[DIM] = {0., 0., 0.};
+
+      double Q1[DIM][dim] = {{0., 0.}, {0., 0.}, {0., 0.}};
+
+      for (unsigned j = 0; j < nxDofs; j++) {
+
+//         V1[0] += phix_uv[1][j] * solNx[0][j] + normal[2] * phix_uv[0][j] * solNx[1][j] - normal[1] * phix_uv[0][j] * solNx[2][j];
+//         V1[1] += - normal[2] * phix_uv[0][j] * solNx[0][j] + phix_uv[1][j] * solNx[1][j] + normal[0] * phix_uv[0][j] * solNx[2][j];
+//         V1[2] += + normal[1] * phix_uv[0][j] * solNx[0][j] - normal[0] * phix_uv[0][j] * solNx[1][j] + phix_uv[1][j] * solNx[2][j];
+// 
+//         W1[0] +=  phix_uv[0][j] * solNx[0][j] - normal[2] * phix_uv[1][j] * solNx[1][j] + normal[1] * phix_uv[1][j] * solNx[2][j];
+//         W1[1] += normal[2] * phix_uv[1][j] * solNx[0][j] + phix_uv[0][j] * solNx[1][j] - normal[0] * phix_uv[1][j] * solNx[2][j];
+//         W1[2] += - normal[1] * phix_uv[1][j] * solNx[0][j] + normal[0] * phix_uv[1][j] * solNx[1][j] + phix_uv[0][j] * solNx[2][j];
+
+
+        Q1[0][0] += ( ( (+gi[1][1] + gi[0][0] * (normal[1] * normal[1] + normal[2] * normal[2]))          * phix_uv[0][j] +
+                        (-gi[0][1] * (normal[0] * normal[0]))                                             * phix_uv[1][j]) * solNx[0][j] +
+                      ( (-gi[0][0] * normal[0] * normal[1])                                               * phix_uv[0][j] +
+                        (-gi[0][1] * normal[0] * normal[1] - gi[1][1] * normal[2] - gi[0][0] * normal[2]) * phix_uv[1][j]) * solNx[1][j] +
+                      ( (-gi[0][0] * normal[0] * normal[2])                                               * phix_uv[0][j] +
+                        (-gi[0][1] * normal[0] * normal[2] + gi[1][1] * normal[1] + gi[0][0] * normal[1]) * phix_uv[1][j]) * solNx[2][j]
+                    );
+
+
+        Q1[0][1] += ( ( (+gi[0][0] + gi[1][1] * (normal[1] * normal[1] + normal[2] * normal[2]))          * phix_uv[1][j] +
+                        (-gi[0][1] * (normal[0] * normal[0]))                                             * phix_uv[0][j]) * solNx[0][j] +
+                      ( (-gi[1][1] * normal[0] * normal[1])                                               * phix_uv[1][j] +
+                        (-gi[0][1] * normal[0] * normal[1] + gi[1][1] * normal[2] + gi[0][0] * normal[2]) * phix_uv[0][j]) * solNx[1][j] +
+                      ( (-gi[1][1] * normal[0] * normal[2])                                               * phix_uv[1][j] +
+                        (-gi[0][1] * normal[0] * normal[2] - gi[1][1] * normal[1] - gi[0][0] * normal[1]) * phix_uv[0][j]) * solNx[2][j]
+                    );
+
+        Q1[1][0] += ( ( (-gi[0][0] * normal[1] * normal[0])                                               * phix_uv[0][j] +
+                        (-gi[0][1] * normal[1] * normal[0] + gi[1][1] * normal[2] + gi[0][0] * normal[2]) * phix_uv[1][j]) * solNx[0][j] +
+                      ( (+gi[1][1] + gi[0][0] * (normal[2] * normal[2] + normal[0] * normal[0]))          * phix_uv[0][j] +
+                        (-gi[0][1] * (normal[1] * normal[1]))                                             * phix_uv[1][j]) * solNx[1][j] +
+                      ( (-gi[0][0] * normal[1] * normal[2])                                               * phix_uv[0][j] +
+                        (-gi[0][1] * normal[1] * normal[2] - gi[1][1] * normal[0] - gi[0][0] * normal[0]) * phix_uv[1][j]) * solNx[2][j]
+                    );
+
+        Q1[1][1] += ( ( (-gi[1][1] * normal[1] * normal[0])                                               * phix_uv[1][j] +
+                        (-gi[0][1] * normal[1] * normal[0] - gi[1][1] * normal[2] - gi[0][0] * normal[2]) * phix_uv[0][j]) * solNx[0][j] +
+                      ( (+gi[0][0] + gi[1][1] * (normal[2] * normal[2] + normal[0] * normal[0]))          * phix_uv[1][j] +
+                        (-gi[0][1] * (normal[1] * normal[1]))                                             * phix_uv[0][j]) * solNx[1][j] +
+                      ( (-gi[1][1] * normal[1] * normal[2])                                               * phix_uv[1][j] +
+                        (-gi[0][1] * normal[1] * normal[2] + gi[1][1] * normal[0] + gi[0][0] * normal[0]) * phix_uv[0][j]) * solNx[2][j]
+                    );
+
+        Q1[2][0] += ( ( (-gi[0][0] * normal[2] * normal[0])                                               * phix_uv[0][j] +
+                        (-gi[0][1] * normal[2] * normal[0] - gi[1][1] * normal[1] - gi[0][0] * normal[1]) * phix_uv[1][j]) * solNx[0][j] +
+                      ( (-gi[0][0] * normal[2] * normal[1])                                               * phix_uv[0][j] +
+                        (-gi[0][1] * normal[2] * normal[1] + gi[1][1] * normal[0] + gi[0][0] * normal[0]) * phix_uv[1][j]) * solNx[1][j] +
+                      ( (+gi[1][1] + gi[0][0] * (normal[0] * normal[0] + normal[1] * normal[1]))          * phix_uv[0][j] +
+                        (-gi[0][1] * (normal[2] * normal[2]))                                             * phix_uv[1][j]) * solNx[2][j]
+
+                    );
+
+        Q1[2][1] += ( ( (-gi[1][1] * normal[2] * normal[0])                                               * phix_uv[1][j] +
+                        (-gi[0][1] * normal[2] * normal[0] + gi[1][1] * normal[1] + gi[0][0] * normal[1]) * phix_uv[0][j]) * solNx[0][j] +
+                      ( (-gi[1][1] * normal[2] * normal[1])                                               * phix_uv[1][j] +
+                        (-gi[0][1] * normal[2] * normal[1] - gi[1][1] * normal[0] - gi[0][0] * normal[0]) * phix_uv[0][j]) * solNx[1][j] +
+                      ( (+gi[0][0] + gi[1][1] * (normal[0] * normal[0] + normal[1] * normal[1]))          * phix_uv[1][j] +
+                        (-gi[0][1] * (normal[2] * normal[2]))                                             * phix_uv[0][j]) * solNx[2][j]
+                    );
+
+      }
+
+//       std::cout << V[0] << " " << V1[0] <<" " << V[0] - V1[0] << std::endl;
+//       std::cout << Q[0][0] << " " << Q1[0][0] << " " << Q[0][0] - Q1[0][0] << std::endl;
+//       std::cout << Q[0][1] << " " << Q1[0][1] << " " << Q[0][1] - Q1[0][1] << std::endl;
+//       std::cout << Q[1][0] << " " << Q1[1][0] << " " << Q[1][0] - Q1[1][0] << std::endl;
+//       std::cout << Q[1][1] << " " << Q1[1][1] << " " << Q[1][1] - Q1[1][1] << std::endl;
+//       std::cout << Q[2][0] << " " << Q1[2][0] << " " << Q[2][0] - Q1[2][0] << std::endl;
+//       std::cout << Q[2][1] << " " << Q1[2][1] << " " << Q[2][1] - Q1[2][1] << std::endl;
+
+
       // Compute new X minus old X dot N, for "reparametrization".
       adept::adouble DnXmDxdotNSqrtDetg = 0.;
       for (unsigned K = 0; K < DIM; K++) {
@@ -463,4 +546,4 @@ void AssembleConformalMinimization (MultiLevelProblem& ml_prob) {
 
 } // end AssembleO2ConformalMinimization.
 
- 
+

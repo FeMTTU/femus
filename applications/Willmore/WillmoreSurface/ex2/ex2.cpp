@@ -251,7 +251,7 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-    dt0 *= 1.025;
+    dt0 *= 1.01;
     if (dt0 > 0.005) dt0 = 0.005;
 
     if (time_step % 1 == 0) {

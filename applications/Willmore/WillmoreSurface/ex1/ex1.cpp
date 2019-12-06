@@ -255,7 +255,7 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-    dt0 *= 1.025;
+    dt0 *= 1.01;
     if (dt0 > 0.005) dt0 = 0.005;
 
     if (time_step % 1 == 0) {
@@ -825,9 +825,9 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       }
 
       // Compute new surface area, volume, and P-Willmore energy.
-      for (unsigned K = 0; K < DIM; K++) {
-        surface += Area.value();
-      }
+      
+      surface += Area.value();
+      
       for (unsigned K = 0; K < DIM; K++) {
         volume += normalSign * (solxNewg[K].value()  * normal[K].value()) * Area.value();
       }
@@ -1488,9 +1488,9 @@ void AssemblePWillmore2 (MultiLevelProblem& ml_prob) {
       }
 
       // Compute new surface area, volume, and P-Willmore energy.
-      for (unsigned K = 0; K < DIM; K++) {
-        surface += Area.value();
-      }
+      
+      surface += Area.value();
+      
       for (unsigned K = 0; K < DIM; K++) {
         volume += normalSign * (solxNewg[K].value()  * normal[K].value()) * Area.value();
       }
