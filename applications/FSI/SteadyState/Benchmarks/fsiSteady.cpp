@@ -413,7 +413,7 @@ output_path.append("/");
   print_vars.push_back("All");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
-  ml_sol.GetWriter()->Write(output_path,"biquadratic",print_vars);
+  ml_sol.GetWriter()->Write(output_path, "biquadratic", print_vars);
 
   if(mem_infos) {
     PetscMemoryGetCurrentUsage(&memory_current_usage);
