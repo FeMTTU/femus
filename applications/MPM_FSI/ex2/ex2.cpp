@@ -83,7 +83,7 @@ int main (int argc, char** args) {
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 10000.;
-  unsigned numberOfUniformLevels = 7; //for refinement in 3D
+  unsigned numberOfUniformLevels = 5; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -517,7 +517,7 @@ int main (int argc, char** args) {
 
 
   system.AttachGetTimeIntervalFunction (SetVariableTimeStep);
-  unsigned n_timesteps = 100;
+  unsigned n_timesteps = 200;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     if (time_step >= 3) {
