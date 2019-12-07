@@ -40,7 +40,7 @@ bool areaConstraint = true;
 
 void AssemblePWillmore (MultiLevelProblem& ml_prob);
 
-double dt0 = 5e-4;
+double dt0 = 1e-3;
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
@@ -80,17 +80,17 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
   //scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  mlMsh.ReadCoarseMesh ("../input/stupid.med", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/stupid.med", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/superknot.med", "seventh", scalingFactor);
 
 
@@ -185,7 +185,7 @@ int main (int argc, char** args) {
   }
 
   // Parameters for convergence and # of iterations for Willmore.
-  system.SetMaxNumberOfNonLinearIterations (2);
+  system.SetMaxNumberOfNonLinearIterations (4);
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to P-Willmore system.
@@ -208,7 +208,7 @@ int main (int argc, char** args) {
   system2.AddSolutionToSystemPDE ("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system2.SetMaxNumberOfNonLinearIterations (1);
+  system2.SetMaxNumberOfNonLinearIterations (2);
   system2.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system2 and initialize.
@@ -233,7 +233,7 @@ int main (int argc, char** args) {
   // First, solve system2 to "conformalize" the initial mesh.
   CopyDisplacement (mlSol, true);
   system2.MGsolve();
-
+  
   // Then, solve system0 to compute initial curvatures.
   CopyDisplacement (mlSol, false);
   system.CopySolutionToOldSolution();
@@ -251,8 +251,8 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-    dt0 *= 1.01;
-    if (dt0 > 0.005) dt0 = 0.005;
+//     dt0 *= 1.01;
+//     if (dt0 > 0.005) dt0 = 0.005;
 
     if (time_step % 1 == 0) {
       mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
@@ -260,9 +260,9 @@ int main (int argc, char** args) {
       CopyDisplacement (mlSol, true);
       //system2.MGsolve();
 
-      if(time_step == 0){
+      //if(time_step == 0){
         system2.MGsolve();
-      }
+      //}
 
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();

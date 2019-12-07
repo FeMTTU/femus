@@ -45,7 +45,7 @@ const double eps = 1e-5;
 void AssemblePWillmore (MultiLevelProblem&);
 void AssemblePWillmore2 (MultiLevelProblem& ml_prob);
 
-double dt0 = 0.00005;
+double dt0 = 0.1;
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
@@ -90,7 +90,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
@@ -100,7 +100,7 @@ int main (int argc, char** args) {
 
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -212,7 +212,7 @@ int main (int argc, char** args) {
   system2.AddSolutionToSystemPDE ("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system2.SetMaxNumberOfNonLinearIterations (1);
+  system2.SetMaxNumberOfNonLinearIterations (2);
   system2.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to system2 and initialize.
@@ -255,8 +255,8 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-    dt0 *= 1.01;
-    if (dt0 > 0.005) dt0 = 0.005;
+//     dt0 *= 1.01;
+//     if (dt0 > 0.005) dt0 = 0.005;
 
     if (time_step % 1 == 0) {
       mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
