@@ -1473,7 +1473,7 @@ namespace femus {
             const int bdry_index = msh->el->GetFaceElementIndex(iel,jface);
             
 	    if( bdry_index < 0) {
-	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface) + 1);
+	      unsigned int face = msh->el->GetBoundaryIndex(iel,jface);
 	      
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){

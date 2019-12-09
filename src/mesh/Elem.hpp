@@ -262,7 +262,7 @@ namespace femus {
       std::vector<unsigned> _materialElementCounter;
 
       MyMatrix <unsigned> _elementDof;
-      MyMatrix <int> _elementNearFace;
+      MyMatrix <int> _elementNearFace;  //@todo is this about the elements attached to each face, but it is used for BCs as well
 
       MyMatrix <unsigned> _childElem;
       MyMatrix <unsigned> _childElemDof;

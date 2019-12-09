@@ -227,12 +227,35 @@ output_path.append("/");
   const std::string mesh_file_path = mesh_file_folder + mesh_file;
   MultiLevelMesh ml_msh(numofrefinements, numofrefinements, mesh_file_path.c_str(), fe_quad_rule.c_str(), Lref, NULL);
 
+  
   ml_msh.EraseCoarseLevels(numofrefinements - numofmeshlevels);
 
   ml_msh.PrintInfo();
 
   dimension = ml_msh.GetLevel(0)->GetDimension();
 
+// ==================================
+  //here I have to create another structure that only aims at isolating the interface faces inside the mesh
+  
+  // - either I do it through a check on the coordinates (it has to be on the fixed mesh, the initial one)
+  // - or I do a structure on the mesh skeleton that sets a -1 to all faces and then sets a different number to the others
+  //it will be similar to elementnearface
+  //si potrebbe fare anche svincolata dagli elementi di volume ma supponiamo sia insieme
+  //faccio una funzione che non contiene informazione sugli elementi di volume, solo facce.
+  
+  //indice POSITIVO per le facce NON FLAGGATE (+1) nel mesh file 
+  //indice NEGATIVO per le facce FLAGGATE nel mesh file (o di Boundary, o di qualsiasi Interfaccia) (parte da -2 mi sa, per conformita')
+  
+  //faccio questa struttura con la stessa allocazione iniziale di elementnearface
+  //poi il riempimento lo faccio con il MED
+
+  //this structure will be similar to 
+  MyMatrix <int> _element_faces;  //@todo is this about the faces of each element, only
+  //I need to allocate this at all levels! or better, at least at the finest level, which requires the coarser
+  //it seems like it is first allocated at the coarse level, and then with the refinement it goes to all levels
+// ==================================
+
+  
   // ******* Fluid and Solid Parameters *******
   Parameter par(Lref,Uref);
 

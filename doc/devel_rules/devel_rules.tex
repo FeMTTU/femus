@@ -234,25 +234,19 @@ To overcome this, do
    
    \section{Mesh}
    
-    \subsection{Boundary mesh}
-    
-    Whenever you want to retrieve the Boundary of a Mesh,
-    you need to loop over each mesh element
-    and then loop over its \textit{faces}.
-    
-    If the FaceElementIndex is $ < 0 $, then it is a \textit{boundary} face.
-    
-    When the FaceElementIndex is stored, the flag that is on the mesh file is made NEGATIVE and then we subtract $ 1 $
-    
-    \subsection{Interface mesh}
-    
-    If I wanted some \textbf{interface} faces, not on the boundary, I should set their FaceElementIndex to be $ > 0 $.
-    How does this affect the rest of the code?
-    
   
- \section{Elem}
+ \subsection{Elem}
   
   The Elem class contains the \textbf{list} of all elements
+  
+  Every Mesh object has an Elem object
+  
+  The Elem list is initialized in different manners at different levels:
+  
+  - at the COARSE level, it is constructed in the Read function of MEDIO or GambitIO
+  
+  - for all other levels, it is constructed in the RefineMesh function in MeshRefinement, with another constructor
+  
   
   
   
@@ -338,6 +332,27 @@ To overcome this, do
 //
 \end{verbatim}
   
+
+  
+  \subsection{Boundary mesh}
+    
+    Whenever you want to retrieve the Boundary of a Mesh,
+    you need to loop over each mesh element
+    and then loop over its \textit{faces}.
+    
+    If the FaceElementIndex is $ < 0 $, then it is a \textit{boundary} face.
+    
+    Otherwise, it is equal to the volume element number corresponding to that face!
+    
+    FaceElementIndex is initialized to $ - 1 $ at first.
+    
+    When the FaceElementIndex is stored, the flag that is on the mesh file is made NEGATIVE and then we subtract $ 1 $
+    
+    \subsection{Interface mesh}
+    
+    If I wanted some \textbf{interface} faces, not on the boundary, I should set their FaceElementIndex to be $ > 0 $.
+    How does this affect the rest of the code?
+    
   
   \section{Geometric Elements}
   
@@ -351,6 +366,8 @@ To overcome this, do
     \subsection{Gambit IO}
     
     \subsection{MED IO}
+    
+    In the mesh file we can specify Groups of Volume Elements as well as Groups of Face Elements.
     
     
     

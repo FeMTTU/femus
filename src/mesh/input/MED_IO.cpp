@@ -264,7 +264,6 @@ namespace femus
     }
 
 
-//@todo Here I would like to create a routine     
     
    void MED_IO::find_boundary_faces_and_set_face_flags(const hid_t&  file_id, const std::string mesh_menu, const GeomElemBase* geom_elem_per_dimension,  const std::vector<GroupInfo> & group_info)  {
   //basically you have certain elements on the boundary, and you have to find them in the list of all elements
@@ -595,7 +594,7 @@ namespace femus
       // SET NUMBER OF VOLUME ELEMENTS
         if ( i == mesh.GetDimension() - 1 ) { 
       mesh.SetNumberOfElements(n_elems_per_dimension);
-      mesh.el = new elem(n_elems_per_dimension);    ///@todo check where this is going to be deleted
+      mesh.el = new elem(n_elems_per_dimension);    ///@todo check where this is going to be deleted. It is in the Destructor of Mesh
 
       // READ CONNECTIVITY MAP
       int* conn_map = new  int[dim_conn];
