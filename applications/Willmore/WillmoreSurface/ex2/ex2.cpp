@@ -80,12 +80,12 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
   //scalingFactor = 1.;  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
-  scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  //scalingFactor = 1.;
+  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
@@ -243,9 +243,11 @@ int main (int argc, char** args) {
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
 
   // Parameters for the main algorithm loop.
-  unsigned numberOfTimeSteps = 10000u;
+  unsigned numberOfTimeSteps = 100u;
   unsigned printInterval = 1u;
 
+  
+  firstTime = true;
   // Main algorithm loop.
   for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
     system.CopySolutionToOldSolution();
@@ -608,6 +610,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           for (unsigned i = 0; i < nxDofs; i++) {
             solxNew_uv[K][j] += phix_uv[j][i] * solx[K][i];
             solx_uv[K][j] += phix_uv[j][i] * 0.5 * (solx[K][i] + solxOld[K][i]);
+            //solx_uv[K][j] += phix_uv[j][i] * solxOld[K][i];
             solxOld_uv[K][j] += phix_uv[j][i] * solxOld[K][i];
           }
         }
@@ -750,7 +753,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           for (unsigned J = 0; J < DIM; J++) {
             term1 +=  phix_Xtan[J][i] * solxNew_Xtan[K][J]; // the field x is new (i + 1) but differentiated on the surface at (i)
           }
-          Res[irow] -= (solYNewg[K] * phix[i] + term1) * Area;
+          Res[irow] -= (solYNewg[K] * phix[i] + term1) * Area; //TODO this is different from ex1
 
           unsigned jstart = istart + K * nxDofs;
           for (unsigned j = 0; j < nxDofs; j++) {
@@ -763,7 +766,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
           jstart = istart + DIM * nxDofs + K * nYDofs;
           for (unsigned j = 0; j < nYDofs; j++) {
-            Jac [jstart + j] += phix[i] * phiY[j] * Area;
+            Jac [jstart + j] += phix[i] * phiY[j] * Area; //TODO this is different from ex1
           }
 
         }
@@ -773,7 +776,7 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           unsigned irow = DIM * nxDofs + K * nYDofs + i;
           unsigned istart = irow * sizeAll;
 
-          Res[irow] -= (solWNewg[K] - sumP1 * solYNewg[K]) * phiY[i] * Area;
+          Res[irow] -= (solWNewg[K] - sumP1 * solYNewg[K]) * phiY[i] * Area; //TODO this can be moved in the nodes
 
           unsigned jstart = istart + DIM * nxDofs + K * nYDofs;
           for (unsigned j = 0; j < nYDofs; j++) {
@@ -798,9 +801,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
           for (unsigned J = 0; J < DIM; J++) {
             term0 += solWNew_Xtan[K][J] * phiW_Xtan[J][i]; // the field W is new (i + 1) but differentiated on the surface at (i)
-            termLambda2 += solx_Xtan[K][J] * phiW_Xtan[J][i];
-            term1 += solxNew_Xtan[K][J] * phiW_Xtan[J][i];
-            term2 += solWNew_Xtan[J][J];
+            //termLambda2 += solx_Xtan[K][J] * phiW_Xtan[J][i];
+            termLambda2 += 0.5 * (solxNew_Xtan[K][J] + solxOld_Xtan[K][J]) * phiW_Xtan[J][i] + 0.5 * phiW_Xtan[J][i] * (solxNew_Xtan[K][J] - solxOld_Xtan[K][J]) ;
+            term1 += solxNew_Xtan[K][J] * phiW_Xtan[J][i]; //TODO This is different from ex1
+            term2 += solWNew_Xtan[J][J]; //TODO This is different from ex1
             term4 = 0.;
             for (unsigned L = 0; L < DIM; L++) { // the fields W and x are old (i) differentiated on the surface at (i)
               term4 += solxOld_Xtan[L][J] * solWOld_Xtan[L][K] + solxOld_Xtan[L][K] * solWOld_Xtan[L][J];
@@ -824,10 +828,14 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           unsigned jstart = istart + K * nxDofs;
           for (unsigned j = 0; j < nxDofs; j++) {
             double term1 = 0.;
+            
+            double termLambda2 = 0.;
+            
             for (unsigned J = 0; J < DIM; J++) {
-              term1 += phix_Xtan[J][i] * phiW_Xtan[J][j];
+              term1 += phix_Xtan[J][j] * phiW_Xtan[J][i];
+              termLambda2 += solLambda2 * (phix_Xtan[J][j] * phiW_Xtan[J][i]);
             }
-            Jac [jstart + j] += (phiW[i] * phix[j] / dt + sumP2 * term1) * Area;
+            Jac [jstart + j] += (phiW[i] * phix[j] / dt + sumP2 * term1 + termLambda2) * Area;
           }
 
           jstart = istart + DIM * (nxDofs + nYDofs) + K * nWDofs;
@@ -880,7 +888,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           double term1d = 0.;
           for (unsigned J = 0; J < DIM; J++) {
             term1 += solx_Xtan[K][J] * solx_Xtan[K][J];
-            term1d += solx_Xtan[K][J] * (solxNew_Xtan[K][J] - solxOld_Xtan[K][J]);
+            //term1d += solx_Xtan[K][J] * (solxNew_Xtan[K][J] - solxOld_Xtan[K][J]);
+            term1d += 0.5 * (solxNew_Xtan[K][J] + solxOld_Xtan[K][J]) * (solxNew_Xtan[K][J] - solxOld_Xtan[K][J]);
           }
           //aResLambda2 += term1t * Area;
           surfaceA += 1. / DIM * (term1 + normal[K] * normal[K]) * Area;
@@ -891,7 +900,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           for (unsigned j = 0; j < nxDofs; j++) {
             double term0 = 0.;
             for (unsigned J = 0; J < DIM; J++) {
-              term0 += solx_Xtan[K][J] * phix_Xtan[J][j];
+              //term0 += solx_Xtan[K][J] * phix_Xtan[J][j];
+              term0 += 0.5 * (solxNew_Xtan[K][J] + solxOld_Xtan[K][J]) * phix_Xtan[J][j] + 0.5 * phix_Xtan[J][j] * (solxNew_Xtan[K][J] - solxOld_Xtan[K][J]) ;
             }
             Jac [jstart + j] += term0 * Area;
           }
@@ -950,3 +960,4 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
 }
 //END Assemble System PWillmore
+

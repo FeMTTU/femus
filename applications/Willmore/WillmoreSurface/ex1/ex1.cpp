@@ -35,7 +35,7 @@ bool volumeConstraint = true;
 bool areaConstraint = true;
 
 unsigned conformalTriangleType = 1;
-const double eps = 1e-5;
+const double eps = 1.0e-5;
 
 #include "../include/supportFunctions.hpp"
 #include "../include/assembleConformalMinimization.hpp"
@@ -45,7 +45,7 @@ const double eps = 1e-5;
 void AssemblePWillmore (MultiLevelProblem&);
 void AssemblePWillmore2 (MultiLevelProblem& ml_prob);
 
-double dt0 = 0.1;
+double dt0 = 0.05;
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
@@ -85,9 +85,9 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
@@ -255,8 +255,8 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-//     dt0 *= 1.01;
-//     if (dt0 > 0.005) dt0 = 0.005;
+    dt0 *= 1.;
+    if (dt0 > 1) dt0 = 1.;
 
     if (time_step % 1 == 0) {
       mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
@@ -1609,5 +1609,6 @@ void AssemblePWillmore2 (MultiLevelProblem& ml_prob) {
 //     std::cin >> a;
 
 } // end AssemblePWillmore.
+
 
 
