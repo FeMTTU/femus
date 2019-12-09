@@ -609,10 +609,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
               advection  +=  phi[i] * (solVp[j] - (solDp[j] - solDpOld[j]) / dt) * gradSolVp[k][j];
             }
             //if(solidFlag1[i]) {   // This is for the coupling with the solid
-              aRhsD[k][i] += (- phi[i] * (solVp[k] - solVpOld[k]) / dt - advection +
-                              muFluid / rhoFluid * (- Vlaplace) + gradPhi[i * dim + k] * solPp / rhoFluid
-                              + 0.005 * muMpm / rhoFluid * (- Dlaplace)   //softStiffness (this is the only trick in this formulation)
-                             ) * mass;
+            aRhsD[k][i] += (- phi[i] * (solVp[k] - solVpOld[k]) / dt - advection +
+                            muFluid / rhoFluid * (- Vlaplace) + gradPhi[i * dim + k] * solPp / rhoFluid
+                            + 0.01 * pow((nDofs - MPMmaterial) / 8. , 2) * muMpm / rhoFluid * (- Dlaplace)    //softStiffness (this is the only trick in this formulation)
+                           ) * mass;
             //}
           }
         }
@@ -1311,6 +1311,61 @@ void GetParticlesToNodeFlag(MultiLevelSolution & mlSol, Line & solidLine, Line &
   sol->_Sol[solIndexNodeFlag]->closeWithMinValues();
   //END
 
+
+  unsigned indexSolC = sol->GetIndex("C");
+
+  std::vector<unsigned> markerOffsetSolid = solidLine.GetMarkerOffset();
+  std::vector<unsigned> markerOffsetFluid = fluidLine.GetMarkerOffset();
+
+
+  unsigned iSmarker = markerOffsetSolid[iproc];
+  unsigned iFmarker = markerOffsetFluid[iproc];
+
+  double rhos = 7850;
+  double rhof = 1000;
+
+  //BEGIN loop on elements (to initialize the "soft" stiffness matrix)
+  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    short unsigned ielt = msh->GetElementType(iel);
+    double  MPMmaterial = (*sol->_Sol[indexSolMat])(iel);
+
+    unsigned nDofs = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
+
+    if(MPMmaterial == 0) {
+      sol->_Sol[indexSolC]->set(iel, 0.);
+    }
+    else if(MPMmaterial == nDofs) {
+      sol->_Sol[indexSolC]->set(iel, 1.);
+    }
+    else {
+      double volumef = 0.;
+      double volumes = 0.;
+
+      //BEGIN SOLID PARTICLE
+      while(iSmarker < markerOffsetSolid[iproc + 1] && iel > particlesSolid[iSmarker]->GetMarkerElement()) {
+        iSmarker++;
+      }
+      while(iSmarker < markerOffsetSolid[iproc + 1] && iel == particlesSolid[iSmarker]->GetMarkerElement()) {
+        volumes += particlesSolid[iSmarker]->GetMarkerMass() / rhos;
+        iSmarker++;
+      }
+      //END SOLID PARTICLE
+
+      //BEGIN FLUID PARTICLE
+      while(iFmarker < markerOffsetFluid[iproc + 1] && iel > particlesFluid[iFmarker]->GetMarkerElement()) {
+        iFmarker++;
+      }
+      while(iFmarker < markerOffsetFluid[iproc + 1] && iel == particlesFluid[iFmarker]->GetMarkerElement()) {
+        volumef += particlesFluid[iFmarker]->GetMarkerMass() / rhof;
+        iFmarker++;
+      }
+      //END FLUID PARTICLE
+
+      sol->_Sol[indexSolC]->set(iel, volumes / (volumes + volumef));
+    }
+  }
+  sol->_Sol[indexSolC]->close();
 }
 
 void ProjectGridVelocity(MultiLevelSolution &mlSol) {
@@ -2179,6 +2234,7 @@ void FindLocalCoordinates(std::vector<double> & xi, std::vector < std::vector < 
   //END Inverse mapping loop
 
 }
+
 
 
 
