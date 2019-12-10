@@ -83,6 +83,9 @@ namespace femus {
       short unsigned GetElementType(const unsigned& iel);
 
       /** To be Added */
+      MyVector< short unsigned > & GetElementTypeArray() { return _elementType; }
+      
+      /** To be Added */
       void SetElementType(const unsigned& iel, const short unsigned& value);
 
       /** To be Added */
@@ -289,6 +292,8 @@ namespace femus {
 
   /**
    * Number of FACES(3D), edges(2D) or point-extrema(1D) for each considered element
+   * The 1st number is the quadrilaterals
+   * The 2nd number is such that the different "2nd - 1st" is the number of triangular faces
    **/
   const unsigned NFC[6][2] = {
     {6, 6},

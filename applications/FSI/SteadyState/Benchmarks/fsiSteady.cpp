@@ -250,9 +250,53 @@ output_path.append("/");
   //poi il riempimento lo faccio con il MED
 
   //this structure will be similar to 
-  MyMatrix <int> _element_faces;  //@todo is this about the faces of each element, only
+  std::vector< MyMatrix <int> > _element_faces(numofrefinements);  //@todo is this about the faces of each element, only
   //I need to allocate this at all levels! or better, at least at the finest level, which requires the coarser
   //it seems like it is first allocated at the coarse level, and then with the refinement it goes to all levels
+  
+  _element_faces[0].resize( ml_msh.GetLevel(0)->GetNumberOfElements(), NFC[0][1], -1);  /*NFC[0][1]: maximum possible number of faces*/
+
+  
+  for (unsigned lev = 1; lev < numofrefinements; lev++) {
+      
+    vector < double > coarseLocalizedAmrVector;
+    ml_msh.GetLevel(lev - 1)->_topology->_Sol[ml_msh.GetLevel(lev - 1)->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
+
+    ml_msh.GetLevel(lev - 1)->el->AllocateChildrenElement(ml_msh.GetLevel(lev)->GetRefIndex(), ml_msh.GetLevel(lev - 1) );
+
+    const unsigned n_elems = ml_msh.GetLevel(lev)->GetNumberOfElements();
+       
+       MyVector <unsigned> rowSizeElNearFace(n_elems);
+       
+    unsigned jel = 0;
+    
+    for (unsigned isdom = 0; isdom < ml_msh.GetLevel(lev)->n_processors(); isdom++) {
+        
+       ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().broadcast(isdom);
+       
+      for (unsigned iel = ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().begin(); 
+                    iel < ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().end(); iel++) {
+          
+        short unsigned elType = ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray()[iel];
+      
+        int increment = 1;
+      
+        if (static_cast < short unsigned >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
+          increment = NRE[elType];
+        }
+        
+        for (unsigned j = 0; j < increment; j++) {
+          rowSizeElNearFace[jel + j] += NFC[elType][1];
+        }
+        
+        jel += increment;
+      }
+      
+      ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().clearBroadcast();
+    }
+         _element_faces[lev] =   MyMatrix <int> (rowSizeElNearFace, -1); 
+
+      }
 // ==================================
 
   

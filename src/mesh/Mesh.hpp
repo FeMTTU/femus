@@ -83,6 +83,10 @@ public:
       return _nelem;
     }
 
+    elem * GetElementArray() const {
+      return el;
+    }
+    
     /** Get if element is refined*/
     short unsigned GetRefinedElementIndex(const unsigned &iel) const;
 

@@ -212,7 +212,24 @@ To overcome this, do
 
    \section{Parallel initialization}
    
+   If you want to retrieve 
+   
+   the number of processors
+   
+   or the current processor
+   
+   you can do so from any class that inherit ParallelObject
+   
+   
+   
    \section{Input parser}
+   
+   We have some interface to parse:
+   
+   - the command line
+   
+   - an input file
+   
    
  
  
@@ -235,7 +252,7 @@ To overcome this, do
    \section{Mesh}
    
   
- \subsection{Elem}
+   \subsection{Elem}
   
   The Elem class contains the \textbf{list} of all elements
   
@@ -398,6 +415,10 @@ To overcome this, do
   
   \section{MeshRefinement}
 
+   
+    This object is used in the MultilevelMesh class, to construct the various levels
+  
+  
   \chapter{Solution (Quantities, Equations, Operators)}
 
 
