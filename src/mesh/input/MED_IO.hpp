@@ -42,11 +42,11 @@ namespace femus
    
 // Auxiliary struct to store group information
   struct GroupInfo {
-      std::string  _group_string;
+      std::string        _user_defined_group_string;
       TYPE_FOR_FAM_FLAGS _med_flag;
-      int _user_defined_flag;
-      unsigned int _user_defined_property;
-      GeomElemBase* _geom_el;
+      int                _user_defined_flag;
+      unsigned int       _user_defined_property;
+      GeomElemBase*      _geom_el;
       int _size;
   };
     
@@ -99,9 +99,18 @@ class MED_IO : public MeshInput<Mesh>
 
    void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const GeomElemBase* geom_elem_per_dimension, std::vector<bool>& type_elem_flag);
    
-   void find_boundary_faces_and_set_face_flags(const hid_t&  file_id, const std::string mesh_menu, const std::vector<GroupInfo> & group_info, const GeomElemBase* geom_elem_per_dimension);
+   void find_boundary_faces_and_set_face_flags(const hid_t&  file_id, 
+                                               const std::string mesh_menu, 
+                                               const std::vector<GroupInfo> & group_info, const GeomElemBase* geom_elem_per_dimension,
+                                               MyMatrix <int> & element_faces_array);
 
-   void find_boundary_nodes_and_set_node_flags(const hid_t&  file_id, const std::string mesh_menu, const std::vector<GroupInfo> & group_info);
+   void find_boundary_nodes_and_set_node_flags(const hid_t&  file_id, 
+                                               const std::string mesh_menu, 
+                                               const std::vector<GroupInfo> & group_info,
+                                               MyMatrix <int> & element_faces_array);
+   
+  void check_all_boundaries_have_some_condition(const unsigned int count_found_face, const unsigned int fam_size) const;
+
    
   bool  see_if_faces_from_different_lists_are_the_same( const GeomElemBase* geom_elem_per_dimension, 
                                             const std::vector< unsigned > & face_nodes_from_vol_connectivity, 

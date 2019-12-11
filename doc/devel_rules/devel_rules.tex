@@ -694,8 +694,59 @@ In Mesh:
 
 - You can use Filters to define Groups of Mesh Elements
 
+\subsubsection{Can I define more than one Group?}
 
-  
+ Yes, you can. It will be a bit more complicated to handle the reading, though.
+ In fact, when Groups of elements are intersection,
+ the naming inside the MED file changes
+ 
+ If there are groups that intersect, then Salome - when exporting to MED - 
+ will define intersecting families. 
+ 
+ If there are elements belonging to 2 groups,
+ they will define a FAM with its own index and the name of the 2 groups
+ 
+ So, the elements belonging only to 1 group will have a FAM with only one group
+ 
+ So, FAM are generated based on WHAT INTERSECTIONS BETWEEN GROUPS there are.
+ 
+ All of this is made in such a way that every element 
+ will have \textit{only one} FAM number in the FAM field of the elements.
+ 
+
+\subsubsection{Can I select faces INSIDE the domain, not at the boundary???}
+
+ The MED format exports only the BOUNDARY ELEMENTS...
+ How can I export INNER FACE ELEMENTS as well?
+ Well, when I draw a mesh by doing Submeshes and making a Compound,
+ there are still elements from the interfaces of the boundaries...
+ 
+ We could have some of the inner edges, coming from the result of drawing subpieces 
+
+ Perhaps what we can do is to not remove the inner faces used to build the submeshes.
+ 
+ Then, I have to change the way I check that ALL boundaries have been implemented,
+ because now I will have additional edges in the list of all edges
+ that are NOT boundary edges...
+ Basically, to check if an element is on the boundary I would 
+ just have to count how many volume elements it belongs to
+ (I am excluding a slit domain with this)
+ 
+ If an edge belongs only to 1 volume element, then it is a Boundary face.
+ 
+ 
+ - An alternative - by hand - could be to use ``Add Quadratic Edge''... but it's very tedious
+ 
+ - The solution of keeping the inner edges is constrained to the fact 
+   that I have to draw thinking of those inner edges ``ahead of time''.
+   For instance, assume you want to perform integration over a face 
+   that was not used to draw your mesh... 
+   Then you should draw your mesh using that face from the very beginning...
+   
+ - The third solution, in case we cannot create groups of inner edges graphically,
+    is to revert back to using if's on the coordinates...  
+ 
+ 
 \section{QUADRILATERAL MESH of a CIRCLE/SEMISPHERE}
 
 Divided Disk or Divided Cylinder do exactly what you are looking for!!!
@@ -869,6 +920,7 @@ You must open that script and change the INSTALLDIR variable with the path of th
 
 Another alternative to view the content of an HDF5 file is to use the 'h5dump' utility shipped with HDF5 (installed through PETSc, for instance)
 
+You can change the names of the Datasets from HDFVIEW
    
     
     

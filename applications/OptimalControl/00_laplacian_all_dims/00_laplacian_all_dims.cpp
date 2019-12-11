@@ -60,7 +60,7 @@ int main(int argc, char** args) {
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
    
-//    mesh_files.push_back("Mesh_1_x.med");
+   mesh_files.push_back("Mesh_1_x.med");
 //    mesh_files.push_back("Mesh_1_y.med");
 //    mesh_files.push_back("Mesh_1_z.med");
 //    mesh_files.push_back("Mesh_2_xy.med");
@@ -69,12 +69,12 @@ int main(int argc, char** args) {
 //    mesh_files.push_back("Mesh_3_xyz.med");
 //    mesh_files.push_back("dome_tri.med");
 //    mesh_files.push_back("dome_quad.med");
-   mesh_files.push_back("disk_quad.med");
-   mesh_files.push_back("disk_quad_45x.med");
-   mesh_files.push_back("disk_quad_90x.med");
-   mesh_files.push_back("disk_tri.med");
-   mesh_files.push_back("disk_tri_45x.med");
-   mesh_files.push_back("disk_tri_90x.med");
+//    mesh_files.push_back("disk_quad.med");
+//    mesh_files.push_back("disk_quad_45x.med");
+//    mesh_files.push_back("disk_quad_90x.med");
+//    mesh_files.push_back("disk_tri.med");
+//    mesh_files.push_back("disk_tri_45x.med");
+//    mesh_files.push_back("disk_tri_90x.med");
    
 
 

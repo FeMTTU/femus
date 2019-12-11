@@ -199,12 +199,12 @@ namespace femus
                                       const std::vector< GroupInfo > & group_info,
                                       const std::vector< GeomElemBase* > geom_elem_per_dimension,
                                       const unsigned mesh_dim,
-                                       MyMatrix <int> & element_faces_array
+                                      MyMatrix <int> & element_faces_array
                                      ) 
     {
  
-      if (mesh_dim > 1)       find_boundary_faces_and_set_face_flags(file_id, mesh_menu, group_info, geom_elem_per_dimension[mesh_dim -1 -1]);
-    else if (mesh_dim == 1)   find_boundary_nodes_and_set_node_flags(file_id, mesh_menu, group_info);
+      if (mesh_dim > 1)       find_boundary_faces_and_set_face_flags(file_id, mesh_menu, group_info, geom_elem_per_dimension[mesh_dim -1 -1], element_faces_array);
+    else if (mesh_dim == 1)   find_boundary_nodes_and_set_node_flags(file_id, mesh_menu, group_info, element_faces_array);
 
     }
     
@@ -290,7 +290,8 @@ namespace femus
    void MED_IO::find_boundary_faces_and_set_face_flags(const hid_t&  file_id, 
                                                        const std::string mesh_menu, 
                                                        const std::vector< GroupInfo > & group_info, 
-                                                       const GeomElemBase* geom_elem_per_dimension)  {
+                                                       const GeomElemBase* geom_elem_per_dimension,
+                                                       MyMatrix <int> & element_faces_array)  {
   //basically you have certain elements on the boundary, and you have to find them in the list of all elements
 
 
@@ -370,7 +371,7 @@ namespace femus
                    if(_print_info) {   std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl; }
 
 //       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
-                mesh.el->GetElementNearFaceArray()[iel][f] = user_flag;   //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
+                element_faces_array[iel][f] = user_flag;   //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
 //                 mesh.el->SetFaceElementIndex(iel, f, user_flag);  //old version
       
               }
@@ -381,18 +382,27 @@ namespace femus
                      
          } //faces of volume elements
          
-       }// end volume elements
-               
-                       if(_print_info) { std::cout << "Count found faces " << count_found_face << std::endl;  }            
-               if (count_found_face < fam_map.size()) { std::cout << "Found " << count_found_face << " faces out of " << fam_map.size() << ", not enough: missing certain boundary conditions." << std::endl;   abort();   }
-               
+       } // end volume elements
+
+       
+         check_all_boundaries_have_some_condition(count_found_face, fam_map.size());
 
    }
    
    
-   
+   void MED_IO::check_all_boundaries_have_some_condition(const unsigned int count_found_face, const unsigned int fam_size) const {
+//Checking that all faces have some boundary condition specified  
+       
+     if(_print_info) { std::cout << "Count found faces " << count_found_face << std::endl;  }            
+               if (count_found_face < fam_size) { std::cout << "Found " << count_found_face << " faces out of " << fam_size << ", not enough: missing certain boundary conditions." << std::endl;   abort();   }
+               
+   }
+       
  //this is for 1D domains  
-   void MED_IO::find_boundary_nodes_and_set_node_flags(const hid_t&  file_id, const std::string mesh_menu, const std::vector<GroupInfo> & group_info)  {
+   void MED_IO::find_boundary_nodes_and_set_node_flags(const hid_t&  file_id, 
+                                                       const std::string mesh_menu,
+                                                       const std::vector<GroupInfo> & group_info,
+                                                       MyMatrix <int> & element_faces_array)  {
        
        std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + node_list/*elem_list*/ + "/";  ///@todo here we have to loop
        
@@ -448,7 +458,8 @@ namespace femus
                       std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl; 
 
 //       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
-      mesh.el->SetFaceElementIndex(iel, f, user_flag);  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
+                  element_faces_array[iel][f] = user_flag;  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
+              //  mesh.el->SetFaceElementIndex(iel, f, user_flag);  //old version
 
                }
       
@@ -580,7 +591,7 @@ namespace femus
     //extract faces
 
 //   // read boundary **************** D
-  for (unsigned k=0; k < group_info.size()/*nbcd*//*@todo these should be the groups that are "boundary groups"*/; k++) { //
+  for (unsigned k = 0; k < group_info.size()/*nbcd*//*@todo these should be the groups that are "boundary groups"*/; k++) { //
            int value = group_info[k]._user_defined_flag;       //flag of the boundary portion
       unsigned nface = group_info[k]._size;  //number of elements in a portion of boundary
                value = - (value + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the value in salome must be POSITIVE
@@ -737,14 +748,15 @@ namespace femus
       std::pair<int, std::vector< int > > gr_family_in_salome_pair = isolate_number_in_string_between_underscores( group_name, initial_str_pos );
       std::pair<int, std::vector< int > > gr_name_pair             = isolate_number_in_string_between_underscores( group_name, gr_family_in_salome_pair.second[1] + 1 );
       std::pair<int, std::vector< int > > gr_property_pair         = isolate_number_in_string_between_underscores( group_name, gr_name_pair.second[1] + 1 );
-      group_info._med_flag           = gr_family_in_salome_pair.first;
+
+      group_info._med_flag              = gr_family_in_salome_pair.first;
       group_info._user_defined_flag     = gr_name_pair.first;
       group_info._user_defined_property = gr_property_pair.first;      
-//       group_info._group_string = isolate_first_field_before_underscore(group_name, initial_str_pos);
+
       const unsigned pos_group_string_init = gr_family_in_salome_pair.second[1] + 1;
       const unsigned pos_group_string_length = gr_name_pair.second[0] - pos_group_string_init;
       
-      group_info._group_string = group_name.substr(pos_group_string_init, pos_group_string_length);
+      group_info._user_defined_group_string = group_name.substr(pos_group_string_init, pos_group_string_length);
       
     return  group_info;
     
