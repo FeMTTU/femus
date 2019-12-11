@@ -42,6 +42,7 @@ namespace femus
    
 // Auxiliary struct to store group information
   struct GroupInfo {
+      std::string  _group_string;
       TYPE_FOR_FAM_FLAGS _med_flag;
       int _user_defined_flag;
       unsigned int _user_defined_property;
@@ -90,7 +91,12 @@ class MED_IO : public MeshInput<Mesh>
 
    void find_boundary_nodes_and_set_node_flags(const hid_t&  file_id, const std::string mesh_menu, const std::vector<GroupInfo> & group_info);
    
-
+    void read_boundary_groups(const hid_t  file_id, 
+                                      const unsigned mesh_dim,
+                                      const std::string mesh_menu,
+                                      const std::vector< GroupInfo > & group_info,
+                                      const std::vector< GeomElemBase* > geom_elem_per_dimension);
+                                      
   bool  see_if_faces_from_different_lists_are_the_same( const GeomElemBase* geom_elem_per_dimension, 
                                             const std::vector< unsigned > & face_nodes_from_vol_connectivity, 
                                             const std::vector< unsigned > & face_nodes_from_bdry_group);
@@ -103,9 +109,11 @@ class MED_IO : public MeshInput<Mesh>
    
    const std::vector<std::string>  get_mesh_names(const hid_t & file_id) const;
      
-   std::pair<int,int>  isolate_number_in_string(const std::string & string_in, const int begin_pos_to_investigate) const;
+   std::pair<int, std::vector<int> >  isolate_number_in_string(const std::string & string_in, const int begin_pos_to_investigate) const;
       
-   /** Determine mesh dimension from mesh file */
+   std::string  isolate_first_field_before_underscore(const std::string &  string_in, const int begin_pos_to_investigate) const;
+
+      /** Determine mesh dimension from mesh file */
    const std::vector< GeomElemBase* >  set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name); //this cannot be const because it sets the dimension in the mesh
 
    GeomElemBase * get_geom_elem_from_med_name(const  std::string el_type) const;

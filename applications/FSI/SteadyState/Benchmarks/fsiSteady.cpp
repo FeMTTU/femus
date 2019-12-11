@@ -235,10 +235,13 @@ output_path.append("/");
   dimension = ml_msh.GetLevel(0)->GetDimension();
 
 // ==================================
+  //If you want this field to be defined at all levels, this operation has to be performed BEFORE we remove all levels
+  //If you want this field to be defined only at the finest level, then do it here
   //here I have to create another structure that only aims at isolating the interface faces inside the mesh
   
   // - either I do it through a check on the coordinates (it has to be on the fixed mesh, the initial one)
   // - or I do a structure on the mesh skeleton that sets a -1 to all faces and then sets a different number to the others
+
   //it will be similar to elementnearface
   //si potrebbe fare anche svincolata dagli elementi di volume ma supponiamo sia insieme
   //faccio una funzione che non contiene informazione sugli elementi di volume, solo facce.
@@ -249,15 +252,14 @@ output_path.append("/");
   //faccio questa struttura con la stessa allocazione iniziale di elementnearface
   //poi il riempimento lo faccio con il MED
 
-  //this structure will be similar to 
-  std::vector< MyMatrix <int> > _element_faces(numofrefinements);  //@todo is this about the faces of each element, only
+  std::vector< MyMatrix <int> > _element_faces(numofmeshlevels);  //@todo is this about the faces of each element, only
   //I need to allocate this at all levels! or better, at least at the finest level, which requires the coarser
   //it seems like it is first allocated at the coarse level, and then with the refinement it goes to all levels
   
   _element_faces[0].resize( ml_msh.GetLevel(0)->GetNumberOfElements(), NFC[0][1], -1);  /*NFC[0][1]: maximum possible number of faces*/
 
   
-  for (unsigned lev = 1; lev < numofrefinements; lev++) {
+  for (unsigned lev = 1; lev < _element_faces.size(); lev++) {
       
     vector < double > coarseLocalizedAmrVector;
     ml_msh.GetLevel(lev - 1)->_topology->_Sol[ml_msh.GetLevel(lev - 1)->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
@@ -299,6 +301,14 @@ output_path.append("/");
       }
 // ==================================
 
+// ==================================
+// Reading from MED file
+// There will be a field in the MED file 
+// I want to access those functions from the main function, not only inside MultilevelMesh
+
+
+
+// ==================================
   
   // ******* Fluid and Solid Parameters *******
   Parameter par(Lref,Uref);

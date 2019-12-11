@@ -85,6 +85,8 @@ namespace femus {
       /** To be Added */
       MyVector< short unsigned > & GetElementTypeArray() { return _elementType; }
       
+      MyMatrix <int> &  GetElementNearFaceArray() { return _elementNearFace; } 
+    
       /** To be Added */
       void SetElementType(const unsigned& iel, const short unsigned& value);
 

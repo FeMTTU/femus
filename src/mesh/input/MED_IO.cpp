@@ -126,7 +126,7 @@ namespace femus
 
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
-  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
+  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups_flag, const bool read_boundary_groups_flag) {
 
     _print_info = false;  
       
@@ -135,13 +135,15 @@ namespace femus
 
     hid_t  file_id = H5Fopen(name.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-    const std::vector<std::string> mesh_menus = get_mesh_names(file_id);
+    const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
 
     if (mesh_menus.size() > 1) { std::cout << "Review the code because there is only one MultilevelMesh object and most likely things don't work" << std::endl; abort(); }
         
 // dimension and geom_el types ===============
 
       const std::vector< GeomElemBase* > geom_elem_per_dimension = set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(file_id, mesh_menus[0]);
+      
+      const unsigned mesh_dim = mesh.GetDimension();
       
 // meshes ========================
      for(unsigned j = 0; j < mesh_menus.size(); j++) {
@@ -150,13 +152,13 @@ namespace femus
             set_node_coordinates(file_id, mesh_menus[j], coords, Lref);
     
 // Volume connectivity
-//       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
-         unsigned i = mesh.GetDimension() - 1; 
+//       for(unsigned i = 0; i < mesh_dim; i++) {
+         unsigned i = mesh_dim - 1; 
                set_elem_connectivity(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
 
       
 
-      if (read_groups == true || read_boundary_groups == true )  {
+      if (read_groups_flag == true || read_boundary_groups_flag == true )  {
           
 // Groups of the mesh ===============
      std::vector< GroupInfo >     group_info = get_group_vector_flags_per_mesh(file_id,mesh_menus[j]);
@@ -166,16 +168,15 @@ namespace femus
           }
           
 // Groups ===============
-    if (read_groups == true) {
-      for(unsigned i = 0; i < mesh.GetDimension(); i++) {
+    if (read_groups_flag == true) {
+      for(unsigned i = 0; i < mesh_dim; i++) {
          set_elem_group_ownership(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], group_info);
       }
     }
     
 // Boundary groups ===============
-      if (read_boundary_groups == true)  {
-    if (mesh.GetDimension() > 1)         find_boundary_faces_and_set_face_flags(file_id, mesh_menus[j], geom_elem_per_dimension[mesh.GetDimension() -1 -1], group_info);
-    else if (mesh.GetDimension() == 1)   find_boundary_nodes_and_set_node_flags(file_id, mesh_menus[j], group_info);
+      if (read_boundary_groups_flag == true)  {
+         read_boundary_groups(file_id, mesh_dim, mesh_menus[j], group_info, geom_elem_per_dimension);          
       }
           
     }
@@ -184,10 +185,28 @@ namespace femus
     }
     
     
-
     H5Fclose(file_id);
 
   }
+  
+  
+  
+// This function reads all boundary groups for the boundary conditions
+// I need a function that reads only one given boundary group, characterized by a name
+// I should distinguish the boundary groups related to the boundary conditions with some name, such as "Boundary_1_0" instead of "Group_1_0"
+    void MED_IO::read_boundary_groups(const hid_t  file_id, 
+                                      const unsigned mesh_dim,
+                                      const std::string mesh_menu,
+                                      const std::vector< GroupInfo > & group_info,
+                                      const std::vector< GeomElemBase* > geom_elem_per_dimension) {
+ 
+      if (mesh_dim > 1)       find_boundary_faces_and_set_face_flags(file_id, mesh_menu, geom_elem_per_dimension[mesh_dim -1 -1], group_info);
+    else if (mesh_dim == 1)   find_boundary_nodes_and_set_node_flags(file_id, mesh_menu, group_info);
+
+    }
+    
+    
+  
 
 
    unsigned int MED_IO::get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS med_flag_in ) const {
@@ -697,17 +716,21 @@ namespace femus
   
   //salome family; our name; our property; group size 
   /// @todo check the underscores according to our naming standard
-  const GroupInfo  MED_IO::get_group_flags_per_mesh(const std::string & group_name) const {
+  const GroupInfo MED_IO::get_group_flags_per_mesh(const std::string & group_name) const {
   
       GroupInfo  group_info;
 
       const int str_pos = 0;
-      std::pair<int,int> gr_family_in_salome_pair = isolate_number_in_string( group_name, str_pos );
-      std::pair<int,int> gr_name_pair             = isolate_number_in_string( group_name, gr_family_in_salome_pair.second + 1 );
-      std::pair<int,int> gr_property_pair         = isolate_number_in_string( group_name, gr_name_pair.second + 1 );
+      std::pair<int, std::vector< int > > gr_family_in_salome_pair = isolate_number_in_string( group_name, str_pos );
+      std::pair<int, std::vector< int > > gr_name_pair             = isolate_number_in_string( group_name, gr_family_in_salome_pair.second[1] + 1 );
+      std::pair<int, std::vector< int > > gr_property_pair         = isolate_number_in_string( group_name, gr_name_pair.second[1] + 1 );
       group_info._med_flag           = gr_family_in_salome_pair.first;
       group_info._user_defined_flag     = gr_name_pair.first;
       group_info._user_defined_property = gr_property_pair.first;      
+//       group_info._group_string = isolate_first_field_before_underscore(group_name, str_pos);
+      group_info._group_string = group_name.substr(gr_family_in_salome_pair.second[1] + 1, gr_name_pair.second[0]);
+      
+      std::cout << group_info._group_string << std::endl;
     
     return  group_info;
  }
@@ -786,12 +809,33 @@ namespace femus
     return mesh_menus;
 }
     
+ ///@deprecated
+  std::string  MED_IO::isolate_first_field_before_underscore(const std::string &  string_in, const int begin_pos_to_investigate) const {
     
+      int str_pos = begin_pos_to_investigate;
+            
+      std::string temp_buffer; 
+      
+      assert(str_pos < string_in.size());
+      
+      temp_buffer = string_in.at(str_pos);
+      
+      if ( temp_buffer.compare( "_" ) == 0 )  {  std::cout <<  "I don't want to start with an underscore" << std::endl; abort();  }
+      
+       std::string first_field = "";
+      //begin search for the 1st underscore -------------------------------
+      while ( temp_buffer.compare( "_" ) != 0  &&  ( str_pos < (string_in.size() - 1) )  ) {  str_pos++; first_field += temp_buffer; temp_buffer = string_in.at(str_pos); }
+      
+      return first_field;
+      
+  }
+  
+  
   // This function starts from a given point in a string,
   // finds the first two occurrences of underscores,
   // and gets the string in between them
   // If it finds only one underscore and it gets to end-of-file, I want to get that string there
-  std::pair<int,int>  MED_IO::isolate_number_in_string(const std::string &  string_in, const int begin_pos_to_investigate) const {
+  std::pair<int, std::vector<int> >  MED_IO::isolate_number_in_string(const std::string &  string_in, const int begin_pos_to_investigate) const {
       
     try {
         
@@ -802,7 +846,9 @@ namespace femus
 
       std::string temp_buffer; 
 
-      assert(str_pos < string_in.size());   temp_buffer = string_in.at(str_pos);
+      assert(str_pos < string_in.size());
+      
+      temp_buffer = string_in.at(str_pos);
       
       if ( temp_buffer.compare( "_" ) == 0 )  {  std::cout <<  "I don't want to start with an underscore" << std::endl; abort();  }
       
@@ -820,7 +866,7 @@ namespace femus
       }
       else if ( str_pos == (string_in.size() - 1) ) {  //if it reaches the end, it does so after the 1st iteration, because there is an EVEN number of underscores
                     two_adj_underscores_pos[0] = begin_pos_to_investigate - 1; //this allows for numbers with more than 1 digit
-                    two_adj_underscores_pos[1] = str_pos+1;
+                    two_adj_underscores_pos[1] = str_pos + 1;
       }
       //end search for the 2 underscores -------------------------------
     
@@ -833,7 +879,7 @@ namespace femus
 
       const int flag = atoi( string_in.substr(string_to_extract_pos,string_to_extract_length).c_str() );
       
-      std::pair<int,int>  flag_and_flag_pos_in_string(flag,two_adj_underscores_pos[1]);
+      std::pair<int,std::vector<int>/*int*/>  flag_and_flag_pos_in_string(flag, two_adj_underscores_pos/*[1]*/);
       
       return flag_and_flag_pos_in_string;
       
