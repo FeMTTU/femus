@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: MED_IO
- Authors: Sureka Pathmanathan, Giorgio Bornia
+ Authors: Giorgio Bornia, Sureka Pathmanathan
  
  Copyright (c) FEMTTU
  All rights reserved. 
@@ -81,22 +81,28 @@ class MED_IO : public MeshInput<Mesh>
      
    unsigned int get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS med_flag_in ) const;
 
-   void set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i,  const GeomElemBase* geom_elem_per_dimension, const std::vector<GroupInfo> & group_info);
+   void set_elem_group_ownership(const hid_t&  file_id,
+                                 const std::string mesh_menu,
+                                 const std::vector<GroupInfo> & group_info,
+                                 const GeomElemBase* geom_elem_per_dimension,
+                                 const int i );
    
+    void set_elem_group_ownership_boundary(const hid_t  file_id,
+                                           const std::string mesh_menu,
+                                           const std::vector< GroupInfo > & group_info,
+                                           const std::vector< GeomElemBase* > geom_elem_per_dimension,
+                                           const unsigned mesh_dim,
+                                           MyMatrix <int> & element_faces_array
+                              );
+                                      
    void compute_group_geom_elem_and_size(const hid_t&  file_id, const std::string mesh_menu, GroupInfo & group_info)  const;
 
    void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const GeomElemBase* geom_elem_per_dimension, std::vector<bool>& type_elem_flag);
    
-   void find_boundary_faces_and_set_face_flags(const hid_t&  file_id, const std::string mesh_menu, const GeomElemBase* geom_elem_per_dimension, const std::vector<GroupInfo> & group_info);
+   void find_boundary_faces_and_set_face_flags(const hid_t&  file_id, const std::string mesh_menu, const std::vector<GroupInfo> & group_info, const GeomElemBase* geom_elem_per_dimension);
 
    void find_boundary_nodes_and_set_node_flags(const hid_t&  file_id, const std::string mesh_menu, const std::vector<GroupInfo> & group_info);
    
-    void read_boundary_groups(const hid_t  file_id, 
-                                      const unsigned mesh_dim,
-                                      const std::string mesh_menu,
-                                      const std::vector< GroupInfo > & group_info,
-                                      const std::vector< GeomElemBase* > geom_elem_per_dimension);
-                                      
   bool  see_if_faces_from_different_lists_are_the_same( const GeomElemBase* geom_elem_per_dimension, 
                                             const std::vector< unsigned > & face_nodes_from_vol_connectivity, 
                                             const std::vector< unsigned > & face_nodes_from_bdry_group);
@@ -105,11 +111,11 @@ class MED_IO : public MeshInput<Mesh>
 
    const GroupInfo                get_group_flags_per_mesh(const std::string & group_names) const;
    
-   const std::vector< GroupInfo > get_group_vector_flags_per_mesh(const hid_t &  file_id, const std::string & mesh_menu) const;
+   const std::vector< GroupInfo > get_group_flags_per_mesh_vector(const hid_t &  file_id, const std::string & mesh_menu) const;
    
    const std::vector<std::string>  get_mesh_names(const hid_t & file_id) const;
      
-   std::pair<int, std::vector<int> >  isolate_number_in_string(const std::string & string_in, const int begin_pos_to_investigate) const;
+   std::pair<int, std::vector<int> >  isolate_number_in_string_between_underscores(const std::string & string_in, const int begin_pos_to_investigate) const;
       
    std::string  isolate_first_field_before_underscore(const std::string &  string_in, const int begin_pos_to_investigate) const;
 
