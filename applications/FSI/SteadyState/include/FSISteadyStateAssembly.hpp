@@ -1461,13 +1461,13 @@ namespace femus {
 	  for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
           
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
-       const unsigned nve_bdry_u = msh->GetElementFaceDofNumber(iel,jface,solType_u[POS_U]);
        
 
        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
  
        geom_element.set_elem_center_bdry_3d();
 
+       const unsigned nve_bdry_u = msh->GetElementFaceDofNumber(iel,jface,solType_u[POS_U]);
        
 	    // look for boundary faces
             const int bdry_index = msh->el->GetFaceElementIndex(iel,jface);

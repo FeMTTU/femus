@@ -16,6 +16,45 @@
 #define FACE_FOR_QOI             4   
 
 
+ int find_solid_interface( const unsigned dim, const std::vector< double > x ) { 
+     
+     
+     const double epsilon = 1.e-4; //with e-5 it doesn't find the circle!!!
+     
+     int face_flag = -1;
+     
+     if (dim == 2) {
+     
+     if ( ( x[0] > 0.248 - epsilon && x[0] < 0.6 + epsilon &&
+            x[1] > 0.21 - epsilon  && x[1] < 0.21 + epsilon ) 
+            ||
+          ( x[0] > 0.248 - epsilon && x[0] < 0.6 + epsilon &&
+            x[1] > 0.19 - epsilon  && x[1] < 0.19 + epsilon )
+            ||
+          ( x[0] > 0.6 - epsilon && x[0] < 0.6 + epsilon &&
+            x[1] > 0.19 - epsilon  && x[1] < 0.21 + epsilon )
+           ||
+          ( x[1] > 0.19 - epsilon  && x[1] < 0.21 + epsilon &&
+            (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) > 0.05 * 0.05 - epsilon &&
+            (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) < 0.05 * 0.05 + epsilon             
+        )
+
+           )
+                
+     {
+           face_flag = 5;   
+     }
+         
+         
+     }
+     
+     else if (dim == 3) { abort(); }
+     
+     return face_flag;
+     
+     
+ }
+
 
 using namespace std;
 using namespace femus;
@@ -302,12 +341,43 @@ output_path.append("/");
 // ==================================
 
 // ==================================
-// Reading from MED file
-// There will be a field in the MED file 
 // I want to access those functions from the main function, not only inside MultilevelMesh
+   unsigned solType_coords = FE_DOMAIN;
+
+        for (unsigned lev = 0; lev < _element_faces.size(); lev++) {
+            
+            unsigned face_count = 0;
+            
+        for (unsigned iel = 0; iel < _element_faces[lev].size(); iel++) {
+            
+       CurrentElem < double > geom_element(dimension, ml_msh.GetLevel(lev));
+    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+  
+        for (unsigned f = 0; f < ml_msh.GetLevel(lev)->GetElementFaceNumber(iel); f++) {
+            
+        const unsigned ielGeom_bdry = ml_msh.GetLevel(lev)->GetElementFaceType(iel, f);    
+       
+
+       geom_element.set_coords_at_dofs_bdry_3d(iel, f, solType_coords);
+ 
+       geom_element.set_elem_center_bdry_3d();
+       
+         const int face_flag = find_solid_interface(dimension, geom_element.get_elem_center_bdry());
+         
+         if (face_flag == 5) face_count++;
+         
+       _element_faces[lev][iel][f] = face_flag; 
+            
+//             std::cout << _element_faces[lev][iel][f];
+
+             }
+           }
+            
+            std::cout << face_count;
+            
+        }
 
 
-// 
 
 
 // ==================================

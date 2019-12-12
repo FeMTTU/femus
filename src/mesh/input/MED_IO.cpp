@@ -487,7 +487,7 @@ namespace femus
                   std::vector<unsigned>  face_nodes_from_vol_connectivity_linear(face_nodes_from_vol_connectivity.begin(),face_nodes_from_vol_connectivity.begin() + geom_elem_per_dimension->n_nodes_linear() );
                   std::vector<unsigned>  face_nodes_from_bdry_group_linear(face_nodes_from_bdry_group.begin(),face_nodes_from_bdry_group.begin() + geom_elem_per_dimension->n_nodes_linear() );
                   
-                  unsigned n_alternatives = 2*geom_elem_per_dimension->n_nodes_linear();
+                  unsigned n_alternatives = 2 * geom_elem_per_dimension->n_nodes_linear();
                   std::vector< std::vector<unsigned> > face_alternatives(n_alternatives);
                   
                for(unsigned alt = 0; alt < n_alternatives/2; alt++) {
