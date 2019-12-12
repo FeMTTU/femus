@@ -165,6 +165,8 @@ void AssembleSystemY (MultiLevelProblem& ml_prob) {
 
       // Initialize derivatives of x and W (new, middle, old) at the Gauss points.
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      double solY_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+
 
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nYDofs; i++) {
@@ -177,6 +179,7 @@ void AssembleSystemY (MultiLevelProblem& ml_prob) {
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
             solx_uv[K][j] += phix_uv[j][i] * solx[K][i];
+            solY_uv[K][j] += phix_uv[j][i] * solY[K][i];
           }
         }
       }
@@ -237,12 +240,14 @@ void AssembleSystemY (MultiLevelProblem& ml_prob) {
 
       // Initializing tangential gradients of X and W (new, middle, old).
       double solx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      double solY_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
       // Computing tangential gradients defined above.
       for (unsigned I = 0; I < DIM; I++) {
         for (unsigned J = 0; J < DIM; J++) {
           for (unsigned k = 0; k < dim; k++) {
             solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
+            solY_Xtan[I][J] += solY_uv[I][k] * Jir[k][J];
           }
         }
       }
@@ -266,14 +271,20 @@ void AssembleSystemY (MultiLevelProblem& ml_prob) {
           unsigned istart = irow * sizeAll;
 
           double term1 = 0.;
+          double term2 = 0.;
           for (unsigned J = 0; J < DIM; J++) {
             term1 +=  phix_Xtan[J][i] * solx_Xtan[K][J]; // the field x is new (i + 1) but differentiated on the surface at (i)
+            term2 +=  phix_Xtan[J][i] * solY_Xtan[K][J];
           }
-          Res[irow] -= (solYg[K] * phiY[i] + term1) * Area;
+          Res[irow] -= (solYg[K] * phiY[i] + term1 + 0 * term2) * Area;
 
           unsigned jstart = istart + K * nYDofs;
           for (unsigned j = 0; j < nYDofs; j++) {
-            Jac [jstart + j] += phiY[i] * phiY[j] * Area;
+            double term3 = 0.;
+            for (unsigned J = 0; J < DIM; J++) {
+              term3 +=  phix_Xtan[J][i] * phix_Xtan[J][j];
+            }
+            Jac [jstart + j] += (phiY[i] * phiY[j] + 0 * term3)* Area;
           }
 
         }

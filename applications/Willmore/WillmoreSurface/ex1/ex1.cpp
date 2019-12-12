@@ -23,7 +23,7 @@
 using namespace femus;
 /* Vector option for P (to handle polynomials).
  * ap is the coefficient in front of the power of H. */
-const unsigned P[3] = {2, 3, 4};
+const unsigned P[3] = {4, 3, 4};
 const double ap[3] = {1, 0., 0.};
 const double normalSign = -1.;
 
@@ -45,7 +45,7 @@ const double eps = 1.0e-5;
 void AssemblePWillmore (MultiLevelProblem&);
 void AssemblePWillmore2 (MultiLevelProblem& ml_prob);
 
-double dt0 = 0.05;
+double dt0 = 0.000005;
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
@@ -85,9 +85,9 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
@@ -247,16 +247,16 @@ int main (int argc, char** args) {
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
 
   // Parameters for the main algorithm loop.
-  unsigned numberOfTimeSteps = 10000u;
-  unsigned printInterval = 1u;
+  unsigned numberOfTimeSteps = 20000u;
+  unsigned printInterval = 10u;
 
   // Main algorithm loop.
   for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-    dt0 *= 1.;
-    if (dt0 > 1) dt0 = 1.;
+    dt0 *= 1.0;
+    if (dt0 > .00005) dt0 = .00005;
 
     if (time_step % 1 == 0) {
       mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
