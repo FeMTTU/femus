@@ -1315,7 +1315,12 @@ namespace femus {
  #define POS_U   0
 
   
-  void ComputeQoI_face(const MultiLevelProblem& ml_prob, const unsigned level, const unsigned face_qoi, const unsigned stress_component, const MonolithicFSINonLinearImplicitSystem* mlPdeSys)    {
+  void ComputeQoI_face(const MultiLevelProblem& ml_prob,
+                       const unsigned level, 
+                       const unsigned face_qoi,
+                       const unsigned stress_component, 
+                       /*const*/ std::vector< MyMatrix <int> > & element_faces, //@todo here the operator with const has to be added to MyMatrix
+                       const MonolithicFSINonLinearImplicitSystem* mlPdeSys)    {
   
   
 //   const MonolithicFSINonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system< MonolithicFSINonLinearImplicitSystem > ("Fluid-Structure-Interaction");
@@ -1469,16 +1474,18 @@ namespace femus {
 
        const unsigned nve_bdry_u = msh->GetElementFaceDofNumber(iel,jface,solType_u[POS_U]);
        
-	    // look for boundary faces
-            const int bdry_index = msh->el->GetFaceElementIndex(iel,jface);
-            
-	    if( bdry_index < 0) {
-	      unsigned int face = msh->el->GetBoundaryIndex(iel,jface);
-	      
-		
-// 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
-	      if(  face == face_qoi) { //control face
+// // // 	    // look for boundary faces
+// // //             const int bdry_index = msh->el->GetFaceElementIndex(iel,jface);
+// // //             
+// // // 	    if( bdry_index < 0) {
+// // // 	      unsigned int face = msh->el->GetBoundaryIndex(iel,jface);
+// // // 	      
+// // // 		
+// // // // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
+// // // 	      if(  face == face_qoi) { //control face
 
+       if ( element_faces[level][iel][jface] == 5) {
+       
 	
 		//============ initialize gauss quantities on the boundary ==========================================
                 std::vector< double > sol_u_bdry_gss(dim);
@@ -1567,10 +1574,12 @@ namespace femus {
           }
     //--------       
             
-           }
-	      } //end face == 3
-	      
-	    } //end if boundary faces
+           } //end gauss boundary
+           
+         } //end faces
+// // // 	      } //end face == 3
+// // // 	    } //end if boundary faces
+	    
 	  }  // loop over element faces   
 
 //=====================================================================================================================  

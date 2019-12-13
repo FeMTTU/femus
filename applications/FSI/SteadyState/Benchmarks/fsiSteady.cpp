@@ -422,7 +422,7 @@ output_path.append("/");
              }
            }
             
-            std::cout << face_count;
+            std::cout << face_count << std::endl;
             
         }
 
@@ -628,7 +628,7 @@ output_path.append("/");
   
   // ******* Postprocessing *******
   
-  ComputeQoI_face(ml_prob, numofmeshlevels - 1, FACE_FOR_QOI, 0, NULL);
+  ComputeQoI_face(ml_prob, numofmeshlevels - 1, FACE_FOR_QOI, 0, _element_faces, NULL);
 
   if(strcmp (output_file_to_parse.c_str(), "") != 0) {
     PrintMumpsInfo      (output_path, output_file_to_parse.c_str(), mesh_file, numofrefinements);
