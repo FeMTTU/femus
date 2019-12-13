@@ -1314,6 +1314,10 @@ namespace femus {
 
  #define POS_U   0
 
+ #define WET_RIGID  5
+ #define WET_DEFORMABLE 6
+ #define INT_RIGID_DEFORMABLE  7
+ 
   
   void ComputeQoI_face(const MultiLevelProblem& ml_prob,
                        const unsigned level, 
@@ -1484,7 +1488,9 @@ namespace femus {
 // // // // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
 // // // 	      if(  face == face_qoi) { //control face
 
-       if ( element_faces[level][iel][jface] == 5) {
+       if ( 
+           element_faces[level][iel][jface] == WET_RIGID || 
+           element_faces[level][iel][jface] == WET_DEFORMABLE ) {
        
 	
 		//============ initialize gauss quantities on the boundary ==========================================
@@ -1569,7 +1575,7 @@ namespace femus {
 //     compute gauss quantities on the boundary through VOLUME interpolation
 
 
-                 integral_norm_stress_component[d] +=  weight_bdry */* sol_u_bdry_gss * sol_u_bdry_gss*/ norm_stress; 
+                 integral_norm_stress_component[d] +=  weight_bdry */* sol_u_bdry_gss * sol_u_bdry_gss*/ /*norm_stress*/1.; 
                  
           }
     //--------       

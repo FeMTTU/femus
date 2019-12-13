@@ -13,13 +13,13 @@
 #include <dlfcn.h>
 
 
-#define FACE_FOR_QOI             4   
+#define FACE_FOR_QOI          4   
 
 #define EPS_EDGE_LOCATION 1.e-4   //with e-5 it doesn't find the circle!!!
 
 
 
- int find_fluid_solid_interface_wet_rigid( const unsigned dim, const std::vector< double > x ) { 
+ int find_fluid_solid_interface_wet( const unsigned dim, const std::vector< double > x ) { 
 
      const double epsilon = EPS_EDGE_LOCATION;
      
@@ -34,30 +34,11 @@
 //              x[0] > 0.2
            ) {
                   
-           face_flag = 5;   
+           face_flag = WET_RIGID;   
         }
-    
-     }
-     
-     else if (dim == 3) { abort(); }
-     
-     
-     return face_flag;
-     
- }
-
- 
- 
- int find_fluid_solid_interface_wet_deformable( const unsigned dim, const std::vector< double > x ) { 
-     
-     
-     const double epsilon = EPS_EDGE_LOCATION;
-     
-     int face_flag;
-     
-     if (dim == 2) {
-     
-     if ( ( x[0] > 0.248 - epsilon && x[0] < 0.6 + epsilon &&
+      
+         else if 
+             ( ( x[0] > 0.248 - epsilon && x[0] < 0.6 + epsilon &&
             x[1] > 0.21 - epsilon  && x[1] < 0.21 + epsilon ) 
             ||
           ( x[0] > 0.248 - epsilon && x[0] < 0.6 + epsilon &&
@@ -75,18 +56,19 @@
            )
                 
      {
-           face_flag = 5;   
+           face_flag = WET_DEFORMABLE;   
      }
-         
-         
+        
      }
      
      else if (dim == 3) { abort(); }
      
+     
      return face_flag;
      
-     
  }
+
+ 
 
 
 using namespace std;
@@ -306,7 +288,14 @@ output_path.append("/");
 
   dimension = ml_msh.GetLevel(0)->GetDimension();
 
-// ==================================
+ // ==================================
+//   This is done at the beginning, so the mesh is in its original position and I can do a check with if''s on coordinates correctly
+ // ==================================
+ //How do I handle the computation of the NORMAL for inner edges?
+ // I need to make sure that the normal is in the right direction
+ // What I'll do is the following: I will restrict the loop over Volume Elements 
+ // only to those that belong to Group 6 !
+ // ==================================
   //If you want this field to be defined at all levels, this operation has to be performed BEFORE we remove all levels
   //If you want this field to be defined only at the finest level, then do it here
   //here I have to create another structure that only aims at isolating the interface faces inside the mesh
@@ -368,7 +357,7 @@ output_path.append("/");
       
       ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().clearBroadcast();
     }
-         _element_faces[lev] =   MyMatrix <int> (rowSizeElNearFace, -1); 
+         _element_faces[lev] =   MyMatrix < int > (rowSizeElNearFace, -1); 
 
       }
 // ==================================
@@ -386,6 +375,12 @@ output_path.append("/");
        CurrentElem < double > geom_element(dimension, ml_msh.GetLevel(lev));
     geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
   
+    int iel_group = ml_msh.GetLevel(lev)->GetElementGroup(iel);
+    
+    int group_outside_solid = 6;
+    
+      if (iel_group == group_outside_solid)  {
+    
         for (unsigned f = 0; f < ml_msh.GetLevel(lev)->GetElementFaceNumber(iel); f++) {
             
         const unsigned ielGeom_bdry = ml_msh.GetLevel(lev)->GetElementFaceType(iel, f);    
@@ -395,8 +390,7 @@ output_path.append("/");
  
        geom_element.set_elem_center_bdry_3d();
        
-         const int face_flag_rigid      = find_fluid_solid_interface_wet_rigid     (dimension, geom_element.get_elem_center_bdry());
-         const int face_flag_deformable = find_fluid_solid_interface_wet_deformable(dimension, geom_element.get_elem_center_bdry());
+         const int face_flag_wet      = find_fluid_solid_interface_wet     (dimension, geom_element.get_elem_center_bdry());
          
          const int elem_near_face = ml_msh.GetLevel(lev)->GetElementArray()->GetFaceElementIndex(iel,f) - 1; //@todo have to subtract 1 because it was added before!
 
@@ -406,22 +400,26 @@ output_path.append("/");
               
              const unsigned int n_faces = ml_msh.GetLevel(lev)->GetElementFaceNumber(elem_near_face);
                for (unsigned int v = 0; v < n_faces; v++) {
-                     if ( _element_faces[lev][elem_near_face][v] == 5 ) already_found = true;
+                     if ( _element_faces[lev][elem_near_face][v] == WET_RIGID ||  _element_faces[lev][elem_near_face][v] == WET_DEFORMABLE ) already_found = true;
                }
          }
          
 
-         if (face_flag_rigid == 5 && face_flag_deformable == 5) abort(); //the following is an XOR
+         if (face_flag_wet == WET_RIGID && 
+             face_flag_wet == WET_DEFORMABLE) abort(); //the following is an XOR
          
-         if ( (face_flag_rigid == 5 || face_flag_deformable == 5) && !already_found) { 
+         if ( ( face_flag_wet == WET_RIGID || face_flag_wet == WET_DEFORMABLE) && !already_found) { //in this way the face is counted only once.
              face_count++;
-            _element_faces[lev][iel][f] = 5; 
+            _element_faces[lev][iel][f] = face_flag_wet; 
          }
 //             std::cout << _element_faces[lev][iel][f];
 
              }
            }
             
+            
+        }  //end group outside solid
+        
             std::cout << face_count << std::endl;
             
         }

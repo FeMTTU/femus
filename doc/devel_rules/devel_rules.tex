@@ -598,7 +598,7 @@ From command line:
 To be added
 
 
-\part{Salome}
+\part{Mesh Generation: Salome}
 
 
  \chapter{SHAPER Module}
@@ -916,9 +916,85 @@ On the other hand, if instead of dumping the script I save the study it is NOT c
     That group should appear as a "child" of the Geometry object you will then mesh. I can try this to double check.
 
 
- \part{Hdfview}
+\part{Mesh Visualization: Paraview}
+
+ If you want to select only some cells, do Interactive Cells mode on
+ 
+ If you want the Edges, do Extract Edges first
+
+ = PARAVIEW PLOTS
+ 
+- plot in the x and y directions
+
+- plot along the axis
+
+- warp in z direction
+
+- warp in y direction ("boat")
+
+- glyphs
+
+- streamlines
 
 
+\chapter{COMPARE/DIFF RESULTS  in paraview}
+
+Can I compare results in paraview?
+Well, you should have the same geometry, with the same mesh.
+Also, if you want the same numbering,
+you should have the SAME NUMBER OF LEVELS 
+and the SAME NUMBER OF PROCESSORS...
+
+You could make a diff of the hdf5 files, but if the NODE ORDERING 
+is different, then you're gonna have even the same values but in 
+different order!
+So you have to use the SAME LEVS and SAME PROCS,
+unless paraview has a GEOMETRIC DIFF, based not on the numbering 
+but on the COORDINATE POSITIONS!!!
+
+I found this script for Programmable filter
+http://rbfzone.blogspot.com/2011/06/difference-two-datasets-in-paraview.html
+Still it doesn't work to me with different files, but in the same file it works
+
+
+\# Get the two inputs
+A = self.GetInputDataObject(0, 0)
+B = self.GetInputDataObject(0, 1)
+s0 = A.GetPointData().GetScalars('Becontx')
+s1 = B.GetPointData().GetScalars('Becontx\_LEVEL2')
+out = vtk.vtkDoubleArray()
+out.SetName('Set Signed Err')
+out2 = vtk.vtkDoubleArray()
+out2.SetName('Set Unsigned Err')
+out3 = vtk.vtkDoubleArray()
+out3.SetName('Set Rel Err')
+for i in xrange(A.GetNumberOfPoints()):
+    val1 = s0.GetValue(i)
+    val2 = s1.GetValue(i)
+    val\_err = val1 - val2;
+    out.InsertNextValue(val\_err)
+    out2.InsertNextValue(abs(val\_err))
+    out3.InsertNextValue(abs(val\_err)/abs(val1))
+\# Initialize the output and add the labels array
+output = self.GetOutput()
+output.ShallowCopy(B)
+output.GetPointData().AddArray(out)
+output.GetPointData().AddArray(out2)
+output.GetPointData().AddArray(out3)
+
+
+
+ \part{File format: HDF5}
+ 
+ \chapter{HDF5} 
+ 
+  - How can I DIFF two HDF5 files?!?
+
+   Yes there is a utility, called "h5diff"! 
+   
+
+ \chapter{HDFView}
+ 
 Follow the instruction in the HDFVIEW website
 
 At the end of the build process, you should have an hdfview.sh script inside the bin directory of your build.
@@ -928,6 +1004,10 @@ Another alternative to view the content of an HDF5 file is to use the 'h5dump' u
 
 You can change the names of the Datasets from HDFVIEW
    
-    
+   
+ \chapter{XDMF}
+ 
+ A way to read HDF5 files from within Paraview
+
     
 \end{document}
