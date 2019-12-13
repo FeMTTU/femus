@@ -15,13 +15,45 @@
 
 #define FACE_FOR_QOI             4   
 
+#define EPS_EDGE_LOCATION 1.e-4   //with e-5 it doesn't find the circle!!!
 
- int find_solid_interface( const unsigned dim, const std::vector< double > x ) { 
+
+
+ int find_fluid_solid_interface_wet_rigid( const unsigned dim, const std::vector< double > x ) { 
+
+     const double epsilon = EPS_EDGE_LOCATION;
+     
+     int face_flag;
+     
+     if (dim == 2) {
+     
+              if ( 
+            (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) > 0.05 * 0.05 - epsilon &&
+            (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) < 0.05 * 0.05 + epsilon &&
+             !(x[0] > 0.2 &&  x[1] > 0.19 - epsilon &&  x[1] < 0.21 + epsilon) 
+//              x[0] > 0.2
+           ) {
+                  
+           face_flag = 5;   
+        }
+    
+     }
+     
+     else if (dim == 3) { abort(); }
      
      
-     const double epsilon = 1.e-4; //with e-5 it doesn't find the circle!!!
+     return face_flag;
      
-     int face_flag = -1;
+ }
+
+ 
+ 
+ int find_fluid_solid_interface_wet_deformable( const unsigned dim, const std::vector< double > x ) { 
+     
+     
+     const double epsilon = EPS_EDGE_LOCATION;
+     
+     int face_flag;
      
      if (dim == 2) {
      
@@ -33,11 +65,12 @@
             ||
           ( x[0] > 0.6 - epsilon && x[0] < 0.6 + epsilon &&
             x[1] > 0.19 - epsilon  && x[1] < 0.21 + epsilon )
-           ||
-          ( x[1] > 0.19 - epsilon  && x[1] < 0.21 + epsilon &&
-            (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) > 0.05 * 0.05 - epsilon &&
-            (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) < 0.05 * 0.05 + epsilon             
-        )
+//            ||
+//           ( x[1] > 0.19 - epsilon  && x[1] < 0.21 + epsilon &&
+//             (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) > 0.05 * 0.05 - epsilon &&
+//             (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) < 0.05 * 0.05 + epsilon &&
+//              x[0] > 0.2
+//           )
 
            )
                 
@@ -362,12 +395,28 @@ output_path.append("/");
  
        geom_element.set_elem_center_bdry_3d();
        
-         const int face_flag = find_solid_interface(dimension, geom_element.get_elem_center_bdry());
+         const int face_flag_rigid      = find_fluid_solid_interface_wet_rigid     (dimension, geom_element.get_elem_center_bdry());
+         const int face_flag_deformable = find_fluid_solid_interface_wet_deformable(dimension, geom_element.get_elem_center_bdry());
          
-         if (face_flag == 5) face_count++;
+         const int elem_near_face = ml_msh.GetLevel(lev)->GetElementArray()->GetFaceElementIndex(iel,f) - 1; //@todo have to subtract 1 because it was added before!
+
+              bool already_found = false;
+              
+         if (elem_near_face >= 0 ) {
+              
+             const unsigned int n_faces = ml_msh.GetLevel(lev)->GetElementFaceNumber(elem_near_face);
+               for (unsigned int v = 0; v < n_faces; v++) {
+                     if ( _element_faces[lev][elem_near_face][v] == 5 ) already_found = true;
+               }
+         }
          
-       _element_faces[lev][iel][f] = face_flag; 
-            
+
+         if (face_flag_rigid == 5 && face_flag_deformable == 5) abort(); //the following is an XOR
+         
+         if ( (face_flag_rigid == 5 || face_flag_deformable == 5) && !already_found) { 
+             face_count++;
+            _element_faces[lev][iel][f] = 5; 
+         }
 //             std::cout << _element_faces[lev][iel][f];
 
              }
