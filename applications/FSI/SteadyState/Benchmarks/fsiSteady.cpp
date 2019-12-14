@@ -13,62 +13,7 @@
 #include <dlfcn.h>
 
 
-#define FACE_FOR_QOI          4   
 
-#define EPS_EDGE_LOCATION 1.e-4   //with e-5 it doesn't find the circle!!!
-
-
-
- int find_fluid_solid_interface_wet( const unsigned dim, const std::vector< double > x ) { 
-
-     const double epsilon = EPS_EDGE_LOCATION;
-     
-     int face_flag;
-     
-     if (dim == 2) {
-     
-              if ( 
-            (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) > 0.05 * 0.05 - epsilon &&
-            (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) < 0.05 * 0.05 + epsilon &&
-             !(x[0] > 0.2 &&  x[1] > 0.19 - epsilon &&  x[1] < 0.21 + epsilon) 
-//              x[0] > 0.2
-           ) {
-                  
-           face_flag = WET_RIGID;   
-        }
-      
-         else if 
-             ( ( x[0] > 0.248 - epsilon && x[0] < 0.6 + epsilon &&
-            x[1] > 0.21 - epsilon  && x[1] < 0.21 + epsilon ) 
-            ||
-          ( x[0] > 0.248 - epsilon && x[0] < 0.6 + epsilon &&
-            x[1] > 0.19 - epsilon  && x[1] < 0.19 + epsilon )
-            ||
-          ( x[0] > 0.6 - epsilon && x[0] < 0.6 + epsilon &&
-            x[1] > 0.19 - epsilon  && x[1] < 0.21 + epsilon )
-//            ||
-//           ( x[1] > 0.19 - epsilon  && x[1] < 0.21 + epsilon &&
-//             (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) > 0.05 * 0.05 - epsilon &&
-//             (x[0] - 0.2) * (x[0] - 0.2) + (x[1] - 0.2) * (x[1] - 0.2) < 0.05 * 0.05 + epsilon &&
-//              x[0] > 0.2
-//           )
-
-           )
-                
-     {
-           face_flag = WET_DEFORMABLE;   
-     }
-        
-     }
-     
-     else if (dim == 3) { abort(); }
-     
-     
-     return face_flag;
-     
- }
-
- 
 
 
 using namespace std;
@@ -311,123 +256,21 @@ output_path.append("/");
   //indice NEGATIVO per le facce FLAGGATE nel mesh file (o di Boundary, o di qualsiasi Interfaccia) (parte da -2 mi sa, per conformita')
   
   //faccio questa struttura con la stessa allocazione iniziale di elementnearface
-  //poi il riempimento lo faccio con il MED
 
   std::vector< MyMatrix <int> > _element_faces(numofmeshlevels);  //@todo is this about the faces of each element, only
   //I need to allocate this at all levels! or better, at least at the finest level, which requires the coarser
   //it seems like it is first allocated at the coarse level, and then with the refinement it goes to all levels
   
-  _element_faces[0].resize( ml_msh.GetLevel(0)->GetNumberOfElements(), NFC[0][1], -1);  /*NFC[0][1]: maximum possible number of faces*/
+   allocate_element_faces(_element_faces, ml_msh);
 
-  
-  for (unsigned lev = 1; lev < _element_faces.size(); lev++) {
-      
-    vector < double > coarseLocalizedAmrVector;
-    ml_msh.GetLevel(lev - 1)->_topology->_Sol[ml_msh.GetLevel(lev - 1)->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
+   const std::vector < int >  all_face_flags =  {WET_RIGID/*, WET_DEFORMABLE*/};
+   
+   
 
-    ml_msh.GetLevel(lev - 1)->el->AllocateChildrenElement(ml_msh.GetLevel(lev)->GetRefIndex(), ml_msh.GetLevel(lev - 1) );
+   fill_element_faces(_element_faces, ml_msh, all_face_flags, GROUP_VOL_ELEMS);
 
-    const unsigned n_elems = ml_msh.GetLevel(lev)->GetNumberOfElements();
-       
-       MyVector <unsigned> rowSizeElNearFace(n_elems);
-       
-    unsigned jel = 0;
-    
-    for (unsigned isdom = 0; isdom < ml_msh.GetLevel(lev)->n_processors(); isdom++) {
-        
-       ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().broadcast(isdom);
-       
-      for (unsigned iel = ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().begin(); 
-                    iel < ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().end(); iel++) {
-          
-        short unsigned elType = ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray()[iel];
-      
-        int increment = 1;
-      
-        if (static_cast < short unsigned >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
-          increment = NRE[elType];
-        }
-        
-        for (unsigned j = 0; j < increment; j++) {
-          rowSizeElNearFace[jel + j] += NFC[elType][1];
-        }
-        
-        jel += increment;
-      }
-      
-      ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().clearBroadcast();
-    }
-         _element_faces[lev] =   MyMatrix < int > (rowSizeElNearFace, -1); 
-
-      }
-// ==================================
-
-// ==================================
-// I want to access those functions from the main function, not only inside MultilevelMesh
-   unsigned solType_coords = FE_DOMAIN;
-
-        for (unsigned lev = 0; lev < _element_faces.size(); lev++) {
-            
-            unsigned face_count = 0;
-            
-        for (unsigned iel = 0; iel < _element_faces[lev].size(); iel++) {
-            
-       CurrentElem < double > geom_element(dimension, ml_msh.GetLevel(lev));
-    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
-  
-    int iel_group = ml_msh.GetLevel(lev)->GetElementGroup(iel);
-    
-    int group_outside_solid = 6;
-    
-      if (iel_group == group_outside_solid)  {
-    
-        for (unsigned f = 0; f < ml_msh.GetLevel(lev)->GetElementFaceNumber(iel); f++) {
-            
-        const unsigned ielGeom_bdry = ml_msh.GetLevel(lev)->GetElementFaceType(iel, f);    
-       
-
-       geom_element.set_coords_at_dofs_bdry_3d(iel, f, solType_coords);
- 
-       geom_element.set_elem_center_bdry_3d();
-       
-         const int face_flag_wet      = find_fluid_solid_interface_wet     (dimension, geom_element.get_elem_center_bdry());
-         
-         const int elem_near_face = ml_msh.GetLevel(lev)->GetElementArray()->GetFaceElementIndex(iel,f) - 1; //@todo have to subtract 1 because it was added before!
-
-              bool already_found = false;
-              
-         if (elem_near_face >= 0 ) {
-              
-             const unsigned int n_faces = ml_msh.GetLevel(lev)->GetElementFaceNumber(elem_near_face);
-               for (unsigned int v = 0; v < n_faces; v++) {
-                     if ( _element_faces[lev][elem_near_face][v] == WET_RIGID ||  _element_faces[lev][elem_near_face][v] == WET_DEFORMABLE ) already_found = true;
-               }
-         }
-         
-
-         if (face_flag_wet == WET_RIGID && 
-             face_flag_wet == WET_DEFORMABLE) abort(); //the following is an XOR
-         
-         if ( ( face_flag_wet == WET_RIGID || face_flag_wet == WET_DEFORMABLE) && !already_found) { //in this way the face is counted only once.
-             face_count++;
-            _element_faces[lev][iel][f] = face_flag_wet; 
-         }
-//             std::cout << _element_faces[lev][iel][f];
-
-             }
-           }
-            
-            
-        }  //end group outside solid
-        
-            std::cout << face_count << std::endl;
-            
-        }
-
-
-
-
-// ==================================
+   
+   
   
   // ******* Fluid and Solid Parameters *******
   Parameter par(Lref,Uref);
@@ -625,8 +468,9 @@ output_path.append("/");
   dlclose(handle);
   
   // ******* Postprocessing *******
+  const unsigned int face_for_qoi  = 4;  //not used now
   
-  ComputeQoI_face(ml_prob, numofmeshlevels - 1, FACE_FOR_QOI, 0, _element_faces, NULL);
+  ComputeQoI_face(ml_prob, numofmeshlevels - 1, face_for_qoi, all_face_flags, 0, _element_faces, NULL);
 
   if(strcmp (output_file_to_parse.c_str(), "") != 0) {
     PrintMumpsInfo      (output_path, output_file_to_parse.c_str(), mesh_file, numofrefinements);

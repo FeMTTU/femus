@@ -1314,14 +1314,216 @@ namespace femus {
 
  #define POS_U   0
 
- #define WET_RIGID  5
- #define WET_DEFORMABLE 6
- #define INT_RIGID_DEFORMABLE  7
+ #define WET_RIGID  5            //set GROUP_VOL_ELEMS 6
+ #define WET_DEFORMABLE 6        //set GROUP_VOL_ELEMS 6
+ #define DRY_RIGID_DEFORMABLE  7 //set GROUP_VOL_ELEMS 5
+
+#define GROUP_VOL_ELEMS  6
+ 
+ #define EPS_EDGE_LOCATION 1.e-4   //with e-5 it doesn't find the circle!!!
+
+
+bool or_vector(const int current_face, const std::vector< int > all_face_flags) {
+ 
+     bool is_face_there = false;
+    
+       for (unsigned l = 0; l < all_face_flags.size(); l++) {
+           if (current_face == all_face_flags[l]) { is_face_there = true; break; }
+
+       }
+    
+    return is_face_there;
+}
+
+
+
+ void allocate_element_faces(  std::vector< MyMatrix <int> > & _element_faces, const MultiLevelMesh & ml_msh) {
+
+  _element_faces[0].resize( ml_msh.GetLevel(0)->GetNumberOfElements(), NFC[0][1], -1);  /*NFC[0][1]: maximum possible number of faces*/
+
+  
+  for (unsigned lev = 1; lev < _element_faces.size(); lev++) {
+      
+    vector < double > coarseLocalizedAmrVector;
+    ml_msh.GetLevel(lev - 1)->_topology->_Sol[ml_msh.GetLevel(lev - 1)->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
+
+//     ml_msh.GetLevel(lev - 1)->el->AllocateChildrenElement(ml_msh.GetLevel(lev)->GetRefIndex(), ml_msh.GetLevel(lev - 1) );  //I believe this was already done
+
+    const unsigned n_elems = ml_msh.GetLevel(lev)->GetNumberOfElements();
+       
+       MyVector <unsigned> rowSizeElNearFace(n_elems);
+       
+    unsigned jel = 0;
+    
+    for (unsigned isdom = 0; isdom < ml_msh.GetLevel(lev)->n_processors(); isdom++) {
+        
+       ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().broadcast(isdom);
+       
+      for (unsigned iel = ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().begin(); 
+                    iel < ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().end(); iel++) {
+          
+        short unsigned elType = ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray()[iel];
+      
+        int increment = 1;
+      
+        if (static_cast < short unsigned >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
+          increment = NRE[elType];
+        }
+        
+        for (unsigned j = 0; j < increment; j++) {
+          rowSizeElNearFace[jel + j] += NFC[elType][1];
+        }
+        
+        jel += increment;
+      }
+      
+      ml_msh.GetLevel(lev)->GetElementArray()->GetElementTypeArray().clearBroadcast();
+    }
+         _element_faces[lev] =   MyMatrix < int > (rowSizeElNearFace, -1); 
+
+      }
+
+     
+}
+// ==================================
+
+
+
+ int find_faces_for_integration( const unsigned dim, const std::vector< double > x ) { 
+
+     const double epsilon = EPS_EDGE_LOCATION;
+     
+     int face_flag;
+     
+     double x_offset = 0.;
+     if (dim == 3) x_offset = 0.3;
+     
+     const double cyl_radius = 0.05;
+     
+//      if (dim == 2) {
+         
+              if (true 
+                 
+//             (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) > cyl_radius * cyl_radius - epsilon &&
+//             (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) < cyl_radius * cyl_radius + epsilon
+                  /* &&
+             !(x[0] > (x_offset + 0.2) &&  x[1] > 0.19 - epsilon &&  x[1] < 0.21 + epsilon)*/ 
+           ) { face_flag = WET_RIGID; }
+      
+// //          else if 
+// //              ( 
+// //              ( x[0] > (x_offset + 0.248) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
+// //                x[1] > 0.21 - epsilon  && x[1] < 0.21 + epsilon ) 
+// //             ||
+// //           ( x[0] > (x_offset + 0.248) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
+// //             x[1] > 0.19 - epsilon  && x[1] < 0.19 + epsilon )
+// //             ||
+// //           ( x[0] > (x_offset + 0.6) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
+// //             x[1] > 0.19 - epsilon  && x[1] < 0.21 + epsilon )
+// //            ) {  face_flag = WET_DEFORMABLE; }
+// //         
+// //          else  if (
+// //             (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) > cyl_radius * cyl_radius - epsilon &&
+// //             (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) < cyl_radius * cyl_radius + epsilon &&
+// //              ( x[0] > (x_offset + 0.2) &&  x[1] > 0.19 - epsilon &&  x[1] < 0.21 + epsilon )
+// //         )  {  
+// //             face_flag = DRY_RIGID_DEFORMABLE; 
+// //             
+// //         }
+
+        
+//      }
+//      
+//      else if (dim == 3) { abort(); }
+     
+     
+     return face_flag;
+     
+ }
+
+ 
+ 
+ 
+ // ==================================
+ void fill_element_faces(  std::vector< MyMatrix <int> > & _element_faces, 
+                           const MultiLevelMesh & ml_msh, 
+                           const std::vector < int > & all_face_flags, 
+                           const int group_outside_solid_to_which_all_faces_belong) {
+     
+   int dimension = ml_msh.GetLevel(0)->GetDimension();
+  
+   unsigned solType_coords = FE_DOMAIN;
+   
+   
+
+        for (unsigned lev = 0; lev < _element_faces.size(); lev++) {
+            
+            unsigned face_count = 0;
+            
+        for (unsigned iel = 0; iel < _element_faces[lev].size(); iel++) {
+            
+       CurrentElem < double > geom_element(dimension, ml_msh.GetLevel(lev));
+       
+    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+  
+    int iel_group = ml_msh.GetLevel(lev)->GetElementGroup(iel);
+    
+    
+      if (iel_group == group_outside_solid_to_which_all_faces_belong)  {
+    
+        for (unsigned f = 0; f < ml_msh.GetLevel(lev)->GetElementFaceNumber(iel); f++) {
+            
+        const unsigned ielGeom_bdry = ml_msh.GetLevel(lev)->GetElementFaceType(iel, f);    
+       
+
+       geom_element.set_coords_at_dofs_bdry_3d(iel, f, solType_coords);
+ 
+       geom_element.set_elem_center_bdry_3d();
+       
+         const int face_flag_wet      = find_faces_for_integration     (dimension, geom_element.get_elem_center_bdry());
+         
+         const int elem_near_face = ml_msh.GetLevel(lev)->GetElementArray()->GetFaceElementIndex(iel,f) - 1; //@todo have to subtract 1 because it was added before!
+
+              bool already_found = false;
+              
+         if (elem_near_face >= 0 ) {
+              
+             const unsigned int n_faces = ml_msh.GetLevel(lev)->GetElementFaceNumber(elem_near_face);
+               for (unsigned int v = 0; v < n_faces; v++) {
+                     if ( or_vector(_element_faces[lev][elem_near_face][v], all_face_flags) ) already_found = true;
+               }
+         }
+         
+
+         if ( or_vector(face_flag_wet, all_face_flags) 
+               && !already_found) { //in this way the face is counted only once.
+             face_count++;
+            _element_faces[lev][iel][f] = face_flag_wet; 
+         }
+//             std::cout << _element_faces[lev][iel][f];
+
+             }
+           }
+            
+            
+        }  //end group outside solid
+        
+            std::cout << face_count << std::endl;
+            
+        }
+
+
+ }
+
+
+// ==================================
+
  
   
   void ComputeQoI_face(const MultiLevelProblem& ml_prob,
                        const unsigned level, 
                        const unsigned face_qoi,
+                       const std::vector < int > all_face_flags,
                        const unsigned stress_component, 
                        /*const*/ std::vector< MyMatrix <int> > & element_faces, //@todo here the operator with const has to be added to MyMatrix
                        const MonolithicFSINonLinearImplicitSystem* mlPdeSys)    {
@@ -1488,9 +1690,7 @@ namespace femus {
 // // // // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
 // // // 	      if(  face == face_qoi) { //control face
 
-       if ( 
-           element_faces[level][iel][jface] == WET_RIGID || 
-           element_faces[level][iel][jface] == WET_DEFORMABLE ) {
+       if ( or_vector(element_faces[level][iel][jface], all_face_flags) ) {
        
 	
 		//============ initialize gauss quantities on the boundary ==========================================
