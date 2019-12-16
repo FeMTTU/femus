@@ -546,7 +546,7 @@ you pick for the quadrature the ones that guarantees exactness for the highest-d
  
  
  
-\part{Git Cheat Sheet}
+\part{Git}
 
 
 - First golden rule: using the manual never hurts.
@@ -950,11 +950,23 @@ On the other hand, if instead of dumping the script I save the study it is NOT c
 
 \part{Mesh Visualization: Paraview}
 
- If you want to select only some cells, do Interactive Cells mode on
+
+\chapter{Selections}
+
+
+ If you want to select only some cells based on a Threshold value, use the Threshold filter
+
+ If you want to select only some cells interactively, do Interactive Cells mode on
  
  If you want the Edges, do Extract Edges first
+ 
+ What if I want to extract all the Faces? 
+   Should I split each element, and then Extract Surface for each element??
 
- = PARAVIEW PLOTS
+ You can also use Edit -> Find data to establish Selection criteria
+ 
+ 
+ \chapter{Plots}
  
 - plot in the x and y directions
 

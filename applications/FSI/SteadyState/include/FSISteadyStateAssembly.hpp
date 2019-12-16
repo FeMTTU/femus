@@ -1402,13 +1402,14 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
      
 //      if (dim == 2) {
          
-              if (true 
-                 
-//             (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) > cyl_radius * cyl_radius - epsilon &&
-//             (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) < cyl_radius * cyl_radius + epsilon
+              if ( 
+            (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) > cyl_radius * cyl_radius - epsilon &&
+            (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) < cyl_radius * cyl_radius + epsilon
                   /* &&
              !(x[0] > (x_offset + 0.2) &&  x[1] > 0.19 - epsilon &&  x[1] < 0.21 + epsilon)*/ 
-           ) { face_flag = WET_RIGID; }
+           ) { 
+                  face_flag = WET_RIGID;
+        }
       
 // //          else if 
 // //              ( 
@@ -1459,7 +1460,8 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
         for (unsigned lev = 0; lev < _element_faces.size(); lev++) {
             
             unsigned face_count = 0;
-            
+                int count_volume_elements = 0;
+
         for (unsigned iel = 0; iel < _element_faces[lev].size(); iel++) {
             
        CurrentElem < double > geom_element(dimension, ml_msh.GetLevel(lev));
@@ -1470,8 +1472,13 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
     
     
       if (iel_group == group_outside_solid_to_which_all_faces_belong)  {
+          
+          count_volume_elements++;
     
-        for (unsigned f = 0; f < ml_msh.GetLevel(lev)->GetElementFaceNumber(iel); f++) {
+        const unsigned int n_faces_iel = ml_msh.GetLevel(lev)->GetElementFaceNumber(iel);
+
+          
+        for (unsigned f = 0; f < n_faces_iel; f++) {
             
         const unsigned ielGeom_bdry = ml_msh.GetLevel(lev)->GetElementFaceType(iel, f);    
        
@@ -1503,12 +1510,15 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 //             std::cout << _element_faces[lev][iel][f];
 
              }
-           }
+             
+           }//end group outside solid
             
             
-        }  //end group outside solid
+        }  //end volume elems
         
-            std::cout << face_count << std::endl;
+            std::cout << "Volume elements " << count_volume_elements  << std::endl;
+            
+            std::cout << "Faces " << face_count << std::endl;
             
         }
 
