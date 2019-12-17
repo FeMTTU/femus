@@ -1399,12 +1399,15 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
      if (dim == 3) x_offset = 0.3;
      
      const double cyl_radius = 0.05;
+     const double cyl_radius_squared = cyl_radius * cyl_radius;
      
 //      if (dim == 2) {
          
+     const double x2plusy2 = (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2);
+     
               if ( 
-            (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) > cyl_radius * cyl_radius - epsilon &&
-            (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) < cyl_radius * cyl_radius + epsilon
+            x2plusy2 > cyl_radius_squared - epsilon &&
+            x2plusy2 < cyl_radius_squared + epsilon
                   /* &&
              !(x[0] > (x_offset + 0.2) &&  x[1] > 0.19 - epsilon &&  x[1] < 0.21 + epsilon)*/ 
            ) { 
@@ -1486,6 +1489,10 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
        geom_element.set_coords_at_dofs_bdry_3d(iel, f, solType_coords);
  
        geom_element.set_elem_center_bdry_3d();
+       
+       // here I use the Element Center of each face to locate the faces.
+       // Alternatively, I could do a Node-based criterion and say that all Nodes of the face have to belong
+       // I need to get the Dof of the center of the face
        
          const int face_flag_wet      = find_faces_for_integration     (dimension, geom_element.get_elem_center_bdry());
          
