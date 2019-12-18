@@ -1401,39 +1401,45 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
      const double cyl_radius = 0.05;
      const double cyl_radius_squared = cyl_radius * cyl_radius;
      
-//      if (dim == 2) {
-         
      const double x2plusy2 = (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2);
      
-              if ( 
-            x2plusy2 > cyl_radius_squared - epsilon &&
-            x2plusy2 < cyl_radius_squared + epsilon
-                  /* &&
-             !(x[0] > (x_offset + 0.2) &&  x[1] > 0.19 - epsilon &&  x[1] < 0.21 + epsilon)*/ 
+     const bool is_cylinder_surface = (x2plusy2 > cyl_radius_squared - epsilon &&
+                                       x2plusy2 < cyl_radius_squared + epsilon);
+
+     
+     const bool is_part_of_cylinder_surface_where_flap_clamps = ( x[0] > (x_offset + 0.2) &&  x[1] > 0.19 - epsilon &&  x[1] < 0.21 + epsilon );
+     
+//      if (dim == 2) {
+         
+     
+              if (
+                  is_cylinder_surface
+                    &&
+              !(is_part_of_cylinder_surface_where_flap_clamps) 
            ) { 
                   face_flag = WET_RIGID;
         }
       
-// //          else if 
-// //              ( 
-// //              ( x[0] > (x_offset + 0.248) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
-// //                x[1] > 0.21 - epsilon  && x[1] < 0.21 + epsilon ) 
-// //             ||
-// //           ( x[0] > (x_offset + 0.248) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
-// //             x[1] > 0.19 - epsilon  && x[1] < 0.19 + epsilon )
-// //             ||
-// //           ( x[0] > (x_offset + 0.6) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
-// //             x[1] > 0.19 - epsilon  && x[1] < 0.21 + epsilon )
-// //            ) {  face_flag = WET_DEFORMABLE; }
-// //         
-// //          else  if (
-// //             (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) > cyl_radius * cyl_radius - epsilon &&
-// //             (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2) < cyl_radius * cyl_radius + epsilon &&
-// //              ( x[0] > (x_offset + 0.2) &&  x[1] > 0.19 - epsilon &&  x[1] < 0.21 + epsilon )
-// //         )  {  
-// //             face_flag = DRY_RIGID_DEFORMABLE; 
-// //             
-// //         }
+         else if 
+             ( 
+             ( x[0] > (x_offset + 0.248) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
+               x[1] > 0.21 - epsilon  && x[1] < 0.21 + epsilon ) 
+            ||
+          ( x[0] > (x_offset + 0.248) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
+            x[1] > 0.19 - epsilon  && x[1] < 0.19 + epsilon )
+            ||
+          ( x[0] > (x_offset + 0.6) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
+            x[1] > 0.19 - epsilon  && x[1] < 0.21 + epsilon )
+           ) {  face_flag = WET_DEFORMABLE; }
+        
+         else  if (
+                  is_cylinder_surface 
+                   &&
+             (is_part_of_cylinder_surface_where_flap_clamps)
+        )  {  
+            face_flag = DRY_RIGID_DEFORMABLE; 
+            
+        }
 
         
 //      }
@@ -1488,13 +1494,26 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 
        geom_element.set_coords_at_dofs_bdry_3d(iel, f, solType_coords);
  
-       geom_element.set_elem_center_bdry_3d();
+       geom_element.set_elem_center_bdry_3d(); //this is computed linearly, so you may offset!
        
        // here I use the Element Center of each face to locate the faces.
        // Alternatively, I could do a Node-based criterion and say that all Nodes of the face have to belong
-       // I need to get the Dof of the center of the face
+       // Instead of doing it on all nodes, I just need to get the Dof of the center of the face
+       //once I have that dof, I will get its coordinates
+                   unsigned nv1 = ml_msh.GetLevel(lev)->GetElementFaceDofNumber(iel, f, solType_coords);  // only the face dofs
+
+                  unsigned i = ml_msh.GetLevel(lev)->GetLocalFaceVertexIndex(iel, f, nv1 - 1/*iv*/);
+                  unsigned idof = ml_msh.GetLevel(lev)->GetSolutionDof(i, iel, solType_coords);
+                  
+       std::vector< double > face_center(3, 0.); 
        
-         const int face_flag_wet      = find_faces_for_integration     (dimension, geom_element.get_elem_center_bdry());
+//        face_center = geom_element.get_elem_center_bdry(); //old method
+       
+        for (unsigned d = 0; d < face_center.size(); d++) {
+                        face_center[d] = (*ml_msh.GetLevel(lev)->_topology->_Sol[d])(idof);
+        }
+        
+         const int face_flag_wet      = find_faces_for_integration     (dimension, face_center);
          
          const int elem_near_face = ml_msh.GetLevel(lev)->GetElementArray()->GetFaceElementIndex(iel,f) - 1; //@todo have to subtract 1 because it was added before!
 
