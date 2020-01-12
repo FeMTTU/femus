@@ -24,6 +24,7 @@ using namespace femus;
 double InitalValueU (const std::vector < double >& x) {
   double value;
 
+  value = 0.;
 //     value =  x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
 //     value =  x[0];
 //     value =  x[0] * x[0];
@@ -39,11 +40,11 @@ double InitalValueU (const std::vector < double >& x) {
 //   double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0] ;
 //   double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0] ;
 
-  double u1 = (a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0]) * (1. + x[0] * x[0]) * cos (x[1]) ;
-  double u2 = (a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0]) * cos (x[0]) * cos (x[1]);
-
-
-  value = (x[0] < 0.) ? u1 : u2;
+//   double u1 = (a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0]) * (1. + x[0] * x[0]) * cos (x[1]) ;
+//   double u2 = (a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0]) * cos (x[0]) * cos (x[1]);
+//
+//
+//   value = (x[0] < 0.) ? u1 : u2;
 
 
   return value;
@@ -54,7 +55,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine);
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
 
   bool dirichlet = true;
-    value = 0.;
+  value = 0.;
 //     value = x[0];
 //     value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0] ;
@@ -69,7 +70,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 
 //   double u1 = (a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0]) * (1. + x[0] * x[0]) * cos (x[1]) ;
 //   double u2 = (a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0]) * cos (x[0]) * cos (x[1]);
-// 
+//
 //   value = (x[0] < 0.) ? u1 : u2;
 
 //   if (facename == 2) {
@@ -86,7 +87,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 1;
+unsigned numberOfUniformLevels = 2;
 unsigned numberOfUniformLevelsFine = 1;
 
 int main (int argc, char** argv) {
@@ -102,14 +103,14 @@ int main (int argc, char** argv) {
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
-  mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+  mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
   mlMshFine.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
-  mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine , NULL);
+  mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine, NULL);
 
-//   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 
-//   mlMshFine.EraseCoarseLevels (numberOfUniformLevelsFine - 1);
+  mlMshFine.EraseCoarseLevels (numberOfUniformLevelsFine - 1);
 
   unsigned dim = mlMsh.GetDimension();
 
@@ -186,7 +187,7 @@ int main (int argc, char** argv) {
 
 // ******* Solution *******
 
-//   system.MGsolve();
+  system.MGsolve();
 
   //END assemble and solve nonlocal problem
 
@@ -389,14 +390,14 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 //       double u1 = a1 + b1 * x_gss - 1. / (2. * kappa1) * x_gss * x_gss;
 //       double u2 = a2 + b2 * x_gss - 1. / (2. * kappa2) * x_gss * x_gss;
 
-      double u1 = (a1 + b1 * x_gss - 1. / (2. * kappa1) * x_gss * x_gss) * (1. + x_gss * x_gss) * cos (y_gss) ;
-      double u2 = (a2 + b2 * x_gss - 1. / (2. * kappa2) * x_gss * x_gss) * cos (x_gss) * cos (y_gss);
+//       double u1 = (a1 + b1 * x_gss - 1. / (2. * kappa1) * x_gss * x_gss) * (1. + x_gss * x_gss) * cos (y_gss) ;
+//       double u2 = (a2 + b2 * x_gss - 1. / (2. * kappa2) * x_gss * x_gss) * cos (x_gss) * cos (y_gss);
 
-      soluExact_gss = (x_gss < 0.) ? u1 : u2;
+//       soluExact_gss = (x_gss < 0.) ? u1 : u2;
 
 //             soluExact_gss = x_gss * x_gss * x_gss * x_gss + 0.1 * x_gss * x_gss; // this is x^4 + delta * x^2
 
-//             soluExact_gss = x_gss * x_gss; // this is x^2
+      soluExact_gss = x_gss * x_gss; // this is x^2
 
 //             soluExact_gss = (x_gss < 0.) ? x_gss * x_gss * x_gss : 3.* x_gss * x_gss * x_gss; // this is x^3 for x< 0 and 3 x^3 for x >= 0
 
