@@ -152,39 +152,35 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
   //BEGIN nonlocal assembly
-  //loop to change _Bdc in the boundary elements and assign the BoundaryFunctionValue to their nodes
-  //BEGIN
-//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-//
-//     short unsigned ielGroup = msh->GetElementGroup (iel);
-//
-//     if (ielGroup == 5 || ielGroup == 6) {   //5 and 6 are the boundary surfaces
-//
-//       unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);
-//       std::vector <double> dofCoordinates (dim);
-//
-//       for (unsigned i = 0; i < nDofu; i++) {
-//         unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
-//         unsigned xDof = msh->GetSolutionDof (i, iel, xType);
-//         sol->_Bdc[soluIndex]->set (solDof, 0.);
-//
-//         for (unsigned jdim = 0; jdim < dim; jdim++) {
-//           dofCoordinates[jdim] = (*msh->_topology->_Sol[jdim]) (xDof);
-//         }
-//
-//         double bdFunctionValue;
-//         GetBoundaryFunctionValue (bdFunctionValue, dofCoordinates);
-//         sol->_Sol[soluIndex]->set (solDof, bdFunctionValue);
-//
-//       }
-//
-//     }
-//
-//   }
-//
-//   sol->_Bdc[soluIndex]->close();
-//   sol->_Sol[soluIndex]->close();
-  //END
+
+  unsigned interiorNodesLocal = 0;
+  unsigned boundaryNodesLocal = 0;
+
+  for (unsigned idof = msh->_dofOffset[soluType][iproc]; idof < msh->_dofOffset[soluType][iproc + 1]; idof++) {
+
+    double epsilon = 1.e-7;
+    double xCoord = (*msh->_topology->_Sol[0]) (idof);
+    double yCoord = (*msh->_topology->_Sol[1]) (idof);
+    double leftBound = - 1. + epsilon;
+    double rightBound = - 0.125 - epsilon;
+
+    if ( (yCoord < (1. - epsilon)) && (yCoord > epsilon)) {  //TODO this doesn't work in parallel, fix
+      if ( (xCoord > leftBound) && (xCoord < rightBound)) interiorNodesLocal++;
+      else if (xCoord > rightBound) boundaryNodesLocal++;
+    }
+
+  }
+
+//   std::cout << " interiorNodesLocal = " << interiorNodesLocal << std::endl;
+//   std::cout << " boundaryNodesLocal = " << boundaryNodesLocal << std::endl;
+
+  unsigned interiorNodes = 0.;
+  unsigned boundaryNodes = 0.;
+  MPI_Allreduce (&interiorNodesLocal, &interiorNodes, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce (&boundaryNodesLocal, &boundaryNodes, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
+
+  std::cout << " interiorNodes = " << interiorNodes << std::endl;
+  std::cout << " boundaryNodes = " << boundaryNodes << std::endl;
 
   for (int kproc = 0; kproc < nprocs; kproc++) {
     for (int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
@@ -419,7 +415,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                   }
 
                   for (unsigned j = 0; j < nDof2; j++) {
-                    double jacValue22 = - cutOff *weight1[ig] * weight2 * kernel * (- phi2y[i]) * phi2y[j];
+                    double jacValue22 = - cutOff * weight1[ig] * weight2 * kernel * (- phi2y[i]) * phi2y[j];
                     Jac22[i * nDof2 + j] -= jacValue22;
                     Res2[i] +=  jacValue22 * solu2[j];
                   }//endl j loop
