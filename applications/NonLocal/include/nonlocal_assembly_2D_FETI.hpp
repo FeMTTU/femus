@@ -161,12 +161,12 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
   for (unsigned idof = msh->_dofOffset[soluType][iproc]; idof < msh->_dofOffset[soluType][iproc + 1]; idof++) {
 
-//     std::cout << "idof = " << idof << std::endl;
+    std::cout << "idof = " << idof << std::endl;
     double epsilon = 1.e-7;
     double xCoord = (*msh->_topology->_Sol[0]) (idof);  //TODO this doesn't work in parallel, fix
-//     std::cout << "xCoord = " << xCoord << std::endl;
+    std::cout << "xCoord = " << xCoord << std::endl;
     double yCoord = (*msh->_topology->_Sol[1]) (idof);  //TODO this doesn't work in parallel, fix
-//     std::cout << "yCoord = " << yCoord << std::endl;
+    std::cout << "yCoord = " << yCoord << std::endl;
     double leftBound = - 1. + epsilon;
     double rightBound = - 0.125 - epsilon;
 
@@ -190,16 +190,16 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   }
   sol->_Sol[nodeFlagIndex]->close();
 
-//   std::cout << " interiorNodesLocal = " << interiorNodesLocal << std::endl;
-//   std::cout << " boundaryNodesLocal = " << boundaryNodesLocal << std::endl;
+  std::cout << " interiorNodesLocal = " << interiorNodesLocal << std::endl;
+  std::cout << " boundaryNodesLocal = " << boundaryNodesLocal << std::endl;
 
   unsigned interiorNodes = 0.;
   unsigned boundaryNodes = 0.;
   MPI_Allreduce (&interiorNodesLocal, &interiorNodes, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce (&boundaryNodesLocal, &boundaryNodes, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
 
-//   std::cout << " interiorNodes = " << interiorNodes << std::endl;
-//   std::cout << " boundaryNodes = " << boundaryNodes << std::endl;
+  std::cout << " interiorNodes = " << interiorNodes << std::endl;
+  std::cout << " boundaryNodes = " << boundaryNodes << std::endl;
 
   unsigned totalNodes = interiorNodes + boundaryNodes;
 
