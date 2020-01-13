@@ -102,10 +102,12 @@ int main (int argc, char** argv) {
 
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
+//   mlMsh.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/FETI_left_subdom_COARSE.neu", "second", scalingFactor);
   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
-  mlMshFine.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
+//   mlMshFine.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
+  mlMshFine.ReadCoarseMesh ("../input/FETI_left_subdom_COARSE.neu", "second", scalingFactor);
   mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine, NULL);
 
   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
@@ -124,6 +126,8 @@ int main (int argc, char** argv) {
   mlSol.AddSolution ("u_local", LAGRANGE, FIRST, 2);
 
   mlSol.AddSolution ("u_exact", LAGRANGE, FIRST, 2);
+  
+  mlSol.AddSolution("NodeFlag", LAGRANGE, FIRST, 2);
 
   mlSol.Initialize ("All");
   mlSolFine.Initialize ("All");

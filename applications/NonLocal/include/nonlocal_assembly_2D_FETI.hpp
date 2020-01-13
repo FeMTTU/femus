@@ -95,6 +95,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   unsigned soluIndex = mlSol->GetIndex ("u");   // get the position of "u" in the ml_sol object
   unsigned soluType = mlSol->GetSolutionType (soluIndex);   // get the finite element type for "u"
 
+  unsigned nodeFlagIndex = mlSol->GetIndex ("NodeFlag");
+  unsigned nodeFlagType = mlSol->GetSolutionType (nodeFlagIndex);
+
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex ("u");   // get the position of "u" in the pdeSys object
 
@@ -158,18 +161,34 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
   for (unsigned idof = msh->_dofOffset[soluType][iproc]; idof < msh->_dofOffset[soluType][iproc + 1]; idof++) {
 
+//     std::cout << "idof = " << idof << std::endl;
     double epsilon = 1.e-7;
-    double xCoord = (*msh->_topology->_Sol[0]) (idof);
-    double yCoord = (*msh->_topology->_Sol[1]) (idof);
+    double xCoord = (*msh->_topology->_Sol[0]) (idof);  //TODO this doesn't work in parallel, fix
+//     std::cout << "xCoord = " << xCoord << std::endl;
+    double yCoord = (*msh->_topology->_Sol[1]) (idof);  //TODO this doesn't work in parallel, fix
+//     std::cout << "yCoord = " << yCoord << std::endl;
     double leftBound = - 1. + epsilon;
     double rightBound = - 0.125 - epsilon;
 
-    if ( (yCoord < (1. - epsilon)) && (yCoord > epsilon)) {  //TODO this doesn't work in parallel, fix
-      if ( (xCoord > leftBound) && (xCoord < rightBound)) interiorNodesLocal++;
-      else if (xCoord > rightBound) boundaryNodesLocal++;
-    }
+    double nodeFlagValue = 0.;  //nodes on the volume constraint
+    sol->_Sol[nodeFlagIndex]->set (idof, nodeFlagValue);
 
+    if ( (yCoord < (1. - epsilon)) && (yCoord > epsilon)) {
+
+      if ( (xCoord > leftBound) && (xCoord < rightBound)) {
+        interiorNodesLocal++;
+        double nodeFlagValue = 1.;  //nodes on the interior constraint
+        sol->_Sol[nodeFlagIndex]->set (idof, nodeFlagValue);
+      }
+      else if (xCoord > rightBound) {
+        boundaryNodesLocal++;
+        double nodeFlagValue = 2.;  //nodes on the nonlocal FETI boundary
+        sol->_Sol[nodeFlagIndex]->set (idof, nodeFlagValue);
+      }
+
+    }
   }
+  sol->_Sol[nodeFlagIndex]->close();
 
 //   std::cout << " interiorNodesLocal = " << interiorNodesLocal << std::endl;
 //   std::cout << " boundaryNodesLocal = " << boundaryNodesLocal << std::endl;
@@ -179,8 +198,10 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   MPI_Allreduce (&interiorNodesLocal, &interiorNodes, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce (&boundaryNodesLocal, &boundaryNodes, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
 
-  std::cout << " interiorNodes = " << interiorNodes << std::endl;
-  std::cout << " boundaryNodes = " << boundaryNodes << std::endl;
+//   std::cout << " interiorNodes = " << interiorNodes << std::endl;
+//   std::cout << " boundaryNodes = " << boundaryNodes << std::endl;
+
+  unsigned totalNodes = interiorNodes + boundaryNodes;
 
   for (int kproc = 0; kproc < nprocs; kproc++) {
     for (int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
@@ -457,7 +478,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
 
 
-void AssembleLocalSys (MultiLevelProblem& ml_prob) {
+void AssembleLocalSys (MultiLevelProblem & ml_prob) {
   adept::Stack& s = FemusInit::_adeptStack;
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("Local");
@@ -686,7 +707,7 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
 //BEGIN fine nonlocal assembly for h convergence computations
 
 
-void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
+void AssembleNonLocalSysFine (MultiLevelProblem & ml_prob) {
   adept::Stack& s = FemusInit::_adeptStack;
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("NonLocalFine");
