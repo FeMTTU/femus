@@ -1,0 +1,141 @@
+/ File opened for write Mon Jan 13 10:29:54 2020.
+The /home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/gambit/cube.dbs database is being opened.
+ 
+*** LISTING "cube" FILES IN DIRECTORY:
+    /home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/gambit
+ 
+    cube.dbs
+    cube.jou
+    cube.trn
+    cube.lok
+Command> export gambit \
+  "/home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu"
+WARN:  Volume volume.1 is not meshed and is not exported.
+WARN:  Face face.1 mesh is not part of a continuum mesh. Cannot export as a boundary type.
+WARN:  Face face.5 is not meshed and is not exported.
+WARN:  Face face.5 mesh is not part of a continuum mesh. Cannot export as a boundary type.
+WARN:  Face face.6 is not meshed and is not exported.
+WARN:  Face face.6 mesh is not part of a continuum mesh. Cannot export as a boundary type.
+WARN:  Face face.2 mesh is not part of a continuum mesh. Cannot export as a boundary type.
+WARN:  Face face.4 is not meshed and is not exported.
+WARN:  Face face.4 mesh is not part of a continuum mesh. Cannot export as a boundary type.
+WARN:  Face face.3 mesh is not part of a continuum mesh. Cannot export as a boundary type.
+WARN:  Continuum Entity 5 does not contain any valid entity and is not written.
+WARN:  Boundary Entity 1 does not contain any valid entity and is not written.
+WARN:  Boundary Entity 2 does not contain any valid entity and is not written.
+WARN:  Boundary Entity 3 does not contain any valid entity and is not written.
+No entities were found for mesh export.
+Errors were found during export.  Export file was not created.
+Command> volume mesh "volume.1" map size 1
+ERROR: Entity face.6 cannot be meshed because mesh on lower entity edge.11
+does not match requested element type.
+ERROR: Face face.6 of volume volume.1 could not be meshed.
+ERROR: Entity face.5 cannot be meshed because mesh on lower entity edge.8
+does not match requested element type.
+ERROR: Face face.5 of volume volume.1 could not be meshed.
+ERROR: Entity face.4 cannot be meshed because mesh on lower entity edge.8
+does not match requested element type.
+ERROR: Face face.4 of volume volume.1 could not be meshed.
+ERROR: Volume volume.1 could not be meshed without face(s) successfully meshed.
+Command> face mesh "face.4" map size 1
+ERROR: Entity face.4 cannot be meshed because mesh on lower entity edge.8
+does not match requested element type.
+Command> face mesh "face.4" map size 1
+ERROR: Entity face.4 cannot be meshed because mesh on lower entity edge.8
+does not match requested element type.
+Command> face mesh "face.4" map size 1
+ERROR: Entity face.4 cannot be meshed because mesh on lower entity edge.8
+does not match requested element type.
+Command> face mesh "face.4" map size 1
+ERROR: Entity face.4 cannot be meshed because mesh on lower entity edge.8
+does not match requested element type.
+Command> default set "MESH.NODES.EDGE" numeric 3
+Command> edge delete "edge.12" "edge.11" "edge.10" "edge.9" "edge.8" "edge.7" "edge.6" \
+  "edge.5" "edge.4" "edge.3" "edge.2" "edge.1" lowertopology onlymesh
+Mesh removed from edge edge.1:   mesh edges = 20.
+Mesh removed from edge edge.2:   mesh edges = 4.
+Mesh removed from edge edge.3:   mesh edges = 4.
+Mesh removed from edge edge.4:   mesh edges = 20.
+Mesh removed from edge edge.5:   mesh edges = 4.
+Mesh removed from edge edge.6:   mesh edges = 4.
+Mesh removed from edge edge.7:   mesh edges = 4.
+Mesh removed from edge edge.8:   mesh edges = 4.
+Mesh removed from edge edge.9:   mesh edges = 20.
+Mesh removed from edge edge.10:   mesh edges = 4.
+Mesh removed from edge edge.11:   mesh edges = 4.
+Mesh removed from edge edge.12:   mesh edges = 20.
+Command> default set "MESH.NODES.EDGE" numeric 3
+Command> undo begingroup
+Command> edge picklink "edge.9" "edge.1" "edge.12" "edge.4"
+Command> edge mesh "edge.4" "edge.12" "edge.1" "edge.9" successive ratio1 1 intervals \
+  20
+Mesh generated for edge edge.4:   mesh edges = 20.
+Mesh generated for edge edge.12:   mesh edges = 20.
+Mesh generated for edge edge.1:   mesh edges = 20.
+Mesh generated for edge edge.9:   mesh edges = 20.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge picklink "edge.6" "edge.11" "edge.3" "edge.8"
+Command> edge mesh "edge.8" "edge.3" "edge.11" "edge.6" successive ratio1 1 intervals \
+  4
+Mesh generated for edge edge.8:   mesh edges = 4.
+Mesh generated for edge edge.3:   mesh edges = 4.
+Mesh generated for edge edge.11:   mesh edges = 4.
+Mesh generated for edge edge.6:   mesh edges = 4.
+Command> undo endgroup
+Command> volume mesh "volume.1" map size 1
+Mesh generated for volume volume.1:   mesh volumes = 320.
+Command> save
+Command> export gambit \
+  "/home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu"
+ 
+Writing 3321 nodes, 320 elements, 1 group and 3 bc sets
+to GAMBIT Neutral file /home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu.
+Done writing Neutral file.
+Command> physics modify "5" ctype volume "volume.1"
+Command> physics modify "5" ctype volume "volume.1"
+Command> physics delete ctype
+Command> physics delete btype
+Command> physics create "1" btype "ELEMENT_SIDE" face "face.3"
+Created Boundary entity: 1
+Command> physics create "2" btype "ELEMENT_SIDE" face "face.4"
+Created Boundary entity: 2
+Command> physics create "3" btype "ELEMENT_SIDE" face "face.5" "face.6" "face.1" \
+  "face.2"
+Created Boundary entity: 3
+Command> physics create "5" ctype "FLUID" volume "volume.1"
+Created Continuum entity: 5
+Command> save
+Command> export gambit \
+  "/home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu"
+ 
+Writing 3321 nodes, 320 elements, 1 group and 3 bc sets
+to GAMBIT Neutral file /home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu.
+Done writing Neutral file.
+Command> volume delete "volume.1" lowertopology onlymesh
+Mesh removed from volume volume.1:   mesh volumes = 320.
+Command> edge mesh "edge.12" "edge.4" "edge.9" "edge.1" successive ratio1 1 intervals \
+  21
+Mesh generated for edge edge.12:   mesh edges = 21.
+Mesh generated for edge edge.4:   mesh edges = 21.
+Mesh generated for edge edge.9:   mesh edges = 21.
+Mesh generated for edge edge.1:   mesh edges = 21.
+Command> edge mesh "edge.7" "edge.10" "edge.5" "edge.2" "edge.11" "edge.3" "edge.8" \
+  "edge.6" successive ratio1 1 intervals 4
+Mesh generated for edge edge.7:   mesh edges = 4.
+Mesh generated for edge edge.10:   mesh edges = 4.
+Mesh generated for edge edge.5:   mesh edges = 4.
+Mesh generated for edge edge.2:   mesh edges = 4.
+Mesh generated for edge edge.11:   mesh edges = 4.
+Mesh generated for edge edge.3:   mesh edges = 4.
+Mesh generated for edge edge.8:   mesh edges = 4.
+Mesh generated for edge edge.6:   mesh edges = 4.
+Command> volume mesh "volume.1" map size 1
+Mesh generated for volume volume.1:   mesh volumes = 336.
+Command> save
+Command> export gambit \
+  "/home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu"
+ 
+Writing 3483 nodes, 336 elements, 1 group and 3 bc sets
+to GAMBIT Neutral file /home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu.
+Done writing Neutral file.

@@ -1,0 +1,91 @@
+/ Journal File for GAMBIT 2.3.16, Database 2.3.14, lnamd64 SP2006033020
+/ Identifier "default_id"
+/ File opened for write Sun Oct  2 17:00:03 2016.
+volume create width 1 depth 1 height 1 brick
+undo begingroup
+edge picklink "edge.12"
+edge mesh "edge.12" successive ratio1 1 intervals 20
+undo endgroup
+undo begingroup
+edge picklink "edge.11" "edge.8"
+edge mesh "edge.8" "edge.11" successive ratio1 1 intervals 4
+undo endgroup
+default set "MESH.NODES.HEX" numeric 27
+/ERROR occurred in the next command!
+volume mesh "volume.1" map size 1
+solver select "Generic"
+physics create "1" btype "ELEMENT_SIDE" face "face.3"
+physics create "2" btype "ELEMENT_SIDE" face "face.4"
+physics create "3" btype "ELEMENT_SIDE" face "face.1" "face.5" "face.6" \
+  "face.2"
+physics delete btype
+solver select "Generic"
+physics create "1" btype "ELEMENT_SIDE" face "face.3"
+physics create "2" btype "ELEMENT_SIDE" face "face.4"
+physics create "3" btype "ELEMENT_SIDE" face "face.1" "face.5" "face.6" \
+  "face.2"
+physics create "5" ctype "FLUID" volume "volume.1"
+save name \
+  "/home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/gambit/cube.dbs"
+/ERROR occurred in the next command!
+export gambit \
+  "/home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu"
+/ File closed at Mon Jan 13 10:27:10 2020, 0.78 cpu second(s), 2616144 maximum memory.
+/ Journal File for GAMBIT 2.3.16, Database 2.3.14, lnamd64 SP2006033020
+/ Identifier "cube"
+/ File opened for append Mon Jan 13 10:29:54 2020.
+identifier name \
+  "/home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/gambit/cube.dbs" \
+  old nosaveprevious
+/ERROR occurred in the next command!
+export gambit \
+  "/home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu"
+/ERROR occurred in the next command!
+volume mesh "volume.1" map size 1
+/ERROR occurred in the next command!
+face mesh "face.4" map size 1
+/ERROR occurred in the next command!
+face mesh "face.4" map size 1
+/ERROR occurred in the next command!
+face mesh "face.4" map size 1
+/ERROR occurred in the next command!
+face mesh "face.4" map size 1
+default set "MESH.NODES.EDGE" numeric 3
+edge delete "edge.12" "edge.11" "edge.10" "edge.9" "edge.8" "edge.7" "edge.6" \
+  "edge.5" "edge.4" "edge.3" "edge.2" "edge.1" lowertopology onlymesh
+default set "MESH.NODES.EDGE" numeric 3
+undo begingroup
+edge picklink "edge.9" "edge.1" "edge.12" "edge.4"
+edge mesh "edge.4" "edge.12" "edge.1" "edge.9" successive ratio1 1 intervals \
+  20
+undo endgroup
+undo begingroup
+edge picklink "edge.6" "edge.11" "edge.3" "edge.8"
+edge mesh "edge.8" "edge.3" "edge.11" "edge.6" successive ratio1 1 intervals \
+  4
+undo endgroup
+volume mesh "volume.1" map size 1
+save
+export gambit \
+  "/home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu"
+physics modify "5" ctype volume "volume.1"
+physics modify "5" ctype volume "volume.1"
+physics delete ctype
+physics delete btype
+physics create "1" btype "ELEMENT_SIDE" face "face.3"
+physics create "2" btype "ELEMENT_SIDE" face "face.4"
+physics create "3" btype "ELEMENT_SIDE" face "face.5" "face.6" "face.1" \
+  "face.2"
+physics create "5" ctype "FLUID" volume "volume.1"
+save
+export gambit \
+  "/home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu"
+volume delete "volume.1" lowertopology onlymesh
+edge mesh "edge.12" "edge.4" "edge.9" "edge.1" successive ratio1 1 intervals \
+  21
+edge mesh "edge.7" "edge.10" "edge.5" "edge.2" "edge.11" "edge.3" "edge.8" \
+  "edge.6" successive ratio1 1 intervals 4
+volume mesh "volume.1" map size 1
+save
+export gambit \
+  "/home/eaulisa/FEMUS/MyFEMuS/applications/Nitsche/ex1/input/cube.neu"

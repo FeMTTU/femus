@@ -24,10 +24,18 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& mlProb);
 
 void BuildFlag (MultiLevelSolution& mlSol);
 
+unsigned DIM = 2;
+
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = false; //dirichlet
-  if (facename == 1  && !strcmp (SolName, "u1") ) dirichlet = true;
-  if (facename == 2  && !strcmp (SolName, "u2") ) dirichlet = true;
+  if (DIM == 1 || DIM == 3) {
+    if (facename == 1  && !strcmp (SolName, "u1")) dirichlet = true;
+    if (facename == 2  && !strcmp (SolName, "u2")) dirichlet = true;
+  }
+  else if (DIM == 2) {
+    if (facename == 4  && !strcmp (SolName, "u1")) dirichlet = true;
+    if (facename == 2  && !strcmp (SolName, "u2")) dirichlet = true;
+  }
   value = 0.;
   return dirichlet;
 }
@@ -42,14 +50,25 @@ int main (int argc, char** args) {
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = 101;
+  unsigned nx = 101; // this should always be a odd number
 
   double length = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh (nx, 0, 0, -length / 2, length / 2, 0., 0., 0., 0., EDGE3, "seventh");
+  if (DIM == 1) {
+    mlMsh.GenerateCoarseBoxMesh (nx, 0, 0, -length / 2, length / 2, 0., 0., 0., 0., EDGE3, "seventh");
+  }
+  else if (DIM == 2) {
+    mlMsh.GenerateCoarseBoxMesh (nx, 4, 0, -length / 2, length / 2, -length / 2, length / 2, 0., 0., QUAD9, "seventh");
+  }
+  else if (DIM == 3) {
+    mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
+    mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+    mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+    numberOfUniformLevels = 1;
+  }
 
   //mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
   mlMsh.PrintInfo();
@@ -208,7 +227,7 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
     }
 
 
-    double alpha1 = 0.5;
+    double alpha1 = .5;
     double alpha2 = 3.;
 
     // start a new recording of all the operations involving adept::adouble variables
@@ -237,23 +256,21 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
           adept::adouble graduGradphi2 = 0.;
 
           for (unsigned k = 0; k < dim; k++) {
-            for (unsigned j = 0; j < dim; j++) {
-              graduGradphi1 += gradSolu1g[j] * phi_x[i * dim + k] ;
-              graduGradphi2 += gradSolu2g[j] * phi_x[i * dim + k] ;
-            }
+            graduGradphi1 += gradSolu1g[k] * phi_x[i * dim + k];
+            graduGradphi2 += gradSolu2g[k] * phi_x[i * dim + k];
           }
 
 
           if (eFlag == 0) {
             aResu1[i] += (- phi[i] + alpha1 * graduGradphi1) * weight;
             if (nodeFlag[i] != 1) {
-              aResu2[i] += ( graduGradphi2) * weight;
+              aResu2[i] += (graduGradphi2) * weight;
             }
           }
           else if (eFlag == 2) {
             aResu2[i] += (- phi[i] + alpha2 * graduGradphi2) * weight;
             if (nodeFlag[i] != 1) {
-              aResu1[i] += ( graduGradphi1) * weight;
+              aResu1[i] += (graduGradphi1) * weight;
             }
           }
 
@@ -265,13 +282,30 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
       // *** Element Gauss point loop ***
 
       //bulk1
-      
-      std::vector <double> xi(dim);
+      std::vector <double> N (dim);
+      N[0] = -1.;
+      std::vector <double> xi (dim);
       xi[0] = -0.5;
-      
+      if (dim > 1) {
+        N[1] = 0.;
+        xi[1] = 0.;
+      }
+      if (dim > 2) {
+        N[2] = 0.;
+        xi[2] = 0.;
+      }
+
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian (x, xi, weight, phi, phi_x);
-      weight = 0 - x[0][0];
+      if (dim == 1) {
+        weight = 0.5 * fabs (x[0][1] - x[0][0]);
+      }
+      else if (dim == 2) {
+        weight = 0.5 * fabs ( (x[0][2] - x[0][0]) * (x[1][2] - x[1][0]));
+      }
+      else if (dim == 3) {
+        weight = 0.5 * fabs ( (x[0][6] - x[0][0]) * (x[1][6] - x[1][0]) * (x[2][6] - x[2][0]));
+      }
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       vector < adept::adouble > gradSolu1g (dim, 0.);
@@ -286,60 +320,79 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofu; i++) {
         adept::adouble graduGradphi1 = 0.;
         for (unsigned k = 0; k < dim; k++) {
-          for (unsigned j = 0; j < dim; j++) {
-            graduGradphi1 += gradSolu1g[j] * phi_x[i * dim + k] ;
-          }
+          graduGradphi1 += gradSolu1g[k] * phi_x[i * dim + k] ;
+
         }
-        aResu1[i] += ( - phi[i] + alpha1 * graduGradphi1) * weight;
+        aResu1[i] += (- phi[i] + alpha1 * graduGradphi1) * weight;
       } // end phi_i loop
-      
-      
-      
+
+
+
       //interface
-      
+
       xi[0] = 0.;
-      
+
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian (x, xi, weight, phi, phi_x);
-            
+
+      if (dim == 1) {
+        weight = 1.;
+      }
+      else if (dim == 2) {
+        weight = fabs ( (x[1][2] - x[1][0]));
+      }
+      else if (dim == 3) {
+        weight = ( (x[1][6] - x[1][0]) * (x[2][6] - x[2][0]));
+      }
+
+
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      
+
+      double theta = 1.;
+      double gamma1 = 0.5;
+      double gamma2 = 0.5;
+
       adept::adouble solu1g  = 0.;
       adept::adouble solu2g  = 0.;
-      
-      gradSolu1g.assign(dim, 0.);
-      vector < adept::adouble > gradSolu2g (dim, 0.);
-      
+      adept::adouble alphaGradSoluDotN = 0.;
+
       for (unsigned i = 0; i < nDofu; i++) {
         solu1g += phi[i] * solu1[i];
         solu2g += phi[i] * solu2[i];
         for (unsigned k = 0; k < dim; k++) {
-          gradSolu1g[k] += phi_x[i * dim + k] * solu1[i];
-          gradSolu2g[k] += phi_x[i * dim + k] * solu2[i];
+          alphaGradSoluDotN += (alpha1 * gamma1  * solu1[i] + alpha2 * gamma2 * solu2[i]) * phi_x[i * dim + k] * N[k];
         }
       }
-      double theta =1.;
-      double gamma1 = 0.5;
-      double gamma2 = 0.5;
+
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofu; i++) {
-        aResu1[i] +=  (solu2g - solu1g) * (-phi[i] * theta + alpha1 * gamma1 *  phi_x [i]);
-        aResu1[i] +=  (alpha1 * gamma1 * gradSolu1g[0] +  alpha2 * gamma2 * gradSolu2g[0] ) * (-phi[i]);
-        aResu2[i] +=  (solu2g - solu1g) * ( phi[i] * theta + alpha2 * gamma2 *  phi_x [i]);
-        aResu2[i] +=  (alpha1 * gamma1 * gradSolu1g[0] +  alpha2 * gamma2 * gradSolu2g[0] ) * (phi[i]);
+
+        adept::adouble gradPhiDotN = 0.;
+        for (unsigned k = 0; k < dim; k++) {
+          gradPhiDotN += phi_x[i * dim + k] * N[k];
+        }
+
+        aResu1[i] += (solu2g - solu1g) * (-phi[i] * theta - alpha1 * gamma1 * gradPhiDotN) * weight;
+        aResu1[i] += alphaGradSoluDotN * (+phi[i]) * weight;
+        aResu2[i] += (solu2g - solu1g) * (+phi[i] * theta - alpha2 * gamma2 * gradPhiDotN) * weight;
+        aResu2[i] += alphaGradSoluDotN * (-phi[i]) * weight;
       } // end phi_i loop
-      
-      
-      
+
       //bulk2
-      
-      
       xi[0] = 0.5;
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian (x, xi, weight, phi, phi_x);
-      weight = x[0][1] - 0.;
+      if (dim == 1) {
+        weight = 0.5 * fabs (x[0][1] - x[0][0]);
+      }
+      else if (dim == 2) {
+        weight = 0.5 * fabs ( (x[0][2] - x[0][0]) * (x[1][2] - x[1][0]));
+      }
+      else if (dim == 3) {
+        weight = 0.5 * fabs ( (x[0][6] - x[0][0]) * (x[1][6] - x[1][0]) * (x[2][6] - x[2][0]));
+      }
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      gradSolu2g.assign (dim, 0.);
+      vector < adept::adouble > gradSolu2g (dim, 0.);
       for (unsigned i = 0; i < nDofu; i++) {
         for (unsigned k = 0; k < dim; k++) {
           gradSolu2g[k] += phi_x[i * dim + k] * solu2[i];
@@ -350,12 +403,10 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofu; i++) {
         adept::adouble graduGradphi2 = 0.;
         for (unsigned k = 0; k < dim; k++) {
-          for (unsigned j = 0; j < dim; j++) {
-            graduGradphi2 += gradSolu2g[j] * phi_x[i * dim + k] ;
-          }
+          graduGradphi2 += gradSolu2g[k] * phi_x[i * dim + k];
         }
-       aResu2[i] += (-phi[i] + alpha2 * graduGradphi2) * weight;
-      } 
+        aResu2[i] += (-phi[i] + alpha2 * graduGradphi2) * weight;
+      }
     }
 
     //copy the value of the adept::adoube aRes in double Res and store
@@ -391,12 +442,12 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
   RES->close();
   KK->close();
 
-  PetscViewer    viewer;
-  //PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
-  //PetscObjectSetName ( (PetscObject) viewer, "FSI matrix");
-  //PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
-  MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
-  VecView ( (static_cast<PetscVector*> (RES))->vec(), viewer);
+//   PetscViewer    viewer;
+//   //PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+//   //PetscObjectSetName ( (PetscObject) viewer, "FSI matrix");
+//   //PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
+//   MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
+//   VecView ( (static_cast<PetscVector*> (RES))->vec(), viewer);
 
   //double a;
   //std::cin >> a;
@@ -441,7 +492,17 @@ void BuildFlag (MultiLevelSolution& mlSol) {
       }
     }
 
-    if (x[0][0] < 0. && x[0][1] > 0.) {
+    bool interface = false;
+    double signi = (x[0][0] < 0.) ? -1. : 1.;
+    for (unsigned j = 1; j < nDofs; j++) {
+      double signj = (x[0][j] < 0.) ? -1. : 1.;
+      if (signi != signj) {
+        interface = true;
+        break;
+      }
+    }
+
+    if (interface) {
       sol->_Sol[eflagIndex]->set (iel, 1.);
       for (unsigned i = 0; i < nDofs; i++) {
         unsigned iDof = msh->GetSolutionDof (i, iel, nflagType);
