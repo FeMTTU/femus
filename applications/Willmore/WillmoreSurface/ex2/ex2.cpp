@@ -30,9 +30,9 @@ bool firstTime = true;
 double surface0 = 0.;
 double volume0 = 0.;
 unsigned conformalTriangleType = 1;
-const double eps = 1e-4;
-bool volumeConstraint = true;
-bool areaConstraint = true;
+const double eps = 0e-5;
+bool volumeConstraint = false;
+bool areaConstraint = false;
 
 #include "../include/supportFunctions.hpp"
 #include "../include/assembleConformalMinimization.hpp"
@@ -40,7 +40,7 @@ bool areaConstraint = true;
 
 void AssemblePWillmore (MultiLevelProblem& ml_prob);
 
-double dt0 = 1e-3;
+double dt0 = 1e-9;
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
@@ -90,7 +90,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  //mlMsh.ReadCoarseMesh ("../input/stupid.med", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/moo.med", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/superknot.med", "seventh", scalingFactor);
 
 
@@ -185,7 +185,7 @@ int main (int argc, char** args) {
   }
 
   // Parameters for convergence and # of iterations for Willmore.
-  system.SetMaxNumberOfNonLinearIterations (4);
+  system.SetMaxNumberOfNonLinearIterations (2);
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to P-Willmore system.
@@ -233,7 +233,7 @@ int main (int argc, char** args) {
   // First, solve system2 to "conformalize" the initial mesh.
   CopyDisplacement (mlSol, true);
   system2.MGsolve();
-  
+
   // Then, solve system0 to compute initial curvatures.
   CopyDisplacement (mlSol, false);
   system.CopySolutionToOldSolution();
@@ -243,34 +243,35 @@ int main (int argc, char** args) {
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
 
   // Parameters for the main algorithm loop.
-  unsigned numberOfTimeSteps = 100u;
+  unsigned numberOfTimeSteps = 10000u;
   unsigned printInterval = 1u;
 
-  
+
   firstTime = true;
   // Main algorithm loop.
   for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-//     dt0 *= 1.01;
-//     if (dt0 > 0.005) dt0 = 0.005;
+    dt0 *= 1.025;
+    if (dt0 > 0.0005) dt0 = 0.0005;
 
     if (time_step % 1 == 0) {
       mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
 
       CopyDisplacement (mlSol, true);
-      //system2.MGsolve();
+      system2.MGsolve();
 
-      //if(time_step == 0){
-        system2.MGsolve();
-      //}
+      // if(time_step == 0){
+      //   system2.MGsolve();
+      // }
 
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();
       systemY.MGsolve();
       systemW.MGsolve();
     }
+
 
     if ( (time_step + 1) % printInterval == 0)
       mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, (time_step + 1) / printInterval);
@@ -674,8 +675,9 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       double sumP1 = 0.;
       double sumP2 = 0.;
       double sumP3 = 0.;
+      double signP = 1.;
       for (unsigned p = 0; p < 3; p++) {
-        double signP = (P[p] % 2u == 0) ? 1. : signYdotN;
+        //double signP = (P[p] % 2u == 0) ? 1. : signYdotN;
         sumP1 += signP * ap[p] * P[p] * pow (YdotY, (P[p] - 2.) / 2.);
         sumP2 += signP * ap[p] * (1. - P[p]) * pow (YdotY , P[p] / 2.);
         sumP3 += signP * ap[p] * pow (YdotY, P[p] / 2.);
@@ -828,9 +830,9 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
           unsigned jstart = istart + K * nxDofs;
           for (unsigned j = 0; j < nxDofs; j++) {
             double term1 = 0.;
-            
+
             double termLambda2 = 0.;
-            
+
             for (unsigned J = 0; J < DIM; J++) {
               term1 += phix_Xtan[J][j] * phiW_Xtan[J][i];
               termLambda2 += solLambda2 * (phix_Xtan[J][j] * phiW_Xtan[J][i]);
@@ -960,4 +962,3 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
 
 }
 //END Assemble System PWillmore
-

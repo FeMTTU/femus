@@ -23,7 +23,9 @@
 using namespace femus;
 /* Vector option for P (to handle polynomials).
  * ap is the coefficient in front of the power of H. */
-const unsigned P[3] = {4, 3, 4};
+
+unsigned P[3] = {2, 3, 4};
+
 const double ap[3] = {1, 0., 0.};
 const double normalSign = -1.;
 
@@ -31,10 +33,10 @@ bool O2conformal = true;
 bool firstTime = true;
 double surface0 = 0.;
 double volume0 = 0.;
-bool volumeConstraint = true;
+bool volumeConstraint = false;
 bool areaConstraint = true;
 
-unsigned conformalTriangleType = 1;
+unsigned conformalTriangleType = 2;
 const double eps = 1.0e-5;
 
 #include "../include/supportFunctions.hpp"
@@ -45,7 +47,8 @@ const double eps = 1.0e-5;
 void AssemblePWillmore (MultiLevelProblem&);
 void AssemblePWillmore2 (MultiLevelProblem& ml_prob);
 
-double dt0 = 0.000005;
+double dt0 = 3.2e-8;
+
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   //if(time==0) return 1.0e-10;
@@ -87,7 +90,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
   mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/horseShoe.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/horseShoe3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
@@ -95,12 +98,12 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  //mlMsh.ReadCoarseMesh ("../input/moo.med", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/spot.med", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/moai.med", "seventh", scalingFactor);
 
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -139,7 +142,7 @@ int main (int argc, char** args) {
 
   // Initialize the variables and attach boundary conditions.
   mlSol.Initialize ("All");
- 
+
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
   mlSol.GenerateBdc ("All");
 
@@ -189,7 +192,7 @@ int main (int argc, char** args) {
   }
 
   // Parameters for convergence and # of iterations for Willmore.
-  system.SetMaxNumberOfNonLinearIterations (3);
+  system.SetMaxNumberOfNonLinearIterations (2);
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   // Attach the assembling function to P-Willmore system.
@@ -236,7 +239,7 @@ int main (int argc, char** args) {
 
   // First, solve system2 to "conformalize" the initial mesh.
   CopyDisplacement (mlSol, true);
-  system2.MGsolve();
+  //system2.MGsolve();
 
   // Then, solve system0 to compute initial curvatures.
   CopyDisplacement (mlSol, false);
@@ -247,22 +250,36 @@ int main (int argc, char** args) {
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
 
   // Parameters for the main algorithm loop.
-  unsigned numberOfTimeSteps = 20000u;
-  unsigned printInterval = 10u;
+
+  unsigned numberOfTimeSteps = 1000u;
+  unsigned printInterval = 1u;
 
   // Main algorithm loop.
   for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-    dt0 *= 1.0;
-    if (dt0 > .00005) dt0 = .00005;
+    dt0 *= 1.1;
+     if (dt0 > 0.005) dt0 = 0.005;
+
+        // if (time_step < 2) {
+        //   //dt0 = 0.005;
+        //   P[0] = 2;
+        // }
+        // else {
+        //   P[0] = 4;
+        //   dt0 *= 1.1;
+        //   if (dt0 > 0.000008) dt0 = 0.000008;
+        // }
 
     if (time_step % 1 == 0) {
       mlSol.GetWriter()->Write ("./output1", "linear", variablesToBePrinted, (time_step + 1) / printInterval);
 
       CopyDisplacement (mlSol, true);
-      system2.MGsolve();
+
+      // if (time_step % 20 ==1) {
+        system2.MGsolve();
+      // }
 
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();
@@ -668,7 +685,8 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
         YdotN += solYg[K] * normal[K];
         YdotY += solYg[K] * solYg[K];
       }
-      double signYdotN = (YdotN.value() >= 0.) ? 1. : -1.;
+      // double signYdotN = (YdotN.value() >= 0.) ? 1. : -1.;
+      double signYdotN = 1.;
 
       // Some necessary quantities when working with polynomials.
       adept::adouble sumP1 = 0.;
@@ -825,9 +843,9 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
       }
 
       // Compute new surface area, volume, and P-Willmore energy.
-      
+
       surface += Area.value();
-      
+
       for (unsigned K = 0; K < DIM; K++) {
         volume += normalSign * (solxNewg[K].value()  * normal[K].value()) * Area.value();
       }
@@ -1488,9 +1506,9 @@ void AssemblePWillmore2 (MultiLevelProblem& ml_prob) {
       }
 
       // Compute new surface area, volume, and P-Willmore energy.
-      
+
       surface += Area.value();
-      
+
       for (unsigned K = 0; K < DIM; K++) {
         volume += normalSign * (solxNewg[K].value()  * normal[K].value()) * Area.value();
       }
@@ -1609,6 +1627,3 @@ void AssemblePWillmore2 (MultiLevelProblem& ml_prob) {
 //     std::cin >> a;
 
 } // end AssemblePWillmore.
-
-
-
