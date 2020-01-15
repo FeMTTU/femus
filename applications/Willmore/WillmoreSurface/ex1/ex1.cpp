@@ -24,7 +24,7 @@ using namespace femus;
 /* Vector option for P (to handle polynomials).
  * ap is the coefficient in front of the power of H. */
 
-unsigned P[3] = {2, 3, 4};
+unsigned P[3] = {4, 3, 4};
 
 const double ap[3] = {1, 0., 0.};
 const double normalSign = -1.;
@@ -34,7 +34,7 @@ bool firstTime = true;
 double surface0 = 0.;
 double volume0 = 0.;
 bool volumeConstraint = false;
-bool areaConstraint = true;
+bool areaConstraint = false;
 
 unsigned conformalTriangleType = 2;
 const double eps = 1.0e-5;
@@ -47,9 +47,10 @@ const double eps = 1.0e-5;
 void AssemblePWillmore (MultiLevelProblem&);
 void AssemblePWillmore2 (MultiLevelProblem& ml_prob);
 
+
 double GetPWillmoreEnergy (MultiLevelSolution &mlSol);
 
-double dt0 = 3.2e-8;
+double dt0 = 3.2e-6;
 
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
@@ -90,8 +91,8 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/c.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/horseShoe3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   scalingFactor = 1.;
@@ -100,7 +101,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  mlMsh.ReadCoarseMesh ("../input/spot.med", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/spot.med", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/moai.med", "seventh", scalingFactor);
 
 
@@ -112,7 +113,7 @@ int main (int argc, char** args) {
   // Erase all the coarse mesh levels.
   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 
-  
+
 
   // Define the multilevel solution and attach the mlMsh object to it.
   MultiLevelSolution mlSol (&mlMsh);
@@ -149,10 +150,10 @@ int main (int argc, char** args) {
 
   GetElementNearVertexNumber (mlSol);
 
-  
+
   // print mesh info
   mlMsh.PrintInfo();
-  
+
   MultiLevelProblem mlProb (&mlSol);
 
   LinearImplicitSystem& systemY = mlProb.add_system < LinearImplicitSystem > ("InitY");
@@ -165,7 +166,7 @@ int main (int argc, char** args) {
   // Add the assembling function to system0 and initialize.
   systemY.SetAssembleFunction (AssembleSystemY);
   systemY.init();
-  
+
   systemY.GetSystemInfo();
 
   LinearImplicitSystem& systemW = mlProb.add_system < LinearImplicitSystem > ("InitW");
@@ -201,7 +202,7 @@ int main (int argc, char** args) {
 
   // Parameters for convergence and # of iterations for Willmore.
   system.SetMaxNumberOfNonLinearIterations (2);
-  system.SetNonLinearConvergenceTolerance (1.e-10);
+  system.SetNonLinearConvergenceTolerance (1.e-12);
 
   // Attach the assembling function to P-Willmore system.
   system.SetAssembleFunction (AssemblePWillmore);
@@ -212,7 +213,7 @@ int main (int argc, char** args) {
   // Initialize the P-Willmore system.
   system.init();
   system.GetSystemInfo();
-  
+
   system.SetMgType (V_CYCLE);
 
   // Add system2 Conformal Minimization in mlProb.
@@ -225,8 +226,8 @@ int main (int argc, char** args) {
   system2.AddSolutionToSystemPDE ("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system2.SetMaxNumberOfNonLinearIterations (2);
-  system2.SetNonLinearConvergenceTolerance (1.e-10);
+  system2.SetMaxNumberOfNonLinearIterations (7);
+  system2.SetNonLinearConvergenceTolerance (1.e-15);
 
   // Attach the assembling function to system2 and initialize.
   system2.SetAssembleFunction (AssembleConformalMinimization);
@@ -286,7 +287,7 @@ int main (int argc, char** args) {
     double time = system.GetTime();
     if(iproc == 0) fs << dt <<" " << time << " " << energy << std::endl;
 
-    dt0 *= 1.1;
+    dt0 *= 1.01;
      if (dt0 > 0.005) dt0 = 0.005;
 
         // if (time_step < 2) {
@@ -304,14 +305,16 @@ int main (int argc, char** args) {
 
       CopyDisplacement (mlSol, true);
 
-      // if (time_step % 20 ==1) {
+       //if (time_step % 2 ==1) {
         system2.MGsolve();
-      // }
+       //}
 
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();
-      systemY.MGsolve();
-      systemW.MGsolve();
+      if (time_step % 7 == 6){
+       systemY.MGsolve();
+       systemW.MGsolve();
+      }
     }
 
     if ( (time_step + 1) % printInterval == 0)
