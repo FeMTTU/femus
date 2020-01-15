@@ -212,6 +212,8 @@ namespace femus {
 
     _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector);
 
+    _mesh.SetCharacteristicLength( mshc->GetCharacteristicLength() );
+    
     unsigned jel = 0;
     //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elements and find all the vertices
 

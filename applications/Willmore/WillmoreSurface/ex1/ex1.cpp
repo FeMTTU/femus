@@ -110,8 +110,7 @@ int main (int argc, char** args) {
   // Erase all the coarse mesh levels.
   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 
-  // print mesh info
-  mlMsh.PrintInfo();
+  
 
   // Define the multilevel solution and attach the mlMsh object to it.
   MultiLevelSolution mlSol (&mlMsh);
@@ -148,6 +147,10 @@ int main (int argc, char** args) {
 
   GetElementNearVertexNumber (mlSol);
 
+  
+  // print mesh info
+  mlMsh.PrintInfo();
+  
   MultiLevelProblem mlProb (&mlSol);
 
   LinearImplicitSystem& systemY = mlProb.add_system < LinearImplicitSystem > ("InitY");
@@ -160,6 +163,8 @@ int main (int argc, char** args) {
   // Add the assembling function to system0 and initialize.
   systemY.SetAssembleFunction (AssembleSystemY);
   systemY.init();
+  
+  systemY.GetSystemInfo();
 
   LinearImplicitSystem& systemW = mlProb.add_system < LinearImplicitSystem > ("InitW");
 
@@ -170,6 +175,7 @@ int main (int argc, char** args) {
   // Add the assembling function to system0 and initialize.
   systemW.SetAssembleFunction (AssembleSystemW);
   systemW.init();
+  systemW.GetSystemInfo();
 
   // Add system P-Willmore in mlProb as a time-dependent system.
   TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("PWillmore");
@@ -203,6 +209,8 @@ int main (int argc, char** args) {
 
   // Initialize the P-Willmore system.
   system.init();
+  system.GetSystemInfo();
+  
   system.SetMgType (V_CYCLE);
 
   // Add system2 Conformal Minimization in mlProb.
@@ -221,6 +229,7 @@ int main (int argc, char** args) {
   // Attach the assembling function to system2 and initialize.
   system2.SetAssembleFunction (AssembleConformalMinimization);
   system2.init();
+  system2.GetSystemInfo();
 
   mlSol.SetWriter (VTK);
   std::vector<std::string> mov_vars;

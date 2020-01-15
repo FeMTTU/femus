@@ -1043,7 +1043,12 @@ namespace femus {
 
 
 
-
+  void LinearImplicitSystem::GetSystemInfo(){
+    std::cout << "Printing information for system "<< _sys_name <<std::endl;
+    std::cout << "Number of Levels = " << _gridn <<std::endl;
+    std::cout << "Characteristic length = " << _msh[0]->GetCharacteristicLength() << std::endl;
+    std::cout << "Total number of dofs = " << _LinSolver[_gridn - 1]->KKIndex[_LinSolver[_gridn - 1]->KKIndex.size() - 1u] <<std::endl;
+  }
 
 
 
