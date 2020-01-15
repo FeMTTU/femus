@@ -24,7 +24,7 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& mlProb);
 
 void BuildFlag (MultiLevelSolution& mlSol);
 
-unsigned DIM = 2;
+unsigned DIM = 3;
 
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = false; //dirichlet
@@ -50,7 +50,7 @@ int main (int argc, char** args) {
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
   unsigned nx = 101; // this should always be a odd number
@@ -66,8 +66,8 @@ int main (int argc, char** args) {
   else if (DIM == 3) {
     mlMsh.ReadCoarseMesh ("./input/cube.neu", "seventh", scalingFactor);
     mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
-    mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
-    numberOfUniformLevels = 1;
+//     mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+//     numberOfUniformLevels = 1;
   }
 
   //mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
@@ -187,6 +187,8 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero(); // Set to zero all the entries of the Global Residual
+  
+  std::vector < std::vector < std::vector <double > > > aP(3);
 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -227,8 +229,8 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
     }
 
 
-    double alpha1 = .5;
-    double alpha2 = 3.;
+    double alpha1 = 1.;
+    double alpha2 = 1.;
 
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
@@ -280,21 +282,50 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
 
     else {
       // *** Element Gauss point loop ***
-
+      
+      if(dim > 1){
+        for(unsigned jtype = 0; jtype < soluType + 1; jtype++) {
+          ProjectNodalToPolynomialCoefficients(aP[jtype], x, ielGeom, jtype) ;
+        }      
+      }
+      
       //bulk1
-      std::vector <double> N (dim);
+      std::vector <double> N (dim, 0.);
       N[0] = -1.;
-      std::vector <double> xi (dim);
-      xi[0] = -0.5;
-      if (dim > 1) {
-        N[1] = 0.;
-        xi[1] = 0.;
+      
+      std::vector <double> H (dim);
+      std::vector <double> XC (dim);
+      if(dim == 1){
+        H[0] = fabs(x[0][1] - x[0][0]);
+        XC[0] = 0.5 * (x[0][1] + x[0][0]);
       }
-      if (dim > 2) {
-        N[2] = 0.;
-        xi[2] = 0.;
+      else if (dim == 2) {
+        H[0] = fabs(x[0][2] - x[0][0]); 
+        H[1] = fabs(x[1][2] - x[1][0]);
+        
+        XC[0] = 0.5 * (x[0][2] + x[0][0]);
+        XC[1] = 0.5 * (x[1][2] + x[1][0]);
       }
+      else if (dim == 3) {
+        H[0] = fabs(x[0][6] - x[0][0]);
+        H[1] = fabs(x[1][6] - x[1][0]); 
+        H[2] = fabs(x[2][6] - x[2][0]);
+        
+        XC[0] = 0.5 * (x[0][6] + x[0][0]);
+        XC[1] = 0.5 * (x[1][6] + x[1][0]);
+        XC[2] = 0.5 * (x[2][6] + x[2][0]);
+      }
+      
+      std::vector <double> xi(dim,0.);
 
+      xi[0] = -0.5;
+      if(dim > 1){
+        std::vector <double> xp = XC;
+        xp[0] -= 0.25 * H[0];
+        GetClosestPointInReferenceElement(x, xp, ielGeom, xi);
+        bool inverseMapping = GetInverseMapping(soluType, ielGeom, aP, xp, xi, 100);
+      }    
+      
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian (x, xi, weight, phi, phi_x);
       if (dim == 1) {
@@ -306,32 +337,32 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
       else if (dim == 3) {
         weight = 0.5 * fabs ( (x[0][6] - x[0][0]) * (x[1][6] - x[1][0]) * (x[2][6] - x[2][0]));
       }
-
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       vector < adept::adouble > gradSolu1g (dim, 0.);
-
       for (unsigned i = 0; i < nDofu; i++) {
         for (unsigned k = 0; k < dim; k++) {
           gradSolu1g[k] += phi_x[i * dim + k] * solu1[i];
         }
       }
-
+      
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofu; i++) {
         adept::adouble graduGradphi1 = 0.;
         for (unsigned k = 0; k < dim; k++) {
-          graduGradphi1 += gradSolu1g[k] * phi_x[i * dim + k] ;
-
+          graduGradphi1 += gradSolu1g[k] * phi_x[i * dim + k];
         }
-        aResu1[i] += (- phi[i] + alpha1 * graduGradphi1) * weight;
-      } // end phi_i loop
-
-
+        aResu1[i] += (-phi[i] + alpha1 * graduGradphi1) * weight;
+      }
+        
 
       //interface
-
       xi[0] = 0.;
-
+      if(dim > 1){
+        std::vector <double> xp = XC;
+        GetClosestPointInReferenceElement(x, xp, ielGeom, xi);
+        bool inverseMapping = GetInverseMapping(soluType, ielGeom, aP, xp, xi, 100);
+      }    
+           
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian (x, xi, weight, phi, phi_x);
 
@@ -348,7 +379,7 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
 
-      double theta = 1.;
+      double theta = 500.;
       double gamma1 = 0.5;
       double gamma2 = 0.5;
 
@@ -380,6 +411,13 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
 
       //bulk2
       xi[0] = 0.5;
+      if(dim > 1){
+        std::vector <double> xp = XC;
+        xp[0] += 0.25 * H[0];
+        GetClosestPointInReferenceElement(x, xp, ielGeom, xi);
+        bool inverseMapping = GetInverseMapping(soluType, ielGeom, aP, xp, xi, 100);
+      }    
+      
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian (x, xi, weight, phi, phi_x);
       if (dim == 1) {
