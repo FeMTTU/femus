@@ -29,34 +29,37 @@
 #include "map"
 #include "MyVector.hpp"
 
-namespace femus
-{
+namespace femus {
 
-  class Line : public ParallelObject
-  {
+  class Line : public ParallelObject {
     public:
 
-      Line(const std::vector < std::vector < double > > x,
-           const std::vector <MarkerType>& markerType,
-           Solution* sol, const unsigned& solType);
-      
-      Line(const std::vector < std::vector < double > > x, const std::vector < double > &mass,
-           const std::vector <MarkerType>& markerType,
-           Solution* sol, const unsigned& solType);
-      
-      
+      Line (const std::vector < std::vector < double > > x,
+            const std::vector <MarkerType>& markerType,
+            Solution* sol, const unsigned& solType);
+
+      Line (const std::vector < std::vector < double > > x, const std::vector < double > &mass,
+            const std::vector <MarkerType>& markerType,
+            Solution* sol, const unsigned& solType);
+
+      Line (const std::vector < std::vector < double > > x,
+            const std::vector < std::vector < std::vector < double > > > &tangent,
+            const std::vector <MarkerType>& markerType,
+            Solution* sol, const unsigned& solType);
+
+
       ~Line();
 
-      typedef void (*ForceFunction)(const std::vector <double>& xMarker, std::vector <double>& Fm, const unsigned& material);
+      typedef void (*ForceFunction) (const std::vector <double>& xMarker, std::vector <double>& Fm, const unsigned& material);
 
-      void GetLine(std::vector < std::vector < double > >& line) {
+      void GetLine (std::vector < std::vector < double > >& line) {
         line = _line;
       }
-      
 
-      void GetStreamLine(std::vector < std::vector < std::vector < double > > >& line, const unsigned& step) {
-        for(unsigned i = 0; i < _size; i++) {
-          line[i].resize(step + 1);
+
+      void GetStreamLine (std::vector < std::vector < std::vector < double > > >& line, const unsigned& step) {
+        for (unsigned i = 0; i < _size; i++) {
+          line[i].resize (step + 1);
           line[i][step] = _line[i];
         }
       }
@@ -69,21 +72,21 @@ namespace femus
         return _particles;
       }
 
-      void AdvectionParallel(const unsigned& n, const double& T, const unsigned& order, ForceFunction Force = NULL);
+      void AdvectionParallel (const unsigned& n, const double& T, const unsigned& order, ForceFunction Force = NULL);
 
       void UpdateLine();
 
       unsigned NumberOfParticlesOutsideTheDomain();
 
-      void GetParticlesToGridMaterial();
+      void GetParticlesToGridMaterial (const bool updateMat = true);
 
       void UpdateLineMPM();
 
-      void SetParticlesMass(const double& volume, const double& density);
+      void SetParticlesMass (const double& volume, const double& density);
 
-      void ScaleParticleMass(double scale(const std::vector <double>& x));
-      
-      void GetExtrema( std::vector <double>& xMin, std::vector <double>& xMax);
+      void ScaleParticleMass (double scale (const std::vector <double>& x));
+
+      void GetExtrema (std::vector <double>& xMin, std::vector <double>& xMax);
 
     private:
       std::vector < std::vector < double > > _line;
@@ -92,8 +95,8 @@ namespace femus
       std::vector < unsigned > _printList;
       unsigned _size;
       unsigned _dim;
-      
-      void Reorder(std::vector < Marker*> &particles);
+
+      void Reorder (std::vector < Marker*> &particles);
 
       static const double _a[4][4][4];
       static const double _b[4][4];
@@ -104,7 +107,7 @@ namespace femus
       Mesh* _mesh;
 
     protected:
-      std::vector< unsigned int >::reference sol(const char* arg1);
+      std::vector< unsigned int >::reference sol (const char* arg1);
   };
 } //end namespace femus
 

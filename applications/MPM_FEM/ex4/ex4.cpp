@@ -390,7 +390,7 @@ int main(int argc, char** args)
     
     std::vector < std::vector < std::vector < double > > > line(1);
     linea->GetLine(line[0]);
-    PrintLine(outputFolder.str(), line, false, 0);
+    PrintLine(outputFolder.str(), "line", line, 0);
     
    
     
@@ -443,7 +443,7 @@ int main(int argc, char** args)
 //       GridToParticlesProjection(ml_prob, *linea);
 
       linea->GetLine(line[0]);
-      PrintLine(outputFolder.str(), line, false, time_step);
+      PrintLine(outputFolder.str(),"line", line, time_step);
 
       CM[time_step][simulation] = line[0][0][1];  
         

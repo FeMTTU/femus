@@ -183,6 +183,8 @@ OPTION(BUILD_ISM "Build the Intersection Marker apps" ON)
 
 OPTION(BUILD_MPM_FEM "Build the MPM FEM apps" ON)
 
+OPTION(BUILD_MPM_FSI "Build the MPM FSI apps" ON)
+
 OPTION(BUILD_REFINEMENT "Build the Refiniment apps" ON)
 
 OPTION(BUILD_PETSC_DEBUG "Build the PETSC debug apps" ON)
@@ -198,6 +200,8 @@ OPTION(BUILD_TUMOR "Build the Tumor apps" ON)
 OPTION(BUILD_RK "Build the Runge-Kutta apps" ON)
 
 OPTION(BUILD_CONFORMAL "Build the Conformal mesh apps" ON)
+
+OPTION(BUILD_NITSCHE "Build the Nitsche apps" ON)
 
 #############################################################################################
 ### Build documentation (Doxygen)
