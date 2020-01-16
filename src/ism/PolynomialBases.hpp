@@ -29,6 +29,12 @@ namespace femus {
   void GetPolynomialShapeFunctionGradient (std::vector < double >& phi, std::vector < std::vector < double > >& gradPhi, const std::vector < double >& xi, short unsigned &ielType, const unsigned & solType) ;
   void GetPolynomialShapeFunctionGradientHessian (std::vector < double >& phi, std::vector < std::vector < double > >& gradPhi, std::vector < std::vector < std::vector < double > > >& hessPhi, const std::vector < double >& xi, short unsigned &ielType, const unsigned & solType) ;
 
+  // LINE specialized functions
+  void ProjectLineNodalToPolynomialCoefficients (std::vector < std::vector <double > > &aP, const std::vector < std::vector <double > > &aN, const unsigned &solutionType) ;
+  void GetLinePolynomialShapeFunction (std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) ;
+  void GetLinePolynomialShapeFunctionGradient (std::vector < double >& phi, std::vector < std::vector < double > >& gradPhi, const std::vector < double >& xi, const unsigned & solType) ;
+  void GetLinePolynomialShapeFunctionGradientHessian (std::vector < double >& phi, std::vector < std::vector < double > >& gradPhi, std::vector < std::vector < std::vector < double > > >& hessPhi, const std::vector < double >& xi, const unsigned & solType) ;
+    
   // QUAD specialized functions
   void ProjectQuadNodalToPolynomialCoefficients (std::vector < std::vector <double > > &aP, const std::vector < std::vector <double > > &aN, const unsigned &solutionType) ;
   void GetQuadPolynomialShapeFunction (std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) ;
