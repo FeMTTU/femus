@@ -52,7 +52,7 @@ const double timederiv = 0.;
 // Declaration of systems.
 void AssembleMCF (MultiLevelProblem&);
 
-double dt0 = 0.0005;
+double dt0 = 6e-3;
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   // if(time==0) return 5.0e-7;
@@ -99,11 +99,11 @@ int main (int argc, char** args) {
 
   //mlMsh.ReadCoarseMesh("../input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/sphere.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/cube.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/c.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/horseShoe3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   scalingFactor = 1.;
@@ -237,7 +237,7 @@ int main (int argc, char** args) {
 
   // First, solve system2 to "conformalize" the initial mesh.
   CopyDisplacement (mlSol, true);
-  system2.MGsolve();
+  //system2.MGsolve();
 
   // Then, solve system0 to compute initial curvatures.
   CopyDisplacement (mlSol, false);
@@ -559,9 +559,9 @@ void AssembleMCF (MultiLevelProblem& ml_prob) {
       adept::adouble solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       double solxOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
 
-      adept::adouble solYNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-      adept::adouble solY_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-      double solYOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      //adept::adouble solYNew_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      //adept::adouble solY_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      //double solYOld_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
 
       // Compute the above quantities at the Gauss points.
       for (unsigned K = 0; K < DIM; K++) {
@@ -584,13 +584,13 @@ void AssembleMCF (MultiLevelProblem& ml_prob) {
           }
         }
 
-        for (int j = 0; j < dim; j++) {
-          for (unsigned i = 0; i < nYDofs; i++) {
-            solYNew_uv[K][j] += phiY_uv[j][i] * solY[K][i];
-            solY_uv[K][j] += phiY_uv[j][i] * 0.5 * (solY[K][i] + solYOld[K][i]);
-            solYOld_uv[K][j] += phiY_uv[j][i] * solYOld[K][i];
-          }
-        }
+      //   for (int j = 0; j < dim; j++) {
+      //     for (unsigned i = 0; i < nYDofs; i++) {
+      //       solYNew_uv[K][j] += phiY_uv[j][i] * solY[K][i];
+      //       solY_uv[K][j] += phiY_uv[j][i] * 0.5 * (solY[K][i] + solYOld[K][i]);
+      //       solYOld_uv[K][j] += phiY_uv[j][i] * solYOld[K][i];
+      //     }
+      //   }
       }
 
       // Computing the metric, metric determinant, and area element.
@@ -657,9 +657,9 @@ void AssembleMCF (MultiLevelProblem& ml_prob) {
       adept::adouble solx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
       adept::adouble solxOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
-      adept::adouble solYNew_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-      adept::adouble solY_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-      adept::adouble solYOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      // adept::adouble solYNew_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      // adept::adouble solY_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      // adept::adouble solYOld_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
 
       // Computing tangential gradients defined above.
       for (unsigned I = 0; I < DIM; I++) {
@@ -669,9 +669,9 @@ void AssembleMCF (MultiLevelProblem& ml_prob) {
             solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
             solxOld_Xtan[I][J] += solxOld_uv[I][k] * Jir[k][J];
 
-            solYNew_Xtan[I][J] += solYNew_uv[I][k] * Jir[k][J];
-            solY_Xtan[I][J] += solY_uv[I][k] * Jir[k][J];
-            solYOld_Xtan[I][J] += solYOld_uv[I][k] * Jir[k][J];
+            // solYNew_Xtan[I][J] += solYNew_uv[I][k] * Jir[k][J];
+            // solY_Xtan[I][J] += solY_uv[I][k] * Jir[k][J];
+            // solYOld_Xtan[I][J] += solYOld_uv[I][k] * Jir[k][J];
           }
         }
       }
@@ -713,9 +713,9 @@ void AssembleMCF (MultiLevelProblem& ml_prob) {
           adept::adouble term1 = 0.;
 
           for (unsigned J = 0; J < DIM; J++) {
-            term1 +=  solx_Xtan[K][J] * phiY_Xtan[J][i];
+            term1 +=  solxNew_Xtan[K][J] * phiY_Xtan[J][i];
           }
-          aResY[K][i] += ( ( ( (solxNewg[K] - solxOldg[K])  / dt) - solYg[K]
+          aResY[K][i] += ( ( ( (solxNewg[K] - solxOldg[K])  / dt) + term1
                           + solLambda1 * normal[K] ) * phiY[i]
                           + solLambda2 * term1) * Area;
         }

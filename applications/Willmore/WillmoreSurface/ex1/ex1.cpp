@@ -47,7 +47,8 @@ const double eps = 1.0e-5;
 void AssemblePWillmore (MultiLevelProblem&);
 void AssemblePWillmore2 (MultiLevelProblem& ml_prob);
 
-double dt0 = 3.2e-6;
+double dt0 = 3.2e-4; //P=2
+//double dt0 = 3.2e-6; //P=4
 
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
@@ -98,7 +99,7 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
-  //mlMsh.ReadCoarseMesh ("../input/spot.med", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/armadillo.med", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/moai.med", "seventh", scalingFactor);
 
 
@@ -223,7 +224,7 @@ int main (int argc, char** args) {
   system2.AddSolutionToSystemPDE ("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system2.SetMaxNumberOfNonLinearIterations (7);
+  system2.SetMaxNumberOfNonLinearIterations (2);
   system2.SetNonLinearConvergenceTolerance (1.e-15);
 
   // Attach the assembling function to system2 and initialize.
@@ -268,17 +269,19 @@ int main (int argc, char** args) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-    dt0 *= 1.005;
-     if (dt0 > 0.005) dt0 = 0.005;
+    dt0 *= 1.02;
+      //UNCOMMENT FOR P=4
+      // if (dt0 > 5e-3) dt0 = 5e-3;
 
-        // if (time_step < 2) {
+        //IGNORE THIS
+        // if (time_step < 1) {
         //   //dt0 = 0.005;
         //   P[0] = 2;
         // }
         // else {
         //   P[0] = 4;
-        //   dt0 *= 1.1;
-        //   if (dt0 > 0.000008) dt0 = 0.000008;
+        //   dt0 *= 1.05;
+        //   //if (dt0 > 0.000008) dt0 = 0.000008;
         // }
 
     if (time_step % 1 == 0) {
@@ -292,10 +295,11 @@ int main (int argc, char** args) {
 
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();
-      if (time_step % 7 == 6){
+        //UNCOMMENT FOR P=4
+        // if (time_step % 4 == 3){
        systemY.MGsolve();
        systemW.MGsolve();
-      }
+      //}
     }
 
     if ( (time_step + 1) % printInterval == 0)
