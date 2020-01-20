@@ -51,6 +51,7 @@ void AssemblePWillmore2 (MultiLevelProblem& ml_prob);
 //double dt0 = 3.2e-4; //P=2
 double dt0 = 3.2e-6; //P=4
 
+
 double GetPWillmoreEnergy (MultiLevelSolution &mlSol);
 
 // Function to control the time stepping.
@@ -270,28 +271,30 @@ int main (int argc, char** args) {
   std::fstream fs;
   int iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
- 
+
   system.CopySolutionToOldSolution();
   double energy = GetPWillmoreEnergy(mlSol);
   if(iproc == 0) {
     fs.open ("Energy.txt", std::fstream::out);
     fs << 0. <<" " << 0. << " " << energy << std::endl;
   }
-  
+
   // Main algorithm loop.
   for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    
+
     double energy = GetPWillmoreEnergy(mlSol);
     double dt = system.GetIntervalTime();
     double time = system.GetTime();
     if(iproc == 0) fs << dt <<" " << time << " " << energy << std::endl;
 
 
+
     dt0 *= 1.02;
       //UNCOMMENT FOR P=4
     if (dt0 > 5e-3) dt0 = 5e-3;
+
 
         //IGNORE THIS
         // if (time_step < 1) {
@@ -325,7 +328,7 @@ int main (int argc, char** args) {
     if ( (time_step + 1) % printInterval == 0)
       mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, (time_step + 1) / printInterval);
   }
-  
+
   if(iproc == 0) fs.close();
   return 0;
 }
@@ -987,10 +990,10 @@ void AssemblePWillmore (MultiLevelProblem& ml_prob) {
   MPI_Reduce (&energy, &energyAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   std::cout << "ENERGY = " << energyAll << std::endl;
 
-  
-  
-  
-  
+
+
+
+
   firstTime = false;
 //   VecView ( (static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_SELF);
 //   MatView ( (static_cast<PetscMatrix*> (KK))->mat(), PETSC_VIEWER_STDOUT_SELF);
@@ -1672,64 +1675,64 @@ void AssemblePWillmore2 (MultiLevelProblem& ml_prob) {
 
 
 double GetPWillmoreEnergy (MultiLevelSolution &mlSol) {
- 
+
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-  
+
   Solution* sol  = mlSol.GetSolutionLevel(level);
   Mesh* msh = mlSol._mlMesh->GetLevel(level);
   elem* el =  msh->el;
-   
+
   // Convenience variables to encode the dimension.
   const unsigned dim = 2;
   const unsigned DIM = 3;
-  
+
   // Get the process_id (for parallel computation).
   unsigned iproc = msh->processor_id();
-  
+
   // Extract the solution vector; get solDx positions in the ml_sol object.
   unsigned solDxIndex[DIM];
   solDxIndex[0] = mlSol.GetIndex ("Dx1");
   solDxIndex[1] = mlSol.GetIndex ("Dx2");
   solDxIndex[2] = mlSol.GetIndex ("Dx3");
-  
+
   // Extract the finite element type for solx.
   unsigned solxType;
   solxType = mlSol.GetSolutionType (solDxIndex[0]);
-  
+
   // Define solx and solxOld.
   std::vector < double > solx[DIM];
   std::vector < double > solxOld[DIM];
-  
+
   // Get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC).
   unsigned xType = 2;
-  
+
   // Get positions of Y in the ml_sol object.
   unsigned solYIndex[DIM];
   solYIndex[0] = mlSol.GetIndex ("Y1");
   solYIndex[1] = mlSol.GetIndex ("Y2");
   solYIndex[2] = mlSol.GetIndex ("Y3");
-  
+
   // Extract the finite element type for Y.
   unsigned solYType;
   solYType = mlSol.GetSolutionType (solYIndex[0]);
-  
-  
+
+
   // Define solY and solYOld.
   std::vector < double > solY[DIM];
   std::vector < double > solYOld[DIM];
-  
+
   // Initialize area, volume, P-Willmore energy.
- 
+
   double energy = 0.;
-   
+
   // ELEMENT LOOP: each process loops only on the elements that it owns.
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    
+
     // Number of solution element dofs.
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nxDofs  = msh->GetElementDofNumber (iel, solxType);
     unsigned nYDofs  = msh->GetElementDofNumber (iel, solYType);
-    
+
     // Resize solution vectors.
     for (unsigned K = 0; K < DIM; K++) {
       solx[K].resize (nxDofs);
@@ -1737,60 +1740,60 @@ double GetPWillmoreEnergy (MultiLevelSolution &mlSol) {
       solY[K].resize (nYDofs);
       solYOld[K].resize (nYDofs);
     }
-    
-    
+
+
     // Loop which handles local storage of global mapping and solution X.
     for (unsigned i = 0; i < nxDofs; i++) {
-      
+
       // Global-to-local mapping between solution node and solution dof.
       unsigned iDDof = msh->GetSolutionDof (i, iel, solxType);
       unsigned iXDof  = msh->GetSolutionDof (i, iel, xType);
-      
+
       for (unsigned K = 0; K < DIM; K++) {
         solxOld[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + (*sol->_SolOld[solDxIndex[K]]) (iDDof);
         solx[K][i] = (*msh->_topology->_Sol[K]) (iXDof) + (*sol->_Sol[solDxIndex[K]]) (iDDof);
       }
     }
-    
+
     // Loop which handles local storage of global mapping and solution Y.
     for (unsigned i = 0; i < nYDofs; i++) {
-      
+
       // Global-to-local mapping between solution node and solution dof.
       unsigned iYDof = msh->GetSolutionDof (i, iel, solYType);
       for (unsigned K = 0; K < DIM; K++) {
-        
+
         // Global-to-local solutions.
         solYOld[K][i] = (*sol->_SolOld[solYIndex[K]]) (iYDof);
         solY[K][i] = (*sol->_Sol[solYIndex[K]]) (iYDof);
-        
+
       }
     }
-      
+
     // begin GAUSS POINT LOOP
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solxType]->GetGaussPointNumber(); ig++) {
-      
+
       const double *phix;  // local test function
       const double *phix_uv[dim]; // first order derivatives in (u,v)
-      
+
       const double *phiY;  // local test function
-      
-      
+
+
       double weight; // gauss point weight
-      
+
       //Extract Gauss point weight, test functions, and their partial derivatives.
       // "0" is derivative in u, "1" is derivative in v.
       weight = msh->_finiteElement[ielGeom][solxType]->GetGaussWeight (ig);
-      
+
       phix = msh->_finiteElement[ielGeom][solxType]->GetPhi (ig);
       phix_uv[0] = msh->_finiteElement[ielGeom][solxType]->GetDPhiDXi (ig);
       phix_uv[1] = msh->_finiteElement[ielGeom][solxType]->GetDPhiDEta (ig);
-      
+
       phiY = msh->_finiteElement[ielGeom][solYType]->GetPhi (ig);
-      
-           
+
+
       double solYg[3] = {0., 0., 0.};
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
-     
+
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nYDofs; i++) {
           solYg[K] += phiY[i] * 0.5 * (solYOld[K][i] + solY[K][i]);
@@ -1801,7 +1804,7 @@ double GetPWillmoreEnergy (MultiLevelSolution &mlSol) {
           }
         }
       }
-      
+
       // Computing the metric, metric determinant, and area element.
       double g[dim][dim] = {{0., 0.}, {0., 0.}};
       for (unsigned i = 0; i < dim; i++) {
@@ -1813,7 +1816,7 @@ double GetPWillmoreEnergy (MultiLevelSolution &mlSol) {
       }
       double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
       double Area = weight * sqrt (detg);
-      
+
       // Computing the unit normal vector N.
       double normal[DIM];
       normal[0] = normalSign * (solx_uv[1][0] * solx_uv[2][1]
@@ -1822,7 +1825,7 @@ double GetPWillmoreEnergy (MultiLevelSolution &mlSol) {
       - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
       normal[2] = normalSign * (solx_uv[0][0] * solx_uv[1][1]
       - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
-      
+
       // Computing Y.N and |Y|^2, which are essentially 2H and 4H^2.
       double YdotN = 0.;
       double YdotY = 0.;
@@ -1832,25 +1835,25 @@ double GetPWillmoreEnergy (MultiLevelSolution &mlSol) {
       }
       // double signYdotN = (YdotN.value() >= 0.) ? 1. : -1.;
       double signYdotN = 1.;
-      
+
       // Some necessary quantities when working with polynomials.
       double sumP3 = 0.;
       for (unsigned p = 0; p < 3; p++) {
         double signP = (P[p] % 2u == 0) ? 1. : signYdotN;
         sumP3 += signP * ap[p] * pow (YdotY, P[p] / 2.);
       }
-      
+
       energy += sumP3 * Area;
-      
+
     } // end GAUSS POINT LOOP.
-     
-    
+
+
   } // End ELEMENT LOOP for each process.
-  
- 
+
+
   double energyAll;
   MPI_Reduce (&energy, &energyAll, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-   
+
   return energyAll;
-   
+
 }
