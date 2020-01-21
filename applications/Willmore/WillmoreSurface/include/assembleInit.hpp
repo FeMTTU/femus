@@ -10,7 +10,7 @@ void AssembleSystemY (MultiLevelProblem& ml_prob) {
 
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
-  // Point to the mesh and element objects.
+  // Point to the mesh and element objects.z
   Mesh *msh = ml_prob._ml_msh->GetLevel (level);
   elem *el = msh->el;
 

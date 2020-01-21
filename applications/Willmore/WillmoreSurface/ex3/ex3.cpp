@@ -22,7 +22,7 @@
 
 /* Vector option for P (to handle polynomials).
  ap is the coefficient in front of the power of H. */
-const unsigned P[3] = {2, 3, 4};
+const unsigned P[3] = {0, 3, 4};
 const double ap[3] = {1, 0., 0.};
 
 using namespace femus;
@@ -52,7 +52,7 @@ const double timederiv = 0.;
 // Declaration of systems.
 void AssembleMCF (MultiLevelProblem&);
 
-double dt0 = 6e-3;
+double dt0 = 5.e-4;
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   // if(time==0) return 5.0e-7;
@@ -117,7 +117,7 @@ int main (int argc, char** args) {
 
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -249,11 +249,24 @@ int main (int argc, char** args) {
   // Parameters for the main algorithm loop.
   unsigned numberOfTimeSteps = 1000u;
   unsigned printInterval = 1u;
-
+  
+  std::fstream fs;
+  int iproc;
+  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+  if(iproc == 0) {
+    fs.open ("Energy.txt", std::fstream::out);
+  }
+  
+  
   // Main algorithm loop.
   for (unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
+    
+    double energy = GetPWillmoreEnergy(mlSol);
+    double dt = system.GetIntervalTime();
+    double time = system.GetTime();
+    if(iproc == 0) fs << dt <<" " << time << " " << energy << std::endl;
 
     dt0 *= 1.02;
 
@@ -274,6 +287,8 @@ int main (int argc, char** args) {
     if ( (time_step + 1) % printInterval == 0)
       mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, (time_step + 1) / printInterval);
   }
+  
+  if(iproc == 0) fs.close();
   return 0;
 }
 
@@ -624,13 +639,13 @@ void AssembleMCF (MultiLevelProblem& ml_prob) {
       double signYdotN = (YdotN.value() >= 0.) ? 1. : -1.;
 
       // Some necessary quantities when working with polynomials.
-      adept::adouble sumP1 = 0.;
-      adept::adouble sumP2 = 0.;
+      //adept::adouble sumP1 = 0.;
+      //adept::adouble sumP2 = 0.;
       adept::adouble sumP3 = 0.;
       for (unsigned p = 0; p < 3; p++) {
         double signP = (P[p] % 2u == 0) ? 1. : signYdotN;
-        sumP1 += signP * ap[p] * P[p] * pow (YdotY, (P[p] - 2.) / 2.);
-        sumP2 += signP * ap[p] * (1. - P[p]) * pow (YdotY , P[p] / 2.);
+        //sumP1 += signP * ap[p] * P[p] * pow (YdotY, (P[p] - 2.) / 2.);
+        //sumP2 += signP * ap[p] * (1. - P[p]) * pow (YdotY , P[p] / 2.);
         //sumP2 += signP * (ap[p] - ap[p] * P[p]) * pow (YdotY , P[p]/2.);
         sumP3 += signP * ap[p] * pow (YdotY, P[p] / 2.);
       }
