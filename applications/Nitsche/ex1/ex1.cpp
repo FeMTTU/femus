@@ -76,11 +76,11 @@ int main (int argc, char** args) {
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol (&mlMsh);
 
-  mlSol.AddSolution ("u1", LAGRANGE, FIRST);
-  mlSol.AddSolution ("u2", LAGRANGE, FIRST);
+  mlSol.AddSolution ("u1", LAGRANGE, SECOND);
+  mlSol.AddSolution ("u2", LAGRANGE, SECOND);
 
   mlSol.AddSolution ("eflag", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSol.AddSolution ("nflag", LAGRANGE, FIRST, 0, false);
+  mlSol.AddSolution ("nflag", LAGRANGE, SECOND, 0, false);
 
   mlSol.Initialize ("All");
 
