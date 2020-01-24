@@ -103,11 +103,13 @@ int main (int argc, char** argv) {
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/FETI_left_subdom_COARSE.neu", "second", scalingFactor);
+//   mlMsh.ReadCoarseMesh ("../input/FETI_left_subdom_COARSE.neu", "second", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/FETI_domain.neu", "second", scalingFactor);
   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
 //   mlMshFine.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
-  mlMshFine.ReadCoarseMesh ("../input/FETI_left_subdom_COARSE.neu", "second", scalingFactor);
+//   mlMshFine.ReadCoarseMesh ("../input/FETI_left_subdom_COARSE.neu", "second", scalingFactor);
+  mlMshFine.ReadCoarseMesh ("../input/FETI_domain.neu", "second", scalingFactor);
   mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine, NULL);
 
   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
@@ -120,19 +122,22 @@ int main (int argc, char** argv) {
   MultiLevelSolution mlSolFine (&mlMshFine);
 
   // add variables to mlSol
-  mlSol.AddSolution ("u", LAGRANGE, FIRST, 2);
-  mlSolFine.AddSolution ("u_fine", LAGRANGE, FIRST, 2);
-
-  mlSol.AddSolution ("u_local", LAGRANGE, FIRST, 2);
-
-  mlSol.AddSolution ("u_exact", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("u1", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("u2", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("mu", LAGRANGE, FIRST, 2);
   
-  mlSol.AddSolution("NodeFlag", LAGRANGE, FIRST, 2);
+//   mlSolFine.AddSolution ("u_fine", LAGRANGE, FIRST, 2);
+//   mlSol.AddSolution ("u_local", LAGRANGE, FIRST, 2);
+//   mlSol.AddSolution ("u_exact", LAGRANGE, FIRST, 2);
+  
+  mlSol.AddSolution("u1Flag", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution("u2Flag", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution("muFlag", LAGRANGE, FIRST, 2);
 
   mlSol.Initialize ("All");
   mlSolFine.Initialize ("All");
 
-  mlSol.Initialize ("u_exact", InitalValueU);
+//   mlSol.Initialize ("u_exact", InitalValueU);
 
   // ******* Set boundary conditions *******
   mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
@@ -145,21 +150,23 @@ int main (int argc, char** argv) {
   volumeConstraintFlags[0] = 5;
   volumeConstraintFlags[1] = 6;
 
-  unsigned soluIndex = mlSol.GetIndex ("u");
-  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, soluIndex, 0);
+  unsigned solu1Index = mlSol.GetIndex ("u1");
+  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solu1Index, 0);
 
-  unsigned soluLocalIndex = mlSol.GetIndex ("u_local");
-  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, soluLocalIndex, 0);
+  unsigned solu2Index = mlSol.GetIndex ("u2");
+  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solu2Index, 0);
 
-  unsigned soluIndexFine = mlSolFine.GetIndex ("u_fine");
-  mlSolFine.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, soluIndexFine, 0);
+  unsigned solmuIndex = mlSol.GetIndex ("mu");
+  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solmuIndex, 0);
 
   //BEGIN assemble and solve nonlocal problem
   MultiLevelProblem ml_prob (&mlSol);
 
   // ******* Add FEM system to the MultiLevel problem *******
   LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("NonLocal");
-  system.AddSolutionToSystemPDE ("u");
+  system.AddSolutionToSystemPDE ("u1");
+  system.AddSolutionToSystemPDE ("u2");
+  system.AddSolutionToSystemPDE ("mu");
 
   // ******* System FEM Assembly *******
   system.SetAssembleFunction (AssembleNonLocalSys);
@@ -196,79 +203,79 @@ int main (int argc, char** argv) {
   //END assemble and solve nonlocal problem
 
   //BEGIN assemble and solve local problem
-  MultiLevelProblem ml_prob2 (&mlSol);
-
-  // ******* Add FEM system to the MultiLevel problem *******
-  LinearImplicitSystem& system2 = ml_prob2.add_system < LinearImplicitSystem > ("Local");
-  system2.AddSolutionToSystemPDE ("u_local");
-
-  // ******* System FEM Assembly *******
-  system2.SetAssembleFunction (AssembleLocalSys);
-  system2.SetMaxNumberOfLinearIterations (1);
-  // ******* set MG-Solver *******
-  system2.SetMgType (V_CYCLE);
-
-  system2.SetAbsoluteLinearConvergenceTolerance (1.e-50);
-
-  system2.SetNumberPreSmoothingStep (1);
-  system2.SetNumberPostSmoothingStep (1);
-
-  // ******* Set Preconditioner *******
-  system2.SetMgSmoother (GMRES_SMOOTHER);
-
-  system2.init();
-
-  // ******* Set Smoother *******
-  system2.SetSolverFineGrids (RICHARDSON);
-
-  system2.SetPreconditionerFineGrids (ILU_PRECOND);
-
-  system2.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
-
-// ******* Solution *******
-
-//   system2.MGsolve();
+//   MultiLevelProblem ml_prob2 (&mlSol);
+// 
+//   // ******* Add FEM system to the MultiLevel problem *******
+//   LinearImplicitSystem& system2 = ml_prob2.add_system < LinearImplicitSystem > ("Local");
+//   system2.AddSolutionToSystemPDE ("u_local");
+// 
+//   // ******* System FEM Assembly *******
+//   system2.SetAssembleFunction (AssembleLocalSys);
+//   system2.SetMaxNumberOfLinearIterations (1);
+//   // ******* set MG-Solver *******
+//   system2.SetMgType (V_CYCLE);
+// 
+//   system2.SetAbsoluteLinearConvergenceTolerance (1.e-50);
+// 
+//   system2.SetNumberPreSmoothingStep (1);
+//   system2.SetNumberPostSmoothingStep (1);
+// 
+//   // ******* Set Preconditioner *******
+//   system2.SetMgSmoother (GMRES_SMOOTHER);
+// 
+//   system2.init();
+// 
+//   // ******* Set Smoother *******
+//   system2.SetSolverFineGrids (RICHARDSON);
+// 
+//   system2.SetPreconditionerFineGrids (ILU_PRECOND);
+// 
+//   system2.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
+// 
+// // ******* Solution *******
+// 
+// //   system2.MGsolve();
 
   //END assemble and solve local problem
 
   //BEGIN assemble and solve fine nonlocal problem
-  MultiLevelProblem ml_probFine (&mlSolFine);
-
-  // ******* Add FEM system to the MultiLevel problem *******
-  LinearImplicitSystem& systemFine = ml_probFine.add_system < LinearImplicitSystem > ("NonLocalFine");
-  systemFine.AddSolutionToSystemPDE ("u_fine");
-
-  // ******* System FEM Assembly *******
-  systemFine.SetAssembleFunction (AssembleNonLocalSysFine);
-  systemFine.SetMaxNumberOfLinearIterations (1);
-  // ******* set MG-Solver *******
-  systemFine.SetMgType (V_CYCLE);
-
-  systemFine.SetAbsoluteLinearConvergenceTolerance (1.e-50);
-  //   systemFine.SetNonLinearConvergenceTolerance(1.e-9);
-  //   systemFine.SetMaxNumberOfNonLinearIterations(20);
-
-  systemFine.SetNumberPreSmoothingStep (1);
-  systemFine.SetNumberPostSmoothingStep (1);
-
-  // ******* Set Preconditioner *******
-  systemFine.SetMgSmoother (GMRES_SMOOTHER);
-
-  systemFine.SetSparsityPatternMinimumSize (5000u);   //TODO tune
-
-  systemFine.init();
-
-  // ******* Set Smoother *******
-  systemFine.SetSolverFineGrids (RICHARDSON);
-  // systemFine.SetRichardsonScaleFactor(0.7);
-
-  systemFine.SetPreconditionerFineGrids (ILU_PRECOND);
-
-  systemFine.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
-
-// ******* Solution *******
-
-//   systemFine.MGsolve(); //TODO
+//   MultiLevelProblem ml_probFine (&mlSolFine);
+// 
+//   // ******* Add FEM system to the MultiLevel problem *******
+//   LinearImplicitSystem& systemFine = ml_probFine.add_system < LinearImplicitSystem > ("NonLocalFine");
+//   systemFine.AddSolutionToSystemPDE ("u_fine");
+// 
+//   // ******* System FEM Assembly *******
+//   systemFine.SetAssembleFunction (AssembleNonLocalSysFine);
+//   systemFine.SetMaxNumberOfLinearIterations (1);
+//   // ******* set MG-Solver *******
+//   systemFine.SetMgType (V_CYCLE);
+// 
+//   systemFine.SetAbsoluteLinearConvergenceTolerance (1.e-50);
+//   //   systemFine.SetNonLinearConvergenceTolerance(1.e-9);
+//   //   systemFine.SetMaxNumberOfNonLinearIterations(20);
+// 
+//   systemFine.SetNumberPreSmoothingStep (1);
+//   systemFine.SetNumberPostSmoothingStep (1);
+// 
+//   // ******* Set Preconditioner *******
+//   systemFine.SetMgSmoother (GMRES_SMOOTHER);
+// 
+//   systemFine.SetSparsityPatternMinimumSize (5000u);   //TODO tune
+// 
+//   systemFine.init();
+// 
+//   // ******* Set Smoother *******
+//   systemFine.SetSolverFineGrids (RICHARDSON);
+//   // systemFine.SetRichardsonScaleFactor(0.7);
+// 
+//   systemFine.SetPreconditionerFineGrids (ILU_PRECOND);
+// 
+//   systemFine.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
+// 
+// // ******* Solution *******
+// 
+// //   systemFine.MGsolve(); //TODO
 
   //END assemble and solve nonlocal problem
 
@@ -284,11 +291,11 @@ int main (int argc, char** argv) {
   mlSol.GetWriter()->SetDebugOutput (true);
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "nonlocal_local_exact", print_vars, 0);
 
-  mlSolFine.SetWriter (VTK);
-  std::vector<std::string> print_vars2;
-  print_vars2.push_back ("All");
-  mlSolFine.GetWriter()->SetDebugOutput (true);
-  mlSolFine.GetWriter()->Write (DEFAULT_OUTPUTDIR, "fine", print_vars2, 0);
+//   mlSolFine.SetWriter (VTK);
+//   std::vector<std::string> print_vars2;
+//   print_vars2.push_back ("All");
+//   mlSolFine.GetWriter()->SetDebugOutput (true);
+//   mlSolFine.GetWriter()->Write (DEFAULT_OUTPUTDIR, "fine", print_vars2, 0);
 
 //   std::cout << std::endl << " total CPU time : " << std::setw (11) << std::setprecision (6) << std::fixed
 //             << static_cast<double> ( (clock() - total_time)) / CLOCKS_PER_SEC << " s" << std::endl;

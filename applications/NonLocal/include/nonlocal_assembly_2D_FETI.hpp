@@ -92,17 +92,32 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors(); // get the noumber of processes (for parallel computation)
 
-  unsigned soluIndex = mlSol->GetIndex ("u");   // get the position of "u" in the ml_sol object
-  unsigned soluType = mlSol->GetSolutionType (soluIndex);   // get the finite element type for "u"
+  unsigned solu1Index = mlSol->GetIndex ("u1");   // get the position of "u1" in the ml_sol object
+  unsigned solu1Type = mlSol->GetSolutionType (solu1Index);   // get the finite element type for "u1"
 
-  unsigned nodeFlagIndex = mlSol->GetIndex ("NodeFlag");
-  unsigned nodeFlagType = mlSol->GetSolutionType (nodeFlagIndex);
+  unsigned solu2Index = mlSol->GetIndex ("u2");   // get the position of "u1" in the ml_sol object
+  unsigned solu2Type = mlSol->GetSolutionType (solu2Index);   // get the finite element type for "u1"
 
-  unsigned soluPdeIndex;
-  soluPdeIndex = mlPdeSys->GetSolPdeIndex ("u");   // get the position of "u" in the pdeSys object
+  unsigned solmuIndex = mlSol->GetIndex ("mu");   // get the position of "u1" in the ml_sol object
+  unsigned solmuType = mlSol->GetSolutionType (solmuIndex);   // get the finite element type for "u1"
 
-  vector < adept::adouble >  solu; // local solution for the local assembly (it uses adept)
-  solu.reserve (maxSize);
+  unsigned u1FlagIndex = mlSol->GetIndex ("u1Flag");
+  unsigned u1FlagType = mlSol->GetSolutionType (u1FlagIndex);
+
+  unsigned u2FlagIndex = mlSol->GetIndex ("u2Flag");
+  unsigned u2FlagType = mlSol->GetSolutionType (u2FlagIndex);
+
+  unsigned muFlagIndex = mlSol->GetIndex ("muFlag");
+  unsigned muFlagType = mlSol->GetSolutionType (muFlagIndex);
+
+  unsigned solu1PdeIndex;
+  solu1PdeIndex = mlPdeSys->GetSolPdeIndex ("u1");   // get the position of "u1" in the pdeSys object
+
+  unsigned solu2PdeIndex;
+  solu2PdeIndex = mlPdeSys->GetSolPdeIndex ("u2");   // get the position of "u2" in the pdeSys object
+
+  unsigned solmuPdeIndex;
+  solmuPdeIndex = mlPdeSys->GetSolPdeIndex ("mu");   // get the position of "mu" in the pdeSys object
 
   vector < double >  solu1; // local solution for the nonlocal assembly
   vector < double >  solu2; // local solution for the nonlocal assembly
@@ -156,52 +171,61 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
   //BEGIN nonlocal assembly
 
-  unsigned interiorNodesLocal = 0;
-  unsigned boundaryNodesLocal = 0;
 
-  for (unsigned idof = msh->_dofOffset[soluType][iproc]; idof < msh->_dofOffset[soluType][iproc + 1]; idof++) {
+  //BEGIN creation of the flags for the assembly procedure
 
-    std::cout << "idof = " << idof << std::endl;
+  //flag = 1 assemble
+  //flag = 0 don't assemble
+
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    short unsigned ielGeom = msh->GetElementType (iel);
+    short unsigned ielGroup = msh->GetElementGroup (iel);
+    unsigned nDof  = msh->GetElementDofNumber (iel, soluType);
+
     double epsilon = 1.e-7;
-    double xCoord = (*msh->_topology->_Sol[0]) (idof);  //TODO this doesn't work in parallel, fix
-    std::cout << "xCoord = " << xCoord << std::endl;
-    double yCoord = (*msh->_topology->_Sol[1]) (idof);  //TODO this doesn't work in parallel, fix
-    std::cout << "yCoord = " << yCoord << std::endl;
-    double leftBound = - 1. + epsilon;
-    double rightBound = - 0.125 - epsilon;
+    double rightBound = 0.125 + epsilon;
+    double leftBound = - 0.125 - epsilon;
 
-    double nodeFlagValue = 0.;  //nodes on the volume constraint
-    sol->_Sol[nodeFlagIndex]->set (idof, nodeFlagValue);
+    std::vector < double > xCoords (nDof);
 
-    if ( (yCoord < (1. - epsilon)) && (yCoord > epsilon)) {
+    for (unsigned i = 0; i < nDof; i++) {
+      unsigned solDof  = msh->GetSolutionDof (i, iel, soluType);
+      unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
+      xCoords[i] = (*msh->_topology->_Sol[0]) (xDof);
 
-      if ( (xCoord > leftBound) && (xCoord < rightBound)) {
-        interiorNodesLocal++;
-        double nodeFlagValue = 1.;  //nodes on the interior constraint
-        sol->_Sol[nodeFlagIndex]->set (idof, nodeFlagValue);
+      if (xCoords[i] < rightBound) {
+        sol->_Sol[u1FlagIndex]->add (solDof, 1.);
+        if (xCoords[i] > leftBound) sol->_Sol[muFlagIndex]->add (solDof, 1.);
       }
-      else if (xCoord > rightBound) {
-        boundaryNodesLocal++;
-        double nodeFlagValue = 2.;  //nodes on the nonlocal FETI boundary
-        sol->_Sol[nodeFlagIndex]->set (idof, nodeFlagValue);
-      }
+
+      if (xCoords[i] > leftBound) sol->_Sol[u2FlagIndex]->add (solDof, 1.);
 
     }
   }
-  sol->_Sol[nodeFlagIndex]->close();
+  sol->_Sol[u1FlagIndex]->close();
+  sol->_Sol[u2FlagIndex]->close();
+  sol->_Sol[muFlagIndex]->close();
 
-  std::cout << " interiorNodesLocal = " << interiorNodesLocal << std::endl;
-  std::cout << " boundaryNodesLocal = " << boundaryNodesLocal << std::endl;
+  for (unsigned idof = msh->_dofOffset[soluType][iproc]; idof < msh->_dofOffset[soluType][iproc + 1]; idof++) {
 
-  unsigned interiorNodes = 0.;
-  unsigned boundaryNodes = 0.;
-  MPI_Allreduce (&interiorNodesLocal, &interiorNodes, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
-  MPI_Allreduce (&boundaryNodesLocal, &boundaryNodes, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
+    double u1Flag = (*sol->_Sol[u1FlagIndex]) (idof);
+    if (u1Flag > 0) sol->_Sol[u1FlagIndex]->set (idof, 1.);
 
-  std::cout << " interiorNodes = " << interiorNodes << std::endl;
-  std::cout << " boundaryNodes = " << boundaryNodes << std::endl;
+    double u2Flag = (*sol->_Sol[u2FlagIndex]) (idof);
+    if (u2Flag > 0) sol->_Sol[u2FlagIndex]->set (idof, 1.);
 
-  unsigned totalNodes = interiorNodes + boundaryNodes;
+    double muFlag = (*sol->_Sol[muFlagIndex]) (idof);
+    if (muFlag > 0) sol->_Sol[muFlagIndex]->set (idof, 1.);
+
+  }
+
+  sol->_Sol[u1FlagIndex]->close();
+  sol->_Sol[u2FlagIndex]->close();
+  sol->_Sol[muFlagIndex]->close();
+
+  //END creation of the flags for the assembly procedure
+
 
   for (int kproc = 0; kproc < nprocs; kproc++) {
     for (int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
