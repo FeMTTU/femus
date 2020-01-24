@@ -25,28 +25,9 @@ double InitalValueU (const std::vector < double >& x) {
   double value;
 
   value = 0.;
-//     value =  x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
 //     value =  x[0];
 //     value =  x[0] * x[0];
 //     value =  x[0] * x[0] * x[0] ;
-//     value =  x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
-//     value =  x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
-//     value =  x[0] * x[0] * x[0] * x[0]; //this is x^4
-//     value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
-
-
-//      value = (x[0] < 0.) ? x[0] * x[0] * x[0] : 3 * x[0] * x[0] * x[0];
-
-//   double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0] ;
-//   double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0] ;
-
-//   double u1 = (a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0]) * (1. + x[0] * x[0]) * cos (x[1]) ;
-//   double u2 = (a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0]) * cos (x[0]) * cos (x[1]);
-//
-//
-//   value = (x[0] < 0.) ? u1 : u2;
-
-
   return value;
 }
 
@@ -59,35 +40,11 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 //     value = x[0];
 //     value = x[0] * x[0];
 //     value = x[0] * x[0] * x[0] ;
-//   value = (x[0] < 0.) ? x[0] * x[0] * x[0] : 3 * x[0] * x[0] * x[0];
-//     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
-//     value = x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
-//     value = x[0] * x[0] * x[0] * x[0];
-//        value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
-
-//   double u1 = a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0] ;
-//   double u2 = a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0] ;
-
-//   double u1 = (a1 + b1 * x[0] - 1. / (2. * kappa1) * x[0] * x[0]) * (1. + x[0] * x[0]) * cos (x[1]) ;
-//   double u2 = (a2 + b2 * x[0] - 1. / (2. * kappa2) * x[0] * x[0]) * cos (x[0]) * cos (x[1]);
-//
-//   value = (x[0] < 0.) ? u1 : u2;
-
-//   if (facename == 2) {
-//     if (!strcmp (SolName, "u_local")) {
-// //       value = a1 ;
-//       value = a1 * cos (x[1]) ;
-//     }
-//     else {
-//       dirichlet = false; //Neumann at the interface boundaries
-//       value = 0.;
-//     }
-//   }
 
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 1;
+unsigned numberOfUniformLevels = 2;
 unsigned numberOfUniformLevelsFine = 1;
 
 int main (int argc, char** argv) {
