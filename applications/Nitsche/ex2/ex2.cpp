@@ -27,7 +27,7 @@ Line* line1;
 Line* line2;
 Line* lineI;
 
-unsigned DIM = 3;
+unsigned DIM = 2;
 
 void AssembleNitscheProblem_AD (MultiLevelProblem& mlProb);
 
@@ -121,21 +121,21 @@ int main (int argc, char** args) {
 
   unsigned Ne = 4;
 
-  double hx = 0.5 * (length / nx);
-  double hy = length / ny;
-  double hz = length / nz;
-
-  double Lx = hx; //beam dimensions
+  double Lx = length / nx; 
+  double Lx1 = 0.25 * Lx; //beam dimensions
+  double Lx2 = Lx - Lx1; //beam dimensions
+  
   double Ly = length;
   double Lz = length;
 
   unsigned rowy = ny * Ne;
   unsigned rowz = (DIM == 3) ?  nz * Ne : 1.;
-  double dy = hy / Ne; // size in y of each row
-  double dz = (DIM == 3) ? hz / Ne : 1.; // size in y of each row
+  double dy = length / rowy; // size in y of each row
+  double dz = (DIM == 3) ? length / rowz : 1.; // size in y of each row
 
   unsigned columns = Ne;
-  double dx = hx / Ne; // size in x of each column
+  double dx1 = Lx1 / Ne; // size in x of each column
+  double dx2 = Lx2 / Ne; // size in x of each column
   unsigned size = rowy * rowz * columns;
 
   std::vector < std::vector < double > > x; // marker
@@ -149,11 +149,10 @@ int main (int argc, char** args) {
     markerType[j] = VOLUME;
   }
 
-  double AREA = Lx * Ly * Lz;
-  std::vector < double > area (x.size(), AREA / x.size()); // uniform marker volume
-
+  
+ 
   //   double xc = 1.e-04 + 0.5 * H ; //should be this one to do COMSOL benchmark
-  double x0 = -Lx; //we are using this not to have markers on edges of elements from the beginning
+  double x0 = -0.5 * Lx; //we are using this not to have markers on edges of elements from the beginning
   double y0 = -length / 2.;
   double z0 = -length / 2.;
 
@@ -161,7 +160,7 @@ int main (int argc, char** args) {
   for (unsigned i = 0; i < columns; i++) {
     for (unsigned j = 0; j < rowy; j++) {
       for (unsigned k = 0; k < rowz; k++) {
-        x[ i * rowy * rowz + j * rowz + k][0] = x0 + 0.5 * dx + i * dx;
+        x[ i * rowy * rowz + j * rowz + k][0] = x0 + 0.5 * dx1 + i * dx1;
         x[ i * rowy * rowz + j * rowz + k][1] = y0 + 0.5 * dy + j * dy;
         if (DIM == 3) x[i * rowy * rowz + j * rowz + k][2] = z0 + 0.5 * dz + k * dz;
       }
@@ -171,7 +170,8 @@ int main (int argc, char** args) {
   //END
 
   unsigned solType = 2;
-  line1 = new Line (x, area, markerType, mlSol.GetLevel (numberOfUniformLevels - 1), solType);
+  std::vector < double > volume (x.size(), Lx1 * Ly * Lz / x.size()); // uniform marker volume
+  line1 = new Line (x, volume, markerType, mlSol.GetLevel (numberOfUniformLevels - 1), solType);
 
   std::vector < std::vector < std::vector < double > > >  line1Points (1);
   line1->GetLine (line1Points[0]);
@@ -179,21 +179,19 @@ int main (int argc, char** args) {
   PrintLine ("./output1", "bulk1", line1Points, 0);
 
 
-  //initialize bulk2 points
-
-  x0 = 0.; //we are using this not to have markers on edges of elements from the beginning
-  //BEGIN initialization
+  //BEGIN initialization bulk2 points
+  x0 = -0.5 * Lx + Lx1; //we are using this not to have markers on edges of elements from the beginning
   for (unsigned i = 0; i < columns; i++) {
     for (unsigned j = 0; j < rowy; j++) {
       for (unsigned k = 0; k < rowz; k++) {
-        x[ i * rowy * rowz + j * rowz + k][0] = x0 + 0.5 * dx + i * dx;
+        x[ i * rowy * rowz + j * rowz + k][0] = x0 + 0.5 * dx2 + i * dx2;
       }
     }
   }
-  //END
-
-  line2 = new Line (x, area, markerType, mlSol.GetLevel (numberOfUniformLevels - 1), solType);
-
+  volume.assign (x.size(), Lx2 * Ly * Lz / x.size()); // uniform marker volume
+  line2 = new Line (x, volume, markerType, mlSol.GetLevel (numberOfUniformLevels - 1), solType);
+  //END initialization bulk2 points
+  
   std::vector < std::vector < std::vector < double > > > line2Points (1);
   line2->GetLine (line2Points[0]);
   PrintLine (DEFAULT_OUTPUTDIR, "bulk2", line2Points, 0);
@@ -211,10 +209,8 @@ int main (int argc, char** args) {
     markerType[j] = INTERFACE;
   }
 
-  area.assign (x.size(), length * length / x.size()); // uniform marker volume
-
-  x0 = 0.; //we are using this not to have markers on edges of elements from the beginning
-
+  std::vector < double > area(x.size(), length * length / x.size()); // uniform marker volume
+  x0 = -0.5 * Lx + Lx1;; //we are using this not to have markers on edges of elements from the beginning
   std::vector < std::vector < std::vector < double > > > T;
   T.resize (x.size());
   for (unsigned i = 0; i < x.size(); i++) {
