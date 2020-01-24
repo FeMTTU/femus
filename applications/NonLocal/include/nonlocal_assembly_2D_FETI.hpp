@@ -93,8 +93,10 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   solu2_1.reserve (maxSize);
   solu2_2.reserve (maxSize);
 
-  vector < double >  solmu; //(NOTE I don't know if we need it right now) local solution for mu for the nonlocal assembly
-  solmu.reserve (maxSize);
+  vector < double >  solmu_1; //(NOTE I don't know if we need it right now) local solution for mu for the nonlocal assembly
+  vector < double >  solmu_2;
+  solmu_1.reserve (maxSize);
+  solmu_2.reserve (maxSize);
 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
@@ -125,8 +127,10 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   l2GMapu2_1.reserve (maxSize);
   l2GMapu2_2.reserve (maxSize);
 
-  vector< int > l2GMapmu; // local to global mapping for mu
-  l2GMapmu.reserve (maxSize);
+  vector< int > l2GMapmu_1; // local to global mapping for mu //TODO
+  vector< int > l2GMapmu_2; // local to global mapping for mu
+  l2GMapmu_1.reserve (maxSize);
+  l2GMapmu_2.reserve (maxSize);
 
   vector< double > Resu1_1; // local redidual vector for u1
   Resu1_1.reserve (maxSize);
@@ -156,8 +160,14 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   vector < double > Jacu2_22;
   Jacu2_22.reserve (maxSize * maxSize);
 
-  vector < double > Jacmu;  // M matrix for mu
-  Jacmu.reserve (maxSize * maxSize);
+  vector < double > Jacmu_11;  // TODO stiffness matrix for mu
+  Jacmu_11.reserve (maxSize * maxSize);
+  vector < double > Jacmu_12;
+  Jacmu_12.reserve (maxSize * maxSize);
+  vector < double > Jacmu_21;
+  Jacmu_21.reserve (maxSize * maxSize);
+  vector < double > Jacmu_22;
+  Jacmu_22.reserve (maxSize * maxSize);
 
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -259,6 +269,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
       l2GMapu1_2.resize (nDof2);
       l2GMapu2_2.resize (nDof2);
+      l2GMapmu_2.resize (nDof2);
+      
       solu1_2.resize (nDof2);
       solu2_2.resize (nDof2);
 
@@ -270,6 +282,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         for (unsigned j = 0; j < nDof2; j++) {
           l2GMapu1_2[j] = pdeSys->GetSystemDof (solu1Index, solu1PdeIndex, j, jel);
           l2GMapu2_2[j] = pdeSys->GetSystemDof (solu2Index, solu2PdeIndex, j, jel);
+          l2GMapmu_2[j] = pdeSys->GetSystemDof (solmuIndex, solmuPdeIndex, j, jel);
 
           unsigned solDofu1 = msh->GetSolutionDof (j, jel, solu1Type);
           unsigned solDofu2 = msh->GetSolutionDof (j, jel, solu2Type);
@@ -286,6 +299,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
         ReorderElement (l2GMapu1_2, solu1_2, x2);
         ReorderElement (l2GMapu2_2, solu2_2, x2);
+        ReorderElement (l2GMapmu_2, solmu_2, x2);
       }
 
       MPI_Bcast (&l2GMapu1_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
@@ -293,6 +307,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
       MPI_Bcast (&l2GMapu2_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast (&solu2_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      
+      MPI_Bcast (&l2GMapmu_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast (&solmu_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
 
       for (unsigned k = 0; k < dim; k++) {
         MPI_Bcast (& x2[k][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
@@ -308,11 +325,11 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
         l2GMapu1_1.resize (nDof1);
         l2GMapu2_1.resize (nDof1);
-        l2GMapmu.resize (nDof1);
+        l2GMapmu_1.resize (nDof1);
 
         solu1_1.resize (nDof1);
         solu2_1.resize (nDof1);
-        solmu.resize (nDof1);
+        solmu_1.resize (nDof1);
 
         Jacu1_11.assign (nDof1 * nDof1 , 0.);
         Jacu1_12.assign (nDof1 * nDof2 , 0.);
@@ -328,7 +345,10 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         Resu2_1.assign (nDof1 , 0.);
         Resu2_2.assign (nDof2 , 0.);
 
-        Jacmu.assign (nDof1 * nDof1 , 0.); //TODO 
+        Jacmu_11.assign (nDof1 * nDof1 , 0.);
+        Jacmu_12.assign (nDof1 * nDof2 , 0.);
+        Jacmu_21.assign (nDof2 * nDof1 , 0.);
+        Jacmu_22.assign (nDof2 * nDof2 , 0.);
 
         for (int k = 0; k < dim; k++) {
           x1[k].resize (nDof1);
@@ -337,15 +357,15 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         for (unsigned i = 0; i < nDof1; i++) {
           l2GMapu1_1[i] = pdeSys->GetSystemDof (solu1Index, solu1PdeIndex, i, iel);
           l2GMapu2_1[i] = pdeSys->GetSystemDof (solu2Index, solu2PdeIndex, i, iel);
-          l2GMapmu[i] = pdeSys->GetSystemDof (solmuIndex, solmuPdeIndex, i, iel);
+          l2GMapmu_1[i] = pdeSys->GetSystemDof (solmuIndex, solmuPdeIndex, i, iel);
 
           unsigned solDofu1 = msh->GetSolutionDof (i, iel, solu1Type);
           unsigned solDofu2 = msh->GetSolutionDof (i, iel, solu2Type);
           unsigned solDofmu = msh->GetSolutionDof (i, iel, solmuType);
 
           solu1_1[i] = (*sol->_Sol[solu1Index]) (solDofu1);
-          solu1_2[i] = (*sol->_Sol[solu2Index]) (solDofu2);
-          solmu[i] = (*sol->_Sol[solmuIndex]) (solDofmu); //NOTE maybe we don't actually need solmu
+          solu2_1[i] = (*sol->_Sol[solu2Index]) (solDofu2);
+          solmu_1[i] = (*sol->_Sol[solmuIndex]) (solDofmu); //NOTE maybe we don't actually need solmu
 
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
 
@@ -356,7 +376,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
         ReorderElement (l2GMapu1_1, solu1_1, x1);
         ReorderElement (l2GMapu2_1, solu2_1, x1);
-        ReorderElement (l2GMapmu, solmu, x1);
+        ReorderElement (l2GMapmu_1, solmu_1, x1);
 
         double sideLength = fabs (x1[0][0] - x1[0][1]);
 
@@ -593,7 +613,10 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             KK->add_matrix_blocked (Jacu2_22, l2GMapu2_2, l2GMapu2_2);
             RES->add_vector_blocked (Resu2_2, l2GMapu2_2);
 
-            KK->add_matrix_blocked (Jacmu, l2GMapmu, l2GMapmu);
+            KK->add_matrix_blocked (Jacmu_11, l2GMapmu_1, l2GMapmu_1);
+            KK->add_matrix_blocked (Jacmu_12, l2GMapmu_1, l2GMapmu_2);
+            KK->add_matrix_blocked (Jacmu_21, l2GMapmu_2, l2GMapmu_1);
+            KK->add_matrix_blocked (Jacmu_22, l2GMapmu_2, l2GMapmu_2);
           }
         }
       } //end iel loop
