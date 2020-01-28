@@ -17,6 +17,8 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "PetscMatrix.hpp"
+#include "slepceps.h"
+
 #include "LinearImplicitSystem.hpp"
 #include "Marker.hpp"
 #include "Line.hpp"
@@ -32,6 +34,7 @@ unsigned DIM = 2;
 void AssembleNitscheProblem_AD (MultiLevelProblem& mlProb);
 
 void BuildFlag (MultiLevelSolution& mlSol);
+void GetInterfaceElementEigenvalues (MultiLevelSolution& mlSol);
 
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = false; //dirichlet
@@ -55,6 +58,8 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 int main (int argc, char** args) {
 
   // init Petsc-MPI communicator
+  
+  SlepcInitialize (&argc, &args, PETSC_NULL, PETSC_NULL);
   FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
   // define multilevel mesh
@@ -78,7 +83,7 @@ int main (int argc, char** args) {
   }
   else if (DIM == 3) {
     nz = ny;
-    mlMsh.GenerateCoarseBoxMesh (nx, ny, nz, -length / 2, length / 2, -length / 2, length / 2, -length/2, length/2, HEX27, "seventh");
+    mlMsh.GenerateCoarseBoxMesh (nx, ny, nz, -length / 2, length / 2, -length / 2, length / 2, -length / 2, length / 2, HEX27, "seventh");
   }
 
   //mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
@@ -121,10 +126,10 @@ int main (int argc, char** args) {
 
   unsigned Ne = 4;
 
-  double Lx = length / nx; 
-  double Lx1 = 0.25 * Lx; //beam dimensions
+  double Lx = length / nx;
+  double Lx1 = 0.5 * Lx; //beam dimensions
   double Lx2 = Lx - Lx1; //beam dimensions
-  
+
   double Ly = length;
   double Lz = length;
 
@@ -149,8 +154,8 @@ int main (int argc, char** args) {
     markerType[j] = VOLUME;
   }
 
-  
- 
+
+
   //   double xc = 1.e-04 + 0.5 * H ; //should be this one to do COMSOL benchmark
   double x0 = -0.5 * Lx; //we are using this not to have markers on edges of elements from the beginning
   double y0 = -length / 2.;
@@ -191,7 +196,7 @@ int main (int argc, char** args) {
   volume.assign (x.size(), Lx2 * Ly * Lz / x.size()); // uniform marker volume
   line2 = new Line (x, volume, markerType, mlSol.GetLevel (numberOfUniformLevels - 1), solType);
   //END initialization bulk2 points
-  
+
   std::vector < std::vector < std::vector < double > > > line2Points (1);
   line2->GetLine (line2Points[0]);
   PrintLine (DEFAULT_OUTPUTDIR, "bulk2", line2Points, 0);
@@ -209,13 +214,13 @@ int main (int argc, char** args) {
     markerType[j] = INTERFACE;
   }
 
-  std::vector < double > area(x.size(), length * length / x.size()); // uniform marker volume
+  std::vector < double > area (x.size(), length * length / x.size()); // uniform marker volume
   x0 = -0.5 * Lx + Lx1;; //we are using this not to have markers on edges of elements from the beginning
   std::vector < std::vector < std::vector < double > > > T;
   T.resize (x.size());
   for (unsigned i = 0; i < x.size(); i++) {
     T[i].resize (DIM - 1);
-    for(unsigned k = 0; k < DIM - 1; k++){
+    for (unsigned k = 0; k < DIM - 1; k++) {
       T[i][k].resize (DIM, 0.);
     }
   }
@@ -226,17 +231,17 @@ int main (int argc, char** args) {
     for (unsigned j = 0; j < rowz; j++) {
       x[ i * rowz + j][0] = x0;
       x[ i * rowz + j][1] = y0 + 0.5 * dy + i * dy;
-      if( DIM == 3 ) x[ i * rowz + j][2] = z0 + 0.5 * dz + j * dz;
+      if (DIM == 3) x[ i * rowz + j][2] = z0 + 0.5 * dz + j * dz;
 
-      T[i*rowz + j][0][0] = 0.;
-      T[i*rowz + j][0][1] = -dy;
-      if( DIM == 3 ){
-        T[i*rowz + j][0][2] = 0.;
-        
-        T[i*rowz + j][1][0] = 0.;
-        T[i*rowz + j][1][1] = 0.;
-        T[i*rowz + j][1][2] = dz;
-        
+      T[i * rowz + j][0][0] = 0.;
+      T[i * rowz + j][0][1] = -dy;
+      if (DIM == 3) {
+        T[i * rowz + j][0][2] = 0.;
+
+        T[i * rowz + j][1][0] = 0.;
+        T[i * rowz + j][1][1] = 0.;
+        T[i * rowz + j][1][2] = dz;
+
       }
     }
   }
@@ -258,6 +263,8 @@ int main (int argc, char** args) {
   std::vector<std::string> print_vars;
   print_vars.push_back ("All");
 
+  GetInterfaceElementEigenvalues (mlSol);
+  
   system.MGsolve();
 
   mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
@@ -467,7 +474,6 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
         }
         imarker1++;
       }
-      std::cout << std::endl;
 
       //bulk2
       while (imarker2 < markerOffset2[iproc + 1] && iel == particle2[imarker2]->GetMarkerElement()) {
@@ -524,8 +530,6 @@ void AssembleNitscheProblem_AD (MultiLevelProblem& ml_prob) {
           N[1] /= weight;
           N[2] /= weight;
         }
-        
-        std::cout << N[0] << " " << N[1]<< " " << N[2] << " " << std::endl;
 
         double theta = 1.;
         double gamma1 = 0.5;
@@ -630,13 +634,13 @@ void BuildFlag (MultiLevelSolution& mlSol) {
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
-    unsigned nDofs  = msh->GetElementDofNumber (iel, nflagType); // number of solution element dofs
+    unsigned nDofu  = msh->GetElementDofNumber (iel, nflagType); // number of solution element dofs
 
     for (int k = 0; k < dim; k++) {
-      x[k].resize (nDofs); // Now we
+      x[k].resize (nDofu); // Now we
     }
 
-    for (unsigned i = 0; i < nDofs; i++) {
+    for (unsigned i = 0; i < nDofu; i++) {
       unsigned xDof  = msh->GetSolutionDof (i, iel, 2);   // global to global mapping between coordinates node and coordinate dof
       for (unsigned k = 0; k < dim; k++) {
         x[k][i] = (*msh->_topology->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
@@ -645,7 +649,7 @@ void BuildFlag (MultiLevelSolution& mlSol) {
 
     bool interface = false;
     double signi = (x[0][0] < 0.) ? -1. : 1.;
-    for (unsigned j = 1; j < nDofs; j++) {
+    for (unsigned j = 1; j < nDofu; j++) {
       double signj = (x[0][j] < 0.) ? -1. : 1.;
       if (signi != signj) {
         interface = true;
@@ -655,7 +659,7 @@ void BuildFlag (MultiLevelSolution& mlSol) {
 
     if (interface) {
       sol->_Sol[eflagIndex]->set (iel, 1.);
-      for (unsigned i = 0; i < nDofs; i++) {
+      for (unsigned i = 0; i < nDofu; i++) {
         unsigned iDof = msh->GetSolutionDof (i, iel, nflagType);
         sol->_Sol[nflagIndex]->set (iDof, 1.);
       }
@@ -669,3 +673,256 @@ void BuildFlag (MultiLevelSolution& mlSol) {
   sol->_Sol[nflagIndex]->close();
 
 }
+
+
+void GetInterfaceElementEigenvalues (MultiLevelSolution& mlSol) {
+
+  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+
+  Solution *sol  = mlSol.GetSolutionLevel (level);
+  Mesh     *msh   = mlSol._mlMesh->GetLevel (level);
+  unsigned iproc  = msh->processor_id();
+
+  unsigned eflagIndex = mlSol.GetIndex ("eflag");
+
+  unsigned solIndex = mlSol.GetIndex ("u1");
+  unsigned soluType = mlSol.GetSolutionType (solIndex);
+
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  std::vector < std::vector<double> >  x (dim);
+
+  vector <double> phi;  // local test function
+  vector <double> phi_x; // local test function first order partial derivatives
+  double weight; // gauss point weight
+
+  std::vector < std::vector < std::vector <double > > > aP (3);
+
+  std::vector<Marker*> particle1 = line1->GetParticles();
+  std::vector<unsigned> markerOffset1 = line1->GetMarkerOffset();
+  unsigned imarker1 = markerOffset1[iproc];
+
+  std::vector<Marker*> particle2 = line2->GetParticles();
+  std::vector<unsigned> markerOffset2 = line2->GetMarkerOffset();
+  unsigned imarker2 = markerOffset2[iproc];
+
+  std::vector<Marker*> particleI = lineI->GetParticles();
+  std::vector<unsigned> markerOffsetI = lineI->GetMarkerOffset();
+  unsigned imarkerI = markerOffsetI[iproc];
+
+  Mat A1, A2, B1, B2;
+  
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    unsigned eFlag = static_cast <unsigned> (floor ( (*sol->_Sol[eflagIndex]) (iel) + 0.5));
+    if (eFlag == 1) {
+
+      short unsigned ielGeom = msh->GetElementType (iel);
+      unsigned nDofu  = msh->GetElementDofNumber (iel, soluType); // number of solution element dofs
+
+      MatCreateSeqDense(PETSC_COMM_SELF, nDofu, nDofu, NULL, &A1);
+      MatCreateSeqDense(PETSC_COMM_SELF, nDofu, nDofu, NULL, &A2);
+      MatCreateSeqDense(PETSC_COMM_SELF, nDofu, nDofu, NULL, &B1);
+      MatCreateSeqDense(PETSC_COMM_SELF, nDofu, nDofu, NULL, &B2);
+      
+      MatZeroEntries(A1);
+      MatZeroEntries(A2);
+      MatZeroEntries(B1);
+      MatZeroEntries(B2);
+            
+      for (int k = 0; k < dim; k++) {
+        x[k].resize (nDofu); // Now we
+      }
+
+      for (unsigned i = 0; i < nDofu; i++) {
+        unsigned xDof  = msh->GetSolutionDof (i, iel, 2);   // global to global mapping between coordinates node and coordinate dof
+        for (unsigned k = 0; k < dim; k++) {
+          x[k][i] = (*msh->_topology->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
+        }
+      }
+
+      //bulk1
+      while (imarker1 < markerOffset1[iproc + 1] && iel == particle1[imarker1]->GetMarkerElement()) {
+
+        // the local coordinates of the particles are the Gauss points in this context
+        std::vector <double> xi = particle1[imarker1]->GetMarkerLocalCoordinates();
+        msh->_finiteElement[ielGeom][soluType]->Jacobian (x, xi, weight, phi, phi_x);
+        double weight = particle1[imarker1]->GetMarkerMass();
+
+        // *** phi_i loop ***
+        for (int i = 0; i < nDofu; i++) {
+          for (int j = 0; j < nDofu; j++) {
+            for (unsigned k = 0; k < dim; k++) {
+              double B1ij = phi_x[i * dim + k] * phi_x[j * dim + k] * weight;
+              
+              MatSetValues(B1, 1, &i, 1,&j, &B1ij, ADD_VALUES);
+            }
+          }
+        }
+        imarker1++;
+      }
+
+      //bulk2
+      while (imarker2 < markerOffset2[iproc + 1] && iel == particle2[imarker2]->GetMarkerElement()) {
+
+        // the local coordinates of the particles are the Gauss points in this context
+        std::vector <double> xi = particle2[imarker2]->GetMarkerLocalCoordinates();
+        msh->_finiteElement[ielGeom][soluType]->Jacobian (x, xi, weight, phi, phi_x);
+        double weight = particle2[imarker2]->GetMarkerMass();
+
+        // *** phi_i loop ***
+        for (int i = 0; i < nDofu; i++) {
+          for (int j = 0; j < nDofu; j++) {
+            for (unsigned k = 0; k < dim; k++) {
+              double B2ij = phi_x[i * dim + k] * phi_x[j * dim + k] * weight;
+              
+              MatSetValues(B2, 1, &i, 1,&j, &B2ij, ADD_VALUES);
+            }
+          }
+        }
+        imarker2++;
+      }
+
+      // interface
+      while (imarkerI < markerOffsetI[iproc + 1] && iel == particleI[imarkerI]->GetMarkerElement()) {
+
+        // the local coordinates of the particles are the Gauss points in this context
+        std::vector <double> xi = particleI[imarkerI]->GetMarkerLocalCoordinates();
+        msh->_finiteElement[ielGeom][soluType]->Jacobian (x, xi, weight, phi, phi_x);
+
+        std::vector <std::vector < double > > T;
+        particleI[imarkerI]->GetMarkerTangent (T);
+
+        double weight;
+        std::vector < double > N (dim);
+        if (dim == 2) {
+          N[0] =  T[0][1];
+          N[1] = -T[0][0];
+          weight = sqrt (N[0] * N[0] + N[1] * N[1]);
+          N[0] /= weight;
+          N[1] /= weight;
+        }
+        else {
+          N[0] = T[0][1] * T[1][2] - T[0][2] * T[1][1];
+          N[1] = T[0][2] * T[1][0] - T[0][0] * T[1][2];
+          N[2] = T[0][0] * T[1][1] - T[0][1] * T[1][0];
+          weight = sqrt (N[0] * N[0] + N[1] * N[1] + N[2] * N[2]);
+          N[0] /= weight;
+          N[1] /= weight;
+          N[2] /= weight;
+        }
+      
+        // *** phi_i loop ***
+        for (int i = 0; i < nDofu; i++) {
+
+          double gradPhiiDotN = 0.;
+          for (unsigned k = 0; k < dim; k++) {
+            gradPhiiDotN += phi_x[i * dim + k] * N[k];
+          }
+          for (int j = 0; j < nDofu; j++) {
+            double gradPhijDotN = 0.;
+            for (unsigned k = 0; k < dim; k++) {
+              gradPhijDotN += phi_x[j * dim + k] * N[k];
+            } 
+            double Aij = gradPhiiDotN * gradPhijDotN  * weight;
+                        
+            MatSetValues(A1, 1, &i, 1,&j, &Aij, ADD_VALUES);
+            MatSetValues(A2, 1, &i, 1,&j, &Aij, ADD_VALUES);
+          }
+        } // end phi_i loop
+        imarkerI++;
+      }
+      
+      MatAssemblyBegin(A1,MAT_FINAL_ASSEMBLY);
+      MatAssemblyEnd(A1,MAT_FINAL_ASSEMBLY);
+      
+      MatAssemblyBegin(A2,MAT_FINAL_ASSEMBLY);
+      MatAssemblyEnd(A2,MAT_FINAL_ASSEMBLY);
+      
+      MatAssemblyBegin(B1,MAT_FINAL_ASSEMBLY);
+      MatAssemblyEnd(B1,MAT_FINAL_ASSEMBLY);
+      
+      MatAssemblyBegin(B2,MAT_FINAL_ASSEMBLY);
+      MatAssemblyEnd(B2,MAT_FINAL_ASSEMBLY);
+      
+      
+      MatView(A1,PETSC_VIEWER_STDOUT_WORLD);
+      MatView(A2,PETSC_VIEWER_STDOUT_WORLD);
+      
+      MatView(B1,PETSC_VIEWER_STDOUT_WORLD);
+      MatView(B2,PETSC_VIEWER_STDOUT_WORLD);
+      
+      EPS eps;
+      int convergedSolns, numberOfIterations;
+      
+      EPSCreate (PETSC_COMM_SELF, &eps);
+      
+      EPSSetOperators (eps, A1, B1);
+      
+//       Vec x[1];
+//       MatCreateVecs(B1,&x[0],NULL);
+//       VecSet(x[0], 1.); 
+//       EPSSetDeflationSpace(eps,1,x);
+      
+      EPSSetFromOptions (eps);
+                 
+      EPSSetDimensions(eps, nDofu, PETSC_DEFAULT, PETSC_DEFAULT);
+      EPSSetWhichEigenpairs (eps, EPS_LARGEST_MAGNITUDE 	);
+      EPSSetTolerances(eps,1.0e-10,1000);
+ 
+      EPSSolve (eps);
+      //EPSView(eps, PETSC_VIEWER_STDOUT_SELF);
+ 
+      EPSGetConverged (eps, &convergedSolns);
+      PetscPrintf (PETSC_COMM_WORLD, " Number of converged eigenpairs: %D\n\n", convergedSolns);
+     
+      for(unsigned i = 0; i < convergedSolns ; i++){
+        double real, imaginary;
+        EPSGetEigenpair (eps, i, &real, &imaginary, NULL, NULL);
+        std::cout << real<<" "<< imaginary << std::endl;
+      }
+     
+      EPSDestroy (&eps);
+      
+      
+      EPSCreate (PETSC_COMM_SELF, &eps);
+      
+      EPSSetOperators (eps, A2, B2);
+      
+      //       Vec x[1];
+      //       MatCreateVecs(B1,&x[0],NULL);
+      //       VecSet(x[0], 1.); 
+      //       EPSSetDeflationSpace(eps,1,x);
+      
+      EPSSetFromOptions (eps);
+      
+      EPSSetDimensions(eps, 4, PETSC_DEFAULT, PETSC_DEFAULT);
+      EPSSetWhichEigenpairs (eps, EPS_LARGEST_MAGNITUDE 	);
+      EPSSetTolerances(eps,1.0e-10,1000);
+      
+      EPSSolve (eps);
+      //EPSView(eps, PETSC_VIEWER_STDOUT_SELF);
+      
+      EPSGetConverged (eps, &convergedSolns);
+      PetscPrintf (PETSC_COMM_WORLD, " Number of converged eigenpairs: %D\n\n", convergedSolns);
+      
+      for(unsigned i = 0; i < convergedSolns ; i++){
+        double real, imaginary;
+        EPSGetEigenpair (eps, i, &real, &imaginary, NULL, NULL);
+        std::cout << real<<" "<< imaginary << std::endl;
+      }
+      
+      EPSDestroy (&eps);
+      
+      
+      //VecDestroy(&x[0]);
+      
+      // get eigenvalue
+      MatDestroy(&A1);
+      MatDestroy(&A2);
+      MatDestroy(&B1);
+      MatDestroy(&B2);
+      
+    }
+  }
+}
+
