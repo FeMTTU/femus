@@ -92,11 +92,13 @@ int main(int argc, char** args) {
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
 
-  mlSol.AddSolution("u1", LAGRANGE, FIRST);
-  mlSol.AddSolution("u2", LAGRANGE, FIRST);
+  FEOrder femOrder = SECOND;
+  
+  mlSol.AddSolution("u1", LAGRANGE, femOrder);
+  mlSol.AddSolution("u2", LAGRANGE, femOrder);
 
   mlSol.AddSolution("eflag", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSol.AddSolution("nflag", LAGRANGE, FIRST, 0, false);
+  mlSol.AddSolution("nflag", LAGRANGE, femOrder, 0, false);
 
   mlSol.AddSolution("C1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
   mlSol.AddSolution("C2", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
@@ -313,6 +315,12 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
   unsigned solu2Index = mlSol->GetIndex("u2");    // get the position of "u" in the ml_sol object
   unsigned soluType = mlSol->GetSolutionType(solu1Index);    // get the finite element type for "u"
 
+  unsigned CIndex[2];
+  
+  CIndex[0] = mlSol->GetIndex("C1");
+  CIndex[1] = mlSol->GetIndex("C2");
+    
+  
   unsigned solu1PdeIndex;
   solu1PdeIndex = mlPdeSys->GetSolPdeIndex("u1");    // get the position of "u" in the pdeSys object
   unsigned solu2PdeIndex;
@@ -450,6 +458,18 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
     }
 
     else {
+      
+      double ia1C1 = 1./ ( alpha1 * (*sol->_Sol[CIndex[0]])(iel) );
+      double ia2C2 = 1./ ( alpha2 * (*sol->_Sol[CIndex[1]])(iel) );
+      
+      double den = ia1C1 + ia2C2;
+      
+      double gamma1 = ia1C1 / den;
+      double gamma2 = ia2C2 / den;
+      
+      double theta = 2000. / den;
+      
+      
 
       //bulk1
       while(imarker1 < markerOffset1[iproc + 1] && iel == particle1[imarker1]->GetMarkerElement()) {
@@ -533,10 +553,6 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
           N[1] /= weight;
           N[2] /= weight;
         }
-
-        double theta = 1.;
-        double gamma1 = 0.5;
-        double gamma2 = 0.5;
 
         adept::adouble solu1g  = 0.;
         adept::adouble solu2g  = 0.;
@@ -841,10 +857,10 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
        * even using its built-in deflation method. 
        * Fortunately, A has at least one zero eigenvalue, with the same x = [1,1,1,...]^T being an element 
        * of its nullspace. Then, it is possible to deflate A and B simultaneously:
-       * $Ad = A - x^T. a1$ and $Bb = A - x^T.b1$, where a1 and b1 are the first rows of A and B, respectively.
+       * $Ad = A - x^T. a1$ and $Bd = B - x^T.b1$, where a1 and b1 are the first rows of A and B, respectively.
        * The generalized eigenvalue problem $Ab u = \lambda Bb u$, with matrices Ab and Bb, 
        * obtained as block matrices from Ad and Bd, removing the first row and the first column, 
-       * has the same eigenvalues of the original one, except the indetermine eigenvalue. 
+       * has the same eigenvalues of the original one, except the indetermine one. 
        * Note that Bb is now invertible, and SLEPC has no problem in solving the deflated 
        * generalized eigenvalue problem.
        */
@@ -891,4 +907,5 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
   sol->_Sol[CIndex[0]]->close();
   sol->_Sol[CIndex[1]]->close();
 }
+
 
