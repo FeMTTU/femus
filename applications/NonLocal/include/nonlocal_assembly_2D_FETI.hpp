@@ -25,6 +25,8 @@ void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
 
 void ReorderElement (std::vector < int > &dofs, std::vector < double > & sol, std::vector < std::vector < double > > & x);
 
+void ReorderElement (std::vector < double > & localFlags, std::vector < int > &dofs, std::vector < double > & sol, std::vector < std::vector < double > > & x);
+
 void RectangleAndBallRelation (bool &theyIntersect, const std::vector<double> &ballCenter, const double &ballRadius, const std::vector < std::vector < double> > &elementCoordinates,  std::vector < std::vector < double> > &newCoordinates);
 
 void RectangleAndBallRelation2 (bool & theyIntersect, const std::vector<double> &ballCenter, const double & ballRadius, const std::vector < std::vector < double> > &elementCoordinates, std::vector < std::vector < double> > &newCoordinates);
@@ -98,14 +100,32 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   solmu_1.reserve (maxSize);
   solmu_2.reserve (maxSize);
 
+  vector < double >  u1LocalFlag_2; // local flag for u1 for the nonlocal assembly
+  u1LocalFlag_2.reserve (maxSize);
+
+  vector < double >  u2LocalFlag_2; // local flag for u2 for the nonlocal assembly
+  u2LocalFlag_2.reserve (maxSize);
+
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   vector < vector < double > > x1 (dim);
   vector < vector < double > > x2 (dim);
 
+  vector < vector < double > > x1Temp (dim);
+  vector < vector < double > > x2Temp (dim);
+
+  vector < vector < double > > x1Tempp (dim);
+  vector < vector < double > > x2Tempp (dim);
+
   for (unsigned k = 0; k < dim; k++) {
     x1[k].reserve (maxSize);
     x2[k].reserve (maxSize);
+
+    x1Temp[k].reserve (maxSize);
+    x2Temp[k].reserve (maxSize);
+
+    x1Tempp[k].reserve (maxSize);
+    x2Tempp[k].reserve (maxSize);
   }
 
   vector <double> phi;  // local test function
@@ -206,6 +226,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
     }
   }
+
   sol->_Sol[u1FlagIndex]->close();
   sol->_Sol[u2FlagIndex]->close();
   sol->_Sol[muFlagIndex]->close();
@@ -270,12 +291,18 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       l2GMapu1_2.resize (nDof2);
       l2GMapu2_2.resize (nDof2);
       l2GMapmu_2.resize (nDof2);
-      
+
       solu1_2.resize (nDof2);
       solu2_2.resize (nDof2);
+      solmu_2.resize (nDof2);
+
+      u1LocalFlag_2.resize (nDof2);
+      u2LocalFlag_2.resize (nDof2);
 
       for (int k = 0; k < dim; k++) {
         x2[k].resize (nDof2);
+        x2Temp[k].resize (nDof2);
+        x2Tempp[k].resize (nDof2);
       }
 
       if (iproc == kproc) {
@@ -286,28 +313,37 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
           unsigned solDofu1 = msh->GetSolutionDof (j, jel, solu1Type);
           unsigned solDofu2 = msh->GetSolutionDof (j, jel, solu2Type);
+          unsigned solDofmu = msh->GetSolutionDof (j, jel, solmuType);
 
           solu1_2[j] = (*sol->_Sol[solu1Index]) (solDofu1);
           solu2_2[j] = (*sol->_Sol[solu2Index]) (solDofu2);
+          solmu_2[j] = (*sol->_Sol[solmuIndex]) (solDofmu);
+
+          u1LocalFlag_2[j] = (*sol->_Sol[u1FlagIndex]) (solDofu1);
+          u2LocalFlag_2[j] = (*sol->_Sol[u2FlagIndex]) (solDofu2);
 
           unsigned xDof  = msh->GetSolutionDof (j, jel, xType);
-
           for (unsigned k = 0; k < dim; k++) {
             x2[k][j] = (*msh->_topology->_Sol[k]) (xDof);
+            x2Temp[k][j] = x2[k][j];
+            x2Tempp[k][j] = x2[k][j];
           }
+
         }
 
-        ReorderElement (l2GMapu1_2, solu1_2, x2);
-        ReorderElement (l2GMapu2_2, solu2_2, x2);
-        ReorderElement (l2GMapmu_2, solmu_2, x2);
+        ReorderElement (u1LocalFlag_2, l2GMapu1_2, solu1_2, x2);
+        ReorderElement (u2LocalFlag_2, l2GMapu2_2, solu2_2, x2Temp);
+        ReorderElement (l2GMapmu_2, solmu_2, x2Tempp);
       }
 
       MPI_Bcast (&l2GMapu1_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast (&solu1_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      MPI_Bcast (&u1LocalFlag_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
 
       MPI_Bcast (&l2GMapu2_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast (&solu2_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
-      
+      MPI_Bcast (&u2LocalFlag_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+
       MPI_Bcast (&l2GMapmu_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast (&solmu_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
 
@@ -331,27 +367,29 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         solu2_1.resize (nDof1);
         solmu_1.resize (nDof1);
 
-        Jacu1_11.assign (nDof1 * nDof1 , 0.);
-        Jacu1_12.assign (nDof1 * nDof2 , 0.);
-        Jacu1_21.assign (nDof2 * nDof1 , 0.);
-        Jacu1_22.assign (nDof2 * nDof2 , 0.);
-        Resu1_1.assign (nDof1 , 0.);
-        Resu1_2.assign (nDof2 , 0.);
+        Jacu1_11.assign (nDof1 * nDof1, 0.);
+        Jacu1_12.assign (nDof1 * nDof2, 0.);
+        Jacu1_21.assign (nDof2 * nDof1, 0.);
+        Jacu1_22.assign (nDof2 * nDof2, 0.);
+        Resu1_1.assign (nDof1, 0.);
+        Resu1_2.assign (nDof2, 0.);
 
-        Jacu2_11.assign (nDof1 * nDof1 , 0.);
-        Jacu2_12.assign (nDof1 * nDof2 , 0.);
-        Jacu2_21.assign (nDof2 * nDof1 , 0.);
-        Jacu2_22.assign (nDof2 * nDof2 , 0.);
-        Resu2_1.assign (nDof1 , 0.);
-        Resu2_2.assign (nDof2 , 0.);
+        Jacu2_11.assign (nDof1 * nDof1, 0.);
+        Jacu2_12.assign (nDof1 * nDof2, 0.);
+        Jacu2_21.assign (nDof2 * nDof1, 0.);
+        Jacu2_22.assign (nDof2 * nDof2, 0.);
+        Resu2_1.assign (nDof1, 0.);
+        Resu2_2.assign (nDof2, 0.);
 
-        Jacmu_11.assign (nDof1 * nDof1 , 0.);
-        Jacmu_12.assign (nDof1 * nDof2 , 0.);
-        Jacmu_21.assign (nDof2 * nDof1 , 0.);
-        Jacmu_22.assign (nDof2 * nDof2 , 0.);
+        Jacmu_11.assign (nDof1 * nDof1, 0.);
+        Jacmu_12.assign (nDof1 * nDof2, 0.);
+        Jacmu_21.assign (nDof2 * nDof1, 0.);
+        Jacmu_22.assign (nDof2 * nDof2, 0.);
 
         for (int k = 0; k < dim; k++) {
           x1[k].resize (nDof1);
+          x1Temp[k].resize (nDof1);
+          x1Tempp[k].resize (nDof1);
         }
 
         for (unsigned i = 0; i < nDof1; i++) {
@@ -368,15 +406,15 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           solmu_1[i] = (*sol->_Sol[solmuIndex]) (solDofmu); //NOTE maybe we don't actually need solmu
 
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
-
           for (unsigned k = 0; k < dim; k++) {
             x1[k][i] = (*msh->_topology->_Sol[k]) (xDof);
+            x1Temp[k][i] = x1[k][i];
+            x1Tempp[k][i] = x1[k][i];
           }
         }
-
         ReorderElement (l2GMapu1_1, solu1_1, x1);
-        ReorderElement (l2GMapu2_1, solu2_1, x1);
-        ReorderElement (l2GMapmu_1, solmu_1, x1);
+        ReorderElement (l2GMapu2_1, solu2_1, x1Temp);
+        ReorderElement (l2GMapmu_1, solmu_1, x1Tempp);
 
         double sideLength = fabs (x1[0][0] - x1[0][1]);
 
@@ -459,14 +497,14 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 unsigned solDofu1 = msh->GetSolutionDof (i, iel, solu1Type);
                 unsigned solDofu2 = msh->GetSolutionDof (i, iel, solu2Type);
 
-                if ( (*sol->_Sol[u1FlagIndex]) (solDofu1) == 1) {
+                if ( (*sol->_Sol[u1FlagIndex]) (solDofu1) > 0.) {
 //                                 Res1[i] -= 0. * weight[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
                   Resu1_1[i] -=  cutOff * 1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
 //                   double resValue = cos (xg1[ig][1]) * (- 0.5 * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] - kappa1 / 8. * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] + 11. / 2. * xg1[ig][0] * xg1[ig][0] + kappa1 / 16. * xg1[ig][0] * xg1[ig][0] + kappa1 * 5. / 8. * xg1[ig][0] + 1. - 1. / 16. * kappa1);
 //                   Res1[i] -=  resValue * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = cos(y) * ( - 0.5 * x^4 - kappa1 / 8 * x^3 + 11. / 2. * x^2 + kappa1 / 16. * x^2 + kappa1 * 5. / 8. * x + 1. - 1. / 16. * k1))
                 }
 
-                if ( (*sol->_Sol[u2FlagIndex]) (solDofu2) == 1) {
+                if ( (*sol->_Sol[u2FlagIndex]) (solDofu2) > 0.) {
                   Resu2_1[i] -=  cutOff * 1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
                 }
 
@@ -516,80 +554,71 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                 for (unsigned i = 0; i < nDof1; i++) {
 
-                  unsigned solDofu1_i = l2GMapu1_1[i];
-                  unsigned solDofu2_i = l2GMapu2_1[i];
+                  unsigned solDofu1_i = msh->GetSolutionDof (i, iel, solu1Type);
+                  unsigned solDofu2_i = msh->GetSolutionDof (i, iel, solu2Type);;
 
                   for (unsigned j = 0; j < nDof1; j++) {
 
-                    unsigned solDofu1_j = l2GMapu1_1[j];
-                    unsigned solDofu2_j = l2GMapu2_1[j];
+                    unsigned solDofu1_j = msh->GetSolutionDof (j, iel, solu1Type);
+                    unsigned solDofu2_j = msh->GetSolutionDof (j, iel, solu2Type);
 
                     double jacValue11 = cutOff * weight1[ig] * weight2 * kernel * (phi1x[ig][i]) * phi1x[ig][j];
-                    if ( ( (*sol->_Sol[u1FlagIndex]) (solDofu1_i) == 1) && ( (*sol->_Sol[u1FlagIndex]) (solDofu1_j) == 1)) {
+                    if ( ( (*sol->_Sol[u1FlagIndex]) (solDofu1_i) > 0.) && ( (*sol->_Sol[u1FlagIndex]) (solDofu1_j) > 0.)) {
                       Jacu1_11[i * nDof1 + j] -= jacValue11;
                       Resu1_1[i] +=  jacValue11 * solu1_1[j];
                     }
 
-                    if ( ( (*sol->_Sol[u2FlagIndex]) (solDofu2_i) == 1) && ( (*sol->_Sol[u2FlagIndex]) (solDofu2_j) == 1)) {
-                      Jacu2_11[i * nDof1 + j] -= jacValue11;
-                      Resu2_1[i] +=  jacValue11 * solu2_1[j];
+                    if ( ( (*sol->_Sol[u2FlagIndex]) (solDofu2_i) > 0.) && ( (*sol->_Sol[u2FlagIndex]) (solDofu2_j) > 0.)) {
+                    Jacu2_11[i * nDof1 + j] -= jacValue11;
+                    Resu2_1[i] +=  jacValue11 * solu2_1[j];
                     }
                   }
 
                   for (unsigned j = 0; j < nDof2; j++) {
 
-                    unsigned solDofu1_j = l2GMapu1_2[j];
-                    unsigned solDofu2_j = l2GMapu2_2[j];
-
                     double jacValue12 = - cutOff * weight1[ig] * weight2 * kernel * (phi1x[ig][i]) * phi2y[j];
-                    if ( ( (*sol->_Sol[u1FlagIndex]) (solDofu1_i) == 1) && ( (*sol->_Sol[u1FlagIndex]) (solDofu1_j) == 1)) {
+                    if ( ( (*sol->_Sol[u1FlagIndex]) (solDofu1_i) > 0.) && (u1LocalFlag_2[j] > 0.)) {
                       Jacu1_12[i * nDof2 + j] -= jacValue12;
                       Resu1_1[i] +=  jacValue12 * solu1_2[j];
                     }
 
-                    if ( ( (*sol->_Sol[u2FlagIndex]) (solDofu2_i) == 1) && ( (*sol->_Sol[u2FlagIndex]) (solDofu2_j) == 1)) {
-                      Jacu2_12[i * nDof2 + j] -= jacValue12;
-                      Resu2_1[i] +=  jacValue12 * solu2_2[j];
+                    if ( ( (*sol->_Sol[u2FlagIndex]) (solDofu2_i) > 0.) && (u2LocalFlag_2[j] > 0.)) {
+                    Jacu2_12[i * nDof2 + j] -= jacValue12;
+                    Resu2_1[i] +=  jacValue12 * solu2_2[j];
                     }
                   }//endl j loop
                 }
 
                 for (unsigned i = 0; i < nDof2; i++) {
 
-                  unsigned solDofu1_i = l2GMapu1_2[i];
-                  unsigned solDofu2_i = l2GMapu2_2[i];
-
                   for (unsigned j = 0; j < nDof1; j++) {
 
-                    unsigned solDofu1_j = l2GMapu1_1[j];
-                    unsigned solDofu2_j = l2GMapu2_1[j];
+                    unsigned solDofu1_j = msh->GetSolutionDof (j, iel, solu1Type);
+                    unsigned solDofu2_j = msh->GetSolutionDof (j, iel, solu2Type);
 
                     double jacValue21 = cutOff * weight1[ig] * weight2 * kernel * (- phi2y[i]) * phi1x[ig][j];
-                    if ( ( (*sol->_Sol[u1FlagIndex]) (solDofu1_i) == 1) && ( (*sol->_Sol[u1FlagIndex]) (solDofu1_j) == 1)) {
+                    if ( (u1LocalFlag_2[i]  > 0.) && ( (*sol->_Sol[u1FlagIndex]) (solDofu1_j) > 0.)) {
                       Jacu1_21[i * nDof1 + j] -= jacValue21;
                       Resu1_2[i] +=  jacValue21 * solu1_1[j];
                     }
 
-                    if ( ( (*sol->_Sol[u2FlagIndex]) (solDofu2_i) == 1) && ( (*sol->_Sol[u2FlagIndex]) (solDofu2_j) == 1)) {
-                      Jacu2_21[i * nDof1 + j] -= jacValue21;
-                      Resu2_2[i] +=  jacValue21 * solu2_1[j];
+                    if ( (u2LocalFlag_2[i]  > 0.) && ( (*sol->_Sol[u2FlagIndex]) (solDofu2_j) > 0.)) {
+                    Jacu2_21[i * nDof1 + j] -= jacValue21;
+                    Resu2_2[i] +=  jacValue21 * solu2_1[j];
                     }
                   }
 
                   for (unsigned j = 0; j < nDof2; j++) {
 
-                    unsigned solDofu1_j = l2GMapu1_2[j];
-                    unsigned solDofu2_j = l2GMapu2_2[j];
-
                     double jacValue22 = - cutOff * weight1[ig] * weight2 * kernel * (- phi2y[i]) * phi2y[j];
-                    if ( ((*sol->_Sol[u1FlagIndex]) (solDofu1_i) == 1) && ((*sol->_Sol[u1FlagIndex]) (solDofu1_j) == 1)) {
+                    if ( (u1LocalFlag_2[i]  > 0.) && (u1LocalFlag_2[j] > 0.)) {
                       Jacu1_22[i * nDof2 + j] -= jacValue22;
                       Resu1_2[i] +=  jacValue22 * solu1_2[j];
                     }
-                    if ( ((*sol->_Sol[u2FlagIndex]) (solDofu2_i) == 1) && ((*sol->_Sol[u2FlagIndex]) (solDofu2_j) == 1)) {
-                      Jacu2_22[i * nDof2 + j] -= jacValue22;
-                      Resu2_2[i] +=  jacValue22 * solu2_2[j];
-                    }
+                    if ( (u2LocalFlag_2[i] > 0.) && (u2LocalFlag_2[j] > 0.)) {
+                    Jacu2_22[i * nDof2 + j] -= jacValue22;
+                    Resu2_2[i] +=  jacValue22 * solu2_2[j];
+                    } 
                   }//endl j loop
                 } //endl i loop
               }//end jg loop
@@ -635,6 +664,15 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
 //     Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
 //     VecView(v,PETSC_VIEWER_STDOUT_WORLD);
+
+//   PetscViewer    viewer;
+//   PetscViewerDrawOpen (PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+//   PetscObjectSetName ( (PetscObject) viewer, "Nonlocal FETI matrix");
+//   PetscViewerPushFormat (viewer, PETSC_VIEWER_DRAW_LG);
+//   MatView ( (static_cast<PetscMatrix*> (KK))->mat(), viewer);
+//   double a;
+//   std::cin >> a;
+//   abort();
 
   // ***************** END ASSEMBLY *******************
 }
@@ -1398,6 +1436,42 @@ void ReorderElement (std::vector < int > &dofs, std::vector < double > & sol, st
   }
 }
 
+void ReorderElement (std::vector<double> &localFlags, std::vector < int > &dofs, std::vector < double > & sol, std::vector < std::vector < double > > & x) {
+
+  unsigned type = 0;
+
+  if (fabs (x[0][0] - x[0][1]) > 1.e-10) {
+    if (x[0][0] - x[0][1] > 0) {
+      type = 2;
+    }
+  }
+
+  else {
+    type = 1;
+
+    if (x[1][0] - x[1][1] > 0) {
+      type = 3;
+    }
+  }
+
+  if (type != 0) {
+    std::vector < int > dofsCopy = dofs;
+    std::vector < double > solCopy = sol;
+    std::vector < double > localFlagsCopy = localFlags;
+    std::vector < std::vector < double > > xCopy = x;
+
+    for (unsigned i = 0; i < dofs.size(); i++) {
+      dofs[i] = dofsCopy[swap[type][i]];
+      sol[i] = solCopy[swap[type][i]];
+      localFlags[i] = localFlagsCopy[swap[type][i]];
+
+      for (unsigned k = 0; k < x.size(); k++) {
+        x[k][i] = xCopy[k][swap[type][i]];
+      }
+    }
+  }
+}
+
 
 void RectangleAndBallRelation2 (bool & theyIntersect, const std::vector<double> &ballCenter, const double & ballRadius, const std::vector < std::vector < double> > &elementCoordinates, std::vector < std::vector < double> > &newCoordinates) {
 
@@ -1482,6 +1556,8 @@ void RectangleAndBallRelation2 (bool & theyIntersect, const std::vector<double> 
   }
 
 }
+
+
 
 
 
