@@ -88,8 +88,8 @@ int main(int argc, char** args) {
   double rhos2 = 7850;
   double E1 = 2.e06;
   double E2 = 2.e06;
-  double nu1 = 0.33;
-  double nu2 = 0.33;
+  double nu1 = 0.4;
+  double nu2 = 0.4;
 
   Parameter par(Lref, Uref);
 
@@ -297,14 +297,22 @@ int main(int argc, char** args) {
   GetInterfaceElementEigenvalues(mlSol);
 
   system.MGsolve();
-  
-  std::vector<std::string> mov_vars;
-  mov_vars.push_back ("DX1");
-  mov_vars.push_back ("DY1");
-  if(DIM == 3) mov_vars.push_back("DZ1");
-  mlSol.GetWriter()->SetMovingMesh (mov_vars);
 
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
+  std::vector<std::string> mov_vars1;
+  mov_vars1.push_back("DX1");
+  mov_vars1.push_back("DY1");
+  if(DIM == 3) mov_vars1.push_back("DZ1");
+  mlSol.GetWriter()->SetMovingMesh(mov_vars1);
+  mlSol.GetWriter()->Write("./outputD1", "linear", print_vars, 0);
+
+
+  std::vector<std::string> mov_vars2;
+  mov_vars2.push_back("DX2");
+  mov_vars2.push_back("DY2");
+  if(DIM == 3) mov_vars2.push_back("DZ2");
+  mlSol.GetWriter()->SetMovingMesh(mov_vars2);
+  mlSol.GetWriter()->Write("./outputD2", "linear", print_vars, 0);
+
 
   ml_prob.clear();
 
@@ -340,15 +348,15 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
 
   double rho1 = ml_prob.parameters.get<Solid> ("Solid1").get_density();
   double rho2 = ml_prob.parameters.get<Solid> ("Solid2").get_density();
-  
+
   double mu1 = ml_prob.parameters.get<Solid> ("Solid1").get_lame_shear_modulus();
   double lambda1 = ml_prob.parameters.get<Solid> ("Solid1").get_lame_lambda();
-  
+
   double mu2 = ml_prob.parameters.get<Solid> ("Solid2").get_lame_shear_modulus();
   double lambda2 = ml_prob.parameters.get<Solid> ("Solid2").get_lame_lambda();
-  
+
   double g[DIM] = {1.};
-  
+
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
@@ -502,15 +510,15 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
             divD1 += gradSolD1[k][k] * (eFlag == 0);
             divD2 += gradSolD2[k][k] * (eFlag == 2);
           }
-                    
+
           for(unsigned k = 0; k < dim; k++) {
 
             adept::adouble sigma1 = 0.;
             adept::adouble sigma2 = 0.;
 
             for(unsigned j = 0; j < dim; j++) {
-              sigma1 += mu1 * (gradSolD1[k][j] + gradSolD1[j][k] * (eFlag == 0) ) * phi_x[i * dim + j];
-              sigma2 += mu2 * (gradSolD2[k][j] + gradSolD2[j][k] * (eFlag == 2) ) * phi_x[i * dim + j];
+              sigma1 += mu1 * (gradSolD1[k][j] + gradSolD1[j][k] * (eFlag == 0)) * phi_x[i * dim + j];
+              sigma2 += mu2 * (gradSolD2[k][j] + gradSolD2[j][k] * (eFlag == 2)) * phi_x[i * dim + j];
             }
             sigma1 += lambda1 * divD1 * phi_x[i * dim + k];
             sigma2 += lambda2 * divD2 * phi_x[i * dim + k];
@@ -537,18 +545,18 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
 
 //       double ia1C1 = 1. / (alpha1 * (*sol->_Sol[CIndex[0]])(iel));
 //       double ia2C2 = 1. / (alpha2 * (*sol->_Sol[CIndex[1]])(iel));
-// 
+//
 //       double den = ia1C1 + ia2C2;
 
 //       double gamma1 = ia1C1 / den;
 //       double gamma2 = ia2C2 / den;
-// 
+//
 //       double theta = 2000. / den;
-      
+
       double gamma1 = 0.5;
       double gamma2 = 0.5;
-      
-      double theta = 1;
+
+      double theta = mu1;
 
 
 
@@ -559,14 +567,14 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
         std::vector <double> xi = particle1[imarker1]->GetMarkerLocalCoordinates();
         msh->_finiteElement[ielGeom][solDType]->Jacobian(x, xi, weight, phi, phi_x);
         double weight = particle1[imarker1]->GetMarkerMass();
-        
-        
+
+
         // evaluate the solution, the solution derivatives and the coordinates in the gauss point
         std::vector < std::vector < adept::adouble > > gradSolD1(dim);
         for(unsigned k = 0; k < dim; k++) {
           gradSolD1[k].assign(nDofD, 0.);
         }
-        
+
         for(unsigned i = 0; i < nDofD; i++) {
           for(unsigned k = 0; k < dim; k++) {
             for(unsigned j = 0; j < dim; j++) {
@@ -574,19 +582,19 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
             }
           }
         }
-        
+
         // *** phi_i loop ***
         for(unsigned i = 0; i < nDofD; i++) {
-          
+
           adept::adouble divD1 = 0.;
           for(unsigned k = 0; k < dim; k++) {
             divD1 += gradSolD1[k][k];
           }
-          
+
           for(unsigned k = 0; k < dim; k++) {
             adept::adouble sigma1 = 0.;
             for(unsigned j = 0; j < dim; j++) {
-              sigma1 += mu1 * (gradSolD1[k][j] + gradSolD1[j][k] ) * phi_x[i * dim + j];
+              sigma1 += mu1 * (gradSolD1[k][j] + gradSolD1[j][k]) * phi_x[i * dim + j];
             }
             sigma1 += lambda1 * divD1 * phi_x[i * dim + k];
             aResD1[k][i] += (- rho1 * g[k] * phi[i] + sigma1) * weight;
@@ -604,11 +612,11 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
         double weight = particle2[imarker2]->GetMarkerMass();
 
         std::vector < std::vector < adept::adouble > > gradSolD2(dim);
-        
+
         for(unsigned k = 0; k < dim; k++) {
           gradSolD2[k].assign(nDofD, 0.);
         }
-        
+
         for(unsigned i = 0; i < nDofD; i++) {
           for(unsigned k = 0; k < dim; k++) {
             for(unsigned j = 0; j < dim; j++) {
@@ -616,7 +624,7 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
             }
           }
         }
-        
+
         // *** phi_i loop ***
         for(unsigned i = 0; i < nDofD; i++) {
           adept::adouble divD2 = 0.;
@@ -626,7 +634,7 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
           for(unsigned k = 0; k < dim; k++) {
             adept::adouble sigma2 = 0.;
             for(unsigned j = 0; j < dim; j++) {
-              sigma2 += mu2 * (gradSolD2[k][j] + gradSolD2[j][k] ) * phi_x[i * dim + j];
+              sigma2 += mu2 * (gradSolD2[k][j] + gradSolD2[j][k]) * phi_x[i * dim + j];
             }
             sigma2 += lambda2 * divD2 * phi_x[i * dim + k];
             aResD2[k][i] += (- rho2 * g[k] * phi[i] + sigma2) * weight;
@@ -635,94 +643,113 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
         imarker2++;
       }
 
-//       // interface
-//       while(imarkerI < markerOffsetI[iproc + 1] && iel == particleI[imarkerI]->GetMarkerElement()) {
-// 
-//         // the local coordinates of the particles are the Gauss points in this context
-//         std::vector <double> xi = particleI[imarkerI]->GetMarkerLocalCoordinates();
-//         msh->_finiteElement[ielGeom][soluType]->Jacobian(x, xi, weight, phi, phi_x);
-// 
-//         std::vector <std::vector < double > > T;
-//         particleI[imarkerI]->GetMarkerTangent(T);
-// 
-//         double weight;
-//         std::vector < double > N(dim);
-//         if(dim == 2) {
-//           N[0] =  T[0][1];
-//           N[1] = -T[0][0];
-//           weight = sqrt(N[0] * N[0] + N[1] * N[1]);
-//           N[0] /= weight;
-//           N[1] /= weight;
-//         }
-//         else {
-//           N[0] = T[0][1] * T[1][2] - T[0][2] * T[1][1];
-//           N[1] = T[0][2] * T[1][0] - T[0][0] * T[1][2];
-//           N[2] = T[0][0] * T[1][1] - T[0][1] * T[1][0];
-//           weight = sqrt(N[0] * N[0] + N[1] * N[1] + N[2] * N[2]);
-//           N[0] /= weight;
-//           N[1] /= weight;
-//           N[2] /= weight;
-//         }
-// 
-//         adept::adouble solu1g  = 0.;
-//         adept::adouble solu2g  = 0.;
-//         adept::adouble alphaGradSoluDotN = 0.;
-// 
-//         for(unsigned i = 0; i < nDofD; i++) {
-//           solu1g += phi[i] * solu1[i];
-//           solu2g += phi[i] * solu2[i];
-//           for(unsigned k = 0; k < dim; k++) {
-//             alphaGradSoluDotN += (alpha1 * gamma1  * solu1[i] + alpha2 * gamma2 * solu2[i]) * phi_x[i * dim + k] * N[k];
-//           }
-//         }
-//         // *** phi_i loop ***
-//         for(unsigned i = 0; i < nDofD; i++) {
-// 
-//           adept::adouble gradPhiDotN = 0.;
-//           for(unsigned k = 0; k < dim; k++) {
-//             gradPhiDotN += phi_x[i * dim + k] * N[k];
-//           }
-// 
-//           aResu1[i] += (solu2g - solu1g) * (-phi[i] * theta - alpha1 * gamma1 * gradPhiDotN) * weight;
-//           aResu1[i] += alphaGradSoluDotN * (+phi[i]) * weight;
-//           aResu2[i] += (solu2g - solu1g) * (+phi[i] * theta - alpha2 * gamma2 * gradPhiDotN) * weight;
-//           aResu2[i] += alphaGradSoluDotN * (-phi[i]) * weight;
-//         } // end phi_i loop
-//         imarkerI++;
-//       }
+      // interface
+      while(imarkerI < markerOffsetI[iproc + 1] && iel == particleI[imarkerI]->GetMarkerElement()) {
+
+        // the local coordinates of the particles are the Gauss points in this context
+        std::vector <double> xi = particleI[imarkerI]->GetMarkerLocalCoordinates();
+        msh->_finiteElement[ielGeom][solDType]->Jacobian(x, xi, weight, phi, phi_x);
+
+        std::vector <std::vector < double > > T;
+        particleI[imarkerI]->GetMarkerTangent(T);
+
+        double weight;
+        std::vector < double > N(dim);
+        if(dim == 2) {
+          N[0] =  T[0][1];
+          N[1] = -T[0][0];
+          weight = sqrt(N[0] * N[0] + N[1] * N[1]);
+          N[0] /= weight;
+          N[1] /= weight;
+        }
+        else {
+          N[0] = T[0][1] * T[1][2] - T[0][2] * T[1][1];
+          N[1] = T[0][2] * T[1][0] - T[0][0] * T[1][2];
+          N[2] = T[0][0] * T[1][1] - T[0][1] * T[1][0];
+          weight = sqrt(N[0] * N[0] + N[1] * N[1] + N[2] * N[2]);
+          N[0] /= weight;
+          N[1] /= weight;
+          N[2] /= weight;
+        }
+
+        std::vector < adept::adouble > u1(dim, 0.);
+        std::vector < adept::adouble > u2(dim, 0.);
+
+        std::vector < adept::adouble > tau(dim, 0.);
+
+        for(unsigned i = 0; i < nDofD; i++) {
+          for(unsigned k = 0; k < dim; k++) {
+            u1[k] += phi[i] * solD1[k][i];
+            u2[k] += phi[i] * solD2[k][i];
+
+            for(unsigned j = 0; j < dim; j++) {
+              tau[k] += (gamma1 * lambda1 * solD1[j][i] * phi_x[i * dim + j] +
+                         gamma2 * lambda2 * solD2[j][i] * phi_x[i * dim + j]) * N[k];
+
+              tau[k] += (gamma1 * mu1 * solD1[k][i] * phi_x[i * dim + j] +
+                         gamma2 * mu2 * solD2[k][i] * phi_x[i * dim + j]) * N[j];
+
+              tau[k] += (gamma1 * mu1 * solD1[j][i] * phi_x[i * dim + k] +
+                         gamma2 * mu2 * solD2[j][i] * phi_x[i * dim + k]) * N[j];
+
+            }
+          }
+        }
+        // *** phi_i loop ***
+        for(unsigned i = 0; i < nDofD; i++) {
+          for(unsigned k = 0; k < dim; k++) {
+            aResD1[k][i] += tau[k] * phi[i] * weight; 
+            aResD1[k][i] += -theta * (u2[k] - u1[k]) * phi[i] * weight;
+            aResD2[k][i] += -tau[k] * phi[i] * weight; 
+            aResD2[k][i] +=  theta * (u2[k] - u1[k]) * phi[i] * weight;
+            for(unsigned j = 0; j < dim; j++) {
+              aResD1[k][i] += -gamma1 * ( lambda1 * phi_x[i * dim + k] * N[j] * (u2[j]-u1[j]) )* weight;
+              aResD1[k][i] += -gamma1 * ( mu1 * phi_x[i * dim + j] * N[j] * (u2[k]-u1[k]) )* weight;
+              aResD1[k][i] += -gamma1 * ( mu1 * phi_x[i * dim + j] * N[k] * (u2[j]-u1[j]) )* weight;
+              
+              aResD2[k][i] += -gamma2 * ( lambda2 * phi_x[i * dim + k] * N[j] * (u2[j]-u1[j]) )* weight;
+              aResD2[k][i] += -gamma2 * ( mu2 * phi_x[i * dim + j] * N[j] * (u2[k]-u1[k]) )* weight;
+              aResD2[k][i] += -gamma2 * ( mu2 * phi_x[i * dim + j] * N[k] * (u2[j]-u1[j]) )* weight;
+            }
+            
+            
+          }
+        } // end phi_i loop
+        imarkerI++;
+      }
 
     }
 
     //copy the value of the adept::adoube aRes in double Res and store
     Res.resize(2 * dim * nDofD);    //resize
 
-    for(unsigned k = 0; k<dim; k++){
+    for(unsigned k = 0; k < dim; k++) {
       for(int i = 0; i < nDofD; i++) {
         Res[k * nDofD + i] = - aResD1[k][i].value();
-        Res[(k+dim) * nDofD + i] = - aResD2[k][i].value();
+        Res[(k + dim) * nDofD + i] = - aResD2[k][i].value();
       }
     }
 
     RES->add_vector_blocked(Res, l2GMap);
 
     // define the dependent variables
-    for(unsigned k = 0; k<dim; k++){
+    for(unsigned k = 0; k < dim; k++) {
       s.dependent(&aResD1[k][0], nDofD);
     }
-    for(unsigned k = 0; k<dim; k++){
+    for(unsigned k = 0; k < dim; k++) {
       s.dependent(&aResD2[k][0], nDofD);
     }
 
     // define the independent variables
-    for(unsigned k = 0; k<dim; k++){
+    for(unsigned k = 0; k < dim; k++) {
       s.independent(&solD1[k][0], nDofD);
     }
-    for(unsigned k = 0; k<dim; k++){
+    for(unsigned k = 0; k < dim; k++) {
       s.independent(&solD2[k][0], nDofD);
     }
 
     // get the jacobian matrix (ordered by row major )
-    Jac.resize(2 * dim* nDofD * 2 * dim * nDofD);    //resize
+    Jac.resize(2 * dim * nDofD * 2 * dim * nDofD);   //resize
     s.jacobian(&Jac[0], true);
 
     //store K in the global matrix KK
