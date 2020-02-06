@@ -263,9 +263,9 @@ output_path.append("/");
   
    allocate_element_faces(_element_faces, ml_msh);
 
-   const std::vector < int >  all_face_flags =  {WET_RIGID /*WET_DEFORMABLE*//*DRY_RIGID_DEFORMABLE*/};
+   const std::vector < int >  all_face_flags =  {WET_RIGID,  WET_DEFORMABLE /*DRY_RIGID_DEFORMABLE*/};
    
-   const int group_outside_solid_to_which_all_faces_belong = 6 /*GROUP_VOL_ELEMS*/; 
+   const int group_outside_solid_to_which_all_faces_belong = GROUP_VOL_ELEMS; 
    
 
    fill_element_faces(_element_faces, ml_msh, all_face_flags, group_outside_solid_to_which_all_faces_belong);

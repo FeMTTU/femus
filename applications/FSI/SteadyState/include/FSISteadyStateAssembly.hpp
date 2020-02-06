@@ -1389,11 +1389,11 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 
 
 
- int find_faces_for_integration( const unsigned dim, const std::vector< double > x ) { 
+ int find_faces_for_integration_based_on_face_center( const unsigned dim, const std::vector< double > x ) { 
 
      const double epsilon = EPS_EDGE_LOCATION;
      
-     int face_flag;
+     int face_flag = 0;      /*std::cout << "The face numbers start from 1" << std::endl;*/
      
      double x_offset = 0.;
      if (dim == 3) x_offset = 0.3;
@@ -1403,48 +1403,46 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
      
      const double x2plusy2 = (x[0] - (x_offset + 0.2) ) * (x[0] - (x_offset + 0.2) ) + (x[1] - 0.2) * (x[1] - 0.2);
      
-     const bool is_cylinder_surface = (x2plusy2 > cyl_radius_squared - epsilon &&
-                                       x2plusy2 < cyl_radius_squared + epsilon);
+     const bool is_cylinder_surface = (x2plusy2 > (cyl_radius_squared - epsilon) &&
+                                       x2plusy2 < (cyl_radius_squared + epsilon) );
 
      
-     const bool is_part_of_cylinder_surface_where_flap_clamps = ( x[0] > (x_offset + 0.2) &&  x[1] > 0.19 - epsilon &&  x[1] < 0.21 + epsilon );
+     const bool is_part_of_cylinder_surface_where_flap_clamps = ( x[0] > (x_offset + 0.2) &&  x[1] > (0.19 - epsilon) &&  x[1] < (0.21 + epsilon) );
+
+     const bool wet_deformable_is_above = ( x[1] > ( 0.21 - epsilon )  && x[1] < ( 0.21 + epsilon ) );
      
-//      if (dim == 2) {
+     const bool wet_deformable_is_below = ( x[1] > (0.19 - epsilon)  && x[1] < ( 0.19 + epsilon) );
+     
+     const bool wet_deformable_is_in_horizontal_range = ( x[0] > ( (x_offset + 0.248) - epsilon ) && x[0] < ( (x_offset + 0.6) + epsilon ) );
+
+     const bool wet_deformable_is_in_vertical_range =   ( x[1] > ( 0.19 - epsilon)  && x[1] < (0.21 + epsilon) );   
+     
+     const bool wet_deformable_is_in_tip = ( x[0] > ( (x_offset + 0.6) - epsilon ) && x[0] < ( (x_offset + 0.6) + epsilon ) );
+     
+          if (dim == 2) {
          
      
               if (
-                  is_cylinder_surface
-                    &&
-              !(is_part_of_cylinder_surface_where_flap_clamps) 
-           ) { 
-                  face_flag = WET_RIGID;
-        }
-      
-         else if 
-             ( 
-             ( x[0] > (x_offset + 0.248) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
-               x[1] > 0.21 - epsilon  && x[1] < 0.21 + epsilon ) 
-            ||
-          ( x[0] > (x_offset + 0.248) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
-            x[1] > 0.19 - epsilon  && x[1] < 0.19 + epsilon )
-            ||
-          ( x[0] > (x_offset + 0.6) - epsilon && x[0] < (x_offset + 0.6) + epsilon &&
-            x[1] > 0.19 - epsilon  && x[1] < 0.21 + epsilon )
-           ) {  face_flag = WET_DEFORMABLE; }
+                  is_cylinder_surface   &&   !(is_part_of_cylinder_surface_where_flap_clamps) 
+                 ) { 
+                     face_flag = WET_RIGID;
+                  }
+       
+         else if ( ( wet_deformable_is_in_horizontal_range &&  wet_deformable_is_above ) 
+            ||     ( wet_deformable_is_in_horizontal_range &&  wet_deformable_is_below )
+            ||     ( wet_deformable_is_in_tip              &&  wet_deformable_is_in_vertical_range )
+                 ) {
+                     face_flag = WET_DEFORMABLE;
+                  }
         
-         else  if (
-                  is_cylinder_surface 
-                   &&
-             (is_part_of_cylinder_surface_where_flap_clamps)
-        )  {  
-            face_flag = DRY_RIGID_DEFORMABLE; 
-            
-        }
+         else  if ( is_cylinder_surface &&  is_part_of_cylinder_surface_where_flap_clamps )  {  
+                    face_flag = DRY_RIGID_DEFORMABLE; 
+                  }
 
         
-//      }
-//      
-//      else if (dim == 3) { abort(); }
+     }
+     
+     else if (dim == 3) { abort(); }
      
      
      return face_flag;
@@ -1500,10 +1498,11 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
        // Alternatively, I could do a Node-based criterion and say that all Nodes of the face have to belong
        // Instead of doing it on all nodes, I just need to get the Dof of the center of the face
        //once I have that dof, I will get its coordinates
+       
                    unsigned nv1 = ml_msh.GetLevel(lev)->GetElementFaceDofNumber(iel, f, solType_coords);  // only the face dofs
 
-                  unsigned i = ml_msh.GetLevel(lev)->GetLocalFaceVertexIndex(iel, f, nv1 - 1/*iv*/);
-                  unsigned idof = ml_msh.GetLevel(lev)->GetSolutionDof(i, iel, solType_coords);
+                  unsigned i_local_face_center = ml_msh.GetLevel(lev)->GetLocalFaceVertexIndex(iel, f, nv1 - 1/*iv*/);  //the center is always the last one
+                  unsigned idof = ml_msh.GetLevel(lev)->GetSolutionDof(i_local_face_center, iel, solType_coords);
                   
        std::vector< double > face_center(3, 0.); 
        
@@ -1513,38 +1512,37 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
                         face_center[d] = (*ml_msh.GetLevel(lev)->_topology->_Sol[d])(idof);
         }
         
-         const int face_flag_wet      = find_faces_for_integration     (dimension, face_center);
+         const int face_flag_wet  = find_faces_for_integration_based_on_face_center (dimension, face_center);
          
-         const int elem_near_face = ml_msh.GetLevel(lev)->GetElementArray()->GetFaceElementIndex(iel,f) - 1; //@todo have to subtract 1 because it was added before!
+         const int elem_near_face = ml_msh.GetLevel(lev)->GetElementArray()->GetFaceElementIndex(iel, f) - 1; //@todo have to subtract 1 because it was added before!
 
-              bool already_found = false;
+              bool face_already_found_from_near_elem = false;
               
          if (elem_near_face >= 0 ) {
               
-             const unsigned int n_faces = ml_msh.GetLevel(lev)->GetElementFaceNumber(elem_near_face);
-               for (unsigned int v = 0; v < n_faces; v++) {
-                     if ( or_vector(_element_faces[lev][elem_near_face][v], all_face_flags) ) already_found = true;
+             const unsigned int n_faces_near_elem = ml_msh.GetLevel(lev)->GetElementFaceNumber(elem_near_face);
+               for (unsigned int v = 0; v < n_faces_near_elem; v++) {
+                     if ( or_vector(_element_faces[lev][elem_near_face][v], all_face_flags) ) face_already_found_from_near_elem = true;
                }
          }
          
 
-         if ( or_vector(face_flag_wet, all_face_flags) 
-               && !already_found) { //in this way the face is counted only once.
-             face_count++;
-            _element_faces[lev][iel][f] = face_flag_wet; 
+         if ( or_vector(face_flag_wet, all_face_flags) && !(face_already_found_from_near_elem) ) { //in this way the face is counted only once... but this already happens by reducing to the group
+              face_count++;
+           _element_faces[lev][iel][f] = face_flag_wet; 
          }
 //             std::cout << _element_faces[lev][iel][f];
 
              }
              
-           }//end group outside solid
+           } //end group outside solid
             
             
         }  //end volume elems
         
-            std::cout << "Volume elements " << count_volume_elements  << std::endl;
+            std::cout << "Volume elements in group " << group_outside_solid_to_which_all_faces_belong << ": " << count_volume_elements  << std::endl;
             
-            std::cout << "Faces " << face_count << std::endl;
+            std::cout << "Faces on which QoI integration is performed: " << face_count << std::endl;
             
         }
 
