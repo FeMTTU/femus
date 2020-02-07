@@ -1757,6 +1757,17 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 
        if ( or_vector(element_faces[level][iel][jface], all_face_flags) ) {
        
+//          //========= check face center ================================================
+//        std::vector< double > face_center(3, 0.); 
+//        face_center = geom_element.get_elem_center_bdry(); //old method
+//        
+//        std::cout << "Face center ====" << std::endl;
+//        
+//        for (unsigned d = 0; d < dim; d++) {
+//          std::cout << face_center[d] << " ";
+//        }
+//        std::cout << std::endl;
+//          //========= check face center ================================================
 	
 		//============ initialize gauss quantities on the boundary ==========================================
                 std::vector< double > sol_u_bdry_gss(dim);
@@ -1805,6 +1816,15 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 	  }
          //========= compute gauss quantities on the boundary ================================================
 
+//          //========= check normal computation ================================================
+//        std::cout << "Normal " << std::endl;
+//        for (unsigned d = 0; d < dim; d++) {
+//          std::cout << normal[d] << " ";
+//        }
+//        std::cout << std::endl;
+//          //========= check normal computation ================================================
+       
+       
 //     compute gauss quantities on the boundary through VOLUME interpolation
           for (unsigned d = 0; d < dim; d++) {
               std::fill(sol_u_x_vol_at_bdry_gss[d].begin(), sol_u_x_vol_at_bdry_gss[d].end(), 0.);
@@ -1840,7 +1860,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 //     compute gauss quantities on the boundary through VOLUME interpolation
 
 
-                 integral_norm_stress_component[d] +=  weight_bdry */* sol_u_bdry_gss * sol_u_bdry_gss*/ /*norm_stress*/1.; 
+                 integral_norm_stress_component[d] +=  weight_bdry * /*norm_stress*/ 1.; /*normal[0] **/ /*normal[1] **/ /*normal[2] **/ 
                  
           }
     //--------       
@@ -1878,7 +1898,8 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 
   
   ////////////////////////////////////////
-  for (unsigned d = 0; d < dim; d++) {
+        std::cout << "The normals on the fluid-solid interface are pointing from the fluid to the solid: " << std::endl;
+ for (unsigned d = 0; d < dim; d++) {
       
        std::cout << "integral on processor: " << integral_norm_stress_component[d] << std::endl;
 
