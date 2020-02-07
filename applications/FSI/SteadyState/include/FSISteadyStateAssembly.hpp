@@ -1860,7 +1860,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 //     compute gauss quantities on the boundary through VOLUME interpolation
 
 
-                 integral_norm_stress_component[d] +=  weight_bdry * /*norm_stress*/ 1.; /*normal[0] **/ /*normal[1] **/ /*normal[2] **/ 
+                 integral_norm_stress_component[d] +=  weight_bdry * norm_stress /*1.*/; /*normal[0] **/ /*normal[1] **/ /*normal[2] **/ 
                  
           }
     //--------       
