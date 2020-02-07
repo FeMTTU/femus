@@ -10,8 +10,8 @@ EXECUTABLE_NAME="./fsisteady"
 # Direct solver for time info
 for ref in $(seq 1 1 ${MAX_REFS});
 do
- output_time=ds_time_`date +%Y`-`date +%m`-`date +%d`_`date +%H`-`date +%M`-`date +%S`;  echo $output_time;  mkdir  output/$output_time; \
- ${EXECUTABLE_NAME} -input "turek_FSI1.med" -rhof 1000 -muf 1 -rhos 1000 -E 1500000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi_steady_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "preonly" -max_outer_solver_iter 1 -nlevel 1 -nrefinement $ref -std_output run_output.txt -output_time output/$output_time | tee output/$output_time/run_output.txt; \
+ output_time=direct_time_`date +%Y`-`date +%m`-`date +%d`_`date +%H`-`date +%M`-`date +%S`;  echo $output_time;  mkdir  output/$output_time; \
+ ${EXECUTABLE_NAME} -input "turek_FSI1.med" -rhof 1000 -muf 1 -rhos 1000 -E 1500000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi_steady_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "preonly" -max_outer_solver_iter 1 -nlevel 1 -nrefinement $ref -std_output run_output.txt -output_time output/$output_time |& tee output/$output_time/run_output.txt; \
  sleep 2;  \
 done
 #to be 100% sure two folders with the same name are not generated
@@ -19,8 +19,8 @@ done
 # Direct solver for convergence and MUMPS info
 for ref in $(seq 1 1 ${MAX_REFS});
 do
- output_time=conv_`date +%Y`-`date +%m`-`date +%d`_`date +%H`-`date +%M`-`date +%S`;  echo $output_time;  mkdir  output/$output_time; 
- ${EXECUTABLE_NAME} -input "turek_FSI1.med" -rhof 1000 -muf 1 -rhos 1000 -E 1500000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi_steady_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "gmres" -max_outer_solver_iter 1 -ksp_view -mat_mumps_icntl_11 1 -ksp_monitor_true_residual -nlevel 1 -nrefinement $ref -std_output run_output.txt -output_time output/$output_time | tee output/$output_time/run_output.txt;
+ output_time=direct_conv_`date +%Y`-`date +%m`-`date +%d`_`date +%H`-`date +%M`-`date +%S`;  echo $output_time;  mkdir  output/$output_time; 
+ ${EXECUTABLE_NAME} -input "turek_FSI1.med" -rhof 1000 -muf 1 -rhos 1000 -E 1500000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi_steady_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "gmres" -max_outer_solver_iter 1 -ksp_view -mat_mumps_icntl_11 1 -ksp_monitor_true_residual -nlevel 1 -nrefinement $ref -std_output run_output.txt -output_time output/$output_time |& tee output/$output_time/run_output.txt;
  sleep 2; #to be 100% sure two folders with the same name are not generated
 done
 
@@ -34,6 +34,6 @@ ${EXECUTABLE_NAME} -input "turek_FSI1.med" -rhof 1000 -muf 1 -rhos 1000 -E 15000
 for ref in $(seq 1 1 ${MAX_REFS});
 do
  output_time=mg_`date +%Y`-`date +%m`-`date +%d`_`date +%H`-`date +%M`-`date +%S`;  echo $output_time;  mkdir  output/$output_time;  
- ${EXECUTABLE_NAME} -input "turek_FSI1.med" -rhof 1000 -muf 1 -rhos 1000 -E 1500000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi_steady_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "gmres" -max_outer_solver_iter 60 -ksp_monitor_true_residual -nrefinement $ref  -nlevel $ref  -mem_infos 1  -std_output run_output.txt -output_time output/$output_time | tee output/$output_time/run_output.txt;
+ ${EXECUTABLE_NAME} -input "turek_FSI1.med" -rhof 1000 -muf 1 -rhos 1000 -E 1500000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi_steady_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "gmres" -max_outer_solver_iter 60 -ksp_monitor_true_residual -nrefinement $ref  -nlevel $ref  -mem_infos 1  -std_output run_output.txt -output_time output/$output_time |& tee output/$output_time/run_output.txt;
  sleep 2; #to be 100% sure two folders with the same name are not generated
 done

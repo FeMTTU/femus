@@ -1337,14 +1337,14 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 
 
 
- void allocate_element_faces(  std::vector< MyMatrix <int> > & _element_faces, const MultiLevelMesh & ml_msh) {
+ void allocate_element_faces(  std::vector< MyMatrix <int> > & _element_faces, /*const*/ MultiLevelMesh & ml_msh) {
 
   _element_faces[0].resize( ml_msh.GetLevel(0)->GetNumberOfElements(), NFC[0][1], -1);  /*NFC[0][1]: maximum possible number of faces*/
 
   
   for (unsigned lev = 1; lev < _element_faces.size(); lev++) {
       
-    vector < double > coarseLocalizedAmrVector;
+    std::vector < double > coarseLocalizedAmrVector;
     ml_msh.GetLevel(lev - 1)->_topology->_Sol[ml_msh.GetLevel(lev - 1)->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
 
 //     ml_msh.GetLevel(lev - 1)->el->AllocateChildrenElement(ml_msh.GetLevel(lev)->GetRefIndex(), ml_msh.GetLevel(lev - 1) );  //I believe this was already done
