@@ -30,7 +30,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   const double tolerance = 1.e-5;
   
-  if (face_name == 1) {
+//   if (face_name == 2) {
+  if (x[0] > 1. - 1.e-6) {
       dirichlet = true;
         value = 0.;
   }
@@ -60,7 +61,7 @@ int main(int argc, char** args) {
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
    
-   mesh_files.push_back("Mesh_1_x.med");
+   mesh_files.push_back("Mesh_1_x_dir_neu.med");
 //    mesh_files.push_back("Mesh_1_y.med");
 //    mesh_files.push_back("Mesh_1_z.med");
 //    mesh_files.push_back("Mesh_2_xy.med");
@@ -80,6 +81,7 @@ int main(int argc, char** args) {
 
  for (unsigned int m = 0; m < mesh_files.size(); m++)  {
    
+  // ======= Mesh  ==================
   // define multilevel mesh
   MultiLevelMesh ml_mesh;
   double scalingFactor = 1.;
@@ -93,7 +95,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
