@@ -1442,7 +1442,38 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
         
      }
      
-     else if (dim == 3) { abort(); }
+     else if (dim == 3) { 
+         
+     const bool three_d_wet_deformable_is_in_z_range    = ( x[2] > ( 0.1 - epsilon)  && x[2] < (0.3 + epsilon) );
+         
+     const bool three_d_wet_deformable_is_in_side_left  = ( x[2] > ( 0.1 - epsilon)  && x[2] < (0.1 + epsilon) );
+
+     const bool three_d_wet_deformable_is_in_side_right = ( x[2] > ( 0.3 - epsilon)  && x[2] < (0.3 + epsilon) );
+     
+     const bool three_d_is_part_of_cylinder_surface_where_flap_clamps = three_d_wet_deformable_is_in_z_range && ( x[0] > (x_offset + 0.2) &&  x[1] > (0.19 - epsilon) &&  x[1] < (0.21 + epsilon) );
+     
+         
+              if (
+                  is_cylinder_surface   &&   !(three_d_is_part_of_cylinder_surface_where_flap_clamps ) 
+                 ) { 
+                     face_flag = WET_RIGID;
+                  }
+       
+      else if (        ( three_d_wet_deformable_is_in_z_range    && wet_deformable_is_in_horizontal_range &&  wet_deformable_is_above ) 
+            ||     ( three_d_wet_deformable_is_in_z_range    && wet_deformable_is_in_horizontal_range &&  wet_deformable_is_below )
+            ||     ( three_d_wet_deformable_is_in_z_range    && wet_deformable_is_in_tip              &&  wet_deformable_is_in_vertical_range )
+            ||     ( three_d_wet_deformable_is_in_side_left  && wet_deformable_is_in_horizontal_range &&  wet_deformable_is_in_vertical_range )
+            ||     ( three_d_wet_deformable_is_in_side_right && wet_deformable_is_in_horizontal_range &&  wet_deformable_is_in_vertical_range )
+                 ) {
+                     face_flag = WET_DEFORMABLE;
+                  }
+         
+       else  if ( is_cylinder_surface &&  three_d_is_part_of_cylinder_surface_where_flap_clamps )  {  
+                    face_flag = DRY_RIGID_DEFORMABLE; 
+                  }
+         
+         
+    }
      
      
      return face_flag;
