@@ -44,7 +44,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 2;
+unsigned numberOfUniformLevels = 1;
 unsigned numberOfUniformLevelsFine = 1;
 
 int main (int argc, char** argv) {
@@ -61,12 +61,14 @@ int main (int argc, char** argv) {
   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
 //   mlMsh.ReadCoarseMesh ("../input/FETI_left_subdom_COARSE.neu", "second", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/FETI_domain.neu", "second", scalingFactor);
+//   mlMsh.ReadCoarseMesh ("../input/FETI_domain.neu", "second", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/FETI_domain_small_delta.neu", "second", scalingFactor);
   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
 //   mlMshFine.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
 //   mlMshFine.ReadCoarseMesh ("../input/FETI_left_subdom_COARSE.neu", "second", scalingFactor);
-  mlMshFine.ReadCoarseMesh ("../input/FETI_domain.neu", "second", scalingFactor);
+//   mlMshFine.ReadCoarseMesh ("../input/FETI_domain.neu", "second", scalingFactor);
+  mlMshFine.ReadCoarseMesh ("../input/FETI_domain_small_delta.neu", "second", scalingFactor);
   mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine, NULL);
 
   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);

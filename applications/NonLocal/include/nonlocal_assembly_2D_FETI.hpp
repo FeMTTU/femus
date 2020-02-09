@@ -8,9 +8,10 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 
-//FETI_left_subdom.neu: 2D domain with delta=0.25
+//FETI_domain.neu: 2D domain with delta=0.25
+//FETI_domain_small_delta.neu: 2D domain with delta=0.05
 
-double delta1 = 0.25;
+double delta1 = 0.05/*0.25*/;
 double kappa1 = 1.;
 
 void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
@@ -208,8 +209,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
     unsigned nDof  = msh->GetElementDofNumber (iel, solu1Type); //NOTE right now we are assuming that u1, u2 and mu are discretized with the same elements
 
     double epsilon = 1.e-7;
-    double rightBound = 0.125 + epsilon;
-    double leftBound = - 0.125 - epsilon;
+    double rightBound = (delta1 * 0.5) + epsilon;
+    double leftBound = - (delta1 * 0.5) - epsilon;
 
     std::vector < double > xCoords (nDof);
 
