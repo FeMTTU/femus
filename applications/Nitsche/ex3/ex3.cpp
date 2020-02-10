@@ -525,13 +525,13 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
 
             if(eFlag == 0) {
               aResD1[k][i] += (- rho1 * g[k] * phi[i] + sigma1) * weight;
-              if(nodeFlag[i] != 1) {
-                aResD2[k][i] += (sigma2) * weight;
+              if(nodeFlag[i] != 1) { // fake equation for sugular matrix
+                aResD2[k][i] += sigma2 * weight;
               }
             }
             else if(eFlag == 2) {
               aResD2[k][i] += (- rho2 * g[k] * phi[i] + sigma2) * weight;
-              if(nodeFlag[i] != 1) {
+              if(nodeFlag[i] != 1) { // fake equation for sugular matrix
                 aResD1[k][i] += sigma1 * weight;
               }
             }
