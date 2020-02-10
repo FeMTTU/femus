@@ -1629,52 +1629,55 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
   
  //*************** unknowns ***************************** 
  //*************************************************** 
-  vector < vector < double > > phi_u(dim);     
-  vector < vector < double > > phi_u_x(dim);   
+   const unsigned int n_fluid_unknowns = dim + 1;
  
-   for (unsigned d = 0; d < dim; d++) {
+  vector < vector < double > > phi_u(n_fluid_unknowns);     
+  vector < vector < double > > phi_u_x(n_fluid_unknowns);   
+ 
+   for (unsigned d = 0; d < phi_u.size(); d++) {
        phi_u[d].reserve(max_size);
        phi_u_x[d].reserve(max_size * space_dim);
    }
- 
- std::vector < std::string >  var_names(dim);
+   
+ std::vector < std::string >  var_names(n_fluid_unknowns);
  var_names[0] = "U";
  var_names[1] = "V";
  if (dim == 3) var_names[2] =  "W";
+ var_names[n_fluid_unknowns - 1] = "P";
  
-  std::vector <  unsigned > solIndex_u(dim); 
-  std::vector <  unsigned > solType_u(dim); 
-  std::vector <  unsigned > nDof_u(dim); 
+  std::vector <  unsigned > solIndex_u(n_fluid_unknowns); 
+  std::vector <  unsigned > solType_u(n_fluid_unknowns); 
+  std::vector <  unsigned > nDof_u(n_fluid_unknowns); 
   
-     for (unsigned d = 0; d < dim; d++) {
+     for (unsigned d = 0; d < solIndex_u.size(); d++) {
          solIndex_u[d] = ml_sol->GetIndex(var_names[d].c_str());            // get the position of "state" in the ml_sol object
          solType_u[d]  = ml_sol->GetSolutionType(solIndex_u[d]);    // get the finite element type for "state"
     }
 
-  vector < vector < double > > sol_u(dim); // local solution
-   for (unsigned d = 0; d < dim; d++) {  sol_u[d].reserve(max_size);   }
+  vector < vector < double > > sol_u(n_fluid_unknowns); // local solution
+   for (unsigned d = 0; d < sol_u.size(); d++) {  sol_u[d].reserve(max_size);   }
   
  //*************************************************** 
  //***************************************************
  //***************************************************
-  vector < vector < double > > phi_u_bdry(dim);
-  vector < vector < double > > phi_u_x_bdry(dim); 
+  vector < vector < double > > phi_u_bdry(n_fluid_unknowns);
+  vector < vector < double > > phi_u_x_bdry(n_fluid_unknowns); 
 
-   for (unsigned d = 0; d < dim; d++) {   
+   for (unsigned d = 0; d < phi_u_bdry.size(); d++) {   
        phi_u_bdry[d].reserve(max_size);
        phi_u_x_bdry[d].reserve(max_size * space_dim);
    }
    
   //volume shape functions at boundary
-  vector < vector < double > > phi_u_vol_at_bdry(dim);
-  vector < vector < double > > phi_u_x_vol_at_bdry(dim);
-  for (unsigned d = 0; d < dim; d++) {   
+  vector < vector < double > > phi_u_vol_at_bdry(n_fluid_unknowns);
+  vector < vector < double > > phi_u_x_vol_at_bdry(n_fluid_unknowns);
+  for (unsigned d = 0; d < phi_u_vol_at_bdry.size(); d++) {   
        phi_u_vol_at_bdry[d].reserve(max_size);
      phi_u_x_vol_at_bdry[d].reserve(max_size * space_dim);
   }
    
-  vector < vector < double > > sol_u_x_vol_at_bdry_gss(dim);
-  for (unsigned d = 0; d < dim; d++) {
+  vector < vector < double > > sol_u_x_vol_at_bdry_gss(n_fluid_unknowns);
+  for (unsigned d = 0; d < sol_u_x_vol_at_bdry_gss.size(); d++) {
       sol_u_x_vol_at_bdry_gss[d].resize(space_dim);
   }
  //***************************************************
@@ -1693,9 +1696,9 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
     double detJac_qp;
 
      std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
-     std::vector < std::vector < double > >  Jac_qp_bdry(dim-1);
+     std::vector < std::vector < double > >  Jac_qp_bdry(dim - 1);
     for (unsigned d = 0; d < Jac_qp_bdry.size(); d++) {   Jac_qp_bdry[d].resize(space_dim); }
-    for (unsigned d = 0; d < JacI_qp_bdry.size(); d++) { JacI_qp_bdry[d].resize(dim-1); }
+    for (unsigned d = 0; d < JacI_qp_bdry.size(); d++) { JacI_qp_bdry[d].resize(dim - 1); }
     
     double detJac_qp_bdry;
     
@@ -1705,7 +1708,12 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
  //*************************************************** 
   
   
-  // element loop: each process loops only on the elements that owns
+ //**** physical parameters ************************** 
+    double mu_f = ml_prob.parameters.get<Fluid>("Fluid").get_viscosity();
+ //*************************************************** 
+ 
+    
+  // element loop: each process loops only on its own elements
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
@@ -1714,7 +1722,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 
    
  //*********** state ********************************* 
-   for (unsigned d = 0; d < dim; d++) {   
+   for (unsigned d = 0; d < sol_u.size(); d++) {   
     nDof_u[d]     = msh->GetElementDofNumber(iel, solType_u[d]);
     sol_u[d]    .resize(nDof_u[d]);
    // local storage of global mapping and solution
@@ -1770,10 +1778,10 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 //          //========= check face center ================================================
 	
 		//============ initialize gauss quantities on the boundary ==========================================
-                std::vector< double > sol_u_bdry_gss(dim);
-                std::vector< std::vector< double > > sol_u_x_bdry_gss(dim);
+                std::vector< double >                sol_u_bdry_gss(sol_u.size());
+                std::vector< std::vector< double > > sol_u_x_bdry_gss(sol_u.size());
                        std::fill( sol_u_bdry_gss.begin(), sol_u_bdry_gss.end(), 0.); 
-                   for (unsigned d = 0; d < dim; d++) {
+                   for (unsigned d = 0; d < sol_u_x_bdry_gss.size(); d++) {
                        sol_u_x_bdry_gss[d].resize(dim);
                        std::fill( sol_u_x_bdry_gss[d].begin(), sol_u_x_bdry_gss[d].end(), 0.); 
                 }
@@ -1786,19 +1794,19 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 
     weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
     
-  for (unsigned d = 0; d < dim; d++) {
+  for (unsigned d = 0; d < phi_u_bdry.size(); d++) {
       elem_all[ielGeom_bdry][solType_u[d]] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_u_bdry[d], phi_u_x_bdry[d], boost::none, space_dim);
   }
     
     elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_qp/*not_needed_here*/, JacI_qp, detJac_qp/*not_needed_here*/, space_dim);
     
-  for (unsigned d = 0; d < dim; d++) {
+  for (unsigned d = 0; d < phi_u_vol_at_bdry.size(); d++) {
     elem_all[ielGeom][solType_u[d]]->shape_funcs_vol_at_bdry_current_elem(ig_bdry, jface, JacI_qp, phi_u_vol_at_bdry[d], phi_u_x_vol_at_bdry[d], boost::none, space_dim);
   }
   
 		  
 		 //========== compute gauss quantities on the boundary ===============================================
-          for (unsigned d = 0; d < dim; d++) {
+          for (unsigned d = 0; d < sol_u_bdry_gss.size(); d++) {
 		    sol_u_bdry_gss[d] = 0.;
                   std::fill(sol_u_x_bdry_gss[d].begin(), sol_u_x_bdry_gss[d].end(), 0.);
           }
@@ -1807,7 +1815,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 	 for (int i_bdry = 0; i_bdry < nve_bdry_u; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 			
-         for (int e = 0; e < dim; e++) {
+         for (int e = 0; e < sol_u_bdry_gss.size(); e++) {
 			sol_u_bdry_gss[e] +=  sol_u[e][i_vol] * phi_u_bdry[e][i_bdry];
                             for (int d = 0; d < dim; d++) {
 			      sol_u_x_bdry_gss[e][d] += sol_u[e][i_vol] * phi_u_x_bdry[e][i_bdry * space_dim + d];
@@ -1826,11 +1834,11 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
        
        
 //     compute gauss quantities on the boundary through VOLUME interpolation
-          for (unsigned d = 0; d < dim; d++) {
+          for (unsigned d = 0; d < sol_u_x_vol_at_bdry_gss.size(); d++) {
               std::fill(sol_u_x_vol_at_bdry_gss[d].begin(), sol_u_x_vol_at_bdry_gss[d].end(), 0.);
            }
            
-         for (int e = 0; e < dim; e++) {
+         for (int e = 0; e < sol_u_x_vol_at_bdry_gss.size(); e++) {
 		      for (int iv = 0; iv < nDof_u[e]; iv++)  {
 			
             for (int d = 0; d < dim; d++) {
@@ -1850,17 +1858,17 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
        }
        
     //--------       
-       for (unsigned d = 0; d < dim; d++) {
+       for (unsigned d = 0; d < deform_tensor_qp.size(); d++) {
            
-          double norm_stress = 0.;
+          double normal_deform_tensor = 0.;
           
             for (unsigned e = 0; e < dim; e++) {
-                  norm_stress += deform_tensor_qp[d][e] * normal[e]; 
+                  normal_deform_tensor += deform_tensor_qp[d][e] * normal[e]; 
                }
 //     compute gauss quantities on the boundary through VOLUME interpolation
 
 
-                 integral_norm_stress_component[d] +=  weight_bdry * norm_stress /*1.*/; /*normal[0] **/ /*normal[1] **/ /*normal[2] **/ 
+                 integral_norm_stress_component[d] +=  weight_bdry * mu_f * normal_deform_tensor /*1.*/; /*normal[0] **/ /*normal[1] **/ /*normal[2] **/ 
                  
           }
     //--------       
@@ -1886,7 +1894,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
     elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig_vol, Jac_qp, JacI_qp, detJac_qp, space_dim);
     weight_vol = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig_vol];
 
-  for (unsigned d = 0; d < dim; d++) {
+  for (unsigned d = 0; d < phi_u.size(); d++) {
     elem_all[ielGeom][solType_u[d]]                 ->shape_funcs_current_elem(ig_vol, JacI_qp, phi_u[d], phi_u_x[d], boost::none, space_dim);
   }
   

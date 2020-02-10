@@ -27,6 +27,9 @@ using std::cout;
 using std::endl;
 
 
+#define  PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES  0
+
+
 
 namespace femus {
 
@@ -780,8 +783,9 @@ namespace femus {
    
    void elem_type_1D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
    
-   
+#if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
        if(_SolType < 3) {
+#endif
 
       unsigned nFaces = 2;
       _phiFace.resize(nFaces);
@@ -819,8 +823,9 @@ namespace femus {
         //std::cout << std::endl;
       }
 
+#if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
     }
-   
+#endif   
    
    }
    
@@ -829,8 +834,10 @@ namespace femus {
       void elem_type_2D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
           
           
-    if(_SolType < 3) {
-        
+#if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
+       if(_SolType < 3) {
+#endif
+
       basis* linearLine = new LineLinear;
 
 
@@ -845,6 +852,7 @@ namespace femus {
       _hessianPhiFace.resize(nFaces);
 
       for(int iface = 0; iface < nFaces; iface++) {
+          
         std::vector< double > xv(faceBasis -> _nc);
         std::vector< double > yv(faceBasis -> _nc);
         for(int jnode = 0; jnode < faceBasis -> _nc; jnode++) {
@@ -884,7 +892,9 @@ namespace femus {
       }
       delete linearLine;
       
+#if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
     }
+#endif
     
     
    }
@@ -892,7 +902,10 @@ namespace femus {
       void elem_type_3D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
           
    
-    if(_SolType < 3) {
+#if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
+       if(_SolType < 3) {
+#endif
+           
         
       basis* linearQuad = new QuadLinear;
       basis* linearTri = new TriLinear;
@@ -984,7 +997,10 @@ namespace femus {
       delete linearQuad;
       delete linearTri;
       
-    }          
+#if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
+    }
+#endif
+
 
    }
       

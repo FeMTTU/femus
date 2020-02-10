@@ -274,18 +274,18 @@ output_path.append("/");
    
   
   // ******* Fluid and Solid Parameters *******
-  Parameter par(Lref,Uref);
+  Parameter par(Lref, Uref);
 
   // Generate Solid Object
   Solid solid;
-  solid = Solid(par,E,ni,rhos,"Mooney-Rivlin");
+  solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
 
   cout << "Solid properties: " << endl;
   cout << solid << endl;
 
   // Generate Fluid Object
 
-  Fluid fluid(par,muf,rhof,"Newtonian");
+  Fluid fluid(par, muf, rhof, "Newtonian");
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
 
@@ -342,6 +342,10 @@ output_path.append("/");
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
 
+//     std::cout << ml_prob.parameters.get<Fluid>("Fluid") << std::endl;
+//     std::cout << fluid << std::endl;
+
+  
   const bool solve_system = true;
   
   if (solve_system) {
@@ -462,12 +466,6 @@ output_path.append("/");
     PetscPrintf(PETSC_COMM_WORLD, "5: Memory maximum usage before clear: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
   }
 
-  // ******* Clear all systems *******
-  ml_prob.clear();
-
-  // ******* close the library *******
-  dlclose(handle);
-  
   // ******* Postprocessing *******
   const unsigned int face_for_qoi  = 4;  //not used now
   
@@ -479,6 +477,12 @@ output_path.append("/");
     PrintMultigridTime  (output_path, output_file_to_parse.c_str(), mesh_file, numofrefinements);
   }
 
+  // ******* Clear all systems *******
+  ml_prob.clear();
+
+  // ******* close the library *******
+  dlclose(handle);
+  
   return 0;
 }
 
