@@ -1320,7 +1320,7 @@ namespace femus {
 
 #define GROUP_VOL_ELEMS  6
  
- #define EPS_EDGE_LOCATION 1.e-4   //with e-5 it doesn't find the circle!!!
+ #define EPS_EDGE_LOCATION 1.e-5   //with e-5 it doesn't find the circle!!!
 
 
 bool or_vector(const int current_face, const std::vector< int > all_face_flags) {
