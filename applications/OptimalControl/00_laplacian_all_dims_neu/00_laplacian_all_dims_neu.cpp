@@ -203,7 +203,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
-  SparseMatrix*             KK = pdeSys->_KK;
+  SparseMatrix*             JAC = pdeSys->_KK;
   NumericVector*           RES = pdeSys->_RES;
 
   const unsigned  dim = msh->GetDimension();
@@ -222,15 +222,15 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
 
  //******************** quadrature *******************************  
-  double weight; 
+  double jacXweight_qp; 
 
  //********************* unknowns *********************** 
  //***************************************************  
   const int n_vars = mlPdeSys->GetSolPdeIndex().size();
   std::cout << "************" << n_vars << "************";
-  vector <double> phi_u;
-  vector <double> phi_u_x; 
-  vector <double> phi_u_xx;
+  std::vector <double> phi_u;
+  std::vector <double> phi_u_x; 
+  std::vector <double> phi_u_xx;
 
   phi_u.reserve(maxSize);
   phi_u_x.reserve(maxSize * space_dim);
@@ -244,8 +244,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   unsigned solPdeIndex_u;
   solPdeIndex_u = mlPdeSys->GetSolPdeIndex("d_s");
 
-  vector < double >  sol_u;     sol_u.reserve(maxSize);
-  vector< int > l2GMap_u;    l2GMap_u.reserve(maxSize);
+  std::vector < double >  sol_u;     sol_u.reserve(maxSize);
+  std::vector< int > l2GMap_u;    l2GMap_u.reserve(maxSize);
  //***************************************************  
  //***************************************************  
 
@@ -253,13 +253,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
  //********* WHOLE SET OF VARIABLES ****************** 
 
-  vector< int > l2GMap_AllVars; l2GMap_AllVars.reserve(n_vars*maxSize); // local to global mapping
-  vector< double >         Res;            Res.reserve(n_vars*maxSize);  // local redidual vector
-  vector < double >        Jac;            Jac.reserve(n_vars*maxSize * n_vars*maxSize);
+  std::vector< int > l2GMap_AllVars; l2GMap_AllVars.reserve(n_vars*maxSize); // local to global mapping
+  std::vector< double >         Res;            Res.reserve(n_vars*maxSize);  // local redidual vector
+  std::vector < double >        Jac;            Jac.reserve(n_vars*maxSize * n_vars*maxSize);
  //***************************************************  
 
 
-  if (assembleMatrix)  KK->zero();
+  if (assembleMatrix)  JAC->zero();
 
   
  //***************************************************  
@@ -312,19 +312,19 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //*************************************************** 
     
  //========= gauss value quantities ==================   
-	double sol_u_gss = 0.;
+// 	double sol_u_gss = 0.;
 	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
  //===================================================   
 
-      // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+      // *** Quadrature point loop ***
+      for (unsigned i_qp = 0; i_qp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); i_qp++) {
           
         // *** get gauss point weight, test function and test function partial derivatives ***
-// 	msh->_finiteElement[ielGeom][solFEType_u]->Jacobian(geom_element.get_coords_at_dofs_3d(),    ig, weight,    phi_u,    phi_u_x,    boost::none /*phi_u_xx*/);
+// 	msh->_finiteElement[ielGeom][solFEType_u]->Jacobian(geom_element.get_coords_at_dofs_3d(),    i_qp, weight,    phi_u,    phi_u_x,    boost::none /*phi_u_xx*/);
           
-	elem_all[ielGeom][xType]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
-    weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
-    elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, boost::none /*phi_u_xx*/, space_dim);
+	elem_all[ielGeom][xType]->JacJacInv(geom_element.get_coords_at_dofs_3d(), i_qp, Jac_qp, JacI_qp, detJac_qp, space_dim);
+    jacXweight_qp = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[i_qp];
+    elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(i_qp, JacI_qp, phi_u, phi_u_x, boost::none /*phi_u_xx*/, space_dim);
 
     elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
     elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
@@ -332,7 +332,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	
 	for (unsigned i = 0; i < nDof_u; i++) {
-	                                                sol_u_gss      += sol_u[i] * phi_u[i];
+// 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
                    for (unsigned d = 0; d < sol_u_x_gss.size(); d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * space_dim + d];
           }
 //--------------    
@@ -349,22 +349,23 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	             }
               }
               
-	      double laplace_beltrami_res_du_u_i = 0.;
-          if ( i < nDof_u ) {    
-          for (unsigned kdim = 0; kdim < dim; kdim++) {
-            for (unsigned ldim = 0; ldim < dim; ldim++) {
-                       laplace_beltrami_res_du_u_i             +=  elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(kdim,ig,i)/*phi_u_x   [i * space_dim + kdim]*/ 
-                                                                 * JacJacT_inv[kdim][ldim]
-                                                                 * sol_u_x_gss[ldim];
-            }
-         }
-       }
+// 	      double laplace_beltrami_res_du_u_i = 0.;
+//           if ( i < nDof_u ) {    
+//           for (unsigned kdim = 0; kdim < dim; kdim++) {
+//             for (unsigned ldim = 0; ldim < dim; ldim++) {
+//                        laplace_beltrami_res_du_u_i             +=   elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(kdim, i_qp, i) 
+//                                                                    * JacJacT_inv[kdim][ldim]
+//                                                                    /*phi_u_x   [i * space_dim + kdim]*/
+//                                                                  * sol_u_x_gss[ldim];
+//             }
+//          }
+//        }
 //--------------    
 	      
 //======================Residuals=======================
           // FIRST ROW
-//           if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
-          if (i < nDof_u)                      Res[0      + i] += - weight * ( phi_u[i] * (  -1. ) - laplace_beltrami_res_du_u_i);
+          if (i < nDof_u)                      Res[0      + i] += - jacXweight_qp * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
+//           if (i < nDof_u)                      Res[0      + i] += - jacXweight_qp * ( phi_u[i] * (  -1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -382,24 +383,24 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	              }
              }
 	      
-              double laplace_beltrami_mat_du_u_i_j = 0.;
-              if ( i < nDof_u && j < nDof_u ) {
-          for (unsigned kdim = 0; kdim < dim; kdim++) {
-            for (unsigned ldim = 0; ldim < dim; ldim++) {
-                       laplace_beltrami_mat_du_u_i_j             +=  elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(kdim,ig,i)/*phi_u_x   [i * space_dim + kdim]*/ 
-                                                                   * JacJacT_inv[kdim][ldim] *
-                                                                     elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(ldim,ig,j)/*phi_u_x   [j * space_dim + ldim]*/;
-                     }
-                  }
-                  
-                  
-              }
+//               double laplace_beltrami_mat_du_u_i_j = 0.;
+//               if ( i < nDof_u && j < nDof_u ) {
+//           for (unsigned kdim = 0; kdim < dim; kdim++) {
+//             for (unsigned ldim = 0; ldim < dim; ldim++) {
+//                        laplace_beltrami_mat_du_u_i_j             +=  elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(kdim,i_qp,i)/*phi_u_x   [i * space_dim + kdim]*/ 
+//                                                                    * JacJacT_inv[kdim][ldim] *
+//                                                                      elem_all[ielGeom][solFEType_u]->get_dphidxi_ref(ldim,i_qp,j)/*phi_u_x   [j * space_dim + ldim]*/;
+//                      }
+//                   }
+//                   
+//                   
+//               }
               //--------------    
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
-// 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_mat_du_u_i_j;
-		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += weight * laplace_beltrami_mat_du_u_i_j; ///@todo On a flat domain, this must coincide with the standard Laplacian, so we can do a double check with this
+		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += jacXweight_qp * laplace_mat_du_u_i_j;
+// 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += jacXweight_qp * laplace_beltrami_mat_du_u_i_j; ///@todo On a flat domain, this must coincide with the standard Laplacian, so we can do a double check with this
             } // end phi_j loop
           } // endif assemble_matrix
 
@@ -411,15 +412,15 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     RES->add_vector_blocked(Res, l2GMap_AllVars);
 
     if (assembleMatrix) {
-      KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
+      JAC->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
     }
     
   } //end element loop for each process
 
   RES->close();
 
-  if (assembleMatrix) KK->close();
-//   KK->print();
+  if (assembleMatrix) JAC->close();
+//   JAC->print();
 //   RES->print();
 
   // ***************** END ASSEMBLY *******************

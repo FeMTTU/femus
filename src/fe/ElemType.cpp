@@ -27,7 +27,7 @@ using std::cout;
 using std::endl;
 
 
-#define  PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES  0
+#define  PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES  1
 
 
 
