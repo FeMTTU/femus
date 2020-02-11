@@ -19,11 +19,22 @@ int main(int argc,char **args) {
   Files files; 
         files.CheckIODirectories();
         files.RedirectCout();
+        
+// fsi 3d - one layer
+// volumes: 66
+// faces:  66*2 + 42 = 132 + 42 = 174
+// edges: 42*2 + 4 = 88
+// 
+// Total mesh:
+// volumes: 264
+// faces:  66*2  + 42*4 =  132 + 168 = 300     
 
  std::vector< std::string >  input_files;
+ input_files.push_back("turek_FSI1.neu");
  input_files.push_back("turek_FSI1.med");
-//   std::string input_file = "turek_FSI1.neu";
-//   std::string input_file = "turek1.med";
+ input_files.push_back("turek_FSI1_3d.med");
+ input_files.push_back("turek_FSI1_coarsest_not_yet_expanded_at_inflow.med");
+//  input_files.push_back("turek_FSI1_no_bc.neu");
 //    std::string input_file = "cyl.med";
 //    std::string input_file = "horse2.med";
 //    std::string input_file = "knot.neu";
@@ -48,16 +59,16 @@ int main(int argc,char **args) {
 
   MultiLevelMesh ml_msh;
   
-  const int n_sub = 1;
+//   const int n_sub = 1;
 //   ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
   const bool read_groups = true;
-  const bool read_boundary_groups = false;
+  const bool read_boundary_groups = true;
   ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref,read_groups, read_boundary_groups);
   
   ml_msh.PrintInfo();
   
   // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution ml_sol(&ml_msh);
+  MultiLevelSolution ml_sol(&ml_msh); //I think I cannot read the mesh alone, I need to attach at least one solution
 
   // add variables to ml_sol
   ml_sol.AddSolution("u", LAGRANGE, FIRST);

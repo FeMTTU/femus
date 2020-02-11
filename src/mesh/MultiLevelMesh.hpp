@@ -83,6 +83,11 @@ public:
         return _level[i];
     };
 
+    /** Get the mesh pointer to level i */
+    const Mesh* GetLevel(const unsigned i) const {
+        return _level[i];
+    };
+
     /** Get the number of grid */
     unsigned GetNumberOfLevels() {
         return _gridn;

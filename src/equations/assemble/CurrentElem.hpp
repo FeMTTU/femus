@@ -301,6 +301,8 @@ template < typename real_num_mov >
   }    
 
   
+// since the Mesh is  Bi-TriQuadratic order, here I need the formula for the center of an Edge, a Triangle, a Quadrilateral
+// On the other hand, instead of COMPUTING this quantity, I'd rather RETRIEVE IT from the LAST NODE!
 template < typename real_num_mov >
  void CurrentElem<real_num_mov>::set_elem_center_bdry_3d() {
      

@@ -422,7 +422,6 @@ namespace femus {
     pt_char = &enc[0];
     for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
 
-
     //print regions array
     cch = b64::b64_encode( &var_proc[0], dim_array_reg[0] , NULL, 0 );
     b64::b64_encode( &var_proc[0], dim_array_reg[0], &enc[0], cch );
@@ -438,31 +437,9 @@ namespace femus {
 
     //-------------------------------------------MATERIAL---------------------------------------------------------
 
-    //NumericVector& material =  mesh->_topology->GetSolutionName( "Material" );
+    material(fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
 
-    fout  << "        <DataArray type=\"Float32\" Name=\"" << "Material" << "\" format=\"binary\">" << std::endl;
-    Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Material" << "\" format=\"binary\"/>" << std::endl;
-    // point pointer to common memory area buffer of void type;
-    float* var_el = static_cast< float*>( buffer_void );
-    icount = 0;
-    for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      var_el[icount] = mesh->GetElementMaterial(iel); 
-      icount++;
-    }
-
-    //print solution on element dimension
-    cch = b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), NULL, 0 );
-    b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-    //print solution on element array
-    cch = b64::b64_encode( &var_el[0], dim_array_elvar[0] , NULL, 0 );
-    b64::b64_encode( &var_el[0], dim_array_elvar[0], &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-    fout << std::endl;
-    fout << "        </DataArray>" << std::endl;
-
+    
     //------------------------------------------------------GROUP-----------------------------------------------------------
 
     //NumericVector& group =  mesh->_topology->GetSolutionName( "Group" );
@@ -470,7 +447,7 @@ namespace femus {
     fout  << "        <DataArray type=\"Float32\" Name=\"" << "Group" << "\" format=\"binary\">" << std::endl;
     Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Group" << "\" format=\"binary\"/>" << std::endl;
     // point pointer to common memory area buffer of void type;
-    var_el = static_cast< float*>( buffer_void );
+    float* var_el = static_cast< float*>( buffer_void );
     icount = 0;
     for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
       var_el[icount] = mesh->GetElementGroup(iel);
@@ -481,6 +458,7 @@ namespace femus {
     b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), &enc[0], cch );
     pt_char = &enc[0];
     for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
+    
     //print solution on element array
     cch = b64::b64_encode( &var_el[0], dim_array_elvar[0] , NULL, 0 );
     b64::b64_encode( &var_el[0], dim_array_elvar[0], &enc[0], cch );
@@ -506,6 +484,7 @@ namespace femus {
     b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), &enc[0], cch );
     pt_char = &enc[0];
     for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
+    
     //print solution on element array
     cch = b64::b64_encode( &var_el[0], dim_array_elvar[0] , NULL, 0 );
     b64::b64_encode( &var_el[0], dim_array_elvar[0], &enc[0], cch );
@@ -515,7 +494,7 @@ namespace femus {
     fout << "        </DataArray>" << std::endl;
 
     
-    //-------------------------------------------------------TYPE--------------------------------------------------
+    //-------------------------------------------------------LEVEL--------------------------------------------------
     fout  << "      <DataArray type=\"Float32\" Name=\"" << "Level" << "\" format=\"binary\">" << std::endl;
     Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Level" << "\" format=\"binary\"/>" << std::endl;
     // point pointer to common memory area buffer of void type;
@@ -695,6 +674,45 @@ namespace femus {
 
     //--------------------------------------------------------------------------------------------------------
     return;
+  }
+  
+  
+  
+  void VTKWriter::material(std::ofstream & fout, std::ofstream & Pfout,
+                           void* buffer_void, 
+                           const unsigned elemetOffset, const unsigned elemetOffsetp1, 
+                           const unsigned * dim_array_elvar, 
+                           const Mesh * mesh,
+                           std::vector <char> & enc) const {
+                               
+      //-------------------------------------------MATERIAL---------------------------------------------------------
+
+    //NumericVector& material =  mesh->_topology->GetSolutionName( "Material" );
+
+    fout  << "       <DataArray type=\"Float32\" Name=\"" << "Material" << "\" format=\"binary\">" << std::endl;
+    Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Material" << "\" format=\"binary\"/>" << std::endl;
+    // point pointer to common memory area buffer of void type;
+    float* var_el = static_cast< float*>( buffer_void );
+    int icount = 0;
+    for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
+      var_el[icount] = mesh->GetElementMaterial(iel); 
+      icount++;
+    }
+
+    //print solution on element dimension
+    size_t cch = b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), NULL, 0 );
+    b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), &enc[0], cch );
+    char* pt_char = &enc[0];
+    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
+    
+    //print solution on element array
+    cch = b64::b64_encode( &var_el[0], dim_array_elvar[0] , NULL, 0 );
+    b64::b64_encode( &var_el[0], dim_array_elvar[0], &enc[0], cch );
+    pt_char = &enc[0];
+    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
+    fout << std::endl;
+    fout << "        </DataArray>" << std::endl;
+
   }
 
 } //end namespace femus

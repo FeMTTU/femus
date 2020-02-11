@@ -162,19 +162,23 @@ const bool Solid::get_if_mass_penalty() const{
 
 std::ostream & operator << (std::ostream & os, const Solid & solid)
 {
-  os << "Density: " << solid._density << std::endl;
-  os << "Young Module: " << solid._young_module << std::endl;
-  os << "Poisson coefficient: " << solid._poisson_coeff << std::endl;
-  os << "Lambda Lamé: " << solid._lambda_lame << std::endl;
-  os << "Mu lamé: " << solid._mu_lame << std::endl;
-  os << "Physical Model: " << solid._model << std::endl;
+    
+  os << "Density: [kg/m^3] "         << solid._density       << std::endl;
+  os << "Young Module: [Pa] "        << solid._young_module  << std::endl;
+  os << "Poisson coefficient: [Pa] " << solid._poisson_coeff << std::endl;
+  os << "Lambda Lamé: [Pa] "         << solid._lambda_lame   << std::endl;
+  os << "Mu lamé: [Pa] "             << solid._mu_lame       << std::endl;
+  os << "Physical Model: "           << solid._model         << std::endl;
   os << std::endl;
+  
   return os;
+  
 }
 
 // Take a const-reference to the right-hand side of the assignment.
 // Return a non-const reference to the left-hand side.
 Solid& Solid::operator=(const Solid &solid) {
+    
   this->_parameter 			= solid._parameter;
   this->_density 			= solid._density;
   this->_thermal_conductivity 		= solid._thermal_conductivity;
@@ -187,7 +191,9 @@ Solid& Solid::operator=(const Solid &solid) {
   this->_model 				= solid._model;
   this->_penalty 			= solid._penalty;
   this->_mass_penalty 			= solid._mass_penalty;
+  
   return *this;  // Return a reference to myself.
+  
 }
 
 

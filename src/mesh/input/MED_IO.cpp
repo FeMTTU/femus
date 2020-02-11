@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: MED_IO
- Authors: Sureka Pathmanathan, Giorgio Bornia
+ Authors: Giorgio Bornia, Sureka Pathmanathan
 
  Copyright (c) FEMTTU
  All rights reserved.
@@ -126,7 +126,7 @@ namespace femus
 
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
-  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
+  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups_flag, const bool read_boundary_groups_flag) {
 
     _print_info = false;  
       
@@ -135,13 +135,15 @@ namespace femus
 
     hid_t  file_id = H5Fopen(name.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-    const std::vector<std::string> mesh_menus = get_mesh_names(file_id);
+    const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
 
     if (mesh_menus.size() > 1) { std::cout << "Review the code because there is only one MultilevelMesh object and most likely things don't work" << std::endl; abort(); }
         
 // dimension and geom_el types ===============
 
       const std::vector< GeomElemBase* > geom_elem_per_dimension = set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(file_id, mesh_menus[0]);
+      
+      const unsigned mesh_dim = mesh.GetDimension();
       
 // meshes ========================
      for(unsigned j = 0; j < mesh_menus.size(); j++) {
@@ -150,32 +152,31 @@ namespace femus
             set_node_coordinates(file_id, mesh_menus[j], coords, Lref);
     
 // Volume connectivity
-//       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
-         unsigned i = mesh.GetDimension() - 1; 
+//       for(unsigned i = 0; i < mesh_dim; i++) {
+         unsigned i = mesh_dim - 1; 
                set_elem_connectivity(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
 
       
 
-      if (read_groups == true || read_boundary_groups == true )  {
+      if (read_groups_flag == true || read_boundary_groups_flag == true )  {
           
 // Groups of the mesh ===============
-     std::vector< GroupInfo >     group_info = get_group_vector_flags_per_mesh(file_id,mesh_menus[j]);
+     std::vector< GroupInfo >     group_info = get_group_flags_per_mesh_vector(file_id,mesh_menus[j]);
     
           for(unsigned i = 0; i < group_info.size(); i++) {
               compute_group_geom_elem_and_size(file_id, mesh_menus[j],group_info[i]);
           }
           
 // Groups ===============
-    if (read_groups == true) {
-      for(unsigned i = 0; i < mesh.GetDimension(); i++) {
-         set_elem_group_ownership(file_id, mesh_menus[j], i, geom_elem_per_dimension[i], group_info);
+    if (read_groups_flag == true) {
+      for(unsigned i = 0; i < mesh_dim; i++) {
+         set_elem_group_ownership(file_id, mesh_menus[j], group_info, geom_elem_per_dimension[i], i);
       }
     }
     
 // Boundary groups ===============
-      if (read_boundary_groups == true)  {
-    if (mesh.GetDimension() > 1)         find_boundary_faces_and_set_face_flags(file_id, mesh_menus[j], geom_elem_per_dimension[mesh.GetDimension() -1 -1], group_info);
-    else if (mesh.GetDimension() == 1)   find_boundary_nodes_and_set_node_flags(file_id, mesh_menus[j], group_info);
+      if (read_boundary_groups_flag == true)  {
+         set_elem_group_ownership_boundary(file_id, mesh_menus[j], group_info, geom_elem_per_dimension, mesh_dim, mesh.el->GetElementNearFaceArray());          
       }
           
     }
@@ -184,10 +185,31 @@ namespace femus
     }
     
     
-
     H5Fclose(file_id);
 
   }
+  
+  
+  
+// This function reads all boundary groups for the boundary conditions
+// I need a function that reads only one given boundary group, characterized by a name
+// I should distinguish the boundary groups related to the boundary conditions with some name, such as "Boundary_1_0" instead of "Group_1_0"
+    void MED_IO::set_elem_group_ownership_boundary(const hid_t  file_id, 
+                                      const std::string mesh_menu,
+                                      const std::vector< GroupInfo > & group_info,
+                                      const std::vector< GeomElemBase* > geom_elem_per_dimension,
+                                      const unsigned mesh_dim,
+                                      MyMatrix <int> & element_faces_array
+                                     ) 
+    {
+ 
+      if (mesh_dim > 1)       find_boundary_faces_and_set_face_flags(file_id, mesh_menu, group_info, geom_elem_per_dimension[mesh_dim -1 -1], element_faces_array);
+    else if (mesh_dim == 1)   find_boundary_nodes_and_set_node_flags(file_id, mesh_menu, group_info, element_faces_array);
+
+    }
+    
+    
+  
 
 
    unsigned int MED_IO::get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS med_flag_in ) const {
@@ -263,9 +285,13 @@ namespace femus
         
     }
 
+
     
-    
-   void MED_IO::find_boundary_faces_and_set_face_flags(const hid_t&  file_id, const std::string mesh_menu, const GeomElemBase* geom_elem_per_dimension,  const std::vector<GroupInfo> & group_info)  {
+   void MED_IO::find_boundary_faces_and_set_face_flags(const hid_t&  file_id, 
+                                                       const std::string mesh_menu, 
+                                                       const std::vector< GroupInfo > & group_info, 
+                                                       const GeomElemBase* geom_elem_per_dimension,
+                                                       MyMatrix <int> & element_faces_array)  {
   //basically you have certain elements on the boundary, and you have to find them in the list of all elements
 
 
@@ -339,14 +365,15 @@ namespace femus
 
                  const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
 
-           int user_flag =  get_user_flag_from_med_flag(group_info,med_flag);   //flag of the boundary portion
+           int user_flag =  get_user_flag_from_med_flag(group_info, med_flag);   //flag of the boundary portion
                user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE
                
                    if(_print_info) {   std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl; }
 
 //       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
-                mesh.el->SetFaceElementIndex(iel,f,user_flag);  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
-                      
+                element_faces_array[iel][f] = user_flag;   //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
+//                 mesh.el->SetFaceElementIndex(iel, f, user_flag);  //old version
+      
               }
                   
            }
@@ -355,18 +382,27 @@ namespace femus
                      
          } //faces of volume elements
          
-       }// end volume elements
-               
-                       if(_print_info) { std::cout << "Count found faces " << count_found_face << std::endl;  }            
-               if (count_found_face < fam_map.size()) { std::cout << "Found " << count_found_face << " faces out of " << fam_map.size() << ", not enough: missing certain boundary conditions." << std::endl;   abort();   }
-               
+       } // end volume elements
+
+       
+         check_all_boundaries_have_some_condition(count_found_face, fam_map.size());
 
    }
    
    
-   
+   void MED_IO::check_all_boundaries_have_some_condition(const unsigned int count_found_face, const unsigned int fam_size) const {
+//Checking that all faces have some boundary condition specified  
+       
+     if(_print_info) { std::cout << "Count found faces " << count_found_face << std::endl;  }            
+               if (count_found_face < fam_size) { std::cout << "Found " << count_found_face << " faces out of " << fam_size << ", not enough: missing certain boundary conditions." << std::endl;   abort();   }
+               
+   }
+       
  //this is for 1D domains  
-   void MED_IO::find_boundary_nodes_and_set_node_flags(const hid_t&  file_id, const std::string mesh_menu, const std::vector<GroupInfo> & group_info)  {
+   void MED_IO::find_boundary_nodes_and_set_node_flags(const hid_t&  file_id, 
+                                                       const std::string mesh_menu,
+                                                       const std::vector<GroupInfo> & group_info,
+                                                       MyMatrix <int> & element_faces_array)  {
        
        std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + node_list/*elem_list*/ + "/";  ///@todo here we have to loop
        
@@ -422,7 +458,8 @@ namespace femus
                       std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl; 
 
 //       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
-      mesh.el->SetFaceElementIndex(iel, f, user_flag);  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
+                  element_faces_array[iel][f] = user_flag;  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
+              //  mesh.el->SetFaceElementIndex(iel, f, user_flag);  //old version
 
                }
       
@@ -450,7 +487,7 @@ namespace femus
                   std::vector<unsigned>  face_nodes_from_vol_connectivity_linear(face_nodes_from_vol_connectivity.begin(),face_nodes_from_vol_connectivity.begin() + geom_elem_per_dimension->n_nodes_linear() );
                   std::vector<unsigned>  face_nodes_from_bdry_group_linear(face_nodes_from_bdry_group.begin(),face_nodes_from_bdry_group.begin() + geom_elem_per_dimension->n_nodes_linear() );
                   
-                  unsigned n_alternatives = 2*geom_elem_per_dimension->n_nodes_linear();
+                  unsigned n_alternatives = 2 * geom_elem_per_dimension->n_nodes_linear();
                   std::vector< std::vector<unsigned> > face_alternatives(n_alternatives);
                   
                for(unsigned alt = 0; alt < n_alternatives/2; alt++) {
@@ -485,7 +522,13 @@ namespace femus
    
   //  we loop over all elements and see which ones are of that group
   //  
-   void MED_IO::set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu,  const int i, const GeomElemBase* geom_elem_per_dimension, const std::vector<GroupInfo> & group_info)  {
+   void MED_IO::set_elem_group_ownership(
+                                         const hid_t&  file_id,
+                                         const std::string mesh_menu,
+                                         const std::vector<GroupInfo> & group_info,
+                                         const GeomElemBase* geom_elem_per_dimension,
+                                         const int i 
+                                        )  {
        
        Mesh& mesh = GetMesh();
        
@@ -517,7 +560,7 @@ namespace femus
 
             if ( i > 0 )  {
             if ( i == group_info[gv]._geom_el->get_dimension() - 1 ) {
-        for(unsigned g = 0; g < fam_map.size()/*group_info[gv]._size*//*number_of_group_elements*/; g++) {
+        for(/*unsigned*/ int g = 0; g < fam_map.size()/*group_info[gv]._size*//*number_of_group_elements*/; g++) {
             if (fam_map[g] == group_info[gv]._med_flag)   {
                 mesh.el->SetElementGroup(g,  group_info[gv]._user_defined_flag /*fam_map[g]*/ /*gr_integer_name*/);  //I think that 1 is set later as the default  group number
                 mesh.el->SetElementMaterial(g, group_info[gv]._user_defined_property );
@@ -548,7 +591,7 @@ namespace femus
     //extract faces
 
 //   // read boundary **************** D
-  for (unsigned k=0; k < group_info.size()/*nbcd*//*@todo these should be the groups that are "boundary groups"*/; k++) { //
+  for (unsigned k = 0; k < group_info.size()/*nbcd*//*@todo these should be the groups that are "boundary groups"*/; k++) { //
            int value = group_info[k]._user_defined_flag;       //flag of the boundary portion
       unsigned nface = group_info[k]._size;  //number of elements in a portion of boundary
                value = - (value + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the value in salome must be POSITIVE
@@ -594,7 +637,7 @@ namespace femus
       // SET NUMBER OF VOLUME ELEMENTS
         if ( i == mesh.GetDimension() - 1 ) { 
       mesh.SetNumberOfElements(n_elems_per_dimension);
-      mesh.el = new elem(n_elems_per_dimension);    ///@todo check where this is going to be deleted
+      mesh.el = new elem(n_elems_per_dimension);    ///@todo check where this is going to be deleted. It is in the Destructor of Mesh
 
       // READ CONNECTIVITY MAP
       int* conn_map = new  int[dim_conn];
@@ -697,24 +740,31 @@ namespace femus
   
   //salome family; our name; our property; group size 
   /// @todo check the underscores according to our naming standard
-  const GroupInfo  MED_IO::get_group_flags_per_mesh(const std::string & group_name) const {
+  const GroupInfo MED_IO::get_group_flags_per_mesh(const std::string & group_name) const {
   
       GroupInfo  group_info;
 
-      const int str_pos = 0;
-      std::pair<int,int> gr_family_in_salome_pair = isolate_number_in_string( group_name, str_pos );
-      std::pair<int,int> gr_name_pair             = isolate_number_in_string( group_name, gr_family_in_salome_pair.second + 1 );
-      std::pair<int,int> gr_property_pair         = isolate_number_in_string( group_name, gr_name_pair.second + 1 );
-      group_info._med_flag           = gr_family_in_salome_pair.first;
+      const int initial_str_pos = 0;
+      std::pair<int, std::vector< int > > gr_family_in_salome_pair = isolate_number_in_string_between_underscores( group_name, initial_str_pos );
+      std::pair<int, std::vector< int > > gr_name_pair             = isolate_number_in_string_between_underscores( group_name, gr_family_in_salome_pair.second[1] + 1 );
+      std::pair<int, std::vector< int > > gr_property_pair         = isolate_number_in_string_between_underscores( group_name, gr_name_pair.second[1] + 1 );
+
+      group_info._med_flag              = gr_family_in_salome_pair.first;
       group_info._user_defined_flag     = gr_name_pair.first;
       group_info._user_defined_property = gr_property_pair.first;      
-    
+
+      const unsigned pos_group_string_init = gr_family_in_salome_pair.second[1] + 1;
+      const unsigned pos_group_string_length = gr_name_pair.second[0] - pos_group_string_init;
+      
+      group_info._user_defined_group_string = group_name.substr(pos_group_string_init, pos_group_string_length);
+      
     return  group_info;
+    
  }
 
 
      // ************** Groups of each Mesh *********************************
- const std::vector< GroupInfo > MED_IO::get_group_vector_flags_per_mesh(const hid_t&  file_id, const std::string & mesh_menu) const {
+ const std::vector< GroupInfo > MED_IO::get_group_flags_per_mesh_vector(const hid_t&  file_id, const std::string & mesh_menu) const {
      
      const Mesh & mesh = GetMesh();
     
@@ -786,12 +836,33 @@ namespace femus
     return mesh_menus;
 }
     
+ ///@deprecated
+  std::string  MED_IO::isolate_first_field_before_underscore(const std::string &  string_in, const int begin_pos_to_investigate) const {
     
+      int str_pos = begin_pos_to_investigate;
+            
+      std::string temp_buffer; 
+      
+      assert(str_pos < string_in.size());
+      
+      temp_buffer = string_in.at(str_pos);
+      
+      if ( temp_buffer.compare( "_" ) == 0 )  {  std::cout <<  "I don't want to start with an underscore" << std::endl; abort();  }
+      
+       std::string first_field = "";
+      //begin search for the 1st underscore -------------------------------
+      while ( temp_buffer.compare( "_" ) != 0  &&  ( str_pos < (string_in.size() - 1) )  ) {  str_pos++; first_field += temp_buffer; temp_buffer = string_in.at(str_pos); }
+      
+      return first_field;
+      
+  }
+  
+  
   // This function starts from a given point in a string,
   // finds the first two occurrences of underscores,
   // and gets the string in between them
   // If it finds only one underscore and it gets to end-of-file, I want to get that string there
-  std::pair<int,int>  MED_IO::isolate_number_in_string(const std::string &  string_in, const int begin_pos_to_investigate) const {
+  std::pair<int, std::vector<int> >  MED_IO::isolate_number_in_string_between_underscores(const std::string &  string_in, const int begin_pos_to_investigate) const {
       
     try {
         
@@ -802,7 +873,9 @@ namespace femus
 
       std::string temp_buffer; 
 
-      assert(str_pos < string_in.size());   temp_buffer = string_in.at(str_pos);
+      assert(str_pos < string_in.size());
+      
+      temp_buffer = string_in.at(str_pos);
       
       if ( temp_buffer.compare( "_" ) == 0 )  {  std::cout <<  "I don't want to start with an underscore" << std::endl; abort();  }
       
@@ -820,7 +893,7 @@ namespace femus
       }
       else if ( str_pos == (string_in.size() - 1) ) {  //if it reaches the end, it does so after the 1st iteration, because there is an EVEN number of underscores
                     two_adj_underscores_pos[0] = begin_pos_to_investigate - 1; //this allows for numbers with more than 1 digit
-                    two_adj_underscores_pos[1] = str_pos+1;
+                    two_adj_underscores_pos[1] = str_pos + 1;
       }
       //end search for the 2 underscores -------------------------------
     
@@ -833,7 +906,7 @@ namespace femus
 
       const int flag = atoi( string_in.substr(string_to_extract_pos,string_to_extract_length).c_str() );
       
-      std::pair<int,int>  flag_and_flag_pos_in_string(flag,two_adj_underscores_pos[1]);
+      std::pair<int, std::vector<int> /*int*/>  flag_and_flag_pos_in_string(flag, two_adj_underscores_pos/*[1]*/);
       
       return flag_and_flag_pos_in_string;
       

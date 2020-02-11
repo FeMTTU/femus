@@ -52,7 +52,7 @@ namespace femus
     _elementDof.resize(_nel, NVE[0][2], UINT_MAX);
     _elementNearFace.resize(_nel, NFC[0][1], -1);
 
-  }
+}
 
   void elem::ShrinkToFit()
   {

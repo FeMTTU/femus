@@ -83,6 +83,10 @@ public:
       return _nelem;
     }
 
+    elem * GetElementArray() const {
+      return el;
+    }
+    
     /** Get if element is refined*/
     short unsigned GetRefinedElementIndex(const unsigned &iel) const;
 
@@ -209,7 +213,7 @@ public:
     vector < unsigned > _dofOffset[5];
     vector< vector < int > > _ghostDofs[5];
 
-    elem *el;  // topology object
+    elem *el;  // topology object - list of all elements
     static bool (* _SetRefinementFlag)(const std::vector < double >& x,
                                        const int &ElemGroupNumber,const int &level);
     static bool _IsUserRefinementFunctionDefined;
