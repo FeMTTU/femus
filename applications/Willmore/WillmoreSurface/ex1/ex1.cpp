@@ -37,7 +37,7 @@ bool volumeConstraint = false;
 bool areaConstraint = false;
 
 unsigned conformalTriangleType = 2;
-const double eps = 1.0e-5;
+const double eps = 1e-5;
 
 #include "../include/supportFunctions.hpp"
 #include "../include/assembleConformalMinimization.hpp"
@@ -262,7 +262,7 @@ int main (int argc, char** args) {
 
   // Parameters for the main algorithm loop.
 
-  unsigned numberOfTimeSteps = 1000u;
+  unsigned numberOfTimeSteps = 400u;
   unsigned printInterval = 1u;
 
   std::fstream fs;
@@ -316,10 +316,10 @@ int main (int argc, char** args) {
       CopyDisplacement (mlSol, false);
       system.CopySolutionToOldSolution();
         //UNCOMMENT FOR P=4
-       //if (time_step % 7 == 6){
+        if (time_step % 7 == 6){
          systemY.MGsolve();
          systemW.MGsolve();
-      //}
+        }
     }
 
     if ( (time_step + 1) % printInterval == 0)

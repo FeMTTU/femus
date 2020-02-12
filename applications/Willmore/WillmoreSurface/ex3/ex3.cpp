@@ -52,7 +52,9 @@ const double timederiv = 0.;
 // Declaration of systems.
 void AssembleMCF (MultiLevelProblem&);
 
-double dt0 = 5.e-4;
+
+double dt0 = 6e-4;
+
 // Function to control the time stepping.
 double GetTimeStep (const double t) {
   // if(time==0) return 5.0e-7;
