@@ -95,16 +95,16 @@ int main (int argc, char** args) {
   // Read coarse level mesh and generate finer level meshes.
   double scalingFactor = 1.;
   
-//   mlMsh.GenerateCoarseBoxMesh(32, 32, 0, -0.5, 0.5, -0.5, 0.5, 0., 0., QUAD9, "seventh");
-// 
-//   // Set number of mesh levels.
-//   unsigned numberOfUniformLevels = 1;
-
-  //mlMsh.ReadCoarseMesh ("../input/squareTri.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/square.neu", "seventh", scalingFactor);
+  mlMsh.GenerateCoarseBoxMesh(32, 32, 0, -0.5, 0.5, -0.5, 0.5, 0., 0., QUAD9, "seventh");
 
   // Set number of mesh levels.
-  unsigned numberOfUniformLevels = 5;
+  unsigned numberOfUniformLevels = 1;
+
+//   //mlMsh.ReadCoarseMesh ("../input/squareTri.neu", "seventh", scalingFactor);
+//   mlMsh.ReadCoarseMesh ("../input/square.neu", "seventh", scalingFactor);
+// 
+//   // Set number of mesh levels.
+//   unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh (numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -149,7 +149,7 @@ int main (int argc, char** args) {
   system.AddSolutionToSystemPDE ("Dx2");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations (1);
+  system.SetMaxNumberOfNonLinearIterations (100);
   system.SetNonLinearConvergenceTolerance (1.e-10);
 
   system.init();
