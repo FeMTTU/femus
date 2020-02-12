@@ -871,7 +871,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
    real_num_mov J_hat;
    real_num_mov trace_e_hat;
 
-    Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda_lame, dim, sol_index_displ, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
+ 
+ Cauchy = Solid::get_Cauchy_stress_tensor< real_num_mov >(solid_model, mus, lambda_lame, incompressible, dim, sol_index_displ, sol_index_press, gradSolVAR_hat_qp, SolVAR_qp, SolPdeIndex, J_hat, trace_e_hat);
 
     
   //STATE=====================================

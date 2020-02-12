@@ -40,9 +40,14 @@ public:
     /** constructors */
     Solid(Parameter& par);
 
-    Solid(Parameter& par, const double young_module, const double poisson_coeff,
-          const double density, const char model[]= "Linear_elastic",
-          const double k=1., const double cp=1., const double alpha=1.e-06);
+    Solid(Parameter& par,
+          const double young_module, 
+          const double poisson_coeff,
+          const double density, 
+          const char model[]= "Linear_elastic",
+          const double k = 1., 
+          const double cp = 1., 
+          const double alpha = 1.e-06);
 
     Solid();
 
@@ -86,6 +91,7 @@ template < class real_num_mov >
 static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(const unsigned int solid_model,
                                                                               const double & mus,
                                                                               const double & lambda,
+                                                                              const bool  incompressible,
                                                                               const unsigned int dim,
                                                                               const unsigned int sol_index_displ,
                                                                               const unsigned int sol_pde_index_press,
@@ -139,6 +145,7 @@ template < class real_num_mov >
 /*static*/ std::vector < std::vector < real_num_mov > >  Solid::get_Cauchy_stress_tensor(const unsigned int solid_model,
                                                              const double & mus,
                                                              const double & lambda,
+                                                             const bool  incompressible,
                                                              const unsigned int dim,
                                                              const unsigned int sol_index_displ,
                                                              const unsigned int sol_pde_index_press,
@@ -150,7 +157,7 @@ template < class real_num_mov >
 ) {
     
     
-    
+//     const unsigned int is_incompressible = 1;  //0 means compressible
           
           
           std::vector < std::vector < real_num_mov > > Cauchy(3);    for (int i = 0; i < Cauchy.size(); i++) Cauchy[i].resize(3);
@@ -177,7 +184,7 @@ template < class real_num_mov >
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
                 //incompressible
-                Cauchy[i][j] = 2. * mus *  e[i][j] -  SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[i][j];  ///@todo check that mus is multiplying everything or only the deformation tensor
+                Cauchy[i][j] = 2. * mus *  e[i][j] -  (incompressible) * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[i][j];  ///@todo check that mus is multiplying everything or only the deformation tensor
                 //+(penalty)*lambda*trace_e*Identity[i][j];
               }
             }
@@ -214,9 +221,9 @@ template < class real_num_mov >
               for (int I = 0; I < 3; ++I) {
                 for (int J = 0; J < 3; ++J) {
                   if (1  ==  solid_model) 
-			Cauchy[I][J] = mus * B[I][J] - mus * I1_B * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J]; 	//Wood-Bonet J_hat  =1;
+			Cauchy[I][J] = mus * B[I][J] - (incompressible) * mus * I1_B * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J]; 	//Wood-Bonet J_hat  =1;   ///@todo check presence of mu_s here
                   else if (2  ==  solid_model) 
-			Cauchy[I][J] = mus / J_hat * B[I][J] - mus / J_hat * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J]; //Wood-Bonet J_hat !=1;
+			Cauchy[I][J] = mus / J_hat * B[I][J] - (incompressible) * mus / J_hat * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J]; //Wood-Bonet J_hat !=1;  ///@todo check presence of mu_s here
                   else if (3  ==  solid_model) 
 			Cauchy[I][J] = mus * (B[I][J] - Identity[I][J]) / J_hat + lambda / J_hat * log(J_hat) * Identity[I][J]; 	//Wood-Bonet penalty
                   else if (4  ==  solid_model) 
@@ -253,7 +260,7 @@ template < class real_num_mov >
                 for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.*(C1 * B[I][J] - C2 * invB[I][J])
                                   //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J];
-                                  - SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J];
+                                  - (incompressible) * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J];
                }
               }
 

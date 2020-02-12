@@ -70,80 +70,82 @@ int main(int argc, char **args) {
   }
 
   // ******* reading input parameters *******
+  std::string third_arg_options = "fsiSteady.cpp";
+  
   PetscOptionsBegin(PETSC_COMM_WORLD, "", "FSI steady problem options", "Unstructured mesh");
 
   cout << " Reading flags:" << endl;
 
-  PetscOptionsBool("-mem_infos", "Print memory infos", "fsiSteady.cpp", mem_infos, &mem_infos, NULL);
+  PetscOptionsBool("-mem_infos", "Print memory infos", third_arg_options.c_str(), mem_infos, &mem_infos, NULL);
   printf(" mem_infos: %d\n", mem_infos);
 
-  PetscOptionsInt("-nlevel", "The number of mesh levels", "fsiSteady.cpp", numofmeshlevels , &numofmeshlevels, NULL);
+  PetscOptionsInt("-nlevel", "The number of mesh levels", third_arg_options.c_str(), numofmeshlevels , &numofmeshlevels, NULL);
   printf(" nlevel: %i\n", numofmeshlevels);
 
-  PetscOptionsInt("-nrefinement", "The number of refinements", "fsiSteady.cpp", numofrefinements , &numofrefinements, NULL);
+  PetscOptionsInt("-nrefinement", "The number of refinements", third_arg_options.c_str(), numofrefinements , &numofrefinements, NULL);
   printf(" nrefinement: %i\n", numofrefinements);
 
-  PetscOptionsString("-input", "The name of the input file", "fsiSteady.cpp", "./mesh.neu", mesh_file, len_mesh_file_name, NULL);
+  PetscOptionsString("-input", "The name of the input file", third_arg_options.c_str(), "./mesh.neu", mesh_file, len_mesh_file_name, NULL);
   printf(" input: %s\n", mesh_file);
 
-  PetscOptionsString("-std_output", "The name of the redirected standard output file", "fsiSteady.cpp", "", stdOutfile, len_mesh_file_name, NULL);
+  PetscOptionsString("-std_output", "The name of the redirected standard output file", third_arg_options.c_str(), "", stdOutfile, len_mesh_file_name, NULL);
   printf(" redirected standard output: %s\n", stdOutfile);
 
-  PetscOptionsString("-ic_bdc", "The name of the file with bdc and ic functions", "fsiSteady.cpp", "", bdcfilename, len_mesh_file_name, NULL);
+  PetscOptionsString("-ic_bdc", "The name of the file with bdc and ic functions", third_arg_options.c_str(), "", bdcfilename, len_mesh_file_name, NULL);
   printf(" ic_bdc: %s\n", bdcfilename);
 
-  PetscOptionsReal("-rhof", "The density of the fluid", "fsiSteady.cpp", rhof, &rhof, NULL);
+  PetscOptionsReal("-rhof", "The density of the fluid", third_arg_options.c_str(), rhof, &rhof, NULL);
   printf(" rhof: %f\n", rhof);
 
-  PetscOptionsReal("-rhos", "The density of the solid", "fsiSteady.cpp", rhos, &rhos, NULL);
+  PetscOptionsReal("-rhos", "The density of the solid", third_arg_options.c_str(), rhos, &rhos, NULL);
   printf(" rhos: %f\n", rhos);
 
-  PetscOptionsReal("-E", "The young module of the solid", "fsiSteady.cpp", E, &E, NULL);
+  PetscOptionsReal("-E", "The young module of the solid", third_arg_options.c_str(), E, &E, NULL);
   printf(" E: %f\n", E);
 
-  PetscOptionsReal("-muf", "The viscosity of the fluid", "fsiSteady.cpp", muf, &muf, NULL);
+  PetscOptionsReal("-muf", "The viscosity of the fluid", third_arg_options.c_str(), muf, &muf, NULL);
   printf(" muf: %f\n", muf);
 
-  PetscOptionsReal("-ni", "The Poisson coefficient of the Solid", "fsiSteady.cpp", ni, &ni, NULL);
+  PetscOptionsReal("-ni", "The Poisson coefficient of the Solid", third_arg_options.c_str(), ni, &ni, NULL);
   printf(" ni: %f\n", ni);
 
-//   PetscOptionsInt("-nlin_iter", "The number of linear iteration", "fsiSteady.cpp", numlineariter , &numlineariter, NULL);
+//   PetscOptionsInt("-nlin_iter", "The number of linear iteration", third_arg_options.c_str(), numlineariter , &numlineariter, NULL);
 //   printf(" nlin_iter: %i\n", numlineariter);
 
-  PetscOptionsBool("-equation_pivoting", "Set equation pivoting during assembly", "fsiSteady.cpp", equation_pivoting , &equation_pivoting, NULL);
+  PetscOptionsBool("-equation_pivoting", "Set equation pivoting during assembly", third_arg_options.c_str(), equation_pivoting , &equation_pivoting, NULL);
   printf(" equation_pivoting: %i\n", equation_pivoting);
 
-  PetscOptionsInt("-nnonlin_iter", "The number of non-linear iteration", "fsiSteady.cpp", numnonlineariter, &numnonlineariter, NULL);
+  PetscOptionsInt("-nnonlin_iter", "The number of non-linear iteration", third_arg_options.c_str(), numnonlineariter, &numnonlineariter, NULL);
   printf(" nnonlin_iter: %i\n", numnonlineariter);
 
-  PetscOptionsReal("-lin_tol", "The linear solver tolerance", "fsiSteady.cpp", lin_tol, &lin_tol, NULL);
+  PetscOptionsReal("-lin_tol", "The linear solver tolerance", third_arg_options.c_str(), lin_tol, &lin_tol, NULL);
   printf(" lin_tol: %g\n", lin_tol);
 
-  PetscOptionsReal("-alin_tol", "The abs linear solver tolerance", "fsiSteady.cpp", alin_tol, &alin_tol, NULL);
+  PetscOptionsReal("-alin_tol", "The abs linear solver tolerance", third_arg_options.c_str(), alin_tol, &alin_tol, NULL);
   printf(" alin_tol: %g\n", alin_tol);
 
-  PetscOptionsReal("-nonlin_tol", "The nonlinear solver tolerance", "fsiSteady.cpp", nonlin_tol, &nonlin_tol, NULL);
+  PetscOptionsReal("-nonlin_tol", "The nonlinear solver tolerance", third_arg_options.c_str(), nonlin_tol, &nonlin_tol, NULL);
   printf(" nonlin_tol: %g\n", nonlin_tol);
 
-  PetscOptionsInt("-asm_block", "The asm block dimension", "fsiSteady.cpp", asm_block, &asm_block, NULL);
+  PetscOptionsInt("-asm_block", "The asm block dimension", third_arg_options.c_str(), asm_block, &asm_block, NULL);
   printf(" asm_block: %i\n", asm_block);
 
-  PetscOptionsString("-outer_ksp_solver", "The outer ksp solver", "fsiSteady.cpp", "gmres", outer_ksp_solver, len_mesh_file_name, NULL);
+  PetscOptionsString("-outer_ksp_solver", "The outer ksp solver", third_arg_options.c_str(), "gmres", outer_ksp_solver, len_mesh_file_name, NULL);
   printf(" outer_ksp_solver: %s\n", outer_ksp_solver);
 
-  PetscOptionsInt("-npre", "The number of presmoothing step", "fsiSteady.cpp", npre, &npre, NULL);
+  PetscOptionsInt("-npre", "The number of presmoothing step", third_arg_options.c_str(), npre, &npre, NULL);
   printf(" npre: %i\n", npre);
 
-  PetscOptionsInt("-npost", "The number of postmoothing step", "fsiSteady.cpp", npost, &npost, NULL);
+  PetscOptionsInt("-npost", "The number of postmoothing step", third_arg_options.c_str(), npost, &npost, NULL);
   printf(" npost: %i\n", npost);
 
-  PetscOptionsInt("-ksp_restart", "The number of ksp linear step before restarting", "fsiSteady.cpp", ksp_restart, &ksp_restart, NULL);
+  PetscOptionsInt("-ksp_restart", "The number of ksp linear step before restarting", third_arg_options.c_str(), ksp_restart, &ksp_restart, NULL);
   printf(" ksp_restart: %i\n", ksp_restart);
 
-  PetscOptionsInt("-max_outer_solver_iter", "The maximum outer solver iterations", "fsiSteady.cpp", max_outer_solver_iter, &max_outer_solver_iter, NULL);
+  PetscOptionsInt("-max_outer_solver_iter", "The maximum outer solver iterations", third_arg_options.c_str(), max_outer_solver_iter, &max_outer_solver_iter, NULL);
   printf(" max_outer_solver_iter: %i\n", max_outer_solver_iter);
 
-   PetscOptionsString("-output_time", "The name of the redirected standard output file", "fsiSteady.cpp", "", output_time, len_mesh_file_name, NULL);
+   PetscOptionsString("-output_time", "The name of the redirected standard output file", third_arg_options.c_str(), "", output_time, len_mesh_file_name, NULL);
   printf(" Output time folder: %s\n", output_time);
   
   printf("\n");
@@ -274,18 +276,24 @@ output_path.append("/");
    
   
   // ******* Fluid and Solid Parameters *******
+//    const std::string solid_model = "Neo-Hookean";
+   const std::string solid_model = "Mooney-Rivlin";
+   
+   const std::string fluid_model = "Newtonian";
+   
+   
   Parameter par(Lref, Uref);
 
   // Generate Solid Object
   Solid solid;
-  solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
+  solid = Solid(par, E, ni, rhos, solid_model.c_str() );
 
   cout << "Solid properties: " << endl;
   cout << solid << endl;
 
   // Generate Fluid Object
 
-  Fluid fluid(par, muf, rhof, "Newtonian");
+  Fluid fluid(par, muf, rhof, fluid_model.c_str() );
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
 
@@ -308,8 +316,13 @@ output_path.append("/");
   if (dimension==3) ml_sol.PairSolution("W","DZ"); // Add this line
 
   
-  const FEFamily pressure_fe_fam   = LAGRANGE; //DISCONTINOUS_POLYNOMIAL
-  const FEOrder  pressure_fe_order = FIRST;    //ZERO
+//   const FEFamily pressure_fe_fam   = LAGRANGE;
+//   const FEOrder  pressure_fe_order = FIRST;
+  const FEFamily pressure_fe_fam   = DISCONTINUOUS_POLYNOMIAL;
+  const FEOrder  pressure_fe_order = FIRST;
+//   const FEFamily pressure_fe_fam   = DISCONTINUOUS_POLYNOMIAL;
+//   const FEOrder  pressure_fe_order = ZERO;
+  
   
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P", pressure_fe_fam, pressure_fe_order, 1);
@@ -472,7 +485,7 @@ output_path.append("/");
 
   // ******* Postprocessing *******
   
-  ComputeQoI_face(ml_prob, numofmeshlevels - 1, all_face_flags, 0, _element_faces, NULL);
+//   Compute_normal_stress_interface(ml_prob, numofmeshlevels - 1, all_face_flags, 0, _element_faces, NULL);
 
   if(strcmp (output_file_to_parse.c_str(), "") != 0) {
     PrintMumpsInfo      (output_path, output_file_to_parse.c_str(), mesh_file, numofrefinements);

@@ -436,6 +436,8 @@ namespace femus {
 
         //BEGIN SOLID ASSEMBLY
         else {
+            
+            
           //BEGIN build Chauchy Stress in moving domain
           //physical quantity
           adept::adouble J_hat;
@@ -465,7 +467,7 @@ namespace femus {
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
                 //incompressible
-                Cauchy[i][j] = 2 * mus * e[i][j] - 2 * mus * I_e * SolVAR[2 * dim] * Id2th[i][j];
+                Cauchy[i][j] = 2 * mus * e[i][j] - 2. * (incompressible) * mus * I_e * SolVAR[2 * dim] * Id2th[i][j];
                 //+(penalty)*lambda*I_e*Id2th[i][j];
               }
             }
@@ -501,9 +503,9 @@ namespace femus {
               for (int I = 0; I < 3; ++I) {
                 for (int J = 0; J < 3; ++J) {
                   if (1  ==  solid_model) Cauchy[I][J] = mus * B[I][J]
-                        - mus * I1_B * SolVAR[2 * dim] * Id2th[I][J]; 	//Wood-Bonet J_hat  =1;
+                        - (incompressible) * mus * I1_B * SolVAR[2 * dim] * Id2th[I][J]; 	//Wood-Bonet J_hat  =1;
                   else if (2  ==  solid_model) Cauchy[I][J] = mus / J_hat * B[I][J]
-                        - mus / J_hat * SolVAR[2 * dim] * Id2th[I][J]; //Wood-Bonet J_hat !=1;
+                        - (incompressible) * mus / J_hat * SolVAR[2 * dim] * Id2th[I][J]; //Wood-Bonet J_hat !=1;
                   else if (3  ==  solid_model) Cauchy[I][J] = mus * (B[I][J] - Id2th[I][J]) / J_hat
                         + lambda / J_hat * log(J_hat) * Id2th[I][J]; 	//Wood-Bonet penalty
                   else if (4  ==  solid_model) Cauchy[I][J] = mus * (B[I][J] - I1_B * Id2th[I][J] / 3.) / pow(J_hat, 5. / 3.)
@@ -540,7 +542,7 @@ namespace femus {
                 for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.*(C1 * B[I][J] - C2 * invB[I][J])
                                   //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR[2 * dim] * Id2th[I][J];
-                                  - SolVAR[2 * dim] * Id2th[I][J];
+                                  - (incompressible) * SolVAR[2 * dim] * Id2th[I][J];
                 }
               }
 
@@ -593,7 +595,7 @@ namespace femus {
                 }
               }
               else if (3  ==  solid_model || 4  ==  solid_model) { // pressure = 0 in the solid
-                aRhs[indexVAR[2 * dim]][i] += -(-phi1[i] * (SolVAR[2 * dim])) * jacobian_hat;
+                   aRhs[indexVAR[2 * dim]][i] += - ( -phi1[i] * (SolVAR[2 * dim])) * jacobian_hat;
               }
             }
           }
@@ -1585,7 +1587,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 
  
   
-  void ComputeQoI_face(const MultiLevelProblem& ml_prob,
+  void Compute_normal_stress_interface(const MultiLevelProblem& ml_prob,
                        const unsigned level, 
                        const std::vector < int > all_face_flags,
                        const unsigned stress_component, 

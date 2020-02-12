@@ -46,38 +46,44 @@ Solid::Solid(Parameter& par) : Material(par) {
   _model = 0;
 }
 
-Solid::Solid(Parameter& par, const double young_module, const double poisson_coeff,
-             const double density, const char model[],
-             const double k, const double cp, const double alpha) : Material(par,density,k,cp,alpha) {
+Solid::Solid(Parameter& par, 
+             const double young_module,
+             const double poisson_coeff,
+             const double density, 
+             const char model[],
+             const double k,
+             const double cp,
+             const double alpha) : Material(par, density, k, cp, alpha) {
+                 
   _young_module = young_module;
 
 
   if (!strcmp(model,"Linear_elastic") || !strcmp(model,"Saint-Venant")) {
     _model = 0;
     _penalty = false;
-    _mass_penalty=false;
+    _mass_penalty = false;
   }
   else if (!strcmp(model,"Saint-Venant-Penalty")) {
     _model = 0;
     _penalty = true;
-    _mass_penalty=false;
+    _mass_penalty = false;
   }
   else if (!strcmp(model,"Neo-Hookean") || !strcmp(model,"Neo-Hookean-MassPenalty")) {
     _model = 1;
     _penalty = false;
-    _mass_penalty=!strcmp(model,"Neo-Hookean-MassPenalty")?true:false;
+    _mass_penalty = !strcmp(model,"Neo-Hookean-MassPenalty") ? true : false;
   }
-  else if (!strcmp(model,"Neo-Hookean-BW") || !strcmp(model,"Neo-Hookean-BW-MassPenalty") ) {
+  else if (!strcmp(model,"Neo-Hookean-BW") || !strcmp(model,"Neo-Hookean-BW-MassPenalty") ) {  //Bonet-Wood
     _model = 2;
     _penalty = false;
-    _mass_penalty=!strcmp(model,"Neo-Hookean-BW-MassPenalty")?true:false;
+    _mass_penalty = !strcmp(model,"Neo-Hookean-BW-MassPenalty") ? true : false;
   }
   else if (!strcmp(model,"Neo-Hookean-BW-Penalty")) {
     _model = 3;
     _penalty = true;
-    _mass_penalty=false;
+    _mass_penalty = false;
   }
-  else if (!strcmp(model,"Neo-Hookean-AB-Penalty")) {
+  else if (!strcmp(model,"Neo-Hookean-AB-Penalty")) {  //Allan-Bower
     _model = 4;
     _penalty = true;
     _mass_penalty = false;
@@ -85,11 +91,11 @@ Solid::Solid(Parameter& par, const double young_module, const double poisson_coe
    else if (!strcmp(model,"Mooney-Rivlin") || !strcmp(model,"Mooney-Rivlin-MassPenalty")) {
     _model = 5;
     _penalty = false;
-    _mass_penalty=(!strcmp(model,"Mooney-Rivlin-MassPenalty"))?true:false;
+    _mass_penalty = (!strcmp(model,"Mooney-Rivlin-MassPenalty")) ? true : false;
   }
   else {
-    cout<<"Error! This solid model is not implemented "<<endl;
-    exit(1);
+    cout << "Error! This solid model is not implemented " << endl;
+    abort();
   }
 
   if (poisson_coeff <= 0.5 && poisson_coeff >= 0) {
@@ -97,7 +103,7 @@ Solid::Solid(Parameter& par, const double young_module, const double poisson_coe
   } 
   else {
     cout << "Error: the value for the Poisson coeffcient must be greater than 0 and less equal than 0.5!" << endl;
-    exit(1);
+    abort();
   }
   
   
@@ -105,13 +111,13 @@ Solid::Solid(Parameter& par, const double young_module, const double poisson_coe
     _lambda_lame = (_young_module*_poisson_coeff)/((1.+_poisson_coeff)*(1.-2.*_poisson_coeff));
   }
   else if (true == _penalty){
-    std::cout<<"Error this solid model requires a Poisson coeffcient strictly less than 0.5"<<endl;
-    exit(1);
+    std::cout << "Error this solid model requires a Poisson coeffcient strictly less than 0.5"<<endl;
+    abort();
   }
   else{
     cout << "Warning: the value for the Poisson coeffcient is 0.5, the material is incompressible"<<endl
 	 << "The Lame constant is infinity and it has been set equal to 1.0e100" << endl;
-    _lambda_lame =1.0e100;
+    _lambda_lame = 1.0e100;
   }
   _mu_lame     = _young_module/(2.*(1.+_poisson_coeff));
 
