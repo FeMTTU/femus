@@ -294,22 +294,26 @@ output_path.append("/");
   MultiLevelSolution ml_sol(&ml_msh);
 
   // ******* Add solution variables to multilevel solution and pair them *******
-  ml_sol.AddSolution("DX",LAGRANGE,SECOND,1);
-  ml_sol.AddSolution("DY",LAGRANGE,SECOND,1);
-  if (dimension==3) ml_sol.AddSolution("DZ",LAGRANGE,SECOND,1);
+  ml_sol.AddSolution("DX", LAGRANGE, SECOND, 1);
+  ml_sol.AddSolution("DY", LAGRANGE, SECOND, 1);
+  if (dimension==3) ml_sol.AddSolution("DZ", LAGRANGE, SECOND, 1);
 
-  ml_sol.AddSolution("U",LAGRANGE,SECOND,1);
-  ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
-  if (dimension==3) ml_sol.AddSolution("W",LAGRANGE,SECOND,1);
+  ml_sol.AddSolution("U", LAGRANGE, SECOND, 1);
+  ml_sol.AddSolution("V", LAGRANGE, SECOND, 1);
+  if (dimension==3) ml_sol.AddSolution("W", LAGRANGE, SECOND, 1);
 
   // Pair each velocity variable with the corresponding displacement variable
   ml_sol.PairSolution("U","DX"); // Add this line
   ml_sol.PairSolution("V","DY"); // Add this line
   if (dimension==3) ml_sol.PairSolution("W","DZ"); // Add this line
 
+  
+  const FEFamily pressure_fe_fam   = LAGRANGE; //DISCONTINOUS_POLYNOMIAL
+  const FEOrder  pressure_fe_order = FIRST;    //ZERO
+  
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("P",DISCONTINUOUS_POLYNOMIAL,FIRST,1);
-  ml_sol.AssociatePropertyToSolution("P","Pressure",false); // Add this line
+  ml_sol.AddSolution("P", pressure_fe_fam, pressure_fe_order, 1);
+  ml_sol.AssociatePropertyToSolution("P", "Pressure", false); // Add this line
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -467,9 +471,8 @@ output_path.append("/");
   }
 
   // ******* Postprocessing *******
-  const unsigned int face_for_qoi  = 4;  //not used now
   
-  ComputeQoI_face(ml_prob, numofmeshlevels - 1, face_for_qoi, all_face_flags, 0, _element_faces, NULL);
+  ComputeQoI_face(ml_prob, numofmeshlevels - 1, all_face_flags, 0, _element_faces, NULL);
 
   if(strcmp (output_file_to_parse.c_str(), "") != 0) {
     PrintMumpsInfo      (output_path, output_file_to_parse.c_str(), mesh_file, numofrefinements);

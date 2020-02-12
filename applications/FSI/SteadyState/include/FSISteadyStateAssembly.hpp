@@ -1587,7 +1587,6 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
   
   void ComputeQoI_face(const MultiLevelProblem& ml_prob,
                        const unsigned level, 
-                       const unsigned face_qoi,
                        const std::vector < int > all_face_flags,
                        const unsigned stress_component, 
                        /*const*/ std::vector< MyMatrix <int> > & element_faces, //@todo here the operator with const has to be added to MyMatrix
@@ -1630,6 +1629,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
  //*************** unknowns ***************************** 
  //*************************************************** 
    const unsigned int n_fluid_unknowns = dim + 1;
+   const unsigned int pressure_index = n_fluid_unknowns - 1;
  
   vector < vector < double > > phi_u(n_fluid_unknowns);     
   vector < vector < double > > phi_u_x(n_fluid_unknowns);   
@@ -1639,11 +1639,13 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
        phi_u_x[d].reserve(max_size * space_dim);
    }
    
+   
+   
  std::vector < std::string >  var_names(n_fluid_unknowns);
  var_names[0] = "U";
  var_names[1] = "V";
  if (dim == 3) var_names[2] =  "W";
- var_names[n_fluid_unknowns - 1] = "P";
+ var_names[pressure_index] = "P";
  
   std::vector <  unsigned > solIndex_u(n_fluid_unknowns); 
   std::vector <  unsigned > solType_u(n_fluid_unknowns); 
@@ -1761,7 +1763,6 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 // // // 	      
 // // // 		
 // // // // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
-// // // 	      if(  face == face_qoi) { //control face
 
        if ( or_vector(element_faces[level][iel][jface], all_face_flags) ) {
        
@@ -1868,7 +1869,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
 //     compute gauss quantities on the boundary through VOLUME interpolation
 
 
-                 integral_norm_stress_component[d] +=  weight_bdry * mu_f * normal_deform_tensor /*1.*/; /*normal[0] **/ /*normal[1] **/ /*normal[2] **/ 
+                 integral_norm_stress_component[d] +=  weight_bdry * mu_f * normal_deform_tensor - sol_u_bdry_gss[pressure_index] * normal[d] /*1.*/; /*normal[0] **/ /*normal[1] **/ /*normal[2] **/ 
                  
           }
     //--------       
@@ -1876,7 +1877,6 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
            } //end gauss boundary
            
          } //end faces
-// // // 	      } //end face == 3
 // // // 	    } //end if boundary faces
 	    
 	  }  // loop over element faces   
