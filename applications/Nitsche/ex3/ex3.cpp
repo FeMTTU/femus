@@ -940,10 +940,13 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
 
         for(unsigned k = 0; k < dim; k++) {
           for(unsigned i = 0; i < nDofu; i++) {
-            for(unsigned j = 0; j < nDofu; j++) {
-              for(unsigned l = 0; l < dim; l++) {
+            for(unsigned l = 0; l < dim; l++) {
+              for(unsigned j = 0; j < nDofu; j++) {
                 b[0][((nDofu * k) + i) * sizeAll + (k * nDofu + j)] += 0.5 * phi_x[i * dim + l] * phi_x[j * dim + l] * weight;
                 b[0][((nDofu * k) + i) * sizeAll + (l * nDofu + j)] += 0.5 * phi_x[i * dim + l] * phi_x[j * dim + k] * weight;
+                if(k == l && i == j){
+                  std::cout << k <<" "<< l << " " << 0.5 * phi_x[i * dim + l] * phi_x[j * dim + k] * weight << std::endl;
+                }
               }
             }
           }
@@ -963,8 +966,8 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
 
         for(unsigned k = 0; k < dim; k++) {
           for(unsigned i = 0; i < nDofu; i++) {
-            for(unsigned j = 0; j < nDofu; j++) {
-              for(unsigned l = 0; l < dim; l++) {
+            for(unsigned l = 0; l < dim; l++) {
+              for(unsigned j = 0; j < nDofu; j++) {
                 b[1][((nDofu * k) + i) * sizeAll + (k * nDofu + j)] += 0.5 * phi_x[i * dim + l] * phi_x[j * dim + l] * weight;
                 b[1][((nDofu * k) + i) * sizeAll + (l * nDofu + j)] += 0.5 * phi_x[i * dim + l] * phi_x[j * dim + k] * weight;
               }
@@ -1048,6 +1051,41 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
        * generalized eigenvalue problem.
        */
 
+//       for(int k = 0; k < dim; k++) {
+//         for(int i = 0; i < nDofu; i++) {
+//           for(int l = 0; l < dim; l++) {
+//             for(int j = 0; j < nDofu; j++) {
+//               std::cout << a[((nDofu * k) + i) * sizeAll + (nDofu * l + j)] << " ";
+//             }
+//           }
+//           std::cout << std::endl;
+//         }
+//       }
+//       std::cout << std::endl;
+//       for(int k = 0; k < dim; k++) {
+//         for(int i = 0; i < nDofu; i++) {
+//           for(int l = 0; l < dim; l++) {
+//             for(int j = 0; j < nDofu; j++) {
+//               std::cout << b[0][((nDofu * k) + i) * sizeAll + (nDofu * l + j)] << " ";
+//             }
+//           }
+//           std::cout << std::endl;
+//         }
+//       }
+//       std::cout << std::endl;
+// 
+      for(int k = 0; k < dim; k++) {
+        for(int i = 0; i < nDofu; i++) {
+          for(int l = 0; l < dim; l++) {
+            for(int j = 0; j < nDofu; j++) {
+              std::cout << b[1][((nDofu * k) + i) * sizeAll + (nDofu * l + j)] << " ";
+            }
+          }
+          std::cout << std::endl;
+        }
+      }
+     std::cout << std::endl;
+
       for(unsigned s = 0; s < 2; s++) {
         MatCreateSeqDense(PETSC_COMM_SELF, dim * (nDofu - 1), dim * (nDofu - 1), NULL, &A);
         MatCreateSeqDense(PETSC_COMM_SELF, dim * (nDofu - 1), dim * (nDofu - 1), NULL, &B);
@@ -1055,25 +1093,47 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
         for(int k = 0; k < dim; k++) {
           for(int i = 0; i < nDofu - 1; i++) {
             int ip = i + 1;
+            int i1 = (nDofu - 1) * k + i;
             for(int l = 0; l < dim; l++) {
               for(int j = 0; j < nDofu - 1; j++) {
                 int jp = j + 1;
+                int j1 = (nDofu - 1) * l + j;
                 double value;
-                value = b[s][((nDofu * k) + ip) * sizeAll + (nDofu * l + jp)] - b[s][(nDofu * k) * sizeAll + (nDofu * l + jp)];
-                MatSetValues(B, 1, &i, 1, &j, &value, INSERT_VALUES);
+                
+                
                 value = a[((nDofu * k) + ip) * sizeAll + (nDofu * l + jp)] - a[(nDofu * k) * sizeAll + (nDofu * l + jp)];
-                MatSetValues(A, 1, &i, 1, &j, &value, INSERT_VALUES);
+                MatSetValues(A, 1, &i1, 1, &j1, &value, INSERT_VALUES);
+                
+                
+                value = b[s][((nDofu * k) + ip) * sizeAll + (nDofu * l + jp)] - b[s][(nDofu * k) * sizeAll + (nDofu * l + jp)];
+                MatSetValues(B, 1, &i1, 1, &j1, &value, INSERT_VALUES);
+                
               }
             }
           }
         }
 
+        
+        
         MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
         MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
 
         MatAssemblyBegin(B, MAT_FINAL_ASSEMBLY);
         MatAssemblyEnd(B, MAT_FINAL_ASSEMBLY);
 
+        if(s==1){
+
+//         PetscViewer    viewer;
+//         PetscViewerDrawOpen(PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+//         PetscObjectSetName((PetscObject)viewer, "FSI matrix");
+//         PetscViewerPushFormat(viewer, PETSC_VIEWER_DRAW_LG);
+ //       MatView(A, 	PETSC_VIEWER_STDOUT_SELF  );
+//        double a;
+//        std::cin >> a;
+         MatView(B, 		PETSC_VIEWER_STDOUT_SELF  );
+//         std::cin >> a;
+
+        }
         EPSCreate(PETSC_COMM_SELF, &eps);
         EPSSetOperators(eps, A, B);
         EPSSetFromOptions(eps);
@@ -1082,7 +1142,7 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
 
         double real, imaginary;
         EPSGetEigenpair(eps, 0, &real, &imaginary, NULL, NULL);
-        //std::cout << real << " " << imaginary << std::endl;
+        std::cout << real << " " << imaginary << std::endl;
         sol->_Sol[CMIndex[s]]->set(iel, real);
 
         EPSDestroy(&eps);
