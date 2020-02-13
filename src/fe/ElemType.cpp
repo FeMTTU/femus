@@ -853,10 +853,22 @@ namespace femus {
          
           
         constexpr unsigned int dim = 2;  
+
+      basis* underlying_volume_basis;
+      
+       if( _SolType < 3 ) {
+           underlying_volume_basis = _pt_basis;
+       }
+       else if( _SolType < 5 ) {
+              if( _GeomElemType == QUAD) underlying_volume_basis = new QuadLinear;
+         else if( _GeomElemType == TRI)  underlying_volume_basis = new TriLinear;
+       }
+      
+      
           
-#if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
-       if(_SolType < 3) {
-#endif
+// // // #if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
+// // //        if(_SolType < 3) {
+// // // #endif
 
 //----- auxiliary basis for the faces //(the reference element has straight edges)
       basis* linearLine = new LineLinear;
@@ -868,7 +880,7 @@ namespace femus {
       const double* xi_ptr = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
 // --------- quadrature
 
-      unsigned nFaces = _pt_basis->faceNumber[2];
+      unsigned nFaces = /*_pt_basis*/underlying_volume_basis->faceNumber[2];
       
       _phiFace.resize(nFaces);
       _gradPhiFace.resize(nFaces);
@@ -882,9 +894,9 @@ namespace femus {
         std::vector< double > yv_face(n_face_dofs);
         
         for(int jnode = 0; jnode < n_face_dofs; jnode++) {
-          unsigned iDof = _pt_basis->GetFaceDof(iface, jnode);
-          xv_face[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
-          yv_face[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
+          unsigned iDof = /*_pt_basis*/underlying_volume_basis->GetFaceDof(iface, jnode);
+          xv_face[jnode] = *(/*_pt_basis*/underlying_volume_basis->GetXcoarse(iDof) + 0);
+          yv_face[jnode] = *(/*_pt_basis*/underlying_volume_basis->GetXcoarse(iDof) + 1);
         }
         
         unsigned nGaussPts = faceGaussPoint.GetGaussPointsNumber();
@@ -923,28 +935,24 @@ namespace femus {
       }
       delete linearLine;
       
-#if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
-    }
-    else if(_SolType < 5) {
-       // if I am a Disc element, I don't have the nodes with me,
-       // but I need them in order to compute the face quadrature points. 
-       // These are needed to locate the boundary quadrature points correctly on each face
-       // Basically, I need the underlying element, or more precisely the underlying Geometric Element
-       // in 2d, it is either a Quad or a Tri, and it will only be one of them 
-
-        
-      basis* underlying_volume_basis;
-            if( _GeomElemType == QUAD) underlying_volume_basis = new QuadLinear;
-       else if( _GeomElemType == TRI)  underlying_volume_basis = new TriLinear;
-
-      
-      
-        
-      delete underlying_volume_basis;
-    }
-#endif
+// // // #if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
+// // //     }
+// // //     else if(_SolType < 5) {
+// // //        // if I am a Disc element, I don't have the nodes with me,
+// // //        // but I need them in order to compute the face quadrature points. 
+// // //        // These are needed to locate the boundary quadrature points correctly on each face
+// // //        // Basically, I need the underlying element, or more precisely the underlying Geometric Element
+// // //        // in 2d, it is either a Quad or a Tri, and it will only be one of them 
+// // // 
+// // //         
+// // //     }
+// // // #endif
     
-    
+        
+if( _SolType >= 3 && _SolType < 5 ) {
+    delete underlying_volume_basis;
+}
+      
    }
    
       void elem_type_3D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
