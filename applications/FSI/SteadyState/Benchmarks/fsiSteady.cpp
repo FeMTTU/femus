@@ -304,16 +304,16 @@ output_path.append("/");
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 1);
   ml_sol.AddSolution("DY", LAGRANGE, SECOND, 1);
-  if (dimension==3) ml_sol.AddSolution("DZ", LAGRANGE, SECOND, 1);
+  if (dimension == 3) ml_sol.AddSolution("DZ", LAGRANGE, SECOND, 1);
 
   ml_sol.AddSolution("U", LAGRANGE, SECOND, 1);
   ml_sol.AddSolution("V", LAGRANGE, SECOND, 1);
-  if (dimension==3) ml_sol.AddSolution("W", LAGRANGE, SECOND, 1);
+  if (dimension == 3) ml_sol.AddSolution("W", LAGRANGE, SECOND, 1);
 
   // Pair each velocity variable with the corresponding displacement variable
-  ml_sol.PairSolution("U","DX"); // Add this line
-  ml_sol.PairSolution("V","DY"); // Add this line
-  if (dimension==3) ml_sol.PairSolution("W","DZ"); // Add this line
+  ml_sol.PairSolution("U", "DX"); // Add this line
+  ml_sol.PairSolution("V", "DY"); // Add this line
+  if (dimension == 3) ml_sol.PairSolution("W","DZ"); // Add this line
 
   
 //   const FEFamily pressure_fe_fam   = LAGRANGE;

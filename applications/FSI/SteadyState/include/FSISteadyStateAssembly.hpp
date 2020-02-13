@@ -583,19 +583,27 @@ namespace femus {
           //BEGIN continuity block
           {
             for (unsigned i = 0; i < nve1; i++) {
+                
               if (!penalty) {
+                  
                 if (0  ==  solid_model) {
                   aRhs[indexVAR[2 * dim]][i] += -(-phi1[i] * (I_e + (!incompressible) / lambda * SolVAR[2 * dim])) * jacobian_hat;
                 }
                 else if (1  ==  solid_model || 5  ==  solid_model) {
-                  aRhs[indexVAR[2 * dim]][i] += phi1[i] * (J_hat - 1. + (!incompressible) / lambda * SolVAR[2 * dim]) * jacobian_hat;
+                  if (incompressible)  aRhs[indexVAR[2 * dim]][i] += phi1[i] * (J_hat - 1. + (!incompressible) / lambda * SolVAR[2 * dim]) * jacobian_hat;
+//                   else                 aRhs[indexVAR[2 * dim]][i] +=  /*phi1[i]*/ /** 1.e10 */ SolVAR[2 * dim];
+                  else                 aRhs[indexVAR[2 * dim]][i] =  Soli[indexVAR[2 * dim]][i];
                 }
                 else if (2  ==  solid_model) {
                   aRhs[indexVAR[2 * dim]][i] +=  -(-phi1[i] * (log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR[2 * dim])) * jacobian_hat;
                 }
+                
               }
-              else if (3  ==  solid_model || 4  ==  solid_model) { // pressure = 0 in the solid
+              else {
+                if (3  ==  solid_model || 4  ==  solid_model) { // pressure = 0 in the solid
                    aRhs[indexVAR[2 * dim]][i] += - ( -phi1[i] * (SolVAR[2 * dim])) * jacobian_hat;
+                }
+                  
               }
             }
           }
