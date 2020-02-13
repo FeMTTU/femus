@@ -485,7 +485,7 @@ output_path.append("/");
 
   // ******* Postprocessing *******
   
-//   Compute_normal_stress_interface(ml_prob, numofmeshlevels - 1, all_face_flags, 0, _element_faces, NULL);
+  Compute_normal_stress_interface(ml_prob, numofmeshlevels - 1, all_face_flags, 0, _element_faces, NULL);
 
   if(strcmp (output_file_to_parse.c_str(), "") != 0) {
     PrintMumpsInfo      (output_path, output_file_to_parse.c_str(), mesh_file, numofrefinements);

@@ -49,6 +49,18 @@ namespace femus {
       abort();
     }  
       
+           if ( !strcmp(geom_elem, "hex") )    _GeomElemType = HEX;
+      else if ( !strcmp(geom_elem, "tet") )    _GeomElemType = TET;
+      else if ( !strcmp(geom_elem, "wedge") )  _GeomElemType = WEDGE;
+      else if ( !strcmp(geom_elem, "quad") )   _GeomElemType = QUAD;
+      else if ( !strcmp(geom_elem, "tri") )    _GeomElemType = TRI;
+      else if ( !strcmp(geom_elem, "line") )   _GeomElemType = LINE;
+      else {
+        cout << " No " << geom_elem << " implemented" << endl;
+        abort();
+      }
+      
+      
             ///@todo conditional delete in the destructor 
       if ( !strcmp(geom_elem, "quad") || !strcmp(geom_elem, "tri") ) { //QUAD or TRI
            _gauss_bdry = new  Gauss("line", order_gauss);
@@ -595,7 +607,7 @@ namespace femus {
       _d2phidxi2[i]  = &_d2phidxi2_memory[i * _nc];
     }
 
-    const double* ptx[1] = {_gauss.GetGaussWeightsPointer() + n_gauss};
+    const double* ptx[1] = {_gauss.GetGaussWeightsPointer() + n_gauss};  // you sum an integer to a pointer, which offsets the pointer as a result
 
     for(unsigned i = 0; i < n_gauss; i++) {
       double x[1];
@@ -782,22 +794,28 @@ namespace femus {
    
    
    void elem_type_1D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
+       
+        constexpr unsigned int dim = 1;  
    
 #if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
        if(_SolType < 3) {
 #endif
 
-      unsigned nFaces = 2;
+      constexpr unsigned int nFaces = 2;
+      
       _phiFace.resize(nFaces);
       _gradPhiFace.resize(nFaces);
       _hessianPhiFace.resize(nFaces);
 
-      double xv[2] = { -1, 1};
+      const double xi[nFaces] = { -1, 1};
+      
+      constexpr unsigned int nGaussPts_on_each_face = 1;
 
       for(int iface = 0; iface < nFaces; iface++) {
-        _phiFace[iface].resize(1);
-        _gradPhiFace[iface].resize(1);
-        _hessianPhiFace[iface].resize(1);
+          
+        _phiFace[iface].resize(nGaussPts_on_each_face);
+        _gradPhiFace[iface].resize(nGaussPts_on_each_face);
+        _hessianPhiFace[iface].resize(nGaussPts_on_each_face);
 
         _phiFace[iface][0].resize(_nc);
         _gradPhiFace[iface][0].resize(_nc);
@@ -805,18 +823,18 @@ namespace femus {
 
         for(int j = 0; j < _nc; j++) {
 
-          _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xv[iface]);
+          _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xi[iface]);
 
           //std::cout <<  _phiFace[iface][0][j] << " ";
 
           _gradPhiFace[iface][0][j].resize(1);
-          _gradPhiFace[iface][0][j][0] = _pt_basis->eval_dphidx(_IND[j], &xv[iface]);
+          _gradPhiFace[iface][0][j][0] = _pt_basis->eval_dphidx(_IND[j], &xi[iface]);
 
           //std::cout <<  _gradPhiFace[iface][0][j][0] << " ";
 
           _hessianPhiFace[iface][0][j].resize(1);
           _hessianPhiFace[iface][0][j][0].resize(1);
-          _hessianPhiFace[iface][0][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], &xv[iface]);
+          _hessianPhiFace[iface][0][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], &xi[iface]);
 
           //std::cout <<  _hessianPhiFace[iface][0][j][0][0] << " ";
         }
@@ -832,60 +850,73 @@ namespace femus {
    
    
       void elem_type_2D::allocate_and_fill_volume_shape_at_reference_boundary_quadrature_points_on_faces(const char* order_gauss)  {
+         
           
+        constexpr unsigned int dim = 2;  
           
 #if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
        if(_SolType < 3) {
 #endif
 
+//----- auxiliary basis for the faces //(the reference element has straight edges)
       basis* linearLine = new LineLinear;
-
-
-      Gauss faceGaussPoint = Gauss("line", order_gauss);
-      const double* xi = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
 
       basis* faceBasis = linearLine;
 
+// --------- quadrature
+      Gauss faceGaussPoint = Gauss("line", order_gauss);
+      const double* xi_ptr = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
+// --------- quadrature
+
       unsigned nFaces = _pt_basis->faceNumber[2];
+      
       _phiFace.resize(nFaces);
       _gradPhiFace.resize(nFaces);
       _hessianPhiFace.resize(nFaces);
+      
+      const unsigned n_face_dofs = faceBasis -> _nc;
 
       for(int iface = 0; iface < nFaces; iface++) {
           
-        std::vector< double > xv(faceBasis -> _nc);
-        std::vector< double > yv(faceBasis -> _nc);
-        for(int jnode = 0; jnode < faceBasis -> _nc; jnode++) {
+        std::vector< double > xv_face(n_face_dofs);
+        std::vector< double > yv_face(n_face_dofs);
+        
+        for(int jnode = 0; jnode < n_face_dofs; jnode++) {
           unsigned iDof = _pt_basis->GetFaceDof(iface, jnode);
-          xv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
-          yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
+          xv_face[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
+          yv_face[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
         }
+        
         unsigned nGaussPts = faceGaussPoint.GetGaussPointsNumber();
+        
         _phiFace[iface].resize(nGaussPts);
         _gradPhiFace[iface].resize(nGaussPts);
         _hessianPhiFace[iface].resize(nGaussPts);
+        
         for(unsigned i = 0; i < nGaussPts; i++) {
-          double x[2] = {0., 0.};
-          for(int j = 0; j <  faceBasis -> _nc; j++) {
-            x[0] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi[i]) * xv[j] ;
-            x[1] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi[i]) * yv[j] ;
+          double x_qp_face[2] = {0., 0.};
+          for(int j = 0; j <  n_face_dofs; j++) {
+            x_qp_face[0] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi_ptr[i]) * xv_face[j] ;
+            x_qp_face[1] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi_ptr[i]) * yv_face[j] ;
           }
+          
           _phiFace[iface][i].resize(_nc);
           _gradPhiFace[iface][i].resize(_nc);
           _hessianPhiFace[iface][i].resize(_nc);
+          
           for(int j = 0; j < _nc; j++) {
-            _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x);
+            _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x_qp_face);
 
             _gradPhiFace[iface][i][j].resize(2);
-            _gradPhiFace[iface][i][j][0] = _pt_basis->eval_dphidx(_IND[j], x);
-            _gradPhiFace[iface][i][j][1] = _pt_basis->eval_dphidy(_IND[j], x);
+            _gradPhiFace[iface][i][j][0] = _pt_basis->eval_dphidx(_IND[j], x_qp_face);
+            _gradPhiFace[iface][i][j][1] = _pt_basis->eval_dphidy(_IND[j], x_qp_face);
 
             _hessianPhiFace[iface][i][j].resize(2);
             _hessianPhiFace[iface][i][j][0].resize(2);
             _hessianPhiFace[iface][i][j][1].resize(2);
-            _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x);
-            _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x);
-            _hessianPhiFace[iface][i][j][0][1] = _pt_basis->eval_d2phidxdy(_IND[j], x);
+            _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x_qp_face);
+            _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x_qp_face);
+            _hessianPhiFace[iface][i][j][0][1] = _pt_basis->eval_d2phidxdy(_IND[j], x_qp_face);
             _hessianPhiFace[iface][i][j][1][0] = _hessianPhiFace[iface][i][j][0][1];
           }
         }
@@ -893,6 +924,23 @@ namespace femus {
       delete linearLine;
       
 #if PHIFACE_ONLY_FOR_LAGRANGIAN_FAMILIES == 1   
+    }
+    else if(_SolType < 5) {
+       // if I am a Disc element, I don't have the nodes with me,
+       // but I need them in order to compute the face quadrature points. 
+       // These are needed to locate the boundary quadrature points correctly on each face
+       // Basically, I need the underlying element, or more precisely the underlying Geometric Element
+       // in 2d, it is either a Quad or a Tri, and it will only be one of them 
+
+        
+      basis* underlying_volume_basis;
+            if( _GeomElemType == QUAD) underlying_volume_basis = new QuadLinear;
+       else if( _GeomElemType == TRI)  underlying_volume_basis = new TriLinear;
+
+      
+      
+        
+      delete underlying_volume_basis;
     }
 #endif
     
@@ -910,7 +958,11 @@ namespace femus {
       basis* linearQuad = new QuadLinear;
       basis* linearTri = new TriLinear;
 
+      basis* faceBasis[2];
+      faceBasis[0] = linearQuad;
+      faceBasis[1] = linearTri;
 
+// --------- quadrature
       Gauss quadGaussPoint = Gauss("quad", order_gauss);
       Gauss triGaussPoint = Gauss("tri", order_gauss);
 
@@ -925,10 +977,7 @@ namespace femus {
       const double* yi[2] = { faceGauss[0]->GetGaussWeightsPointer() + 2 * (faceGauss[0]->GetGaussPointsNumber()),
                               faceGauss[1]->GetGaussWeightsPointer() + 2 * (faceGauss[1]->GetGaussPointsNumber())
                             };
-
-      basis* faceBasis[2];
-      faceBasis[0] = linearQuad;
-      faceBasis[1] = linearTri;
+// --------- quadrature
 
       unsigned nFaces = _pt_basis->faceNumber[2];
       _phiFace.resize(nFaces);

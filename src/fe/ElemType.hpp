@@ -30,6 +30,7 @@
 #include "GaussPoints.hpp"
 #include "adept.h"
 #include "FETypeEnum.hpp"
+#include "GeomElTypeEnum.hpp"
 #include <boost/optional.hpp>
 
 
@@ -234,6 +235,7 @@ namespace femus
                                   _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
                                   */
       unsigned _SolType;       /* Finite Element Family flag */
+      GeomElType _GeomElemType;  /* Geometric Element flag */
       const double** _X;       /* [_nf][_dim] coordinates of the _nf nodes in the refined elements */ 
       const int** _IND;        /* [_nc][_dim] */ /*///@todo This is only used to evaluate the phi and derivatives */
       const int** _KVERT_IND;  /* [_nf][2] For each _nf: 0 = id of the subdivision of the fine element, 1 = local id node on the subdivision of the fine element*/
