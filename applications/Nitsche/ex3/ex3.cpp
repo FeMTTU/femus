@@ -117,8 +117,12 @@ int main(int argc, char** args) {
   mlSol.AddSolution("eflag", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
   mlSol.AddSolution("nflag", LAGRANGE, femOrder, 0, false);
 
-  mlSol.AddSolution("C1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSol.AddSolution("C2", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+  mlSol.AddSolution("CM1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+  mlSol.AddSolution("CM2", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+
+  mlSol.AddSolution("CL1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+  mlSol.AddSolution("CL2", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+
 
   mlSol.Initialize("All");
 
@@ -389,8 +393,8 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
 
   unsigned CIndex[2];
 
-  CIndex[0] = mlSol->GetIndex("C1");
-  CIndex[1] = mlSol->GetIndex("C2");
+  CIndex[0] = mlSol->GetIndex("CM1");
+  CIndex[1] = mlSol->GetIndex("CM2");
 
   unsigned eflagIndex = mlSol->GetIndex("eflag");
   unsigned nflagIndex = mlSol->GetIndex("nflag");
@@ -553,10 +557,15 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
 //
 //       double theta = 2000. / den;
 
-      double gamma1 = 0.5;
-      double gamma2 = 0.5;
+      double gammaL1 = 0.5;
+      double gammaL2 = 0.5;
 
-      double theta = mu1;
+      double gammaM1 = 0.5;
+      double gammaM2 = 0.5;
+
+
+      double thetaL = lambda1;
+      double thetaM = mu1;
 
 
 
@@ -683,14 +692,14 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
             u2[k] += phi[i] * solD2[k][i];
 
             for(unsigned j = 0; j < dim; j++) {
-              tau[k] += (gamma1 * lambda1 * solD1[j][i] * phi_x[i * dim + j] +
-                         gamma2 * lambda2 * solD2[j][i] * phi_x[i * dim + j]) * N[k];
+              tau[k] += (gammaL1 * lambda1 * solD1[j][i] * phi_x[i * dim + j] +
+                         gammaL2 * lambda2 * solD2[j][i] * phi_x[i * dim + j]) * N[k];
 
-              tau[k] += (gamma1 * mu1 * solD1[k][i] * phi_x[i * dim + j] +
-                         gamma2 * mu2 * solD2[k][i] * phi_x[i * dim + j]) * N[j];
+              tau[k] += (gammaM1 * mu1 * solD1[k][i] * phi_x[i * dim + j] +
+                         gammaM2 * mu2 * solD2[k][i] * phi_x[i * dim + j]) * N[j];
 
-              tau[k] += (gamma1 * mu1 * solD1[j][i] * phi_x[i * dim + k] +
-                         gamma2 * mu2 * solD2[j][i] * phi_x[i * dim + k]) * N[j];
+              tau[k] += (gammaM1 * mu1 * solD1[j][i] * phi_x[i * dim + k] +
+                         gammaM2 * mu2 * solD2[j][i] * phi_x[i * dim + k]) * N[j];
 
             }
           }
@@ -698,21 +707,27 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
         // *** phi_i loop ***
         for(unsigned i = 0; i < nDofD; i++) {
           for(unsigned k = 0; k < dim; k++) {
-            aResD1[k][i] += tau[k] * phi[i] * weight; 
-            aResD1[k][i] += -theta * (u2[k] - u1[k]) * phi[i] * weight;
-            aResD2[k][i] += -tau[k] * phi[i] * weight; 
-            aResD2[k][i] +=  theta * (u2[k] - u1[k]) * phi[i] * weight;
+            aResD1[k][i] += tau[k] * phi[i] * weight;
+            aResD1[k][i] += -thetaM * (u2[k] - u1[k]) * phi[i] * weight;
+
+            aResD2[k][i] += -tau[k] * phi[i] * weight;
+            aResD2[k][i] +=  thetaM * (u2[k] - u1[k]) * phi[i] * weight;
+
             for(unsigned j = 0; j < dim; j++) {
-              aResD1[k][i] += -gamma1 * ( lambda1 * phi_x[i * dim + k] * N[j] * (u2[j]-u1[j]) )* weight;
-              aResD1[k][i] += -gamma1 * ( mu1 * phi_x[i * dim + j] * N[j] * (u2[k]-u1[k]) )* weight;
-              aResD1[k][i] += -gamma1 * ( mu1 * phi_x[i * dim + j] * N[k] * (u2[j]-u1[j]) )* weight;
-              
-              aResD2[k][i] += -gamma2 * ( lambda2 * phi_x[i * dim + k] * N[j] * (u2[j]-u1[j]) )* weight;
-              aResD2[k][i] += -gamma2 * ( mu2 * phi_x[i * dim + j] * N[j] * (u2[k]-u1[k]) )* weight;
-              aResD2[k][i] += -gamma2 * ( mu2 * phi_x[i * dim + j] * N[k] * (u2[j]-u1[j]) )* weight;
+              aResD1[k][i] += -gammaL1 * (lambda1 * phi_x[i * dim + k] * N[j] * (u2[j] - u1[j])) * weight;
+              aResD1[k][i] += -gammaM1 * (mu1 * phi_x[i * dim + j] * N[j] * (u2[k] - u1[k])) * weight;
+              aResD1[k][i] += -gammaM1 * (mu1 * phi_x[i * dim + j] * N[k] * (u2[j] - u1[j])) * weight;
+
+              aResD1[k][i] += -thetaL * (u2[j] - u1[j]) * N[j] * phi[i] * N[k] * weight;
+
+              aResD2[k][i] += -gammaL2 * (lambda2 * phi_x[i * dim + k] * N[j] * (u2[j] - u1[j])) * weight;
+              aResD2[k][i] += -gammaM2 * (mu2 * phi_x[i * dim + j] * N[j] * (u2[k] - u1[k])) * weight;
+              aResD2[k][i] += -gammaM2 * (mu2 * phi_x[i * dim + j] * N[k] * (u2[j] - u1[j])) * weight;
+
+              aResD2[k][i] +=  thetaL * (u2[j] - u1[j]) * N[j] * phi[i] * N[k] * weight;
             }
-            
-            
+
+
           }
         } // end phi_i loop
         imarkerI++;
@@ -851,9 +866,9 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
 
   unsigned eflagIndex = mlSol.GetIndex("eflag");
 
-  unsigned CIndex[2];
-  CIndex[0] = mlSol.GetIndex("C1");
-  CIndex[1] = mlSol.GetIndex("C2");
+  unsigned CMIndex[2];
+  CMIndex[0] = mlSol.GetIndex("CM1");
+  CMIndex[1] = mlSol.GetIndex("CM2");
 
   unsigned solIndex = mlSol.GetIndex("DX1");
   unsigned soluType = mlSol.GetSolutionType(solIndex);
@@ -879,8 +894,8 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
   std::vector<unsigned> markerOffsetI = lineI->GetMarkerOffset();
   unsigned imarkerI = markerOffsetI[iproc];
 
-  sol->_Sol[CIndex[0]]->zero();
-  sol->_Sol[CIndex[1]]->zero();
+  sol->_Sol[CMIndex[0]]->zero();
+  sol->_Sol[CMIndex[1]]->zero();
 
   std::vector < double > a;
   std::vector < std::vector < double > > b(2);
@@ -896,9 +911,11 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
       short unsigned ielGeom = msh->GetElementType(iel);
       unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);  // number of solution element dofs
 
-      a.assign(nDofu * nDofu, 0.);
-      b[0].assign(nDofu * nDofu, 0.);
-      b[1].assign(nDofu * nDofu, 0.);
+      unsigned sizeAll = dim * nDofu;
+
+      a.assign(sizeAll * sizeAll, 0.);
+      b[0].assign(sizeAll * sizeAll, 0.);
+      b[1].assign(sizeAll * sizeAll, 0.);
 
       for(int k = 0; k < dim; k++) {
         x[k].resize(nDofu);  // Now we
@@ -920,10 +937,14 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
         double weight = particle1[imarker1]->GetMarkerMass();
 
         // *** phi_i loop ***
-        for(int i = 0; i < nDofu; i++) {
-          for(int j = 0; j < nDofu; j++) {
-            for(unsigned k = 0; k < dim; k++) {
-              b[0][ i * nDofu + j] += phi_x[i * dim + k] * phi_x[j * dim + k] * weight;
+
+        for(unsigned k = 0; k < dim; k++) {
+          for(unsigned i = 0; i < nDofu; i++) {
+            for(unsigned j = 0; j < nDofu; j++) {
+              for(unsigned l = 0; l < dim; l++) {
+                b[0][((nDofu * k) + i) * sizeAll + (k * nDofu + j)] += 0.5 * phi_x[i * dim + l] * phi_x[j * dim + l] * weight;
+                b[0][((nDofu * k) + i) * sizeAll + (l * nDofu + j)] += 0.5 * phi_x[i * dim + l] * phi_x[j * dim + k] * weight;
+              }
             }
           }
         }
@@ -939,10 +960,14 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
         double weight = particle2[imarker2]->GetMarkerMass();
 
         // *** phi_i loop ***
-        for(int i = 0; i < nDofu; i++) {
-          for(int j = 0; j < nDofu; j++) {
-            for(unsigned k = 0; k < dim; k++) {
-              b[1][ i * nDofu + j] += phi_x[i * dim + k] * phi_x[j * dim + k] * weight;
+
+        for(unsigned k = 0; k < dim; k++) {
+          for(unsigned i = 0; i < nDofu; i++) {
+            for(unsigned j = 0; j < nDofu; j++) {
+              for(unsigned l = 0; l < dim; l++) {
+                b[1][((nDofu * k) + i) * sizeAll + (k * nDofu + j)] += 0.5 * phi_x[i * dim + l] * phi_x[j * dim + l] * weight;
+                b[1][((nDofu * k) + i) * sizeAll + (l * nDofu + j)] += 0.5 * phi_x[i * dim + l] * phi_x[j * dim + k] * weight;
+              }
             }
           }
         }
@@ -979,20 +1004,31 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
         }
 
         // *** phi_i loop ***
-        for(int i = 0; i < nDofu; i++) {
 
-          double gradPhiiDotN = 0.;
-          for(unsigned k = 0; k < dim; k++) {
-            gradPhiiDotN += phi_x[i * dim + k] * N[k];
-          }
-          for(int j = 0; j < nDofu; j++) {
-            double gradPhijDotN = 0.;
-            for(unsigned k = 0; k < dim; k++) {
-              gradPhijDotN += phi_x[j * dim + k] * N[k];
+        for(unsigned k = 0; k < dim; k++) {
+          for(int i = 0; i < nDofu; i++) {
+
+            double gradPhiiDotN = 0.;
+            for(unsigned l = 0; l < dim; l++) {
+              gradPhiiDotN += phi_x[i * dim + l] * N[l];
             }
-            a[ i * nDofu + j] += gradPhiiDotN * gradPhijDotN  * weight;
-          }
-        } // end phi_i loop
+            for(int j = 0; j < nDofu; j++) {
+
+              for(unsigned l = 0; l < dim; l++) {
+
+                a[((nDofu * k) + i) * sizeAll + (k * nDofu + j) ] += 0.5 * gradPhiiDotN * 0.5 * N[l] *  phi_x[j * dim + l]  * weight;
+                a[((nDofu * k) + i) * sizeAll + (l * nDofu + j) ] += 0.5 * gradPhiiDotN * 0.5 * N[l] *  phi_x[j * dim + k]  * weight;
+              }
+              for(unsigned l1 = 0; l1 < dim; l1++) {
+                for(unsigned l2 = 0; l2 < dim; l2++) {
+                  a[((nDofu * k) + i) * sizeAll + (l1 * nDofu + j)] += 0.5 * N[k] * phi_x[i * dim + l1] * 0.5 * N[l2] *  phi_x[j * dim + l2]  * weight;
+                  a[((nDofu * k) + i) * sizeAll + (l2 * nDofu + j)] += 0.5 * N[k] * phi_x[i * dim + l1] * 0.5 * N[l2] *  phi_x[j * dim + l1]  * weight;
+                }
+              }
+
+            }
+          } // end phi_i loop
+        }
         imarkerI++;
       }
 
@@ -1012,17 +1048,23 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
        * generalized eigenvalue problem.
        */
 
-      for(unsigned k = 0; k < 2; k++) {
-        MatCreateSeqDense(PETSC_COMM_SELF, nDofu - 1, nDofu - 1, NULL, &A);
-        MatCreateSeqDense(PETSC_COMM_SELF, nDofu - 1, nDofu - 1, NULL, &B);
+      for(unsigned s = 0; s < 2; s++) {
+        MatCreateSeqDense(PETSC_COMM_SELF, dim * (nDofu - 1), dim * (nDofu - 1), NULL, &A);
+        MatCreateSeqDense(PETSC_COMM_SELF, dim * (nDofu - 1), dim * (nDofu - 1), NULL, &B);
 
-        for(int i = 0; i < nDofu - 1; i++) {
-          for(int j = 0; j < nDofu - 1; j++) {
-            double value;
-            value = b[k][(i + 1) * nDofu + (j + 1)] - b[k][j + 1];
-            MatSetValues(B, 1, &i, 1, &j, &value, INSERT_VALUES);
-            value = a[(i + 1) * nDofu + (j + 1)] - a[j + 1];
-            MatSetValues(A, 1, &i, 1, &j, &value, INSERT_VALUES);
+        for(int k = 0; k < dim; k++) {
+          for(int i = 0; i < nDofu - 1; i++) {
+            int ip = i + 1;
+            for(int l = 0; l < dim; l++) {
+              for(int j = 0; j < nDofu - 1; j++) {
+                int jp = j + 1;
+                double value;
+                value = b[s][((nDofu * k) + ip) * sizeAll + (nDofu * l + jp)] - b[s][(nDofu * k) * sizeAll + (nDofu * l + jp)];
+                MatSetValues(B, 1, &i, 1, &j, &value, INSERT_VALUES);
+                value = a[((nDofu * k) + ip) * sizeAll + (nDofu * l + jp)] - a[(nDofu * k) * sizeAll + (nDofu * l + jp)];
+                MatSetValues(A, 1, &i, 1, &j, &value, INSERT_VALUES);
+              }
+            }
           }
         }
 
@@ -1041,7 +1083,7 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
         double real, imaginary;
         EPSGetEigenpair(eps, 0, &real, &imaginary, NULL, NULL);
         //std::cout << real << " " << imaginary << std::endl;
-        sol->_Sol[CIndex[k]]->set(iel, real);
+        sol->_Sol[CMIndex[s]]->set(iel, real);
 
         EPSDestroy(&eps);
         MatDestroy(&A);
@@ -1051,8 +1093,8 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
     }
   }
 
-  sol->_Sol[CIndex[0]]->close();
-  sol->_Sol[CIndex[1]]->close();
+  sol->_Sol[CMIndex[0]]->close();
+  sol->_Sol[CMIndex[1]]->close();
 }
 
 
