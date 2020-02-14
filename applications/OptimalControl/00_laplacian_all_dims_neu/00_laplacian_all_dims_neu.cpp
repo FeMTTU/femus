@@ -103,31 +103,31 @@ int main(int argc, char** args) {
 
   
   // ======= Solution  ==================
-  MultiLevelSolution mlSol(&ml_mesh);
+  MultiLevelSolution ml_sol(&ml_mesh);
 
     // ******* Print mesh *******
-//   mlSol.SetWriter(VTK);  //   mlSol.GetWriter()->SetDebugOutput(true);
-//   mlSol.GetWriter()->Write(files.GetOutputPath(), "biquadratic");
+//   ml_sol.SetWriter(VTK);  //   ml_sol.GetWriter()->SetDebugOutput(true);
+//   ml_sol.GetWriter()->Write(files.GetOutputPath(), "biquadratic");
 //   exit(0);
 //   ml_mesh.SetWriter(VTK);  ///@todo this doesn't work and should be removed, no application uses it
 //   ml_mesh.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic", meshToBePrinted);  
     // ******* End print mesh *******
   
-  // add variables to mlSol
-  mlSol.AddSolution("d_s", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
+  // add variables to ml_sol
+  ml_sol.AddSolution("d_s", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
   
   // ======= Solution: Initial Conditions ==================
-  mlSol.Initialize("All");    // initialize all variables to zero
-  mlSol.Initialize("d_s", InitialValueDS);
+  ml_sol.Initialize("All");    // initialize all variables to zero
+  ml_sol.Initialize("d_s", InitialValueDS);
 
   // ======= Solution: Boundary Conditions ==================
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.GenerateBdc("d_s");
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.GenerateBdc("d_s");
 
   
   // ======= Problem ========================
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem ml_prob(&mlSol);
+  // define the multilevel problem attach the ml_sol object to it
+  MultiLevelProblem ml_prob(&ml_sol);
 
 // *************************************
  // this problem is defined on an open boundary mesh, and the boundary mesh can change 
@@ -176,9 +176,9 @@ int main(int argc, char** args) {
   const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
-  mlSol.SetWriter(VTK);
-  mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(mesh_files[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
+  ml_sol.GetWriter()->Write(mesh_files[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
   
   }
  
@@ -198,8 +198,9 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
+  elem*                     el = msh->el;
 
-  MultiLevelSolution*    mlSol = ml_prob._ml_sol;
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
@@ -238,8 +239,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   
  
   unsigned solIndex_u;
-  solIndex_u = mlSol->GetIndex("d_s"); 
-  unsigned solFEType_u = mlSol->GetSolutionType(solIndex_u); 
+  solIndex_u = ml_sol->GetIndex("d_s"); 
+  unsigned solFEType_u = ml_sol->GetSolutionType(solIndex_u); 
 
   unsigned solPdeIndex_u;
   solPdeIndex_u = mlPdeSys->GetSolPdeIndex("d_s");
@@ -316,6 +317,46 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
  //===================================================   
 
+    
+    /*const*/ double beta = 7.;
+    
+    for (unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+        
+//        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, xType);
+        std::vector  <  double > xx(3); 
+        xx[0] = 1.; 
+        xx[1] = 0.; 
+        xx[2] = 0.; 
+//           xx = geom_element.get_elem_center_bdry();
+       
+       if ( el->GetFaceElementIndex(iel, jface) < 0) { //I am on the boundary
+                  
+         unsigned int face = -(msh->el->GetFaceElementIndex(iel, jface) + 1);
+    
+         bool is_dirichlet =  ml_sol->GetBdcFunction()(xx, "U", beta, face, 0.);                     
+                          
+             if ( !(is_dirichlet)  &&  (beta != 0.) ) {  //dirichlet == false and nonhomogeneous Neumann
+                   unsigned n_dofs_face = msh->GetElementFaceDofNumber(iel, jface, solFEType_u);
+
+                  for (unsigned i = 0; i < n_dofs_face; i++) {
+                      
+                 unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
+
+                 Res[i_vol] +=  beta;
+                 
+                 }
+        
+        
+    }
+                  
+                  
+                  
+                  
+                  
+                  
+              }
+    }
+    
       // *** Quadrature point loop ***
       for (unsigned i_qp = 0; i_qp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); i_qp++) {
           
