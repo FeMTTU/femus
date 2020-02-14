@@ -251,10 +251,10 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
     double muFlag = (*sol->_Sol[muFlagIndex]) (idof);
     if (muFlag > 0) sol->_Sol[muFlagIndex]->set (idof, 1.);
-//     else { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
+    else { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
       sol->_Bdc[solmuIndex]->set (idof, 0.);
       sol->_Sol[solmuIndex]->set (idof, 0.);
-//     } //TODO decomment this!!!
+    } //TODO decomment this!!!
 
   }
 
@@ -494,7 +494,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
             if (iel == jel) {
               double cutOff = 1.;
-              if (ielGroup == 6 || ielGroup == 9) cutOff = 1.;
+              if (ielGroup == 6 || ielGroup == 9) cutOff = 0.5;
               for (unsigned i = 0; i < nDof1; i++) {
                 unsigned solDofu1 = msh->GetSolutionDof (i, iel, solu1Type);
                 unsigned solDofu2 = msh->GetSolutionDof (i, iel, solu2Type);
@@ -512,14 +512,14 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                   Resu2_1[i] -=  cutOff * 1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
                 }
 
-//                 if (ielGroup == 9) {
-//                   double Mlumped = phi1x[ig][i] * weight1[ig];
-//                   M1[ i * nDof1 + i ] +=  Mlumped;
-//                   M2[ i * nDof1 + i ] += - Mlumped;
-//                   Resu1_1[i] -= Mlumped * solmu_1[i];
-//                   Resu2_1[i] -= - Mlumped * solmu_1[i];
-//                   Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
-//                 }
+                if (ielGroup == 9) {
+                  double Mlumped = phi1x[ig][i] * weight1[ig];
+                  M1[ i * nDof1 + i ] +=  Mlumped;
+                  M2[ i * nDof1 + i ] += - Mlumped;
+                  Resu1_1[i] -= Mlumped * solmu_1[i];
+                  Resu2_1[i] -= - Mlumped * solmu_1[i];
+                  Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
+                }
 
               }
 
@@ -564,7 +564,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                 kernel = 0.75 * kappa1 / (delta1 * delta1 * delta1 * delta1) ;
                 double cutOff = 1.;
-                if ( (ielGroup == 6 || ielGroup == 9) && (jelGroup == 6 || jelGroup == 9)) cutOff = 1.;
+                if ( (ielGroup == 6 || ielGroup == 9) && (jelGroup == 6 || jelGroup == 9)) cutOff = 0.5;
 
                 bool ielU1 = ( (ielGroup == 5) || (ielGroup == 6) || (ielGroup == 8) || (ielGroup == 9)) ? true : false;
                 bool ielU2 = ( (ielGroup == 6) || (ielGroup == 7) || (ielGroup == 9) || (ielGroup == 10)) ? true : false;
