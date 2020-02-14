@@ -11,7 +11,7 @@ bool nonLocalAssembly = true;
 //FETI_domain.neu: 2D domain with delta=0.25
 //FETI_domain_small_delta.neu: 2D domain with delta=0.05
 
-double delta1 = 0.05/*0.25*/;
+double delta1 = /*0.05*/0.25;
 double kappa1 = 1.;
 
 void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
@@ -251,10 +251,10 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
     double muFlag = (*sol->_Sol[muFlagIndex]) (idof);
     if (muFlag > 0) sol->_Sol[muFlagIndex]->set (idof, 1.);
-    else { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
+//     else { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
       sol->_Bdc[solmuIndex]->set (idof, 0.);
       sol->_Sol[solmuIndex]->set (idof, 0.);
-    } //TODO decomment this!!!
+//     } //TODO decomment this!!!
 
   }
 
@@ -494,7 +494,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
             if (iel == jel) {
               double cutOff = 1.;
-              if (ielGroup == 6 || ielGroup == 9) cutOff = 6.5;
+              if (ielGroup == 6 || ielGroup == 9) cutOff = 1.;
               for (unsigned i = 0; i < nDof1; i++) {
                 unsigned solDofu1 = msh->GetSolutionDof (i, iel, solu1Type);
                 unsigned solDofu2 = msh->GetSolutionDof (i, iel, solu2Type);
@@ -512,14 +512,14 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                   Resu2_1[i] -=  cutOff * 1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
                 }
 
-                if (ielGroup == 9) {
-                  double Mlumped = phi1x[ig][i] * weight1[ig];
-                  M1[ i * nDof1 + i ] +=  Mlumped;
-                  M2[ i * nDof1 + i ] += - Mlumped;
-                  Resu1_1[i] -= Mlumped * solmu_1[i];
-                  Resu2_1[i] -= - Mlumped * solmu_1[i];
-                  Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
-                }
+//                 if (ielGroup == 9) {
+//                   double Mlumped = phi1x[ig][i] * weight1[ig];
+//                   M1[ i * nDof1 + i ] +=  Mlumped;
+//                   M2[ i * nDof1 + i ] += - Mlumped;
+//                   Resu1_1[i] -= Mlumped * solmu_1[i];
+//                   Resu2_1[i] -= - Mlumped * solmu_1[i];
+//                   Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
+//                 }
 
               }
 
@@ -564,7 +564,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                 kernel = 0.75 * kappa1 / (delta1 * delta1 * delta1 * delta1) ;
                 double cutOff = 1.;
-                if ( (ielGroup == 6 || ielGroup == 9) && (jelGroup == 6 || jelGroup == 9)) cutOff = 6.5;
+                if ( (ielGroup == 6 || ielGroup == 9) && (jelGroup == 6 || jelGroup == 9)) cutOff = 1.;
 
                 bool ielU1 = ( (ielGroup == 5) || (ielGroup == 6) || (ielGroup == 8) || (ielGroup == 9)) ? true : false;
                 bool ielU2 = ( (ielGroup == 6) || (ielGroup == 7) || (ielGroup == 9) || (ielGroup == 10)) ? true : false;
@@ -583,13 +583,13 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                     double jacValue11 = cutOff * weight1[ig] * weight2 * kernel * (phi1x[ig][i]) * phi1x[ig][j];
 //                     if ( ( (*sol->_Sol[u1FlagIndex]) (solDofu1_i) > 0.) && ( (*sol->_Sol[u1FlagIndex]) (solDofu1_j) > 0.)) { //TODO remove
-                    if (ielU1) {
+                    if (ielU1 && jelU1) {
                       Jacu1_11[i * nDof1 + j] -= jacValue11;
                       Resu1_1[i] +=  jacValue11 * solu1_1[j];
                     }
 
 //                     if ( ( (*sol->_Sol[u2FlagIndex]) (solDofu2_i) > 0.) && ( (*sol->_Sol[u2FlagIndex]) (solDofu2_j) > 0.)) { //TODO remove
-                    if (ielU2) {
+                    if (ielU2 && jelU2) {
                       Jacu2_11[i * nDof1 + j] -= jacValue11;
                       Resu2_1[i] +=  jacValue11 * solu2_1[j];
                     }
@@ -637,12 +637,12 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                     double jacValue22 = - cutOff * weight1[ig] * weight2 * kernel * (- phi2y[i]) * phi2y[j];
 //                     if ( (u1LocalFlag_2[i]  > 0.) && (u1LocalFlag_2[j] > 0.)) {  //TODO remove
-                    if (jelU1) {
+                    if (ielU1 && jelU1) {
                       Jacu1_22[i * nDof2 + j] -= jacValue22;
                       Resu1_2[i] +=  jacValue22 * solu1_2[j];
                     }
 //                     if ( (u2LocalFlag_2[i] > 0.) && (u2LocalFlag_2[j] > 0.)) { //TODO remove
-                    if (jelU2) {
+                    if (ielU2 && jelU2) {
                       Jacu2_22[i * nDof2 + j] -= jacValue22;
                       Resu2_2[i] +=  jacValue22 * solu2_2[j];
                     }
