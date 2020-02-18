@@ -30,11 +30,19 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   const double tolerance = 1.e-5;
   
-//   if (face_name == 2) {
-  if (x[0] > 1. - 1.e-6) {
+
+  
+  if (face_name == 1) {
+//   if (x[0] > 1. - 1.e-6) {
       dirichlet = true;
         value = 0.;
   }
+
+ else if (face_name == 2) {
+//   if (x[0] > 1. - 1.e-6) {
+      dirichlet = false;
+        value = 0.;
+  }  
   
   return dirichlet;
  }
@@ -62,6 +70,7 @@ int main(int argc, char** args) {
    std::vector<std::string> mesh_files;
    
    mesh_files.push_back("Mesh_1_x_dir_neu.med");
+//    mesh_files.push_back("Mesh_1_x.med");
 //    mesh_files.push_back("Mesh_1_y.med");
 //    mesh_files.push_back("Mesh_1_z.med");
 //    mesh_files.push_back("Mesh_2_xy.med");
@@ -95,7 +104,7 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 1/*4*/;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
@@ -169,7 +178,7 @@ int main(int argc, char** args) {
   system.SetOuterSolver(GMRES);
   
   system.init();
-  system.MGsolve();
+//   system.MGsolve();
   
     // ======= Print ========================
   // print solutions
@@ -328,14 +337,15 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
         xx[1] = 0.; 
         xx[2] = 0.; 
 //           xx = geom_element.get_elem_center_bdry();
+       const int boundary_index = el->GetFaceElementIndex(iel, jface);
        
-       if ( el->GetFaceElementIndex(iel, jface) < 0) { //I am on the boundary
+       if ( boundary_index < 0) { //I am on the boundary
                   
-         unsigned int face = -(msh->el->GetFaceElementIndex(iel, jface) + 1);
+         unsigned int face = -(boundary_index + 1);
     
          bool is_dirichlet =  ml_sol->GetBdcFunction()(xx, "U", beta, face, 0.);                     
                           
-             if ( !(is_dirichlet)  &&  (beta != 0.) ) {  //dirichlet == false and nonhomogeneous Neumann
+             if ( !(is_dirichlet)  /*&&  (beta != 0.)*/ ) {  //dirichlet == false and nonhomogeneous Neumann
                    unsigned n_dofs_face = msh->GetElementFaceDofNumber(iel, jface, solFEType_u);
 
                   for (unsigned i = 0; i < n_dofs_face; i++) {
@@ -367,8 +377,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     jacXweight_qp = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[i_qp];
     elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(i_qp, JacI_qp, phi_u, phi_u_x, boost::none /*phi_u_xx*/, space_dim);
 
-    elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
-    elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
+//     elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
+//     elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	

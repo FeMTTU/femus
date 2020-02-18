@@ -593,6 +593,7 @@ namespace femus
         }
 
         if(_solType[k] < 3) {  // boundary condition for lagrangian elements
+            
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
               if(msh->el->GetBoundaryIndex(iel, jface) == 0) {   // interior boundary (AMR) u = 0
@@ -611,7 +612,9 @@ namespace femus
           }
 
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
+              
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+                
               if(msh->el->GetBoundaryIndex(iel, jface) > 0) {   // exterior boundary u = value
                 short unsigned ielt = msh->GetElementType(iel);
                 unsigned nv1 = msh->GetElementFaceDofNumber(iel, jface, _solType[k]);
