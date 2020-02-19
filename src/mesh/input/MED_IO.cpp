@@ -440,8 +440,8 @@ namespace femus
                 
                 std::vector<unsigned> face_nodes(n_nodes_in_face);
                 
-               for(unsigned nd = 0; nd < n_nodes_in_face; nd++) {
-                   unsigned nd_of_face = 0 /*_geom_elems[iel_geom_type]->get_face(f)[nd]*/;
+               for(unsigned nd = 0; nd < face_nodes.size(); nd++) {
+                   unsigned nd_of_face = f /*_geom_elems[iel_geom_type]->get_face(f)[nd]*/;
                    face_nodes[nd] = mesh.el->GetElementDofIndex(iel, nd_of_face);
                 
                }
@@ -452,9 +452,9 @@ namespace femus
 
                       const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
                       
-  if (med_flag < 0) abort(); //MED puts its own NEGATIVE flags for elements in dim >=1 (edges, faces), and POSITIVE for nodes (dim=0)
+          if (med_flag < 0) abort(); //MED puts its own NEGATIVE flags for elements in dim >=1 (edges, faces), and POSITIVE for nodes (dim=0)
   
-              if ( med_flag != 0 )  {
+              if ( face_nodes[0] == k && med_flag != 0 )  {
                       
            int user_flag =  get_user_flag_from_med_flag(group_info, med_flag);   //flag of the boundary portion
                user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE

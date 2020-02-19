@@ -26,7 +26,7 @@ double InitialValueDS(const std::vector < double >& x) {
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   bool dirichlet = false;
-  value = 0;
+  value = 0.;
   
   const double tolerance = 1.e-5;
   
@@ -41,7 +41,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
  else if (face_name == 2) {
 //   if (x[0] > 1. - 1.e-6) {
       dirichlet = false;
-        value = 0.;
   }  
   
   return dirichlet;
@@ -104,12 +103,13 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = 1/*4*/;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
   ml_mesh.PrintInfo();
 
+  
   
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
@@ -137,24 +137,6 @@ int main(int argc, char** args) {
   // ======= Problem ========================
   // define the multilevel problem attach the ml_sol object to it
   MultiLevelProblem ml_prob(&ml_sol);
-
-// *************************************
- // this problem is defined on an open boundary mesh, and the boundary mesh can change 
- // as a function of the fracture propagation criterion.
- // Therefore, all the structures may need to be re-allocated after that.
-  
- // For now, let us start without propagation and set up the dense matrix.
-  
- // The workflow is:
-  
- // Read the mesh
-  
- // Fill the dense matrix, and solve it (collocation type BEM)
-  
- // if propagation occurs, re-dimensionalize all the arrays
- // let us start without propagation first
- // and let us start with STEADY-STATE DDM
-// *************************************
   
 
   ml_prob.SetFilesHandler(&files);
@@ -178,7 +160,7 @@ int main(int argc, char** args) {
   system.SetOuterSolver(GMRES);
   
   system.init();
-//   system.MGsolve();
+  system.MGsolve();
   
     // ======= Print ========================
   // print solutions
