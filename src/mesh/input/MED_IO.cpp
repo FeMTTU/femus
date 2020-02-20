@@ -128,7 +128,7 @@ namespace femus
   /// @todo why pass coords other than get it through the Mesh class pointer?
   void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups_flag, const bool read_boundary_groups_flag) {
 
-    _print_info = false;  
+    _print_info = true;  
       
     Mesh& mesh = GetMesh();
     mesh.SetLevel(0);
@@ -364,6 +364,8 @@ namespace femus
                       count_found_face++;
 
                  const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
+                 
+  if (med_flag > 0) abort(); //MED puts its own NEGATIVE flags for elements in dim >=1 (edges, faces), and POSITIVE for nodes (dim=0)
 
            int user_flag =  get_user_flag_from_med_flag(group_info, med_flag);   //flag of the boundary portion
                user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE
@@ -434,13 +436,13 @@ namespace femus
                                
             for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
                 
-                unsigned n_nodes = 1 /*_geom_elems[iel_geom_type]->get_face(f).size()*/;  //here the faces are made of 1 node
+                unsigned n_nodes_in_face = 1 /*_geom_elems[iel_geom_type]->get_face(f).size()*/;  //here the faces are made of 1 node
                 
-                std::vector<unsigned> face_nodes(n_nodes);
+                std::vector<unsigned> face_nodes(n_nodes_in_face);
                 
-               for(unsigned nd = 0; nd < n_nodes; nd++) {
-                   unsigned nd_of_face = 0 /*_geom_elems[iel_geom_type]->get_face(f)[nd]*/;
-                   face_nodes[nd] = mesh.el->GetElementDofIndex(iel,nd_of_face);
+               for(unsigned nd = 0; nd < face_nodes.size(); nd++) {
+                   unsigned nd_of_face = f /*_geom_elems[iel_geom_type]->get_face(f)[nd]*/;
+                   face_nodes[nd] = mesh.el->GetElementDofIndex(iel, nd_of_face);
                 
                }
             
@@ -449,13 +451,15 @@ namespace femus
                for(unsigned k = 0; k < fam_map.size(); k++) {
 
                       const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
-
-              if ( med_flag != 0 )  {
                       
-           int user_flag =  get_user_flag_from_med_flag(group_info,med_flag);   //flag of the boundary portion
+          if (med_flag < 0) abort(); //MED puts its own NEGATIVE flags for elements in dim >=1 (edges, faces), and POSITIVE for nodes (dim=0)
+  
+              if ( face_nodes[0] == k && med_flag != 0 )  {
+                      
+           int user_flag =  get_user_flag_from_med_flag(group_info, med_flag);   //flag of the boundary portion
                user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE
                
-                      std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl; 
+                     if (_print_info) { std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl; }
 
 //       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
                   element_faces_array[iel][f] = user_flag;  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!

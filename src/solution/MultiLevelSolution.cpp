@@ -593,6 +593,8 @@ namespace femus
         }
 
         if(_solType[k] < 3) {  // boundary condition for lagrangian elements
+
+       //AMR - related            
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
               if(msh->el->GetBoundaryIndex(iel, jface) == 0) {   // interior boundary (AMR) u = 0
@@ -609,19 +611,25 @@ namespace femus
               }
             }
           }
+       //AMR - related - end
+       
 
           for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
+              
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
-              if(msh->el->GetBoundaryIndex(iel, jface) > 0) {   // exterior boundary u = value
+                
+                const int boundary_index = msh->el->GetBoundaryIndex(iel, jface);
+                
+              if(boundary_index > 0) {   // exterior boundary u = value
                 short unsigned ielt = msh->GetElementType(iel);
-                unsigned nv1 = msh->GetElementFaceDofNumber(iel, jface, _solType[k]);
+                unsigned n_face_dofs = msh->GetElementFaceDofNumber(iel, jface, _solType[k]);
 
-                for(unsigned iv = 0; iv < nv1; iv++) {
+                for(unsigned iv = 0; iv < n_face_dofs; iv++) {
                   unsigned i = msh->GetLocalFaceVertexIndex(iel, jface, iv);
                   unsigned inode_coord_Metis = msh->GetSolutionDof(i, iel, 2);
 
                   if(_useParsedBCFunction) {
-                    unsigned int faceIndex = msh->el->GetBoundaryIndex(iel, jface);
+                    unsigned int faceIndex = boundary_index;
 
                     if(GetBoundaryCondition(k, faceIndex - 1u) == DIRICHLET) {
                       unsigned inode_Metis = msh->GetSolutionDof(i, iel, _solType[k]);
@@ -648,8 +656,8 @@ namespace femus
                     xx[1] = (*msh->_topology->_Sol[1])(inode_coord_Metis);
                     xx[2] = (*msh->_topology->_Sol[2])(inode_coord_Metis);
                     bool test = (_bdcFuncSetMLProb) ?
-                                _SetBoundaryConditionFunctionMLProb(_mlBCProblem, xx, _solName[k], value, msh->el->GetBoundaryIndex(iel, jface), time) :
-                                _SetBoundaryConditionFunction(xx, _solName[k], value, msh->el->GetBoundaryIndex(iel, jface), time);
+                                _SetBoundaryConditionFunctionMLProb(_mlBCProblem, xx, _solName[k], value, boundary_index, time) :
+                                _SetBoundaryConditionFunction(xx, _solName[k], value, boundary_index, time);
 
                     if(test) {
                       unsigned idof = msh->GetSolutionDof(i, iel, _solType[k]);
@@ -658,10 +666,12 @@ namespace femus
                     }
                   }
                 }
-              }
-            }
-          }
-        }
+              } //end boundary faces
+            }  //end faces
+          }  //end element
+        }  //end Lagrangian
+        
+        
         if(_fixSolutionAtOnePoint[k] == true  && igridn == 0 && _iproc == 0) {
           _solution[igridn]->_Bdc[k]->set(0, 0.);
           _solution[igridn]->_Sol[k]->set(0, 0.);
@@ -673,6 +683,9 @@ namespace femus
 
 
   }
+  
+  
+  
   
    bool PRINT = false;
    void MultiLevelSolution::GenerateRKBdc(
