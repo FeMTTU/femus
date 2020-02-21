@@ -23,7 +23,8 @@
 using namespace femus;
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
+{
   bool dirichlet = true; //dirichlet
   value = 0.;
   return dirichlet;
@@ -55,9 +56,10 @@ double deltat;
 int pdfHistogramSize;
 //END
 
-unsigned numberOfUniformLevels = 4;
+unsigned numberOfUniformLevels = 1;
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 
 
   //BEGIN eigenvalue problem instances
@@ -69,10 +71,10 @@ int main(int argc, char** argv) {
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues
 
   //END
-  
+
   //quadr rule order
   const std::string fe_quad_rule_1 = "sixth";
-  const std::string fe_quad_rule_2 = "seventh";
+  const std::string fe_quad_rule_2 = "sixth";
 
 
   //BEGIN deterministic FEM instances
@@ -84,12 +86,12 @@ int main(int argc, char** argv) {
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.ReadCoarseMesh("../input/square.neu", fe_quad_rule_1.c_str(), scalingFactor);
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
   // erase all the coarse mesh levels
 //   mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
-  
- unsigned dim = mlMsh.GetDimension();
+
+  unsigned dim = mlMsh.GetDimension();
 
   MultiLevelSolution mlSol(&mlMsh);
 
@@ -110,10 +112,10 @@ int main(int argc, char** argv) {
   mlSol.GenerateBdc("All");
 
   MultiLevelProblem ml_prob(&mlSol);
-  
+
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule_2);
   ml_prob.set_all_abstract_fe();
-  
+
 
 
   // ******* Add FEM system to the MultiLevel problem *******
@@ -164,7 +166,7 @@ int main(int argc, char** argv) {
 
   GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues); //solve the generalized eigenvalue problem and compute the eigenpairs
 
-  
+
   for(int i = 0; i < numberOfEigPairs; i++) {
     std::cout << eigenvalues[i].first << " " << eigenvalues[i].second << std::endl;
   }
@@ -206,7 +208,8 @@ int main(int argc, char** argv) {
 
 } //end main
 
-void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues) {
+void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues)
+{
 //void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("UQ");   // pointer to the linear implicit system named "Poisson"
@@ -230,22 +233,27 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors(); // get the process_id (for parallel computation)
 
-  
+
   CurrentElem < double > geom_element1(dim, msh);            // must be adept if the domain is moving, otherwise double
   CurrentElem < double > geom_element2(dim, msh);            // must be adept if the domain is moving, otherwise double
-    
+
   constexpr unsigned int space_dim = 3;
-//***************************************************  
+//***************************************************
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
- //***************************************************  
-     std::vector < std::vector < double > >  JacI_qp(space_dim);
-     std::vector < std::vector < double > >  Jac_qp(dim);
-    for (unsigned d = 0; d < dim; d++) { Jac_qp[d].resize(space_dim); }
-    for (unsigned d = 0; d < space_dim; d++) { JacI_qp[d].resize(dim); }
-    
-    double detJac_qp;  std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > elem_all;
+//***************************************************
+  std::vector < std::vector < double > >  JacI_qp(space_dim);
+  std::vector < std::vector < double > >  Jac_qp(dim);
+  for(unsigned d = 0; d < dim; d++) {
+    Jac_qp[d].resize(space_dim);
+  }
+  for(unsigned d = 0; d < space_dim; d++) {
+    JacI_qp[d].resize(dim);
+  }
+
+  double detJac_qp;
+  std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
- //***************************************************  
+//***************************************************
 
   //solution variable
   unsigned soluIndex;
@@ -290,8 +298,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
   CC->zero();
 
   double integral_iproc = 0.;
-  
-  
+
+
   for(int kproc = 0; kproc < nprocs; kproc++) {
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
@@ -313,7 +321,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
       l2GMap2.resize(nDof2);
 
 
-    for(int k = 0; k < dim; k++) {
+      for(int k = 0; k < dim; k++) {
         x2[k].resize(nDofx2);
       }
 
@@ -339,30 +347,34 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
         MPI_Bcast(& x2[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
       }
       // ######################################################################
-      
-    // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
+
+      // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
       if(iproc == kproc) {
-    geom_element2.set_coords_at_dofs_and_geom_type(jel, xType);
+        geom_element2.set_coords_at_dofs_and_geom_type(jel, xType);
       }
-     for(unsigned k = 0; k < dim; k++) {
-       MPI_Bcast(& geom_element2.get_coords_at_dofs()[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
-     }
-    // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
+      for(unsigned k = 0; k < dim; k++) {
+        MPI_Bcast(& geom_element2.get_coords_at_dofs()[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      }
+      for(unsigned k = 0; k < space_dim; k++) {
+        MPI_Bcast(& geom_element2.get_coords_at_dofs_3d()[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      }
+      // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 //       const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
       const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
-        
+
       vector < vector < double > > xg2(jgNumber);
       vector <double> weight2(jgNumber);
       vector < vector <double> > phi2(jgNumber);  // local test function
+      
 
       for(unsigned jg = 0; jg < jgNumber; jg++) {
-          
-//         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
-          
-	elem_all[ielGeom2][xType]->JacJacInv(/*x2*/geom_element2.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
-    weight2[jg] = detJac_qp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
-    elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
+
+//          msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
+
+        elem_all[ielGeom2][xType]->JacJacInv(/*x2*/geom_element2.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
+        weight2[jg] = detJac_qp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
+        elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
 
         xg2[jg].assign(dim, 0.);
 
@@ -409,10 +421,10 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
         // *** Gauss point loop ***
         const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
 //         const unsigned igNumber = ml_prob.GetQuadratureRule(ielGeom1).GetGaussPointsNumber();
-        
+
         double weight1;
         vector < double > phi1;  // local test function
-        
+
         for(unsigned ig = 0; ig < igNumber; ig++) {
 
           msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
@@ -426,13 +438,13 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
           }
 
           if(iel == jel) {
-              
+
             for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned i1 = 0; i1 < nDof1; i1++) {
                 MMlocal[ i * nDof1 + i1 ] += phi1[i] * phi1[i1] * weight1;
               }
             }
-            
+
           }
 
           for(unsigned jg = 0; jg < jgNumber; jg++) {
@@ -440,19 +452,19 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
             for(unsigned k = 0; k < dim; k++) {
               dist += fabs(xg1[k] - xg2[jg][k]);
             }
-            
+
             integral_iproc +=  weight1 *  weight2[jg];
-            
+
             double C = varianceInput * exp(- dist / L);
-            
+
             for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned j = 0; j < nDof2; j++) {
                 CClocal[i * nDof2 + j] += weight1 * phi1[i] * C * phi2[jg][j] * weight2[jg];
               }//endl j loop
             } //endl i loop
-            
-            
-            
+
+
+
           } //endl jg loop
         } //endl ig loop
         if(iel == jel) MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
@@ -464,16 +476,17 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
   MM->close();
   CC->close();
 
-   ////////////////////////////////////////
-       std::cout << "integral on processor: " << integral_iproc << std::endl;
+  ////////////////////////////////////////
 
-   double J = 0.;
-      MPI_Allreduce( &integral_iproc, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );  //THIS IS THE RIGHT ONE!!
-      
-       std::cout << "integral after Allreduce: " << J << std::endl;
+  printf("integral on processor %d = %f \n", iproc, integral_iproc);
 
- return;  //ignore the rest
-  
+  double J = 0.;
+  MPI_Allreduce(&integral_iproc, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
+
+  std::cout << "integral after Allreduce: " << J << std::endl;
+
+  return;  //ignore the rest
+
   //BEGIN solve the eigenvalue problem
 
   int ierr;
@@ -691,7 +704,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
     }
 
     sol->_Sol[eigfIndex[iGS]]->close();
-    
+
     double local_norm2 = 0.;
     for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -808,7 +821,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 }
 
 
-void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  QoI, const unsigned& m, const double& domainMeasure) {
+void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  QoI, const unsigned& m, const double& domainMeasure)
+{
 
   //  extract pointers to the several objects that we are going to use
 
@@ -924,7 +938,8 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  
 
 }
 
-void GetStochasticData(std::vector <double>& QoI) {
+void GetStochasticData(std::vector <double>& QoI)
+{
 
   //let's standardize the quantity of interest after finding moments and standard deviation
 
@@ -977,8 +992,8 @@ void GetStochasticData(std::vector <double>& QoI) {
       //BEGIN estimation of the PDF
       bool sampleCaptured = false;
       for(unsigned i = 0; i < pdfHistogramSize; i++) {
-        double leftBound = startPoint + i*deltat;
-        double rightBound = startPoint + (i+1)*deltat;
+        double leftBound = startPoint + i * deltat;
+        double rightBound = startPoint + (i + 1) * deltat;
         if(leftBound <=  QoIStandardized[m] && QoIStandardized[m] < rightBound) {
           pdfHistogram[i]++;
 //           std::cout << "leftBound = " << leftBound << " " << "rightBound = " << rightBound << " " << " standardized QoI = " << QoIStandardized[m] << std::endl;
@@ -1002,7 +1017,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     //BEGIN histogram check
     double checkHistogram = 0;
     for(unsigned i = 0; i < pdfHistogramSize; i++) {
-      double point = (startPoint + i * deltat + startPoint + (i+1) * deltat) * 0.5;
+      double point = (startPoint + i * deltat + startPoint + (i + 1) * deltat) * 0.5;
       double pdfCheck = pdfHistogram[i] / M;
       pdfHistogram[i] /= pdfIntegral;
       std::cout << point << "  " << pdfHistogram[i]  << std::endl;
@@ -1077,7 +1092,8 @@ void GetStochasticData(std::vector <double>& QoI) {
 }
 
 
-void PlotStochasticData() {
+void PlotStochasticData()
+{
 
   std::cout.precision(14);
   std::cout << " the number of MC samples is " << M << std::endl;
@@ -1171,7 +1187,7 @@ void PlotStochasticData() {
         d6gaussian = (1.) * gaussian * (pow(t, 6) - 15 * pow(t, 4) + 45 * t * t - 15);
 
         generalizedGC3Terms = generalizedGC2Terms - 1. / 6 * (cumulantsStandardized[2] + 3 * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
-                              + pow(cumulantsStandardized[0], 3)) * d3gaussian;
+                                                              + pow(cumulantsStandardized[0], 3)) * d3gaussian;
 
         std::cout << generalizedGC3Terms << " ";
 
@@ -1182,28 +1198,28 @@ void PlotStochasticData() {
           d9gaussian = (- 1.) * gaussian * (pow(t, 9) - 36. * pow(t, 7) + 378. * pow(t, 5) - 1260. * t * t * t + 945. * t) ;
 
           generalizedGC4Terms = generalizedGC3Terms + 1. / 24 * (cumulantsStandardized[3] + 4. * cumulantsStandardized[2] * cumulantsStandardized[0]
-                                + 3. * pow((cumulantsStandardized[1] - 1.), 2) + 6. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 2)
-                                + pow(cumulantsStandardized[0], 4)) * d4gaussian;
+                                                                 + 3. * pow((cumulantsStandardized[1] - 1.), 2) + 6. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 2)
+                                                                 + pow(cumulantsStandardized[0], 4)) * d4gaussian;
 
           std::cout << generalizedGC4Terms << " ";
 
           if(totMoments > 4) {
 
             generalizedGC5Terms = generalizedGC4Terms - 1. / 120 * (cumulantsStandardized[4] + 5. * cumulantsStandardized[3] * cumulantsStandardized[0]
-                                  + 10. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) + 10. * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 2)
-                                  + 15. * pow((cumulantsStandardized[1] - 1.), 2) * cumulantsStandardized[0] + 10. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 3)
-                                  + pow(cumulantsStandardized[0], 5)) * d5gaussian;
+                                                                    + 10. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) + 10. * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 2)
+                                                                    + 15. * pow((cumulantsStandardized[1] - 1.), 2) * cumulantsStandardized[0] + 10. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 3)
+                                                                    + pow(cumulantsStandardized[0], 5)) * d5gaussian;
 
             std::cout << generalizedGC5Terms << " ";
 
             if(totMoments > 5) {
 
               generalizedGC6Terms = generalizedGC5Terms + 1. / 720 * (cumulantsStandardized[5] + 6. * cumulantsStandardized[4] * cumulantsStandardized[0]
-                                    + 15. * cumulantsStandardized[3] * (cumulantsStandardized[1] - 1.) + 15. * cumulantsStandardized[3] * pow(cumulantsStandardized[0], 2)
-                                    + 10. * pow(cumulantsStandardized[2], 2) + 60. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
-                                    + 20. * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 3) + 15. * pow((cumulantsStandardized[1] - 1.), 3)
-                                    + 45. * pow((cumulantsStandardized[1] - 1.), 2) * pow(cumulantsStandardized[0], 2) + 15. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 4)
-                                    +  pow(cumulantsStandardized[0], 6)) * d6gaussian;
+                                                                      + 15. * cumulantsStandardized[3] * (cumulantsStandardized[1] - 1.) + 15. * cumulantsStandardized[3] * pow(cumulantsStandardized[0], 2)
+                                                                      + 10. * pow(cumulantsStandardized[2], 2) + 60. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
+                                                                      + 20. * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 3) + 15. * pow((cumulantsStandardized[1] - 1.), 3)
+                                                                      + 45. * pow((cumulantsStandardized[1] - 1.), 2) * pow(cumulantsStandardized[0], 2) + 15. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 4)
+                                                                      +  pow(cumulantsStandardized[0], 6)) * d6gaussian;
 
               std::cout << generalizedGC6Terms << " \n ";
 
@@ -1260,9 +1276,9 @@ void PlotStochasticData() {
 
         d8gaussian = (1.) * gaussian * (1. / 16. * (1680. - 6720. * t * t + 3360. * pow(t, 4) - 448. * pow(t, 6) + 16. * pow(t, 8)));
         d10gaussian = (1.) * gaussian * (1. / 32. * (- 30240. + 151200. *  t * t - 100800. * pow(t, 4) + 20160. * pow(t, 6) - 1440. * pow(t, 8)
-                                         + 32. * pow(t, 10)));
+                                                     + 32. * pow(t, 10)));
         d12gaussian = (1.) * gaussian * (1. / 64. * (665280. - 3991680. * t * t + 3326400. * pow(t, 4) - 887040. * pow(t, 6) + 95040. * pow(t, 8)
-                                         - 4224. * pow(t, 10) + 64. * pow(t, 12)));
+                                                     - 4224. * pow(t, 10) + 64. * pow(t, 12)));
 
         lambda6 = cumulants[5] / pow(stdDeviationQoI, 6);
 
