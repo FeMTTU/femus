@@ -86,7 +86,10 @@ int main(int argc, char** argv) {
   mlMsh.ReadCoarseMesh("../input/square.neu", fe_quad_rule_1.c_str(), scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
-  unsigned dim = mlMsh.GetDimension();
+  // erase all the coarse mesh levels
+//   mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  
+ unsigned dim = mlMsh.GetDimension();
 
   MultiLevelSolution mlSol(&mlMsh);
 
@@ -111,6 +114,7 @@ int main(int argc, char** argv) {
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule_2);
   ml_prob.set_all_abstract_fe();
   
+
 
   // ******* Add FEM system to the MultiLevel problem *******
   LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("UQ");
@@ -158,9 +162,9 @@ int main(int argc, char** argv) {
 
   //END stochastic index set test
 
-
   GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues); //solve the generalized eigenvalue problem and compute the eigenpairs
 
+  
   for(int i = 0; i < numberOfEigPairs; i++) {
     std::cout << eigenvalues[i].first << " " << eigenvalues[i].second << std::endl;
   }
@@ -285,6 +289,9 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
   CC->init(MM_size, MM_size, MM_local_size, MM_local_size, MM_local_size, MM_size - MM_local_size);
   CC->zero();
 
+  double integral_iproc = 0.;
+  
+  
   for(int kproc = 0; kproc < nprocs; kproc++) {
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
@@ -305,21 +312,21 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
       // resize local arrays
       l2GMap2.resize(nDof2);
 
-    geom_element2.set_coords_at_dofs_and_geom_type(jel, xType);
 
     for(int k = 0; k < dim; k++) {
         x2[k].resize(nDofx2);
       }
 
-      // local storage of global mapping and solution
+      // local storage of global mapping and solution ********************
       if(iproc == kproc) {
         for(unsigned j = 0; j < nDof2; j++) {
           l2GMap2[j] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, j, jel);  // global to global mapping between solution node and pdeSys dof
         }
       }
       MPI_Bcast(&l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      // ******************************************************************
 
-      // local storage of coordinates
+      // local storage of coordinates  #######################################
       if(iproc == kproc) {
         for(unsigned j = 0; j < nDofx2; j++) {
           unsigned xDof  = msh->GetSolutionDof(j, jel, xType);  // global to global mapping between coordinates node and coordinate dof
@@ -331,6 +338,16 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
       for(unsigned k = 0; k < dim; k++) {
         MPI_Bcast(& x2[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
       }
+      // ######################################################################
+      
+    // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
+      if(iproc == kproc) {
+    geom_element2.set_coords_at_dofs_and_geom_type(jel, xType);
+      }
+     for(unsigned k = 0; k < dim; k++) {
+       MPI_Bcast(& geom_element2.get_coords_at_dofs()[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+     }
+    // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
 //       const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
       const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
@@ -343,7 +360,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
           
 //         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
           
-	elem_all[ielGeom2][xType]->JacJacInv(geom_element2.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
+	elem_all[ielGeom2][xType]->JacJacInv(/*x2*/geom_element2.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
     weight2[jg] = detJac_qp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
     elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
 
@@ -394,7 +411,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 //         const unsigned igNumber = ml_prob.GetQuadratureRule(ielGeom1).GetGaussPointsNumber();
         
         double weight1;
-        vector <double> phi1;  // local test function
+        vector < double > phi1;  // local test function
         
         for(unsigned ig = 0; ig < igNumber; ig++) {
 
@@ -409,11 +426,13 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
           }
 
           if(iel == jel) {
+              
             for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned i1 = 0; i1 < nDof1; i1++) {
                 MMlocal[ i * nDof1 + i1 ] += phi1[i] * phi1[i1] * weight1;
               }
             }
+            
           }
 
           for(unsigned jg = 0; jg < jgNumber; jg++) {
@@ -421,12 +440,19 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
             for(unsigned k = 0; k < dim; k++) {
               dist += fabs(xg1[k] - xg2[jg][k]);
             }
+            
+            integral_iproc +=  weight1 *  weight2[jg];
+            
             double C = varianceInput * exp(- dist / L);
+            
             for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned j = 0; j < nDof2; j++) {
                 CClocal[i * nDof2 + j] += weight1 * phi1[i] * C * phi2[jg][j] * weight2[jg];
               }//endl j loop
             } //endl i loop
+            
+            
+            
           } //endl jg loop
         } //endl ig loop
         if(iel == jel) MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
@@ -438,6 +464,16 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
   MM->close();
   CC->close();
 
+   ////////////////////////////////////////
+       std::cout << "integral on processor: " << integral_iproc << std::endl;
+
+   double J = 0.;
+      MPI_Allreduce( &integral_iproc, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );  //THIS IS THE RIGHT ONE!!
+      
+       std::cout << "integral after Allreduce: " << J << std::endl;
+
+ return;  //ignore the rest
+  
   //BEGIN solve the eigenvalue problem
 
   int ierr;
