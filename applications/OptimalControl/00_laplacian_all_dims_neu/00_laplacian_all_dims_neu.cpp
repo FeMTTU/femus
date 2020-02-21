@@ -35,7 +35,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   if (face_name == 1) {
       dirichlet = true;
-        value = 0.;
+        value = 0.; //Dirichlet value
   }
   else if (face_name == 2) {
       dirichlet = false;
@@ -313,17 +313,20 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     for (unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
         
 //        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, xType);
-        std::vector  <  double > xx(3, 0.); 
-//           xx = geom_element.get_elem_center_bdry();
+        std::vector  <  double > xx_face_elem_center(3, 0.); 
+//           xx_face_elem_center = geom_element.get_elem_center_bdry();
         
        const int boundary_index = el->GetFaceElementIndex(iel, jface);
        
        if ( boundary_index < 0) { //I am on the boundary
                   
-         unsigned int face = -(boundary_index + 1);
+         unsigned int face = - (boundary_index + 1);
     
-         bool is_dirichlet =  ml_sol->GetBdcFunction()(xx, "U", tau, face, 0.);                     
-                          
+         bool is_dirichlet =  ml_sol->GetBdcFunction()(xx_face_elem_center, "U", tau, face, 0.);                     
+         //we have to be careful here, because in GenerateBdc those coordinates are passed as NODE coordinates, 
+         //while here we pass the FACE ELEMENT CENTER coordinates. 
+         // So, if we use this for enforcing space-dependent Dirichlet or Neumann values, we need to be careful!
+         
              if ( !(is_dirichlet)  &&  (tau != 0.) ) {  //dirichlet == false and nonhomogeneous Neumann
                    unsigned n_dofs_face = msh->GetElementFaceDofNumber(iel, jface, solFEType_u);
 
