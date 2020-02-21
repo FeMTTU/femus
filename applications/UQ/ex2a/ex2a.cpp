@@ -9,6 +9,9 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
+#include "CurrentElem.hpp"
+#include "ElemType_template.hpp"
+
 #include "petsc.h"
 #include "petscmat.h"
 #include "PetscMatrix.hpp"
@@ -47,7 +50,7 @@ double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double startPoint = - 3.8;
 double endPoint = 3.8;
-unsigned M = 10000; //number of samples for the Monte Carlo
+unsigned M = 1/*0000*/; //number of samples for the Monte Carlo
 double deltat;
 int pdfHistogramSize;
 //END
@@ -66,6 +69,10 @@ int main(int argc, char** argv) {
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues
 
   //END
+  
+  //quadr rule order
+  const std::string fe_quad_rule_1 = "sixth";
+  const std::string fe_quad_rule_2 = "seventh";
 
 
   //BEGIN deterministic FEM instances
@@ -76,7 +83,7 @@ int main(int argc, char** argv) {
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.ReadCoarseMesh("../input/square.neu", "fifth", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/square.neu", fe_quad_rule_1.c_str(), scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   unsigned dim = mlMsh.GetDimension();
@@ -100,6 +107,10 @@ int main(int argc, char** argv) {
   mlSol.GenerateBdc("All");
 
   MultiLevelProblem ml_prob(&mlSol);
+  
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule_2);
+  ml_prob.set_all_abstract_fe();
+  
 
   // ******* Add FEM system to the MultiLevel problem *******
   LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("UQ");
@@ -165,7 +176,7 @@ int main(int argc, char** argv) {
 
     system.MGsolve();
 
-    GetQuantityOfInterest(ml_prob, QoI, m, domainMeasure);
+// // //     GetQuantityOfInterest(ml_prob, QoI, m, domainMeasure);
 
   }
 
@@ -173,9 +184,9 @@ int main(int argc, char** argv) {
 //     std::cout << "QoI[" << m << "] = " << QoI[m] << std::endl;
 //   }
 
-  GetStochasticData(QoI);
+// // //   GetStochasticData(QoI);
 
-  PlotStochasticData();
+// // //   PlotStochasticData();
 
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
@@ -215,6 +226,22 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors(); // get the process_id (for parallel computation)
 
+  
+  CurrentElem < double > geom_element1(dim, msh);            // must be adept if the domain is moving, otherwise double
+  CurrentElem < double > geom_element2(dim, msh);            // must be adept if the domain is moving, otherwise double
+    
+  constexpr unsigned int space_dim = 3;
+//***************************************************  
+  //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+ //***************************************************  
+     std::vector < std::vector < double > >  JacI_qp(space_dim);
+     std::vector < std::vector < double > >  Jac_qp(dim);
+    for (unsigned d = 0; d < dim; d++) { Jac_qp[d].resize(space_dim); }
+    for (unsigned d = 0; d < space_dim; d++) { JacI_qp[d].resize(dim); }
+    
+    double detJac_qp;  std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > elem_all;
+  ml_prob.get_all_abstract_fe(elem_all);
+ //***************************************************  
 
   //solution variable
   unsigned soluIndex;
@@ -278,7 +305,9 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
       // resize local arrays
       l2GMap2.resize(nDof2);
 
-      for(int k = 0; k < dim; k++) {
+    geom_element2.set_coords_at_dofs_and_geom_type(jel, xType);
+
+    for(int k = 0; k < dim; k++) {
         x2[k].resize(nDofx2);
       }
 
@@ -303,13 +332,20 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
         MPI_Bcast(& x2[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
       }
 
-      unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
+//       const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
+      const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
+        
       vector < vector < double > > xg2(jgNumber);
       vector <double> weight2(jgNumber);
       vector < vector <double> > phi2(jgNumber);  // local test function
 
       for(unsigned jg = 0; jg < jgNumber; jg++) {
-        msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
+          
+//         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
+          
+	elem_all[ielGeom2][xType]->JacJacInv(geom_element2.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
+    weight2[jg] = detJac_qp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
+    elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
 
         xg2[jg].assign(dim, 0.);
 
@@ -354,9 +390,12 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
         CClocal.assign(nDof1 * nDof2, 0.);   //resize
 
         // *** Gauss point loop ***
-        unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
+        const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
+//         const unsigned igNumber = ml_prob.GetQuadratureRule(ielGeom1).GetGaussPointsNumber();
+        
         double weight1;
         vector <double> phi1;  // local test function
+        
         for(unsigned ig = 0; ig < igNumber; ig++) {
 
           msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
