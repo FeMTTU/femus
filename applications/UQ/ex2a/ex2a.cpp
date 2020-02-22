@@ -359,8 +359,8 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
               dist += fabs(xg1[k] - xg2[jg][k]);
             }
 
-            double sol_diff = weight1 * solX[ig] - weight2[jg] * solY[jg];
-            double denom = pow(dist, (dim / 2.) + 0.);
+            double sol_diff = solX[ig] - solY[jg];
+            double denom = pow(dist, (dim / 2.) + 0.5);     // s has to be a variable!!
 
 //             integral_iproc +=  weight1 *  weight2[jg];
             integral_iproc += (sol_diff * sol_diff) / denom;
