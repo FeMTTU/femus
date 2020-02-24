@@ -671,6 +671,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
   }
   sol->_Sol[solw1]->close();
   
+  
   sol->_Sol[indexTheta1]->zero();
 
   for(unsigned i = msh->_dofOffset[solType1][iproc]; i < msh->_dofOffset[solType1][iproc + 1]; i++) {
@@ -683,11 +684,13 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       sol->_Sol[solmu[k]]->set(i, mu[k] / weight);
     }
     sol->_Sol[solsmu1N]->set(i, sqrt(mu[0] * mu[0] + mu[1] * mu[1]) / weight);
+    sol->_Sol[indexTheta1]->set(i, atan2( fabs(mu[1])/weight, fabs(mu[0])/weight) );
   }
   for(unsigned k = 0; k < dim; k++) {
     sol->_Sol[solmu[k]]->close();
   }
   sol->_Sol[solsmu1N]->close();
+  sol->_Sol[indexTheta1]->close();
 
   double norm = sol->_Sol[solsmu1N]->linfty_norm();
   std::cout << norm << std::endl;
@@ -697,7 +700,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
 
 
-  for(unsigned smooth = 0; smooth < 10; smooth++) {
+  for(unsigned smooth = 0; smooth < 5; smooth++) {
     unsigned solw2 = mlSol.GetIndex("weight2");
     unsigned solsmu2N = mlSol.GetIndex("smu2N");  //smooth ni norm
 
@@ -705,9 +708,11 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
     std::vector<double> dof2;
     std::vector<double> sol1;
+    std::vector<double> solTheta1;
 
     sol->_Sol[solsmu2N]->zero();
     sol->_Sol[solw2]->zero();
+    sol->_Sol[indexTheta2]->zero();
 
     std::vector <double> phi2;  // local test function for velocity
     std::vector <double> phi2_x; // local test function first order partial derivatives
@@ -720,6 +725,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       unsigned nDofs2  = msh->GetElementDofNumber(iel, solType2);
 
       sol1.resize(nDofs1);
+      solTheta1.resize(nDofs1);
       dof2.resize(nDofs2);
 
       for(int k = 0; k < dim; k++) {
@@ -729,6 +735,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       for(unsigned i = 0; i < nDofs1; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solType1);
         sol1[i] = (*sol->_Sol[solsmu1N])(idof);
+        solTheta1[i] = (*sol->_Sol[indexTheta1])(idof);
       }
 
       // local storage of global mapping and solution
@@ -748,32 +755,42 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
         double *phi1 = msh->_finiteElement[ielGeom][solType1]->GetPhi(ig);
         double sol1g = 0.;
+        double solTheta1g = 0.;
         for(unsigned i = 0; i < nDofs1; i++) {
           sol1g += phi1[i] * sol1[i];
+          solTheta1g += phi1[i] * solTheta1[i];
         }
 
         // *** phi_i loop ***
         for(unsigned i = 0; i < nDofs2; i++) {
           sol->_Sol[solw2]->add(dof2[i], phi2[i] * weight2);
           sol->_Sol[solsmu2N]->add(dof2[i], sol1g * phi2[i] * weight2);
+          sol->_Sol[indexTheta2]->add(dof2[i], solTheta1g * phi2[i] * weight2);
         } // end phi_i loop
       } // end gauss point loop
 
     } //end element loop for each process*/
     sol->_Sol[solw2]->close();
     sol->_Sol[solsmu2N]->close();
+    sol->_Sol[indexTheta2]->close();
 
     for(unsigned i = msh->_dofOffset[solType2][iproc]; i < msh->_dofOffset[solType2][iproc + 1]; i++) {
-      double value = (*sol->_Sol[solsmu2N])(i);
       double weight = (*sol->_Sol[solw2])(i);
+      double value = (*sol->_Sol[solsmu2N])(i);
       sol->_Sol[solsmu2N]->set(i, value / weight);
+      
+      value = (*sol->_Sol[indexTheta2])(i);
+      sol->_Sol[indexTheta2]->set(i, value / weight);
     }
     sol->_Sol[solsmu2N]->close();
+    sol->_Sol[indexTheta2]->close();
 
 
     sol->_Sol[solsmu1N]->zero();
+    sol->_Sol[indexTheta1]->zero();
 
     std::vector<double> sol2;
+    std::vector<double> solTheta2;
 
     for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -786,6 +803,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       for(int k = 0; k < dim; k++) {
         xHat[k].resize(nDofs2);
         sol2.resize(nDofs2);
+        solTheta2.resize(nDofs2);
       }
 
       // local storage of global mapping and solution
@@ -800,6 +818,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
           xHat[k][i] = (*msh->_topology->_Sol[k])(xDof);
         }
         sol2[i] = (*sol->_Sol[solsmu2N])(idof);
+        solTheta2[i] = (*sol->_Sol[indexTheta2])(idof);
 
       }
 
@@ -808,15 +827,18 @@ void UpdateMu(MultiLevelSolution& mlSol) {
         msh->_finiteElement[ielGeom][solTypeDx]->Jacobian(xHat, ig, weight, phi, phi_x);
 
         double sol2g = 0;
+        double solTheta2g = 0;
 
         for(unsigned i = 0; i < nDofs2; i++) {
           sol2g += sol2[i] * phi[i];
+          solTheta2g += solTheta2[i] * phi[i];
         }
 
         double *phi1 = msh->_finiteElement[ielGeom][solType1]->GetPhi(ig);
 
         for(unsigned i = 0; i < nDofs1; i++) {
           sol->_Sol[solsmu1N]->add(dof1[i], sol2g * phi1[i] * weight);
+          sol->_Sol[indexTheta1]->add(dof1[i], solTheta2g * phi1[i] * weight);
         } // end phi_i loop
 
       } // end gauss point loop
@@ -824,13 +846,18 @@ void UpdateMu(MultiLevelSolution& mlSol) {
     } //end element loop for each process*/
 
     sol->_Sol[solsmu1N]->close();
+    sol->_Sol[indexTheta1]->close();
 
     for(unsigned i = msh->_dofOffset[solType1][iproc]; i < msh->_dofOffset[solType1][iproc + 1]; i++) {
       double weight = (*sol->_Sol[solw1])(i);
       double value = (*sol->_Sol[solsmu1N])(i);
       sol->_Sol[solsmu1N]->set(i,  value / weight);
+      
+      value = (*sol->_Sol[indexTheta1])(i);
+      sol->_Sol[indexTheta1]->set(i,  value / weight);
     }
     sol->_Sol[solsmu1N]->close();
+    sol->_Sol[indexTheta1]->close();
   }
 
 
@@ -838,12 +865,12 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
   double MuNormLocalSum = 0.;
   for(unsigned i = msh->_dofOffset[solType1][iproc]; i < msh->_dofOffset[solType1][iproc + 1]; i++) {
-    double muN = 0.;
-    for(unsigned k = 0; k < dim; k++) {
-      double muk = (*sol->_Sol[solmu[k]])(i);
-      muN += muk * muk;
-    }
-    MuNormLocalSum += sqrt(muN);
+//     double muN = 0.;
+//     for(unsigned k = 0; k < dim; k++) {
+//       double muk = (*sol->_Sol[solmu[k]])(i);
+//       muN += muk * muk;
+//     }
+    MuNormLocalSum += (*sol->_Sol[solsmu1N])(i);
   }
 
   double MuNormAverage;
@@ -853,15 +880,29 @@ void UpdateMu(MultiLevelSolution& mlSol) {
   for(unsigned i = msh->_dofOffset[solType1][iproc]; i < msh->_dofOffset[solType1][iproc + 1]; i++) {
 
     double mu[2];
-    double normMu = 0.;
+    //double normMu = 0.;
     for(unsigned k = 0; k < dim; k++) {
       mu[k] = (*sol->_Sol[solmu[k]])(i);
-      normMu += mu[k] * mu[k];
+      //normMu += mu[k] * mu[k];
     }
-    normMu = sqrt(normMu);
+    //normMu = sqrt(normMu);
+    
+    double normMu = (*sol->_Sol[solsmu1N])(i);
+    double theta = (*sol->_Sol[indexTheta1])(i);
+    
+    if(mu[0] < 0){
+      if(mu[1] >= 0) theta = M_PI - theta;
+      else theta = M_PI + theta;
+    }
+    else if(mu[1] < 0 ) theta = - theta;
+    
+    
     for(unsigned k = 0; k < dim; k++) {
       sol->_Sol[solmu[k]]->set(i, MuNormAverage * mu[k] / normMu);
     }
+    
+    sol->_Sol[solmu[0]]->set(i, MuNormAverage * cos(theta));
+    sol->_Sol[solmu[1]]->set(i, MuNormAverage * sin(theta));
 
   }
 
