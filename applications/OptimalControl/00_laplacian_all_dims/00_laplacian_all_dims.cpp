@@ -328,7 +328,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
     elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
 //--------------    
-	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
+	sol_u_gss = 0.;
+    std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	
 	for (unsigned i = 0; i < nDof_u; i++) {
 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
