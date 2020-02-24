@@ -87,7 +87,7 @@ int main(int argc, char** args) {
   double rhos1 = 7850;
   double rhos2 = 7850;
   double E1 = 2.e06;
-  double E2 = 2.e06;
+  double E2 = 2.e07;
   double nu1 = 0.4;
   double nu2 = 0.4;
 
@@ -162,7 +162,7 @@ int main(int argc, char** args) {
   unsigned Ne = 4;
 
   double Lx = lengthx / nx;
-  double Lx1 = 0.5 * Lx; //beam dimensions
+  double Lx1 = 0.025 * Lx; //beam dimensions
   double Lx2 = Lx - Lx1; //beam dimensions
 
   double Ly = length;
@@ -216,7 +216,7 @@ int main(int argc, char** args) {
   std::vector < std::vector < std::vector < double > > >  line1Points(1);
   line1->GetLine(line1Points[0]);
   PrintLine(DEFAULT_OUTPUTDIR, "bulk1", line1Points, 0);
-  PrintLine("./output1", "bulk1", line1Points, 0);
+  //PrintLine("./output1", "bulk1", line1Points, 0);
 
 
   //BEGIN initialization bulk2 points
@@ -235,7 +235,7 @@ int main(int argc, char** args) {
   std::vector < std::vector < std::vector < double > > > line2Points(1);
   line2->GetLine(line2Points[0]);
   PrintLine(DEFAULT_OUTPUTDIR, "bulk2", line2Points, 0);
-  PrintLine("./output1", "bulk2", line2Points, 0);
+  //PrintLine("./output1", "bulk2", line2Points, 0);
 
   //interface marker initialization
 
@@ -287,7 +287,7 @@ int main(int argc, char** args) {
   std::vector < std::vector < std::vector < double > > > lineIPoints(1);
   lineI->GetLine(lineIPoints[0]);
   PrintLine(DEFAULT_OUTPUTDIR, "interfaceLine", lineIPoints, 0);
-  PrintLine("./output1", "interfaceLine", lineIPoints, 0);
+  //PrintLine("./output1", "interfaceLine", lineIPoints, 0);
   //END interface markers
 
 
@@ -301,6 +301,9 @@ int main(int argc, char** args) {
   GetInterfaceElementEigenvalues(mlSol);
 
   system.MGsolve();
+  
+  
+  mlSol.GetWriter()->Write("./output", "linear", print_vars, 0);
 
   std::vector<std::string> mov_vars1;
   mov_vars1.push_back("DX1");
@@ -391,10 +394,14 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
   std::vector < std::vector < adept::adouble > > solD1(dim); // local solution
   std::vector < std::vector < adept::adouble > > solD2(dim); // local solution
 
-  unsigned CIndex[2];
+  unsigned CMIndex[2];
+  unsigned CLIndex[2];
 
-  CIndex[0] = mlSol->GetIndex("CM1");
-  CIndex[1] = mlSol->GetIndex("CM2");
+  CMIndex[0] = mlSol->GetIndex("CM1");
+  CMIndex[1] = mlSol->GetIndex("CM2");
+  
+  CLIndex[0] = mlSol->GetIndex("CL1");
+  CLIndex[1] = mlSol->GetIndex("CL2");
 
   unsigned eflagIndex = mlSol->GetIndex("eflag");
   unsigned nflagIndex = mlSol->GetIndex("nflag");
@@ -547,25 +554,36 @@ void AssembleNitscheProblem_AD(MultiLevelProblem& ml_prob) {
 
     else {
 
-//       double ia1C1 = 1. / (alpha1 * (*sol->_Sol[CIndex[0]])(iel));
-//       double ia2C2 = 1. / (alpha2 * (*sol->_Sol[CIndex[1]])(iel));
-//
-//       double den = ia1C1 + ia2C2;
+      double iM1C1 = 1. / (mu1 * (*sol->_Sol[CMIndex[0]])(iel));
+      double iM2C2 = 1. / (mu2 * (*sol->_Sol[CMIndex[1]])(iel));
 
-//       double gamma1 = ia1C1 / den;
-//       double gamma2 = ia2C2 / den;
-//
-//       double theta = 2000. / den;
+      double denM = iM1C1 + iM2C2;
 
-      double gammaL1 = 0.5;
-      double gammaL2 = 0.5;
+      double gammaM1 = iM1C1 / denM;
+      double gammaM2 = iM2C2 / denM;
 
-      double gammaM1 = 0.5;
-      double gammaM2 = 0.5;
+      double thetaM = 8. / denM;
 
-
-      double thetaL = lambda1;
-      double thetaM = mu1;
+      double iL1C1 = 1. / (lambda1 * (*sol->_Sol[CLIndex[0]])(iel));
+      double iL2C2 = 1. / (lambda2 * (*sol->_Sol[CLIndex[1]])(iel));
+      
+      double denL = iL1C1 + iL2C2;
+      
+      double gammaL1 = iL1C1 / denL;
+      double gammaL2 = iL2C2 / denL;
+      
+      double thetaL = 4. / denL;
+      
+      
+//       double gammaL1 = 0.5;
+//       double gammaL2 = 0.5;
+// 
+//       double gammaM1 = 0.5;
+//       double gammaM2 = 0.5;
+// 
+// 
+//       double thetaL = lambda1;
+//       double thetaM = mu1;
 
 
 
