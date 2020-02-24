@@ -34,10 +34,10 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
-void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues);
+void GetHsNorm(const unsigned level, MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues);
 
 
-unsigned numberOfUniformLevels = 3;
+unsigned numberOfUniformLevels = 5;
 
 int main(int argc, char** argv)
 {
@@ -63,7 +63,8 @@ int main(int argc, char** argv)
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
   // erase all the coarse mesh levels
-//   mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  const unsigned erased_levels = numberOfUniformLevels - 1;
+  mlMsh.EraseCoarseLevels(erased_levels);
 
   unsigned dim = mlMsh.GetDimension();
 
@@ -82,7 +83,8 @@ int main(int argc, char** argv)
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule_2);
   ml_prob.set_all_abstract_fe();
 
-  GetHsNorm(ml_prob, numberOfEigPairs, eigenvalues); //solve the generalized eigenvalue problem and compute the eigenpairs
+  //solve the generalized eigenvalue problem and compute the eigenpairs
+  GetHsNorm(numberOfUniformLevels  - erased_levels -1, ml_prob, numberOfEigPairs, eigenvalues);
 
 
   // ******* Print solution *******
@@ -99,13 +101,12 @@ int main(int argc, char** argv)
 
 } //end main
 
-void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues)
+void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues)
 {
 //void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
 //   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("UQ");   // pointer to the linear implicit system named "Poisson"
 
-  unsigned level = numberOfUniformLevels - 1;
 
   double varianceInput = stdDeviationInput * stdDeviationInput;
 
@@ -196,11 +197,12 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
 
 
 
+  const double s_frac = 0.5;
+  
   double sol_qp = 0.;
   std::vector< double > sol_x_qp(space_dim);     std::fill(sol_x_qp.begin(), sol_x_qp.end(), 0.);
   double JxWeight = 0.;
   
-  const double s_frac = 0.5;
   double integral_iproc_L2 = 0.;
   double integral_iproc_H1 = 0.;
 
@@ -252,7 +254,7 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
       }
       
       
-  printf("integral on processor %d = %f \n", iproc, integral_iproc_L2);
+  printf("L2 integral on processor %d = %f \n", iproc, integral_iproc_L2);
 
   double J_L2 = 0.;
   MPI_Allreduce(&integral_iproc_L2, &J_L2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
@@ -260,7 +262,7 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
   std::cout << "L2 integral after Allreduce: " << sqrt(J_L2) << std::endl;
       
       
-  printf("integral on processor %d = %f \n", iproc, integral_iproc_H1);
+  printf("H1 integral on processor %d = %f \n", iproc, integral_iproc_H1);
 
   double J_H1 = 0.;
   MPI_Allreduce(&integral_iproc_H1, &J_H1, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
@@ -477,12 +479,12 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
 
   ////////////////////////////////////////
 
-  printf("integral on processor %d = %.40f \n", iproc, integral_iproc_Hhalf);
+  printf("H-1/2 integral on processor %d = %.40f \n", iproc, integral_iproc_Hhalf);
 
   double J = 0.;
   MPI_Allreduce(&integral_iproc_Hhalf, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
 
-//   std::cout << "integral after Allreduce: " << J << std::endl;
+  std::cout << "H-1/2 integral after Allreduce squared: " << J << std::endl;
   std::cout << "H-1/2 integral after Allreduce: " << sqrt(J) << std::endl;
 
   //return;                                                  //ignore the rest
