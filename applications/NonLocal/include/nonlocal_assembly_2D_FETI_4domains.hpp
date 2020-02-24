@@ -312,7 +312,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   //flag = 1 assemble
   //flag = 0 don't assemble
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) { 
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     short unsigned ielGroup = msh->GetElementGroup (iel);
@@ -323,25 +323,54 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
     double leftBound = - (delta1 * 0.5) - epsilon;
 
     std::vector < double > xCoords (nDof);
+    std::vector < double > yCoords (nDof);
 
     for (unsigned i = 0; i < nDof; i++) {
       unsigned solDof  = msh->GetSolutionDof (i, iel, solu1Type);
       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
       xCoords[i] = (*msh->_topology->_Sol[0]) (xDof);
+      yCoords[i] = (*msh->_topology->_Sol[1]) (xDof);
 
-      if (xCoords[i] < rightBound) {
+      if (xCoords[i] < rightBound && yCoords[i] > leftBound) {
         sol->_Sol[u1FlagIndex]->add (solDof, 1.);
-        if (xCoords[i] > leftBound) sol->_Sol[muFlagIndex]->add (solDof, 1.);
       }
 
-      if (xCoords[i] > leftBound) sol->_Sol[u2FlagIndex]->add (solDof, 1.);
+      if (xCoords[i] > leftBound && yCoords[i] > leftBound) {
+        sol->_Sol[u2FlagIndex]->add (solDof, 1.);
+      }
+
+      if (xCoords[i] < rightBound && yCoords[i] < rightBound) {
+        sol->_Sol[u3FlagIndex]->add (solDof, 1.);
+      }
+
+      if (xCoords[i] > leftBound && yCoords[i] < rightBound) {
+        sol->_Sol[u4FlagIndex]->add (solDof, 1.);
+      }
+
+      if (xCoords[i] > leftBound && xCoords[i] < rightBound) {
+        sol->_Sol[muFlagIndex]->add (solDof, 1.);
+        if (yCoords[i] > leftBound && yCoords[i] < rightBound) {
+          sol->_Sol[muExtraFlagIndex]->add (solDof, 1.);
+          sol->_Sol[muExtra2FlagIndex]->add (solDof, 1.);
+        }
+      }
+
+      if (yCoords[i] > leftBound && yCoords[i] < rightBound) {
+        if (xCoords[i] < leftBound || xCoords[i] > rightBound) {
+          sol->_Sol[muFlagIndex]->add (solDof, 1.);
+        }
+      }
 
     }
   }
 
   sol->_Sol[u1FlagIndex]->close();
   sol->_Sol[u2FlagIndex]->close();
+  sol->_Sol[u3FlagIndex]->close();
+  sol->_Sol[u4FlagIndex]->close();
   sol->_Sol[muFlagIndex]->close();
+  sol->_Sol[muExtraFlagIndex]->close();
+  sol->_Sol[muExtra2FlagIndex]->close();
 
   for (unsigned idof = msh->_dofOffset[solu1Type][iproc]; idof < msh->_dofOffset[solu1Type][iproc + 1]; idof++) {
 
@@ -359,6 +388,20 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       sol->_Sol[solu2Index]->set (idof, 0.);
     }
 
+    double u3Flag = (*sol->_Sol[u3FlagIndex]) (idof);
+    if (u3Flag > 0) sol->_Sol[u3FlagIndex]->set (idof, 1.);
+    else {
+      sol->_Bdc[solu3Index]->set (idof, 0.);
+      sol->_Sol[solu3Index]->set (idof, 0.);
+    }
+
+    double u4Flag = (*sol->_Sol[u4FlagIndex]) (idof);
+    if (u4Flag > 0) sol->_Sol[u4FlagIndex]->set (idof, 1.);
+    else {
+      sol->_Bdc[solu4Index]->set (idof, 0.);
+      sol->_Sol[solu4Index]->set (idof, 0.);
+    }
+
     double muFlag = (*sol->_Sol[muFlagIndex]) (idof);
     if (muFlag > 0) sol->_Sol[muFlagIndex]->set (idof, 1.);
     else { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
@@ -366,19 +409,45 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       sol->_Sol[solmuIndex]->set (idof, 0.);
     } //TODO decomment this!!!
 
+    double muExtraFlag = (*sol->_Sol[muExtraFlagIndex]) (idof);
+    if (muExtraFlag > 0) sol->_Sol[muExtraFlagIndex]->set (idof, 1.);
+    else { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
+      sol->_Bdc[solmuExtraIndex]->set (idof, 0.);
+      sol->_Sol[solmuExtraIndex]->set (idof, 0.);
+    } //TODO decomment this!!!
+
+    double muExtra2Flag = (*sol->_Sol[muExtra2FlagIndex]) (idof);
+    if (muExtra2Flag > 0) sol->_Sol[muExtra2FlagIndex]->set (idof, 1.);
+    else { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
+      sol->_Bdc[solmuExtra2Index]->set (idof, 0.);
+      sol->_Sol[solmuExtra2Index]->set (idof, 0.);
+    } //TODO decomment this!!!
+
   }
 
   sol->_Sol[u1FlagIndex]->close();
   sol->_Sol[u2FlagIndex]->close();
+  sol->_Sol[u3FlagIndex]->close();
+  sol->_Sol[u4FlagIndex]->close();
   sol->_Sol[muFlagIndex]->close();
+  sol->_Sol[muExtraFlagIndex]->close();
+  sol->_Sol[muExtra2FlagIndex]->close();
 
   sol->_Sol[solu1Index]->close();
   sol->_Sol[solu2Index]->close();
+  sol->_Sol[solu3Index]->close();
+  sol->_Sol[solu4Index]->close();
   sol->_Sol[solmuIndex]->close();
+  sol->_Sol[solmuExtraIndex]->close();
+  sol->_Sol[solmuExtra2Index]->close();
 
   sol->_Bdc[solu1Index]->close();
   sol->_Bdc[solu2Index]->close();
+  sol->_Bdc[solu3Index]->close();
+  sol->_Bdc[solu4Index]->close();
   sol->_Bdc[solmuIndex]->close();
+  sol->_Bdc[solmuExtraIndex]->close();
+  sol->_Bdc[solmuExtra2Index]->close();
 
   //END creation of the flags for the assembly procedure
 
