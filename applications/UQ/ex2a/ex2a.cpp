@@ -28,7 +28,7 @@ using namespace femus;
 
 double InitialValueU(const std::vector < double >& x)
 {
-  return 0. * x[0] * x[0];                                
+  return 0. * x[0] * x[0];
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
@@ -59,14 +59,14 @@ int main(int argc, char** argv)
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, argv, MPI_COMM_WORLD);
 
-  
+
   unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
 
-  
+
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
-   const std::string mesh_file = "./input/Mesh_1_x.med";
+  const std::string mesh_file = "./input/Mesh_1_x.med";
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
 
   // ******* Set boundary conditions *******
   mlSol.GenerateBdc("All");
-  
+
 
   // ========= Problem ==========================
   MultiLevelProblem ml_prob(&mlSol);
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule_2);
   ml_prob.set_all_abstract_fe();
 
-  
+
   // ========= System ==========================
   LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("FracProblem");
   system.AddSolutionToSystemPDE("u");
@@ -120,43 +120,43 @@ int main(int argc, char** argv)
   system.SetLinearEquationSolverType(FEMuS_DEFAULT);
 
   system.init();
-  
+
   //dense =============
   //dense =============
   //dense =============
-  const unsigned solType = mlSol.GetSolutionType("u"); 
-  
+  const unsigned solType = mlSol.GetSolutionType("u");
+
   for(int level = 0; level < mlMsh.GetNumberOfLevels(); level++) {
-        
- Mesh*                    msh = mlMsh.GetLevel(level); 
-  unsigned    nprocs = msh->n_processors();
-   unsigned    iproc = msh->processor_id();
- 
- int MM_size = msh->_dofOffset[solType][nprocs];
-  int MM_local_size = msh->_dofOffset[solType][iproc + 1] - msh->_dofOffset[solType][iproc];
+
+    Mesh*                    msh = mlMsh.GetLevel(level);
+    unsigned    nprocs = msh->n_processors();
+    unsigned    iproc = msh->processor_id();
+
+    int MM_size = msh->_dofOffset[solType][nprocs];
+    int MM_local_size = msh->_dofOffset[solType][iproc + 1] - msh->_dofOffset[solType][iproc];
 
 //   SparseMatrix* CC;
 //   CC = SparseMatrix::build().release();
-  system._LinSolver[level]->_KK->init(MM_size, MM_size, MM_local_size, MM_local_size, MM_local_size, MM_size - MM_local_size);
-  system._LinSolver[level]->_KK->zero();
-    }
+    system._LinSolver[level]->_KK->init(MM_size, MM_size, MM_local_size, MM_local_size, MM_local_size, MM_size - MM_local_size);
+    system._LinSolver[level]->_KK->zero();
+  }
   //dense =============
   //dense =============
   //dense =============
-  
-    
+
+
   // ******* Set Smoother *******
   system.SetSolverFineGrids(GMRES);
 
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
- 
-    system.MGsolve();
 
-  
+  system.MGsolve();
+
+
   //solve the generalized eigenvalue problem and compute the eigenpairs
-  GetHsNorm(numberOfUniformLevels  - erased_levels -1, ml_prob);
+  GetHsNorm(numberOfUniformLevels  - erased_levels - 1, ml_prob);
 
 
   // ******* Print solution *******
@@ -182,7 +182,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("FracProblem");
 
-    const unsigned level = N_UNIFORM_LEVELS - N_ERASED_LEVELS - 1;
+  const unsigned level = N_UNIFORM_LEVELS - N_ERASED_LEVELS - 1;
 
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -262,7 +262,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
 //   int MM_size = msh->_dofOffset[solType][nprocs];
 //   int MM_local_size = msh->_dofOffset[solType][iproc + 1] - msh->_dofOffset[solType][iproc];
-// 
+//
 //   SparseMatrix* CC;
 //   CC = SparseMatrix::build().release();
 //   CC->init(MM_size, MM_size, MM_local_size, MM_local_size, MM_local_size, MM_size - MM_local_size);
@@ -272,14 +272,14 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
 
   const double s_frac = 0.5;
-  
 
-      
-      
-      
-  
 
-  
+
+
+
+
+
+
   for(int kproc = 0; kproc < nprocs; kproc++) {
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
@@ -365,7 +365,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
         xg2[jg].assign(dim, 0.);
         solY[jg] = 0.;
-                  
+
         for(unsigned j = 0; j < nDof2; j++) {
           solY[jg] += solu2[j] * phi2[jg][j];
           for(unsigned k = 0; k < dim; k++) {
@@ -415,7 +415,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         // *** Gauss point loop ***
         const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
 
-        
+
         double weight1;
         vector < double > phi1;  // local test function
         std::vector< double > solX(igNumber, 0.);
@@ -438,41 +438,42 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           if(iel == jel) {
 
             for(unsigned i = 0; i < nDof1; i++) {
-              for(unsigned i1 = 0; i1 < nDof1; i1++) {
-                MMlocal[ i * nDof1 + i1 ] += phi1[i] * phi1[i1] * weight1;
+              for(unsigned j = 0; j < nDof1; j++) {
+                MMlocal[ i * nDof1 + j ] += phi1[i] * phi1[j] * weight1;
               }
             }
 
           }
 
           for(unsigned jg = 0; jg < jgNumber; jg++) {
-              
+
             double dist_xyz = 0;
             for(unsigned k = 0; k < dim; k++) {
               dist_xyz += (xg1[k] - xg2[jg][k]) * (xg1[k] - xg2[jg][k]);
             }
-            
-           const double denom = pow(dist_xyz, (dim / 2.) + s_frac);
 
-           const double sol_diff = (solX[ig] - solY[jg]);
+            const double denom = pow(dist_xyz, (dim / 2.) + s_frac);
 
-           
-             for(unsigned i = 0; i < nDof1; i++) {
+            const double sol_diff = (solX[ig] - solY[jg]);
+
+
+            for(unsigned i = 0; i < nDof1; i++) {
+
               for(unsigned j = 0; j < nDof2; j++) {
-                CClocal[ i * nDof2 + j ] += ( phi1[j] - phi2[jg][j] ) * ( phi1[i] - phi2[jg][i] ) * weight1 * weight2[jg]/ denom;
+                CClocal[ i * nDof2 + j ] += (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
               }
             }
-           
-           
+
+
 
 
           } //endl jg loop
         } //endl ig loop
-         if(iel == jel) MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
+        if(iel == jel) MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
         MM->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
       } // end iel loop
-      
-      
+
+
     } //end jel loop
   } //end kproc loop
 
@@ -496,7 +497,7 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
   MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
-  
+
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
@@ -552,84 +553,85 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
 
   const double s_frac = 0.5;
-  
+
   double sol_qp = 0.;
-  std::vector< double > sol_x_qp(space_dim);     std::fill(sol_x_qp.begin(), sol_x_qp.end(), 0.);
+  std::vector< double > sol_x_qp(space_dim);
+  std::fill(sol_x_qp.begin(), sol_x_qp.end(), 0.);
   double JxWeight = 0.;
-  
+
   double integral_iproc_L2 = 0.;
   double integral_iproc_H1 = 0.;
 
-  
-      for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-        geom_element1.set_coords_at_dofs_and_geom_type(iel, xType);
-        
-        const short unsigned ielGeom1 = geom_element1.geom_type();
+  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-        unsigned nDof_u  = msh->GetElementDofNumber(iel, solType); 
-        solu1.resize(nDof_u);
+    geom_element1.set_coords_at_dofs_and_geom_type(iel, xType);
 
-        for(unsigned i = 0; i < solu1.size(); i++) {
-          unsigned iDof  = msh->GetSolutionDof(i, iel, solType);  // global to global mapping between coordinates node and coordinate dof
-          solu1[i] = (*sol->_Sol[soluIndex])(iDof);  // global extraction and local storage for the element coordinates
-        }
-        
-        
-        
-       const unsigned igNumber = ml_prob.GetQuadratureRule(ielGeom1).GetGaussPointsNumber();
-   
-        
-            for(unsigned ig = 0; ig < igNumber; ig++) {
-                   
-         elem_all[ielGeom1][xType]->JacJacInv(geom_element1.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
-         
-        JxWeight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom1).GetGaussWeightsPointer()[ig];
-        
-        elem_all[ielGeom1][solType]->shape_funcs_current_elem(ig, JacI_qp, phi, phi_x /*boost::none*/, boost::none /*phi_xx*/, space_dim);
-              
-              
-           sol_qp = 0.;
-            std::fill(sol_x_qp.begin(), sol_x_qp.end(), 0.);
-                
-            for(unsigned i = 0; i <  solu1.size(); i++) {
-            sol_qp += solu1[i] * phi[i];
-                    for (unsigned d = 0; d < sol_x_qp.size(); d++)   sol_x_qp[d] += solu1[i] * phi_x[i * space_dim + d];
-                  
-          }                 
-                    
-            integral_iproc_L2 += JxWeight * sol_qp * sol_qp;
-            
-           for (unsigned d = 0; d < sol_x_qp.size(); d++) integral_iproc_H1 += JxWeight * sol_x_qp[d] * sol_x_qp[d];
-                   
-                   
-               } 
-        
-          
+    const short unsigned ielGeom1 = geom_element1.geom_type();
+
+    unsigned nDof_u  = msh->GetElementDofNumber(iel, solType);
+    solu1.resize(nDof_u);
+
+    for(unsigned i = 0; i < solu1.size(); i++) {
+      unsigned iDof  = msh->GetSolutionDof(i, iel, solType);  // global to global mapping between coordinates node and coordinate dof
+      solu1[i] = (*sol->_Sol[soluIndex])(iDof);  // global extraction and local storage for the element coordinates
+    }
+
+
+
+    const unsigned igNumber = ml_prob.GetQuadratureRule(ielGeom1).GetGaussPointsNumber();
+
+
+    for(unsigned ig = 0; ig < igNumber; ig++) {
+
+      elem_all[ielGeom1][xType]->JacJacInv(geom_element1.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
+
+      JxWeight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom1).GetGaussWeightsPointer()[ig];
+
+      elem_all[ielGeom1][solType]->shape_funcs_current_elem(ig, JacI_qp, phi, phi_x /*boost::none*/, boost::none /*phi_xx*/, space_dim);
+
+
+      sol_qp = 0.;
+      std::fill(sol_x_qp.begin(), sol_x_qp.end(), 0.);
+
+      for(unsigned i = 0; i <  solu1.size(); i++) {
+        sol_qp += solu1[i] * phi[i];
+        for(unsigned d = 0; d < sol_x_qp.size(); d++)   sol_x_qp[d] += solu1[i] * phi_x[i * space_dim + d];
+
       }
-      
-      
+
+      integral_iproc_L2 += JxWeight * sol_qp * sol_qp;
+
+      for(unsigned d = 0; d < sol_x_qp.size(); d++) integral_iproc_H1 += JxWeight * sol_x_qp[d] * sol_x_qp[d];
+
+
+    }
+
+
+  }
+
+
   printf("L2 integral on processor %d = %f \n", iproc, integral_iproc_L2);
 
   double J_L2 = 0.;
   MPI_Allreduce(&integral_iproc_L2, &J_L2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
 
   std::cout << "L2 integral after Allreduce: " << sqrt(J_L2) << std::endl;
-      
-      
+
+
   printf("H1 integral on processor %d = %f \n", iproc, integral_iproc_H1);
 
   double J_H1 = 0.;
   MPI_Allreduce(&integral_iproc_H1, &J_H1, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
 
   std::cout << "H1 integral after Allreduce: " << sqrt(J_H1) << std::endl;
-      
-      
-      
-  
-    double integral_iproc_Hhalf = 0.;
 
-  
+
+
+
+  double integral_iproc_Hhalf = 0.;
+
+
   for(int kproc = 0; kproc < nprocs; kproc++) {
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
@@ -704,7 +706,7 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
         xg2[jg].assign(dim, 0.);
         solY[jg] = 0.;
-                  
+
         for(unsigned j = 0; j < nDof2; j++) {
           solY[jg] += solu2[j] * phi2[jg][j];
           for(unsigned k = 0; k < dim; k++) {
@@ -768,27 +770,27 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
 
           for(unsigned jg = 0; jg < jgNumber; jg++) {
-              
+
             double dist_xyz = 0;
             for(unsigned k = 0; k < dim; k++) {
               dist_xyz += (xg1[k] - xg2[jg][k]) * (xg1[k] - xg2[jg][k]);
             }
-            
-           const double denom = pow(dist_xyz, (dim / 2.) + s_frac);
 
-           const double sol_diff = (solX[ig] - solY[jg]);
+            const double denom = pow(dist_xyz, (dim / 2.) + s_frac);
+
+            const double sol_diff = (solX[ig] - solY[jg]);
 
 //             integral_iproc_Hhalf +=  weight1 *  weight2[jg];
-                integral_iproc_Hhalf +=  weight1 * weight2[jg] *  (sol_diff * sol_diff) / denom;
+            integral_iproc_Hhalf +=  weight1 * weight2[jg] * (sol_diff * sol_diff) / denom;
 
 
           } //endl jg loop
         } //endl ig loop
 
-          
-    } // end iel loop
-      
-      
+
+      } // end iel loop
+
+
     } //end jel loop
   } //end kproc loop
 
