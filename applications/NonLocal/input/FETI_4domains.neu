@@ -2,9 +2,9 @@
 ** GAMBIT NEUTRAL FILE
 FETI_4domains
 PROGRAM:                Gambit     VERSION:  2.3.16
-21 Feb 2020    23:07:56 
+24 Feb 2020    11:36:07 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
-      1025       240        11         1         2         2
+      1025       240        17         1         2         2
 ENDOFSECTION
    NODAL COORDINATES 2.3.16
          1   1.25000000000e-01   5.00000000000e-01
@@ -1519,16 +1519,15 @@ ENDOFSECTION
 GROUP:          1 ELEMENTS:         24 MATERIAL:          4 NFLAGS:          1
                                5
        0
-      85      86      87      88      89      90      33      34      35      36
-       1       2       3       4       5       6       7       8       9      10
-      11      12      13      14
+      85      86      87      88      89      90       1       2       3       4
+       5       6       7       8       9      10      11      12      13      14
+      33      34      35      36
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          2 ELEMENTS:         16 MATERIAL:          4 NFLAGS:          1
+GROUP:          2 ELEMENTS:          4 MATERIAL:          4 NFLAGS:          1
                                6
        0
-     181     182     235     236     226     227     224     225     197     198
-     215     216     211     212     213     214
+     213     214     211     212
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
 GROUP:          3 ELEMENTS:         24 MATERIAL:          4 NFLAGS:          1
@@ -1547,13 +1546,10 @@ GROUP:          4 ELEMENTS:         21 MATERIAL:          2 NFLAGS:          1
       84
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          5 ELEMENTS:         40 MATERIAL:          2 NFLAGS:          1
+GROUP:          5 ELEMENTS:          6 MATERIAL:          2 NFLAGS:          1
                                9
        0
-     183     184     185     186     187     188     189     228     229     230
-     231     232     233     234     190     191     192     193     194     195
-     196     217     218     219     220     221     222     223     208     209
-     210     205     206     207     202     203     204     199     200     201
+     199     200     201     202     203     204
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
 GROUP:          6 ELEMENTS:         21 MATERIAL:          2 NFLAGS:          1
@@ -1564,38 +1560,76 @@ GROUP:          6 ELEMENTS:         21 MATERIAL:          2 NFLAGS:          1
       63
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          7 ELEMENTS:          4 MATERIAL:          2 NFLAGS:          1
+GROUP:          7 ELEMENTS:          4 MATERIAL:          4 NFLAGS:          1
                               11
        0
-     238     237     240     239
+     197     198     215     216
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          8 ELEMENTS:         24 MATERIAL:          4 NFLAGS:          1
+GROUP:          8 ELEMENTS:         14 MATERIAL:          2 NFLAGS:          1
                               12
+       0
+     190     191     192     193     194     195     196     217     218     219
+     220     221     222     223
+ENDOFSECTION
+       ELEMENT GROUP 2.3.16
+GROUP:          9 ELEMENTS:          4 MATERIAL:          2 NFLAGS:          1
+                              13
+       0
+     237     240     238     239
+ENDOFSECTION
+       ELEMENT GROUP 2.3.16
+GROUP:         10 ELEMENTS:         14 MATERIAL:          2 NFLAGS:          1
+                              14
+       0
+     183     184     185     186     187     188     189     228     229     230
+     231     232     233     234
+ENDOFSECTION
+       ELEMENT GROUP 2.3.16
+GROUP:         11 ELEMENTS:          4 MATERIAL:          4 NFLAGS:          1
+                              15
+       0
+     181     182     235     236
+ENDOFSECTION
+       ELEMENT GROUP 2.3.16
+GROUP:         12 ELEMENTS:         24 MATERIAL:          4 NFLAGS:          1
+                              16
        0
      163     164     165     166     167     168     169     170     171     172
      173     174     175     176     177     178     179     180      91      92
       93      94      95      96
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          9 ELEMENTS:         24 MATERIAL:          4 NFLAGS:          1
-                              13
+GROUP:         13 ELEMENTS:          4 MATERIAL:          4 NFLAGS:          1
+                              17
        0
-     139     140     141     142     143     144     149     150     151     152
-     153     154     155     156     157     158     159     160     161     162
-     145     146     147     148
+     226     227     224     225
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:         10 ELEMENTS:         21 MATERIAL:          2 NFLAGS:          1
-                              14
+GROUP:         14 ELEMENTS:         24 MATERIAL:          4 NFLAGS:          1
+                              18
+       0
+     139     140     141     142     143     144     145     146     147     148
+     149     150     151     152     153     154     155     156     157     158
+     159     160     161     162
+ENDOFSECTION
+       ELEMENT GROUP 2.3.16
+GROUP:         15 ELEMENTS:         21 MATERIAL:          2 NFLAGS:          1
+                              19
        0
       97      98      99     100     101     102     103     104     105     106
      107     108     109     110     111     112     113     114     115     116
      117
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:         11 ELEMENTS:         21 MATERIAL:          2 NFLAGS:          1
-                              15
+GROUP:         16 ELEMENTS:          6 MATERIAL:          2 NFLAGS:          1
+                              20
+       0
+     208     209     210     205     206     207
+ENDOFSECTION
+       ELEMENT GROUP 2.3.16
+GROUP:         17 ELEMENTS:         21 MATERIAL:          2 NFLAGS:          1
+                              21
        0
      118     119     120     121     122     123     124     125     126     127
      128     129     130     131     132     133     134     135     136     137

@@ -62,11 +62,11 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   unsigned solu1Index = mlSol->GetIndex ("u1");   // get the position of "u1" in the ml_sol object
   unsigned solu1Type = mlSol->GetSolutionType (solu1Index);   // get the finite element type for "u1"
 
-  unsigned solu2Index = mlSol->GetIndex ("u2");   // get the position of "u1" in the ml_sol object
-  unsigned solu2Type = mlSol->GetSolutionType (solu2Index);   // get the finite element type for "u1"
+  unsigned solu2Index = mlSol->GetIndex ("u2");   // get the position of "u2" in the ml_sol object
+  unsigned solu2Type = mlSol->GetSolutionType (solu2Index);   // get the finite element type for "u2"
 
-  unsigned solmuIndex = mlSol->GetIndex ("mu");   // get the position of "u1" in the ml_sol object
-  unsigned solmuType = mlSol->GetSolutionType (solmuIndex);   // get the finite element type for "u1"
+  unsigned solmuIndex = mlSol->GetIndex ("mu");   // get the position of "mu" in the ml_sol object
+  unsigned solmuType = mlSol->GetSolutionType (solmuIndex);   // get the finite element type for "mu"
 
   unsigned u1FlagIndex = mlSol->GetIndex ("u1Flag");
   unsigned u1FlagType = mlSol->GetSolutionType (u1FlagIndex);
@@ -148,7 +148,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   l2GMapu2_1.reserve (maxSize);
   l2GMapu2_2.reserve (maxSize);
 
-  vector< int > l2GMapmu_1; // local to global mapping for mu //TODO
+  vector< int > l2GMapmu_1; // local to global mapping for mu  
   vector< int > l2GMapmu_2; // local to global mapping for mu
   l2GMapmu_1.reserve (maxSize);
   l2GMapmu_2.reserve (maxSize);
@@ -184,7 +184,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   vector < double > Jacu2_22;
   Jacu2_22.reserve (maxSize * maxSize);
 
-  vector < double > Jacmu;  // TODO diag block for mu
+  vector < double > Jacmu;  // diag block for mu
   Jacmu.reserve (maxSize * maxSize);
   vector < double > M1;
   M1.reserve (maxSize * maxSize);

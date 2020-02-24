@@ -26,8 +26,6 @@ void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
 
 void ReorderElement (std::vector < int > &dofs, std::vector < double > & sol, std::vector < std::vector < double > > & x);
 
-void ReorderElement (std::vector < double > & localFlags, std::vector < int > &dofs, std::vector < double > & sol, std::vector < std::vector < double > > & x);
-
 void RectangleAndBallRelation (bool &theyIntersect, const std::vector<double> &ballCenter, const double &ballRadius, const std::vector < std::vector < double> > &elementCoordinates,  std::vector < std::vector < double> > &newCoordinates);
 
 void RectangleAndBallRelation2 (bool & theyIntersect, const std::vector<double> &ballCenter, const double & ballRadius, const std::vector < std::vector < double> > &elementCoordinates, std::vector < std::vector < double> > &newCoordinates);
@@ -62,11 +60,23 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   unsigned solu1Index = mlSol->GetIndex ("u1");   // get the position of "u1" in the ml_sol object
   unsigned solu1Type = mlSol->GetSolutionType (solu1Index);   // get the finite element type for "u1"
 
-  unsigned solu2Index = mlSol->GetIndex ("u2");   // get the position of "u1" in the ml_sol object
-  unsigned solu2Type = mlSol->GetSolutionType (solu2Index);   // get the finite element type for "u1"
+  unsigned solu2Index = mlSol->GetIndex ("u2");
+  unsigned solu2Type = mlSol->GetSolutionType (solu2Index);
 
-  unsigned solmuIndex = mlSol->GetIndex ("mu");   // get the position of "u1" in the ml_sol object
-  unsigned solmuType = mlSol->GetSolutionType (solmuIndex);   // get the finite element type for "u1"
+  unsigned solu3Index = mlSol->GetIndex ("u3");
+  unsigned solu3Type = mlSol->GetSolutionType (solu3Index);
+
+  unsigned solu4Index = mlSol->GetIndex ("u4");
+  unsigned solu4Type = mlSol->GetSolutionType (solu4Index);
+
+  unsigned solmuIndex = mlSol->GetIndex ("mu");
+  unsigned solmuType = mlSol->GetSolutionType (solmuIndex);
+
+  unsigned solmuExtraIndex = mlSol->GetIndex ("muExtra");
+  unsigned solmuExtraType = mlSol->GetSolutionType (solmuExtraIndex);
+
+  unsigned solmuExtra2Index = mlSol->GetIndex ("muExtra2");
+  unsigned solmuExtra2Type = mlSol->GetSolutionType (solmuExtra2Index);
 
   unsigned u1FlagIndex = mlSol->GetIndex ("u1Flag");
   unsigned u1FlagType = mlSol->GetSolutionType (u1FlagIndex);
@@ -74,38 +84,76 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   unsigned u2FlagIndex = mlSol->GetIndex ("u2Flag");
   unsigned u2FlagType = mlSol->GetSolutionType (u2FlagIndex);
 
+  unsigned u3FlagIndex = mlSol->GetIndex ("u3Flag");
+  unsigned u3FlagType = mlSol->GetSolutionType (u3FlagIndex);
+
+  unsigned u4FlagIndex = mlSol->GetIndex ("u4Flag");
+  unsigned u4FlagType = mlSol->GetSolutionType (u4FlagIndex);
+
   unsigned muFlagIndex = mlSol->GetIndex ("muFlag");
   unsigned muFlagType = mlSol->GetSolutionType (muFlagIndex);
+
+  unsigned muExtraFlagIndex = mlSol->GetIndex ("muExtraFlag");
+  unsigned muExtraFlagType = mlSol->GetSolutionType (muExtraFlagIndex);
+
+  unsigned muExtra2FlagIndex = mlSol->GetIndex ("muExtra2Flag");
+  unsigned muExtra2FlagType = mlSol->GetSolutionType (muExtra2FlagIndex);
 
   unsigned solu1PdeIndex;
   solu1PdeIndex = mlPdeSys->GetSolPdeIndex ("u1");   // get the position of "u1" in the pdeSys object
 
   unsigned solu2PdeIndex;
-  solu2PdeIndex = mlPdeSys->GetSolPdeIndex ("u2");   // get the position of "u2" in the pdeSys object
+  solu2PdeIndex = mlPdeSys->GetSolPdeIndex ("u2");
+
+  unsigned solu3PdeIndex;
+  solu3PdeIndex = mlPdeSys->GetSolPdeIndex ("u3");
+
+  unsigned solu4PdeIndex;
+  solu4PdeIndex = mlPdeSys->GetSolPdeIndex ("u4");
 
   unsigned solmuPdeIndex;
-  solmuPdeIndex = mlPdeSys->GetSolPdeIndex ("mu");   // get the position of "mu" in the pdeSys object
+  solmuPdeIndex = mlPdeSys->GetSolPdeIndex ("mu");
+
+  unsigned solmuExtraPdeIndex;
+  solmuExtraPdeIndex = mlPdeSys->GetSolPdeIndex ("muExtra");
+
+  unsigned solmuExtra2PdeIndex;
+  solmuExtra2PdeIndex = mlPdeSys->GetSolPdeIndex ("muExtra2");
 
   vector < double >  solu1_1; // local solution for u1 for the nonlocal assembly
   vector < double >  solu1_2; // local solution for u1 for the nonlocal assembly
   solu1_1.reserve (maxSize);
   solu1_2.reserve (maxSize);
 
-  vector < double >  solu2_1; // local solution for u2 for the nonlocal assembly
-  vector < double >  solu2_2; // local solution for u2 for the nonlocal assembly
+  vector < double >  solu2_1;
+  vector < double >  solu2_2;
   solu2_1.reserve (maxSize);
   solu2_2.reserve (maxSize);
 
-  vector < double >  solmu_1;  // local solution for mu for the nonlocal assembly
-  vector < double >  solmu_2;  // local solution for mu for the nonlocal assembly
+  vector < double >  solu3_1;
+  vector < double >  solu3_2;
+  solu3_1.reserve (maxSize);
+  solu3_2.reserve (maxSize);
+
+  vector < double >  solu4_1;
+  vector < double >  solu4_2;
+  solu4_1.reserve (maxSize);
+  solu4_2.reserve (maxSize);
+
+  vector < double >  solmu_1;
+  vector < double >  solmu_2;
   solmu_1.reserve (maxSize);
   solmu_2.reserve (maxSize);
 
-  vector < double >  u1LocalFlag_2; // local flag for u1 for the nonlocal assembly
-  u1LocalFlag_2.reserve (maxSize);
+  vector < double >  solmuExtra_1;
+  vector < double >  solmuExtra_2;
+  solmuExtra_1.reserve (maxSize);
+  solmuExtra_2.reserve (maxSize);
 
-  vector < double >  u2LocalFlag_2; // local flag for u2 for the nonlocal assembly
-  u2LocalFlag_2.reserve (maxSize);
+  vector < double >  solmuExtra2_1;
+  vector < double >  solmuExtra2_2;
+  solmuExtra2_1.reserve (maxSize);
+  solmuExtra2_2.reserve (maxSize);
 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
@@ -143,28 +191,64 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   l2GMapu1_1.reserve (maxSize);
   l2GMapu1_2.reserve (maxSize);
 
-  vector< int > l2GMapu2_1; // local to global mapping for u2
-  vector< int > l2GMapu2_2; // local to global mapping for u2
+  vector< int > l2GMapu2_1;
+  vector< int > l2GMapu2_2;
   l2GMapu2_1.reserve (maxSize);
   l2GMapu2_2.reserve (maxSize);
 
-  vector< int > l2GMapmu_1; // local to global mapping for mu //TODO
-  vector< int > l2GMapmu_2; // local to global mapping for mu
+  vector< int > l2GMapu3_1;
+  vector< int > l2GMapu3_2;
+  l2GMapu3_1.reserve (maxSize);
+  l2GMapu3_2.reserve (maxSize);
+
+  vector< int > l2GMapu4_1;
+  vector< int > l2GMapu4_2;
+  l2GMapu4_1.reserve (maxSize);
+  l2GMapu4_2.reserve (maxSize);
+
+  vector< int > l2GMapmu_1;
+  vector< int > l2GMapmu_2;
   l2GMapmu_1.reserve (maxSize);
   l2GMapmu_2.reserve (maxSize);
+
+  vector< int > l2GMapmuExtra_1;
+  vector< int > l2GMapmuExtra_2;
+  l2GMapmuExtra_1.reserve (maxSize);
+  l2GMapmuExtra_2.reserve (maxSize);
+
+  vector< int > l2GMapmuExtra2_1;
+  vector< int > l2GMapmuExtra2_2;
+  l2GMapmuExtra2_1.reserve (maxSize);
+  l2GMapmuExtra2_2.reserve (maxSize);
 
   vector< double > Resu1_1; // local redidual vector for u1
   Resu1_1.reserve (maxSize);
   vector< double > Resu1_2; // local redidual vector for u1
   Resu1_2.reserve (maxSize);
 
-  vector< double > Resu2_1; // local redidual vector for u2
+  vector< double > Resu2_1;
   Resu2_1.reserve (maxSize);
-  vector< double > Resu2_2; // local redidual vector for u2
+  vector< double > Resu2_2;
   Resu2_2.reserve (maxSize);
 
-  vector< double > Resmu; // local redidual vector for mu
+  vector< double > Resu3_1;
+  Resu3_1.reserve (maxSize);
+  vector< double > Resu3_2;
+  Resu3_2.reserve (maxSize);
+
+  vector< double > Resu4_1;
+  Resu4_1.reserve (maxSize);
+  vector< double > Resu4_2;
+  Resu4_2.reserve (maxSize);
+
+  vector< double > Resmu;
   Resmu.reserve (maxSize);
+
+  vector< double > ResmuExtra;
+  ResmuExtra.reserve (maxSize);
+
+  vector< double > ResmuExtra2;
+  ResmuExtra2.reserve (maxSize);
 
   vector < double > Jacu1_11;  // stiffness matrix for u1
   Jacu1_11.reserve (maxSize * maxSize);
@@ -184,12 +268,38 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   vector < double > Jacu2_22;
   Jacu2_22.reserve (maxSize * maxSize);
 
-  vector < double > Jacmu;  // TODO diag block for mu
+  vector < double > Jacu3_11;  // stiffness matrix for u3
+  Jacu3_11.reserve (maxSize * maxSize);
+  vector < double > Jacu3_12;
+  Jacu3_12.reserve (maxSize * maxSize);
+  vector < double > Jacu3_21;
+  Jacu3_21.reserve (maxSize * maxSize);
+  vector < double > Jacu3_22;
+  Jacu3_22.reserve (maxSize * maxSize);
+
+  vector < double > Jacu4_11;  // stiffness matrix for u4
+  Jacu4_11.reserve (maxSize * maxSize);
+  vector < double > Jacu4_12;
+  Jacu4_12.reserve (maxSize * maxSize);
+  vector < double > Jacu4_21;
+  Jacu4_21.reserve (maxSize * maxSize);
+  vector < double > Jacu4_22;
+  Jacu4_22.reserve (maxSize * maxSize);
+
+  vector < double > Jacmu;  // diag block for mu
   Jacmu.reserve (maxSize * maxSize);
+  vector < double > JacmuExtra;  // diag block for muExtra
+  JacmuExtra.reserve (maxSize * maxSize);
+  vector < double > JacmuExtra2;  // diag block for muExtra2
+  JacmuExtra2.reserve (maxSize * maxSize);
   vector < double > M1;
   M1.reserve (maxSize * maxSize);
   vector < double > M2;
   M2.reserve (maxSize * maxSize);
+  vector < double > M3;  //for u2=u3 on group 11
+  M3.reserve (maxSize * maxSize);
+  vector < double > M4; //for u3=u4 on group 11
+  M4.reserve (maxSize * maxSize);
 
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -202,7 +312,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   //flag = 1 assemble
   //flag = 0 don't assemble
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) { 
 
     short unsigned ielGeom = msh->GetElementType (iel);
     short unsigned ielGroup = msh->GetElementGroup (iel);
@@ -298,9 +408,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       solu2_2.resize (nDof2);
       solmu_2.resize (nDof2);
 
-      u1LocalFlag_2.resize (nDof2);
-      u2LocalFlag_2.resize (nDof2);
-
       for (int k = 0; k < dim; k++) {
         x2[k].resize (nDof2);
         x2Temp[k].resize (nDof2);
@@ -321,9 +428,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           solu2_2[j] = (*sol->_Sol[solu2Index]) (solDofu2);
           solmu_2[j] = (*sol->_Sol[solmuIndex]) (solDofmu);
 
-          u1LocalFlag_2[j] = (*sol->_Sol[u1FlagIndex]) (solDofu1); //TODO maybe we don't need this anymore
-          u2LocalFlag_2[j] = (*sol->_Sol[u2FlagIndex]) (solDofu2); //TODO maybe we don't need this anymore
-
           unsigned xDof  = msh->GetSolutionDof (j, jel, xType);
           for (unsigned k = 0; k < dim; k++) {
             x2[k][j] = (*msh->_topology->_Sol[k]) (xDof);
@@ -333,18 +437,16 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
         }
 
-        ReorderElement (u1LocalFlag_2, l2GMapu1_2, solu1_2, x2); //TODO maybe we don't need this anymore
-        ReorderElement (u2LocalFlag_2, l2GMapu2_2, solu2_2, x2Temp); //TODO maybe we don't need this anymore
+        ReorderElement (l2GMapu1_2, solu1_2, x2);
+        ReorderElement (l2GMapu2_2, solu2_2, x2Temp);
         ReorderElement (l2GMapmu_2, solmu_2, x2Tempp);
       }
 
       MPI_Bcast (&l2GMapu1_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast (&solu1_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
-      MPI_Bcast (&u1LocalFlag_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);  //TODO maybe we don't need this anymore
 
       MPI_Bcast (&l2GMapu2_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast (&solu2_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
-      MPI_Bcast (&u2LocalFlag_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);  //TODO maybe we don't need this anymore
 
       MPI_Bcast (&l2GMapmu_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast (&solmu_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
@@ -499,7 +601,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 unsigned solDofu1 = msh->GetSolutionDof (i, iel, solu1Type);
                 unsigned solDofu2 = msh->GetSolutionDof (i, iel, solu2Type);
 
-//                 if ( (*sol->_Sol[u1FlagIndex]) (solDofu1) > 0.) { TODO delete this line
                 if ( (ielGroup == 5) || (ielGroup == 6) || (ielGroup == 8) || (ielGroup == 9)) {
 //                                 Res1[i] -= 0. * weight[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
                   Resu1_1[i] -=  cutOff * 1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
@@ -507,7 +608,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 //                   Res1[i] -=  resValue * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = cos(y) * ( - 0.5 * x^4 - kappa1 / 8 * x^3 + 11. / 2. * x^2 + kappa1 / 16. * x^2 + kappa1 * 5. / 8. * x + 1. - 1. / 16. * k1))
                 }
 
-//                 if ( (*sol->_Sol[u2FlagIndex]) (solDofu2) > 0.) {  TODO delete this line
                 if ( (ielGroup == 6) || (ielGroup == 7) || (ielGroup == 9) || (ielGroup == 10)) {
                   Resu2_1[i] -=  cutOff * 1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
                 }
@@ -582,13 +682,11 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                     unsigned solDofu2_j = msh->GetSolutionDof (j, iel, solu2Type);
 
                     double jacValue11 = cutOff * weight1[ig] * weight2 * kernel * (phi1x[ig][i]) * phi1x[ig][j];
-//                     if ( ( (*sol->_Sol[u1FlagIndex]) (solDofu1_i) > 0.) && ( (*sol->_Sol[u1FlagIndex]) (solDofu1_j) > 0.)) { //TODO remove
                     if (ielU1 && jelU1) {
                       Jacu1_11[i * nDof1 + j] -= jacValue11;
                       Resu1_1[i] +=  jacValue11 * solu1_1[j];
                     }
 
-//                     if ( ( (*sol->_Sol[u2FlagIndex]) (solDofu2_i) > 0.) && ( (*sol->_Sol[u2FlagIndex]) (solDofu2_j) > 0.)) { //TODO remove
                     if (ielU2 && jelU2) {
                       Jacu2_11[i * nDof1 + j] -= jacValue11;
                       Resu2_1[i] +=  jacValue11 * solu2_1[j];
@@ -598,13 +696,11 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                   for (unsigned j = 0; j < nDof2; j++) {
 
                     double jacValue12 = - cutOff * weight1[ig] * weight2 * kernel * (phi1x[ig][i]) * phi2y[j];
-//                     if ( ( (*sol->_Sol[u1FlagIndex]) (solDofu1_i) > 0.) && (u1LocalFlag_2[j] > 0.)) { //TODO remove
                     if ( (ielU1) && (jelU1)) {
                       Jacu1_12[i * nDof2 + j] -= jacValue12;
                       Resu1_1[i] +=  jacValue12 * solu1_2[j];
                     }
 
-//                     if ( ( (*sol->_Sol[u2FlagIndex]) (solDofu2_i) > 0.) && (u2LocalFlag_2[j] > 0.)) { //TODO remove
                     if ( (ielU2) && (jelU2)) {
                       Jacu2_12[i * nDof2 + j] -= jacValue12;
                       Resu2_1[i] +=  jacValue12 * solu2_2[j];
@@ -620,13 +716,11 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                     unsigned solDofu2_j = msh->GetSolutionDof (j, iel, solu2Type);
 
                     double jacValue21 = cutOff * weight1[ig] * weight2 * kernel * (- phi2y[i]) * phi1x[ig][j];
-//                     if ( (u1LocalFlag_2[i]  > 0.) && ( (*sol->_Sol[u1FlagIndex]) (solDofu1_j) > 0.)) { //TODO remove
                     if ( (jelU1) && (ielU1)) {
                       Jacu1_21[i * nDof1 + j] -= jacValue21;
                       Resu1_2[i] +=  jacValue21 * solu1_1[j];
                     }
 
-//                     if ( (u2LocalFlag_2[i]  > 0.) && ( (*sol->_Sol[u2FlagIndex]) (solDofu2_j) > 0.)) { //TODO remove
                     if ( (jelU2) && (ielU2)) {
                       Jacu2_21[i * nDof1 + j] -= jacValue21;
                       Resu2_2[i] +=  jacValue21 * solu2_1[j];
@@ -636,12 +730,10 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                   for (unsigned j = 0; j < nDof2; j++) {
 
                     double jacValue22 = - cutOff * weight1[ig] * weight2 * kernel * (- phi2y[i]) * phi2y[j];
-//                     if ( (u1LocalFlag_2[i]  > 0.) && (u1LocalFlag_2[j] > 0.)) {  //TODO remove
                     if (ielU1 && jelU1) {
                       Jacu1_22[i * nDof2 + j] -= jacValue22;
                       Resu1_2[i] +=  jacValue22 * solu1_2[j];
                     }
-//                     if ( (u2LocalFlag_2[i] > 0.) && (u2LocalFlag_2[j] > 0.)) { //TODO remove
                     if (ielU2 && jelU2) {
                       Jacu2_22[i * nDof2 + j] -= jacValue22;
                       Resu2_2[i] +=  jacValue22 * solu2_2[j];
@@ -1069,43 +1161,6 @@ void ReorderElement (std::vector < int > &dofs, std::vector < double > & sol, st
     }
   }
 }
-
-void ReorderElement (std::vector<double> &localFlags, std::vector < int > &dofs, std::vector < double > & sol, std::vector < std::vector < double > > & x) {
-
-  unsigned type = 0;
-
-  if (fabs (x[0][0] - x[0][1]) > 1.e-10) {
-    if (x[0][0] - x[0][1] > 0) {
-      type = 2;
-    }
-  }
-
-  else {
-    type = 1;
-
-    if (x[1][0] - x[1][1] > 0) {
-      type = 3;
-    }
-  }
-
-  if (type != 0) {
-    std::vector < int > dofsCopy = dofs;
-    std::vector < double > solCopy = sol;
-    std::vector < double > localFlagsCopy = localFlags;
-    std::vector < std::vector < double > > xCopy = x;
-
-    for (unsigned i = 0; i < dofs.size(); i++) {
-      dofs[i] = dofsCopy[swap[type][i]];
-      sol[i] = solCopy[swap[type][i]];
-      localFlags[i] = localFlagsCopy[swap[type][i]];
-
-      for (unsigned k = 0; k < x.size(); k++) {
-        x[k][i] = xCopy[k][swap[type][i]];
-      }
-    }
-  }
-}
-
 
 void RectangleAndBallRelation2 (bool & theyIntersect, const std::vector<double> &ballCenter, const double & ballRadius, const std::vector < std::vector < double> > &elementCoordinates, std::vector < std::vector < double> > &newCoordinates) {
 
