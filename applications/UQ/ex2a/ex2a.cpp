@@ -24,7 +24,7 @@ using namespace femus;
 
 double InitialValueU(const std::vector < double >& x)
 {
-  return /*x[0] + 0.5*/5. ;
+  return x[0] * x[0];                                       //x[0];
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
@@ -44,8 +44,10 @@ int main(int argc, char** argv)
 
 
   //quadr rule order
-  const std::string fe_quad_rule_1 = "fifth";
-  const std::string fe_quad_rule_2 = "sixth";
+//   const std::string fe_quad_rule_1 = "fifth";
+//   const std::string fe_quad_rule_2 = "sixth";
+  const std::string fe_quad_rule_1 = "seventh";
+  const std::string fe_quad_rule_2 = "eighth";
 
 
   //BEGIN deterministic FEM instances
@@ -56,7 +58,8 @@ int main(int argc, char** argv)
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.ReadCoarseMesh("../input/square.neu", fe_quad_rule_1.c_str(), scalingFactor);
+   const std::string mesh_file = "./input/Mesh_1_x.med";
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
   // erase all the coarse mesh levels
@@ -195,8 +198,9 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
 
   double sol_qp = 0.;
   std::vector< double > sol_x_qp(space_dim);     std::fill(sol_x_qp.begin(), sol_x_qp.end(), 0.);
-	
   double JxWeight = 0.;
+  
+  const double s_frac = 0.5;
   double integral_iproc_L2 = 0.;
   double integral_iproc_H1 = 0.;
 
@@ -253,7 +257,7 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
   double J_L2 = 0.;
   MPI_Allreduce(&integral_iproc_L2, &J_L2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
 
-  std::cout << "integral after Allreduce: " << sqrt(J_L2) << std::endl;
+  std::cout << "L2 integral after Allreduce: " << sqrt(J_L2) << std::endl;
       
       
   printf("integral on processor %d = %f \n", iproc, integral_iproc_H1);
@@ -261,7 +265,7 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
   double J_H1 = 0.;
   MPI_Allreduce(&integral_iproc_H1, &J_H1, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
 
-  std::cout << "integral after Allreduce: " << sqrt(J_H1) << std::endl;
+  std::cout << "H1 integral after Allreduce: " << sqrt(J_H1) << std::endl;
       
       
       
@@ -353,7 +357,8 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
         elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
 
         xg2[jg].assign(dim, 0.);
-
+        solY[jg] = 0.;
+                  
         for(unsigned j = 0; j < nDof2; j++) {
           solY[jg] += solu2[j] * phi2[jg][j];
           for(unsigned k = 0; k < dim; k++) {
@@ -414,6 +419,8 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
 
           // evaluate the solution, the solution derivatives and the coordinates in the gauss point
           vector < double > xg1(dim, 0.);
+          std::fill(solX.begin(), solX.end(), 0.);
+
           for(unsigned i = 0; i < nDof1; i++) {
             solX[ig] += solu1[i] * phi1[i];
             for(unsigned k = 0; k < dim; k++) {
@@ -432,18 +439,18 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
 //           }
 
           for(unsigned jg = 0; jg < jgNumber; jg++) {
+              
             double dist_xyz = 0;
             for(unsigned k = 0; k < dim; k++) {
               dist_xyz += (xg1[k] - xg2[jg][k]) * (xg1[k] - xg2[jg][k]);
             }
             
-            double dist = sqrt( dist_xyz );
+           const double denom = pow(dist_xyz, (dim / 2.) + s_frac);
 
-            double sol_diff = (solX[ig] - solY[jg]) * weight2[jg] * weight1 ;
-            double denom = pow(dist, (dim / 2.) + 0.5);     // s has to be a variable!!
+           const double sol_diff = (solX[ig] - solY[jg]);
 
 //             integral_iproc_Hhalf +=  weight1 *  weight2[jg];
-            integral_iproc_Hhalf += (sol_diff * sol_diff) / denom;
+                integral_iproc_Hhalf +=  weight1 * weight2[jg] *  (sol_diff * sol_diff) / denom;
 
 //             double C = varianceInput * exp(- dist / L);
 
@@ -475,8 +482,8 @@ void GetHsNorm(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vec
   double J = 0.;
   MPI_Allreduce(&integral_iproc_Hhalf, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
 
-  std::cout << "integral after Allreduce: " << J << std::endl;
-  std::cout << "integral after Allreduce: " << sqrt(J) << std::endl;
+//   std::cout << "integral after Allreduce: " << J << std::endl;
+  std::cout << "H-1/2 integral after Allreduce: " << sqrt(J) << std::endl;
 
   //return;                                                  //ignore the rest
 
