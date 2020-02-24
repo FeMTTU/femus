@@ -166,6 +166,18 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   vector < vector < double > > x1Tempp (dim);
   vector < vector < double > > x2Tempp (dim);
 
+  vector < vector < double > > x1Tem3p (dim);
+  vector < vector < double > > x2Tem3p (dim);
+
+  vector < vector < double > > x1Tem4p (dim);
+  vector < vector < double > > x2Tem4p (dim);
+
+  vector < vector < double > > x1Tem5p (dim);
+  vector < vector < double > > x2Tem5p (dim);
+
+  vector < vector < double > > x1Tem6p (dim);
+  vector < vector < double > > x2Tem6p (dim);
+
   for (unsigned k = 0; k < dim; k++) {
     x1[k].reserve (maxSize);
     x2[k].reserve (maxSize);
@@ -175,6 +187,18 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
     x1Tempp[k].reserve (maxSize);
     x2Tempp[k].reserve (maxSize);
+
+    x1Tem3p[k].reserve (maxSize);
+    x2Tem3p[k].reserve (maxSize);
+
+    x1Tem4p[k].reserve (maxSize);
+    x2Tem4p[k].reserve (maxSize);
+
+    x1Tem5p[k].reserve (maxSize);
+    x2Tem5p[k].reserve (maxSize);
+
+    x1Tem6p[k].reserve (maxSize);
+    x2Tem6p[k].reserve (maxSize);
   }
 
   vector <double> phi;  // local test function
@@ -296,11 +320,18 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   M1.reserve (maxSize * maxSize);
   vector < double > M2;
   M2.reserve (maxSize * maxSize);
-  vector < double > M3;  //for u2=u3 on group 11
+  vector < double > M3;
   M3.reserve (maxSize * maxSize);
-  vector < double > M4; //for u3=u4 on group 11
+  vector < double > M4;
   M4.reserve (maxSize * maxSize);
-
+  vector < double > M1Extra;
+  M1Extra.reserve (maxSize * maxSize);
+  vector < double > M3Extra;
+  M3Extra.reserve (maxSize * maxSize);
+  vector < double > M3Extra2;
+  M3Extra2.reserve (maxSize * maxSize);
+  vector < double > M4Extra2;
+  M4Extra2.reserve (maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
@@ -471,16 +502,28 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
       l2GMapu1_2.resize (nDof2);
       l2GMapu2_2.resize (nDof2);
+      l2GMapu3_2.resize (nDof2);
+      l2GMapu4_2.resize (nDof2);
       l2GMapmu_2.resize (nDof2);
+      l2GMapmuExtra_2.resize (nDof2);
+      l2GMapmuExtra2_2.resize (nDof2);
 
       solu1_2.resize (nDof2);
       solu2_2.resize (nDof2);
+      solu3_2.resize (nDof2);
+      solu4_2.resize (nDof2);
       solmu_2.resize (nDof2);
+      solmuExtra_2.resize (nDof2);
+      solmuExtra2_2.resize (nDof2);
 
       for (int k = 0; k < dim; k++) {
         x2[k].resize (nDof2);
         x2Temp[k].resize (nDof2);
         x2Tempp[k].resize (nDof2);
+        x2Tem3p[k].resize (nDof2);
+        x2Tem4p[k].resize (nDof2);
+        x2Tem5p[k].resize (nDof2);
+        x2Tem6p[k].resize (nDof2);
       }
 
       if (iproc == kproc) {
@@ -502,13 +545,21 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             x2[k][j] = (*msh->_topology->_Sol[k]) (xDof);
             x2Temp[k][j] = x2[k][j];
             x2Tempp[k][j] = x2[k][j];
+            x2Tem3p[k][j] = x2[k][j];
+            x2Tem4p[k][j] = x2[k][j];
+            x2Tem5p[k][j] = x2[k][j];
+            x2Tem6p[k][j] = x2[k][j];
           }
 
         }
 
         ReorderElement (l2GMapu1_2, solu1_2, x2);
         ReorderElement (l2GMapu2_2, solu2_2, x2Temp);
+        ReorderElement (l2GMapu3_2, solu3_2, x2Tem3p);
+        ReorderElement (l2GMapu4_2, solu4_2, x2Tem4p);
         ReorderElement (l2GMapmu_2, solmu_2, x2Tempp);
+        ReorderElement (l2GMapmuExtra_2, solmuExtra_2, x2Tem5p);
+        ReorderElement (l2GMapmuExtra2_2, solmuExtra2_2, x2Tem6p);
       }
 
       MPI_Bcast (&l2GMapu1_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
@@ -517,8 +568,20 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       MPI_Bcast (&l2GMapu2_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast (&solu2_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
 
+      MPI_Bcast (&l2GMapu3_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast (&solu3_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+
+      MPI_Bcast (&l2GMapu4_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast (&solu4_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+
       MPI_Bcast (&l2GMapmu_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast (&solmu_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+
+      MPI_Bcast (&l2GMapmuExtra_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast (&solmuExtra_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+
+      MPI_Bcast (&l2GMapmuExtra2_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast (&solmuExtra2_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
 
       for (unsigned k = 0; k < dim; k++) {
         MPI_Bcast (& x2[k][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
@@ -534,11 +597,19 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
         l2GMapu1_1.resize (nDof1);
         l2GMapu2_1.resize (nDof1);
+        l2GMapu3_1.resize (nDof1);
+        l2GMapu4_1.resize (nDof1);
         l2GMapmu_1.resize (nDof1);
+        l2GMapmuExtra_1.resize (nDof1);
+        l2GMapmuExtra2_1.resize (nDof1);
 
         solu1_1.resize (nDof1);
         solu2_1.resize (nDof1);
+        solu3_1.resize (nDof1);
+        solu4_1.resize (nDof1);
         solmu_1.resize (nDof1);
+        solmuExtra_1.resize (nDof1);
+        solmuExtra2_1.resize (nDof1);
 
         Jacu1_11.assign (nDof1 * nDof1, 0.);
         Jacu1_12.assign (nDof1 * nDof2, 0.);
@@ -554,10 +625,34 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         Resu2_1.assign (nDof1, 0.);
         Resu2_2.assign (nDof2, 0.);
 
+        Jacu3_11.assign (nDof1 * nDof1, 0.);
+        Jacu3_12.assign (nDof1 * nDof2, 0.);
+        Jacu3_21.assign (nDof2 * nDof1, 0.);
+        Jacu3_22.assign (nDof2 * nDof2, 0.);
+        Resu3_1.assign (nDof1, 0.);
+        Resu3_2.assign (nDof2, 0.);
+
+        Jacu4_11.assign (nDof1 * nDof1, 0.);
+        Jacu4_12.assign (nDof1 * nDof2, 0.);
+        Jacu4_21.assign (nDof2 * nDof1, 0.);
+        Jacu4_22.assign (nDof2 * nDof2, 0.);
+        Resu4_1.assign (nDof1, 0.);
+        Resu4_2.assign (nDof2, 0.);
+
         Jacmu.assign (nDof1 * nDof1, 0.);
+        JacmuExtra.assign (nDof1 * nDof1, 0.);
+        JacmuExtra2.assign (nDof1 * nDof1, 0.);
         M1.assign (nDof1 * nDof1, 0.);
         M2.assign (nDof1 * nDof1, 0.);
+        M3.assign (nDof1 * nDof1, 0.);
+        M4.assign (nDof1 * nDof1, 0.);
+        M1Extra.assign (nDof1 * nDof1, 0.);
+        M3Extra.assign (nDof1 * nDof1, 0.);
+        M3Extra2.assign (nDof1 * nDof1, 0.);
+        M4Extra2.assign (nDof1 * nDof1, 0.);
         Resmu.assign (nDof1, 0.);
+        ResmuExtra.assign (nDof1, 0.);
+        ResmuExtra2.assign (nDof1, 0.);
 
         for (int k = 0; k < dim; k++) {
           x1[k].resize (nDof1);
@@ -568,26 +663,46 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         for (unsigned i = 0; i < nDof1; i++) {
           l2GMapu1_1[i] = pdeSys->GetSystemDof (solu1Index, solu1PdeIndex, i, iel);
           l2GMapu2_1[i] = pdeSys->GetSystemDof (solu2Index, solu2PdeIndex, i, iel);
+          l2GMapu3_1[i] = pdeSys->GetSystemDof (solu3Index, solu3PdeIndex, i, iel);
+          l2GMapu4_1[i] = pdeSys->GetSystemDof (solu4Index, solu4PdeIndex, i, iel);
           l2GMapmu_1[i] = pdeSys->GetSystemDof (solmuIndex, solmuPdeIndex, i, iel);
+          l2GMapmuExtra_1[i] = pdeSys->GetSystemDof (solmuExtraIndex, solmuExtraPdeIndex, i, iel);
+          l2GMapmuExtra2_1[i] = pdeSys->GetSystemDof (solmuExtra2Index, solmuExtra2PdeIndex, i, iel);
 
           unsigned solDofu1 = msh->GetSolutionDof (i, iel, solu1Type);
           unsigned solDofu2 = msh->GetSolutionDof (i, iel, solu2Type);
+          unsigned solDofu3 = msh->GetSolutionDof (i, iel, solu3Type);
+          unsigned solDofu4 = msh->GetSolutionDof (i, iel, solu4Type);
           unsigned solDofmu = msh->GetSolutionDof (i, iel, solmuType);
+          unsigned solDofmuExtra = msh->GetSolutionDof (i, iel, solmuExtraType);
+          unsigned solDofmuExtra2 = msh->GetSolutionDof (i, iel, solmuExtra2Type);
 
           solu1_1[i] = (*sol->_Sol[solu1Index]) (solDofu1);
           solu2_1[i] = (*sol->_Sol[solu2Index]) (solDofu2);
-          solmu_1[i] = (*sol->_Sol[solmuIndex]) (solDofmu); //NOTE maybe we don't actually need solmu
+          solu3_1[i] = (*sol->_Sol[solu3Index]) (solDofu3);
+          solu4_1[i] = (*sol->_Sol[solu4Index]) (solDofu4);
+          solmu_1[i] = (*sol->_Sol[solmuIndex]) (solDofmu);
+          solmuExtra_1[i] = (*sol->_Sol[solmuExtraIndex]) (solDofmuExtra);
+          solmuExtra2_1[i] = (*sol->_Sol[solmuExtra2Index]) (solDofmuExtra2);
 
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
           for (unsigned k = 0; k < dim; k++) {
             x1[k][i] = (*msh->_topology->_Sol[k]) (xDof);
             x1Temp[k][i] = x1[k][i];
             x1Tempp[k][i] = x1[k][i];
+            x1Tem3p[k][i] = x1[k][i];
+            x1Tem4p[k][i] = x1[k][i];
+            x1Tem5p[k][i] = x1[k][i];
+            x1Tem6p[k][i] = x1[k][i];
           }
         }
         ReorderElement (l2GMapu1_1, solu1_1, x1);
         ReorderElement (l2GMapu2_1, solu2_1, x1Temp);
+        ReorderElement (l2GMapu3_1, solu3_1, x1Tem3p);
+        ReorderElement (l2GMapu4_1, solu4_1, x1Tem4p);
         ReorderElement (l2GMapmu_1, solmu_1, x1Tempp);
+        ReorderElement (l2GMapmuExtra_1, solmuExtra_1, x1Tem5p);
+        ReorderElement (l2GMapmuExtra2_1, solmuExtra2_1, x1Tem6p);
 
         double sideLength = fabs (x1[0][0] - x1[0][1]);
 
@@ -665,20 +780,26 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
             if (iel == jel) {
               double cutOff = 1.;
-              if (ielGroup == 6 || ielGroup == 9) cutOff = 0.5;
+              if (ielGroup == 6 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 14 || ielGroup == 15 || ielGroup == 17 || ielGroup == 20) cutOff = 0.5;
+              else if (ielGroup == 13) cutOff = 0.25;
               for (unsigned i = 0; i < nDof1; i++) {
                 unsigned solDofu1 = msh->GetSolutionDof (i, iel, solu1Type);
                 unsigned solDofu2 = msh->GetSolutionDof (i, iel, solu2Type);
 
-                if ( (ielGroup == 5) || (ielGroup == 6) || (ielGroup == 8) || (ielGroup == 9)) {
-//                                 Res1[i] -= 0. * weight[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
+                if (ielGroup == 5 || ielGroup == 6 || ielGroup == 8 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 13) {    //u1 (top left)
                   Resu1_1[i] -=  cutOff * 1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
-//                   double resValue = cos (xg1[ig][1]) * (- 0.5 * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] - kappa1 / 8. * xg1[ig][0] * xg1[ig][0] * xg1[ig][0] + 11. / 2. * xg1[ig][0] * xg1[ig][0] + kappa1 / 16. * xg1[ig][0] * xg1[ig][0] + kappa1 * 5. / 8. * xg1[ig][0] + 1. - 1. / 16. * kappa1);
-//                   Res1[i] -=  resValue * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = cos(y) * ( - 0.5 * x^4 - kappa1 / 8 * x^3 + 11. / 2. * x^2 + kappa1 / 16. * x^2 + kappa1 * 5. / 8. * x + 1. - 1. / 16. * k1))
                 }
 
-                if ( (ielGroup == 6) || (ielGroup == 7) || (ielGroup == 9) || (ielGroup == 10)) {
+                if (ielGroup == 6 || ielGroup == 7 || ielGroup == 9 || ielGroup == 10 || ielGroup == 13 || ielGroup == 14 || ielGroup == 15) {   //u2 (top right)
                   Resu2_1[i] -=  cutOff * 1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
+                }
+
+                if (ielGroup == 11 || ielGroup == 12 || ielGroup == 13 || ielGroup == 16 || ielGroup == 17 || ielGroup == 19 || ielGroup == 20) { //u3 (bottom left)
+                  Resu3_1[i] -=  cutOff * 1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
+                }
+
+                if (ielGroup == 13 || ielGroup == 14 || ielGroup == 15 || ielGroup == 17 || ielGroup == 18 || ielGroup == 20 || ielGroup == 21) { //u4 (bottom right)
+                  Resu4_1[i] -=  cutOff * 1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
                 }
 
                 if (ielGroup == 9) {
@@ -688,6 +809,52 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                   Resu1_1[i] -= Mlumped * solmu_1[i];
                   Resu2_1[i] -= - Mlumped * solmu_1[i];
                   Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
+                }
+
+                if (ielGroup == 12) {
+                  double Mlumped = phi1x[ig][i] * weight1[ig];
+                  M1[ i * nDof1 + i ] +=  Mlumped;
+                  M3[ i * nDof1 + i ] += - Mlumped;
+                  Resu1_1[i] -= Mlumped * solmu_1[i];
+                  Resu3_1[i] -= - Mlumped * solmu_1[i];
+                  Resmu[i] -= Mlumped * (solu1_1[i] - solu3_1[i]);
+                }
+
+                if (ielGroup == 14) {
+                  double Mlumped = phi1x[ig][i] * weight1[ig];
+                  M2[ i * nDof1 + i ] +=  Mlumped;
+                  M4[ i * nDof1 + i ] += - Mlumped;
+                  Resu2_1[i] -= Mlumped * solmu_1[i];
+                  Resu4_1[i] -= - Mlumped * solmu_1[i];
+                  Resmu[i] -= Mlumped * (solu2_1[i] - solu4_1[i]);
+                }
+
+                if (ielGroup == 20) {
+                  double Mlumped = phi1x[ig][i] * weight1[ig];
+                  M3[ i * nDof1 + i ] +=  Mlumped;
+                  M4[ i * nDof1 + i ] += - Mlumped;
+                  Resu3_1[i] -= Mlumped * solmu_1[i];
+                  Resu4_1[i] -= - Mlumped * solmu_1[i];
+                  Resmu[i] -= Mlumped * (solu3_1[i] - solu4_1[i]);
+                }
+
+                if (ielGroup == 13) {
+                  double Mlumped = phi1x[ig][i] * weight1[ig];
+                  M1[ i * nDof1 + i ] +=  Mlumped;
+                  M2[ i * nDof1 + i ] += - Mlumped;
+                  M1Extra[ i * nDof1 + i ] +=  Mlumped;
+                  M3Extra[ i * nDof1 + i ] += - Mlumped;
+                  M3Extra2[ i * nDof1 + i ] +=  Mlumped;
+                  M4Extra2[ i * nDof1 + i ] += - Mlumped;
+                  Resu1_1[i] -= Mlumped * solmu_1[i];
+                  Resu2_1[i] -= - Mlumped * solmu_1[i];
+                  Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
+                  Resu1_1[i] -= Mlumped * solmuExtra_1[i];
+                  Resu3_1[i] -= - Mlumped * solmuExtra_1[i];
+                  ResmuExtra[i] -= Mlumped * (solu1_1[i] - solu3_1[i]);
+                  Resu3_1[i] -= Mlumped * solmuExtra2_1[i];
+                  Resu4_1[i] -= - Mlumped * solmuExtra2_1[i];
+                  ResmuExtra2[i] -= Mlumped * (solu3_1[i] - solu4_1[i]);
                 }
 
               }
@@ -733,14 +900,23 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                 kernel = 0.75 * kappa1 / (delta1 * delta1 * delta1 * delta1) ;
                 double cutOff = 1.;
-                if ( (ielGroup == 6 || ielGroup == 9) && (jelGroup == 6 || jelGroup == 9)) cutOff = 0.5;
+                bool cutOffIel = false;
+                bool cutOffJel = false;
+                if (ielGroup == 6 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 14 || ielGroup == 15 || ielGroup == 17 || ielGroup == 20) cutOffIel = true;
+                if (jelGroup == 6 || jelGroup == 9 || jelGroup == 11 || jelGroup == 12 || jelGroup == 14 || jelGroup == 15 || jelGroup == 17 || jelGroup == 20) cutOffJel = true;
+                if ( cutOffIel && cutOffJel) cutOff = 0.5;
+                else if (ielGroup == 13 && jelGroup == 13) cutOff = 0.25;
 
-                bool ielU1 = ( (ielGroup == 5) || (ielGroup == 6) || (ielGroup == 8) || (ielGroup == 9)) ? true : false;
-                bool ielU2 = ( (ielGroup == 6) || (ielGroup == 7) || (ielGroup == 9) || (ielGroup == 10)) ? true : false;
-                bool jelU1 = ( (jelGroup == 5) || (jelGroup == 6) || (jelGroup == 8) || (jelGroup == 9)) ? true : false;
-                bool jelU2 = ( (jelGroup == 6) || (jelGroup == 7) || (jelGroup == 9) || (jelGroup == 10)) ? true : false;
+                bool ielU1 = (ielGroup == 5 || ielGroup == 6 || ielGroup == 8 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 13) ? true : false;
+                bool ielU2 = (ielGroup == 6 || ielGroup == 7 || ielGroup == 9 || ielGroup == 10 || ielGroup == 13 || ielGroup == 14 || ielGroup == 15) ? true : false;
+                bool ielU3 = (ielGroup == 11 || ielGroup == 12 || ielGroup == 13 || ielGroup == 16 || ielGroup == 17 || ielGroup == 19 || ielGroup == 20) ? true : false;
+                bool ielU4 = (ielGroup == 13 || ielGroup == 14 || ielGroup == 15 || ielGroup == 17 || ielGroup == 18 || ielGroup == 20 || ielGroup == 21) ? true : false;
+                bool jelU1 = (jelGroup == 5 || jelGroup == 6 || jelGroup == 8 || jelGroup == 9 || jelGroup == 11 || jelGroup == 12 || jelGroup == 13) ? true : false;
+                bool jelU2 = (jelGroup == 6 || jelGroup == 7 || jelGroup == 9 || jelGroup == 10 || jelGroup == 13 || jelGroup == 14 || jelGroup == 15) ? true : false;
+                bool jelU3 = (jelGroup == 11 || jelGroup == 12 || jelGroup == 13 || jelGroup == 16 || jelGroup == 17 || jelGroup == 19 || jelGroup == 20) ? true : false;
+                bool jelU4 =  (jelGroup == 13 || jelGroup == 14 || jelGroup == 15 || jelGroup == 17 || jelGroup == 18 || jelGroup == 20 || jelGroup == 21) ? true : false;
 
-                for (unsigned i = 0; i < nDof1; i++) {
+                for (unsigned i = 0; i < nDof1; i++) { //TODO GOT HERE
 
                   unsigned solDofu1_i = msh->GetSolutionDof (i, iel, solu1Type);
                   unsigned solDofu2_i = msh->GetSolutionDof (i, iel, solu2Type);;
