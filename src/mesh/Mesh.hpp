@@ -229,6 +229,14 @@ public:
       _meshIsHomogeneous = value ;
     }
 
+    void SetCharacteristicLength(const double & cLength){
+      _cLenght = cLength;
+    }
+    
+    double GetCharacteristicLength(){
+      return _cLenght;
+    };
+    
     const unsigned GetXIndex()          const { return _xIndex; };
     const unsigned GetYIndex()          const { return _yIndex; };
     const unsigned GetZIndex()          const { return _zIndex; };
@@ -280,6 +288,7 @@ private:
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
     std::vector < std::map < unsigned, bool > > _amrSolidMark;
 
+    double _cLenght;
 };
 
 } //end namespace femus
