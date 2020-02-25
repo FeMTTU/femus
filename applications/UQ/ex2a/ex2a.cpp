@@ -24,7 +24,7 @@ using namespace femus;
 
 #define N_UNIFORM_LEVELS  3
 #define N_ERASED_LEVELS   2
-
+#define S_FRAC 0.5
 
 double InitialValueU(const std::vector < double >& x)
 {
@@ -35,6 +35,12 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 {
   bool dirichlet = false; //dirichlet
   value = 0.;
+  
+  if (facename == 1) {
+  dirichlet = true; //dirichlet
+  value = 0.;
+  }
+  
   return dirichlet;
 }
 
@@ -66,7 +72,8 @@ int main(int argc, char** argv)
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
-  const std::string mesh_file = "./input/Mesh_1_x.med";
+//   const std::string mesh_file = "./input/Mesh_1_x.med";
+  const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
@@ -193,6 +200,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
   SparseMatrix*             MM = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  NumericVector*           RES = pdeSys->_RES;
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
@@ -254,11 +262,14 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   vector < double > MMlocal;
   MMlocal.reserve(maxSize * maxSize);
+  vector< double >         Res;
+  Res.reserve(maxSize);  // local redidual vector
 
   vector < double > CClocal;
   CClocal.reserve(maxSize * maxSize);
 
   MM->zero(); // Set to zero all the entries of the Global Matrix
+  RES->zero();
 
 //   int MM_size = msh->_dofOffset[solType][nprocs];
 //   int MM_local_size = msh->_dofOffset[solType][iproc + 1] - msh->_dofOffset[solType][iproc];
@@ -271,7 +282,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
 
 
-  const double s_frac = 0.5;
+  const double s_frac = S_FRAC;
 
 
 
@@ -411,6 +422,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
         if(iel == jel) MMlocal.assign(nDof1 * nDof1, 0.);  //resize
         CClocal.assign(nDof1 * nDof2, 0.);   //resize
+        Res.assign(nDof1, 0);    //resize
 
         // *** Gauss point loop ***
         const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
@@ -418,7 +430,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
         double weight1;
         vector < double > phi1;  // local test function
-        std::vector< double > solX(igNumber, 0.);
+        double solX = 0.;
 
         for(unsigned ig = 0; ig < igNumber; ig++) {
 
@@ -426,10 +438,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
           // evaluate the solution, the solution derivatives and the coordinates in the gauss point
           vector < double > xg1(dim, 0.);
-          std::fill(solX.begin(), solX.end(), 0.);
+          solX = 0.;
 
           for(unsigned i = 0; i < nDof1; i++) {
-            solX[ig] += solu1[i] * phi1[i];
+            solX += solu1[i] * phi1[i];
             for(unsigned k = 0; k < dim; k++) {
               xg1[k] += x1[k][i] * phi1[i];
             }
@@ -441,6 +453,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               for(unsigned j = 0; j < nDof1; j++) {
                 MMlocal[ i * nDof1 + j ] += phi1[i] * phi1[j] * weight1;
               }
+              double mass_res_i = phi1[i] * solX ;
+              Res[ i ] += weight1 * mass_res_i ;
+              Res[ i ] += - weight1 * (phi1[i] * (-1.)); 
             }
 
           }
@@ -454,14 +469,14 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
             const double denom = pow(dist_xyz, (dim / 2.) + s_frac);
 
-            const double sol_diff = (solX[ig] - solY[jg]);
-
-
             for(unsigned i = 0; i < nDof1; i++) {
+
+               Res[ i ]                 +=      - (solX - solY[jg]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg]  / denom;
 
               for(unsigned j = 0; j < nDof2; j++) {
                 CClocal[ i * nDof2 + j ] += (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
               }
+
             }
 
 
@@ -469,6 +484,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
           } //endl jg loop
         } //endl ig loop
+        RES->add_vector_blocked(Res, l2GMap1);
         if(iel == jel) MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
         MM->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
       } // end iel loop
@@ -478,6 +494,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   } //end kproc loop
 
   MM->close();
+  RES->close();
 //   CC->close();
 
   // ***************** END ASSEMBLY *******************
@@ -552,7 +569,7 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
 
 
-  const double s_frac = 0.5;
+  const double s_frac = S_FRAC;
 
   double sol_qp = 0.;
   std::vector< double > sol_x_qp(space_dim);
@@ -751,7 +768,7 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
         double weight1;
         vector < double > phi1;  // local test function
-        std::vector< double > solX(igNumber, 0.);
+        double  solX = 0.;
 
         for(unsigned ig = 0; ig < igNumber; ig++) {
 
@@ -759,10 +776,10 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
           // evaluate the solution, the solution derivatives and the coordinates in the gauss point
           vector < double > xg1(dim, 0.);
-          std::fill(solX.begin(), solX.end(), 0.);
+          solX = 0.;
 
           for(unsigned i = 0; i < nDof1; i++) {
-            solX[ig] += solu1[i] * phi1[i];
+            solX += solu1[i] * phi1[i];
             for(unsigned k = 0; k < dim; k++) {
               xg1[k] += x1[k][i] * phi1[i];
             }
@@ -778,7 +795,7 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
             const double denom = pow(dist_xyz, (dim / 2.) + s_frac);
 
-            const double sol_diff = (solX[ig] - solY[jg]);
+            const double sol_diff = (solX - solY[jg]);
 
 //             integral_iproc_Hhalf +=  weight1 *  weight2[jg];
             integral_iproc_Hhalf +=  weight1 * weight2[jg] * (sol_diff * sol_diff) / denom;
