@@ -431,6 +431,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         double weight1;
         vector < double > phi1;  // local test function
         double solX = 0.;
+        std::vector<double> sol_u_x(space_dim);     std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
+
 
         for(unsigned ig = 0; ig < igNumber; ig++) {
 
@@ -442,6 +444,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
           for(unsigned i = 0; i < nDof1; i++) {
             solX += solu1[i] * phi1[i];
+            for (unsigned d = 0; d < sol_u_x.size(); d++)   sol_u_x[d] += solu1[i] * phi_x[i * space_dim + d];
             for(unsigned k = 0; k < dim; k++) {
               xg1[k] += x1[k][i] * phi1[i];
             }
@@ -457,6 +460,30 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               Res[ i ] += weight1 * mass_res_i ;
               Res[ i ] += - weight1 * (phi1[i] * (-1.)); 
             }
+            
+//          ---------------------
+//          Laplacian assembly
+//          Residual
+            std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
+            for (unsigned i = 0; i < nDof1; i++) {
+                double laplace_res_du_u_i = 0.;
+                    for (unsigned kdim = 0; kdim < space_dim; kdim++) {
+                       laplace_res_du_u_i  +=  phi_x   [i * space_dim + kdim] * sol_u_x[kdim];
+                    }
+                Res[ i ] += - weight1 * (  - laplace_res_du_u_i);
+             
+//          Matrix  
+                for (unsigned j = 0; j < nDof1; j++) {
+ 
+                double laplace_mat_du_u_i_j = 0.;
+                    for (unsigned kdim = 0; kdim < space_dim; kdim++) {
+                        laplace_mat_du_u_i_j    += phi_x   [i * space_dim + kdim] *
+                                                   phi_x   [j * space_dim + kdim];
+                    }
+                MMlocal[ i * nDof1 + j ]  += weight1 * laplace_mat_du_u_i_j;
+                }
+            }
+//          ---------------------
 
           }
 
