@@ -104,7 +104,7 @@ int main(int argc, char** args) {
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
 
-  FEOrder femOrder = FIRST;
+  FEOrder femOrder = SECOND;
 
   mlSol.AddSolution("DX1", LAGRANGE, femOrder);
   mlSol.AddSolution("DY1", LAGRANGE, femOrder);
@@ -1085,73 +1085,6 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
         imarkerI++;
       }
 
-
-      /* Careful B has one zero eigenvalue (it is singular) with nullspace x = [1,1,1,...]^T,
-       * thus the generalized eigenvalue problem
-       * $$A u = \lambda B u$$
-       * (or $B^{-1} A x = \lambda x$) has one indetermined eigenvalue, that makes the SLEPC solve very unstable,
-       * even using its built-in deflation method.
-       * Fortunately, A has at least one zero eigenvalue, with the same x = [1,1,1,...]^T being an element
-       * of its nullspace. Then, it is possible to deflate A and B simultaneously:
-       * $Ad = A - x^T. a1$ and $Bd = B - x^T.b1$, where a1 and b1 are the first rows of A and B, respectively.
-       * The generalized eigenvalue problem $Ab u = \lambda Bb u$, with matrices Ab and Bb,
-       * obtained as block matrices from Ad and Bd, removing the first row and the first column,
-       * has the same eigenvalues of the original one, except the indetermine one.
-       * Note that Bb is now invertible, and SLEPC has no problem in solving the deflated
-       * generalized eigenvalue problem.
-       */
-
-      std::cout.precision(14);
-
-//       std::cout << "{\n";
-//       for(int k = 0; k < dim; k++) {
-//         for(int i = 0; i < nDofu; i++) {
-//           std::cout << "{";
-//           for(int l = 0; l < dim; l++) {
-//             for(int j = 0; j < nDofu; j++) {
-//               std::cout << a[((nDofu * k) + i) * sizeAll + (nDofu * l + j)] << ",";
-//             }
-//           }
-//           std::cout << "\b},";
-//           std::cout << std::endl;
-//         }
-//       }
-//       std::cout << "\b}";
-//       std::cout << std::endl;
-
-//       for(int k = 0; k < dim; k++) {
-//         for(int i = 0; i < nDofu; i++) {
-//           for(int l = 0; l < dim; l++) {
-//             for(int j = 0; j < nDofu; j++) {
-//               std::cout << b[0][((nDofu * k) + i) * sizeAll + (nDofu * l + j)] << ",";
-//             }
-//           }
-//           std::cout << std::endl;
-//         }
-//       }
-//       std::cout << std::endl;
-//
-
-//       std::cout << "{\n";
-//       for(int k = 0; k < dim; k++) {
-//         for(int i = 0; i < nDofu; i++) {
-//           std::cout << "{";
-//           for(int l = 0; l < dim; l++) {
-//             for(int j = 0; j < nDofu; j++) {
-//               std::cout << b[1][((nDofu * k) + i) * sizeAll + (nDofu * l + j)] << ",";
-//             }
-//           }
-//           std::cout << "\b},";
-//           std::cout << std::endl;
-//         }
-//       }
-//       std::cout << "\b}";
-//       std::cout << std::endl;
-
-
-      
-      
-
       unsigned sizeAll0 = sizeAll;
       aM0 = aM;
       aL0 = aL;
@@ -1216,7 +1149,9 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
             PetscScalar *pv;
             VecGetArray(v, &pv);
             unsigned ii = 0;
-            while(fabs(pv[ii]) < 1.0e-10) ii++;
+            for(unsigned i = 1; i < sizeAll; i++){
+              if(fabs(pv[i]) > fabs(pv[ii])) ii = i;
+            }
 
             unsigned sizeAll1 = sizeAll - 1;
 
@@ -1285,24 +1220,10 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
 
       }
 
-     
-
       for(unsigned s = 0; s < 2; s++) {
         
         sizeAll = sizeAll0;
-        
-//         std::cout << "{\n";
-//         for(int i = 0; i < sizeAll; i++) {
-//           std::cout << "{";
-//           for(int j = 0; j < sizeAll; j++) {
-//             std::cout << aL0[i * sizeAll + j] << ",";
-//           }
-//           std::cout << "\b},";
-//           std::cout << std::endl;
-//         }
-//         std::cout << "\b}";
-//         std::cout << std::endl;
-
+   
         //BEGIN DEFLATION
 
         unsigned sizeAll1 = dim * (nDofu - 1);
@@ -1359,7 +1280,9 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
             PetscScalar *pv;
             VecGetArray(v, &pv);
             unsigned ii = 0;
-            while(fabs(pv[ii]) < 1.0e-10) ii++;
+            for(unsigned i = 1; i < sizeAll; i++){
+              if(fabs(pv[i]) > fabs(pv[ii])) ii = i;
+            }
 
             unsigned sizeAll1 = sizeAll - 1;
 
@@ -1408,18 +1331,6 @@ void GetInterfaceElementEigenvalues(MultiLevelSolution& mlSol) {
 
           VecDestroy(&v);
         }
-/*
-        std::cout << "{\n";
-        for(int i = 0; i < sizeAll; i++) {
-          std::cout << "{";
-          for(int j = 0; j < sizeAll; j++) {
-            std::cout << aL[i * sizeAll + j] << ",";
-          }
-          std::cout << "\b},";
-          std::cout << std::endl;
-        }
-        std::cout << "\b}";
-        std::cout << std::endl;*/
 
         //END DEFLATION
 
