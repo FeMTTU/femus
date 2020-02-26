@@ -18,16 +18,17 @@
 
 #include "slepceps.h"
 
+#include "PetscMatrix.hpp"
 
 using namespace femus;
 
 
-#define N_UNIFORM_LEVELS  7
-#define N_ERASED_LEVELS   6
-#define S_FRAC 0.99999
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
+#define S_FRAC 0.99
 
 #define OP_L2       0
-#define OP_H1       1
+#define OP_H1       0
 #define OP_Hhalf    1
 #define RHS_ONE     1
 
@@ -273,12 +274,24 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   MMlocal.reserve(maxSize * maxSize);
   vector< double >         Res_local;
   Res_local.reserve(maxSize);  // local redidual vector
-  vector< double >         Res_nonlocal;
-  Res_nonlocal.reserve(maxSize);  // local redidual vector
+//   vector< double >         Res_nonlocal;
+//   Res_nonlocal.reserve(maxSize);  // local redidual vector
+  vector< double >         Res_nonlocalI;
+  Res_nonlocalI.reserve(maxSize);  // local redidual vector
+  vector< double >         Res_nonlocalJ;
+  Res_nonlocalJ.reserve(maxSize);  // local redidual vector
 
-  vector < double > CClocal;
-  CClocal.reserve(maxSize * maxSize);
-
+//   vector < double > CClocal;
+//   CClocal.reserve(maxSize * maxSize);
+  vector < double > CClocalII;
+  CClocalII.reserve(maxSize * maxSize);  
+  vector < double > CClocalIJ;
+  CClocalIJ.reserve(maxSize * maxSize);
+  vector < double > CClocalJI;
+  CClocalJI.reserve(maxSize * maxSize);  
+  vector < double > CClocalJJ;
+  CClocalJJ.reserve(maxSize * maxSize);  
+  
   MM->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero();
 
@@ -296,8 +309,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   const double s_frac = S_FRAC;
 
   const double check_limits = 1 - s_frac;
-
-
+  
+  double C_ns = 1; //s_frac * pow ( 2, 2 * s_frac ) * tgamma ( (dim + 2.) / 2. ) / ( tgamma ( 0.5 ) * tgamma( 1 - s_frac ) );
 
 
 
@@ -432,10 +445,16 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         }
 
         if(iel == jel) MMlocal.assign(nDof1 * nDof1, 0.);  //resize
-        CClocal.assign(nDof1 * nDof2, 0.);   //resize
+//         CClocal.assign(nDof1 * nDof2, 0.);   //resize
+        CClocalII.assign(nDof1 * nDof2, 0.);   //resize
+        CClocalIJ.assign(nDof1 * nDof2, 0.);   //resize
+        CClocalJI.assign(nDof1 * nDof2, 0.);   //resize
+        CClocalJJ.assign(nDof1 * nDof2, 0.);   //resize
         if(iel == jel) Res_local.assign(nDof1, 0);    //resize
-        Res_nonlocal.assign(nDof1, 0);    //resize
-
+//         Res_nonlocal.assign(nDof1, 0);    //resize
+        Res_nonlocalI.assign(nDof1, 0);    //resize
+        Res_nonlocalJ.assign(nDof1, 0);    //resize
+                
         // *** Gauss point loop ***
         const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
 
@@ -510,10 +529,25 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
             for(unsigned i = 0; i < nDof1; i++) {
 
-               Res_nonlocal[ i ]         +=      - OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg]  / denom;
+//                Res_nonlocal[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg]  / denom;
+               
+               
+               Res_nonlocalI[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i]) * weight1 * weight2[jg]  / denom;
+
+               Res_nonlocalJ[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (- phi2[jg][i]) * weight1 * weight2[jg]  / denom;
 
               for(unsigned j = 0; j < nDof2; j++) {
-                CClocal[ i * nDof2 + j ] += OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
+//                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
+                                
+                 CClocalII[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight2[jg] / denom;
+                             
+                 CClocalIJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * phi1[i] * weight1 * weight2[jg] / denom;
+                 
+                 CClocalJI[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] ) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
+                 
+                 CClocalJJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
+                 
+                
               }
 
             }
@@ -527,8 +561,16 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
             MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
             RES->add_vector_blocked(Res_local, l2GMap1);
         }
-        MM->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
-        RES->add_vector_blocked(Res_nonlocal, l2GMap1);
+        //MM->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
+        
+        MM->add_matrix_blocked(CClocalII, l2GMap1, l2GMap1);
+        MM->add_matrix_blocked(CClocalIJ, l2GMap1, l2GMap2);
+        MM->add_matrix_blocked(CClocalJI, l2GMap2, l2GMap1);
+        MM->add_matrix_blocked(CClocalJJ, l2GMap2, l2GMap2);
+        
+//         RES->add_vector_blocked(Res_nonlocal, l2GMap1);
+        RES->add_vector_blocked(Res_nonlocalI, l2GMap1);
+        RES->add_vector_blocked(Res_nonlocalJ, l2GMap2);
       } // end iel loop
 
 
@@ -537,6 +579,17 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   MM->close();
   RES->close();
+  
+  
+  
+  PetscViewer    viewer;
+  PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+  PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+  MatView((static_cast<PetscMatrix*> (MM))->mat(),viewer);
+//   MatView((static_cast<PetscMatrix*> (MM))->mat(),  PETSC_VIEWER_STDOUT_WORLD );
+  double a;
+  std::cin>>a;
 
   // ***************** END ASSEMBLY *******************
 }
