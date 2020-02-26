@@ -27,6 +27,7 @@ set(OPTCONTROL_FOLDER OptimalControl/)
 
   
   ADD_SUBDIRECTORY(./boundary_control_inequality/)
+  ADD_SUBDIRECTORY(./mhd/)
   ADD_SUBDIRECTORY(./nsopt/)
   ADD_SUBDIRECTORY(./solidopt/)
   ADD_SUBDIRECTORY(./frac_norm/)
