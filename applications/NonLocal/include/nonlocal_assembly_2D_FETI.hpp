@@ -574,7 +574,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 for (unsigned i = 0; i < nDof1; i++) {
 
                   unsigned solDofu1_i = msh->GetSolutionDof (i, iel, solu1Type);
-                  unsigned solDofu2_i = msh->GetSolutionDof (i, iel, solu2Type);;
+                  unsigned solDofu2_i = msh->GetSolutionDof (i, iel, solu2Type);
 
                   for (unsigned j = 0; j < nDof1; j++) {
 

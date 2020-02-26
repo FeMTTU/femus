@@ -530,15 +530,27 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         for (unsigned j = 0; j < nDof2; j++) {
           l2GMapu1_2[j] = pdeSys->GetSystemDof (solu1Index, solu1PdeIndex, j, jel);
           l2GMapu2_2[j] = pdeSys->GetSystemDof (solu2Index, solu2PdeIndex, j, jel);
+          l2GMapu3_2[j] = pdeSys->GetSystemDof (solu3Index, solu3PdeIndex, j, jel);
+          l2GMapu4_2[j] = pdeSys->GetSystemDof (solu4Index, solu4PdeIndex, j, jel);
           l2GMapmu_2[j] = pdeSys->GetSystemDof (solmuIndex, solmuPdeIndex, j, jel);
+          l2GMapmuExtra_2[j] = pdeSys->GetSystemDof (solmuExtraIndex, solmuExtraPdeIndex, j, jel);
+          l2GMapmuExtra2_2[j] = pdeSys->GetSystemDof (solmuExtra2Index, solmuExtra2PdeIndex, j, jel);
 
           unsigned solDofu1 = msh->GetSolutionDof (j, jel, solu1Type);
           unsigned solDofu2 = msh->GetSolutionDof (j, jel, solu2Type);
+          unsigned solDofu3 = msh->GetSolutionDof (j, jel, solu3Type);
+          unsigned solDofu4 = msh->GetSolutionDof (j, jel, solu4Type);
           unsigned solDofmu = msh->GetSolutionDof (j, jel, solmuType);
+          unsigned solDofmuExtra = msh->GetSolutionDof (j, jel, solmuExtraType);
+          unsigned solDofmuExtra2 = msh->GetSolutionDof (j, jel, solmuExtra2Type);
 
           solu1_2[j] = (*sol->_Sol[solu1Index]) (solDofu1);
           solu2_2[j] = (*sol->_Sol[solu2Index]) (solDofu2);
+          solu3_2[j] = (*sol->_Sol[solu3Index]) (solDofu3);
+          solu4_2[j] = (*sol->_Sol[solu4Index]) (solDofu4);
           solmu_2[j] = (*sol->_Sol[solmuIndex]) (solDofmu);
+          solmuExtra_2[j] = (*sol->_Sol[solmuExtraIndex]) (solDofmuExtra);
+          solmuExtra2_2[j] = (*sol->_Sol[solmuExtra2Index]) (solDofmuExtra2);
 
           unsigned xDof  = msh->GetSolutionDof (j, jel, xType);
           for (unsigned k = 0; k < dim; k++) {
@@ -658,6 +670,10 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           x1[k].resize (nDof1);
           x1Temp[k].resize (nDof1);
           x1Tempp[k].resize (nDof1);
+          x1Tem3p[k].resize (nDof1);
+          x1Tem4p[k].resize (nDof1);
+          x1Tem5p[k].resize (nDof1);
+          x1Tem6p[k].resize (nDof1);
         }
 
         for (unsigned i = 0; i < nDof1; i++) {
@@ -696,6 +712,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             x1Tem6p[k][i] = x1[k][i];
           }
         }
+
         ReorderElement (l2GMapu1_1, solu1_1, x1);
         ReorderElement (l2GMapu2_1, solu2_1, x1Temp);
         ReorderElement (l2GMapu3_1, solu3_1, x1Tem3p);
@@ -783,8 +800,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
               if (ielGroup == 6 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 14 || ielGroup == 15 || ielGroup == 17 || ielGroup == 20) cutOff = 0.5;
               else if (ielGroup == 13) cutOff = 0.25;
               for (unsigned i = 0; i < nDof1; i++) {
-                unsigned solDofu1 = msh->GetSolutionDof (i, iel, solu1Type);
-                unsigned solDofu2 = msh->GetSolutionDof (i, iel, solu2Type);
 
                 if (ielGroup == 5 || ielGroup == 6 || ielGroup == 8 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 13) {    //u1 (top left)
                   Resu1_1[i] -=  cutOff * 1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
@@ -904,7 +919,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 bool cutOffJel = false;
                 if (ielGroup == 6 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 14 || ielGroup == 15 || ielGroup == 17 || ielGroup == 20) cutOffIel = true;
                 if (jelGroup == 6 || jelGroup == 9 || jelGroup == 11 || jelGroup == 12 || jelGroup == 14 || jelGroup == 15 || jelGroup == 17 || jelGroup == 20) cutOffJel = true;
-                if ( cutOffIel && cutOffJel) cutOff = 0.5;
+                if (cutOffIel && cutOffJel) cutOff = 0.5;
                 else if (ielGroup == 13 && jelGroup == 13) cutOff = 0.25;
 
                 bool ielU1 = (ielGroup == 5 || ielGroup == 6 || ielGroup == 8 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 13) ? true : false;
@@ -914,17 +929,21 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 bool jelU1 = (jelGroup == 5 || jelGroup == 6 || jelGroup == 8 || jelGroup == 9 || jelGroup == 11 || jelGroup == 12 || jelGroup == 13) ? true : false;
                 bool jelU2 = (jelGroup == 6 || jelGroup == 7 || jelGroup == 9 || jelGroup == 10 || jelGroup == 13 || jelGroup == 14 || jelGroup == 15) ? true : false;
                 bool jelU3 = (jelGroup == 11 || jelGroup == 12 || jelGroup == 13 || jelGroup == 16 || jelGroup == 17 || jelGroup == 19 || jelGroup == 20) ? true : false;
-                bool jelU4 =  (jelGroup == 13 || jelGroup == 14 || jelGroup == 15 || jelGroup == 17 || jelGroup == 18 || jelGroup == 20 || jelGroup == 21) ? true : false;
+                bool jelU4 = (jelGroup == 13 || jelGroup == 14 || jelGroup == 15 || jelGroup == 17 || jelGroup == 18 || jelGroup == 20 || jelGroup == 21) ? true : false;
 
-                for (unsigned i = 0; i < nDof1; i++) { //TODO GOT HERE
+                for (unsigned i = 0; i < nDof1; i++) {
 
                   unsigned solDofu1_i = msh->GetSolutionDof (i, iel, solu1Type);
-                  unsigned solDofu2_i = msh->GetSolutionDof (i, iel, solu2Type);;
+                  unsigned solDofu2_i = msh->GetSolutionDof (i, iel, solu2Type);
+                  unsigned solDofu3_i = msh->GetSolutionDof (i, iel, solu3Type);
+                  unsigned solDofu4_i = msh->GetSolutionDof (i, iel, solu4Type);
 
                   for (unsigned j = 0; j < nDof1; j++) {
 
                     unsigned solDofu1_j = msh->GetSolutionDof (j, iel, solu1Type);
                     unsigned solDofu2_j = msh->GetSolutionDof (j, iel, solu2Type);
+                    unsigned solDofu3_j = msh->GetSolutionDof (j, iel, solu3Type);
+                    unsigned solDofu4_j = msh->GetSolutionDof (j, iel, solu4Type);
 
                     double jacValue11 = cutOff * weight1[ig] * weight2 * kernel * (phi1x[ig][i]) * phi1x[ig][j];
                     if (ielU1 && jelU1) {
@@ -935,6 +954,16 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                     if (ielU2 && jelU2) {
                       Jacu2_11[i * nDof1 + j] -= jacValue11;
                       Resu2_1[i] +=  jacValue11 * solu2_1[j];
+                    }
+
+                    if (ielU3 && jelU3) {
+                      Jacu3_11[i * nDof1 + j] -= jacValue11;
+                      Resu3_1[i] +=  jacValue11 * solu3_1[j];
+                    }
+
+                    if (ielU4 && jelU4) {
+                      Jacu4_11[i * nDof1 + j] -= jacValue11;
+                      Resu4_1[i] +=  jacValue11 * solu4_1[j];
                     }
                   }
 
@@ -949,6 +978,16 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                     if ( (ielU2) && (jelU2)) {
                       Jacu2_12[i * nDof2 + j] -= jacValue12;
                       Resu2_1[i] +=  jacValue12 * solu2_2[j];
+                    }
+
+                    if ( (ielU3) && (jelU3)) {
+                      Jacu3_12[i * nDof2 + j] -= jacValue12;
+                      Resu3_1[i] +=  jacValue12 * solu3_2[j];
+                    }
+
+                    if ( (ielU4) && (jelU4)) {
+                      Jacu4_12[i * nDof2 + j] -= jacValue12;
+                      Resu4_1[i] +=  jacValue12 * solu4_2[j];
                     }
                   }//endl j loop
                 }
@@ -970,6 +1009,15 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                       Jacu2_21[i * nDof1 + j] -= jacValue21;
                       Resu2_2[i] +=  jacValue21 * solu2_1[j];
                     }
+                    if ( (jelU3) && (ielU3)) {
+                      Jacu3_21[i * nDof1 + j] -= jacValue21;
+                      Resu3_2[i] +=  jacValue21 * solu3_1[j];
+                    }
+
+                    if ( (jelU4) && (ielU4)) {
+                      Jacu4_21[i * nDof1 + j] -= jacValue21;
+                      Resu4_2[i] +=  jacValue21 * solu4_1[j];
+                    }
                   }
 
                   for (unsigned j = 0; j < nDof2; j++) {
@@ -982,6 +1030,14 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                     if (ielU2 && jelU2) {
                       Jacu2_22[i * nDof2 + j] -= jacValue22;
                       Resu2_2[i] +=  jacValue22 * solu2_2[j];
+                    }
+                    if (ielU3 && jelU3) {
+                      Jacu3_22[i * nDof2 + j] -= jacValue22;
+                      Resu3_2[i] +=  jacValue22 * solu3_2[j];
+                    }
+                    if (ielU4 && jelU4) {
+                      Jacu4_22[i * nDof2 + j] -= jacValue22;
+                      Resu4_2[i] +=  jacValue22 * solu4_2[j];
                     }
                   }//endl j loop
                 } //endl i loop
@@ -998,6 +1054,14 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             KK->add_matrix_blocked (Jacu2_12, l2GMapu2_1, l2GMapu2_2);
             RES->add_vector_blocked (Resu2_1, l2GMapu2_1);
 
+            KK->add_matrix_blocked (Jacu3_11, l2GMapu3_1, l2GMapu3_1);
+            KK->add_matrix_blocked (Jacu3_12, l2GMapu3_1, l2GMapu3_2);
+            RES->add_vector_blocked (Resu3_1, l2GMapu3_1);
+
+            KK->add_matrix_blocked (Jacu4_11, l2GMapu4_1, l2GMapu4_1);
+            KK->add_matrix_blocked (Jacu4_12, l2GMapu4_1, l2GMapu4_2);
+            RES->add_vector_blocked (Resu4_1, l2GMapu4_1);
+
             KK->add_matrix_blocked (Jacu1_21, l2GMapu1_2, l2GMapu1_1);
             KK->add_matrix_blocked (Jacu1_22, l2GMapu1_2, l2GMapu1_2);
             RES->add_vector_blocked (Resu1_2, l2GMapu1_2);
@@ -1006,14 +1070,64 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             KK->add_matrix_blocked (Jacu2_22, l2GMapu2_2, l2GMapu2_2);
             RES->add_vector_blocked (Resu2_2, l2GMapu2_2);
 
-            KK->add_matrix_blocked (Jacmu, l2GMapmu_1, l2GMapmu_1);
+            KK->add_matrix_blocked (Jacu3_21, l2GMapu3_2, l2GMapu3_1);
+            KK->add_matrix_blocked (Jacu3_22, l2GMapu3_2, l2GMapu3_2);
+            RES->add_vector_blocked (Resu3_2, l2GMapu3_2);
 
-            if ( (iel == jel) && ielGroup == 9) {
-              KK->add_matrix_blocked (M1, l2GMapmu_1, l2GMapu1_1); //M1 (mu rows and u1 columns)
-              KK->add_matrix_blocked (M1, l2GMapu1_1, l2GMapmu_1); //M1 transpose (u1 rows and mu columns)
-              KK->add_matrix_blocked (M2, l2GMapmu_1, l2GMapu2_1); //M2 (mu rows and u2 columns)
-              KK->add_matrix_blocked (M2, l2GMapu2_1, l2GMapmu_1); //M2 transpose (u2 rows and mu columns)
-              RES->add_vector_blocked (Resmu, l2GMapmu_1);
+            KK->add_matrix_blocked (Jacu4_21, l2GMapu4_2, l2GMapu4_1);
+            KK->add_matrix_blocked (Jacu4_22, l2GMapu4_2, l2GMapu4_2);
+            RES->add_vector_blocked (Resu4_2, l2GMapu4_2);
+
+            KK->add_matrix_blocked (Jacmu, l2GMapmu_1, l2GMapmu_1);
+            KK->add_matrix_blocked (JacmuExtra, l2GMapmuExtra_1, l2GMapmuExtra_1);
+            KK->add_matrix_blocked (JacmuExtra2, l2GMapmuExtra2_1, l2GMapmuExtra2_1);
+
+            if (iel == jel)  {
+              if (ielGroup == 9) {
+                KK->add_matrix_blocked (M1, l2GMapmu_1, l2GMapu1_1); //M1 (mu rows and u1 columns)
+                KK->add_matrix_blocked (M1, l2GMapu1_1, l2GMapmu_1); //M1 transpose (u1 rows and mu columns)
+                KK->add_matrix_blocked (M2, l2GMapmu_1, l2GMapu2_1); //M2 (mu rows and u2 columns)
+                KK->add_matrix_blocked (M2, l2GMapu2_1, l2GMapmu_1); //M2 transpose (u2 rows and mu columns)
+                RES->add_vector_blocked (Resmu, l2GMapmu_1);
+              }
+              if (ielGroup == 12) {
+                KK->add_matrix_blocked (M1, l2GMapmu_1, l2GMapu1_1); //M1 (mu rows and u1 columns)
+                KK->add_matrix_blocked (M1, l2GMapu1_1, l2GMapmu_1); //M1 transpose (u1 rows and mu columns)
+                KK->add_matrix_blocked (M3, l2GMapmu_1, l2GMapu3_1); //M3 (mu rows and u3 columns)
+                KK->add_matrix_blocked (M3, l2GMapu3_1, l2GMapmu_1); //M3 transpose (u3 rows and mu columns)
+                RES->add_vector_blocked (Resmu, l2GMapmu_1);
+              }
+              if (ielGroup == 14) {
+                KK->add_matrix_blocked (M2, l2GMapmu_1, l2GMapu2_1); //M2 (mu rows and u2 columns)
+                KK->add_matrix_blocked (M2, l2GMapu2_1, l2GMapmu_1); //M2 transpose (u2 rows and mu columns)
+                KK->add_matrix_blocked (M4, l2GMapmu_1, l2GMapu4_1); //M4 (mu rows and u4 columns)
+                KK->add_matrix_blocked (M4, l2GMapu4_1, l2GMapmu_1); //M4 transpose (u4 rows and mu columns)
+                RES->add_vector_blocked (Resmu, l2GMapmu_1);
+              }
+              if (ielGroup == 20) {
+                KK->add_matrix_blocked (M3, l2GMapmu_1, l2GMapu3_1); //M3 (mu rows and u3 columns)
+                KK->add_matrix_blocked (M3, l2GMapu3_1, l2GMapmu_1); //M3 transpose (u3 rows and mu columns)
+                KK->add_matrix_blocked (M4, l2GMapmu_1, l2GMapu4_1); //M4 (mu rows and u4 columns)
+                KK->add_matrix_blocked (M4, l2GMapu4_1, l2GMapmu_1); //M4 transpose (u4 rows and mu columns)
+                RES->add_vector_blocked (Resmu, l2GMapmu_1);
+              }
+              if (ielGroup == 13) {
+                KK->add_matrix_blocked (M1, l2GMapmu_1, l2GMapu1_1); //M1 (mu rows and u1 columns)
+                KK->add_matrix_blocked (M1, l2GMapu1_1, l2GMapmu_1); //M1 transpose (u1 rows and mu columns)
+                KK->add_matrix_blocked (M2, l2GMapmu_1, l2GMapu2_1); //M2 (mu rows and u2 columns)
+                KK->add_matrix_blocked (M2, l2GMapu2_1, l2GMapmu_1); //M2 transpose (u2 rows and mu columns)
+                RES->add_vector_blocked (Resmu, l2GMapmu_1);
+                KK->add_matrix_blocked (M1Extra, l2GMapmuExtra_1, l2GMapu1_1); //M1Extra (muExtra rows and u1 columns)
+                KK->add_matrix_blocked (M1Extra, l2GMapu1_1, l2GMapmuExtra_1); //M1Extra transpose (u1 rows and muExtra columns)
+                KK->add_matrix_blocked (M3Extra, l2GMapmuExtra_1, l2GMapu3_1); //M3Extra (muExtra rows and u3 columns)
+                KK->add_matrix_blocked (M3Extra, l2GMapu3_1, l2GMapmuExtra_1); //M3Extra transpose (u3 rows and muExtra columns)
+                RES->add_vector_blocked (ResmuExtra, l2GMapmuExtra_1);
+                KK->add_matrix_blocked (M3Extra2, l2GMapmuExtra2_1, l2GMapu3_1); //M3Extra2 (muExtra2 rows and u3 columns)
+                KK->add_matrix_blocked (M3Extra2, l2GMapu3_1, l2GMapmuExtra2_1); //M3Extra2 transpose (u3 rows and muExtra2 columns)
+                KK->add_matrix_blocked (M4Extra2, l2GMapmuExtra2_1, l2GMapu4_1); //M4Extra2 (muExtra2 rows and u4 columns)
+                KK->add_matrix_blocked (M4Extra2, l2GMapu4_1, l2GMapmuExtra2_1); //M4Extra2 transpose (u4 rows and muExtra2 columns)
+                RES->add_vector_blocked (ResmuExtra2, l2GMapmuExtra2_1);
+              }
             }
 
           }
