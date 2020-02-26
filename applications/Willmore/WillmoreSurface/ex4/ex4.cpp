@@ -632,7 +632,8 @@ void AssembleBloodCell (MultiLevelProblem& ml_prob) {
       adept::adouble Hminc0sqrd = 0;
       for (unsigned K = 0; K < DIM; K++) {
         YdotN += solYOldg[K] * normal[K];
-        YdotY += solYOldg[K] * solYOldg[K];
+        //YdotY += solYOldg[K] * solYOldg[K];
+        YdotY += solYNewg[K] * solYNewg[K];
         Hminc0sqrd += (solYOldg[K] - 2 * c0 * normal[K]) * (solYOldg[K] - 2 * c0 * normal[K]);
       }
       // double signYdotN = (YdotN.value() >= 0.) ? 1. : -1.;
