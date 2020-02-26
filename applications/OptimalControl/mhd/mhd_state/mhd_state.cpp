@@ -12,6 +12,16 @@ using namespace femus;
 
   double force[3] = {10.,0.,0.}; 
 
+  std::string concatenate(const std::string str1, const unsigned num1) {
+   
+      std::ostringstream mystream("");
+      
+      mystream << str1 << "_" << num1;
+      
+      return mystream.str();
+      
+  }
+  
 
 bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
@@ -21,15 +31,15 @@ bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName
   
 // LEFT ==========================  
       if (facename == 4) {
-       if (!strcmp(SolName, "U"))    { dirichlet = false; }
-  else if (!strcmp(SolName, "V"))    {      value = 0.; } 
+       if (!strcmp(SolName, "U_0"))    { dirichlet = false; }
+  else if (!strcmp(SolName, "U_1"))    {      value = 0.; } 
   	
       }
       
 // RIGHT ==========================  
      if (facename == 2) {
-       if (!strcmp(SolName, "U"))    {  dirichlet = false; }
-  else if (!strcmp(SolName, "V"))    {   value = 0.;  } 
+       if (!strcmp(SolName, "U_0"))    {  dirichlet = false; }
+  else if (!strcmp(SolName, "U_1"))    {   value = 0.;  } 
   
   
       }
@@ -80,7 +90,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.GenerateCoarseBoxMesh(32,32,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+  mlMsh.GenerateCoarseBoxMesh(8,8,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
 //   mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
 //   //mlMsh.ReadCoarseMesh ( "./input/square_quad.neu", "seventh", scalingFactor );
 //   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -100,12 +110,13 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("U", LAGRANGE, SECOND);
-  mlSol.AddSolution("V", LAGRANGE, SECOND);
-
-  if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
-
+  for (unsigned int d = 0; d < dim; d++) {
+      const std::string  unknown_name = concatenate("U", d);
+  mlSol.AddSolution(unknown_name.c_str(), LAGRANGE, SECOND);
+  }
+  
   mlSol.AddSolution("P", LAGRANGE, FIRST);
+  
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
@@ -122,11 +133,11 @@ int main(int argc, char** args) {
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
 
   // add solution "u" to system
-  system.AddSolutionToSystemPDE("U");
-  system.AddSolutionToSystemPDE("V");
-
-  if (dim == 3) system.AddSolutionToSystemPDE("W");
-
+  for (unsigned int d = 0; d < dim; d++) {
+      const std::string  unknown_name =  concatenate("U", d);
+  system.AddSolutionToSystemPDE(unknown_name.c_str());
+  }  
+  
   system.AddSolutionToSystemPDE("P");
 
   // attach the assembling function to system
@@ -184,22 +195,21 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
   //solution variable
   vector < unsigned > solVIndex(dim);
-  solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
-  solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
-
-  if (dim == 3) solVIndex[2] = mlSol->GetIndex("W");      // get the position of "V" in the ml_sol object
+   for (unsigned int d = 0; d < dim; d++) {
+      const std::string  unknown_name =  concatenate("U", d);
+  solVIndex[d] = mlSol->GetIndex(unknown_name.c_str());  // get the position of "U" in the ml_sol object
+  }
 
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
-  unsigned solPIndex;
-  solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
+  unsigned solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
   unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
 
   vector < unsigned > solVPdeIndex(dim);
-  solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
-  solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
-
-  if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
+  for (unsigned int d = 0; d < dim; d++) {
+      const std::string  unknown_name =  concatenate("U", d);
+  solVPdeIndex[d] = mlPdeSys->GetSolPdeIndex(unknown_name.c_str());
+  }
 
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
