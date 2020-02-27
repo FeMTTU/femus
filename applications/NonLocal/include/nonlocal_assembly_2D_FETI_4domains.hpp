@@ -78,6 +78,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   unsigned solmuExtra2Index = mlSol->GetIndex ("muExtra2");
   unsigned solmuExtra2Type = mlSol->GetSolutionType (solmuExtra2Index);
 
+  unsigned solmuExtra3Index = mlSol->GetIndex ("muExtra3");
+  unsigned solmuExtra3Type = mlSol->GetSolutionType (solmuExtra3Index);
+
   unsigned u1FlagIndex = mlSol->GetIndex ("u1Flag");
   unsigned u1FlagType = mlSol->GetSolutionType (u1FlagIndex);
 
@@ -99,6 +102,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   unsigned muExtra2FlagIndex = mlSol->GetIndex ("muExtra2Flag");
   unsigned muExtra2FlagType = mlSol->GetSolutionType (muExtra2FlagIndex);
 
+  unsigned muExtra3FlagIndex = mlSol->GetIndex ("muExtra3Flag");
+  unsigned muExtra3FlagType = mlSol->GetSolutionType (muExtra3FlagIndex);
+
   unsigned solu1PdeIndex;
   solu1PdeIndex = mlPdeSys->GetSolPdeIndex ("u1");   // get the position of "u1" in the pdeSys object
 
@@ -119,6 +125,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
   unsigned solmuExtra2PdeIndex;
   solmuExtra2PdeIndex = mlPdeSys->GetSolPdeIndex ("muExtra2");
+
+  unsigned solmuExtra3PdeIndex;
+  solmuExtra3PdeIndex = mlPdeSys->GetSolPdeIndex ("muExtra3");
 
   vector < double >  solu1_1; // local solution for u1 for the nonlocal assembly
   vector < double >  solu1_2; // local solution for u1 for the nonlocal assembly
@@ -155,6 +164,11 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   solmuExtra2_1.reserve (maxSize);
   solmuExtra2_2.reserve (maxSize);
 
+  vector < double >  solmuExtra3_1;
+  vector < double >  solmuExtra3_2;
+  solmuExtra3_1.reserve (maxSize);
+  solmuExtra3_2.reserve (maxSize);
+
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   vector < vector < double > > x1 (dim);
@@ -178,6 +192,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   vector < vector < double > > x1Tem6p (dim);
   vector < vector < double > > x2Tem6p (dim);
 
+  vector < vector < double > > x1Tem7p (dim);
+  vector < vector < double > > x2Tem7p (dim);
+
   for (unsigned k = 0; k < dim; k++) {
     x1[k].reserve (maxSize);
     x2[k].reserve (maxSize);
@@ -199,6 +216,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
     x1Tem6p[k].reserve (maxSize);
     x2Tem6p[k].reserve (maxSize);
+
+    x1Tem7p[k].reserve (maxSize);
+    x2Tem7p[k].reserve (maxSize);
   }
 
   vector <double> phi;  // local test function
@@ -245,6 +265,11 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   l2GMapmuExtra2_1.reserve (maxSize);
   l2GMapmuExtra2_2.reserve (maxSize);
 
+  vector< int > l2GMapmuExtra3_1;
+  vector< int > l2GMapmuExtra3_2;
+  l2GMapmuExtra3_1.reserve (maxSize);
+  l2GMapmuExtra3_2.reserve (maxSize);
+
   vector< double > Resu1_1; // local redidual vector for u1
   Resu1_1.reserve (maxSize);
   vector< double > Resu1_2; // local redidual vector for u1
@@ -273,6 +298,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
   vector< double > ResmuExtra2;
   ResmuExtra2.reserve (maxSize);
+
+  vector< double > ResmuExtra3;
+  ResmuExtra3.reserve (maxSize);
 
   vector < double > Jacu1_11;  // stiffness matrix for u1
   Jacu1_11.reserve (maxSize * maxSize);
@@ -316,6 +344,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   JacmuExtra.reserve (maxSize * maxSize);
   vector < double > JacmuExtra2;  // diag block for muExtra2
   JacmuExtra2.reserve (maxSize * maxSize);
+  vector < double > JacmuExtra3;  // diag block for muExtra3
+  JacmuExtra3.reserve (maxSize * maxSize);
   vector < double > M1;
   M1.reserve (maxSize * maxSize);
   vector < double > M2;
@@ -332,6 +362,10 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   M3Extra2.reserve (maxSize * maxSize);
   vector < double > M4Extra2;
   M4Extra2.reserve (maxSize * maxSize);
+  vector < double > M1Extra3;
+  M1Extra3.reserve (maxSize * maxSize);
+  vector < double > M2Extra3;
+  M2Extra3.reserve (maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
@@ -379,10 +413,13 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       }
 
       if (xCoords[i] > leftBound && xCoords[i] < rightBound) {
-        sol->_Sol[muFlagIndex]->add (solDof, 1.);
+        if (yCoords[i] < leftBound || yCoords[i] > rightBound) {
+          sol->_Sol[muFlagIndex]->add (solDof, 1.);
+        }
         if (yCoords[i] > leftBound && yCoords[i] < rightBound) {
           sol->_Sol[muExtraFlagIndex]->add (solDof, 1.);
           sol->_Sol[muExtra2FlagIndex]->add (solDof, 1.);
+          sol->_Sol[muExtra3FlagIndex]->add (solDof, 1.);
         }
       }
 
@@ -402,6 +439,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   sol->_Sol[muFlagIndex]->close();
   sol->_Sol[muExtraFlagIndex]->close();
   sol->_Sol[muExtra2FlagIndex]->close();
+  sol->_Sol[muExtra3FlagIndex]->close();
 
   for (unsigned idof = msh->_dofOffset[solu1Type][iproc]; idof < msh->_dofOffset[solu1Type][iproc + 1]; idof++) {
 
@@ -454,6 +492,13 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       sol->_Sol[solmuExtra2Index]->set (idof, 0.);
     } //TODO decomment this!!!
 
+    double muExtra3Flag = (*sol->_Sol[muExtra3FlagIndex]) (idof);
+    if (muExtra3Flag > 0) sol->_Sol[muExtra3FlagIndex]->set (idof, 1.);
+    else { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
+      sol->_Bdc[solmuExtra3Index]->set (idof, 0.);
+      sol->_Sol[solmuExtra3Index]->set (idof, 0.);
+    } //TODO decomment this!!!
+
   }
 
   sol->_Sol[u1FlagIndex]->close();
@@ -463,6 +508,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   sol->_Sol[muFlagIndex]->close();
   sol->_Sol[muExtraFlagIndex]->close();
   sol->_Sol[muExtra2FlagIndex]->close();
+  sol->_Sol[muExtra3FlagIndex]->close();
 
   sol->_Sol[solu1Index]->close();
   sol->_Sol[solu2Index]->close();
@@ -471,6 +517,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   sol->_Sol[solmuIndex]->close();
   sol->_Sol[solmuExtraIndex]->close();
   sol->_Sol[solmuExtra2Index]->close();
+  sol->_Sol[solmuExtra3Index]->close();
 
   sol->_Bdc[solu1Index]->close();
   sol->_Bdc[solu2Index]->close();
@@ -479,6 +526,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   sol->_Bdc[solmuIndex]->close();
   sol->_Bdc[solmuExtraIndex]->close();
   sol->_Bdc[solmuExtra2Index]->close();
+  sol->_Bdc[solmuExtra3Index]->close();
 
   //END creation of the flags for the assembly procedure
 
@@ -507,6 +555,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       l2GMapmu_2.resize (nDof2);
       l2GMapmuExtra_2.resize (nDof2);
       l2GMapmuExtra2_2.resize (nDof2);
+      l2GMapmuExtra3_2.resize (nDof2);
 
       solu1_2.resize (nDof2);
       solu2_2.resize (nDof2);
@@ -515,6 +564,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       solmu_2.resize (nDof2);
       solmuExtra_2.resize (nDof2);
       solmuExtra2_2.resize (nDof2);
+      solmuExtra3_2.resize (nDof2);
 
       for (int k = 0; k < dim; k++) {
         x2[k].resize (nDof2);
@@ -524,6 +574,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         x2Tem4p[k].resize (nDof2);
         x2Tem5p[k].resize (nDof2);
         x2Tem6p[k].resize (nDof2);
+        x2Tem7p[k].resize (nDof2);
       }
 
       if (iproc == kproc) {
@@ -535,6 +586,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           l2GMapmu_2[j] = pdeSys->GetSystemDof (solmuIndex, solmuPdeIndex, j, jel);
           l2GMapmuExtra_2[j] = pdeSys->GetSystemDof (solmuExtraIndex, solmuExtraPdeIndex, j, jel);
           l2GMapmuExtra2_2[j] = pdeSys->GetSystemDof (solmuExtra2Index, solmuExtra2PdeIndex, j, jel);
+          l2GMapmuExtra3_2[j] = pdeSys->GetSystemDof (solmuExtra3Index, solmuExtra3PdeIndex, j, jel);
 
           unsigned solDofu1 = msh->GetSolutionDof (j, jel, solu1Type);
           unsigned solDofu2 = msh->GetSolutionDof (j, jel, solu2Type);
@@ -543,6 +595,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           unsigned solDofmu = msh->GetSolutionDof (j, jel, solmuType);
           unsigned solDofmuExtra = msh->GetSolutionDof (j, jel, solmuExtraType);
           unsigned solDofmuExtra2 = msh->GetSolutionDof (j, jel, solmuExtra2Type);
+          unsigned solDofmuExtra3 = msh->GetSolutionDof (j, jel, solmuExtra3Type);
 
           solu1_2[j] = (*sol->_Sol[solu1Index]) (solDofu1);
           solu2_2[j] = (*sol->_Sol[solu2Index]) (solDofu2);
@@ -551,6 +604,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           solmu_2[j] = (*sol->_Sol[solmuIndex]) (solDofmu);
           solmuExtra_2[j] = (*sol->_Sol[solmuExtraIndex]) (solDofmuExtra);
           solmuExtra2_2[j] = (*sol->_Sol[solmuExtra2Index]) (solDofmuExtra2);
+          solmuExtra3_2[j] = (*sol->_Sol[solmuExtra3Index]) (solDofmuExtra3);
 
           unsigned xDof  = msh->GetSolutionDof (j, jel, xType);
           for (unsigned k = 0; k < dim; k++) {
@@ -561,6 +615,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             x2Tem4p[k][j] = x2[k][j];
             x2Tem5p[k][j] = x2[k][j];
             x2Tem6p[k][j] = x2[k][j];
+            x2Tem7p[k][j] = x2[k][j];
           }
 
         }
@@ -572,6 +627,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         ReorderElement (l2GMapmu_2, solmu_2, x2Tempp);
         ReorderElement (l2GMapmuExtra_2, solmuExtra_2, x2Tem5p);
         ReorderElement (l2GMapmuExtra2_2, solmuExtra2_2, x2Tem6p);
+        ReorderElement (l2GMapmuExtra3_2, solmuExtra3_2, x2Tem7p);
       }
 
       MPI_Bcast (&l2GMapu1_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
@@ -595,6 +651,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
       MPI_Bcast (&l2GMapmuExtra2_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast (&solmuExtra2_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
 
+      MPI_Bcast (&l2GMapmuExtra3_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast (&solmuExtra3_2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+
       for (unsigned k = 0; k < dim; k++) {
         MPI_Bcast (& x2[k][0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
       }
@@ -614,6 +673,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         l2GMapmu_1.resize (nDof1);
         l2GMapmuExtra_1.resize (nDof1);
         l2GMapmuExtra2_1.resize (nDof1);
+        l2GMapmuExtra3_1.resize (nDof1);
 
         solu1_1.resize (nDof1);
         solu2_1.resize (nDof1);
@@ -622,6 +682,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         solmu_1.resize (nDof1);
         solmuExtra_1.resize (nDof1);
         solmuExtra2_1.resize (nDof1);
+        solmuExtra3_1.resize (nDof1);
 
         Jacu1_11.assign (nDof1 * nDof1, 0.);
         Jacu1_12.assign (nDof1 * nDof2, 0.);
@@ -654,6 +715,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         Jacmu.assign (nDof1 * nDof1, 0.);
         JacmuExtra.assign (nDof1 * nDof1, 0.);
         JacmuExtra2.assign (nDof1 * nDof1, 0.);
+        JacmuExtra3.assign (nDof1 * nDof1, 0.);
         M1.assign (nDof1 * nDof1, 0.);
         M2.assign (nDof1 * nDof1, 0.);
         M3.assign (nDof1 * nDof1, 0.);
@@ -662,9 +724,12 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         M3Extra.assign (nDof1 * nDof1, 0.);
         M3Extra2.assign (nDof1 * nDof1, 0.);
         M4Extra2.assign (nDof1 * nDof1, 0.);
+        M1Extra3.assign (nDof1 * nDof1, 0.);
+        M2Extra3.assign (nDof1 * nDof1, 0.);
         Resmu.assign (nDof1, 0.);
         ResmuExtra.assign (nDof1, 0.);
         ResmuExtra2.assign (nDof1, 0.);
+        ResmuExtra3.assign (nDof1, 0.);
 
         for (int k = 0; k < dim; k++) {
           x1[k].resize (nDof1);
@@ -674,6 +739,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           x1Tem4p[k].resize (nDof1);
           x1Tem5p[k].resize (nDof1);
           x1Tem6p[k].resize (nDof1);
+          x1Tem7p[k].resize (nDof1);
         }
 
         for (unsigned i = 0; i < nDof1; i++) {
@@ -684,6 +750,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           l2GMapmu_1[i] = pdeSys->GetSystemDof (solmuIndex, solmuPdeIndex, i, iel);
           l2GMapmuExtra_1[i] = pdeSys->GetSystemDof (solmuExtraIndex, solmuExtraPdeIndex, i, iel);
           l2GMapmuExtra2_1[i] = pdeSys->GetSystemDof (solmuExtra2Index, solmuExtra2PdeIndex, i, iel);
+          l2GMapmuExtra3_1[i] = pdeSys->GetSystemDof (solmuExtra3Index, solmuExtra3PdeIndex, i, iel);
 
           unsigned solDofu1 = msh->GetSolutionDof (i, iel, solu1Type);
           unsigned solDofu2 = msh->GetSolutionDof (i, iel, solu2Type);
@@ -692,6 +759,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           unsigned solDofmu = msh->GetSolutionDof (i, iel, solmuType);
           unsigned solDofmuExtra = msh->GetSolutionDof (i, iel, solmuExtraType);
           unsigned solDofmuExtra2 = msh->GetSolutionDof (i, iel, solmuExtra2Type);
+          unsigned solDofmuExtra3 = msh->GetSolutionDof (i, iel, solmuExtra3Type);
 
           solu1_1[i] = (*sol->_Sol[solu1Index]) (solDofu1);
           solu2_1[i] = (*sol->_Sol[solu2Index]) (solDofu2);
@@ -700,6 +768,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           solmu_1[i] = (*sol->_Sol[solmuIndex]) (solDofmu);
           solmuExtra_1[i] = (*sol->_Sol[solmuExtraIndex]) (solDofmuExtra);
           solmuExtra2_1[i] = (*sol->_Sol[solmuExtra2Index]) (solDofmuExtra2);
+          solmuExtra3_1[i] = (*sol->_Sol[solmuExtra3Index]) (solDofmuExtra3);
 
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
           for (unsigned k = 0; k < dim; k++) {
@@ -710,6 +779,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             x1Tem4p[k][i] = x1[k][i];
             x1Tem5p[k][i] = x1[k][i];
             x1Tem6p[k][i] = x1[k][i];
+            x1Tem7p[k][i] = x1[k][i];
           }
         }
 
@@ -720,6 +790,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         ReorderElement (l2GMapmu_1, solmu_1, x1Tempp);
         ReorderElement (l2GMapmuExtra_1, solmuExtra_1, x1Tem5p);
         ReorderElement (l2GMapmuExtra2_1, solmuExtra2_1, x1Tem6p);
+        ReorderElement (l2GMapmuExtra3_1, solmuExtra3_1, x1Tem7p);
 
         double sideLength = fabs (x1[0][0] - x1[0][1]);
 
@@ -855,21 +926,21 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                 if (ielGroup == 13) {
                   double Mlumped = phi1x[ig][i] * weight1[ig];
-                  M1[ i * nDof1 + i ] +=  Mlumped;
-                  M2[ i * nDof1 + i ] += - Mlumped;
                   M1Extra[ i * nDof1 + i ] +=  Mlumped;
                   M3Extra[ i * nDof1 + i ] += - Mlumped;
                   M3Extra2[ i * nDof1 + i ] +=  Mlumped;
                   M4Extra2[ i * nDof1 + i ] += - Mlumped;
-                  Resu1_1[i] -= Mlumped * solmu_1[i];
-                  Resu2_1[i] -= - Mlumped * solmu_1[i];
-                  Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
+                  M1Extra3[ i * nDof1 + i ] +=  Mlumped;
+                  M2Extra3[ i * nDof1 + i ] += - Mlumped;
                   Resu1_1[i] -= Mlumped * solmuExtra_1[i];
                   Resu3_1[i] -= - Mlumped * solmuExtra_1[i];
                   ResmuExtra[i] -= Mlumped * (solu1_1[i] - solu3_1[i]);
                   Resu3_1[i] -= Mlumped * solmuExtra2_1[i];
                   Resu4_1[i] -= - Mlumped * solmuExtra2_1[i];
                   ResmuExtra2[i] -= Mlumped * (solu3_1[i] - solu4_1[i]);
+                  Resu1_1[i] -= Mlumped * solmu_1[i];
+                  Resu2_1[i] -= - Mlumped * solmu_1[i];
+                  ResmuExtra3[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
                 }
 
               }
@@ -920,8 +991,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 if (ielGroup == 6 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 14 || ielGroup == 15 || ielGroup == 17 || ielGroup == 20) cutOffIel = true;
                 if (jelGroup == 6 || jelGroup == 9 || jelGroup == 11 || jelGroup == 12 || jelGroup == 14 || jelGroup == 15 || jelGroup == 17 || jelGroup == 20) cutOffJel = true;
                 if (cutOffIel && cutOffJel) cutOff = 0.5;
-                else if( cutOffIel && jelGroup == 13) cutOff = 0.25;
-                else if( ielGroup == 13 && cutOffJel) cutOff = 0.5;
+                else if (cutOffIel && jelGroup == 13) cutOff = 0.25;
+                else if (ielGroup == 13 && cutOffJel) cutOff = 0.5;
                 else if (ielGroup == 13 && jelGroup == 13) cutOff = 0.25;
 
                 bool ielU1 = (ielGroup == 5 || ielGroup == 6 || ielGroup == 8 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 13) ? true : false;
@@ -1083,6 +1154,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             KK->add_matrix_blocked (Jacmu, l2GMapmu_1, l2GMapmu_1);
             KK->add_matrix_blocked (JacmuExtra, l2GMapmuExtra_1, l2GMapmuExtra_1);
             KK->add_matrix_blocked (JacmuExtra2, l2GMapmuExtra2_1, l2GMapmuExtra2_1);
+            KK->add_matrix_blocked (JacmuExtra3, l2GMapmuExtra3_1, l2GMapmuExtra3_1);
 
             if (iel == jel)  {
               if (ielGroup == 9) {
@@ -1114,11 +1186,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 RES->add_vector_blocked (Resmu, l2GMapmu_1);
               }
               if (ielGroup == 13) {
-                KK->add_matrix_blocked (M1, l2GMapmu_1, l2GMapu1_1); //M1 (mu rows and u1 columns)
-                KK->add_matrix_blocked (M1, l2GMapu1_1, l2GMapmu_1); //M1 transpose (u1 rows and mu columns)
-                KK->add_matrix_blocked (M2, l2GMapmu_1, l2GMapu2_1); //M2 (mu rows and u2 columns)
-                KK->add_matrix_blocked (M2, l2GMapu2_1, l2GMapmu_1); //M2 transpose (u2 rows and mu columns)
-                RES->add_vector_blocked (Resmu, l2GMapmu_1);
                 KK->add_matrix_blocked (M1Extra, l2GMapmuExtra_1, l2GMapu1_1); //M1Extra (muExtra rows and u1 columns)
                 KK->add_matrix_blocked (M1Extra, l2GMapu1_1, l2GMapmuExtra_1); //M1Extra transpose (u1 rows and muExtra columns)
                 KK->add_matrix_blocked (M3Extra, l2GMapmuExtra_1, l2GMapu3_1); //M3Extra (muExtra rows and u3 columns)
@@ -1129,6 +1196,11 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 KK->add_matrix_blocked (M4Extra2, l2GMapmuExtra2_1, l2GMapu4_1); //M4Extra2 (muExtra2 rows and u4 columns)
                 KK->add_matrix_blocked (M4Extra2, l2GMapu4_1, l2GMapmuExtra2_1); //M4Extra2 transpose (u4 rows and muExtra2 columns)
                 RES->add_vector_blocked (ResmuExtra2, l2GMapmuExtra2_1);
+                KK->add_matrix_blocked (M1Extra3, l2GMapmuExtra3_1, l2GMapu1_1); //M1Extra3 (muExtra3 rows and u1 columns)
+                KK->add_matrix_blocked (M1Extra3, l2GMapu1_1, l2GMapmuExtra3_1); //M1Extra3 transpose (u1 rows and muExtra3u columns)
+                KK->add_matrix_blocked (M2Extra3, l2GMapmuExtra3_1, l2GMapu2_1); //M2Extra3 (muExtra3 rows and u2 columns)
+                KK->add_matrix_blocked (M2Extra3, l2GMapu2_1, l2GMapmuExtra3_1); //M2Extra3 transpose (u2 rows and muExtra3 columns)
+                RES->add_vector_blocked (ResmuExtra3, l2GMapmuExtra3_1);
               }
             }
 

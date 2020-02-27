@@ -87,9 +87,10 @@ int main (int argc, char** argv) {
   mlSol.AddSolution ("u2", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("u3", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("u4", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution ("mu", LAGRANGE, FIRST, 2); //use for all the constraints and to impose u1=u2 on group 11
-  mlSol.AddSolution ("muExtra", LAGRANGE, FIRST, 2); // use to impose u2=u3 on group 11
-  mlSol.AddSolution ("muExtra2", LAGRANGE, FIRST, 2); // use to impose u3=u4 on group 11
+  mlSol.AddSolution ("mu", LAGRANGE, FIRST, 2); //use for all the constraints not on group 13
+  mlSol.AddSolution ("muExtra", LAGRANGE, FIRST, 2); // use to impose u2=u3 on group 13
+  mlSol.AddSolution ("muExtra2", LAGRANGE, FIRST, 2); // use to impose u3=u4 on group 13
+  mlSol.AddSolution ("muExtra3", LAGRANGE, FIRST, 2); // use to impose u1=u2 on group 13
 
 //   mlSolFine.AddSolution ("u_fine", LAGRANGE, FIRST, 2);
 //   mlSol.AddSolution ("u_local", LAGRANGE, FIRST, 2);
@@ -102,6 +103,7 @@ int main (int argc, char** argv) {
   mlSol.AddSolution ("muFlag", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("muExtraFlag", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("muExtra2Flag", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("muExtra3Flag", LAGRANGE, FIRST, 2);
 
   mlSol.Initialize ("All");
   mlSolFine.Initialize ("All");
@@ -146,6 +148,9 @@ int main (int argc, char** argv) {
   unsigned solmuExtra2Index = mlSol.GetIndex ("muExtra2");
   mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solmuExtra2Index, 0);
 
+  unsigned solmuExtra3Index = mlSol.GetIndex ("muExtra3");
+  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solmuExtra3Index, 0);
+
   //BEGIN assemble and solve nonlocal problem
   MultiLevelProblem ml_prob (&mlSol);
 
@@ -158,6 +163,7 @@ int main (int argc, char** argv) {
   system.AddSolutionToSystemPDE ("mu");
   system.AddSolutionToSystemPDE ("muExtra");
   system.AddSolutionToSystemPDE ("muExtra2");
+  system.AddSolutionToSystemPDE ("muExtra3");
 
   // ******* System FEM Assembly *******
   system.SetAssembleFunction (AssembleNonLocalSys);
