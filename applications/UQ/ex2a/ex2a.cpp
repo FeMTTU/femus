@@ -23,14 +23,15 @@
 using namespace femus;
 
 
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
-#define S_FRAC 0.99
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
+#define S_FRAC 0.001
 
 #define OP_L2       0
-#define OP_H1       0
-#define OP_Hhalf    1
+#define OP_H1       0.00001
+#define OP_Hhalf    0
 #define RHS_ONE     1
+
 
 double InitialValueU(const std::vector < double >& x)
 {
@@ -46,11 +47,11 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   dirichlet = true; //dirichlet
   value = 0.;
   }
-  else if ( facename == 2){
+  else if ( facename == 2) {
       dirichlet = true; //dirichlet
   value = 0.;  
 }
-  
+
   return dirichlet;
 }
 
@@ -308,9 +309,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   const double s_frac = S_FRAC;
 
-  const double check_limits = 1 - s_frac;
+  const double check_limits = 1.;//1. - s_frac; // - s_frac;
   
-  double C_ns = 1; //s_frac * pow ( 2, 2 * s_frac ) * tgamma ( (dim + 2.) / 2. ) / ( tgamma ( 0.5 ) * tgamma( 1 - s_frac ) );
+  double C_ns = 1.; //  s_frac * pow ( 2, 2 * s_frac ) * tgamma ( (dim + 2.) / 2. ) / ( tgamma ( 0.5 ) * tgamma( 1 - s_frac ) );
 
 
 
@@ -582,14 +583,14 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   
   
   
-  PetscViewer    viewer;
-  PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-  PetscObjectSetName((PetscObject)viewer,"FSI matrix");
-  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-  MatView((static_cast<PetscMatrix*> (MM))->mat(),viewer);
-//   MatView((static_cast<PetscMatrix*> (MM))->mat(),  PETSC_VIEWER_STDOUT_WORLD );
-  double a;
-  std::cin>>a;
+//   PetscViewer    viewer;
+//   PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+//   PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+//   PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//   MatView((static_cast<PetscMatrix*> (MM))->mat(),viewer);
+// //   MatView((static_cast<PetscMatrix*> (MM))->mat(),  PETSC_VIEWER_STDOUT_WORLD );
+//   double a;
+//   std::cin>>a;
 
   // ***************** END ASSEMBLY *******************
 }
