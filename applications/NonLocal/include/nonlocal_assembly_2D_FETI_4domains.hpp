@@ -920,6 +920,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 if (ielGroup == 6 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 14 || ielGroup == 15 || ielGroup == 17 || ielGroup == 20) cutOffIel = true;
                 if (jelGroup == 6 || jelGroup == 9 || jelGroup == 11 || jelGroup == 12 || jelGroup == 14 || jelGroup == 15 || jelGroup == 17 || jelGroup == 20) cutOffJel = true;
                 if (cutOffIel && cutOffJel) cutOff = 0.5;
+                else if( cutOffIel && jelGroup == 13) cutOff = 0.25;
+                else if( ielGroup == 13 && cutOffJel) cutOff = 0.5;
                 else if (ielGroup == 13 && jelGroup == 13) cutOff = 0.25;
 
                 bool ielU1 = (ielGroup == 5 || ielGroup == 6 || ielGroup == 8 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 13) ? true : false;
