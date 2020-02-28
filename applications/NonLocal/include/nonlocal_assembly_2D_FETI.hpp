@@ -573,13 +573,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                 for (unsigned i = 0; i < nDof1; i++) {
 
-                  unsigned solDofu1_i = msh->GetSolutionDof (i, iel, solu1Type);
-                  unsigned solDofu2_i = msh->GetSolutionDof (i, iel, solu2Type);
-
                   for (unsigned j = 0; j < nDof1; j++) {
-
-                    unsigned solDofu1_j = msh->GetSolutionDof (j, iel, solu1Type);
-                    unsigned solDofu2_j = msh->GetSolutionDof (j, iel, solu2Type);
 
                     double jacValue11 = cutOff * weight1[ig] * weight2 * kernel * (phi1x[ig][i]) * phi1x[ig][j];
 //                     if ( ( (*sol->_Sol[u1FlagIndex]) (solDofu1_i) > 0.) && ( (*sol->_Sol[u1FlagIndex]) (solDofu1_j) > 0.)) { //TODO remove
@@ -615,9 +609,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 for (unsigned i = 0; i < nDof2; i++) {
 
                   for (unsigned j = 0; j < nDof1; j++) {
-
-                    unsigned solDofu1_j = msh->GetSolutionDof (j, iel, solu1Type);
-                    unsigned solDofu2_j = msh->GetSolutionDof (j, iel, solu2Type);
 
                     double jacValue21 = cutOff * weight1[ig] * weight2 * kernel * (- phi2y[i]) * phi1x[ig][j];
 //                     if ( (u1LocalFlag_2[i]  > 0.) && ( (*sol->_Sol[u1FlagIndex]) (solDofu1_j) > 0.)) { //TODO remove

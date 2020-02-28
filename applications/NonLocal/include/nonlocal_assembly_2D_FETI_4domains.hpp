@@ -938,8 +938,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                   Resu3_1[i] -= Mlumped * solmuExtra2_1[i];
                   Resu4_1[i] -= - Mlumped * solmuExtra2_1[i];
                   ResmuExtra2[i] -= Mlumped * (solu3_1[i] - solu4_1[i]);
-                  Resu1_1[i] -= Mlumped * solmu_1[i];
-                  Resu2_1[i] -= - Mlumped * solmu_1[i];
+                  Resu1_1[i] -= Mlumped * solmuExtra3_1[i];
+                  Resu2_1[i] -= - Mlumped * solmuExtra3_1[i];
                   ResmuExtra3[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
                 }
 
@@ -1006,17 +1006,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                 for (unsigned i = 0; i < nDof1; i++) {
 
-                  unsigned solDofu1_i = msh->GetSolutionDof (i, iel, solu1Type);
-                  unsigned solDofu2_i = msh->GetSolutionDof (i, iel, solu2Type);
-                  unsigned solDofu3_i = msh->GetSolutionDof (i, iel, solu3Type);
-                  unsigned solDofu4_i = msh->GetSolutionDof (i, iel, solu4Type);
-
                   for (unsigned j = 0; j < nDof1; j++) {
-
-                    unsigned solDofu1_j = msh->GetSolutionDof (j, iel, solu1Type);
-                    unsigned solDofu2_j = msh->GetSolutionDof (j, iel, solu2Type);
-                    unsigned solDofu3_j = msh->GetSolutionDof (j, iel, solu3Type);
-                    unsigned solDofu4_j = msh->GetSolutionDof (j, iel, solu4Type);
 
                     double jacValue11 = cutOff * weight1[ig] * weight2 * kernel * (phi1x[ig][i]) * phi1x[ig][j];
                     if (ielU1 && jelU1) {
@@ -1068,9 +1058,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 for (unsigned i = 0; i < nDof2; i++) {
 
                   for (unsigned j = 0; j < nDof1; j++) {
-
-                    unsigned solDofu1_j = msh->GetSolutionDof (j, iel, solu1Type);
-                    unsigned solDofu2_j = msh->GetSolutionDof (j, iel, solu2Type);
 
                     double jacValue21 = cutOff * weight1[ig] * weight2 * kernel * (- phi2y[i]) * phi1x[ig][j];
                     if ( (jelU1) && (ielU1)) {
