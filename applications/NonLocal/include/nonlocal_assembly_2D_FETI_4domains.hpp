@@ -988,12 +988,21 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 double cutOff = 1.;
                 bool cutOffIel = false;
                 bool cutOffJel = false;
-                if (ielGroup == 6 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 14 || ielGroup == 15 || ielGroup == 17 || ielGroup == 20) cutOffIel = true;
-                if (jelGroup == 6 || jelGroup == 9 || jelGroup == 11 || jelGroup == 12 || jelGroup == 14 || jelGroup == 15 || jelGroup == 17 || jelGroup == 20) cutOffJel = true;
-                if (cutOffIel && cutOffJel) cutOff = 0.5;
-                else if (cutOffIel && jelGroup == 13) cutOff = 0.25;
-                else if (ielGroup == 13 && cutOffJel) cutOff = 0.5;
-                else if (ielGroup == 13 && jelGroup == 13) cutOff = 0.25;
+                
+                if ( (ielGroup == 6 || ielGroup == 9) && (jelGroup == 6 || jelGroup == 9) ) cutOff = 0.5;
+                else if ( (ielGroup == 6 || ielGroup == 9) && jelGroup == 13 ) cutOff = 0.5;
+                else if ( (ielGroup == 11 || ielGroup == 12) && (jelGroup == 11 || jelGroup == 12) ) cutOff = 0.5;
+                else if ( (ielGroup == 11 || ielGroup == 12) && jelGroup == 13 ) cutOff = 0.5;
+                else if ( (ielGroup == 14 || ielGroup == 15) && (jelGroup == 14 || jelGroup == 15) ) cutOff = 0.5;
+                else if ( (ielGroup == 14 || ielGroup == 15) && jelGroup == 13 ) cutOff = 0.5;
+                else if ( (ielGroup == 17 || ielGroup == 20) && (jelGroup == 17 || jelGroup == 20) ) cutOff = 0.5;
+                else if ( (ielGroup == 17 || ielGroup == 20) && jelGroup == 13 ) cutOff = 0.5;
+                
+                else if (ielGroup == 13 && (jelGroup == 6 || jelGroup == 9) ) cutOff = 0.5;
+                else if (ielGroup == 13 && (jelGroup == 11 || jelGroup == 12) ) cutOff = 0.5;
+                else if (ielGroup == 13 && (jelGroup == 14 || jelGroup == 15) ) cutOff = 0.5;
+                else if (ielGroup == 13 && (jelGroup == 17 || jelGroup == 20) ) cutOff = 0.5;
+                else if (ielGroup == 13 && jelGroup == 13 ) cutOff = 0.25;
 
                 bool ielU1 = (ielGroup == 5 || ielGroup == 6 || ielGroup == 8 || ielGroup == 9 || ielGroup == 11 || ielGroup == 12 || ielGroup == 13) ? true : false;
                 bool ielU2 = (ielGroup == 6 || ielGroup == 7 || ielGroup == 9 || ielGroup == 10 || ielGroup == 13 || ielGroup == 14 || ielGroup == 15) ? true : false;
