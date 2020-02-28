@@ -22,15 +22,16 @@
 
 using namespace femus;
 
-
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
-#define S_FRAC 0.001
+#define N_UNIFORM_LEVELS  3
+#define N_ERASED_LEVELS   2
+#define S_FRAC 0.5
 
 #define OP_L2       0
-#define OP_H1       0.00001
-#define OP_Hhalf    0
+#define OP_H1       0
+#define OP_Hhalf    1
 #define RHS_ONE     1
+
+#define USE_Cns     0
 
 
 double InitialValueU(const std::vector < double >& x)
@@ -83,10 +84,16 @@ int main(int argc, char** argv)
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
-//   const std::string mesh_file = "./input/Mesh_1_x.med";
+  //const std::string mesh_file = "./input/Mesh_1_x.med";
+//   const std::string mesh_file = "./input/Mesh_1_x_dir_neu_200_elem.med";
   const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
+  
+  //unsigned nx = static_cast <unsigned > ( floor ( pow(2, N_UNIFORM_LEVELS) + 0.5));
+  //mlMsh.GenerateCoarseBoxMesh(nx, 0, 0, -10000 / 2, 10000 / 2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
+  
+  //mlMsh.RefineMesh(1, 1, NULL);
 
   // erase all the coarse mesh levels
   const unsigned erased_levels = N_ERASED_LEVELS;
@@ -311,8 +318,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   const double check_limits = 1.;//1. - s_frac; // - s_frac;
   
-  double C_ns = 1.; //  s_frac * pow ( 2, 2 * s_frac ) * tgamma ( (dim + 2.) / 2. ) / ( tgamma ( 0.5 ) * tgamma( 1 - s_frac ) );
-
+//   double C_ns = /*2.; // */  ( s_frac * pow ( 2, 2 * s_frac ) * tgamma ( (dim + 2.) / 2. ) / ( tgamma ( 0.5 ) * tgamma( 1 - s_frac ) ));
+  double C_ns = 2 * (1 - USE_Cns) + USE_Cns *s_frac * pow ( 2, ( 2. * s_frac) ) * tgamma( ( dim + 2. * s_frac ) / 2. ) / ( pow(M_PI, dim / 2. ) 
+                * tgamma( 1 -  s_frac ) ) ;
 
 
 
@@ -540,13 +548,13 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               for(unsigned j = 0; j < nDof2; j++) {
 //                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
                                 
-                 CClocalII[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight2[jg] / denom;
-                             
-                 CClocalIJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * phi1[i] * weight1 * weight2[jg] / denom;
-                 
-                 CClocalJI[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] ) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
-                 
-                 CClocalJJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
+                 CClocalII[ i * nDof2 + j ] += 1. /*(C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight2[jg]*/ / denom;
+                                               
+                 CClocalIJ[ i * nDof2 + j ] += 1. /*(C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * phi1[i] * weight1 * weight2[jg]*/ / denom;
+                                               
+                 CClocalJI[ i * nDof2 + j ] += 1. /*(C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] ) * (- phi2[jg][i]) * weight1 * weight2[jg]*/ / denom;
+                                               
+                 CClocalJJ[ i * nDof2 + j ] += 1. /*(C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * (- phi2[jg][i]) * weight1 * weight2[jg]*/ / denom;
                  
                 
               }
@@ -583,12 +591,24 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   
   
   
-//   PetscViewer    viewer;
+  PetscViewer    viewer;
+  PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+  PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+  MatView((static_cast<PetscMatrix*> (MM))->mat(),viewer);
+//   MatView((static_cast<PetscMatrix*> (MM))->mat(),  PETSC_VIEWER_STDOUT_WORLD );
+  double a;
+  std::cin>>a;
+  
+ 
+//     PetscViewer    viewer;
 //   PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
 //   PetscObjectSetName((PetscObject)viewer,"FSI matrix");
 //   PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
 //   MatView((static_cast<PetscMatrix*> (MM))->mat(),viewer);
 // //   MatView((static_cast<PetscMatrix*> (MM))->mat(),  PETSC_VIEWER_STDOUT_WORLD );
+// 
+//   VecView((static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_WORLD );
 //   double a;
 //   std::cin>>a;
 
