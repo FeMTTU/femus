@@ -90,7 +90,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.GenerateCoarseBoxMesh(8,8,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+  mlMsh.GenerateCoarseBoxMesh(2, 2, 0, 0., 1., 0., 1., 0., 0., QUAD9, fe_quad_rule.c_str());
 //   mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
 //   //mlMsh.ReadCoarseMesh ( "./input/square_quad.neu", "seventh", scalingFactor );
 //   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -159,7 +159,7 @@ int main(int argc, char** args) {
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleNS_AD);
 
-  // initilaize and solve the system
+  // initialize and solve the system
   system.init();
   system.SetOuterSolver(PREONLY);
   system.MGsolve();
@@ -303,11 +303,12 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   double* phiP;
   
   
-  vector <double> phiMag;  // local test function
-  vector <double> phiMag_x; // local test function first order partial derivatives
-  phiMag.reserve(maxSize);
-  phiMag_x.reserve(maxSize * dim);
-
+  vector< vector <double> > phiMag(aux_mag_length);  // local test function
+  vector< vector <double> > phiMag_x(aux_mag_length); // local test function first order partial derivatives
+    for (unsigned  k = 0; k < aux_mag_length; k++) {
+       phiMag[k].reserve(maxSize);
+       phiMag_x[k].reserve(maxSize * dim);
+    }
   
   
   
@@ -340,13 +341,12 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
        }
        
        
-      std::vector < unsigned int > nDofsMag_vec_offset(aux_mag_length);
+      std::vector < unsigned int > nDofsMag_vec_offset(aux_mag_length + 1);
      
       nDofsMag_vec_offset[0] = 0;
-       for (unsigned int d = 1; d < nDofsMag_vec_offset.size(); d++)  nDofsMag_vec_offset[d] += nDofsMag_vec[d-1];
+       for (unsigned int d = 1; d <= nDofsMag_vec_offset.size(); d++)  nDofsMag_vec_offset[d] += nDofsMag_vec[d-1];
 
       
-      unsigned solMagType_scalar = solMagType_vec[0];
     
     unsigned nDofsVP = dim * nDofsV + nDofsP;
     
@@ -438,8 +438,10 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
       phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
       
-      msh->_finiteElement[ielGeom][solMagType_scalar]->Jacobian(coordX, ig, weight, phiMag, phiMag_x, boost::none);
-
+    for (unsigned  k = 0; k < aux_mag_length; k++) {
+      msh->_finiteElement[ielGeom][solMagType_vec[k]]->Jacobian(coordX, ig, weight, phiMag[k], phiMag_x[k], boost::none);
+    }
+    
       vector < adept::adouble > solV_gss(dim, 0);
       vector < vector < adept::adouble > > gradSolV_gss(dim);
 
@@ -470,7 +472,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
             vector < adept::adouble > solMag_qp(aux_mag_length, 0);
       for (unsigned  k = 0; k < aux_mag_length; k++) {
         for (unsigned i = 0; i < nDofsMag_vec[k]; i++) {
-          solMag_qp[k] += phiMag[i] * solMag[k][i];
+          solMag_qp[k] += phiMag[k][i] * solMag[k][i];
         }
       
       
@@ -488,7 +490,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
         }
 
         for (unsigned  k = 0; k < dim; k++) {
-          NSV[k] += -solP_gss * phiV_x[i * dim + k];   //pressure gradient
+          NSV[k] += - solP_gss * phiV_x[i * dim + k];   //pressure gradient
         }
 
         for (unsigned  k = 0; k < dim; k++) {
@@ -508,7 +510,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       
       for (unsigned  j = 0; j < aux_mag_length; j++) {
          for (unsigned i = 0; i < nDofsMag_vec[j]; i++) {
-          aResMag[j][i] += ( - phiMag[i] * solMag_qp[j] ) * weight;
+          aResMag[j][i] += ( - phiMag[j][i] * solMag_qp[j] ) * weight;
         }   
        }
 
