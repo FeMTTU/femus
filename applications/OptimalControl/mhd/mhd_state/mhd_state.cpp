@@ -251,16 +251,22 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
+   vector < unsigned > solMagPdeIndex(aux_mag_length);
+   for (unsigned int d = 0; d < solMagPdeIndex.size(); d++) {
+      const std::string  unknown_name =  concatenate("B", d);
+      solMagPdeIndex[d] = mlPdeSys->GetSolPdeIndex(unknown_name.c_str());
+   } 
   
   
-  vector < vector < adept::adouble > >  solV(dim);    // local solution
-  vector < adept::adouble >  solP; // local solution
+  
+  vector < vector < adept::adouble > >  solV(dim);
+  vector < adept::adouble >  solP;
 
-  vector < vector < adept::adouble > >  solMag(aux_mag_length);    // local solution
+  vector < vector < adept::adouble > >  solMag(aux_mag_length);
 
   
-  vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
-  vector< adept::adouble > aResP; // local redidual vector
+  vector< vector < adept::adouble > > aResV(dim);    
+  vector< adept::adouble > aResP;
 
   
   vector< vector < adept::adouble > > aResMag(aux_mag_length);    // local redidual vector
@@ -308,13 +314,13 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   double weight; // gauss point weight
 
   vector< int > sysDof; // local to global pdeSys dofs
-  sysDof.reserve((dim + 1) *maxSize);
+  sysDof.reserve(2 * aux_mag_length * maxSize);
 
   vector< double > Res; // local redidual vector
-  Res.reserve((dim + 1) *maxSize);
+  Res.reserve(2 * aux_mag_length  * maxSize);
 
   vector < double > Jac;
-  Jac.reserve((dim + 1) *maxSize * (dim + 1) *maxSize);
+  Jac.reserve(2 * aux_mag_length * maxSize * 2 * aux_mag_length * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
@@ -333,12 +339,25 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
           nDofsMag_vec[d] = msh->GetElementDofNumber(iel, solMagType_vec[d]);
        }
        
-       unsigned nDofsMag_scalar   = nDofsMag_vec[0];
-       unsigned solMagType_scalar = solMagType_vec[0];
+       
+      std::vector < unsigned int > nDofsMag_vec_offset(aux_mag_length);
+     
+      nDofsMag_vec_offset[0] = 0;
+       for (unsigned int d = 1; d < nDofsMag_vec_offset.size(); d++)  nDofsMag_vec_offset[d] += nDofsMag_vec[d-1];
+
+      
+      unsigned solMagType_scalar = solMagType_vec[0];
     
     unsigned nDofsVP = dim * nDofsV + nDofsP;
+    
+    unsigned nDofsMag = 0;
+       for (unsigned int d = 0; d < nDofsMag_vec.size(); d++)  nDofsMag += nDofsMag_vec[d];
+
+    unsigned nDofsTot = nDofsVP + nDofsMag;
+       
+       
     // resize local arrays
-    sysDof.resize(nDofsVP);
+    sysDof.resize(nDofsTot);
 
     for (unsigned  k = 0; k < dim; k++) {
       solV[k].resize(nDofsV);
@@ -353,15 +372,15 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     
     for (unsigned  k = 0; k < dim; k++) {
       aResV[k].resize(nDofsV);    //resize
-      std::fill(aResV[k].begin(), aResV[k].end(), 0);    //set aRes to zero
+      std::fill(aResV[k].begin(), aResV[k].end(), 0.);    //set aRes to zero
     }
 
     aResP.resize(nDofsP);    //resize
-    std::fill(aResP.begin(), aResP.end(), 0);    //set aRes to zero
+    std::fill(aResP.begin(), aResP.end(), 0.);    //set aRes to zero
     
     for (unsigned  k = 0; k < aResMag.size(); k++) {
       aResMag[k].resize( nDofsMag_vec[k] );    //resize
-      std::fill(aResMag[k].begin(), aResMag[k].end(), 0);    //set aRes to zero
+      std::fill(aResMag[k].begin(), aResMag[k].end(), 0.);    //set aRes to zero
     }
     
     
@@ -376,19 +395,24 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       }
     }
 
+    const unsigned press_offset = dim * nDofsV;
+    
     for (unsigned i = 0; i < nDofsP; i++) {
       unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);    // global to global mapping between solution node and solution dof
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);      // global extraction and local storage for the solution
-      sysDof[i + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+      sysDof[i + press_offset] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
     
-     for (unsigned i = 0; i < nDofsMag_scalar; i++) {
-      unsigned solMagDof = msh->GetSolutionDof(i, iel, solMagType_scalar);    // global to global mapping between solution node and solution dof
-
+    
+    const unsigned mag_offset = dim * nDofsV + nDofsP;
+    
       for (unsigned  k = 0; k < solMag.size(); k++) {
+
+          for (unsigned i = 0; i < nDofsMag_vec[k]; i++) {
+      unsigned solMagDof = msh->GetSolutionDof(i, iel, solMagType_vec[k]);    // global to global mapping between solution node and solution dof
+
         solMag[k][i] = (*sol->_Sol[solMagIndex[k]])(solMagDof);      // global extraction and local storage for the solution
-    std::cout << "================= Fill sysdof correctly " << std::endl;
-// // //         sysDof[i + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+        sysDof[mag_offset + i + nDofsMag_vec_offset[k] ] = pdeSys->GetSystemDof(solMagIndex[k], solMagPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }   
     
@@ -444,8 +468,8 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
       
             vector < adept::adouble > solMag_qp(aux_mag_length, 0);
-      for (unsigned i = 0; i < nDofsMag_scalar; i++) {
-        for (unsigned  k = 0; k < aux_mag_length; k++) {
+      for (unsigned  k = 0; k < aux_mag_length; k++) {
+        for (unsigned i = 0; i < nDofsMag_vec[k]; i++) {
           solMag_qp[k] += phiMag[i] * solMag[k][i];
         }
       
@@ -482,8 +506,8 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
         }
       } // end phiP_i loop
       
-       for (unsigned i = 0; i < nDofsMag_scalar; i++) {
-             for (unsigned  j = 0; j < aux_mag_length; j++) {
+      for (unsigned  j = 0; j < aux_mag_length; j++) {
+         for (unsigned i = 0; i < nDofsMag_vec[j]; i++) {
           aResMag[j][i] += ( - phiMag[i] * solMag_qp[j] ) * weight;
         }   
        }
@@ -498,7 +522,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     // Add the local Matrix/Vector into the global Matrix/Vector
 
     //copy the value of the adept::adoube aRes in double Res and store them in RES
-    Res.resize(nDofsVP);    //resize
+    Res.resize(nDofsTot);    //resize
 
     for (int i = 0; i < nDofsV; i++) {
       for (unsigned  k = 0; k < dim; k++) {
@@ -507,13 +531,13 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     }
 
     for (int i = 0; i < nDofsP; i++) {
-      Res[ i + dim * nDofsV ] = -aResP[i].value();
+      Res[ i + press_offset ] = -aResP[i].value();
 
     }
     
-    for (int i = 0; i < nDofsMag_scalar; i++) {
-      for (unsigned  k = 0; k < aux_mag_length; k++) {
-        Res[ i +  k * nDofsMag_scalar ] = - aResMag[k][i].value();
+    for (unsigned  k = 0; k < aux_mag_length; k++) {
+      for (int i = 0; i < aResMag[k].size(); i++) {
+        Res[ mag_offset + i +  nDofsMag_vec_offset[k] ] = - aResMag[k][i].value();
       }
     }
 
@@ -522,10 +546,10 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
     //Extarct and store the Jacobian
 
-    Jac.resize(nDofsVP * nDofsVP);
+    Jac.resize(nDofsTot * nDofsTot);
     // define the dependent variables
 
-    // how to fill element Jacobian with AD ****************
+    // how to fill element Jacobian with AD - dependent variables ****************
     for (unsigned  k = 0; k < dim; k++) {
       s.dependent(&aResV[k][0], nDofsV);
     }
@@ -536,7 +560,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       s.dependent(&aResMag[k][0], nDofsMag_vec[k]);
     }
 
-    // define the independent variables
+    // how to fill element Jacobian with AD - dependent variables - end ****************
+    
+    // how to fill element Jacobian with AD - independent variables ****************
     for (unsigned  k = 0; k < dim; k++) {
       s.independent(&solV[k][0], nDofsV);
     }
@@ -546,10 +572,10 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     for (unsigned  k = 0; k < aux_mag_length; k++) {
       s.independent(&solMag[k][0], nDofsMag_vec[k]);
     }
+    // how to fill element Jacobian with AD - independent variables - end ****************
 
     // get the and store jacobian matrix (row-major)
     s.jacobian(&Jac[0] , true);
-    // how to fill element Jacobian with AD - end ****************
     
     KK->add_matrix_blocked(Jac, sysDof, sysDof);
 
