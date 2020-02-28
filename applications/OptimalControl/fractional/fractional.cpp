@@ -34,24 +34,22 @@ using namespace femus;
 #define USE_Cns     0
 
 
-double InitialValueU(const std::vector < double >& x)
-{
+double InitialValueU(const std::vector < double >& x) {
   return 0. * x[0] * x[0];
 }
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
-{
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = false; //dirichlet
   value = 0.;
-  
-  if (facename == 1) {
-  dirichlet = true; //dirichlet
-  value = 0.;
+
+  if(facename == 1) {
+    dirichlet = true; //dirichlet
+    value = 0.;
   }
-  else if ( facename == 2) {
-      dirichlet = true; //dirichlet
-  value = 0.;  
-}
+  else if(facename == 2) {
+    dirichlet = true; //dirichlet
+    value = 0.;
+  }
 
   return dirichlet;
 }
@@ -61,8 +59,7 @@ void GetHsNorm(const unsigned level, MultiLevelProblem& ml_prob);
 void AssembleFracProblem(MultiLevelProblem& ml_prob);
 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
 
 
   //quadr rule order
@@ -89,10 +86,10 @@ int main(int argc, char** argv)
   const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
   mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
-  
+
   //unsigned nx = static_cast <unsigned > ( floor ( pow(2, N_UNIFORM_LEVELS) + 0.5));
   //mlMsh.GenerateCoarseBoxMesh(nx, 0, 0, -10000 / 2, 10000 / 2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
-  
+
   //mlMsh.RefineMesh(1, 1, NULL);
 
   // erase all the coarse mesh levels
@@ -201,8 +198,7 @@ int main(int argc, char** argv)
 
 
 
-void AssembleFracProblem(MultiLevelProblem& ml_prob)
-{
+void AssembleFracProblem(MultiLevelProblem& ml_prob) {
 //void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("FracProblem");
@@ -292,14 +288,14 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //   vector < double > CClocal;
 //   CClocal.reserve(maxSize * maxSize);
   vector < double > CClocalII;
-  CClocalII.reserve(maxSize * maxSize);  
+  CClocalII.reserve(maxSize * maxSize);
   vector < double > CClocalIJ;
   CClocalIJ.reserve(maxSize * maxSize);
   vector < double > CClocalJI;
-  CClocalJI.reserve(maxSize * maxSize);  
+  CClocalJI.reserve(maxSize * maxSize);
   vector < double > CClocalJJ;
-  CClocalJJ.reserve(maxSize * maxSize);  
-  
+  CClocalJJ.reserve(maxSize * maxSize);
+
   MM->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero();
 
@@ -317,10 +313,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   const double s_frac = S_FRAC;
 
   const double check_limits = 1.;//1. - s_frac; // - s_frac;
-  
+
 //   double C_ns = /*2.; // */  ( s_frac * pow ( 2, 2 * s_frac ) * tgamma ( (dim + 2.) / 2. ) / ( tgamma ( 0.5 ) * tgamma( 1 - s_frac ) ));
-  double C_ns = 2 * (1 - USE_Cns) + USE_Cns *s_frac * pow ( 2, ( 2. * s_frac) ) * tgamma( ( dim + 2. * s_frac ) / 2. ) / ( pow(M_PI, dim / 2. ) 
-                * tgamma( 1 -  s_frac ) ) ;
+  double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim + 2. * s_frac) / 2.) / (pow(M_PI, dim / 2.)
+                * tgamma(1 -  s_frac)) ;
 
 
 
@@ -463,15 +459,19 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //         Res_nonlocal.assign(nDof1, 0);    //resize
         Res_nonlocalI.assign(nDof1, 0);    //resize
         Res_nonlocalJ.assign(nDof1, 0);    //resize
-                
+
         // *** Gauss point loop ***
         const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
 
 
         double weight1;
         vector < double > phi1;  // local test function
+
+        double weight3;
+        vector < double > phi3;  // local test function
         double solX = 0.;
-        std::vector<double> sol_u_x(space_dim);     std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
+        std::vector<double> sol_u_x(space_dim);
+        std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
 
 
         for(unsigned ig = 0; ig < igNumber; ig++) {
@@ -484,7 +484,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
           for(unsigned i = 0; i < nDof1; i++) {
             solX += solu1[i] * phi1[i];
-            for (unsigned d = 0; d < sol_u_x.size(); d++)   sol_u_x[d] += solu1[i] * phi_x[i * dim + d];
+            for(unsigned d = 0; d < sol_u_x.size(); d++)   sol_u_x[d] += solu1[i] * phi_x[i * dim + d];
             for(unsigned k = 0; k < dim; k++) {
               xg1[k] += x1[k][i] * phi1[i];
             }
@@ -498,34 +498,95 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               }
               double mass_res_i = phi1[i] * solX ;
               Res_local[ i ] += OP_L2 * weight1 * mass_res_i ;
-              Res_local[ i ] += - RHS_ONE * weight1 * (phi1[i] * (-1.)); 
+              Res_local[ i ] += - RHS_ONE * weight1 * (phi1[i] * (-1.));
             }
-            
+
 //          ---------------------
 //          Laplacian assembly
 //          Residual
             std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
-            for (unsigned i = 0; i < nDof1; i++) {
-                double laplace_res_du_u_i = 0.;
-                    for (unsigned kdim = 0; kdim < dim; kdim++) {
-                       laplace_res_du_u_i  +=  phi_x   [i * dim + kdim] * sol_u_x[kdim];
-                    }
-                Res_local[ i ] += - OP_H1 * weight1 * ( - laplace_res_du_u_i);
-             
-//          Matrix  
-                for (unsigned j = 0; j < nDof1; j++) {
- 
-                double laplace_mat_i_j = 0.;
-                    for (unsigned kdim = 0; kdim < dim; kdim++) {
-                        laplace_mat_i_j    += phi_x   [i * dim + kdim] *
-                                                   phi_x   [j * dim + kdim];
-                    }
-                MMlocal[ i * nDof1 + j ]  += OP_H1 * weight1 *  laplace_mat_i_j;
-                }
-            }
-//          ---------------------
+            for(unsigned i = 0; i < nDof1; i++) {
+              double laplace_res_du_u_i = 0.;
+              for(unsigned kdim = 0; kdim < dim; kdim++) {
+                laplace_res_du_u_i  +=  phi_x   [i * dim + kdim] * sol_u_x[kdim];
+              }
+              Res_local[ i ] += - OP_H1 * weight1 * (- laplace_res_du_u_i);
 
+//          Matrix
+              for(unsigned j = 0; j < nDof1; j++) {
+
+                double laplace_mat_i_j = 0.;
+                for(unsigned kdim = 0; kdim < dim; kdim++) {
+                  laplace_mat_i_j    += phi_x   [i * dim + kdim] *
+                                        phi_x   [j * dim + kdim];
+                }
+                MMlocal[ i * nDof1 + j ]  += OP_H1 * weight1 *  laplace_mat_i_j;
+              }
+            }
+
+            std::vector < std::vector < std::vector < std::vector < double > > > > aX;
+
+            std::vector<std::vector<double>> x3(dim);
+            for(unsigned k = 0; k < dim; k++) {
+              x3[k].resize(nDofx1);
+              for(unsigned k = 0; k < dim; k++) {
+                x3[k][0] = x1[k][0];
+                x3[k][1] = 0.5 * (x3[k][0] + xg1[k]);
+                x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
+              }
+            }
+
+            std::cout.precision(14);
+            unsigned Nsplit = 10;
+            for(unsigned split = 0; split <= Nsplit; split++) {
+              for(unsigned jg = 0; jg < igNumber; jg++) {
+                msh->_finiteElement[ielGeom1][solType]->Jacobian(x3, jg, weight3, phi3, phi_x);
+                vector < double > xg3(dim, 0.);
+                for(unsigned i = 0; i < nDof1; i++) {
+                  for(unsigned k = 0; k < dim; k++) {
+                    xg3[k] += x3[k][i] * phi3[i];
+                  }
+                }
+
+                std::vector<double> xi(dim, 0.);
+                for(unsigned k = 0; k < dim; k++) {
+                  xi[k] = (xg3[k] - x1[k][0]) / (x1[k][1] - x1[k][0]);
+                }
+                
+                
+                phi3[0] = 0.5 * (1 - xi[0]) * (-xi[0]);
+                phi3[1] = 0.5 * (1 + xi[0]) * ( xi[0]);
+                phi3[2] = (1. - xi[0] * xi[0]);
+                double solY = 0.;
+                for(unsigned i = 0; i < nDof1; i++) {
+                  solY += solu1[i] * phi3[i];
+                }
+                
+                std::cout << iel << " " << split << " " << xg3[0] <<" " << xi[0]<< " "<< xg1[0] << std::endl;
+                
+               
+                
+              }
+              
+              if(split == Nsplit - 1){
+                for(unsigned k = 0; k < dim; k++) {
+                  x3[k][0] = x3[k][1];
+                  x3[k][1] = xg1[k];
+                  x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
+                }
+              }
+              else{
+                for(unsigned k = 0; k < dim; k++) {
+                  x3[k][0] = x3[k][1];
+                  x3[k][1] = 0.5 * (x3[k][0] + xg1[k]);
+                  x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
+                }
+              }
+              
+            }
           }
+
+
 
           for(unsigned jg = 0; jg < jgNumber; jg++) {
 
@@ -534,29 +595,29 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               dist_xyz += (xg1[k] - xg2[jg][k]) * (xg1[k] - xg2[jg][k]);
             }
 
-            const double denom = pow(dist_xyz, (double) ( (dim / 2.) + s_frac ) );
+            const double denom = pow(dist_xyz, (double)((dim / 2.) + s_frac));
 
             for(unsigned i = 0; i < nDof1; i++) {
 
 //                Res_nonlocal[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg]  / denom;
-               
-               
-               Res_nonlocalI[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i]) * weight1 * weight2[jg]  / denom;
 
-               Res_nonlocalJ[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (- phi2[jg][i]) * weight1 * weight2[jg]  / denom;
+
+              Res_nonlocalI[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i]) * weight1 * weight2[jg]  / denom;
+
+              Res_nonlocalJ[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (- phi2[jg][i]) * weight1 * weight2[jg]  / denom;
 
               for(unsigned j = 0; j < nDof2; j++) {
 //                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
-                                
-                 CClocalII[ i * nDof2 + j ] += 1. /*(C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight2[jg]*/ / denom;
-                                               
-                 CClocalIJ[ i * nDof2 + j ] += 1. /*(C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * phi1[i] * weight1 * weight2[jg]*/ / denom;
-                                               
-                 CClocalJI[ i * nDof2 + j ] += 1. /*(C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] ) * (- phi2[jg][i]) * weight1 * weight2[jg]*/ / denom;
-                                               
-                 CClocalJJ[ i * nDof2 + j ] += 1. /*(C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * (- phi2[jg][i]) * weight1 * weight2[jg]*/ / denom;
-                 
-                
+
+                CClocalII[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight2[jg] / denom;
+
+                CClocalIJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * phi1[i] * weight1 * weight2[jg] / denom;
+
+                CClocalJI[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
+
+                CClocalJJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
+
+
               }
 
             }
@@ -565,18 +626,18 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
           } //endl jg loop
         } //endl ig loop
-        
-        if(iel == jel){ 
-            MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
-            RES->add_vector_blocked(Res_local, l2GMap1);
+
+        if(iel == jel) {
+          MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
+          RES->add_vector_blocked(Res_local, l2GMap1);
         }
         //MM->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
-        
+
         MM->add_matrix_blocked(CClocalII, l2GMap1, l2GMap1);
         MM->add_matrix_blocked(CClocalIJ, l2GMap1, l2GMap2);
         MM->add_matrix_blocked(CClocalJI, l2GMap2, l2GMap1);
         MM->add_matrix_blocked(CClocalJJ, l2GMap2, l2GMap2);
-        
+
 //         RES->add_vector_blocked(Res_nonlocal, l2GMap1);
         RES->add_vector_blocked(Res_nonlocalI, l2GMap1);
         RES->add_vector_blocked(Res_nonlocalJ, l2GMap2);
@@ -588,26 +649,26 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   MM->close();
   RES->close();
-  
-  
-  
-  PetscViewer    viewer;
-  PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-  PetscObjectSetName((PetscObject)viewer,"FSI matrix");
-  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-  MatView((static_cast<PetscMatrix*> (MM))->mat(),viewer);
-//   MatView((static_cast<PetscMatrix*> (MM))->mat(),  PETSC_VIEWER_STDOUT_WORLD );
-  double a;
-  std::cin>>a;
-  
- 
+
+
+
+//   PetscViewer    viewer;
+//   PetscViewerDrawOpen(PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+//   PetscObjectSetName((PetscObject)viewer, "FSI matrix");
+//   PetscViewerPushFormat(viewer, PETSC_VIEWER_DRAW_LG);
+//   MatView((static_cast<PetscMatrix*>(MM))->mat(), viewer);
+// //   MatView((static_cast<PetscMatrix*> (MM))->mat(),  PETSC_VIEWER_STDOUT_WORLD );
+//   double a;
+//   std::cin >> a;
+
+
 //     PetscViewer    viewer;
 //   PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
 //   PetscObjectSetName((PetscObject)viewer,"FSI matrix");
 //   PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
 //   MatView((static_cast<PetscMatrix*> (MM))->mat(),viewer);
 // //   MatView((static_cast<PetscMatrix*> (MM))->mat(),  PETSC_VIEWER_STDOUT_WORLD );
-// 
+//
 //   VecView((static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_WORLD );
 //   double a;
 //   std::cin>>a;
@@ -624,8 +685,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
 
 
-void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
-{
+void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob) {
 
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
