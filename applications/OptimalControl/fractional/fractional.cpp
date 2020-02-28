@@ -36,11 +36,13 @@ using namespace femus;
 #define Nsplit      4
 
 
-double InitialValueU(const std::vector < double >& x) {
+double InitialValueU(const std::vector < double >& x)
+{
   return 0. * x[0] * x[0];
 }
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
+{
   bool dirichlet = false; //dirichlet
   value = 0.;
 
@@ -61,7 +63,8 @@ void GetHsNorm(const unsigned level, MultiLevelProblem& ml_prob);
 void AssembleFracProblem(MultiLevelProblem& ml_prob);
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 
 
   //quadr rule order
@@ -200,7 +203,8 @@ int main(int argc, char** argv) {
 
 
 
-void AssembleFracProblem(MultiLevelProblem& ml_prob) {
+void AssembleFracProblem(MultiLevelProblem& ml_prob)
+{
 //void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("FracProblem");
@@ -290,8 +294,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
   Res_nonlocalI_4.reserve(maxSize);  // local redidual vector
   vector< double >         Res_nonlocalJ_4;
   Res_nonlocalJ_4.reserve(maxSize);  // local redidual vector
-  
-    vector < double > CClocalII_3;
+
+  vector < double > CClocalII_3;
   CClocalII_3.reserve(maxSize * maxSize);
   vector < double > CClocalIJ_3;
   CClocalIJ_3.reserve(maxSize * maxSize);
@@ -299,8 +303,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
   CClocalJI_3.reserve(maxSize * maxSize);
   vector < double > CClocalJJ_3;
   CClocalJJ_3.reserve(maxSize * maxSize);
-  
-    vector < double > CClocalII_4;
+
+  vector < double > CClocalII_4;
   CClocalII_4.reserve(maxSize * maxSize);
   vector < double > CClocalIJ_4;
   CClocalIJ_4.reserve(maxSize * maxSize);
@@ -308,7 +312,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
   CClocalJI_4.reserve(maxSize * maxSize);
   vector < double > CClocalJJ_4;
   CClocalJJ_4.reserve(maxSize * maxSize);
-  
+
 //   Non local matrices and vectors for H^s laplacian operator
 //   vector< double >         Res_nonlocal;
 //   Res_nonlocal.reserve(maxSize);  // local redidual vector
@@ -488,23 +492,23 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
 //         Res_nonlocal.assign(nDof1, 0);    //resize
         Res_nonlocalI.assign(nDof1, 0);    //resize
         Res_nonlocalJ.assign(nDof1, 0);    //resize
-        
-        if(iel == jel){
-            Res_local.assign(nDof1, 0);    //resize
-            MMlocal.assign(nDof1 * nDof1, 0.); 
-        if( Nsplit != 0 ){
+
+        if(iel == jel) {
+          Res_local.assign(nDof1, 0);    //resize
+          MMlocal.assign(nDof1 * nDof1, 0.);
+          if(Nsplit != 0) {
 //             Vectors and matrices for adaptive quadrature
             Res_nonlocalI_3.assign(nDof1, 0);    //resize
             Res_nonlocalI_4.assign(nDof1, 0);    //resize
-            CClocalII_3.assign(nDof1 * nDof1, 0.); 
-            CClocalIJ_3.assign(nDof1 * nDof1, 0.); 
-            CClocalJI_3.assign(nDof1 * nDof1, 0.); 
-            CClocalJJ_3.assign(nDof1 * nDof1, 0.); 
-            CClocalII_4.assign(nDof1 * nDof1, 0.); 
-            CClocalIJ_4.assign(nDof1 * nDof1, 0.); 
-            CClocalJI_4.assign(nDof1 * nDof1, 0.); 
-            CClocalJJ_4.assign(nDof1 * nDof1, 0.); 
-        }
+            CClocalII_3.assign(nDof1 * nDof1, 0.);
+            CClocalIJ_3.assign(nDof1 * nDof1, 0.);
+            CClocalJI_3.assign(nDof1 * nDof1, 0.);
+            CClocalJJ_3.assign(nDof1 * nDof1, 0.);
+            CClocalII_4.assign(nDof1 * nDof1, 0.);
+            CClocalIJ_4.assign(nDof1 * nDof1, 0.);
+            CClocalJI_4.assign(nDof1 * nDof1, 0.);
+            CClocalJJ_4.assign(nDof1 * nDof1, 0.);
+          }
         }
 
         // *** Gauss point loop ***
@@ -572,7 +576,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
                 MMlocal[ i * nDof1 + j ]  += OP_H1 * weight1 *  laplace_mat_i_j;
               }
             }
-            
+
 //          ---------------------
 //          Adaptive quadrature for iel == jel
 
@@ -594,162 +598,162 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
             }
 
             std::cout.precision(14);
-            if(Nsplit != 0){
-            for(unsigned split = 0; split <= Nsplit; split++) {
-              for(unsigned jg = 0; jg < igNumber; jg++) {
-                msh->_finiteElement[ielGeom1][solType]->Jacobian(x3, jg, weight3, phi3, phi_x);
-                msh->_finiteElement[ielGeom1][solType]->Jacobian(x4, jg, weight4, phi4, phi_x);
-                vector < double > xg3(dim, 0.);
-                vector < double > xg4(dim, 0.);
-                for(unsigned i = 0; i < nDof1; i++) {
+            if(Nsplit != 0) {
+              for(unsigned split = 0; split <= Nsplit; split++) {
+                for(unsigned jg = 0; jg < igNumber; jg++) {
+                  msh->_finiteElement[ielGeom1][solType]->Jacobian(x3, jg, weight3, phi3, phi_x);
+                  msh->_finiteElement[ielGeom1][solType]->Jacobian(x4, jg, weight4, phi4, phi_x);
+                  vector < double > xg3(dim, 0.);
+                  vector < double > xg4(dim, 0.);
+                  for(unsigned i = 0; i < nDof1; i++) {
+                    for(unsigned k = 0; k < dim; k++) {
+                      xg3[k] += x3[k][i] * phi3[i];
+                      xg4[k] += x4[k][i] * phi4[i];
+                    }
+                  }
+
+                  std::vector<double> xi3(dim, 0.);
+                  std::vector<double> xi4(dim, 0.);
                   for(unsigned k = 0; k < dim; k++) {
-                    xg3[k] += x3[k][i] * phi3[i];
-                    xg4[k] += x4[k][i] * phi4[i];
+                    xi3[k] = (xg3[k] - x1[k][0]) / (x1[k][1] - x1[k][0]);
+                    xi4[k] = (xg4[k] - x1[k][0]) / (x1[k][1] - x1[k][0]);
+                  }
+
+                  phi3[0] = 0.5 * (1 - xi3[0]) * (-xi3[0]);
+                  phi3[1] = 0.5 * (1 + xi3[0]) * (xi3[0]);
+                  phi3[2] = (1. - xi3[0] * xi3[0]);
+                  phi4[0] = 0.5 * (1 - xi4[0]) * (-xi4[0]);
+                  phi4[1] = 0.5 * (1 + xi4[0]) * (xi4[0]);
+                  phi4[2] = (1. - xi4[0] * xi4[0]);
+                  double solY3 = 0.;
+                  double solY4 = 0.;
+                  for(unsigned i = 0; i < nDof1; i++) {
+                    solY3 += solu1[i] * phi3[i];
+                    solY4 += solu1[i] * phi4[i];
+                  }
+
+
+                  double dist_xyz3 = 0;
+                  double dist_xyz4 = 0;
+                  for(unsigned k = 0; k < dim; k++) {
+                    dist_xyz3 += (xg1[k] - xg3[k]) * (xg1[k] - xg3[k]);
+                    dist_xyz4 += (xg1[k] - xg4[k]) * (xg1[k] - xg4[k]);
+                  }
+                  std::cout << "++++++  " << dist_xyz3 << "  " << dist_xyz4 << "\n";
+
+                  const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
+                  const double denom4 = pow(dist_xyz4, (double)((dim / 2.) + s_frac));
+
+                  for(unsigned i = 0; i < nDof1; i++) {
+
+                    Res_nonlocalI_3[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY3) * (phi1[i]) * weight1 * weight3  / denom3;
+
+                    Res_nonlocalJ_3[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY3) * (- phi3[i]) * weight1 * weight3  / denom3;
+
+                    Res_nonlocalI_4[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY4) * (phi1[i]) * weight1 * weight4  / denom4;
+
+                    Res_nonlocalJ_4[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY4) * (- phi4[i]) * weight1 * weight4  / denom4;
+
+                    for(unsigned j = 0; j < nDof2; j++) {
+//                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
+
+                      CClocalII_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight3 / denom3;
+
+                      CClocalIJ_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi3[j]) * phi1[i] * weight1 * weight3 / denom3;
+
+                      CClocalJI_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi3[i]) * weight1 * weight3 / denom3;
+
+                      CClocalJJ_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi3[j]) * (- phi3[i]) * weight1 * weight3 / denom3;
+
+                      CClocalII_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight4 / denom4;
+
+                      CClocalIJ_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi4[j]) * phi1[i] * weight1 * weight4 / denom4;
+
+                      CClocalJI_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi4[i]) * weight1 * weight4 / denom4;
+
+                      CClocalJJ_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi4[j]) * (- phi4[i]) * weight1 * weight4 / denom4;
+
+                    }
+                  }
+
+
+
+
+                }
+
+                if(split == Nsplit - 1) {
+                  for(unsigned k = 0; k < dim; k++) {
+                    x3[k][0] = x3[k][1];
+                    x3[k][1] = xg1[k];
+                    x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
+                    x4[k][1] = x4[k][0];
+                    x4[k][0] = xg1[k];
+                    x4[k][2] = 0.5 * (x4[k][0] + x4[k][1]);
+                  }
+                }
+                else {
+                  for(unsigned k = 0; k < dim; k++) {
+                    x3[k][0] = x3[k][1];
+                    x3[k][1] = 0.5 * (x3[k][0] + xg1[k]);
+                    x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
+                    x4[k][1] = x4[k][0];
+                    x4[k][0] = 0.5 * (x4[k][1] + xg1[k]);
+                    x4[k][2] = 0.5 * (x4[k][0] + x4[k][1]);
                   }
                 }
 
-                std::vector<double> xi3(dim, 0.);
-                std::vector<double> xi4(dim, 0.);
-                for(unsigned k = 0; k < dim; k++) {
-                  xi3[k] = (xg3[k] - x1[k][0]) / (x1[k][1] - x1[k][0]);
-                  xi4[k] = (xg4[k] - x1[k][0]) / (x1[k][1] - x1[k][0]);
-                }
-                
-                phi3[0] = 0.5 * (1 - xi3[0]) * (-xi3[0]);
-                phi3[1] = 0.5 * (1 + xi3[0]) * ( xi3[0]);
-                phi3[2] = (1. - xi3[0] * xi3[0]);
-                phi4[0] = 0.5 * (1 - xi4[0]) * (-xi4[0]);
-                phi4[1] = 0.5 * (1 + xi4[0]) * ( xi4[0]);
-                phi4[2] = (1. - xi4[0] * xi4[0]);
-                double solY3 = 0.;
-                double solY4 = 0.;
-                for(unsigned i = 0; i < nDof1; i++) {
-                  solY3 += solu1[i] * phi3[i];
-                  solY4 += solu1[i] * phi4[i];
-                }
-                
-               
-                double dist_xyz3 = 0;
-                double dist_xyz4 = 0;
-            for(unsigned k = 0; k < dim; k++) {
-              dist_xyz3 += (xg1[k] - xg3[k]) * (xg1[k] - xg3[k]);
-              dist_xyz4 += (xg1[k] - xg4[k]) * (xg1[k] - xg4[k]);
-            }
-            std::cout<<"++++++  "<<dist_xyz3 <<"  " << dist_xyz4 <<"\n";
-
-            const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
-            const double denom4 = pow(dist_xyz4, (double)((dim / 2.) + s_frac));
-
-            for(unsigned i = 0; i < nDof1; i++) {
-
-              Res_nonlocalI_3[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY3) * (phi1[i]) * weight1 * weight3  / denom3;
-
-              Res_nonlocalJ_3[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY3) * (- phi3[i]) * weight1 * weight3  / denom3;
-              
-              Res_nonlocalI_4[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY4) * (phi1[i]) * weight1 * weight4  / denom4;
-
-              Res_nonlocalJ_4[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY4) * (- phi4[i]) * weight1 * weight4  / denom4;
-
-              for(unsigned j = 0; j < nDof2; j++) {
-//                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
-
-                CClocalII_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight3 / denom3;
-
-                CClocalIJ_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi3[j]) * phi1[i] * weight1 * weight3 / denom3;
-
-                CClocalJI_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi3[i]) * weight1 * weight3 / denom3;
-
-                CClocalJJ_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi3[j]) * (- phi3[i]) * weight1 * weight3 / denom3;
-                
-                CClocalII_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight4 / denom4;
-
-                CClocalIJ_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi4[j]) * phi1[i] * weight1 * weight4 / denom4;
-
-                CClocalJI_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi4[i]) * weight1 * weight4 / denom4;
-
-                CClocalJJ_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi4[j]) * (- phi4[i]) * weight1 * weight4 / denom4;
-                
               }
             }
-                
-                
-                
-                
-              }
-              
-              if(split == Nsplit - 1){
-                for(unsigned k = 0; k < dim; k++) {
-                  x3[k][0] = x3[k][1];
-                  x3[k][1] = xg1[k];
-                  x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
-                  x4[k][1] = x4[k][0];
-                  x4[k][0] = xg1[k];
-                  x4[k][2] = 0.5 * (x4[k][0] + x4[k][1]);
-                }
-              }
-              else{
-                for(unsigned k = 0; k < dim; k++) {
-                  x3[k][0] = x3[k][1];
-                  x3[k][1] = 0.5 * (x3[k][0] + xg1[k]);
-                  x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
-                  x4[k][1] = x4[k][0];
-                  x4[k][0] = 0.5 * (x4[k][1] + xg1[k]);
-                  x4[k][2] = 0.5 * (x4[k][0] + x4[k][1]);
-                }
-              }
-              
-            }
-            }
-            
+
           } // end iel == jel loop
-          
-          if(Nsplit == 0 || iel != jel){
-           for(unsigned jg = 0; jg < jgNumber; jg++) {
 
-            double dist_xyz = 0;
-            for(unsigned k = 0; k < dim; k++) {
-              dist_xyz += (xg1[k] - xg2[jg][k]) * (xg1[k] - xg2[jg][k]);
-            }
+          if(Nsplit == 0 || iel != jel) {
+            for(unsigned jg = 0; jg < jgNumber; jg++) {
 
-            const double denom = pow(dist_xyz, (double)((dim / 2.) + s_frac));
+              double dist_xyz = 0;
+              for(unsigned k = 0; k < dim; k++) {
+                dist_xyz += (xg1[k] - xg2[jg][k]) * (xg1[k] - xg2[jg][k]);
+              }
 
-            for(unsigned i = 0; i < nDof1; i++) {
+              const double denom = pow(dist_xyz, (double)((dim / 2.) + s_frac));
+
+              for(unsigned i = 0; i < nDof1; i++) {
 
 //                Res_nonlocal[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg]  / denom;
 
 
-              Res_nonlocalI[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i]) * weight1 * weight2[jg]  / denom;
+                Res_nonlocalI[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i]) * weight1 * weight2[jg]  / denom;
 
-              Res_nonlocalJ[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (- phi2[jg][i]) * weight1 * weight2[jg]  / denom;
+                Res_nonlocalJ[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (- phi2[jg][i]) * weight1 * weight2[jg]  / denom;
 
-              for(unsigned j = 0; j < nDof2; j++) {
+                for(unsigned j = 0; j < nDof2; j++) {
 //                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
 
-                CClocalII[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight2[jg] / denom;
+                  CClocalII[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight2[jg] / denom;
 
-                CClocalIJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * phi1[i] * weight1 * weight2[jg] / denom;
+                  CClocalIJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * phi1[i] * weight1 * weight2[jg] / denom;
 
-                CClocalJI[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
+                  CClocalJI[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
 
-                CClocalJJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
+                  CClocalJJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
 
+
+                }
 
               }
 
-            }
 
 
+            } //endl jg loop
 
-          } //endl jg loop
-          
           }
-          
+
         } //endl ig loop
 
         if(iel == jel) {
           MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
           RES->add_vector_blocked(Res_local, l2GMap1);
-          
+
           MM->add_matrix_blocked(CClocalII_3, l2GMap1, l2GMap1);
           MM->add_matrix_blocked(CClocalIJ_3, l2GMap1, l2GMap2);
           MM->add_matrix_blocked(CClocalJI_3, l2GMap2, l2GMap1);
@@ -817,7 +821,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
 
 
 
-void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob) {
+void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
+{
 
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
