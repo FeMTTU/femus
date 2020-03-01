@@ -33,8 +33,8 @@ bool O2conformal = true;
 bool firstTime = true;
 double surface0 = 0.;
 double volume0 = 0.;
-bool volumeConstraint = false;
-bool areaConstraint = false;
+bool volumeConstraint = true;
+bool areaConstraint = true;
 
 unsigned conformalTriangleType = 2;
 const double eps = 1e-5;
@@ -48,7 +48,7 @@ void AssemblePWillmore (MultiLevelProblem&);
 void AssemblePWillmore2 (MultiLevelProblem& ml_prob);
 
 
-double dt0 = 3.2e-4; //P=2
+double dt0 = 3.2e-2; //P=2
 //double dt0 = 3.2e-6; //P=4
 
 // Function to control the time stepping.
@@ -87,11 +87,11 @@ int main (int argc, char** args) {
 
   //mlMsh.ReadCoarseMesh("../input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/sphere.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/ellipsoidRef3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidV1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/genusOne.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/knot.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/c.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/c.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/horseShoe3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   scalingFactor = 1.;
@@ -1667,8 +1667,3 @@ void AssemblePWillmore2 (MultiLevelProblem& ml_prob) {
 //     std::cin >> a;
 
 } // end AssemblePWillmore.
-
-
-
-
-
