@@ -21,6 +21,7 @@
 #include "MeshMetisPartitioning.hpp"
 #include "GambitIO.hpp"
 #include "MED_IO.hpp"
+// #include "obj_io.hpp"
 #include "NumericVector.hpp"
 
 // C++ includes
@@ -133,6 +134,11 @@ namespace femus {
     if (name.rfind (".neu") < name.size()) {
       GambitIO (*this).read (name, _coords, Lref, type_elem_flag);
     }
+
+    // else if (name.rfind (".obj") < name.size()) {
+    //   obj_io (*this).read (name, _coords, Lref, type_elem_flag);
+    // }
+
 #ifdef HAVE_HDF5
     else if (name.rfind (".med") < name.size()) {
       MED_IO (*this).read (name, _coords, Lref, type_elem_flag);
@@ -178,6 +184,17 @@ namespace femus {
     _topology->ResizeSolutionVector ("Y");
     _topology->ResizeSolutionVector ("Z");
 
+    std::vector < double > xMax(3,0.);
+    std::vector < double > xMin(3,0.);
+    for(unsigned i = 0; i < _coords[0].size(); i++){
+      for(unsigned k=0;k<3;k++){
+        if(xMax[k] < _coords[k][i]) xMax[k] = _coords[k][i];
+        if(xMin[k] > _coords[k][i]) xMin[k] = _coords[k][i];
+      }
+    }
+    _cLenght = sqrt( pow(xMax[0]-xMin[0],2) + pow(xMax[1]-xMin[1],2) + pow(xMax[2]-xMin[2],2) );
+    
+    
     _topology->GetSolutionName ("X") = _coords[0];
     _topology->GetSolutionName ("Y") = _coords[1];
     _topology->GetSolutionName ("Z") = _coords[2];
@@ -446,7 +463,7 @@ namespace femus {
           if (jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
             imapping[j - 1] = jel;
             imapping[j] = iel;
-            newN = j;
+            newN = j - _elementOffset[isdom];
           }
         }
         n = newN;
@@ -1139,7 +1156,5 @@ namespace femus {
   basis* Mesh::GetBasis (const short unsigned& ielType, const short unsigned& solType) {
     return _finiteElement[ielType][solType]->GetBasis();
   }
-
+  
 } //end namespace femus
-
-

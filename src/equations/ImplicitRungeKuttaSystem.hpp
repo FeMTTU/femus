@@ -296,6 +296,8 @@ namespace femus {
     GetbAi();
   }
   
+  // This idea is used to update the algebraic variable using RK in DAE problems.
+  // Refer to http://www.ams.org/journals/mcom/2006-75-254/S0025-5718-05-01809-0/S0025-5718-05-01809-0.pdfS
   template <class Base>
   void ImplicitRungeKuttaSystem<Base>::GetbAi(){
     _bAi.assign(_RK, 0.);

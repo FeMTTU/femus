@@ -76,6 +76,8 @@ namespace femus {
         _m = m; ///< Initialize  matrix  with dims
         _n = n;
       }
+      
+      virtual void init (const int nr, const int nc, const std::vector < SparseMatrix*> &P) = 0;
 
       /** To be Added */
       virtual void init () {};
@@ -107,6 +109,8 @@ namespace femus {
       /** Return the row values */
       virtual int MatGetRowM (const int i_val, int *cols = NULL, double *vals = NULL) = 0;
 
+      virtual void RemoveZeroEntries(double & tolerance) = 0;
+      
       // flag
       /** Initialization flag */
       virtual bool initialized() const {
@@ -185,9 +189,13 @@ namespace femus {
 
       virtual void matrix_LeftMatMult (const SparseMatrix &mat_A) = 0;
 
+      
       /** To be Addded */
       virtual void matrix_get_diagonal_values (const std::vector< int > &index, std::vector<double> &value) const = 0;
 
+      /** To be Addded */
+      virtual void matrix_set_diagonal_values (NumericVector& D) = 0;
+      
       /** To be Addded */
       virtual void matrix_set_diagonal_values (const std::vector< int > &index, const double &value) = 0;
 

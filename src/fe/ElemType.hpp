@@ -101,6 +101,7 @@ namespace femus
                                vector < double >& other_phi, vector < double >& gradphi, vector < double >& normal) const = 0;
       /** To be Added */
       virtual double* GetPhi(const unsigned& ig) const = 0;
+      virtual void GetPhi(std::vector<double> &phi, const vector < double >& xi ) const = 0;
 
       /** To be Added */
       virtual double* GetDPhiDXi(const unsigned& ig) const = 0;
@@ -332,6 +333,14 @@ namespace femus
       inline double* GetPhi(const unsigned& ig) const {
         return _phi[ig];
       }
+      
+      void GetPhi(std::vector<double> &phi, const vector < double >& xi ) const {
+        phi.resize(_nc);
+        for(unsigned i = 0; i < _nc; i++) {
+          phi[i] = _pt_basis->eval_phi(_IND[i], &xi[0]);
+        }
+      }
+      
       inline double* GetDPhiDXi(const unsigned& ig) const {
         return _dphidxi[ig];
       }
@@ -455,6 +464,14 @@ namespace femus
       inline double* GetPhi(const unsigned& ig) const {
         return _phi[ig];
       }
+      
+      void GetPhi(std::vector<double> &phi, const vector < double >& xi ) const{
+        phi.resize(_nc);
+        for(unsigned i = 0; i < _nc; i++) {
+          phi[i] = _pt_basis->eval_phi(_IND[i], &xi[0]);
+        }
+      }
+      
       inline double* GetDPhiDXi(const unsigned& ig) const {
         return _dphidxi[ig];
       }
@@ -669,6 +686,14 @@ namespace femus
       inline double* GetPhi(const unsigned& ig) const {
         return _phi[ig];
       }
+      
+      void GetPhi(std::vector<double> &phi, const vector < double >& xi ) const {
+        phi.resize(_nc);
+        for(unsigned i = 0; i < _nc; i++) {
+          phi[i] = _pt_basis->eval_phi(_IND[i], &xi[0]);
+        }
+      }
+      
       inline double* GetDPhiDXi(const unsigned& ig) const {
         return _dphidxi[ig];
       }

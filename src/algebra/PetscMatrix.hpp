@@ -87,6 +87,8 @@ namespace femus {
       void init (const  int m, const  int n, const  int m_l, const  int n_l,
                  const std::vector< int > & n_nz, const std::vector< int > & n_oz);
 
+      void init (const int nr, const int nc, const std::vector < SparseMatrix*> &P);
+            
       void init (const int m,  const int n) {
         _m = m;
         _n = n;
@@ -105,7 +107,7 @@ namespace femus {
       // Returns -------------------------------------------
       /// PETSc matrix context pointer
       Mat mat() {
-        assert (_mat != NULL);
+        //assert (_mat != NULL);
         return _mat;
       }
 
@@ -161,8 +163,11 @@ namespace femus {
 
       void matrix_RightMatMult (const SparseMatrix &mat_A);
       void matrix_LeftMatMult (const SparseMatrix &mat_A);
+      
+      void RemoveZeroEntries(double & tolerance);
 
       void matrix_get_diagonal_values (const std::vector< int > &index, std::vector<double> &value) const ;
+      void matrix_set_diagonal_values (NumericVector& D);
       void matrix_set_diagonal_values (const std::vector< int > &index, const double &value);
       void matrix_set_diagonal_values (const std::vector< int > &index, const std::vector<double> &value);
       void matrix_set_off_diagonal_values_blocked (const std::vector< int > &index_rows, const std::vector< int > &index_cols, const double &value);

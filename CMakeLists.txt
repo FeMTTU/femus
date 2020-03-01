@@ -77,13 +77,13 @@ ENDIF(APPLE)
 
 
 # Find MPI (optional)
-# FIND_PACKAGE(MPI)
-# MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
-#
-# SET(HAVE_MPI 0)
+
+FIND_PACKAGE(MPI)
+MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
+SET(HAVE_MPI 0)
+IF(MPI_FOUND)
 SET(HAVE_MPI 1)
-# SET(MPI_FOUND 1)
-# ENDIF(MPI_FOUND)
+ENDIF(MPI_FOUND)
 
 # # Find HDF5 (optional)
 # FIND_PACKAGE (HDF5)
@@ -183,6 +183,8 @@ OPTION(BUILD_ISM "Build the Intersection Marker apps" ON)
 
 OPTION(BUILD_MPM_FEM "Build the MPM FEM apps" ON)
 
+OPTION(BUILD_MPM_FSI "Build the MPM FSI apps" ON)
+
 OPTION(BUILD_REFINEMENT "Build the Refiniment apps" ON)
 
 OPTION(BUILD_PETSC_DEBUG "Build the PETSC debug apps" ON)
@@ -196,6 +198,10 @@ OPTION(BUILD_SW "Build the Shallow Water apps" ON)
 OPTION(BUILD_TUMOR "Build the Tumor apps" ON)
 
 OPTION(BUILD_RK "Build the Runge-Kutta apps" ON)
+
+OPTION(BUILD_CONFORMAL "Build the Conformal mesh apps" ON)
+
+OPTION(BUILD_NITSCHE "Build the Nitsche apps" ON)
 
 #############################################################################################
 ### Build documentation (Doxygen)
@@ -293,8 +299,11 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/ism)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/uq)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
-INCLUDE_DIRECTORIES(/opt/apps/local/mpi/gnu/openmpi/1.10.6/include/)
-INCLUDE_DIRECTORIES(/opt/apps/local/gnu/openmpi/boost/1.61.0/include/)
+#INCLUDE_DIRECTORIES(/opt/apps/local/mpi/gnu/openmpi/1.10.6/include/)
+#INCLUDE_DIRECTORIES(/opt/apps/local/gnu/openmpi/boost/1.61.0/include/)
+
+INCLUDE_DIRECTORIES(/opt/ohpc/pub/mpi/openmpi-gnu/1.10.6/include/)
+INCLUDE_DIRECTORIES(/opt/ohpc/pub/libs/gnu/openmpi/boost/1.63.0/include/)
 
 # Include Fparser files
 IF(FPARSER_FOUND)
