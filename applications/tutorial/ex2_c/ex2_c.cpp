@@ -560,7 +560,8 @@ void System_assemble_flexible(MultiLevelProblem& ml_prob,
   // ***************** END ASSEMBLY *******************
 }
 
-
+namespace femus {
+  
 // here, the peculiarity of the application is not dealt with using virtuality, but with template specialization --------------------------------- 
                                                    
  // template specialization for double
@@ -612,7 +613,11 @@ template < >
         
 }
 
+
+}//end namespace
 //------------------------------------------------------------- 
+
+
 
 
 ///@todo: check bc for discontinuous FE

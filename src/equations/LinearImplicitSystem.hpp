@@ -216,6 +216,8 @@ namespace femus {
       void SetNumberPostSmoothingStep (const unsigned &npost) {
         _npost = npost;
       };
+      
+      void GetSystemInfo();
 
       /** enforce sparcity pattern for setting uncoupled variables and save on memory allocation **/
       void SetSparsityPattern (vector < bool > other_sparcity_pattern);

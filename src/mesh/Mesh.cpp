@@ -184,6 +184,17 @@ namespace femus {
     _topology->ResizeSolutionVector ("Y");
     _topology->ResizeSolutionVector ("Z");
 
+    std::vector < double > xMax(3,0.);
+    std::vector < double > xMin(3,0.);
+    for(unsigned i = 0; i < _coords[0].size(); i++){
+      for(unsigned k=0;k<3;k++){
+        if(xMax[k] < _coords[k][i]) xMax[k] = _coords[k][i];
+        if(xMin[k] > _coords[k][i]) xMin[k] = _coords[k][i];
+      }
+    }
+    _cLenght = sqrt( pow(xMax[0]-xMin[0],2) + pow(xMax[1]-xMin[1],2) + pow(xMax[2]-xMin[2],2) );
+    
+    
     _topology->GetSolutionName ("X") = _coords[0];
     _topology->GetSolutionName ("Y") = _coords[1];
     _topology->GetSolutionName ("Z") = _coords[2];
@@ -1145,5 +1156,5 @@ namespace femus {
   basis* Mesh::GetBasis (const short unsigned& ielType, const short unsigned& solType) {
     return _finiteElement[ielType][solType]->GetBasis();
   }
-
+  
 } //end namespace femus
