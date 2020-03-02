@@ -10,7 +10,8 @@
 #include "CurrentElem.hpp"
 #include "ElemType_template.hpp"
 
-
+#include "Assemble_jacobian.hpp"
+#include "Assemble_unknown_jacres.hpp"
 
 using namespace femus;
  
@@ -26,14 +27,19 @@ double InitialValueDS(const std::vector < double >& x) {
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   bool dirichlet = false;
-  value = 0;
+  value = 0.;
   
   const double tolerance = 1.e-5;
   
-//   if (face_name == 2) {
-  if (x[0] > 1. - 1.e-6) {
+
+  
+  if (face_name == 1) {
       dirichlet = true;
-        value = 0.;
+        value = 0.; //Dirichlet value
+  }
+  else if (face_name == 2) {
+      dirichlet = false;
+        value = -1.; //Neumann value
   }
   
   return dirichlet;
@@ -62,6 +68,7 @@ int main(int argc, char** args) {
    std::vector<std::string> mesh_files;
    
    mesh_files.push_back("Mesh_1_x_dir_neu.med");
+//    mesh_files.push_back("Mesh_1_x.med");
 //    mesh_files.push_back("Mesh_1_y.med");
 //    mesh_files.push_back("Mesh_1_z.med");
 //    mesh_files.push_back("Mesh_2_xy.med");
@@ -95,12 +102,13 @@ int main(int argc, char** args) {
 //     ml_mesh.GenerateCoarseBoxMesh(2,0,0,0.,1.,0.,0.,0.,0.,EDGE3,fe_quad_rule.c_str());
 //     ml_mesh.GenerateCoarseBoxMesh(0,2,0,0.,0.,0.,1.,0.,0.,EDGE3,fe_quad_rule.c_str());
  
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = /*1*/4;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
   ml_mesh.PrintInfo();
 
+  
   
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
@@ -128,24 +136,6 @@ int main(int argc, char** args) {
   // ======= Problem ========================
   // define the multilevel problem attach the ml_sol object to it
   MultiLevelProblem ml_prob(&ml_sol);
-
-// *************************************
- // this problem is defined on an open boundary mesh, and the boundary mesh can change 
- // as a function of the fracture propagation criterion.
- // Therefore, all the structures may need to be re-allocated after that.
-  
- // For now, let us start without propagation and set up the dense matrix.
-  
- // The workflow is:
-  
- // Read the mesh
-  
- // Fill the dense matrix, and solve it (collocation type BEM)
-  
- // if propagation occurs, re-dimensionalize all the arrays
- // let us start without propagation first
- // and let us start with STEADY-STATE DDM
-// *************************************
   
 
   ml_prob.SetFilesHandler(&files);
@@ -318,44 +308,41 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //===================================================   
 
     
-    /*const*/ double beta = 7.;
+    /*const*/ double tau;
     
     for (unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
         
 //        geom_element.set_coords_at_dofs_bdry_3d(iel, jface, xType);
-        std::vector  <  double > xx(3); 
-        xx[0] = 1.; 
-        xx[1] = 0.; 
-        xx[2] = 0.; 
-//           xx = geom_element.get_elem_center_bdry();
+        std::vector  <  double > xx_face_elem_center(3, 0.); 
+//           xx_face_elem_center = geom_element.get_elem_center_bdry();
+        
+       const int boundary_index = el->GetFaceElementIndex(iel, jface);
        
-       if ( el->GetFaceElementIndex(iel, jface) < 0) { //I am on the boundary
+       if ( boundary_index < 0) { //I am on the boundary
                   
-         unsigned int face = -(msh->el->GetFaceElementIndex(iel, jface) + 1);
+         unsigned int face = - (boundary_index + 1);
     
-         bool is_dirichlet =  ml_sol->GetBdcFunction()(xx, "U", beta, face, 0.);                     
-                          
-             if ( !(is_dirichlet)  &&  (beta != 0.) ) {  //dirichlet == false and nonhomogeneous Neumann
+         bool is_dirichlet =  ml_sol->GetBdcFunction()(xx_face_elem_center, "U", tau, face, 0.);                     
+         //we have to be careful here, because in GenerateBdc those coordinates are passed as NODE coordinates, 
+         //while here we pass the FACE ELEMENT CENTER coordinates. 
+         // So, if we use this for enforcing space-dependent Dirichlet or Neumann values, we need to be careful!
+         
+             if ( !(is_dirichlet)  &&  (tau != 0.) ) {  //dirichlet == false and nonhomogeneous Neumann
                    unsigned n_dofs_face = msh->GetElementFaceDofNumber(iel, jface, solFEType_u);
 
                   for (unsigned i = 0; i < n_dofs_face; i++) {
                       
                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
 
-                 Res[i_vol] +=  beta;
+                 Res[i_vol] +=  tau;
                  
-                 }
+                         }
         
-        
-    }
-                  
-                  
-                  
-                  
-                  
+                    }
                   
               }
     }
+    
     
       // *** Quadrature point loop ***
       for (unsigned i_qp = 0; i_qp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); i_qp++) {
@@ -367,8 +354,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     jacXweight_qp = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[i_qp];
     elem_all[ielGeom][solFEType_u]->shape_funcs_current_elem(i_qp, JacI_qp, phi_u, phi_u_x, boost::none /*phi_u_xx*/, space_dim);
 
-    elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
-    elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
+//     elem_all[ielGeom][xType]->jac_jacT(Jac_qp, JacJacT, space_dim);
+//     elem_all[ielGeom][xType]->jac_jacT_inv(JacJacT, JacJacT_inv, space_dim);
 //--------------    
 	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	
@@ -461,8 +448,12 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) JAC->close();
-//   JAC->print();
-//   RES->print();
+
+     //print JAC and RES to files
+    const unsigned nonlin_iter = 0/*mlPdeSys->GetNonlinearIt()*/;
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, JAC, nonlin_iter);
+    assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
+  
 
   // ***************** END ASSEMBLY *******************
 

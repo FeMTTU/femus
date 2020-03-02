@@ -127,7 +127,8 @@ namespace femus {
   /// @todo why pass coords other than get it through the Mesh class pointer?
   void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups_flag, const bool read_boundary_groups_flag) {
 
-    _print_info = false;
+    _print_info = true;  
+      
 
     Mesh& mesh = GetMesh();
     mesh.SetLevel(0);
@@ -371,10 +372,13 @@ namespace femus {
 
           bool are_faces_the_same = see_if_faces_from_different_lists_are_the_same(geom_elem_per_dimension, face_nodes_from_vol_connectivity, face_nodes_from_bdry_group);
 
+                 const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
+                 
+  if (med_flag > 0) abort(); //MED puts its own NEGATIVE flags for elements in dim >=1 (edges, faces), and POSITIVE for nodes (dim=0)
+
           if(are_faces_the_same)  {
             count_found_face++;
 
-            const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
 
             int user_flag =  get_user_flag_from_med_flag(group_info, med_flag);   //flag of the boundary portion
             user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE
@@ -436,101 +440,200 @@ namespace femus {
     H5Dclose(dtset_fam);
 
 
-    // loop over elements to find faces (I guess I cannot loop over nodes directly)
-    // I have to loop over elements to then find faces of the elements, get the dof of those faces, and then with that dof go get the position in NOE/FAM
+    // I have to loop over elements to then find faces of the elements, get the dof of those faces, and then with that dof go get the position in NOE/FAM 
+       
+       
+            // loop over elements to find faces
+       Mesh& mesh = GetMesh();
+       
+       //loop over the volume connectivity and find the boundary faces 
+       //the boundary faces of each volume element have already been constructed after the mesh reading
+       
+        for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
+            
+//             unsigned iel_geom_type = mesh.GetElementType(iel);
+                               
+            for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
+                
+                unsigned n_nodes_in_face = 1 /*_geom_elems[iel_geom_type]->get_face(f).size()*/;  //here the faces are made of 1 node
+                
+                std::vector<unsigned> face_nodes(n_nodes_in_face);
+                
+               for(unsigned nd = 0; nd < face_nodes.size(); nd++) {
+                   unsigned nd_of_face = f /*_geom_elems[iel_geom_type]->get_face(f)[nd]*/;
+                   face_nodes[nd] = mesh.el->GetElementDofIndex(iel, nd_of_face);
+                
+               }
+            
+            // now I take this dof and read from NOE/FAM  
+            // If the group is different from zero 
+               for(unsigned k = 0; k < fam_map.size(); k++) {
 
+                      const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
+                      
+          if (med_flag < 0) abort(); //MED puts its own NEGATIVE flags for elements in dim >=1 (edges, faces), and POSITIVE for nodes (dim=0)
+  
+              if ( face_nodes[0] == k && med_flag != 0 )  {
+                      
+           int user_flag =  get_user_flag_from_med_flag(group_info, med_flag);   //flag of the boundary portion
+               user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE
+               
+                     if (_print_info) { std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl; }
 
-    // loop over elements to find faces
-    Mesh& mesh = GetMesh();
+//       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
+                  element_faces_array[iel][f] = user_flag;  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
+              //  mesh.el->SetFaceElementIndex(iel, f, user_flag);  //old version
 
-    //loop over the volume connectivity and find the boundary faces
-    //the boundary faces of each volume element have already been constructed after the mesh reading
+               }
+      
+      
+                } //end k  
+                
+           } //faces loop
+           
+      } 
+       
+       
+   }
 
-    for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
+   
 
-      //             unsigned iel_geom_type = mesh.GetElementType(iel);
+  bool MED_IO::see_if_faces_from_different_lists_are_the_same( const GeomElemBase* geom_elem_per_dimension, 
+                                                   const std::vector< unsigned > & face_nodes_from_vol_connectivity, 
+                                                   const std::vector< unsigned > & face_nodes_from_bdry_group) {
 
-      for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
+                     // check any possible order of faces 
+                  
+                  //just look for the initial linear element (maybe even the 1st three only); if this is aligned, all the Quad9 will be aligned
+                  //The problem, is that we don't know if the order corresponds to the OUTWARD NORMAL or not.
+                  //How many ways are there? If the nodes are 0 1 2 3, it could only be 0123, or 1230, or 2301, or 3012, or the REVERSE of each of them
+                  std::vector<unsigned>  face_nodes_from_vol_connectivity_linear(face_nodes_from_vol_connectivity.begin(),face_nodes_from_vol_connectivity.begin() + geom_elem_per_dimension->n_nodes_linear() );
+                  std::vector<unsigned>  face_nodes_from_bdry_group_linear(face_nodes_from_bdry_group.begin(),face_nodes_from_bdry_group.begin() + geom_elem_per_dimension->n_nodes_linear() );
+                  
+                  unsigned n_alternatives = 2 * geom_elem_per_dimension->n_nodes_linear();
+                  std::vector< std::vector<unsigned> > face_alternatives(n_alternatives);
+                  
+               for(unsigned alt = 0; alt < n_alternatives/2; alt++) {
+                   unsigned face_length = geom_elem_per_dimension->n_nodes_linear();
+                   face_alternatives[alt].resize( face_length );
+                 for(unsigned i = 0; i < face_length; i++) {
+                     unsigned mod_index = (i+alt)%face_length;
+                          face_alternatives[alt][i] = face_nodes_from_bdry_group_linear[mod_index];
+                   }
+               }
+              
+               for(unsigned alt = n_alternatives/2; alt < n_alternatives; alt++) {
+                    face_alternatives[alt] = face_alternatives[alt-(n_alternatives/2)];
+                    std::reverse(face_alternatives[alt].begin(),face_alternatives[alt].end());
+                }
 
-        unsigned n_nodes = 1 /*_geom_elems[iel_geom_type]->get_face(f).size()*/;  //here the faces are made of 1 node
-
-        std::vector<unsigned> face_nodes(n_nodes);
-
-        for(unsigned nd = 0; nd < n_nodes; nd++) {
-          unsigned nd_of_face = 0 /*_geom_elems[iel_geom_type]->get_face(f)[nd]*/;
-          face_nodes[nd] = mesh.el->GetElementDofIndex(iel, nd_of_face);
-
-        }
-
-        // now I take this dof and read from NOE/FAM
-        // If the group is different from zero
-        for(unsigned k = 0; k < fam_map.size(); k++) {
-
-          const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
-
-          if(med_flag != 0)  {
-
-            int user_flag =  get_user_flag_from_med_flag(group_info, med_flag);  //flag of the boundary portion
-            user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE
-
-            std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl;
-
-            //       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
-            element_faces_array[iel][f] = user_flag;  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
-            //  mesh.el->SetFaceElementIndex(iel, f, user_flag);  //old version
-
-          }
-
-
-        } //end k
-
-      } //faces loop
-
-    }
-
-
-  }
-
-
-
-  bool MED_IO::see_if_faces_from_different_lists_are_the_same(const GeomElemBase* geom_elem_per_dimension,
-                                                              const std::vector< unsigned > & face_nodes_from_vol_connectivity,
-                                                              const std::vector< unsigned > & face_nodes_from_bdry_group) {
-
-    // check any possible order of faces
-
-    //just look for the initial linear element (maybe even the 1st three only); if this is aligned, all the Quad9 will be aligned
-    //The problem, is that we don't know if the order corresponds to the OUTWARD NORMAL or not.
-    //How many ways are there? If the nodes are 0 1 2 3, it could only be 0123, or 1230, or 2301, or 3012, or the REVERSE of each of them
-    std::vector<unsigned>  face_nodes_from_vol_connectivity_linear(face_nodes_from_vol_connectivity.begin(), face_nodes_from_vol_connectivity.begin() + geom_elem_per_dimension->n_nodes_linear());
-    std::vector<unsigned>  face_nodes_from_bdry_group_linear(face_nodes_from_bdry_group.begin(), face_nodes_from_bdry_group.begin() + geom_elem_per_dimension->n_nodes_linear());
-
-    unsigned n_alternatives = 2 * geom_elem_per_dimension->n_nodes_linear();
-    std::vector< std::vector<unsigned> > face_alternatives(n_alternatives);
-
-    for(unsigned alt = 0; alt < n_alternatives / 2; alt++) {
-      unsigned face_length = geom_elem_per_dimension->n_nodes_linear();
-      face_alternatives[alt].resize(face_length);
-      for(unsigned i = 0; i < face_length; i++) {
-        unsigned mod_index = (i + alt) % face_length;
-        face_alternatives[alt][i] = face_nodes_from_bdry_group_linear[mod_index];
-      }
-    }
-
-    for(unsigned alt = n_alternatives / 2; alt < n_alternatives; alt++) {
-      face_alternatives[alt] = face_alternatives[alt - (n_alternatives / 2)];
-      std::reverse(face_alternatives[alt].begin(), face_alternatives[alt].end());
-    }
-
-
-    std::vector<bool>  is_same_face(n_alternatives);
-    bool bool_union = false;
-    for(unsigned alt = 0; alt < n_alternatives; alt++) {
-      is_same_face[alt] = (face_nodes_from_vol_connectivity_linear == face_alternatives[alt]);
-      if(is_same_face[alt] == true) bool_union = true;
-    }
-
-    return bool_union;
+          
+             std::vector<bool>  is_same_face(n_alternatives);
+             bool bool_union = false;
+                      for(unsigned alt = 0; alt < n_alternatives; alt++) {
+                            is_same_face[alt] = (face_nodes_from_vol_connectivity_linear == face_alternatives[alt]);
+                            if (is_same_face[alt] == true) bool_union = true;
+                       }
+                      
+                      return bool_union;
+                                        
+                  
+// =======
+//     // I have to loop over elements to then find faces of the elements, get the dof of those faces, and then with that dof go get the position in NOE/FAM
+// 
+// 
+//     // loop over elements to find faces
+//     Mesh& mesh = GetMesh();
+// 
+//     //loop over the volume connectivity and find the boundary faces
+//     //the boundary faces of each volume element have already been constructed after the mesh reading
+// 
+//     for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
+// 
+//       //             unsigned iel_geom_type = mesh.GetElementType(iel);
+// 
+//       for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
+// 
+//         unsigned n_nodes = 1 /*_geom_elems[iel_geom_type]->get_face(f).size()*/;  //here the faces are made of 1 node
+// 
+//         std::vector<unsigned> face_nodes(n_nodes);
+// 
+//         for(unsigned nd = 0; nd < n_nodes; nd++) {
+//           unsigned nd_of_face = 0 /*_geom_elems[iel_geom_type]->get_face(f)[nd]*/;
+//           face_nodes[nd] = mesh.el->GetElementDofIndex(iel, nd_of_face);
+// 
+//         }
+// 
+//         // now I take this dof and read from NOE/FAM
+//         // If the group is different from zero
+//         for(unsigned k = 0; k < fam_map.size(); k++) {
+// 
+//           const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
+// 
+//           if(med_flag != 0)  {
+// 
+//             int user_flag =  get_user_flag_from_med_flag(group_info, med_flag);  //flag of the boundary portion
+//             user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE
+// 
+//             std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl;
+// 
+//             //       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
+//             element_faces_array[iel][f] = user_flag;  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
+//             //  mesh.el->SetFaceElementIndex(iel, f, user_flag);  //old version
+// 
+// >>>>>>> main/master_gcc_7
+//           }
+// 
+// 
+//         } //end k
+// 
+//       } //faces loop
+// 
+//     }
+// 
+// 
+//   }
+// 
+// 
+// 
+//   bool MED_IO::see_if_faces_from_different_lists_are_the_same(const GeomElemBase* geom_elem_per_dimension,
+//                                                               const std::vector< unsigned > & face_nodes_from_vol_connectivity,
+//                                                               const std::vector< unsigned > & face_nodes_from_bdry_group) {
+// 
+//     // check any possible order of faces
+// 
+//     //just look for the initial linear element (maybe even the 1st three only); if this is aligned, all the Quad9 will be aligned
+//     //The problem, is that we don't know if the order corresponds to the OUTWARD NORMAL or not.
+//     //How many ways are there? If the nodes are 0 1 2 3, it could only be 0123, or 1230, or 2301, or 3012, or the REVERSE of each of them
+//     std::vector<unsigned>  face_nodes_from_vol_connectivity_linear(face_nodes_from_vol_connectivity.begin(), face_nodes_from_vol_connectivity.begin() + geom_elem_per_dimension->n_nodes_linear());
+//     std::vector<unsigned>  face_nodes_from_bdry_group_linear(face_nodes_from_bdry_group.begin(), face_nodes_from_bdry_group.begin() + geom_elem_per_dimension->n_nodes_linear());
+// 
+//     unsigned n_alternatives = 2 * geom_elem_per_dimension->n_nodes_linear();
+//     std::vector< std::vector<unsigned> > face_alternatives(n_alternatives);
+// 
+//     for(unsigned alt = 0; alt < n_alternatives / 2; alt++) {
+//       unsigned face_length = geom_elem_per_dimension->n_nodes_linear();
+//       face_alternatives[alt].resize(face_length);
+//       for(unsigned i = 0; i < face_length; i++) {
+//         unsigned mod_index = (i + alt) % face_length;
+//         face_alternatives[alt][i] = face_nodes_from_bdry_group_linear[mod_index];
+//       }
+//     }
+// 
+//     for(unsigned alt = n_alternatives / 2; alt < n_alternatives; alt++) {
+//       face_alternatives[alt] = face_alternatives[alt - (n_alternatives / 2)];
+//       std::reverse(face_alternatives[alt].begin(), face_alternatives[alt].end());
+//     }
+// 
+// 
+//     std::vector<bool>  is_same_face(n_alternatives);
+//     bool bool_union = false;
+//     for(unsigned alt = 0; alt < n_alternatives; alt++) {
+//       is_same_face[alt] = (face_nodes_from_vol_connectivity_linear == face_alternatives[alt]);
+//       if(is_same_face[alt] == true) bool_union = true;
+//     }
+// 
+//     return bool_union;
 
 
   }

@@ -124,6 +124,8 @@ class CurrentElem {
   
    void set_coords_at_dofs_and_geom_type(const unsigned int dim,  const unsigned int xType);
    
+   vector < vector < real_num_mov > > & get_coords_at_dofs() {  return _coords_at_dofs; }
+   vector < vector < real_num_mov > > & get_coords_at_dofs_3d() {  return _coords_at_dofs_3d; }
    const vector < vector < real_num_mov > > & get_coords_at_dofs() const {  return _coords_at_dofs; }
    const vector < vector < real_num_mov > > & get_coords_at_dofs_3d() const {  return _coords_at_dofs_3d; }
    const vector < vector < real_num_mov > > & get_coords_at_dofs_bdry_3d() const {  return _coords_at_dofs_bdry_3d; }
