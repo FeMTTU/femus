@@ -57,7 +57,7 @@ Fluid::Fluid(Parameter& par, const double viscosity, const double density, const
              const double k, const double cp, const double alpha): Material(par,density,k,cp, alpha) {
 //   cout << "calling 2" << endl;
 
-  const  double lref = par.Get_reference_lenght();
+  const  double lref = par.Get_reference_length();
   const double uref = par.Get_reference_velocity();
   const double DeltaTref = par.Get_reference_temperature();
   _viscosity = viscosity;
@@ -123,23 +123,25 @@ const double Fluid::get_Peclet_number() const{
 
 std::ostream & operator << (std::ostream & os, const Fluid & fluid)
 {
-  os << "Density: " << fluid._density << std::endl;
-  os << "viscosity: " << fluid._viscosity << std::endl;
+  os << "Density: [kg/m3] " << fluid._density << std::endl;
+  os << "viscosity: [Pa*s] " << fluid._viscosity << std::endl;
   os << "Inverse of Reynolds number: " << fluid._IRe << std::endl;
-  os << "Inverse of Prandtl number: " << fluid._Prandtl << std::endl;
-  os << "Inverse of Froude number: " << fluid._Froude << std::endl;
-  os << "Inverse of Rayleigh number: " << fluid._Rayleigh << std::endl;
-  os << "Inverse of Peclet number: " << fluid._Peclet << std::endl;
-  os << "Inverse of Reynolds number: " << fluid._Reynolds << std::endl;
-  os << "Inverse of Grashof number: " << fluid._Grashof << std::endl;
+  os << "Prandtl number: " << fluid._Prandtl << std::endl;
+  os << "Froude number: " << fluid._Froude << std::endl;
+  os << "Rayleigh number: " << fluid._Rayleigh << std::endl;
+  os << "Peclet number: " << fluid._Peclet << std::endl;
+  os << "Reynolds number: " << fluid._Reynolds << std::endl;
+  os << "Grashof number: " << fluid._Grashof << std::endl;
   os << "Physical Model: " << fluid._model << std::endl;
   os << std::endl;
+  
   return os;
 }
 
 // Take a const-reference to the right-hand side of the assignment.
 // Return a non-const reference to the left-hand side.
 Fluid& Fluid::operator=(const Fluid &fluid) {
+    
   this->_parameter = fluid._parameter;
   this->_density = fluid._density;
   this->_thermal_conductivity = fluid._thermal_conductivity;
@@ -154,7 +156,9 @@ Fluid& Fluid::operator=(const Fluid &fluid) {
   this->_Reynolds = fluid._Reynolds;
   this->_Grashof = fluid._Grashof;
   this->_model = fluid._model;
+  
   return *this;  // Return a reference to myself.
+  
 }
 
 

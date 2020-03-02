@@ -1,0 +1,1057 @@
+\documentclass[10pt]{book}
+
+\usepackage[utf8]{inputenc}
+ 
+ %%%%% COMMENT IT BEFORE PRINTING
+\usepackage[pdftex,
+            pagebackref=true,
+            colorlinks=true,
+            linkcolor=blue,
+            unicode,
+            hidelinks
+           ]{hyperref}
+           
+           
+%opening
+\title{Documentation - draft}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+ \setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+\tableofcontents 
+\addcontentsline{toc}{chapter}{Table of Contents}
+
+
+
+\part{Some programming practices}
+
+- Use .hpp for header files and .cpp for source files
+
+- Use std::cout, do not use printf for output.
+
+- If a function must be performed by only one processor (processor 0),
+then write an ifproc INSIDE the FUNCTION (not outside).
+
+- Divide the includes in 
+FEMuS includes,
+ C++ includes,
+ other external libraries' includes.
+
+- Always put include guards in header files.
+
+- Try to put the includes EXPLICITLY WHERE THEY HAVE TO BE, 
+  and not thinking that somewhere some include will lead me to the file i need...
+
+- In the SCRIPTS, almost all the variables have a FM\_ or FEMUS\_ prefix.
+ The variables without this prefix are like this because 
+ they are defined for external packages
+ For instance, PETSC\_DIR and PETSC\_ARCH are used to COMPILE PETSC.
+ 
+ - when you create a NEW HEADER, make sure you change the INCLUDE GUARD.
+ Then, make sure you add the new files to git.
+ 
+ - when you change the name of a file, header or source, recompile all the applications
+   and make sure that everything compiles correctly.
+   
+ - when you start a file, put the source code among the "namespace femus"
+
+ - data encapsulation, please
+ 
+  \chapter{Debugging, parallel}
+ 
+ Put yourself in the simplest case
+ 
+ First of all, check that the coarse mesh has enough elements: if the coarse mesh only has 1 element, then Metis does not work
+ 
+ Then, try to only run Mesh and Printing, by commenting the solution of your System. See how the Metis partitions are printed.
+ 
+ Fine, it works.
+ 
+  \subsubsection{Use valgrind!!!}
+
+ \subsubsection{Command}
+
+ mpiexec -n 1 femus-dbg -start\_in\_debugger
+
+ \subsubsection{Segfaults}
+
+If you use -info it tells you a lot of things about PETSC calls.
+-log\_trace, -info, -log\_summary
+
+Finding a segmentation fault shouldn't be too difficult with valgrind or gdb
+
+(see also this link:
+http://www.cprogramming.com/debugging/segfaults.html )
+
+Di solito guardi uno dei puntatori nella riga in cui si 
+blocca e magari e' un puntatore non inizializzato,
+oppure e' un puntatore a NULL, 
+oppure e' un puntatore che e' stato deallocato,
+oppure sto dereferenziando un puntatore al di fuori del suo range,
+oppure qualcosa altro ma poco...
+
+Per quanto riguarda le PETSC puo' essere molto lungo riuscire 
+a trovare un segmentation fault, perche' dovresti 
+andare a vedere DENTRO LE STRUTTURE (Mat, Vec sono strutture di C)
+e guardare di quegli elementi qual e' quello 
+che causa il segmentation fault.
+
+Per fare questo conviene USARE LE PETSC in DEBUG MODE 
+e vedere quale output ti danno;
+cosi' vedi le chiamate all'interno della libreria petsc.
+
+
+\part{Application}
+
+
+
+ \section{How to SETUP a NEW APPLICATION of the LIBRARY (will do a script probably)}
+
+- Create a folder in the Applications directory with your main function and your src/header files
+- Write the Cmakelists.txt file for it
+- Add the reference to the application in the Cmakelists.txt of the package library
+- open cmake-gui and run configure and generate
+- NOW PAY ATTENTION TO WHAT HAPPENS WHEN YOU ADD SOURCE FILES to the LIBRARY (not to the application)! You have to update the LIST in the src/ cmake file!!! (use ls -1)
+- now go to the binary directory and type make to generate the library
+- then enter your application folder and run make to generate your executable
+
+ \section{How to IMPLEMENT A NEW APPLICATION}
+
+- Follow the examples
+
+\section{How to change the mesh file of an application}
+
+- Put the mesh file in the input/ directory
+- Set the filename in the main file
+
+ \section{How to run in parallel with threads instead of cores}
+
+
+"nproc" gives the number of threads. If your CPU has 2 threads per core, "mpirun -n " works up to nproc/2
+
+To overcome this, do
+
+"mpirun --map-by socket:OVERSUBSCRIBE -n ..."
+
+
+ \section{How to schedule a suite of runs}
+
+- Script
+
+ \section{When you change the input file in the repo folder (NOT IN THE BINARY FOLDER) then you have to RERUN CMAKE !!!}
+ 
+
+ \section{How to RESTART a run of an application}
+ 
+- THE WHOLE RUN is in a single "time" DIRECTORY...
+  so to restart we will EXCLUSIVELY READ from THAT DIRECTORY
+
+- Set the folder from which to restart in the file run\_to\_restart\_from
+- set the ITERATION NUMBER in the "initial\_step" variable in the configuration file IN THE FOLDER OF THE CONSIDERED RUN!
+- set the other parameters like "nsteps"
+
+- We must be very careful.
+- We must change ALMOST NOTHING
+- Do not change NUMBER OF PROCESSORS
+- Do not change NUMBER OF LEVELS
+- Do not change the OUTPUT FOLDERNAME (of course...)
+
+
+
+\part{Application: main stages}
+
+  
+   \chapter{Main blocks}
+
+
+ 
+ - Mesh generation
+ 
+   Mesh Partitioning for parallel (Metis)
+ 
+ - Solution on a Mesh
+
+ - Problem with Solution unknown (certain unknowns, certain not)
+ 
+ Solution: Boundary conditions
+ 
+ Solution: Initial conditions
+ 
+ Space discretization (and quadrature)
+ 
+ Time discretization (i.e. quadrature in time)
+ 
+ - System of a Problem (Nonlinear loop, Linear Solver, Preconditioner, etc.)
+ 
+ - Final output
+ 
+ 
+ 
+ 
+
+  
+  MultilevelMesh
+  
+  MultilevelSolution(MultilevelMesh)
+  
+   MultilevelProblem(MultilevelSolution)
+
+   System
+   
+   MultilevelProblem.add(System)
+   
+   System.solve() --> with this process, the MultilevelSolution (which is accessed by System through MultilevelProblem) is updated
+   
+   
+ \chapter{Init}
+
+   \section{Parallel initialization}
+   
+   If you want to retrieve 
+   
+   the number of processors
+   
+   or the current processor
+   
+   you can do so from any class that inherit ParallelObject
+   
+   
+   
+   \section{Input parser}
+   
+   We have some interface to parse:
+   
+   - the command line
+   
+   - an input file
+   
+   
+ 
+ 
+ 
+ \chapter{ Mesh }
+
+    
+ If you choose LINEAR for the MESH DISCRETIZATION, it only works in SERIAL! It could actually work if the MESH was LINEAR...
+ 
+ For now, the Mesh must be BI/TRI-QUADRATIC. Could it be Tri7, or does it have to be Tri6??? We have to test.
+ 
+ 
+   
+     \section{MultilevelMesh}
+   
+  EraseCoarseLevels: it shifts the level vector, 
+   so if you start with 5 levels and you want to remove the first 3,
+   it shifts 4 and 5 to the 1st and 2nd position 
+   
+   \section{Mesh}
+   
+  
+   \subsection{Elem}
+  
+  The Elem class contains the \textbf{list} of all elements
+  
+  Every Mesh object has an Elem object
+  
+  The Elem list is initialized in different manners at different levels:
+  
+  - at the COARSE level, it is constructed in the Read function of MEDIO or GambitIO
+  
+  - for all other levels, it is constructed in the RefineMesh function in MeshRefinement, with another constructor
+  
+  
+  
+  
+  
+\begin{verbatim}
+//         7------14-------6
+//        /|              /|
+//       / |             / |
+//     15  |   25      13  |
+//     /  19      22   /  18
+//    /    |          /    |
+//   4------12-------5     |
+//   | 23  |   26    | 21  |
+//   |     3------10-|-----2
+//   |    /          |    /
+//  16   /  20      17   /
+//   | 11      24    |  9
+//   | /             | /
+//   |/              |/
+//   0-------8-------1
+
+
+
+
+//            3
+//           /|\
+//          / | \
+//         /  |  \
+//        9   |   8
+//       /    |    \
+//      /     |     \
+//     /      7      \
+//    2-------|5------1
+//     \      |      /
+//      \     |     /
+//       \    |    /
+//        6   |   4
+//         \  |  /
+//          \ | /
+//           \|/
+//            0
+
+//           5
+//          /|\
+//         / | \
+//        /  |  \
+//      11   |  10
+//      /   14    \
+//     /     |     \
+//    /      |      \
+//   3--------9------4
+//   |  17   |  16   |
+//   |       2       |
+//   |      / \      |
+//   |     /   \     |
+//  12    / 15  \   13
+//   |   8       7   |
+//   |  /         \  |
+//   | /           \ |
+//   |/             \|
+//   0-------6-------1
+
+//      3-----6-----2
+//      |           |
+//      |           |
+//      7     8     5
+//      |           |
+//      |           |
+//      0-----4-----1
+
+
+//      2
+//      | \
+//      |   \
+//      5     4
+//      |   6   \
+//      |         \
+//      0-----3----1
+
+
+//
+//	0-----2-----1
+//
+\end{verbatim}
+  
+
+  
+  \subsection{Boundary mesh}
+    
+    Whenever you want to retrieve the Boundary of a Mesh,
+    you need to loop over each mesh element
+    and then loop over its \textit{faces}.
+    
+    If the FaceElementIndex is $ < 0 $, then it is a \textit{boundary} face.
+    
+    Otherwise, it is equal to the volume element number corresponding to that face!
+    
+    FaceElementIndex is initialized to $ - 1 $ at first.
+    
+    When the FaceElementIndex is stored, the flag that is on the mesh file is made NEGATIVE and then we subtract $ 1 $
+    
+    \subsection{Interface mesh}
+    
+    If I wanted some \textbf{interface} faces, not on the boundary, I should set their FaceElementIndex to be $ > 0 $.
+    How does this affect the rest of the code?
+    
+  
+  \section{Geometric Elements}
+  
+  
+  \section{MeshInput}
+
+  These mesh files also set FLAGS to faces
+  
+    \subsection{From function (MeshGeneration)}
+    
+    \subsection{Gambit IO}
+    
+    \subsection{MED IO}
+    
+    In the mesh file we can specify Groups of Volume Elements as well as Groups of Face Elements.
+    
+    
+    
+  \section{MeshPartitioning}
+  
+  
+  \subsubsection{Elem and Node splitting}
+ 
+ In a FE code you have you must do a partition of Elements and Nodes among the processes.
+
+ Elements only belong to one process
+ 
+ Nodes belong to one process but then they are also Ghosted (for the other processes that ``own'' them)
+ 
+    \subsection{MeshMetisPartitioning}
+
+  The Metis library is responsible for that
+
+  
+  The Elements are reordered, so that 
+  
+  the 1st range goes to proc 0, the 2nd range goes to proc 1, and so on...
+  
+  
+    \subsection{MeshASMPartitioning}
+  
+
+  
+  \section{MeshRefinement}
+
+   
+    This object is used in the MultilevelMesh class, to construct the various levels
+  
+  
+  \chapter{Solution (Quantities, Equations, Operators)}
+
+
+  \section{MultilevelSolution}
+   
+   Only MultilevelSolution has a Writer object. This writer will write from the FINEST level available.
+   
+   Solution does not have a Writer.
+   
+   Similarly, MultilevelMesh has a Writer, but not Mesh.
+  
+   However, currently the Writer in MultilevelMesh does not work.
+   
+
+   - The values of variables are taken from the MultilevelSolution object..
+     That's where the absolute values are stored, otherwise it is only about delta x in the nonlinear loops
+
+     
+  \section{MultilevelSolution: Boundary conditions}
+
+  
+  They are set through a function pointer.
+  
+  They are associated to the Solution and not to the Equation.
+  
+  In this way you can set BCs also for Solutions that are not Unknowns of an Equation
+
+   \subsection{Dirichlet}
+  
+  -  Dirichlet boundary conditions are set AFTER the ASSEMBLY process,
+     by setting a Dirichlet row to zero and putting 1 in the diagonal,
+     and by setting the corresponding Residual to ZERO at those rows
+  
+   \subsection{Neumann}
+   
+    They are set by implementing a boundary integral
+    
+    
+    
+  
+  
+  \section{MultilevelSolution: Initial conditions}
+  
+  \subsubsection{Check that boundary values and initial values at the boundary are CONSISTENT}
+
+  
+  \section{Output: Writer}
+
+  
+  \chapter{Problem}
+
+  
+    \section{MultilevelProblem}
+
+  Everything in the Assemble function (and in other parts too) is accessed through this class
+  
+Il problema deve essere dotato dei dati CONDIVISIBILI tra tutte le EQUAZIONI:
+   - parametri fisici / di visualizzazione
+   - puntatori alle equazioni
+   - puntatori ai punti di gauss per l'integrazione
+   - puntatore al MESH
+   - NUMERO DI LIVELLI del multigriglia
+
+Io ci aggiungerei anche 
+   - MGpar, parametri del MG disponibili per tutte le equazioni.
+   
+\section{ Quadrature }
+
+You put it here so that many systems can share it
+
+Clearly, if you have terms with different polynomial degrees,
+you pick for the quadrature the ones that guarantees exactness for the highest-degree polynomial
+  
+\section{FE Abstract Families (with precomputed Quadrature evaluations)}
+  
+  \chapter{System(s) (of a Problem)}
+
+
+  
+     After the MGsolve or MLsolve or solve function is called,
+   the MultilevelSolution vector is updated and ready to be printed to file...
+   
+   But where exactly is it updated?
+   Also, the print routines only print at the FINE level,
+   so is MultilevelSolution updated only at the FINE level or at ALL levels???
+   
+   Ok, what happens is that the MultilevelSolution object contains a VECTOR (based on number of levels) of Solution objects,
+   and THIS is the vector that the Writer uses need to access if I want to retrieve my values!!!
+   
+   
+   System: the System class has a 
+   
+   std::vector of Mesh pointers and a 
+   
+   std::vector of Solution pointers,
+   
+   and it also has pointers to MultilevelSolution and MultilevelMesh...
+   
+   MultilevelMesh, in turn, has a std::vector of Mesh pointers in it;
+   
+   MultilevelSolution, in turn, has a std::vector of Solution pointers in it
+   
+   
+   - Every Mesh should be SINGLE-LEVEL, but it has a \_ProjCoarseToFine object, so it is not really single-level...
+      
+
+\chapter{Solvers and preconditioners}
+
+
+
+ \section{Linear Equation Solver (child of Linear Equation)}
+ 
+ This is to handle $ A e = - r $
+ 
+ The LinearImplicitSystem has a vector of LinearEquationSolver objects (one for each mesh level)
+ 
+ Every LinearEquationSolver has a Solver (which somehow tends to be called Smoother often times) and a Preconditioner
+ 
+ 
+  
+ \section{ML vs. MG solver}
+
+ In MG you pass the Smoother, while in ML you don't.
+ 
+ 
+ 
+ 
+\part{Git}
+
+
+- First golden rule: using the manual never hurts.
+
+- Set name and email in your computer:
+
+  git config --global user.name "Name Surname"
+  git config --global user.email "name.surname@example.com"
+
+  To check what configuration you obtained, do 
+
+  git config --list 
+
+  (this shows you more than you see with "git config -e"
+  because it also reads other git configuration files,
+  such as \$HOME/.gitconfig)
+
+- To contribute:
+  Create a personal github account 
+  Create a fork of the femus repository in your github account
+  Clone your fork in your computer
+  Work in your computer (do branches, commit changes, ...)
+  Push your branches back to your fork 
+  Send a pull request to the main femus repository
+  The maintainers will decide what to do with the pull request and possibly it will be merged to master
+  Periodically, sync the master in the fork with the master in the main femus repository
+
+
+\section{WORKFLOW for updating the master in the FORK from the master in the MAIN REPO}
+
+
+In github:
+
+Go in the MAIN REPO
+
+Click on "Pull requests" (on the right)
+Click on "New pull request" (green button)
+Click on "compare across forks"
+The "base fork" is going to be the FORK master branch
+The "head fork" is going to be the MAIN master branch
+Click on "create pull request"
+Add some title for it
+Make sure that the branches can be AUTOMATICALLY MERGED (otherwise you have to solve the conflicts using command line...)
+Click on "Merge pull request" (you find it by scrolling towards the bottom of the page)
+Click on "Confirm merge"
+
+From command line:
+
+To be added
+
+
+\part{Mesh Generation: Salome}
+
+
+\chapter{Features}
+
+
+ - {SUPPORT for DIFFERENT SHAPE ELEMENTS (quad, hex, tri, tet, ...)} 
+
+ - {SUPPORT for HYBRID MESHES (different elements on the same mesh)}
+    
+ - {SUPPORT for BIQUADRATIC ELEMENTS}
+    
+ - {SUPPORT for SCRIPTING}
+  
+ - Possibility to define Data or Initial/Boundary conditions on your Mesh 
+
+ - {An ACTIVE COMMUNITY of USERS}
+
+ - Potentially, Salome is also available to be \textit{compiled} on your computer
+ 
+ - Salome also contain its own version of Paraview
+
+\chapter{Installation issues}
+
+  The first time you run Salome after installation,
+  you may have it asking for opening service...
+
+The "Failed to narrow the root naming context" 
+is an error displayed when there is no entry in /etc/hosts 
+corresponding to your hostname. So, you need to add it
+
+YOU HAVE TO PUT WHAT COMES OUT OF ``hostname''!
+
+
+
+ \chapter{SHAPER Module}
+
+
+This is a new module that in the long run is supposed to replace the role of the GEOM module.
+In the meantime, you can:
+  - perform drawing operations in the Shaper module 
+  - do "Export to Geom" if you want to then do the meshing.
+
+At the beginning you start with a "Partset" that contains 7 elements (Origin, axes, ...) that cannot be deleted  
+To draw stuff in Shaper, first create a Part with "New Part".
+
+Notice: things that are exported to Geom are those that appear under the "Results" of a Part.
+If you have no object in the Results, nothing will be exported to Geometry.
+
+Then, it's not so clear how to start setting points... Should I use Construction, or Sketch... or Build...
+
+Ok, it seems like:
+ - Sketch is for drawing things "imprecisely", as if it was a real sketch, without specifying precise coordinates and so on.
+ - Construction allows to put precise information
+
+ When you do a Sketch, remove the Interaction Style Switch (white mouse icon)
+ 
+ - If you built a Point as a Construction in the Partset and you want to REMOVE it, you have to click on "Partset" and say "Activate". 
+   Then you can right-click and finally "Delete" is active. Then, Deactivate again to continue drawing
+
+ - Pay attention sometimes when you Dump study, it seems like you may lose the Shaper part!!!  
+   
+ \chapter{GEOMETRY Module}
+ 
+ \section{ROTATIONS}
+
+
+If you have to rotate, do not do that in the Geometry, because then the Mesh will not follow.
+If you do it in the Mesh, the Geometry does not follow either.
+
+\section{SPLIT EDGES/FACES}
+
+
+The tool for this is: Partition then Explode. At first it seems like with Partition no split happens, but then if you do Explode you will get all the pieces
+It seems like Cut is not the right tool for splitting
+
+Pay attention to the difference between Common and Intersection
+
+ \chapter{MESH Module}
+
+\section{Basic procedure}
+
+ Use the NoteBook tab to define variables and parametrize your operations!
+
+\subsection{Geometry}
+
+
+Create faces (Draw points and lines if needed, or create Faces directly)
+   --> Extract edges from a face (Explode)
+   
+\subsection{Mesh}
+ 
+Create Mesh object (only initialize)
+Create SubMesh of Mesh over the wanted SubGeometry
+   --> Hypothesis: Propagation of 1D Hypothesis
+
+In Mesh:
+--   2D: Quadrangle Mapping
+   1D: Wire Discretization, or another SubMesh with Propagation in the other direction (this would overwrite Wire Discretization)
+
+-- Convert EACH mesh to the order you need (linear/quadratic/biquadratic)
+  You have to do this operation BEFORE creating a CompoundMesh,
+  because the compound mesh does not have an underlying geometry to use 
+   
+  You have to do ONE BY ONE, you cannot do by selecting all meshes at once!!! 
+   
+-- Build CompoundMesh to merge the meshes
+     --> Check the Boundary of the CompoundMesh!!! 
+     ---> When you do a Compound, the double nodes are MERGED, but the inner edges or inner faces are not REMOVED! So, you have to remove them manually!!!
+     ---> You need to remove the boundary elements of the previous separate pieces that are now inside the new domain!
+          To do so you do "Remove elements" and you set a filter "Free borders - Not": inner boundary elements are non-free borders
+          Unfortunately you don't see this operation as a new object in the Mesh menu
+     --> Rename it to "Mesh" + something!!!
+     
+\subsection{Groups of Mesh elements}
+ 
+  (must be named \verb|Group_X_Y|, where X is the flag given to the object and Y is the type of boundary condition (0 = Dirichlet, 1 = Neumann). What about the groups that are not for boundary conditions?)
+
+  In order to enforce Boundary Conditions, Material Properties, and potentially other things too,
+  we have to define Groups of Edges, or Faces, or Volumes (Groups of Nodes for the extremes of a 1d domain)
+  
+  The flexible way to define these groups is NOT by selecting the IDs but by doing either "Group on geometry" or "Group on filter"
+
+- AAA: I think I found how to do the "quadrangle-mapping" mesh of a face where one side has multiple edges coming from Explode!!! 
+  I just do the same, but I specify "Composite wire discretization" instead of "Wire discretization"!!!
+
+- You can use Filters to define Groups of Mesh Elements
+
+\subsubsection{Can I define more than one Group?}
+
+ Yes, you can. It will be a bit more complicated to handle the reading, though.
+ In fact, when Groups of elements are intersection,
+ the naming inside the MED file changes
+ 
+ If there are groups that intersect, then Salome - when exporting to MED - 
+ will define intersecting families. 
+ 
+ If there are elements belonging to 2 groups,
+ they will define a FAM with its own index and the name of the 2 groups
+ 
+ So, the elements belonging only to 1 group will have a FAM with only one group
+ 
+ So, FAM are generated based on WHAT INTERSECTIONS BETWEEN GROUPS there are.
+ 
+ All of this is made in such a way that every element 
+ will have \textit{only one} FAM number in the FAM field of the elements.
+ 
+
+\subsubsection{Can I select faces INSIDE the domain, not at the boundary???}
+
+ The MED format exports only the BOUNDARY ELEMENTS...
+ How can I export INNER FACE ELEMENTS as well?
+ Well, when I draw a mesh by doing Submeshes and making a Compound,
+ there are still elements from the interfaces of the boundaries...
+ 
+ We could have some of the inner edges, coming from the result of drawing subpieces 
+
+ Perhaps what we can do is to not remove the inner faces used to build the submeshes.
+ 
+ Then, I have to change the way I check that ALL boundaries have been implemented,
+ because now I will have additional edges in the list of all edges
+ that are NOT boundary edges...
+ Basically, to check if an element is on the boundary I would 
+ just have to count how many volume elements it belongs to
+ (I am excluding a slit domain with this)
+ 
+ If an edge belongs only to 1 volume element, then it is a Boundary face.
+ 
+ 
+ - An alternative - by hand - could be to use ``Add Quadratic Edge''... but it's very tedious
+ 
+ - The solution of keeping the inner edges is constrained to the fact 
+   that I have to draw thinking of those inner edges ``ahead of time''.
+   For instance, assume you want to perform integration over a face 
+   that was not used to draw your mesh... 
+   Then you should draw your mesh using that face from the very beginning...
+   
+ - The third solution, in case we cannot create groups of inner edges graphically,
+    is to revert back to using if's on the coordinates...  
+ 
+ - Another way that is graphical consists in defining the Group of Volume Elements
+ whose Boundary you want to identify,
+ and then do ``Create boundary elements'' on that Group
+ 
+ 
+ 
+\section{QUADRILATERAL MESH of a CIRCLE/SEMISPHERE}
+
+
+Divided Disk or Divided Cylinder do exactly what you are looking for!!!
+
+Partition a semisphere using a Divided Disk!
+
+Beware: it is essential that a vertex of the inner square is aligned with the "meridian arc" that is intrinsic in the generation of a Sphere surface!
+
+For a circle, just do a square in the middle, then divide the circumference into for parts,
+join the angles of the squares with the vertices of these parts and you are done.
+
+For the semisphere, if you try the same it doesn't work, because the faces that are constructed
+do not belong to the original semisphere...
+
+So the idea seems to be NOT the following:
+ - make curved edges on the semisphere
+ - use them to create curved faces
+  So, try to avoid starting from the Edges and instead keep yourself at the level of Faces.
+  Then only at the end you will Explode to get the Edges (that you may need later for submeshes)
+  
+  Also, try not to cut too much, because if you do so you may have multiple edges on one side and then it is not so easy to mesh...
+ 
+ The other way to go is to directly create subfaces by Partition of the semisphere!
+ 
+ First you split, then you join...
+ 
+ Now:
+ 
+ - Fuse doesn't work with non-planar faces...
+ - Glue Edges is to put together coincident edges, but not to remove them
+ - It seems like the right option is Sewing, then Union faces, then Explode to get the edges for the submeshes
+ - The only problem is that now one face does not have 4 edges, but one side can be made of multiple edges,
+   and that creates problems in the mapping algorithm. So, it's all about making 1 edge
+   
+\section{When you do a 3d mesh, not only will you have Volumes and Faces, but also the Edges of the ``Bounding Box''}
+
+  You can leave the edges where they are, because in 3d only Volumes and Faces will be read from the code
+ 
+
+\section{Basic procedure - 3D}
+
+
+- If I want to create a mesh of a Box with 3 arbitrary mesh discretizations in the 3 directions,
+  what is the best way to do that?
+  
+
+I cannot creat a Submesh of a Submesh
+
+- Geometry
+  Create Volumes
+    ---> Extract Faces from a Volume
+    ---> Extract Edges from 2 faces in order to do Submesh of 3 edges in the x,y,z directions
+- Mesh 
+  I'd say I'll treat a Face like I do in 2D, and then do a Mapping to opposite Faces...
+  You don't want to do Automatic Hexahedralization or Tetrahedralization...
+  
+- Another method could perhaps be to create 1d meshes and Propagate their Hypothesis on opposite edges!
+  Global Algorithms:
+    3d: Hexahedron (i,j,k)
+    2d: Quadrangle mapping
+    1d: Wire discretization  - Here sometimes it gives trouble if you don't specify any "Number of Segments"...
+    
+    Do 3 submeshes on 3 Edges, and on each of them establish a "Propagate hypothesis on opposite edges"
+    
+
+    
+\subsection{MESH EXTRUSION}
+
+
+- If your mesh can be thought of as an Extrusion of a 2D mesh, one way to do this 
+  is simply to do your 2D mesh and then extrude it
+  
+- Do extrusion only of faces to avoid generation of extra edges    
+
+- "Scale factors" refer to the TRANSVERSAL direction, not the orthogonal one
+
+
+
+\section{HOW TO SHARE SUBMESHES ON CONTIGUOUS FACES}
+
+
+When you explode adjacent faces, the edges are called differently... we should identify them
+
+
+ \section{Change the Geometry in the Mesh with ``Move node''}
+
+
+ There is a command called "Move node", perhaps it helps avoiding to remesh everything if I go back and change the Geometry instead...
+
+ - 
+ 
+
+\section{Translate Mesh}
+
+ 
+ Copy Mesh of course does not do the trick, you need ``Translation''
+ 
+ ``Offset'' of a mesh does not work for Quadratic mesh
+ 
+ ``Translation'' of a mesh works with ``Create a new mesh'' and ``Copy groups'' creates a translated copy
+
+ 
+\section{Stretch elements}
+
+  ``Scale transform'' does the trick
+
+  
+   
+ \section{BOUNDARY CONDITIONS}
+
+
+ I think it's best if I do the groups on the initial meshes (before doing the Compound)
+  because there I can do "Group on geometry",
+while a Compound does not have an associated Geometry to it
+ (alternatively, one could do Group on Filter maybe)
+
+ \section{Mesh controls}
+ 
+  You want to check that there are 
+  
+  - no Free Nodes or Orphan Nodes (nodes that don't belong to any element)
+  
+  - no Double Nodes
+  
+  - no Inner Edges (only Free Borders, i.e., edges that are at the boundary of the domain)
+  
+  
+
+ 
+
+ \chapter{Questions}
+
+
+- When I remove a Group, can I ask to remove also the elements of that group from the Mesh???
+
+- When you do Extrusion, it also generates the Groups of Volumes from Groups of Faces! It puts a suffix \verb|_extruded|
+
+- When you remove inner edges in a compound mesh and then you dump the script and reload it, the mesh is corrupted! 
+On the other hand, if instead of dumping the script I save the study it is NOT corrupted! So, I will stick with saving the study for now.
+
+- Other times, you dump the script and the Shaper is gone!! It is a current bug! Up to now, you need to activate Shaper before any dumping. Sorry.
+
+- Operations in the Mesh such as "Convert to/from quadratic", "Remove elements" and others
+  are not shown as stages in the Mesh menu in Object Browser
+
+- Intersection vs. Common: the first does it with Edges, the second does it with Volumes, basically...
+
+- To remove Extra Edges on a Face, you first have to create an auxiliary volume, and then do Repair-> Remove extra edges from that volume,
+  then that face will be fixed!
+  Another trick is to put the Face in a Compound. There it works!
+
+- When you convert a mesh to quadratic/biquadratic, do it on a Mesh that is ATTACHED to a Geometry, because it is with the geometry that new nodes are added! 
+  Otherwise nothing happens!
+
+- What is the difference between Regular Faces and Free Faces in the Mesh algorithms? For instance, the Disk only shows algorithms for Free faces...
+
+- Is it possible to merge items obtained by Explode command? If I have 5 edges exploding from a quadrangular face,
+  where 2 of them form one of the actual 4 edges, can I merge them so that the face looks to have 4 items instead?
+    
+  Possible answer: I think the way to go in these cases is to do, after Explode, a "Create Group" in the Geometry.
+    That group should appear as a "child" of the Geometry object you will then mesh. I can try this to double check.
+
+
+\part{Mesh Visualization: Paraview}
+
+
+\chapter{Selections}
+
+
+ If you want to select only some cells based on a Threshold value, use the Threshold filter
+
+ If you want to select only some cells interactively, do Interactive Cells mode on
+ 
+ If you want the Edges, do Extract Edges first
+ 
+ What if I want to extract all the Faces? 
+   Should I split each element, and then Extract Surface for each element??
+
+ You can also use Edit -> Find data to establish Selection criteria
+ 
+ 
+ \chapter{Plots}
+ 
+- plot in the x and y directions
+
+- plot along the axis
+
+- warp in z direction
+
+- warp in y direction ("boat")
+
+- glyphs
+
+- streamlines
+
+
+\chapter{COMPARE/DIFF RESULTS  in paraview}
+
+Can I compare results in paraview?
+Well, you should have the same geometry, with the same mesh.
+Also, if you want the same numbering,
+you should have the SAME NUMBER OF LEVELS 
+and the SAME NUMBER OF PROCESSORS...
+
+You could make a diff of the hdf5 files, but if the NODE ORDERING 
+is different, then you're gonna have even the same values but in 
+different order!
+So you have to use the SAME LEVS and SAME PROCS,
+unless paraview has a GEOMETRIC DIFF, based not on the numbering 
+but on the COORDINATE POSITIONS!!!
+
+I found this script for Programmable filter
+http://rbfzone.blogspot.com/2011/06/difference-two-datasets-in-paraview.html
+Still it doesn't work to me with different files, but in the same file it works
+
+
+\# Get the two inputs
+A = self.GetInputDataObject(0, 0)
+B = self.GetInputDataObject(0, 1)
+s0 = A.GetPointData().GetScalars('Becontx')
+s1 = B.GetPointData().GetScalars('Becontx\_LEVEL2')
+out = vtk.vtkDoubleArray()
+out.SetName('Set Signed Err')
+out2 = vtk.vtkDoubleArray()
+out2.SetName('Set Unsigned Err')
+out3 = vtk.vtkDoubleArray()
+out3.SetName('Set Rel Err')
+for i in xrange(A.GetNumberOfPoints()):
+    val1 = s0.GetValue(i)
+    val2 = s1.GetValue(i)
+    val\_err = val1 - val2;
+    out.InsertNextValue(val\_err)
+    out2.InsertNextValue(abs(val\_err))
+    out3.InsertNextValue(abs(val\_err)/abs(val1))
+\# Initialize the output and add the labels array
+output = self.GetOutput()
+output.ShallowCopy(B)
+output.GetPointData().AddArray(out)
+output.GetPointData().AddArray(out2)
+output.GetPointData().AddArray(out3)
+
+
+
+ \part{File format: HDF5}
+ 
+ \chapter{HDF5} 
+ 
+  - How can I DIFF two HDF5 files?!?
+
+   Yes there is a utility, called "h5diff"! 
+   
+
+ \chapter{HDFView}
+ 
+Follow the instruction in the HDFVIEW website
+
+At the end of the build process, you should have an hdfview.sh script inside the bin directory of your build.
+You must open that script and change the INSTALLDIR variable with the path of this build (by default, /usr/local is in it)
+
+Another alternative to view the content of an HDF5 file is to use the 'h5dump' utility shipped with HDF5 (installed through PETSc, for instance)
+
+You can change the names of the Datasets from HDFVIEW
+   
+   
+ \chapter{XDMF}
+ 
+ A way to read HDF5 files from within Paraview
+
+    
+\end{document}

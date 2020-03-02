@@ -33,6 +33,7 @@ class System;
 class MultiLevelProblem;
 class MultiLevelMesh;
 class String;
+class Unknown;
 
 /**
  * The system abstract class
@@ -94,6 +95,9 @@ public:
     /** Get the index of the Solution "solname" for this system */
     unsigned GetSolPdeIndex(const char solname[]);
     
+    /** Get the index of the Solution "solname" for this system */
+    const unsigned GetSolPdeIndex(const char solname[]) const;
+
     vector <unsigned> & GetSolPdeIndex() {
       return _SolSystemPdeIndex;
     }
@@ -114,6 +118,16 @@ public:
     inline unsigned GetLevelToAssemble() const { return _levelToAssemble; }
 
     inline void SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
+
+    /** Set Unknown list for the current System */
+    void set_unknown_list_for_assembly(const std::vector< Unknown > unknown_in );
+    
+    /** Get Unknown list for the current System */
+    const std::vector< Unknown > get_unknown_list_for_assembly() const;
+    
+    /** Only call assemble function */
+     void assemble_call(const unsigned int n_times) const;
+
 
 protected:
 
@@ -152,6 +166,9 @@ protected:
     const std::string _sys_name;
 
     bool _buildSolver;
+    
+    /** List of unknowns for the assembly routine */
+    std::vector< Unknown > _unknown_list_for_assembly;
 
 };
 

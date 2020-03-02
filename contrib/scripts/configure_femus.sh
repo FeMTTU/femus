@@ -31,7 +31,7 @@ function fm_set_mpi() {
 # $2 value
 
 if test "$1" = "--help"; then
-echo " --prefix-basepath ABSOLUTE_PATH ";
+echo " --prefix-basepath ABSOLUTE_OR_RELATIVE_PATH ";
 return;
 fi
 
@@ -80,7 +80,7 @@ function fm_set_petsc() {
 # $4 value
 
 if test "$1" = "--help"; then
-echo " --prefix-basepath ABSOLUTE_PATH --method {opt,dbg} ";
+echo " --prefix-basepath ABSOLUTE_OR_RELATIVE_PATH --method {opt,dbg} ";
 return;
 fi
 
@@ -113,6 +113,39 @@ export PETSC_DIR=$FM_BASEPATH_TO_PETSC/$FM_PETSC_FOLDER
 # set mpi
 fm_set_mpi --prefix-basepath $EXTERNAL_BASEPATH
 
+
+
+}
+
+
+
+
+####################################################################################
+####################################################################################
+####################################################################################
+# This function is oriented both to the FEMuS makefile and for PETSc standalone
+# alright inside here you realize you have to 
+function fm_set_slepc() {
+# $1 --prefix-basepath
+# $2 value
+
+if test "$1" = "--help"; then
+echo " --prefix-basepath ABSOLUTE_OR_RELATIVE_PATH";
+return;
+fi
+
+if test "$1" != "--prefix-basepath"; then
+echo "The first argument must be --prefix-basepath"; return 18;
+fi
+
+EXTERNAL_BASEPATH=`readlink -f $2`
+
+############ MACHINE DEPENDENT ###################
+       FM_BASEPATH_TO_SLEPC=$EXTERNAL_BASEPATH
+       FM_SLEPC_FOLDER=slepc
+############ END MACHINE DEPENDENT ###################
+
+export SLEPC_DIR=$FM_BASEPATH_TO_SLEPC/$FM_SLEPC_FOLDER
 
 
 }
@@ -238,6 +271,8 @@ fi
 # fm_set_hdf5     # let me remove this now, i'll take it from petsc so far
 
 fm_set_petsc   --prefix-basepath $EXTERNAL_PREFIX --method  $PETSC_METHOD                 #needs FM_PETSC_METHOD; fm_set_mpi is set within here
+
+fm_set_slepc   --prefix-basepath $EXTERNAL_PREFIX 
 
 # fm_set_libmesh --prefix-basepath $EXTERNAL_PREFIX --method  $LIBMESH_METHOD --method-petsc $PETSC_METHOD #needs FM_PETSC_METHOD and FM_LIBMESH_METHOD
 

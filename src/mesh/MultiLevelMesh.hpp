@@ -55,6 +55,9 @@ public:
     /** Read the coarse-mesh from an input file (call the right reader from the extension) */
     void ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref);
 
+    /** Read the coarse-mesh from an input file (call the right reader from the extension) */
+    void ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups);
+
     /** Built-in cube-structured mesh generator */
     void GenerateCoarseBoxMesh( const unsigned int nx,
                                const unsigned int ny,
@@ -77,6 +80,11 @@ public:
     
     /** Get the mesh pointer to level i */
     Mesh* GetLevel(const unsigned i) {
+        return _level[i];
+    };
+
+    /** Get the mesh pointer to level i */
+    const Mesh* GetLevel(const unsigned i) const {
         return _level[i];
     };
 

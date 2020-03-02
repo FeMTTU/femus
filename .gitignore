@@ -46,6 +46,9 @@ codeblocks/
 *.ind
 *.out
 *.toc
+*.synctex.gz
+*.kate-swp
+*.tex.backup
 
 # gambit junk stuff
 *.trn

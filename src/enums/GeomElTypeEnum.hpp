@@ -1,6 +1,13 @@
 #ifndef __femus_enums_GeomElTypeEnum_hpp__
 #define __femus_enums_GeomElTypeEnum_hpp__
 
+#include <string>
+namespace femus {
+    
+  static const std::vector< std::string >  geom_elems = {"hex", "tet", "wedge", "quad", "tri", "line"};
+  static const std::vector< std::string >  fe_fams    = {"linear", "quadratic", "biquadratic", "constant", "disc_linear"};
+
+}
 
 enum  GeomElType { HEX=0, 
                    TET,   //1

@@ -119,10 +119,62 @@ namespace femus {
     {{ -1. / 9., -1. / 9., -1. / 9., 4. / 9., 4. / 9., 4. / 9.}}
   };
 
+
+  
+
+  void Mesh::Partition() {
+      
+    const bool flag_for_ncommon_in_metis = false;  
+      
+    std::vector < unsigned > partition;
+    partition.reserve (GetNumberOfNodes());
+    partition.resize (GetNumberOfElements());
+    MeshMetisPartitioning meshMetisPartitioning (*this);
+    meshMetisPartitioning.DoPartition (partition, flag_for_ncommon_in_metis);
+    FillISvector (partition);
+    partition.resize (0);
+    
+  }
+  
+  
   /**
-   *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file (Now only the Gambit Neutral File)
+   *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file
    **/
   void Mesh::ReadCoarseMesh (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag) {
+      
+      
+      const bool read_groups = true; //by default groups are read
+      const bool read_boundary_groups = true; //by default boundary groups are read
+      
+      ReadCoarseMesh(name, Lref, type_elem_flag, read_groups, read_boundary_groups);
+  
+  }
+  
+  
+  void Mesh::ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
+      
+
+    if (name.rfind (".neu") < name.size()) {
+      GambitIO (*this).read (name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
+    }
+    else if (name.rfind (".med") < name.size()) {
+      MED_IO (*this).read (name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
+    }
+    else {
+      std::cerr << " ERROR: Unrecognized file extension: " << name
+                << "\n   I understand the following:\n\n"
+                << "     *.neu -- Gambit Neutral File\n"
+                << "     *.med -- MED File\n"
+                << std::endl;
+      abort();
+    }
+    
+  }
+    
+  /**
+   *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file
+   **/
+  void Mesh::ReadCoarseMesh (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
 
     SetIfHomogeneous (true);
 
@@ -130,19 +182,10 @@ namespace femus {
 
     _level = 0;
 
-    if (name.rfind (".neu") < name.size()) {
-      GambitIO (*this).read (name, _coords, Lref, type_elem_flag);
-    }
-    else if (name.rfind (".med") < name.size()) {
-      MED_IO (*this).read (name, _coords, Lref, type_elem_flag);
-    }
-    else {
-      std::cerr << " ERROR: Unrecognized file extension: " << name
-                << "\n   I understand the following:\n\n"
-                << "     *.neu -- Gambit Neutral File\n"
-                << std::endl;
-      exit (1);
-    }
+    
+    ReadCoarseMeshFile(name, Lref, type_elem_flag, read_groups, read_boundary_groups);
+
+    
 
     BiquadraticNodesNotInGambit();
 
@@ -151,21 +194,33 @@ namespace femus {
     //el->SetNodeNumber(_nnodes);
 
 
-
-    std::vector < unsigned > partition;
-    partition.reserve (GetNumberOfNodes());
-    partition.resize (GetNumberOfElements());
-    MeshMetisPartitioning meshMetisPartitioning (*this);
-    meshMetisPartitioning.DoPartition (partition, false);
-    FillISvector (partition);
-    partition.resize (0);
-
+    Partition();
+    
+    
     el->BuildElementNearVertex();
-
 
 
     Buildkel();
 
+    
+    InitializeTopologyStructures();
+    
+
+    el->BuildElementNearElement();
+
+    el->ScatterElementQuantities();
+    el->ScatterElementDof();
+    el->ScatterElementNearFace();
+
+    _amrRestriction.resize (3);
+
+    PrintInfo();
+  }
+  
+
+  
+  void Mesh::InitializeTopologyStructures() {
+      
     _topology = new Solution (this);
 
     _topology->AddSolution ("X", LAGRANGE, SECOND, 1, 0);
@@ -187,17 +242,9 @@ namespace femus {
 
     _topology->AddSolution ("solidMrk", LAGRANGE, SECOND, 1, 0);
     AllocateAndMarkStructureNode();
-
-    el->BuildElementNearElement();
-
-    el->ScatterElementQuantities();
-    el->ScatterElementDof();
-    el->ScatterElementNearFace();
-
-    _amrRestriction.resize (3);
-
-    PrintInfo();
-  };
+    
+  }
+  
 
   /**
    *  This function generates the coarse Box Mesh level using the built-in generator
@@ -229,41 +276,19 @@ namespace femus {
     el->SetMaterialElementCounter (materialElementCounter);
 
 
-    std::vector < unsigned > partition;
-    partition.reserve (GetNumberOfNodes());
-    partition.resize (GetNumberOfElements());
-    MeshMetisPartitioning meshMetisPartitioning (*this);
-    meshMetisPartitioning.DoPartition (partition, false);
-    FillISvector (partition);
-    partition.resize (0);
+    Partition();
+    
 
     el->BuildElementNearVertex();
 
     Buildkel();
 
-    _topology = new Solution (this);
+    
+    InitializeTopologyStructures();
 
-    _topology->AddSolution ("X", LAGRANGE, SECOND, 1, 0);
-    _topology->AddSolution ("Y", LAGRANGE, SECOND, 1, 0);
-    _topology->AddSolution ("Z", LAGRANGE, SECOND, 1, 0);
-
-    _topology->ResizeSolutionVector ("X");
-    _topology->ResizeSolutionVector ("Y");
-    _topology->ResizeSolutionVector ("Z");
-
-    _topology->GetSolutionName ("X") = _coords[0];
-    _topology->GetSolutionName ("Y") = _coords[1];
-    _topology->GetSolutionName ("Z") = _coords[2];
-
-    _topology->AddSolution ("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);
-
-    _topology->ResizeSolutionVector ("AMR");
-
-    _topology->AddSolution ("solidMrk", LAGRANGE, SECOND, 1 , 0);
-    AllocateAndMarkStructureNode();
 
     el->BuildElementNearElement();
-    el->DeleteElementNearVertex();
+    el->DeleteElementNearVertex();  ///@todo check why it is needed here and not in the other similar function
 
     el->ScatterElementQuantities();
     el->ScatterElementDof();
@@ -409,46 +434,49 @@ namespace femus {
     }
     // std::cout << "AAAAAAAAAAAAAAAAAAAA\n";
     for (int isdom = 0; isdom < _nprocs; isdom++) {
-//       for (unsigned i = _elementOffset[isdom]; i < _elementOffset[isdom + 1] - 1; i++) {
-//         unsigned iel = imapping[i];
-//         unsigned ielMat = el->GetElementMaterial (iel);
-//         unsigned ielGroup = el->GetElementGroup (iel);
-//         for (unsigned j = i + 1; j < _elementOffset[isdom + 1]; j++) {
-//           unsigned jel = imapping[j];
-//           unsigned jelMat = el->GetElementMaterial (jel);
-//           unsigned jelGroup = el->GetElementGroup (jel);
-//           if (jelMat < ielMat || (jelMat == ielMat && jelGroup < ielGroup || (jelGroup == ielGroup && iel > jel))) {
-//             imapping[i] = jel;
-//             imapping[j] = iel;
-//             iel = jel;
-//             ielMat = jelMat;
-//             ielGroup = jelGroup;
-//           }
-//         }
-//       }
-      unsigned jel, iel;
-      short unsigned jelMat, jelGroup, ielMat, ielGroup;
-
-      unsigned n = _elementOffset[isdom + 1u] - _elementOffset[isdom];
-      while (n > 1) {
-        unsigned newN = 0u;
-        for (unsigned j = _elementOffset[isdom] + 1u; j < _elementOffset[isdom] + n ; j++) {
-          jel = imapping[j];
-          jelMat = el->GetElementMaterial (jel);
-          jelGroup = el->GetElementGroup (jel);
-
-          iel = imapping[j - 1];
-          ielMat = el->GetElementMaterial (iel);
-          ielGroup = el->GetElementGroup (iel);
-
-          if (jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
-            imapping[j - 1] = jel;
+        
+      for (unsigned i = _elementOffset[isdom]; i < _elementOffset[isdom + 1] - 1; i++) {
+        unsigned iel = imapping[i];
+        unsigned ielMat = el->GetElementMaterial (iel);
+        unsigned ielGroup = el->GetElementGroup (iel);
+        for (unsigned j = i + 1; j < _elementOffset[isdom + 1]; j++) {
+          unsigned jel = imapping[j];
+          unsigned jelMat = el->GetElementMaterial (jel);
+          unsigned jelGroup = el->GetElementGroup (jel);
+          if (jelMat < ielMat || (jelMat == ielMat && jelGroup < ielGroup || (jelGroup == ielGroup && iel > jel))) {
+            imapping[i] = jel;
             imapping[j] = iel;
-            newN = j;
+            iel = jel;
+            ielMat = jelMat;
+            ielGroup = jelGroup;
           }
         }
-        n = newN;
       }
+        
+// // //       unsigned jel, iel;
+// // //       short unsigned jelMat, jelGroup, ielMat, ielGroup;
+// // // 
+// // //       unsigned n = _elementOffset[isdom + 1u] - _elementOffset[isdom];
+// // //       while (n > 1) {
+// // //         unsigned newN = 0u;
+// // //         for (unsigned j = _elementOffset[isdom] + 1u; j < _elementOffset[isdom] + n ; j++) {
+// // //           jel = imapping[j];
+// // //           jelMat = el->GetElementMaterial (jel);
+// // //           jelGroup = el->GetElementGroup (jel);
+// // // 
+// // //           iel = imapping[j - 1];
+// // //           ielMat = el->GetElementMaterial (iel);
+// // //           ielGroup = el->GetElementGroup (iel);
+// // // 
+// // //           if (jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
+// // //             imapping[j - 1] = jel;
+// // //             imapping[j] = iel;
+// // //             newN = j;
+// // //           }
+// // //         }
+// // //         n = newN;
+// // //       }
+
     }
 
     for (unsigned i = 0; i < GetNumberOfElements(); i++) {
@@ -1010,7 +1038,7 @@ namespace femus {
 
   /** Only for parallel */
   unsigned Mesh::GetElementFaceDofNumber (const unsigned& iel, const unsigned jface, const unsigned& type) const {
-    assert (type < 3);
+    assert (type < 3);  ///@todo relax this
     return el->GetNFACENODES (GetElementType (iel), jface, type);
   }
 
