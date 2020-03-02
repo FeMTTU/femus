@@ -10,6 +10,8 @@ MACRO(femusMacroBuildApplication mainname appname)
 
 # Build the executable
 ADD_EXECUTABLE(${appname} ${PROJECT_SOURCE_DIR}/${mainname}.cpp)
+set_target_properties(${appname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+
 
 # Link the executable to the petsc anf femttu libs
 TARGET_LINK_LIBRARIES(${appname} femus)
@@ -19,7 +21,7 @@ TARGET_LINK_LIBRARIES(${appname} ${JSONCPP_LIBRARIES})
 TARGET_LINK_LIBRARIES(${appname} ${ADEPT_LIBRARIES})
 
 IF(SLEPC_FOUND)
-  TARGET_LINK_LIBRARIES(${appname} ${SLEPC_LIBARIES})
+  #TARGET_LINK_LIBRARIES(${appname} ${SLEPC_LIBARIES})
   TARGET_LINK_LIBRARIES(${appname} SLEPC::slepc SLEPC::slepc_static)
 ENDIF(SLEPC_FOUND)
 
@@ -27,8 +29,9 @@ IF(FPARSER_FOUND)
   TARGET_LINK_LIBRARIES(${appname} ${FPARSER_LIBRARY})
 ENDIF(FPARSER_FOUND)
 
-IF(MPI_FOUND)
-  TARGET_LINK_LIBRARIES(${appname} ${MPI_EXTRA_LIBRARY})
+IF(MPI_FOUND) 
+  TARGET_LINK_LIBRARIES(${appname} ${MPI_CXX_LIBRARIES})
+  #TARGET_LINK_LIBRARIES(${appname} ${MPI_EXTRA_LIBRARY})
 ENDIF(MPI_FOUND)
 
 IF(HDF5_FOUND)

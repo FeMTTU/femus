@@ -77,6 +77,7 @@ mesh/geom_elements/GeomElemEdge3.cpp
 mesh/Elem.cpp
 mesh/Mesh.cpp
 mesh/MultiLevelMesh.cpp
+mesh/obj_io.cpp
 mesh/input/MeshGeneration.cpp
 mesh/input/GambitIO.cpp
 mesh/input/MED_IO.cpp
@@ -105,6 +106,15 @@ uq/uq.cpp
 uq/sparseGrid.cpp
 )
 
+# IF(HAVE_HDF5)
+#   SET(femus_src ${femus_src} 
+#   mesh/input/MED_IO.cpp
+#   solution/output/XDMFWriter.cpp
+#   mesh/gencase/GenCase.cpp
+#   equations/TimeLoop.cpp
+#   )
+# ENDIF(HAVE_HDF5) 
+
 IF (NOT LIBRARY_OUTPUT_PATH)
   SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib64 CACHE PATH
        "Single output directory for building all libraries.")
@@ -113,3 +123,18 @@ ENDIF (NOT LIBRARY_OUTPUT_PATH)
 
 ADD_LIBRARY(${PROJECT_NAME} SHARED ${femus_src})
 
+IF(APPLE)
+target_link_libraries(${PROJECT_NAME} ${PETSC_DIR}/${PETSC_ARCH}/lib/libhdf5.dylib)
+target_link_libraries(${PROJECT_NAME} ${PETSC_DIR}/${PETSC_ARCH}/lib/libmpi.dylib)
+target_link_libraries(${PROJECT_NAME} ${PETSC_DIR}/${PETSC_ARCH}/lib/libpetsc.dylib)
+target_link_libraries(${PROJECT_NAME} ${PETSC_DIR}/${PETSC_ARCH}/lib/libmetis.dylib)
+# target_link_libraries(${PROJECT_NAME} ${LIBRARY_OUTPUT_PATH}/libjsoncpp.dylib)
+# target_link_libraries(${PROJECT_NAME} ${LIBRARY_OUTPUT_PATH}/libadept.a)
+# target_link_libraries(${PROJECT_NAME} ${LIBRARY_OUTPUT_PATH}/libb64.a)
+
+#target_link_libraries(${PROJECT_NAME} ${PETSC_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${B64_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${JSONCPP_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${ADEPT_LIBRARIES})
+
+ENDIF(APPLE)

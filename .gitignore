@@ -16,6 +16,7 @@ config/FemusConfig.hpp
 
 
 # folders
+.DS_Store/
 output/
 packs/
 templates/
@@ -75,6 +76,7 @@ codeblocks/
 *.h5
 *.pvsm
 *.prn
+.DS_Store
 
 # objects
 *.o

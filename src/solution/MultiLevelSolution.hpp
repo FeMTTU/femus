@@ -149,6 +149,9 @@ public:
     void GenerateRKBdc(const unsigned int &solIndex, const std::vector<unsigned> &solKiIndex, 
                        const unsigned int &grid0, const std::vector < double> & time,  const double &time0, 
                        const double &dt, const double* AI);
+    
+    //for NONLOCAL problems, _Bdc must be 0 on all the volume constraint
+    void GenerateBdcOnVolumeConstraint(const std::vector<unsigned> &volumeConstraintFlags, const unsigned &solIndex, const unsigned &grid0);
 
     /** To be Added */
     BDCType GetBoundaryCondition(const std::string varname, const unsigned int facename) const;
@@ -289,7 +292,7 @@ public:
       return _FSI; 
     }
     
-    
+  
 private:
     
     /** boundary condition function pointer */

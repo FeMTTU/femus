@@ -1,4 +1,4 @@
-/** tutorial/Ex12 Diffusion problem
+/** 
  * This example shows how to set and solve the weak form of the Poisson problem
  *          $$ \dfrac{\partial u}{ \partial t}\=\nabla \cdot (a(u)\nabla u)   $$
  *          $$ \nabla u.n=-\epsilon \text{ on} \partial B(0,1) $$
@@ -21,12 +21,13 @@
 
 using namespace femus;
 
-bool CheckIfPositiveDefinite(double K[6]);
+bool CheckIfPositiveDefinite (double K[6]);
 
-void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split);
+void GetKFromFileISO (MultiLevelSolution &mlSol, const unsigned & split, const unsigned &patient);
+void GetKFromFileANISO (MultiLevelSolution &mlSol);
 
 double GetTimeStep (const double time) {
-  double dt = .01;
+  double dt = .02;
   return dt;
 }
 
@@ -37,16 +38,50 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char solName[]
   return dirichlet;
 }
 
+double Keps = 1.0e-08;
 double V0;
+
+
+
+unsigned jInitialPosition = 0;
+//std::vector <double>  xc = {0,0,0,0,0,0,0,0,0,0,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9,-0.4,0.4,-0.9};
+//std::vector <double>  yc = {-0.9,-0.5,0.3,0.9,-0.9,-0.9,-0.9,-0.5,-0.5,-0.5,0,0,0,0,0,0,0.4,0.4,0.4,-0.9};
+//std::vector <double>  zc = {0,0,0,0,0.4,-0.6,-1.2,0.4,-0.6,-1.2,-0.4,-0.4,-0.4,-1.2,-1.2,-1.2,-0.4,-0.4,-0.4,-0.4};
+
+
 double InitalValueU3D (const std::vector < double >& x) {
-  double r = sqrt (x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
+    
+  unsigned j = jInitialPosition;
+  //std::cout<< "J value is: " << j << std::endl;
+
+  //original=(0.5,0,0), xcentered = (0.5,-0.3,-0.5), ycentered = (-0.3,0,-0.6), zcentered = (-0.3,-0.3,-0.6), badcentered = (0,0.7,0.6)
+  double xc = 0.5;
+  double yc = 0.0;
+  double zc = 0.0;
+  double r = sqrt ( (x[0] - xc) * (x[0] - xc) + (x[1] - yc) * (x[1] - yc) + (x[2] - zc) * (x[2] - zc));
+  //double r = sqrt ( (x[0] - xc[j]) * (x[0] - xc[j]) + (x[1] - yc[j]) * (x[1] - yc[j]) + (x[2] - zc[j]) * (x[2] - zc[j]));
   double r2 = r * r;
-  double R = 1.80001;
+  double R = 1.; //radius of the tumor
   double R2 = R * R;
   double R3 = R2 * R;
-  double Vb = 1.1990039070212866;
+  double Vb;
 
-  return (V0 * M_PI * 4. / 3.) / Vb * exp ( (1. - R2 / (R2 - r2)));
+  if (R == 1.) {
+    Vb = 1.1990039070212866;
+  }
+  else if (R == 0.5) {
+    Vb = 0.149875;
+  }
+  else if (R == 0.35) {
+    Vb = 0.0514073;
+  }
+  else {
+    std::cout << "wrong R, evaluate the integral \n $Vb = 4 \\pi \\int_0^{R} ( 1 - \\frac{R^2}{ R^2 - \\rho^2} \\rho^2 d\\rho$" << std::endl;
+    exit (0);
+  }
+  if (r2 > R2) return 0.;
+  return (V0 * M_PI * 4. / 3.* R3) / Vb * exp ( (1. - R2 / (R2 - r2)));
+  
 }
 
 double InitalValueD (const std::vector < double >& x) {
@@ -65,7 +100,7 @@ double GetSmootK (const double & kmin, const double & kmax, const double & h, co
   return value;
 }
 
-bool GetDeadCells (const double &time, MultiLevelSolution &mlSol);
+bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & last);
 
 void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob);
 
@@ -76,41 +111,48 @@ int main (int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit (argc, args, MPI_COMM_WORLD);
 
-  const unsigned split[4] = {8,4,2,1};
+  //const unsigned split[4] = {8, 4, 2, 1};
 
   double scalingFactor = 1.;
   unsigned numberOfUniformLevels = 4; //We apply uniform refinement.
   unsigned numberOfSelectiveLevels = 0; // We may want to see the solution on some levels.
-  
+
   MultiLevelMesh mlMsh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels,
-                        "./input/cube6x6x6.neu", "fifth", 1., NULL);
+                        "./input/cube8x8x3scaled.neu", "fifth", 1., NULL);
 
   unsigned dim = mlMsh.GetDimension();
   // erase all the coarse mesh levels
   // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
-  
-  for (unsigned simulation = 9; simulation < 11; simulation++) {
-
-    V0 = 0.005 * (simulation + 1) ;   // fraction of injection vs tumor
-
+ //std::vector <double> doses = {0.0100000,0.01170000,0.0128074,0.01375,0.0163183,0.0207917,0.0264914,
+  //   0.0337537,0.0430067,0.05,0.2,0.3,0.43,0.47,0.57,0.68,0.83,0.91,1.1,1.5,2.3,2.8,3.6,3.775, 3.95,4.125,4.3,4.475,4.65,4.825,5};
+     
+  for (unsigned simulation = 0; simulation < 1 ; simulation++) {
+    // unsigned l_base = xc.size();
+    //for (unsigned simulation = 0; simulation < l_base ; simulation++) {
+        
+    jInitialPosition = simulation; 
+    //V0 = 0.05 * (simulation + 1) ;   
+    //V0 = doses[simulation];
+    V0 = 1.5;
     // define the multilevel solution and attach the mlMsh object to it
     MultiLevelSolution mlSol (&mlMsh); // Here we provide the mesh info to the problem.
 
     // add variables to mlSol
-    mlSol.AddSolution ("u", LAGRANGE, SECOND, 2); 
-    mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false); 
-    
+    mlSol.AddSolution ("u", LAGRANGE, SECOND, 2);
+    mlSol.AddSolution ("d", LAGRANGE, SECOND,  0, false);
+
     mlSol.AddSolution ("K11", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
     mlSol.AddSolution ("K12", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
     mlSol.AddSolution ("K13", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
     mlSol.AddSolution ("K22", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
     mlSol.AddSolution ("K23", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
     mlSol.AddSolution ("K33", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
+    //mlSol.AddSolution ("AD", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
 
     mlSol.Initialize ("All");
     mlSol.Initialize ("u", InitalValueU3D);
     mlSol.Initialize ("d", InitalValueD);
-    GetKFromFile (mlSol, split[numberOfUniformLevels - 1]);
+    GetKFromFileANISO (mlSol);
 
     // attach the boundary condition function and generate boundary data
     mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
@@ -130,11 +172,11 @@ int main (int argc, char** args) {
 
     // time loop parameter
     system.AttachGetTimeIntervalFunction (GetTimeStep);
-    const unsigned int n_timesteps = 40;
+    const unsigned int n_timesteps = 60;
 
     system.SetMaxNumberOfNonLinearIterations (1);
     system.SetMaxNumberOfLinearIterations (1);
-    
+
     system.init();
     system.SetTolerances (1.e-10, 1.e-20, 1.e+50, 200, 40);
 
@@ -150,7 +192,7 @@ int main (int argc, char** args) {
     print_vars.push_back ("All");
 
     double time = system.GetTime();
-    GetDeadCells (time, mlSol);
+    GetDeadCells (time, mlSol, false);
 
     mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
@@ -160,13 +202,15 @@ int main (int argc, char** args) {
 
       system.MGsolve();
 
+      bool last = (time_step == n_timesteps - 1) ? true : false;
+
       double time = system.GetTime();
-      bool stop = GetDeadCells (time, mlSol);
+      bool stop = GetDeadCells (time, mlSol, last);
       mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
       if (stop) break;
     }
-   // mlProb.clear();
-    
+    // mlProb.clear();
+
   }
 
   return 0;
@@ -277,6 +321,25 @@ void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob) {
 
     short unsigned ielGeom = msh->GetElementType (iel);
     unsigned nDofu  = msh->GetElementDofNumber (iel, soluType); // number of solution element dofs
+
+    double K = (*sol->_Sol[kIndex[0]]) (iel);
+
+    if (K <= Keps) {
+      // local storage of global mapping and solution
+      for (unsigned i = 0; i < nDofu; i++) {
+        unsigned solDof = msh->GetSolutionDof (i, iel, soluType);   // global to global mapping between solution node and solution dof
+        sol->_Sol[soluIndex]->set (solDof, 0.);
+        sol->_SolOld[soluIndex]->set (solDof, 0.);
+      }
+    }
+  }
+  sol->_Sol[soluIndex]->close();
+
+
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    short unsigned ielGeom = msh->GetElementType (iel);
+    unsigned nDofu  = msh->GetElementDofNumber (iel, soluType); // number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber (iel, xType);   // number of coordinate element dofs
 
     // resize local arrays
@@ -357,7 +420,7 @@ void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob) {
           }
 
           // *** phi_i loop ***
-          double eps = 5.;
+          double eps = 0.0002;
           for (unsigned i = 0; i < faceDofs; i++) {
             unsigned inode = msh->GetLocalFaceVertexIndex (iel, jface, i);
             aRes[inode] +=  phi[i] * eps * (1.0 * solu_gss + 0. * soluOld_gss) * weight;
@@ -445,7 +508,7 @@ void AssemblePoissonProblem_AD (MultiLevelProblem& ml_prob) {
 }
 
 
-bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
+bool GetDeadCells (const double &time, MultiLevelSolution &mlSol, const bool & last) {
 
   double a = 0.0471;
   double b = -1.4629;
@@ -511,6 +574,7 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
       x[k].resize (nDofd); // Now we
     }
 
+
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofd; i++) {
       unsigned solDof = msh->GetSolutionDof (i, iel, soldType);   // global to global mapping between solution node and solution dof
@@ -526,26 +590,33 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
       }
     }
 
+    double K11 = (*sol->_Sol[ mlSol.GetIndex ("K11")]) (iel);
+    double K22 = (*sol->_Sol[ mlSol.GetIndex ("K22")]) (iel);
+    double K33 = (*sol->_Sol[ mlSol.GetIndex ("K33")]) (iel);
 
-    // *** Element Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soldType]->GetGaussPointNumber(); ig++) {
-      // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soldType]->Jacobian (x, ig, weight, phi, phi_x);
+    if (x[0][nDofd - 1] > -0.6 && x[0][nDofd - 1] < 1.7 &&
+        x[1][nDofd - 1] > -1.5 && x[1][nDofd - 1] < 1.5 &&
+        x[2][nDofd - 1] > -1.1 && x[0][nDofd - 1] < 2.2 && (K11+K22+K33)/3. > 0.6) {
+      // *** Element Gauss point loop ***
+      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soldType]->GetGaussPointNumber(); ig++) {
+        // *** get gauss point weight, test function and test function partial derivatives ***
+        msh->_finiteElement[ielGeom][soldType]->Jacobian (x, ig, weight, phi, phi_x);
 
-      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      double sold_gss = 0;
+        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+        double sold_gss = 0;
 
-      for (unsigned i = 0; i < nDofd; i++) {
-        sold_gss += phi[i] * sold[i];
-      }
+        for (unsigned i = 0; i < nDofd; i++) {
+          sold_gss += phi[i] * sold[i];
+        }
 
-      volume += weight;
+        volume += weight;
 
-      if (sold_gss <= 24) volumeUT[0] += weight;
-      if (sold_gss <= 48) volumeUT[1] += weight;
-      if (sold_gss <= 72) volumeUT[2] += weight;
+        if (sold_gss <= 24) volumeUT[0] += weight;
+        if (sold_gss <= 48) volumeUT[1] += weight;
+        if (sold_gss <= 72) volumeUT[2] += weight;
 
-    } // end gauss point loop
+      } // end gauss point loop
+    }
 
   }
 
@@ -562,49 +633,60 @@ bool GetDeadCells (const double &time, MultiLevelSolution &mlSol) {
   double lInfinityNorm    = sol->_Sol[soluIndex]->linfty_norm();
 
   std::cout << "Max = " << lInfinityNorm << " Treshold = " << uT[2].second << std::endl;
+  
+
 
   bool stop = (lInfinityNorm < uT[2].second) ? true : false;
 
-  if (stop && iproc == 0) {
+  if ( (stop || last) && iproc == 0) {
     std::ofstream fout;
+    unsigned j = jInitialPosition;
+    
     fout.open ("DoseResponseCurve.csv", std::ofstream::app);
-    fout << V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+    //fout << xc[j] <<","<<  yc[j] <<","<< zc[j] << ","<<  V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+    fout <<  V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+
     fout.close();
 
     fout.open ("DoseResponseCurve.txt", std::ofstream::app);
-    fout << V0 << " " << volumeUTAll[0] / volumeAll << " " << volumeUTAll[1] / volumeAll << " " << volumeUTAll[2] / volumeAll << " " << std::endl;
+    //fout << xc[j] <<","<<  yc[j] <<","<< zc[j] << ","<<  V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
+    fout << V0 << "," << volumeUTAll[0] / volumeAll << "," << volumeUTAll[1] / volumeAll << "," << volumeUTAll[2] / volumeAll << "," << std::endl;
     fout.close();
   }
   return stop;
 }
 
 
-bool CheckIfPositiveDefinite(double K[6]){
+bool CheckIfPositiveDefinite (double K[6]) {
   bool pDefinite = true;
   double det1 = K[0];
   double det2 = K[0] * K[3] - K[1] * K[1];
-  double det3 =   K[0] * (K[3] * K[5] - K[4] * K[4]) 
-                - K[1] * (K[1] * K[5] - K[4] * K[2]) 
-                + K[2] * (K[1] * K[4] - K[3] * K[2]);
-  if(det1 <= 0. || det2 <= 0. || det3 <= 0.) {
+  double det3 =   K[0] * (K[3] * K[5] - K[4] * K[4])
+                  - K[1] * (K[1] * K[5] - K[4] * K[2])
+                  + K[2] * (K[1] * K[4] - K[3] * K[2]);
+  if (det1 <= 0. || det2 <= 0. || det3 <= 0.) {
     pDefinite = false;
-  }          
+  }
   return pDefinite;
-};  
+};
 
 
-void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split) {
+void GetKFromFileISO (MultiLevelSolution &mlSol, const unsigned & split, const unsigned &patient) {
 
   unsigned Level = mlSol._mlMesh->GetNumberOfLevels() - 1;
 
   Solution *sol  = mlSol.GetSolutionLevel (Level);
   Mesh     *msh   = mlSol._mlMesh->GetLevel (Level);
 
+  std::ostringstream filename;
+  filename << "./input/CroppedMD_Data0" << patient << ".txt";
+
   std::ifstream fin;
 
-  fin.open ("./input/CroppedTensorData.txt");
+  //fin.open ("./input/MeanDiffData.txt");
+  fin.open (filename.str().c_str());
   if (!fin.is_open()) {
-    std::cout << std::endl << " The output file " << "./input/tensor.txt" << " cannot be opened.\n";
+    std::cout << std::endl << " The output file " << "./input/MeanDiffData.txt" << " cannot be opened.\n";
     abort();
   }
 
@@ -634,6 +716,8 @@ void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split) {
   unsigned iproc  = msh->processor_id();
   unsigned nprocs  = msh->n_processors();
 
+
+
   for (unsigned i = 0; i < n1; i++) {
     for (unsigned j = 0; j < n2; j++) {
       for (unsigned k = 0; k < n3; k++) {
@@ -644,21 +728,31 @@ void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split) {
           x[2] = -1. + h3 * k + 0.5 * h3;
 
           double K[6];
-          for (unsigned l = 0; l < 6; l++) {
-            fin >> K[l];
-          }
+          //for (unsigned l = 0; l < 1; l++) {
+          fin >> K[0];
+          if (K[0] < Keps) K[0] = Keps;
+          K[1] = K[2] = K[4] = 0.;
+          K[3] = K[5] = K[0];
+          //}
 
           Marker center = Marker (x, 1., VOLUME , sol, 0);
           unsigned mproc = center.GetMarkerProc (sol);
 
+
+
           if (mproc == iproc) {
             unsigned iel = center.GetMarkerElement();
-            while ( !CheckIfPositiveDefinite(K)){
-              std::cout << " warning k[" << iel << "] is not positive definite\n";   
-              K[0] += fabs(K[0]) + fabs(K[1]) + fabs(K[2]);
-              K[3] += fabs(K[1]) + fabs(K[3]) + fabs(K[4]);
-              K[5] += fabs(K[2]) + fabs(K[4]) + fabs(K[5]);
-            }  
+//             while (!CheckIfPositiveDefinite (K)) {
+//               std::cout << " warning k[" << iel << "] is not positive definite\n";
+//
+//               K[0] += (K[0] < 0.) ? fabs (K[0]) + fabs (K[1]) + fabs (K[2]) : fabs (K[1]) + fabs (K[2]);
+//               K[3] += (K[3] < 0.) ? fabs (K[1]) + fabs (K[3]) + fabs (K[4]) : fabs (K[1]) + fabs (K[4]);
+//               K[5] += (K[5] < 0.) ? fabs (K[2]) + fabs (K[4]) + fabs (K[5]) : fabs (K[2]) + fabs (K[4]);
+//               if (K[0] < eps) K[0] = eps;
+//               if (K[3] < eps) K[3] = eps;
+//               if (K[5] < eps) K[5] = eps;
+//
+//             }
             for (unsigned l = 0; l < 6; l++) {
               sol->_Sol[kIndex[l]]->set (iel, K[l]);
             }
@@ -673,19 +767,195 @@ void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split) {
     sol->_Sol[kIndex[l]]->close();
   }
 
-  double trace = 0.;
-  for (int iel = msh->_dofOffset[kType][iproc]; iel < msh->_dofOffset[kType][iproc + 1]; iel++) {
-    trace += ( (*sol->_Sol[kIndex[0]]) (iel) + (*sol->_Sol[kIndex[3]]) (iel)
-               + (*sol->_Sol[kIndex[5]]) (iel)) / 3.;
+//   double trace = 0.;
+//   for (int iel = msh->_dofOffset[kType][iproc]; iel < msh->_dofOffset[kType][iproc + 1]; iel++) {
+//     trace += ( (*sol->_Sol[kIndex[0]]) (iel) + (*sol->_Sol[kIndex[3]]) (iel)
+//                + (*sol->_Sol[kIndex[5]]) (iel)) / 3.;
+//   }
+//   double traceAll = 0.;
+//   MPI_Allreduce (&trace, &traceAll, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+//
+//   traceAll /= msh->_dofOffset[kType][nprocs];
+//
+//
+//   for (int iel = msh->_dofOffset[kType][iproc]; iel < msh->_dofOffset[kType][iproc + 1]; iel++) {
+//
+//     for (unsigned j = 0; j < 6; j++) {
+//       double value = (*sol->_Sol[kIndex[j]]) (iel) / traceAll;
+//       sol->_Sol[kIndex[j]]->set (iel, value);
+//     }
+//   }
+//   for (unsigned l = 0; l < 6; l++) {
+//     sol->_Sol[kIndex[l]]->close();
+//   }
+
+
+
+}
+
+
+void GetKFromFileANISO (MultiLevelSolution &mlSol) {
+
+  unsigned Level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+
+  Solution *sol  = mlSol.GetSolutionLevel (Level);
+  Mesh     *msh   = mlSol._mlMesh->GetLevel (Level);
+
+  std::ostringstream filename;
+  std::ostringstream fileAD;
+  
+  double treshold = 0.;
+  filename << "./input/NewCorrectedTensorSPD1.txt";
+  treshold = 0.002;
+  
+//   filename << "./input/NewCorrectedTensorSPD2.txt";
+//   treshold = 0.0002;
+ 
+//   filename << "./input/NewCorrectedTensorSPD3.txt";
+//   treshold = 0.00002;
+  
+  
+  //filename << "./input/NewCorrectedTensorSPD_0_1.txt";
+  //fileAD << "/home/erdi/FEMuS/MyFEMuS/applications/Tumor/ex3/input/AxialDiffusivity.txt";
+
+  std::ifstream fin;
+
+  fin.open (filename.str().c_str());
+  
+  if (!fin.is_open()) {
+    std::cout << " The input file " << filename.str().c_str() << " cannot be opened.\n" << std::endl;
+    abort();
   }
-  double traceAll = 0.;
-  MPI_Allreduce (&trace, &traceAll, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-  traceAll /= msh->_dofOffset[kType][nprocs];
+  unsigned n1, n2, n3;
+  fin >> n3;
+  fin >> n2;
+  fin >> n1;
+
+  double h1, h2, h3;
+
+  h1 = 5. / n1;
+  h2 = 5. / n2;
+  h3 = 5. / n3;
+
+  std::string kname[6] = {"K11", "K12", "K13", "K22", "K23", "K33"};
+  //std::string ADName = "AD";
+
+  unsigned kIndex[6];
+  for (unsigned i = 0; i < 6; i++) {
+    kIndex[i] = mlSol.GetIndex (kname[i].c_str());
+  }
+  //unsigned ADIndex;
+  //ADIndex = mlSol.GetIndex(ADName.c_str());
+  
+
+  unsigned kType = mlSol.GetSolutionType (kIndex[0]);
+  //unsigned ADType = mlSol.GetSolutionType (ADIndex);
+
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  std::vector<double> x (dim);
+
+  unsigned iproc  = msh->processor_id();
+  unsigned nprocs  = msh->n_processors();
+
+
+  for (unsigned k = 0; k < n3; k++) {
+    for (unsigned j = 0; j < n2; j++) {
+      for (unsigned i = 0; i < n1; i++) {
+
+        double K[6];
+        for (unsigned l = 0; l < 6; l++) {
+          fin >> K[l];
+        }
+        //double AD;
+        //fAD >> AD;
+        if (K[0] < Keps) K[0] = Keps;
+        if (K[3] < Keps) K[3] = Keps;
+        if (K[5] < Keps) K[5] = Keps;
+
+        x[0] = -2.5 + h1 * i + 0.5 * h1;
+        x[1] = -2.5 + h2 * j + 0.5 * h2;
+        x[2] = -2.5 + h3 * k + 0.5 * h3;
+
+        Marker center = Marker (x, 1., VOLUME , sol, 0);
+        unsigned mproc = center.GetMarkerProc (sol);
+
+        if (mproc == iproc) {
+          unsigned iel = center.GetMarkerElement();
+          while (!CheckIfPositiveDefinite (K)) {
+            std::cout << " warning k[" << iel << "] is not positive definite\n";
+
+            K[0] += (K[0] < 0.) ? fabs (K[0]) + fabs (K[1]) + fabs (K[2]) : fabs (K[1]) + fabs (K[2]);
+            K[3] += (K[3] < 0.) ? fabs (K[1]) + fabs (K[3]) + fabs (K[4]) : fabs (K[1]) + fabs (K[4]);
+            K[5] += (K[5] < 0.) ? fabs (K[2]) + fabs (K[4]) + fabs (K[5]) : fabs (K[2]) + fabs (K[4]);
+            if (K[0] < Keps) K[0] = Keps;
+            if (K[3] < Keps) K[3] = Keps;
+            if (K[5] < Keps) K[5] = Keps;
+          }
+          //sol->_Sol[ADIndex]->set (iel, AD);
+          for (unsigned l = 0; l < 6; l++) {
+            sol->_Sol[kIndex[l]]->set (iel, K[l]);
+          }
+        }
+      }
+    }
+
+  }
+
+  fin.close();
+  for (unsigned l = 0; l < 6; l++) {
+    sol->_Sol[kIndex[l]]->close();
+  }
+  //fAD.close();
+  //sol->_Sol[ADIndex]->close();
+
+  //rescale so that the average of all inSkull DTI traces is 1
+
+  double trace = 0.;
+  unsigned counter = 0;
+  for (int iel = msh->_dofOffset[kType][iproc]; iel < msh->_dofOffset[kType][iproc + 1]; iel++) {
+
+    unsigned xType = 2;
+    unsigned n  = msh->GetElementDofNumber (iel, xType); // number of solution element dofs
+
+    unsigned xDof  = msh->GetSolutionDof (n - 1, iel, xType);   // local to global mapping between coordinates node and coordinate dof
+
+    std::vector<double> x (3);
+    for (unsigned k = 0; k < dim; k++) {
+      x[k] = (*msh->_topology->_Sol[k]) (xDof);     // global extraction and local storage for the element coordinates
+    }
+
+
+
+    if (x[0] > -0.6 && x[0] < 1.7 &&
+        x[1] > -1.5 && x[1] < 1.5 &&
+        x[2] > -1.1 && x[0] < 2.2)  {
+
+      //if (r < 1.3) {
+      double traceIel = ( (*sol->_Sol[kIndex[0]]) (iel) + (*sol->_Sol[kIndex[3]]) (iel)
+                          + (*sol->_Sol[kIndex[5]]) (iel)) / 3.;
+      if (traceIel > treshold) {
+        trace += traceIel;
+        counter++;
+      }
+    }
+  }
+  std::cout <<"Trace is: " << trace <<"counter is :"<< counter <<std::endl;
+
+  double traceAll = 0.;
+  unsigned counterAll;
+  MPI_Allreduce (&trace, &traceAll, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce (&counter, &counterAll, 1, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
+  
+  std::cout << "TraceAll is : " << traceAll << "--" << " CounterAll = "<< counterAll <<std::endl;
+  
+  traceAll *= 1. / counterAll;
+  
+
+  std::cout << "TraceAll after is : " << traceAll << "--" << " CounterAll after = "<< counterAll <<std::endl;
 
 
   for (int iel = msh->_dofOffset[kType][iproc]; iel < msh->_dofOffset[kType][iproc + 1]; iel++) {
-
     for (unsigned j = 0; j < 6; j++) {
       double value = (*sol->_Sol[kIndex[j]]) (iel) / traceAll;
       sol->_Sol[kIndex[j]]->set (iel, value);
@@ -694,7 +964,5 @@ void GetKFromFile (MultiLevelSolution &mlSol, const unsigned & split) {
   for (unsigned l = 0; l < 6; l++) {
     sol->_Sol[kIndex[l]]->close();
   }
-
-
 
 }
