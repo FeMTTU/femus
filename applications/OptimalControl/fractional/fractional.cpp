@@ -22,9 +22,9 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
-#define S_FRAC 0.5
+#define N_UNIFORM_LEVELS  6
+#define N_ERASED_LEVELS   5
+#define S_FRAC 0.9999999
 
 #define OP_L2       0
 #define OP_H1       0
@@ -33,7 +33,7 @@ using namespace femus;
 
 #define USE_Cns     1
 
-#define Nsplit      4
+#define Nsplit      10
 
 
 double InitialValueU(const std::vector < double >& x)
@@ -350,9 +350,18 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   const double check_limits = 1.;//1. - s_frac; // - s_frac;
 
 //   double C_ns = /*2.; // */  ( s_frac * pow ( 2, 2 * s_frac ) * tgamma ( (dim + 2.) / 2. ) / ( tgamma ( 0.5 ) * tgamma( 1 - s_frac ) ));
-  double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim + 2. * s_frac) / 2.) / (pow(M_PI, dim / 2.)
-                * tgamma(1 -  s_frac)) ;
+  double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim + 2. * s_frac) / 2.) / (pow(M_PI, dim / 2.)* tgamma(1 -  s_frac)) ;
 
+  std::cout <<"BBBBBBB " << C_ns/(1. - S_FRAC) << std::endl;
+  
+  C_ns = 1./10; //(1. - S_FRAC)/C_ns;
+  
+  //double C_ns = pow(4., S_FRAC) * tgamma(dim/2.+S_FRAC)/(pow(M_PI, dim/2.) * fabs(tgamma(-S_FRAC)) ) ;
+  
+//   std::cout <<"AAAAAAAAAA " << C_ns << " " << C_nsw << std::endl;
+                
+  //double C_ns = 1./( 1. - S_FRAC);
+  
 
   for(int kproc = 0; kproc < nprocs; kproc++) {
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
@@ -421,8 +430,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
       }
       // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-//       const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
-      const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
+      const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
+      //const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
 
       vector < vector < double > > xg2(jgNumber);
       vector <double> weight2(jgNumber);
@@ -431,11 +440,14 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
       for(unsigned jg = 0; jg < jgNumber; jg++) {
 
-//          msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
+        msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
 
-        elem_all[ielGeom2][xType]->JacJacInv(/*x2*/geom_element2.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
-        weight2[jg] = detJac_qp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
-        elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
+//         elem_all[ielGeom2][xType]->JacJacInv(/*x2*/geom_element2.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
+//         weight2[jg] = detJac_qp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
+//         elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
+        
+        
+        
         
         xg2[jg].assign(dim, 0.);
         solY[jg] = 0.;
@@ -499,17 +511,17 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           if(Nsplit != 0) {
 //             Vectors and matrices for adaptive quadrature
             Res_nonlocalI_3.assign(nDof1, 0);    //resize
-            Res_nonlocalI_4.assign(nDof1, 0);    //resize
-            Res_nonlocalJ_3.assign(nDof1, 0);    //resize
-            Res_nonlocalJ_4.assign(nDof1, 0);    //resize
+            //Res_nonlocalI_4.assign(nDof1, 0);    //resize
+           //Res_nonlocalJ_3.assign(nDof1, 0);    //resize
+           // Res_nonlocalJ_4.assign(nDof1, 0);    //resize
             CClocalII_3.assign(nDof1 * nDof1, 0.);
-            CClocalIJ_3.assign(nDof1 * nDof1, 0.);
-            CClocalJI_3.assign(nDof1 * nDof1, 0.);
-            CClocalJJ_3.assign(nDof1 * nDof1, 0.);
-            CClocalII_4.assign(nDof1 * nDof1, 0.);
-            CClocalIJ_4.assign(nDof1 * nDof1, 0.);
-            CClocalJI_4.assign(nDof1 * nDof1, 0.);
-            CClocalJJ_4.assign(nDof1 * nDof1, 0.);
+//             CClocalIJ_3.assign(nDof1 * nDof1, 0.);
+//             CClocalJI_3.assign(nDof1 * nDof1, 0.);
+//             CClocalJJ_3.assign(nDof1 * nDof1, 0.);
+//             CClocalII_4.assign(nDof1 * nDof1, 0.);
+//             CClocalIJ_4.assign(nDof1 * nDof1, 0.);
+//             CClocalJI_4.assign(nDof1 * nDof1, 0.);
+//             CClocalJJ_4.assign(nDof1 * nDof1, 0.);
           }
         }
 
@@ -583,27 +595,36 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //          ---------------------
 //          Adaptive quadrature for iel == jel
 
-            std::vector<std::vector<double>> x3(dim);
-            std::vector<std::vector<double>> x4(dim);
-            for(unsigned k = 0; k < dim; k++) {
-              x3[k].resize(nDofx1);
-              x4[k].resize(nDofx1);
-              for(unsigned k = 0; k < dim; k++) {
-                x3[k][0] = x1[k][0];
-                x3[k][1] = 0.5 * (x3[k][0] + xg1[k]);
-                x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
-                x4[k][1] = x1[k][1];
-                x4[k][0] = 0.5 * (x4[k][1] + xg1[k]);
-                x4[k][2] = 0.5 * (x4[k][0] + x4[k][1]);
-              }
-            }
+            
 
-            std::cout.precision(14);
+            
             if(Nsplit != 0) {
+              std::cout.precision(14);
+              std::vector<std::vector<double>> x3(dim);
+              std::vector<std::vector<double>> x4(dim);
+              for(unsigned k = 0; k < dim; k++) {
+                x3[k].resize(nDofx1);
+                x4[k].resize(nDofx1);
+                for(unsigned k = 0; k < dim; k++) {
+                  x3[k][0] = x1[k][0];
+                  x3[k][1] = 0.5 * (x3[k][0] + xg1[k]);
+                  x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
+                  x4[k][1] = x1[k][1];
+                  x4[k][0] = 0.5 * (x4[k][1] + xg1[k]);
+                  x4[k][2] = 0.5 * (x4[k][0] + x4[k][1]);
+                }
+              }
+              double weight3sum = 0.;
+              double weight4sum = 0.;
+              
               for(unsigned split = 0; split <= Nsplit; split++) {
                 for(unsigned jg = 0; jg < igNumber; jg++) {
                   msh->_finiteElement[ielGeom1][solType]->Jacobian(x3, jg, weight3, phi3, phi_x);
                   msh->_finiteElement[ielGeom1][solType]->Jacobian(x4, jg, weight4, phi4, phi_x);
+                  
+                  weight3sum += weight3;
+                  weight4sum += weight4;
+                  
                   vector < double > xg3(dim, 0.);
                   vector < double > xg4(dim, 0.);
                   for(unsigned i = 0; i < nDof1; i++) {
@@ -616,16 +637,18 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                   std::vector<double> xi3(dim, 0.);
                   std::vector<double> xi4(dim, 0.);
                   for(unsigned k = 0; k < dim; k++) {
-                    xi3[k] = (xg3[k] - x1[k][0]) / (x1[k][1] - x1[k][0]);
-                    xi4[k] = (xg4[k] - x1[k][0]) / (x1[k][1] - x1[k][0]);
+                    xi3[k] = -1. + 2. * (xg3[k] - x1[k][0]) / (x1[k][1] - x1[k][0]);
+                    xi4[k] = -1. + 2. * (xg4[k] - x1[k][0]) / (x1[k][1] - x1[k][0]);
                   }
 
-                  phi3[0] = 0.5 * (1 - xi3[0]) * (-xi3[0]);
-                  phi3[1] = 0.5 * (1 + xi3[0]) * (xi3[0]);
+                  phi3[0] = 0.5 * (1. - xi3[0]) * (-xi3[0]);
+                  phi3[1] = 0.5 * (1. + xi3[0]) * (xi3[0]);
                   phi3[2] = (1. - xi3[0] * xi3[0]);
-                  phi4[0] = 0.5 * (1 - xi4[0]) * (-xi4[0]);
-                  phi4[1] = 0.5 * (1 + xi4[0]) * (xi4[0]);
+                  
+                  phi4[0] = 0.5 * (1. - xi4[0]) * (-xi4[0]);
+                  phi4[1] = 0.5 * (1. + xi4[0]) * (xi4[0]);
                   phi4[2] = (1. - xi4[0] * xi4[0]);
+                  
                   double solY3 = 0.;
                   double solY4 = 0.;
                   for(unsigned i = 0; i < nDof1; i++) {
@@ -643,9 +666,14 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
                   const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
                   const double denom4 = pow(dist_xyz4, (double)((dim / 2.) + s_frac));
+                  
+                  
+                  //std::cout << iel << " "<<jg<<" " << xg1[0] <<" " << xi3[0] <<" "<< phi3[0] << " " << phi3[1] << " " << phi3[2] <<" "<< phi3[0] + phi3[1] + phi3[2] << std::endl;
+                  //std::cout << iel << " "<<jg<<" "<< xg1[0] <<" " << xi4[0] <<" "<< phi4[0] << " " << phi4[1] << " " << phi4[2] <<" "<< phi4[0] + phi4[1] + phi4[2] << std::endl;
+                  //std::cout << iel << " " <<jg << " " << denom3 <<" "<< denom4 <<std::endl;
 
                   for(unsigned i = 0; i < nDof1; i++) {
-
+/*
                     Res_nonlocalI_3[ i ]    +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY3) * (phi1[i]) * weight1 * weight3  / denom3;
 
                     Res_nonlocalJ_3[ i ]    +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY3) * (- phi3[i]) * weight1 * weight3  / denom3;
@@ -653,27 +681,36 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                     Res_nonlocalI_4[ i ]    +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY4) * (phi1[i]) * weight1 * weight4  / denom4;
 
                     Res_nonlocalJ_4[ i ]    +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY4) * (- phi4[i]) * weight1 * weight4  / denom4;
-                    
+                    */
 
+                    Res_nonlocalI_3[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits * 
+                                                      ( (solX - solY3) * (phi1[i] - phi3[i]) * weight3 / denom3 +
+                                                        (solX - solY4) * (phi1[i] - phi4[i]) * weight4 / denom4 ) * weight1 ;
+                    
                     for(unsigned j = 0; j < nDof2; j++) {
 //                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
 
-                      CClocalII_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight3 / denom3;
+//                       CClocalII_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight3 / denom3;
+// 
+//                       CClocalIJ_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi3[j]) * phi1[i] * weight1 * weight3 / denom3;
+// 
+//                       CClocalJI_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi3[i]) * weight1 * weight3 / denom3;
+// 
+//                       CClocalJJ_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi3[j]) * (- phi3[i]) * weight1 * weight3 / denom3;
+// 
+//                       CClocalII_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight4 / denom4;
+// 
+//                       CClocalIJ_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi4[j]) * phi1[i] * weight1 * weight4 / denom4;
+// 
+//                       CClocalJI_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi4[i]) * weight1 * weight4 / denom4;
+// 
+//                       CClocalJJ_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi4[j]) * (- phi4[i]) * weight1 * weight4 / denom4;
 
-                      CClocalIJ_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi3[j]) * phi1[i] * weight1 * weight3 / denom3;
-
-                      CClocalJI_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi3[i]) * weight1 * weight3 / denom3;
-
-                      CClocalJJ_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi3[j]) * (- phi3[i]) * weight1 * weight3 / denom3;
-
-                      CClocalII_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight4 / denom4;
-
-                      CClocalIJ_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi4[j]) * phi1[i] * weight1 * weight4 / denom4;
-
-                      CClocalJI_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi4[i]) * weight1 * weight4 / denom4;
-
-                      CClocalJJ_4[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi4[j]) * (- phi4[i]) * weight1 * weight4 / denom4;
-
+                      
+                      CClocalII_3[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * 
+                                                      ( (phi1[j] - phi3[j]) * (phi1[i] - phi3[i]) * weight3 / denom3 +
+                                                        (phi1[j] - phi4[j]) * (phi1[i] - phi4[i]) * weight4 / denom4 ) * weight1 ;
+                                            
                     }
                   }
 
@@ -687,6 +724,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                     x3[k][0] = x3[k][1];
                     x3[k][1] = xg1[k];
                     x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
+                    
                     x4[k][1] = x4[k][0];
                     x4[k][0] = xg1[k];
                     x4[k][2] = 0.5 * (x4[k][0] + x4[k][1]);
@@ -697,6 +735,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                     x3[k][0] = x3[k][1];
                     x3[k][1] = 0.5 * (x3[k][0] + xg1[k]);
                     x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
+                    
                     x4[k][1] = x4[k][0];
                     x4[k][0] = 0.5 * (x4[k][1] + xg1[k]);
                     x4[k][2] = 0.5 * (x4[k][0] + x4[k][1]);
@@ -704,6 +743,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 }
 
               }
+              
+              //std::cout << weight3sum <<" " << weight4sum << " " << weight3sum + weight4sum << std::endl;
             }
 
           } // end iel == jel loop
@@ -718,16 +759,16 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
               const double denom = pow(dist_xyz, (double)((dim / 2.) + s_frac));
 //               const double denom = 1;
-              weight2[jg] = 1.;
+             // weight2[jg] = 1.;
 
               for(unsigned i = 0; i < nDof1; i++) {
 
 //                Res_nonlocal[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg]  / denom;
 
 
-                Res_nonlocalI[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i]) * weight1 * weight2[jg]  / denom;
+               Res_nonlocalI[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i]) * weight1 * weight2[jg]  / denom;
 
-                Res_nonlocalJ[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (- phi2[jg][i]) * weight1 * weight2[jg]  / denom;
+               Res_nonlocalJ[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (- phi2[jg][i]) * weight1 * weight2[jg]  / denom;
 
                 for(unsigned j = 0; j < nDof2; j++) {
 //                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
@@ -759,17 +800,17 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
           if(Nsplit != 0) {
             MM->add_matrix_blocked(CClocalII_3, l2GMap1, l2GMap1);
-            MM->add_matrix_blocked(CClocalIJ_3, l2GMap1, l2GMap2);
-            MM->add_matrix_blocked(CClocalJI_3, l2GMap2, l2GMap1);
-            MM->add_matrix_blocked(CClocalJJ_3, l2GMap2, l2GMap2);
-            MM->add_matrix_blocked(CClocalII_4, l2GMap1, l2GMap1);
-            MM->add_matrix_blocked(CClocalIJ_4, l2GMap1, l2GMap2);
-            MM->add_matrix_blocked(CClocalJI_4, l2GMap2, l2GMap1);
-            MM->add_matrix_blocked(CClocalJJ_4, l2GMap2, l2GMap2);
+//             MM->add_matrix_blocked(CClocalIJ_3, l2GMap1, l2GMap2);
+//             MM->add_matrix_blocked(CClocalJI_3, l2GMap2, l2GMap1);
+//             MM->add_matrix_blocked(CClocalJJ_3, l2GMap2, l2GMap2);
+//             MM->add_matrix_blocked(CClocalII_4, l2GMap1, l2GMap1);
+//             MM->add_matrix_blocked(CClocalIJ_4, l2GMap1, l2GMap2);
+//             MM->add_matrix_blocked(CClocalJI_4, l2GMap2, l2GMap1);
+//             MM->add_matrix_blocked(CClocalJJ_4, l2GMap2, l2GMap2);
             RES->add_vector_blocked(Res_nonlocalI_3, l2GMap1);
-            RES->add_vector_blocked(Res_nonlocalJ_3, l2GMap2);
-            RES->add_vector_blocked(Res_nonlocalI_4, l2GMap1);
-            RES->add_vector_blocked(Res_nonlocalJ_4, l2GMap2);
+//             RES->add_vector_blocked(Res_nonlocalJ_3, l2GMap2);
+//             RES->add_vector_blocked(Res_nonlocalI_4, l2GMap1);
+//             RES->add_vector_blocked(Res_nonlocalJ_4, l2GMap2);
           }
         }
         //MM->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
