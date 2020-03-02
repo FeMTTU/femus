@@ -1,7 +1,7 @@
 /*=========================================================================
 
 Program: FEMUS
-Module: MultiLevelProblem
+Module: MultiLevelSolution
 Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
 Copyright (c) FEMTTU
@@ -355,8 +355,45 @@ namespace femus {
     }
 
     return _solType[index];
-  }  
+  }
+  
+  
+  
+//---------------------------------------------------------------------------------------------------
+    const FEFamily MultiLevelSolution::GetSolutionFamily(const std::string & sol_name) const {
+        
+        const char * name = sol_name.c_str();
+        
+        const unsigned int index = GetIndex(name);
+        
+        return _family[index];
+   
+  }
+  
 
+//---------------------------------------------------------------------------------------------------
+    const FEOrder MultiLevelSolution::GetSolutionOrder(const std::string & sol_name) const {
+        
+        const char * name = sol_name.c_str();
+        
+        const unsigned index = GetIndex(name);
+        
+        return _order[index];
+   
+  }
+  
+  
+//---------------------------------------------------------------------------------------------------
+    const int MultiLevelSolution::GetSolutionTimeOrder(const std::string & sol_name) const {
+        
+        const char * name = sol_name.c_str();
+        
+        const unsigned index = GetIndex(name);
+        
+        return _solTimeOrder[index];
+   
+  }
+  
 
 //---------------------------------------------------------------------------------------------------
   void MultiLevelSolution::AttachSetBoundaryConditionFunction (BoundaryFuncMLProb SetBoundaryConditionFunction_in) {

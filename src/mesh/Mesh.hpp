@@ -83,6 +83,10 @@ public:
       return _nelem;
     }
 
+    elem * GetElementArray() const {
+      return el;
+    }
+    
     /** Get if element is refined*/
     short unsigned GetRefinedElementIndex(const unsigned &iel) const;
 
@@ -160,10 +164,18 @@ public:
     /** To be Added */
     void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
 
-    /** Generate mesh functions */
+    void Partition();
+    
+    void InitializeTopologyStructures();
+  
+    /** Only file reading */
+    void ReadCoarseMeshFile (const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
 
-    /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
+      /** This function generates the coarse mesh level, $l_0$, from an input mesh file */
     void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag);
+
+    /** This function generates the coarse mesh level, $l_0$, from an input mesh file, with option to not read groups */
+    void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag, const bool read_groups, const bool read_boundary_groups);
 
     /** This function generates a coarse box mesh */
     void GenerateCoarseBoxMesh(const unsigned int nx,
@@ -201,7 +213,7 @@ public:
     vector < unsigned > _dofOffset[5];
     vector< vector < int > > _ghostDofs[5];
 
-    elem *el;  // topology object
+    elem *el;  // topology object - list of all elements
     static bool (* _SetRefinementFlag)(const std::vector < double >& x,
                                        const int &ElemGroupNumber,const int &level);
     static bool _IsUserRefinementFunctionDefined;

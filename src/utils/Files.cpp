@@ -339,7 +339,7 @@ void Files::ComposeOutdirName() {
    int outchar_size;
    std::ostringstream outname;
 
-    
+//****** Proc0 generates the string    
    if (paral::get_rank() == 0) {
   
   time_t      curtime = 0; 
@@ -370,6 +370,7 @@ void Files::ComposeOutdirName() {
   
     }
 
+//****** Proc0 broadcasts the string size and the string content to every proc    
 #ifdef HAVE_MPI
   MPI_Bcast(&outchar_size,1,MPI_INT,0,MPI_COMM_WORLD);
 #endif
@@ -518,6 +519,7 @@ void Files::CheckIODirectories() {
 
    std::string abs_outputdir = abs_app + "/" + DEFAULT_OUTPUTDIR;
 /*(iproc==0)*/  ComposeOutdirName();  //this adds an element to the Files map, so the SetupAll function cannot be constant
+
 /*(iproc==0)*/  CheckDirOrMake(abs_outputdir,_output_time);
 
 // at this point we should copy the input files in the outtime directory

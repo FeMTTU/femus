@@ -36,6 +36,13 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x,
 				  const int &ElemGroupNumber,const int &level) = NULL;
 
 
+MultiLevelProblem::MultiLevelProblem():
+				      _files(NULL)
+{
+
+}
+
+
 MultiLevelProblem::MultiLevelProblem( MultiLevelSolution *ml_sol):
 				      _ml_sol(ml_sol),
 				      _ml_msh(ml_sol->_mlMesh),
@@ -52,6 +59,17 @@ MultiLevelProblem::~MultiLevelProblem(){
     delete iterator->second;
   }
 }
+
+
+
+ void MultiLevelProblem::SetMultiLevelMeshAndSolution(MultiLevelMesh * ml_mesh, MultiLevelSolution * ml_sol) {
+     
+				      _ml_sol = ml_sol;
+				      _ml_msh = ml_sol->_mlMesh;
+				       _gridn = _ml_msh->GetNumberOfLevels();
+     
+ }
+
 
 System & MultiLevelProblem::add_system (const std::string& sys_type,
 				      const std::string& name)
@@ -146,28 +164,22 @@ void MultiLevelProblem::clear ()
 // }
 
 
- void MultiLevelProblem::SetQruleAndElemType(const std::string quadr_order_in) {
+ void MultiLevelProblem::SetQuadratureRuleAllGeomElems(const std::string quadr_order_in) {
 
-
-  _qrule.reserve(_ml_msh->GetLevel(LEV_PICK)->GetDimension());
-  for (int idim=0;idim < _ml_msh->GetLevel(LEV_PICK)->GetDimension(); idim++) {
-          Gauss qrule_temp(_mesh->_geomelem_id[idim].c_str(),quadr_order_in.c_str());
+  
+  _qrule.reserve(N_GEOM_ELS);
+  
+  for (int iel = 0; iel < femus::geom_elems.size(); iel++) {
+          Gauss qrule_temp(femus::geom_elems[iel].c_str(),quadr_order_in.c_str());
          _qrule.push_back(qrule_temp);
            }
 
-  // =======FEElems =====  //remember to delete the FE at the end
-  const std::string  FEFamily[QL] = {"biquadratic","linear","constant"};
-  _elem_type.resize(_ml_msh->GetLevel(LEV_PICK)->GetDimension());
-  for (int idim=0;idim < _ml_msh->GetLevel(LEV_PICK)->GetDimension(); idim++)   _elem_type[idim].resize(QL);
-
-  for (int idim=0;idim < _ml_msh->GetLevel(LEV_PICK)->GetDimension(); idim++) {
-    for (int fe=0; fe<QL; fe++) {
-       _elem_type[idim][fe] = _ml_msh->_finiteElement[ _mesh->_geomelem_flag[idim] ][ elem_type::_fe_old_to_new[fe] ];
-     }
-    }
-
    return;
 }
+
+
+
+
 
 } //end namespace femus
 

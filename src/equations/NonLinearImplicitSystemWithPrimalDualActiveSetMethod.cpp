@@ -46,7 +46,7 @@ namespace femus {
 
     clock_t start_mg_time = clock();
 
-    double totalAssembyTime = 0.;
+    double totalAssemblyTime = 0.;
 
     unsigned grid0;
 
@@ -74,7 +74,44 @@ namespace femus {
       if (ThisIsAMR) _solution[igridn]->InitAMREps();
 
 
-      for (unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++) {
+      
+      
+     nonlinear_solve_single_level(mgSmootherType, totalAssemblyTime, grid0, igridn);
+ 
+     
+     
+     
+
+      if (_bitFlipOccurred && _bitFlipCounter == 1) {
+        goto restart;
+      }
+
+      if (igridn + 1 < _gridn) ProlongatorSol (igridn + 1);
+
+      if (ThisIsAMR) AddAMRLevel (AMRCounter);
+
+
+      std::cout << std::endl << "   ****** Nonlinear-Cycle TIME: " << std::setw (11) << std::setprecision (6) << std::fixed
+                << static_cast<double> ( (clock() - start_nl_time)) / CLOCKS_PER_SEC << std::endl;
+
+      std::cout << std::endl << "   ****** End Level Max " << igridn + 1 << " ******" << std::endl;
+    }
+
+    double totalSolverTime = static_cast<double> ( (clock() - start_mg_time)) / CLOCKS_PER_SEC;
+    std::cout << std::endl << "   *** Nonlinear Solver TIME: " << std::setw (11) << std::setprecision (6) << std::fixed
+              << totalSolverTime <<  " = assembly TIME( " << totalAssemblyTime << " ) + "
+              << " solver TIME( " << totalSolverTime - totalAssemblyTime << " ) " << std::endl;
+
+    _totalAssemblyTime += totalAssemblyTime;
+    _totalSolverTime += totalSolverTime - totalAssemblyTime;
+  }
+
+  
+  
+  void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::nonlinear_solve_single_level(const MgSmootherType& mgSmootherType, double & totalAssemblyTime, const unsigned int grid0, const unsigned int igridn) {
+      
+      
+         for (unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++) {
 
         _nonliniteration = nonLinearIterator;
 
@@ -161,7 +198,7 @@ namespace femus {
           std::cout << "   ********* Level Max " << igridn + 1 << " MGINIT TIME:\t" \
                     << static_cast<double> ( (clock() - mg_init_time)) / CLOCKS_PER_SEC << std::endl;
         }
-        totalAssembyTime += static_cast<double> ( (clock() - start_assembly_time)) / CLOCKS_PER_SEC;
+        totalAssemblyTime += static_cast<double> ( (clock() - start_assembly_time)) / CLOCKS_PER_SEC;
         std::cout << "   ********* Level Max " << igridn + 1 << " PREPARATION TIME:\t" << \
                   static_cast<double> ( (clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
         clock_t startUpdateResidualTime = clock();
@@ -229,7 +266,7 @@ namespace femus {
         Solution*                sol = this->GetMLProb()._ml_sol->GetSolutionLevel (_levelToAssemble);   // pointer to the solution (level) object
         unsigned int solIndex_act_flag = this->GetMLProb()._ml_sol->GetIndex (_active_flag_name.c_str());
 
-        int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare (* (sol->_Sol[solIndex_act_flag])));
+        int compare_return = ( (sol->_SolOld[solIndex_act_flag])->compare (* (sol->_Sol[solIndex_act_flag])));     ///@todo perhaps this one slows things down in parallel!!!
         bool compare_bool = false;
         if (compare_return == -1) compare_bool = true;
         if (compare_bool && (_nonliniteration  > 0)) {
@@ -240,33 +277,17 @@ namespace femus {
 
         if (nonLinearIsConverged || _bitFlipOccurred) break;
 
-      }
-
-
-      if (_bitFlipOccurred && _bitFlipCounter == 1) {
-        goto restart;
-      }
-
-      if (igridn + 1 < _gridn) ProlongatorSol (igridn + 1);
-
-      if (ThisIsAMR) AddAMRLevel (AMRCounter);
-
-
-      std::cout << std::endl << "   ****** Nonlinear-Cycle TIME: " << std::setw (11) << std::setprecision (6) << std::fixed
-                << static_cast<double> ( (clock() - start_nl_time)) / CLOCKS_PER_SEC << std::endl;
-
-      std::cout << std::endl << "   ****** End Level Max " << igridn + 1 << " ******" << std::endl;
-    }
-
-    double totalSolverTime = static_cast<double> ( (clock() - start_mg_time)) / CLOCKS_PER_SEC;
-    std::cout << std::endl << "   *** Nonlinear Solver TIME: " << std::setw (11) << std::setprecision (6) << std::fixed
-              << totalSolverTime <<  " = assembly TIME( " << totalAssembyTime << " ) + "
-              << " solver TIME( " << totalSolverTime - totalAssembyTime << " ) " << std::endl;
-
-    _totalAssemblyTime += totalAssembyTime;
-    _totalSolverTime += totalSolverTime - totalAssembyTime;
+      }   
+      
+      
+      
+      
+      
+      
   }
-
+  
+  
+  
 
 
 } //end namespace femus

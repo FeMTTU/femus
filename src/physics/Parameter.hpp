@@ -33,7 +33,7 @@ public:
     Parameter(const double Lref=1.,const double Uref=1.,const double DeltaTref=1.);
 
     /** To be Added */
-    double Get_reference_lenght();
+    double Get_reference_length();
 
     /** To be Added */
     double Get_reference_velocity();
