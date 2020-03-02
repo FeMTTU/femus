@@ -268,7 +268,7 @@ int main(int argc, char** args)
   Line linea(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
 
   linea.GetLine(line0[0]);
-  PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
+  PrintLine(DEFAULT_OUTPUTDIR, "line", line0, 0);
 
   double T = 2 * acos(-1.);
 
@@ -289,7 +289,7 @@ int main(int argc, char** args)
     if (dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
     linea.AdvectionParallel(40, T / n, 4);
     linea.GetLine(line[0]);
-    PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
+    PrintLine(DEFAULT_OUTPUTDIR, "line",line, k);
   }
 
 

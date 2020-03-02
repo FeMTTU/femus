@@ -44,7 +44,6 @@ namespace femus {
     _AMRtest (0),
     _maxAMRlevels (0),
     _AMRnorm (0),
-    _AMRthreshold (0.01),
     _AMReighborThresholdValue (0.),
     _smootherType (smoother_type),
     _includeCoarseLevelSmoother (INCLUDE_COARSE_LEVEL_FALSE),
@@ -58,6 +57,7 @@ namespace femus {
     _mgOuterSolver = GMRES;
     _totalAssemblyTime = 0.;
     _totalSolverTime = 0.;
+    
 
   }
 
@@ -120,7 +120,7 @@ namespace femus {
     _LinSolver.resize (_gridn);
 
 
-    if (_includeCoarseLevelSmoother = INCLUDE_COARSE_LEVEL_TRUE) {
+    if (_includeCoarseLevelSmoother == INCLUDE_COARSE_LEVEL_TRUE) {
       _LinSolver[0] = LinearEquationSolver::build (0, _solution[0], _smootherType).release();
     }
     else {
@@ -1043,7 +1043,12 @@ namespace femus {
 
 
 
-
+  void LinearImplicitSystem::GetSystemInfo(){
+    std::cout << "Printing information for system "<< _sys_name <<std::endl;
+    std::cout << "Number of Levels = " << _gridn <<std::endl;
+    std::cout << "Characteristic length = " << _msh[0]->GetCharacteristicLength() << std::endl;
+    std::cout << "Total number of dofs = " << _LinSolver[_gridn - 1]->KKIndex[_LinSolver[_gridn - 1]->KKIndex.size() - 1u] <<std::endl;
+  }
 
 
 

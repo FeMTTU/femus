@@ -610,7 +610,7 @@ void System_assemble_flexible(const std::vector < std::vector < /*const*/ elem_t
 
 
 namespace femus {
-
+  
 // here, the peculiarity of the application is not dealt with using virtuality, but with template specialization ---------------------------------
 
 // template specialization for double
@@ -688,6 +688,9 @@ void  assemble_jacobian< double, double >::compute_jacobian_inside_integration_l
 } //end namespace
 
 //-------------------------------------------------------------
+
+
+
 
 
 ///@todo: check bc for discontinuous FE

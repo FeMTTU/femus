@@ -28,22 +28,19 @@
 #include <iostream>
 
 
-namespace femus
-{
+namespace femus {
 
   using std::cout;
   using std::endl;
 
 
-  MeshMetisPartitioning::MeshMetisPartitioning(Mesh& mesh) : MeshPartitioning(mesh)
-  {
+  MeshMetisPartitioning::MeshMetisPartitioning(Mesh& mesh) : MeshPartitioning(mesh) {
 
   }
 
 
 //------------------------------------------------------------------------------------------------------
-  void MeshMetisPartitioning::DoPartition(std::vector <unsigned>& partition, const bool& AMR)
-  {
+  void MeshMetisPartitioning::DoPartition(std::vector <unsigned>& partition, const bool& AMR) {
 
     int nnodes = _mesh.GetNumberOfNodes();
     int nelem = _mesh.GetNumberOfElements();
@@ -73,88 +70,80 @@ namespace femus
       exit(1);
 #endif
 
-      bool standard = true;
+      unsigned eind_size = _mesh.el->GetElementNumber("Hex") * NVE[0][2]      + _mesh.el->GetElementNumber("Tet") * NVE[1][2]
+                           + _mesh.el->GetElementNumber("Wedge") * NVE[2][2]    + _mesh.el->GetElementNumber("Quad") * NVE[3][2]
+                           + _mesh.el->GetElementNumber("Triangle") * NVE[4][2] + _mesh.el->GetElementNumber("Line") * NVE[5][2];
 
-      if(standard) {
+      vector < idx_t > eptr(nelem + 1);
+      vector < idx_t > eind(eind_size);
 
-        unsigned eind_size = _mesh.el->GetElementNumber("Hex") * NVE[0][2]      + _mesh.el->GetElementNumber("Tet") * NVE[1][2]
-                             + _mesh.el->GetElementNumber("Wedge") * NVE[2][2]    + _mesh.el->GetElementNumber("Quad") * NVE[3][2]
-                             + _mesh.el->GetElementNumber("Triangle") * NVE[4][2] + _mesh.el->GetElementNumber("Line") * NVE[5][2];
+      vector < int > npart(nnodes);
 
-        vector < idx_t > eptr(nelem + 1);
-        vector < idx_t > eind(eind_size);
+      idx_t objval;
+      idx_t options[METIS_NOPTIONS];
 
-        vector < int > npart(nnodes);
+      METIS_SetDefaultOptions(options);
 
-        idx_t objval;
-        idx_t options[METIS_NOPTIONS];
+      options[METIS_OPTION_NUMBERING] = 0;
+      options[METIS_OPTION_DBGLVL]   = 0;
+      options[METIS_OPTION_CTYPE]    = METIS_CTYPE_SHEM;
+      options[METIS_OPTION_PTYPE]    = METIS_PTYPE_KWAY;
+      options[METIS_OPTION_IPTYPE]   = METIS_IPTYPE_RANDOM;
+      options[METIS_OPTION_CONTIG]   = 0;
+      options[METIS_OPTION_MINCONN]  = 1;
+      options[METIS_OPTION_NITER]    = 10;
+      options[METIS_OPTION_UFACTOR]  = 100;
 
-        METIS_SetDefaultOptions(options);
-
-        options[METIS_OPTION_NUMBERING] = 0;
-        options[METIS_OPTION_DBGLVL]   = 0;
-        options[METIS_OPTION_CTYPE]    = METIS_CTYPE_SHEM;
-        options[METIS_OPTION_PTYPE]    = METIS_PTYPE_KWAY;
-        options[METIS_OPTION_IPTYPE]   = METIS_IPTYPE_RANDOM;
-        options[METIS_OPTION_CONTIG]   = 0;
-        options[METIS_OPTION_MINCONN]  = 1;
-        options[METIS_OPTION_NITER]    = 10;
-        options[METIS_OPTION_UFACTOR]  = 100;
-
-        eptr[0] = 0;
-        unsigned counter = 0;
-        for(unsigned iel = 0; iel < nelem; iel++) {
-          unsigned ndofs = _mesh.el->GetElementDofNumber(iel, 2);
-          eptr[iel + 1] = eptr[iel] + ndofs;
-          for(unsigned inode = 0; inode < ndofs; inode++) {
-            eind[counter] = _mesh.el->GetElementDofIndex(iel, inode);
-            counter++;
-          }
+      eptr[0] = 0;
+      unsigned counter = 0;
+      for(unsigned iel = 0; iel < nelem; iel++) {
+        unsigned ndofs = _mesh.el->GetElementDofNumber(iel, 2);
+        eptr[iel + 1] = eptr[iel] + ndofs;
+        for(unsigned inode = 0; inode < ndofs; inode++) {
+          eind[counter] = _mesh.el->GetElementDofIndex(iel, inode);
+          counter++;
         }
-
-
-        int ncommon = (AMR || _mesh.GetDimension() == 1) ? 1 : _mesh.GetDimension() + 1;
-
-        //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
-        int err = METIS_PartMeshDual(&nelem, &nnodes, &eptr[0], &eind[0], NULL, NULL, &ncommon, &_nprocs, NULL, options, &objval, &epart[0], &npart[0]);
-
-        if(err == METIS_OK) {
-          std::cout << " METIS PARTITIONING IS OK " << std::endl;
-        }
-        else if(err == METIS_ERROR_INPUT) {
-          cout << " METIS_ERROR_INPUT " << endl;
-          exit(1);
-        }
-        else if(err == METIS_ERROR_MEMORY) {
-          cout << " METIS_ERROR_MEMORY " << endl;
-          exit(2);
-        }
-        else {
-          cout << " METIS_GENERIC_ERROR " << endl;
-          exit(3);
-        }
-        
-        std::vector<unsigned> MaterialElementCounter = _mesh.el->GetMaterialElementCounter();
-// 	std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA\n";
-//     for (unsigned i = 0 ; i < MaterialElementCounter.size(); i++ )   std::cout << MaterialElementCounter[i] << " ";
-//     std::cout << std::endl; 
-          
-    }
-      else{
-      
       }
+
+
+      int ncommon = (AMR || _mesh.GetDimension() == 1) ? 1 : _mesh.GetDimension() + 1;
+
+      //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
+      int err = METIS_PartMeshDual(&nelem, &nnodes, &eptr[0], &eind[0], NULL, NULL, &ncommon, &_nprocs, NULL, options, &objval, &epart[0], &npart[0]);
+
+      if(err == METIS_OK) {
+        std::cout << " METIS PARTITIONING IS OK " << std::endl;
+      }
+      else if(err == METIS_ERROR_INPUT) {
+        cout << " METIS_ERROR_INPUT " << endl;
+        exit(1);
+      }
+      else if(err == METIS_ERROR_MEMORY) {
+        cout << " METIS_ERROR_MEMORY " << endl;
+        exit(2);
+      }
+      else {
+        cout << " METIS_GENERIC_ERROR " << endl;
+        exit(3);
+      }
+
+      std::vector<unsigned> MaterialElementCounter = _mesh.el->GetMaterialElementCounter();
+
+//         for (unsigned i = 0 ; i < MaterialElementCounter.size(); i++)   std::cout << MaterialElementCounter[i] << " ";
+//         std::cout << std::endl;
+
+
     }
-    
+
     partition.resize(epart.size());
-    for(unsigned i = 0; i < epart.size(); i++){
+    for(unsigned i = 0; i < epart.size(); i++) {
       partition[i] = epart[i];
     }
-    
+
     return;
   }
 
-  void MeshMetisPartitioning::DoPartition(std::vector <unsigned>& partition, const Mesh& meshc)
-  {
+  void MeshMetisPartitioning::DoPartition(std::vector <unsigned>& partition, const Mesh& meshc) {
     partition.resize(_mesh.GetNumberOfElements());
     unsigned refIndex = _mesh.GetRefIndex();
     for(int isdom = 0; isdom < _nprocs; isdom++) {

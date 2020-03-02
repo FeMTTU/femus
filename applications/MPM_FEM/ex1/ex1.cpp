@@ -197,6 +197,8 @@ int main(int argc, char** args)
       numberOfUniformLevels = 1;
 
       unsigned dim = mlMsh.GetDimension();
+      
+      std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<dim<<std::endl;
 
       MultiLevelSolution mlSol(&mlMsh);
       // add variables to mlSol
@@ -359,7 +361,7 @@ int main(int argc, char** args)
       std::vector<std::string> mov_vars;
       mov_vars.push_back("DX");
       mov_vars.push_back("DY");
-      mov_vars.push_back("DZ");
+      //mov_vars.push_back("DZ");
       mlSol.GetWriter()->SetMovingMesh(mov_vars);
       
       std::vector<std::string> print_vars;
@@ -372,7 +374,7 @@ int main(int argc, char** args)
       std::vector < std::vector < std::vector < double > > > line(1);
       
       linea->GetLine(line[0]);
-      PrintLine(outputFolder.str(), line, false, 0);
+      PrintLine(outputFolder.str(), "line", line, 0);
       
       //END Print solution 0 *******
       
@@ -415,7 +417,7 @@ int main(int argc, char** args)
         GridToParticlesProjection(ml_prob, *linea);
         linea->GetLine(line[0]); 
         
-        PrintLine(outputFolder.str(), line, false, time_step);
+        PrintLine(outputFolder.str(), "line", line, time_step);
 
         if(time_step >= timestep0){
           CM[time_step - timestep0][simulation] = line[0][0][0];  

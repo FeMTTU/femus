@@ -69,6 +69,7 @@ namespace femus {
     _abstol = 1.e-20;
     _dtol = 1.e+50;
     _maxits = 1;
+    _restart = 30;
     _richardsonScaleFactor = 0.5;
     _schurFactType = SCHUR_FACT_AUTOMATIC;
     _schurPreType = SCHUR_PRE_AUTOMATIC;
@@ -144,6 +145,7 @@ namespace femus {
     _abstol = 1.e-20;
     _dtol = 1.e+50;
     _maxits = 1;
+    _restart = 30;
     _richardsonScaleFactor = 0.5;
     _schurFactType = SCHUR_FACT_AUTOMATIC;
     _schurPreType = SCHUR_PRE_AUTOMATIC;
@@ -322,17 +324,19 @@ namespace femus {
   }
 
   /*---------adjusted by Guoyi Ke-----------*/
-  void FieldSplitTree::SetupKSPTolerances (const double& rtol, const double& abstol, const double& dtol, const unsigned& maxits) {
+  void FieldSplitTree::SetTolerances(const double& rtol, const double& abstol, const double& dtol, 
+                                     const unsigned& maxits, const unsigned & restart) {
     _rtol = rtol;
     _abstol = abstol;
     _dtol = dtol;
     _maxits = maxits;
+    _restart = restart;
   }
   
-  void FieldSplitTree::SetupSchurFactorizationType (const SchurFactType& schurFactType) {
+  void FieldSplitTree::SetSchurFactorizationType (const SchurFactType& schurFactType) {
     _schurFactType = schurFactType;
   }
-  void FieldSplitTree::SetupSchurPreType (const SchurPreType& schurPreType) {
+  void FieldSplitTree::SetSchurPreType (const SchurPreType& schurPreType) {
     _schurPreType = schurPreType;
   }
   /*---------adjusted by Guoyi Ke-----------*/
@@ -354,6 +358,10 @@ namespace femus {
       }  
         
       SetSolver (ksp, _solver);
+      KSPSetTolerances (ksp, _rtol, _abstol, _dtol, _maxits);
+      if(_solver == GMRES || _solver == LGMRES || _solver == FGMRES){
+        KSPGMRESSetRestart (ksp, _restart);
+      }
       KSPSetUp (ksp);
         
       PetscPreconditioner::set_petsc_preconditioner_type (_preconditioner, pc);
@@ -382,6 +390,9 @@ namespace femus {
              _preconditioner == ASM_ADDITIVE_PRECOND) {
       SetSolver (ksp, _solver);
       KSPSetTolerances (ksp, _rtol, _abstol, _dtol, _maxits);
+      if(_solver == GMRES || _solver == LGMRES || _solver == FGMRES){
+        KSPGMRESSetRestart (ksp, _restart);
+      }
 
       PetscPreconditioner::set_petsc_preconditioner_type (_preconditioner, pc);
 
@@ -391,6 +402,9 @@ namespace femus {
 
       PCASMSetOverlap (pc, _asmOverlapping);
 
+      if(_solver == GMRES || _solver == LGMRES || _solver == FGMRES){
+        KSPGMRESSetRestart (ksp, _restart);
+      }
       KSPSetUp (ksp);
 
       KSP* subksps;
@@ -441,12 +455,15 @@ namespace femus {
       }
 
       SetSolver(ksp,_solver);
+      KSPSetTolerances (ksp, _rtol, _abstol, _dtol, _maxits);
+      if(_solver == GMRES || _solver == LGMRES || _solver == FGMRES){
+        KSPGMRESSetRestart (ksp, _restart);
+      }
+      KSPSetFromOptions (ksp);
+      KSPSetUp (ksp);
       PC pc;
       KSPGetPC (ksp, &pc);
-      KSPSetTolerances (ksp, _rtol, _abstol, _dtol, _maxits);
-      KSPSetFromOptions (ksp);
       PetscReal epsilon = 1.e-16;
-
       PetscPreconditioner::set_petsc_preconditioner_type (_preconditioner, pc);
       PCFactorSetZeroPivot (pc, epsilon);
       PCFactorSetShiftType (pc, MAT_SHIFT_NONZERO);

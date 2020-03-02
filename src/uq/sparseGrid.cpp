@@ -614,7 +614,7 @@ namespace femus
             lldiv_t q { n, 0 };
 
             for ( long long i = inputCartesian.size() - 1 ; 0 <= i ; --i ) {
-                q = div ( q.quot, inputCartesian[i].size() );
+                q = lldiv ( q.quot, inputCartesian[i].size() );
                 u[i] = inputCartesian[i][q.rem];
             }
 

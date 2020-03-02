@@ -52,7 +52,7 @@ int main(int argc, char **args)
   valve = false;
   twoPressure = true;
   
-  unsigned simulation = 5;
+  unsigned simulation = 0;
 
   if(argc >= 2) {
     if(!strcmp("0", args[1])) {       /** FSI Turek2D no stent */
@@ -167,7 +167,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 4;
+  numberOfUniformRefinedMeshes = 3;
   
   numberOfAMRLevels = 0;
 
@@ -401,7 +401,7 @@ int main(int argc, char **args)
 //     else if(simulation == 6) {    //AAA_thrombus_porous, 15=thrombus
 //       GetSolutionNorm(ml_sol, 7, data[time_step]);
 //     }
-    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
 
 

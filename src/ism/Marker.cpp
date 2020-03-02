@@ -2022,7 +2022,7 @@ namespace femus
           }
         }
       }
-      GetClosestPointInReferenceElement(xv[0], _x, elemType, _xi);
+      GetClosestPointInReferenceElement (xv[0], _x, elemType, _xi);
     }
 
 

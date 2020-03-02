@@ -1117,7 +1117,7 @@ namespace femus
                           }
 
                           if(k == 0) {
-                            mesh.el->SetFaceElementIndex(iel, 0, -2);
+                            mesh.el->SetFaceElementIndex(iel, 4, -2);
                             mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(0, "bottom"));
                           }
 
@@ -1129,25 +1129,25 @@ namespace femus
 
 
                           if(j == 0) {
-                            mesh.el->SetFaceElementIndex(iel, 1, -3);
+                            mesh.el->SetFaceElementIndex(iel, 0, -3);
                             mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(1, "front"));
                           }
 
 
                           if(j == 2 * (ny - 1)) {
-                            mesh.el->SetFaceElementIndex(iel, 3, -5);
+                            mesh.el->SetFaceElementIndex(iel, 2, -5);
                             mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(3, "behind"));
                           }
 
 
                           if(i == 0) {
-                            mesh.el->SetFaceElementIndex(iel, 4, -6);
+                            mesh.el->SetFaceElementIndex(iel, 3, -6);
                             mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(4, "left"));
                           }
 
 
                           if(i == 2 * (nx - 1)) {
-                            mesh.el->SetFaceElementIndex(iel, 2, -4);
+                            mesh.el->SetFaceElementIndex(iel, 1, -4);
                             mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(2, "right"));
                           }
 

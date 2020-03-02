@@ -185,7 +185,10 @@ namespace femus {
     KSPCreate (PETSC_COMM_WORLD, &_ksp);
 
     _mgSolverType = mgSolverType;
+    double otherRCF = _richardsonScaleFactor;
+    _richardsonScaleFactor = .99999;
     SetSolver (_ksp, _mgSolverType);
+    _richardsonScaleFactor = otherRCF;
 
     KSPGetPC (_ksp, &_pc);
     PCSetType (_pc, PCMG);
