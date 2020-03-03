@@ -22,9 +22,9 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  6
-#define N_ERASED_LEVELS   5
-#define S_FRAC 0.9999999
+#define N_UNIFORM_LEVELS  5
+#define N_ERASED_LEVELS   4
+#define S_FRAC 0.5
 
 #define OP_L2       0
 #define OP_H1       0
@@ -33,7 +33,7 @@ using namespace femus;
 
 #define USE_Cns     1
 
-#define Nsplit      10
+#define Nsplit      15
 
 
 double InitialValueU(const std::vector < double >& x)
@@ -400,8 +400,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
       }
       // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-      const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
-      //const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
+//       const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
+      const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
 
       vector < vector < double > > xg2(jgNumber);
       vector <double> weight2(jgNumber);
@@ -410,11 +410,11 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
       for(unsigned jg = 0; jg < jgNumber; jg++) {
 
-        msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
+//         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
 
-//         elem_all[ielGeom2][xType]->JacJacInv(/*x2*/geom_element2.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
-//         weight2[jg] = detJac_qp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
-//         elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
+        elem_all[ielGeom2][xType]->JacJacInv(/*x2*/geom_element2.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
+        weight2[jg] = detJac_qp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
+        elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
 
 
 
