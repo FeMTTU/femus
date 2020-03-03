@@ -344,8 +344,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       std::vector < unsigned int > nDofsMag_vec_offset(aux_mag_length + 1);
      
       nDofsMag_vec_offset[0] = 0;
-       for (unsigned int d = 1; d <= nDofsMag_vec_offset.size(); d++)  nDofsMag_vec_offset[d] += nDofsMag_vec[d-1];
-
+       for (unsigned int d = 1; d < nDofsMag_vec_offset.size(); d++)  {
+           nDofsMag_vec_offset[d] = nDofsMag_vec_offset[d-1] + nDofsMag_vec[d-1];
+       }
       
     
     unsigned nDofsVP = dim * nDofsV + nDofsP;
@@ -385,7 +386,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     
     
     
-    // local storage of global mapping and solution
+    // local storage of global mapping and solution *****************************
     for (unsigned i = 0; i < nDofsV; i++) {
       unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
@@ -415,6 +416,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
         sysDof[mag_offset + i + nDofsMag_vec_offset[k] ] = pdeSys->GetSystemDof(solMagIndex[k], solMagPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }   
+    // local storage of global mapping and solution *****************************
     
     
     
