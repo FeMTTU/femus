@@ -10,7 +10,8 @@
 
 using namespace femus;
 
-  double force[3] = {10.,0.,0.}; 
+  double force[3] = {1.,0.,0.}; 
+  double forceMag[3] = {1.,1.,1.}; 
 
   std::string concatenate(const std::string str1, const unsigned num1) {
    
@@ -26,23 +27,37 @@ using namespace femus;
 bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
   
-  bool dirichlet = true;
+  bool dirichlet = false;
    value = 0.;
   
 // LEFT ==========================  
       if (facename == 4) {
        if (!strcmp(SolName, "U_0"))    { dirichlet = false; }
-  else if (!strcmp(SolName, "U_1"))    {      value = 0.; } 
-  	
+  else if (!strcmp(SolName, "U_1"))    { dirichlet = true;      value = 0.; } 
       }
       
 // RIGHT ==========================  
      if (facename == 2) {
        if (!strcmp(SolName, "U_0"))    {  dirichlet = false; }
-  else if (!strcmp(SolName, "U_1"))    {   value = 0.;  } 
+  else if (!strcmp(SolName, "U_1"))    {  dirichlet = true;  value = 0.;  } 
   
   
       }
+      
+// BOTTOM ==========================  
+      if (facename == 1) {
+       if (!strcmp(SolName, "U_0"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "U_1"))    { dirichlet = true; value = 0.; } 
+     
+      }
+      
+// TOP ==========================  
+      if (facename == 3) {
+       if (!strcmp(SolName, "U_0"))    { dirichlet = true; value = 0.;  }
+  else if (!strcmp(SolName, "U_1"))    { dirichlet = true; value = 0.;  } 
+     
+      }
+      
       
 //if the boundary integral is implemented below, you need to use these conditions on pressure to retrieve the Poiseuille flow (and set the volume force to zero)      
 //       if (!strcmp(SolName, "P"))  { 
@@ -486,7 +501,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned  k = 0; k < dim; k++) {
-            NSV[k]   +=  nu * 0.5 * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);  //diffusion
+            NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);  //diffusion
             NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);                                //advection
           }
         }
@@ -510,9 +525,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
         }
       } // end phiP_i loop
       
-      for (unsigned  j = 0; j < aux_mag_length; j++) {
-         for (unsigned i = 0; i < nDofsMag_vec[j]; i++) {
-          aResMag[j][i] += ( - phiMag[j][i] * solMag_qp[j] ) * weight;
+      for (unsigned  k = 0; k < aux_mag_length; k++) {
+         for (unsigned i = 0; i < nDofsMag_vec[k]; i++) {
+          aResMag[k][i] += (  forceMag[k] * phiMag[k][i] - phiMag[k][i] * solMag_qp[k] ) * weight;
         }   
        }
 
@@ -530,7 +545,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
     for (int i = 0; i < nDofsV; i++) {
       for (unsigned  k = 0; k < dim; k++) {
-        Res[ i +  k * nDofsV ] = -aResV[k][i].value();
+        Res[ i +  k * nDofsV ] = - aResV[k][i].value();
       }
     }
 
