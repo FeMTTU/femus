@@ -22,8 +22,8 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  5
-#define N_ERASED_LEVELS   4
+#define N_UNIFORM_LEVELS  8
+#define N_ERASED_LEVELS   7
 #define S_FRAC 0.5
 
 #define OP_L2       0
@@ -33,7 +33,10 @@ using namespace femus;
 
 #define USE_Cns     1
 
-#define Nsplit      15
+#define Nsplit      0
+
+#define EX_1       -1.
+#define EX_2        1.
 
 
 double InitialValueU(const std::vector < double >& x)
@@ -88,15 +91,12 @@ int main(int argc, char** argv)
   unsigned numberOfSelectiveLevels = 0;
   //const std::string mesh_file = "./input/Mesh_1_x.med";
 //   const std::string mesh_file = "./input/Mesh_1_x_dir_neu_200_elem.med";
-  const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
-  mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
+//  const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
+ // mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
+
+  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
-
-  //unsigned nx = static_cast <unsigned > ( floor ( pow(2, N_UNIFORM_LEVELS) + 0.5));
-  //mlMsh.GenerateCoarseBoxMesh(nx, 0, 0, -10000 / 2, 10000 / 2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
-
-  //mlMsh.RefineMesh(1, 1, NULL);
-
+  
   // erase all the coarse mesh levels
   const unsigned erased_levels = N_ERASED_LEVELS;
   mlMsh.EraseCoarseLevels(erased_levels);
@@ -329,10 +329,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim + 2. * s_frac) / 2.) / (pow(M_PI, dim / 2.) * tgamma(1 -  s_frac)) ;
 
-//   std::cout <<"BBBBBBB " << C_ns/(1. - S_FRAC) << std::endl;
-
-//   C_ns = 1./10; //(1. - S_FRAC)/C_ns;
-
   for(int kproc = 0; kproc < nprocs; kproc++) {
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
@@ -551,11 +547,27 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 MMlocal[ i * nDof1 + j ]  += OP_H1 * weight1 *  laplace_mat_i_j;
               }
             }
+//          ---------------------
+//          Mixed integral ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals)
+            double ex_1 = EX_1;
+            double ex_2 = EX_2;
+            double dist_1 = 0.;
+            double dist_2 = 0.;            
+            for(int k = 0; k < dim; k++){
+              dist_1 += sqrt( ( xg1[k] - ex_1 ) * ( xg1[k] - ex_1 ) );
+              dist_2 += sqrt( ( xg1[k] - ex_2 ) * ( xg1[k] - ex_2 ) );
+            }
+            double mixed_term = pow( dist_1, -2. * s_frac ) + pow( dist_2, - 2. * s_frac );
+            
+            for(unsigned i = 0; i < nDof1; i++) {
+              for(unsigned j = 0; j < nDof1; j++) {
+                MMlocal[ i * nDof1 + j ] += ( C_ns / 2. ) * ( 1. / s_frac ) * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
+              }
+              Res_local[ i ] += ( C_ns / 2. ) * ( 1. / s_frac ) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
+            }
 
 //          ---------------------
 //          Adaptive quadrature for iel == jel
-
-
 
 
             if(Nsplit != 0) {
@@ -691,8 +703,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               }
 
               const double denom = pow(dist_xyz, (double)((dim / 2.) + s_frac));
-//               const double denom = 1;
-              // weight2[jg] = 1.;
 
               for(unsigned i = 0; i < nDof1; i++) {
 
@@ -706,11 +716,11 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
 
                   CClocalII[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight2[jg] / denom;
-
+                                                
                   CClocalIJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * phi1[i] * weight1 * weight2[jg] / denom;
-
+                                                
                   CClocalJI[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
-
+                                                
                   CClocalJJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
 
 
