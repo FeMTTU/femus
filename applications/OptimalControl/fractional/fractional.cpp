@@ -22,8 +22,8 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  8
-#define N_ERASED_LEVELS   7
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
 #define S_FRAC 0.5
 
 #define OP_L2       0
@@ -46,17 +46,17 @@ double InitialValueU(const std::vector < double >& x)
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
 {
-  bool dirichlet = false; //dirichlet
+  bool dirichlet = true; //dirichlet
   value = 0.;
 
-  if(facename == 1) {
-    dirichlet = true; //dirichlet
-    value = 0.;
-  }
-  else if(facename == 2) {
-    dirichlet = true; //dirichlet
-    value = 0.;
-  }
+//   if(facename == 1) {
+//     dirichlet = true; //dirichlet
+//     value = 0.;
+//   }
+//   else if(facename == 2) {
+//     dirichlet = true; //dirichlet
+//     value = 0.;
+//   }
 
   return dirichlet;
 }
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 //  const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
  // mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
 
-  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
+  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, EX_1, EX_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
   
   // erase all the coarse mesh levels
@@ -325,7 +325,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   const double s_frac = S_FRAC;
 
-  const double check_limits = 1.;//1. - s_frac; // - s_frac;
+  const double check_limits = /*1.;//*/1./(1. - s_frac); // - s_frac;
 
   double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim + 2. * s_frac) / 2.) / (pow(M_PI, dim / 2.) * tgamma(1 -  s_frac)) ;
 
@@ -561,9 +561,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
             
             for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned j = 0; j < nDof1; j++) {
-                MMlocal[ i * nDof1 + j ] += ( C_ns / 2. ) * ( 1. / s_frac ) * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
+                MMlocal[ i * nDof1 + j ] += ( C_ns / 2. ) * check_limits * ( 1. / s_frac ) * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
               }
-              Res_local[ i ] += ( C_ns / 2. ) * ( 1. / s_frac ) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
+              Res_local[ i ] += ( C_ns / 2. ) * check_limits * ( 1. / s_frac ) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
             }
 
 //          ---------------------
@@ -694,7 +694,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
           } // end iel == jel loop
 
-          if(Nsplit == 0 || iel != jel) {
+          if((Nsplit == 0 || iel != jel) && OP_Hhalf != 0) {
             for(unsigned jg = 0; jg < jgNumber; jg++) {
 
               double dist_xyz = 0;
