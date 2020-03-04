@@ -22,8 +22,8 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 #define S_FRAC 0.5
 
 #define OP_L2       0
@@ -91,10 +91,12 @@ int main(int argc, char** argv)
   unsigned numberOfSelectiveLevels = 0;
   //const std::string mesh_file = "./input/Mesh_1_x.med";
 //   const std::string mesh_file = "./input/Mesh_1_x_dir_neu_200_elem.med";
-//  const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
- // mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
+ //const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
+  const std::string mesh_file = "./input/disk.neu";
+  mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
 
-  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, EX_1, EX_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+  
+  //mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, EX_1, EX_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
   
   // erase all the coarse mesh levels
