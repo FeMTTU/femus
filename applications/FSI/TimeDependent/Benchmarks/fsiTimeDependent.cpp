@@ -385,7 +385,7 @@ int main(int argc,char **args) {
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  mov_vars.push_back("DZ");
+  if (dimension==3) mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
 
   std::vector<std::string> print_vars;
@@ -621,6 +621,9 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
   inf.close();
 
 }
+
+
+
 
 void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofrefinements){
 

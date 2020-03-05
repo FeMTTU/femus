@@ -83,6 +83,11 @@ namespace femus {
       short unsigned GetElementType(const unsigned& iel);
 
       /** To be Added */
+      MyVector< short unsigned > & GetElementTypeArray() { return _elementType; }
+      
+      MyMatrix <int> &  GetElementNearFaceArray() { return _elementNearFace; } 
+    
+      /** To be Added */
       void SetElementType(const unsigned& iel, const short unsigned& value);
 
       /** To be Added */
@@ -262,7 +267,7 @@ namespace femus {
       std::vector<unsigned> _materialElementCounter;
 
       MyMatrix <unsigned> _elementDof;
-      MyMatrix <int> _elementNearFace;
+      MyMatrix <int> _elementNearFace;  //@todo this is about the elements attached to each face, but it is used for BCs as well
 
       MyMatrix <unsigned> _childElem;
       MyMatrix <unsigned> _childElemDof;
@@ -272,7 +277,7 @@ namespace femus {
 
   };
 
-//linear, quadratic, biquadratic, picewise costant, picewise linear discontinuous
+//linear, quadratic, biquadratic, piecewise costant, piecewise linear discontinuous
   const unsigned NVE[6][5] = {
     {8, 20, 27, 1, 4}, //hex
     {4, 10, 15, 1, 4}, //tet
@@ -289,6 +294,8 @@ namespace femus {
 
   /**
    * Number of FACES(3D), edges(2D) or point-extrema(1D) for each considered element
+   * The 1st number is the quadrilaterals
+   * The 2nd number is such that the different "2nd - 1st" is the number of triangular faces
    **/
   const unsigned NFC[6][2] = {
     {6, 6},

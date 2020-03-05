@@ -1,8 +1,8 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: FemusInit
- Authors: Simone Bnà
+ Module: Solid
+ Authors: Simone Bnà, Giorgio Bornia
 
  Copyright (c) FEMTTU
  All rights reserved.
@@ -40,9 +40,14 @@ public:
     /** constructors */
     Solid(Parameter& par);
 
-    Solid(Parameter& par, const double young_module, const double poisson_coeff,
-          const double density, const char model[]= "Linear_elastic",
-          const double k=1., const double cp=1., const double alpha=1.e-06);
+    Solid(Parameter& par,
+          const double young_module, 
+          const double poisson_coeff,
+          const double density, 
+          const char model[]= "Linear_elastic",
+          const double k = 1., 
+          const double cp = 1., 
+          const double alpha = 1.e-06);
 
     Solid();
 
@@ -84,10 +89,66 @@ public:
     
 template < class real_num_mov >
 static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(const unsigned int solid_model,
+                                                                              const double & mus,
+                                                                              const double & lambda,
+                                                                              const bool  incompressible,
+                                                                              const unsigned int dim,
+                                                                              const unsigned int sol_index_displ,
+                                                                              const unsigned int sol_pde_index_press,
+                                                                              const std::vector < std::vector < real_num_mov > > & gradSolVAR_hat_qp,
+                                                                              const          std::vector < real_num_mov >   & SolVAR_qp,
+                                                                              const          std::vector < unsigned int >   & SolPdeIndex,
+                                                                              real_num_mov & J_hat,
+                                                                              real_num_mov & trace_e_hat);
+    
+
+
+template < class real_num_mov >
+static real_num_mov   get_mass_balance_reference_domain(const unsigned int solid_model,
+                                                        const bool penalty,
+                                                        const bool incompressible,
+                                                        const double & lambda,
+                                                        const real_num_mov & trace_e_hat,
+                                                        const real_num_mov & J_hat,
+                                                        const std::vector < real_num_mov >   & SolVAR_qp,
+                                                        const std::vector < unsigned int >   & SolPdeIndex,
+                                                        const unsigned int sol_pde_index_press);
+
+
+template < class real_num_mov >
+static real_num_mov   get_mass_balance_moving_domain(const std::vector < std::vector < real_num_mov > > & gradSolVAR_qp,
+                                                     const std::vector < unsigned int >   & SolPdeIndex); 
+
+    
+
+private:
+
+    double _young_module;
+
+    double _poisson_coeff;
+
+    double _lambda_lame;
+
+    double _mu_lame;
+
+    unsigned _model;
+    
+    bool _penalty;
+    
+    bool _mass_penalty;
+
+};
+
+
+
+template < class real_num_mov >
+/*static*/ std::vector < std::vector < real_num_mov > >  Solid::get_Cauchy_stress_tensor(const unsigned int solid_model,
                                                              const double & mus,
                                                              const double & lambda,
+                                                             const bool  incompressible,
                                                              const unsigned int dim,
-                                                             const unsigned int press_type_pos,
+                                                             const unsigned int sol_index_displ,
+                                                             const unsigned int sol_pde_index_press,
                                                              const std::vector < std::vector < real_num_mov > > & gradSolVAR_hat_qp,
                                                              const          std::vector < real_num_mov >   & SolVAR_qp,
                                                              const          std::vector < unsigned int >   & SolPdeIndex,
@@ -96,7 +157,7 @@ static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(co
 ) {
     
     
-    
+//     const unsigned int is_incompressible = 1;  //0 means compressible
           
           
           std::vector < std::vector < real_num_mov > > Cauchy(3);    for (int i = 0; i < Cauchy.size(); i++) Cauchy[i].resize(3);
@@ -123,7 +184,7 @@ static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(co
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
                 //incompressible
-                Cauchy[i][j] = 2. * mus *  ( e[i][j] -  SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[i][j] );  ///@todo check that mus is multiplying everything or only the deformation tensor
+                Cauchy[i][j] = 2. * mus *  e[i][j] -  (incompressible) * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[i][j];  ///@todo check that mus is multiplying everything or only the deformation tensor
                 //+(penalty)*lambda*trace_e*Identity[i][j];
               }
             }
@@ -160,9 +221,9 @@ static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(co
               for (int I = 0; I < 3; ++I) {
                 for (int J = 0; J < 3; ++J) {
                   if (1  ==  solid_model) 
-			Cauchy[I][J] = mus * B[I][J] - mus * I1_B * SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[I][J]; 	//Wood-Bonet J_hat  =1;
+			Cauchy[I][J] = mus * B[I][J] - (incompressible) * mus * I1_B * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J]; 	//Wood-Bonet J_hat  =1;   ///@todo check presence of mu_s here
                   else if (2  ==  solid_model) 
-			Cauchy[I][J] = mus / J_hat * B[I][J] - mus / J_hat * SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[I][J]; //Wood-Bonet J_hat !=1;
+			Cauchy[I][J] = mus / J_hat * B[I][J] - (incompressible) * mus / J_hat * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J]; //Wood-Bonet J_hat !=1;  ///@todo check presence of mu_s here
                   else if (3  ==  solid_model) 
 			Cauchy[I][J] = mus * (B[I][J] - Identity[I][J]) / J_hat + lambda / J_hat * log(J_hat) * Identity[I][J]; 	//Wood-Bonet penalty
                   else if (4  ==  solid_model) 
@@ -198,8 +259,8 @@ static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(co
               for (int I = 0; I < 3; ++I) {
                 for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.*(C1 * B[I][J] - C2 * invB[I][J])
-                                  //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[I][J];
-                                  - SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[I][J];
+                                  //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J];
+                                  - (incompressible) * SolVAR_qp[SolPdeIndex[sol_pde_index_press]] * Identity[I][J];
                }
               }
 
@@ -211,9 +272,8 @@ static std::vector < std::vector < real_num_mov > >  get_Cauchy_stress_tensor(co
 }
 
 
-
 template < class real_num_mov >
-static real_num_mov   get_mass_balance_reference_domain(const unsigned int solid_model, 
+/*static*/ real_num_mov   Solid::get_mass_balance_reference_domain(const unsigned int solid_model, 
                                 const bool penalty,
                                 const bool incompressible,
                                 const double & lambda,
@@ -221,16 +281,16 @@ static real_num_mov   get_mass_balance_reference_domain(const unsigned int solid
                                 const real_num_mov & J_hat,
                                 const std::vector < real_num_mov >   & SolVAR_qp,
                                 const std::vector < unsigned int >   & SolPdeIndex,
-                                const unsigned int press_type_pos) {
+                                const unsigned int sol_pde_index_press) {
     
   real_num_mov  mass_balance = 0.;
   
               if (!penalty) {
                      if (0  ==  solid_model)                           mass_balance = trace_e_hat;
-                else if (1  ==  solid_model || 5  ==  solid_model)     mass_balance = J_hat - 1.         + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]];
-                else if (2  ==  solid_model)                           mass_balance = log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]];
+                else if (1  ==  solid_model || 5  ==  solid_model)     mass_balance = J_hat - 1.         + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[sol_pde_index_press]];
+                else if (2  ==  solid_model)                           mass_balance = log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[sol_pde_index_press]];
               }
-                else if (3  ==  solid_model || 4  ==  solid_model)     mass_balance = SolVAR_qp[SolPdeIndex[press_type_pos]] ; // pressure = 0 in the solid
+                else if (3  ==  solid_model || 4  ==  solid_model)     mass_balance = SolVAR_qp[SolPdeIndex[sol_pde_index_press]] ; // pressure = 0 in the solid
               
  return mass_balance;              
               
@@ -238,7 +298,7 @@ static real_num_mov   get_mass_balance_reference_domain(const unsigned int solid
 
 
 template < class real_num_mov >
-static real_num_mov   get_mass_balance_moving_domain(const std::vector < std::vector < real_num_mov > > & gradSolVAR_qp,
+/*static*/ real_num_mov   Solid::get_mass_balance_moving_domain(const std::vector < std::vector < real_num_mov > > & gradSolVAR_qp,
                                                      const std::vector < unsigned int >   & SolPdeIndex) {
     
  real_num_mov  mass_balance = 0.;
@@ -253,24 +313,6 @@ static real_num_mov   get_mass_balance_moving_domain(const std::vector < std::ve
 }
 
     
-
-private:
-
-    double _young_module;
-
-    double _poisson_coeff;
-
-    double _lambda_lame;
-
-    double _mu_lame;
-
-    unsigned _model;
-    
-    bool _penalty;
-    
-    bool _mass_penalty;
-
-};
 
 
 

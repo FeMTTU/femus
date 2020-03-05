@@ -35,29 +35,6 @@ double  nonlin_term_derivative(const double& v) {
 
 
 
-  
- inline double laplacian_row(const vector < unsigned > & SolFEType, const vector < vector < double > > & phi_x_fe_qp, const vector < vector < double > > & sol_grad_qp, const int my_row_pos, const int my_col_pos, const int i, const unsigned dim_in) {
-  
-              double laplace_rhs_i_j = 0.;
-
-              for (unsigned kdim = 0; kdim < dim_in; kdim++) laplace_rhs_i_j  += phi_x_fe_qp[SolFEType[my_row_pos]][i * dim_in + kdim] *
-                                                                                           sol_grad_qp[my_col_pos][kdim];
-
-     return laplace_rhs_i_j;
-}
-  
-  
- inline double laplacian_row_col(const vector < unsigned > & SolFEType, const vector < vector < double > > & phi_x_fe_qp, const int my_row_pos, const int my_col_pos, const int i, const int j, const unsigned dim_in) {
-  
-              double laplace_mat_i_j = 0.;
-
-              for (unsigned kdim = 0; kdim < dim_in; kdim++) laplace_mat_i_j  += phi_x_fe_qp[SolFEType[my_row_pos]][i * dim_in + kdim] *
-                                                                                 phi_x_fe_qp[SolFEType[my_col_pos]][j * dim_in + kdim];
-
-     return laplace_mat_i_j;
-}
-
-
 double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
          
            double value = 0.;
@@ -157,11 +134,12 @@ int main(int argc, char** args) {
   ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST,fake_time_dep_flag);               
 
     // ======= Problem ========================
-  MultiLevelProblem ml_prob(&ml_sol);  // define the multilevel problem attach the ml_sol object to it
+  MultiLevelProblem ml_prob(&ml_sol);
 
   ml_prob.SetFilesHandler(&files);
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   
-    // ======= Initial values ========================
+    // ======= Solution: Initial values ========================
   ml_sol.Initialize("All");    // initialize all variables to zero
 
 //   ml_sol.Initialize("All", SetInitialCondition, &ml_prob); //unfortunately if I do this it sets all to zero //I would like to do an attach function similar to the BC
@@ -173,7 +151,7 @@ int main(int argc, char** args) {
   ml_sol.Initialize("ContReg", SetInitialCondition, &ml_prob);
   ml_sol.Initialize(act_set_flag_name.c_str(),  SetInitialCondition, &ml_prob);
 
-    // ======= Boundary Conditions ========================
+    // ======= Solution: Boundary Conditions ========================
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);  // attach the boundary condition function and generate boundary data
 
 //   ml_sol.GenerateBdc("All");  //this would do it also for the non-equation-related variables
@@ -183,7 +161,7 @@ int main(int argc, char** args) {
   ml_sol.GenerateBdc("mu");  //we need this for all Pde variables to make the matrix iterations work... but this should be related to the matrix and not to the sol... The same for the initial condition
 
     // ======= System ========================
-  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("OptSys");    // add system in ml_prob
+  NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("OptSys");
 
   system.SetActiveSetFlagName(act_set_flag_name);
 
@@ -231,40 +209,40 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
   Mesh*                          msh = ml_prob._ml_msh->GetLevel(level);
 
-  MultiLevelSolution*          ml_sol = ml_prob._ml_sol;
+  MultiLevelSolution*         ml_sol = ml_prob._ml_sol;
   Solution*                      sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
   LinearEquationSolver*       pdeSys = mlPdeSys->_LinSolver[level];
   SparseMatrix*                   KK = pdeSys->_KK;
   NumericVector*                 RES = pdeSys->_RES;
 
-  const unsigned     dim = msh->GetDimension();                                 // get the domain dimension of the problem
-  const unsigned    dim2 = (3 * (dim - 1) + !(dim - 1));                        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  const unsigned                 dim = msh->GetDimension();                                 // get the domain dimension of the problem
+  const unsigned                dim2 = (3 * (dim - 1) + !(dim - 1));                        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  const unsigned            max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
-  const unsigned   iproc = msh->processor_id(); 
+  const unsigned               iproc = msh->processor_id(); 
 
 
  //************** geometry (at dofs) *************************************  
   vector < vector < double > > coords_at_dofs(dim);
-  unsigned coords_fe_type = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
-  for (unsigned i = 0; i < coords_at_dofs.size(); i++)    coords_at_dofs[i].reserve(max_size);
+  vector < unsigned int >      SolFEType_domain(dim);
+    for (unsigned  d = 0; d < dim; d++) SolFEType_domain[d] = BIQUADR_FE;
+    
+    for (unsigned i = 0; i < coords_at_dofs.size(); i++)    coords_at_dofs[i].reserve(max_size);
 
  //************** geometry (at quadrature points) *************************************  
   vector < double > coord_at_qp(dim);
   
 
- //************* shape functions (at dofs and quadrature points) **************************************  
-  double weight_qp; // gauss point weight
-  
-  vector < vector < double > > phi_fe_qp(NFE_FAMS);
-  vector < vector < double > > phi_x_fe_qp(NFE_FAMS);
-  vector < vector < double > > phi_xx_fe_qp(NFE_FAMS);
+ //************** geometry phi **************************
+  vector < vector < double > > phi_fe_qp_domain(dim);
+  vector < vector < double > > phi_x_fe_qp_domain(dim);
+  vector < vector < double > > phi_xx_fe_qp_domain(dim);
  
-  for(int fe=0; fe < NFE_FAMS; fe++) {  
-        phi_fe_qp[fe].reserve(max_size);
-      phi_x_fe_qp[fe].reserve(max_size*dim);
-     phi_xx_fe_qp[fe].reserve(max_size*(3*(dim-1)));
+  for(int fe = 0; fe < dim; fe++) {
+        phi_fe_qp_domain[fe].reserve(max_size);
+      phi_x_fe_qp_domain[fe].reserve(max_size * dim);
+     phi_xx_fe_qp_domain[fe].reserve(max_size * dim2);
    }
 
  //***************************************************  
@@ -272,7 +250,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
   
-  enum Sol_pos{pos_state=0,pos_ctrl,pos_adj,pos_mu};  //these are known at compile-time 
+  enum Sol_pos{pos_state = 0, pos_ctrl, pos_adj, pos_mu};  //these are known at compile-time 
   //right now this is the same as Sol_pos = SolPdeIndex, but now I want to have flexible rows and columns
   // the ROW index corresponds to the EQUATION we want to solve
   // the COLUMN index corresponds to the column variables 
@@ -294,7 +272,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   assert(pos_mu    == mlPdeSys->GetSolPdeIndex("mu"));
  //***************************************************  
   
-  const int solType_max = BIQUADR_FE;  //biquadratic
+  const int solFEType_max = BIQUADR_FE;  //biquadratic
 
   vector < std::string > Solname(n_unknowns);
   Solname[pos_state] = "state";
@@ -311,10 +289,32 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
     SolPdeIndex[ivar] = mlPdeSys->GetSolPdeIndex(  Solname[ivar].c_str() );
-       SolIndex[ivar] = ml_sol->GetIndex         (  Solname[ivar].c_str() );
-      SolFEType[ivar] = ml_sol->GetSolutionType  ( SolIndex[ivar]);
+    assert(ivar == SolPdeIndex[ivar]); 
+    SolIndex[ivar] = ml_sol->GetIndex         (  Solname[ivar].c_str() );
+    SolFEType[ivar] = ml_sol->GetSolutionType  ( SolIndex[ivar]);
   }
   
+ //************* shape functions (at dofs and quadrature points) **************************************  
+  double weight_qp;
+  
+  vector < vector < double > > phi_fe_qp(n_unknowns);
+  vector < vector < double > > phi_x_fe_qp(n_unknowns);
+  vector < vector < double > > phi_xx_fe_qp(n_unknowns);
+  vector < vector < vector < double > > > phi_x_fe_qp_vec(n_unknowns);
+ 
+  for(int fe = 0; fe < n_unknowns; fe++) {
+        phi_fe_qp[fe].reserve(max_size);
+      phi_x_fe_qp[fe].reserve(max_size * dim);
+     phi_xx_fe_qp[fe].reserve(max_size * dim2);
+  phi_x_fe_qp_vec[fe].resize(dim);
+  for(int d = 0; d < dim; d++) {
+  phi_x_fe_qp_vec[fe][d].reserve(max_size);
+}
+      
+}
+   
+ 
+   
   //----------- quantities (at dof objects) ------------------------------
   vector < vector < double > >     sol_eldofs(n_unknowns);
   for(int k=0; k<n_unknowns; k++)  sol_eldofs[k].reserve(max_size);
@@ -391,13 +391,12 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
 
  //******************** GEOMETRY ********************* 
-    unsigned nDofx = msh->GetElementDofNumber(iel, coords_fe_type);    // number of coordinate element dofs
-    for (int i = 0; i < dim; i++)  coords_at_dofs[i].resize(nDofx);
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, coords_fe_type);  // global to global mapping between coordinates node and coordinate dof
-
       for (unsigned jdim = 0; jdim < dim; jdim++) {
+    unsigned nDofx = msh->GetElementDofNumber(iel, SolFEType_domain[jdim]);
+    coords_at_dofs[jdim].resize(nDofx);
+    // local storage of coordinates
+    for (unsigned i = 0; i < coords_at_dofs[jdim].size(); i++) {
+      unsigned xDof  = msh->GetSolutionDof(i, iel, SolFEType_domain[jdim]);  // global to global mapping between coordinates node and coordinate dof
         coords_at_dofs[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
@@ -406,12 +405,12 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
     for (unsigned j = 0; j < dim; j++) {  
-      for (unsigned i = 0; i < nDofx; i++) {
+      for (unsigned i = 0; i < coords_at_dofs[j].size(); i++) {
          elem_center[j] += coords_at_dofs[j][i];
        }
     }
     
-   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
+   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/coords_at_dofs[j].size(); }
  //***************************************************  
   
  //****** set target domain flag ********************* 
@@ -432,7 +431,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
       }
     }
   //all vars###################################################################
-    
+
+  for (unsigned  k = 0; k < n_unknowns; k++) {
+     for(int d = 0; d < dim; d++) {
+          phi_x_fe_qp_vec[k][d].resize(Sol_n_el_dofs[k]);
+     }
+  }
+  
     
  //************** update active set flag for current nonlinear iteration **************************** 
  // 0: inactive; 1: active_a; 2: active_b
@@ -490,20 +495,32 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
 
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solFEType_max]->GetGaussPointNumber(); ig++) {
 	
       // *** get gauss point weight, test function and test function partial derivatives ***
-      for(int fe=0; fe < NFE_FAMS; fe++) {
-         msh->_finiteElement[ielGeom][fe]->Jacobian(coords_at_dofs,ig,weight_qp,phi_fe_qp[fe],phi_x_fe_qp[fe],phi_xx_fe_qp[fe]);
+      for(unsigned int k = 0; k < n_unknowns; k++) {
+         msh->_finiteElement[ielGeom][SolFEType[k]]->Jacobian(coords_at_dofs, ig, weight_qp, phi_fe_qp[k], phi_x_fe_qp[k], phi_xx_fe_qp[k]);
       }
+      
+   for (unsigned  k = 0; k < n_unknowns; k++) {
+      for(unsigned int d = 0; d < dim; d++) {
+        for(unsigned int i = 0; i < Sol_n_el_dofs[k]; i++) {
+          phi_x_fe_qp_vec[k][d][i] =  phi_x_fe_qp[k][i * dim + d];
+       }
+     }
+   }
+      
+      
    //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
-         msh->_finiteElement[ielGeom][coords_fe_type]->Jacobian(coords_at_dofs,ig,weight_qp,phi_fe_qp[coords_fe_type],phi_x_fe_qp[coords_fe_type],phi_xx_fe_qp[coords_fe_type]);
-    
+    for (unsigned int d = 0; d < dim; d++) {
+         msh->_finiteElement[ielGeom][SolFEType_domain[d]]->Jacobian(coords_at_dofs, ig, weight_qp, phi_fe_qp_domain[d], phi_x_fe_qp_domain[d], phi_xx_fe_qp_domain[d]);
+      }
+      
  //========= fill gauss value xyz ==================   
    std::fill(coord_at_qp.begin(), coord_at_qp.end(), 0.);
     for (unsigned  d = 0; d < dim; d++) {
         	for (unsigned i = 0; i < coords_at_dofs[d].size(); i++) {
-               coord_at_qp[d] += coords_at_dofs[d][i] * phi_fe_qp[coords_fe_type][i];
+               coord_at_qp[d] += coords_at_dofs[d][i] * phi_fe_qp_domain[d][i];
             }
     }
   //========= fill gauss value xyz ==================   
@@ -514,8 +531,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     
     for (unsigned  k = 0; k < n_unknowns; k++) {
 	for (unsigned i = 0; i < Sol_n_el_dofs[k]; i++) {
-	                                                         sol_qp[k]    += sol_eldofs[k][i] *   phi_fe_qp[SolFEType[k]][i];
-                   for (unsigned d = 0; d < dim; d++)   sol_grad_qp[k][d] += sol_eldofs[k][i] * phi_x_fe_qp[SolFEType[k]][i * dim + d];
+	                                                         sol_qp[k]    += sol_eldofs[k][i] *   phi_fe_qp[k][i];
+                   for (unsigned d = 0; d < dim; d++)   sol_grad_qp[k][d] += sol_eldofs[k][i] * phi_x_fe_qp[k][i * dim + d];
        }        
     }
  //========= fill gauss value quantities ==================   
@@ -526,25 +543,25 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	  
 //======================Residuals=======================
           // ===============
-        Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ] += - weight_qp * (target_flag * phi_fe_qp[SolFEType[pos_state]][i] * (
+        Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_state,i) ] += - weight_qp * (target_flag * phi_fe_qp[pos_state][i] * (
                                                                                               m_b_f[pos_state][pos_state] * sol_qp[pos_state] 
                                                                                             - DesiredTarget(coord_at_qp) ) 
-                                                                                          + m_b_f[pos_state][pos_adj]   * ( laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_state, pos_adj, i, dim)  
-                                                                                                                            - sol_qp[pos_adj] *  nonlin_term_derivative(phi_fe_qp[SolFEType[pos_state]][i]) *  sol_qp[pos_ctrl]) );
+                                                                                          + m_b_f[pos_state][pos_adj]   * ( assemble_jacobian<double,double>::laplacian_row(phi_x_fe_qp_vec, sol_grad_qp, pos_state, pos_adj, i, dim)  
+                                                                                                                            - sol_qp[pos_adj] *  nonlin_term_derivative(phi_fe_qp[pos_state][i]) *  sol_qp[pos_ctrl]) );
         
           
 
           // ==============
 	     if ( control_el_flag == 1)        Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(control_node_flag[i]) **/ - weight_qp * (
-                                                                                  + m_b_f[pos_ctrl][pos_ctrl] * alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_ctrl]
-		                                                                          + m_b_f[pos_ctrl][pos_ctrl] *  beta * laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_ctrl, pos_ctrl, i, dim) 
-		                                                                          - m_b_f[pos_ctrl][pos_adj]  *         phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_adj] * nonlin_term_function(sol_qp[pos_state])
+                                                                                  + m_b_f[pos_ctrl][pos_ctrl] * alpha * phi_fe_qp[pos_ctrl][i] * sol_qp[pos_ctrl]
+		                                                                          + m_b_f[pos_ctrl][pos_ctrl] *  beta * assemble_jacobian<double,double>::laplacian_row(phi_x_fe_qp_vec, sol_grad_qp, pos_ctrl, pos_ctrl, i, dim) 
+		                                                                          - m_b_f[pos_ctrl][pos_adj]  *         phi_fe_qp[pos_ctrl][i] * sol_qp[pos_adj] * nonlin_term_function(sol_qp[pos_state])
                                                                                                                          );
 	      else if ( control_el_flag == 0)  Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(1 - control_node_flag[i]) **/ m_b_f[pos_ctrl][pos_ctrl] * (- penalty_strong) * (sol_eldofs[pos_ctrl][i]);
 
           // =============
-        Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i) ] += - weight_qp *  ( + m_b_f[pos_adj][pos_state] * laplacian_row(SolFEType, phi_x_fe_qp, sol_grad_qp, pos_adj, pos_state, i, dim) 
-                                                                          - m_b_f[pos_adj][pos_ctrl]  * phi_fe_qp[SolFEType[pos_adj]][i] * sol_qp[pos_ctrl] * nonlin_term_function(sol_qp[pos_state]) 
+        Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs,pos_adj,i) ] += - weight_qp *  ( + m_b_f[pos_adj][pos_state] * assemble_jacobian<double,double>::laplacian_row(phi_x_fe_qp_vec, sol_grad_qp, pos_adj, pos_state, i, dim) 
+                                                                          - m_b_f[pos_adj][pos_ctrl]  * phi_fe_qp[pos_adj][i] * sol_qp[pos_ctrl] * nonlin_term_function(sol_qp[pos_state]) 
                                                                         );
 
 //======================End Residuals=======================
@@ -556,13 +573,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
                 
               //============ delta_state row ============================
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_state, i, j) ]  += 
-                                                      m_b_f[pos_state][pos_state] * weight_qp * target_flag * phi_fe_qp[SolFEType[pos_state]][j] *  phi_fe_qp[SolFEType[pos_state]][i];
+                                                      m_b_f[pos_state][pos_state] * weight_qp * target_flag * phi_fe_qp[pos_state][j] *  phi_fe_qp[pos_state][i];
               
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_adj, i, j)  ]  +=
 		                                              m_b_f[pos_state][pos_adj] * weight_qp * (
-                                                                          laplacian_row_col(SolFEType, phi_x_fe_qp, pos_state, pos_adj, i, j, dim)
-                                                                                                       - phi_fe_qp[SolFEType[pos_adj]][j] *
-                                                                                                         nonlin_term_derivative(phi_fe_qp[SolFEType[pos_state]][i]) * 
+                                                                          assemble_jacobian<double,double>::laplacian_row_col(phi_x_fe_qp_vec,phi_x_fe_qp_vec, pos_state, pos_adj, i, j, dim)
+                                                                                                       - phi_fe_qp[pos_adj][j] *
+                                                                                                         nonlin_term_derivative(phi_fe_qp[pos_state][i]) * 
                                                                                                          sol_qp[pos_ctrl]
                                                                                               );
               
@@ -570,13 +587,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	      if ( control_el_flag == 1)  {
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += 
 		                                              m_b_f[pos_ctrl][pos_ctrl] * ( control_node_flag[i]) * weight_qp * (
-                                                                                  beta * control_el_flag  * laplacian_row_col(SolFEType, phi_x_fe_qp, pos_ctrl, pos_ctrl, i, j, dim) 
-                                                                               + alpha * control_el_flag  * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] 
+                                                                                  beta * control_el_flag  * assemble_jacobian<double,double>::laplacian_row_col(phi_x_fe_qp_vec,phi_x_fe_qp_vec, pos_ctrl, pos_ctrl, i, j, dim) 
+                                                                               + alpha * control_el_flag  * phi_fe_qp[pos_ctrl][i] * phi_fe_qp[pos_ctrl][j] 
 		                                                                                    );
               
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_adj, i, j) ]  += m_b_f[pos_ctrl][pos_adj] * control_node_flag[i] * weight_qp * (
-                                                                                                                                      - phi_fe_qp[SolFEType[pos_ctrl]][i] * 
-                                                                                                                                        phi_fe_qp[SolFEType[pos_adj]][j] * 
+                                                                                                                                      - phi_fe_qp[pos_ctrl][i] * 
+                                                                                                                                        phi_fe_qp[pos_adj][j] * 
                                                                                                                                         nonlin_term_function(sol_qp[pos_state])
                                                                                                     );
 	        }
@@ -587,15 +604,15 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	      
 	      //=========== delta_adjoint row ===========================
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_state, i, j) ]  += m_b_f[pos_adj][pos_state] * weight_qp * (
-                                                                                                                                      laplacian_row_col(SolFEType, phi_x_fe_qp, pos_adj, pos_state, i, j, dim)
-                                                                                                                                      - phi_fe_qp[SolFEType[pos_adj]][i] *
-                                                                                                                                        nonlin_term_derivative(phi_fe_qp[SolFEType[pos_state]][j]) * 
+                                                                                                                                      assemble_jacobian<double,double>::laplacian_row_col(phi_x_fe_qp_vec,phi_x_fe_qp_vec, pos_adj, pos_state, i, j, dim)
+                                                                                                                                      - phi_fe_qp[pos_adj][i] *
+                                                                                                                                        nonlin_term_derivative(phi_fe_qp[pos_state][j]) * 
                                                                                                                                         sol_qp[pos_ctrl]
                                                                                                                                     );
 
         Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_ctrl, i, j)  ]  += m_b_f[pos_adj][pos_ctrl] * weight_qp * ( 
-                                                                                                                                      - phi_fe_qp[SolFEType[pos_adj]][i] * 
-                                                                                                                                        phi_fe_qp[SolFEType[pos_ctrl]][j] * 
+                                                                                                                                      - phi_fe_qp[pos_adj][i] * 
+                                                                                                                                        phi_fe_qp[pos_ctrl][j] * 
                                                                                                                                         nonlin_term_function(sol_qp[pos_state])
                                                                                                                                    ); 
 		     
@@ -706,7 +723,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
  //************** geometry (at dofs and quadrature points) *************************************  
   vector < vector < double > > coords_at_dofs(dim);
-  unsigned coords_fe_type = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
+  unsigned SolFEType_domain = BIQUADR_FE; // get the finite element type for "x", it is always 2 (LAGRANGE BIQUADRATIC)
   for (unsigned i = 0; i < coords_at_dofs.size(); i++)    coords_at_dofs[i].reserve(max_size);
 
   vector < double > coord_at_qp(dim);
@@ -721,8 +738,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_fe_qp[fe].reserve(max_size);
-      phi_x_fe_qp[fe].reserve(max_size*dim);
-     phi_xx_fe_qp[fe].reserve(max_size*(3*(dim-1)));
+      phi_x_fe_qp[fe].reserve(max_size * dim);
+     phi_xx_fe_qp[fe].reserve(max_size * dim2);
    }
 
    
@@ -825,7 +842,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
  //*************************************************** 
  //********* WHOLE SET OF VARIABLES ****************** 
-  const int solType_max = BIQUADR_FE;  //biquadratic
+  const int solFEType_max = BIQUADR_FE;  //biquadratic
  //*************************************************** 
   
   double integral_target = 0.;
@@ -839,11 +856,11 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
     short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
  
  //***************** GEOMETRY ************************ 
-    unsigned nDofx = msh->GetElementDofNumber(iel, coords_fe_type);    // number of coordinate element dofs
+    unsigned nDofx = msh->GetElementDofNumber(iel, SolFEType_domain);    // number of coordinate element dofs
     for (int i = 0; i < dim; i++)  coords_at_dofs[i].resize(nDofx);
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, coords_fe_type);    // global to global mapping between coordinates node and coordinate dof
+      unsigned xDof  = msh->GetSolutionDof(i, iel, SolFEType_domain);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
         coords_at_dofs[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
@@ -880,20 +897,20 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
    
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solFEType_max]->GetGaussPointNumber(); ig++) {
 	
       // *** get gauss point weight, test function and test function partial derivatives ***
       for(int fe=0; fe < NFE_FAMS; fe++) {
          msh->_finiteElement[ielGeom][fe]->Jacobian(coords_at_dofs,ig,weight_qp,phi_fe_qp[fe],phi_x_fe_qp[fe],phi_xx_fe_qp[fe]);
       }
    //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
-         msh->_finiteElement[ielGeom][coords_fe_type]->Jacobian(coords_at_dofs,ig,weight_qp,phi_fe_qp[coords_fe_type],phi_x_fe_qp[coords_fe_type],phi_xx_fe_qp[coords_fe_type]);
+         msh->_finiteElement[ielGeom][SolFEType_domain]->Jacobian(coords_at_dofs,ig,weight_qp,phi_fe_qp[SolFEType_domain],phi_x_fe_qp[SolFEType_domain],phi_xx_fe_qp[SolFEType_domain]);
 
  //========= fill gauss value xyz ==================   
    std::fill(coord_at_qp.begin(), coord_at_qp.end(), 0.);
     for (unsigned  d = 0; d < dim; d++) {
         	for (unsigned i = 0; i < coords_at_dofs[d].size(); i++) {
-               coord_at_qp[d] += coords_at_dofs[d][i] * phi_fe_qp[coords_fe_type][i];
+               coord_at_qp[d] += coords_at_dofs[d][i] * phi_fe_qp[SolFEType_domain][i];
             }
     }
   //========= fill gauss value xyz ==================   

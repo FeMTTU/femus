@@ -9,7 +9,6 @@
 
 
 
-
 namespace femus {
 
 // remember that you have to declare all these functions "inline", otherwise you get "multiple definition" in linking
@@ -113,20 +112,10 @@ template < class type = double >
 };
 
 
-//this is based on the AddSolution function in MLSol
- class Unknown {
-     
- public:
-     
-     std::string _name;
-     FEFamily _fe_family;     
-     FEOrder  _fe_order;     
-     
- };
+
 
  
 } //end namespace Math
-
 
 
 

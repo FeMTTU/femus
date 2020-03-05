@@ -29,7 +29,7 @@ Parameter::Parameter(const double Lref,const double Uref,const double DeltaTref)
   _DeltaTref = DeltaTref;
 }
 
-double Parameter::Get_reference_lenght() {
+double Parameter::Get_reference_length() {
   return _Lref;
 }
 
