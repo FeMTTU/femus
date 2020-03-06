@@ -22,8 +22,8 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
+#define N_UNIFORM_LEVELS  1
+#define N_ERASED_LEVELS   0
 #define S_FRAC 0.5
 
 #define OP_L2       0
@@ -37,6 +37,8 @@ using namespace femus;
 
 #define EX_1       -1.
 #define EX_2        1.
+#define EY_1       -1.
+#define EY_2        1.
 
 
 double InitialValueU(const std::vector < double >& x)
@@ -59,6 +61,23 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 //   }
 
   return dirichlet;
+}
+
+double hypergeometric( double a, double b, double c, double x )
+{
+   const double TOLERANCE = 1.0e-10;
+   double term = a * b * x / c;
+   double value = 1.0 + term;
+   int n = 1;
+
+   while ( abs( term ) > TOLERANCE )
+   {
+      a++, b++, c++, n++;
+      term *= a * b * x / c / n;
+      value += term;
+   }
+
+   return value;
 }
 
 void GetHsNorm(const unsigned level, MultiLevelProblem& ml_prob);
@@ -92,11 +111,13 @@ int main(int argc, char** argv)
   //const std::string mesh_file = "./input/Mesh_1_x.med";
 //   const std::string mesh_file = "./input/Mesh_1_x_dir_neu_200_elem.med";
  //const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
-  const std::string mesh_file = "./input/disk.neu";
-  mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
+//   const std::string mesh_file = "./input/disk.neu";
+//   mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
 
+//   mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
+//   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
   
-  //mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, EX_1, EX_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+  mlMsh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
   
   // erase all the coarse mesh levels
@@ -327,7 +348,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   const double s_frac = S_FRAC;
 
-  const double check_limits = /*1.;//*/1./(1. - s_frac); // - s_frac;
+  const double check_limits = 1.;//1./(1. - s_frac); // - s_frac;
 
   double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim + 2. * s_frac) / 2.) / (pow(M_PI, dim / 2.) * tgamma(1 -  s_frac)) ;
 
@@ -551,6 +572,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
             }
 //          ---------------------
 //          Mixed integral ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals)
+        if(dim == 1){
             double ex_1 = EX_1;
             double ex_2 = EX_2;
             double dist_1 = 0.;
@@ -567,6 +589,58 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               }
               Res_local[ i ] += ( C_ns / 2. ) * check_limits * ( 1. / s_frac ) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
             }
+        }
+        if(dim == 2){
+            double ex[4] = {EX_1, EX_2, EY_1, EY_2};  
+
+            double CC = 1. / (2 * s_frac * (1 + 2. * s_frac)); 
+            
+            double teta[4], CCC[4];
+            teta[0] = atan2((ex[3] - xg1[1]) , (ex[1] - xg1[0]));
+            teta[1] = atan2((ex[3] - xg1[1]) , (ex[0] - xg1[0]));
+            teta[2] = atan2((ex[2] - xg1[1]) , (ex[0] - xg1[0])) + 2 * M_PI;
+            teta[3] = atan2((ex[2] - xg1[1]) , (ex[1] - xg1[0])) + 2 * M_PI;
+
+            CCC[0] = pow( fabs( ex[3] - xg1[1] ) , - 2. * s_frac );
+            CCC[1] = - pow( fabs( ex[0] - xg1[0] ) , - 2. * s_frac );
+            CCC[2] = - pow( fabs( ex[2] - xg1[1] ) , - 2. * s_frac );
+            CCC[3] = pow( fabs( ex[1] - xg1[0] ) , - 2. * s_frac );
+            
+            
+            double mixed_term = 0.;
+            
+            for(unsigned qq = 0; qq < 4; qq++){
+                if(qq == 3) teta[3] -= 2. * M_PI ;
+                
+                double mix_backup = mixed_term;
+                
+//                 if( qq % 2 == 0 ) mixed_term += CC * CCC[qq] * ( pow( fabs( sin(teta[(qq+1)%4]) ), ( 1 + 2. * s_frac) ) * ( 2 * signbit( cos(teta[(qq+1)%4]) ) - 1 ) *
+//                       hypergeometric( 0.5, 0.5 + s_frac, 1.5 + s_frac, pow( sin(teta[(qq+1)%4]), 2. ) )  - 
+//                       pow( fabs( sin(teta[qq]) ), ( 1 + 2. * s_frac) ) *  ( 2 * signbit( cos(teta[qq]) ) - 1 ) *
+//                       hypergeometric( 0.5, 0.5 + s_frac, 1.5 + s_frac, pow( sin(teta[qq]), 2. ) ) );
+//                 
+//                 else mixed_term += CC * CCC[qq] * ( pow ( fabs (cos(teta[(qq+1)%4]) ), ( 1 + 2. * s_frac) ) * ( 2 * signbit( sin(teta[(qq+1)%4]) ) - 1 ) *
+//                       hypergeometric( 0.5, 0.5 + s_frac, 1.5 + s_frac, pow( cos(teta[(qq+1)%4]), 2. ) ) - 
+//                       pow( fabs( cos(teta[qq]) ), ( 1 + 2. * s_frac) ) * ( 2 * signbit( sin(teta[qq]) ) - 1 ) *
+//                       hypergeometric( 0.5, 0.5 + s_frac, 1.5 + s_frac, pow( cos(teta[qq]), 2. ) ) );
+                
+                if( qq % 2 == 0 ) mixed_term += 4 * CC * CCC[qq] /** pow( -1, qq/2 )*/ * ( - cos(teta[(qq+1)%4]) + cos(teta[qq]) ) ;
+                else mixed_term += 4 * CC * CCC[qq] /** pow( -1, (qq-1)/2 )*/ * (  sin(teta[(qq+1)%4]) - sin(teta[qq]) ) ;
+                
+                std::cout << xg1[0] <<"  " << xg1[1] << "  "<< qq << "   " << mixed_term - mix_backup << "\n";
+                std::cout<< " AAAA " <<pow( cos(teta[(qq+1)%4]), ( 1 + 2. * s_frac) ) << " " << cos(teta[(qq+1)%4])  << " " <<
+                 pow( cos(teta[(qq+1)%4]), ( 1 + 2. * s_frac) )<< "  "<< pow( fabs(cos(teta[(qq+1)%4])), ( 1 + 2. * s_frac) ) <<  "\n";
+                
+            }
+            
+
+            for(unsigned i = 0; i < nDof1; i++) {
+              for(unsigned j = 0; j < nDof1; j++) {
+                MMlocal[ i * nDof1 + j ] += ( C_ns / 2. ) * check_limits * ( 1. / s_frac ) * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
+              }
+              Res_local[ i ] += ( C_ns / 2. ) * check_limits * ( 1. / s_frac ) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
+            }
+        }            
 
 //          ---------------------
 //          Adaptive quadrature for iel == jel
