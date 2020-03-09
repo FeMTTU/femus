@@ -13,9 +13,9 @@ double kappa = 1.;
 
 void GetBoundaryFunctionValue (double &value, const std::vector < double >& x) {
 
-//   value = 0.;
+  value = 0.;
 //     value = x[0];
-  value = x[0] * x[0];
+//   value = x[0] * x[0];
 //     value = ( x[0] < 0. ) ? x[0] * x[0] * x[0] : 3 * x[0] * x[0] * x[0];
 //     value = x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 //     value = x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0];
@@ -279,8 +279,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
             if (iel == jel) {
               for (unsigned i = 0; i < nDof1; i++) {
 //                                 Res1[i] -= 0. * weight[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
-//                 Res1[i] -=  1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
-                Res1[i] -=  - 2. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = - 2)
+                Res1[i] -=  1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
+//                 Res1[i] -=  - 2. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = - 2)
 //                                 Res1[i] -=  - 6. * xg1[ig][0] * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 x)
                 // Res1[i] -=  - 6. * ( xg1[ig][0] + xg1[ig][1] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 (x + y))
 //                                 Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)
@@ -557,8 +557,8 @@ void AssembleLocalSys (MultiLevelProblem& ml_prob) {
         }
 
 //                 double srcTerm =  12. * x_gss[0] * x_gss[0] ; // so f = - 12 x^2
-        double srcTerm =  2. ; // so f = - 2
-//         double srcTerm =  - 1. ; // so f = 1
+//         double srcTerm =  2. ; // so f = - 2
+        double srcTerm =  - 1. ; // so f = 1
         //double srcTerm =  0./*- GetExactSolutionLaplace(x_gss)*/ ;
         aRes[i] += (srcTerm * phi[i] + laplace) * weight;
 
@@ -863,8 +863,8 @@ void AssembleNonLocalSysFine (MultiLevelProblem& ml_prob) {
             if (iel == jel) {
               for (unsigned i = 0; i < nDof1; i++) {
 //                                 Res1[i] -= 0. * weight[ig] * phi1x[ig][i]; //Ax - f (so f = 0)
-//                 Res1[i] -=  1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
-                Res1[i] -=  - 2. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = - 2 )
+                Res1[i] -=  1. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = 1)
+//                 Res1[i] -=  - 2. * weight1[ig]  * phi1x[ig][i]; //Ax - f (so f = - 2 )
 //                                 Res1[i] -=  - 6. * xg1[ig][0] * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 x)
                 // Res1[i] -=  - 6. * ( xg1[ig][0] + xg1[ig][1] ) * weight1[ig] * phi1x[ig][i]; //Ax - f (so f = - 6 (x + y))
 //                                 Res1[i] -= ( - 12. * xg1[ig][0] * xg1[ig][0] - 6. / 5. * radius * radius - 2. * radius ) * weight1[ig] * phi1x[ig][i];  //Ax - f (so f = - 12x^2 - 6/5 * delta^2 - 2 delta)

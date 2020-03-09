@@ -26,7 +26,7 @@ double InitalValueU (const std::vector < double >& x) {
 
 //     value =  x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
 //   value =  x[0];
-    value =  x[0] * x[0];
+  value =  x[0] * x[0];
 //     value =  x[0] * x[0] * x[0] ;
 //     value =  x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 //     value =  x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
@@ -45,14 +45,19 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine);
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
 
   bool dirichlet = true;
-//     value = 0.;
+  value = 0.;
 //     value = x[0];
-  value =  x[0] * x[0];
+//   value =  x[0] * x[0];
 //     value =  x[0] * x[0] * x[0] ;
 //     value =  x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
 //     value =  x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
 //     value =  x[0] * x[0] * x[0] * x[0]; //this is x^4
 //     value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
+
+  if (facename == 2) {
+    dirichlet = false; //Neumann 
+    value = 0.;
+  }
 
   return dirichlet;
 }
@@ -72,10 +77,14 @@ int main (int argc, char** argv) {
 
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.ReadCoarseMesh ("../input/FETI_domain_ex5.neu", "second", scalingFactor);
+//   mlMsh.ReadCoarseMesh ("../input/FETI_domain_ex5.neu", "second", scalingFactor);
+//     mlMsh.ReadCoarseMesh ("../input/FETI_left_domain_ex5.neu", "second", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/FETI_domain_ex5_1Dir_3Neu.neu", "second", scalingFactor);
   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
-  mlMshFine.ReadCoarseMesh ("../input/FETI_domain_ex5.neu", "second", scalingFactor);
+//   mlMshFine.ReadCoarseMesh ("../input/FETI_domain_ex5.neu", "second", scalingFactor);
+//     mlMshFine.ReadCoarseMesh ("../input/FETI_left_domain_ex5.neu", "second", scalingFactor);
+  mlMshFine.ReadCoarseMesh ("../input/FETI_domain_ex5_1Dir_3Neu.neu", "second", scalingFactor);
   mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine , NULL);
 
   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
