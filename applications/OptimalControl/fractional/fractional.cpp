@@ -22,8 +22,8 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
+#define N_UNIFORM_LEVELS  6
+#define N_ERASED_LEVELS   5
 #define S_FRAC 0.75
 
 #define OP_L2       0
@@ -33,7 +33,7 @@ using namespace femus;
 
 #define USE_Cns     1
 
-#define Nsplit      4
+#define Nsplit      10
 
 #define EX_1       -1.
 #define EX_2        1.
@@ -579,22 +579,22 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
 //          ---------------------
 //          Mixed integral ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals)
             if(dim == 1) {
-              double ex_1 = EX_1;
-              double ex_2 = EX_2;
-              double dist_1 = 0.;
-              double dist_2 = 0.;
-              for(int k = 0; k < dim; k++) {
-                dist_1 += sqrt((xg1[k] - ex_1) * (xg1[k] - ex_1));
-                dist_2 += sqrt((xg1[k] - ex_2) * (xg1[k] - ex_2));
-              }
-              double mixed_term = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
-
-              for(unsigned i = 0; i < nDof1; i++) {
-                for(unsigned j = 0; j < nDof1; j++) {
-                  MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
-                }
-                Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
-              }
+//               double ex_1 = EX_1;
+//               double ex_2 = EX_2;
+//               double dist_1 = 0.;
+//               double dist_2 = 0.;
+//               for(int k = 0; k < dim; k++) {
+//                 dist_1 += sqrt((xg1[k] - ex_1) * (xg1[k] - ex_1));
+//                 dist_2 += sqrt((xg1[k] - ex_2) * (xg1[k] - ex_2));
+//               }
+//               double mixed_term = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
+//
+//               for(unsigned i = 0; i < nDof1; i++) {
+//                 for(unsigned j = 0; j < nDof1; j++) {
+//                   MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
+//                 }
+//                 Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
+//               }
             }
             if(dim == 2) {
               double ex[4] = {EX_1, EX_2, EY_1, EY_2};
@@ -656,152 +656,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
 
 
             if(Nsplit != 0) {
-//               std::cout.precision(14);
-//               std::vector<std::vector<double>> x3(dim);
-//               std::vector<std::vector<double>> x4(dim);
-//               for(unsigned k = 0; k < dim; k++) {
-//                 x3[k].resize(nDofx1);
-//                 x4[k].resize(nDofx1);
-//                 for(unsigned k = 0; k < dim; k++) {
-//                   x3[k][0] = x1[k][0];
-//                   x3[k][1] = 0.5 * (x3[k][0] + xg1[k]);
-//                   x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
-//                   x4[k][1] = x1[k][1];
-//                   x4[k][0] = 0.5 * (x4[k][1] + xg1[k]);
-//                   x4[k][2] = 0.5 * (x4[k][0] + x4[k][1]);
-//                 }
-//               }
-//               double weight3sum = 0.;
-//               double weight4sum = 0.;
-//
-//               for(unsigned split = 0; split <= Nsplit; split++) {
-//                 for(unsigned jg = 0; jg < igNumber; jg++) {
-//                   msh->_finiteElement[ielGeom1][solType]->Jacobian(x3, jg, weight3, phi3, phi_x);
-//                   msh->_finiteElement[ielGeom1][solType]->Jacobian(x4, jg, weight4, phi4, phi_x);
-//
-//                   weight3sum += weight3;
-//                   weight4sum += weight4;
-//
-//                   vector < double > xg3(dim, 0.);
-//                   vector < double > xg4(dim, 0.);
-//                   for(unsigned i = 0; i < nDof1; i++) {
-//                     for(unsigned k = 0; k < dim; k++) {
-//                       xg3[k] += x3[k][i] * phi3[i];
-//                       xg4[k] += x4[k][i] * phi4[i];
-//                     }
-//                   }
-//
-//
-//                   std::vector<double> xi3(dim, 0.);
-//                   std::vector<double> xi4(dim, 0.);
-//
-//                   GetClosestPointInReferenceElement(x1, xg3, ielGeom1, xi3);
-//                   GetInverseMapping(solType, ielGeom1, aP, xg3, xi3, 1000);
-//
-//                   GetClosestPointInReferenceElement(x1, xg4, ielGeom1, xi4);
-//                   GetInverseMapping(solType, ielGeom1, aP, xg4, xi4, 1000);
-//
-// //                   std::vector<double> xi3(dim, 0.);
-// //                   std::vector<double> xi4(dim, 0.);
-// //
-// //                   for(unsigned k = 0; k < dim; k++) {
-// //                     xi3[k] = -1. + 2. * (xg3[k] - x1[k][0]) / (x1[k][1] - x1[k][0]);
-// //                     xi4[k] = -1. + 2. * (xg4[k] - x1[k][0]) / (x1[k][1] - x1[k][0]);
-// //                   }
-// //
-// //                   std::cout <<  xi3[0] - xi3t[0] <<std::endl;
-// //                   std::cout <<  xi4[0] - xi4t[0]<<std::endl;
-//
-// //                   phi3[0] = 0.5 * (1. - xi3[0]) * (-xi3[0]);
-// //                   phi3[1] = 0.5 * (1. + xi3[0]) * (xi3[0]);
-// //                   phi3[2] = (1. - xi3[0] * xi3[0]);
-// //
-// //                   phi4[0] = 0.5 * (1. - xi4[0]) * (-xi4[0]);
-// //                   phi4[1] = 0.5 * (1. + xi4[0]) * (xi4[0]);
-// //                   phi4[2] = (1. - xi4[0] * xi4[0]);
-// //
-// //                   for(unsigned i = 0; i < nDof1; i++) {
-// //                     std::cout << phi3[i] << " " << phi4[i] << " ";
-// //                   }
-// //                   std::cout << std::endl;
-//
-//                   msh->_finiteElement[ielGeom1][solType]->GetPhi(phi3, xi3);
-//                   msh->_finiteElement[ielGeom1][solType]->GetPhi(phi4, xi4);
-//
-// //                   for(unsigned i = 0; i < nDof1; i++) {
-// //                     std::cout << phi3[i] << " " << phi4[i] << " ";
-// //                   }
-// //                   std::cout << std::endl;
-// //
-//
-//
-//                   double solY3 = 0.;
-//                   double solY4 = 0.;
-//                   for(unsigned i = 0; i < nDof1; i++) {
-//                     solY3 += solu1[i] * phi3[i];
-//                     solY4 += solu1[i] * phi4[i];
-//                   }
-//
-//                   double dist_xyz3 = 0;
-//                   double dist_xyz4 = 0;
-//                   for(unsigned k = 0; k < dim; k++) {
-//                     dist_xyz3 += (xg1[k] - xg3[k]) * (xg1[k] - xg3[k]);
-//                     dist_xyz4 += (xg1[k] - xg4[k]) * (xg1[k] - xg4[k]);
-//                   }
-//
-//                   const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
-//                   const double denom4 = pow(dist_xyz4, (double)((dim / 2.) + s_frac));
-//
-//
-//                   //std::cout << iel << " "<<jg<<" " << xg1[0] <<" " << xi3[0] <<" "<< phi3[0] << " " << phi3[1] << " " << phi3[2] <<" "<< phi3[0] + phi3[1] + phi3[2] << std::endl;
-//                   //std::cout << iel << " "<<jg<<" "<< xg1[0] <<" " << xi4[0] <<" "<< phi4[0] << " " << phi4[1] << " " << phi4[2] <<" "<< phi4[0] + phi4[1] + phi4[2] << std::endl;
-//                   //std::cout << iel << " " <<jg << " " << denom3 <<" "<< denom4 <<std::endl;
-//
-//                   for(unsigned i = 0; i < nDof1; i++) {
-//
-//                     Res_local_refined[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits *
-//                                                       ((solX - solY3) * (phi1[i] - phi3[i]) * weight3 / denom3 +
-//                                                        (solX - solY4) * (phi1[i] - phi4[i]) * weight4 / denom4) * weight1 ;
-//
-//                     for(unsigned j = 0; j < nDof2; j++) {
-// //                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
-//
-//                       CClocal_refined[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits *
-//                                                           ((phi1[j] - phi3[j]) * (phi1[i] - phi3[i]) * weight3 / denom3 +
-//                                                            (phi1[j] - phi4[j]) * (phi1[i] - phi4[i]) * weight4 / denom4) * weight1 ;
-//
-//                     }
-//                   }
-//
-//
-//
-//
-//                 }
-//
-//                 if(split == Nsplit - 1) {
-//                   for(unsigned k = 0; k < dim; k++) {
-//                     x3[k][0] = x3[k][1];
-//                     x3[k][1] = xg1[k];
-//                     x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
-//
-//                     x4[k][1] = x4[k][0];
-//                     x4[k][0] = xg1[k];
-//                     x4[k][2] = 0.5 * (x4[k][0] + x4[k][1]);
-//                   }
-//                 }
-//                 else {
-//                   for(unsigned k = 0; k < dim; k++) {
-//                     x3[k][0] = x3[k][1];
-//                     x3[k][1] = 0.5 * (x3[k][0] + xg1[k]);
-//                     x3[k][2] = 0.5 * (x3[k][0] + x3[k][1]);
-//
-//                     x4[k][1] = x4[k][0];
-//                     x4[k][0] = 0.5 * (x4[k][1] + xg1[k]);
-//                     x4[k][2] = 0.5 * (x4[k][0] + x4[k][1]);
-//                   }
-//                 }
-//
-//               }
 
               std::cout.precision(14);
               std::vector< std::vector<std::vector<double>>> x3;
@@ -813,12 +667,12 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
                 for(unsigned r = 0; r < 2; r++) {
 
                   for(unsigned jg = 0; jg < igNumber; jg++) {
-                    
-                   
+
+
                     msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], jg, weight3, phi3, phi_x);
-                   
+
                     vector < double > xg3(dim, 0.);
-                   
+
                     for(unsigned i = 0; i < nDof1; i++) {
                       for(unsigned k = 0; k < dim; k++) {
                         xg3[k] += x3[r][k][i] * phi3[i];
@@ -826,12 +680,12 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
                     }
 
                     std::vector<double> xi3(dim, 0.);
-                    
+
                     GetClosestPointInReferenceElement(x1, xg3, ielGeom1, xi3);
                     GetInverseMapping(solType, ielGeom1, aP, xg3, xi3, 1000);
-                                       
+
                     msh->_finiteElement[ielGeom1][solType]->GetPhi(phi3, xi3);
-                    
+
                     double solY3 = 0.;
                     for(unsigned i = 0; i < nDof1; i++) {
                       solY3 += solu1[i] * phi3[i];
@@ -847,16 +701,36 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
                     for(unsigned i = 0; i < nDof1; i++) {
 
                       Res_local_refined[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits *
-                                                        ((solX - solY3) * (phi1[i] - phi3[i]) * weight3 / denom3 
+                                                        ((solX - solY3) * (phi1[i] - phi3[i]) * weight3 / denom3
                                                         ) * weight1 ;
 
                       for(unsigned j = 0; j < nDof2; j++) {
                         CClocal_refined[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits *
-                                                            ((phi1[j] - phi3[j]) * (phi1[i] - phi3[i]) * weight3 / denom3 
+                                                            ((phi1[j] - phi3[j]) * (phi1[i] - phi3[i]) * weight3 / denom3
                                                             ) * weight1 ;
 
                       }
                     }
+
+                    if(ig == 0) {
+                      double ex_1 = EX_1;
+                      double ex_2 = EX_2;
+                      double dist_1 = 0.;
+                      double dist_2 = 0.;
+                      for(int k = 0; k < dim; k++) {
+                        dist_1 += sqrt((xg3[k] - ex_1) * (xg3[k] - ex_1));
+                        dist_2 += sqrt((xg3[k] - ex_2) * (xg3[k] - ex_2));
+                      }
+                      double mixed_term = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
+
+                      for(unsigned i = 0; i < nDof1; i++) {
+                        for(unsigned j = 0; j < nDof1; j++) {
+                          MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term;
+                        }
+                        Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight3 * phi3[i] * solY3 * mixed_term;
+                      }
+                    }
+
                   }
                 }
               }
@@ -1346,10 +1220,99 @@ void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector
       x[right][k][2] = 0.5 * (x[right][k][0] + x[right][k][1]);
     }
   }
-
-
-
 }
+
+// double x1i[1][3]={{-1.,1.,0.}};
+//
+// void GetElementPartition1D2(const std::vector <double >  & xig,
+//                             const unsigned &split,
+//                             const std::vector < std::vector <double > > & x1,
+//                             std::vector < std::vector < std::vector<double>>> &xi,
+//                             std::vector < std::vector < std::vector<double>>> &x) {
+//   unsigned dim = 1;
+//   unsigned left = 0;
+//   unsigned right = 1;
+//
+//   if(split == 0) { //init
+//     xi.resize(2);
+//     xi[left].resize(dim);
+//     xi[right].resize(dim);
+//     for(unsigned k = 0; k < dim; k++) {
+//       xi[left][k].resize(3);
+//       xi[right][k].resize(3);
+//       for(unsigned k = 0; k < dim; k++) {
+//         xi[left][k][0] = x1i[k][0];
+//         xi[left][k][1] = 0.5 * (xi[left][k][0] + xig[k]);
+//         xi[left][k][2] = 0.5 * (xi[left][k][0] + xi[left][k][1]);
+//         xi[right][k][1] = x1i[k][1];
+//         xi[right][k][0] = 0.5 * (xi[right][k][1] + xig[k]);
+//         xi[right][k][2] = 0.5 * (xi[right][k][0] + xi[right][k][1]);
+//       }
+//     }
+//   }
+//   else if(split == Nsplit) {
+//     for(unsigned k = 0; k < dim; k++) {
+//       xi[left][k][0] = xi[left][k][1];
+//       xi[left][k][1] = xig[k];
+//       xi[left][k][2] = 0.5 * (xi[left][k][0] + xi[left][k][1]);
+//
+//       xi[right][k][1] = xi[right][k][0];
+//       xi[right][k][0] = xig[k];
+//       xi[right][k][2] = 0.5 * (xi[right][k][0] + xi[right][k][1]);
+//     }
+//   }
+//   else {
+//     for(unsigned k = 0; k < dim; k++) {
+//       xi[left][k][0] = xi[left][k][1];
+//       xi[left][k][1] = 0.5 * (xi[left][k][0] + xig[k]);
+//       xi[left][k][2] = 0.5 * (xi[left][k][0] + xi[left][k][1]);
+//
+//       xi[right][k][1] = xi[right][k][0];
+//       xi[right][k][0] = 0.5 * (xi[right][k][1] + xig[k]);
+//       xi[right][k][2] = 0.5 * (xi[right][k][0] + xi[right][k][1]);
+//     }
+//   }
+//
+//   x.resize(2);
+//   for(unsigned r = 0; r < 2; r++){
+//     x[r].resize(dim);
+//     for(unsigned k = 0; k < dim; k++) {
+//       x[r][k].assign(3,0.);
+//     }
+//   }
+//
+//    for(unsigned r = 0; r < 2; r++){
+//      for(unsigned i = 0; i < 3; i++){
+//        msh->_finiteElement[ielGeom1][solType]->GetPhi(phi3, xi[r]);
+//
+//
+//     }
+//    }
+//
+//
+//
+//
+//
+// }
+//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1357,17 +1320,17 @@ void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector
 
 
 void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1 , const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x) {
-  
-  
-  
+
+
+
   unsigned dim = 2;
-  
+
   unsigned iSplit = split / Nsplit;
   unsigned jSplit = split % Nsplit;
-  
+
   unsigned left = 0;
   unsigned right = 1;
-  
+
   if(split == 0) { //init
     x.resize(2);
     x[left].resize(dim);
@@ -1390,7 +1353,7 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
       x[left][k][0] = x[left][k][1];
       x[left][k][1] = xg1[k];
       x[left][k][2] = 0.5 * (x[left][k][0] + x[left][k][1]);
-      
+
       x[right][k][1] = x[right][k][0];
       x[right][k][0] = xg1[k];
       x[right][k][2] = 0.5 * (x[right][k][0] + x[right][k][1]);
@@ -1401,15 +1364,14 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
       x[left][k][0] = x[left][k][1];
       x[left][k][1] = 0.5 * (x[left][k][0] + xg1[k]);
       x[left][k][2] = 0.5 * (x[left][k][0] + x[left][k][1]);
-      
+
       x[right][k][1] = x[right][k][0];
       x[right][k][0] = 0.5 * (x[right][k][1] + xg1[k]);
       x[right][k][2] = 0.5 * (x[right][k][0] + x[right][k][1]);
     }
   }
-  
-  
-  
-}
 
+
+
+}
 
