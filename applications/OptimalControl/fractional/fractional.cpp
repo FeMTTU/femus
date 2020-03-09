@@ -22,8 +22,8 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  6
-#define N_ERASED_LEVELS   5
+#define N_UNIFORM_LEVELS  1
+#define N_ERASED_LEVELS   0
 #define S_FRAC 0.75
 
 #define OP_L2       0
@@ -33,7 +33,7 @@ using namespace femus;
 
 #define USE_Cns     1
 
-#define Nsplit      10
+#define Nsplit      1
 
 #define EX_1       -1.
 #define EX_2        1.
@@ -43,14 +43,17 @@ using namespace femus;
 
 double Antiderivative1(const double &theta, const double &s, const double &y);
 double Antiderivative2(const double &theta, const double &s, const double &x);
-void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1 , const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x);
+void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x);
+void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x);
 
 
-double InitialValueU(const std::vector < double >& x) {
+double InitialValueU(const std::vector < double >& x)
+{
   return 0. * x[0] * x[0];
 }
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
+{
   bool dirichlet = true; //dirichlet
   value = 0.;
 
@@ -66,7 +69,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
-double hypergeometric(double a, double b, double c, double x) {
+double hypergeometric(double a, double b, double c, double x)
+{
   const double TOLERANCE = 1.0e-10;
   double term = a * b * x / c;
   double value = 1.0 + term;
@@ -86,7 +90,8 @@ void GetHsNorm(const unsigned level, MultiLevelProblem& ml_prob);
 void AssembleFracProblem(MultiLevelProblem& ml_prob);
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 
 
   //quadr rule order
@@ -114,11 +119,11 @@ int main(int argc, char** argv) {
 //   const std::string mesh_file = "./input/disk.neu";
 //   mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
 
-  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
-
-//   mlMsh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+//   mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
 //   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
+
+  mlMsh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
   // erase all the coarse mesh levels
   const unsigned erased_levels = N_ERASED_LEVELS;
@@ -226,7 +231,8 @@ int main(int argc, char** argv) {
 
 
 
-void AssembleFracProblem(MultiLevelProblem& ml_prob) {
+void AssembleFracProblem(MultiLevelProblem& ml_prob)
+{
 //void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("FracProblem");
@@ -602,16 +608,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
 //               double CC = 1. / (2 * s_frac * (1 + 2. * s_frac));
 
               double teta[4], CCC[4];
-              teta[0] = atan2((ex[3] - xg1[1]) , (ex[1] - xg1[0]));
-              teta[1] = atan2((ex[3] - xg1[1]) , (ex[0] - xg1[0]));
-              teta[2] = atan2((ex[2] - xg1[1]) , (ex[0] - xg1[0])) + 2 * M_PI;
-              teta[3] = atan2((ex[2] - xg1[1]) , (ex[1] - xg1[0])) + 2 * M_PI;
-
-//               CCC[0] = pow(fabs(ex[3] - xg1[1]) , - 2. * s_frac);
-//               CCC[1] = - pow(fabs(ex[0] - xg1[0]) , - 2. * s_frac);
-//               CCC[2] = - pow(fabs(ex[2] - xg1[1]) , - 2. * s_frac);
-//               CCC[3] = pow(fabs(ex[1] - xg1[0]) , - 2. * s_frac);
-
+              teta[0] = atan2((ex[3] - xg1[1]), (ex[1] - xg1[0]));
+              teta[1] = atan2((ex[3] - xg1[1]), (ex[0] - xg1[0]));
+              teta[2] = atan2((ex[2] - xg1[1]), (ex[0] - xg1[0])) + 2 * M_PI;
+              teta[3] = atan2((ex[2] - xg1[1]), (ex[1] - xg1[0])) + 2 * M_PI;
 
               double mixed_term = 0.;
 
@@ -619,28 +619,78 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
                 if(qq == 3) teta[3] -= 2. * M_PI ;
 
                 if(qq  == 0)
-                  mixed_term += 2.* (Antiderivative1(teta[1], s_frac , ex[3] - xg1[1]) -
-                                     Antiderivative1(teta[0], s_frac , ex[3] - xg1[1]));
+                  mixed_term += 2.* (Antiderivative1(teta[1], s_frac, ex[3] - xg1[1]) -
+                                     Antiderivative1(teta[0], s_frac, ex[3] - xg1[1]));
                 else if(qq  == 2)
-                  mixed_term += 2.* (Antiderivative1(teta[3], s_frac , ex[2] - xg1[1]) -
-                                     Antiderivative1(teta[2], s_frac , ex[2] - xg1[1]));
+                  mixed_term += 2.* (Antiderivative1(teta[3], s_frac, ex[2] - xg1[1]) -
+                                     Antiderivative1(teta[2], s_frac, ex[2] - xg1[1]));
                 else if(qq  == 1)
-                  mixed_term += 2. * (Antiderivative2(teta[2], s_frac , ex[0] - xg1[0]) -
-                                      Antiderivative2(teta[1], s_frac , ex[0] - xg1[0]));
+                  mixed_term += 2. * (Antiderivative2(teta[2], s_frac, ex[0] - xg1[0]) -
+                                      Antiderivative2(teta[1], s_frac, ex[0] - xg1[0]));
                 else
-                  mixed_term += 2. * (Antiderivative2(teta[0], s_frac , ex[1] - xg1[0]) -
-                                      Antiderivative2(teta[3], s_frac , ex[1] - xg1[0]));
+                  mixed_term += 2. * (Antiderivative2(teta[0], s_frac, ex[1] - xg1[0]) -
+                                      Antiderivative2(teta[3], s_frac, ex[1] - xg1[0]));
 
-//                 if(qq % 2 == 0) mixed_term += 4 * CC * CCC[qq] /** pow( -1, qq/2 )*/ * (- cos(teta[(qq + 1) % 4]) + cos(teta[qq])) ;
-//                 else mixed_term += 4 * CC * CCC[qq] /** pow( -1, (qq-1)/2 )*/ * (sin(teta[(qq + 1) % 4]) - sin(teta[qq])) ;
-
-                // std::cout << mixed_term << " " << mixed_term1 << std::endl;
-
-                //std::cout << xg1[0] <<"  " << xg1[1] << "  "<< qq << "   " << mixed_term - mix_backup << "\n";
-                //std::cout<< " AAAA " <<pow( cos(teta[(qq+1)%4]), ( 1 + 2. * s_frac) ) << " " << cos(teta[(qq+1)%4])  << " " <<
-                // pow( cos(teta[(qq+1)%4]), ( 1 + 2. * s_frac) )<< "  "<< pow( fabs(cos(teta[(qq+1)%4])), ( 1 + 2. * s_frac) ) <<  "\n";
 
               }
+              
+              
+              
+              
+              
+//     New approach for numerical integral (START)
+//     -----------------------------------
+//     -----------------------------------              
+              
+              
+                  // *** Face Gauss point loop (boundary Integral) ***
+    for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
+      int faceIndex = el->GetBoundaryIndex(iel, jface);
+      // look for boundary faces
+      if ( faceIndex >= 0 ) {  
+        const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
+        unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, solType);         
+        vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
+        for ( int k = 0; k < dim; k++ ) {
+          faceCoordinates[k].resize (faceDofs);
+        }
+        for ( unsigned i = 0; i < faceDofs; i++ ) {
+          unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i ); // face-to-element local node mapping.
+          for ( unsigned k = 0; k < dim; k++ ) {
+            faceCoordinates[k][i] =  x1[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
+          }
+        }
+//         for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][solType]->GetGaussPointNumber(); ig++ ) { 
+//             // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh. 
+//           vector < double> normal;
+//           msh->_finiteElement[faceGeom][solType]->JacobianSur ( faceCoordinates, ig, weight, phi, phi_x, normal );
+//             
+//           vector< double > xg(dim,0.);
+//           for ( unsigned i = 0; i < faceDofs; i++ ) {
+//             for( unsigned k=0; k<dim; k++){
+//               xg[k] += phi[i] * faceCoordinates[k][i]; // xg(ig)= \sum_{i=0}^faceDofs phi[i](xig) facecoordinates[i]     
+//             }
+//           }
+//           double tau; // a(u)*grad_u\cdot normal
+//           SetBoundaryCondition( xg, "u", tau, faceIndex, 0. ); // return tau
+//           // *** phi_i loop ***
+//           for ( unsigned i = 0; i < faceDofs; i++ ) {
+//             unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i );
+//             aRes[inode] +=  phi[i] * tau * weight; 
+//           }        
+//         }
+      }
+    }  
+    
+//     New approach for numerical integral (END)
+//     -----------------------------------
+//     -----------------------------------               
+              
+              
+              
+              
+              
+              
 
 
               for(unsigned i = 0; i < nDof1; i++) {
@@ -662,9 +712,11 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
 
               for(unsigned split = 0; split <= Nsplit; split++) {
 
-                GetElementPartition1D(xg1, x1 , split,  x3);
+                if(dim == 1) GetElementPartition1D(xg1, x1, split, x3);
+                else if(dim == 2) GetElementPartition2D(xg1, x1, split, x3);
+                
 
-                for(unsigned r = 0; r < 2; r++) {
+                for(unsigned r = 0; r < pow(2, dim); r++) {
 
                   for(unsigned jg = 0; jg < igNumber; jg++) {
 
@@ -697,7 +749,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
                     }
 
                     const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
-
+                    
                     for(unsigned i = 0; i < nDof1; i++) {
 
                       Res_local_refined[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits *
@@ -712,7 +764,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
                       }
                     }
 
-                    if(ig == 0) {
+                    if(ig == 0 && dim == 1 ) {
                       double ex_1 = EX_1;
                       double ex_2 = EX_2;
                       double dist_1 = 0.;
@@ -843,7 +895,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob) {
 
 
 
-void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob) {
+void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
+{
 
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -1164,19 +1217,22 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
-double Antiderivative1(const double &theta, const double &s, const double &y) {
-  return -(1. / tan(theta) * hypergeometric(0.5, 0.5 - s, 1.5 , pow(cos(theta), 2.)) * pow(pow(sin(theta), 2.), 0.5 - s)) /
+double Antiderivative1(const double &theta, const double &s, const double &y)
+{
+  return -(1. / tan(theta) * hypergeometric(0.5, 0.5 - s, 1.5, pow(cos(theta), 2.)) * pow(pow(sin(theta), 2.), 0.5 - s)) /
          (2.* s * pow(y * 1 / sin(theta), 2. * s));
 }
 
-double Antiderivative2(const double &theta, const double &s, const double &x) {
+double Antiderivative2(const double &theta, const double &s, const double &x)
+{
   return (pow(pow(cos(theta), 2.), 0.5 - s) * hypergeometric(0.5, 0.5 - s, 1.5, pow(sin(theta), 2)) * tan(theta)) /
          (2.* s * pow(x * 1. / cos(theta), 2. * s));
 }
 
 
 
-void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1 , const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x) {
+void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x)
+{
   unsigned dim = 1;
   unsigned left = 0;
   unsigned right = 1;
@@ -1188,14 +1244,14 @@ void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector
     for(unsigned k = 0; k < dim; k++) {
       x[left][k].resize(x1[0].size());
       x[right][k].resize(x1[0].size());
-      for(unsigned k = 0; k < dim; k++) {
+//       for(unsigned k = 0; k < dim; k++) {
         x[left][k][0] = x1[k][0];
         x[left][k][1] = 0.5 * (x[left][k][0] + xg1[k]);
         x[left][k][2] = 0.5 * (x[left][k][0] + x[left][k][1]);
         x[right][k][1] = x1[k][1];
         x[right][k][0] = 0.5 * (x[right][k][1] + xg1[k]);
         x[right][k][2] = 0.5 * (x[right][k][0] + x[right][k][1]);
-      }
+//       }
     }
   }
   else if(split == Nsplit) {
@@ -1319,59 +1375,70 @@ void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector
 
 
 
-void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1 , const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x) {
-
-
-
+void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x)
+{
   unsigned dim = 2;
-
-  unsigned iSplit = split / Nsplit;
-  unsigned jSplit = split % Nsplit;
-
-  unsigned left = 0;
-  unsigned right = 1;
+  unsigned bl = 0; // bottom left
+  unsigned br = 1; // bottom right
+  unsigned tr = 2; // top left
+  unsigned tl = 3; // top right
+  
+  double ex_x_1;
+  double ex_x_2;
+  double ex_y_1;
+  double ex_y_2;
 
   if(split == 0) { //init
-    x.resize(2);
-    x[left].resize(dim);
-    x[right].resize(dim);
+    x.resize(4);
+    x[bl].resize(dim);
+    x[br].resize(dim);
+    x[tr].resize(dim);
+    x[tl].resize(dim);
     for(unsigned k = 0; k < dim; k++) {
-      x[left][k].resize(x1[0].size());
-      x[right][k].resize(x1[0].size());
-      for(unsigned k = 0; k < dim; k++) {
-        x[left][k][0] = x1[k][0];
-        x[left][k][1] = 0.5 * (x[left][k][0] + xg1[k]);
-        x[left][k][2] = 0.5 * (x[left][k][0] + x[left][k][1]);
-        x[right][k][1] = x1[k][1];
-        x[right][k][0] = 0.5 * (x[right][k][1] + xg1[k]);
-        x[right][k][2] = 0.5 * (x[right][k][0] + x[right][k][1]);
-      }
+      x[bl][k].resize(x1[0].size());
+      x[br][k].resize(x1[0].size());
+      x[tr][k].resize(x1[0].size());
+      x[tl][k].resize(x1[0].size());  
     }
-  }
-  else if(split == Nsplit) {
-    for(unsigned k = 0; k < dim; k++) {
-      x[left][k][0] = x[left][k][1];
-      x[left][k][1] = xg1[k];
-      x[left][k][2] = 0.5 * (x[left][k][0] + x[left][k][1]);
-
-      x[right][k][1] = x[right][k][0];
-      x[right][k][0] = xg1[k];
-      x[right][k][2] = 0.5 * (x[right][k][0] + x[right][k][1]);
-    }
+    ex_x_1 = x1[0][0];
+    ex_x_2 = x1[0][1];
+    ex_y_1 = x1[1][0];
+    ex_y_2 = x1[1][3];
   }
   else {
-    for(unsigned k = 0; k < dim; k++) {
-      x[left][k][0] = x[left][k][1];
-      x[left][k][1] = 0.5 * (x[left][k][0] + xg1[k]);
-      x[left][k][2] = 0.5 * (x[left][k][0] + x[left][k][1]);
-
-      x[right][k][1] = x[right][k][0];
-      x[right][k][0] = 0.5 * (x[right][k][1] + xg1[k]);
-      x[right][k][2] = 0.5 * (x[right][k][0] + x[right][k][1]);
-    }
+    ex_x_1 = x[bl][0][1]; 
+    ex_x_2 = x[br][0][0];
+    ex_y_1 = x[bl][1][2];
+    ex_y_2 = x[tl][1][1];
   }
-
-
+    
+    
+    //     Prototipo: x[quadrante][dim][numero_nodo]
+    x[bl][1][0] = x[bl][1][1] = x[br][1][0] = x[br][1][1] = ex_y_1;
+    x[tl][1][2] = x[tl][1][3] = x[tr][1][2] = x[tr][1][3] = ex_y_2;
+    x[bl][0][0] = x[bl][0][3] = x[tl][0][0] = x[tl][0][3] = ex_x_1;
+    x[br][0][1] = x[br][0][2] = x[tr][0][1] = x[tr][0][2] = ex_x_2;
+    if(split == Nsplit){
+      x[bl][1][2] = x[bl][1][3] = x[br][1][2] = x[br][1][3] = x[tl][1][0] = x[tl][1][1] = x[tr][1][0] = x[tr][1][1] = xg1[1];
+      x[bl][0][1] = x[bl][0][2] = x[tl][0][1] = x[tl][0][2] = x[br][0][0] = x[br][0][3] = x[tr][0][0] = x[tr][0][3] = xg1[0];
+    }
+    else{
+      x[bl][1][2] = x[bl][1][3] = x[br][1][2] = x[br][1][3] = 0.5 * (ex_y_1 + xg1[1]);
+      x[tl][1][0] = x[tl][1][1] = x[tr][1][0] = x[tr][1][1] = 0.5 * (ex_y_2 + xg1[1]);
+      x[bl][0][1] = x[bl][0][2] = x[tl][0][1] = x[tl][0][2] = 0.5 * (ex_x_1 + xg1[0]);
+      x[br][0][0] = x[br][0][3] = x[tr][0][0] = x[tr][0][3] = 0.5 * (ex_x_2 + xg1[0]);
+    }
+    
+    
+    for(unsigned qq = 0; qq < 4; qq++){
+      for(unsigned k = 0; k < dim; k++){
+        x[qq][k][4] = 0.5 * ( x[qq][k][0] + x[qq][k][1] );
+        x[qq][k][5] = 0.5 * ( x[qq][k][1] + x[qq][k][2] );
+        x[qq][k][6] = 0.5 * ( x[qq][k][2] + x[qq][k][3] );
+        x[qq][k][7] = 0.5 * ( x[qq][k][3] + x[qq][k][4] );
+        x[qq][k][8] = 0.5 * ( x[qq][k][0] + x[qq][k][2] );
+      }
+    }
 
 }
 
