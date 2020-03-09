@@ -182,7 +182,7 @@ namespace femus {
       for (int k = 0; k < dim; k++) {
         aP[k][0] = aN[k][2];
         aP[k][1] = 0.5 * (aN[k][1] - aN[k][0]);
-        aP[k][4] = 0.5 * (aN[k][1] + aN[k][0]) - aN[k][2];
+        aP[k][2] = 0.5 * (aN[k][1] + aN[k][0]) - aN[k][2];
       }
     }
   }
