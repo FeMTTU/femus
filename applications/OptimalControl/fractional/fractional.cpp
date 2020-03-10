@@ -24,7 +24,7 @@ using namespace femus;
 
 #define N_UNIFORM_LEVELS  3
 #define N_ERASED_LEVELS   2
-#define S_FRAC 0.75
+#define S_FRAC 0.5
 
 #define OP_L2       0
 #define OP_H1       0
@@ -33,7 +33,7 @@ using namespace femus;
 
 #define USE_Cns     1
 
-#define Nsplit      10
+#define Nsplit      5
 
 #define EX_1       -1.
 #define EX_2        1.
@@ -638,65 +638,63 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               
               
               
-//     New approach for numerical integral (START)
-//     -----------------------------------
-//     -----------------------------------              
+// //     New approach for numerical integral (START)
+// //     -----------------------------------
+// //     -----------------------------------              
+//               
+//     double mixed_term1 = 0;
+//     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
+//                   // *** Face Gauss point loop (boundary Integral) ***
+//     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( kel ); jface++ ) {
+//       int faceIndex = el->GetBoundaryIndex(kel, jface);
+//       // look for boundary faces
+//       if ( faceIndex >= 1 ) {  
+//         const unsigned faceGeom = msh->GetElementFaceType ( kel, jface );
+//         unsigned faceDofs = msh->GetElementFaceDofNumber (kel, jface, solType);         
+//         vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
+//         for ( int k = 0; k < dim; k++ ) {
+//           faceCoordinates[k].resize (faceDofs);
+//         }
+//         for ( unsigned i = 0; i < faceDofs; i++ ) {
+//           unsigned inode = msh->GetLocalFaceVertexIndex ( kel, jface, i ); // face-to-element local node mapping.
+//           for ( unsigned k = 0; k < dim; k++ ) {
+//             faceCoordinates[k][i] =  x1[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
+//           }
+//         }
+// //         valido per 2D, verifica che funzioni!!
+//         double teta2 = atan2((faceCoordinates[1][1] - xg1[1]), ( faceCoordinates[0][1] - xg1[0]));
+//         double teta1 = atan2((faceCoordinates[1][0] - xg1[1]), ( faceCoordinates[0][0] - xg1[0])); 
+//         
+//         double delta_teta = fabs ( teta2 - teta1 );
+//         
+//         vector <double> mid_sur;
+//         mid_sur.resize(dim);
+//         for( unsigned k = 0; k < dim; k++ ) {
+//           mid_sur[k] = ( faceCoordinates[k][1] + faceCoordinates[k][0] ) * 0.5;
+//         }
+//         double dist2 = 0;
+//         for(int k = 0; k < dim; k++) {
+//           dist2 += (xg1[k] - mid_sur[k]) * (xg1[k] - mid_sur[k]);
+//         }
+//         double dist = sqrt( dist2 );
+//         mixed_term1 += (1. / (2. * s_frac )) * pow(dist, -  2. * s_frac) * delta_teta;
+//         
+//       }
+//     } 
+//     }
+//     
+// //     New approach for numerical integral (END)
+// //     -----------------------------------
+// //     -----------------------------------               
               
-    double mixed_term1 = 0;
-    for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
-                  // *** Face Gauss point loop (boundary Integral) ***
-    for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( kel ); jface++ ) {
-      int faceIndex = el->GetBoundaryIndex(kel, jface);
-      // look for boundary faces
-      if ( faceIndex >= 0 ) {  
-        const unsigned faceGeom = msh->GetElementFaceType ( kel, jface );
-        unsigned faceDofs = msh->GetElementFaceDofNumber (kel, jface, solType);         
-        vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
-        for ( int k = 0; k < dim; k++ ) {
-          faceCoordinates[k].resize (faceDofs);
-        }
-        for ( unsigned i = 0; i < faceDofs; i++ ) {
-          unsigned inode = msh->GetLocalFaceVertexIndex ( kel, jface, i ); // face-to-element local node mapping.
-          for ( unsigned k = 0; k < dim; k++ ) {
-            faceCoordinates[k][i] =  x1[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
-          }
-        }
-//         valido per 2D, verifica che funzioni!!
-        double teta2 = atan2((faceCoordinates[1][1] - xg1[1]), (ex[1] - faceCoordinates[0][1]));
-        double teta1 = atan2((faceCoordinates[1][0] - xg1[1]), (ex[1] - faceCoordinates[0][0])); 
-        
-        double delta_teta = fabs ( teta2 - teta1 );
-        
-        vector <double> mid_sur;
-        mid_sur.resize(dim);
-        for( unsigned k = 0; k < dim; k++ ) {
-          mid_sur[k] = ( faceCoordinates[k][1] + faceCoordinates[k][0] ) * 0.5;
-        }
-        double dist2 = 0;
-        for(int k = 0; k < dim; k++) {
-          dist2 += (xg1[k] - mid_sur[k]) * (xg1[k] - mid_sur[k]);
-        }
-        double dist = sqrt( dist2 );
-        mixed_term1 += pow(dist, -2. * s_frac) * delta_teta;
-        
-      }
-    } 
-    }
-    
-//     New approach for numerical integral (END)
-//     -----------------------------------
-//     -----------------------------------               
-              
-              
-         std::cout << "AAAA " << mixed_term << "  " << mixed_term1 << "\n"   ;
               
 
 
               for(unsigned i = 0; i < nDof1; i++) {
                 for(unsigned j = 0; j < nDof1; j++) {
-                  MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
+                  MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits /** (1. / s_frac)*/ * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
                 }
-                Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
+                Res_local[ i ] += (C_ns / 2.) * check_limits /** (1. / s_frac)*/ * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
               }
             }
 
@@ -708,7 +706,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
               std::cout.precision(14);
               std::vector< std::vector<std::vector<double>>> x3;
-
+              
               for(unsigned split = 0; split <= Nsplit; split++) {
 
                 unsigned size_part;
@@ -718,14 +716,13 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 if(dim == 1) GetElementPartition1D(xg1, x1, split, x3);
                 else if(dim == 2) GetElementPartition2D(xg1, x1, split, x3);
                 
-
                 for(unsigned r = 0; r < size_part; r++) {
 
                   for(unsigned jg = 0; jg < igNumber; jg++) {
 
 
                     msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], jg, weight3, phi3, phi_x);
-
+                    
                     vector < double > xg3(dim, 0.);
 
                     for(unsigned i = 0; i < nDof1; i++) {
@@ -794,6 +791,77 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
             }
 
           } // end iel == jel loop
+          
+          
+          
+          
+          
+          
+          //     New approach for numerical integral (START)
+//     -----------------------------------
+//     -----------------------------------              
+              
+    double mixed_term1 = 0;
+//     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
+                  // *** Face Gauss point loop (boundary Integral) ***
+    for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( jel ); jface++ ) {
+      int faceIndex = el->GetBoundaryIndex(jel, jface);
+      // look for boundary faces
+      if ( faceIndex >= 1 ) {  
+        const unsigned faceGeom = msh->GetElementFaceType ( jel, jface );
+        unsigned faceDofs = msh->GetElementFaceDofNumber (jel, jface, solType);         
+        vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
+        for ( int k = 0; k < dim; k++ ) {
+          faceCoordinates[k].resize (faceDofs);
+        }
+        for ( unsigned i = 0; i < faceDofs; i++ ) {
+          unsigned inode = msh->GetLocalFaceVertexIndex ( jel, jface, i ); // face-to-element local node mapping.
+          for ( unsigned k = 0; k < dim; k++ ) {
+            faceCoordinates[k][i] =  x1[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
+          }
+        }
+//         valido per 2D, verifica che funzioni!!
+        double teta2 = atan2((faceCoordinates[1][1] - xg1[1]), ( faceCoordinates[0][1] - xg1[0]));
+        double teta1 = atan2((faceCoordinates[1][0] - xg1[1]), ( faceCoordinates[0][0] - xg1[0])); 
+        
+        double delta_teta = fabs ( teta2 - teta1 );
+        
+        vector <double> mid_sur;
+        mid_sur.resize(dim);
+        for( unsigned k = 0; k < dim; k++ ) {
+          mid_sur[k] = ( faceCoordinates[k][1] + faceCoordinates[k][0] ) * 0.5;
+        }
+        double dist2 = 0;
+        for(int k = 0; k < dim; k++) {
+          dist2 += (xg1[k] - mid_sur[k]) * (xg1[k] - mid_sur[k]);
+        }
+        double dist = sqrt( dist2 );
+        mixed_term1 += pow(dist, -  2. * s_frac) * delta_teta;
+        
+      }
+    } 
+//     }
+    
+//     New approach for numerical integral (END)
+//     -----------------------------------
+//     ----------------------------------- 
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
 
           if((Nsplit == 0 || iel != jel) && OP_Hhalf != 0) {
             for(unsigned jg = 0; jg < jgNumber; jg++) {
@@ -1462,4 +1530,5 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
     }
 
 }
+
 
