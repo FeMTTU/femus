@@ -2,9 +2,9 @@
 ** GAMBIT NEUTRAL FILE
 FETI_left_domain_ex5
 PROGRAM:                Gambit     VERSION:  2.3.16
- 9 Mar 2020    08:16:49 
+10 Mar 2020    01:21:02 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
-       575       132         2         1         2         2
+       575       132         2         2         2         2
 ENDOFSECTION
    NODAL COORDINATES 2.3.16
          1  -1.00000000000e+00   5.00000000000e-01
@@ -874,19 +874,7 @@ GROUP:          2 ELEMENTS:         72 MATERIAL:          2 NFLAGS:          1
       99     100
 ENDOFSECTION
  BOUNDARY CONDITIONS 2.3.16
-                               1       1      34       0       6
-         9    2    1
-        43    2    4
-        41    2    4
-        39    2    4
-        37    2    4
-        35    2    4
-        33    2    4
-        31    2    4
-        13    2    4
-        15    2    4
-        15    2    3
-        16    2    3
+                               1       1      38       0       6
        108    2    1
        107    2    1
        106    2    1
@@ -895,10 +883,29 @@ ENDOFSECTION
        103    2    1
        102    2    1
        101    2    1
+        15    2    3
+        16    2    3
+        13    2    4
+        15    2    4
+        43    2    4
+        41    2    4
+        39    2    4
+        37    2    4
+        35    2    4
+        33    2    4
+        31    2    4
+         9    2    1
+         7    2    3
+         8    2    4
+         7    2    4
+         5    2    4
+         6    2    4
          3    2    4
          1    2    4
          4    2    3
          3    2    3
+         6    2    1
+        11    2    1
         29    2    4
         27    2    4
         25    2    4
@@ -906,7 +913,15 @@ ENDOFSECTION
         21    2    4
         19    2    4
         17    2    4
-        11    2    1
-         6    2    1
-         7    2    3
+ENDOFSECTION
+ BOUNDARY CONDITIONS 2.3.16
+                               2       1       8       0       6
+       132    2    4
+       131    2    4
+       130    2    4
+       129    2    4
+       128    2    4
+       127    2    4
+       126    2    4
+       125    2    4
 ENDOFSECTION
