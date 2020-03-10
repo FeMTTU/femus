@@ -13,7 +13,7 @@
 using namespace femus;
 
   double force[3] = {1.,0.,0.}; 
-  double forceMag[3] = {0.,0.,0.}; 
+  double forceMag[3] = {1.,2.,7.}; 
 
   std::string concatenate(const std::string str1, const unsigned num1) {
    
@@ -525,6 +525,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
           solMag_qp[k] += phiMag[k][i] * solMag[k][i];
         }
       
+      } //this was missing!!
       
       double nu = 1.;
 
@@ -558,15 +559,12 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
         }
       } // end phiP_i loop
       
-//       for (unsigned  k = 0; k < aux_mag_length; k++) {
+      for (unsigned  k = 0; k < aux_mag_length; k++) {
          for (unsigned i = 0; i < nDofsMag_vec[k]; i++) {
-          aResMag[0][i] += (  /*forceMag[0] * phiMag[0][i]*/ - /*phiMag[0][i] **/ solMag_qp[0] ) /** weight*/;
-          aResMag[1][i] += (  /*forceMag[1] * phiMag[1][i]*/ - /*phiMag[1][i] **/ solMag_qp[1] ) /** weight*/;
-          aResMag[2][i] += (  /*forceMag[2] * phiMag[2][i]*/ - /*phiMag[2][i] **/ solMag_qp[2] ) /** weight*/;
+          aResMag[k][i] += (  forceMag[k] * phiMag[k][i] - phiMag[k][i] * solMag_qp[k] ) * weight;
         }   
-//        }
+       }
 
-      } // end phiV_i loop
 
       
 
@@ -637,8 +635,8 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     s.clear_independents();
     s.clear_dependents();
 
-         assemble_jacobian<double,double>::print_element_residual(iel, Res, nDofs_all, 10, 5);
-         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, nDofs_all, 10, 5);
+//          assemble_jacobian<double,double>::print_element_residual(iel, Res, nDofs_all, 10, 5);
+//          assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, nDofs_all, 10, 5);
    
     
     
