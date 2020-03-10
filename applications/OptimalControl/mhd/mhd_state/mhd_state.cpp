@@ -6,12 +6,14 @@
 #include "NumericVector.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
+#include "Assemble_jacobian.hpp"
+#include "Assemble_unknown_jacres.hpp"
 
 
 using namespace femus;
 
   double force[3] = {1.,0.,0.}; 
-  double forceMag[3] = {1.,1.,1.}; 
+  double forceMag[3] = {0.,0.,0.}; 
 
   std::string concatenate(const std::string str1, const unsigned num1) {
    
@@ -226,8 +228,8 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
   
     
+  const unsigned aux_ns_length = dim + 1;
   const unsigned aux_mag_length = dim + 1;
-  
   
   
   //solution variable
@@ -242,6 +244,28 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       const std::string  unknown_name =  concatenate("B", d);
   solMagIndex[d] = mlSol->GetIndex(unknown_name.c_str());  // get the position of "U" in the ml_sol object
   }
+  
+
+   //all unknowns ==========================
+  vector < unsigned > solIndex_all(aux_ns_length + aux_mag_length);
+  
+  solIndex_all[0] = mlSol->GetIndex("U_0");
+  solIndex_all[1] = mlSol->GetIndex("U_1");
+  solIndex_all[2] = mlSol->GetIndex("P");
+  solIndex_all[3] = mlSol->GetIndex("B_0");
+  solIndex_all[4] = mlSol->GetIndex("B_1");
+  solIndex_all[5] = mlSol->GetIndex("B_2");
+
+  if (dim == 3) { std::cout << "Change variable inputs above"; abort(); } 
+  
+  vector < unsigned > solType_all(aux_ns_length + aux_mag_length);
+  
+   for (unsigned int d = 0; d < solType_all.size(); d++) {
+       
+       solType_all[d] = mlSol->GetSolutionType(solIndex_all[d]);
+       
+   }
+   //all unknowns ==========================
   
   
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
@@ -350,6 +374,12 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);    // number of solution element dofs
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
     
+
+    std::vector < unsigned int > nDofs_all(aux_ns_length + aux_mag_length);
+       for (unsigned int d = 0; d < nDofs_all.size(); d++) {
+          nDofs_all[d] = msh->GetElementDofNumber(iel, solType_all[d]);
+       }
+       
     std::vector < unsigned int > nDofsMag_vec(aux_mag_length);
        for (unsigned int d = 0; d < nDofsMag_vec.size(); d++) {
           nDofsMag_vec[d] = msh->GetElementDofNumber(iel, solMagType_vec[d]);
@@ -452,19 +482,21 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
         
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
-      phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
-      
+        
     for (unsigned  k = 0; k < aux_mag_length; k++) {
       msh->_finiteElement[ielGeom][solMagType_vec[k]]->Jacobian(coordX, ig, weight, phiMag[k], phiMag_x[k], boost::none);
     }
     
-      vector < adept::adouble > solV_gss(dim, 0);
+      msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
+      phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
+      
+    
+      vector < adept::adouble > solV_gss(dim, 0.);
       vector < vector < adept::adouble > > gradSolV_gss(dim);
 
       for (unsigned  k = 0; k < dim; k++) {
         gradSolV_gss[k].resize(dim);
-        std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0);
+        std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0.);
       }
 
       for (unsigned i = 0; i < nDofsV; i++) {
@@ -486,8 +518,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       }
 
       
-            vector < adept::adouble > solMag_qp(aux_mag_length, 0);
+        vector < adept::adouble > solMag_qp(aux_mag_length, 0.);
       for (unsigned  k = 0; k < aux_mag_length; k++) {
+          solMag_qp[k] = 0.;
         for (unsigned i = 0; i < nDofsMag_vec[k]; i++) {
           solMag_qp[k] += phiMag[k][i] * solMag[k][i];
         }
@@ -525,11 +558,13 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
         }
       } // end phiP_i loop
       
-      for (unsigned  k = 0; k < aux_mag_length; k++) {
+//       for (unsigned  k = 0; k < aux_mag_length; k++) {
          for (unsigned i = 0; i < nDofsMag_vec[k]; i++) {
-          aResMag[k][i] += (  forceMag[k] * phiMag[k][i] - phiMag[k][i] * solMag_qp[k] ) * weight;
+          aResMag[0][i] += (  /*forceMag[0] * phiMag[0][i]*/ - /*phiMag[0][i] **/ solMag_qp[0] ) /** weight*/;
+          aResMag[1][i] += (  /*forceMag[1] * phiMag[1][i]*/ - /*phiMag[1][i] **/ solMag_qp[1] ) /** weight*/;
+          aResMag[2][i] += (  /*forceMag[2] * phiMag[2][i]*/ - /*phiMag[2][i] **/ solMag_qp[2] ) /** weight*/;
         }   
-       }
+//        }
 
       } // end phiV_i loop
 
@@ -602,6 +637,11 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     s.clear_independents();
     s.clear_dependents();
 
+         assemble_jacobian<double,double>::print_element_residual(iel, Res, nDofs_all, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, nDofs_all, 10, 5);
+   
+    
+    
   } //end element loop for each process
 
   RES->close();
