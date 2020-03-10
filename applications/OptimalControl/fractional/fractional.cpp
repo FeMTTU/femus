@@ -660,6 +660,21 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
             faceCoordinates[k][i] =  x1[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
           }
         }
+//         valido per 2D, verifica che funzioni!!
+        double teta2 = atan2((faceCoordinates[1][1] - xg1[1]), (ex[1] - faceCoordinates[0][1]));
+        double teta1 = atan2((faceCoordinates[1][0] - xg1[1]), (ex[1] - faceCoordinates[0][0])); 
+        
+        double delta_teta = fabs ( teta2 - teta1 );
+        
+        vector <double> mid_sur;
+        mid_sur.resize(dim);
+        for( unsigned k = 0; k < dim; k++ ) {
+          mid_sur[k] = ( faceCoordinates[k][1] + faceCoordinates[k][0] ) * 0.5;
+        }
+        
+//         fai funzione per integrazione 1D da richiamare qui
+
+
 //         for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][solType]->GetGaussPointNumber(); ig++ ) { 
 //             // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh. 
 //           vector < double> normal;
@@ -1351,17 +1366,6 @@ void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector
 //
 // }
 //
-
-
-
-
-
-
-
-
-
-
-
 
 
 
