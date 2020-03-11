@@ -6,11 +6,14 @@
 #include "NumericVector.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
+#include "Assemble_jacobian.hpp"
+#include "Assemble_unknown_jacres.hpp"
 
 
 using namespace femus;
 
-  double force[3] = {10.,0.,0.}; 
+  double force[3] = {1.,0.,0.}; 
+  double forceMag[3] = {1.,2.,7.}; 
 
   std::string concatenate(const std::string str1, const unsigned num1) {
    
@@ -26,23 +29,37 @@ using namespace femus;
 bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
   
-  bool dirichlet = true;
+  bool dirichlet = false;
    value = 0.;
   
 // LEFT ==========================  
       if (facename == 4) {
        if (!strcmp(SolName, "U_0"))    { dirichlet = false; }
-  else if (!strcmp(SolName, "U_1"))    {      value = 0.; } 
-  	
+  else if (!strcmp(SolName, "U_1"))    { dirichlet = true;      value = 0.; } 
       }
       
 // RIGHT ==========================  
      if (facename == 2) {
        if (!strcmp(SolName, "U_0"))    {  dirichlet = false; }
-  else if (!strcmp(SolName, "U_1"))    {   value = 0.;  } 
+  else if (!strcmp(SolName, "U_1"))    {  dirichlet = true;  value = 0.;  } 
   
   
       }
+      
+// BOTTOM ==========================  
+      if (facename == 1) {
+       if (!strcmp(SolName, "U_0"))    { dirichlet = true; value = 0.; }
+  else if (!strcmp(SolName, "U_1"))    { dirichlet = true; value = 0.; } 
+     
+      }
+      
+// TOP ==========================  
+      if (facename == 3) {
+       if (!strcmp(SolName, "U_0"))    { dirichlet = true; value = 0.;  }
+  else if (!strcmp(SolName, "U_1"))    { dirichlet = true; value = 0.;  } 
+     
+      }
+      
       
 //if the boundary integral is implemented below, you need to use these conditions on pressure to retrieve the Poiseuille flow (and set the volume force to zero)      
 //       if (!strcmp(SolName, "P"))  { 
@@ -211,8 +228,8 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
   
     
+  const unsigned aux_ns_length = dim + 1;
   const unsigned aux_mag_length = dim + 1;
-  
   
   
   //solution variable
@@ -227,6 +244,28 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       const std::string  unknown_name =  concatenate("B", d);
   solMagIndex[d] = mlSol->GetIndex(unknown_name.c_str());  // get the position of "U" in the ml_sol object
   }
+  
+
+   //all unknowns ==========================
+  vector < unsigned > solIndex_all(aux_ns_length + aux_mag_length);
+  
+  solIndex_all[0] = mlSol->GetIndex("U_0");
+  solIndex_all[1] = mlSol->GetIndex("U_1");
+  solIndex_all[2] = mlSol->GetIndex("P");
+  solIndex_all[3] = mlSol->GetIndex("B_0");
+  solIndex_all[4] = mlSol->GetIndex("B_1");
+  solIndex_all[5] = mlSol->GetIndex("B_2");
+
+  if (dim == 3) { std::cout << "Change variable inputs above"; abort(); } 
+  
+  vector < unsigned > solType_all(aux_ns_length + aux_mag_length);
+  
+   for (unsigned int d = 0; d < solType_all.size(); d++) {
+       
+       solType_all[d] = mlSol->GetSolutionType(solIndex_all[d]);
+       
+   }
+   //all unknowns ==========================
   
   
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
@@ -335,6 +374,12 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);    // number of solution element dofs
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
     
+
+    std::vector < unsigned int > nDofs_all(aux_ns_length + aux_mag_length);
+       for (unsigned int d = 0; d < nDofs_all.size(); d++) {
+          nDofs_all[d] = msh->GetElementDofNumber(iel, solType_all[d]);
+       }
+       
     std::vector < unsigned int > nDofsMag_vec(aux_mag_length);
        for (unsigned int d = 0; d < nDofsMag_vec.size(); d++) {
           nDofsMag_vec[d] = msh->GetElementDofNumber(iel, solMagType_vec[d]);
@@ -344,8 +389,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       std::vector < unsigned int > nDofsMag_vec_offset(aux_mag_length + 1);
      
       nDofsMag_vec_offset[0] = 0;
-       for (unsigned int d = 1; d <= nDofsMag_vec_offset.size(); d++)  nDofsMag_vec_offset[d] += nDofsMag_vec[d-1];
-
+       for (unsigned int d = 1; d < nDofsMag_vec_offset.size(); d++)  {
+           nDofsMag_vec_offset[d] = nDofsMag_vec_offset[d-1] + nDofsMag_vec[d-1];
+       }
       
     
     unsigned nDofsVP = dim * nDofsV + nDofsP;
@@ -385,7 +431,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     
     
     
-    // local storage of global mapping and solution
+    // local storage of global mapping and solution *****************************
     for (unsigned i = 0; i < nDofsV; i++) {
       unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
@@ -415,6 +461,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
         sysDof[mag_offset + i + nDofsMag_vec_offset[k] ] = pdeSys->GetSystemDof(solMagIndex[k], solMagPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }   
+    // local storage of global mapping and solution *****************************
     
     
     
@@ -435,19 +482,21 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
         
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
-      phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
-      
+        
     for (unsigned  k = 0; k < aux_mag_length; k++) {
       msh->_finiteElement[ielGeom][solMagType_vec[k]]->Jacobian(coordX, ig, weight, phiMag[k], phiMag_x[k], boost::none);
     }
     
-      vector < adept::adouble > solV_gss(dim, 0);
+      msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
+      phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
+      
+    
+      vector < adept::adouble > solV_gss(dim, 0.);
       vector < vector < adept::adouble > > gradSolV_gss(dim);
 
       for (unsigned  k = 0; k < dim; k++) {
         gradSolV_gss[k].resize(dim);
-        std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0);
+        std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0.);
       }
 
       for (unsigned i = 0; i < nDofsV; i++) {
@@ -469,12 +518,14 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       }
 
       
-            vector < adept::adouble > solMag_qp(aux_mag_length, 0);
+        vector < adept::adouble > solMag_qp(aux_mag_length, 0.);
       for (unsigned  k = 0; k < aux_mag_length; k++) {
+          solMag_qp[k] = 0.;
         for (unsigned i = 0; i < nDofsMag_vec[k]; i++) {
           solMag_qp[k] += phiMag[k][i] * solMag[k][i];
         }
       
+      } //this was missing!!
       
       double nu = 1.;
 
@@ -484,7 +535,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned  k = 0; k < dim; k++) {
-            NSV[k]   +=  nu * 0.5 * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);  //diffusion
+            NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);  //diffusion
             NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);                                //advection
           }
         }
@@ -508,13 +559,12 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
         }
       } // end phiP_i loop
       
-      for (unsigned  j = 0; j < aux_mag_length; j++) {
-         for (unsigned i = 0; i < nDofsMag_vec[j]; i++) {
-          aResMag[j][i] += ( - phiMag[j][i] * solMag_qp[j] ) * weight;
+      for (unsigned  k = 0; k < aux_mag_length; k++) {
+         for (unsigned i = 0; i < nDofsMag_vec[k]; i++) {
+          aResMag[k][i] += (  forceMag[k] * phiMag[k][i] - phiMag[k][i] * solMag_qp[k] ) * weight;
         }   
        }
 
-      } // end phiV_i loop
 
       
 
@@ -528,7 +578,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
     for (int i = 0; i < nDofsV; i++) {
       for (unsigned  k = 0; k < dim; k++) {
-        Res[ i +  k * nDofsV ] = -aResV[k][i].value();
+        Res[ i +  k * nDofsV ] = - aResV[k][i].value();
       }
     }
 
@@ -585,6 +635,11 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     s.clear_independents();
     s.clear_dependents();
 
+//          assemble_jacobian<double,double>::print_element_residual(iel, Res, nDofs_all, 10, 5);
+//          assemble_jacobian<double,double>::print_element_jacobian(iel, Jac, nDofs_all, 10, 5);
+   
+    
+    
   } //end element loop for each process
 
   RES->close();
