@@ -22,8 +22,8 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 #define S_FRAC 0.5
 
 #define OP_L2       1
@@ -561,8 +561,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               Res_local[ i ] += - RHS_ONE * weight1 * (phi1[i] * (-1.));
             }
 
-//          ---------------------
-//          Laplacian assembly
+//============  Laplacian assembly ==================	
+
 //          Residual
             std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
             for(unsigned i = 0; i < nDof1; i++) {
@@ -583,8 +583,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 MMlocal[ i * nDof1 + j ]  += OP_H1 * weight1 *  laplace_mat_i_j;
               }
             }
-//          ---------------------
-//          Mixed integral ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals)
+//============  Laplacian assembly ==================	
+
+//============  Mixed integral ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================	
             if(dim == 1) {
 //               double ex_1 = EX_1;
 //               double ex_2 = EX_2;
@@ -634,8 +635,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
 
               }
-              
-              
               
               
               
@@ -693,16 +692,14 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
               for(unsigned i = 0; i < nDof1; i++) {
                 for(unsigned j = 0; j < nDof1; j++) {
-                  MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits /** (1. / s_frac)*/ * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
+                  MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
                 }
-                Res_local[ i ] += (C_ns / 2.) * check_limits /** (1. / s_frac)*/ * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
+                Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
               }
             }
+//============  Mixed integral ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================	
 
-//          ---------------------
-//          Adaptive quadrature for iel == jel
-
-
+//============ Adaptive quadrature for iel == jel ==================	
             if(Nsplit != 0) {
 
               std::cout.precision(14);
@@ -769,9 +766,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
                       }
                     }
-                    
-// //               Mixed integral 1D
-// //               ------------------
+//============ Adaptive quadrature for iel == jel ==================	
+
+//============ Mixed integral 1D ==================	
                     if(ig == 0 && dim == 1 && UNBOUNDED == 1) {
                       double ex_1 = EX_1;
                       double ex_2 = EX_2;
@@ -781,16 +778,16 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                         dist_1 += sqrt((xg3[k] - ex_1) * (xg3[k] - ex_1));
                         dist_2 += sqrt((xg3[k] - ex_2) * (xg3[k] - ex_2));
                       }
-                      double mixed_term = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
+                      double mixed_term = ( pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac) ) * (1. / s_frac) ;
 
                       for(unsigned i = 0; i < nDof1; i++) {
                         for(unsigned j = 0; j < nDof1; j++) {
-                          MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term;
+                          MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term;
                         }
-                        Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight3 * phi3[i] * solY3 * mixed_term;
+                        Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solY3 * mixed_term;
                       }
                     }
-
+//============ Mixed integral 1D ==================	
                   }
                 }
               }
@@ -803,54 +800,72 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           
           
           
-//           //     New approach for numerical integral (START)
-// //     -----------------------------------
-// //     -----------------------------------              
-//               
-//     double mixed_term1 = 0;
-// //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
-//                   // *** Face Gauss point loop (boundary Integral) ***
-//     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( jel ); jface++ ) {
-//       int faceIndex = el->GetBoundaryIndex(jel, jface);
-//       // look for boundary faces
-//       if ( faceIndex >= 1 ) {  
-//         const unsigned faceGeom = msh->GetElementFaceType ( jel, jface );
-//         unsigned faceDofs = msh->GetElementFaceDofNumber (jel, jface, solType);         
-//         vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
-//         for ( int k = 0; k < dim; k++ ) {
-//           faceCoordinates[k].resize (faceDofs);
-//         }
-//         for ( unsigned i = 0; i < faceDofs; i++ ) {
-//           unsigned inode = msh->GetLocalFaceVertexIndex ( jel, jface, i ); // face-to-element local node mapping.
-//           for ( unsigned k = 0; k < dim; k++ ) {
-//             faceCoordinates[k][i] =  x1[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
-//           }
-//         }
-// //         valido per 2D, verifica che funzioni!!
-//         double teta2 = atan2((faceCoordinates[1][1] - xg1[1]), ( faceCoordinates[0][1] - xg1[0]));
-//         double teta1 = atan2((faceCoordinates[1][0] - xg1[1]), ( faceCoordinates[0][0] - xg1[0])); 
-//         
-//         double delta_teta = fabs ( teta2 - teta1 );
-//         
-//         vector <double> mid_sur;
-//         mid_sur.resize(dim);
-//         for( unsigned k = 0; k < dim; k++ ) {
-//           mid_sur[k] = ( faceCoordinates[k][1] + faceCoordinates[k][0] ) * 0.5;
-//         }
-//         double dist2 = 0;
-//         for(int k = 0; k < dim; k++) {
-//           dist2 += (xg1[k] - mid_sur[k]) * (xg1[k] - mid_sur[k]);
-//         }
-//         double dist = sqrt( dist2 );
-//         mixed_term1 += pow(dist, -  2. * s_frac) * delta_teta;
-//         
-//       }
-//     } 
-// //     }
-//     
-// //     New approach for numerical integral (END)
-// //     -----------------------------------
-// //     ----------------------------------- 
+          //     New approach for numerical integral (START)
+//     -----------------------------------
+//     -----------------------------------              
+              
+    double mixed_term1 = 0;
+//     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
+                  // *** Face Gauss point loop (boundary Integral) ***
+    for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( jel ); jface++ ) {
+      int faceIndex = el->GetBoundaryIndex(jel, jface);
+      // look for boundary faces
+      if ( faceIndex >= 1 ) {  
+        const unsigned faceGeom = msh->GetElementFaceType ( jel, jface );
+        unsigned faceDofs = msh->GetElementFaceDofNumber (jel, jface, solType);         
+        vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
+        for ( int k = 0; k < dim; k++ ) {
+          faceCoordinates[k].resize (faceDofs);
+        }
+        for ( unsigned i = 0; i < faceDofs; i++ ) {
+          unsigned inode = msh->GetLocalFaceVertexIndex ( jel, jface, i ); // face-to-element local node mapping.
+          for ( unsigned k = 0; k < dim; k++ ) {
+            faceCoordinates[k][i] =  x2[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
+          }
+        }
+        vector  < vector  <  double> > interpCoordinates ( dim );
+        for ( int k = 0; k < dim; k++ ) {
+          interpCoordinates[k].resize (4); // set "4" as a parameter
+        }
+        for(unsigned n = 0; n <= 4; n++){
+          for ( int k = 0; k < dim; k++ ) {
+            interpCoordinates[k][n] = faceCoordinates[k][0] + n * ( fabs(faceCoordinates[k][0] - faceCoordinates[k][1]) / 4. );
+          }
+        }
+        for(unsigned n = 0; n < 4; n++){
+//         valido per 2D, verifica che funzioni!!
+        double teta2 = atan2((interpCoordinates[1][n+1] - xg1[1]), ( interpCoordinates[0][n+1] - xg1[0]));
+        double teta1 = atan2((interpCoordinates[1][n] - xg1[1]), ( interpCoordinates[0][n] - xg1[0])); 
+        
+        double delta_teta = fabs ( teta2 - teta1 );
+        
+        vector <double> mid_sur;
+        mid_sur.resize(dim);
+        for( unsigned k = 0; k < dim; k++ ) {
+          mid_sur[k] = ( interpCoordinates[k][n+1] + interpCoordinates[k][n] ) * 0.5;
+        }
+        double dist2 = 0;
+        for(int k = 0; k < dim; k++) {
+          dist2 += (xg1[k] - mid_sur[k]) * (xg1[k] - mid_sur[k]);
+        }
+        double dist = sqrt( dist2 );
+        mixed_term1 += pow(dist, -  2. * s_frac) * delta_teta * (1. / (2. * s_frac));
+        }
+        
+              for(unsigned i = 0; i < nDof1; i++) {
+                for(unsigned j = 0; j < nDof1; j++) {
+                  MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term1;
+                }
+                Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
+              }
+        
+      }
+    }
+//     }
+    
+//     New approach for numerical integral (END)
+//     -----------------------------------
+//     ----------------------------------- 
           
           
           
@@ -1356,87 +1371,6 @@ void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector
     }
   }
 }
-
-// double x1i[1][3]={{-1.,1.,0.}};
-//
-// void GetElementPartition1D2(const std::vector <double >  & xig,
-//                             const unsigned &split,
-//                             const std::vector < std::vector <double > > & x1,
-//                             std::vector < std::vector < std::vector<double>>> &xi,
-//                             std::vector < std::vector < std::vector<double>>> &x) {
-//   unsigned dim = 1;
-//   unsigned left = 0;
-//   unsigned right = 1;
-//
-//   if(split == 0) { //init
-//     xi.resize(2);
-//     xi[left].resize(dim);
-//     xi[right].resize(dim);
-//     for(unsigned k = 0; k < dim; k++) {
-//       xi[left][k].resize(3);
-//       xi[right][k].resize(3);
-//       for(unsigned k = 0; k < dim; k++) {
-//         xi[left][k][0] = x1i[k][0];
-//         xi[left][k][1] = 0.5 * (xi[left][k][0] + xig[k]);
-//         xi[left][k][2] = 0.5 * (xi[left][k][0] + xi[left][k][1]);
-//         xi[right][k][1] = x1i[k][1];
-//         xi[right][k][0] = 0.5 * (xi[right][k][1] + xig[k]);
-//         xi[right][k][2] = 0.5 * (xi[right][k][0] + xi[right][k][1]);
-//       }
-//     }
-//   }
-//   else if(split == Nsplit) {
-//     for(unsigned k = 0; k < dim; k++) {
-//       xi[left][k][0] = xi[left][k][1];
-//       xi[left][k][1] = xig[k];
-//       xi[left][k][2] = 0.5 * (xi[left][k][0] + xi[left][k][1]);
-//
-//       xi[right][k][1] = xi[right][k][0];
-//       xi[right][k][0] = xig[k];
-//       xi[right][k][2] = 0.5 * (xi[right][k][0] + xi[right][k][1]);
-//     }
-//   }
-//   else {
-//     for(unsigned k = 0; k < dim; k++) {
-//       xi[left][k][0] = xi[left][k][1];
-//       xi[left][k][1] = 0.5 * (xi[left][k][0] + xig[k]);
-//       xi[left][k][2] = 0.5 * (xi[left][k][0] + xi[left][k][1]);
-//
-//       xi[right][k][1] = xi[right][k][0];
-//       xi[right][k][0] = 0.5 * (xi[right][k][1] + xig[k]);
-//       xi[right][k][2] = 0.5 * (xi[right][k][0] + xi[right][k][1]);
-//     }
-//   }
-//
-//   x.resize(2);
-//   for(unsigned r = 0; r < 2; r++){
-//     x[r].resize(dim);
-//     for(unsigned k = 0; k < dim; k++) {
-//       x[r][k].assign(3,0.);
-//     }
-//   }
-//
-//    for(unsigned r = 0; r < 2; r++){
-//      for(unsigned i = 0; i < 3; i++){
-//        msh->_finiteElement[ielGeom1][solType]->GetPhi(phi3, xi[r]);
-//
-//
-//     }
-//    }
-//
-//
-//
-//
-//
-// }
-//
-
-
-
-
-
-
-
 
 
 
