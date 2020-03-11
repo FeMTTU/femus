@@ -2,7 +2,7 @@
 #include <boost/random/normal_distribution.hpp>
 
 
-//THIS IS THE 2D ASSEMBLY FOR THE NONLOCAL FETI METHOD
+//THIS IS THE 2D ASSEMBLY FOR THE NONLOCAL FETI METHOD WITH 2 SUBDOMAINS
 
 using namespace femus;
 
