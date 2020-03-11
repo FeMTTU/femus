@@ -24,7 +24,7 @@ using namespace femus;
 
 #define N_UNIFORM_LEVELS  3
 #define N_ERASED_LEVELS   2
-#define S_FRAC 0.5
+#define S_FRAC 0.75
 
 #define OP_L2       0
 #define OP_H1       0
@@ -45,7 +45,7 @@ double Antiderivative1(const double &theta, const double &s, const double &y);
 double Antiderivative2(const double &theta, const double &s, const double &x);
 void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x);
 void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x);
-
+void GetElementPartitionQuad(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & xNodes, const unsigned & split, const unsigned & totalNumberofSplits,  std::vector < std::vector < std::vector<double>>> &x);
 
 double InitialValueU(const std::vector < double >& x)
 {
@@ -709,14 +709,19 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               
               for(unsigned split = 0; split <= Nsplit; split++) {
 
-                unsigned size_part;
-                if(dim == 1) size_part = 2;
-                else size_part = (split != Nsplit) ? 12 : 4;
+//                 unsigned size_part;
+//                 if(dim == 1) size_part = 2;
+//                 else size_part = (split != Nsplit) ? 12 : 4;
                 
                 if(dim == 1) GetElementPartition1D(xg1, x1, split, x3);
-                else if(dim == 2) GetElementPartition2D(xg1, x1, split, x3);
+                else if(dim == 2) {
+                  //GetElementPartition2D(xg1, x1, split, x3);
+                  GetElementPartitionQuad(xg1, x1, split, Nsplit, x3);
+                }
                 
-                for(unsigned r = 0; r < size_part; r++) {
+                //for(unsigned r = 0; r < size_part; r++) {
+                for(unsigned r = 0; r < x3.size(); r++) {
+                
 
                   for(unsigned jg = 0; jg < igNumber; jg++) {
 
@@ -1437,8 +1442,8 @@ void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector
 
 
 
-void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x)
-{
+
+void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x) {
   unsigned dim = 2;
   unsigned bl = 0; // bottom left
   unsigned br = 1; // bottom right
@@ -1459,14 +1464,14 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
   double ex_y_2;
   
   unsigned size_part = (split != Nsplit) ? 12 : 4;
-
+  
   if(split == 0) { //init
     x.resize(size_part);
-    for( unsigned j = 0; j < size_part; j++){
+    for(unsigned j = 0; j < size_part; j++) {
       x[j].resize(dim);
-    for(unsigned k = 0; k < dim; k++) {
-      x[j][k].resize(x1[0].size());
-    }
+      for(unsigned k = 0; k < dim; k++) {
+        x[j][k].resize(x1[0].size());
+      }
     }
     ex_x_1 = x1[0][0];
     ex_x_2 = x1[0][1];
@@ -1474,61 +1479,190 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
     ex_y_2 = x1[1][3];
   }
   else {
-    ex_x_1 = x[bl][0][1]; 
+    ex_x_1 = x[bl][0][1];
     ex_x_2 = x[br][0][0];
     ex_y_1 = x[bl][1][2];
     ex_y_2 = x[tl][1][1];
   }
-    
-    
-    //     Prototipo: x[quadrante][dim][numero_nodo]
-    x[bl][1][0] = x[bl][1][1] = x[br][1][0] = x[br][1][1] = ex_y_1;
-    x[tl][1][2] = x[tl][1][3] = x[tr][1][2] = x[tr][1][3] = ex_y_2;
-    x[bl][0][0] = x[bl][0][3] = x[tl][0][0] = x[tl][0][3] = ex_x_1;
-    x[br][0][1] = x[br][0][2] = x[tr][0][1] = x[tr][0][2] = ex_x_2;
-    
-    
-    if(split == Nsplit){
-      x[bl][1][2] = x[bl][1][3] = x[br][1][2] = x[br][1][3] = x[tl][1][0] = x[tl][1][1] = x[tr][1][0] = x[tr][1][1] = xg1[1];
-      x[bl][0][1] = x[bl][0][2] = x[tl][0][1] = x[tl][0][2] = x[br][0][0] = x[br][0][3] = x[tr][0][0] = x[tr][0][3] = xg1[0];
+  
+  
+  //     Prototipo: x[quadrante][dim][numero_nodo]
+  x[bl][1][0] = x[bl][1][1] = x[br][1][0] = x[br][1][1] = ex_y_1;
+  x[tl][1][2] = x[tl][1][3] = x[tr][1][2] = x[tr][1][3] = ex_y_2;
+  x[bl][0][0] = x[bl][0][3] = x[tl][0][0] = x[tl][0][3] = ex_x_1;
+  x[br][0][1] = x[br][0][2] = x[tr][0][1] = x[tr][0][2] = ex_x_2;
+  
+  
+  if(split == Nsplit) {
+    x[bl][1][2] = x[bl][1][3] = x[br][1][2] = x[br][1][3] = x[tl][1][0] = x[tl][1][1] = x[tr][1][0] = x[tr][1][1] = xg1[1];
+    x[bl][0][1] = x[bl][0][2] = x[tl][0][1] = x[tl][0][2] = x[br][0][0] = x[br][0][3] = x[tr][0][0] = x[tr][0][3] = xg1[0];
+  }
+  else {
+    x[bl][1][2] = x[bl][1][3] = x[br][1][2] = x[br][1][3] = 0.5 * (ex_y_1 + xg1[1]);
+    x[tl][1][0] = x[tl][1][1] = x[tr][1][0] = x[tr][1][1] = 0.5 * (ex_y_2 + xg1[1]);
+    x[bl][0][1] = x[bl][0][2] = x[tl][0][1] = x[tl][0][2] = 0.5 * (ex_x_1 + xg1[0]);
+    x[br][0][0] = x[br][0][3] = x[tr][0][0] = x[tr][0][3] = 0.5 * (ex_x_2 + xg1[0]);
+  }
+  
+  if(split != Nsplit) {
+    x[bl1][1][0] = x[bl1][1][1] = x[br1][1][0] = x[br1][1][1] = ex_y_1;
+    x[tl1][1][2] = x[tl1][1][3] = x[tr1][1][2] = x[tr1][1][3] = ex_y_2;
+    x[bl1][1][2] = x[bl1][1][3] = x[br1][1][2] = x[br1][1][3] = 0.5 * (ex_y_1 + xg1[1]);
+    x[bl2][1][0] = x[bl2][1][1] = x[br2][1][0] = x[br2][1][1] = 0.5 * (ex_y_1 + xg1[1]);
+    x[tl1][1][0] = x[tl1][1][1] = x[tr1][1][0] = x[tr1][1][1] = 0.5 * (ex_y_2 + xg1[1]);
+    x[tl2][1][2] = x[tl2][1][3] = x[tr2][1][2] = x[tr2][1][3] = 0.5 * (ex_y_2 + xg1[1]);
+    x[bl2][1][2] = x[bl2][1][3] = x[br2][1][2] = x[br2][1][3] = xg1[1];
+    x[tl2][1][0] = x[tl2][1][1] = x[tr2][1][0] = x[tr2][1][1] = xg1[1];
+    x[bl2][0][0] = x[bl2][0][3] = x[tl2][0][0] = x[tl2][0][3] = ex_x_1;
+    x[br2][0][1] = x[br2][0][2] = x[tr2][0][1] = x[tr2][0][2] = ex_x_2;
+    x[bl2][0][1] = x[bl2][0][2] = x[tl2][0][1] = x[tl2][0][2] = 0.5 * (ex_x_1 + xg1[0]);
+    x[bl1][0][0] = x[bl1][0][3] = x[tl1][0][0] = x[tl1][0][3] = 0.5 * (ex_x_1 + xg1[0]);
+    x[br2][0][0] = x[br2][0][3] = x[tr2][0][0] = x[tr2][0][3] = 0.5 * (ex_x_2 + xg1[0]);
+    x[br1][0][1] = x[br1][0][2] = x[tr1][0][1] = x[tr1][0][2] = 0.5 * (ex_x_2 + xg1[0]);
+    x[bl1][0][1] = x[bl1][0][2] = x[tl1][0][1] = x[tl1][0][2] = xg1[0];
+    x[br1][0][0] = x[br1][0][3] = x[tr1][0][0] = x[tr1][0][3] = xg1[0];
+  }
+  
+  
+  for(unsigned qq = 0; qq < size_part; qq++) {
+    for(unsigned k = 0; k < dim; k++) { //middle point formula
+      x[qq][k][4] = 0.5 * (x[qq][k][0] + x[qq][k][1]);
+      x[qq][k][5] = 0.5 * (x[qq][k][1] + x[qq][k][2]);
+      x[qq][k][6] = 0.5 * (x[qq][k][2] + x[qq][k][3]);
+      x[qq][k][7] = 0.5 * (x[qq][k][3] + x[qq][k][0]);
+      x[qq][k][8] = 0.5 * (x[qq][k][0] + x[qq][k][2]);
     }
-    else{
-      x[bl][1][2] = x[bl][1][3] = x[br][1][2] = x[br][1][3] = 0.5 * (ex_y_1 + xg1[1]);
-      x[tl][1][0] = x[tl][1][1] = x[tr][1][0] = x[tr][1][1] = 0.5 * (ex_y_2 + xg1[1]);
-      x[bl][0][1] = x[bl][0][2] = x[tl][0][1] = x[tl][0][2] = 0.5 * (ex_x_1 + xg1[0]);
-      x[br][0][0] = x[br][0][3] = x[tr][0][0] = x[tr][0][3] = 0.5 * (ex_x_2 + xg1[0]);
-    }
-
-    if(split != Nsplit){
-      x[bl1][1][0] = x[bl1][1][1] = x[br1][1][0] = x[br1][1][1] = ex_y_1;
-      x[tl1][1][2] = x[tl1][1][3] = x[tr1][1][2] = x[tr1][1][3] = ex_y_2;
-      x[bl1][1][2] = x[bl1][1][3] = x[br1][1][2] = x[br1][1][3] = 0.5 * (ex_y_1 + xg1[1]);
-      x[bl2][1][0] = x[bl2][1][1] = x[br2][1][0] = x[br2][1][1] = 0.5 * (ex_y_1 + xg1[1]);
-      x[tl1][1][0] = x[tl1][1][1] = x[tr1][1][0] = x[tr1][1][1] = 0.5 * (ex_y_2 + xg1[1]);
-      x[tl2][1][2] = x[tl2][1][3] = x[tr2][1][2] = x[tr2][1][3] = 0.5 * (ex_y_2 + xg1[1]);
-      x[bl2][1][2] = x[bl2][1][3] = x[br2][1][2] = x[br2][1][3] = xg1[1];
-      x[tl2][1][0] = x[tl2][1][1] = x[tr2][1][0] = x[tr2][1][1] = xg1[1];
-      x[bl2][0][0] = x[bl2][0][3] = x[tl2][0][0] = x[tl2][0][3] = ex_x_1;
-      x[br2][0][1] = x[br2][0][2] = x[tr2][0][1] = x[tr2][0][2] = ex_x_2;
-      x[bl2][0][1] = x[bl2][0][2] = x[tl2][0][1] = x[tl2][0][2] = 0.5 * (ex_x_1 + xg1[0]);
-      x[bl1][0][0] = x[bl1][0][3] = x[tl1][0][0] = x[tl1][0][3] = 0.5 * (ex_x_1 + xg1[0]);
-      x[br2][0][0] = x[br2][0][3] = x[tr2][0][0] = x[tr2][0][3] = 0.5 * (ex_x_2 + xg1[0]);
-      x[br1][0][1] = x[br1][0][2] = x[tr1][0][1] = x[tr1][0][2] = 0.5 * (ex_x_2 + xg1[0]);
-      x[bl1][0][1] = x[bl1][0][2] = x[tl1][0][1] = x[tl1][0][2] = xg1[0];
-      x[br1][0][0] = x[br1][0][3] = x[tr1][0][0] = x[tr1][0][3] = xg1[0];
-    }
-    
-    
-    for(unsigned qq = 0; qq < size_part; qq++){
-      for(unsigned k = 0; k < dim; k++){
-        x[qq][k][4] = 0.5 * ( x[qq][k][0] + x[qq][k][1] );
-        x[qq][k][5] = 0.5 * ( x[qq][k][1] + x[qq][k][2] );
-        x[qq][k][6] = 0.5 * ( x[qq][k][2] + x[qq][k][3] );
-        x[qq][k][7] = 0.5 * ( x[qq][k][3] + x[qq][k][4] );
-        x[qq][k][8] = 0.5 * ( x[qq][k][0] + x[qq][k][2] );
-      }
-    }
-
+  }
+  
 }
 
 
+const unsigned ijndex[2][12][2] = {
+  { {0, 0}, {3, 0}, {3, 3}, {0, 3},
+  {1, 0}, {0, 1},
+  {2, 0}, {3, 1},
+  {2, 3}, {3, 2},
+  {1, 3}, {0, 2}
+  },
+  {{0, 0}, {1, 0}, {1, 1}, {0, 1}}
+};
+
+void GetElementPartitionQuad(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & xNodes, const unsigned & split, const unsigned & totalNumberofSplits,  std::vector < std::vector < std::vector<double>>> &x) {
+  unsigned dim = 2;
+  
+  unsigned solType;
+  unsigned size = xNodes[0].size();
+  
+  if(size == 4) {
+    solType = 0; //lagrange linear
+  }
+  else if(size == 8) {
+    solType = 1; //lagrange serendipity
+  }
+  else if(size == 9) {
+    solType = 2; //lagrange quadratic
+  }
+  else {
+    std::cout << "abort in GetElementPartitionQuad" << std::endl;
+    abort();
+  }
+  
+  
+  unsigned bl = 0; // bottom left
+  unsigned br = 1; // bottom right
+  unsigned tr = 2; // top left
+  unsigned tl = 3; // top right
+  
+  std::vector < double > XX;
+  std::vector < double > YY;
+  
+  unsigned size_part = 12;
+  unsigned splitType = 0;
+  
+  if(split < totalNumberofSplits) { //init && update
+    
+    XX.resize(5);
+    YY.resize(5);
+    
+    if(split == 0) { //init
+      
+      x.resize(size_part);
+      for(unsigned j = 0; j < size_part; j++) {
+        x[j].resize(dim);
+        for(unsigned k = 0; k < dim; k++) {
+          x[j][k].resize(size);
+        }
+      }
+      
+      XX[0] = xNodes[0][0];
+      XX[4] = xNodes[0][1];
+      YY[0] = xNodes[1][0];
+      YY[4] = xNodes[1][3];
+      
+    }
+    else { //update
+      XX[0] = x[bl][0][1];
+      XX[4] = x[br][0][0];
+      YY[0] = x[bl][1][2];
+      YY[4] = x[tl][1][1];
+    }
+    XX[2] = xg1[0];
+    XX[1] = 0.5 * (XX[0] + XX[2]);
+    XX[3] = 0.5 * (XX[2] + XX[4]);
+    
+    YY[2] = xg1[1];
+    YY[1] = 0.5 * (YY[0] + YY[2]);
+    YY[3] = 0.5 * (YY[2] + YY[4]);
+  }
+  else { //close
+    
+    XX.resize(3);
+    YY.resize(3);
+    
+    XX[0] = x[bl][0][1];
+    XX[1] = xg1[0];
+    XX[2] = x[br][0][0];
+    YY[0] = x[bl][1][2];
+    YY[1] = xg1[1];
+    YY[2] = x[tl][1][1];
+    
+    size_part = 4;
+    splitType = 1;
+    x.resize(size_part);
+    for(unsigned j = 0; j < size_part; j++) {
+      x[j].resize(dim);
+      for(unsigned k = 0; k < dim; k++) {
+        x[j][k].resize(size);
+      }
+    }
+  }
+  
+  for(unsigned qq = 0; qq < size_part; qq++) {
+    unsigned i = ijndex[splitType][qq][0];
+    x[qq][0][0] = x[qq][0][3] = XX[i];
+    x[qq][0][1] = x[qq][0][2] = XX[i + 1];
+    
+    unsigned j = ijndex[splitType][qq][1];
+    x[qq][1][0] = x[qq][1][1] = YY[j];
+    x[qq][1][2] = x[qq][1][3] = YY[j + 1];
+  }
+  if(solType > 0) {
+    for(unsigned qq = 0; qq < size_part; qq++) {
+      for(unsigned k = 0; k < dim; k++) { //middle point formula
+        x[qq][k][4] = 0.5 * (x[qq][k][0] + x[qq][k][1]);
+        x[qq][k][5] = 0.5 * (x[qq][k][1] + x[qq][k][2]);
+        x[qq][k][6] = 0.5 * (x[qq][k][2] + x[qq][k][3]);
+        x[qq][k][7] = 0.5 * (x[qq][k][3] + x[qq][k][0]);
+      }
+    }
+  }
+  
+  if(solType > 1) {
+    for(unsigned qq = 0; qq < size_part; qq++) {
+      for(unsigned k = 0; k < dim; k++) { //middle point formula
+        x[qq][k][8] = 0.5 * (x[qq][k][0] + x[qq][k][2]);
+      }
+    }
+  }
+  
+}
