@@ -22,18 +22,20 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   2
-#define S_FRAC 0.75
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
+#define S_FRAC 0.5
 
-#define OP_L2       0
+#define OP_L2       1
 #define OP_H1       0
 #define OP_Hhalf    1
 #define RHS_ONE     1
 
+#define UNBOUNDED   1
+
 #define USE_Cns     1
 
-#define Nsplit      5
+#define Nsplit      2
 
 #define EX_1       -1.
 #define EX_2        1.
@@ -518,8 +520,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
         double weight3;
         vector < double > phi3;  // local test function
-        double weight4;
-        vector < double > phi4;  // local test function
+        
         double solX = 0.;
         std::vector<double> sol_u_x(space_dim);
         std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
@@ -602,7 +603,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //                 Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
 //               }
             }
-            if(dim == 2) {
+            if(dim == 2 && UNBOUNDED == 1) {
               double ex[4] = {EX_1, EX_2, EY_1, EY_2};
 
 //               double CC = 1. / (2 * s_frac * (1 + 2. * s_frac));
@@ -771,7 +772,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                     
 // //               Mixed integral 1D
 // //               ------------------
-                    if(ig == 0 && dim == 1 ) {
+                    if(ig == 0 && dim == 1 && UNBOUNDED == 1) {
                       double ex_1 = EX_1;
                       double ex_2 = EX_2;
                       double dist_1 = 0.;
@@ -802,54 +803,54 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           
           
           
-          //     New approach for numerical integral (START)
-//     -----------------------------------
-//     -----------------------------------              
-              
-    double mixed_term1 = 0;
-//     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
-                  // *** Face Gauss point loop (boundary Integral) ***
-    for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( jel ); jface++ ) {
-      int faceIndex = el->GetBoundaryIndex(jel, jface);
-      // look for boundary faces
-      if ( faceIndex >= 1 ) {  
-        const unsigned faceGeom = msh->GetElementFaceType ( jel, jface );
-        unsigned faceDofs = msh->GetElementFaceDofNumber (jel, jface, solType);         
-        vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
-        for ( int k = 0; k < dim; k++ ) {
-          faceCoordinates[k].resize (faceDofs);
-        }
-        for ( unsigned i = 0; i < faceDofs; i++ ) {
-          unsigned inode = msh->GetLocalFaceVertexIndex ( jel, jface, i ); // face-to-element local node mapping.
-          for ( unsigned k = 0; k < dim; k++ ) {
-            faceCoordinates[k][i] =  x1[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
-          }
-        }
-//         valido per 2D, verifica che funzioni!!
-        double teta2 = atan2((faceCoordinates[1][1] - xg1[1]), ( faceCoordinates[0][1] - xg1[0]));
-        double teta1 = atan2((faceCoordinates[1][0] - xg1[1]), ( faceCoordinates[0][0] - xg1[0])); 
-        
-        double delta_teta = fabs ( teta2 - teta1 );
-        
-        vector <double> mid_sur;
-        mid_sur.resize(dim);
-        for( unsigned k = 0; k < dim; k++ ) {
-          mid_sur[k] = ( faceCoordinates[k][1] + faceCoordinates[k][0] ) * 0.5;
-        }
-        double dist2 = 0;
-        for(int k = 0; k < dim; k++) {
-          dist2 += (xg1[k] - mid_sur[k]) * (xg1[k] - mid_sur[k]);
-        }
-        double dist = sqrt( dist2 );
-        mixed_term1 += pow(dist, -  2. * s_frac) * delta_teta;
-        
-      }
-    } 
-//     }
-    
-//     New approach for numerical integral (END)
-//     -----------------------------------
-//     ----------------------------------- 
+//           //     New approach for numerical integral (START)
+// //     -----------------------------------
+// //     -----------------------------------              
+//               
+//     double mixed_term1 = 0;
+// //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
+//                   // *** Face Gauss point loop (boundary Integral) ***
+//     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( jel ); jface++ ) {
+//       int faceIndex = el->GetBoundaryIndex(jel, jface);
+//       // look for boundary faces
+//       if ( faceIndex >= 1 ) {  
+//         const unsigned faceGeom = msh->GetElementFaceType ( jel, jface );
+//         unsigned faceDofs = msh->GetElementFaceDofNumber (jel, jface, solType);         
+//         vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
+//         for ( int k = 0; k < dim; k++ ) {
+//           faceCoordinates[k].resize (faceDofs);
+//         }
+//         for ( unsigned i = 0; i < faceDofs; i++ ) {
+//           unsigned inode = msh->GetLocalFaceVertexIndex ( jel, jface, i ); // face-to-element local node mapping.
+//           for ( unsigned k = 0; k < dim; k++ ) {
+//             faceCoordinates[k][i] =  x1[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
+//           }
+//         }
+// //         valido per 2D, verifica che funzioni!!
+//         double teta2 = atan2((faceCoordinates[1][1] - xg1[1]), ( faceCoordinates[0][1] - xg1[0]));
+//         double teta1 = atan2((faceCoordinates[1][0] - xg1[1]), ( faceCoordinates[0][0] - xg1[0])); 
+//         
+//         double delta_teta = fabs ( teta2 - teta1 );
+//         
+//         vector <double> mid_sur;
+//         mid_sur.resize(dim);
+//         for( unsigned k = 0; k < dim; k++ ) {
+//           mid_sur[k] = ( faceCoordinates[k][1] + faceCoordinates[k][0] ) * 0.5;
+//         }
+//         double dist2 = 0;
+//         for(int k = 0; k < dim; k++) {
+//           dist2 += (xg1[k] - mid_sur[k]) * (xg1[k] - mid_sur[k]);
+//         }
+//         double dist = sqrt( dist2 );
+//         mixed_term1 += pow(dist, -  2. * s_frac) * delta_teta;
+//         
+//       }
+//     } 
+// //     }
+//     
+// //     New approach for numerical integral (END)
+// //     -----------------------------------
+// //     ----------------------------------- 
           
           
           
