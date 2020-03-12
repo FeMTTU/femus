@@ -11,6 +11,7 @@
 #include "petsc.h"
 #include "petscmat.h"
 #include "PetscMatrix.hpp"
+#include "FieldSplitTree.hpp"
 
 #include "slepceps.h"
 
@@ -73,9 +74,9 @@ int main (int argc, char** argv) {
 //     mlMshFine.ReadCoarseMesh ("../input/FETI_left_domain.neu", "second", scalingFactor);
   mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine, NULL);
 
-  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1); 
 
-  mlMshFine.EraseCoarseLevels (numberOfUniformLevelsFine - 1);
+//   mlMshFine.EraseCoarseLevels (numberOfUniformLevelsFine - 1); 
 
   unsigned dim = mlMsh.GetDimension();
 
@@ -86,14 +87,14 @@ int main (int argc, char** argv) {
   mlSol.AddSolution ("u1", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("u2", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("mu", LAGRANGE, FIRST, 2);
-  
+
 //   mlSolFine.AddSolution ("u_fine", LAGRANGE, FIRST, 2);
 //   mlSol.AddSolution ("u_local", LAGRANGE, FIRST, 2);
 //   mlSol.AddSolution ("u_exact", LAGRANGE, FIRST, 2);
-  
-  mlSol.AddSolution("u1Flag", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution("u2Flag", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution("muFlag", LAGRANGE, FIRST, 2);
+
+  mlSol.AddSolution ("u1Flag", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("u2Flag", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("muFlag", LAGRANGE, FIRST, 2);
 
   mlSol.Initialize ("All");
   mlSolFine.Initialize ("All");
@@ -130,6 +131,32 @@ int main (int argc, char** argv) {
   system.AddSolutionToSystemPDE ("u2");
   system.AddSolutionToSystemPDE ("mu");
 
+  std::vector < unsigned > solutionTypeU1U2 (2);
+  solutionTypeU1U2[0] = mlSol.GetSolutionType ("u1");
+  solutionTypeU1U2[1] = mlSol.GetSolutionType ("u2");
+
+  //BEGIN FIELD SPLIT
+  std::vector < unsigned > fieldU1U2 (2);
+  fieldU1U2[0] = system.GetSolPdeIndex ("u1");
+  fieldU1U2[1] = system.GetSolPdeIndex ("u2");
+  FieldSplitTree FS_U1U2 (PREONLY, ILU_PRECOND, fieldU1U2, solutionTypeU1U2,  "u1u2");
+  FS_U1U2.SetupKSPTolerances (1.e-3, 1.e-20, 1.e+50, 1); // by Guoyi Ke
+
+  std::vector < unsigned > solutionTypeMu (1);
+  solutionTypeMu[0] = mlSol.GetSolutionType ("mu");
+  std::vector < unsigned > fieldMu (1);
+  FieldSplitTree FS_MU (PREONLY, ILU_PRECOND, fieldMu, "mu");
+  FS_MU.SetupKSPTolerances (1.e-3, 1.e-20, 1.e+50, 1); // by Guoyi Ke
+
+  std::vector < FieldSplitTree *> FS1;
+  FS1.reserve (2);
+  FS1.push_back (&FS_U1U2);
+  FS1.push_back (&FS_MU);
+  FieldSplitTree FS_Nonlocal (PREONLY, FS_SCHUR_PRECOND, FS1, "Nonlocal_FETI");
+  FS_Nonlocal.SetupSchurFactorizationType (SCHUR_FACT_UPPER); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL;
+  FS_Nonlocal.SetupSchurPreType (SCHUR_PRE_SELFP); // SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11,SCHUR_PRE_FULL;
+  //END FIELD SPLIT
+
   // ******* System FEM Assembly *******
   system.SetAssembleFunction (AssembleNonLocalSys);
   system.SetMaxNumberOfLinearIterations (1);
@@ -144,7 +171,8 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (GMRES_SMOOTHER);
+//   system.SetMgSmoother (GMRES_SMOOTHER); //TODO decomment if doing direct solver
+  system.SetMgSmoother (FIELDSPLIT_SMOOTHER); //TODO comment if doing direct solver
 
   system.SetSparsityPatternMinimumSize (5000u);   //TODO tune
 
@@ -156,9 +184,16 @@ int main (int argc, char** argv) {
 
   system.SetPreconditionerFineGrids (ILU_PRECOND);
 
+  system.SetFieldSplitTree (&FS_Nonlocal); //TODO comment if doing direct solver
+
   system.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
 
 // ******* Solution *******
+
+  system.ClearVariablesToBeSolved(); //TODO comment if doing direct solver
+  system.AddVariableToBeSolved ("All"); //TODO comment if doing direct solver
+  system.SetNumberOfSchurVariables (1); //TODO comment if doing direct solver
+  system.SetElementBlockNumber (4); //TODO comment if doing direct solver
 
   system.MGsolve();
 
@@ -166,77 +201,77 @@ int main (int argc, char** argv) {
 
   //BEGIN assemble and solve local problem
 //   MultiLevelProblem ml_prob2 (&mlSol);
-// 
+//
 //   // ******* Add FEM system to the MultiLevel problem *******
 //   LinearImplicitSystem& system2 = ml_prob2.add_system < LinearImplicitSystem > ("Local");
 //   system2.AddSolutionToSystemPDE ("u_local");
-// 
+//
 //   // ******* System FEM Assembly *******
 //   system2.SetAssembleFunction (AssembleLocalSys);
 //   system2.SetMaxNumberOfLinearIterations (1);
 //   // ******* set MG-Solver *******
 //   system2.SetMgType (V_CYCLE);
-// 
+//
 //   system2.SetAbsoluteLinearConvergenceTolerance (1.e-50);
-// 
+//
 //   system2.SetNumberPreSmoothingStep (1);
 //   system2.SetNumberPostSmoothingStep (1);
-// 
+//
 //   // ******* Set Preconditioner *******
 //   system2.SetMgSmoother (GMRES_SMOOTHER);
-// 
+//
 //   system2.init();
-// 
+//
 //   // ******* Set Smoother *******
 //   system2.SetSolverFineGrids (RICHARDSON);
-// 
+//
 //   system2.SetPreconditionerFineGrids (ILU_PRECOND);
-// 
+//
 //   system2.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
-// 
+//
 // // ******* Solution *******
-// 
+//
 // //   system2.MGsolve();
 
   //END assemble and solve local problem
 
   //BEGIN assemble and solve fine nonlocal problem
 //   MultiLevelProblem ml_probFine (&mlSolFine);
-// 
+//
 //   // ******* Add FEM system to the MultiLevel problem *******
 //   LinearImplicitSystem& systemFine = ml_probFine.add_system < LinearImplicitSystem > ("NonLocalFine");
 //   systemFine.AddSolutionToSystemPDE ("u_fine");
-// 
+//
 //   // ******* System FEM Assembly *******
 //   systemFine.SetAssembleFunction (AssembleNonLocalSysFine);
 //   systemFine.SetMaxNumberOfLinearIterations (1);
 //   // ******* set MG-Solver *******
 //   systemFine.SetMgType (V_CYCLE);
-// 
+//
 //   systemFine.SetAbsoluteLinearConvergenceTolerance (1.e-50);
 //   //   systemFine.SetNonLinearConvergenceTolerance(1.e-9);
 //   //   systemFine.SetMaxNumberOfNonLinearIterations(20);
-// 
+//
 //   systemFine.SetNumberPreSmoothingStep (1);
 //   systemFine.SetNumberPostSmoothingStep (1);
-// 
+//
 //   // ******* Set Preconditioner *******
 //   systemFine.SetMgSmoother (GMRES_SMOOTHER);
-// 
+//
 //   systemFine.SetSparsityPatternMinimumSize (5000u);   //TODO tune
-// 
+//
 //   systemFine.init();
-// 
+//
 //   // ******* Set Smoother *******
 //   systemFine.SetSolverFineGrids (RICHARDSON);
 //   // systemFine.SetRichardsonScaleFactor(0.7);
-// 
+//
 //   systemFine.SetPreconditionerFineGrids (ILU_PRECOND);
-// 
+//
 //   systemFine.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
-// 
+//
 // // ******* Solution *******
-// 
+//
 // //   systemFine.MGsolve(); //TODO
 
   //END assemble and solve nonlocal problem
