@@ -24,7 +24,7 @@ using namespace femus;
 
 #define N_UNIFORM_LEVELS  2
 #define N_ERASED_LEVELS   1
-#define S_FRAC 0.5
+#define S_FRAC 0.75
 
 #define OP_L2       1
 #define OP_H1       0
@@ -35,7 +35,7 @@ using namespace femus;
 
 #define USE_Cns     1
 
-#define Nsplit      2
+#define Nsplit      0
 
 #define EX_1       -1.
 #define EX_2        1.
@@ -322,6 +322,11 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   vector < double > CClocal_refined;
   CClocal_refined.reserve(maxSize * maxSize);
 
+  vector < double > MM_mixed;
+  MM_mixed.reserve(maxSize * maxSize);
+  vector< double >         Res_mixed;
+  Res_mixed.reserve(maxSize);  // local redidual vector
+
 //   Non local matrices and vectors for H^s laplacian operator
 //   vector< double >         Res_nonlocal;
 //   Res_nonlocal.reserve(maxSize);  // local redidual vector
@@ -366,16 +371,19 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
       unsigned nDof2;
       unsigned nDofx2;
       unsigned nDofu2;
+      //unsigned n_face;
 
       if(iproc == kproc) {
         ielGeom2 = msh->GetElementType(jel);
         nDof2  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
         nDofx2 = msh->GetElementDofNumber(jel, xType);    // number of coordinate element dofs
+
       }
 
       MPI_Bcast(&ielGeom2, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
       MPI_Bcast(&nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast(&nDofx2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      //MPI_Bcast(&n_face, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
 
       // resize local arrays
       l2GMap2.resize(nDof2);
@@ -456,6 +464,41 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         }
       }
 
+      std::vector <int> bd_face(0);
+      unsigned nFaces;
+      //std::vector <unsigned> faceDofs(n_face, 0);
+      //vector < vector <unsigned> > inode(n_face);
+      if(iproc == kproc) {
+        for(unsigned jface = 0; jface < msh->GetElementFaceNumber(jel); jface++) {
+          int faceIndex = el->GetBoundaryIndex(jel, jface);
+//           faceDofs[jface] = msh->GetElementFaceDofNumber(jel, jface, solType);
+//           inode[jface].resize(faceDofs[jface]);
+// //       inode[jface].assign(faceDofs[jface], 0);
+//           for(unsigned i = 0; i < faceDofs[jface]; i++) {
+//             inode[jface][i] = msh->GetLocalFaceVertexIndex(jel, jface, i);    // face-to-element local node mapping.
+//           }
+//           MPI_Bcast(& inode[jface][0], faceDofs[jface], MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+
+          // look for boundary faces
+          if(faceIndex >= 1) {
+            unsigned i = bd_face.size();
+            bd_face.resize(i + 1);
+            bd_face[i] = jface;
+          }
+        }
+        nFaces = bd_face.size();
+      }
+
+      MPI_Bcast(& nFaces, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+
+      bd_face.resize(nFaces);
+      //std::cout << "\n" << nFaces << "  ";
+      //for (unsigned i = 0; i<nFaces; i++) std::cout << bd_face[i] << " ";
+      //std::cout << "\n";
+      MPI_Bcast(& bd_face[0], nFaces, MPI_INT, kproc, MPI_COMM_WORLD);
+
+
+
 
       // element loop: each process loops only on the elements that owns
       for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -501,6 +544,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         Res_nonlocalI.assign(nDof1, 0);    //resize
         Res_nonlocalJ.assign(nDof1, 0);    //resize
 
+        Res_mixed.assign(nDof1, 0);    //resize
+        MM_mixed.assign(nDof1 * nDof1, 0.);
+
         if(iel == jel) {
           Res_local.assign(nDof1, 0);    //resize
           MMlocal.assign(nDof1 * nDof1, 0.);
@@ -520,7 +566,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
         double weight3;
         vector < double > phi3;  // local test function
-        
+
         double solX = 0.;
         std::vector<double> sol_u_x(space_dim);
         std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
@@ -561,7 +607,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               Res_local[ i ] += - RHS_ONE * weight1 * (phi1[i] * (-1.));
             }
 
-//============  Laplacian assembly ==================	
+//============  Laplacian assembly ==================
 
 //          Residual
             std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
@@ -583,9 +629,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 MMlocal[ i * nDof1 + j ]  += OP_H1 * weight1 *  laplace_mat_i_j;
               }
             }
-//============  Laplacian assembly ==================	
+//============  Laplacian assembly ==================
 
-//============  Mixed integral ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================	
+//============  Mixed integral ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================
             if(dim == 1) {
 //               double ex_1 = EX_1;
 //               double ex_2 = EX_2;
@@ -605,15 +651,15 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //               }
             }
             if(dim == 2 && UNBOUNDED == 1) {
-              double ex[4] = {EX_1, EX_2, EY_1, EY_2};
+              double ex[4] = {EX_1 - xg1[0], EX_2 - xg1[0], EY_1 - xg1[1], EY_2 - xg1[1]};
 
 //               double CC = 1. / (2 * s_frac * (1 + 2. * s_frac));
 
               double teta[4], CCC[4];
-              teta[0] = atan2((ex[3] - xg1[1]), (ex[1] - xg1[0]));
-              teta[1] = atan2((ex[3] - xg1[1]), (ex[0] - xg1[0]));
-              teta[2] = atan2((ex[2] - xg1[1]), (ex[0] - xg1[0])) + 2 * M_PI;
-              teta[3] = atan2((ex[2] - xg1[1]), (ex[1] - xg1[0])) + 2 * M_PI;
+              teta[0] = atan2(ex[3], ex[1]);
+              teta[1] = atan2(ex[3], ex[0]);
+              teta[2] = atan2(ex[2], ex[0]) + 2 * M_PI;
+              teta[3] = atan2(ex[2], ex[1]) + 2 * M_PI;
 
               double mixed_term = 0.;
 
@@ -621,111 +667,61 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 if(qq == 3) teta[3] -= 2. * M_PI ;
 
                 if(qq == 0)
-                  mixed_term += 2.* (Antiderivative1(teta[1], s_frac, ex[3] - xg1[1]) -
-                                     Antiderivative1(teta[0], s_frac, ex[3] - xg1[1]));
+                  mixed_term += 2.* (Antiderivative1(teta[1], s_frac, ex[3]) -
+                                     Antiderivative1(teta[0], s_frac, ex[3]));
                 else if(qq  == 2)
-                  mixed_term += 2.* (Antiderivative1(teta[3], s_frac, ex[2] - xg1[1]) -
-                                     Antiderivative1(teta[2], s_frac, ex[2] - xg1[1]));
+                  mixed_term += 2.* (Antiderivative1(teta[3], s_frac, ex[2]) -
+                                     Antiderivative1(teta[2], s_frac, ex[2]));
                 else if(qq  == 1)
-                  mixed_term += 2. * (Antiderivative2(teta[2], s_frac, ex[0] - xg1[0]) -
-                                      Antiderivative2(teta[1], s_frac, ex[0] - xg1[0]));
+                  mixed_term += 2. * (Antiderivative2(teta[2], s_frac, ex[0]) -
+                                      Antiderivative2(teta[1], s_frac, ex[0]));
                 else
-                  mixed_term += 2. * (Antiderivative2(teta[0], s_frac, ex[1] - xg1[0]) -
-                                      Antiderivative2(teta[3], s_frac, ex[1] - xg1[0]));
+                  mixed_term += 2. * (Antiderivative2(teta[0], s_frac, ex[1]) -
+                                      Antiderivative2(teta[3], s_frac, ex[1]));
 
 
               }
-              
-              
-              
-// //     New approach for numerical integral (START)
-// //     -----------------------------------
-// //     -----------------------------------              
-//               
-//     double mixed_term1 = 0;
-//     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
-//                   // *** Face Gauss point loop (boundary Integral) ***
-//     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( kel ); jface++ ) {
-//       int faceIndex = el->GetBoundaryIndex(kel, jface);
-//       // look for boundary faces
-//       if ( faceIndex >= 1 ) {  
-//         const unsigned faceGeom = msh->GetElementFaceType ( kel, jface );
-//         unsigned faceDofs = msh->GetElementFaceDofNumber (kel, jface, solType);         
-//         vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
-//         for ( int k = 0; k < dim; k++ ) {
-//           faceCoordinates[k].resize (faceDofs);
-//         }
-//         for ( unsigned i = 0; i < faceDofs; i++ ) {
-//           unsigned inode = msh->GetLocalFaceVertexIndex ( kel, jface, i ); // face-to-element local node mapping.
-//           for ( unsigned k = 0; k < dim; k++ ) {
-//             faceCoordinates[k][i] =  x1[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
-//           }
-//         }
-// //         valido per 2D, verifica che funzioni!!
-//         double teta2 = atan2((faceCoordinates[1][1] - xg1[1]), ( faceCoordinates[0][1] - xg1[0]));
-//         double teta1 = atan2((faceCoordinates[1][0] - xg1[1]), ( faceCoordinates[0][0] - xg1[0])); 
-//         
-//         double delta_teta = fabs ( teta2 - teta1 );
-//         
-//         vector <double> mid_sur;
-//         mid_sur.resize(dim);
-//         for( unsigned k = 0; k < dim; k++ ) {
-//           mid_sur[k] = ( faceCoordinates[k][1] + faceCoordinates[k][0] ) * 0.5;
-//         }
-//         double dist2 = 0;
-//         for(int k = 0; k < dim; k++) {
-//           dist2 += (xg1[k] - mid_sur[k]) * (xg1[k] - mid_sur[k]);
-//         }
-//         double dist = sqrt( dist2 );
-//         mixed_term1 += (1. / (2. * s_frac )) * pow(dist, -  2. * s_frac) * delta_teta;
-//         
-//       }
-//     } 
-//     }
-//     
-// //     New approach for numerical integral (END)
-// //     -----------------------------------
-// //     -----------------------------------               
-              
-              
+
+// //               if(iel == 0 && ig == 4)   sum_int += mixed_term;
+// //               std::cout<<"sum_int = " << sum_int << "\n";
 
 
-              for(unsigned i = 0; i < nDof1; i++) {
-                for(unsigned j = 0; j < nDof1; j++) {
-                  MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
-                }
-                Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
-              }
+//               for(unsigned i = 0; i < nDof1; i++) {
+//                 for(unsigned j = 0; j < nDof1; j++) {
+//                   MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
+//                 }
+//                 Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
+//               }
             }
-//============  Mixed integral ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================	
+//============  Mixed integral ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================
 
-//============ Adaptive quadrature for iel == jel ==================	
+//============ Adaptive quadrature for iel == jel ==================
             if(Nsplit != 0) {
 
               std::cout.precision(14);
               std::vector< std::vector<std::vector<double>>> x3;
-              
+
               for(unsigned split = 0; split <= Nsplit; split++) {
 
 //                 unsigned size_part;
 //                 if(dim == 1) size_part = 2;
 //                 else size_part = (split != Nsplit) ? 12 : 4;
-                
+
                 if(dim == 1) GetElementPartition1D(xg1, x1, split, x3);
                 else if(dim == 2) {
                   //GetElementPartition2D(xg1, x1, split, x3);
                   GetElementPartitionQuad(xg1, x1, split, Nsplit, x3);
                 }
-                
+
                 //for(unsigned r = 0; r < size_part; r++) {
                 for(unsigned r = 0; r < x3.size(); r++) {
-                
+
 
                   for(unsigned jg = 0; jg < igNumber; jg++) {
 
 
                     msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], jg, weight3, phi3, phi_x);
-                    
+
                     vector < double > xg3(dim, 0.);
 
                     for(unsigned i = 0; i < nDof1; i++) {
@@ -752,7 +748,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                     }
 
                     const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
-                    
+
                     for(unsigned i = 0; i < nDof1; i++) {
 
                       Res_local_refined[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits *
@@ -766,9 +762,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
                       }
                     }
-//============ Adaptive quadrature for iel == jel ==================	
+//============ Adaptive quadrature for iel == jel ==================
 
-//============ Mixed integral 1D ==================	
+//============ Mixed integral 1D ==================
                     if(ig == 0 && dim == 1 && UNBOUNDED == 1) {
                       double ex_1 = EX_1;
                       double ex_2 = EX_2;
@@ -778,7 +774,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                         dist_1 += sqrt((xg3[k] - ex_1) * (xg3[k] - ex_1));
                         dist_2 += sqrt((xg3[k] - ex_2) * (xg3[k] - ex_2));
                       }
-                      double mixed_term = ( pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac) ) * (1. / s_frac) ;
+                      double mixed_term = (pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac)) * (1. / s_frac) ;
 
                       for(unsigned i = 0; i < nDof1; i++) {
                         for(unsigned j = 0; j < nDof1; j++) {
@@ -787,102 +783,97 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                         Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solY3 * mixed_term;
                       }
                     }
-//============ Mixed integral 1D ==================	
+//============ Mixed integral 1D ==================
                   }
                 }
               }
             }
 
           } // end iel == jel loop
-          
-          
-          
-          
-          
-          
-          //     New approach for numerical integral (START)
-//     -----------------------------------
-//     -----------------------------------              
-              
-    double mixed_term1 = 0;
+
+
+
+//============ Numerical Mixed Integral ==================
+          if((iel != jel || Nsplit == 0) && UNBOUNDED == 1) {
+            double mixed_term1 = 0;
 //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
-                  // *** Face Gauss point loop (boundary Integral) ***
-    for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( jel ); jface++ ) {
-      int faceIndex = el->GetBoundaryIndex(jel, jface);
-      // look for boundary faces
-      if ( faceIndex >= 1 ) {  
-        const unsigned faceGeom = msh->GetElementFaceType ( jel, jface );
-        unsigned faceDofs = msh->GetElementFaceDofNumber (jel, jface, solType);         
-        vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
-        for ( int k = 0; k < dim; k++ ) {
-          faceCoordinates[k].resize (faceDofs);
-        }
-        for ( unsigned i = 0; i < faceDofs; i++ ) {
-          unsigned inode = msh->GetLocalFaceVertexIndex ( jel, jface, i ); // face-to-element local node mapping.
-          for ( unsigned k = 0; k < dim; k++ ) {
-            faceCoordinates[k][i] =  x2[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
-          }
-        }
-        vector  < vector  <  double> > interpCoordinates ( dim );
-        for ( int k = 0; k < dim; k++ ) {
-          interpCoordinates[k].resize (4); // set "4" as a parameter
-        }
-        for(unsigned n = 0; n <= 4; n++){
-          for ( int k = 0; k < dim; k++ ) {
-            interpCoordinates[k][n] = faceCoordinates[k][0] + n * ( fabs(faceCoordinates[k][0] - faceCoordinates[k][1]) / 4. );
-          }
-        }
-        for(unsigned n = 0; n < 4; n++){
-//         valido per 2D, verifica che funzioni!!
-        double teta2 = atan2((interpCoordinates[1][n+1] - xg1[1]), ( interpCoordinates[0][n+1] - xg1[0]));
-        double teta1 = atan2((interpCoordinates[1][n] - xg1[1]), ( interpCoordinates[0][n] - xg1[0])); 
-        
-        double delta_teta = fabs ( teta2 - teta1 );
-        
-        vector <double> mid_sur;
-        mid_sur.resize(dim);
-        for( unsigned k = 0; k < dim; k++ ) {
-          mid_sur[k] = ( interpCoordinates[k][n+1] + interpCoordinates[k][n] ) * 0.5;
-        }
-        double dist2 = 0;
-        for(int k = 0; k < dim; k++) {
-          dist2 += (xg1[k] - mid_sur[k]) * (xg1[k] - mid_sur[k]);
-        }
-        double dist = sqrt( dist2 );
-        mixed_term1 += pow(dist, -  2. * s_frac) * delta_teta * (1. / (2. * s_frac));
-        }
-        
-              for(unsigned i = 0; i < nDof1; i++) {
-                for(unsigned j = 0; j < nDof1; j++) {
-                  MMlocal[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term1;
-                }
-                Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
+            // *** Face Gauss point loop (boundary Integral) ***
+            for(unsigned jj = 0; jj < bd_face.size(); jj++) {
+
+              int jface = bd_face[jj];
+              // look for boundary faces
+
+
+
+              unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
+
+              //std::cout << faceDofs<< " ";
+
+              vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
+              for(int k = 0; k < dim; k++) {
+                faceCoordinates[k].resize(faceDofs);
               }
-        
-      }
-    }
-//     }
-    
-//     New approach for numerical integral (END)
-//     -----------------------------------
-//     ----------------------------------- 
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
+              for(unsigned i = 0; i < faceDofs; i++) {
+                unsigned inode = el->GetIG(ielGeom2, jface, i);  // face-to-element local node mapping.
+                for(unsigned k = 0; k < dim; k++) {
+                  faceCoordinates[k][i] =  x2[k][inode] - xg1[k]; // We extract the local coordinates on the face from local coordinates on the element.
+
+
+                }
+              }
+              const unsigned div = 10;
+              vector  < vector  <  double> > interpCoordinates(dim);
+              for(int k = 0; k < dim; k++) {
+                interpCoordinates[k].resize(div + 1); // set "4" as a parameter
+              }
+              for(unsigned n = 0; n <= div; n++) {
+                for(int k = 0; k < dim; k++) {
+                  interpCoordinates[k][n] = faceCoordinates[k][0] + n * (faceCoordinates[k][1] - faceCoordinates[k][0]) /  div ;
+                  //std::cout << interpCoordinates[k][n] <<" ";
+                }
+                //std::cout<<std::endl;
+              }
+              for(unsigned n = 0; n < div; n++) {
+                double teta2 = atan2(interpCoordinates[1][n + 1], interpCoordinates[0][n + 1]);
+                double teta1 = atan2(interpCoordinates[1][n], interpCoordinates[0][n]);
+
+                if(teta2 < teta1) teta2 += 2. * M_PI;
+
+                // std::cout << teta2 - teta1<<std::endl;
+
+                double delta_teta = teta2 - teta1;
+
+
+                vector <double> mid_point;
+                mid_point.resize(dim);
+                for(unsigned k = 0; k < dim; k++) {
+                  mid_point[k] = (interpCoordinates[k][n + 1] + interpCoordinates[k][n]) * 0.5;
+                }
+                double dist2 = 0;
+                for(int k = 0; k < dim; k++) {
+                  dist2 += mid_point[k] * mid_point[k];
+                }
+                double dist = sqrt(dist2);
+                mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
+              }
+            }
+//           if(iel == 0 && ig ==4) sum_int1 += mixed_term1;
+//           std::cout << "sum_int1 = " << sum_int1 <<"\n";
+
+            //std::cout << mixed_term1 << " ";
+
+            for(unsigned i = 0; i < nDof1; i++) {
+              for(unsigned j = 0; j < nDof1; j++) {
+                MM_mixed[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term1;
+              }
+              Res_mixed[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
+            }
+          }
+
+//============ Numerical Mixed Integral ==================
+
+
+
 
           if((Nsplit == 0 || iel != jel) && OP_Hhalf != 0) {
             for(unsigned jg = 0; jg < jgNumber; jg++) {
@@ -936,6 +927,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           }
         }
 //        MM->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
+        MM->add_matrix_blocked(MM_mixed, l2GMap1, l2GMap1);
+        RES->add_vector_blocked(Res_mixed, l2GMap1);
 
         MM->add_matrix_blocked(CClocalII, l2GMap1, l2GMap1);
         MM->add_matrix_blocked(CClocalIJ, l2GMap1, l2GMap2);
@@ -1339,12 +1332,12 @@ void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector
       x[left][k].resize(x1[0].size());
       x[right][k].resize(x1[0].size());
 //       for(unsigned k = 0; k < dim; k++) {
-        x[left][k][0] = x1[k][0];
-        x[left][k][1] = 0.5 * (x[left][k][0] + xg1[k]);
-        x[left][k][2] = 0.5 * (x[left][k][0] + x[left][k][1]);
-        x[right][k][1] = x1[k][1];
-        x[right][k][0] = 0.5 * (x[right][k][1] + xg1[k]);
-        x[right][k][2] = 0.5 * (x[right][k][0] + x[right][k][1]);
+      x[left][k][0] = x1[k][0];
+      x[left][k][1] = 0.5 * (x[left][k][0] + xg1[k]);
+      x[left][k][2] = 0.5 * (x[left][k][0] + x[left][k][1]);
+      x[right][k][1] = x1[k][1];
+      x[right][k][0] = 0.5 * (x[right][k][1] + xg1[k]);
+      x[right][k][2] = 0.5 * (x[right][k][0] + x[right][k][1]);
 //       }
     }
   }
@@ -1378,7 +1371,8 @@ void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector
 
 
 
-void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x) {
+void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split,  std::vector < std::vector < std::vector<double>>> &x)
+{
   unsigned dim = 2;
   unsigned bl = 0; // bottom left
   unsigned br = 1; // bottom right
@@ -1392,14 +1386,14 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
   unsigned tr2 = 9; // top left
   unsigned tl1 = 10; // top right
   unsigned tl2 = 11; // top right
-  
+
   double ex_x_1;
   double ex_x_2;
   double ex_y_1;
   double ex_y_2;
-  
+
   unsigned size_part = (split != Nsplit) ? 12 : 4;
-  
+
   if(split == 0) { //init
     x.resize(size_part);
     for(unsigned j = 0; j < size_part; j++) {
@@ -1419,15 +1413,15 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
     ex_y_1 = x[bl][1][2];
     ex_y_2 = x[tl][1][1];
   }
-  
-  
+
+
   //     Prototipo: x[quadrante][dim][numero_nodo]
   x[bl][1][0] = x[bl][1][1] = x[br][1][0] = x[br][1][1] = ex_y_1;
   x[tl][1][2] = x[tl][1][3] = x[tr][1][2] = x[tr][1][3] = ex_y_2;
   x[bl][0][0] = x[bl][0][3] = x[tl][0][0] = x[tl][0][3] = ex_x_1;
   x[br][0][1] = x[br][0][2] = x[tr][0][1] = x[tr][0][2] = ex_x_2;
-  
-  
+
+
   if(split == Nsplit) {
     x[bl][1][2] = x[bl][1][3] = x[br][1][2] = x[br][1][3] = x[tl][1][0] = x[tl][1][1] = x[tr][1][0] = x[tr][1][1] = xg1[1];
     x[bl][0][1] = x[bl][0][2] = x[tl][0][1] = x[tl][0][2] = x[br][0][0] = x[br][0][3] = x[tr][0][0] = x[tr][0][3] = xg1[0];
@@ -1438,7 +1432,7 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
     x[bl][0][1] = x[bl][0][2] = x[tl][0][1] = x[tl][0][2] = 0.5 * (ex_x_1 + xg1[0]);
     x[br][0][0] = x[br][0][3] = x[tr][0][0] = x[tr][0][3] = 0.5 * (ex_x_2 + xg1[0]);
   }
-  
+
   if(split != Nsplit) {
     x[bl1][1][0] = x[bl1][1][1] = x[br1][1][0] = x[br1][1][1] = ex_y_1;
     x[tl1][1][2] = x[tl1][1][3] = x[tr1][1][2] = x[tr1][1][3] = ex_y_2;
@@ -1457,8 +1451,8 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
     x[bl1][0][1] = x[bl1][0][2] = x[tl1][0][1] = x[tl1][0][2] = xg1[0];
     x[br1][0][0] = x[br1][0][3] = x[tr1][0][0] = x[tr1][0][3] = xg1[0];
   }
-  
-  
+
+
   for(unsigned qq = 0; qq < size_part; qq++) {
     for(unsigned k = 0; k < dim; k++) { //middle point formula
       x[qq][k][4] = 0.5 * (x[qq][k][0] + x[qq][k][1]);
@@ -1468,26 +1462,27 @@ void GetElementPartition2D(const std::vector <double >  & xg1, const std::vector
       x[qq][k][8] = 0.5 * (x[qq][k][0] + x[qq][k][2]);
     }
   }
-  
+
 }
 
 
 const unsigned ijndex[2][12][2] = {
   { {0, 0}, {3, 0}, {3, 3}, {0, 3},
-  {1, 0}, {0, 1},
-  {2, 0}, {3, 1},
-  {2, 3}, {3, 2},
-  {1, 3}, {0, 2}
+    {1, 0}, {0, 1},
+    {2, 0}, {3, 1},
+    {2, 3}, {3, 2},
+    {1, 3}, {0, 2}
   },
   {{0, 0}, {1, 0}, {1, 1}, {0, 1}}
 };
 
-void GetElementPartitionQuad(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & xNodes, const unsigned & split, const unsigned & totalNumberofSplits,  std::vector < std::vector < std::vector<double>>> &x) {
+void GetElementPartitionQuad(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & xNodes, const unsigned & split, const unsigned & totalNumberofSplits,  std::vector < std::vector < std::vector<double>>> &x)
+{
   unsigned dim = 2;
-  
+
   unsigned solType;
   unsigned size = xNodes[0].size();
-  
+
   if(size == 4) {
     solType = 0; //lagrange linear
   }
@@ -1501,26 +1496,26 @@ void GetElementPartitionQuad(const std::vector <double >  & xg1, const std::vect
     std::cout << "abort in GetElementPartitionQuad" << std::endl;
     abort();
   }
-  
-  
+
+
   unsigned bl = 0; // bottom left
   unsigned br = 1; // bottom right
   unsigned tr = 2; // top left
   unsigned tl = 3; // top right
-  
+
   std::vector < double > XX;
   std::vector < double > YY;
-  
+
   unsigned size_part = 12;
   unsigned splitType = 0;
-  
+
   if(split < totalNumberofSplits) { //init && update
-    
+
     XX.resize(5);
     YY.resize(5);
-    
+
     if(split == 0) { //init
-      
+
       x.resize(size_part);
       for(unsigned j = 0; j < size_part; j++) {
         x[j].resize(dim);
@@ -1528,12 +1523,12 @@ void GetElementPartitionQuad(const std::vector <double >  & xg1, const std::vect
           x[j][k].resize(size);
         }
       }
-      
+
       XX[0] = xNodes[0][0];
       XX[4] = xNodes[0][1];
       YY[0] = xNodes[1][0];
       YY[4] = xNodes[1][3];
-      
+
     }
     else { //update
       XX[0] = x[bl][0][1];
@@ -1544,23 +1539,23 @@ void GetElementPartitionQuad(const std::vector <double >  & xg1, const std::vect
     XX[2] = xg1[0];
     XX[1] = 0.5 * (XX[0] + XX[2]);
     XX[3] = 0.5 * (XX[2] + XX[4]);
-    
+
     YY[2] = xg1[1];
     YY[1] = 0.5 * (YY[0] + YY[2]);
     YY[3] = 0.5 * (YY[2] + YY[4]);
   }
   else { //close
-    
+
     XX.resize(3);
     YY.resize(3);
-    
+
     XX[0] = x[bl][0][1];
     XX[1] = xg1[0];
     XX[2] = x[br][0][0];
     YY[0] = x[bl][1][2];
     YY[1] = xg1[1];
     YY[2] = x[tl][1][1];
-    
+
     size_part = 4;
     splitType = 1;
     x.resize(size_part);
@@ -1571,12 +1566,12 @@ void GetElementPartitionQuad(const std::vector <double >  & xg1, const std::vect
       }
     }
   }
-  
+
   for(unsigned qq = 0; qq < size_part; qq++) {
     unsigned i = ijndex[splitType][qq][0];
     x[qq][0][0] = x[qq][0][3] = XX[i];
     x[qq][0][1] = x[qq][0][2] = XX[i + 1];
-    
+
     unsigned j = ijndex[splitType][qq][1];
     x[qq][1][0] = x[qq][1][1] = YY[j];
     x[qq][1][2] = x[qq][1][3] = YY[j + 1];
@@ -1591,7 +1586,7 @@ void GetElementPartitionQuad(const std::vector <double >  & xg1, const std::vect
       }
     }
   }
-  
+
   if(solType > 1) {
     for(unsigned qq = 0; qq < size_part; qq++) {
       for(unsigned k = 0; k < dim; k++) { //middle point formula
@@ -1599,5 +1594,6 @@ void GetElementPartitionQuad(const std::vector <double >  & xg1, const std::vect
       }
     }
   }
-  
+
 }
+
