@@ -67,7 +67,7 @@ int main(int argc, char** args) {
   mlMsh.ReadCoarseMesh ("../input/cylinder.neu", "seventh", scalingFactor);
 
 
-  unsigned numberOfUniformLevels = 5;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -324,6 +324,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
     for(unsigned K = 0; K < DIM; K++) {
       aResDx[K].assign(nxDofs, 0.);
     }
+    aResL.resize(nLDofs);
 
     // local storage of global mapping and solution
     for(unsigned i = 0; i < nxDofs; i++) {
@@ -427,7 +428,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       //   }
       // }
 
-      //double *phi1 = msh->_finiteElement[ielGeom][solType1]->GetPhi(ig);
+      phi1 = msh->_finiteElement[ielGeom][solType1]->GetPhi(ig);
 
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
       double xHatg[3] = {0., 0., 0. };
@@ -485,7 +486,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       double mu[2] = {0., 0.};
 
       for(unsigned i = 0; i < nDofs1; i++) {
-        for(unsigned k = 0; k < dim; k++) {
+        for(unsigned k = 0; k < 2; k++) {
           mu[k] += phi1[i] * solMu[k][i];
         }
       }
