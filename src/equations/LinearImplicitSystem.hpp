@@ -222,7 +222,7 @@ namespace femus {
       /** enforce sparcity pattern for setting uncoupled variables and save on memory allocation **/
       void SetSparsityPattern (vector < bool > other_sparcity_pattern);
 
-      void SetSparsityPatternMinimumSize (const unsigned & minimumSize);
+      void SetSparsityPatternMinimumSize (const unsigned &minimumSize, const std::string variableName = "All");
 
       bool GetAssembleMatrix() {
         return _assembleMatrix;
@@ -333,6 +333,7 @@ namespace femus {
 
       unsigned _numberOfGlobalVariables;
       unsigned _sparsityPatternMinimumSize;
+      std::vector< std::string > _solNameSparsityPattern;
 
   };
 

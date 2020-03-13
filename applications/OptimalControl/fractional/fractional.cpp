@@ -185,9 +185,9 @@ int main(int argc, char** argv)
 
   for(int level = 0; level < mlMsh.GetNumberOfLevels(); level++) {
 
-    Mesh*                    msh = mlMsh.GetLevel(level);
-    unsigned    nprocs = msh->n_processors();
-    unsigned    iproc = msh->processor_id();
+    Mesh* msh = mlMsh.GetLevel(level);
+    unsigned nprocs = msh->n_processors();
+    unsigned iproc = msh->processor_id();
 
     int MM_size = msh->_dofOffset[solType][nprocs];
     int MM_local_size = msh->_dofOffset[solType][iproc + 1] - msh->_dofOffset[solType][iproc];

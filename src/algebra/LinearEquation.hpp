@@ -114,7 +114,7 @@ public:
   vector < int > d_nnz;
   vector < int > o_nnz;
   
-  void SetSparsityPatternMinimumSize(const unsigned &multyplyingFactor);
+  void SetSparsityPatternMinimumSize (const unsigned &minimumSize, const std::vector < unsigned > variablesToBeincreasedIndex);
 
 protected:
 
@@ -128,6 +128,7 @@ protected:
   const vector <NumericVector*> *_Bdc;
   vector <bool> _SparsityPattern;
   unsigned _sparsityPatternMinimumSize; 
+  std::vector <unsigned> _variablesToBeincreasedIndex;
   unsigned _numberOfGlobalVariables;
 
 };
