@@ -36,7 +36,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   if(!strcmp(solName, "Dx1")) {
     if(1 == faceName) {
       //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
-      value = 0.75 * sin(x[1] / 0.5 * M_PI);
+      value = 0.25 * sin(x[1] / 0.5 * M_PI);
       //dirichlet = false;
     }
   }
@@ -67,7 +67,7 @@ int main(int argc, char** args) {
   mlMsh.ReadCoarseMesh ("../input/cylinder.neu", "seventh", scalingFactor);
 
 
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -125,7 +125,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE ("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(100);
+  system.SetMaxNumberOfNonLinearIterations(20);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
@@ -270,7 +270,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 
   // Local solution vectors for Nx and NDx.
   std::vector < std::vector < adept::adouble > > solDx(DIM);
-  std::vector < std::vector < adept::adouble > > solx(DIM);
+  std::vector < std::vector < adept::adouble > > solNx(DIM);
   std::vector < std::vector < double > > xHat(DIM);
 
   std::vector < std::vector < double > > solMu(dim);
@@ -301,7 +301,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
     // Resize local arrays.
     for(unsigned K = 0; K < DIM; K++) {
       solDx[K].resize(nxDofs);
-      solx[K].resize(nxDofs);
+      solNx[K].resize(nxDofs);
       xHat[K].resize(nxDofs);
       // solMu[K].resize(nDofs1);
     }
@@ -366,7 +366,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       unsigned iXDof  = msh->GetSolutionDof(i, iel, xType);
       for(unsigned K = 0; K < DIM; K++) {
         xHat[K][i] = (*msh->_topology->_Sol[K])(iXDof);
-        solx[K][i] = xHat[K][i] + solDx[K][i];
+        solNx[K][i] = xHat[K][i] + solDx[K][i];
       }
     }
 
@@ -432,16 +432,21 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
       double xHatg[3] = {0., 0., 0. };
-      adept::adouble solxg[3] = {0. ,0. ,0. };
-      adept::adouble solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      adept::adouble solDxg[3] = {0., 0., 0.};
+      adept::adouble solNxg[3] = {0. ,0. ,0. };
+      double xHat_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      adept::adouble solNx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+
       for (unsigned K = 0; K < DIM; K++) {
         for (unsigned i = 0; i < nxDofs; i++) {
           xHatg[K] += phix[i] * xHat[K][i];
-          solxg[K] += phix[i] * solx[K][i];
+          solNxg[K] += phix[i] * solNx[K][i];
+          solDxg[K] += phix[i] * solDx[K][i];
         }
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
-            solx_uv[K][j] += phix_uv[j][i] * solx[K][i];
+            xHat_uv[K][j] += phix_uv[j][i] * xHat[K][i];
+            solNx_uv[K][j] += phix_uv[j][i] * solNx[K][i];
           }
         }
 
@@ -453,13 +458,13 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       }
 
       // Compute the metric, metric determinant, and area element.
-      std::vector < std::vector < adept::adouble > > g (dim);
+      std::vector < std::vector < double > > g (dim);
       for (unsigned i = 0; i < dim; i++) g[i].assign (dim, 0.);
 
       for (unsigned i = 0; i < dim; i++) {
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned K = 0; K < DIM; K++) {
-            g[i][j] += solx_uv[K][i] * solx_uv[K][j];
+            g[i][j] += xHat_uv[K][i] * xHat_uv[K][j];
           }
         }
       }
@@ -469,17 +474,17 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 
       // Computing the unit normal vector N.
       adept::adouble normal[DIM];
-      normal[0] = (solx_uv[1][0] * solx_uv[2][1]
-                 - solx_uv[2][0] * solx_uv[1][1]) / sqrt (detg);
-      normal[1] = (solx_uv[2][0] * solx_uv[0][1]
-                 - solx_uv[0][0] * solx_uv[2][1]) / sqrt (detg);
-      normal[2] = (solx_uv[0][0] * solx_uv[1][1]
-                 - solx_uv[1][0] * solx_uv[0][1]) / sqrt (detg);
+      normal[0] = (xHat_uv[1][0] * xHat_uv[2][1]
+                 - xHat_uv[2][0] * xHat_uv[1][1]) / sqrt (detg);
+      normal[1] = (xHat_uv[2][0] * xHat_uv[0][1]
+                 - xHat_uv[0][0] * xHat_uv[2][1]) / sqrt (detg);
+      normal[2] = (xHat_uv[0][0] * xHat_uv[1][1]
+                 - xHat_uv[1][0] * xHat_uv[0][1]) / sqrt (detg);
 
       adept::adouble normalMSqrtDetg[DIM];
-      normalMSqrtDetg[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]);
-      normalMSqrtDetg[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]);
-      normalMSqrtDetg[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]);
+      normalMSqrtDetg[0] = (xHat_uv[1][0] * xHat_uv[2][1] - xHat_uv[2][0] * xHat_uv[1][1]);
+      normalMSqrtDetg[1] = (xHat_uv[2][0] * xHat_uv[0][1] - xHat_uv[0][0] * xHat_uv[2][1]);
+      normalMSqrtDetg[2] = (xHat_uv[0][0] * xHat_uv[1][1] - xHat_uv[1][0] * xHat_uv[0][1]);
 
 //       // Comment out for working code
 
@@ -511,38 +516,38 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 
       adept::adouble M[DIM][dim];
 
-      M[0][0] = muMinus + muPlus * (normal[1] * normal[1] + normal[2] * normal[2]) * solx_uv[0][0]
-              - muPlus * normal[0] * (solx_uv[1][0] * normal[1] + solx_uv[2][0] * normal[2])
-                           - muSqr * (solx_uv[2][1] * normal[1] - solx_uv[1][1] * normal[2]);
+      M[0][0] = muMinus + muPlus * (normal[1] * normal[1] + normal[2] * normal[2]) * solNx_uv[0][0]
+              - muPlus * normal[0] * (solNx_uv[1][0] * normal[1] + solNx_uv[2][0] * normal[2])
+                           - muSqr * (solNx_uv[2][1] * normal[1] - solNx_uv[1][1] * normal[2]);
 
-      M[1][0] = muMinus + muPlus * (normal[2] * normal[2] + normal[0] * normal[0]) * solx_uv[1][0]
-              - muPlus * normal[1] * (solx_uv[2][0] * normal[2] + solx_uv[0][0] * normal[0])
-                           - muSqr * (solx_uv[0][1] * normal[2] - solx_uv[2][1] * normal[0]);
+      M[1][0] = muMinus + muPlus * (normal[2] * normal[2] + normal[0] * normal[0]) * solNx_uv[1][0]
+              - muPlus * normal[1] * (solNx_uv[2][0] * normal[2] + solNx_uv[0][0] * normal[0])
+                           - muSqr * (solNx_uv[0][1] * normal[2] - solNx_uv[2][1] * normal[0]);
 
-      M[2][0] = muMinus + muPlus * (normal[0] * normal[0] + normal[1] * normal[1]) * solx_uv[2][0]
-              - muPlus * normal[2] * (solx_uv[0][0] * normal[0] + solx_uv[1][0] * normal[1])
-                           - muSqr * (solx_uv[1][1] * normal[0] - solx_uv[0][1] * normal[1]);
+      M[2][0] = muMinus + muPlus * (normal[0] * normal[0] + normal[1] * normal[1]) * solNx_uv[2][0]
+              - muPlus * normal[2] * (solNx_uv[0][0] * normal[0] + solNx_uv[1][0] * normal[1])
+                           - muSqr * (solNx_uv[1][1] * normal[0] - solNx_uv[0][1] * normal[1]);
 
-      M[0][1] = muMinus + muPlus * (normal[1] * normal[1] + normal[2] * normal[2]) * solx_uv[0][1]
-              - muPlus * normal[0] * (solx_uv[2][1] * normal[2] + solx_uv[1][1] * normal[1])
-                           + muSqr * (solx_uv[2][0] * normal[1] - solx_uv[1][0] * normal[2]);
+      M[0][1] = muMinus + muPlus * (normal[1] * normal[1] + normal[2] * normal[2]) * solNx_uv[0][1]
+              - muPlus * normal[0] * (solNx_uv[2][1] * normal[2] + solNx_uv[1][1] * normal[1])
+                           + muSqr * (solNx_uv[2][0] * normal[1] - solNx_uv[1][0] * normal[2]);
 
-      M[1][1] = muMinus + muPlus * (normal[2] * normal[2] + normal[0] * normal[0]) * solx_uv[1][1]
-              - muPlus * normal[1] * (solx_uv[0][1] * normal[0] + solx_uv[2][1] * normal[2])
-                           + muSqr * (solx_uv[0][0] * normal[2] - solx_uv[2][0] * normal[0]);
+      M[1][1] = muMinus + muPlus * (normal[2] * normal[2] + normal[0] * normal[0]) * solNx_uv[1][1]
+              - muPlus * normal[1] * (solNx_uv[0][1] * normal[0] + solNx_uv[2][1] * normal[2])
+                           + muSqr * (solNx_uv[0][0] * normal[2] - solNx_uv[2][0] * normal[0]);
 
-      M[2][1] = muMinus + muPlus * (normal[0] * normal[0] + normal[1] * normal[1]) * solx_uv[2][1]
-              - muPlus * normal[2] * (solx_uv[1][1] * normal[1] + solx_uv[0][1] * normal[0])
-                           + muSqr * (solx_uv[1][0] * normal[0] - solx_uv[0][0] * normal[1]);
+      M[2][1] = muMinus + muPlus * (normal[0] * normal[0] + normal[1] * normal[1]) * solNx_uv[2][1]
+              - muPlus * normal[2] * (solNx_uv[1][1] * normal[1] + solNx_uv[0][1] * normal[0])
+                           + muSqr * (solNx_uv[1][0] * normal[0] - solNx_uv[0][0] * normal[1]);
 
       adept::adouble DnXmDxdotN = 0.;
       for(unsigned K = 0; K < DIM; K++) {
-        DnXmDxdotN += (xHatg[K] - solxg[K]) * normalMSqrtDetg[K];
+        DnXmDxdotN += (solDxg[K]) * normalMSqrtDetg[K];
       }
 
       // Lagrange multiplier equation (with trick).
       for (unsigned i = 0; i < nLDofs; i++) {
-        aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area; // no2
+        aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area2; // no2
       }
 
       // Implement the Conformal Minimization equations.
