@@ -19,7 +19,6 @@
 
 
 //2D NONLOCAL DOMAIN DECOMPOSITION WITH FETI: Dirichlet on the left, Neumann everywhere else
-//WARNING DOES NOT RUN WITH A DIRECT SOLVER
 
 using namespace femus;
 
