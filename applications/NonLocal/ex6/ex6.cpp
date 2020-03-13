@@ -11,6 +11,7 @@
 #include "petsc.h"
 #include "petscmat.h"
 #include "PetscMatrix.hpp"
+#include "FieldSplitTree.hpp"
 
 #include "slepceps.h"
 
@@ -53,9 +54,15 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 unsigned numberOfUniformLevels = 3;
 unsigned numberOfUniformLevelsFine = 1;
 
+//solver type (default is MG)
+bool directSolver = true;
+bool Schur = false;
+
 int main (int argc, char** argv) {
 
   clock_t total_time = clock();
+
+  if (Schur) directSolver = false;
 
   // init Petsc-MPI communicator
   FemusInit mpinit (argc, argv, MPI_COMM_WORLD);
@@ -73,9 +80,9 @@ int main (int argc, char** argv) {
   mlMshFine.ReadCoarseMesh ("../input/FETI_domain_1Dir_3Neu.neu", "second", scalingFactor);
   mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine, NULL);
 
-  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+  if (directSolver) mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 
-  mlMshFine.EraseCoarseLevels (numberOfUniformLevelsFine - 1);
+  if (directSolver) mlMshFine.EraseCoarseLevels (numberOfUniformLevelsFine - 1);
 
   unsigned dim = mlMsh.GetDimension();
 
@@ -107,17 +114,11 @@ int main (int argc, char** argv) {
   mlSolFine.GenerateBdc ("All");
 
   // ******* Set volume constraints for the nonlocal *******
-  std::vector<unsigned> volumeConstraintFlags (1);
-  volumeConstraintFlags[0] = 11;
+  std::vector< unsigned > volumeConstraintFlags (1);
 
-  unsigned solu1Index = mlSol.GetIndex ("u1");
-  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solu1Index, 0);
+  volumeConstraintFlags[0]=11;
 
-  unsigned solu2Index = mlSol.GetIndex ("u2");
-  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solu2Index, 0);
-
-  unsigned solmuIndex = mlSol.GetIndex ("mu");
-  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solmuIndex, 0);
+  mlSol.GenerateBdcOnVolumeConstraintFETI (volumeConstraintFlags, 0, 6, delta1);
 
   //BEGIN assemble and solve nonlocal problem
   MultiLevelProblem ml_prob (&mlSol);
@@ -127,6 +128,32 @@ int main (int argc, char** argv) {
   system.AddSolutionToSystemPDE ("u1");
   system.AddSolutionToSystemPDE ("u2");
   system.AddSolutionToSystemPDE ("mu");
+
+  //BEGIN FIELD SPLIT
+  std::vector < unsigned > solutionTypeU1U2 (2);
+  solutionTypeU1U2[0] = mlSol.GetSolutionType ("u1");
+  solutionTypeU1U2[1] = mlSol.GetSolutionType ("u2");
+
+  std::vector < unsigned > fieldU1U2 (2);
+  fieldU1U2[0] = system.GetSolPdeIndex ("u1");
+  fieldU1U2[1] = system.GetSolPdeIndex ("u2");
+  FieldSplitTree FS_U1U2 (PREONLY, ILU_PRECOND, fieldU1U2, solutionTypeU1U2,  "u1u2");
+  FS_U1U2.SetupKSPTolerances (1.e-3, 1.e-20, 1.e+50, 1); // by Guoyi Ke
+
+  std::vector < unsigned > solutionTypeMu (1);
+  solutionTypeMu[0] = mlSol.GetSolutionType ("mu");
+  std::vector < unsigned > fieldMu (1);
+  FieldSplitTree FS_MU (PREONLY, ILU_PRECOND, fieldMu, "mu");
+  FS_MU.SetupKSPTolerances (1.e-3, 1.e-20, 1.e+50, 1); // by Guoyi Ke
+
+  std::vector < FieldSplitTree *> FS1;
+  FS1.reserve (2);
+  FS1.push_back (&FS_U1U2);
+  FS1.push_back (&FS_MU);
+  FieldSplitTree FS_Nonlocal (PREONLY, FS_SCHUR_PRECOND, FS1, "Nonlocal_FETI");
+  FS_Nonlocal.SetupSchurFactorizationType (SCHUR_FACT_UPPER); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL;
+  FS_Nonlocal.SetupSchurPreType (SCHUR_PRE_SELFP); // SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11,SCHUR_PRE_FULL;
+  //END FIELD SPLIT
 
   // ******* System FEM Assembly *******
   system.SetAssembleFunction (AssembleNonLocalSys);
@@ -138,11 +165,12 @@ int main (int argc, char** argv) {
   //   system.SetNonLinearConvergenceTolerance(1.e-9);
 //   system.SetMaxNumberOfNonLinearIterations(20);
 
-  system.SetNumberPreSmoothingStep (1);
-  system.SetNumberPostSmoothingStep (1);
+  system.SetNumberPreSmoothingStep (5);
+  system.SetNumberPostSmoothingStep (5);
 
   // ******* Set Preconditioner *******
   system.SetMgSmoother (GMRES_SMOOTHER);
+  if (Schur) system.SetMgSmoother (FIELDSPLIT_SMOOTHER);
 
   system.SetSparsityPatternMinimumSize (5000u);   //TODO tune
 
@@ -153,6 +181,8 @@ int main (int argc, char** argv) {
 //   system.SetRichardsonScaleFactor(0.7);
 
   system.SetPreconditionerFineGrids (ILU_PRECOND);
+
+  if (Schur) system.SetFieldSplitTree (&FS_Nonlocal);
 
   system.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
 

@@ -45,12 +45,18 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 3;
+unsigned numberOfUniformLevels = 3; //for the tests, use at least 3 here
 unsigned numberOfUniformLevelsFine = 1;
+
+//solver type (default is MG)
+bool directSolver = true; 
+bool Schur = false;
 
 int main (int argc, char** argv) {
 
   clock_t total_time = clock();
+  
+  if (Schur) directSolver = false;
 
   // init Petsc-MPI communicator
   FemusInit mpinit (argc, argv, MPI_COMM_WORLD);
@@ -60,23 +66,17 @@ int main (int argc, char** argv) {
 
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
-//   mlMsh.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
-//   mlMsh.ReadCoarseMesh ("../input/FETI_left_subdom_COARSE.neu", "second", scalingFactor);
   mlMsh.ReadCoarseMesh ("../input/FETI_domain.neu", "second", scalingFactor);
 //   mlMsh.ReadCoarseMesh ("../input/FETI_domain_small_delta.neu", "second", scalingFactor);
-//     mlMsh.ReadCoarseMesh ("../input/FETI_left_domain.neu", "second", scalingFactor);
   mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
-//   mlMshFine.ReadCoarseMesh ("../input/FETI_left_subdom.neu", "second", scalingFactor);
-//   mlMshFine.ReadCoarseMesh ("../input/FETI_left_subdom_COARSE.neu", "second", scalingFactor);
   mlMshFine.ReadCoarseMesh ("../input/FETI_domain.neu", "second", scalingFactor);
 //   mlMshFine.ReadCoarseMesh ("../input/FETI_domain_small_delta.neu", "second", scalingFactor);
-//     mlMshFine.ReadCoarseMesh ("../input/FETI_left_domain.neu", "second", scalingFactor);
   mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine, NULL);
 
-  mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1); 
+  if (directSolver) mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 
-//   mlMshFine.EraseCoarseLevels (numberOfUniformLevelsFine - 1); 
+  if (directSolver) mlMshFine.EraseCoarseLevels (numberOfUniformLevelsFine - 1);
 
   unsigned dim = mlMsh.GetDimension();
 
@@ -92,9 +92,9 @@ int main (int argc, char** argv) {
 //   mlSol.AddSolution ("u_local", LAGRANGE, FIRST, 2);
 //   mlSol.AddSolution ("u_exact", LAGRANGE, FIRST, 2);
 
-  mlSol.AddSolution ("u1Flag", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution ("u2Flag", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution ("muFlag", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("u1Flag", LAGRANGE, FIRST, 2); //TODO erase this
+  mlSol.AddSolution ("u2Flag", LAGRANGE, FIRST, 2); //TODO erase this
+  mlSol.AddSolution ("muFlag", LAGRANGE, FIRST, 2); //TODO erase this
 
   mlSol.Initialize ("All");
   mlSolFine.Initialize ("All");
@@ -108,19 +108,13 @@ int main (int argc, char** argv) {
   mlSolFine.GenerateBdc ("All");
 
   // ******* Set volume constraints for the nonlocal *******
-  std::vector<unsigned> volumeConstraintFlags (3);
+  std::vector < unsigned > volumeConstraintFlags (3);
+
   volumeConstraintFlags[0] = 5;
   volumeConstraintFlags[1] = 6;
   volumeConstraintFlags[2] = 7;
 
-  unsigned solu1Index = mlSol.GetIndex ("u1");
-  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solu1Index, 0);
-
-  unsigned solu2Index = mlSol.GetIndex ("u2");
-  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solu2Index, 0);
-
-  unsigned solmuIndex = mlSol.GetIndex ("mu");
-  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solmuIndex, 0);
+  mlSol.GenerateBdcOnVolumeConstraintFETI (volumeConstraintFlags, 0, 3, delta1);
 
   //BEGIN assemble and solve nonlocal problem
   MultiLevelProblem ml_prob (&mlSol);
@@ -131,11 +125,11 @@ int main (int argc, char** argv) {
   system.AddSolutionToSystemPDE ("u2");
   system.AddSolutionToSystemPDE ("mu");
 
+  //BEGIN FIELD SPLIT
   std::vector < unsigned > solutionTypeU1U2 (2);
   solutionTypeU1U2[0] = mlSol.GetSolutionType ("u1");
   solutionTypeU1U2[1] = mlSol.GetSolutionType ("u2");
 
-  //BEGIN FIELD SPLIT
   std::vector < unsigned > fieldU1U2 (2);
   fieldU1U2[0] = system.GetSolPdeIndex ("u1");
   fieldU1U2[1] = system.GetSolPdeIndex ("u2");
@@ -171,8 +165,8 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-//   system.SetMgSmoother (GMRES_SMOOTHER); //TODO decomment if doing direct solver
-  system.SetMgSmoother (FIELDSPLIT_SMOOTHER); //TODO comment if doing direct solver
+  system.SetMgSmoother (GMRES_SMOOTHER);
+  if (Schur) system.SetMgSmoother (FIELDSPLIT_SMOOTHER);
 
   system.SetSparsityPatternMinimumSize (5000u);   //TODO tune
 
@@ -180,20 +174,15 @@ int main (int argc, char** argv) {
 
   // ******* Set Smoother *******
   system.SetSolverFineGrids (RICHARDSON);
-//   system.SetRichardsonScaleFactor(0.7);
+//   system.SetRichardsonScaleFactor(1.);
 
   system.SetPreconditionerFineGrids (ILU_PRECOND);
 
-  system.SetFieldSplitTree (&FS_Nonlocal); //TODO comment if doing direct solver
+  if (Schur) system.SetFieldSplitTree (&FS_Nonlocal);
 
   system.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
 
 // ******* Solution *******
-
-  system.ClearVariablesToBeSolved(); //TODO comment if doing direct solver
-  system.AddVariableToBeSolved ("All"); //TODO comment if doing direct solver
-  system.SetNumberOfSchurVariables (1); //TODO comment if doing direct solver
-  system.SetElementBlockNumber (4); //TODO comment if doing direct solver
 
   system.MGsolve();
 
@@ -671,6 +660,7 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
   //END
 
 }
+
 
 
 

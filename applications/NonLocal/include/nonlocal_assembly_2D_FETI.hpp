@@ -148,7 +148,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   l2GMapu2_1.reserve (maxSize);
   l2GMapu2_2.reserve (maxSize);
 
-  vector< int > l2GMapmu_1; // local to global mapping for mu  
+  vector< int > l2GMapmu_1; // local to global mapping for mu
   vector< int > l2GMapmu_2; // local to global mapping for mu
   l2GMapmu_1.reserve (maxSize);
   l2GMapmu_2.reserve (maxSize);
@@ -197,78 +197,79 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   //BEGIN nonlocal assembly
 
 
+  //NOTE this has been replaced in the main by the function GenerateBdcOnVolumeConstraintFETI
   //BEGIN creation of the flags for the assembly procedure
 
   //flag = 1 assemble
   //flag = 0 don't assemble
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-    short unsigned ielGeom = msh->GetElementType (iel);
-    short unsigned ielGroup = msh->GetElementGroup (iel);
-    unsigned nDof  = msh->GetElementDofNumber (iel, solu1Type); //NOTE right now we are assuming that u1, u2 and mu are discretized with the same elements
-
-    double epsilon = 1.e-7;
-    double rightBound = (delta1 * 0.5) + epsilon;
-    double leftBound = - (delta1 * 0.5) - epsilon;
-
-    std::vector < double > xCoords (nDof);
-
-    for (unsigned i = 0; i < nDof; i++) {
-      unsigned solDof  = msh->GetSolutionDof (i, iel, solu1Type);
-      unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
-      xCoords[i] = (*msh->_topology->_Sol[0]) (xDof);
-
-      if (xCoords[i] < rightBound) {
-        sol->_Sol[u1FlagIndex]->add (solDof, 1.);
-        if (xCoords[i] > leftBound) sol->_Sol[muFlagIndex]->add (solDof, 1.);
-      }
-
-      if (xCoords[i] > leftBound) sol->_Sol[u2FlagIndex]->add (solDof, 1.);
-
-    }
-  }
-
-  sol->_Sol[u1FlagIndex]->close();
-  sol->_Sol[u2FlagIndex]->close();
-  sol->_Sol[muFlagIndex]->close();
-
-  for (unsigned idof = msh->_dofOffset[solu1Type][iproc]; idof < msh->_dofOffset[solu1Type][iproc + 1]; idof++) {
-
-    double u1Flag = (*sol->_Sol[u1FlagIndex]) (idof);
-    if (u1Flag > 0) sol->_Sol[u1FlagIndex]->set (idof, 1.);
-    else {
-      sol->_Bdc[solu1Index]->set (idof, 0.);
-      sol->_Sol[solu1Index]->set (idof, 0.);
-    }
-
-    double u2Flag = (*sol->_Sol[u2FlagIndex]) (idof);
-    if (u2Flag > 0) sol->_Sol[u2FlagIndex]->set (idof, 1.);
-    else {
-      sol->_Bdc[solu2Index]->set (idof, 0.);
-      sol->_Sol[solu2Index]->set (idof, 0.);
-    }
-
-    double muFlag = (*sol->_Sol[muFlagIndex]) (idof);
-    if (muFlag > 0) sol->_Sol[muFlagIndex]->set (idof, 1.);
-    else { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
-      sol->_Bdc[solmuIndex]->set (idof, 0.);
-      sol->_Sol[solmuIndex]->set (idof, 0.);
-    } //TODO decomment this!!!
-
-  }
-
-  sol->_Sol[u1FlagIndex]->close();
-  sol->_Sol[u2FlagIndex]->close();
-  sol->_Sol[muFlagIndex]->close();
-
-  sol->_Sol[solu1Index]->close();
-  sol->_Sol[solu2Index]->close();
-  sol->_Sol[solmuIndex]->close();
-
-  sol->_Bdc[solu1Index]->close();
-  sol->_Bdc[solu2Index]->close();
-  sol->_Bdc[solmuIndex]->close();
+//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+//
+//     short unsigned ielGeom = msh->GetElementType (iel);
+//     short unsigned ielGroup = msh->GetElementGroup (iel);
+//     unsigned nDof  = msh->GetElementDofNumber (iel, solu1Type); //NOTE right now we are assuming that u1, u2 and mu are discretized with the same elements
+//
+//     double epsilon = 1.e-7;
+//     double rightBound = (delta1 * 0.5) + epsilon;
+//     double leftBound = - (delta1 * 0.5) - epsilon;
+//
+//     std::vector < double > xCoords (nDof);
+//
+//     for (unsigned i = 0; i < nDof; i++) {
+//       unsigned solDof  = msh->GetSolutionDof (i, iel, solu1Type);
+//       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
+//       xCoords[i] = (*msh->_topology->_Sol[0]) (xDof);
+//
+//       if (xCoords[i] < rightBound) {
+//         sol->_Sol[u1FlagIndex]->add (solDof, 1.);
+//         if (xCoords[i] > leftBound) sol->_Sol[muFlagIndex]->add (solDof, 1.);
+//       }
+//
+//       if (xCoords[i] > leftBound) sol->_Sol[u2FlagIndex]->add (solDof, 1.);
+//
+//     }
+//   }
+//
+//   sol->_Sol[u1FlagIndex]->close();
+//   sol->_Sol[u2FlagIndex]->close();
+//   sol->_Sol[muFlagIndex]->close();
+//
+//   for (unsigned idof = msh->_dofOffset[solu1Type][iproc]; idof < msh->_dofOffset[solu1Type][iproc + 1]; idof++) {
+//
+//     double u1Flag = (*sol->_Sol[u1FlagIndex]) (idof);
+//     if (u1Flag > 0) sol->_Sol[u1FlagIndex]->set (idof, 1.);
+//     else {
+//       sol->_Bdc[solu1Index]->set (idof, 0.);
+//       sol->_Sol[solu1Index]->set (idof, 0.);
+//     }
+//
+//     double u2Flag = (*sol->_Sol[u2FlagIndex]) (idof);
+//     if (u2Flag > 0) sol->_Sol[u2FlagIndex]->set (idof, 1.);
+//     else {
+//       sol->_Bdc[solu2Index]->set (idof, 0.);
+//       sol->_Sol[solu2Index]->set (idof, 0.);
+//     }
+//
+//     double muFlag = (*sol->_Sol[muFlagIndex]) (idof);
+//     if (muFlag > 0) sol->_Sol[muFlagIndex]->set (idof, 1.);
+//     else { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
+//       sol->_Bdc[solmuIndex]->set (idof, 0.);
+//       sol->_Sol[solmuIndex]->set (idof, 0.);
+//     } //TODO decomment this!!!
+//
+//   }
+//
+//   sol->_Sol[u1FlagIndex]->close();
+//   sol->_Sol[u2FlagIndex]->close();
+//   sol->_Sol[muFlagIndex]->close();
+//
+//   sol->_Sol[solu1Index]->close();
+//   sol->_Sol[solu2Index]->close();
+//   sol->_Sol[solmuIndex]->close();
+//
+//   sol->_Bdc[solu1Index]->close();
+//   sol->_Bdc[solu2Index]->close();
+//   sol->_Bdc[solmuIndex]->close();
 
   //END creation of the flags for the assembly procedure
 
