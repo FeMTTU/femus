@@ -36,7 +36,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   if(!strcmp(solName, "Dx1")) {
     if(1 == faceName) {
       //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
-      value = 0.25 * sin(x[1] / 0.5 * M_PI);
+      //value = 0.25 * sin(x[1] / 0.5 * M_PI);
       //dirichlet = false;
     }
   }
@@ -64,7 +64,7 @@ int main(int argc, char** args) {
 
 
   //mlMsh.ReadCoarseMesh ("../input/squareTri.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/cylinder.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/cylinder2.neu", "seventh", scalingFactor);
 
 
   unsigned numberOfUniformLevels = 3;
