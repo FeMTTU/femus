@@ -163,9 +163,6 @@ int main(int argc, char** argv)
 
   // ******* System FEM Assembly *******
   
-  unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim );
-  system.SetSparsityPatternMinimumSize (dimension, "u");
-  
   system.SetAssembleFunction(AssembleFracProblem);
   system.SetMaxNumberOfLinearIterations(1);
   //system.SetAssembleFunction(AssembleFEM);
@@ -181,14 +178,19 @@ int main(int argc, char** argv)
 
   // ******* Set Preconditioner *******
   system.SetLinearEquationSolverType(FEMuS_DEFAULT);
-
+  
+  unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim );
+  system.SetSparsityPatternMinimumSize (dimension, "u");
+    
   system.init();
 
   //dense =============
   //dense =============
   //dense =============
-  const unsigned solType = mlSol.GetSolutionType("u");
-
+  
+  
+  
+//  const unsigned solType = mlSol.GetSolutionType("u");
 //   for(int level = 0; level < mlMsh.GetNumberOfLevels(); level++) {
 // 
 //     Mesh* msh = mlMsh.GetLevel(level);
