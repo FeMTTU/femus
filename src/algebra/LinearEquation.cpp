@@ -196,22 +196,15 @@ namespace femus {
     int KK_local_size = KKoffset[KKIndex.size() - 1][processor_id()] - KKoffset[0][processor_id()];
 
     if(_sparsityPatternMinimumSize.size() > 0) {
-  
-        
-        
       for(unsigned i = 0; i < _sparsityPatternVariableIndex.size(); i++) {
-          
-        
-          
+                 
         unsigned maxDiagSize = (_sparsityPatternMinimumSize[i] < KK_local_size) ? _sparsityPatternMinimumSize[i] : KK_local_size;
         unsigned maxOffDiagSize = (_sparsityPatternMinimumSize[i] < KK_size - KK_local_size) ? _sparsityPatternMinimumSize[i] : KK_size - KK_local_size;  
           
-        unsigned idx = _sparsityPatternVariableIndex[i];
-        
-        std::cout<< "AAAAAAAAAAAAA  " << idx << " " <<  _sparsityPatternMinimumSize[i] << std::endl;
-        
+        unsigned idx = _sparsityPatternVariableIndex[i];   
         unsigned jstart = KKoffset[idx][processor_id()] - KKoffset[0][processor_id()];
         unsigned jend = KKoffset[idx + 1][processor_id()] - KKoffset[0][processor_id()];
+        
         for(unsigned j = jstart; j < jend; j++) {
           d_nnz[j] = (d_nnz[j] > maxDiagSize) ? d_nnz[j] : maxDiagSize;
           o_nnz[j] = (o_nnz[j] > maxOffDiagSize) ? o_nnz[j] : maxOffDiagSize;;
