@@ -51,7 +51,6 @@ namespace femus {
     _MGmatrixCoarseReuse(false),
     _printSolverInfo(false),
     _assembleMatrix(true),
-    _sparsityPatternMinimumSize(1u),
     _numberOfGlobalVariables(0u) {
     _SparsityPattern.resize(0);
     _mgOuterSolver = GMRES;
@@ -113,9 +112,14 @@ namespace femus {
   // ********************************************
 
   void LinearImplicitSystem::SetSparsityPatternMinimumSize(const unsigned &minimumSize, const std::string variableName) {
-    _sparsityPatternMinimumSize = (minimumSize < 2u) ? 1u : minimumSize;
-    _solNameSparsityPattern.resize(1);
-    _solNameSparsityPattern[0] = variableName;
+      
+    unsigned n = _sparsityPatternSolName.size();  
+    
+    _sparsityPatternSolName.resize(n + 1);
+    _sparsityPatternMinimumSize.resize(n + 1);  
+          
+    _sparsityPatternMinimumSize[n] = (minimumSize < 2u) ? 1u : minimumSize;
+    _sparsityPatternSolName[n] = variableName;
   }
 
   // ******************************************
@@ -135,40 +139,46 @@ namespace femus {
       _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();
     }
 
-    if(_sparsityPatternMinimumSize != 1u) {
-      std::vector <unsigned> variablesToBeincreasedIndex;
+    if(_sparsityPatternMinimumSize.size() > 0) {
+      std::vector <unsigned> variableIndex;
 
-      for(unsigned i = 0; i < _solNameSparsityPattern.size(); i++) {
-        if(_solNameSparsityPattern[i] == "All" || _solNameSparsityPattern[i] == "ALL"  || _solNameSparsityPattern[i] == "all") {
-          variablesToBeincreasedIndex.resize(_SolSystemPdeIndex.size());
-
+      for(unsigned i = 0; i < _sparsityPatternSolName.size(); i++) {
+        if(_sparsityPatternSolName[i] == "All" || _sparsityPatternSolName[i] == "ALL"  || _sparsityPatternSolName[i] == "all") {
+          unsigned minimumSize = _sparsityPatternMinimumSize[i];  
+          
+          _sparsityPatternMinimumSize.assign(_SolSystemPdeIndex.size(), minimumSize);  
+          variableIndex.resize(_SolSystemPdeIndex.size());
+                   
           for(unsigned j = 0; j < _SolSystemPdeIndex.size(); j++) {
-            variablesToBeincreasedIndex[j] = j;
+            variableIndex[j] = j;
           }
           break;
         }
         else {
-          unsigned n = variablesToBeincreasedIndex.size();
-          variablesToBeincreasedIndex.resize(n + 1u);
-          unsigned varind = _ml_sol->GetIndex(_solNameSparsityPattern[i].c_str());
+          unsigned n = variableIndex.size();
+          variableIndex.resize(n + 1u);
+          unsigned varind = _ml_sol->GetIndex(_sparsityPatternSolName[i].c_str());
 
           for(unsigned j = 0; j < _SolSystemPdeIndex.size(); j++) {
             if(_SolSystemPdeIndex[j] == varind) {
-              variablesToBeincreasedIndex[n] = j;
+              variableIndex[n] = j;
               break;
             }
 
             if(_SolSystemPdeIndex.size() - 1u == j) {
-              std::cout << "Warning! The variable " << _solNameSparsityPattern[i] << " cannot be be increased in sparsity pattern "
+              std::cout << "Warning! The variable " << _sparsityPatternSolName[i] << " cannot be be increased in sparsity pattern "
                         << "since it is not included in the solution variable set." << std::endl;
-              variablesToBeincreasedIndex.resize(n);
+              variableIndex.resize(n);
+              
+              _sparsityPatternMinimumSize.erase (_sparsityPatternMinimumSize.begin() + n);
+              
             }
           }
         }
       }
-      if ( variablesToBeincreasedIndex.size() > 0 ){
+      if ( variableIndex.size() > 0 ){
         for(unsigned i = 0; i < _gridn; i++) {
-          _LinSolver[i]->SetSparsityPatternMinimumSize(_sparsityPatternMinimumSize, variablesToBeincreasedIndex);
+          _LinSolver[i]->SetSparsityPatternMinimumSize(_sparsityPatternMinimumSize, variableIndex);
         }
       }
     }

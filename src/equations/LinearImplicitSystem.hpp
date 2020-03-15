@@ -332,8 +332,9 @@ namespace femus {
       unsigned _bitFlipCounter;
 
       unsigned _numberOfGlobalVariables;
-      unsigned _sparsityPatternMinimumSize;
-      std::vector< std::string > _solNameSparsityPattern;
+      
+      std::vector< std::string > _sparsityPatternSolName;
+      std::vector < unsigned > _sparsityPatternMinimumSize;
 
   };
 

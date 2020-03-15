@@ -45,7 +45,6 @@ namespace femus {
     _RESC = NULL;
     _KK = NULL;
     _KKamr = NULL;
-    _sparsityPatternMinimumSize = 1u;
     _numberOfGlobalVariables = 0u;
   }
 
@@ -196,27 +195,27 @@ namespace femus {
     int KK_size = KKIndex[KKIndex.size() - 1u];
     int KK_local_size = KKoffset[KKIndex.size() - 1][processor_id()] - KKoffset[0][processor_id()];
 
-    if(_sparsityPatternMinimumSize != 1u) {
-
-      unsigned maxDiagSize = (_sparsityPatternMinimumSize < KK_local_size) ? _sparsityPatternMinimumSize : KK_local_size;
-      unsigned maxOffdDiagSize = (_sparsityPatternMinimumSize < KK_size - KK_local_size) ? _sparsityPatternMinimumSize : KK_size - KK_local_size;
-
-      for(unsigned j = 0; j < _variablesToBeincreasedIndex.size(); j++) {
-        unsigned jdx = _variablesToBeincreasedIndex[j];
-        unsigned istart = KKoffset[jdx][processor_id()] - KKoffset[0][processor_id()];
-        unsigned iend = KKoffset[jdx + 1][processor_id()] - KKoffset[0][processor_id()];
-        for(unsigned i = istart; i < iend; i++) {
-          d_nnz[i] = (d_nnz[i] > maxDiagSize) ? d_nnz[i] : maxDiagSize;
-          o_nnz[i] = (o_nnz[i] > _sparsityPatternMinimumSize) ? o_nnz[i] : maxOffdDiagSize;;
+    if(_sparsityPatternMinimumSize.size() > 0) {
+  
+        
+        
+      for(unsigned i = 0; i < _sparsityPatternVariableIndex.size(); i++) {
+          
+        
+          
+        unsigned maxDiagSize = (_sparsityPatternMinimumSize[i] < KK_local_size) ? _sparsityPatternMinimumSize[i] : KK_local_size;
+        unsigned maxOffDiagSize = (_sparsityPatternMinimumSize[i] < KK_size - KK_local_size) ? _sparsityPatternMinimumSize[i] : KK_size - KK_local_size;  
+          
+        unsigned idx = _sparsityPatternVariableIndex[i];
+        
+        std::cout<< "AAAAAAAAAAAAA  " << idx << " " <<  _sparsityPatternMinimumSize[i] << std::endl;
+        
+        unsigned jstart = KKoffset[idx][processor_id()] - KKoffset[0][processor_id()];
+        unsigned jend = KKoffset[idx + 1][processor_id()] - KKoffset[0][processor_id()];
+        for(unsigned j = jstart; j < jend; j++) {
+          d_nnz[j] = (d_nnz[j] > maxDiagSize) ? d_nnz[j] : maxDiagSize;
+          o_nnz[j] = (o_nnz[j] > maxOffDiagSize) ? o_nnz[j] : maxOffDiagSize;;
         }
-
-//       for (unsigned i = 0; i < d_nnz.size(); i++) {
-//         d_nnz[i] = (d_nnz[i] > maxDiagSize) ? d_nnz[i] : maxDiagSize;
-//       }
-//
-//       for (unsigned i = 0; i < o_nnz.size(); i++) {
-//         o_nnz[i] = (o_nnz[i] > _sparsityPatternMinimumSize) ? o_nnz[i] : maxOffdDiagSize;;
-//       }
       }
     }
 
@@ -235,9 +234,9 @@ namespace femus {
 
   }
 
-  void LinearEquation::SetSparsityPatternMinimumSize(const unsigned &minimumSize, const std::vector < unsigned > variablesToBeincreasedIndex) {
-    _sparsityPatternMinimumSize = (minimumSize < 2u) ? 1u : minimumSize;
-    _variablesToBeincreasedIndex = variablesToBeincreasedIndex;
+  void LinearEquation::SetSparsityPatternMinimumSize(const std::vector < unsigned> &minimumSize, const std::vector < unsigned > &variableIndex) {
+    _sparsityPatternMinimumSize = minimumSize;
+    _sparsityPatternVariableIndex = variableIndex;
 
   }
 
