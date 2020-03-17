@@ -39,25 +39,8 @@ namespace femus {
   using std::endl;
 
 //---------------------------------------------------------------------------------------------------
-// <<<<<<< HEAD
-//
-//   MultiLevelSolution::~MultiLevelSolution() {
-//
-//     for(unsigned i = 0; i < _gridn; i++) {
-//       _solution[i]->FreeSolutionVectors();
-//       delete _solution[i];
-//     }
-//
-//     for(unsigned i = 0; i < _solName.size(); i++) delete [] _solName[i];
-//
-//     for(unsigned i = 0; i < _solName.size(); i++) delete [] _bdcType[i];
-//
-//     if(_writer != NULL) delete _writer;
-// =======
   MultiLevelSolution::~MultiLevelSolution()  {
-
     clear();
-
   }
 
 //---------------------------------------------------------------------------------------------------
@@ -704,23 +687,23 @@ namespace femus {
 
           unsigned nDofu  = msh->GetElementDofNumber(iel, solType);
 
-          for(unsigned i = 0; i < nDofu; i++) {
-            unsigned solDof = msh->GetSolutionDof(i, iel, solType);
-            _solution[igridn]->_Bdc[solIndex]->set(solDof, 0.);
+          for (unsigned i = 0; i < nDofu; i++) {
+            unsigned solDof = msh->GetSolutionDof (i, iel, solType);
+            _solution[igridn]->_Bdc[solIndex]->set (solDof, 0.);
 
 
             double value;
-            std::vector < double > xCord(3);
-            unsigned inode_coord_Metis = msh->GetSolutionDof(i, iel, 2);
-            xCord[0] = (*msh->_topology->_Sol[0])(inode_coord_Metis);
-            xCord[1] = (*msh->_topology->_Sol[1])(inode_coord_Metis);
-            xCord[2] = (*msh->_topology->_Sol[2])(inode_coord_Metis);
+            std::vector < double > xCord (3);
+            unsigned inode_coord_Metis = msh->GetSolutionDof (i, iel, 2);
+            xCord[0] = (*msh->_topology->_Sol[0]) (inode_coord_Metis);
+            xCord[1] = (*msh->_topology->_Sol[1]) (inode_coord_Metis);
+            xCord[2] = (*msh->_topology->_Sol[2]) (inode_coord_Metis);
             bool test = (_bdcFuncSetMLProb) ?
-                        _SetBoundaryConditionFunctionMLProb(_mlBCProblem, xCord, _solName[solIndex], value, UINT_MAX, 0.) :
-                        _SetBoundaryConditionFunction(xCord, _solName[solIndex], value, UINT_MAX, 0.);
+                        _SetBoundaryConditionFunctionMLProb (_mlBCProblem, xCord, _solName[solIndex], value, UINT_MAX, 0.) :
+                        _SetBoundaryConditionFunction (xCord, _solName[solIndex], value, UINT_MAX, 0.);
 
-            if(test) {
-              _solution[igridn]->_Sol[solIndex]->set(solDof, value);
+            if (test) {
+              _solution[igridn]->_Sol[solIndex]->set (solDof, value);
             }
 
           }
@@ -730,6 +713,131 @@ namespace femus {
 
       _solution[igridn]->_Bdc[solIndex]->close();
       _solution[igridn]->_Sol[solIndex]->close();
+
+    }
+
+  }
+
+  void MultiLevelSolution::GenerateBdcOnVolumeConstraintFETI (const std::vector< unsigned > &volumeConstraintFlags, const unsigned &grid0, const unsigned & exNumber, const double & delta) {
+
+    std::vector <unsigned> solIndex;
+    unsigned solType = GetSolutionType (GetIndex ("u1")); //they are all linear and u1 is always present in all FETI ex
+
+    for (unsigned igridn = grid0; igridn < _gridn; igridn++) {
+      Mesh* msh = _mlMesh->GetLevel (igridn);
+      for (int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
+
+        short unsigned ielGroup = msh->GetElementGroup (iel);
+
+        bool ielIsInVolumeConstraint = false;
+
+        for (unsigned i = 0; i < volumeConstraintFlags.size(); i++) {
+          if (volumeConstraintFlags[i] == ielGroup) {
+            ielIsInVolumeConstraint = true;
+            break;
+          }
+        }
+
+        unsigned nDofu  = msh->GetElementDofNumber (iel, solType);
+
+        for (unsigned i = 0; i < nDofu; i++) {
+
+          unsigned solDof = msh->GetSolutionDof (i, iel, solType);
+
+          double value;
+          std::vector < double > xCord (3);
+          unsigned inode_coord_Metis = msh->GetSolutionDof (i, iel, 2);
+          xCord[0] = (*msh->_topology->_Sol[0]) (inode_coord_Metis);
+          xCord[1] = (*msh->_topology->_Sol[1]) (inode_coord_Metis);
+          xCord[2] = (*msh->_topology->_Sol[2]) (inode_coord_Metis);
+
+          if (exNumber == 3 || exNumber == 6) {
+            solIndex.resize (3);
+            solIndex[0] = GetIndex ("u1");
+            solIndex[1] = GetIndex ("u2");
+            solIndex[2] = GetIndex ("mu");
+          }
+
+          if (ielIsInVolumeConstraint) {
+            for (unsigned solIndexCnt = 0; solIndexCnt < solIndex.size(); solIndexCnt++) {
+
+              _solution[igridn]->_Bdc[solIndex[solIndexCnt]]->set (solDof, 0.);
+
+              bool test = (_bdcFuncSetMLProb) ?
+                          _SetBoundaryConditionFunctionMLProb (_mlBCProblem, xCord, _solName[solIndex[solIndexCnt]], value, UINT_MAX, 0.) :
+                          _SetBoundaryConditionFunction (xCord, _solName[solIndex[solIndexCnt]], value, UINT_MAX, 0.);
+
+              if (test) {
+                _solution[igridn]->_Sol[solIndex[solIndexCnt]]->set (solDof, value);
+              }
+            }
+
+          }
+
+          if (exNumber == 3) {
+
+            //Note: this functions makes use of the specific mesh used in ex3, i.e. FETI_domain.neu
+            double epsilon = 1.e-7;
+            double rightBound = (delta * 0.5) + epsilon;
+            double leftBound = - (delta * 0.5) - epsilon;
+
+            if (ielGroup == 10 && rightBound < xCord[0]) _solution[igridn]->_Bdc[0]->set (solDof, 0.); //u1
+
+            if (ielGroup == 8 && xCord[0] < leftBound) _solution[igridn]->_Bdc[1]->set (solDof, 0.); //u2
+
+            if ( (rightBound < xCord[0] || xCord[0] < leftBound) && (ielGroup == 8 || ielGroup == 10)) _solution[igridn]->_Bdc[2]->set (solDof, 0.); //mu
+
+            for (unsigned solIndexCnt = 0; solIndexCnt < solIndex.size(); solIndexCnt++) {
+              bool test = (_bdcFuncSetMLProb) ?
+                          _SetBoundaryConditionFunctionMLProb (_mlBCProblem, xCord, _solName[solIndex[solIndexCnt]], value, UINT_MAX, 0.) :
+                          _SetBoundaryConditionFunction (xCord, _solName[solIndex[solIndexCnt]], value, UINT_MAX, 0.);
+
+              if (test) {
+                _solution[igridn]->_Sol[solIndex[solIndexCnt]]->set (solDof, value);
+              }
+            }
+
+          }
+
+          if (exNumber == 6) {
+
+            //Note: this functions makes use of the specific mesh used in ex6, i.e. FETI_domain.neu
+            double epsilon = 1.e-7;
+            double rightBound = (delta * 0.5) + epsilon;
+            double leftBound = - (delta * 0.5) - epsilon;
+
+            if ((ielGroup == 7 || ielGroup == 10) && rightBound < xCord[0]) _solution[igridn]->_Bdc[0]->set (solDof, 0.); //u1
+
+            if ((ielGroup == 5 || ielGroup == 8) && xCord[0] < leftBound) _solution[igridn]->_Bdc[1]->set (solDof, 0.); //u2
+
+            if ( (rightBound < xCord[0] || xCord[0] < leftBound) && (ielGroup == 5 || ielGroup == 7 || ielGroup == 8 || ielGroup == 10)) _solution[igridn]->_Bdc[2]->set (solDof, 0.); //mu
+
+            for (unsigned solIndexCnt = 0; solIndexCnt < solIndex.size(); solIndexCnt++) {
+              bool test = (_bdcFuncSetMLProb) ?
+                          _SetBoundaryConditionFunctionMLProb (_mlBCProblem, xCord, _solName[solIndex[solIndexCnt]], value, UINT_MAX, 0.) :
+                          _SetBoundaryConditionFunction (xCord, _solName[solIndex[solIndexCnt]], value, UINT_MAX, 0.);
+
+              if (test) {
+                _solution[igridn]->_Sol[solIndex[solIndexCnt]]->set (solDof, value);
+              }
+            }
+          }
+
+        }
+
+//         else {
+//
+//           std::cout << "Function not yet implemented for ex" << exNumber << " , " << " aborting ... " << std::endl;
+//           std::cout << "(we are on function GenerateBdcOnVolumeConstraintFETI in MultiLevelSolution.cpp)" << std::endl;
+//
+//         }
+
+      }
+
+      for (unsigned solIndexCnt = 0; solIndexCnt < solIndex.size(); solIndexCnt++) {
+        _solution[igridn]->_Bdc[solIndex[solIndexCnt]]->close();
+        _solution[igridn]->_Sol[solIndex[solIndexCnt]]->close();
+      }
 
     }
 
@@ -1079,6 +1187,7 @@ namespace femus {
 
 
 } //end namespace femus
+
 
 
 
