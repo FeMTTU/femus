@@ -52,14 +52,14 @@ unsigned numberOfUniformLevels = 3; //for the tests, use at least 3 here
 unsigned numberOfUniformLevelsFine = 1;
 
 //solver type (default is MG)
-bool directSolver = true; 
+bool directSolver = true;
 bool Schur = false;
-bool includeCoarseLevel = false;
+bool includeCoarseLevel = true;
 
 int main (int argc, char** argv) {
 
   clock_t total_time = clock();
-  
+
   if (Schur) directSolver = false;
 
   // init Petsc-MPI communicator
@@ -91,15 +91,16 @@ int main (int argc, char** argv) {
   // add variables to mlSol
   mlSol.AddSolution ("u1", LAGRANGE, FIRST, 2);
   mlSol.AddSolution ("u2", LAGRANGE, FIRST, 2);
-  mlSol.AddSolution ("mu", LAGRANGE, FIRST, 2);
+  if(linearMu) mlSol.AddSolution ("mu", LAGRANGE, FIRST, 2);
+  else mlSol.AddSolution ("mu", DISCONTINUOUS_POLYNOMIAL, ZERO, 2);
 
 //   mlSolFine.AddSolution ("u_fine", LAGRANGE, FIRST, 2);
 //   mlSol.AddSolution ("u_local", LAGRANGE, FIRST, 2);
 //   mlSol.AddSolution ("u_exact", LAGRANGE, FIRST, 2);
 
-  mlSol.AddSolution ("u1Flag", LAGRANGE, FIRST, 2); //TODO erase this
-  mlSol.AddSolution ("u2Flag", LAGRANGE, FIRST, 2); //TODO erase this
-  mlSol.AddSolution ("muFlag", LAGRANGE, FIRST, 2); //TODO erase this
+  mlSol.AddSolution ("u1Flag", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("u2Flag", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution ("muFlag", LAGRANGE, FIRST, 2);
 
   mlSol.Initialize ("All");
   mlSolFine.Initialize ("All");
@@ -119,7 +120,16 @@ int main (int argc, char** argv) {
   volumeConstraintFlags[1] = 6;
   volumeConstraintFlags[2] = 7;
 
-  mlSol.GenerateBdcOnVolumeConstraintFETI (volumeConstraintFlags, 0, 3, delta1);
+  unsigned solu1Index = mlSol.GetIndex ("u1");
+  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solu1Index, 0);
+
+  unsigned solu2Index = mlSol.GetIndex ("u2");
+  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solu2Index, 0);
+
+  unsigned solmuIndex = mlSol.GetIndex ("mu");
+  mlSol.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, solmuIndex, 0);
+
+//   mlSol.GenerateBdcOnVolumeConstraintFETI (volumeConstraintFlags, 0, 3, delta1); //kill this function soon
 
   //BEGIN assemble and solve nonlocal problem
   MultiLevelProblem ml_prob (&mlSol);
@@ -138,13 +148,13 @@ int main (int argc, char** argv) {
   std::vector < unsigned > fieldU1U2 (2);
   fieldU1U2[0] = system.GetSolPdeIndex ("u1");
   fieldU1U2[1] = system.GetSolPdeIndex ("u2");
-  FieldSplitTree FS_U1U2 (PREONLY, MLU_PRECOND, fieldU1U2, solutionTypeU1U2,  "u1u2");
+  FieldSplitTree FS_U1U2 (PREONLY, ILU_PRECOND, fieldU1U2, solutionTypeU1U2,  "u1u2");
   FS_U1U2.SetTolerances (1.e-3, 1.e-20, 1.e+50, 1); // by Guoyi Ke
 
   std::vector < unsigned > solutionTypeMu (1);
   solutionTypeMu[0] = mlSol.GetSolutionType ("mu");
   std::vector < unsigned > fieldMu (1);
-  FieldSplitTree FS_MU (PREONLY, MLU_PRECOND, fieldMu, "mu");
+  FieldSplitTree FS_MU (PREONLY, ILU_PRECOND, fieldMu, "mu");
   FS_MU.SetTolerances (1.e-3, 1.e-20, 1.e+50, 1); // by Guoyi Ke
 
   std::vector < FieldSplitTree *> FS1;
@@ -153,7 +163,7 @@ int main (int argc, char** argv) {
   FS1.push_back (&FS_MU);
   FieldSplitTree FS_Nonlocal (PREONLY, FIELDSPLIT_SCHUR_PRECOND, FS1, "Nonlocal_FETI");
   FS_Nonlocal.SetSchurFactorizationType (SCHUR_FACT_UPPER); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL;
-  FS_Nonlocal.SetSchurPreType (SCHUR_PRE_FULL); // SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11,SCHUR_PRE_FULL;
+  FS_Nonlocal.SetSchurPreType (SCHUR_PRE_SELFP); // SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11,SCHUR_PRE_FULL;
   //END FIELD SPLIT
 
   // ******* System FEM Assembly *******
@@ -171,13 +181,13 @@ int main (int argc, char** argv) {
 
   // ******* Set Preconditioner *******
 
-  system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
+  system.SetLinearEquationSolverType (FEMuS_DEFAULT);
   if (Schur) {
-    if(!includeCoarseLevel){ 
+    if (!includeCoarseLevel) {
       system.SetLinearEquationSolverType (FEMuS_FIELDSPLIT);
     }
-    else{
-      system.SetOuterSolver(RICHARDSON);
+    else {
+      system.SetOuterSolver (RICHARDSON);
       system.SetLinearEquationSolverType (FEMuS_FIELDSPLIT, INCLUDE_COARSE_LEVEL_TRUE);
     }
   }

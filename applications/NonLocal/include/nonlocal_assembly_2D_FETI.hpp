@@ -8,6 +8,8 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 
+bool linearMu = false;
+
 //FETI_domain.neu: 2D domain with delta=0.25
 //FETI_domain_small_delta.neu: 2D domain with delta=0.05
 
@@ -190,86 +192,123 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   M1.reserve (maxSize * maxSize);
   vector < double > M2;
   M2.reserve (maxSize * maxSize);
+  vector < double > M1T;
+  M1T.reserve (maxSize * maxSize);
+  vector < double > M2T;
+  M2T.reserve (maxSize * maxSize);
 
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
   //BEGIN nonlocal assembly
 
-
-  //NOTE this has been replaced in the main by the function GenerateBdcOnVolumeConstraintFETI
   //BEGIN creation of the flags for the assembly procedure
 
   //flag = 1 assemble
   //flag = 0 don't assemble
 
-//   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-//
-//     short unsigned ielGeom = msh->GetElementType (iel);
-//     short unsigned ielGroup = msh->GetElementGroup (iel);
-//     unsigned nDof  = msh->GetElementDofNumber (iel, solu1Type); //NOTE right now we are assuming that u1, u2 and mu are discretized with the same elements
-//
-//     double epsilon = 1.e-7;
-//     double rightBound = (delta1 * 0.5) + epsilon;
-//     double leftBound = - (delta1 * 0.5) - epsilon;
-//
-//     std::vector < double > xCoords (nDof);
-//
-//     for (unsigned i = 0; i < nDof; i++) {
-//       unsigned solDof  = msh->GetSolutionDof (i, iel, solu1Type);
-//       unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
-//       xCoords[i] = (*msh->_topology->_Sol[0]) (xDof);
-//
-//       if (xCoords[i] < rightBound) {
-//         sol->_Sol[u1FlagIndex]->add (solDof, 1.);
-//         if (xCoords[i] > leftBound) sol->_Sol[muFlagIndex]->add (solDof, 1.);
-//       }
-//
-//       if (xCoords[i] > leftBound) sol->_Sol[u2FlagIndex]->add (solDof, 1.);
-//
-//     }
-//   }
-//
-//   sol->_Sol[u1FlagIndex]->close();
-//   sol->_Sol[u2FlagIndex]->close();
-//   sol->_Sol[muFlagIndex]->close();
-//
-//   for (unsigned idof = msh->_dofOffset[solu1Type][iproc]; idof < msh->_dofOffset[solu1Type][iproc + 1]; idof++) {
-//
-//     double u1Flag = (*sol->_Sol[u1FlagIndex]) (idof);
-//     if (u1Flag > 0) sol->_Sol[u1FlagIndex]->set (idof, 1.);
-//     else {
-//       sol->_Bdc[solu1Index]->set (idof, 0.);
-//       sol->_Sol[solu1Index]->set (idof, 0.);
-//     }
-//
-//     double u2Flag = (*sol->_Sol[u2FlagIndex]) (idof);
-//     if (u2Flag > 0) sol->_Sol[u2FlagIndex]->set (idof, 1.);
-//     else {
-//       sol->_Bdc[solu2Index]->set (idof, 0.);
-//       sol->_Sol[solu2Index]->set (idof, 0.);
-//     }
-//
-//     double muFlag = (*sol->_Sol[muFlagIndex]) (idof);
-//     if (muFlag > 0) sol->_Sol[muFlagIndex]->set (idof, 1.);
-//     else { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
-//       sol->_Bdc[solmuIndex]->set (idof, 0.);
-//       sol->_Sol[solmuIndex]->set (idof, 0.);
-//     } //TODO decomment this!!!
-//
-//   }
-//
-//   sol->_Sol[u1FlagIndex]->close();
-//   sol->_Sol[u2FlagIndex]->close();
-//   sol->_Sol[muFlagIndex]->close();
-//
-//   sol->_Sol[solu1Index]->close();
-//   sol->_Sol[solu2Index]->close();
-//   sol->_Sol[solmuIndex]->close();
-//
-//   sol->_Bdc[solu1Index]->close();
-//   sol->_Bdc[solu2Index]->close();
-//   sol->_Bdc[solmuIndex]->close();
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    short unsigned ielGeom = msh->GetElementType (iel);
+    short unsigned ielGroup = msh->GetElementGroup (iel);
+    unsigned nDof  = msh->GetElementDofNumber (iel, solu1Type);
+    unsigned nDofmu  = msh->GetElementDofNumber (iel, solmuType);
+
+    double epsilon = 1.e-7;
+    double rightBound = (delta1 * 0.5) + epsilon;
+    double leftBound = - (delta1 * 0.5) - epsilon;
+
+    std::vector < double > xCoords (nDof);
+
+    for (unsigned i = 0; i < nDof; i++) {
+      unsigned solDof  = msh->GetSolutionDof (i, iel, solu1Type);
+      unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
+      xCoords[i] = (*msh->_topology->_Sol[0]) (xDof);
+
+      if (xCoords[i] < rightBound) sol->_Sol[u1FlagIndex]->add (solDof, 1.);
+
+      if (xCoords[i] > leftBound) sol->_Sol[u2FlagIndex]->add (solDof, 1.);
+
+    }
+
+
+    if (linearMu) {
+      std::vector < double > xCoords1 (nDofmu);
+
+      for (unsigned i = 0; i < nDofmu; i++) {
+        unsigned solDof  = msh->GetSolutionDof (i, iel, solmuType);
+        unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
+        xCoords1[i] = (*msh->_topology->_Sol[0]) (xDof);
+
+        if (xCoords1[i] < rightBound && xCoords1[i] > leftBound)  sol->_Sol[muFlagIndex]->add (solDof, 1.);
+      }
+    }
+
+  }
+
+  sol->_Sol[u1FlagIndex]->close();
+  sol->_Sol[u2FlagIndex]->close();
+  sol->_Sol[muFlagIndex]->close();
+
+  for (unsigned idof = msh->_dofOffset[solu1Type][iproc]; idof < msh->_dofOffset[solu1Type][iproc + 1]; idof++) {
+
+    double u1Flag = (*sol->_Sol[u1FlagIndex]) (idof);
+    if (u1Flag > 0) sol->_Sol[u1FlagIndex]->set (idof, 1.);
+    else {
+      sol->_Bdc[solu1Index]->set (idof, 0.);
+      sol->_Sol[solu1Index]->set (idof, 0.);
+    }
+
+    double u2Flag = (*sol->_Sol[u2FlagIndex]) (idof);
+    if (u2Flag > 0) sol->_Sol[u2FlagIndex]->set (idof, 1.);
+    else {
+      sol->_Bdc[solu2Index]->set (idof, 0.);
+      sol->_Sol[solu2Index]->set (idof, 0.);
+    }
+
+  }
+
+  if (linearMu) {
+    for (unsigned idof = msh->_dofOffset[solmuType][iproc]; idof < msh->_dofOffset[solmuType][iproc + 1]; idof++) {
+
+      double muFlag = (*sol->_Sol[muFlagIndex]) (idof);
+      if (muFlag > 0) sol->_Sol[muFlagIndex]->set (idof, 1.);
+      else {
+        sol->_Bdc[solmuIndex]->set (idof, 0.);
+        sol->_Sol[solmuIndex]->set (idof, 0.);
+      }
+
+    }
+  }
+
+  else {
+    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+      short unsigned ielGroup = msh->GetElementGroup (iel);
+      unsigned nDofMu  = msh->GetElementDofNumber (iel, solmuType);
+
+      if (ielGroup == 8 || ielGroup == 10) { //TODO decomment this!!! (comment to do block diagonal with only u1 and u2)
+        for (unsigned i = 0; i < nDofMu; i++) {
+          unsigned solDof  = msh->GetSolutionDof (i, iel, solmuType);
+          sol->_Bdc[solmuIndex]->set (solDof, 0.);
+          sol->_Sol[solmuIndex]->set (solDof, 0.);
+        }
+      } //TODO decomment this!!!
+
+    }
+  }
+
+  sol->_Sol[u1FlagIndex]->close();
+  sol->_Sol[u2FlagIndex]->close();
+  sol->_Sol[muFlagIndex]->close();
+
+  sol->_Sol[solu1Index]->close();
+  sol->_Sol[solu2Index]->close();
+  sol->_Sol[solmuIndex]->close();
+
+  sol->_Bdc[solu1Index]->close();
+  sol->_Bdc[solu2Index]->close();
+  sol->_Bdc[solmuIndex]->close();
 
   //END creation of the flags for the assembly procedure
 
@@ -361,14 +400,15 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         short unsigned ielGeom = msh->GetElementType (iel);
         short unsigned ielGroup = msh->GetElementGroup (iel);
         unsigned nDof1  = msh->GetElementDofNumber (iel, solu1Type);
+        unsigned nDofMu  = msh->GetElementDofNumber (iel, solmuType);
 
         l2GMapu1_1.resize (nDof1);
         l2GMapu2_1.resize (nDof1);
-        l2GMapmu_1.resize (nDof1);
+        l2GMapmu_1.resize (nDofMu);
 
         solu1_1.resize (nDof1);
         solu2_1.resize (nDof1);
-        solmu_1.resize (nDof1);
+        solmu_1.resize (nDofMu);
 
         Jacu1_11.assign (nDof1 * nDof1, 0.);
         Jacu1_12.assign (nDof1 * nDof2, 0.);
@@ -384,37 +424,49 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
         Resu2_1.assign (nDof1, 0.);
         Resu2_2.assign (nDof2, 0.);
 
-        Jacmu.assign (nDof1 * nDof1, 0.);
-        M1.assign (nDof1 * nDof1, 0.);
-        M2.assign (nDof1 * nDof1, 0.);
-        Resmu.assign (nDof1, 0.);
+        Jacmu.assign (nDofMu * nDofMu, 0.);
+        M1.assign (nDofMu * nDof1, 0.);
+        M2.assign (nDofMu * nDof1, 0.);
+        M1T.assign (nDof1 * nDofMu, 0.);
+        M2T.assign (nDof1 * nDofMu, 0.);
+        Resmu.assign (nDofMu, 0.);
 
         for (int k = 0; k < dim; k++) {
           x1[k].resize (nDof1);
           x1Temp[k].resize (nDof1);
-          x1Tempp[k].resize (nDof1);
+          x1Tempp[k].resize (nDofMu);
         }
 
         for (unsigned i = 0; i < nDof1; i++) {
           l2GMapu1_1[i] = pdeSys->GetSystemDof (solu1Index, solu1PdeIndex, i, iel);
           l2GMapu2_1[i] = pdeSys->GetSystemDof (solu2Index, solu2PdeIndex, i, iel);
-          l2GMapmu_1[i] = pdeSys->GetSystemDof (solmuIndex, solmuPdeIndex, i, iel);
 
           unsigned solDofu1 = msh->GetSolutionDof (i, iel, solu1Type);
           unsigned solDofu2 = msh->GetSolutionDof (i, iel, solu2Type);
-          unsigned solDofmu = msh->GetSolutionDof (i, iel, solmuType);
 
           solu1_1[i] = (*sol->_Sol[solu1Index]) (solDofu1);
           solu2_1[i] = (*sol->_Sol[solu2Index]) (solDofu2);
-          solmu_1[i] = (*sol->_Sol[solmuIndex]) (solDofmu); //NOTE maybe we don't actually need solmu
 
           unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
           for (unsigned k = 0; k < dim; k++) {
             x1[k][i] = (*msh->_topology->_Sol[k]) (xDof);
             x1Temp[k][i] = x1[k][i];
-            x1Tempp[k][i] = x1[k][i];
           }
         }
+
+        for (unsigned i = 0; i < nDofMu; i++) {
+          l2GMapmu_1[i] = pdeSys->GetSystemDof (solmuIndex, solmuPdeIndex, i, iel);
+
+          unsigned solDofmu = msh->GetSolutionDof (i, iel, solmuType);
+
+          solmu_1[i] = (*sol->_Sol[solmuIndex]) (solDofmu);
+
+          unsigned xDof  = msh->GetSolutionDof (i, iel, xType);
+          for (unsigned k = 0; k < dim; k++) {
+            x1Tempp[k][i] = (*msh->_topology->_Sol[k]) (xDof);;
+          }
+        }
+
         ReorderElement (l2GMapu1_1, solu1_1, x1);
         ReorderElement (l2GMapu2_1, solu2_1, x1Temp);
         ReorderElement (l2GMapmu_1, solmu_1, x1Tempp);
@@ -458,8 +510,6 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           for (unsigned ig = 0; ig < igNumber; ig++) {
             msh->_finiteElement[ielGeom][solu1Type]->Jacobian (x1, ig, weight1[ig], phi1x[ig], phi_x);
 
-            const double *phiL = msh->_finiteElement[ielGeom][solmuType]->GetPhi(ig);
-            
             xg1[ig].assign (dim, 0.);
 
             for (unsigned i = 0; i < nDof1; i++) {
@@ -495,6 +545,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
           for (unsigned ig = 0; ig < igNumber; ig++) {
 
+            const double *phiL = msh->_finiteElement[ielGeom][solmuType]->GetPhi (ig);
+
             if (iel == jel) {
               double cutOff = 1.;
               if (ielGroup == 6 || ielGroup == 9) cutOff = 0.5;
@@ -516,28 +568,47 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 }
 
                 if (ielGroup == 9) {
+
+                  //lumped mass matrix
 //                   double Mlumped = phi1x[ig][i] * weight1[ig];
 //                   M1[ i * nDof1 + i ] +=  Mlumped;
 //                   M2[ i * nDof1 + i ] += - Mlumped;
 //                   Resu1_1[i] -= Mlumped * solmu_1[i];
 //                   Resu2_1[i] -= - Mlumped * solmu_1[i];
 //                   Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
-                  
-                  double Mlumped = phi1x[ig][i] * weight1[ig];
-                  for(unsigned j = 0; j < nDof1; j++){
-                    M1[ i * nDof1 + j ] +=  Mlumped * phi1x[ig][j];
-                    M2[ i * nDof1 + j ] += - Mlumped * phi1x[ig][j];
-                    
-                    Resu1_1[i] -= Mlumped * solmu_1[i] * phi1x[ig][j];
-                    Resu2_1[i] -= - Mlumped * solmu_1[i] * phi1x[ig][j];
-                    Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]) * phi1x[ig][j];
-                    
-                  }
-                  
-                }
 
+                  //mass matrix
+//                   double Mlumped = phi1x[ig][i] * weight1[ig];
+//                   for (unsigned j = 0; j < nDof1; j++) {
+//                     M1[ i * nDof1 + j ] +=  Mlumped * phi1x[ig][j];
+//                     M2[ i * nDof1 + j ] += - Mlumped * phi1x[ig][j];
+//
+//                     Resu1_1[i] -= Mlumped * solmu_1[i] * phi1x[ig][j];
+//                     Resu2_1[i] -= - Mlumped * solmu_1[i] * phi1x[ig][j];
+//                     Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]) * phi1x[ig][j];
+//                   }
+
+                  double Mlumped = phi1x[ig][i] * weight1[ig];
+                  for (unsigned j = 0; j < nDofMu; j++) {
+                    M1T[ i * nDof1 + j ] +=  Mlumped * phiL[j];
+                    M2T[ i * nDof1 + j ] += - Mlumped * phiL[j];
+
+                    Resu1_1[i] -= Mlumped * solmu_1[j] * phiL[j];
+                    Resu2_1[i] -= - Mlumped * solmu_1[j] * phiL[j];
+                  }
+                }
               }
 
+              if (ielGroup == 9) {
+                for (unsigned i = 0; i < nDofMu; i++) {
+                  for (unsigned j = 0; j < nDof1; j++) {
+                    double massMatrix = phi1x[ig][j] * weight1[ig] * phiL[i];
+                    M1[ i * nDofMu + j ] +=  massMatrix;
+                    M2[ i * nDofMu + j ] += - massMatrix;
+                    Resmu[i] -= massMatrix * (solu1_1[j] - solu2_1[j]);
+                  }
+                }
+              }
             }
 
             std::vector< std::vector < double > > x2New;
@@ -679,9 +750,9 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
             if ( (iel == jel) && ielGroup == 9) {
               KK->add_matrix_blocked (M1, l2GMapmu_1, l2GMapu1_1); //M1 (mu rows and u1 columns)
-              KK->add_matrix_blocked (M1, l2GMapu1_1, l2GMapmu_1); //M1 transpose (u1 rows and mu columns)
+              KK->add_matrix_blocked (M1T, l2GMapu1_1, l2GMapmu_1); //M1 transpose (u1 rows and mu columns)
               KK->add_matrix_blocked (M2, l2GMapmu_1, l2GMapu2_1); //M2 (mu rows and u2 columns)
-              KK->add_matrix_blocked (M2, l2GMapu2_1, l2GMapmu_1); //M2 transpose (u2 rows and mu columns)
+              KK->add_matrix_blocked (M2T, l2GMapu2_1, l2GMapmu_1); //M2 transpose (u2 rows and mu columns)
               RES->add_vector_blocked (Resmu, l2GMapmu_1);
             }
 
