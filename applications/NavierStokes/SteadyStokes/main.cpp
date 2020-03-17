@@ -1,4 +1,5 @@
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelMesh.hpp"
 #include "TransientSystem.hpp"
 #include "NumericVector.hpp"
@@ -84,7 +85,7 @@ int main(int argc,char **args) {
 //   ml_sol.AddSolution("U",LAGRANGE,SECOND);
 //   ml_sol.AddSolution("V",LAGRANGE,SECOND);
 //   // the pressure variable should be the last for the Schur decomposition
-//   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST);
+//   ml_sol.AddSolution("P",DISCONTINUOUS_POLYNOMIAL,FIRST);
 
   ml_sol.AddSolution("T",LAGRANGE,FIRST);
   ml_sol.AddSolution("U",LAGRANGE,FIRST);
@@ -137,8 +138,8 @@ int main(int argc,char **args) {
   system1.SetNumberPostSmoothingStep(1);
 
   //Set Smoother Options
-  if(Gmres) 		system1.SetMgSmoother(GMRES_SMOOTHER);
-  else if(Asm) 		system1.SetMgSmoother(ASM_SMOOTHER);
+  if(Gmres) 		system1.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  else if(Asm) 		system1.SetLinearEquationSolverType(FEMuS_ASM);
 
   system1.init();
   //common smoother options
@@ -161,7 +162,8 @@ int main(int argc,char **args) {
   //system1.SetDirichletBCsHandling(ELIMINATION);
 
   // Solve Navier-Stokes system
-  ml_prob.get_system("Stokes").MLsolve();
+  ml_prob.get_system("Navier-Stokes").SetOuterSolver(PREONLY);
+  ml_prob.get_system("Stokes").MGsolve();
   //END Stokes Multilevel Problem
 
   /// Print all solutions

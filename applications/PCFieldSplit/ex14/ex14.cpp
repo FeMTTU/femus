@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -78,7 +79,7 @@ int main(int argc, char** args) {
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
@@ -105,28 +106,28 @@ int main(int argc, char** args) {
   fieldUV[0] = system.GetSolPdeIndex("U");
   fieldUV[1] = system.GetSolPdeIndex("V");
   FieldSplitTree FS_UV( PREONLY, ILU_PRECOND, fieldUV , "Velocity");
-  FS_UV.SetupKSPTolerances(1.e-3,1.e-20,1.e+50, 1); // changed by Guoyi Ke 
+  FS_UV.SetTolerances(1.e-3,1.e-20,1.e+50, 1); // changed by Guoyi Ke 
 
   std::vector < unsigned > fieldP(1);
   fieldP[0] = system.GetSolPdeIndex("P");
 
   //FS_P.SetFieldSplitSchurFactType{PC_FIELDSPLIT_SCHUR_FACT_LOWER}; //changed by Guoyi Ke
   FieldSplitTree FS_P(PREONLY, ILU_PRECOND, fieldP, "Pressure");
-  FS_P.SetupKSPTolerances(1.e-3,1.e-20,1.e+50, 1); //changed by Guoyi Ke
+  FS_P.SetTolerances(1.e-3,1.e-20,1.e+50, 1); //changed by Guoyi Ke
   
   std::vector < FieldSplitTree *> FS1;
   FS1.reserve(2);
   FS1.push_back(&FS_UV);
   FS1.push_back(&FS_P);
   
-  FieldSplitTree FS_NS(GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
-  FS_NS.SetupSchurFactorizationType(SCHUR_FACT_UPPER); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL; how to use if FS_SCHUR_PRECOND? Guoyike
-  FS_NS.SetupSchurPreType(SCHUR_PRE_SELFP);// SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11,SCHUR_PRE_FULL;
+  FieldSplitTree FS_NS(GMRES, FIELDSPLIT_SCHUR_PRECOND, FS1, "Navier-Stokes");
+  FS_NS.SetSchurFactorizationType(SCHUR_FACT_UPPER); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL; how to use if FS_SCHUR_PRECOND? Guoyike
+  FS_NS.SetSchurPreType(SCHUR_PRE_SELFP);// SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11,SCHUR_PRE_FULL;
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT); // Additive Swartz Method
 
-  //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
+  //system.SetLinearEquationSolverType(FEMuS_ASM); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 

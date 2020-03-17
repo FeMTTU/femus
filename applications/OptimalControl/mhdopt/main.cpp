@@ -13,6 +13,7 @@
 #include "Files.hpp"
 #include "MultiLevelMeshTwo.hpp"
 #include "MultiLevelProblem.hpp"
+#include "MultiLevelSolution.hpp"
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "ElemType.hpp"
@@ -175,7 +176,8 @@ int main(int argc, char** argv) {
 
   MultiLevelProblem ml_prob(&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
-  ml_prob.SetQruleAndElemType("fifth");
+  ml_prob.SetQuadratureRuleAllGeomElems("fifth");
+//   ml_prob.SetElemTypeAllDims();
   ml_prob.SetInputParser(&physics_map);
   ml_prob.SetQtyMap(&qty_map);
 

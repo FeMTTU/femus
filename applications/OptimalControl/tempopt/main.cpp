@@ -13,6 +13,7 @@
 #include "GenCase.hpp"
 #include "FETypeEnum.hpp"
 #include "GaussPoints.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "ElemType.hpp"
 #include "TimeLoop.hpp"
@@ -135,7 +136,8 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
   // ******* Set problem *******
   MultiLevelProblem ml_prob(&ml_sol);
   ml_prob.SetMeshTwo(&mesh);
-  ml_prob.SetQruleAndElemType("fifth");
+  ml_prob.SetQuadratureRuleAllGeomElems("fifth");
+//   ml_prob.SetElemTypeAllDims();
   ml_prob.SetInputParser(&physics_map);
   ml_prob.SetQtyMap(&qty_map);
 
@@ -230,7 +232,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
   sys->SetMaxNumberOfNonLinearIterations(15); //10
 
   // ******* Set Preconditioner *******
-  sys->SetMgSmoother(GMRES_SMOOTHER);//ASM_SMOOTHER,VANKA_SMOOTHER
+  sys->SetLinearEquationSolverType(FEMuS_DEFAULT);//FEMuS_ASM,VANKA_SMOOTHER
 
   // ******* init *******
   sys->init();

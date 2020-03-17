@@ -94,20 +94,27 @@ public:
     _KKamr = Temp;
   }
   
+  void SetNumberOfGlobalVariables(const unsigned &numberOfGlobalVariables){
+    _numberOfGlobalVariables = numberOfGlobalVariables;
+  }
+  
   // member data
   Mesh *_msh;
   Solution *_solution;
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
   SparseMatrix *_KK;
   SparseMatrix *_KKamr;
-  vector < vector <unsigned> > KKoffset;
-  vector < unsigned > KKghostsize;
-  vector < vector < int> > KKghost_nd;
-  vector <int> KKIndex;
-  unsigned _gridn;
-
+  
+  
+  vector < vector <unsigned> > KKoffset;     // size [_SolPdeIndex.size() + 1][_nprocs]
+  vector < unsigned > KKghostsize;           // size [_nprocs]
+  vector < vector < int> > KKghost_nd;       // size [_nprocs][KKghostsize[i]]
+  vector <int> KKIndex;                      // size [_SolPdeIndex.size() + 1]
+  unsigned _gridn;  
   vector < int > d_nnz;
   vector < int > o_nnz;
+  
+  void SetSparsityPatternMinimumSize (const std::vector < unsigned> &minimumSize, const std::vector < unsigned > &variableIndex);
 
 protected:
 
@@ -120,6 +127,9 @@ protected:
   vector <char*> _SolName;
   const vector <NumericVector*> *_Bdc;
   vector <bool> _SparsityPattern;
+  std::vector < unsigned > _sparsityPatternMinimumSize; 
+  std::vector <unsigned> _sparsityPatternVariableIndex;
+  unsigned _numberOfGlobalVariables;
 
 };
 

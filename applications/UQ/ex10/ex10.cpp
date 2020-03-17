@@ -80,7 +80,7 @@ double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
-unsigned numberOfUniformLevels = 5; //refinement for the PDE mesh
+unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
 
 int main (int argc, char** argv) {
 
@@ -149,7 +149,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (GMRES_SMOOTHER);
+  system.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   system.init();
 
@@ -187,7 +187,7 @@ int main (int argc, char** argv) {
   systemSG.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  systemSG.SetMgSmoother (GMRES_SMOOTHER);
+  systemSG.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   systemSG.init();
 
@@ -195,7 +195,7 @@ int main (int argc, char** argv) {
 
   systemSG.SetPreconditionerFineGrids (ILU_PRECOND);
 
-  systemSG.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
+  systemSG.SetTolerances (1.e-10, 1.e-10, 1.e+50, 4000);
   //END
 
 
@@ -262,10 +262,10 @@ int main (int argc, char** argv) {
   MultiLevelSolution mlSolHisto (&mlMshHisto);
   MultiLevelSolution mlSolHistoFinest (&mlMshHistoFinest);
 
-  mlSolHisto.AddSolution ("HISTO", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSolHisto.AddSolution ("HISTO", DISCONTINUOUS_POLYNOMIAL, ZERO);
   mlSolHisto.AddSolution ("PROPOSED", LAGRANGE, FIRST);
 
-  mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSolHistoFinest.AddSolution ("HISTO_F", DISCONTINUOUS_POLYNOMIAL, ZERO);
 
   mlSolHisto.Initialize ("All");
 

@@ -28,7 +28,7 @@
 #include "PrecondtypeEnum.hpp"
 #include "SolvertypeEnum.hpp"
 #include "LinearEquation.hpp"
-#include "MgSmootherEnum.hpp"
+#include "LinearEquationSolverEnum.hpp"
 #include "MgTypeEnum.hpp"
 #include "FieldSplitTree.hpp"
 
@@ -67,7 +67,7 @@ namespace femus {
 
       /** Builds a \p LinearEquationSolver using the linear solver in \p solver_package */
       static std::unique_ptr<LinearEquationSolver> build(const unsigned &igrid, Solution* other_solution,
-          const MgSmoother & smoother_type, const SolverPackage solver_package = LSOLVER);
+          const LinearEquationSolverType & smoother_type, const SolverPackage solver_package = LSOLVER);
 
       /** Set the tolerance for the solver */
       virtual void SetTolerances(const double& rtol, const double& atol,
@@ -79,7 +79,7 @@ namespace femus {
         abort();
       }
 
-      virtual void MGInit(const MgSmootherType &mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver = KSPGMRES) {
+      virtual void MGInit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const SolverType & mgSolverType) {
         std::cout << "Warning InitMG(...) is not available for this smoother\n";
         abort();
       }
@@ -100,8 +100,8 @@ namespace femus {
       virtual void SetRichardsonScaleFactor(const double & richardsonScaleFactor) = 0; 
 
       /** Sets the type of solver to use. */
-      void set_solver_type(const SolverType st)  {
-        _solver_type = st;
+      void set_solver_type (const SolverType st)  {
+        _levelSolverType = st;
       }
 
       /** Sets the type of preconditioner to use. */
@@ -117,7 +117,7 @@ namespace femus {
 
       /** Returns the type of solver to use. */
       SolverType solver_type() const {
-        return _solver_type;
+        return _levelSolverType;
       }
 
       /** Returns the type of preconditioner to use. */
@@ -173,7 +173,8 @@ namespace femus {
     protected:
 
       /** Enum stating which type of iterative solver to use. */
-      SolverType _solver_type;
+      SolverType _levelSolverType;
+      SolverType _mgSolverType;
 
       /** Enum statitng with type of preconditioner to use. */
       PreconditionerType _preconditioner_type;
@@ -197,7 +198,8 @@ namespace femus {
 
   inline LinearEquationSolver::LinearEquationSolver(const unsigned &igrid, Solution *other_solution) :
     LinearEquation(other_solution),
-    _solver_type(GMRES),
+    _levelSolverType(GMRES),
+    _mgSolverType(GMRES),
     _preconditioner(NULL),
     _is_initialized(false),
     same_preconditioner(false) {

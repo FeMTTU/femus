@@ -11,6 +11,7 @@
  **/
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -22,7 +23,7 @@
 
 using namespace femus;
 
-int simulation = 1; // =1 sphere (default) = 2 torus
+int simulation = 2; // =1 sphere (default) = 2 torus
 
 //Sphere
 
@@ -62,20 +63,23 @@ bool SetBoundaryConditionTorus (const std::vector < double >& x, const char SolN
     value = z;
   }
   else if (!strcmp ("W", SolName)) {
+       //dirichlet = false;
     double theta1 = theta;
     double theta2 = acos (-1.) - theta1;
     double A = 1. / z;
     double H1 =  0.5 * (1. + cos (theta1) / (sqrt (2.) + cos (theta1)));
     double H2 =  0.5 * (1. + cos (theta2) / (sqrt (2.) + cos (theta2)));
-
     if (facename == 1) {
-      value = - A * H1;
+      dirichlet = false;//Neumann
+      //value = - A * H1; 
+      value = sqrt(3)/2.;
     }
     else if (facename == 2) {
-      value = - A * H2;
+      dirichlet = false;//Neumann
+      //value = - A * H2;
+     value = sqrt(3)/2.;
     }
   }
-
   return dirichlet;
 }
 

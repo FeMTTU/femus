@@ -14,7 +14,10 @@
 =========================================================================*/
 
 #include "System.hpp"
+#include "MultiLevelSolution.hpp"
+#include "MultiLevelProblem.hpp"
 #include "MultiLevelMeshTwo.hpp"
+#include "Assemble_unknown.hpp"
 
 #include <sstream>
 
@@ -23,7 +26,7 @@ namespace femus {
 
 
   /** Constructor.  Optionally initializes required data structures. */
-  System::System (MultiLevelProblem& ml_probl, const std::string& name_in, const unsigned int number_in, const MgSmoother & smoother_type) :
+  System::System (MultiLevelProblem& ml_probl, const std::string& name_in, const unsigned int number_in, const LinearEquationSolverType & smoother_type) :
   _equation_systems                 (ml_probl),
   _sys_name                         (name_in),
   _sys_number                       (number_in),
@@ -42,11 +45,6 @@ namespace femus {
 
 
 System::~System() {
-  this->clear();
-}
-
-void System::clear() {
-
 }
 
 void System::init() {
@@ -92,13 +90,45 @@ unsigned System::GetSolPdeIndex(const char solname[]) {
   while (strcmp(_ml_sol->GetSolutionName(_SolSystemPdeIndex[index]),solname)) {
     index++;
     if (index==_SolSystemPdeIndex.size()) {
-      std::cout<<"error! invalid name entry MultiLevelProblem::GetSolPdeIndex(const char pdename[], const char solname[])"<<std::endl;
-      exit(0);
+      std::cout<<"error! invalid name entry" << std::endl;
+      abort();
     }
   }
   return index;
 }
 
+
+const unsigned System::GetSolPdeIndex(const char solname[]) const {
+  //unsigned ipde=GetPdeIndex(pdename);
+  unsigned index=0;
+  while (strcmp(_ml_sol->GetSolutionName(_SolSystemPdeIndex[index]),solname)) {
+    index++;
+    if (index==_SolSystemPdeIndex.size()) {
+      std::cout<<"error! invalid name entry" << std::endl;
+      abort();
+    }
+  }
+  return index;
+}
+
+
+ void System::set_unknown_list_for_assembly(const std::vector< Unknown > unknown_in ) {
+    _unknown_list_for_assembly = unknown_in; 
+ }
+
+ const std::vector< Unknown > System::get_unknown_list_for_assembly() const {
+        return  _unknown_list_for_assembly; 
+    }
+    
+ void System::assemble_call(const unsigned int n_times) const {
+     
+   for (unsigned it = 0; it < n_times; it++) {
+
+            _assemble_system_function (_equation_systems);
+   }
+   
+ }
+    
 
 
 } //end namespace femus

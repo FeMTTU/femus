@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -130,7 +131,7 @@ int main(int argc, char** args) {
 
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
@@ -200,11 +201,12 @@ int main(int argc, char** args) {
   if(precType == FS_TVp) FS2.push_back(&FS_NS);   //Navier-Stokes block last
 
   FieldSplitTree FS_NST(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
+  FS_NST.SetRichardsonScaleFactor(.6);
 
   //END buid fieldSplitTree
-  if(precType == FS_VTp || precType == FS_TVp) system.SetMgSmoother(FIELDSPLIT_SMOOTHER);    // Field-Split preconditioned
-  else if(precType == ASM_VTp || precType == ASM_TVp) system.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz preconditioner
-  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(GMRES_SMOOTHER);
+  if(precType == FS_VTp || precType == FS_TVp) system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT);    // Field-Split preconditioned
+  else if(precType == ASM_VTp || precType == ASM_TVp) system.SetLinearEquationSolverType(FEMuS_ASM);  // Additive Swartz preconditioner
+  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetLinearEquationSolverType(FEMuS_DEFAULT);
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);

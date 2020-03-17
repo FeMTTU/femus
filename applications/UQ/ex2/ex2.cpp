@@ -1,5 +1,6 @@
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
 #include "TransientSystem.hpp"
@@ -119,7 +120,7 @@ int main(int argc, char** argv) {
   system.SetNumberPostSmoothingStep(1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother(GMRES_SMOOTHER);
+  system.SetLinearEquationSolverType(FEMuS_DEFAULT);
 
   system.init();
 

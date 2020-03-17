@@ -1,4 +1,6 @@
 #include "UqQuadratureTypeEnum.hpp"
+#include "MultiLevelSolution.hpp"
+
 using namespace femus;
 
 //THIS IS THE MOST UPDATED ASSEMBLY FOR SGM SIMULATIONS OF POISSON's EQUATION with HERMITE or LEGENDRE POLYNOMIALS
@@ -8,7 +10,7 @@ using namespace femus;
 uq &myuq = FemusInit::_uqHermite;
 // uq &myuq = FemusInit::_uqLegendre;
 
-unsigned pIndex = 4;
+unsigned pIndex = 5;
 unsigned qIndex = 5;
 
 int  numberOfEigPairs = 2; //dimension of the stochastic variable

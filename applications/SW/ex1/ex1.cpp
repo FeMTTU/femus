@@ -12,6 +12,7 @@
  **/
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
@@ -84,7 +85,7 @@ int main(int argc, char** args)
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf(name, "h%d", i);
-    mlSol.AddSolution(name, DISCONTINOUS_POLYNOMIAL, ZERO);
+    mlSol.AddSolution(name, DISCONTINUOUS_POLYNOMIAL, ZERO);
     sprintf(name, "v%d", i);
     mlSol.AddSolution(name, LAGRANGE, FIRST);
     //sprintf(name, "he%d", i);

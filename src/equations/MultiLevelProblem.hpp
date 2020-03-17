@@ -19,16 +19,17 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
-#include "MultiLevelMesh.hpp"
-#include "MultiLevelSolution.hpp"
-#include "Solution.hpp"
-#include "Parameters.hpp"
-#include "ParallelObject.hpp"
-#include "MgSmootherEnum.hpp"
 #include <vector>
 #include <map>
+#include "MultiLevelMesh.hpp"
+#include "Parameters.hpp"
+#include "ParallelObject.hpp"
+#include "LinearEquationSolverEnum.hpp"
 #include "GaussPoints.hpp"
 #include "FemusInputParser.hpp"
+#include "Files.hpp"
+#include "System.hpp"
+#include "ElemType_template.hpp"
 
 namespace femus {
 
@@ -37,13 +38,12 @@ using std::map;
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-class System;
+class MultiLevelSolution;
 class MultiLevelMeshTwo;
 class elem_type;
 class QuantityMap;
 
 
-typedef double (*initfunc) (const double &x, const double &y, const double &z);
 
 /**
 * This class is a black box container to handle multilevel problems.
@@ -54,7 +54,7 @@ class MultiLevelProblem {
 public:
 
     /** Constructor */
-    //MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
+    MultiLevelProblem();
 
     MultiLevelProblem(MultiLevelSolution *ml_sol);
 
@@ -71,9 +71,6 @@ public:
     /** Data structure holding arbitrary parameters. */
     Parameters parameters;
 
-    /** Data structure holding the systems. */
-    std::map<std::string, System*> _systems;
-
     /** Typedef for system iterators */
     typedef std::map<std::string, System*>::iterator       system_iterator;
 
@@ -84,7 +81,7 @@ public:
     virtual System & add_system (const std::string& system_type, const std::string& name);
 
     /** Add the system named \p name to the systems array. */
-    template <typename T_sys> T_sys & add_system (const std::string& name, const MgSmoother & smoother_type = GMRES_SMOOTHER);
+    template <typename T_sys> T_sys & add_system (const std::string& name, const LinearEquationSolverType & smoother_type = FEMuS_DEFAULT);
 
     /**
      * @returns a constant reference to the system named \p name.
@@ -188,34 +185,161 @@ public:
 
   inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
 
-  inline const Gauss & GetQrule(const unsigned dim) const { return _qrule[dim - 1]; }
+  inline const std::vector<Gauss> & GetQuadratureRuleAllGeomElems() const { return _qrule; }
+  
+  inline const Gauss & GetQuadratureRule(const unsigned geom_elem_type) const { return _qrule[geom_elem_type]; }
 
-  void SetQruleAndElemType(const std::string quadr_order_in);
-
+  void SetQuadratureRuleAllGeomElems(const std::string quadr_order_in);
+  
     /** Input Parser */
   inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
 
   void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
 
+    /** Files Handler */
+  void SetFilesHandler(const Files * files_in) { _files = files_in; return; }
+  
+  inline const Files * GetFilesHandler() const { return  _files; }
 
+    /** Input Parser */
+  const int get_current_system_number() const { return _current_system_number; }
+
+  void set_current_system_number(const unsigned current_system_number_in) { _current_system_number = current_system_number_in; }
+
+  void SetMultiLevelMeshAndSolution(MultiLevelMesh * ml_mesh, MultiLevelSolution * ml_sol);
+  
+  //   Returns a non-const reference to the map of Systems
+  std::map<std::string, System*> & get_systems_map() { return _systems; }
+  
+  
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 /*const*/ { elem_all_in = _elem_all_dd; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         /*const*/ { elem_all_in = _elem_all_ad; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) /*const*/ { elem_all_in = _elem_all_aa; }
+
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 const { elem_all_in = _elem_all_dd; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         const { elem_all_in = _elem_all_ad; }
+  
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) const { elem_all_in = _elem_all_aa; }
+
+  
+  
+  void set_all_abstract_fe() {
+      
+       set_all_abstract_fe<double, double>(_elem_all_dd);
+       set_all_abstract_fe<adept::adouble, double>(_elem_all_ad);
+       set_all_abstract_fe<adept::adouble, adept::adouble>(_elem_all_aa);
+    
+}  
+  
+ template <class type, class type_mov>
+  void set_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base<type, type_mov> *  > > & elem_all_in) const {
+
+//this function performs the initialization of all abstract FE families on all abstract Geometric Elements      
+      
+//     clock_t start_evals = clock();
+  
+  //prepare Abstract quantities for all fe fams for all geom elems: perform all quadrature evaluations beforehand
+        elem_all_in.resize( femus::geom_elems.size() );
+  
+         for (unsigned int g = 0; g < femus::geom_elems.size(); g++) {
+             elem_all_in[g].resize(femus::fe_fams.size());
+             const std::string quad_order = this->GetQuadratureRule(g).GetGaussOrderString();  ///@todo what if you choose different quadrature orders on different geom elems?
+
+         for (unsigned int fe = 0; fe < femus::fe_fams.size(); fe++) {
+            elem_all_in[g][fe] = elem_type_templ_base<type, type_mov>::build(femus::geom_elems[g], femus::fe_fams[fe], quad_order.c_str(), 3);          
+           }
+       }
+       
+//   clock_t end_evals = clock();
+//    std::cout << " FE Evals time " << static_cast<double>(end_evals - start_evals) / CLOCKS_PER_SEC << std::endl;
+
+   
+   }
+   
+   
 private:
+
+
+    /** Data structure holding the systems. */
+    std::map<std::string, System*> _systems;
 
     // member data
     vector < map <unsigned,bool> > index;
     unsigned short _gridn;
 
-    std::vector< std::vector<const elem_type*> >  _elem_type;
-    std::vector<Gauss>                      _qrule;
+    std::vector< std::vector<const elem_type*> >  _elem_type;  ///@deprecated 
+    std::vector<Gauss>                      _qrule;            //over all Geom Elems
     const FemusInputParser<double>        * _phys;
     const QuantityMap                     * _qtymap;
     const MultiLevelMeshTwo               * _mesh;
 
+    const Files                           * _files;
+    unsigned int _current_system_number;
 
+    // attempt to handle templated classes from non-templated class
+    std::vector< std::vector< /*const*/ elem_type_templ_base< double, double > * > >  _elem_all_dd;
+    std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, double > * > >  _elem_all_ad;
+    std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > * > >  _elem_all_aa;
+    
+    
+    
 };
+
 
 template <typename T_sys>
 inline
-T_sys & MultiLevelProblem::add_system (const std::string& name,const MgSmoother & smoother_type )
+const T_sys & MultiLevelProblem::get_system (const unsigned int num) const
+{
+  assert(num < this->n_systems());
+
+  const_system_iterator       pos = _systems.begin();
+  const const_system_iterator end = _systems.end();
+
+  for (; pos != end; ++pos)
+    if (pos->second->number() == num)
+      break;
+
+  // Check for errors
+  if (pos == end)
+  {
+    std::cerr << "ERROR: no system number " << num << " found!" << std::endl;
+  }
+
+  // Attempt dynamic cast
+  return *static_cast<T_sys*>(pos->second);
+}
+
+template <typename T_sys>
+inline
+T_sys & MultiLevelProblem::get_system (const unsigned int num)
+{
+  assert(num < this->n_systems());
+
+  const_system_iterator       pos = _systems.begin();
+  const const_system_iterator end = _systems.end();
+
+  for (; pos != end; ++pos)
+    if (pos->second->number() == num)
+      break;
+
+  // Check for errors
+  if (pos == end)
+  {
+    std::cerr << "ERROR: no system number " << num << " found!" << std::endl;
+  }
+
+  // Attempt dynamic cast
+  return *static_cast<T_sys*>(pos->second);
+}
+
+
+
+template <typename T_sys>
+inline
+T_sys & MultiLevelProblem::add_system (const std::string& name,const LinearEquationSolverType & smoother_type )
 {
     T_sys* ptr = NULL;
 

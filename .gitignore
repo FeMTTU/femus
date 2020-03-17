@@ -16,6 +16,7 @@ config/FemusConfig.hpp
 
 
 # folders
+.DS_Store/
 output/
 packs/
 templates/
@@ -46,6 +47,9 @@ codeblocks/
 *.ind
 *.out
 *.toc
+*.synctex.gz
+*.kate-swp
+*.tex.backup
 
 # gambit junk stuff
 *.trn
@@ -72,6 +76,7 @@ codeblocks/
 *.h5
 *.pvsm
 *.prn
+.DS_Store
 
 # objects
 *.o

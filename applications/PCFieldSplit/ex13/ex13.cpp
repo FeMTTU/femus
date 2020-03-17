@@ -14,6 +14,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -78,7 +79,7 @@ int main(int argc, char** args) {
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
@@ -149,12 +150,12 @@ int main(int argc, char** args) {
   FS1.reserve(2);
   FS1.push_back(&FS_UV);
   FS1.push_back(&FS_P);
-  FieldSplitTree FS_NS(PREONLY, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
+  FieldSplitTree FS_NS(RICHARDSON, FIELDSPLIT_SCHUR_PRECOND, FS1, "Navier-Stokes");
 
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
+  //system.SetLinearEquationSolverType(FEMuS_DEFAULT);
+  //system.SetLinearEquationSolverType(FEMuS_ASM); // Additive Swartz Method
+  system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT); // Additive Swartz Method
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);

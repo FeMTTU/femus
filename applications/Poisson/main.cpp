@@ -1,4 +1,5 @@
 
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "MultiLevelMesh.hpp"
 #include "TransientSystem.hpp"
@@ -226,10 +227,10 @@ int main(int argc, char** argv) {
   system2.SetNumberPostSmoothingStep(npostmoothing);
 
   if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "gmres")) {
-    system2.SetMgSmoother(GMRES_SMOOTHER);
+    system2.SetLinearEquationSolverType(FEMuS_DEFAULT);
   }
   else if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "asm")) {
-    system2.SetMgSmoother(ASM_SMOOTHER);
+    system2.SetLinearEquationSolverType(FEMuS_ASM);
   }
 
   system2.init();

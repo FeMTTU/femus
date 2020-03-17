@@ -13,6 +13,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -26,7 +27,7 @@ using namespace femus;
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
 
-  if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense. why !strcmp??? not false ==true?
+  if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense. 
     value = 0.;
     if (facename == 1) {
       if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
@@ -86,7 +87,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   
   //  Taylor-hood
   //  mlSol.AddSolution("U", LAGRANGE, SERENDIPITY);
@@ -122,7 +123,8 @@ int main(int argc, char** args) {
 
   // initilaize and solve the system
   system.init();
-  system.MLsolve();
+  system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

@@ -247,9 +247,9 @@ int main(int argc, char** args) {
       if(dim > 2) mlSol.AddSolution("AZ", LAGRANGE, SECOND, 2);
   
       mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
-      mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+      mlSol.AddSolution("Mat", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
   
-      mlSol.AddSolution("NF", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+      mlSol.AddSolution("NF", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
       
       mlSol.Initialize("All");
   
@@ -290,7 +290,7 @@ int main(int argc, char** args) {
       system.SetNumberPostSmoothingStep(1);
   
       // ******* Set Preconditioner *******
-      system.SetMgSmoother(GMRES_SMOOTHER);
+      system.SetLinearEquationSolverType(FEMuS_DEFAULT);
   
       system.init();
   
@@ -327,7 +327,7 @@ int main(int argc, char** args) {
       system2.SetNumberPostSmoothingStep(1);
       
       // ******* Set Preconditioner *******
-      system2.SetMgSmoother(GMRES_SMOOTHER);
+      system2.SetLinearEquationSolverType(FEMuS_DEFAULT);
       
       system2.init();
       
@@ -447,7 +447,7 @@ int main(int argc, char** args) {
   
       std::vector < std::vector < std::vector < double > > > line(1);
       linea->GetLine(line[0]);
-      PrintLine(outputFolder.str(), line, false, 0);
+      PrintLine(outputFolder.str(), "line", line, 0);
             
       system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
             
@@ -491,7 +491,7 @@ int main(int argc, char** args) {
         mlSol.GetWriter()->Write(outputFolder.str(), "biquadratic", print_vars, time_step);
     
         linea->GetLine(line[0]);
-        PrintLine(outputFolder.str(), line, false, time_step);
+        PrintLine(outputFolder.str(), "line", line, time_step);
         
         if(time_step >= timestep0){
           CM[time_step - timestep0][simulation] = line[0][0][0] - xc;  

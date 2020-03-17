@@ -4,6 +4,7 @@
 #include "FemusInit.hpp"
 #include "Marker.hpp"
 #include "MultiLevelMesh.hpp"
+#include "MultiLevelSolution.hpp"
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "MyVector.hpp"
@@ -219,7 +220,7 @@ int main(int argc, char** args) {
   particle[0]->GetMarkerCoordinates(line[0][pSize]);
 
   std::vector < std::vector < std::vector < double > > > line0 = line; // saves the initial position
-  PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
+  PrintLine(DEFAULT_OUTPUTDIR, "line", line, 0);
 
   n = 30;
 
@@ -245,7 +246,7 @@ int main(int argc, char** args) {
       particle[j]->GetMarkerCoordinates(line[0][j]);
     }
     particle[0]->GetMarkerCoordinates(line[0][pSize]);
-    PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
+    PrintLine(DEFAULT_OUTPUTDIR,"line", line, k);
   }
 
 

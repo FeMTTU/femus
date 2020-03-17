@@ -24,14 +24,22 @@
 #include <iostream>
 #include <stdlib.h>
 #include <vector>
+#include <cassert>
 
 namespace femus {
 
   class basis {
+      
     public:
 
       const int _nc, _nf, _nlag0, _nlag1, _nlag2, _nlag3;
-      int faceNumber[3];
+                                  /* _nc: number of dofs of 1 element;  _nf: number of dofs in that element after refinement; 
+                                  _nlag[0] = number of linear dofs in 1 element;
+                                  _nlag[1] = number of serendipity dofs in 1 element; 
+                                  _nlag[2] = number of tensor-product quadratic dofs in 1 element; 
+                                  _nlag[3] = number of tensor-product quadratic dofs in that element after 1 refinement; 
+                                  */
+      int faceNumber[3]; /*this is only needed in 3d to handle faces of different types (wedges, pyramides, ...)*/
 
       basis(const int &nc, const int &nf, const int &nlag0, const int &nlag1, const int &nlag2, const int &nlag3,
 	    const int  &faceNumber0,const int  &faceNumber1, const int  &faceNumber2):
@@ -65,6 +73,20 @@ namespace femus {
       double eval_dphidz(const unsigned &j, const std::vector < double > &x) const {
         return eval_dphidz(this->GetIND(j), &x[0]);
       };
+      
+      /** Evaluate the derivatives either in the x, y or z direction **/
+      double eval_dphidxyz(const unsigned int dim, const int* j, const double* x) const {
+          
+        assert(dim < 3); //0, 1, 2
+
+        switch(dim) {
+            case(0): { return eval_dphidx(j, x); }
+            case(1): { return eval_dphidy(j, x); }
+            case(2): { return eval_dphidz(j, x); }
+            default: {std::cout << "Only up to dim 3" << std::endl; abort(); }
+        }
+        
+    };
       
       double eval_d2phidx2(const unsigned &j, const std::vector < double > &x) const {
         return eval_d2phidx2(this->GetIND(j), &x[0]);
@@ -159,6 +181,7 @@ namespace femus {
       }
 
     protected:
+        
       //1D basis
       // linear lagrangian
       inline double lagLinear(const double& x, const int& i) const {
@@ -343,6 +366,7 @@ namespace femus {
       };
 
     protected:
+        
       static const double Xc[27][3];
       double X[125][3];
       static const int IND[27][3];
@@ -557,8 +581,9 @@ namespace femus {
       };
 
     protected:
-      double X[95][3];
+        
       static const double Xc[21][3];
+      double X[95][3];
       static const int IND[21][3];
       static const int KVERT_IND[95][2];
 
@@ -662,6 +687,7 @@ namespace femus {
       };
 
     protected:
+        
       static const double X[32][3];
       static const int IND[4][3];
       static const int KVERT_IND[32][2];
@@ -773,8 +799,9 @@ namespace femus {
       };
 
     protected:
-      double X[67][3];
+        
       static const double Xc[15][3];
+      double X[67][3];
       static const int IND[15][3];
       static const int KVERT_IND[67][2];
 
@@ -880,9 +907,11 @@ namespace femus {
       };
 
     protected:
+        
       static const double X[32][3];
       static const int IND[4][3];
       static const int KVERT_IND[32][2];
+      
   };
 
   class tet0: public tet_const {
@@ -990,6 +1019,7 @@ namespace femus {
       };
 
     protected:
+        
       static const double Xc[9][2];
       double X[25][2];
       static const int IND[9][2];
@@ -1075,6 +1105,7 @@ namespace femus {
 
 
     protected:
+        
       static const double X[12][2];
       static const int IND[3][2];
       static const int KVERT_IND[12][2];
@@ -1167,8 +1198,9 @@ namespace femus {
       };
 
     protected:
-      double X[19][2];
+        
       static const double Xc[7][2];
+      double X[19][2];
       static const int IND[7][2];
       static const int KVERT_IND[19][2];
 
@@ -1254,6 +1286,7 @@ namespace femus {
       };
 
     protected:
+        
       static const double X[12][2];
       static const int IND[3][2];
       static const int KVERT_IND[12][2];
@@ -1338,8 +1371,9 @@ namespace femus {
       };
 
     protected:
-      double X[5][2];
+        
       static const double Xc[3][1];
+      double X[5][2];  ///@todo why does this have 2 in the second component instead of 1?
       static const int IND[3][1];
       static const int KVERT_IND[5][2];
       
@@ -1391,9 +1425,11 @@ namespace femus {
       };
 
     protected:
+        
       static const double X[4][1];
       static const int IND[2][1];
       static const int KVERT_IND[4][2];
+      
   };
 
 

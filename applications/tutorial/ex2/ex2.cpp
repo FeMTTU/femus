@@ -1,7 +1,7 @@
 /** tutorial/Ex2
  * This example shows how to set and solve the weak form of the Poisson problem
  *                    $$ \Delta u = \Delta u_exact \text{ on }\Omega, $$
- *          $$ u=0 \text{ on } \Gamma, $$
+ *                    $$ u=0 \text{ on } \Gamma, $$
  * on a square domain $\Omega$ with boundary $\Gamma$;
  * all the coarse-level meshes are removed;
  * a multilevel problem and an equation system are initialized;
@@ -9,6 +9,7 @@
  **/
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -102,7 +103,9 @@ int main(int argc, char** args) {
 
       // initilaize and solve the system
       system.init();
-      system.MLsolve();
+      
+      system.SetOuterSolver(PREONLY);
+      system.MGsolve();
 
       std::pair< double , double > norm = GetErrorNorm(&mlSol);
       l2Norm[i][j]  = norm.first;
@@ -503,7 +506,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
       vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
-        solu_gss += phi[i] * solu[i];
+        solu_gss += phi[i] * solu[i]; // We dont use this one for this problem.
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
@@ -524,6 +527,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
         aRes[i] += (srcTerm * phi[i] - laplace) * weight;
 
       } // end phi_i loop
+      
     } // end gauss point loop
 
     //--------------------------------------------------------------------------------------------------------

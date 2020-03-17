@@ -3,6 +3,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(femus)
 
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake-modules")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}     -O3 -march=native -mtune=native")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -mtune=native")
+set(CMAKE_MACOSX_RPATH 1)
 
 #############################################################################################
 ### Femus library version
@@ -14,7 +17,7 @@ SET(FEMUS_BUILD_VERSION 0)
 SET(FEMUS_VERSION "${FEMTTU_MAJOR_VERSION}.${FEMTTU_MINOR_VERSION}.${FEMTTU_BUILD_VERSION}")
 
 
-
+   
 #############################################################################################
 ### Compilers
 #############################################################################################
@@ -64,15 +67,44 @@ IF(PETSC_FOUND)
   SET(HAVE_PETSC 1)
 ENDIF(PETSC_FOUND)
 
+IF(UNIX)
+SET (DYLIB so)
+ENDIF(UNIX)
+
+IF(APPLE)
+SET (DYLIB dylib)
+ENDIF(APPLE)
+
 
 # Find MPI (optional)
-# FIND_PACKAGE(MPI)
-# MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
-# 
-# SET(HAVE_MPI 0)
-# IF(MPI_FOUND)
+
+FIND_PACKAGE(MPI)
+MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
+SET(HAVE_MPI 0)
+IF(MPI_FOUND)
 SET(HAVE_MPI 1)
-# ENDIF(MPI_FOUND)
+ENDIF(MPI_FOUND)
+
+# # Find HDF5 (optional)
+# FIND_PACKAGE (HDF5)
+# MESSAGE(STATUS "HDF5_FOUND = ${HDF5_FOUND}")
+#
+# SET(HAVE_HDF5 0)
+# IF(HDF5_FOUND)
+SET(HAVE_HDF5 1)
+# SET(HDF5_FOUND 1)
+# SET (HDF5_FOUND 1)
+# ENDIF(HDF5_FOUND)
+
+# # Find Metis (optional)
+# FIND_PACKAGE(METIS)
+# MESSAGE(STATUS "METIS_FOUND = ${METIS_FOUND}")
+#
+# SET (HAVE_METIS 0)
+# IF(METIS_FOUND)
+SET(HAVE_METIS 1)
+# SET(METIS_FOUND 1)
+# ENDIF(METIS_FOUND)
 
 # Find FParser
 FIND_PACKAGE(FParser)
@@ -81,24 +113,6 @@ SET (HAVE_FPARSER 0)
 IF(FPARSER_FOUND)
   SET(HAVE_FPARSER 1)
 ENDIF(FPARSER_FOUND)
-
-# # Find HDF5 (optional)
-# FIND_PACKAGE (HDF5)
-# MESSAGE(STATUS "HDF5_FOUND = ${HDF5_FOUND}")
-# 
-# SET(HAVE_HDF5 0)
-# IF(HDF5_FOUND)
-SET(HAVE_HDF5 1)
-# ENDIF(HDF5_FOUND)
-
-# # Find Metis (optional)
-# FIND_PACKAGE(METIS)
-# MESSAGE(STATUS "METIS_FOUND = ${METIS_FOUND}")
-# 
-# SET (HAVE_METIS 0)
-# IF(METIS_FOUND)
-SET(HAVE_METIS 1)
-# ENDIF(METIS_FOUND)
 
 # Find Slepc Library (optional)
 FIND_PACKAGE(SLEPc)
@@ -122,6 +136,7 @@ set(CMAKE_CXX_STANDARD 11)
 #############################################################################################
 ### Build options
 #############################################################################################
+
 
 #-- Add an Option to toggle the generation of the API documentation
 OPTION(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
@@ -154,9 +169,6 @@ OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
 OPTION(BUILD_WILLMORE "Build the Willmore problem" ON)
 
 # --
-OPTION(BUILD_WILLMORE_SURFACE "Build the Generalized Willmore problem" ON)
-
-# --
 OPTION(BUILD_TUTORIAL "Build the tutorial problems" ON)
 
 # --
@@ -171,17 +183,25 @@ OPTION(BUILD_ISM "Build the Intersection Marker apps" ON)
 
 OPTION(BUILD_MPM_FEM "Build the MPM FEM apps" ON)
 
+OPTION(BUILD_MPM_FSI "Build the MPM FSI apps" ON)
+
 OPTION(BUILD_REFINEMENT "Build the Refiniment apps" ON)
 
 OPTION(BUILD_PETSC_DEBUG "Build the PETSC debug apps" ON)
 
 OPTION(BUILD_UQ "Build the UQ apps" ON)
 
+OPTION(BUILD_NONLOCAL "Build the NONLOCAL apps" ON)
+
 OPTION(BUILD_SW "Build the Shallow Water apps" ON)
 
 OPTION(BUILD_TUMOR "Build the Tumor apps" ON)
 
 OPTION(BUILD_RK "Build the Runge-Kutta apps" ON)
+
+OPTION(BUILD_CONFORMAL "Build the Conformal mesh apps" ON)
+
+OPTION(BUILD_NITSCHE "Build the Nitsche apps" ON)
 
 #############################################################################################
 ### Build documentation (Doxygen)
@@ -206,8 +226,6 @@ IF(BUILD_DOCUMENTATION)
   # IF you do NOT want the documentation to be generated EVERY time you build the project
   # then leave out the 'ALL' keyword from the above command.
 ENDIF(BUILD_DOCUMENTATION)
-
-
 
 #############################################################################################
 ### Add external libraries
@@ -253,7 +271,7 @@ CONFIGURE_FILE(
   "${PROJECT_SOURCE_DIR}/UseFemus.CMake.in"
   "${PROJECT_BINARY_DIR}/UseFemus.CMake" @ONLY IMMEDIATE
   )
-  
+
 #############################################################################################
 ### Include files
 #############################################################################################
@@ -269,20 +287,29 @@ ENDIF(SLEPC_FOUND)
 #include femus include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/algebra)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/meshGencase)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh/geom_elements/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh/input/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh/partitioning/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh/refinement/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh/gencase/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/utils)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/utils/input_parser/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/quadrature)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/parallel)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/equations)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/equations/assemble/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/solution)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/solution/output/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/enums)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/ism)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/uq)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
-INCLUDE_DIRECTORIES(/opt/apps/local/mpi/gnu/openmpi/1.10.6/include/)
-INCLUDE_DIRECTORIES(/opt/apps/local/gnu/openmpi/boost/1.61.0/include/)
+
+# HPCC TTU
+INCLUDE_DIRECTORIES(/opt/ohpc/pub/mpi/openmpi-gnu/1.10.6/include/)
+INCLUDE_DIRECTORIES(/opt/ohpc/pub/libs/gnu/openmpi/boost/1.63.0/include/)
 
 # Include Fparser files
 IF(FPARSER_FOUND)
@@ -340,3 +367,12 @@ IF(BUILD_TESTING)
   ADD_SUBDIRECTORY(unittests)
 ENDIF(BUILD_TESTING)
 
+# message(petsc library = ${PETSC_LIBRARIES})
+# message(b64 library = ${B64_LIBRARIES})
+# message(json library = ${JSONCPP_LIBRARIES})
+# message(adept library = ${ADEPT_LIBRARIES})
+# message(fparser library = ${FPARSER_LIBRARY})
+# message(mpi extra library = ${MPI_EXTRA_LIBRARY})
+# message(hdf5 extra library = ${HDF5_LIBRARIES})
+# message(slepc library = ${SLEPC_LIBARIES})
+# message(slepc library = SLEPC::slepc)

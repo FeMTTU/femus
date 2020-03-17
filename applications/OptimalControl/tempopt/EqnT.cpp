@@ -21,7 +21,6 @@
 #include "GeomElTypeEnum.hpp"
 #include "Domain.hpp"
 #include "TimeLoop.hpp"
-#include "CurrentGaussPoint.hpp"
 #include "CurrentElem.hpp"
 #include "OptLoop.hpp"
 #include "paral.hpp"
@@ -106,26 +105,26 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob){
 
 //   for (uint iel_two = nel_beg; iel_two < nel_end; iel_two++) {
   
-  CurrentElem       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);    
-  CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,ml_prob.GetQrule(currelem.GetDim()));
+  CurrentElem<double>       currelem(iel,myproc,Level,VV,&my_system,ml_prob.GetMeshTwo(),ml_prob.GetElemType(),mymsh);    
+  //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,ml_prob.GetQuadratureRule(currelem.GetDim()));
   
 
 //=========INTERNAL QUANTITIES (unknowns of the equation) =========     
-    CurrentQuantity Tempold(currgp);
+    CurrentQuantity Tempold(currelem);
     Tempold._SolName = "Qty_Temperature";
     Tempold._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Temperature"); 
     Tempold.VectWithQtyFillBasic();
     Tempold.Allocate();
 
 //====================================
-    CurrentQuantity Tlift(currgp);
+    CurrentQuantity Tlift(currelem);
     Tlift._SolName = "Qty_TempLift";
     Tlift._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempLift");
     Tlift.VectWithQtyFillBasic();
     Tlift.Allocate();
 
 //=====================================
-    CurrentQuantity TAdj(currgp);
+    CurrentQuantity TAdj(currelem);
     TAdj._SolName = "Qty_TempAdj";
     TAdj._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_TempAdj"); 
     TAdj.VectWithQtyFillBasic();
@@ -133,28 +132,28 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob){
    
 //=========EXTERNAL QUANTITIES (couplings) =====
     //========= //DOMAIN MAPPING
-  CurrentQuantity xyz(currgp);  //no quantity
+  CurrentQuantity xyz(currelem);  //no quantity
     xyz._dim      = space_dim;
     xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
   //==================
-    CurrentQuantity velX(currgp);
+    CurrentQuantity velX(currelem);
     velX._SolName = "Qty_Velocity0";
     velX._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity0"); 
     velX.VectWithQtyFillBasic();
     velX.Allocate();
     
   //==================
-    CurrentQuantity velY(currgp);
+    CurrentQuantity velY(currelem);
     velY._SolName = "Qty_Velocity1";
     velY._qtyptr   = ml_prob.GetQtyMap().GetQuantity("Qty_Velocity1"); 
     velY.VectWithQtyFillBasic();
     velY.Allocate();    
     
 //===============Tdes=====================
-    CurrentQuantity Tdes(currgp);
+    CurrentQuantity Tdes(currelem);
     Tdes._SolName = "Qty_TempDes";
     Tdes._dim      = Tempold._dim;
     Tdes._FEord    = Tempold._FEord;
@@ -186,23 +185,23 @@ void  GenMatRhsT(MultiLevelProblem &ml_prob){
     int domain_flag = ElFlagControl(xyz._el_average,ml_prob._ml_msh);
 //====================    
 
-   const uint el_ngauss = ml_prob.GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+   const uint el_ngauss = ml_prob.GetQuadratureRule(currelem.GetDim()).GetGaussPointsNumber();
    
    for (uint qp=0; qp< el_ngauss; qp++) {
 
 //======= "COMMON SHAPE PART"==================
 for (uint fe = 0; fe < QL; fe++)   { 
-  currgp.SetPhiElDofsFEVB_g (fe,qp);
-  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); 
+//   currgp.SetPhiElDofsFEVB_g (fe,qp);
+//   currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp); 
 }
 	  
-const double      det = currgp.JacVectVV_g(xyz);
-const double dtxJxW_g = det*ml_prob.GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+const double      det = 1.; //currgp.JacVectVV_g(xyz);
+const double dtxJxW_g = det*ml_prob.GetQuadratureRule(currelem.GetDim()).GetGaussWeight(qp);
 const double     detb = det/el_ngauss;
 	  
 for (uint fe = 0; fe < QL; fe++)     { 
-  currgp.SetDPhiDxyzElDofsFEVB_g   (fe,qp);
-  currgp.ExtendDphiDxyzElDofsFEVB_g(fe);
+//   currgp.SetDPhiDxyzElDofsFEVB_g   (fe,qp);
+//   currgp.ExtendDphiDxyzElDofsFEVB_g(fe);
 }
 //======= end of the "COMMON SHAPE PART"==================
 
@@ -213,133 +212,133 @@ for (uint fe = 0; fe < QL; fe++)     {
            velY.val_g(); 
            Tdes.val_g();
  
-      for (uint i=0; i < Tempold._ndof; i++)     {
-
-        const double phii_g = currgp._phi_ndsQLVB_g[Tempold._FEord][i];
-
-        for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][i+idim*Tempold._ndof];
-
-//=========== FIRST ROW ===============
-        currelem.Rhs()(i) +=      
-           currelem.GetBCDofFlag()[i]*dtxJxW_g*( 0. )
-	   + (1-currelem.GetBCDofFlag()[i])*detb*(Tempold._val_dofs[i]);
-        
-        currelem.Mat()(i,i) +=  (1-currelem.GetBCDofFlag()[i])*detb;
-
-//========= SECOND ROW (CONTROL) =====================
-	 int ip1 = i + /* 1* */Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
-	 currelem.Rhs()(ip1) +=      
-           currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
-                     + alphaT*domain_flag*(Tdes._val_g[0])*phii_g // T_d delta T_0
-	  )
-	   + (1-currelem.GetBCDofFlag()[ip1])*detb*(Tlift._val_dofs[i]);
-        
-         currelem.Mat()(ip1,ip1) +=  (1-currelem.GetBCDofFlag()[ip1])*detb;
-
-//======= THIRD ROW (ADJOINT) ===================================
-	 int ip2 = i + 2 * Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
-           currelem.Rhs()(ip2) +=      
-           currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
-                + alphaT*domain_flag*(Tdes._val_g[0])*phii_g // T_d delta T'
-	     )
-	   + (1-currelem.GetBCDofFlag()[ip2])*detb*(Tempold._val_dofs[i]);
-        
-        currelem.Mat()(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
-
-	 // Matrix Assemblying ---------------------------
-        for (uint j=0; j<Tempold._ndof; j++) {
-          double phij_g = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
-	  
-        for (uint idim = 0; idim < space_dim; idim++)  dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][j+idim*Tempold._ndof]; 
-           
-   
-          double Lap_g   = Math::dot(&dphijdx_g[0],&dphiidx_g[0],space_dim);
-          double Advection = velX._val_g[0]*dphijdx_g[0] + velY._val_g[0]*dphijdx_g[1]; //Math::dot(&vel._val_g[0],&dphijdx_g[0],space_dim);
-
-	    int ip1 = i + Tempold._ndof;
-	    int jp1 = j + Tempold._ndof;
-	    int ip2 = i + 2*Tempold._ndof;
-	    int jp2 = j + 2*Tempold._ndof;
-
-// 	           T     T_0     T_adj
-	    
-// 	    T      X      X       O
-	     
-// 	    T_0   
-	    
-// 	    T_adj
-	    
-	    
-//============ FIRST ROW state  delta T ===============
-//======= DIAGONAL =============================
-	   currelem.Mat()(i,j) +=        
-            currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
-            + Advection*phii_g
-            + IRe*IPr*Lap_g  
-            );
-
-//===============================
-    //same operators for T and T_0
-	    currelem.Mat()(i,jp1) +=        
-            currelem.GetBCDofFlag()[i]*dtxJxW_g*(    
-            + Advection*phii_g
-            + IRe*IPr*Lap_g
-	    );
-
-//====================================
-	   currelem.Mat()(i,jp2) +=        
-            currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
-                0.
-            );
-
-	    
-//============= SECOND ROW (LIFTING) delta T_0 =============
-//===== DIAGONAL ===========================
-         currelem.Mat()(ip1,jp1) +=        
-            currelem.GetBCDofFlag()[ip1]*
-            dtxJxW_g*( 
-             + alphaL2*phij_g*phii_g  //L_2 control norm
-             + alphaH1*Lap_g          //H_1 control norm
-              + alphaT*domain_flag*(phij_g)*phii_g  //T_0 delta T_0  //ADDED///////////////
-            ); 
-//====================================
-	   currelem.Mat()(ip1,j) +=        
-            currelem.GetBCDofFlag()[ip1]*
-            dtxJxW_g*( 
-                + alphaT*domain_flag*(phij_g)*phii_g  //T' delta T_0     //ADDED///////////////
-            );
-//====================================
-	   currelem.Mat()(ip1,jp2) +=        
-            currelem.GetBCDofFlag()[ip1]*
-             dtxJxW_g*( 
-                 -Advection*phii_g
-                + IRe*IPr*Lap_g
-           );
-
-//============= THIRD ROW (ADJOINT) =============
-//======= DIAGONAL ==================
-          currelem.Mat()(ip2,jp2) +=        
-            currelem.GetBCDofFlag()[ip2]*
-              dtxJxW_g*( 
-            - Advection*phii_g  //minus sign
-            + IRe*IPr*Lap_g
-               
-            ); 
-//====================================
-	   currelem.Mat()(ip2,j) +=        
-            currelem.GetBCDofFlag()[ip2]*
-            dtxJxW_g*( 
-               + alphaT*domain_flag*(phij_g)*phii_g  //T' delta T'
-            );
-//====================================
-	   currelem.Mat()(ip2,jp1) +=        
-            currelem.GetBCDofFlag()[ip2]*
-            dtxJxW_g*( 
-               + alphaT*domain_flag*(phij_g)*phii_g  //T_0 delta T'     ///ADDED///////
-            );
-
-        }  //end j (col)
-      }   //end i (row)
+// // //       for (uint i=0; i < Tempold._ndof; i++)     {
+// // // 
+// // //         const double phii_g = currgp._phi_ndsQLVB_g[Tempold._FEord][i];
+// // // 
+// // //         for (uint idim = 0; idim < space_dim; idim++) dphiidx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][i+idim*Tempold._ndof];
+// // // 
+// // // //=========== FIRST ROW ===============
+// // //         currelem.Rhs()(i) +=      
+// // //            currelem.GetBCDofFlag()[i]*dtxJxW_g*( 0. )
+// // // 	   + (1-currelem.GetBCDofFlag()[i])*detb*(Tempold._val_dofs[i]);
+// // //         
+// // //         currelem.Mat()(i,i) +=  (1-currelem.GetBCDofFlag()[i])*detb;
+// // // 
+// // // //========= SECOND ROW (CONTROL) =====================
+// // // 	 int ip1 = i + /* 1* */Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
+// // // 	 currelem.Rhs()(ip1) +=      
+// // //            currelem.GetBCDofFlag()[ip1]*dtxJxW_g*( 
+// // //                      + alphaT*domain_flag*(Tdes._val_g[0])*phii_g // T_d delta T_0
+// // // 	  )
+// // // 	   + (1-currelem.GetBCDofFlag()[ip1])*detb*(Tlift._val_dofs[i]);
+// // //         
+// // //          currelem.Mat()(ip1,ip1) +=  (1-currelem.GetBCDofFlag()[ip1])*detb;
+// // // 
+// // // //======= THIRD ROW (ADJOINT) ===================================
+// // // 	 int ip2 = i + 2 * Tempold._ndof;   //suppose that T' T_0 T_adj have the same order
+// // //            currelem.Rhs()(ip2) +=      
+// // //            currelem.GetBCDofFlag()[ip2]*dtxJxW_g*( 
+// // //                 + alphaT*domain_flag*(Tdes._val_g[0])*phii_g // T_d delta T'
+// // // 	     )
+// // // 	   + (1-currelem.GetBCDofFlag()[ip2])*detb*(Tempold._val_dofs[i]);
+// // //         
+// // //         currelem.Mat()(ip2,ip2) +=  (1-currelem.GetBCDofFlag()[ip2])*detb;
+// // // 
+// // // 	 // Matrix Assemblying ---------------------------
+// // //         for (uint j=0; j<Tempold._ndof; j++) {
+// // //           double phij_g = currgp._phi_ndsQLVB_g[Tempold._FEord][j];
+// // // 	  
+// // //         for (uint idim = 0; idim < space_dim; idim++)  dphijdx_g[idim] = currgp._dphidxyz_ndsQLVB_g[Tempold._FEord][j+idim*Tempold._ndof]; 
+// // //            
+// // //    
+// // //           double Lap_g   = Math::dot(&dphijdx_g[0],&dphiidx_g[0],space_dim);
+// // //           double Advection = velX._val_g[0]*dphijdx_g[0] + velY._val_g[0]*dphijdx_g[1]; //Math::dot(&vel._val_g[0],&dphijdx_g[0],space_dim);
+// // // 
+// // // 	    int ip1 = i + Tempold._ndof;
+// // // 	    int jp1 = j + Tempold._ndof;
+// // // 	    int ip2 = i + 2*Tempold._ndof;
+// // // 	    int jp2 = j + 2*Tempold._ndof;
+// // // 
+// // // // 	           T     T_0     T_adj
+// // // 	    
+// // // // 	    T      X      X       O
+// // // 	     
+// // // // 	    T_0   
+// // // 	    
+// // // // 	    T_adj
+// // // 	    
+// // // 	    
+// // // //============ FIRST ROW state  delta T ===============
+// // // //======= DIAGONAL =============================
+// // // 	   currelem.Mat()(i,j) +=        
+// // //             currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
+// // //             + Advection*phii_g
+// // //             + IRe*IPr*Lap_g  
+// // //             );
+// // // 
+// // // //===============================
+// // //     //same operators for T and T_0
+// // // 	    currelem.Mat()(i,jp1) +=        
+// // //             currelem.GetBCDofFlag()[i]*dtxJxW_g*(    
+// // //             + Advection*phii_g
+// // //             + IRe*IPr*Lap_g
+// // // 	    );
+// // // 
+// // // //====================================
+// // // 	   currelem.Mat()(i,jp2) +=        
+// // //             currelem.GetBCDofFlag()[i]*dtxJxW_g*( 
+// // //                 0.
+// // //             );
+// // // 
+// // // 	    
+// // // //============= SECOND ROW (LIFTING) delta T_0 =============
+// // // //===== DIAGONAL ===========================
+// // //          currelem.Mat()(ip1,jp1) +=        
+// // //             currelem.GetBCDofFlag()[ip1]*
+// // //             dtxJxW_g*( 
+// // //              + alphaL2*phij_g*phii_g  //L_2 control norm
+// // //              + alphaH1*Lap_g          //H_1 control norm
+// // //               + alphaT*domain_flag*(phij_g)*phii_g  //T_0 delta T_0  //ADDED///////////////
+// // //             ); 
+// // // //====================================
+// // // 	   currelem.Mat()(ip1,j) +=        
+// // //             currelem.GetBCDofFlag()[ip1]*
+// // //             dtxJxW_g*( 
+// // //                 + alphaT*domain_flag*(phij_g)*phii_g  //T' delta T_0     //ADDED///////////////
+// // //             );
+// // // //====================================
+// // // 	   currelem.Mat()(ip1,jp2) +=        
+// // //             currelem.GetBCDofFlag()[ip1]*
+// // //              dtxJxW_g*( 
+// // //                  -Advection*phii_g
+// // //                 + IRe*IPr*Lap_g
+// // //            );
+// // // 
+// // // //============= THIRD ROW (ADJOINT) =============
+// // // //======= DIAGONAL ==================
+// // //           currelem.Mat()(ip2,jp2) +=        
+// // //             currelem.GetBCDofFlag()[ip2]*
+// // //               dtxJxW_g*( 
+// // //             - Advection*phii_g  //minus sign
+// // //             + IRe*IPr*Lap_g
+// // //                
+// // //             ); 
+// // // //====================================
+// // // 	   currelem.Mat()(ip2,j) +=        
+// // //             currelem.GetBCDofFlag()[ip2]*
+// // //             dtxJxW_g*( 
+// // //                + alphaT*domain_flag*(phij_g)*phii_g  //T' delta T'
+// // //             );
+// // // //====================================
+// // // 	   currelem.Mat()(ip2,jp1) +=        
+// // //             currelem.GetBCDofFlag()[ip2]*
+// // //             dtxJxW_g*( 
+// // //                + alphaT*domain_flag*(phij_g)*phii_g  //T_0 delta T'     ///ADDED///////
+// // //             );
+// // // 
+// // //         }  //end j (col)
+// // //       }   //end i (row)
     } // end of the quadrature point qp-loop
 
        my_system._LinSolver[Level]->_KK->add_matrix(currelem.Mat(),currelem.GetDofIndices());

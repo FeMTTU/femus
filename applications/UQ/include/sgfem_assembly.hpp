@@ -1,6 +1,7 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/math/special_functions/binomial.hpp>
+#include "MultiLevelSolution.hpp"
 
 //THIS IS THE ASSEMBLY TO RUN SGM SIMULATIONS OF POISSON's EQUATION with HERMITE POLYNOMIALS ONLY
 

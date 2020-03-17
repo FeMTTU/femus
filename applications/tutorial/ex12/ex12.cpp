@@ -13,6 +13,7 @@
  */
 
 #include "FemusInit.hpp"
+#include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
@@ -50,7 +51,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
     dirichlet = false;
     value = 0.;
     if(facename == 3){
-      value = 10.;
+      value = 0.;
     }
   }
 
@@ -83,7 +84,7 @@ int main(int argc, char** args) {
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -94,7 +95,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P",  DISCONTINUOUS_POLYNOMIAL, FIRST);
   
   //  Taylor-hood
   //  mlSol.AddSolution("U", LAGRANGE, SERENDIPITY);
@@ -130,7 +131,8 @@ int main(int argc, char** args) {
 
   // initilaize and solve the system
   system.init();
-  system.MLsolve();
+  //system.SetOuterSolver(PREONLY);
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -358,7 +360,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         solP_gss += phiP[i] * solP[i];
       }
 
-      double nu = 1.;
+      double nu = 1;
 
       // *** phiV_i loop ***
       for (unsigned i = 0; i < nDofsV; i++) {
@@ -372,7 +374,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           NSV[k] += -solP_gss * phiV_x[i * dim + k]; // pressure gradient
         }
         for (unsigned  k = 0; k < dim; k++) {
-          aResV[k][i] += - NSV[k] * weight;
+          aResV[k][i] += NSV[k] * weight;
         }
       } // end phiV_i loop
 
