@@ -183,6 +183,8 @@ OPTION(BUILD_ISM "Build the Intersection Marker apps" ON)
 
 OPTION(BUILD_MPM_FEM "Build the MPM FEM apps" ON)
 
+OPTION(BUILD_MPM_FSI "Build the MPM FSI apps" ON)
+
 OPTION(BUILD_REFINEMENT "Build the Refiniment apps" ON)
 
 OPTION(BUILD_PETSC_DEBUG "Build the PETSC debug apps" ON)
@@ -198,6 +200,8 @@ OPTION(BUILD_TUMOR "Build the Tumor apps" ON)
 OPTION(BUILD_RK "Build the Runge-Kutta apps" ON)
 
 OPTION(BUILD_CONFORMAL "Build the Conformal mesh apps" ON)
+
+OPTION(BUILD_NITSCHE "Build the Nitsche apps" ON)
 
 #############################################################################################
 ### Build documentation (Doxygen)
@@ -283,21 +287,27 @@ ENDIF(SLEPC_FOUND)
 #include femus include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/algebra)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/meshGencase)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh/geom_elements/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh/input/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh/partitioning/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh/refinement/)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/mesh/gencase/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/utils)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/utils/input_parser/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/quadrature)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/parallel)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/equations)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/equations/assemble/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/solution)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/solution/output/)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/enums)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/ism)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/uq)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
-#INCLUDE_DIRECTORIES(/opt/apps/local/mpi/gnu/openmpi/1.10.6/include/)
-#INCLUDE_DIRECTORIES(/opt/apps/local/gnu/openmpi/boost/1.61.0/include/)
 
+# HPCC TTU
 INCLUDE_DIRECTORIES(/opt/ohpc/pub/mpi/openmpi-gnu/1.10.6/include/)
 INCLUDE_DIRECTORIES(/opt/ohpc/pub/libs/gnu/openmpi/boost/1.63.0/include/)
 

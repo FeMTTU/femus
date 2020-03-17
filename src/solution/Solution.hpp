@@ -85,12 +85,12 @@ namespace femus {
       
       void ResetSolutionToOldSolution();
 
-      /** Get a const solution (Numeric Vector) by name */
+      /** Get a const solution (Numeric Vector) by name @todo make the _Sol object private */
       const NumericVector& GetSolutionName(const char* var) const {
         return *_Sol[GetIndex(var)];
       };
 
-      /** Get a solution (Numeric Vector) by name */
+      /** Get a solution (Numeric Vector) by name @todo make the _Sol object private */
       NumericVector& GetSolutionName(const char* var) {
         return *_Sol[GetIndex(var)];
       };

@@ -94,6 +94,7 @@ public:
 
   /** Call the assemble functions */
   virtual void close () = 0;
+  virtual void closeWithMinValues () = 0;
   
   /**
    * Change the dimension of the vector to \p N. The reserved memory for

@@ -115,6 +115,11 @@ namespace femus {
     return GaussWeight;
   };
   
+  inline const double *  GetGaussCoordinatePointer (const unsigned &k) const {
+    return GaussWeight + (k+1) * GaussPoints;
+  };
+  
+  
   inline const double  GetGaussWeight(const unsigned ig) const {
     return GaussWeight[ig];
   };

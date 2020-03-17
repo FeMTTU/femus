@@ -474,7 +474,7 @@ int main(int argc, char **args)
 
       output_path << "./output/particles-" << configuration << "-" << diam;
 
-      PrintLine(output_path.str(), streamline, true, 0);
+      PrintLine(output_path.str(), "streamline", streamline, 0);
     }
   }
 
@@ -554,7 +554,7 @@ int main(int argc, char **args)
         std::ostringstream output_path;
         output_path << "./output/particles-" << configuration << "-" << diam;
 
-        PrintLine(output_path.str(), streamline, true, time_step + 1);
+        PrintLine(output_path.str(), "streamline", streamline, time_step + 1);
 
         data[time_step][0] = time_step / 16.;
         //data[time_step][0] = time_step / (64*1.4);

@@ -110,7 +110,7 @@ int main (int argc, char** args) {
     }
   }
 
-  PrintLine ("./output/", Xprint, false, 0);
+  PrintLine ("./output/", "line", Xprint, 0);
 
   std::vector < std::vector < std::vector< double> > > M (nve); // array of matrices
   for (unsigned i = 0; i < nve; i++) {

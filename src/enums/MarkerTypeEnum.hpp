@@ -3,10 +3,11 @@
 
 enum  MarkerType {
   VOLUME = 0,
+  INTERFACE/*
   INTERSECTION,
   FIXED,
   BOUNDARY,
-  INTERIOR
+  INTERIOR*/
 };
 
 

@@ -1,7 +1,7 @@
 /*=========================================================================
 
 Program: FEMuS
-Module: MultiLevelProblem
+Module: MultiLevelSolution
 Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
 
 Copyright (c) FEMuS
@@ -40,18 +40,15 @@ class MultiLevelProblem;
 
 class MultiLevelSolution : public ParallelObject {
 
-private:
 
+public:
+    
     /** Initial condition function pointer typedef */
     typedef double (*InitFunc) (const std::vector < double >& x);
 
     /** duplicate */
     typedef double (*InitFuncMLProb) (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]);
 
-
-
-public:
-    
     /** Boundary condition function pointer typedef */
     typedef bool (*BoundaryFunc) (const std::vector < double >& x, const char name[], double &value, const int FaceName, const double time);
     
@@ -169,7 +166,12 @@ public:
     /** To be Added */
     FunctionBase* GetBdcFunction(const std::string varname, const unsigned int facename) const;
 
-    /** To be Added */
+       /** duplicate of GetSolutionLevel, to be removed @todo */
+    Solution* GetLevel(const unsigned i) {
+        return _solution[i];
+    };
+    
+       /** To be Added */
     Solution* GetSolutionLevel(const unsigned i) {
         return _solution[i];
     };
@@ -207,6 +209,8 @@ public:
         return _solTimeOrder[i];
     };
 
+    const int   GetSolutionTimeOrder(const std::string & sol_name) const;
+
     /** To be Added */
     bool  TestIfSolutionIsPressure(unsigned i) {
         return _testIfPressure[i];
@@ -226,10 +230,13 @@ public:
       return _family[i];  
     };
     
+    const FEFamily GetSolutionFamily(const std::string & sol_name) const;
+    
     FEOrder GetSolutionOrder(const unsigned& i){
       return _order[i];    
     }
     
+    const FEOrder GetSolutionOrder(const std::string & sol_name) const;
 
     void build();
 
@@ -267,12 +274,6 @@ public:
     void CoarsenSolutionByOneLevel( const unsigned &gridf );
 
   // ********************************************
-    
-    Solution* GetLevel(const unsigned i) {
-      return _solution[i];
-    };
-    
-    
     
     void UpdateSolution(const char name[], InitFunc func, const double& time);
     
@@ -325,7 +326,7 @@ private:
     vector < FEOrder >                  _order;
     vector < char* >                    _solName;
     vector < char* >                    _bdcType;
-    vector < int >                      _solTimeOrder;
+    vector < int >                      _solTimeOrder;  //0 = steady, 2 = time-dependent
     vector < bool >                     _pdeType;    /*Tells whether the Solution is an unknown of a PDE or not*/
     vector < bool >                     _testIfPressure;
     vector < bool >                     _addAMRPressureStability;

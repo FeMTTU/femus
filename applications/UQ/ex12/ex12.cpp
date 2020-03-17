@@ -22,12 +22,12 @@ using namespace femus;
 
 //BEGIN stochastic data
 
-unsigned alpha = 4;
+unsigned alpha = 6;
 unsigned M = pow ( 10, alpha ); //number of samples
-unsigned N = 10; //dimension of the parameter space (each of the M samples has N entries)
-unsigned L = alpha; //max refinement level
+unsigned N = 2; //dimension of the parameter space (each of the M samples has N entries)
+unsigned L = 6; //max refinement level
 bool output = false; //for debugging
-bool matlabView = false;
+bool matlabView = true;
 bool histoView = false;
 
 double xmin = - 5.5;   //-1.5 for uniform // -5.5 for Gaussian

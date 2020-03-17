@@ -11,7 +11,6 @@
 #include "TimeLoop.hpp"
 #include "Files.hpp"
 #include "CurrentElem.hpp"
-#include "CurrentGaussPointBase.hpp"
 #include "CurrentQuantity.hpp"
 #include "Quantity.hpp"
 #include "ElemType.hpp"
@@ -501,28 +500,28 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
 
     for (uint iel=0; iel < (nel_e - nel_b); iel++) {
 
-    CurrentElem       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
-    CurrentGaussPointBase & currgp = CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQrule(currelem.GetDim()));
+    CurrentElem<double>       currelem(iel,myproc,Level,VV,eqn,*mesh,eqn->GetMLProb().GetElemType(),mymsh);
+    //   CurrentGaussPointBase & currgp = //   CurrentGaussPointBase::build(currelem,eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()));
 
 //========= DOMAIN MAPPING
-    CurrentQuantity xyz(currgp);
+    CurrentQuantity xyz(currelem);
     xyz._dim      = DIMENSION;
     xyz._FEord    = MESH_MAPPING_FE;
     xyz._ndof     = currelem.GetElemType(xyz._FEord)->GetNDofs();
     xyz.Allocate();
 
      //==========
-    CurrentQuantity VelX(currgp);
+    CurrentQuantity VelX(currelem);
     VelX._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity0");
     VelX.VectWithQtyFillBasic();
     VelX.Allocate();
 
-    CurrentQuantity VelY(currgp);
+    CurrentQuantity VelY(currelem);
     VelY._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity1");
     VelY.VectWithQtyFillBasic();
     VelY.Allocate();
 
-    CurrentQuantity VelZ(currgp);
+    CurrentQuantity VelZ(currelem);
     VelZ._qtyptr      = eqn->GetMLProb().GetQtyMap().GetQuantity("Qty_Velocity2");
     VelZ.VectWithQtyFillBasic();
     VelZ.Allocate();
@@ -533,19 +532,19 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
     Vel_vec.push_back(&VelZ);
 
     //==========
-  CurrentQuantity VelDesX(currgp);
+  CurrentQuantity VelDesX(currelem);
     VelDesX._dim        = 1;
     VelDesX._FEord      = VelX._FEord;
     VelDesX._ndof       = VelX._ndof;
     VelDesX.Allocate();
 
-  CurrentQuantity VelDesY(currgp);
+  CurrentQuantity VelDesY(currelem);
     VelDesY._dim        = 1;
     VelDesY._FEord      = VelX._FEord;
     VelDesY._ndof       = VelX._ndof;
     VelDesY.Allocate();
 
-  CurrentQuantity VelDesZ(currgp);
+  CurrentQuantity VelDesZ(currelem);
     VelDesZ._dim        = 1;
     VelDesZ._FEord      = VelX._FEord;
     VelDesZ._ndof       = VelX._ndof;
@@ -570,17 +569,17 @@ double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const S
        VelDesired(&eqn->GetMLProb(),*VelDes_vec[idim],currelem,idim);
     }
 
-      const uint el_ngauss = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussPointsNumber();
+      const uint el_ngauss = eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()).GetGaussPointsNumber();
 
     for (uint qp = 0; qp < el_ngauss; qp++) {
 
 for (uint fe = 0; fe < QL; fe++) {
-  currgp.SetPhiElDofsFEVB_g (fe,qp);
-  currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
+//   currgp.SetPhiElDofsFEVB_g (fe,qp);
+//   currgp.SetDPhiDxezetaElDofsFEVB_g (fe,qp);
 }
 
-   const double  Jac_g = currgp.JacVectVV_g(xyz);  //not xyz_refbox!
-   const double  wgt_g = eqn->GetMLProb().GetQrule(currelem.GetDim()).GetGaussWeight(qp);
+   const double  Jac_g = 1.; //currgp.JacVectVV_g(xyz);  //not xyz_refbox!
+   const double  wgt_g = eqn->GetMLProb().GetQuadratureRule(currelem.GetDim()).GetGaussWeight(qp);
 
 
  for (uint idim=0; idim < space_dim; idim++) {
@@ -636,7 +635,7 @@ return el_flagdom;
 
 
 
- void VelDesired(const MultiLevelProblem * ml_prob, CurrentQuantity& myvect, const CurrentElem & currelem, const uint idim)  {
+ void VelDesired(const MultiLevelProblem * ml_prob, CurrentQuantity& myvect, const CurrentElem<double> & currelem, const uint idim)  {
 
   const double Lref = ml_prob->GetInputParser().get("Lref");
   const double Uref = ml_prob->GetInputParser().get("Uref");

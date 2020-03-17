@@ -109,6 +109,8 @@ namespace femus {
       /** Return the row values */
       virtual int MatGetRowM (const int i_val, int *cols = NULL, double *vals = NULL) = 0;
 
+      virtual void RemoveZeroEntries(double & tolerance) = 0;
+      
       // flag
       /** Initialization flag */
       virtual bool initialized() const {

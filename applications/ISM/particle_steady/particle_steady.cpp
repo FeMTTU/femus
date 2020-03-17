@@ -367,7 +367,7 @@ int main(int argc, char **args)
 
   linea[0]->GetStreamLine(streamline, 0);
   linea[0]->GetStreamLine(streamline, 1);
-  PrintLine(DEFAULT_OUTPUTDIR, streamline, true, 0);
+  PrintLine(DEFAULT_OUTPUTDIR, "streamline", streamline, 0);
 
   std::vector <double> data;
 
@@ -424,7 +424,7 @@ int main(int argc, char **args)
     for (int i = 0; i < linea.size(); i++) {
       linea[i]->GetStreamLine(streamline, i + 1);
     }
-    PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
+    PrintLine(DEFAULT_OUTPUTDIR, "streamline", streamline, time_step + 1);
 
 
   }

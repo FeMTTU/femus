@@ -295,7 +295,7 @@ int main(int argc, char** args)
 //   linea->SetParticlesMass(beamArea, rhos);
 
   linea->GetLine(line0[0]);
-  PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
+  PrintLine(DEFAULT_OUTPUTDIR,"line", line0, 0);
 
   
   linea->GetParticlesToGridMaterial();
@@ -333,7 +333,7 @@ int main(int argc, char** args)
     GridToParticlesProjection(ml_prob, *linea);
 
     linea->GetLine(line[0]);
-    PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
+    PrintLine(DEFAULT_OUTPUTDIR, "line", line, time_step);
 
 
 

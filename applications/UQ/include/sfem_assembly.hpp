@@ -25,7 +25,7 @@ std::vector < std::pair<double, double> > eigenvalues ( numberOfEigPairs );
 
 double amin = 1. / 100.;
 
-double stdDeviationInput = 0.8;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.08;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double meanInput = 0.;
 
 //FOR STD GAUSSIAN SAMPLING
