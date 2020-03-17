@@ -4,6 +4,7 @@
 #include "VTKWriter.hpp"
 #include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "MultiLevelSolution.hpp"
 
 #include "NumericVector.hpp"
 #include "adept.h"
@@ -55,7 +56,9 @@ unsigned numberOfUniformLevelsFine = 1;
 
 //solver type (default is MG)
 bool directSolver = true;
+
 bool Schur = false;
+bool includeCoarseLevel = true;
 
 int main (int argc, char** argv) {
 
@@ -79,9 +82,10 @@ int main (int argc, char** argv) {
   mlMshFine.ReadCoarseMesh ("../input/FETI_domain_1Dir_3Neu.neu", "second", scalingFactor);
   mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine, NULL);
 
-  if (directSolver) mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
-
-  if (directSolver) mlMshFine.EraseCoarseLevels (numberOfUniformLevelsFine - 1);
+  if (directSolver || includeCoarseLevel) {
+    mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
+    mlMshFine.EraseCoarseLevels (numberOfUniformLevelsFine - 1);
+  }
 
   unsigned dim = mlMsh.GetDimension();
 
@@ -137,21 +141,22 @@ int main (int argc, char** argv) {
   fieldU1U2[0] = system.GetSolPdeIndex ("u1");
   fieldU1U2[1] = system.GetSolPdeIndex ("u2");
   FieldSplitTree FS_U1U2 (PREONLY, ILU_PRECOND, fieldU1U2, solutionTypeU1U2,  "u1u2");
-  FS_U1U2.SetupKSPTolerances (1.e-3, 1.e-20, 1.e+50, 1); // by Guoyi Ke
+  FS_U1U2.SetTolerances (1.e-3, 1.e-20, 1.e+50, 1); // by Guoyi Ke
 
   std::vector < unsigned > solutionTypeMu (1);
   solutionTypeMu[0] = mlSol.GetSolutionType ("mu");
   std::vector < unsigned > fieldMu (1);
   FieldSplitTree FS_MU (PREONLY, ILU_PRECOND, fieldMu, "mu");
-  FS_MU.SetupKSPTolerances (1.e-3, 1.e-20, 1.e+50, 1); // by Guoyi Ke
+  FS_MU.SetTolerances (1.e-3, 1.e-20, 1.e+50, 1); // by Guoyi Ke
 
   std::vector < FieldSplitTree *> FS1;
   FS1.reserve (2);
   FS1.push_back (&FS_U1U2);
   FS1.push_back (&FS_MU);
-  FieldSplitTree FS_Nonlocal (PREONLY, FS_SCHUR_PRECOND, FS1, "Nonlocal_FETI");
-  FS_Nonlocal.SetupSchurFactorizationType (SCHUR_FACT_UPPER); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL;
-  FS_Nonlocal.SetupSchurPreType (SCHUR_PRE_SELFP); // SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11,SCHUR_PRE_FULL;
+  
+  FieldSplitTree FS_Nonlocal (PREONLY, FIELDSPLIT_SCHUR_PRECOND, FS1, "Nonlocal_FETI");
+  FS_Nonlocal.SetSchurFactorizationType (SCHUR_FACT_UPPER); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL;
+  FS_Nonlocal.SetSchurPreType (SCHUR_PRE_SELFP); // SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11,SCHUR_PRE_FULL;
   //END FIELD SPLIT
 
   // ******* System FEM Assembly *******
@@ -168,9 +173,16 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (5);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (GMRES_SMOOTHER);
-  if (Schur) system.SetMgSmoother (FIELDSPLIT_SMOOTHER);
-
+  system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
+  if (Schur) {
+    if(!includeCoarseLevel){ 
+      system.SetLinearEquationSolverType (FEMuS_FIELDSPLIT);
+    }
+    else{
+      system.SetOuterSolver(RICHARDSON);
+      system.SetLinearEquationSolverType (FEMuS_FIELDSPLIT, INCLUDE_COARSE_LEVEL_TRUE);
+    }
+  }
   system.SetSparsityPatternMinimumSize (5000u);   //TODO tune
 
   system.init();

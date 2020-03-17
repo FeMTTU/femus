@@ -4,6 +4,7 @@
 #include "VTKWriter.hpp"
 #include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "MultiLevelSolution.hpp"
 
 #include "NumericVector.hpp"
 #include "adept.h"
@@ -149,7 +150,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (GMRES_SMOOTHER);
+  system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
 
   system.SetSparsityPatternMinimumSize (5000u);   //TODO tune
 
@@ -188,8 +189,8 @@ int main (int argc, char** argv) {
   system2.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system2.SetMgSmoother (GMRES_SMOOTHER);
-
+  system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
+  
   system2.init();
 
   // ******* Set Smoother *******
@@ -226,7 +227,7 @@ int main (int argc, char** argv) {
   systemFine.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  systemFine.SetMgSmoother (GMRES_SMOOTHER);
+  system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
 
   systemFine.SetSparsityPatternMinimumSize (5000u);   //TODO tune
 

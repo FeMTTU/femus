@@ -4,6 +4,7 @@
 #include "VTKWriter.hpp"
 #include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "MultiLevelSolution.hpp"
 
 #include "NumericVector.hpp"
 #include "adept.h"
@@ -11,6 +12,7 @@
 #include "petsc.h"
 #include "petscmat.h"
 #include "PetscMatrix.hpp"
+#include "FieldSplitTree.hpp"
 
 #include "slepceps.h"
 
@@ -179,7 +181,8 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetMgSmoother (GMRES_SMOOTHER);
+ 
+  system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
 
   system.SetSparsityPatternMinimumSize (5000u);   //TODO tune
 

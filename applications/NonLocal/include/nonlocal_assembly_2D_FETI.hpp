@@ -458,6 +458,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
           for (unsigned ig = 0; ig < igNumber; ig++) {
             msh->_finiteElement[ielGeom][solu1Type]->Jacobian (x1, ig, weight1[ig], phi1x[ig], phi_x);
 
+            const double *phiL = msh->_finiteElement[ielGeom][solmuType]->GetPhi(ig);
+            
             xg1[ig].assign (dim, 0.);
 
             for (unsigned i = 0; i < nDof1; i++) {
@@ -514,12 +516,24 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 }
 
                 if (ielGroup == 9) {
+//                   double Mlumped = phi1x[ig][i] * weight1[ig];
+//                   M1[ i * nDof1 + i ] +=  Mlumped;
+//                   M2[ i * nDof1 + i ] += - Mlumped;
+//                   Resu1_1[i] -= Mlumped * solmu_1[i];
+//                   Resu2_1[i] -= - Mlumped * solmu_1[i];
+//                   Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
+                  
                   double Mlumped = phi1x[ig][i] * weight1[ig];
-                  M1[ i * nDof1 + i ] +=  Mlumped;
-                  M2[ i * nDof1 + i ] += - Mlumped;
-                  Resu1_1[i] -= Mlumped * solmu_1[i];
-                  Resu2_1[i] -= - Mlumped * solmu_1[i];
-                  Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]);
+                  for(unsigned j = 0; j < nDof1; j++){
+                    M1[ i * nDof1 + j ] +=  Mlumped * phi1x[ig][j];
+                    M2[ i * nDof1 + j ] += - Mlumped * phi1x[ig][j];
+                    
+                    Resu1_1[i] -= Mlumped * solmu_1[i] * phi1x[ig][j];
+                    Resu2_1[i] -= - Mlumped * solmu_1[i] * phi1x[ig][j];
+                    Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]) * phi1x[ig][j];
+                    
+                  }
+                  
                 }
 
               }
