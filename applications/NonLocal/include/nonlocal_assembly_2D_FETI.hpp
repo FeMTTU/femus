@@ -8,7 +8,7 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 
-bool linearMu = false;
+
 
 //FETI_domain.neu: 2D domain with delta=0.25
 //FETI_domain_small_delta.neu: 2D domain with delta=0.05
@@ -375,7 +375,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
         ReorderElement (u1LocalFlag_2, l2GMapu1_2, solu1_2, x2); //TODO maybe we don't need this anymore
         ReorderElement (u2LocalFlag_2, l2GMapu2_2, solu2_2, x2Temp); //TODO maybe we don't need this anymore
-        ReorderElement (l2GMapmu_2, solmu_2, x2Tempp);
+        if( solmuType <= 2) ReorderElement (l2GMapmu_2, solmu_2, x2Tempp);
       }
 
       MPI_Bcast (&l2GMapu1_2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
@@ -469,7 +469,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
         ReorderElement (l2GMapu1_1, solu1_1, x1);
         ReorderElement (l2GMapu2_1, solu2_1, x1Temp);
-        ReorderElement (l2GMapmu_1, solmu_1, x1Tempp);
+        if( solmuType <= 2) ReorderElement (l2GMapmu_1, solmu_1, x1Tempp);
 
         double sideLength = fabs (x1[0][0] - x1[0][1]);
 
@@ -590,8 +590,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                   double Mlumped = phi1x[ig][i] * weight1[ig];
                   for (unsigned j = 0; j < nDofMu; j++) {
-                    M1T[ i * nDof1 + j ] +=  Mlumped * phiL[j];
-                    M2T[ i * nDof1 + j ] += - Mlumped * phiL[j];
+                    M1T[ i * nDofMu + j ] +=  Mlumped * phiL[j];
+                    M2T[ i * nDofMu + j ] += - Mlumped * phiL[j];
 
                     Resu1_1[i] -= Mlumped * solmu_1[j] * phiL[j];
                     Resu2_1[i] -= - Mlumped * solmu_1[j] * phiL[j];
@@ -603,8 +603,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 for (unsigned i = 0; i < nDofMu; i++) {
                   for (unsigned j = 0; j < nDof1; j++) {
                     double massMatrix = phi1x[ig][j] * weight1[ig] * phiL[i];
-                    M1[ i * nDofMu + j ] +=  massMatrix;
-                    M2[ i * nDofMu + j ] += - massMatrix;
+                    M1[ i * nDof1 + j ] +=  massMatrix;
+                    M2[ i * nDof1 + j ] += - massMatrix;
                     Resmu[i] -= massMatrix * (solu1_1[j] - solu2_1[j]);
                   }
                 }
