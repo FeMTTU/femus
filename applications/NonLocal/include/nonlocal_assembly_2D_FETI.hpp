@@ -590,8 +590,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
                   for (unsigned j = 0; j < nDofMu; j++) {
                     double massMatrix = phi1x[ig][i] * weight1[ig] * phiL[j];
-                    M1T[ i * nDof1 + j ] +=  massMatrix;
-                    M2T[ i * nDof1 + j ] += - massMatrix;
+                    M1T[ i * nDofMu + j ] +=  massMatrix;
+                    M2T[ i * nDofMu + j ] += - massMatrix;
 
                     Resu1_1[i] -= massMatrix * solmu_1[j];
                     Resu2_1[i] -= - massMatrix * solmu_1[j];
@@ -603,8 +603,8 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
                 for (unsigned i = 0; i < nDofMu; i++) {
                   for (unsigned j = 0; j < nDof1; j++) {
                     double massMatrix = phi1x[ig][j] * weight1[ig] * phiL[i];
-                    M1[ i * nDofMu + j ] +=  massMatrix;
-                    M2[ i * nDofMu + j ] += - massMatrix;
+                    M1[ i * nDof1 + j ] +=  massMatrix;
+                    M2[ i * nDof1 + j ] += - massMatrix;
                     Resmu[i] -= massMatrix * (solu1_1[j] - solu2_1[j]);
                   }
                 }

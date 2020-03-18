@@ -53,7 +53,7 @@ unsigned numberOfUniformLevelsFine = 1;
 
 //solver type (default is MG)
 bool directSolver = true;
-bool Schur = false;
+bool Schur = true;
 bool includeCoarseLevel = true;
 
 int main (int argc, char** argv) {
