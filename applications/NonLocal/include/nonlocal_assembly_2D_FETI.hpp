@@ -8,7 +8,7 @@ using namespace femus;
 
 bool nonLocalAssembly = true;
 
-bool linearMu = false;
+bool linearMu = false; //decides the sol type of the Lagrange multipliers mu (if false then it is piece-wise constant)
 
 //FETI_domain.neu: 2D domain with delta=0.25
 //FETI_domain_small_delta.neu: 2D domain with delta=0.05
@@ -469,7 +469,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 
         ReorderElement (l2GMapu1_1, solu1_1, x1);
         ReorderElement (l2GMapu2_1, solu2_1, x1Temp);
-        ReorderElement (l2GMapmu_1, solmu_1, x1Tempp);
+        if(linearMu) ReorderElement (l2GMapmu_1, solmu_1, x1Tempp);
 
         double sideLength = fabs (x1[0][0] - x1[0][1]);
 
@@ -588,13 +588,13 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
 //                     Resmu[i] -= Mlumped * (solu1_1[i] - solu2_1[i]) * phi1x[ig][j];
 //                   }
 
-                  double Mlumped = phi1x[ig][i] * weight1[ig];
                   for (unsigned j = 0; j < nDofMu; j++) {
-                    M1T[ i * nDof1 + j ] +=  Mlumped * phiL[j];
-                    M2T[ i * nDof1 + j ] += - Mlumped * phiL[j];
+                    double massMatrix = phi1x[ig][i] * weight1[ig] * phiL[j];
+                    M1T[ i * nDof1 + j ] +=  massMatrix;
+                    M2T[ i * nDof1 + j ] += - massMatrix;
 
-                    Resu1_1[i] -= Mlumped * solmu_1[j] * phiL[j];
-                    Resu2_1[i] -= - Mlumped * solmu_1[j] * phiL[j];
+                    Resu1_1[i] -= massMatrix * solmu_1[j];
+                    Resu2_1[i] -= - massMatrix * solmu_1[j];
                   }
                 }
               }

@@ -48,7 +48,7 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 3; //for the tests, use at least 3 here
+unsigned numberOfUniformLevels = 2; //for the tests, use at least 3 here
 unsigned numberOfUniformLevelsFine = 1;
 
 //solver type (default is MG)
