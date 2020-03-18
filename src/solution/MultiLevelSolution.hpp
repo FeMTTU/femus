@@ -152,6 +152,7 @@ public:
     
     //for NONLOCAL problems, _Bdc must be 0 on all the volume constraint
     void GenerateBdcOnVolumeConstraint(const std::vector<unsigned> &volumeConstraintFlags, const unsigned &solIndex, const unsigned &grid0);
+    void GenerateBdcOnVolumeConstraintFETI (const std::vector< unsigned > &volumeConstraintFlags, const unsigned &grid0, const unsigned & exNumber, const double & delta);
 
     /** To be Added */
     BDCType GetBoundaryCondition(const std::string varname, const unsigned int facename) const;

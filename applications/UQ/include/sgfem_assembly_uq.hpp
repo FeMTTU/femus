@@ -14,7 +14,9 @@ unsigned pIndex = 5;
 unsigned qIndex = 5;
 
 int  numberOfEigPairs = 2; //dimension of the stochastic variable
-double stdDeviationInput = 1.4;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+
+double stdDeviationInput = 1.6;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+
 double meanInput = 0.;
 double amin = 1. / 100.; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues (numberOfEigPairs);
