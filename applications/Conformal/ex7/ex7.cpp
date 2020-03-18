@@ -38,7 +38,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
     }
     if(4 == faceName) {
       //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
-      value = 0.75 * sin(x[1] / 0.5 * M_PI);
+      value = 0.5 * sin(x[1] / 0.5 * M_PI);
       //dirichlet = false;
     }
   }
@@ -70,10 +70,10 @@ int main(int argc, char** args) {
 
 
   //mlMsh.ReadCoarseMesh ("../input/squareTri.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/square.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/squareReg.neu", "seventh", scalingFactor);
 
 
-  unsigned numberOfUniformLevels = 5;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -145,9 +145,9 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
   // Attach the assembling function to system and initialize.
-  system.SetAssembleFunction(AssembleShearMinimization);
+  //system.SetAssembleFunction(AssembleShearMinimization);
   //system.SetAssembleFunction (AssembleConformalMinimization);
-  system.MGsolve();
+  // system.MGsolve();
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 1);
 
   system.SetAssembleFunction(AssembleConformalMinimization);
@@ -629,6 +629,10 @@ void UpdateMu(MultiLevelSolution& mlSol) {
           mu[k] += (1. / norm2Xz) * XzBarXz_Bar[k];
         }
       }
+      
+      if(iel == 4){
+        std::cout << mu[0] << " " << mu[1] << " " << norm2Xz <<"\n";
+      }
 
       for(unsigned i = 0; i < nDofs1; i++) {
         sol->_Sol[indexW1]->add(dof1[i], phi1[i] * weight);
@@ -671,8 +675,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
   double norm = sol->_Sol[indexMuN1]->linfty_norm();
   std::cout << norm << std::endl;
-  if(norm < 0.5) stopIterate = true;
-
+  
   //BEGIN Iterative smoothing element -> nodes -> element
 
   for(unsigned smooth = 0; smooth < 1; smooth++) {
