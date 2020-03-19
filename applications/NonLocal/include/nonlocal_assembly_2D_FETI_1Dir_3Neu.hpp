@@ -651,6 +651,8 @@ void AssembleNonLocalSysFETI (MultiLevelProblem& ml_prob) {
   RES->close();
 
   KK->close();
+  
+  //   KK->print_matlab("matrix.txt", "ascii");
 
 //     Mat A = ( static_cast<PetscMatrix*> ( KK ) )->mat();
 //     MatAssemblyBegin ( A, MAT_FINAL_ASSEMBLY );
