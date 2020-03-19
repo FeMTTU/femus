@@ -175,6 +175,7 @@ int main (int argc, char** argv) {
 
   // ******* Set Preconditioner *******
   system.SetLinearEquationSolverType (FEMuS_DEFAULT);
+  system.SetOuterSolver (PREONLY);
   if (Schur) {
     system.SetOuterSolver (RICHARDSON);
     system.SetLinearEquationSolverType (FEMuS_FIELDSPLIT, INCLUDE_COARSE_LEVEL_TRUE);
@@ -213,8 +214,6 @@ int main (int argc, char** argv) {
   systemGlobal.SetMgType (V_CYCLE);
 
   systemGlobal.SetAbsoluteLinearConvergenceTolerance (1.e-50);
-  //   systemGlobal.SetNonLinearConvergenceTolerance(1.e-9);
-//   systemGlobal.SetMaxNumberOfNonLinearIterations(20);
 
   systemGlobal.SetNumberPreSmoothingStep (1);
   systemGlobal.SetNumberPostSmoothingStep (1);

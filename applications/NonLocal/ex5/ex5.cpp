@@ -127,14 +127,13 @@ int main (int argc, char** argv) {
   system.SetMgType (V_CYCLE);
 
   system.SetAbsoluteLinearConvergenceTolerance (1.e-50);
-  //   system.SetNonLinearConvergenceTolerance(1.e-9);
-//   system.SetMaxNumberOfNonLinearIterations(20);
 
   system.SetNumberPreSmoothingStep (1);
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
   system.SetLinearEquationSolverType (FEMuS_DEFAULT);
+  system.SetOuterSolver (PREONLY);
 
   system.SetSparsityPatternMinimumSize (5000u);   //TODO tune
 

@@ -23,7 +23,7 @@ using namespace femus;
 //2D NONLOCAL DOMAIN DECOMPOSITION WITH FETI AND 4 SUBDOMAINS: nonlocal diffusion using a nonlocal version of FETI
 
 // solver specifics (default is direct solver (MUMPS))
-bool Schur = true;
+bool Schur = false;
 
 double InitalValueU (const std::vector < double >& x) {
   double value;
@@ -205,14 +205,13 @@ int main (int argc, char** argv) {
   system.SetMgType (V_CYCLE);
 
   system.SetAbsoluteLinearConvergenceTolerance (1.e-50);
-  //   system.SetNonLinearConvergenceTolerance(1.e-9);
-//   system.SetMaxNumberOfNonLinearIterations(20);
 
   system.SetNumberPreSmoothingStep (1);
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
   system.SetLinearEquationSolverType (FEMuS_DEFAULT);
+  system.SetOuterSolver (PREONLY);
   if (Schur) {
     system.SetOuterSolver (RICHARDSON);
     system.SetLinearEquationSolverType (FEMuS_FIELDSPLIT, INCLUDE_COARSE_LEVEL_TRUE);
