@@ -16,9 +16,9 @@
 
 #include "slepceps.h"
 
-using namespace femus;
-
 #include "../include/nonlocal_assembly_2D_FETI_1Dir_3Neu.hpp"
+
+using namespace femus;
 
 //2D NONLOCAL DOMAIN DECOMPOSITION WITH FETI: Dirichlet on the left, Neumann everywhere else
 
@@ -52,20 +52,16 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 
 unsigned numberOfUniformLevels = 3; 
 
-// solver specifics
-bool directSolver = true;
-bool Schur = true;
+// solver specifics (default is direct solver (MUMPS))
+bool Schur = false;
 
 int main (int argc, char** argv) {
 
   clock_t total_time = clock();
 
-  if (Schur) directSolver = false;
-
   FemusInit mpinit (argc, argv, MPI_COMM_WORLD);
 
   MultiLevelMesh mlMsh;
-  MultiLevelMesh mlMshGlobal;
 
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
@@ -117,8 +113,6 @@ int main (int argc, char** argv) {
 
   unsigned soluIndex = mlSolGlobal.GetIndex ("u");
   mlSolGlobal.GenerateBdcOnVolumeConstraint (volumeConstraintFlags, soluIndex, 0);
-
-//   mlSol.GenerateBdcOnVolumeConstraintFETI (volumeConstraintFlags, 0, 6, delta1);
 
   //BEGIN assemble and solve nonlocal FETI problem
   MultiLevelProblem ml_prob (&mlSol);
