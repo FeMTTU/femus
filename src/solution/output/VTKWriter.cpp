@@ -53,7 +53,10 @@ namespace femus {
     if( _ml_sol != NULL ) filename_prefix = "sol";
     else filename_prefix = "mesh";
     
-       Write(_gridn, filename_prefix, output_path, order, vars, time_step );
+      const std::string suffix_pre_extension = "";
+    
+       Write(_gridn, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step );
+
    }
    
 
@@ -63,18 +66,23 @@ namespace femus {
     if( _ml_sol != NULL ) filename_prefix = "sol";
     else filename_prefix = "mesh";
     
-       Write(my_level, filename_prefix, output_path, order, vars, time_step );
+      const std::string suffix_pre_extension = "";
+    
+       Write(my_level, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step );
+       
    }
    
    
    
   void VTKWriter::Write(const std::string filename_prefix, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
        
-       Write(_gridn, filename_prefix, output_path, order, vars, time_step );
+      const std::string suffix_pre_extension = "";
+      
+       Write(_gridn, filename_prefix, output_path, suffix_pre_extension, order, vars, time_step );
    }
    
   
-  void VTKWriter::Write(const unsigned my_level, const std::string filename_prefix, const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+  void VTKWriter::Write(const unsigned my_level, const std::string filename_prefix, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
       
     std::ostringstream level_name_stream;    
     level_name_stream << ".level" << my_level;
@@ -96,7 +104,7 @@ namespace femus {
 
 
     std::ostringstream filename;
-    filename << output_path << "/" << dirnamePVTK << filename_prefix << level_name << "." << _iproc << "." << time_step << "." << order << ".vtu";
+    filename << output_path << "/" << dirnamePVTK << filename_prefix << level_name << "." << _iproc << "." << time_step << "." << order << suffix_pre_extension << ".vtu";
 
     fout.open( filename.str().c_str() );
     if( !fout.is_open() ) {
@@ -116,7 +124,7 @@ namespace femus {
     }
     else {
       std::ostringstream Pfilename;
-      Pfilename << output_path << "/" << filename_prefix << level_name << "." << time_step << "." << order << ".pvtu";
+      Pfilename << output_path << "/" << filename_prefix << level_name << "." << time_step << "." << order <<  suffix_pre_extension << ".pvtu";
       Pfout.open( Pfilename.str().c_str() );
       if( Pfout.is_open() ) {
         std::cout << std::endl << " The output is printed to file " << Pfilename.str() << " in parallel VTK-XML (64-based) format" << std::endl;
@@ -133,7 +141,7 @@ namespace femus {
     Pfout << "  <PUnstructuredGrid GhostLevel=\"0\">" << std::endl;
     for( int jproc = 0; jproc < _nprocs; jproc++ ) {
       Pfout << "    <Piece Source=\"" << dirnamePVTK
-            << filename_prefix << level_name << "." << jproc << "." << time_step << "." << order << ".vtu"
+            << filename_prefix << level_name << "." << jproc << "." << time_step << "." << order <<  suffix_pre_extension << ".vtu"
             << "\"/>" << std::endl;
     }
     // ****************************************

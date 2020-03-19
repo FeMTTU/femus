@@ -60,8 +60,8 @@ namespace femus {
     /** write output function with fixed level and arbitrary initial string */
     virtual void Write(const std::string init_string, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0) { abort(); };
   
-    /** write output function with arbitrary level and arbitrary initial string! */
-    virtual void Write(const unsigned my_level, const std::string init_string, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0) { abort(); };
+    /** write output function with arbitrary level and arbitrary initial string and arbitrary suffix before the extension */
+    virtual void Write(const unsigned my_level, const std::string init_string, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0) { abort(); };
   
     /** set moving mesh */
     void SetMovingMesh(std::vector<std::string>& movvars_in);

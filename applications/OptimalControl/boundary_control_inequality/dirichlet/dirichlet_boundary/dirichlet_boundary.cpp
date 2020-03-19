@@ -157,7 +157,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -234,9 +234,12 @@ int main(int argc, char** args) {
 //   system.assemble_call(1);
   
   // ======= Print ========================
+  const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
-  ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
+  ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, print_order.c_str(), variablesToBePrinted);
 
   return 0;
 }

@@ -55,8 +55,8 @@ public:
     /** write output function with fixed level and arbitrary initial string */
   void Write(const std::string init_string, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
   
-    /** write output function with arbitrary level and arbitrary initial string! */
-  void Write(const unsigned my_level, const std::string init_string, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
+    /** write output function with arbitrary level and arbitrary initial string and arbitrary suffix before the extension */
+  void Write(const unsigned my_level, const std::string init_string, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
   
     /** Set if to print or not to prind the debugging variables */
     void SetDebugOutput( bool value ){ _debugOutput = value;}
