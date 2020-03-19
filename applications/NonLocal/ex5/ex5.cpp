@@ -19,26 +19,15 @@ using namespace femus;
 
 #include "../include/nonlocal_assembly_2D_no_interface.hpp"
 
-
 //2D NONLOCAL EX : 2D nonlocal diffusion NO INTERFACE
-
 
 double InitalValueU (const std::vector < double >& x) {
   double value;
 
-//     value =  x[0] + 0. * ( 0.51 * 0.51 - x[0] * x[0] ) * ( 0.51 * 0.51 - x[1] * x[1] );
-//   value =  x[0];
-  value =  x[0] * x[0];
-//     value =  x[0] * x[0] * x[0] ;
-//     value =  x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
-//     value =  x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
-//     value =  x[0] * x[0] * x[0] * x[0]; //this is x^4
-//     value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
-
-
-//      value = (x[0] < 0.) ? x[0] * x[0] * x[0] : 3 * x[0] * x[0] * x[0];
-
-
+  value =  0.;
+//  value =  x[0];
+//  value =  x[0] * x[0];
+//  value =  x[0] * x[0] * x[0] ;
   return value;
 }
 
@@ -51,20 +40,16 @@ bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[]
 //     value = x[0];
 //   value =  x[0] * x[0];
 //     value =  x[0] * x[0] * x[0] ;
-//     value =  x[0] * x[0] * x[0] + x[1] * x[1] * x[1];
-//     value =  x[0] * x[0] * x[0] * x[0] + 0.1 * x[0] * x[0]; //this is x^4 + delta x^2
-//     value =  x[0] * x[0] * x[0] * x[0]; //this is x^4
-//     value =  2 * x[0] + x[0] * x[0] * x[0] * x[0] * x[0]; //this is 2x + x^5
 
   if (facename == 2) {
-    dirichlet = false; //Neumann 
+    dirichlet = false; //Neumann
     value = 0.;
   }
 
   return dirichlet;
 }
 
-unsigned numberOfUniformLevels = 3;
+unsigned numberOfUniformLevels = 3; // run with at least 3 here
 unsigned numberOfUniformLevelsFine = 1;
 
 int main (int argc, char** argv) {
@@ -82,12 +67,12 @@ int main (int argc, char** argv) {
 //   mlMsh.ReadCoarseMesh ("../input/FETI_domain_ex5.neu", "second", scalingFactor);
 //     mlMsh.ReadCoarseMesh ("../input/FETI_left_domain_ex5.neu", "second", scalingFactor);
   mlMsh.ReadCoarseMesh ("../input/FETI_domain_ex5_1Dir_3Neu.neu", "second", scalingFactor);
-  mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+  mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
 //   mlMshFine.ReadCoarseMesh ("../input/FETI_domain_ex5.neu", "second", scalingFactor);
 //     mlMshFine.ReadCoarseMesh ("../input/FETI_left_domain_ex5.neu", "second", scalingFactor);
   mlMshFine.ReadCoarseMesh ("../input/FETI_domain_ex5_1Dir_3Neu.neu", "second", scalingFactor);
-  mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine , NULL);
+  mlMshFine.RefineMesh (numberOfUniformLevelsFine + numberOfSelectiveLevels, numberOfUniformLevelsFine, NULL);
 
   mlMsh.EraseCoarseLevels (numberOfUniformLevels - 1);
 
@@ -98,7 +83,6 @@ int main (int argc, char** argv) {
   MultiLevelSolution mlSol (&mlMsh);
   MultiLevelSolution mlSolFine (&mlMshFine);
 
-  // add variables to mlSol
   mlSol.AddSolution ("u", LAGRANGE, FIRST, 2);
 
   mlSolFine.AddSolution ("u_fine", LAGRANGE, FIRST, 2);
@@ -150,7 +134,7 @@ int main (int argc, char** argv) {
   system.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
+  system.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   system.SetSparsityPatternMinimumSize (5000u);   //TODO tune
 
@@ -189,8 +173,8 @@ int main (int argc, char** argv) {
   system2.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
-  
+  system.SetLinearEquationSolverType (FEMuS_DEFAULT);
+
   system2.init();
 
   // ******* Set Smoother *******
@@ -227,7 +211,7 @@ int main (int argc, char** argv) {
   systemFine.SetNumberPostSmoothingStep (1);
 
   // ******* Set Preconditioner *******
-  system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
+  system.SetLinearEquationSolverType (FEMuS_DEFAULT);
 
   systemFine.SetSparsityPatternMinimumSize (5000u);   //TODO tune
 
