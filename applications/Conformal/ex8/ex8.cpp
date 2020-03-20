@@ -161,17 +161,17 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(100);
+  system.SetMaxNumberOfNonLinearIterations(2);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
 
   mlSol.SetWriter(VTK);
-  std::vector<std::string> mov_vars;
-  mov_vars.push_back("Dx1");
-  mov_vars.push_back("Dx2");
-  mov_vars.push_back("Dx3");
-  mlSol.GetWriter()->SetMovingMesh(mov_vars);
+//   std::vector<std::string> mov_vars;
+//   mov_vars.push_back("Dx1");
+//   mov_vars.push_back("Dx2");
+//   mov_vars.push_back("Dx3");
+//   mlSol.GetWriter()->SetMovingMesh(mov_vars);
 
   // and this?
   std::vector < std::string > variablesToBePrinted;
@@ -1683,28 +1683,28 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
       double normal[DIM];
       normal[0] = 0.;//(solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
       normal[1] = 0.;//(solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
-      normal[2] = 1.;//(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
+      normal[2] = 0.;//(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
 
 
       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
-      adept::adouble V[DIM];
-      V[0] = solNx_uv[0][1] - normal[1] * solNx_uv[2][0] + normal[2] * solNx_uv[1][0];
-      V[1] = solNx_uv[1][1] - normal[2] * solNx_uv[0][0] + normal[0] * solNx_uv[2][0];
-      V[2] = solNx_uv[2][1] - normal[0] * solNx_uv[1][0] + normal[1] * solNx_uv[0][0];
-
-      adept::adouble W[DIM];
-      W[0] = solNx_uv[0][0] + normal[1] * solNx_uv[2][1] - normal[2] * solNx_uv[1][1];
-      W[1] = solNx_uv[1][0] + normal[2] * solNx_uv[0][1] - normal[0] * solNx_uv[2][1];
-      W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
-
-      adept::adouble M[DIM][dim];
-      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2];
-      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0];
-      M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1];
-
-      M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2];
-      M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
-      M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
+//       adept::adouble V[DIM];
+//       V[0] = solNx_uv[0][1] - normal[1] * solNx_uv[2][0] + normal[2] * solNx_uv[1][0];
+//       V[1] = solNx_uv[1][1] - normal[2] * solNx_uv[0][0] + normal[0] * solNx_uv[2][0];
+//       V[2] = solNx_uv[2][1] - normal[0] * solNx_uv[1][0] + normal[1] * solNx_uv[0][0];
+// 
+//       adept::adouble W[DIM];
+//       W[0] = solNx_uv[0][0] + normal[1] * solNx_uv[2][1] - normal[2] * solNx_uv[1][1];
+//       W[1] = solNx_uv[1][0] + normal[2] * solNx_uv[0][1] - normal[0] * solNx_uv[2][1];
+//       W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
+// 
+//       adept::adouble M[DIM][dim];
+//       M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2];
+//       M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0];
+//       M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1];
+// 
+//       M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2];
+//       M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
+//       M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
 
 
       double mu[2] = {0., 0.};
@@ -1821,6 +1821,13 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
         }
       }
 
+      if(iel == 4 && ig == 1){
+        for(unsigned i = 0; i < nxDofs; i++) {  
+          std::cout <<  mu[0] <<" "<< mu[1] << " "<< aResNDx[0][i] << " " << aResNDx[1][i]<<"\n";
+        }
+      }
+      
+      
       // Lagrange multiplier equation (with trick).
       for(unsigned i = 0; i < nLDofs; i++) {
         aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area; // no2

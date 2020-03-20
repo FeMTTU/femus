@@ -126,16 +126,16 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Dx2");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(100);
+  system.SetMaxNumberOfNonLinearIterations(2);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
 
   mlSol.SetWriter(VTK);
-  std::vector<std::string> mov_vars;
-  mov_vars.push_back("Dx1");
-  mov_vars.push_back("Dx2");
-  mlSol.GetWriter()->SetMovingMesh(mov_vars);
+//   std::vector<std::string> mov_vars;
+//   mov_vars.push_back("Dx1");
+//   mov_vars.push_back("Dx2");
+//   mlSol.GetWriter()->SetMovingMesh(mov_vars);
 
   // and this?
   std::vector < std::string > variablesToBePrinted;
@@ -476,6 +476,13 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
           aResDx[k][i] += term1 * weight;
         }
       }
+      
+      if(iel == 4 && ig == 1){
+        for(unsigned i = 0; i < nxDofs; i++) {  
+          std::cout <<  mu[0] <<" "<< mu[1] << " "<< aResDx[0][i] << " " << aResDx[1][i]<<"\n";
+        }
+      }
+      
     } // end GAUSS POINT LOOP
 
     //------------------------------------------------------------------------
