@@ -50,7 +50,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
     }
   }
 
-  
+
 //   if (!strcmp (solName, "Dx1")) {
 //     if (1 == faceName || 3 == faceName) {
 //       dirichlet = false;
@@ -62,7 +62,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 //     }
 //   }
 
- 
+
 
   /*
 
@@ -167,11 +167,11 @@ int main(int argc, char** args) {
   system.init();
 
   mlSol.SetWriter(VTK);
-//   std::vector<std::string> mov_vars;
-//   mov_vars.push_back("Dx1");
-//   mov_vars.push_back("Dx2");
-//   mov_vars.push_back("Dx3");
-//   mlSol.GetWriter()->SetMovingMesh(mov_vars);
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back("Dx1");
+  mov_vars.push_back("Dx2");
+  mov_vars.push_back("Dx3");
+  mlSol.GetWriter()->SetMovingMesh(mov_vars);
 
   // and this?
   std::vector < std::string > variablesToBePrinted;
@@ -830,11 +830,15 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       //double Area = weight * sqrt(detg);
       //double Area2 = weight; // Trick to give equal weight to each element.
 
-      // Compute components of the unit normal N.
+      // std::cout << detg << " ";
+
       double normal[DIM];
       normal[0] = 0.;//(solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
       normal[1] = 0.;//(solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
       normal[2] = 1.;//(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
+      //normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) * sqrt(detg) / detg;
+      //normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) * sqrt(detg) / detg;
+      //normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) * sqrt(detg) / detg;
 
       double dxPlus[DIM];
       dxPlus[0] = solx_uv[0][0] + solx_uv[1][1] * normal[2] - solx_uv[2][1] * normal[1];
@@ -858,8 +862,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
       //double dxsdxp = 0.;
       for(unsigned K = 0; K < DIM; K++) {
-        norm2dxPlus += dxPlus[K] * dxPlus[K];
-        norm2sdxPlus += sdxPlus[K] * sdxPlus[K];
+        norm2dxPlus -= dxPlus[K] * dxPlus[K];
+        norm2sdxPlus -= sdxPlus[K] * sdxPlus[K];
         rhsmu1 += dxPlus[K] * dxMinus[K];
         rhsmu2 += sdxPlus[K] * dxMinus[K];
 
@@ -875,11 +879,11 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       // Comment out for working code
 
       double mu[2] = {0., 0.};
-      mu[0] = -rhsmu1 / norm2dxPlus;
-      mu[1] = -rhsmu2 / norm2sdxPlus;
+      mu[0] = rhsmu1 / norm2dxPlus;
+      mu[1] = rhsmu2 / norm2sdxPlus;
 
       if(iel == 4){
-        std::cout << mu[0] << " " << mu[1] << " " << norm2dxPlus<<" "<< norm2sdxPlus<<"\n";
+        std::cout << mu[0] << " " << mu[1] << " " << norm2dxPlus << " " << norm2sdxPlus<< "\n";
       }
 
       // for(unsigned k = 0; k < 2; k++) {
@@ -910,6 +914,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
   for(unsigned i = msh->_dofOffset[solType1][iproc]; i < msh->_dofOffset[solType1][iproc + 1]; i++) {
 
     double weight = (*sol->_Sol[indexW1])(i);
+
+    //std::cout << weight << " ";
 
     double mu[2];
     for(unsigned k = 0; k < dim; k++) {
@@ -1683,28 +1689,28 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
       double normal[DIM];
       normal[0] = 0.;//(solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
       normal[1] = 0.;//(solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
-      normal[2] = 0.;//(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
+      normal[2] = 1.;//(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
 
 
       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
-//       adept::adouble V[DIM];
-//       V[0] = solNx_uv[0][1] - normal[1] * solNx_uv[2][0] + normal[2] * solNx_uv[1][0];
-//       V[1] = solNx_uv[1][1] - normal[2] * solNx_uv[0][0] + normal[0] * solNx_uv[2][0];
-//       V[2] = solNx_uv[2][1] - normal[0] * solNx_uv[1][0] + normal[1] * solNx_uv[0][0];
-// 
-//       adept::adouble W[DIM];
-//       W[0] = solNx_uv[0][0] + normal[1] * solNx_uv[2][1] - normal[2] * solNx_uv[1][1];
-//       W[1] = solNx_uv[1][0] + normal[2] * solNx_uv[0][1] - normal[0] * solNx_uv[2][1];
-//       W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
-// 
-//       adept::adouble M[DIM][dim];
-//       M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2];
-//       M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0];
-//       M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1];
-// 
-//       M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2];
-//       M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
-//       M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
+      adept::adouble V[DIM];
+      V[0] = solNx_uv[0][1] - normal[1] * solNx_uv[2][0] + normal[2] * solNx_uv[1][0];
+      V[1] = solNx_uv[1][1] - normal[2] * solNx_uv[0][0] + normal[0] * solNx_uv[2][0];
+      V[2] = solNx_uv[2][1] - normal[0] * solNx_uv[1][0] + normal[1] * solNx_uv[0][0];
+
+      adept::adouble W[DIM];
+      W[0] = solNx_uv[0][0] + normal[1] * solNx_uv[2][1] - normal[2] * solNx_uv[1][1];
+      W[1] = solNx_uv[1][0] + normal[2] * solNx_uv[0][1] - normal[0] * solNx_uv[2][1];
+      W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
+
+      adept::adouble M[DIM][dim];
+      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2];
+      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0];
+      M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1];
+
+      M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2];
+      M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
+      M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
 
 
       double mu[2] = {0., 0.};
@@ -1760,12 +1766,12 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
                  + muSqr * (solNx_uv[1][0] * normal[0] - solNx_uv[0][0] * normal[1]);
 
 
-//       std::cout << 00 << " "<< M[0][0]<<" "<< M1[0][0]<<std::endl;
-//       std::cout << 10 << " "<< M[1][0]<<" "<< M1[1][0]<<std::endl;
-//       std::cout << 20 << " "<< M[2][0]<<" "<< M1[2][0]<<std::endl;
-//       std::cout << 01 << " "<< M[0][1]<<" "<< M1[0][1]<<std::endl;
-//       std::cout << 11 << " "<< M[1][1]<<" "<< M1[1][1]<<std::endl;
-//       std::cout << 21 << " "<< M[2][1]<<" "<< M1[2][1]<<std::endl;
+      // std::cout << 00 << " "<< M[0][0]<<" "<< M1[0][0]<<std::endl;
+      // std::cout << 10 << " "<< M[1][0]<<" "<< M1[1][0]<<std::endl;
+      // std::cout << 20 << " "<< M[2][0]<<" "<< M1[2][0]<<std::endl;
+      // std::cout << 01 << " "<< M[0][1]<<" "<< M1[0][1]<<std::endl;
+      // std::cout << 11 << " "<< M[1][1]<<" "<< M1[1][1]<<std::endl;
+      // std::cout << 21 << " "<< M[2][1]<<" "<< M1[2][1]<<std::endl;
 
 
 
@@ -1821,18 +1827,17 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
         }
       }
 
-      if(iel == 4 && ig == 1){
-        for(unsigned i = 0; i < nxDofs; i++) {  
-          std::cout <<  mu[0] <<" "<< mu[1] << " "<< aResNDx[0][i] << " " << aResNDx[1][i]<<"\n";
-        }
-      }
-      
-      
       // Lagrange multiplier equation (with trick).
       for(unsigned i = 0; i < nLDofs; i++) {
         aResL[i] += phiL[i] * (DnXmDxdotN + eps * solL[i]) * Area; // no2
       }
       //aResL[0] += (DnXmDxdotN + eps * solL[0]) * Area;
+
+      if(iel == 4 && ig == 1){
+        for(unsigned i = 0; i < nxDofs; i++) {
+          std::cout <<  mu[0] <<" "<< mu[1] << " "<< aResNDx[0][i] << " " << aResNDx[1][i]<<"\n";
+        }
+      }
 
     } // end GAUSS POINT LOOP
 

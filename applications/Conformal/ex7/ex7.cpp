@@ -126,16 +126,16 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Dx2");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(2);
+  system.SetMaxNumberOfNonLinearIterations(20);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
 
   mlSol.SetWriter(VTK);
-//   std::vector<std::string> mov_vars;
-//   mov_vars.push_back("Dx1");
-//   mov_vars.push_back("Dx2");
-//   mlSol.GetWriter()->SetMovingMesh(mov_vars);
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back("Dx1");
+  mov_vars.push_back("Dx2");
+  mlSol.GetWriter()->SetMovingMesh(mov_vars);
 
   // and this?
   std::vector < std::string > variablesToBePrinted;
@@ -465,24 +465,33 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       //M[1][1]= -(1 + mu1) * V[0] - mu2 * V[1];
 
 
+      adept::adouble M1[DIM][dim];
+      double muSqrPlus = 1 + mu[0] * mu[0] + mu[1] * mu[1];
+      double muSqrMinus = mu[0] * mu[0] + mu[1] * mu[1] - 1;
+
+      M1[0][0] = muSqrPlus * gradSolx[0][0] + muSqrMinus * gradSolx[1][1];
+      M1[1][0] = muSqrPlus * gradSolx[1][0] - muSqrMinus * gradSolx[0][1];
+      M1[0][1] = muSqrPlus * gradSolx[0][1] - muSqrMinus * gradSolx[1][0];
+      M1[1][1] = muSqrPlus * gradSolx[1][1] + muSqrMinus * gradSolx[0][0];
+
       // Implement the Conformal Minimization equations.
       for(unsigned k = 0; k < dim; k++) {
         for(unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
           for(unsigned j = 0; j < dim; j++) {
-            term1 += 2 * M[k][j] * phi_x[i * dim + j];
+            term1 += 2 * M1[k][j] * phi_x[i * dim + j];
           }
           // Conformal energy equation (with trick).
           aResDx[k][i] += term1 * weight;
         }
       }
-      
+
       if(iel == 4 && ig == 1){
-        for(unsigned i = 0; i < nxDofs; i++) {  
+        for(unsigned i = 0; i < nxDofs; i++) {
           std::cout <<  mu[0] <<" "<< mu[1] << " "<< aResDx[0][i] << " " << aResDx[1][i]<<"\n";
         }
       }
-      
+
     } // end GAUSS POINT LOOP
 
     //------------------------------------------------------------------------
@@ -636,7 +645,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
           mu[k] += (1. / norm2Xz) * XzBarXz_Bar[k];
         }
       }
-      
+
       if(iel == 4){
         std::cout << mu[0] << " " << mu[1] << " " << norm2Xz <<"\n";
       }
@@ -682,7 +691,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
   double norm = sol->_Sol[indexMuN1]->linfty_norm();
   std::cout << norm << std::endl;
-  
+
   //BEGIN Iterative smoothing element -> nodes -> element
 
   for(unsigned smooth = 0; smooth < 1; smooth++) {
@@ -885,7 +894,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 //           theta =  M_PI / 2 - phi;
 //         }
 //       }
-      
+
 //       sol->_Sol[indexMu[0]]->set(i, radius * cos(theta));
 //       sol->_Sol[indexMu[1]]->set(i, radius * sin(theta));
 
@@ -893,7 +902,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
     sol->_Sol[indexMuN1]->close();
     sol->_Sol[indexTheta1]->close();
     sol->_Sol[indexPhi1]->close();
-    
+
 //     for(unsigned k = 0; k < dim; k++) {
 //       sol->_Sol[indexMu[k]]->close();
 //     }
@@ -1126,4 +1135,3 @@ void AssembleShearMinimization(MultiLevelProblem& ml_prob) {
 
   // ***************** END ASSEMBLY *******************
 }
-
