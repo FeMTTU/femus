@@ -1691,26 +1691,26 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
       normal[1] = 0.;//(solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
       normal[2] = 1.;//(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
 
-
-      // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
-      adept::adouble V[DIM];
-      V[0] = solNx_uv[0][1] - normal[1] * solNx_uv[2][0] + normal[2] * solNx_uv[1][0];
-      V[1] = solNx_uv[1][1] - normal[2] * solNx_uv[0][0] + normal[0] * solNx_uv[2][0];
-      V[2] = solNx_uv[2][1] - normal[0] * solNx_uv[1][0] + normal[1] * solNx_uv[0][0];
-
-      adept::adouble W[DIM];
-      W[0] = solNx_uv[0][0] + normal[1] * solNx_uv[2][1] - normal[2] * solNx_uv[1][1];
-      W[1] = solNx_uv[1][0] + normal[2] * solNx_uv[0][1] - normal[0] * solNx_uv[2][1];
-      W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
-
-      adept::adouble M[DIM][dim];
-      M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2];
-      M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0];
-      M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1];
-
-      M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2];
-      M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
-      M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
+      //
+      // // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
+      // adept::adouble V[DIM];
+      // V[0] = solNx_uv[0][1] - normal[1] * solNx_uv[2][0] + normal[2] * solNx_uv[1][0];
+      // V[1] = solNx_uv[1][1] - normal[2] * solNx_uv[0][0] + normal[0] * solNx_uv[2][0];
+      // V[2] = solNx_uv[2][1] - normal[0] * solNx_uv[1][0] + normal[1] * solNx_uv[0][0];
+      //
+      // adept::adouble W[DIM];
+      // W[0] = solNx_uv[0][0] + normal[1] * solNx_uv[2][1] - normal[2] * solNx_uv[1][1];
+      // W[1] = solNx_uv[1][0] + normal[2] * solNx_uv[0][1] - normal[0] * solNx_uv[2][1];
+      // W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
+      //
+      // adept::adouble M[DIM][dim];
+      // M[0][0] = W[0] - normal[2] * V[1] + normal[1] * V[2];
+      // M[1][0] = W[1] - normal[0] * V[2] + normal[2] * V[0];
+      // M[2][0] = W[2] - normal[1] * V[0] + normal[0] * V[1];
+      //
+      // M[0][1] = V[0] + normal[2] * W[1] - normal[1] * W[2];
+      // M[1][1] = V[1] + normal[0] * W[2] - normal[2] * W[0];
+      // M[2][1] = V[2] + normal[1] * W[0] - normal[0] * W[1];
 
 
       double mu[2] = {0., 0.};
@@ -1723,8 +1723,8 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
       double muPlus = pow(1 + mu[0], 2) + mu[1] * mu[1];
       double muMinus = pow(1 - mu[0], 2) + mu[1] * mu[1];
       double mu1Sqr = mu[1] * mu[1];
-      double sqrMin = (1 - mu[0]) * (1 - mu[0]);
-      double sqrPls = (1 + mu[0]) * (1 + mu[0]);
+      double sqrMin = ((1 - mu[0]) * (1 - mu[0]));
+      double sqrPlus = ((1 + mu[0]) * (1 + mu[0]));
       double xMin = mu[1] * (1 - mu[0]);
       double xPlus = mu[1] * (1 + mu[0]);
       double muSqr = (mu[0] * mu[0] + mu[1] * mu[1] - 1.);
@@ -1774,49 +1774,70 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
       adept::adouble N[DIM][dim];
 
       N[0][0] = ( sqrMin + mu1Sqr  * (   normal[1]    * normal[1] +   normal[2]    * normal[2] ) ) * solNx_uv[0][0]
-              - ( xMin + xPlus     * (   normal[1]    * normal[1] +   normal[2]    * normal[2] ) ) * solNx_uv[0][1]
-              - mu1Sqr * normal[0] * ( solNx_uv[1][0] * normal[1] + solNx_uv[2][0] * normal[2])
-              + xPlus  * normal[0] * ( solNx_uv[1][1] * normal[1] + solNx_uv[2][1] * normal[2])
-              + muSqr  *             ( solNx_uv[1][1] * normal[2] - solNx_uv[2][1] * normal[1]);
+              - ( xMin   + xPlus   * (   normal[1]    * normal[1] +   normal[2]    * normal[2] ) ) * solNx_uv[0][1]
+              - mu1Sqr * normal[0] * ( solNx_uv[1][0] * normal[1] + solNx_uv[2][0] * normal[2] )
+              + xPlus  * normal[0] * ( solNx_uv[1][1] * normal[1] + solNx_uv[2][1] * normal[2] )
+              + muSqr  *             ( solNx_uv[1][1] * normal[2] - solNx_uv[2][1] * normal[1] );
 
       N[1][0] = ( sqrMin + mu1Sqr  * ( normal[2]      * normal[2] +   normal[0]    * normal[0] ) ) * solNx_uv[1][0]
-              - ( xMin + xPlus     * ( normal[2]      * normal[2] +   normal[0]    * normal[0] ) ) * solNx_uv[1][1]
-              - mu1Sqr * normal[1] * ( solNx_uv[2][0] * normal[2] + solNx_uv[0][0] * normal[0])
-              + xPlus  * normal[1] * ( solNx_uv[2][1] * normal[2] + solNx_uv[0][1] * normal[0])
-              + muSqr  *             ( solNx_uv[2][1] * normal[0] - solNx_uv[0][1] * normal[2]);
+              - ( xMin   + xPlus   * ( normal[2]      * normal[2] +   normal[0]    * normal[0] ) ) * solNx_uv[1][1]
+              - mu1Sqr * normal[1] * ( solNx_uv[2][0] * normal[2] + solNx_uv[0][0] * normal[0] )
+              + xPlus  * normal[1] * ( solNx_uv[2][1] * normal[2] + solNx_uv[0][1] * normal[0] )
+              + muSqr  *             ( solNx_uv[2][1] * normal[0] - solNx_uv[0][1] * normal[2] );
 
       N[2][0] = ( sqrMin + mu1Sqr  * (   normal[0]    * normal[0] +   normal[1]    * normal[1] ) ) * solNx_uv[2][0]
-              - ( xMin + xPlus     * (   normal[0]    * normal[0] +   normal[1]    * normal[1] ) ) * solNx_uv[2][1]
-              - mu1Sqr * normal[2] * ( solNx_uv[0][0] * normal[0] + solNx_uv[1][0] * normal[1])
-              + xPlus  * normal[2] * ( solNx_uv[0][1] * normal[0] + solNx_uv[1][1] * normal[1])
-              + muSqr  *             ( solNx_uv[0][1] * normal[1] - solNx_uv[1][1] * normal[0]);
+              - ( xMin   + xPlus   * (   normal[0]    * normal[0] +   normal[1]    * normal[1] ) ) * solNx_uv[2][1]
+              - mu1Sqr * normal[2] * ( solNx_uv[0][0] * normal[0] + solNx_uv[1][0] * normal[1] )
+              + xPlus  * normal[2] * ( solNx_uv[0][1] * normal[0] + solNx_uv[1][1] * normal[1] )
+              + muSqr  *             ( solNx_uv[0][1] * normal[1] - solNx_uv[1][1] * normal[0] );
 
 
-      N[0][1] = ( mu1Sqr + sqrPls  * (   normal[1]    * normal[1] +   normal[2]    * normal[2] ) ) * solNx_uv[0][1]
-              - ( xMin + xPlus     * (   normal[1]    * normal[1] +   normal[2]    * normal[2] ) ) * solNx_uv[0][0]
-              - sqrPls * normal[0] * ( solNx_uv[1][1] * normal[1] + solNx_uv[2][1] * normal[2])
-              + xPlus  * normal[0] * ( solNx_uv[1][0] * normal[1] + solNx_uv[2][0] * normal[2])
-              - muSqr  *             ( solNx_uv[1][0] * normal[2] - solNx_uv[2][0] * normal[1]);
+      N[0][1] = ( mu1Sqr  + sqrPlus  * (   normal[1]    * normal[1] +   normal[2]    * normal[2] ) ) * solNx_uv[0][1]
+              - ( xMin    + xPlus    * (   normal[1]    * normal[1] +   normal[2]    * normal[2] ) ) * solNx_uv[0][0]
+              - sqrPlus * normal[0]  * ( solNx_uv[1][1] * normal[1] + solNx_uv[2][1] * normal[2] )
+              + xPlus   * normal[0]  * ( solNx_uv[1][0] * normal[1] + solNx_uv[2][0] * normal[2] )
+              - muSqr   *              ( solNx_uv[1][0] * normal[2] - solNx_uv[2][0] * normal[1] );
 
-      N[1][1] = ( mu1Sqr + sqrPls  * (   normal[2]    * normal[2] +   normal[0]    * normal[0] ) ) * solNx_uv[1][1]
-              - ( xMin + xPlus     * (   normal[2]    * normal[2] +   normal[0]    * normal[0] ) ) * solNx_uv[1][0]
-              - sqrPls * normal[1] * ( solNx_uv[2][1] * normal[2] + solNx_uv[0][1] * normal[0])
-              + xPlus  * normal[1] * ( solNx_uv[2][0] * normal[2] + solNx_uv[0][0] * normal[0])
-              - muSqr  *             ( solNx_uv[2][0] * normal[0] - solNx_uv[0][0] * normal[2]);
+      N[1][1] = ( mu1Sqr  + sqrPlus  * (   normal[2]    * normal[2] +   normal[0]    * normal[0] ) ) * solNx_uv[1][1]
+              - ( xMin    + xPlus    * (   normal[2]    * normal[2] +   normal[0]    * normal[0] ) ) * solNx_uv[1][0]
+              - sqrPlus * normal[1]  * ( solNx_uv[2][1] * normal[2] + solNx_uv[0][1] * normal[0] )
+              + xPlus   * normal[1]  * ( solNx_uv[2][0] * normal[2] + solNx_uv[0][0] * normal[0] )
+              - muSqr   *              ( solNx_uv[2][0] * normal[0] - solNx_uv[0][0] * normal[2] );
 
-      N[2][1] = ( mu1Sqr + sqrPls  * (   normal[0]    * normal[0] +   normal[1]    * normal[1] ) ) * solNx_uv[2][1]
-              - ( xMin + xPlus     * (   normal[0]    * normal[0] +   normal[1]    * normal[1] ) ) * solNx_uv[2][0]
-              - sqrPls * normal[2] * ( solNx_uv[0][1] * normal[0] + solNx_uv[1][1] * normal[1])
-              + xPlus  * normal[2] * ( solNx_uv[0][0] * normal[0] + solNx_uv[1][0] * normal[1])
-              - muSqr  *             ( solNx_uv[0][0] * normal[1] - solNx_uv[1][0] * normal[0]);
+      N[2][1] = ( mu1Sqr  + sqrPlus  * (   normal[0]    * normal[0] +   normal[1]    * normal[1] ) ) * solNx_uv[2][1]
+              - ( xMin    + xPlus    * (   normal[0]    * normal[0] +   normal[1]    * normal[1] ) ) * solNx_uv[2][0]
+              - sqrPlus * normal[2]  * ( solNx_uv[0][1] * normal[0] + solNx_uv[1][1] * normal[1] )
+              + xPlus   * normal[2]  * ( solNx_uv[0][0] * normal[0] + solNx_uv[1][0] * normal[1] )
+              - muSqr   *              ( solNx_uv[0][0] * normal[1] - solNx_uv[1][0] * normal[0] );
 
 
-      // std::cout << 00 << " "<< N[0][0]<<" "<< M1[0][0]<<std::endl;
-      // std::cout << 10 << " "<< N[1][0]<<" "<< M1[1][0]<<std::endl;
-      // std::cout << 20 << " "<< N[2][0]<<" "<< M1[2][0]<<std::endl;
-      // std::cout << 01 << " "<< N[0][1]<<" "<< M1[0][1]<<std::endl;
-      // std::cout << 11 << " "<< N[1][1]<<" "<< M1[1][1]<<std::endl;
-      // std::cout << 21 << " "<< N[2][1]<<" "<< M1[2][1]<<std::endl;
+      adept::adouble V[DIM];
+      V[0] = (1 - mu[0]) * solNx_uv[0][0] - (1 + mu[0]) * solNx_uv[1][1] + mu[1] * (solNx_uv[1][0] - solNx_uv[0][1]);
+      V[1] = (1 - mu[0]) * solNx_uv[1][0] + (1 + mu[0]) * solNx_uv[0][1] - mu[1] * (solNx_uv[0][0] + solNx_uv[1][1]);
+      V[2] = 0;
+
+
+      adept::adouble M[DIM][dim];
+
+      M[0][0] = (1 - mu[0]) * V[0] - mu[1] * V[1];
+      M[1][0] = (1 - mu[0]) * V[1] + mu[1] * V[0];
+      M[2][0] = 0;
+      //M[0][0] = (1 - mu1) * V[0] - mu2 * V[1];
+      //M[1][0] = (1 - mu1) * V[1] + mu2 * V[0];
+
+      M[0][1] = (1 + mu[0]) * V[1] - mu[1] * V[0];
+      M[1][1] = - (1 + mu[0]) * V[0] - mu[1] * V[1];
+      M[2][1] = 0;
+
+      // std::cout << 00 << " "<< M1[0][0]<<std::endl;
+
+
+      std::cout << "00" << " "<< N[0][0]<<" "<< M[0][0]<<std::endl;
+      std::cout << "10" << " "<< N[1][0]<<" "<< M[1][0]<<std::endl;
+      //std::cout << "20" << " "<< N[2][0]<<" "<< M[2][0]<<std::endl;
+      std::cout << "01" << " "<< N[0][1]<<" "<< M[0][1]<<std::endl;
+      std::cout << "11" << " "<< N[1][1]<<" "<< M[1][1]<<std::endl;
+      //std::cout << "21" << " "<< N[2][1]<<" "<< M[2][1]<<std::endl;
 
 
 
@@ -1861,7 +1882,7 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
           adept::adouble term1 = 0.;
 
           for(unsigned j = 0; j < dim; j++) {
-            term1 += N[K][j] * phix_uv[j][i];
+            term1 += M[K][j] * phix_uv[j][i];
             //term1 += Q[K][j] * phix_uv[j][i];
           }
 

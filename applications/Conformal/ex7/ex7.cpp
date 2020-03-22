@@ -464,6 +464,10 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       //M[0][1] = (1 + mu1) * V[1] - mu2 * V[0];
       //M[1][1]= -(1 + mu1) * V[0] - mu2 * V[1];
 
+      std::cout << "00" <<" "<< M[0][0] << std::endl;
+      std::cout << "10" <<" "<< M[1][0] << std::endl;
+      std::cout << "01" <<" "<< M[0][1] << std::endl;
+      std::cout << "11" <<" "<< M[1][1] << std::endl;
 
       adept::adouble M1[DIM][dim];
       double muSqrPlus = 1 + mu[0] * mu[0] + mu[1] * mu[1];
