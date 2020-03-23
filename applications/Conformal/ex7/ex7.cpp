@@ -70,7 +70,7 @@ int main(int argc, char** args) {
 
 
   //mlMsh.ReadCoarseMesh ("../input/squareTri.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ("../input/squareReg.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/squareReg.neu", "seventh", scalingFactor);
 
 
   unsigned numberOfUniformLevels = 3;
@@ -126,7 +126,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Dx2");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(20);
+  system.SetMaxNumberOfNonLinearIterations(2);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
@@ -464,10 +464,6 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       //M[0][1] = (1 + mu1) * V[1] - mu2 * V[0];
       //M[1][1]= -(1 + mu1) * V[0] - mu2 * V[1];
 
-      std::cout << "00" <<" "<< M[0][0] << std::endl;
-      std::cout << "10" <<" "<< M[1][0] << std::endl;
-      std::cout << "01" <<" "<< M[0][1] << std::endl;
-      std::cout << "11" <<" "<< M[1][1] << std::endl;
 
       adept::adouble M1[DIM][dim];
       double muSqrPlus = 1 + mu[0] * mu[0] + mu[1] * mu[1];
@@ -478,22 +474,52 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       M1[0][1] = muSqrPlus * gradSolx[0][1] - muSqrMinus * gradSolx[1][0];
       M1[1][1] = muSqrPlus * gradSolx[1][1] + muSqrMinus * gradSolx[0][0];
 
+
+      if(iel == 4 && ig == 1) {
+
+        std::cout << "derivatives "<<std::endl;  
+        std::cout << 1 << " " << gradSolx[0][0] << std::endl;
+        std::cout << 2 << " " << gradSolx[1][1] << std::endl;
+        std::cout << 3 << " " << gradSolx[1][0] << std::endl;
+        std::cout << 4 << " " << gradSolx[0][1] << std::endl;
+
+        std::cout << "symmetric "<<std::endl;
+        std::cout << "00" << " " << M1[0][0] << std::endl;
+        std::cout << "10" << " " << M1[1][0] << std::endl;
+        std::cout << "01" << " " << M1[0][1] << std::endl;
+        std::cout << "11" << " " << M1[1][1] << std::endl;
+        
+        std::cout << "asymmetric "<<std::endl;
+        std::cout << "00" << " " << M[0][0] << std::endl;
+        std::cout << "10" << " " << M[1][0] << std::endl;
+        std::cout << "01" << " " << M[0][1] << std::endl;
+        std::cout << "11" << " " << M[1][1] << std::endl;
+      }
+//       adept::adouble M1[DIM][dim];
+//       double muSqrPlus = 1 + mu[0] * mu[0] + mu[1] * mu[1];
+//       double muSqrMinus = mu[0] * mu[0] + mu[1] * mu[1] - 1;
+// 
+//       M1[0][0] = muSqrPlus * gradSolx[0][0] + muSqrMinus * gradSolx[1][1];
+//       M1[1][0] = muSqrPlus * gradSolx[1][0] - muSqrMinus * gradSolx[0][1];
+//       M1[0][1] = muSqrPlus * gradSolx[0][1] - muSqrMinus * gradSolx[1][0];
+//       M1[1][1] = muSqrPlus * gradSolx[1][1] + muSqrMinus * gradSolx[0][0];
+
       // Implement the Conformal Minimization equations.
       for(unsigned k = 0; k < dim; k++) {
         for(unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
           for(unsigned j = 0; j < dim; j++) {
-            //term1 += 2 * M[k][j] * phi_x[i * dim + j]; // asymmetric
-            term1 += 2 * M1[k][j] * phi_x[i * dim + j]; // symmetric
+            term1 += 2 * M[k][j] * phi_x[i * dim + j]; // asymmetric
+            //term1 += 2 * M1[k][j] * phi_x[i * dim + j]; // symmetric
           }
           // Conformal energy equation (with trick).
           aResDx[k][i] += term1 * weight;
         }
       }
 
-      if(iel == 4 && ig == 1){
+      if(iel == 4 && ig == 1) {
         for(unsigned i = 0; i < nxDofs; i++) {
-          std::cout <<  mu[0] <<" "<< mu[1] << " "<< aResDx[0][i] << " " << aResDx[1][i]<<"\n";
+          std::cout <<  mu[0] << " " << mu[1] << " " << aResDx[0][i] << " " << aResDx[1][i] << "\n";
         }
       }
 
@@ -651,8 +677,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
         }
       }
 
-      if(iel == 4){
-        std::cout << mu[0] << " " << mu[1] << " " << norm2Xz <<"\n";
+      if(iel == 4) {
+        std::cout << mu[0] << " " << mu[1] << " " << norm2Xz << "\n";
       }
 
       for(unsigned i = 0; i < nDofs1; i++) {

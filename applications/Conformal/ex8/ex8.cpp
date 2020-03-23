@@ -36,7 +36,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   bool dirichlet = true;
   value = 0.;
 
-   if(!strcmp(solName, "Dx1")) {
+  if(!strcmp(solName, "Dx1")) {
     if(1 == faceName || 3 == faceName) {
       dirichlet = false;
     }
@@ -882,8 +882,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       mu[0] = rhsmu1 / norm2dxPlus;
       mu[1] = rhsmu2 / norm2sdxPlus;
 
-      if(iel == 4){
-        std::cout << mu[0] << " " << mu[1] << " " << norm2dxPlus << " " << norm2sdxPlus<< "\n";
+      if(iel == 4) {
+        std::cout << mu[0] << " " << mu[1] << " " << norm2dxPlus << " " << norm2sdxPlus << "\n";
       }
 
       // for(unsigned k = 0; k < 2; k++) {
@@ -1773,42 +1773,42 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
 
       adept::adouble N[DIM][dim];
 
-      N[0][0] = ( sqrMin + mu1Sqr  * (   normal[1]    * normal[1] +   normal[2]    * normal[2] ) ) * solNx_uv[0][0]
-              - ( xMin   + xPlus   * (   normal[1]    * normal[1] +   normal[2]    * normal[2] ) ) * solNx_uv[0][1]
-              - mu1Sqr * normal[0] * ( solNx_uv[1][0] * normal[1] + solNx_uv[2][0] * normal[2] )
-              + xPlus  * normal[0] * ( solNx_uv[1][1] * normal[1] + solNx_uv[2][1] * normal[2] )
-              + muSqr  *             ( solNx_uv[1][1] * normal[2] - solNx_uv[2][1] * normal[1] );
+      N[0][0] = (+ (sqrMin + mu1Sqr  * (normal[1] * normal[1] + normal[2] * normal[2])) * solNx_uv[0][0]
+                 - (xMin   + xPlus   * (normal[1] * normal[1] + normal[2] * normal[2])) * solNx_uv[0][1])
+                + (- (solNx_uv[1][0] * normal[1] + solNx_uv[2][0] * normal[2]) * mu1Sqr * normal[0]
+                   + (solNx_uv[1][1] * normal[1] + solNx_uv[2][1] * normal[2]) * xPlus  * normal[0]
+                   + (solNx_uv[1][1] * normal[2] - solNx_uv[2][1] * normal[1]) * muSqr);
 
-      N[1][0] = ( sqrMin + mu1Sqr  * ( normal[2]      * normal[2] +   normal[0]    * normal[0] ) ) * solNx_uv[1][0]
-              - ( xMin   + xPlus   * ( normal[2]      * normal[2] +   normal[0]    * normal[0] ) ) * solNx_uv[1][1]
-              - mu1Sqr * normal[1] * ( solNx_uv[2][0] * normal[2] + solNx_uv[0][0] * normal[0] )
-              + xPlus  * normal[1] * ( solNx_uv[2][1] * normal[2] + solNx_uv[0][1] * normal[0] )
-              + muSqr  *             ( solNx_uv[2][1] * normal[0] - solNx_uv[0][1] * normal[2] );
+      N[1][0] = (+ (sqrMin + mu1Sqr  * (normal[2] * normal[2] + normal[0] * normal[0])) * solNx_uv[1][0]
+                 - (xMin   + xPlus   * (normal[2] * normal[2] + normal[0] * normal[0])) * solNx_uv[1][1])
+                + (- (solNx_uv[2][0] * normal[2] + solNx_uv[0][0] * normal[0]) * mu1Sqr * normal[1]
+                   + (solNx_uv[2][1] * normal[2] + solNx_uv[0][1] * normal[0]) * xPlus  * normal[1]
+                   + (solNx_uv[2][1] * normal[0] - solNx_uv[0][1] * normal[2]) * muSqr);
 
-      N[2][0] = ( sqrMin + mu1Sqr  * (   normal[0]    * normal[0] +   normal[1]    * normal[1] ) ) * solNx_uv[2][0]
-              - ( xMin   + xPlus   * (   normal[0]    * normal[0] +   normal[1]    * normal[1] ) ) * solNx_uv[2][1]
-              - mu1Sqr * normal[2] * ( solNx_uv[0][0] * normal[0] + solNx_uv[1][0] * normal[1] )
-              + xPlus  * normal[2] * ( solNx_uv[0][1] * normal[0] + solNx_uv[1][1] * normal[1] )
-              + muSqr  *             ( solNx_uv[0][1] * normal[1] - solNx_uv[1][1] * normal[0] );
+      N[2][0] = (+ (sqrMin + mu1Sqr  * (normal[0] * normal[0] + normal[1] * normal[1])) * solNx_uv[2][0]
+                 - (xMin   + xPlus   * (normal[0] * normal[0] + normal[1] * normal[1])) * solNx_uv[2][1])
+                + (- (solNx_uv[0][0] * normal[0] + solNx_uv[1][0] * normal[1]) * mu1Sqr * normal[2]
+                   + (solNx_uv[0][1] * normal[0] + solNx_uv[1][1] * normal[1]) * xPlus  * normal[2]
+                   + (solNx_uv[0][1] * normal[1] - solNx_uv[1][1] * normal[0]) * muSqr);
 
 
-      N[0][1] = ( mu1Sqr  + sqrPlus  * (   normal[1]    * normal[1] +   normal[2]    * normal[2] ) ) * solNx_uv[0][1]
-              - ( xMin    + xPlus    * (   normal[1]    * normal[1] +   normal[2]    * normal[2] ) ) * solNx_uv[0][0]
-              - sqrPlus * normal[0]  * ( solNx_uv[1][1] * normal[1] + solNx_uv[2][1] * normal[2] )
-              + xPlus   * normal[0]  * ( solNx_uv[1][0] * normal[1] + solNx_uv[2][0] * normal[2] )
-              - muSqr   *              ( solNx_uv[1][0] * normal[2] - solNx_uv[2][0] * normal[1] );
+      N[0][1] = (+ (mu1Sqr + sqrPlus * (normal[1] * normal[1] + normal[2] * normal[2])) * solNx_uv[0][1]
+                 - (xMin   + xPlus   * (normal[1] * normal[1] + normal[2] * normal[2])) * solNx_uv[0][0])
+                + (- (solNx_uv[1][1] * normal[1] + solNx_uv[2][1] * normal[2]) * sqrPlus * normal[0]
+                   + (solNx_uv[1][0] * normal[1] + solNx_uv[2][0] * normal[2]) * xPlus   * normal[0]
+                   - (solNx_uv[1][0] * normal[2] - solNx_uv[2][0] * normal[1]) * muSqr);
 
-      N[1][1] = ( mu1Sqr  + sqrPlus  * (   normal[2]    * normal[2] +   normal[0]    * normal[0] ) ) * solNx_uv[1][1]
-              - ( xMin    + xPlus    * (   normal[2]    * normal[2] +   normal[0]    * normal[0] ) ) * solNx_uv[1][0]
-              - sqrPlus * normal[1]  * ( solNx_uv[2][1] * normal[2] + solNx_uv[0][1] * normal[0] )
-              + xPlus   * normal[1]  * ( solNx_uv[2][0] * normal[2] + solNx_uv[0][0] * normal[0] )
-              - muSqr   *              ( solNx_uv[2][0] * normal[0] - solNx_uv[0][0] * normal[2] );
+      N[1][1] = (+ (mu1Sqr + sqrPlus * (normal[2] * normal[2] + normal[0] * normal[0])) * solNx_uv[1][1]
+                 - (xMin   + xPlus   * (normal[2] * normal[2] + normal[0] * normal[0])) * solNx_uv[1][0])
+                + (- (solNx_uv[2][1] * normal[2] + solNx_uv[0][1] * normal[0]) * sqrPlus * normal[1]
+                   + (solNx_uv[2][0] * normal[2] + solNx_uv[0][0] * normal[0]) * xPlus   * normal[1]
+                   - (solNx_uv[2][0] * normal[0] - solNx_uv[0][0] * normal[2]) * muSqr);
 
-      N[2][1] = ( mu1Sqr  + sqrPlus  * (   normal[0]    * normal[0] +   normal[1]    * normal[1] ) ) * solNx_uv[2][1]
-              - ( xMin    + xPlus    * (   normal[0]    * normal[0] +   normal[1]    * normal[1] ) ) * solNx_uv[2][0]
-              - sqrPlus * normal[2]  * ( solNx_uv[0][1] * normal[0] + solNx_uv[1][1] * normal[1] )
-              + xPlus   * normal[2]  * ( solNx_uv[0][0] * normal[0] + solNx_uv[1][0] * normal[1] )
-              - muSqr   *              ( solNx_uv[0][0] * normal[1] - solNx_uv[1][0] * normal[0] );
+      N[2][1] = (+ (mu1Sqr + sqrPlus * (normal[0] * normal[0] + normal[1] * normal[1])) * solNx_uv[2][1]
+                 - (xMin   + xPlus   * (normal[0] * normal[0] + normal[1] * normal[1])) * solNx_uv[2][0])
+                + (- (solNx_uv[0][1] * normal[0] + solNx_uv[1][1] * normal[1]) * sqrPlus * normal[2]
+                   + (solNx_uv[0][0] * normal[0] + solNx_uv[1][0] * normal[1]) * xPlus   * normal[2]
+                   - (solNx_uv[0][0] * normal[1] - solNx_uv[1][0] * normal[0]) * muSqr);
 
 
       adept::adouble V[DIM];
@@ -1831,15 +1831,34 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
 
       // std::cout << 00 << " "<< M1[0][0]<<std::endl;
 
+      if(iel == 4 && ig == 1) {
 
-      std::cout << "00" << " "<< N[0][0]<<" "<< M[0][0]<<std::endl;
-      std::cout << "10" << " "<< N[1][0]<<" "<< M[1][0]<<std::endl;
-      //std::cout << "20" << " "<< N[2][0]<<" "<< M[2][0]<<std::endl;
-      std::cout << "01" << " "<< N[0][1]<<" "<< M[0][1]<<std::endl;
-      std::cout << "11" << " "<< N[1][1]<<" "<< M[1][1]<<std::endl;
-      //std::cout << "21" << " "<< N[2][1]<<" "<< M[2][1]<<std::endl;
+        std::cout << "derivatives " << std::endl;
+        std::cout << 1 << " " << solNx_uv[0][0] << std::endl;
+        std::cout << 2 << " " << solNx_uv[1][1] << std::endl;
+        std::cout << 3 << " " << solNx_uv[1][0] << std::endl;
+        std::cout << 4 << " " << solNx_uv[0][1] << std::endl;
 
+        std::cout << "symmetric " << std::endl;
+        std::cout << "00" << " " << M1[0][0] << std::endl;
+        std::cout << "01" << " " << M1[1][0] << std::endl;
+        std::cout << "01" << " " << M1[0][1] << std::endl;
+        std::cout << "11" << " " << M1[1][1] << std::endl;
 
+        std::cout << "asymmetric " << std::endl;
+        std::cout << "00" << " " << N[0][0] << std::endl;
+        std::cout << "01" << " " << N[1][0] << std::endl;
+        std::cout << "01" << " " << N[0][1] << std::endl;
+        std::cout << "11" << " " << N[1][1] << std::endl;
+
+//         std::cout << "00" << " " << N[0][0] << " " << M[0][0] << std::endl;
+//         std::cout << "10" << " " << N[1][0] << " " << M[1][0] << std::endl;
+//         //std::cout << "20" << " "<< N[2][0]<<" "<< M[2][0]<<std::endl;
+//         std::cout << "01" << " " << N[0][1] << " " << M[0][1] << std::endl;
+//         std::cout << "11" << " " << N[1][1] << " " << M[1][1] << std::endl;
+//         //std::cout << "21" << " "<< N[2][1]<<" "<< M[2][1]<<std::endl;
+
+      }
 
 
 
@@ -1882,8 +1901,8 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
           adept::adouble term1 = 0.;
 
           for(unsigned j = 0; j < dim; j++) {
-            //term1 += N[K][j] * phix_uv[j][i]; //asymmetric
-            term1 += M1[K][j] * phix_uv[j][i]; //symmetric
+            term1 += 2 * N[K][j] * phix_uv[j][i]; //asymmetric
+            //term1 += M1[K][j] * phix_uv[j][i]; //symmetric
             //term1 += Q[K][j] * phix_uv[j][i];
           }
 
@@ -1900,9 +1919,9 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
       }
       //aResL[0] += (DnXmDxdotN + eps * solL[0]) * Area;
 
-      if(iel == 4 && ig == 1){
+      if(iel == 4 && ig == 1) {
         for(unsigned i = 0; i < nxDofs; i++) {
-          std::cout <<  mu[0] <<" "<< mu[1] << " "<< aResNDx[0][i] << " " << aResNDx[1][i]<<"\n";
+          std::cout <<  mu[0] << " " << mu[1] << " " << aResNDx[0][i] << " " << aResNDx[1][i] << "\n";
         }
       }
 
@@ -1955,3 +1974,5 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
   counter++;
 
 } // end AssembleConformalMinimization.
+
+
