@@ -1882,7 +1882,8 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
           adept::adouble term1 = 0.;
 
           for(unsigned j = 0; j < dim; j++) {
-            term1 += M[K][j] * phix_uv[j][i];
+            //term1 += N[K][j] * phix_uv[j][i]; //asymmetric
+            term1 += M1[K][j] * phix_uv[j][i]; //symmetric
             //term1 += Q[K][j] * phix_uv[j][i];
           }
 

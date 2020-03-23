@@ -483,7 +483,8 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         for(unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
           for(unsigned j = 0; j < dim; j++) {
-            term1 += 2 * M1[k][j] * phi_x[i * dim + j];
+            //term1 += 2 * M[k][j] * phi_x[i * dim + j]; // asymmetric
+            term1 += 2 * M1[k][j] * phi_x[i * dim + j]; // symmetric
           }
           // Conformal energy equation (with trick).
           aResDx[k][i] += term1 * weight;
