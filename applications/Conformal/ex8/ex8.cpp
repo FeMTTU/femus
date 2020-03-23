@@ -1743,6 +1743,15 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
 
       //std::cout << mu[0] <<" "<< mu[1]<<" ";
 
+      adept::adouble M2[DIM][dim];
+      double muSqrPlus = 1 + mu[0] * mu[0] + mu[1] * mu[1];
+      double muSqrMinus = mu[0] * mu[0] + mu[1] * mu[1] - 1;
+
+      M2[0][0] = muSqrPlus * solNx_uv[0][0] + muSqrMinus * solNx_uv[1][1];
+      M2[1][0] = muSqrPlus * solNx_uv[1][0] - muSqrMinus * solNx_uv[0][1];
+      M2[0][1] = muSqrPlus * solNx_uv[0][1] - muSqrMinus * solNx_uv[1][0];
+      M2[1][1] = muSqrPlus * solNx_uv[1][1] + muSqrMinus * solNx_uv[0][0];
+
 
       adept::adouble M1[DIM][dim];
 
@@ -1840,16 +1849,16 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
         std::cout << 4 << " " << solNx_uv[0][1] << std::endl;
 
         std::cout << "symmetric " << std::endl;
-        std::cout << "00" << " " << M1[0][0] << std::endl;
-        std::cout << "01" << " " << M1[1][0] << std::endl;
-        std::cout << "01" << " " << M1[0][1] << std::endl;
-        std::cout << "11" << " " << M1[1][1] << std::endl;
+        std::cout << "00" << " " << M1[0][0] << " " << M2[0][0] << std::endl;
+        std::cout << "01" << " " << M1[1][0] << " " << M2[1][0] << std::endl;
+        std::cout << "01" << " " << M1[0][1] << " " << M2[0][1] << std::endl;
+        std::cout << "11" << " " << M1[1][1] << " " << M2[1][1] << std::endl;
 
         std::cout << "asymmetric " << std::endl;
-        std::cout << "00" << " " << N[0][0] << std::endl;
-        std::cout << "01" << " " << N[1][0] << std::endl;
-        std::cout << "01" << " " << N[0][1] << std::endl;
-        std::cout << "11" << " " << N[1][1] << std::endl;
+        std::cout << "00" << " " << N[0][0] << " " << M[0][0] << std::endl;
+        std::cout << "01" << " " << N[1][0] << " " << M[1][0] << std::endl;
+        std::cout << "01" << " " << N[0][1] << " " << M[0][1] << std::endl;
+        std::cout << "11" << " " << N[1][1] << " " << M[1][1] << std::endl;
 
 //         std::cout << "00" << " " << N[0][0] << " " << M[0][0] << std::endl;
 //         std::cout << "10" << " " << N[1][0] << " " << M[1][0] << std::endl;
@@ -1901,7 +1910,7 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
           adept::adouble term1 = 0.;
 
           for(unsigned j = 0; j < dim; j++) {
-            term1 += 2 * N[K][j] * phix_uv[j][i]; //asymmetric
+            term1 += N[K][j] * phix_uv[j][i]; //asymmetric
             //term1 += M1[K][j] * phix_uv[j][i]; //symmetric
             //term1 += Q[K][j] * phix_uv[j][i];
           }
@@ -1974,5 +1983,3 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
   counter++;
 
 } // end AssembleConformalMinimization.
-
-

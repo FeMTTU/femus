@@ -447,6 +447,29 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 
       //std::cout << mu[0] <<" "<< mu[1]<<" ";
 
+      double muPlus = pow(1 + mu[0], 2) + mu[1] * mu[1];
+      double muMinus = pow(1 - mu[0], 2) + mu[1] * mu[1];
+      double mu1Sqr = mu[1] * mu[1];
+      double sqrMin = ((1 - mu[0]) * (1 - mu[0]));
+      double sqrPlus = ((1 + mu[0]) * (1 + mu[0]));
+      double xMin = mu[1] * (1 - mu[0]);
+      double xPlus = mu[1] * (1 + mu[0]);
+      double muSqr = (mu[0] * mu[0] + mu[1] * mu[1] - 1.);
+
+      adept::adouble Asym1[DIM][dim];
+      Asym1[0][0] = muMinus * gradSolx[0][0] + muSqr * gradSolx[1][1] - (xMin + xPlus) * gradSolx[0][1];
+      Asym1[1][0] = muMinus * gradSolx[1][0] - muSqr * gradSolx[0][1] - 2 * mu[1] * gradSolx[1][1];
+      Asym1[0][1] = muPlus  * gradSolx[0][1] - muSqr * gradSolx[1][0] - 2 * mu[1] * gradSolx[0][0];
+      Asym1[1][1] = muPlus  * gradSolx[1][1] + muSqr * gradSolx[0][0] - 2 * mu[1] * gradSolx[1][0];
+
+      adept::adouble Asym2[DIM][dim];
+      Asym1[0][0] = muPlus   * gradSolx[0][0] + muSqr * gradSolx[1][1] + 2 * mu[1] * gradSolx[0][1];
+      Asym1[1][0] = muPlus   * gradSolx[1][0] - muSqr * gradSolx[0][1] + 2 * mu[1] * gradSolx[1][1];
+      Asym1[0][1] = muMinus  * gradSolx[0][1] - muSqr * gradSolx[1][0] + 2 * mu[1] * gradSolx[0][0];
+      Asym1[1][1] = muMinus  * gradSolx[1][1] + muSqr * gradSolx[0][0] + 2 * mu[1] * gradSolx[1][0];
+
+
+
       adept::adouble V[DIM];
       V[0] = (1 - mu[0]) * gradSolx[0][0] - (1 + mu[0]) * gradSolx[1][1] + mu[1] * (gradSolx[1][0] - gradSolx[0][1]);
       V[1] = (1 - mu[0]) * gradSolx[1][0] + (1 + mu[0]) * gradSolx[0][1] - mu[1] * (gradSolx[0][0] + gradSolx[1][1]);
@@ -477,28 +500,29 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 
       if(iel == 4 && ig == 1) {
 
-        std::cout << "derivatives "<<std::endl;  
+        std::cout << "derivatives "<<std::endl;
         std::cout << 1 << " " << gradSolx[0][0] << std::endl;
         std::cout << 2 << " " << gradSolx[1][1] << std::endl;
         std::cout << 3 << " " << gradSolx[1][0] << std::endl;
         std::cout << 4 << " " << gradSolx[0][1] << std::endl;
 
         std::cout << "symmetric "<<std::endl;
-        std::cout << "00" << " " << M1[0][0] << std::endl;
-        std::cout << "10" << " " << M1[1][0] << std::endl;
-        std::cout << "01" << " " << M1[0][1] << std::endl;
-        std::cout << "11" << " " << M1[1][1] << std::endl;
-        
+        std::cout << "00" << " " << M1[0][0] << " " << Asym1[0][0] + Asym2[0][0] << std::endl;
+        std::cout << "10" << " " << M1[1][0] << " " << Asym1[1][0] + Asym2[1][0] << std::endl;
+        std::cout << "01" << " " << M1[0][1] << " " << Asym1[0][1] + Asym2[0][1] << std::endl;
+        std::cout << "11" << " " << M1[1][1] << " " << Asym1[1][1] + Asym2[1][1] << std::endl;
+
         std::cout << "asymmetric "<<std::endl;
-        std::cout << "00" << " " << M[0][0] << std::endl;
-        std::cout << "10" << " " << M[1][0] << std::endl;
-        std::cout << "01" << " " << M[0][1] << std::endl;
-        std::cout << "11" << " " << M[1][1] << std::endl;
+        std::cout << "00" << " " << M[0][0] << " " << Asym1[0][0] << " " << Asym2[0][0] << std::endl;
+        std::cout << "10" << " " << M[1][0] << " " << Asym1[1][0] << " " << Asym2[1][0] << std::endl;
+        std::cout << "01" << " " << M[0][1] << " " << Asym1[0][1] << " " << Asym2[0][1] << std::endl;
+        std::cout << "11" << " " << M[1][1] << " " << Asym1[1][1] << " " << Asym2[1][1] << std::endl;
+
       }
 //       adept::adouble M1[DIM][dim];
 //       double muSqrPlus = 1 + mu[0] * mu[0] + mu[1] * mu[1];
 //       double muSqrMinus = mu[0] * mu[0] + mu[1] * mu[1] - 1;
-// 
+//
 //       M1[0][0] = muSqrPlus * gradSolx[0][0] + muSqrMinus * gradSolx[1][1];
 //       M1[1][0] = muSqrPlus * gradSolx[1][0] - muSqrMinus * gradSolx[0][1];
 //       M1[0][1] = muSqrPlus * gradSolx[0][1] - muSqrMinus * gradSolx[1][0];
@@ -509,7 +533,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         for(unsigned i = 0; i < nxDofs; i++) {
           adept::adouble term1 = 0.;
           for(unsigned j = 0; j < dim; j++) {
-            term1 += 2 * M[k][j] * phi_x[i * dim + j]; // asymmetric
+            term1 += Asym1[k][j] * phi_x[i * dim + j]; // asymmetric
             //term1 += 2 * M1[k][j] * phi_x[i * dim + j]; // symmetric
           }
           // Conformal energy equation (with trick).
