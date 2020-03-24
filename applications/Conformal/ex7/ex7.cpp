@@ -126,7 +126,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Dx2");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(100);
+  system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
@@ -428,7 +428,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 
       for(unsigned i = 0; i < nDofs1; i++) {
         for(unsigned K = 0; K < DIM; K++) {
-          mu[K] = phi1[i] * solMu[K][i];
+          mu[K] += phi1[i] * solMu[K][i];
         }
       }
 
@@ -467,8 +467,8 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 //       Asym2[1][0] = muPlus   * gradSolx[1][0] - muSqr * gradSolx[0][1] + 2 * mu[1] * gradSolx[1][1];
 //       Asym2[0][1] = muMinus  * gradSolx[0][1] - muSqr * gradSolx[1][0] + 2 * mu[1] * gradSolx[0][0];
 //       Asym2[1][1] = muMinus  * gradSolx[1][1] + muSqr * gradSolx[0][0] + 2 * mu[1] * gradSolx[1][0];
-//       
-      
+//
+
       Asym2[0][0] = muMinus * gradSolx[0][0] + muSqr * gradSolx[1][1] - 2. * mu[1] * gradSolx[0][1];
       Asym2[1][0] = muMinus * gradSolx[1][0] - muSqr * gradSolx[0][1] - 2. * mu[1] * gradSolx[1][1];
       Asym2[0][1] = muPlus  * gradSolx[0][1] - muSqr * gradSolx[1][0] - 2. * mu[1] * gradSolx[0][0];
@@ -693,23 +693,59 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
       double *phi1 = msh->_finiteElement[ielGeom][solType1]->GetPhi(ig);
 
-      double norm2Xz = (1. / 4.) * (pow((gradSolx[0][0] + gradSolx[1][1]), 2) + pow((gradSolx[1][0] - gradSolx[0][1]), 2));
-      double XzBarXz_Bar[2];
+      // double norm2Xz = (1. / 4.) * (pow((gradSolx[0][0] + gradSolx[1][1]), 2) + pow((gradSolx[1][0] - gradSolx[0][1]), 2));
+      //
+      // double XzBarXz_Bar[2];
+      // XzBarXz_Bar[0] = (1. / 4.) * (pow(gradSolx[0][0], 2) + pow(gradSolx[1][0], 2) - pow(gradSolx[0][1], 2) - pow(gradSolx[1][1], 2));
+      // XzBarXz_Bar[1] = (1. / 2.) * (gradSolx[0][0] * gradSolx[0][1] + gradSolx[1][0] * gradSolx[1][1]);
+      //
+      // // Comment out for working code
+      //
+      // double mu[2] = {0., 0.};
+      // for(unsigned k = 0; k < 2; k++) {
+      //   if(norm2Xz > 0.) {
+      //     mu[k] += (1. / norm2Xz) * XzBarXz_Bar[k];
+      //   }
+      // }
 
-      XzBarXz_Bar[0] = (1. / 4.) * (pow(gradSolx[0][0], 2) + pow(gradSolx[1][0], 2) - pow(gradSolx[0][1], 2) - pow(gradSolx[1][1], 2));
-      XzBarXz_Bar[1] = (1. / 2.) * (gradSolx[0][0] * gradSolx[0][1] + gradSolx[1][0] * gradSolx[1][1]);
+      double normal[3] = {0,0,1};
 
-      // Comment out for working code
+      double dxPlus1[3];
+      dxPlus1[0] = gradSolx[0][0] + gradSolx[1][1] * normal[2] - 0 * normal[1];
+      dxPlus1[1] = gradSolx[1][0] + 0 * normal[0] - gradSolx[0][1] * normal[2];
+      dxPlus1[2] = 0 + gradSolx[0][1] * normal[1] - gradSolx[1][1] * normal[0];
 
-      double mu[2] = {0., 0.};
-      for(unsigned k = 0; k < 2; k++) {
-        if(norm2Xz > 0.) {
-          mu[k] += (1. / norm2Xz) * XzBarXz_Bar[k];
-        }
+      double sdxPlus1[3];
+      sdxPlus1[0] = gradSolx[0][1] - gradSolx[1][0] * normal[2] + 0 * normal[1];
+      sdxPlus1[1] = gradSolx[1][1] - 0 * normal[0] + gradSolx[0][0] * normal[2];
+      sdxPlus1[2] = 0 - gradSolx[0][0] * normal[1] + gradSolx[1][0] * normal[0];
+
+      double dxMinus1[3];
+      dxMinus1[0] = gradSolx[0][0] - gradSolx[1][1] * normal[2] + 0 * normal[1];
+      dxMinus1[1] = gradSolx[1][0] - 0 * normal[0] + gradSolx[0][1] * normal[2];
+      dxMinus1[2] = 0 - gradSolx[0][1] * normal[1] + gradSolx[1][1] * normal[0];
+
+      double norm2dxPlus1 = 0;
+      double norm2sdxPlus1 = 0;
+      double rhs1mu1 = 0;
+      double rhs1mu2 = 0;
+
+      //FAKE COMPUTATION NOTE THE SIGNS;
+      for(unsigned K = 0; K < 3; K++) {
+        norm2dxPlus1 += dxPlus1[K] * dxPlus1[K];
+        norm2sdxPlus1 += sdxPlus1[K] * sdxPlus1[K];
+        rhs1mu1 += dxPlus1[K] * dxMinus1[K];
+        rhs1mu2 += sdxPlus1[K] * dxMinus1[K];
+
+        //dxsdxp += dxMinus[K] * dxMinus[K];
       }
 
+      double mu[2] = {0., 0.};
+      mu[0] = rhs1mu1 / norm2dxPlus1;
+      mu[1] = rhs1mu2 / norm2sdxPlus1;
+
       if(iel == 4) {
-        std::cout << mu[0] << " " << mu[1] << " " << norm2Xz << "\n";
+        std::cout << mu[0] << " " << mu[1] << " " /*<< norm2Xz*/ << "\n";
       }
 
       for(unsigned i = 0; i < nDofs1; i++) {

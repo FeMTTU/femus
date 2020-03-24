@@ -33,22 +33,22 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob);
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
 
 
-  // bool dirichlet = true;
-  // value = 0.;
-  //
-  // if(!strcmp(solName, "Dx1")) {
-  //   if(1 == faceName || 3 == faceName) {
-  //     dirichlet = false;
-  //   }
-  //   if(4 == faceName) {
-  //     value = 0.5 * sin(x[1] / 0.5 * M_PI);
-  //   }
-  // }
-  // else if(!strcmp(solName, "Dx2")) {
-  //   if(2 == faceName) {
-  //     dirichlet = false;
-  //   }
-  // }
+  bool dirichlet = true;
+  value = 0.;
+
+  if(!strcmp(solName, "Dx1")) {
+    if(1 == faceName || 3 == faceName) {
+      dirichlet = false;
+    }
+    if(4 == faceName) {
+      value = 0.5 * sin(x[1] / 0.5 * M_PI);
+    }
+  }
+  else if(!strcmp(solName, "Dx2")) {
+    if(2 == faceName) {
+      dirichlet = false;
+    }
+  }
 
 
 //   if (!strcmp (solName, "Dx1")) {
@@ -66,16 +66,16 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
   // /*
 
-  bool dirichlet = true;
-  value = 0.;
-
-  if(!strcmp(solName, "Dx1")) {
-  if(1 == faceName) {
-    value = 0.25 * sin (2*(x[1] / 0.5 * acos (-1.)));
-    //value = 0. * sin(x[1] / 0.5 * M_PI);
-    //dirichlet = false;
-  }
-  }
+  // bool dirichlet = true;
+  // value = 0.;
+  //
+  // if(!strcmp(solName, "Dx1")) {
+  // if(1 == faceName) {
+  //   value = 0.25 * sin (2*(x[1] / 0.5 * acos (-1.)));
+  //   //value = 0. * sin(x[1] / 0.5 * M_PI);
+  //   //dirichlet = false;
+  // }
+  // }
 
 
   return dirichlet;
@@ -99,8 +99,9 @@ int main(int argc, char** args) {
   //mlMsh.GenerateCoarseBoxMesh(32, 32, 0, -0.5, 0.5, -0.5, 0.5, 0., 0., QUAD9, "seventh");
 
 
-  //mlMsh.ReadCoarseMesh("../input/squareReg3D.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/squareReg3D.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("../input/square13D.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
 
 
   unsigned numberOfUniformLevels = 3;
@@ -161,7 +162,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(50);
+  system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
@@ -833,15 +834,15 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       // std::cout << detg << " ";
 
       double normal[DIM];
-      // normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
-      // normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
-      // normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
+       normal[0] = 0; // (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
+       normal[1] = 0; //(solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
+       normal[2] = 1; //(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
       //normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) * sqrt(detg) / detg;
       //normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) * sqrt(detg) / detg;
       //normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) * sqrt(detg) / detg;
-      normal[0] = 0;
-      normal[1] = solxg[1] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
-      normal[2] = solxg[2] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
+      // normal[0] = 0;
+      // normal[1] = solxg[1] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
+      // normal[2] = solxg[2] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
 
 
       double dxPlus[DIM];
@@ -864,10 +865,10 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       double rhsmu1 = 0;
       double rhsmu2 = 0;
 
-      //double dxsdxp = 0.;
+      //FAKE COMPUTATION NOTE THE SIGNS
       for(unsigned K = 0; K < DIM; K++) {
-        norm2dxPlus -= dxPlus[K] * dxPlus[K];
-        norm2sdxPlus -= sdxPlus[K] * sdxPlus[K];
+        norm2dxPlus += dxPlus[K] * dxPlus[K];
+        norm2sdxPlus += sdxPlus[K] * sdxPlus[K];
         rhsmu1 += dxPlus[K] * dxMinus[K];
         rhsmu2 += sdxPlus[K] * dxMinus[K];
 
@@ -1693,12 +1694,12 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
 
       // Compute components of the unit normal N.
       double normal[DIM];
-      // normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
-      // normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
-      // normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
-      normal[0] = 0;
-      normal[1] = solNxg[1] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
-      normal[2] = solNxg[2] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
+       normal[0] = 0; //(solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
+       normal[1] = 0; //(solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
+       normal[2] = 1; //(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
+      // normal[0] = 0;
+      // normal[1] = solNxg[1] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
+      // normal[2] = solNxg[2] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
 
 
       //
@@ -1727,7 +1728,7 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
 
       for(unsigned i = 0; i < nDofs1; i++) {
         for(unsigned k = 0; k < 2; k++) {
-          mu[k] -= phi1[i] * solMu[k][i];
+          mu[k] += phi1[i] * solMu[k][i];
         }
       }
       double muPlus = pow(1 + mu[0], 2) + mu[1] * mu[1];
