@@ -70,7 +70,7 @@ int main(int argc, char** args) {
 
 
   //mlMsh.ReadCoarseMesh ("../input/squareTri.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("../input/squareReg.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/square1.neu", "seventh", scalingFactor);
 
 
   unsigned numberOfUniformLevels = 3;
@@ -126,7 +126,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Dx2");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(100);
+  system.SetMaxNumberOfNonLinearIterations(2);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();

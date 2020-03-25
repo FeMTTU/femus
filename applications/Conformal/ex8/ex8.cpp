@@ -16,15 +16,25 @@
 #include "PetscMatrix.hpp"
 
 bool stopIterate = false;
-const double eps = 1.0e-5;
+
+unsigned conformalTriangleType = 2;
+const double eps = 1e-5;
+const double normalSign = -1.;
+bool O2conformal = false;
+unsigned counter = 0;
 
 using namespace femus;
+void UpdateMu(MultiLevelSolution& mlSol);
+
+
+#include "../include/supportFunctions.hpp"
+#include "../include/assembleConformalMinimization.hpp"
 // Comment back in for working code
 //const double mu[2] = {0.8, 0.};
 
-void UpdateMu(MultiLevelSolution& mlSol);
 
-void AssembleConformalMinimization(MultiLevelProblem& ml_prob);   //stable and not bad
+
+void AssembleConformalMinimizationOld(MultiLevelProblem& ml_prob);   //stable and not bad
 void AssembleShearMinimization(MultiLevelProblem& ml_prob);
 
 void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob);
@@ -64,18 +74,18 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
 
 
-  /*
+  
 
-  bool dirichlet = true;
-  value = 0.;
-
-  if(!strcmp(solName, "Dx1")) {
-  if(1 == faceName) {
-    //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
-    value = 0. * sin(x[1] / 0.5 * M_PI);
-    //dirichlet = false;
-  }
-  }*/
+//   bool dirichlet = true;
+//   value = 0.;
+// 
+//   if(!strcmp(solName, "Dx1")) {
+//   if(1 == faceName) {
+//     value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
+//     value = 0.125 * sin(x[1] / 0.5 * M_PI);
+//     dirichlet = false;
+//   }
+//   }
 
 
   return dirichlet;
@@ -98,8 +108,8 @@ int main(int argc, char** args) {
 
   //mlMsh.GenerateCoarseBoxMesh(32, 32, 0, -0.5, 0.5, -0.5, 0.5, 0., 0., QUAD9, "seventh");
 
-
-  mlMsh.ReadCoarseMesh("../input/squareReg3D.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("../input/squareReg3D.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/square13D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
 
 
@@ -186,7 +196,8 @@ int main(int argc, char** args) {
   //system.MGsolve();
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 1);
 
-  system.SetAssembleFunction(AssembleConformalO1Minimization);
+  system.SetAssembleFunction(AssembleConformalMinimization);
+  //system.SetAssembleFunction(AssembleConformalO1Minimization);
   system.MGsolve();
 
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 2);
@@ -194,10 +205,10 @@ int main(int argc, char** args) {
   return 0;
 }
 
-unsigned counter = 0;
+
 
 // Building the Conformal Minimization system.
-void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
+void AssembleConformalMinimizationOld(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
 
@@ -1717,7 +1728,7 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
 
       for(unsigned i = 0; i < nDofs1; i++) {
         for(unsigned k = 0; k < 2; k++) {
-          mu[k] += phi1[i] * solMu[k][i];
+          mu[k] -= phi1[i] * solMu[k][i];
         }
       }
       double muPlus = pow(1 + mu[0], 2) + mu[1] * mu[1];
