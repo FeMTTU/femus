@@ -46,19 +46,19 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   bool dirichlet = true;
   value = 0.;
 
-  if(!strcmp(solName, "Dx1")) {
-    if(1 == faceName || 3 == faceName) {
-      dirichlet = false;
-    }
-    if(4 == faceName) {
-      value = 0.5 * sin(x[1] / 0.5 * M_PI);
-    }
-  }
-  else if(!strcmp(solName, "Dx2")) {
-    if(2 == faceName) {
-      dirichlet = false;
-    }
-  }
+  // if(!strcmp(solName, "Dx1")) {
+  //   if(1 == faceName || 3 == faceName) {
+  //     dirichlet = false;
+  //   }
+  //   if(4 == faceName) {
+  //     value = 0.5 * sin(x[1] / 0.5 * M_PI);
+  //   }
+  // }
+  // else if(!strcmp(solName, "Dx2")) {
+  //   if(2 == faceName) {
+  //     dirichlet = false;
+  //   }
+  // }
 
 
 //   if (!strcmp (solName, "Dx1")) {
@@ -76,40 +76,16 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
 
 
-//   bool dirichlet = true;
-//   value = 0.;
-//
-//   if(!strcmp(solName, "Dx1")) {
-//   if(1 == faceName) {
-//     value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
-//     value = 0.125 * sin(x[1] / 0.5 * M_PI);
-//     dirichlet = false;
-//   }
-//   }
-
-
-//   bool dirichlet = true;
-//   value = 0.;
-//
-//   if(!strcmp(solName, "Dx1")) {
-//   if(1 == faceName) {
-//     value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
-//     value = 0.125 * sin(x[1] / 0.5 * M_PI);
-//     dirichlet = false;
-//   }
-//   }
-  /*
-
-  bool dirichlet = true;
-  value = 0.;
+  // bool dirichlet = true;
+  // value = 0.;
 
   if(!strcmp(solName, "Dx1")) {
   if(1 == faceName) {
     //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
-    value = 0. * sin(x[1] / 0.5 * M_PI);
+    value = 0.15 * sin(x[1] / 0.5 * M_PI);
     //dirichlet = false;
   }
-  }*/
+  }
 
 
   return dirichlet;
@@ -133,11 +109,11 @@ int main(int argc, char** args) {
   //mlMsh.GenerateCoarseBoxMesh(32, 32, 0, -0.5, 0.5, -0.5, 0.5, 0., 0., QUAD9, "seventh");
 
   //mlMsh.ReadCoarseMesh("../input/squareReg3D.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("../input/square13D.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("../input/square13D.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
 
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -868,16 +844,12 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       // std::cout << detg << " ";
 
       double normal[DIM];
-       normal[0] = 0; // (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
-       normal[1] = 0; //(solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
-       normal[2] = 1; //(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
+      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
+      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
+      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
       //normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) * sqrt(detg) / detg;
       //normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) * sqrt(detg) / detg;
       //normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) * sqrt(detg) / detg;
-      // normal[0] = 0;
-      // normal[1] = solxg[1] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
-      // normal[2] = solxg[2] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
-
 
       double dxPlus[DIM];
       dxPlus[0] = solx_uv[0][0] + solx_uv[1][1] * normal[2] - solx_uv[2][1] * normal[1];
@@ -899,7 +871,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       double rhsmu1 = 0;
       double rhsmu2 = 0;
 
-      //FAKE COMPUTATION NOTE THE SIGNS
+      //double dxsdxp = 0.;
       for(unsigned K = 0; K < DIM; K++) {
         norm2dxPlus += dxPlus[K] * dxPlus[K];
         norm2sdxPlus += sdxPlus[K] * sdxPlus[K];
@@ -962,8 +934,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       sol->_Sol[indexMu[k]]->set(i, mu[k] / weight);
     }
     sol->_Sol[indexMuN1]->set(i, sqrt(mu[0] * mu[0] + mu[1] * mu[1]) / weight);
-    sol->_Sol[indexTheta1]->set(i, atan2( mu[1], fabs(mu[0]) ));
-    sol->_Sol[indexPhi1]->set(i, atan2( mu[0], fabs(mu[1]) ));
+    sol->_Sol[indexTheta1]->set(i, atan2(mu[1] / weight, fabs(mu[0]) / weight));
+    sol->_Sol[indexPhi1]->set(i, atan2(mu[0] / weight, fabs(mu[1]) / weight));
   }
   for(unsigned k = 0; k < dim; k++) {
     sol->_Sol[indexMu[k]]->close();
@@ -977,7 +949,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
   //BEGIN Iterative smoothing element -> nodes -> element
 
-  for(unsigned smooth = 0; smooth < 0; smooth++) {
+  for(unsigned smooth = 0; smooth < 1; smooth++) {
     unsigned indexW2 = mlSol.GetIndex("weight2");
     unsigned indexMuN2 = mlSol.GetIndex("muN2");  //smooth ni norm
 
@@ -1235,37 +1207,6 @@ void UpdateMu(MultiLevelSolution& mlSol) {
         theta =  M_PI / 2 - phi;
       }
     }
-
-//     double theta = (*sol->_Sol[indexTheta1])(i);
-//     double phi = (*sol->_Sol[indexPhi1])(i);
-//
-//     double mu[2];
-//     for(unsigned k = 0; k < dim; k++) {
-//       mu[k] = (*sol->_Sol[indexMu[k]])(i);
-//     }
-//
-//     std::cout << fabs(theta)/(M_PI/2.) <<" "<<fabs(phi)/(M_PI/2) << " " << 0.5 + (fabs(phi) - fabs(theta))/(M_PI)<<std::endl;
-//     double xi = 0.5 + (fabs(phi) - fabs(theta))/(M_PI);
-//
-//
-//     double theta1;
-//     //if(fabs(theta) < fabs(phi)) {
-//       if(mu[0] < 0) {
-//         if(mu[1] < 0) theta1 = -theta - M_PI;
-//         else theta1 = M_PI - theta;
-//       }
-//     //}
-//     //else {
-//     double theta2;
-//       if(mu[1] < 0) {
-//         theta2 = -M_PI / 2 + phi;
-//       }
-//       else {
-//         theta2 =  M_PI / 2 - phi;
-//       }
-//     //
-//
-//     theta = theta1 * xi + theta2 * (1.-xi);
 
     sol->_Sol[indexMu[0]]->set(i, MuNormAverage * cos(theta));
     sol->_Sol[indexMu[1]]->set(i, MuNormAverage * sin(theta));
@@ -1711,7 +1652,6 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
 
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
       //double solDxg[3] = {0., 0., 0.};
-      double solNxg[3] = {0., 0., 0.};
       adept::adouble solNDxg[3] = {0., 0., 0.};
 
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
@@ -1721,7 +1661,6 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
         for(unsigned i = 0; i < nxDofs; i++) {
           //solDxg[K] += phix[i] * solDx[K][i];
           solNDxg[K] += phix[i] * solNDx[K][i];
-          solNxg[K] += phix[i] * (xhat[K][i] + solNDx[K][i].value());
         }
         for(int j = 0; j < dim; j++) {
           for(unsigned i = 0; i < nxDofs; i++) {
@@ -1759,13 +1698,9 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
 
       // Compute components of the unit normal N.
       double normal[DIM];
-       normal[0] = 0; //(solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
-       normal[1] = 0; //(solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
-       normal[2] = 1; //(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
-      // normal[0] = 0;
-      // normal[1] = solNxg[1] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
-      // normal[2] = solNxg[2] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
-
+      normal[0] = 0.;//(solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
+      normal[1] = 0.;//(solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
+      normal[2] = 1.;//(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
 
       //
       // // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
@@ -1804,8 +1739,7 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
       double xMin = mu[1] * (1 - mu[0]);
       double xPlus = mu[1] * (1 + mu[0]);
       double muSqr = (mu[0] * mu[0] + mu[1] * mu[1] - 1.);
-
-      //std::cout << mu[0] << " " << mu[1] << " ";
+      // std::cout << mu[0] <<" ";//<<mu[1]<<" ";
 
 
 //       if (counter == 0) mu[0] = 0.8;

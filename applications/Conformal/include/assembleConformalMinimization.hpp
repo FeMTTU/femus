@@ -333,21 +333,21 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
       normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
 
-      normal[0] = 0.;
-      normal[1] = 0.;
-      normal[2] = 1.;
+      // normal[0] = 0.;
+      // normal[1] = 0.;
+      // normal[2] = 1.;
 
       double normalMSqrtDetg[DIM];
       normalMSqrtDetg[0] = (solMx_uv[1][0] * solMx_uv[2][1] - solMx_uv[2][0] * solMx_uv[1][1]);
       normalMSqrtDetg[1] = (solMx_uv[2][0] * solMx_uv[0][1] - solMx_uv[0][0] * solMx_uv[2][1]);
       normalMSqrtDetg[2] = (solMx_uv[0][0] * solMx_uv[1][1] - solMx_uv[1][0] * solMx_uv[0][1]);
 
-      normalMSqrtDetg[0] = 0.;
-      normalMSqrtDetg[1] = 0.;
-      normalMSqrtDetg[2] = sqrt(detg);
+      // normalMSqrtDetg[0] = 0.;
+      // normalMSqrtDetg[1] = 0.;
+      // normalMSqrtDetg[2] = sqrt(detg);
 
       // Computing the "reduced Jacobian" g^{ij}X_j .
-      double Jir[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}};
+      double Jir[dim][DIM] = {{0., 0., 0.}, {0., 0., 0.}};
       for(unsigned i = 0; i < dim; i++) {
         for(unsigned J = 0; J < DIM; J++) {
           for(unsigned k = 0; k < dim; k++) {
@@ -355,7 +355,6 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
           }
         }
       }
-      Jir[2][0] = normal[0]; Jir[2][1] = normal[1]; Jir[2][2] = normal[2];
 
       // Initializing tangential gradients of X and W (new, middle, old).
       double solx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
@@ -512,19 +511,18 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         for(unsigned J = 0; J < DIM * dim; J++) {
           AIJ[I][J] = 0.;
           for(unsigned K = 0; K < DIM; K++) {
-              // for(unsigned L = 0; L < DIM; L++) {
 //             AIJ[I][J] += (gi[1][1] * Jac0[K][I] * Jac0[K][J] -
 //                           gi[0][1] * Jac1[K][I] * Jac0[K][J] -
 //                           gi[1][0] * Jac0[K][I] * Jac1[K][J] +
 //                           gi[0][0] * Jac1[K][I] * Jac1[K][J]);
 
-            AIJ[I][J] += Jac1[K][I]* Jac1[K][J];
+          //  AIJ[I][J] += Jac1[K][I] * Jac1[K][J];
 
-//             AIJ[I][J] += (gi[0][0] * Jac0[K][I] * Jac0[K][J] +
-//                           gi[1][0] * Jac1[K][I] * Jac0[K][J] +
-//                           gi[0][1] * Jac0[K][I] * Jac1[K][J] +
-//                           gi[1][1] * Jac1[K][I] * Jac1[K][J]);
-              // }
+            AIJ[I][J] += (gi[0][0] * Jac0[K][I] * Jac0[K][J] +
+                          gi[1][0] * Jac1[K][I] * Jac0[K][J] +
+                          gi[0][1] * Jac0[K][I] * Jac1[K][J] +
+                          gi[1][1] * Jac1[K][I] * Jac1[K][J]);
+
           }
         }
       }
