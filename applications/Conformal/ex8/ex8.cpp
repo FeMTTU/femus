@@ -74,11 +74,11 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
 
 
-  
+
 
 //   bool dirichlet = true;
 //   value = 0.;
-// 
+//
 //   if(!strcmp(solName, "Dx1")) {
 //   if(1 == faceName) {
 //     value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
@@ -113,7 +113,7 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
 
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -171,7 +171,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(1000);
+  system.SetMaxNumberOfNonLinearIterations(50);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
@@ -873,8 +873,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
       //double dxsdxp = 0.;
       for(unsigned K = 0; K < DIM; K++) {
-        norm2dxPlus -= dxPlus[K] * dxPlus[K];
-        norm2sdxPlus -= sdxPlus[K] * sdxPlus[K];
+        norm2dxPlus += dxPlus[K] * dxPlus[K];
+        norm2sdxPlus += sdxPlus[K] * sdxPlus[K];
         rhsmu1 += dxPlus[K] * dxMinus[K];
         rhsmu2 += sdxPlus[K] * dxMinus[K];
 
@@ -1206,20 +1206,20 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       else {
         theta =  M_PI / 2 - phi;
       }
-    }  
-      
+    }
+
 //     double theta = (*sol->_Sol[indexTheta1])(i);
 //     double phi = (*sol->_Sol[indexPhi1])(i);
-// 
+//
 //     double mu[2];
 //     for(unsigned k = 0; k < dim; k++) {
 //       mu[k] = (*sol->_Sol[indexMu[k]])(i);
 //     }
-// 
+//
 //     std::cout << fabs(theta)/(M_PI/2.) <<" "<<fabs(phi)/(M_PI/2) << " " << 0.5 + (fabs(phi) - fabs(theta))/(M_PI)<<std::endl;
 //     double xi = 0.5 + (fabs(phi) - fabs(theta))/(M_PI);
-//     
-//     
+//
+//
 //     double theta1;
 //     //if(fabs(theta) < fabs(phi)) {
 //       if(mu[0] < 0) {
@@ -1236,9 +1236,9 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 //         theta2 =  M_PI / 2 - phi;
 //       }
 //     //
-// 
+//
 //     theta = theta1 * xi + theta2 * (1.-xi);
-    
+
     sol->_Sol[indexMu[0]]->set(i, MuNormAverage * cos(theta));
     sol->_Sol[indexMu[1]]->set(i, MuNormAverage * sin(theta));
 
@@ -1759,7 +1759,7 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
 
       for(unsigned i = 0; i < nDofs1; i++) {
         for(unsigned k = 0; k < 2; k++) {
-          mu[k] -= phi1[i] * solMu[k][i];
+          mu[k] += phi1[i] * solMu[k][i];
         }
       }
       double muPlus = pow(1 + mu[0], 2) + mu[1] * mu[1];

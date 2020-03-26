@@ -336,12 +336,12 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       normal[0] = 0.;
       normal[1] = 0.;
       normal[2] = 1.;
-      
+
       double normalMSqrtDetg[DIM];
       normalMSqrtDetg[0] = (solMx_uv[1][0] * solMx_uv[2][1] - solMx_uv[2][0] * solMx_uv[1][1]);
       normalMSqrtDetg[1] = (solMx_uv[2][0] * solMx_uv[0][1] - solMx_uv[0][0] * solMx_uv[2][1]);
       normalMSqrtDetg[2] = (solMx_uv[0][0] * solMx_uv[1][1] - solMx_uv[1][0] * solMx_uv[0][1]);
-      
+
       normalMSqrtDetg[0] = 0.;
       normalMSqrtDetg[1] = 0.;
       normalMSqrtDetg[2] = sqrt(detg);
@@ -453,7 +453,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       const double *phiMu = msh->_finiteElement[ielGeom][solTypeMu]->GetPhi(ig);  // local test function
       for(unsigned i = 0; i < nDofsMu; i++) {
         for(unsigned k = 0; k < 2; k++) {
-          mu[k] -= phiMu[i] * solMu[k][i];
+          mu[k] += phiMu[i] * solMu[k][i];
         }
       }
 
@@ -492,7 +492,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       Jac1[0][3] = -normal[2] * mu[1];
       Jac1[0][4] = -normal[1] * (1. - mu[0]);
       Jac1[0][5] =  normal[1] * mu[1];
-      
+
       Jac1[1][0] = -Jac1[0][2];
       Jac1[1][1] = -Jac1[0][3];
       Jac1[1][2] =  Jac1[0][0];
@@ -506,7 +506,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       Jac1[2][3] = -Jac1[1][5];
       Jac1[2][4] =  Jac1[0][0];
       Jac1[2][5] =  Jac1[0][1];
-      
+
       double AIJ[DIM * dim][DIM * dim];
       for(unsigned I = 0; I < DIM * dim; I++) {
         for(unsigned J = 0; J < DIM * dim; J++) {
@@ -517,9 +517,9 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 //                           gi[0][1] * Jac1[K][I] * Jac0[K][J] -
 //                           gi[1][0] * Jac0[K][I] * Jac1[K][J] +
 //                           gi[0][0] * Jac1[K][I] * Jac1[K][J]);
-            
+
             AIJ[I][J] += Jac1[K][I]* Jac1[K][J];
-            
+
 //             AIJ[I][J] += (gi[0][0] * Jac0[K][I] * Jac0[K][J] +
 //                           gi[1][0] * Jac1[K][I] * Jac0[K][J] +
 //                           gi[0][1] * Jac0[K][I] * Jac1[K][J] +
@@ -702,4 +702,3 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 //     std::cin >> a;
 
 } // end AssembleO2ConformalMinimization.
-
