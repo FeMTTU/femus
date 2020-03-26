@@ -447,13 +447,9 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       }
 
 //       adept::adouble norm2Xz = (1. / 4.) * (pow ( (solx_uv[0][0] + solx_uv[1][1]), 2) + pow ( (solx_uv[1][0] - solx_uv[0][1]), 2));
-//
-//       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
+
 //       adept::adouble XzBarXz_Bar[DIM];
-//
-//       // Comment out for working code
-//
-//
+
 //       XzBarXz_Bar[0] = (1. / 4.) * (pow (solx_uv[0][0], 2) + pow (solx_uv[1][0], 2) - pow (solx_uv[0][1], 2) - pow (solx_uv[1][1], 2));
 //       XzBarXz_Bar[1] = (1. / 2.) * (solx_uv[0][0] * solx_uv[0][1] + solx_uv[1][0] * solx_uv[1][1]);
 //
@@ -491,24 +487,35 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       //double xPlus = mu[1] * (1 + mu[0]);
       double muSqr = (mu[0] * mu[0] + mu[1] * mu[1] - 1.);
 
-      adept::adouble Asym1[DIM][dim];
-      Asym1[0][0] = muMinus * gradSolx[0][0] + muSqr * gradSolx[1][1] - 2. * mu[1] * gradSolx[0][1];
-      Asym1[1][0] = muMinus * gradSolx[1][0] - muSqr * gradSolx[0][1] - 2. * mu[1] * gradSolx[1][1];
-      Asym1[0][1] = muPlus  * gradSolx[0][1] - muSqr * gradSolx[1][0] - 2. * mu[1] * gradSolx[0][0];
-      Asym1[1][1] = muPlus  * gradSolx[1][1] + muSqr * gradSolx[0][0] - 2. * mu[1] * gradSolx[1][0];
+      adept::adouble Asym1xy[DIM][DIM];
+      Asym1xy[0][0] = muMinus * gradSolx[0][0] + muSqr * gradSolx[1][1] - 2. * mu[1] * gradSolx[0][1];
+      Asym1xy[1][0] = muMinus * gradSolx[1][0] - muSqr * gradSolx[0][1] - 2. * mu[1] * gradSolx[1][1];
+      Asym1xy[0][1] = muPlus  * gradSolx[0][1] - muSqr * gradSolx[1][0] - 2. * mu[1] * gradSolx[0][0];
+      Asym1xy[1][1] = muPlus  * gradSolx[1][1] + muSqr * gradSolx[0][0] - 2. * mu[1] * gradSolx[1][0];
 
-      adept::adouble Asym2[DIM][dim];
+      adept::adouble Asym2xy[DIM][DIM];
+      Asym2xy[0][0] = muMinus * gradSolx[0][0] + muSqr * gradSolx[1][1] - 2. * mu[1] * gradSolx[0][1];
+      Asym2xy[1][0] = muMinus * gradSolx[1][0] - muSqr * gradSolx[0][1] - 2. * mu[1] * gradSolx[1][1];
+      Asym2xy[0][1] = muPlus  * gradSolx[0][1] - muSqr * gradSolx[1][0] - 2. * mu[1] * gradSolx[0][0];
+      Asym2xy[1][1] = muPlus  * gradSolx[1][1] + muSqr * gradSolx[0][0] - 2. * mu[1] * gradSolx[1][0];
+
+      // adept::adouble Asym2[DIM][dim];
 //       Asym2[0][0] = muPlus   * gradSolx[0][0] + muSqr * gradSolx[1][1] + 2 * mu[1] * gradSolx[0][1];
 //       Asym2[1][0] = muPlus   * gradSolx[1][0] - muSqr * gradSolx[0][1] + 2 * mu[1] * gradSolx[1][1];
 //       Asym2[0][1] = muMinus  * gradSolx[0][1] - muSqr * gradSolx[1][0] + 2 * mu[1] * gradSolx[0][0];
 //       Asym2[1][1] = muMinus  * gradSolx[1][1] + muSqr * gradSolx[0][0] + 2 * mu[1] * gradSolx[1][0];
 //
+      adept::adouble Asym1uv[DIM][dim];
+      Asym1uv[0][0] = muMinus * solNx_uv[0][0] + muSqr * solNx_uv[1][1] - 2. * mu[1] * solNx_uv[0][1];
+      Asym1uv[1][0] = muMinus * solNx_uv[1][0] - muSqr * solNx_uv[0][1] - 2. * mu[1] * solNx_uv[1][1];
+      Asym1uv[0][1] = muPlus  * solNx_uv[0][1] - muSqr * solNx_uv[1][0] - 2. * mu[1] * solNx_uv[0][0];
+      Asym1uv[1][1] = muPlus  * solNx_uv[1][1] + muSqr * solNx_uv[0][0] - 2. * mu[1] * solNx_uv[1][0];
 
-      Asym2[0][0] = muMinus * gradSolx[0][0] + muSqr * gradSolx[1][1] - 2. * mu[1] * gradSolx[0][1];
-      Asym2[1][0] = muMinus * gradSolx[1][0] - muSqr * gradSolx[0][1] - 2. * mu[1] * gradSolx[1][1];
-      Asym2[0][1] = muPlus  * gradSolx[0][1] - muSqr * gradSolx[1][0] - 2. * mu[1] * gradSolx[0][0];
-      Asym2[1][1] = muPlus  * gradSolx[1][1] + muSqr * gradSolx[0][0] - 2. * mu[1] * gradSolx[1][0];
-
+      adept::adouble Asym2uv[DIM][dim];
+      Asym2uv[0][0] = muMinus * solNx_uv[0][0] + muSqr * solNx_uv[1][1] - 2. * mu[1] * solNx_uv[0][1];
+      Asym2uv[1][0] = muMinus * solNx_uv[1][0] - muSqr * solNx_uv[0][1] - 2. * mu[1] * solNx_uv[1][1];
+      Asym2uv[0][1] = muPlus  * solNx_uv[0][1] - muSqr * solNx_uv[1][0] - 2. * mu[1] * solNx_uv[0][0];
+      Asym2uv[1][1] = muPlus  * solNx_uv[1][1] + muSqr * solNx_uv[0][0] - 2. * mu[1] * solNx_uv[1][0];
 
 
       adept::adouble V[DIM];
@@ -547,26 +554,18 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         std::cout << 4 << " " << gradSolx[0][1] << std::endl;
 
         std::cout << "symmetric "<<std::endl;
-        std::cout << "00" << " " << M1[0][0] << " " << 0.5*(Asym1[0][0] + Asym2[0][0]) << std::endl;
-        std::cout << "10" << " " << M1[1][0] << " " << 0.5*(Asym1[1][0] + Asym2[1][0]) << std::endl;
-        std::cout << "01" << " " << M1[0][1] << " " << 0.5*(Asym1[0][1] + Asym2[0][1]) << std::endl;
-        std::cout << "11" << " " << M1[1][1] << " " << 0.5*(Asym1[1][1] + Asym2[1][1]) << std::endl;
+        std::cout << "00" << " " << M1[0][0] << " " << 0.5*(Asym1xy[0][0] + Asym2xy[0][0]) << std::endl;
+        std::cout << "10" << " " << M1[1][0] << " " << 0.5*(Asym1xy[1][0] + Asym2xy[1][0]) << std::endl;
+        std::cout << "01" << " " << M1[0][1] << " " << 0.5*(Asym1xy[0][1] + Asym2xy[0][1]) << std::endl;
+        std::cout << "11" << " " << M1[1][1] << " " << 0.5*(Asym1xy[1][1] + Asym2xy[1][1]) << std::endl;
 
         std::cout << "asymmetric "<<std::endl;
-        std::cout << "00" << " " << M[0][0] << " " << Asym1[0][0] << " " << Asym2[0][0] << std::endl;
-        std::cout << "10" << " " << M[1][0] << " " << Asym1[1][0] << " " << Asym2[1][0] << std::endl;
-        std::cout << "01" << " " << M[0][1] << " " << Asym1[0][1] << " " << Asym2[0][1] << std::endl;
-        std::cout << "11" << " " << M[1][1] << " " << Asym1[1][1] << " " << Asym2[1][1] << std::endl;
+        std::cout << "00" << " " << M[0][0] << " " << Asym1xy[0][0] << " " << Asym2xy[0][0] << std::endl;
+        std::cout << "10" << " " << M[1][0] << " " << Asym1xy[1][0] << " " << Asym2xy[1][0] << std::endl;
+        std::cout << "01" << " " << M[0][1] << " " << Asym1xy[0][1] << " " << Asym2xy[0][1] << std::endl;
+        std::cout << "11" << " " << M[1][1] << " " << Asym1xy[1][1] << " " << Asym2xy[1][1] << std::endl;
 
       }
-//       adept::adouble M1[DIM][dim];
-//       double muSqrPlus = 1 + mu[0] * mu[0] + mu[1] * mu[1];
-//       double muSqrMinus = mu[0] * mu[0] + mu[1] * mu[1] - 1;
-//
-//       M1[0][0] = muSqrPlus * gradSolx[0][0] + muSqrMinus * gradSolx[1][1];
-//       M1[1][0] = muSqrPlus * gradSolx[1][0] - muSqrMinus * gradSolx[0][1];
-//       M1[0][1] = muSqrPlus * gradSolx[0][1] - muSqrMinus * gradSolx[1][0];
-//       M1[1][1] = muSqrPlus * gradSolx[1][1] + muSqrMinus * gradSolx[0][0];
 
       // Implement the Conformal Minimization equations.
       // for(unsigned k = 0; k < dim; k++) {
@@ -587,9 +586,11 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         for(unsigned i = 0; i < nxDofs; i++) {
         adept::adouble term1 = 0.;
           for(unsigned J = 0; J < DIM; J++) {
-            term1 +=  Asym2[K][J] * phix_Xtan[J][i];
+            term1 +=  Asym2uv[K][J] * phix_uv[J][i];
+            //term1 +=  Asym2xy[K][J] * phix_Xtan[J][i];
           }
-          aResDx[K][i] += term1 * weight;
+          aResDx[K][i] += term1 * Area2;
+          //aResDx[K][i] += term1 * Area;
         }
       }
 
@@ -677,6 +678,31 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
   std::vector< double > dof1;
 
+  std::vector < std::vector < double > > xT (2);
+  xT[0].resize (7);
+  xT[0][0] = -0.5;
+  xT[0][1] = 0.5;
+  xT[0][2] = 0.;
+  xT[0][3] = 0.;
+  xT[0][4] = 0.25;
+  xT[0][5] = -0.25;
+  xT[0][6] = 0.;
+
+  xT[1].resize (7);
+  xT[1][0] = 0.;
+  xT[1][1] = 0.;
+  xT[1][2] = sqrt (3.) / 2.;
+  xT[1][3] = 0.;
+  xT[1][4] = sqrt (3.) / 4.;
+  xT[1][5] = sqrt (3.) / 4.;
+  xT[1][6] = sqrt (3.) / 6.;
+
+  std::vector< double > phi_uv0;
+  std::vector< double > phi_uv1;
+
+  std::vector< double > stdVectorPhi;
+  std::vector< double > stdVectorPhi_uv;
+
   std::vector < std::vector < double > > solx(dim);
   std::vector < std::vector < double > > xHat(dim);
 
@@ -721,6 +747,53 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solTypeDx]->GetGaussPointNumber(); ig++) {
 
+       const double *phix;  // local test function
+//       const double *phi1;  // local test function
+       const double *phix_uv[dim]; // local test function first order partial derivatives
+
+      double weight; // gauss point weight
+
+      // Get Gauss point weight, test function, and first order derivatives.
+      if (ielGeom == QUAD) {
+        phix = msh->_finiteElement[ielGeom][solTypeDx]->GetPhi (ig);
+
+        phix_uv[0] = msh->_finiteElement[ielGeom][solTypeDx]->GetDPhiDXi (ig);
+        phix_uv[1] = msh->_finiteElement[ielGeom][solTypeDx]->GetDPhiDEta (ig);
+
+        weight = msh->_finiteElement[ielGeom][solTypeDx]->GetGaussWeight (ig);
+      }
+
+      // Special adjustments for triangles.
+      else {
+        msh->_finiteElement[ielGeom][solTypeDx]->Jacobian (xT, ig, weight, stdVectorPhi, stdVectorPhi_uv);
+        phix = &stdVectorPhi[0];
+        phi_uv0.resize (nDofsDx);
+        phi_uv1.resize (nDofsDx);
+        for (unsigned i = 0; i < nDofsDx; i++) {
+          phi_uv0[i] = stdVectorPhi_uv[i * dim];
+          phi_uv1[i] = stdVectorPhi_uv[i * dim + 1];
+        }
+        phix_uv[0] = &phi_uv0[0];
+        phix_uv[1] = &phi_uv1[0];
+      }
+
+      // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
+      //double solDxg[3] = {0., 0., 0.};
+      // double solNxg[3] = {0., 0., 0.};
+      // adept::adouble solNDxg[3] = {0., 0., 0.};
+
+      double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      double solNx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+
+      for(unsigned K = 0; K < 2; K++) {
+        for(int j = 0; j < dim; j++) {
+          for(unsigned i = 0; i < nDofsDx; i++) {
+            solx_uv[K][j]    += phix_uv[j][i] * xHat[K][i];
+            solNx_uv[K][j]   += phix_uv[j][i] * solx[K][i];
+          }
+        }
+      }
+
       msh->_finiteElement[ielGeom][solTypeDx]->Jacobian(xHat, ig, weight, phi, phi_x);
 
       std::vector < std::vector < double > > gradSolx(dim);
@@ -739,11 +812,19 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
       double *phi1 = msh->_finiteElement[ielGeom][solType1]->GetPhi(ig);
 
-      double norm2Xz = (1. / 4.) * (pow((gradSolx[0][0] + gradSolx[1][1]), 2) + pow((gradSolx[1][0] - gradSolx[0][1]), 2));
+      //Uncomment for uv
+      double norm2Xz = (1. / 4.) * (pow((solNx_uv[0][0] + solNx_uv[1][1]), 2) + pow((solNx_uv[1][0] - solNx_uv[0][1]), 2));
       double XzBarXz_Bar[2];
 
-      XzBarXz_Bar[0] = (1. / 4.) * (pow(gradSolx[0][0], 2) + pow(gradSolx[1][0], 2) - pow(gradSolx[0][1], 2) - pow(gradSolx[1][1], 2));
-      XzBarXz_Bar[1] = (1. / 2.) * (gradSolx[0][0] * gradSolx[0][1] + gradSolx[1][0] * gradSolx[1][1]);
+      XzBarXz_Bar[0] = (1. / 4.) * (pow(solNx_uv[0][0], 2) + pow(solNx_uv[1][0], 2) - pow(solNx_uv[0][1], 2) - pow(solNx_uv[1][1], 2));
+      XzBarXz_Bar[1] = (1. / 2.) * (solNx_uv[0][0] * solNx_uv[0][1] + solNx_uv[1][0] * solNx_uv[1][1]);
+
+      // //Uncomment for xy
+      // double norm2Xz = (1. / 4.) * (pow((gradSolx[0][0] + gradSolx[1][1]), 2) + pow((gradSolx[1][0] - gradSolx[0][1]), 2));
+      // double XzBarXz_Bar[2];
+      //
+      // XzBarXz_Bar[0] = (1. / 4.) * (pow(gradSolx[0][0], 2) + pow(gradSolx[1][0], 2) - pow(gradSolx[0][1], 2) - pow(gradSolx[1][1], 2));
+      // XzBarXz_Bar[1] = (1. / 2.) * (gradSolx[0][0] * gradSolx[0][1] + gradSolx[1][0] * gradSolx[1][1]);
 
       // Comment out for working code
 
@@ -802,7 +883,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
   //BEGIN Iterative smoothing element -> nodes -> element
 
-  for(unsigned smooth = 0; smooth < 1; smooth++) {
+  for(unsigned smooth = 0; smooth < 0; smooth++) {
     unsigned indexW2 = mlSol.GetIndex("weight2");
     unsigned indexMuN2 = mlSol.GetIndex("muN2");  //smooth ni norm
 
