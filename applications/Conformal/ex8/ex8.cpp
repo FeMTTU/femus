@@ -894,8 +894,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       // Comment out for working code
 
       double mu[2] = {0., 0.};
-      mu[0] = rhsmu1 / norm2dxPlus;
-      mu[1] = rhsmu2 / norm2sdxPlus;
+      mu[0] = -rhsmu1 / norm2dxPlus;
+      mu[1] = -rhsmu2 / norm2sdxPlus;
 
       if(iel == 4) {
         std::cout << mu[0] << " " << mu[1] << " " << norm2dxPlus << " " << norm2sdxPlus << "\n";

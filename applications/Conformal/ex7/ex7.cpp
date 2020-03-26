@@ -73,7 +73,7 @@ int main(int argc, char** args) {
   mlMsh.ReadCoarseMesh("../input/square1.neu", "seventh", scalingFactor);
 
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
