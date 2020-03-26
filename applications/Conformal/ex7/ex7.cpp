@@ -126,13 +126,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Dx2");
 
   // Parameters for convergence and # of iterations.
-<<<<<<< HEAD
-  system.SetMaxNumberOfNonLinearIterations(1000);
-||||||| 50f52f9c
-  system.SetMaxNumberOfNonLinearIterations(2);
-=======
   system.SetMaxNumberOfNonLinearIterations(50);
->>>>>>> e8432feb9ad722e2e7dc8dc90c5a5ac157608902
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();

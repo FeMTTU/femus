@@ -74,7 +74,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
 
 
-<<<<<<< HEAD
 
 
 //   bool dirichlet = true;
@@ -87,12 +86,11 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 //     dirichlet = false;
 //   }
 //   }
-||||||| 50f52f9c
-  
+
 
 //   bool dirichlet = true;
 //   value = 0.;
-// 
+//
 //   if(!strcmp(solName, "Dx1")) {
 //   if(1 == faceName) {
 //     value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
@@ -100,7 +98,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 //     dirichlet = false;
 //   }
 //   }
-=======
   /*
 
   bool dirichlet = true;
@@ -113,7 +110,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
     //dirichlet = false;
   }
   }*/
->>>>>>> e8432feb9ad722e2e7dc8dc90c5a5ac157608902
 
 
   return dirichlet;
@@ -199,13 +195,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Lambda1");
 
   // Parameters for convergence and # of iterations.
-<<<<<<< HEAD
   system.SetMaxNumberOfNonLinearIterations(50);
-||||||| 50f52f9c
-  system.SetMaxNumberOfNonLinearIterations(2);
-=======
-  system.SetMaxNumberOfNonLinearIterations(10);
->>>>>>> e8432feb9ad722e2e7dc8dc90c5a5ac157608902
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
@@ -928,8 +918,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       // Comment out for working code
 
       double mu[2] = {0., 0.};
-      mu[0] = -rhsmu1 / norm2dxPlus;
-      mu[1] = -rhsmu2 / norm2sdxPlus;
+      mu[0] = rhsmu1 / norm2dxPlus;
+      mu[1] = rhsmu2 / norm2sdxPlus;
 
       if(iel == 4) {
         std::cout << mu[0] << " " << mu[1] << " " << norm2dxPlus << " " << norm2sdxPlus << "\n";
