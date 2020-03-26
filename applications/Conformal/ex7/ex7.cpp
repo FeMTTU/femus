@@ -418,8 +418,10 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       gi[1][0] = -g[1][0] / detg;
       gi[1][1] =  g[0][0] / detg;
 
+
       //std::vector < std::vector < adept::adouble > > solNx_Xtan (DIM);
       for (unsigned K = 0; K < DIM; K++) gradSolx[K].assign (DIM, 0.);
+
       for (unsigned I = 0; I < DIM; I++) {
         for (unsigned J = 0; J < DIM; J++) {
           for (unsigned i = 0; i < dim; i++) {
@@ -428,6 +430,19 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
             }
           }
           //if(fabs(solNx_Xtan[I][J] - gradSolx[I][J]) > 1.0e-12) std::cout << "error" << std::endl;
+        }
+      }
+
+      std::vector < double > phix_Xtan[DIM];
+
+      for (unsigned J = 0; J < DIM; J++) {
+        phix_Xtan[J].assign (nxDofs, 0.);
+        for (unsigned inode  = 0; inode < nxDofs; inode++) {
+          for (unsigned k = 0; k < dim; k++) {
+            for (unsigned j = 0; j < dim; j++) {
+              phix_Xtan[J][inode] += phix_uv[k][inode] * gi[k][j] * solx_uv[J][j];
+            }
+          }
         }
       }
 
@@ -554,19 +569,30 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 //       M1[1][1] = muSqrPlus * gradSolx[1][1] + muSqrMinus * gradSolx[0][0];
 
       // Implement the Conformal Minimization equations.
-      for(unsigned k = 0; k < dim; k++) {
+      // for(unsigned k = 0; k < dim; k++) {
+      //   for(unsigned i = 0; i < nxDofs; i++) {
+      //     adept::adouble term1 = 0.;
+      //     for(unsigned j = 0; j < dim; j++) {
+      //       //term1 += 0.5 * (Asym1[k][j] + Asym2[k][j]) * phi_x[i * dim + j]; // asymmetric
+      //       //term1 += Asym1[k][j] * phi_x[i * dim + j]; // asymmetric1
+      //       term1 += Asym2[k][j] * phi_x[i * dim + j]; // asymmetric2
+      //       //term1 += M1[k][j] * phi_x[i * dim + j]; // symmetric
+      //     }
+      //     // Conformal energy equation (with trick).
+      //     aResDx[k][i] += term1 * weight;
+      //   }
+      // }
+
+      for(unsigned K = 0; K < DIM; K++) {
         for(unsigned i = 0; i < nxDofs; i++) {
-          adept::adouble term1 = 0.;
-          for(unsigned j = 0; j < dim; j++) {
-            //term1 += 0.5 * (Asym1[k][j] + Asym2[k][j]) * phi_x[i * dim + j]; // asymmetric
-            //term1 += Asym1[k][j] * phi_x[i * dim + j]; // asymmetric1
-            term1 += Asym2[k][j] * phi_x[i * dim + j]; // asymmetric2
-            //term1 += M1[k][j] * phi_x[i * dim + j]; // symmetric
+        adept::adouble term1 = 0.;
+          for(unsigned J = 0; J < DIM; J++) {
+            term1 +=  Asym2[K][J] * phix_Xtan[J][i];
           }
-          // Conformal energy equation (with trick).
-          aResDx[k][i] += term1 * weight;
+          aResDx[K][i] += term1 * weight;
         }
       }
+
 
       if(iel == 4 && ig == 1) {
         for(unsigned i = 0; i < nxDofs; i++) {
