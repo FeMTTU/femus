@@ -126,7 +126,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Dx2");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(2);
+  system.SetMaxNumberOfNonLinearIterations(1000);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
@@ -756,7 +756,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
   //BEGIN Iterative smoothing element -> nodes -> element
 
-  for(unsigned smooth = 0; smooth < 1; smooth++) {
+  for(unsigned smooth = 0; smooth < 0; smooth++) {
     unsigned indexW2 = mlSol.GetIndex("weight2");
     unsigned indexMuN2 = mlSol.GetIndex("muN2");  //smooth ni norm
 

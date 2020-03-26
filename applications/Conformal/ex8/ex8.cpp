@@ -171,7 +171,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(2);
+  system.SetMaxNumberOfNonLinearIterations(1000);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
@@ -934,8 +934,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       sol->_Sol[indexMu[k]]->set(i, mu[k] / weight);
     }
     sol->_Sol[indexMuN1]->set(i, sqrt(mu[0] * mu[0] + mu[1] * mu[1]) / weight);
-    sol->_Sol[indexTheta1]->set(i, atan2(mu[1] / weight, fabs(mu[0]) / weight));
-    sol->_Sol[indexPhi1]->set(i, atan2(mu[0] / weight, fabs(mu[1]) / weight));
+    sol->_Sol[indexTheta1]->set(i, atan2( mu[1], fabs(mu[0]) ));
+    sol->_Sol[indexPhi1]->set(i, atan2( mu[0], fabs(mu[1]) ));
   }
   for(unsigned k = 0; k < dim; k++) {
     sol->_Sol[indexMu[k]]->close();
@@ -949,7 +949,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
   //BEGIN Iterative smoothing element -> nodes -> element
 
-  for(unsigned smooth = 0; smooth < 1; smooth++) {
+  for(unsigned smooth = 0; smooth < 0; smooth++) {
     unsigned indexW2 = mlSol.GetIndex("weight2");
     unsigned indexMuN2 = mlSol.GetIndex("muN2");  //smooth ni norm
 
@@ -1206,8 +1206,39 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       else {
         theta =  M_PI / 2 - phi;
       }
-    }
-
+    }  
+      
+//     double theta = (*sol->_Sol[indexTheta1])(i);
+//     double phi = (*sol->_Sol[indexPhi1])(i);
+// 
+//     double mu[2];
+//     for(unsigned k = 0; k < dim; k++) {
+//       mu[k] = (*sol->_Sol[indexMu[k]])(i);
+//     }
+// 
+//     std::cout << fabs(theta)/(M_PI/2.) <<" "<<fabs(phi)/(M_PI/2) << " " << 0.5 + (fabs(phi) - fabs(theta))/(M_PI)<<std::endl;
+//     double xi = 0.5 + (fabs(phi) - fabs(theta))/(M_PI);
+//     
+//     
+//     double theta1;
+//     //if(fabs(theta) < fabs(phi)) {
+//       if(mu[0] < 0) {
+//         if(mu[1] < 0) theta1 = -theta - M_PI;
+//         else theta1 = M_PI - theta;
+//       }
+//     //}
+//     //else {
+//     double theta2;
+//       if(mu[1] < 0) {
+//         theta2 = -M_PI / 2 + phi;
+//       }
+//       else {
+//         theta2 =  M_PI / 2 - phi;
+//       }
+//     //
+// 
+//     theta = theta1 * xi + theta2 * (1.-xi);
+    
     sol->_Sol[indexMu[0]]->set(i, MuNormAverage * cos(theta));
     sol->_Sol[indexMu[1]]->set(i, MuNormAverage * sin(theta));
 
