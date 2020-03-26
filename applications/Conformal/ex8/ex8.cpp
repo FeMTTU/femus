@@ -18,8 +18,8 @@
 bool stopIterate = false;
 
 unsigned conformalTriangleType = 2;
-const double eps = 1e-5;
-const double normalSign = -1.;
+const double eps = 0e-5;
+// const double normalSign = -1.;
 bool O2conformal = false;
 unsigned counter = 0;
 
@@ -82,7 +82,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   if(!strcmp(solName, "Dx1")) {
   if(1 == faceName) {
     //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
-    value = 0.15 * sin(x[1] / 0.5 * M_PI);
+    value = 0.4 * sin(x[1] / 0.5 * M_PI);
     //dirichlet = false;
   }
   }
@@ -113,7 +113,7 @@ int main(int argc, char** args) {
   mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
 
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -171,7 +171,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(50);
+  system.SetMaxNumberOfNonLinearIterations(1000);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
@@ -844,12 +844,15 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       // std::cout << detg << " ";
 
       double normal[DIM];
-      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
-      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
-      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
+      // normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
+      // normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
+      // normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
       //normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) * sqrt(detg) / detg;
       //normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) * sqrt(detg) / detg;
       //normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) * sqrt(detg) / detg;
+      normal[0] = 0;
+      normal[1] = solxg[1] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
+      normal[2] = solxg[2] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
 
       double dxPlus[DIM];
       dxPlus[0] = solx_uv[0][0] + solx_uv[1][1] * normal[2] - solx_uv[2][1] * normal[1];

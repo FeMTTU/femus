@@ -171,7 +171,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(50);
+  system.SetMaxNumberOfNonLinearIterations(200);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();

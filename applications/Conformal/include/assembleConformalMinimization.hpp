@@ -282,6 +282,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
       double solDxg[3] = {0., 0., 0.};
       double solNDxg[3] = {0., 0., 0.};
+      double solNxg[3] = {0., 0., 0.};
 
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       double solMx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
@@ -291,6 +292,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         for(unsigned i = 0; i < nxDofs; i++) {
           solDxg[K] += phix[i] * solDx[K][i];
           solNDxg[K] += phix[i] * solNDx[K][i];
+          solNxg[K] += phix[i] * solNx[K][i];
         }
         for(int j = 0; j < dim; j++) {
           for(unsigned i = 0; i < nxDofs; i++) {
@@ -329,22 +331,30 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 
       // Compute components of the unit normal N.
       double normal[DIM];
-      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
-      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
-      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
+      // normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
+      // normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
+      // normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
 
-      // normal[0] = 0.;
-      // normal[1] = 0.;
-      // normal[2] = 1.;
+      normal[0] = 0.;
+      normal[1] = 0.;
+      normal[2] = 1.;
+
+      // normal[0] = 0;
+      // normal[1] = solNxg[1] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
+      // normal[2] = solNxg[2] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
 
       double normalMSqrtDetg[DIM];
-      normalMSqrtDetg[0] = (solMx_uv[1][0] * solMx_uv[2][1] - solMx_uv[2][0] * solMx_uv[1][1]);
-      normalMSqrtDetg[1] = (solMx_uv[2][0] * solMx_uv[0][1] - solMx_uv[0][0] * solMx_uv[2][1]);
-      normalMSqrtDetg[2] = (solMx_uv[0][0] * solMx_uv[1][1] - solMx_uv[1][0] * solMx_uv[0][1]);
+      // normalMSqrtDetg[0] = (solMx_uv[1][0] * solMx_uv[2][1] - solMx_uv[2][0] * solMx_uv[1][1]);
+      // normalMSqrtDetg[1] = (solMx_uv[2][0] * solMx_uv[0][1] - solMx_uv[0][0] * solMx_uv[2][1]);
+      // normalMSqrtDetg[2] = (solMx_uv[0][0] * solMx_uv[1][1] - solMx_uv[1][0] * solMx_uv[0][1]);
 
-      // normalMSqrtDetg[0] = 0.;
-      // normalMSqrtDetg[1] = 0.;
-      // normalMSqrtDetg[2] = sqrt(detg);
+      normalMSqrtDetg[0] = 0.;
+      normalMSqrtDetg[1] = 0.;
+      normalMSqrtDetg[2] = sqrt(detg);
+      //
+      // normalMSqrtDetg[0] = 0;
+      // normalMSqrtDetg[1] = solNxg[1];
+      // normalMSqrtDetg[2] = solNxg[2];
 
       // Computing the "reduced Jacobian" g^{ij}X_j .
       double Jir[dim][DIM] = {{0., 0., 0.}, {0., 0., 0.}};
