@@ -335,26 +335,26 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       // normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
       // normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
 
-      normal[0] = 0.;
-      normal[1] = 0.;
-      normal[2] = 1.;
+      // normal[0] = 0.;
+      // normal[1] = 0.;
+      // normal[2] = 1.;
 
-      // normal[0] = 0;
-      // normal[1] = solNxg[1] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
-      // normal[2] = solNxg[2] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
+      normal[0] = 0;
+      normal[1] = solNxg[1] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
+      normal[2] = solNxg[2] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
 
       double normalMSqrtDetg[DIM];
       // normalMSqrtDetg[0] = (solMx_uv[1][0] * solMx_uv[2][1] - solMx_uv[2][0] * solMx_uv[1][1]);
       // normalMSqrtDetg[1] = (solMx_uv[2][0] * solMx_uv[0][1] - solMx_uv[0][0] * solMx_uv[2][1]);
       // normalMSqrtDetg[2] = (solMx_uv[0][0] * solMx_uv[1][1] - solMx_uv[1][0] * solMx_uv[0][1]);
 
-      normalMSqrtDetg[0] = 0.;
-      normalMSqrtDetg[1] = 0.;
-      normalMSqrtDetg[2] = sqrt(detg);
+      // normalMSqrtDetg[0] = 0.;
+      // normalMSqrtDetg[1] = 0.;
+      // normalMSqrtDetg[2] = sqrt(detg);
       //
-      // normalMSqrtDetg[0] = 0;
-      // normalMSqrtDetg[1] = solNxg[1];
-      // normalMSqrtDetg[2] = solNxg[2];
+      normalMSqrtDetg[0] = 0;
+      normalMSqrtDetg[1] = solNxg[1];
+      normalMSqrtDetg[2] = solNxg[2];
 
       // Computing the "reduced Jacobian" g^{ij}X_j .
       double Jir[dim][DIM] = {{0., 0., 0.}, {0., 0., 0.}};
@@ -526,7 +526,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 //                           gi[1][0] * Jac0[K][I] * Jac1[K][J] +
 //                           gi[0][0] * Jac1[K][I] * Jac1[K][J]);
 
-          //  AIJ[I][J] += Jac1[K][I] * Jac1[K][J];
+          //AIJ[I][J] += Jac1[K][I] * Jac1[K][J] + Jac0[K][I] * Jac0[K][J];
 
             AIJ[I][J] += (gi[0][0] * Jac0[K][I] * Jac0[K][J] +
                           gi[1][0] * Jac1[K][I] * Jac0[K][J] +
