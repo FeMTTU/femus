@@ -16,6 +16,9 @@
 #include "PetscMatrix.hpp"
 
 bool stopIterate = false;
+//unsigned muSmoothingType = 1; // the mesh should be logically structured and uniformly oriented
+unsigned muSmoothingType = 2; // invariant with respect to quad orientation
+
 
 unsigned conformalTriangleType = 2;
 const double eps = 0e-5;
@@ -46,19 +49,19 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   bool dirichlet = true;
   value = 0.;
 
-  // if(!strcmp(solName, "Dx1")) {
-  //   if(1 == faceName || 3 == faceName) {
-  //     dirichlet = false;
-  //   }
-  //   if(4 == faceName) {
-  //     value = 0.5 * sin(x[1] / 0.5 * M_PI);
-  //   }
-  // }
-  // else if(!strcmp(solName, "Dx2")) {
-  //   if(2 == faceName) {
-  //     dirichlet = false;
-  //   }
-  // }
+  if(!strcmp(solName, "Dx1")) {
+    if(1 == faceName || 3 == faceName) {
+      dirichlet = false;
+    }
+    if(4 == faceName) {
+      value = 0.75 * sin(x[1] / 0.5 * M_PI);
+    }
+  }
+  else if(!strcmp(solName, "Dx2")) {
+    if(2 == faceName) {
+      dirichlet = false;
+    }
+  }
 
 
 //   if (!strcmp (solName, "Dx1")) {
@@ -79,13 +82,13 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   // bool dirichlet = true;
   // value = 0.;
 
-  if(!strcmp(solName, "Dx1")) {
-  if(1 == faceName) {
-    //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
-    value = 0.4 * sin(x[1] / 0.5 * M_PI);
-    //dirichlet = false;
-  }
-  }
+//   if(!strcmp(solName, "Dx1")) {
+//   if(1 == faceName) {
+//     //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
+//     value = 0.4 * sin(x[1] / 0.5 * M_PI);
+//     //dirichlet = false;
+//   }
+//   }
 
 
   return dirichlet;
@@ -109,8 +112,8 @@ int main(int argc, char** args) {
   //mlMsh.GenerateCoarseBoxMesh(32, 32, 0, -0.5, 0.5, -0.5, 0.5, 0., 0., QUAD9, "seventh");
 
   //mlMsh.ReadCoarseMesh("../input/squareReg3D.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("../input/square13D.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/square13D.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
 
 
   unsigned numberOfUniformLevels = 4;
@@ -844,15 +847,15 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       // std::cout << detg << " ";
 
       double normal[DIM];
-      // normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
-      // normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
-      // normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
-      //normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) * sqrt(detg) / detg;
-      //normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) * sqrt(detg) / detg;
-      //normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) * sqrt(detg) / detg;
-      normal[0] = 0;
-      normal[1] = solxg[1] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
-      normal[2] = solxg[2] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
+      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
+      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
+      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
+
+
+//       //Analytic for the cylinder
+//       normal[0] = 0;
+//       normal[1] = solxg[1] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
+//       normal[2] = solxg[2] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
 
       double dxPlus[DIM];
       dxPlus[0] = solx_uv[0][0] + solx_uv[1][1] * normal[2] - solx_uv[2][1] * normal[1];
@@ -896,9 +899,9 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       mu[0] = rhsmu1 / norm2dxPlus;
       mu[1] = rhsmu2 / norm2sdxPlus;
 
-      if(iel == 4) {
-        std::cout << mu[0] << " " << mu[1] << " " << norm2dxPlus << " " << norm2sdxPlus << "\n";
-      }
+//       if(iel == 4) {
+//         std::cout << mu[0] << " " << mu[1] << " " << norm2dxPlus << " " << norm2sdxPlus << "\n";
+//       }
 
       // for(unsigned k = 0; k < 2; k++) {
       //   if(norm2Xz > 0.) {
@@ -933,12 +936,24 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
     double mu[2];
     for(unsigned k = 0; k < dim; k++) {
-      mu[k] = (*sol->_Sol[indexMu[k]])(i);
-      sol->_Sol[indexMu[k]]->set(i, mu[k] / weight);
+      mu[k] = (*sol->_Sol[indexMu[k]])(i) / weight;
+      sol->_Sol[indexMu[k]]->set(i, mu[k]);
     }
-    sol->_Sol[indexMuN1]->set(i, sqrt(mu[0] * mu[0] + mu[1] * mu[1]) / weight);
-    sol->_Sol[indexTheta1]->set(i, atan2(mu[1] / weight, fabs(mu[0]) / weight));
-    sol->_Sol[indexPhi1]->set(i, atan2(mu[0] / weight, fabs(mu[1]) / weight));
+    sol->_Sol[indexMuN1]->set(i, sqrt(mu[0] * mu[0] + mu[1] * mu[1]));
+
+    if(muSmoothingType == 1) {
+      sol->_Sol[indexTheta1]->set(i, atan2(mu[1], fabs(mu[0])));
+      sol->_Sol[indexPhi1]->set(i, atan2(mu[0], fabs(mu[1])));
+    }
+    else if(muSmoothingType == 2) { //invariant on quad element orientation
+      sol->_Sol[indexTheta1]->set(i, atan(mu[1] / mu[0]));
+      sol->_Sol[indexPhi1]->set(i, atan(mu[0] / mu[1]));
+    }
+//     else if(muSmoothingType == 3) { //invariant on quad element orientation
+//       sol->_Sol[indexTheta1]->set(i, sin(2. * atan2(mu[1], mu[0])));
+//       sol->_Sol[indexPhi1]->set(i, cos(2.*atan2(mu[0], mu[1])));
+//     }
+
   }
   for(unsigned k = 0; k < dim; k++) {
     sol->_Sol[indexMu[k]]->close();
@@ -1135,43 +1150,20 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       sol->_Sol[indexMuN1]->set(i,  radius);
 
       double theta = (*sol->_Sol[indexTheta1])(i) / weight;
-      sol->_Sol[indexTheta1]->set(i,  theta);
+      sol->_Sol[indexTheta1]->set(i, theta);
 
       double phi = (*sol->_Sol[indexPhi1])(i) / weight;
-      sol->_Sol[indexPhi1]->set(i,  phi);
+      sol->_Sol[indexPhi1]->set(i, phi);
 
 
       double mu[2];
       for(unsigned k = 0; k < dim; k++) {
         mu[k] = (*sol->_Sol[indexMu[k]])(i);
       }
-
-//       if(fabs(theta) < fabs(phi)) {
-//         if(mu[0] < 0) {
-//           if(mu[1] < 0) theta = -theta - M_PI;
-//           else theta = M_PI - theta;
-//         }
-//       }
-//       else {
-//         if(mu[1] < 0) {
-//           theta = -M_PI / 2 + phi;
-//         }
-//         else {
-//           theta =  M_PI / 2 - phi;
-//         }
-//       }
-
-//       sol->_Sol[indexMu[0]]->set(i, radius * cos(theta));
-//       sol->_Sol[indexMu[1]]->set(i, radius * sin(theta));
-
     }
     sol->_Sol[indexMuN1]->close();
     sol->_Sol[indexTheta1]->close();
     sol->_Sol[indexPhi1]->close();
-
-//     for(unsigned k = 0; k < dim; k++) {
-//       sol->_Sol[indexMu[k]]->close();
-//     }
   }
   //END Iterative smoothing element -> nodes -> element
 
@@ -1196,32 +1188,81 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       mu[k] = (*sol->_Sol[indexMu[k]])(i);
     }
 
-    if(fabs(theta) < fabs(phi)) {
-      if(mu[0] < 0) {
-        if(mu[1] < 0) theta = -theta - M_PI;
-        else theta = M_PI - theta;
-      }
-    }
-    else {
-      if(mu[1] < 0) {
-        theta = -M_PI / 2 + phi;
+    if(muSmoothingType == 1) {
+      if(fabs(theta) < fabs(phi)) {
+        if(mu[0] < 0) {
+          if(mu[1] < 0) theta = -theta - M_PI;
+          else theta = M_PI - theta;
+        }
       }
       else {
-        theta =  M_PI / 2 - phi;
+        if(mu[1] < 0) {
+          theta = -M_PI / 2 + phi;
+        }
+        else {
+          theta =  M_PI / 2 - phi;
+        }
       }
     }
+    else if(muSmoothingType == 2) {
+      double thetaOriginal = atan2(mu[1], mu[0]);
+      if(thetaOriginal < -0.75 * M_PI) {
+        theta = theta - M_PI;
+      }
+      else if(thetaOriginal < -0.25 * M_PI) {
+        theta = -phi - 0.5 * M_PI;
+      }
+      else if(thetaOriginal < 0.25 * M_PI) {
+        theta = theta;
+      }
+      else if(thetaOriginal < 0.75 * M_PI) {
+        theta = -phi + 0.5 * M_PI;
+      }
+      else {
+        theta = theta + M_PI;
+      }
+    }
+//     else if(muSmoothingType == 3) {
+//       double thetaOriginal = atan2(mu[1], mu[0]);
+//       if(thetaOriginal < -7. / 8. * M_PI) {
+//         theta = 0.5 * asin(theta) - M_PI;
+//       }
+//       else if(thetaOriginal < -5. / 8. * M_PI) {
+//         theta = -0.5 * acos(phi) - 0.5 * M_PI;
+//       }
+//       else if(thetaOriginal < -3. / 8. * M_PI) {
+//         theta = -0.5 * asin(theta) - 0.5 * M_PI;
+//       }
+//       else if(thetaOriginal < -1. / 8. * M_PI) {
+//         theta =  0.5 * acos(phi) - 0.5 * M_PI;
+//       }
+//       else if(thetaOriginal < 1. / 8. * M_PI) {
+//         theta = 0.5 * asin(theta);
+//       }
+//       else if(thetaOriginal < 3. / 8. * M_PI) {
+//         theta = -0.5 * acos(phi) + 0.5 * M_PI;
+//       }
+//       else if(thetaOriginal < 5. / 8. * M_PI) {
+//         theta = -0.5 * asin(theta) + 0.5 * M_PI;
+//       }
+//       else if(thetaOriginal < 7. / 8. * M_PI) {
+//         theta = 0.5 * acos(phi) + 0.5 * M_PI;
+//       }
+//       else {
+//         theta = 0.5 * asin(theta) + M_PI;
+//       }
+//     }
 
+    sol->_Sol[indexTheta1]->set(i, theta);
     sol->_Sol[indexMu[0]]->set(i, MuNormAverage * cos(theta));
     sol->_Sol[indexMu[1]]->set(i, MuNormAverage * sin(theta));
-
-    //sol->_Sol[indexTheta1]->set(i, theta);
 
   }
 
   for(unsigned k = 0; k < dim; k++) {
     sol->_Sol[indexMu[k]]->close();
+    sol->_Sol[indexTheta1]->close();
   }
-  //sol->_Sol[indexTheta1]->close();
   //END mu update
 }
 
@@ -1854,25 +1895,25 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
 
       // std::cout << 00 << " "<< M1[0][0]<<std::endl;
 
-      if(iel == 4 && ig == 1) {
-
-        std::cout << "derivatives " << std::endl;
-        std::cout << 1 << " " << solNx_uv[0][0] << std::endl;
-        std::cout << 2 << " " << solNx_uv[1][1] << std::endl;
-        std::cout << 3 << " " << solNx_uv[1][0] << std::endl;
-        std::cout << 4 << " " << solNx_uv[0][1] << std::endl;
-
-        std::cout << "symmetric " << std::endl;
-        std::cout << "00" << " " << M1[0][0] << " " << M2[0][0] << std::endl;
-        std::cout << "01" << " " << M1[1][0] << " " << M2[1][0] << std::endl;
-        std::cout << "01" << " " << M1[0][1] << " " << M2[0][1] << std::endl;
-        std::cout << "11" << " " << M1[1][1] << " " << M2[1][1] << std::endl;
-
-        std::cout << "asymmetric " << std::endl;
-        std::cout << "00" << " " << N[0][0] << " " << M[0][0] << std::endl;
-        std::cout << "01" << " " << N[1][0] << " " << M[1][0] << std::endl;
-        std::cout << "01" << " " << N[0][1] << " " << M[0][1] << std::endl;
-        std::cout << "11" << " " << N[1][1] << " " << M[1][1] << std::endl;
+//       if(iel == 4 && ig == 1) {
+//
+//         std::cout << "derivatives " << std::endl;
+//         std::cout << 1 << " " << solNx_uv[0][0] << std::endl;
+//         std::cout << 2 << " " << solNx_uv[1][1] << std::endl;
+//         std::cout << 3 << " " << solNx_uv[1][0] << std::endl;
+//         std::cout << 4 << " " << solNx_uv[0][1] << std::endl;
+//
+//         std::cout << "symmetric " << std::endl;
+//         std::cout << "00" << " " << M1[0][0] << " " << M2[0][0] << std::endl;
+//         std::cout << "01" << " " << M1[1][0] << " " << M2[1][0] << std::endl;
+//         std::cout << "01" << " " << M1[0][1] << " " << M2[0][1] << std::endl;
+//         std::cout << "11" << " " << M1[1][1] << " " << M2[1][1] << std::endl;
+//
+//         std::cout << "asymmetric " << std::endl;
+//         std::cout << "00" << " " << N[0][0] << " " << M[0][0] << std::endl;
+//         std::cout << "01" << " " << N[1][0] << " " << M[1][0] << std::endl;
+//         std::cout << "01" << " " << N[0][1] << " " << M[0][1] << std::endl;
+//         std::cout << "11" << " " << N[1][1] << " " << M[1][1] << std::endl;
 
 //         std::cout << "00" << " " << N[0][0] << " " << M[0][0] << std::endl;
 //         std::cout << "10" << " " << N[1][0] << " " << M[1][0] << std::endl;
@@ -1881,7 +1922,7 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
 //         std::cout << "11" << " " << N[1][1] << " " << M[1][1] << std::endl;
 //         //std::cout << "21" << " "<< N[2][1]<<" "<< M[2][1]<<std::endl;
 
-      }
+//     }
 
 
 
@@ -1942,11 +1983,11 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob) {
       }
       //aResL[0] += (DnXmDxdotN + eps * solL[0]) * Area;
 
-      if(iel == 4 && ig == 1) {
-        for(unsigned i = 0; i < nxDofs; i++) {
-          std::cout <<  mu[0] << " " << mu[1] << " " << aResNDx[0][i] << " " << aResNDx[1][i] << "\n";
-        }
-      }
+//       if(iel == 4 && ig == 1) {
+//         for(unsigned i = 0; i < nxDofs; i++) {
+//           std::cout <<  mu[0] << " " << mu[1] << " " << aResNDx[0][i] << " " << aResNDx[1][i] << "\n";
+//         }
+//       }
 
     } // end GAUSS POINT LOOP
 

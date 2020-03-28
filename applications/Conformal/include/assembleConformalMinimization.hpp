@@ -331,30 +331,30 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 
       // Compute components of the unit normal N.
       double normal[DIM];
-      // normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
-      // normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
-      // normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
+      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
+      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
+      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
 
-      // normal[0] = 0.;
-      // normal[1] = 0.;
-      // normal[2] = 1.;
+      //normal[0] = 0.;
+      //normal[1] = 0.;
+      //normal[2] = 1.;
 
-      normal[0] = 0;
-      normal[1] = solNxg[1] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
-      normal[2] = solNxg[2] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
+      //normal[0] = 0;
+      //normal[1] = solNxg[1] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
+      //normal[2] = solNxg[2] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
 
       double normalMSqrtDetg[DIM];
-      // normalMSqrtDetg[0] = (solMx_uv[1][0] * solMx_uv[2][1] - solMx_uv[2][0] * solMx_uv[1][1]);
-      // normalMSqrtDetg[1] = (solMx_uv[2][0] * solMx_uv[0][1] - solMx_uv[0][0] * solMx_uv[2][1]);
-      // normalMSqrtDetg[2] = (solMx_uv[0][0] * solMx_uv[1][1] - solMx_uv[1][0] * solMx_uv[0][1]);
+      normalMSqrtDetg[0] = (solMx_uv[1][0] * solMx_uv[2][1] - solMx_uv[2][0] * solMx_uv[1][1]);
+      normalMSqrtDetg[1] = (solMx_uv[2][0] * solMx_uv[0][1] - solMx_uv[0][0] * solMx_uv[2][1]);
+      normalMSqrtDetg[2] = (solMx_uv[0][0] * solMx_uv[1][1] - solMx_uv[1][0] * solMx_uv[0][1]);
 
-      // normalMSqrtDetg[0] = 0.;
-      // normalMSqrtDetg[1] = 0.;
-      // normalMSqrtDetg[2] = sqrt(detg);
+      //normalMSqrtDetg[0] = 0.;
+      //normalMSqrtDetg[1] = 0.;
+      //normalMSqrtDetg[2] = sqrt(detg);
       //
-      normalMSqrtDetg[0] = 0;
-      normalMSqrtDetg[1] = solNxg[1];
-      normalMSqrtDetg[2] = solNxg[2];
+      //normalMSqrtDetg[0] = 0;
+      //normalMSqrtDetg[1] = solNxg[1];
+      //normalMSqrtDetg[2] = solNxg[2];
 
       // Computing the "reduced Jacobian" g^{ij}X_j .
       double Jir[dim][DIM] = {{0., 0., 0.}, {0., 0., 0.}};
@@ -571,10 +571,10 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 
         double DQ1[DIM][DIM][dim];
 
-        if(iel == 4 && ig == 1 && j == 1) {
-          std::cout << AIJ[0][0] <<" "<< (+gi[1][1] + gi[0][0] * (normal[1] * normal[1] + normal[2] * normal[2])) << std::endl;
-          std::cout << AIJ[0][1] <<" "<< (-gi[0][1] * (normal[0] * normal[0]))   << std::endl;
-        }
+//         if(iel == 4 && ig == 1 && j == 1) {
+//           std::cout << AIJ[0][0] <<" "<< (+gi[1][1] + gi[0][0] * (normal[1] * normal[1] + normal[2] * normal[2])) << std::endl;
+//           std::cout << AIJ[0][1] <<" "<< (-gi[0][1] * (normal[0] * normal[0]))   << std::endl;
+//         }
 
         DQ1[0][0][0] = ((+gi[1][1] + gi[0][0] * (normal[1] * normal[1] + normal[2] * normal[2]))          * phix_uv[0][j] +
                         (-gi[0][1] * (normal[0] * normal[0]))                                             * phix_uv[1][j]);
@@ -618,13 +618,13 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         DQ1[2][2][1] = ((+gi[0][0] + gi[1][1] * (normal[0] * normal[0] + normal[1] * normal[1]))          * phix_uv[1][j] +
                         (-gi[0][1] * (normal[2] * normal[2]))                                             * phix_uv[0][j]);
 
-        if(iel == 4 && ig == 1 && j == 1) {
-          for(unsigned I = 0; I < DIM; I++) {
-            for(unsigned J = 0; J < DIM; J++) {
-              std::cout << DQ[I][J][0] << " " << DQ1[I][J][0] << " " << DQ[I][J][1] << " " << DQ1[I][J][1] << std::endl;
-            }
-          }
-        }
+//         if(iel == 4 && ig == 1 && j == 1) {
+//           for(unsigned I = 0; I < DIM; I++) {
+//             for(unsigned J = 0; J < DIM; J++) {
+//               std::cout << DQ[I][J][0] << " " << DQ1[I][J][0] << " " << DQ[I][J][1] << " " << DQ1[I][J][1] << std::endl;
+//             }
+//           }
+//         }
 
         double DnormalMSqrtDetg[DIM][DIM];
 
