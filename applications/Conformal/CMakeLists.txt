@@ -12,6 +12,7 @@ ADD_SUBDIRECTORY(ex7/)
 ADD_SUBDIRECTORY(ex8/)
 ADD_SUBDIRECTORY(ex9/)
 ADD_SUBDIRECTORY(ex10/)
+ADD_SUBDIRECTORY(ex11/)
 
 FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/Conformal/input/)
 FILE(COPY           ${PROJECT_SOURCE_DIR}/applications/Conformal/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/Conformal/input/)

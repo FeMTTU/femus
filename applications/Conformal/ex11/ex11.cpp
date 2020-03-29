@@ -29,7 +29,7 @@ unsigned counter = 0;
 using namespace femus;
 
 #include "../include/supportFunctions.hpp"
-#include "../include/updateMu.hpp"
+#include "../include/updateMu1.hpp"
 #include "../include/assembleConformalMinimization.hpp"
 
 // Comment back in for working code
@@ -50,7 +50,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   value = 0.;
 
   if(!strcmp(solName, "Dx1")) {
-    if(1 == faceName || 3 == faceName) {
+    if(3 == faceName || 3 == faceName) {
       dirichlet = false;
     }
     if(4 == faceName) {
@@ -142,19 +142,11 @@ int main(int argc, char** args) {
 
   mlSol.AddSolution("mu1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
   mlSol.AddSolution("mu2", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
-
-  mlSol.AddSolution("muN1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
   mlSol.AddSolution("weight1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
-
-  mlSol.AddSolution("muN2", LAGRANGE, feOrder, 0, false);
-  mlSol.AddSolution("weight2", LAGRANGE, feOrder, 0, false);
-
-
-  mlSol.AddSolution("theta1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSol.AddSolution("theta2", LAGRANGE, feOrder, 0, false);
-
-  mlSol.AddSolution("phi1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
-  mlSol.AddSolution("phi2", LAGRANGE, feOrder, 0, false);
+  
+  mlSol.AddSolution("mu1Edge", LAGRANGE, SECOND, 0, false);
+  mlSol.AddSolution("mu2Edge", LAGRANGE, SECOND, 0, false);
+  mlSol.AddSolution("cntEdge", LAGRANGE, SECOND, 0, false);
 
   // Initialize the variables and attach boundary conditions.
   mlSol.Initialize("All");
@@ -190,20 +182,12 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
   mlSol.GetWriter()->SetDebugOutput(true);
-  //mlSol.GetWriter()->Write (DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, 0);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
-  // Attach the assembling function to system and initialize.
-  //system.SetAssembleFunction(AssembleShearMinimization);
-  //system.SetAssembleFunction (AssembleConformalMinimization);
-  //system.MGsolve();
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 1);
-
   system.SetAssembleFunction(AssembleConformalMinimization);
-  //system.SetAssembleFunction(AssembleConformalO1Minimization);
   system.MGsolve();
 
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 2);
+  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 1);
 
   return 0;
 }
