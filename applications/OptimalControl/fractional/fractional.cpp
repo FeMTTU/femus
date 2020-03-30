@@ -147,6 +147,8 @@ int main(int argc, char** argv)
   // ******* Set boundary conditions *******
   mlSol.GenerateBdc("All");
 
+  
+  
 
   // ========= Problem ==========================
   MultiLevelProblem ml_prob(&mlSol);
@@ -160,6 +162,7 @@ int main(int argc, char** argv)
   system.AddSolutionToSystemPDE("u");
 
   // ******* System FEM Assembly *******
+  
   system.SetAssembleFunction(AssembleFracProblem);
   system.SetMaxNumberOfLinearIterations(1);
   //system.SetAssembleFunction(AssembleFEM);
@@ -175,28 +178,33 @@ int main(int argc, char** argv)
 
   // ******* Set Preconditioner *******
   system.SetLinearEquationSolverType(FEMuS_DEFAULT);
-
+  
+  unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim );
+  system.SetSparsityPatternMinimumSize (dimension, "u");
+    
   system.init();
 
   //dense =============
   //dense =============
   //dense =============
-  const unsigned solType = mlSol.GetSolutionType("u");
-
-  for(int level = 0; level < mlMsh.GetNumberOfLevels(); level++) {
-
-    Mesh*                    msh = mlMsh.GetLevel(level);
-    unsigned    nprocs = msh->n_processors();
-    unsigned    iproc = msh->processor_id();
-
-    int MM_size = msh->_dofOffset[solType][nprocs];
-    int MM_local_size = msh->_dofOffset[solType][iproc + 1] - msh->_dofOffset[solType][iproc];
-
-//   SparseMatrix* CC;
-//   CC = SparseMatrix::build().release();
-    system._LinSolver[level]->_KK->init(MM_size, MM_size, MM_local_size, MM_local_size, MM_local_size, MM_size - MM_local_size);
-    system._LinSolver[level]->_KK->zero();
-  }
+  
+  
+  
+//  const unsigned solType = mlSol.GetSolutionType("u");
+//   for(int level = 0; level < mlMsh.GetNumberOfLevels(); level++) {
+// 
+//     Mesh* msh = mlMsh.GetLevel(level);
+//     unsigned nprocs = msh->n_processors();
+//     unsigned iproc = msh->processor_id();
+// 
+//     int MM_size = msh->_dofOffset[solType][nprocs];
+//     int MM_local_size = msh->_dofOffset[solType][iproc + 1] - msh->_dofOffset[solType][iproc];
+// 
+// //   SparseMatrix* CC;
+// //   CC = SparseMatrix::build().release();
+//     system._LinSolver[level]->_KK->init(MM_size, MM_size, MM_local_size, MM_local_size, MM_local_size, MM_size - MM_local_size);
+//     system._LinSolver[level]->_KK->zero();
+//   }
   //dense =============
   //dense =============
   //dense =============
