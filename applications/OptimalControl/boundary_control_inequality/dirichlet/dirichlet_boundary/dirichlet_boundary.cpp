@@ -137,7 +137,7 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-  std::string input_file = "square_4x5.med";
+  std::string input_file = "square_4x4.med";
 //   std::string input_file = "square_parametric.med";
 //   std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
@@ -157,7 +157,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -166,16 +166,16 @@ int main(int argc, char** args) {
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
 
-  ml_sol.AddSolution("state",   LAGRANGE, SECOND/*FIRST*/);
-  ml_sol.AddSolution("control", LAGRANGE, SECOND/*FIRST*/);
-  ml_sol.AddSolution("adjoint", LAGRANGE, SECOND/*FIRST*/);
-  ml_sol.AddSolution("mu",      LAGRANGE, SECOND/*FIRST*/);  //MU
+  ml_sol.AddSolution("state",   LAGRANGE, /*SECOND*/FIRST);
+  ml_sol.AddSolution("control", LAGRANGE, /*SECOND*/FIRST);
+  ml_sol.AddSolution("adjoint", LAGRANGE, /*SECOND*/FIRST);
+  ml_sol.AddSolution("mu",      LAGRANGE, /*SECOND*/FIRST);  //MU
   ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   //MU
   const unsigned int fake_time_dep_flag = 2;
   const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, SECOND/*FIRST*/, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   //MU
 
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
