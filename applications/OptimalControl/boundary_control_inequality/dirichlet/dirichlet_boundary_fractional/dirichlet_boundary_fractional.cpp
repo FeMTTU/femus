@@ -528,6 +528,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     //-----------
                     geom_element,
                     solType_coords,
+                    space_dim,
                     //-----------
                     n_unknowns,
                     Solname_Mat,
@@ -538,6 +539,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     sol_eldofs_Mat,  
                     L2G_dofmap_Mat,
                     L2G_dofmap_Mat_AllVars,
+                    //-----------
+                    Res,
+                    Jac,
                     //-----------
                     n_quantities,
                     SolFEType_quantities,
@@ -551,11 +555,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     phi_ctrl_bdry,
                     phi_ctrl_x_bdry, 
                     //-----------
-                    Res,
-                    Jac,
                     pos_mat_ctrl,
                     pos_sol_ctrl,
-                    space_dim,
                     IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY,
                     //-----------
                     KK,

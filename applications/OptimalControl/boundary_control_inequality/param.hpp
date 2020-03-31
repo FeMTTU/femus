@@ -9,6 +9,10 @@
 #include "Assemble_unknown_jacres.hpp"
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 
+
+#include "../fractional_functions.hpp"
+
+
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
 #define NSUB_X  2
@@ -529,7 +533,8 @@ void el_dofs_unknowns(const Solution*                sol,
   
     //********** BEGIN FRAC CONTROL *****************************************
 
-  void control_eqn_bdry(const unsigned iproc,
+  void control_eqn_bdry_fractional(const unsigned iproc,
+                                   const unsigned nprocs,
                         MultiLevelProblem &    ml_prob,
                         MultiLevelSolution*    ml_sol,
                         const Solution*        sol,
@@ -538,6 +543,8 @@ void el_dofs_unknowns(const Solution*                sol,
                         //-----------
                         CurrentElem < double > & geom_element,
                         const unsigned int solType_coords,
+                        const unsigned int dim,
+                        const unsigned int space_dim,
                         //-----------
                         const unsigned int n_unknowns,
                         const    vector < std::string > & Solname_Mat,
@@ -548,6 +555,9 @@ void el_dofs_unknowns(const Solution*                sol,
                         vector < vector < double > > & sol_eldofs_Mat,  
                         vector < vector < int > > & L2G_dofmap_Mat,
                         std::vector< int >    &   L2G_dofmap_Mat_AllVars,
+                        //-----------
+                        std::vector < double > & Res,
+                        std::vector < double > & Jac,
                         //-----------
                         const unsigned int n_quantities,
                         vector < unsigned > SolFEType_quantities,
@@ -561,11 +571,196 @@ void el_dofs_unknowns(const Solution*                sol,
                         vector <double> phi_ctrl_bdry,
                         vector <double> phi_ctrl_x_bdry, 
                         //-----------
-                        std::vector < double > & Res,
-                        std::vector < double > & Jac,
                         const unsigned int pos_mat_ctrl,
                         const unsigned int pos_sol_ctrl,
+                        const unsigned int is_block_dctrl_ctrl_inside_bdry,
+                        //-----------
+                        SparseMatrix*             KK,
+                        NumericVector* RES,
+                        const bool assembleMatrix,
+                        //-----------
+                        const double alpha,
+                        const double beta,
+                        const unsigned int Nsplit
+                       ) {
+      
+//   unsigned solType =       SolFEType_Mat[pos_mat_ctrl];
+//       
+//   vector < vector < double > > x1(dim);    // local coordinates
+//   vector < vector < double > > x2(dim);    // local coordinates
+//   for(unsigned k = 0; k < dim; k++) {
+//     x1[k].reserve(maxSize);
+//     x2[k].reserve(maxSize);
+//   }
+//   
+//       
+//    for(int kproc = 0; kproc < nprocs; kproc++) {
+//     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
+//       
+//             for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+//                 
+//                   short unsigned ielGeom1 = msh->GetElementType(iel);
+// 
+//                   
+//                     const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
+// 
+//                     
+//                     
+//                     
+//         for(unsigned ig = 0; ig < igNumber; ig++) {
+//   
+//             
+//           msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
+// 
+//           // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+//           vector < double > xg1(dim, 0.);
+//           solX = 0.;
+// 
+//           for(unsigned i = 0; i < nDof1; i++) {
+//             solX += solu1[i] * phi1[i];
+//             for(unsigned d = 0; d < sol_u_x.size(); d++)   sol_u_x[d] += solu1[i] * phi_x[i * dim + d];
+//             for(unsigned k = 0; k < dim; k++) {
+//               xg1[k] += x1[k][i] * phi1[i];
+//             }
+//           }
+//           
+//           
+//           if(iel == jel) {
+//                                           
+//  //============ Adaptive quadrature for iel == jel ==================
+//             if(Nsplit != 0) {
+//                                          
+//             std::cout.precision(14);
+//               std::vector< std::vector<std::vector<double>>> x3;
+// 
+//               for(unsigned split = 0; split <= Nsplit; split++) {
+// 
+// //                 unsigned size_part;
+// //                 if(dim == 1) size_part = 2;
+// //                 else size_part = (split != Nsplit) ? 12 : 4;
+// 
+//                 if(dim == 1) GetElementPartition1D(xg1, x1, split, Nsplit, x3);
+//                 else if(dim == 2) {
+//                   //GetElementPartition2D(xg1, x1, split, Nsplit, x3);
+//                   GetElementPartitionQuad(xg1, x1, split, Nsplit, x3);
+//                 }
+// 
+//                 //for(unsigned r = 0; r < size_part; r++) {
+//                 for(unsigned r = 0; r < x3.size(); r++) {
+// 
+// 
+//                   for(unsigned jg = 0; jg < igNumber; jg++) {
+// 
+// 
+//                     msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], jg, weight3, phi3, phi_x);
+// 
+//                     vector < double > xg3(dim, 0.);
+// 
+//                     for(unsigned i = 0; i < nDof1; i++) {
+//                       for(unsigned k = 0; k < dim; k++) {
+//                         xg3[k] += x3[r][k][i] * phi3[i];
+//                       }
+//                     }
+// 
+//                     std::vector<double> xi3(dim, 0.);
+// 
+//                     GetClosestPointInReferenceElement(x1, xg3, ielGeom1, xi3);
+//                     GetInverseMapping(solType, ielGeom1, aP, xg3, xi3, 1000);
+// 
+//                     msh->_finiteElement[ielGeom1][solType]->GetPhi(phi3, xi3);
+// 
+//                     double solY3 = 0.;
+//                     for(unsigned i = 0; i < nDof1; i++) {
+//                       solY3 += solu1[i] * phi3[i];
+//                     }
+// 
+//                     double dist_xyz3 = 0;
+//                     for(unsigned k = 0; k < dim; k++) {
+//                       dist_xyz3 += (xg1[k] - xg3[k]) * (xg1[k] - xg3[k]);
+//                     }
+// 
+//                     const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
+// 
+//                     for(unsigned i = 0; i < nDof1; i++) {
+// 
+//                       Res_local_refined[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits *
+//                                                         ((solX - solY3) * (phi1[i] - phi3[i]) * weight3 / denom3
+//                                                         ) * weight1 ;
+// 
+//                       for(unsigned j = 0; j < nDof2; j++) {
+//                         CClocal_refined[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits *
+//                                                             ((phi1[j] - phi3[j]) * (phi1[i] - phi3[i]) * weight3 / denom3
+//                                                             ) * weight1 ;
+// 
+//                       }
+//                     }
+// //============ Adaptive quadrature for iel == jel ==================
+//                                           
+//                                                } //end jg
+//                 } //end r
+//               }  //end split
+//             }  //end if Nsplit != 0
+//              
+//                                           
+//         } //iel != jel
+//                             
+//                             
+//                             
+//                             
+//                             
+//                         }
+//                 
+//                 
+//                 
+//               }
+//            }
+//         }
+//       
+      
+  }
+    
+  //********** END FRAC CONTROL *****************************************
+  
+  
+    
+  void control_eqn_bdry(const unsigned iproc,
+                        MultiLevelProblem &    ml_prob,
+                        MultiLevelSolution*    ml_sol,
+                        const Solution*        sol,
+                        const Mesh * msh,
+                        const  LinearEquationSolver* pdeSys,
+                        //-----------
+                        CurrentElem < double > & geom_element,
+                        const unsigned int solType_coords,
                         const unsigned int space_dim,
+                        //-----------
+                        const unsigned int n_unknowns,
+                        const    vector < std::string > & Solname_Mat,
+                        const    vector < unsigned > & SolFEType_Mat,
+                        const vector < unsigned > & SolIndex_Mat,
+                        const vector < unsigned > & SolPdeIndex,
+                        vector < unsigned > & Sol_n_el_dofs_Mat, 
+                        vector < vector < double > > & sol_eldofs_Mat,  
+                        vector < vector < int > > & L2G_dofmap_Mat,
+                        std::vector< int >    &   L2G_dofmap_Mat_AllVars,
+                        //-----------
+                        std::vector < double > & Res,
+                        std::vector < double > & Jac,
+                        //-----------
+                        const unsigned int n_quantities,
+                        vector < unsigned > SolFEType_quantities,
+                        vector < unsigned > Sol_n_el_dofs_quantities,
+                        //-----------
+                        std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all,
+                        std::vector < std::vector < double > >  Jac_qp_bdry,
+                        std::vector < std::vector < double > >  JacI_qp_bdry,
+                        double detJac_qp_bdry,
+                        double weight_bdry,
+                        vector <double> phi_ctrl_bdry,
+                        vector <double> phi_ctrl_x_bdry, 
+                        //-----------
+                        const unsigned int pos_mat_ctrl,
+                        const unsigned int pos_sol_ctrl,
                         const unsigned int is_block_dctrl_ctrl_inside_bdry,
                         //-----------
                         SparseMatrix*             KK,
@@ -764,7 +959,7 @@ void el_dofs_unknowns(const Solution*                sol,
     
 }
 
-  //********** END FRAC CONTROL *****************************************
+
   
   
   
