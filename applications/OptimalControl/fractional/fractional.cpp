@@ -328,14 +328,14 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   Res_nonlocalJ.reserve(maxSize);  // local redidual vector
 //   vector < double > CClocal;
 //   CClocal.reserve(maxSize * maxSize);
-  vector < double > CClocalII;
-  CClocalII.reserve(maxSize * maxSize);
-  vector < double > CClocalIJ;
-  CClocalIJ.reserve(maxSize * maxSize);
-  vector < double > CClocalJI;
-  CClocalJI.reserve(maxSize * maxSize);
-  vector < double > CClocalJJ;
-  CClocalJJ.reserve(maxSize * maxSize);
+  vector < double > CC_nonlocal_II;
+  CC_nonlocal_II.reserve(maxSize * maxSize);
+  vector < double > CC_nonlocal_IJ;
+  CC_nonlocal_IJ.reserve(maxSize * maxSize);
+  vector < double > CC_nonlocal_JI;
+  CC_nonlocal_JI.reserve(maxSize * maxSize);
+  vector < double > CC_nonlocal_JJ;
+  CC_nonlocal_JJ.reserve(maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero();
@@ -484,9 +484,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
       MPI_Bcast(& nFaces, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
 
       bd_face.resize(nFaces);
-      //std::cout << "\n" << nFaces << "  ";
-      //for (unsigned i = 0; i<nFaces; i++) std::cout << bd_face[i] << " ";
-      //std::cout << "\n";
       MPI_Bcast(& bd_face[0], nFaces, MPI_INT, kproc, MPI_COMM_WORLD);
 
 
@@ -528,10 +525,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         }
 
 //         CClocal.assign(nDof1 * nDof2, 0.);   //resize
-        CClocalII.assign(nDof1 * nDof2, 0.);   //resize
-        CClocalIJ.assign(nDof1 * nDof2, 0.);   //resize
-        CClocalJI.assign(nDof1 * nDof2, 0.);   //resize
-        CClocalJJ.assign(nDof1 * nDof2, 0.);   //resize
+        CC_nonlocal_II.assign(nDof1 * nDof2, 0.);   //resize
+        CC_nonlocal_IJ.assign(nDof1 * nDof2, 0.);   //resize
+        CC_nonlocal_JI.assign(nDof1 * nDof2, 0.);   //resize
+        CC_nonlocal_JJ.assign(nDof1 * nDof2, 0.);   //resize
 //         Res_nonlocal.assign(nDof1, 0);    //resize
         Res_nonlocalI.assign(nDof1, 0);    //resize
         Res_nonlocalJ.assign(nDof1, 0);    //resize
@@ -754,106 +751,102 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                     }
 //============ Adaptive quadrature for iel == jel ==================
 
-                if(UNBOUNDED == 1) {
+              if(UNBOUNDED == 1) {
 //============ Mixed integral 1D - Analytical ==================
-                    if(ig == 0 && dim == 1) {
-                      double ex_1 = EX_1;
-                      double ex_2 = EX_2;
-                      double dist_1 = 0.;
-                      double dist_2 = 0.;
-                      for(int k = 0; k < dim; k++) {
-                        dist_1 += sqrt((xg3[k] - ex_1) * (xg3[k] - ex_1));
-                        dist_2 += sqrt((xg3[k] - ex_2) * (xg3[k] - ex_2));
-                      }
-                      double mixed_term = (pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac)) * (1. / s_frac) ;
+                if(ig == 0 && dim == 1) {
+                  double ex_1 = EX_1;
+                  double ex_2 = EX_2;
+                  double dist_1 = 0.;
+                  double dist_2 = 0.;
+                  for(int k = 0; k < dim; k++) {
+                    dist_1 += sqrt((xg3[k] - ex_1) * (xg3[k] - ex_1));
+                    dist_2 += sqrt((xg3[k] - ex_2) * (xg3[k] - ex_2));
+                  }
+                  double mixed_term = (pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac)) * (1. / s_frac) ;
 
-                      for(unsigned i = 0; i < nDof1; i++) {
-                        for(unsigned j = 0; j < nDof1; j++) {
-                          KK_local[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term;
-                        }
-                        Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solY3 * mixed_term;
-                      }
+                  for(unsigned i = 0; i < nDof1; i++) {
+                    for(unsigned j = 0; j < nDof1; j++) {
+                      KK_local[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term;
                     }
+                    Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solY3 * mixed_term;
+                  }
+                }
 //============ Mixed integral 1D - Analytical ==================
 //============ Mixed Integral 2D - Numerical ==================
-                    if(ig == 0 && dim == 2) {
-            double mixed_term1 = 0;
+                if(ig == 0 && dim == 2) {
+                  double mixed_term1 = 0;
 //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
             // *** Face Gauss point loop (boundary Integral) ***
-            for(unsigned jj = 0; jj < bd_face.size(); jj++) {
+                  for(unsigned jj = 0; jj < bd_face.size(); jj++) {
 
-              int jface = bd_face[jj];
-              // look for boundary faces
+                    int jface = bd_face[jj];
+                    
+                    // look for boundary faces
+                    unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
 
-              unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
 
-              //std::cout << faceDofs<< " ";
+                    vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
+                    for(int k = 0; k < dim; k++) {
+                      faceCoordinates[k].resize(faceDofs);
+                    }
+                    for(unsigned i = 0; i < faceDofs; i++) {
+                      unsigned inode = el->GetIG(ielGeom2, jface, i);  // face-to-element local node mapping.
+                      for(unsigned k = 0; k < dim; k++) {
+                        faceCoordinates[k][i] =  x2[k][inode] - xg3[k]; // We extract the local coordinates on the face from local coordinates on the element.
+                      }
+                    }
+                    const unsigned div = 10;
+                    vector  < vector  <  double> > interpCoordinates(dim);
+                    for(int k = 0; k < dim; k++) {
+                      interpCoordinates[k].resize(div + 1); // set "4" as a parameter
+                    }
+                    for(unsigned n = 0; n <= div; n++) {
+                      for(int k = 0; k < dim; k++) {
+                        interpCoordinates[k][n] = faceCoordinates[k][0] + n * (faceCoordinates[k][1] - faceCoordinates[k][0]) /  div ;
+                      }
+                    }
+                    for(unsigned n = 0; n < div; n++) {
+                      double teta2 = atan2(interpCoordinates[1][n + 1], interpCoordinates[0][n + 1]);
+                      double teta1 = atan2(interpCoordinates[1][n], interpCoordinates[0][n]);
 
-              vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
-              for(int k = 0; k < dim; k++) {
-                faceCoordinates[k].resize(faceDofs);
-              }
-              for(unsigned i = 0; i < faceDofs; i++) {
-                unsigned inode = el->GetIG(ielGeom2, jface, i);  // face-to-element local node mapping.
-                for(unsigned k = 0; k < dim; k++) {
-                  faceCoordinates[k][i] =  x2[k][inode] - xg3[k]; // We extract the local coordinates on the face from local coordinates on the element.
+                      if(teta2 < teta1) teta2 += 2. * M_PI;
+
+                      double delta_teta = teta2 - teta1;
+
+
+                      vector <double> mid_point;
+                      mid_point.resize(dim);
+                      for(unsigned k = 0; k < dim; k++) {
+                        mid_point[k] = (interpCoordinates[k][n + 1] + interpCoordinates[k][n]) * 0.5;
+                      }
+                      double dist2 = 0;
+                      for(int k = 0; k < dim; k++) {
+                        dist2 += mid_point[k] * mid_point[k];
+                      }
+                      double dist = sqrt(dist2);
+                      mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
+                    }
+                  }
+
+                  for(unsigned i = 0; i < nDof1; i++) {
+                    for(unsigned j = 0; j < nDof1; j++) {
+                      KK_mixed[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term1;
+                    }
+                    Res_mixed[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solX * mixed_term1;
+                  }
                 }
               }
-              const unsigned div = 10;
-              vector  < vector  <  double> > interpCoordinates(dim);
-              for(int k = 0; k < dim; k++) {
-                interpCoordinates[k].resize(div + 1); // set "4" as a parameter
-              }
-              for(unsigned n = 0; n <= div; n++) {
-                for(int k = 0; k < dim; k++) {
-                  interpCoordinates[k][n] = faceCoordinates[k][0] + n * (faceCoordinates[k][1] - faceCoordinates[k][0]) /  div ;
-                }
-              }
-              for(unsigned n = 0; n < div; n++) {
-                double teta2 = atan2(interpCoordinates[1][n + 1], interpCoordinates[0][n + 1]);
-                double teta1 = atan2(interpCoordinates[1][n], interpCoordinates[0][n]);
-
-                if(teta2 < teta1) teta2 += 2. * M_PI;
-
-                // std::cout << teta2 - teta1<<std::endl;
-
-                double delta_teta = teta2 - teta1;
-
-
-                vector <double> mid_point;
-                mid_point.resize(dim);
-                for(unsigned k = 0; k < dim; k++) {
-                  mid_point[k] = (interpCoordinates[k][n + 1] + interpCoordinates[k][n]) * 0.5;
-                }
-                double dist2 = 0;
-                for(int k = 0; k < dim; k++) {
-                  dist2 += mid_point[k] * mid_point[k];
-                }
-                double dist = sqrt(dist2);
-                mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
-              }
-            }
-
-            for(unsigned i = 0; i < nDof1; i++) {
-              for(unsigned j = 0; j < nDof1; j++) {
-                KK_mixed[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term1;
-              }
-              Res_mixed[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solX * mixed_term1;
-            }
-                       }
-                 }
 //============ Mixed Integral 2D - Numerical ==================
-                  } //end jg
-                } //end r
-              }  //end split
-            }  //end if Nsplit != 0
-
-          } // end iel == jel loop
+            } //end jg
+          } //end r
+        }  //end split
+      }  //end if Nsplit != 0
+    } // end iel == jel loop
 
 
 
 //============ Mixed Integral - Numerical ==================
-          if((iel != jel || Nsplit == 0)) {
+          if(iel != jel || Nsplit == 0) {
               
             if( UNBOUNDED == 1 && dim == 2 ) {
             double mixed_term1 = 0;
@@ -865,8 +858,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               // look for boundary faces
 
               unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
-
-              //std::cout << faceDofs<< " ";
 
               vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
               for(int k = 0; k < dim; k++) {
@@ -893,8 +884,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 double teta1 = atan2(interpCoordinates[1][n], interpCoordinates[0][n]);
 
                 if(teta2 < teta1) teta2 += 2. * M_PI;
-
-                // std::cout << teta2 - teta1<<std::endl;
 
                 double delta_teta = teta2 - teta1;
 
@@ -947,27 +936,20 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 for(unsigned j = 0; j < nDof2; j++) {
 //                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
 
-                  CClocalII[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight2[jg] / denom;
+                  CC_nonlocal_II[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight2[jg] / denom;
 
-                  CClocalIJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * phi1[i] * weight1 * weight2[jg] / denom;
+                  CC_nonlocal_IJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * phi1[i] * weight1 * weight2[jg] / denom;
 
-                  CClocalJI[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
+                  CC_nonlocal_JI[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
 
-                  CClocalJJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
+                  CC_nonlocal_JJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
 
 
+                  }
                 }
-
-              }
-
-
-
-            } //endl jg loop
-
-            
-            
-          }
-          }
+              } //endl jg loop
+            }
+          } //end if(iel != jel || Nsplit == 0)
           
         } //endl ig loop
 
@@ -984,10 +966,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         KK->add_matrix_blocked(KK_mixed, l2GMap1, l2GMap1);
         RES->add_vector_blocked(Res_mixed, l2GMap1);
 
-        KK->add_matrix_blocked(CClocalII, l2GMap1, l2GMap1);
-        KK->add_matrix_blocked(CClocalIJ, l2GMap1, l2GMap2);
-        KK->add_matrix_blocked(CClocalJI, l2GMap2, l2GMap1);
-        KK->add_matrix_blocked(CClocalJJ, l2GMap2, l2GMap2);
+        KK->add_matrix_blocked(CC_nonlocal_II, l2GMap1, l2GMap1);
+        KK->add_matrix_blocked(CC_nonlocal_IJ, l2GMap1, l2GMap2);
+        KK->add_matrix_blocked(CC_nonlocal_JI, l2GMap2, l2GMap1);
+        KK->add_matrix_blocked(CC_nonlocal_JJ, l2GMap2, l2GMap2);
 
 //        RES->add_vector_blocked(Res_nonlocal, l2GMap1);
         RES->add_vector_blocked(Res_nonlocalI, l2GMap1);
@@ -1357,4 +1339,9 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
   // ***************** END ASSEMBLY *******************
 }
+
+
+
+
+
 
