@@ -777,73 +777,69 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //============ Mixed integral 1D - Analytical ==================
 //============ Mixed Integral 2D - Numerical ==================
                     if(ig == 0 && dim == 2) {
-//             double mixed_term1 = 0;
-// //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
-//             // *** Face Gauss point loop (boundary Integral) ***
-//             for(unsigned jj = 0; jj < bd_face.size(); jj++) {
-// 
-//               int jface = bd_face[jj];
-//               // look for boundary faces
-// 
-//               unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
-// 
-//               //std::cout << faceDofs<< " ";
-// 
-//               vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
-//               for(int k = 0; k < dim; k++) {
-//                 faceCoordinates[k].resize(faceDofs);
-//               }
-//               for(unsigned i = 0; i < faceDofs; i++) {
-//                 unsigned inode = el->GetIG(ielGeom2, jface, i);  // face-to-element local node mapping.
-//                 for(unsigned k = 0; k < dim; k++) {
-//                   faceCoordinates[k][i] =  x2[k][inode] - xg3[k]; // We extract the local coordinates on the face from local coordinates on the element.
-//                 }
-//               }
-//               const unsigned div = 10;
-//               vector  < vector  <  double> > interpCoordinates(dim);
-//               for(int k = 0; k < dim; k++) {
-//                 interpCoordinates[k].resize(div + 1); // set "4" as a parameter
-//               }
-//               for(unsigned n = 0; n <= div; n++) {
-//                 for(int k = 0; k < dim; k++) {
-//                   interpCoordinates[k][n] = faceCoordinates[k][0] + n * (faceCoordinates[k][1] - faceCoordinates[k][0]) /  div ;
-//                 }
-//               }
-//               for(unsigned n = 0; n < div; n++) {
-//                 double teta2 = atan2(interpCoordinates[1][n + 1], interpCoordinates[0][n + 1]);
-//                 double teta1 = atan2(interpCoordinates[1][n], interpCoordinates[0][n]);
-// 
-//                 if(teta2 < teta1) teta2 += 2. * M_PI;
-// 
-//                 // std::cout << teta2 - teta1<<std::endl;
-// 
-//                 double delta_teta = teta2 - teta1;
-// 
-// 
-//                 vector <double> mid_point;
-//                 mid_point.resize(dim);
-//                 for(unsigned k = 0; k < dim; k++) {
-//                   mid_point[k] = (interpCoordinates[k][n + 1] + interpCoordinates[k][n]) * 0.5;
-//                 }
-//                 double dist2 = 0;
-//                 for(int k = 0; k < dim; k++) {
-//                   dist2 += mid_point[k] * mid_point[k];
-//                 }
-//                 double dist = sqrt(dist2);
-//                 mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
-//               }
-//             }
-//           if(iel == 0 && ig ==4) sum_int1 += mixed_term1;
-//           std::cout << "sum_int1 = " << sum_int1 <<"\n";
+            double mixed_term1 = 0;
+//     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
+            // *** Face Gauss point loop (boundary Integral) ***
+            for(unsigned jj = 0; jj < bd_face.size(); jj++) {
 
-            //std::cout << mixed_term1 << " ";
+              int jface = bd_face[jj];
+              // look for boundary faces
 
-//             for(unsigned i = 0; i < nDof1; i++) {
-//               for(unsigned j = 0; j < nDof1; j++) {
-//                 KK_mixed[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term1;
-//               }
-//               Res_mixed[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solX * mixed_term1;
-//             }
+              unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
+
+              //std::cout << faceDofs<< " ";
+
+              vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
+              for(int k = 0; k < dim; k++) {
+                faceCoordinates[k].resize(faceDofs);
+              }
+              for(unsigned i = 0; i < faceDofs; i++) {
+                unsigned inode = el->GetIG(ielGeom2, jface, i);  // face-to-element local node mapping.
+                for(unsigned k = 0; k < dim; k++) {
+                  faceCoordinates[k][i] =  x2[k][inode] - xg3[k]; // We extract the local coordinates on the face from local coordinates on the element.
+                }
+              }
+              const unsigned div = 10;
+              vector  < vector  <  double> > interpCoordinates(dim);
+              for(int k = 0; k < dim; k++) {
+                interpCoordinates[k].resize(div + 1); // set "4" as a parameter
+              }
+              for(unsigned n = 0; n <= div; n++) {
+                for(int k = 0; k < dim; k++) {
+                  interpCoordinates[k][n] = faceCoordinates[k][0] + n * (faceCoordinates[k][1] - faceCoordinates[k][0]) /  div ;
+                }
+              }
+              for(unsigned n = 0; n < div; n++) {
+                double teta2 = atan2(interpCoordinates[1][n + 1], interpCoordinates[0][n + 1]);
+                double teta1 = atan2(interpCoordinates[1][n], interpCoordinates[0][n]);
+
+                if(teta2 < teta1) teta2 += 2. * M_PI;
+
+                // std::cout << teta2 - teta1<<std::endl;
+
+                double delta_teta = teta2 - teta1;
+
+
+                vector <double> mid_point;
+                mid_point.resize(dim);
+                for(unsigned k = 0; k < dim; k++) {
+                  mid_point[k] = (interpCoordinates[k][n + 1] + interpCoordinates[k][n]) * 0.5;
+                }
+                double dist2 = 0;
+                for(int k = 0; k < dim; k++) {
+                  dist2 += mid_point[k] * mid_point[k];
+                }
+                double dist = sqrt(dist2);
+                mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
+              }
+            }
+
+            for(unsigned i = 0; i < nDof1; i++) {
+              for(unsigned j = 0; j < nDof1; j++) {
+                KK_mixed[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term1;
+              }
+              Res_mixed[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solX * mixed_term1;
+            }
                        }
                  }
 //============ Mixed Integral 2D - Numerical ==================
@@ -859,7 +855,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //============ Mixed Integral - Numerical ==================
           if((iel != jel || Nsplit == 0)) {
               
-            if( UNBOUNDED == 1) {
+            if( UNBOUNDED == 1 && dim == 2 ) {
             double mixed_term1 = 0;
 //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
             // *** Face Gauss point loop (boundary Integral) ***
