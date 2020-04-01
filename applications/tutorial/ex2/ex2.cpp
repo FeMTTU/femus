@@ -99,7 +99,7 @@ int main(int argc, char** args) {
       system.AddSolutionToSystemPDE("u");
 
       // attach the assembling function to system
-      system.SetAssembleFunction(AssemblePoissonProblem_AD);
+      system.SetAssembleFunction(AssemblePoissonProblem);
 
       // initilaize and solve the system
       system.init();
