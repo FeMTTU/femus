@@ -273,9 +273,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //***************************************************
 
   //solution variable
-  unsigned soluIndex;
-  soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned solType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
+  unsigned soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
+  unsigned solType   = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
   std::vector < double > solu1;
   std::vector < double > solu2;
@@ -303,39 +302,27 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   l2GMap2.reserve(maxSize);
 
 //   Local matrices and rhs for laplacian and mass matrix
-  vector < double > KK_local;
-  KK_local.reserve(maxSize * maxSize);
-  vector< double >         Res_local;
-  Res_local.reserve(maxSize);  // local redidual vector
+  vector < double > KK_local;  KK_local.reserve(maxSize * maxSize);
+  vector < double > Res_local; Res_local.reserve(maxSize);
 
 //   Local matrices and rhs for adaptive quadrature
-  vector< double >         Res_local_refined;
-  Res_local_refined.reserve(maxSize);  // local redidual vector
-  vector < double > CClocal_refined;
-  CClocal_refined.reserve(maxSize * maxSize);
+  vector < double > Res_local_refined; Res_local_refined.reserve(maxSize);
+  vector < double > CClocal_refined;   CClocal_refined.reserve(maxSize * maxSize);
 
-  vector < double > KK_mixed;
-  KK_mixed.reserve(maxSize * maxSize);
-  vector< double >         Res_mixed;
-  Res_mixed.reserve(maxSize);  // local redidual vector
+  vector < double > KK_mixed;   KK_mixed.reserve(maxSize * maxSize);
+  vector < double > Res_mixed;  Res_mixed.reserve(maxSize);
 
 //   Non local matrices and vectors for H^s laplacian operator
 //   vector< double >         Res_nonlocal;
-//   Res_nonlocal.reserve(maxSize);  // local redidual vector
-  vector< double >         Res_nonlocalI;
-  Res_nonlocalI.reserve(maxSize);  // local redidual vector
-  vector< double >         Res_nonlocalJ;
-  Res_nonlocalJ.reserve(maxSize);  // local redidual vector
+//   Res_nonlocal.reserve(maxSize);  // local residual vector
+  vector< double >         Res_nonlocalI;  Res_nonlocalI.reserve(maxSize);
+  vector< double >         Res_nonlocalJ;  Res_nonlocalJ.reserve(maxSize);
 //   vector < double > CClocal;
 //   CClocal.reserve(maxSize * maxSize);
-  vector < double > CClocalII;
-  CClocalII.reserve(maxSize * maxSize);
-  vector < double > CClocalIJ;
-  CClocalIJ.reserve(maxSize * maxSize);
-  vector < double > CClocalJI;
-  CClocalJI.reserve(maxSize * maxSize);
-  vector < double > CClocalJJ;
-  CClocalJJ.reserve(maxSize * maxSize);
+  vector < double > CClocalII;  CClocalII.reserve(maxSize * maxSize);
+  vector < double > CClocalIJ;  CClocalIJ.reserve(maxSize * maxSize);
+  vector < double > CClocalJI;  CClocalJI.reserve(maxSize * maxSize);
+  vector < double > CClocalJJ;  CClocalJJ.reserve(maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero();
@@ -522,6 +509,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
             x1[k][i] = (*msh->_topology->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
           }
         }
+        
         for(unsigned i = 0; i < nDof1; i++) {
           unsigned iDof  = msh->GetSolutionDof(i, iel, solType);  // global to global mapping between coordinates node and coordinate dof
           solu1[i] = (*sol->_Sol[soluIndex])(iDof);  // global extraction and local storage for the element coordinates
@@ -1002,6 +990,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //        RES->add_vector_blocked(Res_nonlocal, l2GMap1);
         RES->add_vector_blocked(Res_nonlocalI, l2GMap1);
         RES->add_vector_blocked(Res_nonlocalJ, l2GMap2);
+        
       } // end iel loop
 
 

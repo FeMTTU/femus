@@ -555,6 +555,7 @@ void el_dofs_unknowns(const Solution*                sol,
                         vector < vector < double > > & sol_eldofs_Mat,  
                         vector < vector < int > > & L2G_dofmap_Mat,
                         std::vector< int >    &   L2G_dofmap_Mat_AllVars,
+                        const unsigned int maxSize,
                         //-----------
                         std::vector < double > & Res,
                         std::vector < double > & Jac,
@@ -575,148 +576,254 @@ void el_dofs_unknowns(const Solution*                sol,
                         const unsigned int pos_sol_ctrl,
                         const unsigned int is_block_dctrl_ctrl_inside_bdry,
                         //-----------
-                        SparseMatrix*             KK,
+                        SparseMatrix*  KK,
                         NumericVector* RES,
                         const bool assembleMatrix,
                         //-----------
                         const double alpha,
                         const double beta,
-                        const unsigned int Nsplit
+                        const unsigned int Nsplit,
+                        const double s_frac,
+                        const double check_limits,
+                        const double C_ns,
+                        const unsigned int OP_Hhalf
                        ) {
       
-//   unsigned solType =       SolFEType_Mat[pos_mat_ctrl];
-//       
-//   vector < vector < double > > x1(dim);    // local coordinates
-//   vector < vector < double > > x2(dim);    // local coordinates
-//   for(unsigned k = 0; k < dim; k++) {
-//     x1[k].reserve(maxSize);
-//     x2[k].reserve(maxSize);
-//   }
-//   
-//       
-//    for(int kproc = 0; kproc < nprocs; kproc++) {
-//     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
-//       
-//             for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-//                 
-//                   short unsigned ielGeom1 = msh->GetElementType(iel);
-// 
-//                   
-//                     const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
-// 
-//                     
-//                     
-//                     
-//         for(unsigned ig = 0; ig < igNumber; ig++) {
-//   
-//             
-//           msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
-// 
-//           // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-//           vector < double > xg1(dim, 0.);
-//           solX = 0.;
-// 
-//           for(unsigned i = 0; i < nDof1; i++) {
-//             solX += solu1[i] * phi1[i];
-//             for(unsigned d = 0; d < sol_u_x.size(); d++)   sol_u_x[d] += solu1[i] * phi_x[i * dim + d];
-//             for(unsigned k = 0; k < dim; k++) {
-//               xg1[k] += x1[k][i] * phi1[i];
-//             }
-//           }
-//           
-//           
-//           if(iel == jel) {
-//                                           
-//  //============ Adaptive quadrature for iel == jel ==================
-//             if(Nsplit != 0) {
-//                                          
-//             std::cout.precision(14);
-//               std::vector< std::vector<std::vector<double>>> x3;
-// 
-//               for(unsigned split = 0; split <= Nsplit; split++) {
-// 
-// //                 unsigned size_part;
-// //                 if(dim == 1) size_part = 2;
-// //                 else size_part = (split != Nsplit) ? 12 : 4;
-// 
-//                 if(dim == 1) GetElementPartition1D(xg1, x1, split, Nsplit, x3);
-//                 else if(dim == 2) {
-//                   //GetElementPartition2D(xg1, x1, split, Nsplit, x3);
-//                   GetElementPartitionQuad(xg1, x1, split, Nsplit, x3);
-//                 }
-// 
-//                 //for(unsigned r = 0; r < size_part; r++) {
-//                 for(unsigned r = 0; r < x3.size(); r++) {
-// 
-// 
-//                   for(unsigned jg = 0; jg < igNumber; jg++) {
-// 
-// 
-//                     msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], jg, weight3, phi3, phi_x);
-// 
-//                     vector < double > xg3(dim, 0.);
-// 
-//                     for(unsigned i = 0; i < nDof1; i++) {
-//                       for(unsigned k = 0; k < dim; k++) {
-//                         xg3[k] += x3[r][k][i] * phi3[i];
-//                       }
-//                     }
-// 
-//                     std::vector<double> xi3(dim, 0.);
-// 
-//                     GetClosestPointInReferenceElement(x1, xg3, ielGeom1, xi3);
-//                     GetInverseMapping(solType, ielGeom1, aP, xg3, xi3, 1000);
-// 
-//                     msh->_finiteElement[ielGeom1][solType]->GetPhi(phi3, xi3);
-// 
-//                     double solY3 = 0.;
-//                     for(unsigned i = 0; i < nDof1; i++) {
-//                       solY3 += solu1[i] * phi3[i];
-//                     }
-// 
-//                     double dist_xyz3 = 0;
-//                     for(unsigned k = 0; k < dim; k++) {
-//                       dist_xyz3 += (xg1[k] - xg3[k]) * (xg1[k] - xg3[k]);
-//                     }
-// 
-//                     const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
-// 
-//                     for(unsigned i = 0; i < nDof1; i++) {
-// 
-//                       Res_local_refined[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits *
-//                                                         ((solX - solY3) * (phi1[i] - phi3[i]) * weight3 / denom3
-//                                                         ) * weight1 ;
-// 
-//                       for(unsigned j = 0; j < nDof2; j++) {
-//                         CClocal_refined[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits *
-//                                                             ((phi1[j] - phi3[j]) * (phi1[i] - phi3[i]) * weight3 / denom3
-//                                                             ) * weight1 ;
-// 
-//                       }
-//                     }
-// //============ Adaptive quadrature for iel == jel ==================
-//                                           
-//                                                } //end jg
-//                 } //end r
-//               }  //end split
-//             }  //end if Nsplit != 0
-//              
-//                                           
-//         } //iel != jel
-//                             
-//                             
-//                             
-//                             
-//                             
-//                         }
-//                 
-//                 
-//                 
-//               }
-//            }
-//         }
-//       
       
+   vector < double > phi_x;
+     
+      
+  unsigned solType =   SolFEType_Mat[pos_mat_ctrl];
+  unsigned soluIndex = SolIndex_Mat[pos_mat_ctrl];
+  std::vector < double > solu1;
+      
+  //------- geometry ---------------
+ vector < vector < double > > x1(dim);
+  vector < vector < double > > x2(dim);
+  for(unsigned k = 0; k < dim; k++) {
+    x1[k].reserve(maxSize);
+    x2[k].reserve(maxSize);
+  }
+ 
+ 
+  //-------- local to global mappings --------------
+  vector< int > l2GMap1;
+  vector< int > l2GMap2;
+  l2GMap1.reserve(maxSize);
+  l2GMap2.reserve(maxSize);
+
+  //-------- Local matrices and rhs --------------
+  vector < double > KK_local;  KK_local.reserve(maxSize * maxSize);
+  vector < double > Res_local; Res_local.reserve(maxSize);
+
+//   Local matrices and rhs for adaptive quadrature
+  vector < double > Res_local_refined; Res_local_refined.reserve(maxSize);
+  vector < double > CClocal_refined;   CClocal_refined.reserve(maxSize * maxSize);
+
+  vector < double > KK_mixed;   KK_mixed.reserve(maxSize * maxSize);
+  vector < double > Res_mixed;  Res_mixed.reserve(maxSize);
+
+//   Non local matrices and vectors for H^s laplacian operator
+//   vector< double >         Res_nonlocal;
+//   Res_nonlocal.reserve(maxSize);  // local residual vector
+  vector< double >         Res_nonlocalI;  Res_nonlocalI.reserve(maxSize);
+  vector< double >         Res_nonlocalJ;  Res_nonlocalJ.reserve(maxSize);
+//   vector < double > CClocal;
+//   CClocal.reserve(maxSize * maxSize);
+  vector < double > CClocalII;  CClocalII.reserve(maxSize * maxSize);
+  vector < double > CClocalIJ;  CClocalIJ.reserve(maxSize * maxSize);
+  vector < double > CClocalJI;  CClocalJI.reserve(maxSize * maxSize);
+  vector < double > CClocalJJ;  CClocalJJ.reserve(maxSize * maxSize); 
+ 
+ //----------------------
+  KK->zero();
+  RES->zero(); 
+ //----------------------
+  
+  
+   for(int kproc = 0; kproc < nprocs; kproc++) {
+    for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
+      
+       unsigned nDof2;
+       
+         if(iproc == kproc) {
+            nDof2  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
+        }
+        MPI_Bcast(&nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+     
+       
+       
+       for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+                
+        short unsigned ielGeom1 = msh->GetElementType(iel);
+        unsigned nDof1  = msh->GetElementDofNumber(iel, solType);
+        unsigned nDofx1 = msh->GetElementDofNumber(iel, solType_coords);
+
+        solu1.resize(nDof1);
+        
+        for(unsigned i = 0; i < nDof1; i++) {
+          unsigned iDof  = msh->GetSolutionDof(i, iel, solType);  // global to global mapping between coordinates node and coordinate dof
+          solu1[i] = (*sol->_Sol[soluIndex])(iDof);  // global extraction and local storage for the element coordinates
+        }
+                  
+                    const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
+
+         double weight1;
+        vector < double > phi1;  // local test function
+
+        double weight3;
+        vector < double > phi3;  // local test function
+
+        double solX = 0.;
+        std::vector<double> sol_u_x(space_dim);
+        std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
+
+
+        std::vector < std::vector < std::vector <double > > > aP(3);
+        if(Nsplit > 0) {
+          for(unsigned jtype = 0; jtype < solType + 1; jtype++) {
+            ProjectNodalToPolynomialCoefficients(aP[jtype], x1, ielGeom1, jtype) ;
+          }
+        }                   
+                    
+                    
+        for(unsigned ig = 0; ig < igNumber; ig++) {
+  
+            
+          msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
+
+          // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+          vector < double > xg1(dim, 0.);
+          solX = 0.;
+
+          for(unsigned i = 0; i < nDof1; i++) {
+            solX += solu1[i] * phi1[i];
+            for(unsigned d = 0; d < sol_u_x.size(); d++)   sol_u_x[d] += solu1[i] * phi_x[i * dim + d];
+            for(unsigned k = 0; k < dim; k++) {
+              xg1[k] += x1[k][i] * phi1[i];
+            }
+          }
+          
+          
+          if(iel == jel) {
+                                          
+ //============ Adaptive quadrature for iel == jel ==================
+            if(Nsplit != 0) {
+                                         
+            std::cout.precision(14);
+              std::vector< std::vector<std::vector<double>>> x3;
+
+              for(unsigned split = 0; split <= Nsplit; split++) {
+
+//                 unsigned size_part;
+//                 if(dim == 1) size_part = 2;
+//                 else size_part = (split != Nsplit) ? 12 : 4;
+
+                if(dim == 1) GetElementPartition1D(xg1, x1, split, Nsplit, x3);
+                else if(dim == 2) {
+                  //GetElementPartition2D(xg1, x1, split, Nsplit, x3);
+                  GetElementPartitionQuad(xg1, x1, split, Nsplit, x3);
+                }
+
+                //for(unsigned r = 0; r < size_part; r++) {
+                for(unsigned r = 0; r < x3.size(); r++) {
+
+
+                  for(unsigned jg = 0; jg < igNumber; jg++) {
+
+
+                    msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], jg, weight3, phi3, phi_x);
+
+                    vector < double > xg3(dim, 0.);
+
+                    for(unsigned i = 0; i < nDof1; i++) {
+                      for(unsigned k = 0; k < dim; k++) {
+                        xg3[k] += x3[r][k][i] * phi3[i];
+                      }
+                    }
+
+                    std::vector<double> xi3(dim, 0.);
+
+                    GetClosestPointInReferenceElement(x1, xg3, ielGeom1, xi3);
+                    GetInverseMapping(solType, ielGeom1, aP, xg3, xi3, 1000);
+
+                    msh->_finiteElement[ielGeom1][solType]->GetPhi(phi3, xi3);
+
+                    double solY3 = 0.;
+                    for(unsigned i = 0; i < nDof1; i++) {
+                      solY3 += solu1[i] * phi3[i];
+                    }
+
+                    double dist_xyz3 = 0;
+                    for(unsigned k = 0; k < dim; k++) {
+                      dist_xyz3 += (xg1[k] - xg3[k]) * (xg1[k] - xg3[k]);
+                    }
+
+                    const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
+
+                    for(unsigned i = 0; i < nDof1; i++) {
+
+                      Res_local_refined[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits *
+                                                        ((solX - solY3) * (phi1[i] - phi3[i]) * weight3 / denom3
+                                                        ) * weight1 ;
+
+                      for(unsigned j = 0; j < nDof2; j++) {
+                        CClocal_refined[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits *
+                                                            ((phi1[j] - phi3[j]) * (phi1[i] - phi3[i]) * weight3 / denom3
+                                                            ) * weight1 ;
+
+                      }
+                    }
+//============ Adaptive quadrature for iel == jel ==================
+                                          
+                  } //end jg
+                } //end r
+              }  //end split
+            }  //end if Nsplit != 0
+             
+                                          
+        } //iel != jel
+                            
+                            
+                            
+                            
+                            
+  } //end ig
+                
+                
+//============ add to global ==================
+         if(iel == jel) {
+          KK->add_matrix_blocked(KK_local, l2GMap1, l2GMap1);
+          RES->add_vector_blocked(Res_local, l2GMap1);
+
+          if(Nsplit != 0) {
+            KK->add_matrix_blocked(CClocal_refined, l2GMap1, l2GMap1);
+            RES->add_vector_blocked(Res_local_refined, l2GMap1);
+          }
+        }
+//        KK->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
+        KK->add_matrix_blocked(KK_mixed, l2GMap1, l2GMap1);
+        RES->add_vector_blocked(Res_mixed, l2GMap1);
+
+        KK->add_matrix_blocked(CClocalII, l2GMap1, l2GMap1);
+        KK->add_matrix_blocked(CClocalIJ, l2GMap1, l2GMap2);
+        KK->add_matrix_blocked(CClocalJI, l2GMap2, l2GMap1);
+        KK->add_matrix_blocked(CClocalJJ, l2GMap2, l2GMap2);
+
+//        RES->add_vector_blocked(Res_nonlocal, l2GMap1);
+        RES->add_vector_blocked(Res_nonlocalI, l2GMap1);
+        RES->add_vector_blocked(Res_nonlocalJ, l2GMap2);
+//============ add to global - end ==================
+        
+        
+    } //end iel
+    } //end jel
+    } //end kproc
+      
+   KK->close();
+  RES->close();
+  
+  
   }
     
   //********** END FRAC CONTROL *****************************************
