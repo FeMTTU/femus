@@ -21,9 +21,9 @@ unsigned muSmoothingType = 2; // invariant with respect to quad orientation
 
 
 unsigned conformalTriangleType = 2;
-const double eps = 1.0e-5;
+const double eps = 1.0e-3;
 // const double normalSign = -1.;
-bool O2conformal = false;
+bool O2conformal = true;
 unsigned counter = 0;
 
 using namespace femus;
@@ -46,22 +46,22 @@ void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob);
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
 
 
-  bool dirichlet = true;
-  value = 0.;
-
-  if(!strcmp(solName, "Dx1")) {
-    if(3 == faceName || 3 == faceName) {
-      dirichlet = false;
-    }
-    if(4 == faceName) {
-      value = 0.75 * sin(x[1] / 0.5 * M_PI);
-    }
-  }
-  else if(!strcmp(solName, "Dx2")) {
-    if(2 == faceName) {
-      dirichlet = false;
-    }
-  }
+//   bool dirichlet = true;
+//   value = 0.;
+// 
+//   if(!strcmp(solName, "Dx1")) {
+//     if(3 == faceName || 3 == faceName) {
+//       dirichlet = false;
+//     }
+//     if(4 == faceName) {
+//       value = 0.75 * sin(x[1] / 0.5 * M_PI);
+//     }
+//   }
+//   else if(!strcmp(solName, "Dx2")) {
+//     if(2 == faceName) {
+//       dirichlet = false;
+//     }
+//   }
 
 
 //   if (!strcmp (solName, "Dx1")) {
@@ -79,15 +79,33 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
 
 
-  // bool dirichlet = true;
-  // value = 0.;
+  bool dirichlet = true;
+  value = 0.;
 
-//   if(!strcmp(solName, "Dx1")) {
-//   if(1 == faceName) {
-//     //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
-//     value = 0.4 * sin(x[1] / 0.5 * M_PI);
-//     //dirichlet = false;
+  if(!strcmp(solName, "Dx1")) {
+    if(1 == faceName) {
+      //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
+      value = 0.4 * sin(x[1] / 0.5 * M_PI);
+      //dirichlet = false;
+    }
+  }
+  
+//   else if(!strcmp(solName, "Dx2")) {
+//     if(1 == faceName) {
+//         
+//       //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
+//       value = 0.25 * x[1];
+//       //dirichlet = false;
+//     }
 //   }
+//   
+//   else if(!strcmp(solName, "Dx3")) {
+//     if(1 == faceName) {
+//         
+//       //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
+//       value = 0.25 * x[2];
+//       //dirichlet = false;
+//     }
 //   }
 
 
@@ -112,8 +130,8 @@ int main(int argc, char** args) {
   //mlMsh.GenerateCoarseBoxMesh(32, 32, 0, -0.5, 0.5, -0.5, 0.5, 0., 0., QUAD9, "seventh");
 
   //mlMsh.ReadCoarseMesh("../input/squareReg3D.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("../input/square13D.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("../input/square13D.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
 
 
   unsigned numberOfUniformLevels = 4;
@@ -166,7 +184,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(1000);
+  system.SetMaxNumberOfNonLinearIterations(500);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();

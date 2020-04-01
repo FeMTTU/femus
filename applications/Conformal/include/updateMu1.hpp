@@ -30,8 +30,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
   std::vector< double > dof1;
 
   std::vector < std::vector < double > > solx(DIM);
-  std::vector < std::vector < double > > xHat(DIM);
-
+  std::vector < std::vector < double > > solNx(DIM);
+  
   for(unsigned k = 0; k < dim; k++) {
     sol->_Sol[indexMu[k]]->zero();
   }
@@ -69,8 +69,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
     dof1.resize(nDofs1);
 
     for(int K = 0; K < DIM; K++) {
-      xHat[K].resize(nDofsDx);
       solx[K].resize(nDofsDx);
+      solNx[K].resize(nDofsDx);
     }
 
     // local storage of global mapping and solution
@@ -82,8 +82,8 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       unsigned idof = msh->GetSolutionDof(i, iel, solTypeDx);
       unsigned xDof  = msh->GetSolutionDof(i, iel, 2);
       for(unsigned K = 0; K < DIM; K++) {
-        xHat[K][i] = (*msh->_topology->_Sol[K])(xDof);
-        solx[K][i] = xHat[K][i] + (*sol->_Sol[indexDx[K]])(idof);
+        solx[K][i] = (*msh->_topology->_Sol[K])(xDof);
+        solNx[K][i] = solx[K][i]  + (*sol->_Sol[indexDx[K]])(idof);
       }
     }
 
@@ -130,6 +130,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
       double solxg[3] = {0., 0., 0.};
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
+      double solNx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
 
       for(unsigned K = 0; K < DIM; K++) {
         for(unsigned i = 0; i < nDofsDx; i++) {
@@ -138,6 +139,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
         for(int j = 0; j < dim; j++) {
           for(unsigned i = 0; i < nDofsDx; i++) {
             solx_uv[K][j]    += phix_uv[j][i] * solx[K][i];
+            solNx_uv[K][j]    += phix_uv[j][i] * solNx[K][i];
           }
         }
       }
@@ -154,9 +156,9 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
 
       double normal[DIM];
-      normal[0] = 0.;//(solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
-      normal[1] = 0.;//(solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
-      normal[2] = 1.;//(solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
+      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
+      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
+      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
 
 
 //       //Analytic for the cylinder
@@ -165,19 +167,19 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 //       normal[2] = solxg[2] / sqrt(solxg[1] * solxg[1] + solxg[2] * solxg[2]);
 
       double dxPlus[DIM];
-      dxPlus[0] = solx_uv[0][0] + solx_uv[1][1] * normal[2] - solx_uv[2][1] * normal[1];
-      dxPlus[1] = solx_uv[1][0] + solx_uv[2][1] * normal[0] - solx_uv[0][1] * normal[2];
-      dxPlus[2] = solx_uv[2][0] + solx_uv[0][1] * normal[1] - solx_uv[1][1] * normal[0];
+      dxPlus[0] = solNx_uv[0][0] + solNx_uv[1][1] * normal[2] - solNx_uv[2][1] * normal[1];
+      dxPlus[1] = solNx_uv[1][0] + solNx_uv[2][1] * normal[0] - solNx_uv[0][1] * normal[2];
+      dxPlus[2] = solNx_uv[2][0] + solNx_uv[0][1] * normal[1] - solNx_uv[1][1] * normal[0];
 
       double sdxPlus[DIM];
-      sdxPlus[0] = solx_uv[0][1] - solx_uv[1][0] * normal[2] + solx_uv[2][0] * normal[1];
-      sdxPlus[1] = solx_uv[1][1] - solx_uv[2][0] * normal[0] + solx_uv[0][0] * normal[2];
-      sdxPlus[2] = solx_uv[2][1] - solx_uv[0][0] * normal[1] + solx_uv[1][0] * normal[0];
+      sdxPlus[0] = solNx_uv[0][1] - solNx_uv[1][0] * normal[2] + solNx_uv[2][0] * normal[1];
+      sdxPlus[1] = solNx_uv[1][1] - solNx_uv[2][0] * normal[0] + solNx_uv[0][0] * normal[2];
+      sdxPlus[2] = solNx_uv[2][1] - solNx_uv[0][0] * normal[1] + solNx_uv[1][0] * normal[0];
 
       double dxMinus[DIM];
-      dxMinus[0] = solx_uv[0][0] - solx_uv[1][1] * normal[2] + solx_uv[2][1] * normal[1];
-      dxMinus[1] = solx_uv[1][0] - solx_uv[2][1] * normal[0] + solx_uv[0][1] * normal[2];
-      dxMinus[2] = solx_uv[2][0] - solx_uv[0][1] * normal[1] + solx_uv[1][1] * normal[0];
+      dxMinus[0] = solNx_uv[0][0] - solNx_uv[1][1] * normal[2] + solNx_uv[2][1] * normal[1];
+      dxMinus[1] = solNx_uv[1][0] - solNx_uv[2][1] * normal[0] + solNx_uv[0][1] * normal[2];
+      dxMinus[2] = solNx_uv[2][0] - solNx_uv[0][1] * normal[1] + solNx_uv[1][1] * normal[0];
 
       double norm2dxPlus = 0;
       double norm2sdxPlus = 0;

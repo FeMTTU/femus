@@ -168,6 +168,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         xhat[K][i] = (*msh->_topology->_Sol[K])(iXDof);
         solDx[K][i] = 0.;//(*sol->_Sol[solDxIndex[K]])(iDDof);
         solx[K][i] = xhat[K][i] + solDx[K][i];
+        
         solNDx[K][i] = (*sol->_Sol[solNDxIndex[K]])(iDDof);
         solNx[K][i] = xhat[K][i] + solNDx[K][i];
 
@@ -282,7 +283,6 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
       double solDxg[3] = {0., 0., 0.};
       double solNDxg[3] = {0., 0., 0.};
-      double solNxg[3] = {0., 0., 0.};
 
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       double solMx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
@@ -292,7 +292,6 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         for(unsigned i = 0; i < nxDofs; i++) {
           solDxg[K] += phix[i] * solDx[K][i];
           solNDxg[K] += phix[i] * solNDx[K][i];
-          solNxg[K] += phix[i] * solNx[K][i];
         }
         for(int j = 0; j < dim; j++) {
           for(unsigned i = 0; i < nxDofs; i++) {
@@ -334,99 +333,12 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
       normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
       normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
-
-      //normal[0] = 0.;
-      //normal[1] = 0.;
-      //normal[2] = 1.;
-
-      //normal[0] = 0;
-      //normal[1] = solNxg[1] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
-      //normal[2] = solNxg[2] / sqrt(solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2]);
-
+      
       double normalMSqrtDetg[DIM];
       normalMSqrtDetg[0] = (solMx_uv[1][0] * solMx_uv[2][1] - solMx_uv[2][0] * solMx_uv[1][1]);
       normalMSqrtDetg[1] = (solMx_uv[2][0] * solMx_uv[0][1] - solMx_uv[0][0] * solMx_uv[2][1]);
       normalMSqrtDetg[2] = (solMx_uv[0][0] * solMx_uv[1][1] - solMx_uv[1][0] * solMx_uv[0][1]);
-
-      //normalMSqrtDetg[0] = 0.;
-      //normalMSqrtDetg[1] = 0.;
-      //normalMSqrtDetg[2] = sqrt(detg);
-      //
-      //normalMSqrtDetg[0] = 0;
-      //normalMSqrtDetg[1] = solNxg[1];
-      //normalMSqrtDetg[2] = solNxg[2];
-
-      // Computing the "reduced Jacobian" g^{ij}X_j .
-      double Jir[dim][DIM] = {{0., 0., 0.}, {0., 0., 0.}};
-      for(unsigned i = 0; i < dim; i++) {
-        for(unsigned J = 0; J < DIM; J++) {
-          for(unsigned k = 0; k < dim; k++) {
-            Jir[i][J] += gi[i][k] * solx_uv[J][k];
-          }
-        }
-      }
-
-      // Initializing tangential gradients of X and W (new, middle, old).
-      double solx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-      double solNx_Xtan[DIM][DIM] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-      for(unsigned I = 0; I < DIM; I++) {
-        for(unsigned J = 0; J < DIM; J++) {
-          for(unsigned k = 0; k < dim; k++) {
-            solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
-            solNx_Xtan[I][J] += solNx_uv[I][k] * Jir[k][J];
-          }
-        }
-      }
-
-      // Define and compute gradients of test functions for X and W.
-      std::vector < double > phix_Xtan[DIM];
-
-      for(unsigned J = 0; J < DIM; J++) {
-        phix_Xtan[J].assign(nxDofs, 0.);
-
-        for(unsigned inode  = 0; inode < nxDofs; inode++) {
-          for(unsigned k = 0; k < dim; k++) {
-            phix_Xtan[J][inode] += phix_uv[k][inode] * Jir[k][J];
-          }
-        }
-      }
-
-//       // Discretize the equation \delta CD = 0 on the basis d/du, d/dv.
-//       double V[DIM];
-//       V[0] = solNx_uv[0][1] - normal[1] * solNx_uv[2][0] + normal[2] * solNx_uv[1][0];
-//       V[1] = solNx_uv[1][1] - normal[2] * solNx_uv[0][0] + normal[0] * solNx_uv[2][0];
-//       V[2] = solNx_uv[2][1] - normal[0] * solNx_uv[1][0] + normal[1] * solNx_uv[0][0];
-//
-//       double W[DIM];
-//       W[0] = solNx_uv[0][0] + normal[1] * solNx_uv[2][1] - normal[2] * solNx_uv[1][1];
-//       W[1] = solNx_uv[1][0] + normal[2] * solNx_uv[0][1] - normal[0] * solNx_uv[2][1];
-//       W[2] = solNx_uv[2][0] + normal[0] * solNx_uv[1][1] - normal[1] * solNx_uv[0][1];
-
-//       double Q[DIM][dim];
-//       Q[0][0] = (+ gi[1][1] * W[0]
-//                  + gi[0][0] * (normal[1] * V[2] - normal[2] * V[1])
-//                  + gi[0][1] * (normal[2] * W[1] - normal[1] * W[2] - V[0]));
-//
-//       Q[1][0] = (+ gi[1][1] * W[1]
-//                  + gi[0][0] * (normal[2] * V[0] - normal[0] * V[2])
-//                  + gi[0][1] * (normal[0] * W[2] - normal[2] * W[0] - V[1]));
-//
-//       Q[2][0] = (+ gi[1][1] * W[2]
-//                  + gi[0][0] * (normal[0] * V[1] - normal[1] * V[0])
-//                  + gi[0][1] * (normal[1] * W[0] - normal[0] * W[1] - V[2]));
-//
-//       Q[0][1] = (+ gi[0][0] * V[0]
-//                  + gi[1][1] * (normal[2] * W[1] - normal[1] * W[2])
-//                  + gi[0][1] * (normal[1] * V[2] - normal[2] * V[1] - W[0]));
-//
-//       Q[1][1] = (+ gi[0][0] * V[1]
-//                  + gi[1][1] * (normal[0] * W[2] - normal[2] * W[0])
-//                  + gi[0][1] * (normal[2] * V[0] - normal[0] * V[2] - W[1]));
-//
-//       Q[2][1] = (+ gi[0][0] * V[2]
-//                  + gi[1][1] * (normal[1] * W[0] - normal[0] * W[1])
-//                  + gi[0][1] * (normal[0] * V[1] - normal[1] * V[0] - W[2]));
-
+     
       // Compute new X minus old X dot N, for "reparametrization".
       double DnXmDxdotNSqrtDetg = 0.;
       for(unsigned K = 0; K < DIM; K++) {
@@ -436,14 +348,9 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       // Implement the Conformal Minimization equations.
       for(unsigned K = 0; K < DIM; K++) {
         for(unsigned i = 0; i < nxDofs; i++) {
-//           double M1 = 0.;
-//
-//           for(unsigned k = 0; k < dim; k++) {
-//             M1 +=  Q[K][k] * phix_uv[k][i];
-//           }
 
           //Residual (Conformal Minimization + Lagrange Multiplier)
-          double term = /*M1 * Area +*/ solLg * phix[i] * normalMSqrtDetg[K] * Area2;
+          double term = solLg * phix[i] * normalMSqrtDetg[K] * Area2;
           Res[K * nxDofs + i] -= term;
 
           unsigned irow = K * nxDofs + i;
@@ -452,7 +359,6 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
           for(unsigned j = 0; j < nLDofs; j++) {
             Jac[istart + DIM * nxDofs + j] += phiL[j] * phix[i] * normalMSqrtDetg[K] * Area2;
           }
-
         }
       }
 
@@ -521,12 +427,6 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         for(unsigned J = 0; J < DIM * dim; J++) {
           AIJ[I][J] = 0.;
           for(unsigned K = 0; K < DIM; K++) {
-//             AIJ[I][J] += (gi[1][1] * Jac0[K][I] * Jac0[K][J] -
-//                           gi[0][1] * Jac1[K][I] * Jac0[K][J] -
-//                           gi[1][0] * Jac0[K][I] * Jac1[K][J] +
-//                           gi[0][0] * Jac1[K][I] * Jac1[K][J]);
-
-          //AIJ[I][J] += Jac1[K][I] * Jac1[K][J] + Jac0[K][I] * Jac0[K][J];
 
             AIJ[I][J] += (gi[0][0] * Jac0[K][I] * Jac0[K][J] +
                           gi[1][0] * Jac1[K][I] * Jac0[K][J] +
@@ -568,63 +468,6 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
 
         DQ[2][2][0] = AIJ[4][4] * phix_uv[0][j] + AIJ[4][5] * phix_uv[1][j];
         DQ[2][2][1] = AIJ[5][4] * phix_uv[0][j] + AIJ[5][5] * phix_uv[1][j];
-
-        double DQ1[DIM][DIM][dim];
-
-//         if(iel == 4 && ig == 1 && j == 1) {
-//           std::cout << AIJ[0][0] <<" "<< (+gi[1][1] + gi[0][0] * (normal[1] * normal[1] + normal[2] * normal[2])) << std::endl;
-//           std::cout << AIJ[0][1] <<" "<< (-gi[0][1] * (normal[0] * normal[0]))   << std::endl;
-//         }
-
-        DQ1[0][0][0] = ((+gi[1][1] + gi[0][0] * (normal[1] * normal[1] + normal[2] * normal[2]))          * phix_uv[0][j] +
-                        (-gi[0][1] * (normal[0] * normal[0]))                                             * phix_uv[1][j]);
-        DQ1[0][1][0] = ((-gi[0][0] * normal[0] * normal[1])                                               * phix_uv[0][j] +
-                        (-gi[0][1] * normal[0] * normal[1] - gi[1][1] * normal[2] - gi[0][0] * normal[2]) * phix_uv[1][j]);
-        DQ1[0][2][0] = ((-gi[0][0] * normal[0] * normal[2])                                               * phix_uv[0][j] +
-                        (-gi[0][1] * normal[0] * normal[2] + gi[1][1] * normal[1] + gi[0][0] * normal[1]) * phix_uv[1][j]);
-
-        DQ1[0][0][1] = ((+gi[0][0] + gi[1][1] * (normal[1] * normal[1] + normal[2] * normal[2]))          * phix_uv[1][j] +
-                        (-gi[0][1] * (normal[0] * normal[0]))                                             * phix_uv[0][j]);
-        DQ1[0][1][1] = ((-gi[1][1] * normal[0] * normal[1])                                               * phix_uv[1][j] +
-                        (-gi[0][1] * normal[0] * normal[1] + gi[1][1] * normal[2] + gi[0][0] * normal[2]) * phix_uv[0][j]);
-        DQ1[0][2][1] = ((-gi[1][1] * normal[0] * normal[2])                                               * phix_uv[1][j] +
-                        (-gi[0][1] * normal[0] * normal[2] - gi[1][1] * normal[1] - gi[0][0] * normal[1]) * phix_uv[0][j]);
-
-        DQ1[1][0][0] = ((-gi[0][0] * normal[1] * normal[0])                                               * phix_uv[0][j] +
-                        (-gi[0][1] * normal[1] * normal[0] + gi[1][1] * normal[2] + gi[0][0] * normal[2]) * phix_uv[1][j]);
-        DQ1[1][1][0] = ((+gi[1][1] + gi[0][0] * (normal[2] * normal[2] + normal[0] * normal[0]))          * phix_uv[0][j] +
-                        (-gi[0][1] * (normal[1] * normal[1]))                                             * phix_uv[1][j]);
-        DQ1[1][2][0] = ((-gi[0][0] * normal[1] * normal[2])                                               * phix_uv[0][j] +
-                        (-gi[0][1] * normal[1] * normal[2] - gi[1][1] * normal[0] - gi[0][0] * normal[0]) * phix_uv[1][j]);
-
-        DQ1[1][0][1] = ((-gi[1][1] * normal[1] * normal[0])                                               * phix_uv[1][j] +
-                        (-gi[0][1] * normal[1] * normal[0] - gi[1][1] * normal[2] - gi[0][0] * normal[2]) * phix_uv[0][j]);
-        DQ1[1][1][1] = ((+gi[0][0] + gi[1][1] * (normal[2] * normal[2] + normal[0] * normal[0]))          * phix_uv[1][j] +
-                        (-gi[0][1] * (normal[1] * normal[1]))                                             * phix_uv[0][j]);
-        DQ1[1][2][1] = ((-gi[1][1] * normal[1] * normal[2])                                               * phix_uv[1][j] +
-                        (-gi[0][1] * normal[1] * normal[2] + gi[1][1] * normal[0] + gi[0][0] * normal[0]) * phix_uv[0][j]);
-
-        DQ1[2][0][0] = ((-gi[0][0] * normal[2] * normal[0])                                               * phix_uv[0][j] +
-                        (-gi[0][1] * normal[2] * normal[0] - gi[1][1] * normal[1] - gi[0][0] * normal[1]) * phix_uv[1][j]);
-        DQ1[2][1][0] = ((-gi[0][0] * normal[2] * normal[1])                                               * phix_uv[0][j] +
-                        (-gi[0][1] * normal[2] * normal[1] + gi[1][1] * normal[0] + gi[0][0] * normal[0]) * phix_uv[1][j]);
-        DQ1[2][2][0] = ((+gi[1][1] + gi[0][0] * (normal[0] * normal[0] + normal[1] * normal[1]))          * phix_uv[0][j] +
-                        (-gi[0][1] * (normal[2] * normal[2]))                                             * phix_uv[1][j]);
-
-        DQ1[2][0][1] = ((-gi[1][1] * normal[2] * normal[0])                                               * phix_uv[1][j] +
-                        (-gi[0][1] * normal[2] * normal[0] + gi[1][1] * normal[1] + gi[0][0] * normal[1]) * phix_uv[0][j]);
-        DQ1[2][1][1] = ((-gi[1][1] * normal[2] * normal[1])                                               * phix_uv[1][j] +
-                        (-gi[0][1] * normal[2] * normal[1] - gi[1][1] * normal[0] - gi[0][0] * normal[0]) * phix_uv[0][j]);
-        DQ1[2][2][1] = ((+gi[0][0] + gi[1][1] * (normal[0] * normal[0] + normal[1] * normal[1]))          * phix_uv[1][j] +
-                        (-gi[0][1] * (normal[2] * normal[2]))                                             * phix_uv[0][j]);
-
-//         if(iel == 4 && ig == 1 && j == 1) {
-//           for(unsigned I = 0; I < DIM; I++) {
-//             for(unsigned J = 0; J < DIM; J++) {
-//               std::cout << DQ[I][J][0] << " " << DQ1[I][J][0] << " " << DQ[I][J][1] << " " << DQ1[I][J][1] << std::endl;
-//             }
-//           }
-//         }
 
         double DnormalMSqrtDetg[DIM][DIM];
 
