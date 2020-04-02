@@ -20,6 +20,18 @@
 
 using namespace femus;
 
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
+#define S_FRAC 0.75
+
+#define q_step 3
+
+#define EX_1       -1.
+#define EX_2        1.
+#define EY_1       -1.
+#define EY_2        1.
+
+
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0;
@@ -29,32 +41,35 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
 void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
 
-unsigned systemToBesolved;
+int n_sys;
 
 int main(int argc, char** args) {
+  
+  const std::string fe_quad_rule_1 = "seventh";
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
+  unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
 
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
-  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-    probably in furure it is not going to be an argument of this function   */
-  unsigned dim = mlMsh.GetDimension();
-  unsigned numberOfUniformLevels;
-
-  if(dim == 2) {
-    numberOfUniformLevels = 4;
-  }
-  else {
-    numberOfUniformLevels = 4;
-  }
-
   unsigned numberOfSelectiveLevels = 0;
+//   mlMsh.ReadCoarseMesh("./input/square_quad.neu", fe_quad_rule_1, scalingFactor);
+//   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
+//   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
+//     probably in furure it is not going to be an argument of this function   */
+  
+  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
+  
+//   mlMsh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+//   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
+  
+  unsigned dim = mlMsh.GetDimension();
+
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
@@ -69,8 +84,11 @@ int main(int argc, char** args) {
   // add variables to mlSol
   mlSol.AddSolution("u", LAGRANGE, SECOND);
   mlSol.Initialize("All");
+  
+  double N_plus = round( 2 * pow( M_PI, 2 ) / ( S_FRAC * pow( q_step, 2 ) ) );
+  double N_minus = round( 4 *   pow( M_PI, 2 ) / ((1 - S_FRAC) * pow( q_step, 2 )) ) ;
 
-  for (unsigned i = 0; i < 10; i++) {
+  for (int i = - N_minus; i < N_plus + 1; i++) {
     char solName[10];
     sprintf (solName, "w%d", i);
     mlSol.AddSolution (solName, LAGRANGE, SECOND);
@@ -89,7 +107,7 @@ int main(int argc, char** args) {
 
   // add system Poisson in mlProb as a Linear Implicit System
   
-  for (unsigned i = 0; i < 10; i++) {
+  for (int i = - N_minus; i < N_plus + 1; i++) {
     char sysName[20];
     sprintf (sysName, "Poisson%d", i);
     LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > (sysName);
@@ -99,7 +117,7 @@ int main(int argc, char** args) {
     system.SetAssembleFunction(AssemblePoissonProblem);
      
     system.init();
-    systemToBesolved = i;
+    n_sys = i;
     system.SetOuterSolver(PREONLY);
     system.MGsolve();
   }
@@ -127,9 +145,9 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   //  extract pointers to the several objects that we are going to use
 
   char sysName[20];
-  sprintf (sysName, "Poisson%d", systemToBesolved);
+  sprintf (sysName, "Poisson%d", n_sys);
   char solName[10];
-  sprintf (solName, "w%d", systemToBesolved);  
+  sprintf (solName, "w%d", n_sys);  
   
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> (sysName);   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -255,7 +273,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
           laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        aRes[i] += ( phi[i] - solu_gss * phi[i] + 1000 * laplace) * weight;
+        aRes[i] += ( - phi[i] + solu_gss * phi[i] + exp( q_step * n_sys ) * laplace) * weight;
 
       } // end phi_i loop
       
