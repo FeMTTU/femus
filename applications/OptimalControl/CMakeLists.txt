@@ -34,4 +34,5 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   ADD_SUBDIRECTORY(./00_laplacian_all_dims/)
   ADD_SUBDIRECTORY(./00_laplacian_all_dims_neu/)
   ADD_SUBDIRECTORY(./elliptic_nonlin/)
+  ADD_SUBDIRECTORY(./bonito/)
   
