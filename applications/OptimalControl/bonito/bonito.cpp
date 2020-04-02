@@ -39,6 +39,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   return dirichlet;
 }
 
+void BuildU(MultiLevelSolution& mlSol);
+
 void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
 
 int n_sys;
@@ -122,13 +124,15 @@ int main(int argc, char** args) {
     system.MGsolve();
   }
 
+  BuildU(mlSol);
+  
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
  
-  vtkIO.SetDebugOutput(true);
+  //vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
   return 0;
 }
@@ -316,6 +320,42 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
+void BuildU(MultiLevelSolution& mlSol) {
+
+  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+
+  Solution *sol  = mlSol.GetSolutionLevel (level);
+  Mesh     *msh   = mlSol._mlMesh->GetLevel (level);
+  unsigned iproc  = msh->processor_id();
+
+  
+  double N_plus = round( 2 * pow( M_PI, 2 ) / ( S_FRAC * pow( q_step, 2 ) ) );
+  double N_minus = round( 4 *   pow( M_PI, 2 ) / ((1 - S_FRAC) * pow( q_step, 2 )) ) ;
+
+  std::vector< unsigned > wIndex(N_minus + N_plus + 1);
+  for (int i = - N_minus; i < N_plus + 1; i++) {
+    char solName[10];
+    sprintf (solName, "w%d", i);
+    wIndex[i + N_minus] = mlSol.GetIndex (solName);
+  }
+  unsigned uIndex = mlSol.GetIndex ("u");
+  
+  unsigned solType = mlSol.GetSolutionType (uIndex);
+
+  sol->_Sol[uIndex]->zero();
+  
+  for(unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
+    double value = 0.;
+    
+    for (unsigned k = 0; k < N_minus + N_plus + 1; k++) {
+      value += (*sol->_Sol[wIndex[k]])(i);
+    }
+    sol->_Sol[uIndex]->set(i,value);
+  }
+  
+  sol->_Sol[uIndex]->close();
+
+}
 
 
 
