@@ -21,7 +21,7 @@ unsigned muSmoothingType = 2; // invariant with respect to quad orientation
 
 
 unsigned conformalTriangleType = 2;
-const double eps = 1.0e-5;
+double eps = 1.0e-5;
 // const double normalSign = -1.;
 bool O2conformal = false;
 unsigned counter = 0;

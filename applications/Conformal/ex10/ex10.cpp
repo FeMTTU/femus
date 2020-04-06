@@ -18,7 +18,7 @@
 bool stopIterate = false;
 
 unsigned conformalTriangleType = 2;
-const double eps = 1e-5;
+double eps = 1e-5;
 const double normalSign = -1.;
 bool O2conformal = false;
 unsigned counter = 0;

@@ -21,10 +21,11 @@ unsigned muSmoothingType = 2; // invariant with respect to quad orientation
 
 
 unsigned conformalTriangleType = 2;
-const double eps = 1.0e-3;
+
 // const double normalSign = -1.;
-bool O2conformal = true;
+const bool O2conformal = true;
 unsigned counter = 0;
+const double eps = 1.e-3;// * O2conformal;
 
 using namespace femus;
 
@@ -35,12 +36,7 @@ using namespace femus;
 // Comment back in for working code
 //const double mu[2] = {0.8, 0.};
 
-
-
-void AssembleConformalMinimizationOld(MultiLevelProblem& ml_prob);   //stable and not bad
-void AssembleShearMinimization(MultiLevelProblem& ml_prob);
-
-void AssembleConformalO1Minimization(MultiLevelProblem& ml_prob);
+void ProjectSolution(MultiLevelSolution& mlSol);
 
 // IBVs.  No boundary, and IVs set to sphere (just need something).
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
@@ -48,7 +44,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
 //   bool dirichlet = true;
 //   value = 0.;
-// 
+//
 //   if(!strcmp(solName, "Dx1")) {
 //     if(3 == faceName || 3 == faceName) {
 //       dirichlet = false;
@@ -89,19 +85,19 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
       //dirichlet = false;
     }
   }
-  
+
 //   else if(!strcmp(solName, "Dx2")) {
 //     if(1 == faceName) {
-//         
+//
 //       //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
 //       value = 0.25 * x[1];
 //       //dirichlet = false;
 //     }
 //   }
-//   
+//
 //   else if(!strcmp(solName, "Dx3")) {
 //     if(1 == faceName) {
-//         
+//
 //       //value = 0.04 * sin (4*(x[1] / 0.5 * acos (-1.)));
 //       value = 0.25 * x[2];
 //       //dirichlet = false;
@@ -161,7 +157,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
   mlSol.AddSolution("mu2", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
   mlSol.AddSolution("weight1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
-  
+
   mlSol.AddSolution("mu1Edge", LAGRANGE, SECOND, 0, false);
   mlSol.AddSolution("mu2Edge", LAGRANGE, SECOND, 0, false);
   mlSol.AddSolution("cntEdge", LAGRANGE, SECOND, 0, false);
@@ -206,7 +202,55 @@ int main(int argc, char** args) {
   system.MGsolve();
 
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 1);
+  
+  ProjectSolution(mlSol);
+
+  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 2);
 
   return 0;
 }
 
+
+void ProjectSolution(MultiLevelSolution& mlSol) {
+  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1u;
+
+  Solution* sol = mlSol.GetSolutionLevel(level);
+  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  elem* el = msh->el;
+
+  //unsigned  dim = msh->GetDimension();
+  unsigned dim = 2;
+  unsigned DIM = 3;
+  std::vector < unsigned > indexDx(DIM);
+  indexDx[0] = mlSol.GetIndex("Dx1");
+  indexDx[1] = mlSol.GetIndex("Dx2");
+  indexDx[2] = mlSol.GetIndex("Dx3");
+  unsigned solType = mlSol.GetSolutionType(indexDx[0]);
+
+  unsigned iproc = msh->processor_id();
+
+  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    unsigned nDofs  = msh->GetElementDofNumber(iel, solType);
+
+    for(unsigned i = 0; i < nDofs; i++) {
+      unsigned idof = msh->GetSolutionDof(i, iel, solType);
+      unsigned xdof = msh->GetSolutionDof(i, iel, 2);
+
+      double Yhat = (*msh->_topology->_Sol[1])(xdof);
+      double Zhat = (*msh->_topology->_Sol[2])(xdof);
+
+      double DY  = (*sol->_Sol[indexDx[1]])(idof);
+      double DZ  = (*sol->_Sol[indexDx[2]])(idof);
+
+      double theta = atan2(Zhat + DZ, Yhat + DY);
+
+      sol->_Sol[indexDx[1]]->set(idof, 0.5 * cos(theta) - Yhat);
+      sol->_Sol[indexDx[2]]->set(idof, 0.5 * sin(theta) - Zhat);
+    }
+  }
+
+  sol->_Sol[indexDx[1]]->close();
+  sol->_Sol[indexDx[2]]->close();
+
+}

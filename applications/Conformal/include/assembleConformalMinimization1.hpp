@@ -168,7 +168,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         xhat[K][i] = (*msh->_topology->_Sol[K])(iXDof);
         solDx[K][i] = 0.;//(*sol->_Sol[solDxIndex[K]])(iDDof);
         solx[K][i] = xhat[K][i] + solDx[K][i];
-        
+
         solNDx[K][i] = (*sol->_Sol[solNDxIndex[K]])(iDDof);
         solNx[K][i] = xhat[K][i] + solNDx[K][i];
 
@@ -283,6 +283,8 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       // Initialize and compute values of x, Dx, NDx, x_uv at the Gauss points.
       double solDxg[3] = {0., 0., 0.};
       double solNDxg[3] = {0., 0., 0.};
+      double solNxg[3] = {0., 0., 0.};
+
 
       double solx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
       double solMx_uv[3][2] = {{0., 0.}, {0., 0.}, {0., 0.}};
@@ -292,6 +294,7 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         for(unsigned i = 0; i < nxDofs; i++) {
           solDxg[K] += phix[i] * solDx[K][i];
           solNDxg[K] += phix[i] * solNDx[K][i];
+          solNxg[K] += phix[i] * solNx[K][i];
         }
         for(int j = 0; j < dim; j++) {
           for(unsigned i = 0; i < nxDofs; i++) {
@@ -333,12 +336,12 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1]) / sqrt(detg);
       normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1]) / sqrt(detg);
       normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1]) / sqrt(detg);
-      
+
       double normalMSqrtDetg[DIM];
       normalMSqrtDetg[0] = (solMx_uv[1][0] * solMx_uv[2][1] - solMx_uv[2][0] * solMx_uv[1][1]);
       normalMSqrtDetg[1] = (solMx_uv[2][0] * solMx_uv[0][1] - solMx_uv[0][0] * solMx_uv[2][1]);
       normalMSqrtDetg[2] = (solMx_uv[0][0] * solMx_uv[1][1] - solMx_uv[1][0] * solMx_uv[0][1]);
-     
+
       // Compute new X minus old X dot N, for "reparametrization".
       double DnXmDxdotNSqrtDetg = 0.;
       for(unsigned K = 0; K < DIM; K++) {
@@ -346,18 +349,18 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       }
 
       // Implement the Conformal Minimization equations.
-      for(unsigned K = 0; K < DIM; K++) {
+      for(unsigned K = 1; K < DIM; K++) {
         for(unsigned i = 0; i < nxDofs; i++) {
 
           //Residual (Conformal Minimization + Lagrange Multiplier)
-          double term = solLg * phix[i] * normalMSqrtDetg[K] * Area2;
+          double term = phix[i] * 2. * solLg * solNxg[K] * Area;
           Res[K * nxDofs + i] -= term;
 
           unsigned irow = K * nxDofs + i;
           unsigned istart = irow * sizeAll;
           // Jacobian (part1 Lagrange Multiplier: delta NDX * normal)
           for(unsigned j = 0; j < nLDofs; j++) {
-            Jac[istart + DIM * nxDofs + j] += phiL[j] * phix[i] * normalMSqrtDetg[K] * Area2;
+            Jac[istart + DIM * nxDofs + j] += phix[i] * 2. * solNxg[K] * phiL[j] * Area;
           }
         }
       }
@@ -493,7 +496,11 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
               for(unsigned k = 0; k < dim; k++) {
                 term += DQ[K][J][k] * phix_uv[k][i];
               }
-              Jac[istart + J * nxDofs + j] += term * Area + O2conformal * solLg * phix[i] * DnormalMSqrtDetg[K][J] * Area2;
+              Jac[istart + J * nxDofs + j] += term * Area;
+              if(K > 0 && J == K){
+                Jac[istart + J * nxDofs + j] += + phix[i] * 2. * solLg * phix[j] * Area;  
+              }
+                  
               Res[K * nxDofs + i] -= term * Area * (xhat[J][j] + solNDx[J][j]);
             }
           }
@@ -503,12 +510,8 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
         for(unsigned i = 0; i < nLDofs; i++) {
           unsigned irow = DIM * nxDofs + i;
           unsigned istart = irow * sizeAll;
-          for(unsigned K = 0; K < DIM; K++) {
-            double term = 0.;
-            for(unsigned J = 0; J < DIM; J++) {
-              term += O2conformal * (solDxg[J] - solNDxg[J]) * DnormalMSqrtDetg[J][K];
-            }
-            Jac[istart + K * nxDofs + j] += phiL[i] * (term - phix[j] * normalMSqrtDetg[K]) * Area2;
+          for(unsigned K = 1; K < DIM; K++) {
+            Jac[istart + K * nxDofs + j] += phiL[i] * 2.* solNxg[K] * phix[j] * Area;
           }
         }
       }
@@ -516,7 +519,8 @@ void AssembleConformalMinimization(MultiLevelProblem& ml_prob) {
       // Residual (constraint + eps) and Jacobian (eps)
       for(unsigned i = 0; i < nLDofs; i++) {
         unsigned irow = DIM * nxDofs + i;
-        double term = phiL[i] * (DnXmDxdotNSqrtDetg * Area2 + eps * solLg * Area);
+        double term = phiL[i] * ((solNxg[1] * solNxg[1] + solNxg[2] * solNxg[2] - .25) * Area +
+                                 eps * solLg * Area);
         Res[irow] -= term;
         unsigned istart = irow * sizeAll;
         for(unsigned j = 0; j < nLDofs; j++) {
