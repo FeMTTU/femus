@@ -42,22 +42,22 @@ void ProjectSolution(MultiLevelSolution& mlSol);
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
 
 
-//   bool dirichlet = true;
-//   value = 0.;
-//
-//   if(!strcmp(solName, "Dx1")) {
-//     if(3 == faceName || 3 == faceName) {
-//       dirichlet = false;
-//     }
-//     if(4 == faceName) {
-//       value = 0.75 * sin(x[1] / 0.5 * M_PI);
-//     }
-//   }
-//   else if(!strcmp(solName, "Dx2")) {
-//     if(2 == faceName) {
-//       dirichlet = false;
-//     }
-//   }
+  bool dirichlet = true;
+  value = 0.;
+
+  if(!strcmp(solName, "Dx1")) {
+    if(3 == faceName || 3 == faceName) {
+      dirichlet = false;
+    }
+    if(4 == faceName) {
+      value = 0.75 * sin(x[1] / 0.5 * M_PI);
+    }
+  }
+  else if(!strcmp(solName, "Dx2")) {
+    if(2 == faceName) {
+      dirichlet = false;
+    }
+  }
 
 
 //   if (!strcmp (solName, "Dx1")) {
@@ -74,7 +74,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
 
 
-
+/*
   bool dirichlet = true;
   value = 0.;
 
@@ -84,7 +84,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
       value = 0.4 * sin(x[1] / 0.5 * M_PI);
       //dirichlet = false;
     }
-  }
+  }*/
 
 //   else if(!strcmp(solName, "Dx2")) {
 //     if(1 == faceName) {
@@ -127,7 +127,8 @@ int main(int argc, char** args) {
 
   //mlMsh.ReadCoarseMesh("../input/squareReg3D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/square13D.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/squareTri3D.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
 
 
   unsigned numberOfUniformLevels = 4;
@@ -147,12 +148,14 @@ int main(int argc, char** args) {
 
   // Add variables X,Y,W to mlSol.
 
-  FEOrder feOrder = FIRST;
+  FEOrder feOrder = SECOND;
   mlSol.AddSolution("Dx1", LAGRANGE, feOrder, 0);
   mlSol.AddSolution("Dx2", LAGRANGE, feOrder, 0);
   mlSol.AddSolution("Dx3", LAGRANGE, feOrder, 0);
 
   mlSol.AddSolution("Lambda1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0);
+  
+  mlSol.AddSolution ("ENVN", LAGRANGE, feOrder, 0, false);
 
   mlSol.AddSolution("mu1", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
   mlSol.AddSolution("mu2", DISCONTINUOUS_POLYNOMIAL, ZERO, 0, false);
@@ -168,6 +171,8 @@ int main(int argc, char** args) {
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("All");
 
+  GetElementNearVertexNumber (mlSol);
+  
   MultiLevelProblem mlProb(&mlSol);
 
   // Add system Conformal or Shear Minimization in mlProb.
@@ -180,7 +185,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(500);
+  system.SetMaxNumberOfNonLinearIterations(100);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
@@ -203,7 +208,7 @@ int main(int argc, char** args) {
 
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 1);
   
-  ProjectSolution(mlSol);
+  //ProjectSolution(mlSol);
 
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 2);
 

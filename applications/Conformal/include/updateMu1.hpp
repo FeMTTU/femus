@@ -1,4 +1,6 @@
 
+
+
 void UpdateMu(MultiLevelSolution& mlSol) {
 
   //MultiLevelSolution*  mlSol = ml_prob._ml_sol;
@@ -31,7 +33,7 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
   std::vector < std::vector < double > > solx(DIM);
   std::vector < std::vector < double > > solNx(DIM);
-  
+
   for(unsigned k = 0; k < dim; k++) {
     sol->_Sol[indexMu[k]]->zero();
   }
@@ -44,15 +46,31 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
 // Setting the reference elements to be equilateral triangles.
   std::vector < std::vector < double > > xT(2);
-  xT[0].resize(3);
+  xT[0].resize(7);
   xT[0][0] = -0.5;
   xT[0][1] = 0.5;
   xT[0][2] = 0.;
+  xT[0][3] = 0.5 * (xT[0][0] + xT[0][1]);
+  xT[0][4] = 0.5 * (xT[0][1] + xT[0][2]);
+  xT[0][5] = 0.5 * (xT[0][2] + xT[0][0]);
+  xT[0][6] = 0.33333333333333333333 * (xT[0][0] + xT[0][1] + xT[0][2]);
 
-  xT[1].resize(3);
+  xT[1].resize(7);
   xT[1][0] = 0.;
   xT[1][1] = 0.;
   xT[1][2] = sqrt(3.) / 2.;
+  xT[1][3] = 0.5 * (xT[1][0] + xT[1][1]);
+  xT[1][4] = 0.5 * (xT[1][1] + xT[1][2]);
+  xT[1][5] = 0.5 * (xT[1][2] + xT[1][0]);
+  xT[1][6] = 0.33333333333333333333 * (xT[1][0] + xT[1][1] + xT[1][2]);
+
+  double angles[2][4] = {
+    {0., 0.5 * M_PI, M_PI, 1.5 * M_PI}, // for square
+    {0., 2. / 3. * M_PI, 4. / 3 * M_PI} // for equilateral triangle
+  };
+
+  unsigned solENVNIndex = mlSol.GetIndex("ENVN");
+  unsigned solENVNType = mlSol.GetSolutionType(solENVNIndex);
 
   std::vector<double> phi_uv0;
   std::vector<double> phi_uv1;
@@ -86,6 +104,53 @@ void UpdateMu(MultiLevelSolution& mlSol) {
         solNx[K][i] = solx[K][i]  + (*sol->_Sol[indexDx[K]])(idof);
       }
     }
+
+
+//     if(ielGeom == TRI) {
+// 
+//       xT[0][1] = 0.5;
+//       std::vector < unsigned > ENVN(3);
+//       std::vector < double > angle(3);
+// 
+//       for(unsigned j = 0; j < 3; j++) {
+//         unsigned jnode  = msh->GetSolutionDof(j, iel, solENVNType);
+//         ENVN[j] = (*sol->_Sol[solENVNIndex])(jnode);
+//         angle[j] = 2 * M_PI / ENVN[j];
+//       }
+// 
+// 
+//       if(conformalTriangleType == 1) {  //this works with moo two levels
+//         ChangeTriangleConfiguration1(ENVN, angle);
+//       }
+//       else if(conformalTriangleType == 2) {  //this works with mao
+//         ChangeTriangleConfiguration2(ENVN, angle);
+//       }
+//       else { //no change
+//         angle.assign(3, M_PI / 3.);
+//       }
+// 
+//       double l = xT[0][1] - xT[0][0];
+//       double d = l * sin(angle[0]) * sin(angle[1]) / sin(angle[0] + angle[1]);
+//       double scale = sqrt((sqrt(3.) / 2.) / (l * d));
+//       l = l * scale;
+//       d = d * scale;
+//       xT[0][1] = xT[0][0] + l;
+//       xT[0][2] = xT[0][0] + d / tan(angle[0]);
+//       xT[1][2] = d;
+// 
+//       xT[0][3] = 0.5 * (xT[0][0] + xT[0][1]);
+//       xT[0][4] = 0.5 * (xT[0][1] + xT[0][2]);
+//       xT[0][5] = 0.5 * (xT[0][2] + xT[0][0]);
+//       xT[0][6] = 0.33333333333333333333 * (xT[0][0] + xT[0][1] + xT[0][2]);
+// 
+//       xT[1][3] = 0.5 * (xT[1][0] + xT[1][1]);
+//       xT[1][4] = 0.5 * (xT[1][1] + xT[1][2]);
+//       xT[1][5] = 0.5 * (xT[1][2] + xT[1][0]);
+//       xT[1][6] = 0.33333333333333333333 * (xT[1][0] + xT[1][1] + xT[1][2]);
+// 
+//       //std::cout << l << " " << d<<" "<< angle[0] << " " << angle[1] <<" "<< angle[2] << " " << l * d <<" "<< xT[0][2]<< " " << xT[1][2]<<  std::endl;
+//     }
+
 
 // *** Gauss point loop ***
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solTypeDx]->GetGaussPointNumber(); ig++) {
@@ -262,20 +327,69 @@ void UpdateMu(MultiLevelSolution& mlSol) {
 
     for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
+      short unsigned ielGeom = msh->GetElementType(iel);
+      unsigned idx = (ielGeom == QUAD) ? 0 : 1;
+
       double mu[2];
       for(unsigned k = 0; k < 2; k++) {
         mu[k] = (*sol->_Sol[indexMu[k]])(iel);
       }
 
-      //for quads only
+//       if(ielGeom == TRI) {
+// 
+//         xT[0][1] = 0.5;
+//         std::vector < unsigned > ENVN(3);
+//         std::vector < double > angle(3);
+// 
+//         for(unsigned j = 0; j < 3; j++) {
+//           unsigned jnode  = msh->GetSolutionDof(j, iel, solENVNType);
+//           ENVN[j] = (*sol->_Sol[solENVNIndex])(jnode);
+//           angle[j] = 2 * M_PI / ENVN[j];
+//         }
+// 
+// 
+//         if(conformalTriangleType == 1) {  //this works with moo two levels
+//           ChangeTriangleConfiguration1(ENVN, angle);
+//         }
+//         else if(conformalTriangleType == 2) {  //this works with mao
+//           ChangeTriangleConfiguration2(ENVN, angle);
+//         }
+//         else { //no change
+//           angle.assign(3, M_PI / 3.);
+//         }
+// 
+//         double l = xT[0][1] - xT[0][0];
+//         double d = l * sin(angle[0]) * sin(angle[1]) / sin(angle[0] + angle[1]);
+//         double scale = sqrt((sqrt(3.) / 2.) / (l * d));
+//         l = l * scale;
+//         d = d * scale;
+//         xT[0][1] = xT[0][0] + l;
+//         xT[0][2] = xT[0][0] + d / tan(angle[0]);
+//         xT[1][2] = d;
+// 
+//         angles[idx][1] = atan2(xT[1][2], xT[0][2] - xT[0][1]);
+//         angles[idx][2] = atan2(-xT[1][2], -0.5 + xT[0][2]);
+// 
+//       }
+
       unsigned nDofs0  = msh->GetElementDofNumber(iel, 0);
       for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
 
         unsigned idof = msh->GetSolutionDof(nDofs0 + iface, iel, solType2);
-        double weight = (iface % 2) ? -1. : 1.;
 
-        sol->_Sol[indexMuEdge[0]]->add(idof, weight * mu[0]);
-        sol->_Sol[indexMuEdge[1]]->add(idof, weight * mu[1]);
+        //double weight = (iface % 2) ? -1. : 1.;
+        //sol->_Sol[indexMuEdge[0]]->add(idof, weight * mu[0]);
+        //sol->_Sol[indexMuEdge[1]]->add(idof, weight * mu[1]);
+
+        double a = cos(angles[idx][iface]);
+        double b = sin(angles[idx][iface]);
+
+        double mu0s = (a * a - b * b) * mu[0] + 2. * a * b * mu[1];
+        double mu1s = (a * a - b * b) * mu[1] - 2. * a * b * mu[0];
+
+        sol->_Sol[indexMuEdge[0]]->add(idof, mu0s);
+        sol->_Sol[indexMuEdge[1]]->add(idof, mu1s);
+
         sol->_Sol[indexCntEdge]->add(idof, 1);
       }
     }
@@ -287,6 +401,44 @@ void UpdateMu(MultiLevelSolution& mlSol) {
     for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
       short unsigned ielGeom = msh->GetElementType(iel);
+      unsigned idx = (ielGeom == QUAD) ? 0 : 1;
+
+//       if(ielGeom == TRI) {
+// 
+//         xT[0][1] = 0.5;
+//         std::vector < unsigned > ENVN(3);
+//         std::vector < double > angle(3);
+// 
+//         for(unsigned j = 0; j < 3; j++) {
+//           unsigned jnode  = msh->GetSolutionDof(j, iel, solENVNType);
+//           ENVN[j] = (*sol->_Sol[solENVNIndex])(jnode);
+//           angle[j] = 2 * M_PI / ENVN[j];
+//         }
+// 
+// 
+//         if(conformalTriangleType == 1) {  //this works with moo two levels
+//           ChangeTriangleConfiguration1(ENVN, angle);
+//         }
+//         else if(conformalTriangleType == 2) {  //this works with mao
+//           ChangeTriangleConfiguration2(ENVN, angle);
+//         }
+//         else { //no change
+//           angle.assign(3, M_PI / 3.);
+//         }
+// 
+//         double l = xT[0][1] - xT[0][0];
+//         double d = l * sin(angle[0]) * sin(angle[1]) / sin(angle[0] + angle[1]);
+//         double scale = sqrt((sqrt(3.) / 2.) / (l * d));
+//         l = l * scale;
+//         d = d * scale;
+//         xT[0][1] = xT[0][0] + l;
+//         xT[0][2] = xT[0][0] + d / tan(angle[0]);
+//         xT[1][2] = d;
+// 
+//         angles[idx][1] = atan2(xT[1][2], xT[0][2] - xT[0][1]);
+//         angles[idx][2] = atan2(-xT[1][2], -0.5 + xT[0][2]);
+// 
+//       }
 
       double mu[2] = {0., 0.};
       double cnt = 0.;
@@ -295,10 +447,20 @@ void UpdateMu(MultiLevelSolution& mlSol) {
       for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
 
         unsigned idof = msh->GetSolutionDof(nDofs0 + iface, iel, solType2);
-        double sign = (iface % 2) ? -1. : 1.;
+        //double sign = (iface % 2) ? -1. : 1.;
+//         mu[0] += sign * (*sol->_Sol[indexMuEdge[0]])(idof);
+//         mu[1] += sign * (*sol->_Sol[indexMuEdge[1]])(idof);
 
-        mu[0] += sign * (*sol->_Sol[indexMuEdge[0]])(idof);
-        mu[1] += sign * (*sol->_Sol[indexMuEdge[1]])(idof);
+
+        double mu0s = (*sol->_Sol[indexMuEdge[0]])(idof);
+        double mu1s = (*sol->_Sol[indexMuEdge[1]])(idof);
+
+
+        double a = cos(angles[idx][iface]);
+        double b = sin(angles[idx][iface]);
+
+        mu[0] += (a * a - b * b) * mu0s - 2. * a * b * mu1s;
+        mu[1] += (a * a - b * b) * mu1s + 2. * a * b * mu0s;
 
         cnt += (*sol->_Sol[indexCntEdge])(idof);
       }
