@@ -38,6 +38,12 @@ using namespace femus;
 
 void ProjectSolution(MultiLevelSolution& mlSol);
 
+double InitalValueCM(const std::vector < double >& x) {
+//   return cos(4.* M_PI * sqrt(x[0] * x[0] + x[1] * x[1])/0.5) ;
+    return sin(4.* M_PI * x[0]) * sin(4.* M_PI * x[1]) ;
+}
+
+
 // IBVs.  No boundary, and IVs set to sphere (just need something).
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
 
@@ -126,12 +132,12 @@ int main(int argc, char** args) {
   //mlMsh.GenerateCoarseBoxMesh(32, 32, 0, -0.5, 0.5, -0.5, 0.5, 0., 0., QUAD9, "seventh");
 
   //mlMsh.ReadCoarseMesh("../input/squareReg3D.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("../input/square13D.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("../input/squareTri3D.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/square13D.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("../input/squareTri3D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/cylinder2.neu", "seventh", scalingFactor);
 
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -164,9 +170,14 @@ int main(int argc, char** args) {
   mlSol.AddSolution("mu1Edge", LAGRANGE, SECOND, 0, false);
   mlSol.AddSolution("mu2Edge", LAGRANGE, SECOND, 0, false);
   mlSol.AddSolution("cntEdge", LAGRANGE, SECOND, 0, false);
+  
+  mlSol.AddSolution("cm", LAGRANGE, SECOND, 0, false);
+  
 
   // Initialize the variables and attach boundary conditions.
   mlSol.Initialize("All");
+  
+  mlSol.Initialize("cm", InitalValueCM);
 
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("All");
@@ -185,19 +196,13 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Lambda1");
 
   // Parameters for convergence and # of iterations.
-  system.SetMaxNumberOfNonLinearIterations(100);
+  system.SetMaxNumberOfNonLinearIterations(20);
   system.SetNonLinearConvergenceTolerance(1.e-10);
 
   system.init();
 
   mlSol.SetWriter(VTK);
-  std::vector<std::string> mov_vars;
-  mov_vars.push_back("Dx1");
-  mov_vars.push_back("Dx2");
-  mov_vars.push_back("Dx3");
-  mlSol.GetWriter()->SetMovingMesh(mov_vars);
-
-  // and this?
+ 
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
   mlSol.GetWriter()->SetDebugOutput(true);
@@ -206,6 +211,13 @@ int main(int argc, char** args) {
   system.SetAssembleFunction(AssembleConformalMinimization);
   system.MGsolve();
 
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back("Dx1");
+  mov_vars.push_back("Dx2");
+  mov_vars.push_back("Dx3");
+  mlSol.GetWriter()->SetMovingMesh(mov_vars);
+  
+  
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 1);
   
   //ProjectSolution(mlSol);
