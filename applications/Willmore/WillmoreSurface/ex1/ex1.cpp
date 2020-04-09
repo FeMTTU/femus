@@ -104,13 +104,13 @@ int main (int argc, char** args) {
   //mlMsh.ReadCoarseMesh ("../input/horseShoe3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/tiltedTorus.neu", "seventh", scalingFactor);
   scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh ("../input/dog.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/virus3.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh ("../input/ellipsoidSphere.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("../input/CliffordTorus.neu", "seventh", scalingFactor);
 
   //mlMsh.ReadCoarseMesh ("../input/armadillo.med", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh ("../input/moai.med", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh ("../input/moo.med", "seventh", scalingFactor);
 
 
   // Set number of mesh levels.
