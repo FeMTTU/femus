@@ -542,6 +542,7 @@ void el_dofs_unknowns(const Solution*                sol,
                         const  LinearEquationSolver* pdeSys,
                         //-----------
                         CurrentElem < double > & geom_element,
+                        CurrentElem < double > & geom_element_jel,
                         const unsigned int solType_coords,
                         const unsigned int dim,
                         const unsigned int space_dim,
@@ -565,12 +566,12 @@ void el_dofs_unknowns(const Solution*                sol,
                         vector < unsigned > Sol_n_el_dofs_quantities,
                         //-----------
                         std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all,
-                        std::vector < std::vector < double > >  Jac_qp_bdry,
-                        std::vector < std::vector < double > >  JacI_qp_bdry,
-                        double detJac_qp_bdry,
-                        double weight_bdry,
-                        vector <double> phi_ctrl_bdry,
-                        vector <double> phi_ctrl_x_bdry, 
+                        std::vector < std::vector < double > >  Jac_qp/*_bdry*/,
+                        std::vector < std::vector < double > >  JacI_qp/*_bdry*/,
+                        double detJac_qp/*_bdry*/,
+                        double weight/*_bdry*/,
+                        vector <double> phi_ctrl/*_bdry*/,
+                        vector <double> phi_ctrl_x/*_bdry*/, 
                         //-----------
                         const unsigned int pos_mat_ctrl,
                         const unsigned int pos_sol_ctrl,
@@ -589,14 +590,33 @@ void el_dofs_unknowns(const Solution*                sol,
                         const unsigned int OP_Hhalf
                        ) {
       
-      
+//  //***************************************************
+//   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
+// //***************************************************
+//   std::vector < std::vector < double > >  JacI_qp(space_dim);
+//   std::vector < std::vector < double > >  Jac_qp(dim);
+//   for(unsigned d = 0; d < dim; d++) {
+//     Jac_qp[d].resize(space_dim);
+//   }
+//   for(unsigned d = 0; d < space_dim; d++) {
+//     JacI_qp[d].resize(dim);
+//   }
+// 
+//   double detJac_qp;
+//   std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > elem_all;
+//   ml_prob.get_all_abstract_fe(elem_all);
+// //***************************************************
+     
    vector < double > phi_x;
      
       
   unsigned solType =   SolFEType_Mat[pos_mat_ctrl];
   unsigned soluIndex = SolIndex_Mat[pos_mat_ctrl];
+  unsigned soluPdeIndex = SolPdeIndex[pos_mat_ctrl];
+  
   std::vector < double > solu1;
-      
+  std::vector < double > solu2;
+    
   //------- geometry ---------------
  vector < vector < double > > x1(dim);
   vector < vector < double > > x2(dim);
@@ -643,18 +663,176 @@ void el_dofs_unknowns(const Solution*                sol,
   
    for(int kproc = 0; kproc < nprocs; kproc++) {
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
-      
-       unsigned nDof2;
-       
-         if(iproc == kproc) {
-            nDof2  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
+ 
+       short unsigned ielGeom2;
+      unsigned nDof2;
+      unsigned nDofx2;
+      unsigned nDofu2;
+      //unsigned n_face;
+
+      if(iproc == kproc) {
+        ielGeom2 = msh->GetElementType(jel);
+        nDof2  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
+        nDofx2 = msh->GetElementDofNumber(jel, solType_coords);    // number of coordinate element dofs
+
+      }
+
+      MPI_Bcast(&ielGeom2, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
+      MPI_Bcast(&nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast(&nDofx2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      //MPI_Bcast(&n_face, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+
+      // resize local arrays
+      l2GMap2.resize(nDof2);
+
+
+      for(int k = 0; k < dim; k++) {
+        x2[k].resize(nDofx2);
+      }
+      solu2.resize(nDof2);
+
+      // local storage of global mapping and solution ********************
+      if(iproc == kproc) {
+        for(unsigned j = 0; j < nDof2; j++) {
+          l2GMap2[j] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, j, jel);  // global to global mapping between solution node and pdeSys dof
         }
-        MPI_Bcast(&nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      }
+      MPI_Bcast(&l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      // ******************************************************************
+
+      // local storage of coordinates  #######################################
+      if(iproc == kproc) {
+        for(unsigned j = 0; j < nDofx2; j++) {
+          unsigned xDof  = msh->GetSolutionDof(j, jel, solType_coords);  // global to global mapping between coordinates node and coordinate dof
+          for(unsigned k = 0; k < dim; k++) {
+            x2[k][j] = (*msh->_topology->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
+          }
+        }
+        for(unsigned j = 0; j < nDof2; j++) {
+          unsigned jDof  = msh->GetSolutionDof(j, jel, solType);  // global to global mapping between coordinates node and coordinate dof
+          solu2[j] = (*sol->_Sol[soluIndex])(jDof);  // global extraction and local storage for the element coordinates
+        }
+      }
+      for(unsigned k = 0; k < dim; k++) {
+        MPI_Bcast(& x2[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      }
+      MPI_Bcast(& solu2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      // ######################################################################
+
+      // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+      if(iproc == kproc) {
+        geom_element_jel.set_coords_at_dofs_and_geom_type(jel, solType_coords);
+      }
+      for(unsigned k = 0; k < dim; k++) {
+        MPI_Bcast(& geom_element_jel.get_coords_at_dofs()[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      }
+      for(unsigned k = 0; k < space_dim; k++) {
+        MPI_Bcast(& geom_element_jel.get_coords_at_dofs_3d()[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      }
+      // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+//       const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
+      const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
+
+      vector < vector < double > > xg2(jgNumber);
+      vector <double> weight2(jgNumber);
+      vector < vector <double> > phi2(jgNumber);  // local test function
+      std::vector< double > solY(jgNumber, 0.);
+
+      for(unsigned jg = 0; jg < jgNumber; jg++) {
+
+//         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
+
+        elem_all[ielGeom2][solType_coords]->JacJacInv(/*x2*/geom_element_jel.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
+        weight2[jg] = detJac_qp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
+        elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
+
+
+
+
+        xg2[jg].assign(dim, 0.);
+        solY[jg] = 0.;
+
+        for(unsigned j = 0; j < nDof2; j++) {
+          solY[jg] += solu2[j] * phi2[jg][j];
+          for(unsigned k = 0; k < dim; k++) {
+            xg2[jg][k] += x2[k][j] * phi2[jg][j];
+          }
+        }
+      }       
+        
      
        
+       unsigned counter_verify = 0;
        
        for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
                 
+           geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+              
+           geom_element.set_elem_center(iel, solType_coords);
+
+
+   //************ set control flag *********************
+  int control_el_flag = 0;
+        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
+  std::vector<int> control_node_flag(Sol_n_el_dofs_Mat[pos_mat_ctrl], 0);
+ //*************************************************** 
+      
+	// Perform face loop over elements that contain some control face
+	if (control_el_flag == 1) {
+        
+        
+        	  double tau=0.;
+	  std::vector<double> normal(space_dim, 0.);
+	       
+	  // loop on faces of the current element
+
+	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+          
+       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, jface);    
+       
+       std::vector<unsigned int> Sol_el_n_dofs_current_face(n_quantities); ///@todo the active flag is not an unknown!
+
+       for (unsigned  k = 0; k < Sol_el_n_dofs_current_face.size(); k++) {
+                 if (SolFEType_quantities[k] < 3) Sol_el_n_dofs_current_face[k] = msh->GetElementFaceDofNumber(iel, jface, SolFEType_quantities[k]);  ///@todo fix this absence
+       }
+       
+       const unsigned nDof_max_bdry = ElementJacRes<double>::compute_max_n_dofs(Sol_el_n_dofs_current_face);
+       
+       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+ 
+       geom_element.set_elem_center_bdry_3d();
+
+	    // look for boundary faces
+            const int bdry_index = msh->el->GetFaceElementIndex(iel, jface);
+            
+	    if( bdry_index < 0) {
+	      const unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+		
+// 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
+	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
+
+        counter_verify++;
+              
+              //Quadrature loop
+                      const unsigned n_gauss_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
+        
+    
+		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
+            
+            
+        }
+              
+              
+              
+          }
+        }
+      }
+        
+	  
+    } //end control elem flag
+           
+           
         short unsigned ielGeom1 = msh->GetElementType(iel);
         unsigned nDof1  = msh->GetElementDofNumber(iel, solType);
         unsigned nDofx1 = msh->GetElementDofNumber(iel, solType_coords);
@@ -817,6 +995,7 @@ void el_dofs_unknowns(const Solution*                sol,
         
         
     } //end iel
+    
     } //end jel
     } //end kproc
       
@@ -898,11 +1077,9 @@ void el_dofs_unknowns(const Solution*                sol,
     
     unsigned int sum_Sol_n_el_dofs = ElementJacRes<double>::compute_sum_n_dofs(Sol_n_el_dofs_Mat);
 
-    Res.resize(sum_Sol_n_el_dofs);
-    std::fill(Res.begin(), Res.end(), 0.);
+    Res.resize(sum_Sol_n_el_dofs);                        std::fill(Res.begin(), Res.end(), 0.);
 
-    Jac.resize(sum_Sol_n_el_dofs * sum_Sol_n_el_dofs);
-    std::fill(Jac.begin(), Jac.end(), 0.);
+    Jac.resize(sum_Sol_n_el_dofs * sum_Sol_n_el_dofs);    std::fill(Jac.begin(), Jac.end(), 0.);
     
     L2G_dofmap_Mat_AllVars.resize(0);
       for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_Mat_AllVars.insert(L2G_dofmap_Mat_AllVars.end(), L2G_dofmap_Mat[k].begin(), L2G_dofmap_Mat[k].end());

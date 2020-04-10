@@ -17,6 +17,18 @@
 #define IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY    0
 
 
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
+#define S_FRAC 0.75
+
+#define OP_Hhalf    1
+
+#define USE_Cns     1
+
+#define Nsplit      4
+
+
+
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
 
 ///@todo do a very weak impl of Laplacian
@@ -294,6 +306,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  unsigned    nprocs = msh->n_processors(); // get the process_id (for parallel computation)
 
   constexpr bool print_algebra_global = false;
   constexpr bool print_algebra_local = false;
@@ -517,7 +530,71 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   ml_prob.get_all_abstract_fe(elem_all);
 //*************************************************** 
 //***************************************************
+  
+  const double s_frac = S_FRAC;
 
+  const double check_limits = 1.;//1./(1. - s_frac); // - s_frac;
+
+  double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim + 2. * s_frac) / 2.) / (pow(M_PI, dim / 2.) * tgamma(1 -  s_frac)) ;
+
+     control_eqn_bdry_fractional(iproc,
+                   nprocs,
+                    ml_prob,
+                    ml_sol,
+                    sol,
+                    msh,
+                    pdeSys,
+                    //-----------
+                    geom_element,
+                    geom_element,
+                    solType_coords,
+                    dim,
+                    space_dim,
+                    //-----------
+                    n_unknowns,
+                    Solname_Mat,
+                    SolFEType_Mat,
+                    SolIndex_Mat,
+                    SolPdeIndex,
+                    Sol_n_el_dofs_Mat, 
+                    sol_eldofs_Mat,  
+                    L2G_dofmap_Mat,
+                    L2G_dofmap_Mat_AllVars,
+                    max_size,
+                    //-----------
+                    Res,
+                    Jac,
+                    //-----------
+                    n_quantities,
+                    SolFEType_quantities,
+                    Sol_n_el_dofs_quantities,
+                    //-----------
+                    elem_all,
+                    Jac_qp_bdry,
+                    JacI_qp_bdry,
+                    detJac_qp_bdry,
+                    weight_bdry,
+                    phi_ctrl_bdry,
+                    phi_ctrl_x_bdry, 
+                    //-----------
+                    pos_mat_ctrl,
+                    pos_sol_ctrl,
+                    IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY,
+                    //-----------
+                    KK,
+                    RES,
+                    assembleMatrix,
+                    //-----------
+                    alpha,
+                    beta,     
+                    Nsplit,
+                    s_frac,
+                    check_limits,
+                    C_ns,
+                    OP_Hhalf
+                    ) ;
+                    
+                    
   
    control_eqn_bdry(iproc,
                     ml_prob,
