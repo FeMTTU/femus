@@ -88,8 +88,8 @@ int main(int argc, char** args) {
   mlSol.AddSolution("u", LAGRANGE, SECOND);
   mlSol.Initialize("All");
   
-  double N_plus = round( pow( M_PI, 2 ) / ( 4 * S_FRAC * pow( q_step, 2 ) ) );
-  double N_minus = round( pow( M_PI, 2 ) / ( 4 * (1 - S_FRAC) * pow( q_step, 2 )) ) ;
+  int N_plus = round( pow( M_PI, 2 ) / ( 4 * (1 - S_FRAC) * pow( q_step, 2 ) ) );
+  int N_minus = round( pow( M_PI, 2 ) / ( 4  * S_FRAC * pow( q_step, 2 )) ) ;
 
   for (int i = - N_minus; i < N_plus + 1; i++) {
 //   for (int i = - N; i < N + 1; i++) {
@@ -282,7 +282,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
           laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        aRes[i] += ( + phi[i] - solu_gss * phi[i] - exp( 2 * q_step * n_sys ) * laplace) * weight ;
+        aRes[i] += ( + exp( 2 * S_FRAC * q_step * n_sys ) * phi[i] - solu_gss * phi[i] - exp( 2 * q_step * n_sys ) * laplace) * weight ;
 
       } // end phi_i loop
       
@@ -335,8 +335,8 @@ void BuildU(MultiLevelSolution& mlSol) {
   
 //   double q_step = 1. / sqrt( N );
   
-  double N_plus = round( pow( M_PI, 2 ) / ( 4. * S_FRAC * pow( q_step, 2 ) ) );
-  double N_minus = round( pow( M_PI, 2 ) / ( 4. * (1 - S_FRAC) * pow( q_step, 2 )) ) ;
+  int N_plus = round( pow( M_PI, 2 ) / ( 4. * (1 - S_FRAC) * pow( q_step, 2 ) ) );
+  int N_minus = round( pow( M_PI, 2 ) / ( 4. * S_FRAC * pow( q_step, 2 )) ) ;
 
   std::vector< unsigned > wIndex(N_minus + N_plus + 1);
 //   std::vector< unsigned > wIndex(2 * N + 1);
@@ -375,7 +375,7 @@ void BuildU(MultiLevelSolution& mlSol) {
 //     }
         for (int j = -N_minus ; j < N_plus + 1; j++) {
 //     for (int k = 0; k < 2 * N + 1; k++) {
-      double weight = exp( 2 * S_FRAC * q_step * j );
+      double weight = 1.;//exp( 2 * S_FRAC * q_step * j );
 //       double weight = exp( /*2 **/ S_FRAC * q_step * ( k - N) );
       
       value += Cs * q_step * weight * (*sol->_Sol[wIndex[j+N_minus]])(i);
