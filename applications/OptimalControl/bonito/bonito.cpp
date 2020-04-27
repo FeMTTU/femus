@@ -20,16 +20,17 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
-#define S_FRAC 0.75
+#define N_UNIFORM_LEVELS  6
+#define N_ERASED_LEVELS   5
+#define S_FRAC            0.99
 
-#define q_step 3
+#define q_step            0.4
+// #define N              10
 
-#define EX_1       -1.
-#define EX_2        1.
-#define EY_1       -1.
-#define EY_2        1.
+#define EX_1              -1.
+#define EX_2               1.
+#define EY_1              -1.
+#define EY_2               1.
 
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
@@ -38,6 +39,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
   return dirichlet;
 }
+
+void BuildU(MultiLevelSolution& mlSol);
 
 void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
 
@@ -85,10 +88,11 @@ int main(int argc, char** args) {
   mlSol.AddSolution("u", LAGRANGE, SECOND);
   mlSol.Initialize("All");
   
-  double N_plus = round( 2 * pow( M_PI, 2 ) / ( S_FRAC * pow( q_step, 2 ) ) );
-  double N_minus = round( 4 *   pow( M_PI, 2 ) / ((1 - S_FRAC) * pow( q_step, 2 )) ) ;
+  int N_plus = round( pow( M_PI, 2 ) / ( 4 * (1 - S_FRAC) * pow( q_step, 2 ) ) );
+  int N_minus = round( pow( M_PI, 2 ) / ( 4  * S_FRAC * pow( q_step, 2 )) ) ;
 
   for (int i = - N_minus; i < N_plus + 1; i++) {
+//   for (int i = - N; i < N + 1; i++) {
     char solName[10];
     sprintf (solName, "w%d", i);
     mlSol.AddSolution (solName, LAGRANGE, SECOND);
@@ -108,6 +112,7 @@ int main(int argc, char** args) {
   // add system Poisson in mlProb as a Linear Implicit System
   
   for (int i = - N_minus; i < N_plus + 1; i++) {
+//   for (int i = - N; i < N + 1; i++) {
     char sysName[20];
     sprintf (sysName, "Poisson%d", i);
     LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > (sysName);
@@ -122,13 +127,15 @@ int main(int argc, char** args) {
     system.MGsolve();
   }
 
+  BuildU(mlSol);
+  
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
  
-  vtkIO.SetDebugOutput(true);
+  //vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
   return 0;
 }
@@ -263,6 +270,8 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
           x_gss[jdim] += x[jdim][i] * phi[i];
         }
       }
+      
+//       double q_step = 1 / ( sqrt( N ) );
 
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofu; i++) {
@@ -273,7 +282,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
           laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        aRes[i] += ( - phi[i] + solu_gss * phi[i] + exp( q_step * n_sys ) * laplace) * weight;
+        aRes[i] += ( + exp( 2 * S_FRAC * q_step * n_sys ) * phi[i] - solu_gss * phi[i] - exp( 2 * q_step * n_sys ) * laplace) * weight ;
 
       } // end phi_i loop
       
@@ -316,6 +325,74 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
+void BuildU(MultiLevelSolution& mlSol) {
+
+  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+
+  Solution *sol  = mlSol.GetSolutionLevel (level);
+  Mesh     *msh   = mlSol._mlMesh->GetLevel (level);
+  unsigned iproc  = msh->processor_id();
+  
+//   double q_step = 1. / sqrt( N );
+  
+  int N_plus = round( pow( M_PI, 2 ) / ( 4. * (1 - S_FRAC) * pow( q_step, 2 ) ) );
+  int N_minus = round( pow( M_PI, 2 ) / ( 4. * S_FRAC * pow( q_step, 2 )) ) ;
+
+  std::vector< unsigned > wIndex(N_minus + N_plus + 1);
+//   std::vector< unsigned > wIndex(2 * N + 1);
+  
+  for (int i = - N_minus; i < N_plus + 1; i++) {
+//   for (int i = - N; i < N + 1; i++) {
+    char solName[10];
+    sprintf (solName, "w%d", i);
+    wIndex[i + N_minus] = mlSol.GetIndex (solName);
+//     wIndex[i + N] = mlSol.GetIndex (solName);
+  }
+  unsigned uIndex = mlSol.GetIndex ("u");
+  
+  unsigned solType = mlSol.GetSolutionType (uIndex);
+
+  sol->_Sol[uIndex]->zero();
+  
+  for(unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
+    double value = 0.;
+    
+    double Cs =  2 * sin( M_PI * S_FRAC) / M_PI ;
+    
+//     for (unsigned k = 0; k < N_minus + N_plus + 1; k++) {
+// //     for (int k = 0; k < 2 * N + 1; k++) {
+//       double weight = exp( 2 * S_FRAC * q_step * ( k - N_minus) );
+// //       double weight = exp( /*2 **/ S_FRAC * q_step * ( k - N) );
+//       
+//       value += Cs * q_step * weight * (*sol->_Sol[wIndex[k]])(i);
+//       std::cout.precision(14);
+//       if(i == 32) std::cout<<k-N_minus<< " " << Cs * q_step * weight << "  " <<
+//         (*sol->_Sol[wIndex[k]])(i) << "  " <<
+//         Cs * q_step * weight * (*sol->_Sol[wIndex[k]])(i) << "  " << value <<"\n";
+//       
+// //       if(k == 0 || k == 1) std::cout<< k<< "  " << i<< "  " <<  (*sol->_Sol[wIndex[k]])(i) << "\n" ;
+//       
+//     }
+        for (int j = -N_minus ; j < N_plus + 1; j++) {
+//     for (int k = 0; k < 2 * N + 1; k++) {
+      double weight = 1.;//exp( 2 * S_FRAC * q_step * j );
+//       double weight = exp( /*2 **/ S_FRAC * q_step * ( k - N) );
+      
+      value += Cs * q_step * weight * (*sol->_Sol[wIndex[j+N_minus]])(i);
+      std::cout.precision(14);
+      if(i == 32) std::cout<< j << " " << Cs * q_step * weight << "  " <<
+        (*sol->_Sol[wIndex[j+N_minus]])(i) << "  " <<
+        Cs * q_step * weight * (*sol->_Sol[wIndex[j+N_minus]])(i) << "  " << value <<"\n";
+      
+//       if(k == 0 || k == 1) std::cout<< k<< "  " << i<< "  " <<  (*sol->_Sol[wIndex[k]])(i) << "\n" ;
+      
+    }
+    sol->_Sol[uIndex]->set(i,value);
+  }
+  
+  sol->_Sol[uIndex]->close();
+
+}
 
 
 
