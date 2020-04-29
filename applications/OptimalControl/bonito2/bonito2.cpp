@@ -125,84 +125,52 @@ int main(int argc, char** args) {
 
 
   unsigned N = N_minus + N_plus + 1;
-  FieldSplitTree **field1;
-  field1 = new FieldSplitTree * [N + 1];
+  FieldSplitTree **fieldSplitwi;
+  fieldSplitwi = new FieldSplitTree * [N];
 
-  std::vector < FieldSplitTree *> split1;
-  split1.reserve(N + 1);
+  std::vector < FieldSplitTree *> fieldSplitwiPointer(N);
+  //allFieldSplitwi.reserve(N);
 
   for(int i = - N_minus; i < N_plus + 1; i++) {
-    sprintf(solName, "w%d", i);
+      
+    char wiName[10];  
+    sprintf(wiName, "w%d", i);
 
     std::vector < unsigned > fieldw(1);
-    fieldw[0] = system.GetSolPdeIndex(solName);
+    fieldw[0] = system.GetSolPdeIndex(wiName);
 
     std::vector < unsigned > solutionTypew(1);
-    solutionTypew[0] = mlSol.GetSolutionType(solName);
+    solutionTypew[0] = mlSol.GetSolutionType(wiName);
 
-    field1[i + N_minus] = new FieldSplitTree(PREONLY, MLU_PRECOND, fieldw, solutionTypew, solName);
+    fieldSplitwi[i + N_minus] = new FieldSplitTree(PREONLY, MLU_PRECOND, fieldw, solutionTypew, wiName);
 
-    split1.push_back(field1[i + N_minus]);
+    fieldSplitwiPointer[i + N_minus] = fieldSplitwi[i + N_minus];
   }
-  
-  {
-    std::vector < unsigned > fieldu(1);
-    fieldu[0] = system.GetSolPdeIndex("u");
-
-    std::vector < unsigned > solutionTypeu(1);
-    solutionTypeu[0] = mlSol.GetSolutionType("u");
-
-    field1[N] = new FieldSplitTree(PREONLY, MLU_PRECOND, fieldu, solutionTypeu, "u");
-
-    split1.push_back(field1[N]);
-  }
-  
-  
-//   FieldSplitTree FieldSplit1(PREONLY, FIELDSPLIT_ADDITIVE_PRECOND, split1, "FS1");
-// 
-//   FieldSplit1.PrintFieldSplitTree();
-// 
-// 
-//   FieldSplitTree **field2;
-//   field2 = new FieldSplitTree * [1];
-// 
-//   std::vector < FieldSplitTree *> split2;
-//   split2.reserve(1);
-// 
-//   {
-//     std::vector < unsigned > fieldu(1);
-//     fieldu[0] = system.GetSolPdeIndex("u");
-// 
-//     std::vector < unsigned > solutionTypeu(1);
-//     solutionTypeu[0] = mlSol.GetSolutionType("u");
-// 
-//     field2[0] = new FieldSplitTree(PREONLY, MLU_PRECOND, fieldu, solutionTypeu, "u");
-// 
-//     split2.push_back(field2[0]);
-//   }
-//   FieldSplitTree FieldSplit2(PREONLY, FIELDSPLIT_ADDITIVE_PRECOND, split2, "FS2");
-// 
-//   FieldSplit2.PrintFieldSplitTree();
-//   
-//  
-//   std::vector < FieldSplitTree *> FSAll(2);
-//   FSAll.reserve(2);
-//   FSAll.push_back(&FieldSplit1);
-//   FSAll.push_back(&FieldSplit2);
+  FieldSplitTree fieldSplitw(PREONLY, FIELDSPLIT_ADDITIVE_PRECOND, fieldSplitwiPointer, "w");
 
 
-  FieldSplitTree uSG(PREONLY, FIELDSPLIT_MULTIPLICATIVE_PRECOND, split1, "uSG");
+  std::vector < unsigned > fieldu(1);
+  fieldu[0] = system.GetSolPdeIndex("u");
 
-  uSG.PrintFieldSplitTree();
+  std::vector < unsigned > solutionTypeu(1);
+  solutionTypeu[0] = mlSol.GetSolutionType("u");
 
-  //return 1;
+  FieldSplitTree fieldSplitu = FieldSplitTree(PREONLY, MLU_PRECOND, fieldu, solutionTypeu, "u");
+
+  std::vector < FieldSplitTree *> fieldSplitAllPointer(2);
+  fieldSplitAllPointer[0] = &fieldSplitw;
+  fieldSplitAllPointer[1] = &fieldSplitu;
+
+  FieldSplitTree fieldSplitAll(PREONLY, FIELDSPLIT_MULTIPLICATIVE_PRECOND, fieldSplitAllPointer, "All");
+
+  fieldSplitAll.PrintFieldSplitTree();
 
   system.SetOuterSolver(RICHARDSON);
   system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT, INCLUDE_COARSE_LEVEL_TRUE);
 
   system.init();
 
-  system.SetFieldSplitTree(&uSG);
+  system.SetFieldSplitTree(&fieldSplitAll);
 
   system.MGsolve();
 
@@ -217,6 +185,13 @@ int main(int argc, char** args) {
 
   //vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+
+
+  for(int i = 0; i < N; i++) {
+    delete fieldSplitwi[i];
+  }
+  delete [] fieldSplitwi;
+
   return 0;
 }
 
@@ -263,7 +238,6 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     sprintf(solName, "w%d", i);
     solwIndex[i + N_minus] = mlSol->GetIndex(solName);
     solwPdeIndex[i + N_minus] = mlPdeSys->GetSolPdeIndex(solName);
-    std::cout << i + N_minus << " " << solName << " " << solwIndex[i + N_minus] << " " <<  solwPdeIndex[i + N_minus] << std::endl;
   }
 
   //solution variable
