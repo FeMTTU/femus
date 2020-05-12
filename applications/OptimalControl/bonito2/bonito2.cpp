@@ -23,11 +23,11 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  6
-#define N_ERASED_LEVELS   5
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
 #define S_FRAC            0.5
 
-#define q_step            .5
+#define q_step            0.5
 // #define N              10
 
 #define EX_1              -1.
@@ -335,20 +335,24 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
           }
         }
       }
-      double Cs =  2 * sin(M_PI * S_FRAC) / M_PI ;
+      double Cs =  sin(M_PI * S_FRAC) / M_PI ;
       // *** phi_i loop ***
       for(unsigned i = 0; i < nDofu; i++) {
-        aResu[i] -= solu[i] * phi[i] * weight ;
+        aResu[i] +=  1. * phi[i] * weight;
+//         aResu[i] -= solu[i] * phi[i] * weight ;
         for(int j = 0; j < N; j++) {
           adept::adouble laplace = 0.;
           for(unsigned k = 0; k < dim; k++) {
             laplace   +=  phi_x[i * dim + k] * gradSolw_gss[j][k];
           }
-          aResw[j][i] += (+ exp(2 * S_FRAC * q_step * (j - N_minus)) * phi[i]
-                          - solw_gss[j] * phi[i]
-                          - exp(2 * q_step * (j - N_minus)) *   laplace
+          aResw[j][i] += (- solu[i] * phi[i]
+                          - solw[j][i] * phi[i]
+                          - exp( - q_step * (j - N_minus)) * laplace
                          ) * weight ;
-          aResu[i] += Cs * q_step * solw[j][i] * phi[i] * weight ;
+          aResu[i] -= Cs * q_step * exp(S_FRAC * q_step * (j - N_minus))  * 
+                      ( solu[i] * phi[i] ) * weight ;
+          aResu[i] -= Cs * q_step * exp(S_FRAC * q_step * (j - N_minus))  * 
+                      ( phi[i] * solw[j][i] ) * weight ;
         }
       } // end phi_i loop
 
@@ -398,14 +402,29 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
   KK->close();
 
-//   PetscViewer    viewer;
-//   PetscViewerDrawOpen(PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
-//   PetscObjectSetName((PetscObject)viewer, "FSI matrix");
+  PetscViewer    viewer;
+  PetscViewerDrawOpen(PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+  PetscObjectSetName((PetscObject)viewer, "FSI matrix");
 //   PetscViewerPushFormat(viewer, PETSC_VIEWER_DRAW_LG);
-//   MatView((static_cast<PetscMatrix*>(KK))->mat(), viewer);
-//   MatView((static_cast<PetscMatrix*>(KK))->mat(),  PETSC_VIEWER_STDOUT_WORLD);
+//     PetscViewerPushFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_MATLAB);
+    PetscViewerPushFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_DENSE);
+  MatView((static_cast<PetscMatrix*>(KK))->mat(), viewer);
+  MatView((static_cast<PetscMatrix*>(KK))->mat(),  PETSC_VIEWER_STDOUT_WORLD);
 //   double a;
 //   std::cin >> a;
+  
+//       PetscViewer    viewer;
+  PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+  PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+  MatView((static_cast<PetscMatrix*> (KK))->mat(),viewer);
+//   MatView((static_cast<PetscMatrix*> (KK))->mat(),  PETSC_VIEWER_STDOUT_WORLD );
+
+  VecView((static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_WORLD );
+  double a;
+  std::cin>>a;
+//   
+
 
   // ***************** END ASSEMBLY *******************
 }
@@ -465,11 +484,6 @@ void BuildU(MultiLevelSolution& mlSol) {
 
       value += Cs * q_step * weight * (*sol->_Sol[wIndex[j + N_minus]])(i);
       std::cout.precision(14);
-      if(i == 32) std::cout << j << " " << Cs * q_step * weight << "  " <<
-                              (*sol->_Sol[wIndex[j + N_minus]])(i) << "  " <<
-                              Cs * q_step * weight * (*sol->_Sol[wIndex[j + N_minus]])(i) << "  " << value << "\n";
-
-//       if(k == 0 || k == 1) std::cout<< k<< "  " << i<< "  " <<  (*sol->_Sol[wIndex[k]])(i) << "\n" ;
 
     }
     sol->_Sol[uIndex]->set(i, value);
