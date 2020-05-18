@@ -27,7 +27,7 @@ using namespace femus;
 #define N_ERASED_LEVELS   3
 #define S_FRAC            0.5
 
-#define q_step            0.5
+#define q_step            .5
 // #define N              10
 
 #define EX_1              -1.
@@ -85,13 +85,10 @@ int main(int argc, char** args) {
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
 
-
-
   int N_plus = round(pow(M_PI, 2) / (4 * (1 - S_FRAC) * pow(q_step, 2)));
   int N_minus = round(pow(M_PI, 2) / (4  * S_FRAC * pow(q_step, 2))) ;
 
   for(int i = - N_minus; i < N_plus + 1; i++) {
-//   for (int i = - N; i < N + 1; i++) {
     char solName[10];
     sprintf(solName, "w%d", i);
     mlSol.AddSolution(solName, LAGRANGE, SECOND);
@@ -106,8 +103,6 @@ int main(int argc, char** args) {
   mlSol.Initialize("All");
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("All");
-
-
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
@@ -155,15 +150,20 @@ int main(int argc, char** args) {
   std::vector < unsigned > solutionTypeu(1);
   solutionTypeu[0] = mlSol.GetSolutionType("u");
 
-  FieldSplitTree fieldSplitu = FieldSplitTree(PREONLY, MLU_PRECOND, fieldu, solutionTypeu, "u");
+  FieldSplitTree fieldSplitu = FieldSplitTree(GMRES, ILU_PRECOND, fieldu, solutionTypeu, "u");
+  fieldSplitu.SetTolerances (1.e-10, 1.e-20, 1.e+50, 100); 
 
   std::vector < FieldSplitTree *> fieldSplitAllPointer(2);
   fieldSplitAllPointer[0] = &fieldSplitw;
   fieldSplitAllPointer[1] = &fieldSplitu;
 
-  FieldSplitTree fieldSplitAll(PREONLY, FIELDSPLIT_MULTIPLICATIVE_PRECOND, fieldSplitAllPointer, "All");
+  FieldSplitTree fieldSplitAll(PREONLY, FIELDSPLIT_SCHUR_PRECOND, fieldSplitAllPointer, "All");
 
   fieldSplitAll.PrintFieldSplitTree();
+  
+  //fieldSplitAll.SetSchurFactorizationType (SCHUR_FACT_FULL); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL;
+  fieldSplitAll.SetSchurPreType (SCHUR_PRE_FULL); // SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11, SCHUR_PRE_FULL;
+
 
   system.SetOuterSolver(RICHARDSON);
   system.SetLinearEquationSolverType(FEMuS_FIELDSPLIT, INCLUDE_COARSE_LEVEL_TRUE);
@@ -172,6 +172,8 @@ int main(int argc, char** args) {
 
   system.SetFieldSplitTree(&fieldSplitAll);
 
+  //system.SetTolerances (1.e-20, 1.e-20, 1.e+50, 100);
+  
   system.MGsolve();
 
 
@@ -402,28 +404,28 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
   KK->close();
 
-  PetscViewer    viewer;
-  PetscViewerDrawOpen(PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
-  PetscObjectSetName((PetscObject)viewer, "FSI matrix");
-//   PetscViewerPushFormat(viewer, PETSC_VIEWER_DRAW_LG);
-//     PetscViewerPushFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_MATLAB);
-    PetscViewerPushFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_DENSE);
-  MatView((static_cast<PetscMatrix*>(KK))->mat(), viewer);
-  MatView((static_cast<PetscMatrix*>(KK))->mat(),  PETSC_VIEWER_STDOUT_WORLD);
-//   double a;
-//   std::cin >> a;
-  
-//       PetscViewer    viewer;
-  PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-  PetscObjectSetName((PetscObject)viewer,"FSI matrix");
-  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-  MatView((static_cast<PetscMatrix*> (KK))->mat(),viewer);
-//   MatView((static_cast<PetscMatrix*> (KK))->mat(),  PETSC_VIEWER_STDOUT_WORLD );
-
-  VecView((static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_WORLD );
-  double a;
-  std::cin>>a;
+//   PetscViewer    viewer;
+//   PetscViewerDrawOpen(PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+//   PetscObjectSetName((PetscObject)viewer, "FSI matrix");
+// //   PetscViewerPushFormat(viewer, PETSC_VIEWER_DRAW_LG);
+// //     PetscViewerPushFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_MATLAB);
+//     PetscViewerPushFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_DENSE);
+//   MatView((static_cast<PetscMatrix*>(KK))->mat(), viewer);
+//   MatView((static_cast<PetscMatrix*>(KK))->mat(),  PETSC_VIEWER_STDOUT_WORLD);
+// //   double a;
+// //   std::cin >> a;
 //   
+// //       PetscViewer    viewer;
+//   PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+//   PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+//   PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//   MatView((static_cast<PetscMatrix*> (KK))->mat(),viewer);
+// //   MatView((static_cast<PetscMatrix*> (KK))->mat(),  PETSC_VIEWER_STDOUT_WORLD );
+// 
+//   VecView((static_cast<PetscVector*> (RES))->vec(),  PETSC_VIEWER_STDOUT_WORLD );
+//   double a;
+//   std::cin>>a;
+// //   
 
 
   // ***************** END ASSEMBLY *******************
