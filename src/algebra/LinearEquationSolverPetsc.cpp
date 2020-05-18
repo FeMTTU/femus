@@ -315,14 +315,14 @@ namespace femus {
       KSPSetUp (_ksp);
 
 //       PetscViewer    viewer;
-// //       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-// //       PetscObjectSetName((PetscObject)viewer,"FSI matrix");
-// //       PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,1800,1800,&viewer);
+//       PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+//       PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
 //       MatView(KK,viewer);
 //
 //       VecView((static_cast< PetscVector* >(_RES))->vec(),viewer);
 //       double a;
-//       //std::cin>>a;
+//       std::cin>>a;
     }
 
     ZerosBoundaryResiduals();

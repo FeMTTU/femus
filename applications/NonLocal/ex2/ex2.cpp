@@ -248,7 +248,10 @@ int main (int argc, char** argv) {
   system2.SetMgType (V_CYCLE);
 
   system2.SetAbsoluteLinearConvergenceTolerance (1.e-50);
- 
+
+  system2.SetNumberPreSmoothingStep (1);
+  system2.SetNumberPostSmoothingStep (1);
+
   system2.SetLinearEquationSolverType ( FEMuS_DEFAULT );
 
   system2.init();
@@ -289,7 +292,12 @@ int main (int argc, char** argv) {
   // ******* Set Preconditioner *******
   systemFine.SetLinearEquationSolverType ( FEMuS_DEFAULT );
 
+// <<<<<<< HEAD
+//     // ******* Set Preconditioner *******
+//     system2.SetLinearEquationSolverType ( FEMuS_DEFAULT );
+// =======
   systemFine.SetSparsityPatternMinimumSize (5000u);   //TODO tune
+
 
   systemFine.init();
 
