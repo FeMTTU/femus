@@ -23,11 +23,11 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
+#define N_UNIFORM_LEVELS  5
+#define N_ERASED_LEVELS   4
 #define S_FRAC            0.5
 
-#define q_step            .5
+#define q_step            0.8
 // #define N              10
 
 #define EX_1              -1.
@@ -42,8 +42,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
 
   return dirichlet;
 }
-
-void BuildU(MultiLevelSolution& mlSol);
 
 void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
 
@@ -66,11 +64,11 @@ int main(int argc, char** args) {
 //   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
 //     probably in furure it is not going to be an argument of this function   */
 
-  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
-
-//   mlMsh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+//   mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
 //   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
+
+  mlMsh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
   unsigned dim = mlMsh.GetDimension();
 
@@ -411,9 +409,9 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 // //     PetscViewerPushFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_MATLAB);
 //     PetscViewerPushFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_DENSE);
 //   MatView((static_cast<PetscMatrix*>(KK))->mat(), viewer);
-//   MatView((static_cast<PetscMatrix*>(KK))->mat(),  PETSC_VIEWER_STDOUT_WORLD);
-// //   double a;
-// //   std::cin >> a;
+// //   MatView((static_cast<PetscMatrix*>(KK))->mat(),  PETSC_VIEWER_STDOUT_WORLD);
+//   double a;
+//   std::cin >> a;
 //   
 // //       PetscViewer    viewer;
 //   PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
@@ -430,75 +428,5 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
   // ***************** END ASSEMBLY *******************
 }
-
-void BuildU(MultiLevelSolution& mlSol) {
-
-  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-
-  Solution *sol  = mlSol.GetSolutionLevel(level);
-  Mesh     *msh   = mlSol._mlMesh->GetLevel(level);
-  unsigned iproc  = msh->processor_id();
-
-//   double q_step = 1. / sqrt( N );
-
-  int N_plus = round(pow(M_PI, 2) / (4. * (1 - S_FRAC) * pow(q_step, 2)));
-  int N_minus = round(pow(M_PI, 2) / (4. * S_FRAC * pow(q_step, 2))) ;
-
-  std::vector< unsigned > wIndex(N_minus + N_plus + 1);
-//   std::vector< unsigned > wIndex(2 * N + 1);
-
-  for(int i = - N_minus; i < N_plus + 1; i++) {
-//   for (int i = - N; i < N + 1; i++) {
-    char solName[10];
-    sprintf(solName, "w%d", i);
-    wIndex[i + N_minus] = mlSol.GetIndex(solName);
-//     wIndex[i + N] = mlSol.GetIndex (solName);
-  }
-  unsigned uIndex = mlSol.GetIndex("u");
-
-  unsigned solType = mlSol.GetSolutionType(uIndex);
-
-  sol->_Sol[uIndex]->zero();
-
-  for(unsigned i = msh->_dofOffset[solType][iproc]; i < msh->_dofOffset[solType][iproc + 1]; i++) {
-    double value = 0.;
-
-    double Cs =  2 * sin(M_PI * S_FRAC) / M_PI ;
-
-//     for (unsigned k = 0; k < N_minus + N_plus + 1; k++) {
-// //     for (int k = 0; k < 2 * N + 1; k++) {
-//       double weight = exp( 2 * S_FRAC * q_step * ( k - N_minus) );
-// //       double weight = exp( /*2 **/ S_FRAC * q_step * ( k - N) );
-//
-//       value += Cs * q_step * weight * (*sol->_Sol[wIndex[k]])(i);
-//       std::cout.precision(14);
-//       if(i == 32) std::cout<<k-N_minus<< " " << Cs * q_step * weight << "  " <<
-//         (*sol->_Sol[wIndex[k]])(i) << "  " <<
-//         Cs * q_step * weight * (*sol->_Sol[wIndex[k]])(i) << "  " << value <<"\n";
-//
-// //       if(k == 0 || k == 1) std::cout<< k<< "  " << i<< "  " <<  (*sol->_Sol[wIndex[k]])(i) << "\n" ;
-//
-//     }
-    for(int j = -N_minus ; j < N_plus + 1; j++) {
-//     for (int k = 0; k < 2 * N + 1; k++) {
-      double weight = 1.;//exp( 2 * S_FRAC * q_step * j );
-//       double weight = exp( /*2 **/ S_FRAC * q_step * ( k - N) );
-
-      value += Cs * q_step * weight * (*sol->_Sol[wIndex[j + N_minus]])(i);
-      std::cout.precision(14);
-
-    }
-    sol->_Sol[uIndex]->set(i, value);
-  }
-
-  sol->_Sol[uIndex]->close();
-
-}
-
-
-
-
-
-
 
 
