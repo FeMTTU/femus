@@ -27,7 +27,7 @@ using namespace femus;
 #define N_ERASED_LEVELS   4
 #define S_FRAC            0.5
 
-#define q_step            0.8
+#define q_step            2.
 // #define N              10
 
 #define EX_1              -1.
@@ -83,7 +83,7 @@ int main(int argc, char** args) {
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
 
-  int N_plus = round(pow(M_PI, 2) / (4 * (1 - S_FRAC) * pow(q_step, 2)));
+  int N_plus = round(pow(M_PI, 2) / (2 * (1 - S_FRAC) * pow(q_step, 2)));
   int N_minus = round(pow(M_PI, 2) / (4  * S_FRAC * pow(q_step, 2))) ;
 
   for(int i = - N_minus; i < N_plus + 1; i++) {
@@ -226,7 +226,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
-  int N_plus = round(pow(M_PI, 2) / (4 * (1 - S_FRAC) * pow(q_step, 2)));
+  int N_plus = round(pow(M_PI, 2) / (2 * (1 - S_FRAC) * pow(q_step, 2)));
   int N_minus = round(pow(M_PI, 2) / (4  * S_FRAC * pow(q_step, 2))) ;
 
   unsigned N = N_plus + N_minus + 1;

@@ -20,11 +20,11 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  5
-#define N_ERASED_LEVELS   4
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
 #define S_FRAC            0.5
 
-#define q_step            0.8
+#define q_step            2.
 // #define N              10
 
 #define EX_1              -1.

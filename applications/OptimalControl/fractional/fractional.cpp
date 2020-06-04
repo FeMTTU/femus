@@ -22,8 +22,8 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   2
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
 #define S_FRAC 0.5
 
 #define OP_L2       0
@@ -44,7 +44,7 @@ using namespace femus;
 
 #include "../fractional_functions.hpp"
 
-#define Nsplit      20
+#define Nsplit      4
 
 double InitialValueU(const std::vector < double >& x)
 {
@@ -842,9 +842,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         }  //end split
       }  //end if Nsplit != 0
     } // end iel == jel loop
-    
-    
-    if( Nsplit == 0 ){
+
+
+          if(iel != jel || Nsplit == 0) {
+            
     //============  Mixed integral 1D  ==================
             if(dim == 1 && UNBOUNDED == 1) {
               double ex_1 = EX_1;
@@ -864,8 +865,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
               }
             }
-//============ Mixed Integral - Numerical ==================    
-          if( UNBOUNDED == 1 && dim == 2 ) {
+    //============  Mixed integral 1D  ==================        
+    
+    //============ Mixed Integral - Numerical ==================      
+            if( dim == 2 && UNBOUNDED == 1 ) {
             double mixed_term1 = 0;
 //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
             // *** Face Gauss point loop (boundary Integral) ***
@@ -926,13 +929,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               Res_mixed[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
             }
            }
+          
 //============ Mixed Integral - Numerical ==================
-    }
-    
 
 
-
-          if(iel != jel || Nsplit == 0) {
 
            if(OP_Hhalf != 0) {
              
