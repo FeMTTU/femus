@@ -24,7 +24,7 @@ using namespace femus;
 
 #define N_UNIFORM_LEVELS  4
 #define N_ERASED_LEVELS   3
-#define S_FRAC 0.5
+#define S_FRAC 0.25
 
 #define OP_L2       0
 #define OP_H1       0
@@ -44,7 +44,7 @@ using namespace femus;
 
 #include "../fractional_functions.hpp"
 
-#define Nsplit      4
+#define Nsplit      10
 
 double InitialValueU(const std::vector < double >& x)
 {
@@ -273,9 +273,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //***************************************************
 
   //solution variable
-  unsigned soluIndex;
-  soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned solType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
+  unsigned soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
+  unsigned solType   = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
   std::vector < double > solu1;
   std::vector < double > solu2;
@@ -303,39 +302,28 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   l2GMap2.reserve(maxSize);
 
 //   Local matrices and rhs for laplacian and mass matrix
-  vector < double > KK_local;
-  KK_local.reserve(maxSize * maxSize);
-  vector< double >         Res_local;
-  Res_local.reserve(maxSize);  // local redidual vector
+  vector < double > KK_local;  KK_local.reserve(maxSize * maxSize);
+  vector < double > Res_local; Res_local.reserve(maxSize);
 
 //   Local matrices and rhs for adaptive quadrature
-  vector< double >         Res_local_refined;
-  Res_local_refined.reserve(maxSize);  // local redidual vector
-  vector < double > CClocal_refined;
-  CClocal_refined.reserve(maxSize * maxSize);
+  vector < double > Res_local_refined; Res_local_refined.reserve(maxSize);
+  vector < double > CClocal_refined;   CClocal_refined.reserve(maxSize * maxSize);
 
-  vector < double > KK_mixed;
-  KK_mixed.reserve(maxSize * maxSize);
-  vector< double >         Res_mixed;
-  Res_mixed.reserve(maxSize);  // local redidual vector
+  vector < double > KK_mixed;   KK_mixed.reserve(maxSize * maxSize);
+  vector < double > Res_mixed;  Res_mixed.reserve(maxSize);
 
 //   Non local matrices and vectors for H^s laplacian operator
 //   vector< double >         Res_nonlocal;
-//   Res_nonlocal.reserve(maxSize);  // local redidual vector
-  vector< double >         Res_nonlocalI;
-  Res_nonlocalI.reserve(maxSize);  // local redidual vector
-  vector< double >         Res_nonlocalJ;
-  Res_nonlocalJ.reserve(maxSize);  // local redidual vector
+//   Res_nonlocal.reserve(maxSize);  // local residual vector
+  vector< double >         Res_nonlocalI;  Res_nonlocalI.reserve(maxSize);
+  vector< double >         Res_nonlocalJ;  Res_nonlocalJ.reserve(maxSize);
 //   vector < double > CClocal;
 //   CClocal.reserve(maxSize * maxSize);
-  vector < double > CC_nonlocal_II;
-  CC_nonlocal_II.reserve(maxSize * maxSize);
-  vector < double > CC_nonlocal_IJ;
-  CC_nonlocal_IJ.reserve(maxSize * maxSize);
-  vector < double > CC_nonlocal_JI;
-  CC_nonlocal_JI.reserve(maxSize * maxSize);
-  vector < double > CC_nonlocal_JJ;
-  CC_nonlocal_JJ.reserve(maxSize * maxSize);
+
+  vector < double > CC_nonlocal_II;  CC_nonlocal_II.reserve(maxSize * maxSize);
+  vector < double > CC_nonlocal_IJ;  CC_nonlocal_IJ.reserve(maxSize * maxSize);
+  vector < double > CC_nonlocal_JI;  CC_nonlocal_JI.reserve(maxSize * maxSize);
+  vector < double > CC_nonlocal_JJ;  CC_nonlocal_JJ.reserve(maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero();
@@ -519,6 +507,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
             x1[k][i] = (*msh->_topology->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
           }
         }
+        
         for(unsigned i = 0; i < nDof1; i++) {
           unsigned iDof  = msh->GetSolutionDof(i, iel, solType);  // global to global mapping between coordinates node and coordinate dof
           solu1[i] = (*sol->_Sol[soluIndex])(iDof);  // global extraction and local storage for the element coordinates
@@ -593,7 +582,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               }
               double mass_res_i = phi1[i] * solX ;
               Res_local[ i ] += OP_L2 * weight1 * mass_res_i ;
-              Res_local[ i ] += - RHS_ONE * weight1 * (phi1[i] * (-1.));
+              Res_local[ i ] += - RHS_ONE * weight1 * (phi1[i] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][i])) * ( sin(2 * acos(0.0) * x1[1][i]))*/);
             }
 
 //============  Laplacian assembly ==================
@@ -621,7 +610,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //============  Laplacian assembly ==================
 
 //============  Mixed integral - Analytical ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================
-            if(dim == 1 && UNBOUNDED == 1) {
+//             if(dim == 1 && UNBOUNDED == 1) {
 //               double ex_1 = EX_1;
 //               double ex_2 = EX_2;
 //               double dist_1 = 0.;
@@ -638,8 +627,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //                 }
 //                 Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
 //               }
-            }
-            if(dim == 2 && UNBOUNDED == 1) {
+//             }
+//             if(dim == 2 && UNBOUNDED == 1) {
 //               double ex[4] = {EX_1 - xg1[0], EX_2 - xg1[0], EY_1 - xg1[1], EY_2 - xg1[1]};
 // 
 //               double teta[4], CCC[4];
@@ -679,11 +668,11 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //                 }
 //                 Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
 //               }
-            }
+//             }
 //============  Mixed integral - Analytical ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================
 
 //============ Adaptive quadrature for iel == jel ==================
-            if(Nsplit != 0) {
+            if(Nsplit != 0 && OP_Hhalf != 0) {
 
               std::cout.precision(14);
               std::vector< std::vector<std::vector<double>>> x3;
@@ -843,7 +832,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
       }  //end if Nsplit != 0
     } // end iel == jel loop
 
-
+      if(OP_Hhalf != 0) {
           if(iel != jel || Nsplit == 0) {
             
     //============  Mixed integral 1D  ==================
@@ -932,9 +921,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           
 //============ Mixed Integral - Numerical ==================
 
-
-
-           if(OP_Hhalf != 0) {
              
             for(unsigned jg = 0; jg < jgNumber; jg++) {
 
@@ -968,8 +954,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                   }
                 }
               } //endl jg loop
-            }
-          } //end if(iel != jel || Nsplit == 0)
+            } //end if(iel != jel || Nsplit == 0)
+          } 
           
         } //endl ig loop
 
@@ -994,6 +980,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //        RES->add_vector_blocked(Res_nonlocal, l2GMap1);
         RES->add_vector_blocked(Res_nonlocalI, l2GMap1);
         RES->add_vector_blocked(Res_nonlocalJ, l2GMap2);
+        
       } // end iel loop
 
 

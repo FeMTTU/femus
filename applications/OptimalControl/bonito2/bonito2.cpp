@@ -23,11 +23,11 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  5
-#define N_ERASED_LEVELS   4
-#define S_FRAC            0.5
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
+#define S_FRAC            0.25
 
-#define q_step            2.
+#define q_step            1.
 // #define N              10
 
 #define EX_1              -1.
@@ -338,7 +338,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
       double Cs =  sin(M_PI * S_FRAC) / M_PI ;
       // *** phi_i loop ***
       for(unsigned i = 0; i < nDofu; i++) {
-        aResu[i] +=  1. * phi[i] * weight;
+        aResu[i] +=  /*( sin(2 * acos(0.0) * x[0][i])) * ( sin(2 * acos(0.0) * x[1][i])) **/ 1. * phi[i] * weight;
 //         aResu[i] -= solu[i] * phi[i] * weight ;
         for(int j = 0; j < N; j++) {
           adept::adouble laplace = 0.;
