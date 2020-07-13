@@ -20,11 +20,11 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  6
-#define N_ERASED_LEVELS   5
-#define S_FRAC            0.99
+#define N_UNIFORM_LEVELS  5
+#define N_ERASED_LEVELS   4
+#define S_FRAC            0.25
 
-#define q_step            0.4
+#define q_step            1.
 // #define N              10
 
 #define EX_1              -1.
@@ -65,11 +65,11 @@ int main(int argc, char** args) {
 //   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
 //     probably in furure it is not going to be an argument of this function   */
   
-  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
-  
-//   mlMsh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+//   mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
 //   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
+  
+  mlMsh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
   
   unsigned dim = mlMsh.GetDimension();
 
@@ -280,9 +280,10 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+          x_gss[jdim] += x[jdim][i] * phi[i];
         }
 
-        aRes[i] += ( + exp( 2 * S_FRAC * q_step * n_sys ) * phi[i] - solu_gss * phi[i] - exp( 2 * q_step * n_sys ) * laplace) * weight ;
+        aRes[i] += ( + exp( 2 * S_FRAC * q_step * n_sys ) /** sin(2 * acos(0.0) * x[0][i]) * sin(2 * acos(0.0) * x[1][i]) */* phi[i] - solu_gss * phi[i] - exp( 2 * q_step * n_sys ) * laplace) * weight ;
 
       } // end phi_i loop
       
@@ -380,9 +381,9 @@ void BuildU(MultiLevelSolution& mlSol) {
       
       value += Cs * q_step * weight * (*sol->_Sol[wIndex[j+N_minus]])(i);
       std::cout.precision(14);
-      if(i == 32) std::cout<< j << " " << Cs * q_step * weight << "  " <<
-        (*sol->_Sol[wIndex[j+N_minus]])(i) << "  " <<
-        Cs * q_step * weight * (*sol->_Sol[wIndex[j+N_minus]])(i) << "  " << value <<"\n";
+//       if(i == 32) std::cout<< j << " " << Cs * q_step * weight << "  " <<
+//         (*sol->_Sol[wIndex[j+N_minus]])(i) << "  " <<
+//         Cs * q_step * weight * (*sol->_Sol[wIndex[j+N_minus]])(i) << "  " << value <<"\n";
       
 //       if(k == 0 || k == 1) std::cout<< k<< "  " << i<< "  " <<  (*sol->_Sol[wIndex[k]])(i) << "\n" ;
       

@@ -46,6 +46,8 @@ double InitalValueU (const std::vector < double >& x) {
 
 void GetL2Norm (MultiLevelSolution &mlSol, MultiLevelSolution &mlSolFine);
 
+void GetL2NormLocalConnectedNonlocalFine (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine);
+
 void PutADoubleNodeAtTheInterface (MultiLevelMesh &mlMsh, const double &meshSize, double &leftBound, double &rightBound);
 
 void ShiftTheExtrema (MultiLevelMesh &mlMsh, const double &meshSize, const double &delta1Shift, const double &delta2Shift, double &leftBound, double &rightBound);
@@ -108,7 +110,7 @@ int main (int argc, char** argv) {
 
   mlMshFine.GenerateCoarseBoxMesh (numberOfElementsFine, 0, 0, xMinCoarseBoxFine, xMaxCoarseBoxFine, 0., 0., 0., 0., EDGE3, "fifth");
 
-  if (doubleIntefaceNode) PutADoubleNodeAtTheInterface (mlMshFine, desiredMeshSizeFine, leftBoundFine, rightBoundFine);
+  if (doubleIntefaceNodeFine) PutADoubleNodeAtTheInterface (mlMshFine, desiredMeshSizeFine, leftBoundFine, rightBoundFine);
 
   if (shiftExternalNodes) ShiftTheExtrema (mlMshFine, desiredMeshSizeFine, delta1ShiftFine, delta2ShiftFine, leftBoundFine, rightBoundFine);
 
@@ -167,7 +169,7 @@ int main (int argc, char** argv) {
 
   system.SetLinearEquationSolverType ( FEMuS_DEFAULT );
 
-  system.SetSparsityPatternMinimumSize (500u);   //TODO tune was 10000
+  system.SetSparsityPatternMinimumSize (10000u);   //TODO tune was 500
 
   system.init();
 
@@ -180,7 +182,7 @@ int main (int argc, char** argv) {
 
 // ******* Solution *******
 
-  system.MGsolve();
+  system.MGsolve(); //TODO
 
   //END assemble and solve nonlocal problem
 
@@ -253,7 +255,7 @@ int main (int argc, char** argv) {
 
 // ******* Solution *******
 
-  systemFine.MGsolve();  //TODO uncomment
+//   systemFine.MGsolve();  //TODO uncomment
 
   //END assemble and solve fine nonlocal problem
 
@@ -262,6 +264,7 @@ int main (int argc, char** argv) {
 
   //BEGIN compute errors
   GetL2Norm (mlSol, mlSolFine);
+  GetL2NormLocalConnectedNonlocalFine (mlSol, mlSolFine);
   //END compute errors
 
   std::cout << std::endl << " L2 norm CPU time : " << std::setw (11) << std::setprecision (6) << std::fixed
@@ -331,8 +334,8 @@ void GetL2Norm (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
 
   unsigned    iproc = msh->processor_id();
   unsigned    nprocs = msh->n_processors();
-  
- for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     if (elementSkipFlags[iel] == 0) {
 
@@ -914,6 +917,184 @@ void BuildElementSkipFlags (MultiLevelMesh & mlMsh, std::vector<unsigned> &eleme
 //
 //   }
   //END TO REMOVE
+
+}
+
+void GetL2NormLocalConnectedNonlocalFine (MultiLevelSolution & mlSol, MultiLevelSolution & mlSolFine) {
+
+  const unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+  Mesh* msh = mlSol._mlMesh->GetLevel (level);
+  Solution* sol  = mlSol.GetSolutionLevel (level);
+
+  const unsigned levelFine = mlSolFine._mlMesh->GetNumberOfLevels() - 1;
+  Mesh* mshFine = mlSolFine._mlMesh->GetLevel (levelFine);
+  Solution* solFine  = mlSolFine.GetSolutionLevel (levelFine);
+
+  const unsigned  dim = msh->GetDimension();
+
+  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+  unsigned soluIndexLocal;
+  soluIndexLocal = mlSol.GetIndex ("u_local");
+  unsigned soluType = mlSol.GetSolutionType (soluIndexLocal);
+
+  unsigned soluIndexFine;
+  soluIndexFine = mlSolFine.GetIndex ("u_fine");
+
+  unsigned    iproc = msh->processor_id();
+  unsigned    nprocs = msh->n_processors();
+
+  double error_Loc_NonLocFine_norm2 = 0.;
+
+  //BEGIN ||local on connected grid - nonlocal on nonconnected grid||_L2 on nonconnected grid
+
+  std::cout << "------------------------------------- " << std::endl;
+
+  unsigned    iprocFine = mshFine->processor_id(); // get the process_id (for parallel computation)
+
+  for (int kproc = 0; kproc < nprocs; kproc++) {
+    for (int ielLocal = sol->GetMesh()->_elementOffset[kproc]; ielLocal < sol->GetMesh()->_elementOffset[kproc + 1]; ielLocal++) {
+
+      short unsigned ielGeomLocal;
+      unsigned nDofLocal;
+
+      if (iproc == kproc) {
+        ielGeomLocal = msh->GetElementType (ielLocal);
+        nDofLocal  = msh->GetElementDofNumber (ielLocal, soluType);
+      }
+
+      MPI_Bcast (&ielGeomLocal, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
+      MPI_Bcast (&nDofLocal, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+
+
+      std::vector < std::vector <double> > xLocal (dim);
+      vector < double >  soluLocLocal (nDofLocal);
+
+      for (int k = 0; k < dim; k++) {
+        xLocal[k].resize (nDofLocal);
+      }
+
+      if (iproc == kproc) {
+        for (unsigned jdof = 0; jdof < nDofLocal; jdof++) {
+          unsigned xDof  = msh->GetSolutionDof (jdof, ielLocal, xType);
+          unsigned solDof = msh->GetSolutionDof (jdof, ielLocal, soluType);
+          soluLocLocal[jdof] = (*sol->_Sol[soluIndexLocal]) (solDof);
+          for (unsigned k = 0; k < dim; k++) {
+            xLocal[k][jdof] = (*sol->GetMesh()->_topology->_Sol[k]) (xDof);
+          }
+        }
+
+        std::vector<int> dofsTemp (nDofLocal);
+//         ReorderElement (dofsTemp, soluLocLocal, xLocal);
+      }
+
+      MPI_Bcast (&soluLocLocal[0], nDofLocal, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+
+      for (unsigned k = 0; k < dim; k++) {
+        MPI_Bcast (& xLocal[k][0], nDofLocal, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      }
+
+      std::vector<double> xMinAndMax (nDofLocal);
+      xMinAndMax.assign (2, 0.);
+
+      for (unsigned i = 0; i < nDofLocal; i++) {
+        xMinAndMax[i] = xLocal[0][i];
+      }
+
+      for (unsigned i = 0; i < nDofLocal; i++) {
+        if (xLocal[0][i] < xMinAndMax[0]) xMinAndMax[0] = xLocal[0][i];
+
+        if (xLocal[0][i] > xMinAndMax[1]) xMinAndMax[1] = xLocal[0][i];
+      }
+
+      for (int ielFine = solFine->GetMesh()->_elementOffset[iprocFine]; ielFine < solFine->GetMesh()->_elementOffset[iprocFine + 1]; ielFine ++) {
+
+        short unsigned ielFineGeom = mshFine->GetElementType (ielFine);
+        unsigned nDofFine  = mshFine->GetElementDofNumber (ielFine, soluType);
+
+        vector < double >  soluNonLocFine (nDofFine);
+
+        std::vector < std::vector <double> > xFine (dim);
+
+        for (int k = 0; k < dim; k++) {
+          xFine[k].assign (nDofFine, 0.);
+        }
+
+        for (unsigned i = 0; i < nDofFine; i++) {
+          unsigned solDof = mshFine->GetSolutionDof (i, ielFine, soluType);
+          soluNonLocFine[i] = (*solFine->_Sol[soluIndexFine]) (solDof);
+          unsigned xDof  = mshFine->GetSolutionDof (i, ielFine, xType);
+          for (unsigned jdim = 0; jdim < dim; jdim++) {
+            xFine[jdim][i] = (*mshFine->_topology->_Sol[jdim]) (xDof);
+          }
+        }
+
+        vector <double> phi;  // local test function
+        vector <double> phi_x; // local test function first order partial derivatives
+        double weight; // gauss point weight
+
+        unsigned igNumberFine = mshFine->_finiteElement[ielFineGeom][soluType]->GetGaussPointNumber();
+//     unsigned igNumberFine = femQuadrature->GetGaussPointNumber();
+
+        // *** Gauss point loop ***
+        for (unsigned ig = 0; ig < igNumberFine; ig++) {
+          // *** get gauss point weight, test function and test function partial derivatives ***
+          mshFine->_finiteElement[ielFineGeom][soluType]->Jacobian (xFine, ig, weight, phi, phi_x);
+//       femQuadrature->Jacobian (xFine, ig, weight, phi, phi_x);
+
+          double soluLoc_gss = 0.;
+          double soluNonLocFine_gss = 0.;
+          std::vector <double> x_gss_fine (dim, 0.);
+
+
+          for (unsigned i = 0; i < nDofFine; i++) {
+            soluNonLocFine_gss += phi[i] * soluNonLocFine[i];
+            for (unsigned jdim = 0; jdim < dim; jdim++) {
+              x_gss_fine[jdim] += phi[i] * xFine[jdim][i];
+            }
+          }
+
+          unsigned fineGaussPointInLocalMeshElem = 0;
+
+          if ( (x_gss_fine[0] > xMinAndMax[0] && x_gss_fine[0] < xMinAndMax[1]) || fabs (x_gss_fine[0] - xMinAndMax[0]) < 1.e-10 || fabs (x_gss_fine[0] - xMinAndMax[1]) < 1.e-10) {
+            fineGaussPointInLocalMeshElem++;
+          }
+
+          if (fineGaussPointInLocalMeshElem == dim) {
+
+
+            std::vector<double> x_gss_fine_Local (dim, 0.);
+            for (unsigned ii = 0; ii < dim; ii++) {
+              x_gss_fine_Local[ii] = - 1. + 2. * (x_gss_fine[ii] - xLocal[ii][ii]) / (xLocal[ii][ii + 1] - xLocal[ii][ii]);
+            }
+
+            vector <double> phi2;  // local test function
+            vector <double> phi_x2; // local test function first order partial derivatives
+            double weight2; // gauss point weight
+            msh->_finiteElement[ielGeomLocal][soluType]->Jacobian (xLocal, x_gss_fine_Local, weight2, phi2, phi_x2);
+//           femQuadrature->Jacobian (xLocal, x_gss_fine_Local, weight2, phi2, phi_x2);
+
+            for (unsigned jdof = 0; jdof < nDofLocal; jdof++) {
+              soluLoc_gss += soluLocLocal[jdof] * phi2[jdof];
+            }
+
+            error_Loc_NonLocFine_norm2 += (soluLoc_gss - soluNonLocFine_gss) * (soluLoc_gss - soluNonLocFine_gss) * weight;
+
+          }
+        }
+      }
+
+    }
+
+  }
+
+  double norm2 = 0.;
+  MPI_Allreduce (&error_Loc_NonLocFine_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  double norm = sqrt (norm2);
+  std::cout.precision (14);
+  std::cout << "L2 norm of ERROR: Local (connected grid) - Nonlocal (nonconnected grid) = " << norm << std::endl;
+
+  //END
 
 }
 

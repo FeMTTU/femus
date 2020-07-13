@@ -137,7 +137,7 @@ void AssembleNonLocalSys (MultiLevelProblem& ml_prob) {
   vector< double > Res1; // local redidual vector
   Res1.reserve (maxSize);
   vector< double > Res2; // local redidual vector
-  Res1.reserve (maxSize);
+  Res2.reserve (maxSize);
 
   vector < double > Jac11;
   Jac11.reserve (maxSize * maxSize);

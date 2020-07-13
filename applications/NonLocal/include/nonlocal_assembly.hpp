@@ -7,14 +7,14 @@
 
 using namespace femus;
 
-double delta1 = pow(2., -4.); 
-double delta2 = pow(2., -3.);
+double delta1 = pow(2., -10.); 
+double delta2 = pow(2., -9.);
 double kappa1 = 1.;
 double kappa2 = 3.;
 
 //parameters to play with
-double desiredMeshSize = pow(2., -4.);
-double desiredMeshSizeFine = pow(2., -11.);
+double desiredMeshSize = pow(2., -12.);
+double desiredMeshSizeFine = pow(2., -12.);
 
 bool shiftExternalNodes = false;
 double delta1Mesh = (shiftExternalNodes) ? desiredMeshSize : delta1;
@@ -36,12 +36,12 @@ unsigned numberOfElements = (doubleIntefaceNode) ?  numberOfElementsTemp + 1 : n
 double leftBound = (doubleIntefaceNode) ? leftBoundTemp - 0.5 * desiredMeshSize : leftBoundTemp;
 double rightBound = (doubleIntefaceNode) ? rightBoundTemp + 0.5 * desiredMeshSize : rightBoundTemp;
 
-
+bool doubleIntefaceNodeFine = true;
 unsigned numberOfElementsFineTemp = static_cast<unsigned> (fabs (rightBoundTemp + delta2MeshFine - (leftBoundTemp - delta1MeshFine)) / desiredMeshSizeFine);
-// unsigned numberOfElementsFine = (doubleIntefaceNode) ?  numberOfElementsFineTemp + 2 : numberOfElementsFineTemp + 1; //TODO tune
-unsigned numberOfElementsFine = (doubleIntefaceNode) ?  numberOfElementsFineTemp + 1 : numberOfElementsFineTemp;
-double leftBoundFine = (doubleIntefaceNode) ? leftBoundTemp - 0.5 * desiredMeshSizeFine : leftBoundTemp;
-double rightBoundFine = (doubleIntefaceNode) ? rightBoundTemp + 0.5 * desiredMeshSizeFine : rightBoundTemp;
+// unsigned numberOfElementsFine = (doubleIntefaceNodeFine) ?  numberOfElementsFineTemp + 2 : numberOfElementsFineTemp + 1; //TODO tune
+unsigned numberOfElementsFine = (doubleIntefaceNodeFine) ?  numberOfElementsFineTemp + 1 : numberOfElementsFineTemp;
+double leftBoundFine = (doubleIntefaceNodeFine) ? leftBoundTemp - 0.5 * desiredMeshSizeFine : leftBoundTemp;
+double rightBoundFine = (doubleIntefaceNodeFine) ? rightBoundTemp + 0.5 * desiredMeshSizeFine : rightBoundTemp;
 
 std::vector <unsigned> elementSkipFlags;
 std::vector <unsigned> elementSkipFlagsFine;

@@ -22,9 +22,9 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  8
-#define N_ERASED_LEVELS   7
-#define S_FRAC 0.99
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
+#define S_FRAC 0.25
 
 #define OP_L2       0
 #define OP_H1       0
@@ -44,7 +44,7 @@ using namespace femus;
 
 #include "../fractional_functions.hpp"
 
-#define Nsplit      20
+#define Nsplit      10
 
 double InitialValueU(const std::vector < double >& x)
 {
@@ -104,11 +104,11 @@ int main(int argc, char** argv)
 //   const std::string mesh_file = "./input/disk.neu";
 //   mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
 
-  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
-
-//   mlMsh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+//   mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
 //   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
+
+  mlMsh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
   // erase all the coarse mesh levels
   const unsigned erased_levels = N_ERASED_LEVELS;
@@ -582,7 +582,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               }
               double mass_res_i = phi1[i] * solX ;
               Res_local[ i ] += OP_L2 * weight1 * mass_res_i ;
-              Res_local[ i ] += - RHS_ONE * weight1 * (phi1[i] * (-1.));
+              Res_local[ i ] += - RHS_ONE * weight1 * (phi1[i] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][i])) * ( sin(2 * acos(0.0) * x1[1][i]))*/);
             }
 
 //============  Laplacian assembly ==================
@@ -610,7 +610,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //============  Laplacian assembly ==================
 
 //============  Mixed integral - Analytical ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================
-            if(dim == 1 && UNBOUNDED == 1) {
+//             if(dim == 1 && UNBOUNDED == 1) {
 //               double ex_1 = EX_1;
 //               double ex_2 = EX_2;
 //               double dist_1 = 0.;
@@ -627,8 +627,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //                 }
 //                 Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
 //               }
-            }
-            if(dim == 2 && UNBOUNDED == 1) {
+//             }
+//             if(dim == 2 && UNBOUNDED == 1) {
 //               double ex[4] = {EX_1 - xg1[0], EX_2 - xg1[0], EY_1 - xg1[1], EY_2 - xg1[1]};
 // 
 //               double teta[4], CCC[4];
@@ -668,11 +668,11 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //                 }
 //                 Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
 //               }
-            }
+//             }
 //============  Mixed integral - Analytical ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================
 
 //============ Adaptive quadrature for iel == jel ==================
-            if(Nsplit != 0) {
+            if(Nsplit != 0 && OP_Hhalf != 0) {
 
               std::cout.precision(14);
               std::vector< std::vector<std::vector<double>>> x3;
@@ -831,9 +831,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         }  //end split
       }  //end if Nsplit != 0
     } // end iel == jel loop
-    
-    
-    if( Nsplit == 0 ){
+
+      if(OP_Hhalf != 0) {
+          if(iel != jel || Nsplit == 0) {
+            
     //============  Mixed integral 1D  ==================
             if(dim == 1 && UNBOUNDED == 1) {
               double ex_1 = EX_1;
@@ -853,8 +854,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
               }
             }
-//============ Mixed Integral - Numerical ==================    
-          if( UNBOUNDED == 1 && dim == 2 ) {
+    //============  Mixed integral 1D  ==================        
+    
+    //============ Mixed Integral - Numerical ==================      
+            if( dim == 2 && UNBOUNDED == 1 ) {
             double mixed_term1 = 0;
 //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
             // *** Face Gauss point loop (boundary Integral) ***
@@ -915,15 +918,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               Res_mixed[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
             }
            }
+          
 //============ Mixed Integral - Numerical ==================
-    }
-    
 
-
-
-          if(iel != jel || Nsplit == 0) {
-
-           if(OP_Hhalf != 0) {
              
             for(unsigned jg = 0; jg < jgNumber; jg++) {
 
@@ -957,8 +954,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                   }
                 }
               } //endl jg loop
-            }
-          } //end if(iel != jel || Nsplit == 0)
+            } //end if(iel != jel || Nsplit == 0)
+          } 
           
         } //endl ig loop
 
