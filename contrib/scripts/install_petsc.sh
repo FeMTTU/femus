@@ -6,6 +6,8 @@
 # we might install the code in other environments where petsc and mpi are already there,
 # so in that case the PETSC_DIR and PETSC_ARCH will be set by the system administrator
 
+PETSC_VERSION_GIT_TAG=v3.13
+
 
 echo Install petsc
 
@@ -42,10 +44,12 @@ echo =========== Clone
 
 git clone https://gitlab.com/petsc/petsc $FM_PETSC_DIR_REL
 
-git checkout v3.12.2 -b petsc_current
-
 
 cd $FM_PETSC_DIR_REL
+
+git checkout $PETSC_VERSION_GIT_TAG -b petsc_current
+
+
 
 for i in 0 #1 let us only install the optimized version, to speed up the installation
 do

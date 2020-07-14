@@ -1,7 +1,9 @@
 #!/bin/bash
 
  
- #a development version of slepc cannot be installed with a release version of slepc
+#a release version of slepc cannot be installed with a development version of petsc
+
+SLEPC_VERSION_GIT_TAG=v3.13
  
 
 echo Install slepc
@@ -21,16 +23,22 @@ SOFTWARE_DIR=`readlink -f $2`
 echo "=========" $SOFTWARE_DIR
 
 
-
 cd $SOFTWARE_DIR
 
+
+echo =========== Remove previous installations
+rm -rf $SLEPC_NAME
+echo =========== Clone
+
+
 git clone https://gitlab.com/slepc/slepc
+
 
 cd $SLEPC_NAME
 
 export SLEPC_DIR=$SOFTWARE_DIR/$SLEPC_NAME
 
-# git checkout v3.12.2 -b slepc_current
+git checkout $SLEPC_VERSION_GIT_TAG -b slepc_current
 
 ./configure
 make
