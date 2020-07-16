@@ -20,6 +20,9 @@
 
 #include "PetscMatrix.hpp"
 
+#include "Assemble_jacobian.hpp"
+
+
 using namespace femus;
 
 #define N_UNIFORM_LEVELS  4
@@ -86,11 +89,14 @@ int main(int argc, char** argv)
   const std::string fe_quad_rule_2 = "eighth";
 
 
-  //BEGIN deterministic FEM instances
 
-  // init Petsc-MPI communicator
+  // ======= Init ========================
   FemusInit mpinit(argc, argv, MPI_COMM_WORLD);
 
+  // ======= Files ========================
+  Files files; 
+        files.CheckIODirectories();
+        files.RedirectCout();
 
   unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
 
@@ -136,6 +142,7 @@ int main(int argc, char** argv)
   // ========= Problem ==========================
   MultiLevelProblem ml_prob(&mlSol);
 
+  ml_prob.SetFilesHandler(&files);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule_2);
   ml_prob.set_all_abstract_fe();
 
@@ -202,7 +209,7 @@ int main(int argc, char** argv)
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
 
   system.MGsolve();
-
+//   system.assemble_call(1);  //to only call the assemble function
 
   //solve the generalized eigenvalue problem and compute the eigenpairs
   GetHsNorm(numberOfUniformLevels  - erased_levels - 1, ml_prob);
@@ -990,6 +997,12 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   KK->close();
   RES->close();
 
+//--- print matrix on file
+  //this shows that the matrix is full, because each row has all columns (see the output file)
+const unsigned nonlin_iter = 0/*mlPdeSys->GetNonlinearIt()*/;
+    assemble_jacobian< double, double >::print_global_jacobian(/*assemble_matrix*/true, ml_prob, KK, nonlin_iter);
+//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
+//--- print matrix on file
 
 
 //   PetscViewer    viewer;

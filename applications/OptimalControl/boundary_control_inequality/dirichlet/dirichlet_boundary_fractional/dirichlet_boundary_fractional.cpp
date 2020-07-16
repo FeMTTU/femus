@@ -172,7 +172,7 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -182,16 +182,16 @@ int main(int argc, char** args) {
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
 
-  ml_sol.AddSolution("state",   LAGRANGE, SECOND/*FIRST*/);
-  ml_sol.AddSolution("control", LAGRANGE, SECOND/*FIRST*/);
-  ml_sol.AddSolution("adjoint", LAGRANGE, SECOND/*FIRST*/);
-  ml_sol.AddSolution("mu",      LAGRANGE, SECOND/*FIRST*/);  //MU
+  ml_sol.AddSolution("state",   LAGRANGE, /*SECOND*/FIRST);
+  ml_sol.AddSolution("control", LAGRANGE, /*SECOND*/FIRST);
+  ml_sol.AddSolution("adjoint", LAGRANGE, /*SECOND*/FIRST);
+  ml_sol.AddSolution("mu",      LAGRANGE, /*SECOND*/FIRST);  //MU
   ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   //MU
   const unsigned int fake_time_dep_flag = 2;
   const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, SECOND/*FIRST*/, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
   //MU
 
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
@@ -596,53 +596,53 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     
                     
   
-   control_eqn_bdry(iproc,
-                    ml_prob,
-                    ml_sol,
-                    sol,
-                    msh,
-                    pdeSys,
-                    //-----------
-                    geom_element,
-                    solType_coords,
-                    space_dim,
-                    //-----------
-                    n_unknowns,
-                    Solname_Mat,
-                    SolFEType_Mat,
-                    SolIndex_Mat,
-                    SolPdeIndex,
-                    Sol_n_el_dofs_Mat, 
-                    sol_eldofs_Mat,  
-                    L2G_dofmap_Mat,
-                    L2G_dofmap_Mat_AllVars,
-                    //-----------
-                    Res,
-                    Jac,
-                    //-----------
-                    n_quantities,
-                    SolFEType_quantities,
-                    Sol_n_el_dofs_quantities,
-                    //-----------
-                    elem_all,
-                    Jac_qp_bdry,
-                    JacI_qp_bdry,
-                    detJac_qp_bdry,
-                    weight_bdry,
-                    phi_ctrl_bdry,
-                    phi_ctrl_x_bdry, 
-                    //-----------
-                    pos_mat_ctrl,
-                    pos_sol_ctrl,
-                    IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY,
-                    //-----------
-                    KK,
-                    RES,
-                    assembleMatrix,
-                    //-----------
-                    alpha,
-                    beta     
-                    ) ;
+//    control_eqn_bdry(iproc,
+//                     ml_prob,
+//                     ml_sol,
+//                     sol,
+//                     msh,
+//                     pdeSys,
+//                     //-----------
+//                     geom_element,
+//                     solType_coords,
+//                     space_dim,
+//                     //-----------
+//                     n_unknowns,
+//                     Solname_Mat,
+//                     SolFEType_Mat,
+//                     SolIndex_Mat,
+//                     SolPdeIndex,
+//                     Sol_n_el_dofs_Mat, 
+//                     sol_eldofs_Mat,  
+//                     L2G_dofmap_Mat,
+//                     L2G_dofmap_Mat_AllVars,
+//                     //-----------
+//                     Res,
+//                     Jac,
+//                     //-----------
+//                     n_quantities,
+//                     SolFEType_quantities,
+//                     Sol_n_el_dofs_quantities,
+//                     //-----------
+//                     elem_all,
+//                     Jac_qp_bdry,
+//                     JacI_qp_bdry,
+//                     detJac_qp_bdry,
+//                     weight_bdry,
+//                     phi_ctrl_bdry,
+//                     phi_ctrl_x_bdry, 
+//                     //-----------
+//                     pos_mat_ctrl,
+//                     pos_sol_ctrl,
+//                     IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY,
+//                     //-----------
+//                     KK,
+//                     RES,
+//                     assembleMatrix,
+//                     //-----------
+//                     alpha,
+//                     beta     
+//                     ) ;
   
   
   // element loop: each process loops only on the elements that owns

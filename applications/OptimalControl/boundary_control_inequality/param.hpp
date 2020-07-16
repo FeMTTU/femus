@@ -618,19 +618,23 @@ void el_dofs_unknowns(const Solution*                sol,
   std::vector < double > solu2;
     
   //------- geometry ---------------
- vector < vector < double > > x1(dim);
+  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+  vector < vector < double > > x1(dim);
   vector < vector < double > > x2(dim);
   for(unsigned k = 0; k < dim; k++) {
     x1[k].reserve(maxSize);
     x2[k].reserve(maxSize);
   }
  
+  //------- geometry ---------------
+ 
+ 
  
   //-------- local to global mappings --------------
-  vector< int > l2GMap1;
-  vector< int > l2GMap2;
-  l2GMap1.reserve(maxSize);
-  l2GMap2.reserve(maxSize);
+  vector< int > l2GMap1;  l2GMap1.reserve(maxSize);
+  vector< int > l2GMap2;  l2GMap2.reserve(maxSize);
+
 
   //-------- Local matrices and rhs --------------
   vector < double > KK_local;  KK_local.reserve(maxSize * maxSize);
@@ -650,10 +654,10 @@ void el_dofs_unknowns(const Solution*                sol,
   vector< double >         Res_nonlocalJ;  Res_nonlocalJ.reserve(maxSize);
 //   vector < double > CClocal;
 //   CClocal.reserve(maxSize * maxSize);
-  vector < double > CClocalII;  CClocalII.reserve(maxSize * maxSize);
-  vector < double > CClocalIJ;  CClocalIJ.reserve(maxSize * maxSize);
-  vector < double > CClocalJI;  CClocalJI.reserve(maxSize * maxSize);
-  vector < double > CClocalJJ;  CClocalJJ.reserve(maxSize * maxSize); 
+  vector < double > CC_nonlocal_II;  CC_nonlocal_II.reserve(maxSize * maxSize);
+  vector < double > CC_nonlocal_IJ;  CC_nonlocal_IJ.reserve(maxSize * maxSize);
+  vector < double > CC_nonlocal_JI;  CC_nonlocal_JI.reserve(maxSize * maxSize);
+  vector < double > CC_nonlocal_JJ;  CC_nonlocal_JJ.reserve(maxSize * maxSize); 
  
  //----------------------
   KK->zero();
@@ -670,38 +674,45 @@ void el_dofs_unknowns(const Solution*                sol,
       unsigned nDofu2;
       //unsigned n_face;
 
-      if(iproc == kproc) {
-        ielGeom2 = msh->GetElementType(jel);
+// --- vector sizes
+      if(kproc == iproc) {
         nDof2  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
         nDofx2 = msh->GetElementDofNumber(jel, solType_coords);    // number of coordinate element dofs
 
       }
 
-      MPI_Bcast(&ielGeom2, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
       MPI_Bcast(&nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast(&nDofx2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       //MPI_Bcast(&n_face, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+// --- vector sizes
 
-      // resize local arrays
-      l2GMap2.resize(nDof2);
-
-
-      for(int k = 0; k < dim; k++) {
-        x2[k].resize(nDofx2);
-      }
-      solu2.resize(nDof2);
+      
+// --- l2GMap
+        l2GMap2.resize(nDof2);
 
       // local storage of global mapping and solution ********************
-      if(iproc == kproc) {
+      if(kproc == iproc) {
         for(unsigned j = 0; j < nDof2; j++) {
           l2GMap2[j] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, j, jel);  // global to global mapping between solution node and pdeSys dof
         }
       }
       MPI_Bcast(&l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       // ******************************************************************
+// --- l2GMap
 
-      // local storage of coordinates  #######################################
-      if(iproc == kproc) {
+      
+// --- geometry and solution
+      
+      
+      
+      
+      for(int k = 0; k < dim; k++) {
+        x2[k].resize(nDofx2);
+      }
+
+      solu2.resize(nDof2);
+      
+      if(kproc == iproc) {
         for(unsigned j = 0; j < nDofx2; j++) {
           unsigned xDof  = msh->GetSolutionDof(j, jel, solType_coords);  // global to global mapping between coordinates node and coordinate dof
           for(unsigned k = 0; k < dim; k++) {
@@ -717,10 +728,9 @@ void el_dofs_unknowns(const Solution*                sol,
         MPI_Bcast(& x2[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
       }
       MPI_Bcast(& solu2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
-      // ######################################################################
 
       // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-      if(iproc == kproc) {
+      if(kproc == iproc) {
         geom_element_jel.set_coords_at_dofs_and_geom_type(jel, solType_coords);
       }
       for(unsigned k = 0; k < dim; k++) {
@@ -730,6 +740,13 @@ void el_dofs_unknowns(const Solution*                sol,
         MPI_Bcast(& geom_element_jel.get_coords_at_dofs_3d()[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
       }
       // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+// --- geometry and solution
+
+
+// --- geom_el type
+      if(kproc == iproc) {   ielGeom2 = msh->GetElementType(jel);  }
+      MPI_Bcast(&ielGeom2, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
+// --- geom_el type
 
 //       const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
       const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
@@ -739,6 +756,7 @@ void el_dofs_unknowns(const Solution*                sol,
       vector < vector <double> > phi2(jgNumber);  // local test function
       std::vector< double > solY(jgNumber, 0.);
 
+      
       for(unsigned jg = 0; jg < jgNumber; jg++) {
 
 //         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
@@ -749,7 +767,7 @@ void el_dofs_unknowns(const Solution*                sol,
 
 
 
-
+//--- geometry and solution, at qp
         xg2[jg].assign(dim, 0.);
         solY[jg] = 0.;
 
@@ -760,6 +778,7 @@ void el_dofs_unknowns(const Solution*                sol,
           }
         }
       }       
+//--- geometry and solution, at qp
         
      
        
@@ -816,9 +835,35 @@ void el_dofs_unknowns(const Solution*                sol,
               
               //Quadrature loop
                       const unsigned n_gauss_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
-        
+      
+     //**** Evaluating coarse FE functions on Quadrature Points of the "sub-elements"
+                      
+                      
+     //**** Evaluating coarse FE functions on Quadrature Points of the "sub-elements"
+                      
     
 		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
+            
+            
+      //============ Adaptive quadrature for iel == jel ==================
+          if(iel == jel) {
+                                          
+            if(Nsplit != 0) {
+                
+                
+                
+                
+                
+                
+            }  //end if Nsplit != 0
+                                          
+        } //iel == jel                
+    //============ Adaptive quadrature for iel == jel ==================
+             
+                
+                
+            
+            
             
             
         }
@@ -837,14 +882,64 @@ void el_dofs_unknowns(const Solution*                sol,
         unsigned nDof1  = msh->GetElementDofNumber(iel, solType);
         unsigned nDofx1 = msh->GetElementDofNumber(iel, solType_coords);
 
-        solu1.resize(nDof1);
+// --- l2GMap
+        l2GMap1.resize(nDof1);
+        for(unsigned i = 0; i < nDof1; i++) {
+          l2GMap1[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);
+        }
+// --- l2GMap
+
+
+// --- geometry        
+        for(int k = 0; k < dim; k++) {
+          x1[k].resize(nDofx1);
+        }
+        
+        // local storage of coordinates
+        for(unsigned i = 0; i < nDofx1; i++) {
+          unsigned xDof  = msh->GetSolutionDof(i, iel, xType);
+          for(unsigned k = 0; k < dim; k++) {
+            x1[k][i] = (*msh->_topology->_Sol[k])(xDof);
+          }
+        }
+// --- geometry        
+        
+        
+// --- solution        
+       solu1.resize(nDof1);
         
         for(unsigned i = 0; i < nDof1; i++) {
           unsigned iDof  = msh->GetSolutionDof(i, iel, solType);  // global to global mapping between coordinates node and coordinate dof
           solu1[i] = (*sol->_Sol[soluIndex])(iDof);  // global extraction and local storage for the element coordinates
         }
+// --- solution        
                   
-                    const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
+  //****** matrix resizing ******
+//           CC_local.assign(nDof1 * nDof2, 0.);   //resize
+        CC_nonlocal_II.assign(nDof1 * nDof2, 0.);   //resize
+        CC_nonlocal_IJ.assign(nDof1 * nDof2, 0.);   //resize
+        CC_nonlocal_JI.assign(nDof1 * nDof2, 0.);   //resize
+        CC_nonlocal_JJ.assign(nDof1 * nDof2, 0.);   //resize
+//         Res_nonlocal.assign(nDof1, 0);    //resize
+        Res_nonlocalI.assign(nDof1, 0);    //resize
+        Res_nonlocalJ.assign(nDof1, 0);    //resize
+
+        Res_mixed.assign(nDof1, 0);    //resize
+        KK_mixed.assign(nDof1 * nDof1, 0.);
+
+        if(iel == jel) {
+          Res_local.assign(nDof1, 0);    //resize
+          KK_local.assign(nDof1 * nDof1, 0.);
+          if(Nsplit != 0) {
+//             Vectors and matrices for adaptive quadrature
+            Res_local_refined.assign(nDof1, 0);    //resize
+            CClocal_refined.assign(nDof1 * nDof1, 0.);
+          }
+        }
+  //****** matrix resizing ******
+
+  
+  const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
 
          double weight1;
         vector < double > phi1;  // local test function
@@ -859,8 +954,8 @@ void el_dofs_unknowns(const Solution*                sol,
 
         std::vector < std::vector < std::vector <double > > > aP(3);
         if(Nsplit > 0) {
-          for(unsigned jtype = 0; jtype < solType + 1; jtype++) {
-            ProjectNodalToPolynomialCoefficients(aP[jtype], x1, ielGeom1, jtype) ;
+          for(unsigned j_fe_type = 0; j_fe_type < solType + 1; j_fe_type++) {
+            ProjectNodalToPolynomialCoefficients(aP[j_fe_type], x1, ielGeom1, j_fe_type) ;
           }
         }                   
                     
@@ -882,10 +977,9 @@ void el_dofs_unknowns(const Solution*                sol,
             }
           }
           
-          
+//============ Adaptive quadrature for iel == jel ==================
           if(iel == jel) {
                                           
- //============ Adaptive quadrature for iel == jel ==================
             if(Nsplit != 0) {
                                          
             std::cout.precision(14);
@@ -952,16 +1046,17 @@ void el_dofs_unknowns(const Solution*                sol,
 
                       }
                     }
-//============ Adaptive quadrature for iel == jel ==================
                                           
                   } //end jg
                 } //end r
               }  //end split
+              
             }  //end if Nsplit != 0
-             
+
                                           
-        } //iel != jel
-                            
+        } //iel == jel
+  //============ Adaptive quadrature for iel == jel ==================
+
                             
                             
                             
@@ -983,10 +1078,10 @@ void el_dofs_unknowns(const Solution*                sol,
         KK->add_matrix_blocked(KK_mixed, l2GMap1, l2GMap1);
         RES->add_vector_blocked(Res_mixed, l2GMap1);
 
-        KK->add_matrix_blocked(CClocalII, l2GMap1, l2GMap1);
-        KK->add_matrix_blocked(CClocalIJ, l2GMap1, l2GMap2);
-        KK->add_matrix_blocked(CClocalJI, l2GMap2, l2GMap1);
-        KK->add_matrix_blocked(CClocalJJ, l2GMap2, l2GMap2);
+        KK->add_matrix_blocked(CC_nonlocal_II, l2GMap1, l2GMap1);
+//         KK->add_matrix_blocked(CC_nonlocal_JI, l2GMap2, l2GMap1);  ///@todo
+//         KK->add_matrix_blocked(CC_nonlocal_IJ, l2GMap1, l2GMap2);  ///@todo
+        KK->add_matrix_blocked(CC_nonlocal_JJ, l2GMap2, l2GMap2);
 
 //        RES->add_vector_blocked(Res_nonlocal, l2GMap1);
         RES->add_vector_blocked(Res_nonlocalI, l2GMap1);
@@ -998,10 +1093,19 @@ void el_dofs_unknowns(const Solution*                sol,
     
     } //end jel
     } //end kproc
-      
-   KK->close();
-  RES->close();
-  
+    
+    
+// AAA do not close this because later they will be filled with the rest of the system!!!      
+//    KK->close();
+//   RES->close();
+
+   //print JAC and RES to files
+KK->close();KK->zero();
+const unsigned nonlin_iter = 0/*mlPdeSys->GetNonlinearIt()*/;
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
+//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
+abort();
+//   std::cout << "****************************" << std::endl;
   
   }
     
