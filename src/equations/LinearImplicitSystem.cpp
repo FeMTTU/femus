@@ -188,7 +188,10 @@ namespace femus {
       _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
                              _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridn, _SparsityPattern);
     }
-
+    
+    
+    
+ //****** init: MG part *******************
     _PP.resize(_gridn);
     _RR.resize(_gridn);
     for(unsigned i = 0; i < _gridn; i++) {
@@ -220,15 +223,20 @@ namespace femus {
     for(unsigned ig = 1; ig < _gridn; ig++) {
       ZeroInterpolatorDirichletNodes(ig);
     }
+ //****** init: MG part *******************
 
 
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
     _richardsonScaleFactorIsSet = false;
+
     // By default we solve for all the PDE variables
     ClearVariablesToBeSolved();
     AddVariableToBeSolved("All");
+    
+    
+    
   }
 
   // ********************************************
@@ -1047,46 +1055,6 @@ namespace femus {
     }
   };
 
-
-  /// @deprecated
-// this function is like init but it doesn't call InitPDE
-  void LinearImplicitSystem::init_two() {
-
-    _LinSolver.resize(_gridn);
-
-    _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], FEMuS_DEFAULT).release();
-
-    for(unsigned i = 1; i < _gridn; i++) {
-      _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();
-    }
-
-//     for (unsigned i=0; i<_gridn; i++) {
-//       _LinSolver[i]->InitPde(_SolSystemPdeIndex,_ml_sol->GetSolType(),
-//                           _ml_sol->GetSolName(),&_solution[i]->_Bdc,_gridr,_gridn,_SparsityPattern);
-//     }
-
-
-    _PP.resize(_gridn);
-    _RR.resize(_gridn);
-
-    for(unsigned i = 0; i < _gridn; i++) {
-      _PP[i] = NULL;
-      _RR[i] = NULL;
-    }
-
-//
-//     for (unsigned ig=1; ig<_gridn; ig++) {
-//       BuildProlongatorMatrix(ig);
-//     }
-
-    _NSchurVar_test = 0;
-    _numblock_test = 0;
-    _numblock_all_test = 0;
-    _richardsonScaleFactorIsSet = false;
-    // By default we solved for all the PDE variables
-    ClearVariablesToBeSolved();
-    AddVariableToBeSolved("All");
-  }
 
 
 

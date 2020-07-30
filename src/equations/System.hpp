@@ -89,8 +89,6 @@ public:
     /** Init the system PDE structures */
     virtual void init();
 
-    /** @deprecated Init the system PDE structures */
-    virtual void init_two(){};
 
     /** Get the index of the Solution "solname" for this system */
     unsigned GetSolPdeIndex(const char solname[]);

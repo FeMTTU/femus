@@ -51,9 +51,6 @@ namespace femus {
       /** Init the system PDE structures */
       virtual void init();
 
-      /** @deprecated Init the system PDE structures */
-      virtual void init_two();
-
       /** @deprecated Multigrid routine */
       void MGSolve (double Eps, int MaxIter, const uint Gamma = DEFAULT_MG_GAMMA, const uint Nc_pre = DEFAULT_NC_PRE, const uint Nc_coarse = DEFAULT_NC_COARSE, const uint Nc_post = DEFAULT_NC_POST);
 

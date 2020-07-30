@@ -254,7 +254,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
 //   sys->solve();
 
 //=====================
-    sys -> init_two();     //the dof map is built here based on all the solutions associated with that system
+//     sys -> init_two();     //the dof map is built here based on all the solutions associated with that system
     sys -> _LinSolver[0]->set_solver_type(GMRES);  //if I keep PREONLY it doesn't run
 
 //=====================
