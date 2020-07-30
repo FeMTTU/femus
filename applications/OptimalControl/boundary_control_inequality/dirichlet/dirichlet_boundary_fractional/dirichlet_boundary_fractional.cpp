@@ -235,8 +235,9 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("adjoint");  
   system.AddSolutionToSystemPDE("mu");     //MU
   
+  unsigned column_max_length = ml_mesh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels - 1)->GetNumberOfNodes();  //trick to get linear dofs
   unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim );
-  system.SetSparsityPatternMinimumSize (dimension, "control");
+  system.SetSparsityPatternMinimumSize (column_max_length/*dimension*/, "control");
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleOptSys);

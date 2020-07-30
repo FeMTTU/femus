@@ -77,7 +77,7 @@ namespace femus {
       * details of interfacing with various linear algebra packages
       * like PETSc or LASPACK. Up to now also for the nonlinear case we use linear_solvers, in future we will add the nonlinear solver
       */
-      vector < LinearEquationSolver*> _LinSolver;
+      vector < LinearEquationSolver*> _LinSolver;   /* vector of number of levels */
 
       void SetNumberOfGlobalVariables (const unsigned &numberOfGlobalVariables) {
         _numberOfGlobalVariables = numberOfGlobalVariables;

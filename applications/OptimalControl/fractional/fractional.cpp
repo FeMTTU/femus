@@ -25,8 +25,8 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 #define S_FRAC 0.25
 
 #define OP_L2       0
@@ -101,28 +101,28 @@ int main(int argc, char** argv)
   unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
 
 
-  MultiLevelMesh mlMsh;
+  MultiLevelMesh ml_mesh;
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
   //const std::string mesh_file = "./input/Mesh_1_x.med";
 //   const std::string mesh_file = "./input/Mesh_1_x_dir_neu_200_elem.med";
 //const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
 //   const std::string mesh_file = "./input/disk.neu";
-//   mlMsh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
+//   ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
 
-//   mlMsh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
-//   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
+//   ml_mesh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
+//   ml_mesh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
-  mlMsh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
+  ml_mesh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+  ml_mesh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
   // erase all the coarse mesh levels
   const unsigned erased_levels = N_ERASED_LEVELS;
-  mlMsh.EraseCoarseLevels(erased_levels);
+  ml_mesh.EraseCoarseLevels(erased_levels);
 
-  unsigned dim = mlMsh.GetDimension();
+  unsigned dim = ml_mesh.GetDimension();
 
-  MultiLevelSolution mlSol(&mlMsh);
+  MultiLevelSolution mlSol(&ml_mesh);
 
   // add variables to mlSol
   mlSol.AddSolution("u", LAGRANGE, SECOND, 2);
@@ -170,21 +170,32 @@ int main(int argc, char** argv)
   // ******* Set Preconditioner *******
   system.SetLinearEquationSolverType(FEMuS_DEFAULT);
   
-  unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim );
-  system.SetSparsityPatternMinimumSize (dimension, "u");
+  unsigned n_levels = numberOfUniformLevels - erased_levels;
+  unsigned column_max_length = ml_mesh.GetLevel(n_levels - 1)->GetNumberOfNodes();  //bad, works only for tensor-product quadratic
+  
+  std::string variable_string = "u";
+  unsigned variable_index = system.GetSolPdeIndex(variable_string.c_str());
+  Mesh* msh = ml_mesh.GetLevel(n_levels - 1);
+  unsigned nprocs = msh->n_processors();
+  
     
-  system.init();
+  system.init();  //it takes a double init because I need some stuff below, I would like to split that
+  
+  unsigned n_dofs_var_all_procs = system._LinSolver[n_levels - 1]->KKoffset[variable_index + 1][nprocs - 1] - system._LinSolver[n_levels - 1]->KKoffset[variable_index][nprocs - 1];
+  unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim ); // (2^{l+1} + 1)^{dim} //bad, works only for tensor-product quadratic
+  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs/*column_max_length*//*dimension*/, variable_string);
 
-  //dense =============
+   system.init();
+ //dense =============
   //dense =============
   //dense =============
   
   
   
 //  const unsigned solType = mlSol.GetSolutionType("u");
-//   for(int level = 0; level < mlMsh.GetNumberOfLevels(); level++) {
+//   for(int level = 0; level < ml_mesh.GetNumberOfLevels(); level++) {
 // 
-//     Mesh* msh = mlMsh.GetLevel(level);
+//     Mesh* msh = ml_mesh.GetLevel(level);
 //     unsigned nprocs = msh->n_processors();
 //     unsigned iproc = msh->processor_id();
 // 
