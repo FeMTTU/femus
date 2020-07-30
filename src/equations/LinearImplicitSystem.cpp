@@ -121,6 +121,8 @@ namespace femus {
     _sparsityPatternMinimumSize[n] = (minimumSize < 2u) ? 1u : minimumSize;
     _sparsityPatternSolName[n] = variableName;
   }
+  
+  
 
   // ******************************************
 
@@ -129,6 +131,7 @@ namespace femus {
     _LinSolver.resize(_gridn);
 
 
+ //****** init: level build part *******************
     if(_includeCoarseLevelSmoother == INCLUDE_COARSE_LEVEL_TRUE) {
       _LinSolver[0] = LinearEquationSolver::build(0, _solution[0], _smootherType).release();
     }
@@ -138,6 +141,11 @@ namespace femus {
     for(unsigned i = 1; i < _gridn; i++) {
       _LinSolver[i] = LinearEquationSolver::build(i, _solution[i], _smootherType).release();
     }
+ //****** init: level build part *******************
+    
+    
+    
+ //****** init: Sparsity Pattern part *******************
 
     if(_sparsityPatternMinimumSize.size() > 0) {
       std::vector <unsigned> variableIndex;
@@ -188,6 +196,8 @@ namespace femus {
       _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
                              _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridn, _SparsityPattern);
     }
+ //****** init: Sparsity Pattern part *******************
+    
     
     
     
@@ -209,28 +219,35 @@ namespace femus {
       _PPamr[i] = NULL;
       _RRamr[i] = NULL;
     }
+    
     for(unsigned ig = 0; ig < _gridn; ig++) {
       if(!_ml_msh->GetLevel(ig)->GetIfHomogeneous()) {
         BuildAmrProlongatorMatrix(ig);
       }
     }
+    
     for(unsigned ig = 1; ig < _gridn; ig++) {
       if(!_ml_msh->GetLevel(ig - 1)->GetIfHomogeneous()) {
         _PP[ig]->matrix_RightMatMult(*_PPamr[ig - 1]);
         if(_RR[ig]) _RR[ig]->matrix_LeftMatMult(*_RRamr[ig - 1]);
       }
     }
+    
     for(unsigned ig = 1; ig < _gridn; ig++) {
       ZeroInterpolatorDirichletNodes(ig);
     }
  //****** init: MG part *******************
 
 
+ //****** init: DD part (I think) *******************
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
     _richardsonScaleFactorIsSet = false;
+ //****** init: DD part (I think) *******************
 
+    
+    
     // By default we solve for all the PDE variables
     ClearVariablesToBeSolved();
     AddVariableToBeSolved("All");
@@ -238,6 +255,8 @@ namespace femus {
     
     
   }
+  
+  
 
   // ********************************************
 

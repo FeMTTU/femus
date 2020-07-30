@@ -171,18 +171,29 @@ int main(int argc, char** argv)
   system.SetLinearEquationSolverType(FEMuS_DEFAULT);
   
   unsigned n_levels = numberOfUniformLevels - erased_levels;
-  unsigned column_max_length = ml_mesh.GetLevel(n_levels - 1)->GetNumberOfNodes();  //bad, works only for tensor-product quadratic
   
+// Method 1  
+//   unsigned column_max_length = ml_mesh.GetLevel(n_levels - 1)->GetNumberOfNodes();  //bad, works only for tensor-product quadratic
+  
+// Method 2  
+  unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim ); // (2^{l+1} + 1)^{dim} //bad, works only for tensor-product quadratic
+  
+// Method 3  
   std::string variable_string = "u";
   unsigned variable_index = system.GetSolPdeIndex(variable_string.c_str());
   Mesh* msh = ml_mesh.GetLevel(n_levels - 1);
   unsigned nprocs = msh->n_processors();
-  
+  unsigned iproc = msh->processor_id();
     
   system.init();  //it takes a double init because I need some stuff below, I would like to split that
   
-  unsigned n_dofs_var_all_procs = system._LinSolver[n_levels - 1]->KKoffset[variable_index + 1][nprocs - 1] - system._LinSolver[n_levels - 1]->KKoffset[variable_index][nprocs - 1];
-  unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim ); // (2^{l+1} + 1)^{dim} //bad, works only for tensor-product quadratic
+  unsigned n_dofs_var_all_procs = 0;
+  for(int ip = 0; ip < nprocs; ip++) {
+     n_dofs_var_all_procs += system._LinSolver[n_levels - 1]->KKoffset[variable_index + 1][ip] - system._LinSolver[n_levels - 1]->KKoffset[variable_index][ip];
+  // how does this depend on the number of levels and the number of processors? 
+  // For the processors I summed over them and it seems to work fine
+  // For the levels... should I pick the coarsest level instead of the finest one, or is it the same?
+} 
   system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs/*column_max_length*//*dimension*/, variable_string);
 
    system.init();
