@@ -1079,8 +1079,8 @@ void el_dofs_unknowns(const Solution*                sol,
         RES->add_vector_blocked(Res_mixed, l2GMap1);
 
         KK->add_matrix_blocked(CC_nonlocal_II, l2GMap1, l2GMap1);
-//         KK->add_matrix_blocked(CC_nonlocal_JI, l2GMap2, l2GMap1);  ///@todo
-//         KK->add_matrix_blocked(CC_nonlocal_IJ, l2GMap1, l2GMap2);  ///@todo
+        KK->add_matrix_blocked(CC_nonlocal_JI, l2GMap2, l2GMap1);  ///@todo
+        KK->add_matrix_blocked(CC_nonlocal_IJ, l2GMap1, l2GMap2);  ///@todo
         KK->add_matrix_blocked(CC_nonlocal_JJ, l2GMap2, l2GMap2);
 
 //        RES->add_vector_blocked(Res_nonlocal, l2GMap1);

@@ -145,13 +145,12 @@ namespace femus {
     
     
     
- //****** init: Sparsity Pattern part *******************
- // If there is at least one dense variable, 
- // loop over them as listed in _sparsityPatternSolName
+ //****** init: Sparsity Pattern part for dense variables *******************
+          //at every level, LinSolver has two vectors:
+          // - sparsityPatternMinimumSize    - for each variable, this contains the minimum number of nonzeros in a row
+          // - sparsityPatternVariableIndex  - for each variable, this contains the indices of all variables that are dense (it is used for the columns)
+          // Both of these vectors are "compact", in the sense that they start at zero and they fill only the needed stuff
  
- // If all variables are sparse, then do something and exit the loop
- // Otherwise, fill the variableIndex vector with the indices
-  
     if(_sparsityPatternMinimumSize.size() > 0) {
         
       std::vector <unsigned> variableIndex;
@@ -173,15 +172,15 @@ namespace femus {
         else {
           unsigned n = variableIndex.size();
           variableIndex.resize(n + 1u);
-          unsigned varind = _ml_sol->GetIndex(_sparsityPatternSolName[i].c_str());
+          unsigned varind_i = _ml_sol->GetIndex(_sparsityPatternSolName[i].c_str());
 
           for(unsigned j = 0; j < _SolSystemPdeIndex.size(); j++) {
-            if(_SolSystemPdeIndex[j] == varind) {
+            if(_SolSystemPdeIndex[j] == varind_i) {
               variableIndex[n] = j;
               break;
             }
 
-            if(_SolSystemPdeIndex.size() - 1u == j) {
+            if(j == _SolSystemPdeIndex.size() - 1u) { //if it reaches here, it means we are trying to add a variable that is in Sol but not in PDE
               std::cout << "Warning! The variable " << _sparsityPatternSolName[i] << " cannot be increased in sparsity pattern "
                         << "since it is not included in the solution variable set." << std::endl;
               variableIndex.resize(n);
@@ -191,28 +190,25 @@ namespace femus {
             }
           }
         }
-      }
+      } //end loop over variables that are dense
       
       if ( variableIndex.size() > 0 ) {
-          //every LinSolver has two vectors:
-          // sparsityPatternMinimumSize
-          // sparsityPatternVariableIndex
         for(unsigned i = 0; i < _gridn; i++) {
           _LinSolver[i]->SetSparsityPatternMinimumSize(_sparsityPatternMinimumSize, variableIndex);
         }
       }
       
     } //end at least one dense variable
-//****** init: Sparsity Pattern part *******************
+//****** init: Sparsity Pattern part for dense variables *******************
   
 
- //****** init: PDE part *******************
+ //****** init:  Sparsity Pattern part, conclusion *******************
     for(unsigned i = 0; i < _gridn; i++) {
       _LinSolver[i]->SetNumberOfGlobalVariables(_numberOfGlobalVariables);
       _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
                              _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridn, _SparsityPattern);
     }
- //****** init: PDE part *******************
+ //****** init:  Sparsity Pattern part, conclusion *******************
     
     
     

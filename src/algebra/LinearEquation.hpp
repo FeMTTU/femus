@@ -113,7 +113,7 @@ public:
   vector < unsigned > KKghostsize;           // size [_nprocs]
   vector < vector < int> > KKghost_nd;       // size [_nprocs][KKghostsize[i]]
   vector <int> KKIndex;                      // size [_SolPdeIndex.size() + 1]
-  unsigned _gridn;  
+  unsigned _gridn;                           // number of levels
   vector < int > d_nnz;                      //number of non-zeros per row, on-diagonal
   vector < int > o_nnz;                      //number of non-zeros per row, off-diagonal
   

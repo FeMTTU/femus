@@ -133,6 +133,7 @@ namespace femus {
   void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  vector <int> &SolType_other,
                                const vector <char*> &SolName_other, vector <NumericVector*> *Bdc_other,
                                const unsigned &other_gridn, vector <bool> &SparsityPattern_other) {
+      
     _SolPdeIndex = SolPdeIndex_other;
     _gridn = other_gridn;
 
@@ -142,13 +143,12 @@ namespace femus {
 
     _SparsityPattern = SparsityPattern_other;
 
-    int ierr;
+    //--- Matrix offsets ---------------------------------------------------------------------------------------------
     KKIndex.resize(_SolPdeIndex.size() + 1u);
     KKIndex[0] = 0;
     for(unsigned i = 1; i < KKIndex.size(); i++)
       KKIndex[i] = KKIndex[i - 1] + _msh->_dofOffset[_SolType[_SolPdeIndex[i - 1]]][n_processors()];
 
-    //-----------------------------------------------------------------------------------------------
     KKoffset.resize(_SolPdeIndex.size() + 1);
     for(int i = 0; i < _SolPdeIndex.size() + 1; i++) {
       KKoffset[i].resize(_nprocs);
@@ -197,8 +197,10 @@ namespace femus {
         }
       }
     }
+    //--- Matrix offsets ---------------------------------------------------------------------------------------------
+    
 
-    //-----------------------------------------------------------------------------------------------
+    //--- Error and residual --------------------------------------------------------------------------------------------
     int EPSsize = KKIndex[KKIndex.size() - 1];
     _EPS = NumericVector::build().release();
     if(n_processors() == 1) {  // IF SERIAL
@@ -217,16 +219,21 @@ namespace femus {
 
     _RESC = NumericVector::build().release();
     _RESC->init(*_EPS);
+    //--- Error and residual --------------------------------------------------------------------------------------------
 
 
+    // Sparsity pattern: fill it as if all variables were sparse -----------------------------------------------------------------------------------------------
     GetSparsityPatternSize();
+    // Sparsity pattern: fill it as if all variables were sparse -----------------------------------------------------------------------------------------------
 
+    // Sparsity pattern: adjust it for dense variables -----------------------------------------------------------------------------------------------
     const unsigned dim = _msh->GetDimension();
-    int KK_UNIT_SIZE_ = pow(5, dim);
+//     int KK_UNIT_SIZE_ = pow(5, dim);
     int KK_size = KKIndex[KKIndex.size() - 1u];
     int KK_local_size = KKoffset[KKIndex.size() - 1][processor_id()] - KKoffset[0][processor_id()];
 
     if(_sparsityPatternMinimumSize.size() > 0) {
+        
       for(unsigned i = 0; i < _sparsityPatternVariableIndex.size(); i++) {
                  
         unsigned maxDiagSize = (_sparsityPatternMinimumSize[i] < KK_local_size) ? _sparsityPatternMinimumSize[i] : KK_local_size;
@@ -238,9 +245,10 @@ namespace femus {
         
         for(unsigned j = jstart; j < jend; j++) {
           d_nnz[j] = (d_nnz[j] > maxDiagSize) ? d_nnz[j] : maxDiagSize;
-          o_nnz[j] = (o_nnz[j] > maxOffDiagSize) ? o_nnz[j] : maxOffDiagSize;;
+          o_nnz[j] = (o_nnz[j] > maxOffDiagSize) ? o_nnz[j] : maxOffDiagSize;
         }
       }
+      
     }
 
     if(_iproc == 0) {
@@ -250,7 +258,10 @@ namespace femus {
         o_nnz[k] = KK_size - KK_local_size;
       }
     }
+    // Sparsity pattern: adjust it for dense variables -----------------------------------------------------------------------------------------------
+    
 
+    //-----------------------------------------------------------------------------------------------
     _KK = SparseMatrix::build().release();
     _KK->init(KK_size, KK_size, KK_local_size, KK_local_size, d_nnz, o_nnz);
 

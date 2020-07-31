@@ -255,13 +255,23 @@ int main(int argc, char** args) {
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
 
   
+  std::string variable_string = "control";
+  unsigned variable_index = system.GetSolPdeIndex(variable_string.c_str());
+  Mesh* msh = ml_mesh.GetLevel(n_levels - 1);
+  unsigned nprocs = msh->n_processors();
+  unsigned iproc = msh->processor_id();
   
-  unsigned column_max_length = ml_mesh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels - 1)->GetNumberOfNodes();  //trick to get linear dofs
+  unsigned n_dofs_var_all_procs = 0;
+  for(int ip = 0; ip < nprocs; ip++) {
+     n_dofs_var_all_procs += system._LinSolver[n_levels - 1]->KKoffset[variable_index + 1][ip] - system._LinSolver[n_levels - 1]->KKoffset[variable_index][ip];
+  // how does this depend on the number of levels and the number of processors? 
+  // For the processors I summed over them and it seems to work fine
+  // For the levels... should I pick the coarsest level instead of the finest one, or is it the same?
+} 
+
+  unsigned column_max_length = ml_mesh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels - 1)->GetNumberOfNodes();
   unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim );
-  system.SetSparsityPatternMinimumSize (0, "state");
-  system.SetSparsityPatternMinimumSize (/*column_max_length*/dimension, "control");
-  system.SetSparsityPatternMinimumSize (0, "adjoint");
-  system.SetSparsityPatternMinimumSize (0, "mu");
+  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs/*column_max_length*//*dimension*/, variable_string);
 
 
   //   // initialize and solve the system
@@ -675,11 +685,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
    //You print only what is being sent to the global matrix. If nothing is sent, nothing is printed                 
    // I will keep this print here for later because it highlights what positions were filled in the matrix
    // If I remove everything above here, it seems like the very last diagonal position is filled... why? from where?
-  KK->close(); //KK->zero();
-  const unsigned nonlin_iter = 9/*mlPdeSys->GetNonlinearIt()*/;
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
-//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
-  abort();
+//   KK->close(); //KK->zero();
+//   const unsigned nonlin_iter = 0/*mlPdeSys->GetNonlinearIt()*/;
+//     assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
+// //     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
 //   std::cout << "****************************" << std::endl;
 //**************************                    
 
@@ -1169,7 +1178,7 @@ if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
     
     
   if (print_algebra_global) {
-    if (assembleMatrix) KK->close(); KK->zero();
+    if (assembleMatrix) KK->close();
     std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
     KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
 
@@ -1382,7 +1391,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   	if (control_el_flag == 1) {
 	  
-	  double tau=0.;
+	  double tau = 0.;
 	       
 	  // loop on faces of the current element
 
