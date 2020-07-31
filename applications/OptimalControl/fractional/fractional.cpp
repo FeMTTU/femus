@@ -187,6 +187,10 @@ int main(int argc, char** argv)
     
   system.init();  //it takes a double init because I need some stuff below, I would like to split that
   
+  std::ostringstream sp_out_base; sp_out_base << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
+  
   unsigned n_dofs_var_all_procs = 0;
   for(int ip = 0; ip < nprocs; ip++) {
      n_dofs_var_all_procs += system._LinSolver[n_levels - 1]->KKoffset[variable_index + 1][ip] - system._LinSolver[n_levels - 1]->KKoffset[variable_index][ip];
@@ -194,10 +198,18 @@ int main(int argc, char** argv)
   // For the processors I summed over them and it seems to work fine
   // For the levels... should I pick the coarsest level instead of the finest one, or is it the same?
 } 
+
   system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs/*column_max_length*//*dimension*/, variable_string);
 
+  
    system.init();
- //dense =============
+   
+   sp_out_base << "after_second_init_";
+
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
+
+  //dense =============
   //dense =============
   //dense =============
   

@@ -235,12 +235,6 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("adjoint");  
   system.AddSolutionToSystemPDE("mu");     //MU
   
-  unsigned column_max_length = ml_mesh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels - 1)->GetNumberOfNodes();  //trick to get linear dofs
-  unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim );
-//   system.SetSparsityPatternMinimumSize (0, "state");
-//   system.SetSparsityPatternMinimumSize (/*column_max_length*/dimension, "control");
-//   system.SetSparsityPatternMinimumSize (0, "adjoint");
-//   system.SetSparsityPatternMinimumSize (0, "mu");
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleOptSys);
@@ -253,9 +247,32 @@ int main(int argc, char** args) {
   system.SetDebugFunction(ComputeIntegral);  //weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
 // *****************
    
-//   // initialize and solve the system
+  system.init(); //I need to put this init before, later I will remove it 
+
+  unsigned n_levels = numberOfUniformLevels/* - erased_levels*/;
+  std::ostringstream sp_out_base; sp_out_base << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
+
+  
+  
+  unsigned column_max_length = ml_mesh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels - 1)->GetNumberOfNodes();  //trick to get linear dofs
+  unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim );
+  system.SetSparsityPatternMinimumSize (0, "state");
+  system.SetSparsityPatternMinimumSize (/*column_max_length*/dimension, "control");
+  system.SetSparsityPatternMinimumSize (0, "adjoint");
+  system.SetSparsityPatternMinimumSize (0, "mu");
+
+
+  //   // initialize and solve the system
   system.init();
-//   system.MGsolve();
+
+  sp_out_base << "after_second_init_";
+  
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
+
+  //   system.MGsolve();
   system.assemble_call(1);
   
   // ======= Print ========================

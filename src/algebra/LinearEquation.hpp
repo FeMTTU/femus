@@ -71,7 +71,10 @@ public:
 			
   unsigned GetSystemDof(const unsigned &soltype, const unsigned &kkindex_sol,
 			const unsigned &i, const unsigned &iel, const vector < vector <unsigned> > &otherKKoffset) const;
-			
+
+            
+  /** Sparsity pattern: print number of nonzeros per row */
+  void sparsity_pattern_print_nonzeros(const std::string filename_base, const std::string on_or_off);
 
   /** To be Added */
   void SetResZero();
@@ -111,8 +114,8 @@ public:
   vector < vector < int> > KKghost_nd;       // size [_nprocs][KKghostsize[i]]
   vector <int> KKIndex;                      // size [_SolPdeIndex.size() + 1]
   unsigned _gridn;  
-  vector < int > d_nnz;
-  vector < int > o_nnz;
+  vector < int > d_nnz;                      //number of non-zeros per row, on-diagonal
+  vector < int > o_nnz;                      //number of non-zeros per row, off-diagonal
   
   void SetSparsityPatternMinimumSize (const std::vector < unsigned> &minimumSize, const std::vector < unsigned > &variableIndex);
 

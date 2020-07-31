@@ -17,6 +17,8 @@
 // includes :
 //----------------------------------------------------------------------------
 
+#include <iostream>
+#include <fstream>
 #include <ctime>
 #include <fstream>
 #include <algorithm>
@@ -97,7 +99,36 @@ namespace femus {
     return KKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
   }
 
+  void LinearEquation::sparsity_pattern_print_nonzeros(const std::string filename_base, const std::string on_or_off) {
 
+         
+      if (on_or_off != "on" && on_or_off != "off")
+      { std::cout << "Must be either on or off diagonal" << std::endl; abort(); }     
+          
+   std::string filename =  filename_base + on_or_off + ".txt";
+      std::ofstream file_pr;
+      file_pr.open (filename);
+      
+         std::vector<int> * nonzeros; 
+      if (on_or_off == "on") {
+          nonzeros = &d_nnz;
+      }
+      else if (on_or_off == "off") {
+          nonzeros = &o_nnz;
+      }
+      
+      
+      for(unsigned j = 0; j < nonzeros->size(); j++) {
+                  file_pr << j << " " << (*nonzeros)[j] << std::endl;
+                }
+                
+      
+   file_pr.close();          
+  
+  
+  }
+  
+  
 //--------------------------------------------------------------------------------
   void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  vector <int> &SolType_other,
                                const vector <char*> &SolName_other, vector <NumericVector*> *Bdc_other,
