@@ -237,7 +237,10 @@ int main(int argc, char** args) {
   
   unsigned column_max_length = ml_mesh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels - 1)->GetNumberOfNodes();  //trick to get linear dofs
   unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim );
-  system.SetSparsityPatternMinimumSize (column_max_length/*dimension*/, "control");
+//   system.SetSparsityPatternMinimumSize (0, "state");
+//   system.SetSparsityPatternMinimumSize (/*column_max_length*/dimension, "control");
+//   system.SetSparsityPatternMinimumSize (0, "adjoint");
+//   system.SetSparsityPatternMinimumSize (0, "mu");
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleOptSys);
@@ -252,8 +255,8 @@ int main(int argc, char** args) {
    
 //   // initialize and solve the system
   system.init();
-  system.MGsolve();
-//   system.assemble_call(1);
+//   system.MGsolve();
+  system.assemble_call(1);
   
   // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;
@@ -309,7 +312,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors(); // get the process_id (for parallel computation)
 
-  constexpr bool print_algebra_global = false;
+  constexpr bool print_algebra_global = true;
   constexpr bool print_algebra_local = false;
   
   
@@ -645,7 +648,26 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //                     beta     
 //                     ) ;
   
+
+//**************************                    
+// AAA do not close this because later they will be filled with the rest of the system!!!      
+//    KK->close();
+//   RES->close();
+
+   //print JAC and RES to files
+   //You print only what is being sent to the global matrix. If nothing is sent, nothing is printed                 
+   // I will keep this print here for later because it highlights what positions were filled in the matrix
+   // If I remove everything above here, it seems like the very last diagonal position is filled... why? from where?
+  KK->close(); //KK->zero();
+  const unsigned nonlin_iter = 9/*mlPdeSys->GetNonlinearIt()*/;
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
+//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
+  abort();
+//   std::cout << "****************************" << std::endl;
+//**************************                    
+
   
+                    
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -1130,7 +1152,7 @@ if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
     
     
   if (print_algebra_global) {
-    if (assembleMatrix) KK->close();
+    if (assembleMatrix) KK->close(); KK->zero();
     std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
     KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
 

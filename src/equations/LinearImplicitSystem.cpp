@@ -146,11 +146,18 @@ namespace femus {
     
     
  //****** init: Sparsity Pattern part *******************
-
+ // If there is at least one dense variable, 
+ // loop over them as listed in _sparsityPatternSolName
+ 
+ // If all variables are sparse, then do something and exit the loop
+ // Otherwise, fill the variableIndex vector with the indices
+  
     if(_sparsityPatternMinimumSize.size() > 0) {
+        
       std::vector <unsigned> variableIndex;
 
       for(unsigned i = 0; i < _sparsityPatternSolName.size(); i++) {
+          
         if(_sparsityPatternSolName[i] == "All" || _sparsityPatternSolName[i] == "ALL"  || _sparsityPatternSolName[i] == "all") {
           unsigned minimumSize = _sparsityPatternMinimumSize[i];  
           
@@ -162,6 +169,7 @@ namespace femus {
           }
           break;
         }
+        
         else {
           unsigned n = variableIndex.size();
           variableIndex.resize(n + 1u);
@@ -174,7 +182,7 @@ namespace femus {
             }
 
             if(_SolSystemPdeIndex.size() - 1u == j) {
-              std::cout << "Warning! The variable " << _sparsityPatternSolName[i] << " cannot be be increased in sparsity pattern "
+              std::cout << "Warning! The variable " << _sparsityPatternSolName[i] << " cannot be increased in sparsity pattern "
                         << "since it is not included in the solution variable set." << std::endl;
               variableIndex.resize(n);
               
@@ -184,19 +192,27 @@ namespace femus {
           }
         }
       }
-      if ( variableIndex.size() > 0 ){
+      
+      if ( variableIndex.size() > 0 ) {
+          //every LinSolver has two vectors:
+          // sparsityPatternMinimumSize
+          // sparsityPatternVariableIndex
         for(unsigned i = 0; i < _gridn; i++) {
           _LinSolver[i]->SetSparsityPatternMinimumSize(_sparsityPatternMinimumSize, variableIndex);
         }
       }
-    }
+      
+    } //end at least one dense variable
+//****** init: Sparsity Pattern part *******************
+  
 
+ //****** init: PDE part *******************
     for(unsigned i = 0; i < _gridn; i++) {
       _LinSolver[i]->SetNumberOfGlobalVariables(_numberOfGlobalVariables);
       _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
                              _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridn, _SparsityPattern);
     }
- //****** init: Sparsity Pattern part *******************
+ //****** init: PDE part *******************
     
     
     

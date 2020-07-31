@@ -1095,17 +1095,6 @@ void el_dofs_unknowns(const Solution*                sol,
     } //end kproc
     
     
-// AAA do not close this because later they will be filled with the rest of the system!!!      
-//    KK->close();
-//   RES->close();
-
-   //print JAC and RES to files
-KK->close();KK->zero();
-const unsigned nonlin_iter = 0/*mlPdeSys->GetNonlinearIt()*/;
-    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, nonlin_iter);
-//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
-abort();
-//   std::cout << "****************************" << std::endl;
   
   }
     
