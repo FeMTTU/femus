@@ -143,7 +143,7 @@ namespace femus {
 
     _SparsityPattern = SparsityPattern_other;
 
-    //--- Matrix offsets ---------------------------------------------------------------------------------------------
+    //--- Matrix and vectors offsets ---------------------------------------------------------------------------------------------
     KKIndex.resize(_SolPdeIndex.size() + 1u);
     KKIndex[0] = 0;
     for(unsigned i = 1; i < KKIndex.size(); i++)
@@ -197,10 +197,10 @@ namespace femus {
         }
       }
     }
-    //--- Matrix offsets ---------------------------------------------------------------------------------------------
+    //--- Matrix and vectors offsets ---------------------------------------------------------------------------------------------
     
 
-    //--- Error and residual --------------------------------------------------------------------------------------------
+    //--- Error and residual: build and init --------------------------------------------------------------------------------------------
     int EPSsize = KKIndex[KKIndex.size() - 1];
     _EPS = NumericVector::build().release();
     if(n_processors() == 1) {  // IF SERIAL
@@ -219,14 +219,15 @@ namespace femus {
 
     _RESC = NumericVector::build().release();
     _RESC->init(*_EPS);
-    //--- Error and residual --------------------------------------------------------------------------------------------
+    //--- Error and residual: build and init  --------------------------------------------------------------------------------------------
 
 
-    // Sparsity pattern: fill it as if all variables were sparse -----------------------------------------------------------------------------------------------
+    //--- Sparsity pattern: fill it as if all variables were sparse -----------------------------------------------------------------------------------------------
     GetSparsityPatternSize();
-    // Sparsity pattern: fill it as if all variables were sparse -----------------------------------------------------------------------------------------------
+    //--- Sparsity pattern: fill it as if all variables were sparse -----------------------------------------------------------------------------------------------
 
-    // Sparsity pattern: adjust it for dense variables -----------------------------------------------------------------------------------------------
+    
+    //--- Sparsity pattern: adjust it for dense variables -----------------------------------------------------------------------------------------------
     const unsigned dim = _msh->GetDimension();
 //     int KK_UNIT_SIZE_ = pow(5, dim);
     int KK_size = KKIndex[KKIndex.size() - 1u];
@@ -258,14 +259,17 @@ namespace femus {
         o_nnz[k] = KK_size - KK_local_size;
       }
     }
-    // Sparsity pattern: adjust it for dense variables -----------------------------------------------------------------------------------------------
+    //--- Sparsity pattern: adjust it for dense variables -----------------------------------------------------------------------------------------------
     
 
-    //-----------------------------------------------------------------------------------------------
+    //--- Matrix: build and init --------------------------------------------------------------------------------------------
     _KK = SparseMatrix::build().release();
     _KK->init(KK_size, KK_size, KK_local_size, KK_local_size, d_nnz, o_nnz);
+    //--- Matrix: build and init --------------------------------------------------------------------------------------------
 
+    //--- Matrix AMR: build --------------------------------------------------------------------------------------------
     _KKamr = SparseMatrix::build().release();
+    //--- Matrix AMR: build --------------------------------------------------------------------------------------------
 
   }
 
@@ -368,17 +372,18 @@ namespace femus {
 
     int IndexStart = KKoffset[0][this_proc];
     int IndexEnd  = KKoffset[KKIndex.size() - 1][this_proc];
-    int owned_dofs    = IndexEnd - IndexStart;
+    int owned_dofs    = IndexEnd - IndexStart;  //all dofs of all vars of this_proc
 
-    vector < std::map < int, bool > > BlgToMe_d(owned_dofs);
-    vector < std::map < int, bool > > BlgToMe_o(owned_dofs);
-    std::map < int, std::map <int, bool > > DnBlgToMe_o;
-    std::map < int, std::map <int, bool > > DnBlgToMe_d;
+    vector < std::map < int, bool > > BlgToMe_d(owned_dofs); //belong to me
+    vector < std::map < int, bool > > BlgToMe_o(owned_dofs); //belong to me
+    std::map < int, std::map <int, bool > > DnBlgToMe_o;     //don't belong to me 
+    std::map < int, std::map <int, bool > > DnBlgToMe_d;     //don't belong to me
 
     for(int kel = _msh->_elementOffset[this_proc]; kel < _msh->_elementOffset[this_proc + 1]; kel++) {
 
       short int kelt = _msh->GetElementType(kel);
       vector < int > nve(_SolPdeIndex.size());
+      
       for(int i = 0; i < _SolPdeIndex.size(); i++) {
         nve[i] = _msh->GetElementDofNumber(kel, _SolType[_SolPdeIndex[i]]);
       }
@@ -393,15 +398,20 @@ namespace femus {
           dofsVAR[i][j] = GetSystemDof(_SolPdeIndex[i], i, j, kel);
         }
       }
+      
       for(int i = 0; i < _SolPdeIndex.size(); i++) {
+          
         for(int inode = 0; inode < nve[i]; inode++) {
           int idof_local = dofsVAR[i][inode] - IndexStart;
+          
           for(int j = 0; j < _SolPdeIndex.size(); j++) {
+              
             if(_SparsityPattern[_SolPdeIndex.size() *i + j]) {
+                
               for(int jnode = 0; jnode < nve[j]; jnode++) {
                 int jdof_local = dofsVAR[j][jnode] - IndexStart;
 
-                if(idof_local >= 0) {  // i-row belogns to this proc
+                if(idof_local >= 0) {  // i-row belongs to this proc
                   if(jdof_local >= 0) {  // j-row belongs to this proc (diagonal)
                     BlgToMe_d[ idof_local ][ jdof_local ] = 1;
                   }
@@ -410,26 +420,29 @@ namespace femus {
                   }
                 }
                 else { // i-row does not belong to this proc
-                  // identify the process the i-row belogns to
+                  // identify the process the i-row belongs to
                   int iproc = 0;
                   while(dofsVAR[i][inode] >= KKoffset[KKIndex.size() - 1][iproc]) iproc++;
 
-                  // identify the process the j-column belogns to
+                  // identify the process the j-column belongs to
                   int jproc = 0;
                   while(dofsVAR[j][jnode] >= KKoffset[KKIndex.size() - 1][jproc]) jproc++;
                   if(iproc != jproc) {  // if diagonal
-                    DnBlgToMe_o[dofsVAR[i][inode]][dofsVAR[j][jnode]] = 1;
+                    DnBlgToMe_o[ dofsVAR[i][inode] ][ dofsVAR[j][jnode] ] = 1;
                   }
                   else if(iproc == jproc) {  // if off-diagonal
-                    DnBlgToMe_d[dofsVAR[i][inode]][dofsVAR[j][jnode]] = 1;
+                    DnBlgToMe_d[ dofsVAR[i][inode] ][ dofsVAR[j][jnode] ] = 1;
                   }
                 }
-              }
-            }
-          }
-        }
-      }
-    }
+                
+              }  //ndofs jvar
+              
+            }  //test if there is coupling between ivar and jvar
+          } //jvar
+        }  //ndofs ivar
+      }  //ivar
+      
+    } //end el loop
 
     NumericVector  *sizeDnBM_o = NumericVector::build().release();
     sizeDnBM_o->init(*_EPS);

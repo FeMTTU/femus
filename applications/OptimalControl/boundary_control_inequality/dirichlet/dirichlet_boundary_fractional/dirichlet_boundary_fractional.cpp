@@ -269,9 +269,10 @@ int main(int argc, char** args) {
   // For the levels... should I pick the coarsest level instead of the finest one, or is it the same?
 } 
 
-  unsigned column_max_length = ml_mesh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels - 1)->GetNumberOfNodes();
-  unsigned dimension = pow ( pow(2, numberOfUniformLevels) * 2 + 1, dim );
-  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs/*column_max_length*//*dimension*/, variable_string);
+  unsigned n_vars = system.GetSolPdeIndex().size();   //assume all variables are dense: we should sum 3 sparse + 1 dense...
+  //check that the dofs are picked correctly, it doesn't seem so 
+  
+  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs * n_vars, variable_string);
 
 
   //   // initialize and solve the system

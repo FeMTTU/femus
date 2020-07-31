@@ -145,7 +145,7 @@ namespace femus {
     
     
     
- //****** init: Sparsity Pattern part for dense variables *******************
+ //****** init: Sparsity Pattern, preparation for dense variables *******************
           //at every level, LinSolver has two vectors:
           // - sparsityPatternMinimumSize    - for each variable, this contains the minimum number of nonzeros in a row
           // - sparsityPatternVariableIndex  - for each variable, this contains the indices of all variables that are dense (it is used for the columns)
@@ -199,16 +199,16 @@ namespace femus {
       }
       
     } //end at least one dense variable
-//****** init: Sparsity Pattern part for dense variables *******************
+//****** init: Sparsity Pattern, preparation for dense variables *******************
   
 
- //****** init:  Sparsity Pattern part, conclusion *******************
+ //****** init:  Sparsity Pattern, conclusion *******************
     for(unsigned i = 0; i < _gridn; i++) {
       _LinSolver[i]->SetNumberOfGlobalVariables(_numberOfGlobalVariables);
       _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
                              _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridn, _SparsityPattern);
     }
- //****** init:  Sparsity Pattern part, conclusion *******************
+ //****** init:  Sparsity Pattern, conclusion *******************
     
     
     

@@ -1081,6 +1081,9 @@ void el_dofs_unknowns(const Solution*                sol,
         KK->add_matrix_blocked(CC_nonlocal_II, l2GMap1, l2GMap1);
         KK->add_matrix_blocked(CC_nonlocal_JI, l2GMap2, l2GMap1);  ///@todo
         KK->add_matrix_blocked(CC_nonlocal_IJ, l2GMap1, l2GMap2);  ///@todo
+//  here nonzeros cause a malloc. this means that we are not reserving enough positions for those rows.
+// If they were all sparse, we would have at most 4x9=36
+// Since 1 is dense and 3 are sparse, and the dense dofs are 30, we should have at most 3x9 + 30 = 57, but in the sparsity print it shows 30. That's the problem, I believe        
         KK->add_matrix_blocked(CC_nonlocal_JJ, l2GMap2, l2GMap2);
 
 //        RES->add_vector_blocked(Res_nonlocal, l2GMap1);
