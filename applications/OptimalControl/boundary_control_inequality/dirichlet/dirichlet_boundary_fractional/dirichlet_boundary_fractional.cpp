@@ -283,8 +283,8 @@ int main(int argc, char** args) {
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
 
-  //   system.MGsolve();
-  system.assemble_call(1);
+    system.MGsolve();
+//   system.assemble_call(1);
   
   // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;
@@ -1091,8 +1091,8 @@ add_one_times_mu_res_ctrl_bdry(iproc,
     
   // ***************** END ASSEMBLY - ADD PART *******************
 
-RES->close();
-if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
+// RES->close();
+// if (assembleMatrix) KK->close();  ///@todo is it needed? It seems like it is not needed!!!
 
 
 //   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
