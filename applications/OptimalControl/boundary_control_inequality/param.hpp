@@ -798,6 +798,7 @@ void el_dofs_unknowns(const Solution*                sol,
            
            
         short unsigned ielGeom1 = msh->GetElementType(iel);
+        
         unsigned nDof1  = msh->GetElementDofNumber(iel, solType);
         unsigned nDofx1 = msh->GetElementDofNumber(iel, solType_coords);
 
@@ -913,30 +914,64 @@ void el_dofs_unknowns(const Solution*                sol,
         counter_verify++;
               
               //Quadrature loop
-                      const unsigned n_gauss_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
-         double solX = 0.;
+                      const unsigned n_qp_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
+         double sol_ctrl_iqp_bdry = 0.;
      
-     //**** Evaluating coarse FE functions on Quadrature Points of the "sub-elements"
-                      
-                      
-     //**** Evaluating coarse FE functions on Quadrature Points of the "sub-elements"
+     //**** Adaptive preparation: Evaluating coarse FE functions on Quadrature Points of the "sub-elements"  ********  
+         ///@todo check this!!!!!!!!!!!!
+        std::vector < std::vector < std::vector <double > > > aP(3);
+        if(Nsplit > 0) {
+          for(unsigned jtype = 0; jtype < solType + 1; jtype++) { //loop up to the FE type + 1 of the unknown
+            ProjectNodalToPolynomialCoefficients(aP[jtype], x1, ielGeom1, jtype) ;
+          }
+        }                      
+     //**** Adaptive preparation: Evaluating coarse FE functions on Quadrature Points of the "sub-elements" ********  
                       
     
-		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
+		for(unsigned iqp_bdry = 0; iqp_bdry < n_qp_bdry; iqp_bdry++) {
             
-    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_iqp_bdry, JacI_iqp_bdry, detJac_iqp_bdry, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_iqp_bdry, JacI_iqp_bdry, detJac_iqp_bdry, space_dim);
 	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_iqp_bdry, normal);
     
-    weight_iqp_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
+    weight_iqp_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(ig_bdry, JacI_iqp_bdry, phi_ctrl_iqp_bdry, phi_ctrl_x_iqp_bdry, boost::none, space_dim);
+    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry, phi_ctrl_iqp_bdry, phi_ctrl_x_iqp_bdry, boost::none, space_dim);
             
-           solX = 0.;
-           
-           for(unsigned i = 0; i < nDof1; i++) {
-            solX += solu1[i] * phi_ctrl_iqp_bdry[i];
-          }
-            
+
+//========== compute gauss quantities on the boundary ===============================================
+		  sol_ctrl_iqp_bdry = 0.;
+	      for (int i_bdry = 0; i_bdry < Sol_n_el_dofs_quantities[pos_sol_ctrl]; i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+			
+			sol_ctrl_iqp_bdry +=  /*sol_eldofs_Mat[pos_mat_ctrl]*/solu1[i_vol] * phi_ctrl_iqp_bdry[i_bdry];
+
+		      }
+		      
+	      
+//========== compute gauss quantities on the boundary ================================================
+
+
+
+                
+               //have to unleash this 
+                
+// // //           msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
+// // // 
+// // //           // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+// // //           vector < double > xg1(dim, 0.);
+// // //           solX = 0.;
+// // // 
+// // //           for(unsigned i = 0; i < nDof1; i++) {
+// // //             solX += solu1[i] * phi1[i];
+// // //             for(unsigned d = 0; d < sol_u_x.size(); d++)   sol_u_x[d] += solu1[i] * phi_x[i * dim + d];
+// // //             for(unsigned k = 0; k < dim; k++) {
+// // //               xg1[k] += x1[k][i] * phi1[i];
+// // //             }
+// // //           }
+          
+          
+          
+          
             if(iel == jel) {
               
        //============  Mass assembly ==================
@@ -944,7 +979,7 @@ void el_dofs_unknowns(const Solution*                sol,
               for(unsigned j = 0; j < phi_ctrl_iqp_bdry.size(); j++) {
                 KK_local[ i * phi_ctrl_iqp_bdry.size() + j ] += OP_L2 * phi_ctrl_iqp_bdry[i] * phi_ctrl_iqp_bdry[j] * weight_iqp_bdry;
               }
-              double mass_res_i = phi_ctrl_iqp_bdry[i] * solX ;
+              double mass_res_i = phi_ctrl_iqp_bdry[i] * sol_ctrl_iqp_bdry ;
               Res_local[ i ] += OP_L2 * weight_iqp_bdry * mass_res_i ;
               Res_local[ i ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iqp_bdry[i] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][i])) * ( sin(2 * acos(0.0) * x1[1][i]))*/);
             }
@@ -958,7 +993,79 @@ void el_dofs_unknowns(const Solution*                sol,
             if(Nsplit != 0 && OP_Hhalf != 0) {
                 
                 
+               //have to unleash this 
                 
+                
+// // //              std::cout.precision(14);
+// // //               std::vector< std::vector<std::vector<double>>> x3;
+// // // 
+// // //               for(unsigned split = 0; split <= Nsplit; split++) {
+// // // 
+// // // //                 unsigned size_part;
+// // // //                 if(dim == 1) size_part = 2;
+// // // //                 else size_part = (split != Nsplit) ? 12 : 4;
+// // // 
+// // //                 if(dim == 1) GetElementPartition1D(xg1, x1, split, Nsplit, x3);
+// // //                 else if(dim == 2) {
+// // //                   //GetElementPartition2D(xg1, x1, split, Nsplit, x3);
+// // //                   GetElementPartitionQuad(xg1, x1, split, Nsplit, x3);
+// // //                 }
+// // // 
+// // //                 //for(unsigned r = 0; r < size_part; r++) {
+// // //                 for(unsigned r = 0; r < x3.size(); r++) {
+// // // 
+// // // 
+// // //                   for(unsigned jg = 0; jg < igNumber; jg++) {
+// // // 
+// // // 
+// // //                     msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], jg, weight3, phi3, phi_x);
+// // // 
+// // //                     vector < double > xg3(dim, 0.);
+// // // 
+// // //                     for(unsigned i = 0; i < nDof1; i++) {
+// // //                       for(unsigned k = 0; k < dim; k++) {
+// // //                         xg3[k] += x3[r][k][i] * phi3[i];
+// // //                       }
+// // //                     }
+// // // 
+// // //                     std::vector<double> xi3(dim, 0.);
+// // // 
+// // //                     GetClosestPointInReferenceElement(x1, xg3, ielGeom1, xi3);
+// // //                     GetInverseMapping(solType, ielGeom1, aP, xg3, xi3, 1000);
+// // // 
+// // //                     msh->_finiteElement[ielGeom1][solType]->GetPhi(phi3, xi3);
+// // // 
+// // //                     double solY3 = 0.;
+// // //                     for(unsigned i = 0; i < nDof1; i++) {
+// // //                       solY3 += solu1[i] * phi3[i];
+// // //                     }
+// // // 
+// // //                     double dist_xyz3 = 0;
+// // //                     for(unsigned k = 0; k < dim; k++) {
+// // //                       dist_xyz3 += (xg1[k] - xg3[k]) * (xg1[k] - xg3[k]);
+// // //                     }
+// // // 
+// // //                     const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
+// // // 
+// // //                     for(unsigned i = 0; i < nDof1; i++) {
+// // // 
+// // //                       Res_local_refined[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits *
+// // //                                                         ((solX - solY3) * (phi1[i] - phi3[i]) * weight3 / denom3
+// // //                                                         ) * weight1 ;
+// // // 
+// // //                       for(unsigned j = 0; j < nDof2; j++) {
+// // //                         CClocal_refined[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits *
+// // //                                                             ((phi1[j] - phi3[j]) * (phi1[i] - phi3[i]) * weight3 / denom3
+// // //                                                             ) * weight1 ;
+// // // 
+// // //                       }
+// // //                     }
+// // //                                           
+// // //                   } //end jg
+// // //                 } //end r
+// // //               }  //end split
+              
+              
                 
                 
                 
@@ -979,7 +1086,7 @@ void el_dofs_unknowns(const Solution*                sol,
             
             
             
-        }   //end ig_bdry
+        }   //end iqp_bdry
               
               
               
@@ -991,131 +1098,7 @@ void el_dofs_unknowns(const Solution*                sol,
     } //end control elem flag
            
            
-//7777777777777777777777777777777777777777
-  
-  const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
 
-         double weight1;
-        vector < double > phi1;  // local test function
-
-        double weight3;
-        vector < double > phi3;  // local test function
-
-        double solX = 0.;
-        std::vector<double> sol_u_x(space_dim);
-        std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
-
-
-        std::vector < std::vector < std::vector <double > > > aP(3);
-        if(Nsplit > 0) {
-          for(unsigned j_fe_type = 0; j_fe_type < solType + 1; j_fe_type++) {
-            ProjectNodalToPolynomialCoefficients(aP[j_fe_type], x1, ielGeom1, j_fe_type) ;
-          }
-        }                   
-                    
-                    
-        for(unsigned ig = 0; ig < igNumber; ig++) {
-  
-            
-          msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
-
-          // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-          vector < double > xg1(dim, 0.);
-          solX = 0.;
-
-          for(unsigned i = 0; i < nDof1; i++) {
-            solX += solu1[i] * phi1[i];
-            for(unsigned d = 0; d < sol_u_x.size(); d++)   sol_u_x[d] += solu1[i] * phi_x[i * dim + d];
-            for(unsigned k = 0; k < dim; k++) {
-              xg1[k] += x1[k][i] * phi1[i];
-            }
-          }
-          
-//============ Adaptive quadrature for iel == jel ==================
-          if(iel == jel) {
-                                          
-            if(Nsplit != 0) {
-                                         
-            std::cout.precision(14);
-              std::vector< std::vector<std::vector<double>>> x3;
-
-              for(unsigned split = 0; split <= Nsplit; split++) {
-
-//                 unsigned size_part;
-//                 if(dim == 1) size_part = 2;
-//                 else size_part = (split != Nsplit) ? 12 : 4;
-
-                if(dim == 1) GetElementPartition1D(xg1, x1, split, Nsplit, x3);
-                else if(dim == 2) {
-                  //GetElementPartition2D(xg1, x1, split, Nsplit, x3);
-                  GetElementPartitionQuad(xg1, x1, split, Nsplit, x3);
-                }
-
-                //for(unsigned r = 0; r < size_part; r++) {
-                for(unsigned r = 0; r < x3.size(); r++) {
-
-
-                  for(unsigned jg = 0; jg < igNumber; jg++) {
-
-
-                    msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], jg, weight3, phi3, phi_x);
-
-                    vector < double > xg3(dim, 0.);
-
-                    for(unsigned i = 0; i < nDof1; i++) {
-                      for(unsigned k = 0; k < dim; k++) {
-                        xg3[k] += x3[r][k][i] * phi3[i];
-                      }
-                    }
-
-                    std::vector<double> xi3(dim, 0.);
-
-                    GetClosestPointInReferenceElement(x1, xg3, ielGeom1, xi3);
-                    GetInverseMapping(solType, ielGeom1, aP, xg3, xi3, 1000);
-
-                    msh->_finiteElement[ielGeom1][solType]->GetPhi(phi3, xi3);
-
-                    double solY3 = 0.;
-                    for(unsigned i = 0; i < nDof1; i++) {
-                      solY3 += solu1[i] * phi3[i];
-                    }
-
-                    double dist_xyz3 = 0;
-                    for(unsigned k = 0; k < dim; k++) {
-                      dist_xyz3 += (xg1[k] - xg3[k]) * (xg1[k] - xg3[k]);
-                    }
-
-                    const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
-
-                    for(unsigned i = 0; i < nDof1; i++) {
-
-                      Res_local_refined[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits *
-                                                        ((solX - solY3) * (phi1[i] - phi3[i]) * weight3 / denom3
-                                                        ) * weight1 ;
-
-                      for(unsigned j = 0; j < nDof2; j++) {
-                        CClocal_refined[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits *
-                                                            ((phi1[j] - phi3[j]) * (phi1[i] - phi3[i]) * weight3 / denom3
-                                                            ) * weight1 ;
-
-                      }
-                    }
-                                          
-                  } //end jg
-                } //end r
-              }  //end split
-              
-            }  //end if Nsplit != 0
-
-                                          
-        } //iel == jel
-  //============ Adaptive quadrature for iel == jel ==================
-
-                            
-                            
-                            
-                            
-  } //end ig
                 
                 
 //============ add to global ==================
@@ -1283,32 +1266,32 @@ void el_dofs_unknowns(const Solution*                sol,
         
  
 //========= initialize gauss quantities on the boundary ============================================
-                double sol_ctrl_bdry_gss = 0.;
-                std::vector<double> sol_ctrl_x_bdry_gss(space_dim);   std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
+                double sol_ctrl_iqp_bdry = 0.;
+                std::vector<double> sol_ctrl_x_iqp_bdry(space_dim);   std::fill(sol_ctrl_x_iqp_bdry.begin(), sol_ctrl_x_iqp_bdry.end(), 0.);
 
 //========= initialize gauss quantities on the boundary ============================================
 		
-        const unsigned n_gauss_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
+        const unsigned n_qp_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
         
     
-		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
+		for(unsigned iqp_bdry = 0; iqp_bdry < n_qp_bdry; iqp_bdry++) {
     
-    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
 	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal);
     
-    weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
+    weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, boost::none, space_dim);
+    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, boost::none, space_dim);
   
 //========== compute gauss quantities on the boundary ===============================================
-		  sol_ctrl_bdry_gss = 0.;
-                  std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
+		  sol_ctrl_iqp_bdry = 0.;
+                  std::fill(sol_ctrl_x_iqp_bdry.begin(), sol_ctrl_x_iqp_bdry.end(), 0.);
 		      for (int i_bdry = 0; i_bdry < Sol_n_el_dofs_quantities[pos_sol_ctrl]; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 			
-			sol_ctrl_bdry_gss +=  sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_bdry[i_bdry];
+			sol_ctrl_iqp_bdry +=  sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_bdry[i_bdry];
                             for (int d = 0; d < space_dim; d++) {
-			      sol_ctrl_x_bdry_gss[d] += sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
+			      sol_ctrl_x_iqp_bdry[d] += sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
 			    }
 		      }
 		      
@@ -1321,7 +1304,7 @@ void el_dofs_unknowns(const Solution*                sol,
 
                  double lap_rhs_dctrl_ctrl_bdry_gss_i = 0.;
                  for (unsigned d = 0; d < space_dim; d++) {
-                       if ( i_vol < Sol_n_el_dofs_Mat[pos_mat_ctrl] )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_ctrl_x_bdry[i_bdry * space_dim + d] * sol_ctrl_x_bdry_gss[d];
+                       if ( i_vol < Sol_n_el_dofs_Mat[pos_mat_ctrl] )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_ctrl_x_bdry[i_bdry * space_dim + d] * sol_ctrl_x_iqp_bdry[d];
                  }
                  
 //=============== construct control node flag field on the go  =========================================    
@@ -1339,7 +1322,7 @@ void el_dofs_unknowns(const Solution*                sol,
 		 
 //============ Bdry Residuals ==================	
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
-                                                                                (     ( 1 - is_block_dctrl_ctrl_inside_bdry ) * alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
+                                                                                (     ( 1 - is_block_dctrl_ctrl_inside_bdry ) * alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_iqp_bdry
 							                           +  ( 1 - is_block_dctrl_ctrl_inside_bdry ) * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							                         );  //boundary optimality condition
 //============ Bdry Residuals ==================    
@@ -1371,7 +1354,7 @@ void el_dofs_unknowns(const Solution*                sol,
 	      }  //end j loop
 	      
 		  }  //end i loop
-		}  //end ig_bdry loop
+		}  //end iqp_bdry loop
 	  }    //end if control face
 	      
 	    }  //end if boundary faces

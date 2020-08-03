@@ -378,7 +378,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //   CC->zero();
 
 // The macro structure of the loops is 
-   // jel - iel - ig - jg
+   // jel - iel  - ig - jg 
   
 
   const double s_frac = S_FRAC;
@@ -465,6 +465,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
       vector < vector <double> > phi2(jgNumber);  // local test function
       std::vector< double > solY(jgNumber, 0.);
 
+// ---- jg stored computations ----       
       for(unsigned jg = 0; jg < jgNumber; jg++) {
 
 //         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
@@ -486,7 +487,11 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           }
         }
       }
+// ---- jg stored computations ----    
 
+
+
+// ---- boundary faces in jel: compute and broadcast ----    
       std::vector <int> bd_face(0);
       unsigned nFaces;
       //std::vector <unsigned> faceDofs(n_face, 0);
@@ -516,11 +521,11 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
       bd_face.resize(nFaces);
       MPI_Bcast(& bd_face[0], nFaces, MPI_INT, kproc, MPI_COMM_WORLD);
+// ---- boundary faces in jel: compute and broadcast ----    
 
 
 
 
-      // element loop: each process loops only on the elements that owns
       for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
         short unsigned ielGeom1 = msh->GetElementType(iel);
