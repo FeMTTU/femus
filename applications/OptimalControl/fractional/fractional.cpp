@@ -299,16 +299,16 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //***************************************************
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
 //***************************************************
-  std::vector < std::vector < double > >  JacI_qp(space_dim);
-  std::vector < std::vector < double > >  Jac_qp(dim);
+  std::vector < std::vector < double > >  JacI_jqp(space_dim);
+  std::vector < std::vector < double > >  Jac_jqp(dim);
   for(unsigned d = 0; d < dim; d++) {
-    Jac_qp[d].resize(space_dim);
+    Jac_jqp[d].resize(space_dim);
   }
   for(unsigned d = 0; d < space_dim; d++) {
-    JacI_qp[d].resize(dim);
+    JacI_jqp[d].resize(dim);
   }
 
-  double detJac_qp;
+  double detJac_jqp;
   std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
 //***************************************************
@@ -350,8 +350,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   vector < double > Res_local_refined; Res_local_refined.reserve(maxSize);
   vector < double > CClocal_refined;   CClocal_refined.reserve(maxSize * maxSize);
 
-  vector < double > KK_mixed;   KK_mixed.reserve(maxSize * maxSize);
-  vector < double > Res_mixed;  Res_mixed.reserve(maxSize);
+  vector < double > KK_local_mixed_num;   KK_local_mixed_num.reserve(maxSize * maxSize);
+  vector < double > Res_local_mixed_num;  Res_local_mixed_num.reserve(maxSize);
 
 //   Non local matrices and vectors for H^s laplacian operator
 //   vector< double >         Res_nonlocal;
@@ -377,7 +377,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //   CC->init(KK_size, KK_size, KK_local_size, KK_local_size, KK_local_size, KK_size - KK_local_size);
 //   CC->zero();
 
-
+// The macro structure of the loops is 
+   // jel - iel - ig - jg
+  
 
   const double s_frac = S_FRAC;
 
@@ -467,9 +469,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
 //         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
 
-        elem_all[ielGeom2][xType]->JacJacInv(/*x2*/geom_element2.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
-        weight2[jg] = detJac_qp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
-        elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
+        elem_all[ielGeom2][xType]->JacJacInv(/*x2*/geom_element2.get_coords_at_dofs_3d(), jg, Jac_jqp, JacI_jqp, detJac_jqp, space_dim);
+        weight2[jg] = detJac_jqp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
+        elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_jqp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
 
 
 
@@ -529,11 +531,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         l2GMap1.resize(nDof1);
         //std::vector<bool>bdcDirichlet(nDof1);
 
-        for(int k = 0; k < dim; k++) {
-          x1[k].resize(nDofx1);
-        }
-        solu1.resize(nDof1);
-
         // local storage of global mapping and solution
         for(unsigned i = 0; i < nDof1; i++) {
           l2GMap1[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
@@ -541,6 +538,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           //bdcDirichlet[i] = ( (*sol->_Bdc[soluIndex])(solDof) < 1.5)? false:false;
         }
 
+        for(int k = 0; k < dim; k++) {
+          x1[k].resize(nDofx1);
+        }
         // local storage of coordinates
         for(unsigned i = 0; i < nDofx1; i++) {
           unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
@@ -549,6 +549,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           }
         }
         
+        solu1.resize(nDof1);
         for(unsigned i = 0; i < nDof1; i++) {
           unsigned iDof  = msh->GetSolutionDof(i, iel, solType);  // global to global mapping between coordinates node and coordinate dof
           solu1[i] = (*sol->_Sol[soluIndex])(iDof);  // global extraction and local storage for the element coordinates
@@ -563,8 +564,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
         Res_nonlocalI.assign(nDof1, 0);    //resize
         Res_nonlocalJ.assign(nDof1, 0);    //resize
 
-        Res_mixed.assign(nDof1, 0);    //resize
-        KK_mixed.assign(nDof1 * nDof1, 0.);
+        Res_local_mixed_num.assign(nDof1, 0);    //resize
+        KK_local_mixed_num.assign(nDof1 * nDof1, 0.);
 
         if(iel == jel) {
           Res_local.assign(nDof1, 0);    //resize
@@ -617,7 +618,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
           if(iel == jel) {
 
-            for(unsigned i = 0; i < nDof1; i++) {
+ //============  Mass assembly ==================
+           for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned j = 0; j < nDof1; j++) {
                 KK_local[ i * nDof1 + j ] += OP_L2 * phi1[i] * phi1[j] * weight1;
               }
@@ -625,6 +627,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               Res_local[ i ] += OP_L2 * weight1 * mass_res_i ;
               Res_local[ i ] += - RHS_ONE * weight1 * (phi1[i] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][i])) * ( sin(2 * acos(0.0) * x1[1][i]))*/);
             }
+ //============  Mass assembly ==================
 
 //============  Laplacian assembly ==================
 
@@ -860,9 +863,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
                   for(unsigned i = 0; i < nDof1; i++) {
                     for(unsigned j = 0; j < nDof1; j++) {
-                      KK_mixed[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term1;
+                      KK_local_mixed_num[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term1;
                     }
-                    Res_mixed[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solX * mixed_term1;
+                    Res_local_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solX * mixed_term1;
                   }
                 }
               }
@@ -954,9 +957,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
             for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned j = 0; j < nDof1; j++) {
-                KK_mixed[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term1;
+                KK_local_mixed_num[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term1;
               }
-              Res_mixed[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
+              Res_local_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
             }
            }
           
@@ -1010,8 +1013,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           }
         }
 //        KK->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
-        KK->add_matrix_blocked(KK_mixed, l2GMap1, l2GMap1);
-        RES->add_vector_blocked(Res_mixed, l2GMap1);
+        KK->add_matrix_blocked(KK_local_mixed_num, l2GMap1, l2GMap1);
+        RES->add_vector_blocked(Res_local_mixed_num, l2GMap1);
 
         KK->add_matrix_blocked(CC_nonlocal_II, l2GMap1, l2GMap1);
         KK->add_matrix_blocked(CC_nonlocal_IJ, l2GMap1, l2GMap2);
@@ -1097,16 +1100,28 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 //***************************************************
   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
 //***************************************************
-  std::vector < std::vector < double > >  JacI_qp(space_dim);
-  std::vector < std::vector < double > >  Jac_qp(dim);
+  std::vector < std::vector < double > >  JacI_iqp(space_dim);
+  std::vector < std::vector < double > >  Jac_iqp(dim);
   for(unsigned d = 0; d < dim; d++) {
-    Jac_qp[d].resize(space_dim);
+    Jac_iqp[d].resize(space_dim);
   }
   for(unsigned d = 0; d < space_dim; d++) {
-    JacI_qp[d].resize(dim);
+    JacI_iqp[d].resize(dim);
   }
 
-  double detJac_qp;
+  double detJac_iqp;
+  
+  std::vector < std::vector < double > >  JacI_jqp(space_dim);
+  std::vector < std::vector < double > >  Jac_jqp(dim);
+  for(unsigned d = 0; d < dim; d++) {
+    Jac_jqp[d].resize(space_dim);
+  }
+  for(unsigned d = 0; d < space_dim; d++) {
+    JacI_jqp[d].resize(dim);
+  }
+
+  double detJac_jqp;  
+  
   std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
 //***************************************************
@@ -1169,11 +1184,11 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
     for(unsigned ig = 0; ig < igNumber; ig++) {
 
-      elem_all[ielGeom1][xType]->JacJacInv(geom_element1.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
+      elem_all[ielGeom1][xType]->JacJacInv(geom_element1.get_coords_at_dofs_3d(), ig, Jac_iqp, JacI_iqp, detJac_iqp, space_dim);
 
-      JxWeight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom1).GetGaussWeightsPointer()[ig];
+      JxWeight = detJac_iqp * ml_prob.GetQuadratureRule(ielGeom1).GetGaussWeightsPointer()[ig];
 
-      elem_all[ielGeom1][solType]->shape_funcs_current_elem(ig, JacI_qp, phi, phi_x /*boost::none*/, boost::none /*phi_xx*/, space_dim);
+      elem_all[ielGeom1][solType]->shape_funcs_current_elem(ig, JacI_iqp, phi, phi_x /*boost::none*/, boost::none /*phi_xx*/, space_dim);
 
 
       sol_qp = 0.;
@@ -1285,9 +1300,9 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
 //          msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
 
-        elem_all[ielGeom2][xType]->JacJacInv(/*x2*/geom_element2.get_coords_at_dofs_3d(), jg, Jac_qp, JacI_qp, detJac_qp, space_dim);
-        weight2[jg] = detJac_qp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
-        elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_qp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
+        elem_all[ielGeom2][xType]->JacJacInv(/*x2*/geom_element2.get_coords_at_dofs_3d(), jg, Jac_jqp, JacI_jqp, detJac_jqp, space_dim);
+        weight2[jg] = detJac_jqp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
+        elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_jqp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
 
         xg2[jg].assign(dim, 0.);
         solY[jg] = 0.;
