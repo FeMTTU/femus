@@ -550,6 +550,7 @@ void el_dofs_unknowns(const Solution*                sol,
                         const unsigned int solType_coords,
                         const unsigned int dim,
                         const unsigned int space_dim,
+                        const unsigned int dim_bdry,
                         //-----------
                         const unsigned int n_unknowns,
                         const    vector < std::string > & Solname_Mat,
@@ -622,7 +623,8 @@ void el_dofs_unknowns(const Solution*                sol,
 //   std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > elem_all;
 //   ml_prob.get_all_abstract_fe(elem_all);
 // //***************************************************
-     
+
+      
    vector < double > phi_x;
      
       
@@ -682,8 +684,84 @@ void el_dofs_unknowns(const Solution*                sol,
   
   
    for(int kproc = 0; kproc < nprocs; kproc++) {
+       
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
+
+// ***** Bdry intro ****************************
+// ***** Bdry intro ****************************
+// ***** Bdry intro ****************************
+
+// --- geometry        
+        geom_element_jel.set_coords_at_dofs_and_geom_type(jel, solType_coords);
+
+        short unsigned jelGeom = geom_element_jel.geom_type();
+              
+        geom_element_jel.set_elem_center(jel, solType_coords);
+// --- geometry        
+        
+    //************ set control flag *********************
+  int control_el_flag = 0;
+        control_el_flag = ControlDomainFlag_bdry(geom_element_jel.get_elem_center());
+  std::vector<int> control_node_flag(Sol_n_el_dofs_Mat[pos_mat_ctrl], 0);
+ //*************************************************** 
+      
+	// Perform face loop over elements that contain some control face
+	if (control_el_flag == 1) {
+        
+        
+      double tau = 0.;
+	  std::vector<double> normal(space_dim, 0.);
+	       
+	  // loop on faces of the current element
+
+	  for(unsigned jface = 0; jface < msh->GetElementFaceNumber(jel); jface++) {
+          
+       const unsigned jelGeom_bdry = msh->GetElementFaceType(jel, jface);    
+       
+       geom_element_jel.set_coords_at_dofs_bdry_3d(jel, jface, solType_coords);
  
+       geom_element_jel.set_elem_center_bdry_3d();
+
+	    // look for boundary faces
+            const int bdry_index = msh->el->GetFaceElementIndex(jel, jface);
+            
+	    if( bdry_index < 0) {
+	      const unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(jel,jface) + 1);
+		
+// 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
+	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
+
+              
+              //Quadrature loop
+                      const unsigned n_iqp_bdry = ml_prob.GetQuadratureRule(jelGeom_bdry).GetGaussPointsNumber();
+         double sol_ctrl_iqp_bdry = 0.;
+
+         
+         
+         //to be filled
+         
+         
+         
+         
+          }
+        }
+      }
+    }
+        
+        
+// ***** Bdry intro ****************************
+// ***** Bdry intro ****************************
+// ***** Bdry intro ****************************
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
        short unsigned ielGeom2;
       unsigned nDof2;
       unsigned nDofx2;
@@ -769,6 +847,7 @@ void el_dofs_unknowns(const Solution*                sol,
       std::vector< double > solY(jgNumber, 0.);
 
       
+//---- Quadrature in j, preparation -------      
       for(unsigned jg = 0; jg < jgNumber; jg++) {
 
         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
@@ -790,7 +869,8 @@ void el_dofs_unknowns(const Solution*                sol,
           }
         }
       }       
-//--- geometry and solution, at qp
+//--- geometry and solution, at jqp
+//---- Quadrature in j, preparation -------      
         
      
        
@@ -865,7 +945,7 @@ void el_dofs_unknowns(const Solution*                sol,
 	if (control_el_flag == 1) {
         
         
-      double tau=0.;
+      double tau = 0.;
 	  std::vector<double> normal(space_dim, 0.);
 	       
 	  // loop on faces of the current element
@@ -890,7 +970,7 @@ void el_dofs_unknowns(const Solution*                sol,
         counter_verify++;
               
               //Quadrature loop
-                      const unsigned n_qp_bdry = ml_prob.GetQuadratureRule(ielGeom1_bdry).GetGaussPointsNumber();
+                      const unsigned n_iqp_bdry = ml_prob.GetQuadratureRule(ielGeom1_bdry).GetGaussPointsNumber();
          double sol_ctrl_iqp_bdry = 0.;
      
      //**** Adaptive preparation: Evaluating coarse FE functions on Quadrature Points of the "sub-elements"  ********  
@@ -903,7 +983,7 @@ void el_dofs_unknowns(const Solution*                sol,
      //**** Adaptive preparation: Evaluating coarse FE functions on Quadrature Points of the "sub-elements" ********  
                       
     
-		for(unsigned iqp_bdry = 0; iqp_bdry < n_qp_bdry; iqp_bdry++) {
+		for(unsigned iqp_bdry = 0; iqp_bdry < n_iqp_bdry; iqp_bdry++) {
             
     elem_all[ielGeom1_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_iqp_bdry, JacI_iqp_bdry, detJac_iqp_bdry, space_dim);
 	elem_all[ielGeom1_bdry][solType_coords]->compute_normal(Jac_iqp_bdry, normal);
@@ -966,11 +1046,11 @@ void el_dofs_unknowns(const Solution*                sol,
   //============ Adaptive quadrature (iel == jel) ==================
                 
                 
-               //have to unleash this 
-                
-                
+// // //                       const unsigned n_kqp_bdry = ml_prob.GetQuadratureRule(ielGeom1_bdry/*kelGeom3_bdry, actually*/).GetGaussPointsNumber();
+// // //                 
+// // //                 
 // // //              std::cout.precision(14);
-// // //               std::vector< std::vector<std::vector<double>>> x3;
+// // //               std::vector< std::vector< std::vector<double> > > x3;
 // // // 
 // // //               for(unsigned split = 0; split <= Nsplit; split++) {
 // // // 
@@ -978,8 +1058,8 @@ void el_dofs_unknowns(const Solution*                sol,
 // // // //                 if(dim == 1) size_part = 2;
 // // // //                 else size_part = (split != Nsplit) ? 12 : 4;
 // // // 
-// // //                 if(dim == 1) GetElementPartition1D(xg1_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
-// // //                 else if(dim == 2) {
+// // //                 if (dim == 1) GetElementPartition1D(xg1_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
+// // //                 else if (dim == 2) {
 // // //                   //GetElementPartition2D(xg1_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
 // // //                   GetElementPartitionQuad(xg1_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
 // // //                 }
@@ -988,10 +1068,10 @@ void el_dofs_unknowns(const Solution*                sol,
 // // //                 for(unsigned r = 0; r < x3.size(); r++) {
 // // // 
 // // // 
-// // //                   for(unsigned jg = 0; jg < igNumber; jg++) {
+// // //                   for(unsigned k_qp = 0; k_qp < n_kqp_bdry; k_qp++) {
 // // // 
 // // // 
-// // //                     msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], jg, weight3, phi3, phi_x);
+// // //                     msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], k_qp, weight3, phi3, phi_x);
 // // // 
 // // //                     vector < double > xg3(dim, 0.);
 // // // 
@@ -1034,7 +1114,7 @@ void el_dofs_unknowns(const Solution*                sol,
 // // //                       }
 // // //                     }
 // // //                                           
-// // //                   } //end jg
+// // //                   } //end k_qp
 // // //                 } //end r
 // // //               }  //end split
               

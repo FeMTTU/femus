@@ -359,7 +359,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   //=============== Geometry ========================================
    unsigned solType_coords = FE_DOMAIN;
  
-  CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
+  CurrentElem < double > geom_element_iel(dim, msh);            // must be adept if the domain is moving, otherwise double
+  CurrentElem < double > geom_element_jel(dim, msh);            // must be adept if the domain is moving, otherwise double
     
   constexpr unsigned int space_dim = 3;
   
@@ -577,11 +578,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //*************************************************** 
 //***************************************************
   
+  const unsigned dim_bdry = dim - 1;
+  
   const double s_frac = S_FRAC;
 
   const double check_limits = 1.;//1./(1. - s_frac); // - s_frac;
 
-  double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim + 2. * s_frac) / 2.) / (pow(M_PI, dim / 2.) * tgamma(1 -  s_frac)) ;
+  double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim_bdry + 2. * s_frac) / 2.) / (pow(M_PI, dim_bdry / 2.) * tgamma(1 -  s_frac)) ;
 
      control_eqn_bdry_fractional(iproc,
                    nprocs,
@@ -591,11 +594,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     msh,
                     pdeSys,
                     //-----------
-                    geom_element,
-                    geom_element,
+                    geom_element_iel,
+                    geom_element_jel,
                     solType_coords,
                     dim,
                     space_dim,
+                    dim_bdry,
                     //-----------
                     n_unknowns,
                     Solname_Mat,
@@ -661,7 +665,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //                     msh,
 //                     pdeSys,
 //                     //-----------
-//                     geom_element,
+//                     geom_element_iel,
 //                     solType_coords,
 //                     space_dim,
 //                     //-----------
@@ -724,9 +728,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
         
-    const short unsigned ielGeom = geom_element.geom_type();
+    const short unsigned ielGeom = geom_element_iel.geom_type();
 
 
    el_dofs_unknowns(sol, msh, pdeSys, iel,
@@ -756,17 +760,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
       
       
-   geom_element.set_elem_center(iel, solType_coords);
+   geom_element_iel.set_elem_center(iel, solType_coords);
 
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element.get_elem_center());
+   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center());
  //*************************************************** 
    
 
  //************ set control flag *********************
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
+        control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
   std::vector<int> control_node_flag(Sol_n_el_dofs_Mat[pos_mat_ctrl],0);
  //*************************************************** 
  
@@ -794,9 +798,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
        
        const unsigned nDof_max_bdry = ElementJacRes<double>::compute_max_n_dofs(Sol_el_n_dofs_current_face);
        
-       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
  
-       geom_element.set_elem_center_bdry_3d();
+       geom_element_iel.set_elem_center_bdry_3d();
 
 	    // look for boundary faces
             const int bdry_index = el->GetFaceElementIndex(iel, jface);
@@ -809,7 +813,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               
  //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl].c_str(), tau, face_in_rectangle_domain, 0.);
+	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl].c_str(), tau, face_in_rectangle_domain, 0.);
 
  //=================================================== 
         
@@ -826,7 +830,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     
 		for(unsigned ig_bdry = 0; ig_bdry < n_gauss_bdry; ig_bdry++) {
     
-    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_iqp_bdry, JacI_iqp_bdry, detJac_iqp_bdry, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_iqp_bdry, JacI_iqp_bdry, detJac_iqp_bdry, space_dim);
 	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_iqp_bdry, normal);
     
     weight_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
@@ -836,10 +840,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_adj]]  ->shape_funcs_current_elem(ig_bdry, JacI_iqp_bdry, phi_adj_bdry, phi_adj_x_bdry,  boost::none, space_dim);
 
 
-    elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_iqp/*not_needed_here*/, JacI_iqp, detJac_iqp/*not_needed_here*/, space_dim);
+    elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element_iel.get_coords_at_dofs_3d(), ig_bdry, jface, Jac_iqp/*not_needed_here*/, JacI_iqp, detJac_iqp/*not_needed_here*/, space_dim);
     elem_all[ielGeom][SolFEType_quantities[pos_sol_adj]]->shape_funcs_vol_at_bdry_current_elem(ig_bdry, jface, JacI_iqp, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry, boost::none, space_dim);
      
-//     msh->_finiteElement[ielGeom][SolFEType_quantities[pos_sol_adj]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(geom_element.get_coords_at_dofs(), geom_element.get_coords_at_dofs_bdry_3d(), jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
+//     msh->_finiteElement[ielGeom][SolFEType_quantities[pos_sol_adj]]->fill_volume_shape_funcs_at_boundary_quadrature_points_on_current_elem(geom_element_iel.get_coords_at_dofs(), geom_element_iel.get_coords_at_dofs_bdry_3d(), jface, ig_bdry, phi_adj_vol_at_bdry, phi_adj_x_vol_at_bdry);
 
 		  
 //========== compute gauss quantities on the boundary ===============================================
@@ -997,7 +1001,7 @@ if ( i_vol == j_vol )  {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_iqp, JacI_iqp, detJac_iqp, space_dim);
+    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_iqp, JacI_iqp, detJac_iqp, space_dim);
     weight = detJac_iqp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
 
     elem_all[ielGeom][SolFEType_quantities[pos_sol_state]]->shape_funcs_current_elem(ig, JacI_iqp, phi_u, phi_u_x, phi_u_xx, space_dim);
@@ -1129,17 +1133,17 @@ add_one_times_mu_res_ctrl_bdry(iproc,
 
    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
        
-     geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+     geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
       
     el_dofs_unknowns(sol, msh, pdeSys, iel,
                         SolFEType_Mat, SolIndex_Mat, SolPdeIndex,
                         Sol_n_el_dofs_Mat, sol_eldofs_Mat, L2G_dofmap_Mat);
 
-   geom_element.set_elem_center(iel, solType_coords);
+   geom_element_iel.set_elem_center(iel, solType_coords);
 
  //************ set control flag *********************
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
+        control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
 //  *************************************************** 
 
 // Perform face loop over elements that contain some control face
@@ -1147,7 +1151,7 @@ add_one_times_mu_res_ctrl_bdry(iproc,
 
     	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
 
-       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
 // 	    look for boundary faces
             const int bdry_index = el->GetFaceElementIndex(iel, jface);
    
@@ -1159,7 +1163,7 @@ add_one_times_mu_res_ctrl_bdry(iproc,
        update_active_set_flag_for_current_nonlinear_iteration_bdry
    (msh, sol,
     iel, jface,
-    geom_element.get_coords_at_dofs_bdry_3d(), 
+    geom_element_iel.get_coords_at_dofs_bdry_3d(), 
     sol_eldofs_Mat, 
     Sol_n_el_dofs_Mat, 
     pos_mat_mu,               //this becomes a vector
@@ -1246,7 +1250,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   //=============== Geometry ========================================
    unsigned solType_coords = FE_DOMAIN;
  
-  CurrentElem < double > geom_element(dim, msh);
+  CurrentElem < double > geom_element_iel(dim, msh);
     
   constexpr unsigned int space_dim = 3;
   
@@ -1351,15 +1355,15 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
+    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
         
-    const short unsigned ielGeom = geom_element.geom_type();
+    const short unsigned ielGeom = geom_element_iel.geom_type();
 
   //************* set target domain flag **************
-   geom_element.set_elem_center(iel, solType_coords);
+   geom_element_iel.set_elem_center(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element.get_elem_center());
+   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center());
  //***************************************************
 
    
@@ -1412,7 +1416,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  // ==================================================
  //****** set control flag ***************************
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
+        control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
  //***************************************************
 
   
@@ -1428,9 +1432,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
        const unsigned nve_bdry_ctrl = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
        
 
-       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
+       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, jface, solType_coords);
  
-       geom_element.set_elem_center_bdry_3d();
+       geom_element_iel.set_elem_center_bdry_3d();
 
        
 	    // look for boundary faces
@@ -1451,7 +1455,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 		
 		for(unsigned ig_bdry = 0; ig_bdry < ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber(); ig_bdry++) {
 		  
-    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
     weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
     elem_all[ielGeom_bdry][solType_ctrl] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, boost::none, space_dim);
 
@@ -1492,7 +1496,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
+    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
     weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
 
     elem_all[ielGeom][solType_u]                 ->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, space_dim);

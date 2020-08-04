@@ -604,8 +604,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           }
         }
 
+        const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
 
-        for(unsigned ig = 0; ig < igNumber; ig++) {
+        for(unsigned ig = 0; ig < jgNumber; ig++) {
 
           msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
 
