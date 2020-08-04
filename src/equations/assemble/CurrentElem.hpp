@@ -138,11 +138,11 @@ class CurrentElem {
 
   private:
 
-  std::vector < std::vector < real_num_mov > >  _coords_at_dofs;         // must be adept if the domain is moving, otherwise double
-  std::vector < std::vector < real_num_mov > >  _coords_at_dofs_3d;
-  std::vector< real_num_mov > _elem_center_3d;                           // element center point
+  std::vector < std::vector < real_num_mov > >  _coords_at_dofs;         //[DIM][N_DOFS]       // must be adept if the domain is moving, otherwise double
+  std::vector < std::vector < real_num_mov > >  _coords_at_dofs_3d;      //[3][N_DOFS]
+  std::vector< real_num_mov > _elem_center_3d;                                             // element center point
   
-  std::vector < std::vector < real_num_mov > >  _coords_at_dofs_bdry_3d;
+  std::vector < std::vector < real_num_mov > >  _coords_at_dofs_bdry_3d; //[3][N_DOFS_BDRY]
   std::vector< real_num_mov > _elem_center_bdry_3d;
 
   const uint _dim;         //spatial dimension of the current element (can be different from the mesh dimension!)
