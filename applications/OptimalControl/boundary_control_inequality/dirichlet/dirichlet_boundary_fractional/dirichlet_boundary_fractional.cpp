@@ -364,8 +364,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   constexpr unsigned int space_dim = 3;
   
   std::vector< double > normal(space_dim, 0.);
- //***************************************************  
   
+ //************ geom ***************************************  
   vector < double > coord_at_qp_bdry(space_dim);
   
   vector <double> phi_coords;
@@ -376,6 +376,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   phi_coords_x.reserve(max_size * space_dim);
   phi_coords_xx.reserve(max_size * dim2);
   
+ //********************* bdry cont *******************
+ //*************************************************** 
+  vector <double> phi_coords_iqp_bdry;  
+  vector <double> phi_coords_x_iqp_bdry; 
+
+  phi_coords_iqp_bdry.reserve(max_size);
+  phi_coords_x_iqp_bdry.reserve(max_size * space_dim);
 
  //*************************************************** 
 
@@ -616,6 +623,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     weight_bdry,
                     phi_ctrl_bdry,
                     phi_ctrl_x_bdry, 
+                    phi_coords_iqp_bdry,
+                    phi_coords_x_iqp_bdry, 
                     //-----------
                     Jac_iqp_bdry,
                     JacI_iqp_bdry,
