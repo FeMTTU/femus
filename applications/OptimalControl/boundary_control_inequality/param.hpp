@@ -700,13 +700,13 @@ void el_dofs_unknowns(const Solution*                sol,
 // --- geometry        
         
     //************ set control flag *********************
-  int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element_jel.get_elem_center());
+  int control_el_flag_j = 0;
+        control_el_flag_j = ControlDomainFlag_bdry(geom_element_jel.get_elem_center());
   std::vector<int> control_node_flag(Sol_n_el_dofs_Mat[pos_mat_ctrl], 0);
  //*************************************************** 
       
 	// Perform face loop over elements that contain some control face
-	if (control_el_flag == 1) {
+	if (control_el_flag_j == 1) {
         
         
       double tau = 0.;
@@ -723,13 +723,13 @@ void el_dofs_unknowns(const Solution*                sol,
        geom_element_jel.set_elem_center_bdry_3d();
 
 	    // look for boundary faces
-            const int bdry_index = msh->el->GetFaceElementIndex(jel, jface);
+            const int bdry_index_j = msh->el->GetFaceElementIndex(jel, jface);
             
-	    if( bdry_index < 0) {
-	      const unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(jel,jface) + 1);
+	    if( bdry_index_j < 0) {
+	      const unsigned int face_in_rectangle_domain_j = -( msh->el->GetFaceElementIndex(jel,jface) + 1);
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
-	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
+	      if(  face_in_rectangle_domain_j == FACE_FOR_CONTROL) { //control face
 
               
               //Quadrature loop
@@ -743,10 +743,10 @@ void el_dofs_unknowns(const Solution*                sol,
          
          
          
-          }
-        }
-      }
-    }
+//           }
+//         }
+//       }
+//     }
         
         
 // ***** Bdry intro ****************************
@@ -936,13 +936,13 @@ void el_dofs_unknowns(const Solution*                sol,
            
            
    //************ set control flag *********************
-  int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
+  int control_el_flag_i = 0;
+        control_el_flag_i = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
   std::vector<int> control_node_flag(Sol_n_el_dofs_Mat[pos_mat_ctrl], 0);
  //*************************************************** 
       
 	// Perform face loop over elements that contain some control face
-	if (control_el_flag == 1) {
+	if (control_el_flag_i == 1) {
         
         
       double tau = 0.;
@@ -959,13 +959,13 @@ void el_dofs_unknowns(const Solution*                sol,
        geom_element_iel.set_elem_center_bdry_3d();
 
 	    // look for boundary faces
-            const int bdry_index = msh->el->GetFaceElementIndex(iel, iface);
+            const int bdry_index_i = msh->el->GetFaceElementIndex(iel, iface);
             
-	    if( bdry_index < 0) {
-	      const unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,iface)+1);
+	    if( bdry_index_i < 0) {
+	      const unsigned int face_in_rectangle_domain_i = -( msh->el->GetFaceElementIndex(iel,iface)+1);
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
-	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
+	      if(  face_in_rectangle_domain_i == FACE_FOR_CONTROL) { //control face
 
         counter_verify++;
               
@@ -1136,20 +1136,14 @@ void el_dofs_unknowns(const Solution*                sol,
     } //OP_Hhalf != 0              
           
             
-            
-            
         }   //end iqp_bdry
               
               
-              
-          }
-        }
+          } //end if(face_in_rectangle_domain_i == FACE_FOR_CONTROL)
+        } //end if(bdry_index_i < 0)
       } //end iface
-        
-	  
-    } //end control elem flag
-           
-           
+    } //end control elem flag i (control_el_flag_i == 1)
+    
 
                 
                 
@@ -1180,6 +1174,11 @@ void el_dofs_unknowns(const Solution*                sol,
         
         
     } //end iel
+    
+              } //end if(face_in_rectangle_domain_j == FACE_FOR_CONTROL)
+        } //end if(bdry_index_j < 0)
+      } //end jface
+    }  //end control elem flag j (control_el_flag_i == 1
     
     } //end jel
     } //end kproc
