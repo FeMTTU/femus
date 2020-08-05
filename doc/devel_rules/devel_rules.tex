@@ -537,6 +537,17 @@ you pick for the quadrature the ones that guarantees exactness for the highest-d
  
  Every LinearEquationSolver has a Solver (which somehow tends to be called Smoother often times) and a Preconditioner
  
+ \section{Sparsity pattern}
+ 
+  When you have a matrix to store, you need to define a sparsity pattern
+  
+  The classes where this is taken care of are 
+  
+  LinearImplicitSystem, in the init() function
+  
+  LinearEquation, in the InitPde function
+  
+  
  
   
  \section{ML vs. MG solver}
