@@ -668,8 +668,8 @@ void el_dofs_unknowns(const Solution*                sol,
  
  
   //-------- local to global mappings --------------
-  vector< int > l2GMap1;  l2GMap1.reserve(maxSize);
-  vector< int > l2GMap2;  l2GMap2.reserve(maxSize);
+  vector< int > l2gMap_iel;  l2gMap_iel.reserve(maxSize);
+  vector< int > l2gMap_jel;  l2gMap_jel.reserve(maxSize);
 
 
   //-------- Local matrices and rhs --------------
@@ -705,10 +705,7 @@ void el_dofs_unknowns(const Solution*                sol,
        
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
-// ***** Bdry intro ****************************
-// ***** Bdry intro ****************************
-// ***** Bdry intro ****************************
-
+// ******* only control volume elements *************
 // --- geometry        
         geom_element_jel.set_coords_at_dofs_and_geom_type(jel, solType_coords);
 
@@ -718,49 +715,49 @@ void el_dofs_unknowns(const Solution*                sol,
 // --- geometry        
         
     //************ set control flag *********************
-  int control_el_flag_j = 0;
-        control_el_flag_j = ControlDomainFlag_bdry(geom_element_jel.get_elem_center());
+  int control_flag_jel = 0;
+        control_flag_jel = ControlDomainFlag_bdry(geom_element_jel.get_elem_center());
   std::vector<int> control_node_flag_j(Sol_n_el_dofs_Mat[pos_mat_ctrl], 0);
  //*************************************************** 
       
 	// Perform face loop over elements that contain some control face
-	if (control_el_flag_j == 1) {
-        
+	if (control_flag_jel == 1) {
+// ******* only control volume elements *************
          
          
 
       
         
         
-       short unsigned ielGeom2;
-      unsigned nDof2;
+       short unsigned jelGeom;
+      unsigned nDof_jel;
       unsigned nDofx2;
       unsigned nDofu2;
       //unsigned n_face;
 
 // --- vector sizes
       if(kproc == iproc) {
-        nDof2  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
+        nDof_jel  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
         nDofx2 = msh->GetElementDofNumber(jel, solType_coords);    // number of coordinate element dofs
 
       }
 
-      MPI_Bcast(&nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast(&nDof_jel, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast(&nDofx2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       //MPI_Bcast(&n_face, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
 // --- vector sizes
 
       
 // --- l2GMap
-        l2GMap2.resize(nDof2);
+        l2gMap_jel.resize(nDof_jel);
 
       // local storage of global mapping and solution ********************
       if(kproc == iproc) {
-        for(unsigned j = 0; j < nDof2; j++) {
-          l2GMap2[j] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, j, jel);  // global to global mapping between solution node and pdeSys dof
+        for(unsigned j = 0; j < nDof_jel; j++) {
+          l2gMap_jel[j] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, j, jel);  // global to global mapping between solution node and pdeSys dof
         }
       }
-      MPI_Bcast(&l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast(&l2gMap_jel[0], nDof_jel, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       // ******************************************************************
 // --- l2GMap
 
@@ -770,7 +767,7 @@ void el_dofs_unknowns(const Solution*                sol,
       
       for(int k = 0; k < dim; k++) {  x2[k].resize(nDofx2);  }
 
-      solu2.resize(nDof2);
+      solu2.resize(nDof_jel);
       
       if(kproc == iproc) {
         for(unsigned j = 0; j < nDofx2; j++) {
@@ -779,7 +776,7 @@ void el_dofs_unknowns(const Solution*                sol,
             x2[k][j] = (*msh->_topology->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
           }
         }
-        for(unsigned j = 0; j < nDof2; j++) {
+        for(unsigned j = 0; j < nDof_jel; j++) {
           unsigned jDof  = msh->GetSolutionDof(j, jel, solType);  // global to global mapping between coordinates node and coordinate dof
           solu2[j] = (*sol->_Sol[soluIndex])(jDof);  // global extraction and local storage for the element coordinates
         }
@@ -787,7 +784,7 @@ void el_dofs_unknowns(const Solution*                sol,
       for(unsigned k = 0; k < dim; k++) {
         MPI_Bcast(& x2[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
       }
-      MPI_Bcast(& solu2[0], nDof2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      MPI_Bcast(& solu2[0], nDof_jel, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
 
       // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
       if(kproc == iproc) {
@@ -804,12 +801,12 @@ void el_dofs_unknowns(const Solution*                sol,
 
 
 // --- geom_el type
-      if(kproc == iproc) {   ielGeom2 = msh->GetElementType(jel);  }
-      MPI_Bcast(&ielGeom2, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
+      if(kproc == iproc) {   jelGeom = msh->GetElementType(jel);  }
+      MPI_Bcast(&jelGeom, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
 // --- geom_el type
 
-//       const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
-      const unsigned jgNumber = ml_prob.GetQuadratureRule(ielGeom2).GetGaussPointsNumber();
+//       const unsigned jgNumber = msh->_finiteElement[jelGeom][solType]->GetGaussPointNumber();
+      const unsigned jgNumber = ml_prob.GetQuadratureRule(jelGeom).GetGaussPointsNumber();
 //       const unsigned n_jqp_bdry = ml_prob.GetQuadratureRule(jelGeom_bdry).GetGaussPointsNumber();
 
       vector < vector < double > > xg2(jgNumber);
@@ -821,11 +818,11 @@ void el_dofs_unknowns(const Solution*                sol,
 // // // //---- Quadrature in j, preparation -------      
 // // //       for(unsigned jg = 0; jg < jgNumber; jg++) {
 // // // 
-// // //         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
+// // //         msh->_finiteElement[jelGeom][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
 // // // 
-// // //         elem_all[ielGeom2][solType_coords]->JacJacInv(/*x2*/geom_element_jel.get_coords_at_dofs_3d(), jg, Jac_jqp, JacI_jqp, detJac_jqp, space_dim);
-// // //         weight2[jg] = detJac_jqp * ml_prob.GetQuadratureRule(ielGeom2).GetGaussWeightsPointer()[jg];
-// // //         elem_all[ielGeom2][solType]->shape_funcs_current_elem(jg, JacI_jqp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
+// // //         elem_all[jelGeom][solType_coords]->JacJacInv(/*x2*/geom_element_jel.get_coords_at_dofs_3d(), jg, Jac_jqp, JacI_jqp, detJac_jqp, space_dim);
+// // //         weight2[jg] = detJac_jqp * ml_prob.GetQuadratureRule(jelGeom).GetGaussWeightsPointer()[jg];
+// // //         elem_all[jelGeom][solType]->shape_funcs_current_elem(jg, JacI_jqp, phi2[jg], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
 // // // 
 // // // 
 // // // 
@@ -833,7 +830,7 @@ void el_dofs_unknowns(const Solution*                sol,
 // // //         xg2[jg].assign(dim, 0.);
 // // //         solY[jg] = 0.;
 // // // 
-// // //         for(unsigned j = 0; j < nDof2; j++) {
+// // //         for(unsigned j = 0; j < nDof_jel; j++) {
 // // //           solY[jg] += solu2[j] * phi2[jg][j];
 // // //           for(unsigned k = 0; k < dim; k++) {
 // // //             xg2[jg][k] += x2[k][j] * phi2[jg][j];
@@ -844,82 +841,82 @@ void el_dofs_unknowns(const Solution*                sol,
 // // // //---- Quadrature in j, preparation -------      
         
      
-       
-       unsigned counter_verify = 0;
-       
+              
        for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
            
            
+// ******* only control volume elements *************
 // --- geometry        
         geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
 
-        short unsigned ielGeom1 = geom_element_iel.geom_type();
+        short unsigned ielGeom = geom_element_iel.geom_type();
               
         geom_element_iel.set_elem_center(iel, solType_coords);
 // --- geometry        
 
-
-        unsigned nDof1  = msh->GetElementDofNumber(iel, solType);
+   //************ set control flag *********************
+  int control_flag_iel = 0;
+        control_flag_iel = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
+  std::vector<int> control_node_flag_i(Sol_n_el_dofs_Mat[pos_mat_ctrl], 0);
+ //*************************************************** 
+      
+	// Perform face loop over elements that contain some control face
+	if (control_flag_iel == 1) {
+// ******* only control volume elements *************
+        
+        unsigned nDof_iel  = msh->GetElementDofNumber(iel, solType);
 
 // --- l2GMap
-        l2GMap1.resize(nDof1);
-        for(unsigned i = 0; i < nDof1; i++) {
-          l2GMap1[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);
+        l2gMap_iel.resize(nDof_iel);
+        for(unsigned i = 0; i < nDof_iel; i++) {
+          l2gMap_iel[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);
         }
 // --- l2GMap
 
       
         
 // --- solution        
-       solu1.resize(nDof1);
+       solu1.resize(nDof_iel);
         
-        for(unsigned i = 0; i < nDof1; i++) {
+        for(unsigned i = 0; i < nDof_iel; i++) {
           unsigned iDof  = msh->GetSolutionDof(i, iel, solType);  // global to global mapping between coordinates node and coordinate dof
           solu1[i] = (*sol->_Sol[soluIndex])(iDof);  // global extraction and local storage for the element coordinates
         }
 // --- solution        
 
 
-//****** matrix resizing ******
-//           CC_local.assign(nDof1 * nDof2, 0.);   //resize
-        CC_nonlocal_II.assign(nDof1 * nDof2, 0.);   //resize
-        CC_nonlocal_IJ.assign(nDof1 * nDof2, 0.);   //resize
-        CC_nonlocal_JI.assign(nDof1 * nDof2, 0.);   //resize
-        CC_nonlocal_JJ.assign(nDof1 * nDof2, 0.);   //resize
-//         Res_nonlocal.assign(nDof1, 0);    //resize
-        Res_nonlocalI.assign(nDof1, 0.);    //resize
-        Res_nonlocalJ.assign(nDof1, 0.);    //resize
+//****** element matrix and vector resizing ******
+//           CC_local.assign(nDof_iel * nDof_jel, 0.);   //resize
+        CC_nonlocal_II.assign(nDof_iel * nDof_iel, 0.);   //resize
+        CC_nonlocal_IJ.assign(nDof_iel * nDof_jel, 0.);   //resize
+        CC_nonlocal_JI.assign(nDof_jel * nDof_iel, 0.);   //resize
+        CC_nonlocal_JJ.assign(nDof_jel * nDof_jel, 0.);   //resize
+//         Res_nonlocal.assign(nDof_iel, 0);    //resize
+        Res_nonlocalI.assign(nDof_iel, 0.);    //resize
+        Res_nonlocalJ.assign(nDof_jel, 0.);    //resize
 
-        Res_mixed.assign(nDof1, 0.);    //resize
-        KK_mixed.assign(nDof1 * nDof1, 0.);
+        Res_mixed.assign(nDof_iel, 0.);    //resize
+        KK_mixed.assign(nDof_iel * nDof_iel, 0.);
 
         if( check_if_same_elem(iel, jel) ) {
-          Res_local.assign(nDof1, 0.);    //resize
-          KK_local.assign(nDof1 * nDof1, 0.);
+          Res_local.assign(nDof_iel, 0.);    //resize
+          KK_local.assign(nDof_iel * nDof_iel, 0.);
           if(Nsplit != 0) {
 //             Vectors and matrices for adaptive quadrature
-            Res_local_refined.assign(nDof1, 0.);    //resize
-            CClocal_refined.assign(nDof1 * nDof1, 0.);
+            Res_local_refined.assign(nDof_iel, 0.);    //resize
+            CClocal_refined.assign(nDof_iel * nDof_iel, 0.);
           }
         }
-  //****** matrix resizing ******
+//****** element matrix and vector resizing ******
+          
+           
 
-           
-           
-   //************ set control flag *********************
-  int control_el_flag_i = 0;
-        control_el_flag_i = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
-  std::vector<int> control_node_flag_i(Sol_n_el_dofs_Mat[pos_mat_ctrl], 0);
- //*************************************************** 
-      
-	// Perform face loop over elements that contain some control face
-	if (control_el_flag_i == 1) {
         
         
 //------------ iface opening ---------        
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
           
-       const unsigned ielGeom1_bdry = msh->GetElementFaceType(iel, iface);    
+       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
        
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
  
@@ -933,9 +930,6 @@ void el_dofs_unknowns(const Solution*                sol,
 	    if( check_if_boundary_control_face( bdry_index_i, face_in_rectangle_domain_i) ) {
 //------------ iface opening ---------        
 		
-
-
-        counter_verify++;
 
         
 //------------ jface opening ---------        
@@ -964,7 +958,7 @@ void el_dofs_unknowns(const Solution*                sol,
         
         
               //Quadrature loop initialization
-                      const unsigned n_iqp_bdry = ml_prob.GetQuadratureRule(ielGeom1_bdry).GetGaussPointsNumber();
+                      const unsigned n_iqp_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
          double sol_ctrl_iqp_bdry = 0.;
               //Quadrature loop initialization
      
@@ -972,7 +966,7 @@ void el_dofs_unknowns(const Solution*                sol,
         std::vector < std::vector < std::vector <double > > > aP(3);  //[NFE_FAMS][][]
         if(Nsplit != 0) {
           for(unsigned fe_type = 0; fe_type < solType + 1; fe_type++) { //loop up to the FE type + 1 of the unknown
-            ProjectNodalToPolynomialCoefficients(aP[fe_type], geom_element_iel.get_coords_at_dofs_bdry_3d(), ielGeom1_bdry, fe_type) ;         ///@todo check this!!!!!!!!!!!!
+            ProjectNodalToPolynomialCoefficients(aP[fe_type], geom_element_iel.get_coords_at_dofs_bdry_3d(), ielGeom_bdry, fe_type) ;         ///@todo check this!!!!!!!!!!!!
           }
         }                      
      //**** Adaptive preparation: Evaluating coarse FE functions on Quadrature Points of the "sub-elements" ********  
@@ -980,13 +974,13 @@ void el_dofs_unknowns(const Solution*                sol,
     
 		for(unsigned iqp_bdry = 0; iqp_bdry < n_iqp_bdry; iqp_bdry++) {
             
-    elem_all[ielGeom1_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_iqp_bdry, JacI_iqp_bdry, detJac_iqp_bdry, space_dim);
+    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_iqp_bdry, JacI_iqp_bdry, detJac_iqp_bdry, space_dim);
     
-    weight_iqp_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRule(ielGeom1_bdry).GetGaussWeightsPointer()[iqp_bdry];
+    weight_iqp_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[ielGeom1_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry, phi_ctrl_iqp_bdry, phi_ctrl_x_iqp_bdry, boost::none, space_dim);
+    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry, phi_ctrl_iqp_bdry, phi_ctrl_x_iqp_bdry, boost::none, space_dim);
             
-    elem_all[ielGeom1_bdry][solType_coords] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry, phi_coords_iqp_bdry, phi_coords_x_iqp_bdry, boost::none, space_dim);
+    elem_all[ielGeom_bdry][solType_coords] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry, phi_coords_iqp_bdry, phi_coords_x_iqp_bdry, boost::none, space_dim);
 
 //========== compute gauss quantities on the boundary ===============================================
 //--- geom
@@ -1040,7 +1034,7 @@ void el_dofs_unknowns(const Solution*                sol,
   //============ Adaptive quadrature (iel == jel) ==================
                 
                 
-// // //                       const unsigned n_kqp_bdry = ml_prob.GetQuadratureRule(ielGeom1_bdry/*kelGeom3_bdry, actually*/).GetGaussPointsNumber();
+// // //                       const unsigned n_kqp_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry/*kelGeom3_bdry, actually*/).GetGaussPointsNumber();
 // // //                 
 // // //                 
 // // //              std::cout.precision(14);
@@ -1065,11 +1059,11 @@ void el_dofs_unknowns(const Solution*                sol,
 // // //                   for(unsigned k_qp = 0; k_qp < n_kqp_bdry; k_qp++) {
 // // // 
 // // // 
-// // //                     msh->_finiteElement[ielGeom1][solType]->Jacobian(x3[r], k_qp, weight3, phi3, phi_x);
+// // //                     msh->_finiteElement[ielGeom][solType]->Jacobian(x3[r], k_qp, weight3, phi3, phi_x);
 // // // 
 // // //                     vector < double > xg3(dim, 0.);
 // // // 
-// // //                     for(unsigned i = 0; i < nDof1; i++) {
+// // //                     for(unsigned i = 0; i < nDof_iel; i++) {
 // // //                       for(unsigned k = 0; k < dim; k++) {
 // // //                         xg3[k] += x3[r][k][i] * phi3[i];
 // // //                       }
@@ -1077,13 +1071,13 @@ void el_dofs_unknowns(const Solution*                sol,
 // // // 
 // // //                     std::vector<double> xi3(dim, 0.);
 // // // 
-// // //                     GetClosestPointInReferenceElement(geom_element_iel.get_coords_at_dofs_bdry_3d(), xg3, ielGeom1, xi3);
-// // //                     GetInverseMapping(solType, ielGeom1, aP, xg3, xi3, 1000);
+// // //                     GetClosestPointInReferenceElement(geom_element_iel.get_coords_at_dofs_bdry_3d(), xg3, ielGeom, xi3);
+// // //                     GetInverseMapping(solType, ielGeom, aP, xg3, xi3, 1000);
 // // // 
-// // //                     msh->_finiteElement[ielGeom1][solType]->GetPhi(phi3, xi3);
+// // //                     msh->_finiteElement[ielGeom][solType]->GetPhi(phi3, xi3);
 // // // 
 // // //                     double solY3 = 0.;
-// // //                     for(unsigned i = 0; i < nDof1; i++) {
+// // //                     for(unsigned i = 0; i < nDof_iel; i++) {
 // // //                       solY3 += solu1[i] * phi3[i];
 // // //                     }
 // // // 
@@ -1094,14 +1088,14 @@ void el_dofs_unknowns(const Solution*                sol,
 // // // 
 // // //                     const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
 // // // 
-// // //                     for(unsigned i = 0; i < nDof1; i++) {
+// // //                     for(unsigned i = 0; i < nDof_iel; i++) {
 // // // 
 // // //                       Res_local_refined[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits *
 // // //                                                         ((sol_ctrl_iqp_bdry - solY3) * (phi_ctrl_iqp_bdry[i] - phi3[i]) * weight3 / denom3
 // // //                                                         ) * weight_iqp_bdry ;
 // // // 
-// // //                       for(unsigned j = 0; j < nDof2; j++) {
-// // //                         CClocal_refined[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits *
+// // //                       for(unsigned j = 0; j < nDof_jel; j++) {
+// // //                         CClocal_refined[ i * nDof_jel + j ] += (C_ns / 2.) * OP_Hhalf * check_limits *
 // // //                                                             ((phi_ctrl_iqp_bdry[j] - phi3[j]) * (phi_ctrl_iqp_bdry[i] - phi3[i]) * weight3 / denom3
 // // //                                                             ) * weight_iqp_bdry ;
 // // // 
@@ -1126,7 +1120,10 @@ void el_dofs_unknowns(const Solution*                sol,
             
          } //end if(iel != jel || Nsplit == 0)
 
-                
+                      const unsigned n_jqp_bdry = ml_prob.GetQuadratureRule(jelGeom_bdry).GetGaussPointsNumber();
+		for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
+        }  //end jqp_bdry
+        
     } //OP_Hhalf != 0              
           
             
@@ -1148,38 +1145,38 @@ void el_dofs_unknowns(const Solution*                sol,
                 
 //============ add to global ==================
          if( check_if_same_elem(iel, jel) ) {
-          KK->add_matrix_blocked(KK_local, l2GMap1, l2GMap1);
-          RES->add_vector_blocked(Res_local, l2GMap1);
+          KK->add_matrix_blocked(KK_local, l2gMap_iel, l2gMap_iel);
+          RES->add_vector_blocked(Res_local, l2gMap_iel);
 
           if(Nsplit != 0) {
-            KK->add_matrix_blocked(CClocal_refined, l2GMap1, l2GMap1);
-            RES->add_vector_blocked(Res_local_refined, l2GMap1);
+            KK->add_matrix_blocked(CClocal_refined, l2gMap_iel, l2gMap_iel);
+            RES->add_vector_blocked(Res_local_refined, l2gMap_iel);
           }
         }
-//        KK->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
-        KK->add_matrix_blocked(KK_mixed, l2GMap1, l2GMap1);
-        RES->add_vector_blocked(Res_mixed, l2GMap1);
+//        KK->add_matrix_blocked(CClocal, l2gMap_iel, l2gMap_jel);
+        KK->add_matrix_blocked(KK_mixed, l2gMap_iel, l2gMap_iel);
+        RES->add_vector_blocked(Res_mixed, l2gMap_iel);
 
-        KK->add_matrix_blocked(CC_nonlocal_II, l2GMap1, l2GMap1);
-        KK->add_matrix_blocked(CC_nonlocal_JI, l2GMap2, l2GMap1);
-        KK->add_matrix_blocked(CC_nonlocal_IJ, l2GMap1, l2GMap2);
-        KK->add_matrix_blocked(CC_nonlocal_JJ, l2GMap2, l2GMap2);
+        KK->add_matrix_blocked(CC_nonlocal_II, l2gMap_iel, l2gMap_iel);
+        KK->add_matrix_blocked(CC_nonlocal_JI, l2gMap_jel, l2gMap_iel);
+        KK->add_matrix_blocked(CC_nonlocal_IJ, l2gMap_iel, l2gMap_jel);
+        KK->add_matrix_blocked(CC_nonlocal_JJ, l2gMap_jel, l2gMap_jel);
 // Since 1 is dense and 3 are sparse, and the dense dofs are 30, we should have at most 3x9 + 30 = 57, but in the sparsity print it shows 30. That's the problem
 
-//        RES->add_vector_blocked(Res_nonlocal, l2GMap1);
-        RES->add_vector_blocked(Res_nonlocalI, l2GMap1);
-        RES->add_vector_blocked(Res_nonlocalJ, l2GMap2);
+//        RES->add_vector_blocked(Res_nonlocal, l2gMap_iel);
+        RES->add_vector_blocked(Res_nonlocalI, l2gMap_iel);
+        RES->add_vector_blocked(Res_nonlocalJ, l2gMap_jel);
 //============ add to global - end ==================
         
         
 //----- iel ---        
-    } //end control elem flag i (control_el_flag_i == 1)
+    } //end control elem flag i (control_flag_iel == 1)
   } //end iel
 //----- iel ---        
 
     
 //----- jel ---        
-    }  //end control elem flag j (control_el_flag_i == 1
+    }  //end control elem flag j (control_flag_iel == 1
    } //end jel
 //----- jel ---        
    
