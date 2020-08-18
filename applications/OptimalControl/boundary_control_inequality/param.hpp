@@ -13,7 +13,7 @@
 #include "../fractional_functions.hpp"
 
 
-
+#include <functional>
 
 
 
@@ -622,7 +622,10 @@ void el_dofs_unknowns(const Solution*                sol,
                         const double C_ns,
                         const unsigned int OP_Hhalf,
                         const unsigned int OP_L2,
-                        const unsigned int RHS_ONE
+                        const unsigned int RHS_ONE,
+                        const unsigned int UNBOUNDED,
+                        const double EX_1,
+                        const double EX_2
                        ) {
       
 //  //***************************************************
@@ -673,27 +676,25 @@ void el_dofs_unknowns(const Solution*                sol,
 
 
   //-------- Local matrices and rhs --------------
-  vector < double > KK_local_iel;  KK_local_iel.reserve(maxSize * maxSize);
   vector < double > Res_local_iel; Res_local_iel.reserve(maxSize);
+  vector < double > KK_local_iel;  KK_local_iel.reserve(maxSize * maxSize);
 
-//   Local matrices and rhs for adaptive quadrature
-  vector < double > Res_local_refined; Res_local_refined.reserve(maxSize);
-  vector < double > CClocal_refined;   CClocal_refined.reserve(maxSize * maxSize);
+//   Local matrices and rhs for adaptive quadrature (iel == jel)
+  vector < double > Res_local_iel_refined; Res_local_iel_refined.reserve(maxSize);
+  vector < double > KK_local_iel_refined;   KK_local_iel_refined.reserve(maxSize * maxSize);
 
-  vector < double > KK_local_mixed_num;   KK_local_mixed_num.reserve(maxSize * maxSize);
-  vector < double > Res_local_mixed_num;  Res_local_mixed_num.reserve(maxSize);
+//   Local matrices and rhs for the mixed internal-external integral term (both adaptive and non-adaptive)
+  vector < double > Res_local_iel_mixed_num;  Res_local_iel_mixed_num.reserve(maxSize);
+  vector < double > KK_local_iel_mixed_num;   KK_local_iel_mixed_num.reserve(maxSize * maxSize);
 
 //   Non local matrices and vectors for H^s laplacian operator
-//   vector< double >         Res_nonlocal;
-//   Res_nonlocal.reserve(maxSize);  // local residual vector
-  vector< double >         Res_nonlocalI;  Res_nonlocalI.reserve(maxSize);
-  vector< double >         Res_nonlocalJ;  Res_nonlocalJ.reserve(maxSize);
-//   vector < double > CClocal;
-//   CClocal.reserve(maxSize * maxSize);
-  vector < double > CC_nonlocal_II;  CC_nonlocal_II.reserve(maxSize * maxSize);
-  vector < double > CC_nonlocal_IJ;  CC_nonlocal_IJ.reserve(maxSize * maxSize);
-  vector < double > CC_nonlocal_JI;  CC_nonlocal_JI.reserve(maxSize * maxSize);
-  vector < double > CC_nonlocal_JJ;  CC_nonlocal_JJ.reserve(maxSize * maxSize); 
+  vector< double >         Res_nonlocal_iel;  Res_nonlocal_iel.reserve(maxSize);
+  vector< double >         Res_nonlocal_jel;  Res_nonlocal_jel.reserve(maxSize);
+
+  vector < double > KK_nonlocal_iel_iel;  KK_nonlocal_iel_iel.reserve(maxSize * maxSize);
+  vector < double > KK_nonlocal_iel_jel;  KK_nonlocal_iel_jel.reserve(maxSize * maxSize);
+  vector < double > KK_nonlocal_jel_iel;  KK_nonlocal_jel_iel.reserve(maxSize * maxSize);
+  vector < double > KK_nonlocal_jel_jel;  KK_nonlocal_jel_jel.reserve(maxSize * maxSize); 
  
  //----------------------
   KK->zero();
@@ -913,8 +914,14 @@ void el_dofs_unknowns(const Solution*                sol,
 // // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
 
             
-              
-              
+// ---- boundary faces in jface: compute and broadcast - BEGIN ----
+// This is only needed for when the boundary is a 2D face. We'll look at it later on
+// look for what face of jface are on the boundary of the domain
+// I believe we have to see deeply how we can extend this to the boundary case
+
+// ---- boundary faces in jface: compute and broadcast - END ----    
+
+
               
        for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
            
@@ -959,25 +966,24 @@ void el_dofs_unknowns(const Solution*                sol,
 // --- l2GMap
 
 // --- element matrix and vector resizing
-//           CC_local.assign(nDof_iel * nDof_jel, 0.);   //resize
-        CC_nonlocal_II.assign(nDof_iel * nDof_iel, 0.);   //resize
-        CC_nonlocal_IJ.assign(nDof_iel * nDof_jel, 0.);   //resize
-        CC_nonlocal_JI.assign(nDof_jel * nDof_iel, 0.);   //resize
-        CC_nonlocal_JJ.assign(nDof_jel * nDof_jel, 0.);   //resize
+        KK_nonlocal_iel_iel.assign(nDof_iel * nDof_iel, 0.);   //resize
+        KK_nonlocal_iel_jel.assign(nDof_iel * nDof_jel, 0.);   //resize
+        KK_nonlocal_jel_iel.assign(nDof_jel * nDof_iel, 0.);   //resize
+        KK_nonlocal_jel_jel.assign(nDof_jel * nDof_jel, 0.);   //resize
 //         Res_nonlocal.assign(nDof_iel, 0);    //resize
-        Res_nonlocalI.assign(nDof_iel, 0.);    //resize
-        Res_nonlocalJ.assign(nDof_jel, 0.);    //resize
+        Res_nonlocal_iel.assign(nDof_iel, 0.);    //resize
+        Res_nonlocal_jel.assign(nDof_jel, 0.);    //resize
 
-        Res_local_mixed_num.assign(nDof_iel, 0.);    //resize
-        KK_local_mixed_num.assign(nDof_iel * nDof_iel, 0.);
+        Res_local_iel_mixed_num.assign(nDof_iel, 0.);    //resize
+        KK_local_iel_mixed_num.assign(nDof_iel * nDof_iel, 0.);
 
         if( check_if_same_elem(iel, jel) ) {
           Res_local_iel.assign(nDof_iel, 0.);    //resize
           KK_local_iel.assign(nDof_iel * nDof_iel, 0.);
           if(Nsplit != 0) {
 //             Vectors and matrices for adaptive quadrature
-            Res_local_refined.assign(nDof_iel, 0.);    //resize
-            CClocal_refined.assign(nDof_iel * nDof_iel, 0.);
+            Res_local_iel_refined.assign(nDof_iel, 0.);    //resize
+            KK_local_iel_refined.assign(nDof_iel * nDof_iel, 0.);
           }
         }
 // --- element matrix and vector resizing 
@@ -1156,12 +1162,12 @@ void el_dofs_unknowns(const Solution*                sol,
 // // // 
 // // //                     for(unsigned i = 0; i < nDof_iel; i++) {
 // // // 
-// // //                       Res_local_refined[ i ]    +=      - (0.5 * C_ns) * OP_Hhalf * check_limits *
+// // //                       Res_local_iel_refined[ i ]    +=      - (0.5 * C_ns) * OP_Hhalf * check_limits *
 // // //                                                         ((sol_ctrl_iqp_bdry - solY3) * (phi_ctrl_iel_bdry_iqp_bdry[i] - phi3[i]) * weight3 / denom3
 // // //                                                         ) * weight_iqp_bdry ;
 // // // 
 // // //                       for(unsigned j = 0; j < nDof_jel; j++) {
-// // //                         CClocal_refined[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits *
+// // //                         KK_local_iel_refined[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits *
 // // //                                                             ((phi_ctrl_iel_bdry_iqp_bdry[j] - phi3[j]) * (phi_ctrl_iel_bdry_iqp_bdry[i] - phi3[i]) * weight3 / denom3
 // // //                                                             ) * weight_iqp_bdry ;
 // // // 
@@ -1183,6 +1189,96 @@ void el_dofs_unknowns(const Solution*                sol,
       //============ Either different elements, or non-adaptivity (on all elements) - BEGIN ==================
         else {  //  if(iel != jel || Nsplit == 0) 
 // ********* UNBOUNDED PART - BEGIN ***************
+          if(UNBOUNDED == 1) {
+    //============  Mixed integral 1D - Analytical  ==================
+            if(/*dim*/dim_bdry == 1) {
+              double ex_1 = EX_1;
+              double ex_2 = EX_2;
+              double dist_1 = 0.;
+              double dist_2 = 0.;
+              
+              for(int d = 0; d < dim_bdry; d++) {
+                dist_1 += sqrt((x_iqp_bdry[d] - ex_1) * (x_iqp_bdry[d] - ex_1));
+                dist_2 += sqrt((x_iqp_bdry[d] - ex_2) * (x_iqp_bdry[d] - ex_2));
+              }
+              
+              double mixed_term = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
+
+              for(unsigned i = 0; i < nDof_iel; i++) {
+                for(unsigned j = 0; j < nDof_iel; j++) {
+                  KK_local_iel[ i * nDof_iel + j ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term;
+                }
+                Res_local_iel[ i ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_term;
+              }
+            }
+    //============  Mixed integral 1D - Analytical  ==================        
+    
+    //============ Mixed Integral 2D - Numerical ==================      
+            else if( /*dim*/dim_bdry == 2 ) {
+                
+// // //             double mixed_term1 = 0.;
+// // // //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
+// // //             // *** Face Gauss point loop (boundary Integral) ***
+// // //             for(unsigned jj = 0; jj < bd_face.size(); jj++) {
+// // // 
+// // //               int jface = bd_face[jj];
+// // //               // look for boundary faces
+// // // 
+// // //               unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
+// // // 
+// // //               vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
+// // //               for(int k = 0; k < dim; k++) {
+// // //                 faceCoordinates[k].resize(faceDofs);
+// // //               }
+// // //               for(unsigned i = 0; i < faceDofs; i++) {
+// // //                 unsigned inode = el->GetIG(ielGeom2, jface, i);  // face-to-element local node mapping.
+// // //                 for(unsigned k = 0; k < dim; k++) {
+// // //                   faceCoordinates[k][i] =  x2[k][inode] - x_iqp_bdry[k]; // We extract the local coordinates on the face from local coordinates on the element.
+// // //                 }
+// // //               }
+// // //               const unsigned div = 10;
+// // //               vector  < vector  <  double> > interpCoordinates(dim);
+// // //               for(int k = 0; k < dim; k++) {
+// // //                 interpCoordinates[k].resize(div + 1); // set "4" as a parameter
+// // //               }
+// // //               for(unsigned n = 0; n <= div; n++) {
+// // //                 for(int k = 0; k < dim; k++) {
+// // //                   interpCoordinates[k][n] = faceCoordinates[k][0] + n * (faceCoordinates[k][1] - faceCoordinates[k][0]) /  div ;
+// // //                 }
+// // //               }
+// // //               for(unsigned n = 0; n < div; n++) {
+// // //                 double teta2 = atan2(interpCoordinates[1][n + 1], interpCoordinates[0][n + 1]);
+// // //                 double teta1 = atan2(interpCoordinates[1][n], interpCoordinates[0][n]);
+// // // 
+// // //                 if(teta2 < teta1) teta2 += 2. * M_PI;
+// // // 
+// // //                 double delta_teta = teta2 - teta1;
+// // // 
+// // // 
+// // //                 vector <double> mid_point;
+// // //                 mid_point.resize(dim);
+// // //                 for(unsigned k = 0; k < dim; k++) {
+// // //                   mid_point[k] = (interpCoordinates[k][n + 1] + interpCoordinates[k][n]) * 0.5;
+// // //                 }
+// // //                 double dist2 = 0;
+// // //                 for(int k = 0; k < dim; k++) {
+// // //                   dist2 += mid_point[k] * mid_point[k];
+// // //                 }
+// // //                 double dist = sqrt(dist2);
+// // //                 mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
+// // //               }
+// // //             }
+// // // 
+// // //             for(unsigned i = 0; i < nDof1; i++) {
+// // //               for(unsigned j = 0; j < nDof1; j++) {
+// // //                 KK_local_iel_mixed_num[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term1;
+// // //               }
+// // //               Res_local_iel_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
+// // //             }
+            
+           }
+//============ Mixed Integral 2D - Numerical ==================
+         }
 // ********* UNBOUNDED PART - END ***************
             
 // ********* BOUNDED PART - BEGIN ***************
@@ -1197,19 +1293,19 @@ void el_dofs_unknowns(const Solution*                sol,
 
               for(unsigned i = 0; i < nDof_iel; i++) {
 
-                Res_nonlocalI[ i ]         +=      - (0.5 * C_ns) * OP_Hhalf *  check_limits * (sol_ctrl_iqp_bdry - sol_ctrl_jqp_bdry[jqp_bdry]) * (phi_ctrl_iel_bdry_iqp_bdry[i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
+                Res_nonlocal_iel[ i ]         +=      - (0.5 * C_ns) * OP_Hhalf *  check_limits * (sol_ctrl_iqp_bdry - sol_ctrl_jqp_bdry[jqp_bdry]) * (phi_ctrl_iel_bdry_iqp_bdry[i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
 
-                Res_nonlocalJ[ i ]         +=      - (0.5 * C_ns) * OP_Hhalf *  check_limits * (sol_ctrl_iqp_bdry - sol_ctrl_jqp_bdry[jqp_bdry]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
+                Res_nonlocal_jel[ i ]         +=      - (0.5 * C_ns) * OP_Hhalf *  check_limits * (sol_ctrl_iqp_bdry - sol_ctrl_jqp_bdry[jqp_bdry]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
 
                 for(unsigned j = 0; j < nDof_jel; j++) {
 
-                  CC_nonlocal_II[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * phi_ctrl_iel_bdry_iqp_bdry[j]  * phi_ctrl_iel_bdry_iqp_bdry[i] * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+                  KK_nonlocal_iel_iel[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * phi_ctrl_iel_bdry_iqp_bdry[j]  * phi_ctrl_iel_bdry_iqp_bdry[i] * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
 
-                  CC_nonlocal_IJ[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j]) * phi_ctrl_iel_bdry_iqp_bdry[i] * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+                  KK_nonlocal_iel_jel[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j]) * phi_ctrl_iel_bdry_iqp_bdry[i] * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
 
-                  CC_nonlocal_JI[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (phi_ctrl_iel_bdry_iqp_bdry[j]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+                  KK_nonlocal_jel_iel[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (phi_ctrl_iel_bdry_iqp_bdry[j]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
 
-                  CC_nonlocal_JJ[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+                  KK_nonlocal_jel_jel[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
 
 
                   }
@@ -1237,30 +1333,49 @@ void el_dofs_unknowns(const Solution*                sol,
 
 
                 
-//============ add to global ==================
-         if( check_if_same_elem(iel, jel) ) {
+//============ add to global - BEGIN ==================
+// // multiply everything by -1.? Don't think so
+// std::transform(KK_local_iel.begin(), KK_local_iel.end(), KK_local_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(Res_local_iel.begin(), Res_local_iel.end(), Res_local_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// 
+// std::transform(KK_local_iel_refined.begin(), KK_local_iel_refined.end(), KK_local_iel_refined.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(Res_local_iel_refined.begin(), Res_local_iel_refined.end(), Res_local_iel_refined.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// 
+// std::transform(KK_local_iel_mixed_num.begin(), KK_local_iel_mixed_num.end(), KK_local_iel_mixed_num.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(Res_local_iel_mixed_num.begin(), Res_local_iel_mixed_num.end(), Res_local_iel_mixed_num.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// 
+// std::transform(KK_nonlocal_iel_iel.begin(), KK_nonlocal_iel_iel.end(), KK_nonlocal_iel_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(KK_nonlocal_iel_jel.begin(), KK_nonlocal_iel_jel.end(), KK_nonlocal_iel_jel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(KK_nonlocal_jel_iel.begin(), KK_nonlocal_jel_iel.end(), KK_nonlocal_jel_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(KK_nonlocal_jel_jel.begin(), KK_nonlocal_jel_jel.end(), KK_nonlocal_jel_jel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// 
+// std::transform(Res_nonlocal_iel.begin(), Res_nonlocal_iel.end(), Res_nonlocal_iel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// std::transform(Res_nonlocal_jel.begin(), Res_nonlocal_jel.end(), Res_nonlocal_jel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
+// // multiply everything by -1.
+
+if( check_if_same_elem(iel, jel) ) {
           KK->add_matrix_blocked(KK_local_iel, l2gMap_iel, l2gMap_iel);
           RES->add_vector_blocked(Res_local_iel, l2gMap_iel);
 
           if(Nsplit != 0) {
-            KK->add_matrix_blocked(CClocal_refined, l2gMap_iel, l2gMap_iel);
-            RES->add_vector_blocked(Res_local_refined, l2gMap_iel);
+            KK->add_matrix_blocked(KK_local_iel_refined, l2gMap_iel, l2gMap_iel);
+            RES->add_vector_blocked(Res_local_iel_refined, l2gMap_iel);
           }
         }
 
-        KK->add_matrix_blocked(KK_local_mixed_num, l2gMap_iel, l2gMap_iel);
-        RES->add_vector_blocked(Res_local_mixed_num, l2gMap_iel);
+        KK->add_matrix_blocked(KK_local_iel_mixed_num, l2gMap_iel, l2gMap_iel);
+        RES->add_vector_blocked(Res_local_iel_mixed_num, l2gMap_iel);
 
-        KK->add_matrix_blocked(CC_nonlocal_II, l2gMap_iel, l2gMap_iel);
-        KK->add_matrix_blocked(CC_nonlocal_JI, l2gMap_jel, l2gMap_iel);
-        KK->add_matrix_blocked(CC_nonlocal_IJ, l2gMap_iel, l2gMap_jel);
-        KK->add_matrix_blocked(CC_nonlocal_JJ, l2gMap_jel, l2gMap_jel);
+        KK->add_matrix_blocked(KK_nonlocal_iel_iel, l2gMap_iel, l2gMap_iel);
+        KK->add_matrix_blocked(KK_nonlocal_jel_iel, l2gMap_jel, l2gMap_iel);
+        KK->add_matrix_blocked(KK_nonlocal_iel_jel, l2gMap_iel, l2gMap_jel);
+        KK->add_matrix_blocked(KK_nonlocal_jel_jel, l2gMap_jel, l2gMap_jel);
 // Since 1 is dense and 3 are sparse, and the dense dofs are 30, we should have at most 3x9 + 30 = 57, but in the sparsity print it shows 30. That's the problem
 
 
-        RES->add_vector_blocked(Res_nonlocalI, l2gMap_iel);
-        RES->add_vector_blocked(Res_nonlocalJ, l2gMap_jel);
-//============ add to global - end ==================
+        RES->add_vector_blocked(Res_nonlocal_iel, l2gMap_iel);
+        RES->add_vector_blocked(Res_nonlocal_jel, l2gMap_jel);
+//============ add to global - END ==================
         
         
 //----- iel ---        

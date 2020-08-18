@@ -17,8 +17,8 @@
 #define IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY    0
 
 
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
+#define N_UNIFORM_LEVELS  3
+#define N_ERASED_LEVELS   2
 
 
 //*********************** 
@@ -33,6 +33,11 @@
 #define UNBOUNDED   1
 
 #define USE_Cns     1
+
+#define EX_1        0.
+#define EX_2        1.
+#define EY_1        0.
+#define EY_2        1.
 //*********************** 
 
 
@@ -179,10 +184,11 @@ int main(int argc, char** args) {
    //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
-  unsigned numberOfUniformLevels = 1;
+  const unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
+  const unsigned erased_levels = N_ERASED_LEVELS;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-  ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  ml_mesh.EraseCoarseLevels(erased_levels/*numberOfUniformLevels - 1*/);
   ml_mesh.PrintInfo();
   unsigned dim = ml_mesh.GetDimension();
 
@@ -256,7 +262,7 @@ int main(int argc, char** args) {
    
   system.init(); //I need to put this init before, later I will remove it 
 
-  unsigned n_levels = numberOfUniformLevels/* - erased_levels*/;
+  unsigned n_levels = numberOfUniformLevels - erased_levels;
   std::ostringstream sp_out_base; sp_out_base << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
@@ -667,8 +673,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     C_ns,
                     OP_Hhalf,
                     OP_L2,
-                    RHS_ONE
-                    ) ;
+                    /*RHS_ONE*/0,
+                    UNBOUNDED,
+                    EX_1,
+                    EX_2
+                    );
                     
                     
   
@@ -701,9 +710,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //                     Sol_n_el_dofs_quantities,
 //                     //-----------
 //                     elem_all,
-//                     Jac_qp_bdry,
-//                     JacI_qp_bdry,
-//                     detJac_qp_bdry,
+//                     Jac_iqp_bdry,
+//                     JacI_iqp_bdry,
+//                     detJac_iqp_bdry,
 //                     weight_bdry,
 //                     phi_ctrl_bdry,
 //                     phi_ctrl_x_bdry, 

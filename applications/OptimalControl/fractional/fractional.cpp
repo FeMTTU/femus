@@ -493,7 +493,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
 
 
-// ---- boundary faces in jel: compute and broadcast ----    
+// ---- boundary faces in jel: compute and broadcast - BEGIN ----    
       std::vector <int> bd_face(0);
       unsigned nFaces;
       //std::vector <unsigned> faceDofs(n_face, 0);
@@ -523,7 +523,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
       bd_face.resize(nFaces);
       MPI_Bcast(& bd_face[0], nFaces, MPI_INT, kproc, MPI_COMM_WORLD);
-// ---- boundary faces in jel: compute and broadcast ----    
+// ---- boundary faces in jel: compute and broadcast - END ----    
 
 
 
@@ -915,7 +915,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
             
 // ********* UNBOUNDED PART - BEGIN ***************
           if(UNBOUNDED == 1) {
-    //============  Mixed integral 1D  ==================
+    //============  Mixed integral 1D - Analytical  ==================
             if(dim == 1) {
               double ex_1 = EX_1;
               double ex_2 = EX_2;
@@ -934,9 +934,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
               }
             }
-    //============  Mixed integral 1D  ==================        
+    //============  Mixed integral 1D - Analytical ==================        
     
-    //============ Mixed Integral - Numerical ==================      
+    //============ Mixed Integral 2D - Numerical ==================      
             else if( dim == 2 ) {
             double mixed_term1 = 0;
 //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
