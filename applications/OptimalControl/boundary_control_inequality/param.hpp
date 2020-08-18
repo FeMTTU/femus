@@ -628,26 +628,7 @@ void el_dofs_unknowns(const Solution*                sol,
                         const double EX_2
                        ) {
       
-//  //***************************************************
-//   //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
-// //***************************************************
-//   std::vector < std::vector < double > >  JacI_qp(space_dim);
-//   std::vector < std::vector < double > >  Jac_qp(dim);
-//   for(unsigned d = 0; d < dim; d++) {
-//     Jac_qp[d].resize(space_dim);
-//   }
-//   for(unsigned d = 0; d < space_dim; d++) {
-//     JacI_qp[d].resize(dim);
-//   }
-// 
-//   double detJac_qp;
-//   std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > elem_all;
-//   ml_prob.get_all_abstract_fe(elem_all);
-// //***************************************************
-
       
-   vector < double > phi_x;
-     
       
   unsigned solType =   SolFEType_Mat[pos_mat_ctrl];
   unsigned soluIndex = SolIndex_Mat[pos_mat_ctrl];

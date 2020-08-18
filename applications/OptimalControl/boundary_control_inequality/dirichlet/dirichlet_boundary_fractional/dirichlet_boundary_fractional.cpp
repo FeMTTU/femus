@@ -158,7 +158,10 @@ int main(int argc, char** args) {
         files.RedirectCout();
 
   // ======= Quad Rule ========================
-  std::string fe_quad_rule("seventh");
+  //right now only one quadrature rule is used, so there is no possibility of quadrature point offset to try to avoid numerical cancellation
+  //quadr rule order
+  const std::string fe_quad_rule_1 = "seventh";
+//   const std::string fe_quad_rule_1 = "eighth";
 
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
@@ -172,7 +175,7 @@ int main(int argc, char** args) {
   const double Lref = 1.;
   
   
-  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref);
+  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_1.c_str(), Lref);
   
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, 0, 0., 1., 0., 1., 0., 0., QUAD9, fe_quad_rule.c_str());  
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, NSUB_Z, 0., 1., 0., 1., 0., 1., HEX27, fe_quad_rule.c_str());  
@@ -215,7 +218,7 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob(&ml_sol);
   
   ml_prob.SetFilesHandler(&files);
-  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule_1);
   ml_prob.set_all_abstract_fe();
 
   // ======= Solution: Initial Conditions ==================
@@ -710,6 +713,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //                     Sol_n_el_dofs_quantities,
 //                     //-----------
 //                     elem_all,
+//                      //-----------
 //                     Jac_iqp_bdry,
 //                     JacI_iqp_bdry,
 //                     detJac_iqp_bdry,
