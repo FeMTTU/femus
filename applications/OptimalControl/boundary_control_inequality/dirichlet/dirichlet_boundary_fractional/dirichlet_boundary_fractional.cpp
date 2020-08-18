@@ -558,20 +558,34 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   if (assembleMatrix)  KK->zero();
 
  //*************************************************** 
+// ---
      std::vector < std::vector < double > >  JacI_iqp(space_dim);
      std::vector < std::vector < double > >  Jac_iqp(dim);
     for (unsigned d = 0; d < Jac_iqp.size(); d++) {   Jac_iqp[d].resize(space_dim); }
     for (unsigned d = 0; d < JacI_iqp.size(); d++) { JacI_iqp[d].resize(dim); }
     
     double detJac_iqp;
+// ---
 
-     std::vector < std::vector < double > >  JacI_iqp_bdry(space_dim);
+// ---
+    std::vector < std::vector < double > >  JacI_iqp_bdry(space_dim);
      std::vector < std::vector < double > >  Jac_iqp_bdry(dim-1);
     for (unsigned d = 0; d < Jac_iqp_bdry.size(); d++) {   Jac_iqp_bdry[d].resize(space_dim); }
     for (unsigned d = 0; d < JacI_iqp_bdry.size(); d++) { JacI_iqp_bdry[d].resize(dim-1); }
     
     double detJac_iqp_bdry;
+// ---
     
+// ---
+     std::vector < std::vector < double > >  JacI_jqp_bdry(space_dim);
+     std::vector < std::vector < double > >  Jac_jqp_bdry(dim-1);
+    for (unsigned d = 0; d < Jac_jqp_bdry.size(); d++) {   Jac_jqp_bdry[d].resize(space_dim); }
+    for (unsigned d = 0; d < JacI_jqp_bdry.size(); d++) { JacI_jqp_bdry[d].resize(dim-1); }
+    
+    double detJac_jqp_bdry;
+// ---
+//*************************************************** 
+
     //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all;
   ml_prob.get_all_abstract_fe(elem_all);
@@ -630,12 +644,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     phi_coords_iqp_bdry,
                     phi_coords_x_iqp_bdry, 
                     //-----------
-                    Jac_iqp_bdry,
-                    JacI_iqp_bdry,
-                    detJac_iqp_bdry,
-                    weight_bdry,
-                    phi_ctrl_bdry,
-                    phi_ctrl_x_bdry, 
+                    Jac_jqp_bdry,
+                    JacI_jqp_bdry,
+                    detJac_jqp_bdry,
+//                     weight_bdry,
+//                     phi_ctrl_bdry,
+//                     phi_ctrl_x_bdry, 
                     //-----------
                     pos_mat_ctrl,
                     pos_sol_ctrl,

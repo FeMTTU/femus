@@ -465,7 +465,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
       vector < vector <double> > phi2(jgNumber);  // local test function
       std::vector< double > solY(jgNumber, 0.);
 
-// ---- jg stored computations ----       
+// ---- jg stored computations ---- 
+// you store all that happens at the jg points so that it is computed only once      
       for(unsigned jg = 0; jg < jgNumber; jg++) {
 
 //         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
