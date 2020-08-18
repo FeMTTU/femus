@@ -388,6 +388,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim + 2. * s_frac) / 2.) / (pow(M_PI, dim / 2.) * tgamma(1 -  s_frac)) ;
 
   for(int kproc = 0; kproc < nprocs; kproc++) {
+      
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
       short unsigned ielGeom2;
@@ -530,9 +531,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
       for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
         short unsigned ielGeom1 = msh->GetElementType(iel);
-        unsigned nDof1  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
-        unsigned nDofx1 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
+// ---
+        unsigned nDof1  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
         // resize local arrays
         l2GMap1.resize(nDof1);
         //std::vector<bool>bdcDirichlet(nDof1);
@@ -543,7 +544,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           //unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
           //bdcDirichlet[i] = ( (*sol->_Bdc[soluIndex])(solDof) < 1.5)? false:false;
         }
+// ---
 
+// ---
+        unsigned nDofx1 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
         for(int k = 0; k < dim; k++) {
           x1[k].resize(nDofx1);
         }
@@ -554,13 +558,20 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
             x1[k][i] = (*msh->_topology->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
           }
         }
-        
+// ---
+
+
+// ---
         solu1.resize(nDof1);
         for(unsigned i = 0; i < nDof1; i++) {
           unsigned iDof  = msh->GetSolutionDof(i, iel, solType);  // global to global mapping between coordinates node and coordinate dof
           solu1[i] = (*sol->_Sol[soluIndex])(iDof);  // global extraction and local storage for the element coordinates
         }
+// ---
 
+
+
+// ---
 //         CClocal.assign(nDof1 * nDof2, 0.);   //resize
         CC_nonlocal_II.assign(nDof1 * nDof2, 0.);   //resize
         CC_nonlocal_IJ.assign(nDof1 * nDof2, 0.);   //resize
@@ -582,21 +593,25 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
             CClocal_refined.assign(nDof1 * nDof1, 0.);
           }
         }
-
-        // *** Gauss point loop ***
-        const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
+// ---
 
 
+
+        // *** ig loop ***
+        
+        // *** ig initialization - BEGIN  ***
         double weight1;
         vector < double > phi1;  // local test function
-
-        double weight3;
-        vector < double > phi3;  // local test function
 
         double solX = 0.;
         std::vector<double> sol_u_x(space_dim);
         std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
+        // *** ig initialization - END ***
 
+
+     //**** Adaptive preparation - BEGIN ********  
+        double weight3;
+        vector < double > phi3;
 
         std::vector < std::vector < std::vector <double > > > aP(3);
         if(Nsplit > 0) {
@@ -604,10 +619,13 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
             ProjectNodalToPolynomialCoefficients(aP[jtype], x1, ielGeom1, jtype) ;
           }
         }
+     //**** Adaptive preparation - END ********  
 
+        const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
         const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
+        
 
-        for(unsigned ig = 0; ig < jgNumber; ig++) {
+        for(unsigned ig = 0; ig < jgNumber/*@todo error*/; ig++) {
 
           msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
 
@@ -622,10 +640,12 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               xg1[k] += x1[k][i] * phi1[i];
             }
           }
+          
+          
 
           if(iel == jel) {
 
- //============  Mass assembly ==================
+ //============  Mass assembly - BEGIN ==================
            for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned j = 0; j < nDof1; j++) {
                 KK_local[ i * nDof1 + j ] += OP_L2 * phi1[i] * phi1[j] * weight1;
@@ -634,9 +654,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               Res_local[ i ] += OP_L2 * weight1 * mass_res_i ;
               Res_local[ i ] += - RHS_ONE * weight1 * (phi1[i] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][i])) * ( sin(2 * acos(0.0) * x1[1][i]))*/);
             }
- //============  Mass assembly ==================
+ //============  Mass assembly - END ==================
 
-//============  Laplacian assembly ==================
+//============  Laplacian assembly - BEGIN ==================
 
 //          Residual
             std::fill(sol_u_x.begin(), sol_u_x.end(), 0.);
@@ -658,7 +678,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 KK_local[ i * nDof1 + j ]  += OP_H1 * weight1 *  laplace_mat_i_j;
               }
             }
-//============  Laplacian assembly ==================
+//============  Laplacian assembly - END ==================
 
 //============  Mixed integral - Analytical ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================
 //             if(dim == 1 && UNBOUNDED == 1) {
@@ -722,8 +742,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //             }
 //============  Mixed integral - Analytical ((Rn-Omega) x Omega) assembly (based on the analytic result of integrals) ==================
 
-//============ Adaptive quadrature for iel == jel ==================
-            if(Nsplit != 0 && OP_Hhalf != 0) {
+//============ Adaptive quadrature for iel == jel - BEGIN ==================
+            if(OP_Hhalf != 0) {
+            if(Nsplit != 0) {
 
               std::cout.precision(14);
               std::vector< std::vector<std::vector<double>>> x3;
@@ -789,8 +810,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
                       }
                     }
-//============ Adaptive quadrature for iel == jel ==================
 
+// ********* UNBOUNDED PART - BEGIN ***************
               if(UNBOUNDED == 1) {
 //============ Mixed integral 1D - Analytical ==================
                 if(ig == 0 && dim == 1) {
@@ -875,19 +896,27 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                     Res_local_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solX * mixed_term1;
                   }
                 }
-              }
 //============ Mixed Integral 2D - Numerical ==================
+              }
+// ********* UNBOUNDED PART - END ***************
+              
             } //end jg
           } //end r
         }  //end split
-      }  //end if Nsplit != 0
+              }  //end if Nsplit != 0
+            }  //end  OP_Hhalf != 0
+//============ Adaptive quadrature for iel == jel - END ==================
+
     } // end iel == jel loop
+
 
       if(OP_Hhalf != 0) {
           if(iel != jel || Nsplit == 0) {
             
+// ********* UNBOUNDED PART - BEGIN ***************
+          if(UNBOUNDED == 1) {
     //============  Mixed integral 1D  ==================
-            if(dim == 1 && UNBOUNDED == 1) {
+            if(dim == 1) {
               double ex_1 = EX_1;
               double ex_2 = EX_2;
               double dist_1 = 0.;
@@ -908,7 +937,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
     //============  Mixed integral 1D  ==================        
     
     //============ Mixed Integral - Numerical ==================      
-            if( dim == 2 && UNBOUNDED == 1 ) {
+            else if( dim == 2 ) {
             double mixed_term1 = 0;
 //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
             // *** Face Gauss point loop (boundary Integral) ***
@@ -969,10 +998,12 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               Res_local_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
             }
            }
-          
 //============ Mixed Integral - Numerical ==================
+         }
+// ********* UNBOUNDED PART - END ***************
 
              
+// ********* BOUNDED PART - BEGIN ***************
             for(unsigned jg = 0; jg < jgNumber; jg++) {
 
               double dist_xyz = 0;
@@ -1005,6 +1036,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                   }
                 }
               } //endl jg loop
+// ********* BOUNDED PART - END ***************
+
             } //end if(iel != jel || Nsplit == 0)
           } 
           

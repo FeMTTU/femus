@@ -680,8 +680,8 @@ void el_dofs_unknowns(const Solution*                sol,
   vector < double > Res_local_refined; Res_local_refined.reserve(maxSize);
   vector < double > CClocal_refined;   CClocal_refined.reserve(maxSize * maxSize);
 
-  vector < double > KK_mixed;   KK_mixed.reserve(maxSize * maxSize);
-  vector < double > Res_mixed;  Res_mixed.reserve(maxSize);
+  vector < double > KK_local_mixed_num;   KK_local_mixed_num.reserve(maxSize * maxSize);
+  vector < double > Res_local_mixed_num;  Res_local_mixed_num.reserve(maxSize);
 
 //   Non local matrices and vectors for H^s laplacian operator
 //   vector< double >         Res_nonlocal;
@@ -853,31 +853,25 @@ void el_dofs_unknowns(const Solution*                sol,
 // // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
 // // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
 
-            // Wait a second... If I want to prepare the jqp_bdry loop, I must be inside jface as well...
+// Wait a second... If I want to prepare the jqp_bdry loop, I must be inside jface as well...
 // So now it seems to me that I have to do jel jface iel iface instead...
-// Or better, previously it was jel iel iqp jqp
-// Or better, it has to be jel jface  - iel iface - iqp_bdry jqp_bdry
-            
+// Previously it was jel iel iqp jqp
+// Now, it has to be jel jface  - iel iface - iqp_bdry jqp_bdry
 // The two quadrature loops must be the innermost. In this way you exclude all non-needed volume elements and all non-needed faces, so that you minimize the number of inner ifs. You keep them outside as much as possible
 // There will be a storage of jqp_bdry
-                      const unsigned n_jqp_bdry = ml_prob.GetQuadratureRule(jelGeom_bdry).GetGaussPointsNumber();
+            
+      const unsigned n_jqp_bdry = ml_prob.GetQuadratureRule(jelGeom_bdry).GetGaussPointsNumber();
 
-      vector < vector < double > > xg_jel_bdry_jqp_bdry(n_jqp_bdry);
-      vector <double> weight_jqp_bdry(n_jqp_bdry);
-      vector < vector <double> > phi_ctrl_jel_bdry_jqp_bdry(n_jqp_bdry);
-      vector < vector <double> > phi_ctrl_x_jel_bdry_jqp_bdry(n_jqp_bdry);
-      vector < vector <double> > phi_coords_jel_bdry_jqp_bdry(n_jqp_bdry);
-      vector < vector <double> > phi_coords_x_jel_bdry_jqp_bdry(n_jqp_bdry);
+      vector < vector < double > > x_jqp_bdry(n_jqp_bdry);
+      vector < double > weight_jqp_bdry(n_jqp_bdry);
+      vector < vector < double > > phi_ctrl_jel_bdry_jqp_bdry(n_jqp_bdry);
+      vector < vector < double > > phi_ctrl_x_jel_bdry_jqp_bdry(n_jqp_bdry);
+      vector < vector < double > > phi_coords_jel_bdry_jqp_bdry(n_jqp_bdry);
+      vector < vector < double > > phi_coords_x_jel_bdry_jqp_bdry(n_jqp_bdry);
       std::vector< double > sol_ctrl_jqp_bdry(n_jqp_bdry, 0.);
 
          for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
-// // // 
-// // //         msh->_finiteElement[jelGeom][solType]->Jacobian(x2, jqp_bdry, weight_jqp_bdry[jqp_bdry], phi2[jqp_bdry], phi_x);
-// // // 
-// // //         elem_all[jelGeom][solType_coords]->JacJacInv(/*x2*/geom_element_jel.get_coords_at_dofs_3d(), jqp_bdry, Jac_jqp, JacI_jqp, detJac_jqp, space_dim);
-// // //         weight_jqp_bdry[jqp_bdry] = detJac_jqp * ml_prob.GetQuadratureRule(jelGeom).GetGaussWeightsPointer()[jqp_bdry];
-// // //         elem_all[jelGeom][solType]->shape_funcs_current_elem(jqp_bdry, JacI_jqp, phi2[jqp_bdry], phi_x /*boost::none*/, boost::none /*phi_u_xx*/, space_dim);
-// // // 
+
     elem_all[jelGeom_bdry][solType_coords]->JacJacInv(geom_element_jel.get_coords_at_dofs_bdry_3d(), jqp_bdry, Jac_jel_bdry_jqp_bdry, JacI_jel_bdry_jqp_bdry, detJac_jel_bdry_jqp_bdry, space_dim);
     
     weight_jqp_bdry[jqp_bdry] = detJac_jel_bdry_jqp_bdry * ml_prob.GetQuadratureRule(jelGeom_bdry).GetGaussWeightsPointer()[jqp_bdry];
@@ -888,13 +882,13 @@ void el_dofs_unknowns(const Solution*                sol,
 
 //========== compute gauss quantities on the boundary ===============================================
 //--- geom
-           xg_jel_bdry_jqp_bdry[jqp_bdry].assign(dim, 0.);
+           x_jqp_bdry[jqp_bdry].assign(dim, 0.);
           
             for(unsigned d = 0; d < dim; d++) {
 	      for (int j_bdry = 0; j_bdry < geom_element_jel.get_coords_at_dofs_bdry_3d()[d].size(); j_bdry++)  {
 		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(jel, jface, j_bdry);
 			
-              xg_jel_bdry_jqp_bdry[jqp_bdry][d] += geom_element_jel.get_coords_at_dofs_bdry_3d()[d][j_vol] * phi_coords_jel_bdry_jqp_bdry[jqp_bdry][j_bdry];
+              x_jqp_bdry[jqp_bdry][d] += geom_element_jel.get_coords_at_dofs_bdry_3d()[d][j_vol] * phi_coords_jel_bdry_jqp_bdry[jqp_bdry][j_bdry];
 
 		      }
             }
@@ -909,7 +903,7 @@ void el_dofs_unknowns(const Solution*                sol,
 
 		      }
 //--- solution
-//========== compute gauss quantities on the boundary ================================================// // // 
+//========== compute gauss quantities on the boundary ================================================
 
 
         }  //jqp_bdry
@@ -955,25 +949,14 @@ void el_dofs_unknowns(const Solution*                sol,
 // ***************************************
         
       
-// --- solution        
-        unsigned nDof_iel  = msh->GetElementDofNumber(iel, solType);
-
-       sol_ctrl_iel.resize(nDof_iel);
-        
-        for(unsigned i = 0; i < nDof_iel; i++) {
-          unsigned iDof  = msh->GetSolutionDof(i, iel, solType);  // global to global mapping between coordinates node and coordinate dof
-          sol_ctrl_iel[i] = (*sol->_Sol[soluIndex])(iDof);  // global extraction and local storage for the element coordinates
-        }
-// --- solution        
-
-
 // --- l2GMap
+        unsigned nDof_iel  = msh->GetElementDofNumber(iel, solType);
+        
         l2gMap_iel.resize(nDof_iel);
         for(unsigned i = 0; i < nDof_iel; i++) {
           l2gMap_iel[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);
         }
 // --- l2GMap
-
 
 // --- element matrix and vector resizing
 //           CC_local.assign(nDof_iel * nDof_jel, 0.);   //resize
@@ -985,8 +968,8 @@ void el_dofs_unknowns(const Solution*                sol,
         Res_nonlocalI.assign(nDof_iel, 0.);    //resize
         Res_nonlocalJ.assign(nDof_jel, 0.);    //resize
 
-        Res_mixed.assign(nDof_iel, 0.);    //resize
-        KK_mixed.assign(nDof_iel * nDof_iel, 0.);
+        Res_local_mixed_num.assign(nDof_iel, 0.);    //resize
+        KK_local_mixed_num.assign(nDof_iel * nDof_iel, 0.);
 
         if( check_if_same_elem(iel, jel) ) {
           Res_local_iel.assign(nDof_iel, 0.);    //resize
@@ -1000,13 +983,20 @@ void el_dofs_unknowns(const Solution*                sol,
 // --- element matrix and vector resizing 
 
 
+// --- solution        
+
+       sol_ctrl_iel.resize(nDof_iel);
+        
+        for(unsigned i = 0; i < nDof_iel; i++) {
+          unsigned iDof  = msh->GetSolutionDof(i, iel, solType);  // global to global mapping between coordinates node and coordinate dof
+          sol_ctrl_iel[i] = (*sol->_Sol[soluIndex])(iDof);  // global extraction and local storage for the element coordinates
+        }
+// --- solution        
+
 // ***************************************
 // ******* iel-related stuff - end *************
 // ***************************************
         
-          
-           
-
 
 
         
@@ -1028,30 +1018,23 @@ void el_dofs_unknowns(const Solution*                sol,
 //------------ iface opening ---------        
 		
 
-        
-    
-              
-         
-         
-         //to be filled
-        
-        
-        
-              //Quadrature loop initialization
-                      const unsigned n_iqp_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
-         double sol_ctrl_iqp_bdry = 0.;
-              //Quadrature loop initialization
-     
-     //**** Adaptive preparation: Evaluating coarse FE functions on Quadrature Points of the "sub-elements"  ********  
+
+             
+     //**** Adaptive preparation: Evaluating coarse FE functions on Quadrature Points of the "sub-elements" - BEGIN ********  
         std::vector < std::vector < std::vector <double > > > aP(3);  //[NFE_FAMS][][]
         if(Nsplit != 0) {
           for(unsigned fe_type = 0; fe_type < solType + 1; fe_type++) { //loop up to the FE type + 1 of the unknown
             ProjectNodalToPolynomialCoefficients(aP[fe_type], geom_element_iel.get_coords_at_dofs_bdry_3d(), ielGeom_bdry, fe_type) ;         ///@todo check this!!!!!!!!!!!!
           }
         }                      
-     //**** Adaptive preparation: Evaluating coarse FE functions on Quadrature Points of the "sub-elements" ********  
+     //**** Adaptive preparation: Evaluating coarse FE functions on Quadrature Points of the "sub-elements" - END ********  
                       
+              //Quadrature loop initialization - BEGIN
+        const unsigned n_iqp_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
+         double sol_ctrl_iqp_bdry = 0.;
+              //Quadrature loop initialization - END
     
+         
 		for(unsigned iqp_bdry = 0; iqp_bdry < n_iqp_bdry; iqp_bdry++) {
             
     elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_iel_bdry_iqp_bdry, JacI_iel_bdry_iqp_bdry, detJac_iel_bdry_iqp_bdry, space_dim);
@@ -1064,13 +1047,13 @@ void el_dofs_unknowns(const Solution*                sol,
 
 //========== compute gauss quantities on the boundary ===============================================
 //--- geom
-          vector < double > xg1_bdry(dim, 0.);
+          vector < double > x_iqp_bdry(dim, 0.);  //@todo is this dim or dim_bdry?
 
-            for(unsigned d = 0; d < dim; d++) {
+            for(unsigned d = 0; d < x_iqp_bdry.size(); d++) {
 	      for (int i_bdry = 0; i_bdry < geom_element_iel.get_coords_at_dofs_bdry_3d()[d].size(); i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 			
-              xg1_bdry[d] += geom_element_iel.get_coords_at_dofs_bdry_3d()[d][i_vol] * phi_coords_iel_bdry_iqp_bdry[i_bdry];
+              x_iqp_bdry[d] += geom_element_iel.get_coords_at_dofs_bdry_3d()[d][i_vol] * phi_coords_iel_bdry_iqp_bdry[i_bdry];
 
 		      }
             }
@@ -1092,7 +1075,7 @@ void el_dofs_unknowns(const Solution*                sol,
           
             if( check_if_same_elem_bdry(iel, jel, iface, jface) ) {
               
-       //============  Mass assembly ==================
+       //============  Mass assembly - BEGIN ==================
            for(unsigned i = 0; i < phi_ctrl_iel_bdry_iqp_bdry.size(); i++) {
               for(unsigned j = 0; j < phi_ctrl_iel_bdry_iqp_bdry.size(); j++) {
                 KK_local_iel[ i * phi_ctrl_iel_bdry_iqp_bdry.size() + j ] += OP_L2 * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry;
@@ -1101,17 +1084,20 @@ void el_dofs_unknowns(const Solution*                sol,
               Res_local_iel[ i ] += OP_L2 * weight_iqp_bdry * mass_res_i ;
               Res_local_iel[ i ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][i])) * ( sin(2 * acos(0.0) * x1[1][i]))*/);
             }
-        //============  Mass assembly ==================
+        //============  Mass assembly - END ==================
          
-      //============  Laplacian assembly ==================
-      //============  Laplacian assembly ==================
+      //============  Laplacian assembly - BEGIN ==================
+      //============  Laplacian assembly - END ==================
+      
+    
             } 
              
              
-             
-             if(OP_Hhalf != 0) {
+      //============  Fractional assembly - BEGIN ==================
+        if(OP_Hhalf != 0) {
+                 
+      //============ Same elem, && Adaptive quadrature - BEGIN ==================
        if( check_if_same_elem_bdry(iel, jel, iface, jface) && Nsplit != 0) {
-  //============ Adaptive quadrature (iel == jel) ==================
                 
                 
 // // //                       const unsigned n_kqp_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry/*kelGeom3_bdry, actually*/).GetGaussPointsNumber();
@@ -1126,10 +1112,10 @@ void el_dofs_unknowns(const Solution*                sol,
 // // // //                 if(dim == 1) size_part = 2;
 // // // //                 else size_part = (split != Nsplit) ? 12 : 4;
 // // // 
-// // //                 if (dim == 1) GetElementPartition1D(xg1_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
+// // //                 if (dim == 1) GetElementPartition1D(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
 // // //                 else if (dim == 2) {
-// // //                   //GetElementPartition2D(xg1_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
-// // //                   GetElementPartitionQuad(xg1_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
+// // //                   //GetElementPartition2D(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
+// // //                   GetElementPartitionQuad(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
 // // //                 }
 // // // 
 // // //                 //for(unsigned r = 0; r < size_part; r++) {
@@ -1163,19 +1149,19 @@ void el_dofs_unknowns(const Solution*                sol,
 // // // 
 // // //                     double dist_xyz3 = 0;
 // // //                     for(unsigned k = 0; k < dim; k++) {
-// // //                       dist_xyz3 += (xg1_bdry[k] - xg3[k]) * (xg1_bdry[k] - xg3[k]);
+// // //                       dist_xyz3 += (x_iqp_bdry[k] - xg3[k]) * (x_iqp_bdry[k] - xg3[k]);
 // // //                     }
 // // // 
 // // //                     const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
 // // // 
 // // //                     for(unsigned i = 0; i < nDof_iel; i++) {
 // // // 
-// // //                       Res_local_refined[ i ]    +=      - (C_ns / 2.) * OP_Hhalf * check_limits *
+// // //                       Res_local_refined[ i ]    +=      - (0.5 * C_ns) * OP_Hhalf * check_limits *
 // // //                                                         ((sol_ctrl_iqp_bdry - solY3) * (phi_ctrl_iel_bdry_iqp_bdry[i] - phi3[i]) * weight3 / denom3
 // // //                                                         ) * weight_iqp_bdry ;
 // // // 
 // // //                       for(unsigned j = 0; j < nDof_jel; j++) {
-// // //                         CClocal_refined[ i * nDof_jel + j ] += (C_ns / 2.) * OP_Hhalf * check_limits *
+// // //                         CClocal_refined[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits *
 // // //                                                             ((phi_ctrl_iel_bdry_iqp_bdry[j] - phi3[j]) * (phi_ctrl_iel_bdry_iqp_bdry[i] - phi3[i]) * weight3 / denom3
 // // //                                                             ) * weight_iqp_bdry ;
 // // // 
@@ -1191,20 +1177,56 @@ void el_dofs_unknowns(const Solution*                sol,
                 
                 
             }  //end iel == jel && Nsplit != 0
-    //============ Adaptive quadrature (iel == jel) ==================
+      //============ Same elem, && Adaptive quadrature - END ==================
               
              
-        else {  //  if(iel != jel || Nsplit == 0) {
+      //============ Either different elements, or non-adaptivity (on all elements) - BEGIN ==================
+        else {  //  if(iel != jel || Nsplit == 0) 
+// ********* UNBOUNDED PART - BEGIN ***************
+// ********* UNBOUNDED PART - END ***************
             
+// ********* BOUNDED PART - BEGIN ***************
+            for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
+
+              double dist_xyz = 0.;
+              for(unsigned d = 0; d < x_jqp_bdry.size(); d++) {
+                dist_xyz += (x_iqp_bdry[d] - x_jqp_bdry[jqp_bdry][d]) * (x_iqp_bdry[d] - x_jqp_bdry[jqp_bdry][d]);
+              }
+
+              const double denom = pow(dist_xyz, (double)((/*dim*/dim_bdry / 2.) + s_frac));
+
+              for(unsigned i = 0; i < nDof_iel; i++) {
+
+                Res_nonlocalI[ i ]         +=      - (0.5 * C_ns) * OP_Hhalf *  check_limits * (sol_ctrl_iqp_bdry - sol_ctrl_jqp_bdry[jqp_bdry]) * (phi_ctrl_iel_bdry_iqp_bdry[i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
+
+                Res_nonlocalJ[ i ]         +=      - (0.5 * C_ns) * OP_Hhalf *  check_limits * (sol_ctrl_iqp_bdry - sol_ctrl_jqp_bdry[jqp_bdry]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
+
+                for(unsigned j = 0; j < nDof_jel; j++) {
+
+                  CC_nonlocal_II[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * phi_ctrl_iel_bdry_iqp_bdry[j]  * phi_ctrl_iel_bdry_iqp_bdry[i] * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+
+                  CC_nonlocal_IJ[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j]) * phi_ctrl_iel_bdry_iqp_bdry[i] * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+
+                  CC_nonlocal_JI[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (phi_ctrl_iel_bdry_iqp_bdry[j]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+
+                  CC_nonlocal_JJ[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+
+
+                  }
+                }
+                
+              } //endl jqp_bdry loop
+// ********* BOUNDED PART - END ***************
             
             
          } //end if(iel != jel || Nsplit == 0)
+      //============ Either different elements, or non-adaptivity (on all elements) - END ==================
 
         
-    } //OP_Hhalf != 0              
-          
+         } //OP_Hhalf != 0              
+      //============  Fractional assembly - END ==================
             
-        }   //end iqp_bdry
+      }   //end iqp_bdry
               
 //----- iface ---        
         } //end if(bdry_index_i < 0) //end if(face_in_rectangle_domain_i == FACE_FOR_CONTROL)
@@ -1225,9 +1247,9 @@ void el_dofs_unknowns(const Solution*                sol,
             RES->add_vector_blocked(Res_local_refined, l2gMap_iel);
           }
         }
-//        KK->add_matrix_blocked(CClocal, l2gMap_iel, l2gMap_jel);
-        KK->add_matrix_blocked(KK_mixed, l2gMap_iel, l2gMap_iel);
-        RES->add_vector_blocked(Res_mixed, l2gMap_iel);
+
+        KK->add_matrix_blocked(KK_local_mixed_num, l2gMap_iel, l2gMap_iel);
+        RES->add_vector_blocked(Res_local_mixed_num, l2gMap_iel);
 
         KK->add_matrix_blocked(CC_nonlocal_II, l2gMap_iel, l2gMap_iel);
         KK->add_matrix_blocked(CC_nonlocal_JI, l2gMap_jel, l2gMap_iel);
@@ -1235,7 +1257,7 @@ void el_dofs_unknowns(const Solution*                sol,
         KK->add_matrix_blocked(CC_nonlocal_JJ, l2gMap_jel, l2gMap_jel);
 // Since 1 is dense and 3 are sparse, and the dense dofs are 30, we should have at most 3x9 + 30 = 57, but in the sparsity print it shows 30. That's the problem
 
-//        RES->add_vector_blocked(Res_nonlocal, l2gMap_iel);
+
         RES->add_vector_blocked(Res_nonlocalI, l2gMap_iel);
         RES->add_vector_blocked(Res_nonlocalJ, l2gMap_jel);
 //============ add to global - end ==================
@@ -1301,8 +1323,8 @@ void el_dofs_unknowns(const Solution*                sol,
                         std::vector < std::vector < double > >  JacI_qp_bdry,
                         double detJac_qp_bdry,
                         double weight_bdry,
-                        vector <double> phi_ctrl_bdry,
-                        vector <double> phi_ctrl_x_bdry, 
+                        vector <double> phi_ctrl_iel_bdry_iqp_bdry,
+                        vector <double> phi_ctrl_x_iel_bdry_iqp_bdry, 
                         //-----------
                         const unsigned int pos_mat_ctrl,
                         const unsigned int pos_sol_ctrl,
@@ -1408,7 +1430,7 @@ void el_dofs_unknowns(const Solution*                sol,
     
     weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, boost::none, space_dim);
+    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_qp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
   
 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_iqp_bdry = 0.;
@@ -1416,9 +1438,9 @@ void el_dofs_unknowns(const Solution*                sol,
 		      for (int i_bdry = 0; i_bdry < Sol_n_el_dofs_quantities[pos_sol_ctrl]; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 			
-			sol_ctrl_iqp_bdry +=  sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_bdry[i_bdry];
+			sol_ctrl_iqp_bdry +=  sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_iel_bdry_iqp_bdry[i_bdry];
                             for (int d = 0; d < space_dim; d++) {
-			      sol_ctrl_x_iqp_bdry[d] += sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_x_bdry[i_bdry * space_dim + d];
+			      sol_ctrl_x_iqp_bdry[d] += sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d];
 			    }
 		      }
 		      
@@ -1431,7 +1453,7 @@ void el_dofs_unknowns(const Solution*                sol,
 
                  double lap_rhs_dctrl_ctrl_bdry_gss_i = 0.;
                  for (unsigned d = 0; d < space_dim; d++) {
-                       if ( i_vol < Sol_n_el_dofs_Mat[pos_mat_ctrl] )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_ctrl_x_bdry[i_bdry * space_dim + d] * sol_ctrl_x_iqp_bdry[d];
+                       if ( i_vol < Sol_n_el_dofs_Mat[pos_mat_ctrl] )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * sol_ctrl_x_iqp_bdry[d];
                  }
                  
 //=============== construct control node flag field on the go  =========================================    
@@ -1449,7 +1471,7 @@ void el_dofs_unknowns(const Solution*                sol,
 		 
 //============ Bdry Residuals ==================	
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
-                                                                                (     ( 1 - is_block_dctrl_ctrl_inside_bdry ) * alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_iqp_bdry
+                                                                                (     ( 1 - is_block_dctrl_ctrl_inside_bdry ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry
 							                           +  ( 1 - is_block_dctrl_ctrl_inside_bdry ) * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							                         );  //boundary optimality condition
 //============ Bdry Residuals ==================    
@@ -1467,11 +1489,11 @@ void el_dofs_unknowns(const Solution*                sol,
 
 //========block delta_control / control ========
               double  lap_mat_dctrl_ctrl_bdry_gss = 0.;
-		      for (unsigned d = 0; d < space_dim; d++) {  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_bdry[i_bdry * space_dim + d] * phi_ctrl_x_bdry[j_bdry * space_dim + d];    }
+		      for (unsigned d = 0; d < space_dim; d++) {  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * phi_ctrl_x_iel_bdry_iqp_bdry[j_bdry * space_dim + d];    }
 
           
               Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i_vol, j_vol) ] 
-			+=  control_node_flag[i_vol] *  weight_bdry * ( ( 1 - is_block_dctrl_ctrl_inside_bdry ) * alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry] 
+			+=  control_node_flag[i_vol] *  weight_bdry * ( ( 1 - is_block_dctrl_ctrl_inside_bdry ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
 			                                              + ( 1 - is_block_dctrl_ctrl_inside_bdry ) * beta *  lap_mat_dctrl_ctrl_bdry_gss);   
     
 		   
