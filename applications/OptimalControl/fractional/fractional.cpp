@@ -790,6 +790,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                       solY3 += solu1[i] * phi3[i];
                     }
 
+// ********* BOUNDED PART - BEGIN ***************
                     double dist_xyz3 = 0;
                     for(unsigned k = 0; k < dim; k++) {
                       dist_xyz3 += (xg1[k] - xg3[k]) * (xg1[k] - xg3[k]);
@@ -810,11 +811,13 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
                       }
                     }
+// ********* BOUNDED PART - END ***************
 
 // ********* UNBOUNDED PART - BEGIN ***************
               if(UNBOUNDED == 1) {
 //============ Mixed integral 1D - Analytical ==================
-                if(ig == 0 && dim == 1) {
+                if(ig == 0) { ///@todo is there a way to put this outside of the ig loop?
+                if(dim == 1) {
                   double ex_1 = EX_1;
                   double ex_2 = EX_2;
                   double dist_1 = 0.;
@@ -834,7 +837,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                 }
 //============ Mixed integral 1D - Analytical ==================
 //============ Mixed Integral 2D - Numerical ==================
-                if(ig == 0 && dim == 2) {
+                else if (dim == 2) {
                   double mixed_term1 = 0;
 //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
             // *** Face Gauss point loop (boundary Integral) ***
@@ -897,7 +900,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                   }
                 }
 //============ Mixed Integral 2D - Numerical ==================
-              }
+               } //end ig == 0
+             } //end unbounded
 // ********* UNBOUNDED PART - END ***************
               
             } //end jg
@@ -1006,7 +1010,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 // ********* BOUNDED PART - BEGIN ***************
             for(unsigned jg = 0; jg < jgNumber; jg++) {
 
-              double dist_xyz = 0;
+              double dist_xyz = 0.;
               for(unsigned k = 0; k < dim; k++) {
                 dist_xyz += (xg1[k] - xg2[jg][k]) * (xg1[k] - xg2[jg][k]);
               }

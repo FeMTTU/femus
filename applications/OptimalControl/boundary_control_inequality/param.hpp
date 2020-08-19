@@ -552,6 +552,123 @@ void el_dofs_unknowns(const Solution*                sol,
    return (iel == jel && iface == jface);
       
   }
+
+  
+  void mixed_integral(const unsigned UNBOUNDED,
+                      const unsigned dim,
+                      const double EX_1,
+                      const double EX_2,
+                      const double weight_iqp_bdry,
+                      const std::vector < double > & x_iqp_bdry,
+                      const std::vector < double > & phi_ctrl_iel_bdry_iqp_bdry,
+                      const double sol_ctrl_iqp_bdry,
+                      const double s_frac,
+                      const double check_limits,
+                      const double C_ns,
+                      const unsigned int OP_Hhalf,
+                      const unsigned int nDof_iel,
+                      std::vector < double > & KK_local_iel,
+                      std::vector < double > & Res_local_iel
+                     ) {
+      
+  if(UNBOUNDED == 1) {
+      
+      //============ Mixed Integral 1D - Analytical ==================      
+      if (dim == 1) {
+      
+              double ex_1 = EX_1;
+              double ex_2 = EX_2;
+              double dist_1 = 0.;
+              double dist_2 = 0.;
+              
+              for(int d = 0; d < dim; d++) {
+                dist_1 += sqrt((x_iqp_bdry[d] - ex_1) * (x_iqp_bdry[d] - ex_1));
+                dist_2 += sqrt((x_iqp_bdry[d] - ex_2) * (x_iqp_bdry[d] - ex_2));
+              }
+              
+              double mixed_term = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
+
+              for(unsigned i = 0; i < nDof_iel; i++) {
+                for(unsigned j = 0; j < nDof_iel /* @todo is this correct? */; j++) {
+                  KK_local_iel[ i * nDof_iel + j ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term;
+                }
+                Res_local_iel[ i ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_term;
+              }
+   
+      }
+      
+    //============ Mixed Integral 2D - Numerical ==================      
+      else if (dim == 2) {            abort();
+          
+// // //             double mixed_term1 = 0.;
+// // // //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
+// // //             // *** Face Gauss point loop (boundary Integral) ***
+// // //             for(unsigned jj = 0; jj < bd_face.size(); jj++) {
+// // // 
+// // //               int jface = bd_face[jj];
+// // //               // look for boundary faces
+// // // 
+// // //               unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
+// // // 
+// // //               vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
+// // //               for(int k = 0; k < dim; k++) {
+// // //                 faceCoordinates[k].resize(faceDofs);
+// // //               }
+// // //               for(unsigned i = 0; i < faceDofs; i++) {
+// // //                 unsigned inode = el->GetIG(ielGeom2, jface, i);  // face-to-element local node mapping.
+// // //                 for(unsigned k = 0; k < dim; k++) {
+// // //                   faceCoordinates[k][i] =  x2[k][inode] - x_iqp_bdry[k]; // We extract the local coordinates on the face from local coordinates on the element.
+// // //                 }
+// // //               }
+// // //               const unsigned div = 10;
+// // //               vector  < vector  <  double> > interpCoordinates(dim);
+// // //               for(int k = 0; k < dim; k++) {
+// // //                 interpCoordinates[k].resize(div + 1); // set "4" as a parameter
+// // //               }
+// // //               for(unsigned n = 0; n <= div; n++) {
+// // //                 for(int k = 0; k < dim; k++) {
+// // //                   interpCoordinates[k][n] = faceCoordinates[k][0] + n * (faceCoordinates[k][1] - faceCoordinates[k][0]) /  div ;
+// // //                 }
+// // //               }
+// // //               for(unsigned n = 0; n < div; n++) {
+// // //                 double teta2 = atan2(interpCoordinates[1][n + 1], interpCoordinates[0][n + 1]);
+// // //                 double teta1 = atan2(interpCoordinates[1][n], interpCoordinates[0][n]);
+// // // 
+// // //                 if(teta2 < teta1) teta2 += 2. * M_PI;
+// // // 
+// // //                 double delta_teta = teta2 - teta1;
+// // // 
+// // // 
+// // //                 vector <double> mid_point;
+// // //                 mid_point.resize(dim);
+// // //                 for(unsigned k = 0; k < dim; k++) {
+// // //                   mid_point[k] = (interpCoordinates[k][n + 1] + interpCoordinates[k][n]) * 0.5;
+// // //                 }
+// // //                 double dist2 = 0;
+// // //                 for(int k = 0; k < dim; k++) {
+// // //                   dist2 += mid_point[k] * mid_point[k];
+// // //                 }
+// // //                 double dist = sqrt(dist2);
+// // //                 mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
+// // //               }
+// // //             }
+// // // 
+// // //             for(unsigned i = 0; i < nDof1; i++) {
+// // //               for(unsigned j = 0; j < nDof1; j++) {
+// // //                 KK_local_iel_mixed_num[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term1;
+// // //               }
+// // //               Res_local_iel_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
+// // //             }
+          
+      }          
+      
+  }
+  
+  
+ }
+  
+  
+  
   
     //********** BEGIN FRAC CONTROL *****************************************
 
@@ -1007,14 +1124,18 @@ void el_dofs_unknowns(const Solution*                sol,
 
 
              
-     //**** Adaptive preparation: Evaluating coarse FE functions on Quadrature Points of the "sub-elements" - BEGIN ********  
-        std::vector < std::vector < std::vector <double > > > aP(3);  //[NFE_FAMS][][]
+     //**** Adaptive preparation - BEGIN ******** 
+        double weight3;
+        vector < double > phi3;
+
+//        Evaluating coarse FE functions on Quadrature Points of the "sub-elements"
+       std::vector < std::vector < std::vector <double > > > aP(3);  //[NFE_FAMS][][]
         if(Nsplit != 0) {
           for(unsigned fe_type = 0; fe_type < solType + 1; fe_type++) { //loop up to the FE type + 1 of the unknown
             ProjectNodalToPolynomialCoefficients(aP[fe_type], geom_element_iel.get_coords_at_dofs_bdry_3d(), ielGeom_bdry, fe_type) ;         ///@todo check this!!!!!!!!!!!!
           }
         }                      
-     //**** Adaptive preparation: Evaluating coarse FE functions on Quadrature Points of the "sub-elements" - END ********  
+     //**** Adaptive preparation - END ********  
                       
               //Quadrature loop initialization - BEGIN
         const unsigned n_iqp_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussPointsNumber();
@@ -1059,6 +1180,7 @@ void el_dofs_unknowns(const Solution*                sol,
 
 
   
+      //============  Non-fractional assembly - BEGIN ==================
           
             if( check_if_same_elem_bdry(iel, jel, iface, jface) ) {
               
@@ -1078,6 +1200,7 @@ void el_dofs_unknowns(const Solution*                sol,
       
     
             } 
+      //============  Non-fractional assembly - END ==================
              
              
       //============  Fractional assembly - BEGIN ==================
@@ -1167,99 +1290,27 @@ void el_dofs_unknowns(const Solution*                sol,
       //============ Same elem, && Adaptive quadrature - END ==================
               
              
-      //============ Either different elements, or non-adaptivity (on all elements) - BEGIN ==================
+      //============ Either different elements, or lack of adaptivity (so all elements) - BEGIN ==================
         else {  //  if(iel != jel || Nsplit == 0) 
-// ********* UNBOUNDED PART - BEGIN ***************
-          if(UNBOUNDED == 1) {
-    //============  Mixed integral 1D - Analytical  ==================
-            if(/*dim*/dim_bdry == 1) {
-              double ex_1 = EX_1;
-              double ex_2 = EX_2;
-              double dist_1 = 0.;
-              double dist_2 = 0.;
-              
-              for(int d = 0; d < dim_bdry; d++) {
-                dist_1 += sqrt((x_iqp_bdry[d] - ex_1) * (x_iqp_bdry[d] - ex_1));
-                dist_2 += sqrt((x_iqp_bdry[d] - ex_2) * (x_iqp_bdry[d] - ex_2));
-              }
-              
-              double mixed_term = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
-
-              for(unsigned i = 0; i < nDof_iel; i++) {
-                for(unsigned j = 0; j < nDof_iel; j++) {
-                  KK_local_iel[ i * nDof_iel + j ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term;
-                }
-                Res_local_iel[ i ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_term;
-              }
-            }
-    //============  Mixed integral 1D - Analytical  ==================        
-    
-    //============ Mixed Integral 2D - Numerical ==================      
-            else if( /*dim*/dim_bdry == 2 ) {
-                
-// // //             double mixed_term1 = 0.;
-// // // //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
-// // //             // *** Face Gauss point loop (boundary Integral) ***
-// // //             for(unsigned jj = 0; jj < bd_face.size(); jj++) {
-// // // 
-// // //               int jface = bd_face[jj];
-// // //               // look for boundary faces
-// // // 
-// // //               unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
-// // // 
-// // //               vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
-// // //               for(int k = 0; k < dim; k++) {
-// // //                 faceCoordinates[k].resize(faceDofs);
-// // //               }
-// // //               for(unsigned i = 0; i < faceDofs; i++) {
-// // //                 unsigned inode = el->GetIG(ielGeom2, jface, i);  // face-to-element local node mapping.
-// // //                 for(unsigned k = 0; k < dim; k++) {
-// // //                   faceCoordinates[k][i] =  x2[k][inode] - x_iqp_bdry[k]; // We extract the local coordinates on the face from local coordinates on the element.
-// // //                 }
-// // //               }
-// // //               const unsigned div = 10;
-// // //               vector  < vector  <  double> > interpCoordinates(dim);
-// // //               for(int k = 0; k < dim; k++) {
-// // //                 interpCoordinates[k].resize(div + 1); // set "4" as a parameter
-// // //               }
-// // //               for(unsigned n = 0; n <= div; n++) {
-// // //                 for(int k = 0; k < dim; k++) {
-// // //                   interpCoordinates[k][n] = faceCoordinates[k][0] + n * (faceCoordinates[k][1] - faceCoordinates[k][0]) /  div ;
-// // //                 }
-// // //               }
-// // //               for(unsigned n = 0; n < div; n++) {
-// // //                 double teta2 = atan2(interpCoordinates[1][n + 1], interpCoordinates[0][n + 1]);
-// // //                 double teta1 = atan2(interpCoordinates[1][n], interpCoordinates[0][n]);
-// // // 
-// // //                 if(teta2 < teta1) teta2 += 2. * M_PI;
-// // // 
-// // //                 double delta_teta = teta2 - teta1;
-// // // 
-// // // 
-// // //                 vector <double> mid_point;
-// // //                 mid_point.resize(dim);
-// // //                 for(unsigned k = 0; k < dim; k++) {
-// // //                   mid_point[k] = (interpCoordinates[k][n + 1] + interpCoordinates[k][n]) * 0.5;
-// // //                 }
-// // //                 double dist2 = 0;
-// // //                 for(int k = 0; k < dim; k++) {
-// // //                   dist2 += mid_point[k] * mid_point[k];
-// // //                 }
-// // //                 double dist = sqrt(dist2);
-// // //                 mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
-// // //               }
-// // //             }
-// // // 
-// // //             for(unsigned i = 0; i < nDof1; i++) {
-// // //               for(unsigned j = 0; j < nDof1; j++) {
-// // //                 KK_local_iel_mixed_num[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term1;
-// // //               }
-// // //               Res_local_iel_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
-// // //             }
             
-           }
-//============ Mixed Integral 2D - Numerical ==================
-         }
+// ********* UNBOUNDED PART - BEGIN ***************
+               mixed_integral(UNBOUNDED,
+                              dim_bdry,
+                              EX_1,
+                              EX_2,
+                              weight_iqp_bdry,
+                              x_iqp_bdry,
+                              phi_ctrl_iel_bdry_iqp_bdry,
+                              sol_ctrl_iqp_bdry,
+                              s_frac,
+                              check_limits,
+                              C_ns,
+                              OP_Hhalf,
+                              nDof_iel,
+                              KK_local_iel,
+                              Res_local_iel
+                             ); 
+              
 // ********* UNBOUNDED PART - END ***************
             
 // ********* BOUNDED PART - BEGIN ***************
@@ -1297,7 +1348,7 @@ void el_dofs_unknowns(const Solution*                sol,
             
             
          } //end if(iel != jel || Nsplit == 0)
-      //============ Either different elements, or non-adaptivity (on all elements) - END ==================
+      //============ Either different elements, or lack of adaptivity (so all elements) - END ==================
 
         
          } //OP_Hhalf != 0              
