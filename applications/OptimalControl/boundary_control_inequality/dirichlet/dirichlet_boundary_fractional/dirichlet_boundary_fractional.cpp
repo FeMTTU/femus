@@ -9,7 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             1
+#define FACE_FOR_CONTROL             3  /* 1-2 x axis, 3-4 y axis, 5-6 z axis */
 
 
 #include "../../param.hpp"
@@ -22,13 +22,13 @@
 
 
 //*********************** 
-#define Nsplit 4
+#define Nsplit 0
 #define S_FRAC 0.25
 
 #define OP_L2       0
 #define OP_H1       0
 #define OP_Hhalf    1
-#define RHS_ONE     1
+#define RHS_ONE     0/*1*/
 
 #define UNBOUNDED   1
 
@@ -676,7 +676,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     C_ns,
                     OP_Hhalf,
                     OP_L2,
-                    /*RHS_ONE*/0,
+                    RHS_ONE,
                     UNBOUNDED,
                     EX_1,
                     EX_2

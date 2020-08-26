@@ -755,7 +755,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //                 if(dim == 1) size_part = 2;
 //                 else size_part = (split != Nsplit) ? 12 : 4;
 
-                if(dim == 1) GetElementPartition1D(xg1, x1, split, Nsplit, x3);
+                if(dim == 1) GetElementPartition1D(xg1, x1, split, Nsplit, x3, dim);
                 else if(dim == 2) {
                   //GetElementPartition2D(xg1, x1, split, Nsplit, x3);
                   GetElementPartitionQuad(xg1, x1, split, Nsplit, x3);
@@ -814,9 +814,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 // ********* BOUNDED PART - END ***************
 
 // ********* UNBOUNDED PART - BEGIN ***************
+                if(ig == 0) { ///@todo is there a way to put this outside of the ig loop?
               if(UNBOUNDED == 1) {
 //============ Mixed integral 1D - Analytical ==================
-                if(ig == 0) { ///@todo is there a way to put this outside of the ig loop?
                 if(dim == 1) {
                   double ex_1 = EX_1;
                   double ex_2 = EX_2;
@@ -900,8 +900,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                   }
                 }
 //============ Mixed Integral 2D - Numerical ==================
-               } //end ig == 0
              } //end unbounded
+            } //end ig == 0
 // ********* UNBOUNDED PART - END ***************
               
             } //end jg

@@ -32,9 +32,17 @@ double Antiderivative2(const double &theta, const double &s, const double &x)
 
 
 
-void GetElementPartition1D(const std::vector <double >  & xg1, const std::vector < std::vector <double > > & x1, const unsigned &split, const unsigned int Nsplit, std::vector < std::vector < std::vector<double>>> &x)
+void GetElementPartition1D(const std::vector <double >  & xg1,
+                           const std::vector < std::vector <double > > & x1, 
+                           const unsigned &split, 
+                           const unsigned int Nsplit, 
+                           std::vector < std::vector < std::vector<double>>> &x,
+                           const unsigned dim
+                          )
 {
-  unsigned dim = 1;
+    
+//   x: [Left_and_right][dim][n_dofs]  
+//   unsigned dim = 1;
   unsigned left = 0;
   unsigned right = 1;
 

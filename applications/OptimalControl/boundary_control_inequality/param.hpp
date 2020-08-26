@@ -985,9 +985,8 @@ void el_dofs_unknowns(const Solution*                sol,
           
             for(unsigned d = 0; d < dim; d++) {
 	      for (int j_bdry = 0; j_bdry < geom_element_jel.get_coords_at_dofs_bdry_3d()[d].size(); j_bdry++)  {
-		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(jel, jface, j_bdry);
 			
-              x_jqp_bdry[jqp_bdry][d] += geom_element_jel.get_coords_at_dofs_bdry_3d()[d][j_vol] * phi_coords_jel_bdry_jqp_bdry[jqp_bdry][j_bdry];
+              x_jqp_bdry[jqp_bdry][d] += geom_element_jel.get_coords_at_dofs_bdry_3d()[d][j_bdry] * phi_coords_jel_bdry_jqp_bdry[jqp_bdry][j_bdry];
 
 		      }
             }
@@ -1125,11 +1124,21 @@ void el_dofs_unknowns(const Solution*                sol,
 
              
      //**** Adaptive preparation - BEGIN ******** 
-        double weight3;
-        vector < double > phi3;
+     std::vector < std::vector < double > >  Jac_kel_bdry_kqp_bdry;
+     std::vector < std::vector < double > >  JacI_kel_bdry_kqp_bdry;
+     double detJac_kel_bdry_kqp_bdry;
+      vector < double >  x_kqp_bdry;
+      double  weight_kqp_bdry;
+      vector < double >  phi_ctrl_kel_bdry_kqp_bdry;
+      vector < double >  phi_ctrl_x_kel_bdry_kqp_bdry;
+      vector < double >  phi_coords_kel_bdry_kqp_bdry;
+      vector < double >  phi_coords_x_kel_bdry_kqp_bdry;
+      double sol_ctrl_kqp_bdry = 0.;
+//         double weight3;
+//         vector < double > phi3;
 
 //        Evaluating coarse FE functions on Quadrature Points of the "sub-elements"
-       std::vector < std::vector < std::vector <double > > > aP(3);  //[NFE_FAMS][][]
+       std::vector < std::vector < std::vector <double > > > aP(3);  //[NFE_FAMS][DIM==3][N_DOFS]
         if(Nsplit != 0) {
           for(unsigned fe_type = 0; fe_type < solType + 1; fe_type++) { //loop up to the FE type + 1 of the unknown
             ProjectNodalToPolynomialCoefficients(aP[fe_type], geom_element_iel.get_coords_at_dofs_bdry_3d(), ielGeom_bdry, fe_type) ;         ///@todo check this!!!!!!!!!!!!
@@ -1155,13 +1164,12 @@ void el_dofs_unknowns(const Solution*                sol,
 
 //========== compute gauss quantities on the boundary ===============================================
 //--- geom
-          vector < double > x_iqp_bdry(dim, 0.);  //@todo is this dim or dim_bdry?
+          vector < double > x_iqp_bdry(dim, 0.);  ///@todo is this dim or dim_bdry?
 
             for(unsigned d = 0; d < x_iqp_bdry.size(); d++) {
 	      for (int i_bdry = 0; i_bdry < geom_element_iel.get_coords_at_dofs_bdry_3d()[d].size(); i_bdry++)  {
-		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 			
-              x_iqp_bdry[d] += geom_element_iel.get_coords_at_dofs_bdry_3d()[d][i_vol] * phi_coords_iel_bdry_iqp_bdry[i_bdry];
+              x_iqp_bdry[d] += geom_element_iel.get_coords_at_dofs_bdry_3d()[d][i_bdry] * phi_coords_iel_bdry_iqp_bdry[i_bdry];
 
 		      }
             }
@@ -1169,7 +1177,7 @@ void el_dofs_unknowns(const Solution*                sol,
     
 //--- solution
     sol_ctrl_iqp_bdry = 0.;
-	      for (int i_bdry = 0; i_bdry < Sol_n_el_dofs_quantities[pos_sol_ctrl]; i_bdry++)  {
+	      for (int i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 			
 			sol_ctrl_iqp_bdry +=  /*sol_eldofs_Mat[pos_mat_ctrl]*/sol_ctrl_iel[i_vol] * phi_ctrl_iel_bdry_iqp_bdry[i_bdry];
@@ -1209,39 +1217,72 @@ void el_dofs_unknowns(const Solution*                sol,
       //============ Same elem, && Adaptive quadrature - BEGIN ==================
        if( check_if_same_elem_bdry(iel, jel, iface, jface) && Nsplit != 0) {
                 
-                
-// // //                       const unsigned n_kqp_bdry = ml_prob.GetQuadratureRule(ielGeom_bdry/*kelGeom3_bdry, actually*/).GetGaussPointsNumber();
-// // //                 
-// // //                 
-// // //              std::cout.precision(14);
-// // //               std::vector< std::vector< std::vector<double> > > x3;
+// // // // //                       /*const*/ short unsigned kelGeom_bdry = ielGeom_bdry;
+// // // // //            
+// // // // //                       const unsigned n_kqp_bdry = ml_prob.GetQuadratureRule(kelGeom_bdry).GetGaussPointsNumber();
+// // // // //                 
+// // // // //                 
+// // // // //              std::cout.precision(14);
+// // // // //               std::vector< std::vector< std::vector<double> > > x3;
+// // // // // 
+// // // // //               for(unsigned split = 0; split <= Nsplit; split++) {
+// // // // // 
+// // // // // 
+// // // // //                 if (dim_bdry/*dim*/ == 1) GetElementPartition1D(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3, space_dim);
+// // // // //                 else if (dim_bdry/*dim*/ == 2) {
+// // // // //                   //GetElementPartition2D(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
+// // // // //                   GetElementPartitionQuad(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
+// // // // //                 }
+// // // // // 
+// // // // //                 //for(unsigned r = 0; r < size_part; r++) {
+// // // // //                 for(unsigned r = 0; r < x3.size(); r++) {
+// // // // // 
+// // // // // 
+// // // // //                   for(unsigned k_qp_bdry = 0; k_qp_bdry < n_kqp_bdry; k_qp_bdry++) {
+// // // // // 
+// // // // // // ********* PREPARATION PART - BEGIN ***************
+// // // // //     elem_all[kelGeom_bdry][solType_coords]->JacJacInv(x3[r]/*geom_element_iel.get_coords_at_dofs_bdry_3d()*/, k_qp_bdry, Jac_kel_bdry_kqp_bdry, JacI_kel_bdry_kqp_bdry, detJac_kel_bdry_kqp_bdry, space_dim);
+// // // // //     
+// // // // //     weight_kqp_bdry = detJac_kel_bdry_kqp_bdry * ml_prob.GetQuadratureRule(kelGeom_bdry).GetGaussWeightsPointer()[k_qp_bdry];
+// // // // // 
+// // // // //     elem_all[kelGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(k_qp_bdry, JacI_kel_bdry_kqp_bdry, phi_ctrl_kel_bdry_kqp_bdry, phi_ctrl_x_kel_bdry_kqp_bdry, boost::none, space_dim);
+// // // // //             
+// // // // //     elem_all[kelGeom_bdry][solType_coords] ->shape_funcs_current_elem(k_qp_bdry, JacI_kel_bdry_kqp_bdry, phi_coords_kel_bdry_kqp_bdry, phi_coords_x_kel_bdry_kqp_bdry, boost::none, space_dim);
+// // // // // 
+// // // // // //--- geom
+// // // // //           vector < double > x_kqp_bdry(dim, 0.);  ///@todo is this dim or dim_bdry?
+// // // // // 
+// // // // //             for(unsigned d = 0; d < x_kqp_bdry.size(); d++) {
+// // // // // 	      for (int k_bdry = 0; k_bdry < /*geom_element_iel.get_coords_at_dofs_bdry_3d()[d].size()*/phi_coords_kel_bdry_kqp_bdry.size(); k_bdry++)  {
+// // // // // 			
+// // // // //               x_kqp_bdry[d] += x3[r][d][k_bdry]/*geom_element_iel.get_coords_at_dofs_bdry_3d()[d][i_vol]*/ * phi_coords_kel_bdry_kqp_bdry[k_bdry];
+// // // // // 
+// // // // // 		      }
+// // // // //             }
+// // // // // //--- geom
+// // // // //     
+// // // // //                     std::vector<double> xi3(dim, 0.);
+// // // // // 
+// // // // //                     GetClosestPointInReferenceElement(geom_element_iel.get_coords_at_dofs_bdry_3d(), x_kqp_bdry, kelGeom_bdry, xi3);
+// // // // //                     GetInverseMapping(solType_coords, kelGeom_bdry, aP, x_kqp_bdry, xi3, 1000);  ///@todo generalize to rectangular Jacobian
+// // // // // 
+// // // // //                     msh->_finiteElement[kelGeom_bdry][solType]->GetPhi(phi_ctrl_kel_bdry_kqp_bdry, xi3);
+// // // // // 
+// // // // //                     double solY3 = 0.;
+// // // // //                     for(unsigned i_bdry = 0; i_bdry < phi_ctrl_kel_bdry_kqp_bdry.size()/*nDof_iel*/; i_bdry++) {
+// // // // // 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+// // // // //                       solY3 += sol_ctrl_iel[i_vol] * phi_ctrl_kel_bdry_kqp_bdry[i_bdry];
+// // // // //                     }
+    
 // // // 
-// // //               for(unsigned split = 0; split <= Nsplit; split++) {
 // // // 
-// // // //                 unsigned size_part;
-// // // //                 if(dim == 1) size_part = 2;
-// // // //                 else size_part = (split != Nsplit) ? 12 : 4;
-// // // 
-// // //                 if (dim == 1) GetElementPartition1D(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
-// // //                 else if (dim == 2) {
-// // //                   //GetElementPartition2D(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
-// // //                   GetElementPartitionQuad(x_iqp_bdry, geom_element_iel.get_coords_at_dofs_bdry_3d(), split, Nsplit, x3);
-// // //                 }
-// // // 
-// // //                 //for(unsigned r = 0; r < size_part; r++) {
-// // //                 for(unsigned r = 0; r < x3.size(); r++) {
-// // // 
-// // // 
-// // //                   for(unsigned k_qp = 0; k_qp < n_kqp_bdry; k_qp++) {
-// // // 
-// // // 
-// // //                     msh->_finiteElement[ielGeom][solType]->Jacobian(x3[r], k_qp, weight3, phi3, phi_x);
+// // //                     msh->_finiteElement[ielGeom][solType]->Jacobian(x3[r], k_qp_bdry, weight_kqp_bdry, phi3, phi_x);
 // // // 
 // // //                     vector < double > xg3(dim, 0.);
 // // // 
-// // //                     for(unsigned i = 0; i < nDof_iel; i++) {
-// // //                       for(unsigned k = 0; k < dim; k++) {
-// // //                         xg3[k] += x3[r][k][i] * phi3[i];
+// // //                     for(unsigned d = 0; d < dim; d++) {
+// // //                       for(unsigned i = 0; i < nDof_iel; i++) {
+// // //                         xg3[d] += x3[r][d][i] * phi3[i];
 // // //                       }
 // // //                     }
 // // // 
@@ -1256,6 +1297,9 @@ void el_dofs_unknowns(const Solution*                sol,
 // // //                     for(unsigned i = 0; i < nDof_iel; i++) {
 // // //                       solY3 += sol_ctrl_iel[i] * phi3[i];
 // // //                     }
+// ********* PREPARATION PART - END ***************
+
+// ********* BOUNDED PART - BEGIN ***************
 // // // 
 // // //                     double dist_xyz3 = 0;
 // // //                     for(unsigned k = 0; k < dim; k++) {
@@ -1267,20 +1311,24 @@ void el_dofs_unknowns(const Solution*                sol,
 // // //                     for(unsigned i = 0; i < nDof_iel; i++) {
 // // // 
 // // //                       Res_local_iel_refined[ i ]    +=      - (0.5 * C_ns) * OP_Hhalf * check_limits *
-// // //                                                         ((sol_ctrl_iqp_bdry - solY3) * (phi_ctrl_iel_bdry_iqp_bdry[i] - phi3[i]) * weight3 / denom3
+// // //                                                         ((sol_ctrl_iqp_bdry - solY3) * (phi_ctrl_iel_bdry_iqp_bdry[i] - phi3[i]) * weight_kqp_bdry / denom3
 // // //                                                         ) * weight_iqp_bdry ;
 // // // 
 // // //                       for(unsigned j = 0; j < nDof_jel; j++) {
 // // //                         KK_local_iel_refined[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits *
-// // //                                                             ((phi_ctrl_iel_bdry_iqp_bdry[j] - phi3[j]) * (phi_ctrl_iel_bdry_iqp_bdry[i] - phi3[i]) * weight3 / denom3
+// // //                                                             ((phi_ctrl_iel_bdry_iqp_bdry[j] - phi3[j]) * (phi_ctrl_iel_bdry_iqp_bdry[i] - phi3[i]) * weight_kqp_bdry / denom3
 // // //                                                             ) * weight_iqp_bdry ;
 // // // 
 // // //                       }
 // // //                     }
-// // //                                           
-// // //                   } //end k_qp
-// // //                 } //end r
-// // //               }  //end split
+// ********* BOUNDED PART - END ***************
+                      
+// ********* UNBOUNDED PART - BEGIN ***************
+// ********* UNBOUNDED PART - END ***************
+                                         
+// // // // //                   } //end k_qp_bdry
+// // // // //                 } //end r
+// // // // //               }  //end split
               
               
                 
