@@ -185,13 +185,15 @@ public:
 
   inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
 
-  inline const std::vector<Gauss> & GetQuadratureRuleAllGeomElems() const { return _qrule; }
+  inline const std::vector<Gauss> & GetQuadratureRuleAllGeomElems() const { return _qrule[0]; }
   
-  inline const Gauss & GetQuadratureRule(const unsigned geom_elem_type) const { return _qrule[geom_elem_type]; }
+  inline const Gauss & GetQuadratureRule(const unsigned geom_elem_type) const { return _qrule[0][geom_elem_type]; }
 
   void SetQuadratureRuleAllGeomElems(const std::string quadr_order_in);
   
-    /** Input Parser */
+  void SetQuadratureRuleAllGeomElemsMultiple(const std::vector<std::string> quadr_order_in_vec);
+
+     /** Input Parser */
   inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
 
   void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
@@ -212,26 +214,34 @@ public:
   std::map<std::string, System*> & get_systems_map() { return _systems; }
   
   
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 /*const*/ { elem_all_in = _elem_all_dd; }
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 /*const*/ { elem_all_in = _elem_all_dd[0]; }
   
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         /*const*/ { elem_all_in = _elem_all_ad; }
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         /*const*/ { elem_all_in = _elem_all_ad[0]; }
   
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) /*const*/ { elem_all_in = _elem_all_aa; }
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) /*const*/ { elem_all_in = _elem_all_aa[0]; }
 
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 const { elem_all_in = _elem_all_dd; }
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > & elem_all_in)                 const { elem_all_in = _elem_all_dd[0]; }
   
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         const { elem_all_in = _elem_all_ad; }
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > & elem_all_in)         const { elem_all_in = _elem_all_ad[0]; }
   
-  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) const { elem_all_in = _elem_all_aa; }
+  void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) const { elem_all_in = _elem_all_aa[0]; }
 
   
   
   void set_all_abstract_fe() {
       
-       set_all_abstract_fe<double, double>(_elem_all_dd);
-       set_all_abstract_fe<adept::adouble, double>(_elem_all_ad);
-       set_all_abstract_fe<adept::adouble, adept::adouble>(_elem_all_aa);
-    
+      const unsigned n_qrules = _qrule.size();
+      
+      _elem_all_dd.resize(n_qrules);
+      _elem_all_ad.resize(n_qrules);
+      _elem_all_aa.resize(n_qrules);
+          
+  for (int q = 0; q < n_qrules; q++) {
+       set_all_abstract_fe<double, double>(_elem_all_dd[q]);
+       set_all_abstract_fe<adept::adouble, double>(_elem_all_ad[q]);
+       set_all_abstract_fe<adept::adouble, adept::adouble>(_elem_all_aa[q]);
+  }
+  
 }  
   
  template <class type, class type_mov>
@@ -271,7 +281,7 @@ private:
     unsigned short _gridn;
 
     std::vector< std::vector<const elem_type*> >  _elem_type;  ///@deprecated 
-    std::vector<Gauss>                      _qrule;            //over all Geom Elems
+    std::vector< std::vector< Gauss > >    _qrule;            //[QRULES][Geom Elems][FE]
     const FemusInputParser<double>        * _phys;
     const QuantityMap                     * _qtymap;
     const MultiLevelMeshTwo               * _mesh;
@@ -280,9 +290,9 @@ private:
     unsigned int _current_system_number;
 
     // attempt to handle templated classes from non-templated class
-    std::vector< std::vector< /*const*/ elem_type_templ_base< double, double > * > >  _elem_all_dd;
-    std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, double > * > >  _elem_all_ad;
-    std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > * > >  _elem_all_aa;
+    std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< double, double > * > > >                    _elem_all_dd;  //[QRULES][Geom Elems][FE]
+    std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, double > * > > >            _elem_all_ad;  //[QRULES][Geom Elems][FE]
+    std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > * > > >    _elem_all_aa;  //[QRULES][Geom Elems][FE]
     
     
     

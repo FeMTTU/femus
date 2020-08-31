@@ -9,7 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             3  /* 1-2 x axis, 3-4 y axis, 5-6 z axis */
+#define FACE_FOR_CONTROL             3  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 
 #include "../../param.hpp"
@@ -160,8 +160,9 @@ int main(int argc, char** args) {
   // ======= Quad Rule ========================
   //right now only one quadrature rule is used, so there is no possibility of quadrature point offset to try to avoid numerical cancellation
   //quadr rule order
-  const std::string fe_quad_rule_1 = "seventh";
-//   const std::string fe_quad_rule_1 = "eighth";
+  /*const*/ std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+  fe_quad_rule_vec.push_back("eighth");
 
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
@@ -175,7 +176,7 @@ int main(int argc, char** args) {
   const double Lref = 1.;
   
   
-  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_1.c_str(), Lref);
+  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref);
   
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, 0, 0., 1., 0., 1., 0., 0., QUAD9, fe_quad_rule.c_str());  
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, NSUB_Z, 0., 1., 0., 1., 0., 1., HEX27, fe_quad_rule.c_str());  
@@ -218,7 +219,7 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob(&ml_sol);
   
   ml_prob.SetFilesHandler(&files);
-  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule_1);
+  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe();
 
   // ======= Solution: Initial Conditions ==================

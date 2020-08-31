@@ -39,6 +39,7 @@ bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x,
 MultiLevelProblem::MultiLevelProblem():
 				      _files(NULL)
 {
+    
 
 }
 
@@ -166,19 +167,39 @@ void MultiLevelProblem::clear ()
 
  void MultiLevelProblem::SetQuadratureRuleAllGeomElems(const std::string quadr_order_in) {
 
-  
-  _qrule.reserve(N_GEOM_ELS);
-  
-  for (int iel = 0; iel < femus::geom_elems.size(); iel++) {
-          Gauss qrule_temp(femus::geom_elems[iel].c_str(),quadr_order_in.c_str());
-         _qrule.push_back(qrule_temp);
-           }
+     std::vector< std::string > qrule_list(1); 
+     qrule_list[0] = quadr_order_in;
+     
+     SetQuadratureRuleAllGeomElemsMultiple(qrule_list);
+     
+     
+//   _qrule.resize(1);
+//   _qrule[0].reserve(N_GEOM_ELS);
+//   
+//   for (int iel = 0; iel < femus::geom_elems.size(); iel++) {
+//           Gauss qrule_temp(femus::geom_elems[iel].c_str(),quadr_order_in.c_str());
+//          _qrule[0].push_back(qrule_temp);
+//            }
 
    return;
 }
 
 
+ void MultiLevelProblem::SetQuadratureRuleAllGeomElemsMultiple(const std::vector<std::string> quadr_order_in_vec) {
 
+  _qrule.resize(quadr_order_in_vec.size());
+  
+  for (int q = 0; q < _qrule.size(); q++) {
+  _qrule[q].reserve(N_GEOM_ELS);
+  
+  for (int iel = 0; iel < femus::geom_elems.size(); iel++) {
+          Gauss qrule_temp(femus::geom_elems[iel].c_str(),quadr_order_in_vec[q].c_str());
+         _qrule[q].push_back(qrule_temp);
+           }
+  }
+  
+   return;
+}
 
 
 } //end namespace femus
