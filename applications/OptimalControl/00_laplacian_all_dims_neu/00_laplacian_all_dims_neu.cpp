@@ -140,7 +140,7 @@ int main(int argc, char** args) {
 
   ml_prob.SetFilesHandler(&files);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-  ml_prob.set_all_abstract_fe();
+  ml_prob.set_all_abstract_fe_multiple();
   
 //   std::vector < std::vector < const elem_type_templ_base<double, double> *  > > elem_all = ml_prob.evaluate_all_fe<double, double>();
   

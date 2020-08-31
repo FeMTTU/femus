@@ -227,8 +227,20 @@ public:
   void get_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > & elem_all_in) const { elem_all_in = _elem_all_aa[0]; }
 
   
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > > & elem_all_in)                 /*const*/ { elem_all_in = _elem_all_dd; }
   
-  void set_all_abstract_fe() {
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > > & elem_all_in)         /*const*/ { elem_all_in = _elem_all_ad; }
+  
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > > & elem_all_in) /*const*/ { elem_all_in = _elem_all_aa; }
+
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< double, double > *  > > > & elem_all_in)                 const { elem_all_in = _elem_all_dd; }
+  
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, double > *  > > > & elem_all_in)         const { elem_all_in = _elem_all_ad; }
+  
+  void get_all_abstract_fe_multiple(std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > *  > > > & elem_all_in) const { elem_all_in = _elem_all_aa; }
+  
+  
+  void set_all_abstract_fe_multiple() {
       
       const unsigned n_qrules = _qrule.size();
       

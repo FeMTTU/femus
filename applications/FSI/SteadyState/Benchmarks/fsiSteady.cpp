@@ -351,7 +351,7 @@ output_path.append("/");
   
   ml_prob.SetFilesHandler(&files);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-  ml_prob.set_all_abstract_fe();
+  ml_prob.set_all_abstract_fe_multiple();
   
   
   // Add fluid object

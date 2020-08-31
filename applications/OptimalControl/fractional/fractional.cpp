@@ -144,7 +144,7 @@ int main(int argc, char** argv)
 
   ml_prob.SetFilesHandler(&files);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule_2);
-  ml_prob.set_all_abstract_fe();
+  ml_prob.set_all_abstract_fe_multiple();
 
 
   // ========= System ==========================

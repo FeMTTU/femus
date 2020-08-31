@@ -281,7 +281,7 @@ int main(int argc, char** args) {
   
     mlProb.SetQuadratureRuleAllGeomElems(fe_quad_rule);
     mlProb.SetFilesHandler(&files);
-    mlProb.set_all_abstract_fe();
+    mlProb.set_all_abstract_fe_multiple();
 
     mlSol.Initialize("All");
     mlSol.Initialize("TargReg",     Solution_set_initial_conditions, & mlProb);

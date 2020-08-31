@@ -705,7 +705,7 @@ void el_dofs_unknowns(const Solution*                sol,
                         vector < unsigned > SolFEType_quantities,
                         vector < unsigned > Sol_n_el_dofs_quantities,
                         //-----------
-                        std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all,
+                        std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all,
                         //-----------
                         std::vector < std::vector < double > >  Jac_iel_bdry_iqp_bdry,
                         std::vector < std::vector < double > >  JacI_iel_bdry_iqp_bdry,
@@ -971,13 +971,13 @@ void el_dofs_unknowns(const Solution*                sol,
 
          for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
 
-    elem_all[jelGeom_bdry][solType_coords]->JacJacInv(geom_element_jel.get_coords_at_dofs_bdry_3d(), jqp_bdry, Jac_jel_bdry_jqp_bdry, JacI_jel_bdry_jqp_bdry, detJac_jel_bdry_jqp_bdry, space_dim);
+    elem_all[1][jelGeom_bdry][solType_coords]->JacJacInv(geom_element_jel.get_coords_at_dofs_bdry_3d(), jqp_bdry, Jac_jel_bdry_jqp_bdry, JacI_jel_bdry_jqp_bdry, detJac_jel_bdry_jqp_bdry, space_dim);
     
     weight_jqp_bdry[jqp_bdry] = detJac_jel_bdry_jqp_bdry * ml_prob.GetQuadratureRule(jelGeom_bdry).GetGaussWeightsPointer()[jqp_bdry];
 
-    elem_all[jelGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(jqp_bdry, JacI_jel_bdry_jqp_bdry, phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry], phi_ctrl_x_jel_bdry_jqp_bdry[jqp_bdry], boost::none, space_dim);
+    elem_all[1][jelGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(jqp_bdry, JacI_jel_bdry_jqp_bdry, phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry], phi_ctrl_x_jel_bdry_jqp_bdry[jqp_bdry], boost::none, space_dim);
             
-    elem_all[jelGeom_bdry][solType_coords] ->shape_funcs_current_elem(jqp_bdry, JacI_jel_bdry_jqp_bdry, phi_coords_jel_bdry_jqp_bdry[jqp_bdry], phi_coords_x_jel_bdry_jqp_bdry[jqp_bdry], boost::none, space_dim);
+    elem_all[1][jelGeom_bdry][solType_coords] ->shape_funcs_current_elem(jqp_bdry, JacI_jel_bdry_jqp_bdry, phi_coords_jel_bdry_jqp_bdry[jqp_bdry], phi_coords_x_jel_bdry_jqp_bdry[jqp_bdry], boost::none, space_dim);
 
 //========== compute gauss quantities on the boundary ===============================================
 //--- geom
@@ -1154,13 +1154,13 @@ void el_dofs_unknowns(const Solution*                sol,
          
 		for(unsigned iqp_bdry = 0; iqp_bdry < n_iqp_bdry; iqp_bdry++) {
             
-    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_iel_bdry_iqp_bdry, JacI_iel_bdry_iqp_bdry, detJac_iel_bdry_iqp_bdry, space_dim);
+    elem_all[0][ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_iel_bdry_iqp_bdry, JacI_iel_bdry_iqp_bdry, detJac_iel_bdry_iqp_bdry, space_dim);
     
     weight_iqp_bdry = detJac_iel_bdry_iqp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
+    elem_all[0][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
             
-    elem_all[ielGeom_bdry][solType_coords] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_coords_iel_bdry_iqp_bdry, phi_coords_x_iel_bdry_iqp_bdry, boost::none, space_dim);
+    elem_all[0][ielGeom_bdry][solType_coords] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_coords_iel_bdry_iqp_bdry, phi_coords_x_iel_bdry_iqp_bdry, boost::none, space_dim);
 
 //========== compute gauss quantities on the boundary ===============================================
 //--- geom
@@ -1513,7 +1513,7 @@ if( check_if_same_elem(iel, jel) ) {
                         vector < unsigned > SolFEType_quantities,
                         vector < unsigned > Sol_n_el_dofs_quantities,
                         //-----------
-                        std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > elem_all,
+                        std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all,
                         std::vector < std::vector < double > >  Jac_qp_bdry,
                         std::vector < std::vector < double > >  JacI_qp_bdry,
                         double detJac_qp_bdry,
@@ -1620,12 +1620,12 @@ if( check_if_same_elem(iel, jel) ) {
     
 		for(unsigned iqp_bdry = 0; iqp_bdry < n_qp_bdry; iqp_bdry++) {
     
-    elem_all[ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
-// 	elem_all[ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal);
+    elem_all[0][ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
+// 	elem_all[0][ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal);
     
     weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bdry).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_qp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
+    elem_all[0][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_qp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
   
 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_iqp_bdry = 0.;

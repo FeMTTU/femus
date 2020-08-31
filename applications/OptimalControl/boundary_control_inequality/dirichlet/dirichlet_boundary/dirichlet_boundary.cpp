@@ -187,7 +187,7 @@ int main(int argc, char** args) {
   
   ml_prob.SetFilesHandler(&files);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-  ml_prob.set_all_abstract_fe();
+  ml_prob.set_all_abstract_fe_multiple();
 
   // ======= Solution: Initial Conditions ==================
   ml_sol.Initialize("All");    // initialize all varaibles to zero
