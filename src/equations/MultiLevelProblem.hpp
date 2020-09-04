@@ -185,9 +185,11 @@ public:
 
   inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
 
-  inline const std::vector<Gauss> & GetQuadratureRuleAllGeomElems() const { return _qrule[0]; }
+  inline const std::vector<Gauss> & GetQuadratureRuleAllGeomElems() const { return _qrule[0]; }  ///@todo obsolete
   
-  inline const Gauss & GetQuadratureRule(const unsigned geom_elem_type) const { return _qrule[0][geom_elem_type]; }
+  inline const Gauss & GetQuadratureRule(const unsigned geom_elem_type) const { return _qrule[0][geom_elem_type]; }  ///@todo obsolete
+  
+  inline const Gauss & GetQuadratureRuleMultiple(const unsigned qrule_pos, const unsigned geom_elem_type) const { return _qrule[qrule_pos][geom_elem_type]; }
 
   void SetQuadratureRuleAllGeomElems(const std::string quadr_order_in);
   
@@ -249,15 +251,15 @@ public:
       _elem_all_aa.resize(n_qrules);
           
   for (int q = 0; q < n_qrules; q++) {
-       set_all_abstract_fe<double, double>(_elem_all_dd[q]);
-       set_all_abstract_fe<adept::adouble, double>(_elem_all_ad[q]);
-       set_all_abstract_fe<adept::adouble, adept::adouble>(_elem_all_aa[q]);
+       set_all_abstract_fe<double, double>(q, _elem_all_dd[q]);
+       set_all_abstract_fe<adept::adouble, double>(q, _elem_all_ad[q]);
+       set_all_abstract_fe<adept::adouble, adept::adouble>(q, _elem_all_aa[q]);
   }
   
 }  
   
  template <class type, class type_mov>
-  void set_all_abstract_fe(std::vector < std::vector < /*const*/ elem_type_templ_base<type, type_mov> *  > > & elem_all_in) const {
+  void set_all_abstract_fe(const unsigned qrule, std::vector < std::vector < /*const*/ elem_type_templ_base<type, type_mov> *  > > & elem_all_in) const {
 
 //this function performs the initialization of all abstract FE families on all abstract Geometric Elements      
       
@@ -268,7 +270,7 @@ public:
   
          for (unsigned int g = 0; g < femus::geom_elems.size(); g++) {
              elem_all_in[g].resize(femus::fe_fams.size());
-             const std::string quad_order = this->GetQuadratureRule(g).GetGaussOrderString();  ///@todo what if you choose different quadrature orders on different geom elems?
+             const std::string quad_order = this->GetQuadratureRuleMultiple(qrule, g).GetGaussOrderString();  ///@todo what if you choose different quadrature orders on different geom elems?
 
          for (unsigned int fe = 0; fe < femus::fe_fams.size(); fe++) {
             elem_all_in[g][fe] = elem_type_templ_base<type, type_mov>::build(femus::geom_elems[g], femus::fe_fams[fe], quad_order.c_str(), 3);          
