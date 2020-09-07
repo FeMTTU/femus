@@ -9,7 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             1  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL             3  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 
 #include "../../param.hpp"
@@ -30,9 +30,9 @@
 #define Nsplit 0
 #define S_FRAC 0.5
 
-#define OP_L2       1  /* direi che ci vuole */
+#define OP_L2       0  /* direi che ci vuole */
 #define OP_H1       0
-#define OP_Hhalf    0/*1*/
+#define OP_Hhalf    1
 #define RHS_ONE     0/*1*/
 
 #define UNBOUNDED   0/*1*/

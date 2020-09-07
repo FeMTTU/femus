@@ -1207,16 +1207,16 @@ void el_dofs_unknowns(const Solution*                sol,
             if( check_if_same_elem_bdry(iel, jel, iface, jface) ) {
               
        //============  Mass assembly - BEGIN ==================
-           for(unsigned i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); i_bdry++) {
-               		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+           for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) {
+               		    unsigned int l_vol = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
 
-              for(unsigned j_bdry = 0; j_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); j_bdry++) {
-               		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);  //these are columns but still in iel, so it shouldn't be confused with the iel-jel conventions
-                KK_local_iel[ i_vol * nDof_iel + j_vol ] += OP_L2 * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * weight_iqp_bdry;
+              for(unsigned m_bdry = 0; m_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); m_bdry++) {
+               		    unsigned int m_vol = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
+                KK_local_iel[ l_vol * nDof_iel + m_vol ] += OP_L2 * phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * phi_ctrl_iel_bdry_iqp_bdry[m_bdry] * weight_iqp_bdry;
               }
-              double mass_res_i = phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry ;
-              Res_local_iel[ i_vol ] += OP_L2 * weight_iqp_bdry * mass_res_i ;
-              Res_local_iel[ i_vol ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][i_bdry])) * ( sin(2 * acos(0.0) * x1[1][i_bdry]))*/);
+              double mass_res_i = phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * sol_ctrl_iqp_bdry ;
+              Res_local_iel[ l_vol ] += OP_L2 * weight_iqp_bdry * mass_res_i ;
+              Res_local_iel[ l_vol ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
             }
         //============  Mass assembly - END ==================
          
@@ -1388,22 +1388,31 @@ void el_dofs_unknowns(const Solution*                sol,
               }
 
               const double denom = pow(dist_xyz, (double)(  0.5 * /*dim*/dim_bdry + s_frac));
+              
+              const double common_weight = (0.5 * C_ns) * OP_Hhalf * check_limits * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
 
-              for(unsigned i = 0; i < nDof_iel; i++) {
+//               for(unsigned i = 0; i < nDof_iel; i++) {
+           for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) { //dofs of test function
+               		    unsigned int l_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
+               		    unsigned int l_vol_jel = msh->GetLocalFaceVertexIndex(jel, jface, l_bdry);
 
-                Res_nonlocal_iel[ i ]         +=      - (0.5 * C_ns) * OP_Hhalf *  check_limits * (sol_ctrl_iqp_bdry - sol_ctrl_jqp_bdry[jqp_bdry]) * (phi_ctrl_iel_bdry_iqp_bdry[i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
+                Res_nonlocal_iel[ l_vol_iel ]      +=      - common_weight * (sol_ctrl_iqp_bdry - sol_ctrl_jqp_bdry[jqp_bdry]) * (phi_ctrl_iel_bdry_iqp_bdry[l_bdry]);
 
-                Res_nonlocal_jel[ i ]         +=      - (0.5 * C_ns) * OP_Hhalf *  check_limits * (sol_ctrl_iqp_bdry - sol_ctrl_jqp_bdry[jqp_bdry]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
+                Res_nonlocal_jel[ l_vol_jel ]      +=      - common_weight * (sol_ctrl_iqp_bdry - sol_ctrl_jqp_bdry[jqp_bdry]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][l_bdry]);
 
-                for(unsigned j = 0; j < nDof_jel; j++) {
+               
+//                 for(unsigned j = 0; j < nDof_jel; j++) {
+           for(unsigned m_bdry = 0; m_bdry < phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry].size(); m_bdry++) { //dofs of unknown function
+               		    unsigned int m_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
+               		    unsigned int m_vol_jel = msh->GetLocalFaceVertexIndex(jel, jface, m_bdry);
 
-                  KK_nonlocal_iel_iel[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * phi_ctrl_iel_bdry_iqp_bdry[j]  * phi_ctrl_iel_bdry_iqp_bdry[i] * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+                  KK_nonlocal_iel_iel[ l_vol_iel * nDof_jel + m_vol_iel ] += common_weight *          phi_ctrl_iel_bdry_iqp_bdry[m_bdry]            *    phi_ctrl_iel_bdry_iqp_bdry[l_bdry];
 
-                  KK_nonlocal_iel_jel[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j]) * phi_ctrl_iel_bdry_iqp_bdry[i] * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+                  KK_nonlocal_iel_jel[ l_vol_iel * nDof_jel + m_vol_jel ] += common_weight * (- 1.) * phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][m_bdry]  *    phi_ctrl_iel_bdry_iqp_bdry[l_bdry];
 
-                  KK_nonlocal_jel_iel[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (phi_ctrl_iel_bdry_iqp_bdry[j]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+                  KK_nonlocal_jel_iel[ l_vol_jel * nDof_jel + m_vol_iel ] += common_weight * (- 1.) * phi_ctrl_iel_bdry_iqp_bdry[m_bdry]            *   phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][l_bdry];
 
-                  KK_nonlocal_jel_jel[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j]) * (- phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][i]) * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry] / denom;
+                  KK_nonlocal_jel_jel[ l_vol_jel * nDof_jel + m_vol_jel ] += common_weight *          phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][m_bdry]  *    phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][l_bdry];
 
 
                   }
