@@ -50,7 +50,7 @@ namespace femus {
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper =  .1;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper =  .03;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower = -1000.; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      
@@ -556,6 +556,7 @@ void el_dofs_unknowns(const Solution*                sol,
   
   void mixed_integral(const unsigned UNBOUNDED,
                       const unsigned dim,
+                      const unsigned dim_bdry,
                       const double EX_1,
                       const double EX_2,
                       const double weight_iqp_bdry,
@@ -574,16 +575,27 @@ void el_dofs_unknowns(const Solution*                sol,
   if(UNBOUNDED == 1) {
       
       //============ Mixed Integral 1D - Analytical ==================      
-      if (dim == 1) {
+      if (dim_bdry == 1) {
       
               double ex_1 = EX_1;
               double ex_2 = EX_2;
-              double dist_1 = 0.;
-              double dist_2 = 0.;
+              std::vector < double > ex_1_vec(dim);
+              std::vector < double > ex_2_vec(dim);
+              ex_1_vec[0] = EX_1;
+              ex_1_vec[1] = 0.;
+              ex_2_vec[0] = EX_2;
+              ex_2_vec[1] = 0.;
+//               ex_1_vec[0] = 0.;
+//               ex_1_vec[1] = EX_1;
+//               ex_2_vec[0] = 0.;
+//               ex_2_vec[1] = EX_2;
+              
+              double dist_1 = 0.;  //distance from node to extreme 1
+              double dist_2 = 0.;  //distance from node to extreme 2
               
               for(int d = 0; d < dim; d++) {
-                dist_1 += sqrt((x_iqp_bdry[d] - ex_1) * (x_iqp_bdry[d] - ex_1));
-                dist_2 += sqrt((x_iqp_bdry[d] - ex_2) * (x_iqp_bdry[d] - ex_2));
+                dist_1 += sqrt((x_iqp_bdry[d] - ex_1_vec[d]) * (x_iqp_bdry[d] - ex_1_vec[d]));
+                dist_2 += sqrt((x_iqp_bdry[d] - ex_2_vec[d]) * (x_iqp_bdry[d] - ex_2_vec[d]));
               }
               
               double mixed_term = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
@@ -598,8 +610,8 @@ void el_dofs_unknowns(const Solution*                sol,
       }
       
     //============ Mixed Integral 2D - Numerical ==================      
-      else if (dim == 2) {            abort();
-          
+      else if (dim_bdry == 2) {           
+          std::cout << "check dim vs dim_bdry ";   abort();
 // // //             double mixed_term1 = 0.;
 // // // //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
 // // //             // *** Face Gauss point loop (boundary Integral) ***
@@ -1195,13 +1207,16 @@ void el_dofs_unknowns(const Solution*                sol,
             if( check_if_same_elem_bdry(iel, jel, iface, jface) ) {
               
        //============  Mass assembly - BEGIN ==================
-           for(unsigned i = 0; i < phi_ctrl_iel_bdry_iqp_bdry.size(); i++) {
-              for(unsigned j = 0; j < phi_ctrl_iel_bdry_iqp_bdry.size(); j++) {
-                KK_local_iel[ i * phi_ctrl_iel_bdry_iqp_bdry.size() + j ] += OP_L2 * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry;
+           for(unsigned i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); i_bdry++) {
+               		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+
+              for(unsigned j_bdry = 0; j_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); j_bdry++) {
+               		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);  //these are columns but still in iel, so it shouldn't be confused with the iel-jel conventions
+                KK_local_iel[ i_vol * nDof_iel + j_vol ] += OP_L2 * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * weight_iqp_bdry;
               }
-              double mass_res_i = phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry ;
-              Res_local_iel[ i ] += OP_L2 * weight_iqp_bdry * mass_res_i ;
-              Res_local_iel[ i ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][i])) * ( sin(2 * acos(0.0) * x1[1][i]))*/);
+              double mass_res_i = phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry ;
+              Res_local_iel[ i_vol ] += OP_L2 * weight_iqp_bdry * mass_res_i ;
+              Res_local_iel[ i_vol ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][i_bdry])) * ( sin(2 * acos(0.0) * x1[1][i_bdry]))*/);
             }
         //============  Mass assembly - END ==================
          
@@ -1345,6 +1360,7 @@ void el_dofs_unknowns(const Solution*                sol,
             
 // ********* UNBOUNDED PART - BEGIN ***************
                mixed_integral(UNBOUNDED,
+                              dim,
                               dim_bdry,
                               EX_1,
                               EX_2,
@@ -1371,7 +1387,7 @@ void el_dofs_unknowns(const Solution*                sol,
                 dist_xyz += (x_iqp_bdry[d] - x_jqp_bdry[jqp_bdry][d]) * (x_iqp_bdry[d] - x_jqp_bdry[jqp_bdry][d]);
               }
 
-              const double denom = pow(dist_xyz, (double)((/*dim*/dim_bdry / 2.) + s_frac));
+              const double denom = pow(dist_xyz, (double)(  0.5 * /*dim*/dim_bdry + s_frac));
 
               for(unsigned i = 0; i < nDof_iel; i++) {
 

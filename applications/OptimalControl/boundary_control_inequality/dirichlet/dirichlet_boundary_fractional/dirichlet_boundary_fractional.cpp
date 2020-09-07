@@ -9,7 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             3  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL             1  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 
 #include "../../param.hpp"
@@ -22,25 +22,25 @@
 #define IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY    0
 
 
-#define N_UNIFORM_LEVELS  5
-#define N_ERASED_LEVELS   4
+#define N_UNIFORM_LEVELS  3
+#define N_ERASED_LEVELS   2
 
 
 //*********************** 
 #define Nsplit 0
 #define S_FRAC 0.5
 
-#define OP_L2       0
+#define OP_L2       1  /* direi che ci vuole */
 #define OP_H1       0
-#define OP_Hhalf    1
+#define OP_Hhalf    0/*1*/
 #define RHS_ONE     0/*1*/
 
-#define UNBOUNDED   1
+#define UNBOUNDED   0/*1*/
 
 #define USE_Cns     1
 
-#define EX_1        0.
-#define EX_2        1.
+#define EX_1        GAMMA_CONTROL_LOWER
+#define EX_2        GAMMA_CONTROL_UPPER
 #define EY_1        0.
 #define EY_2        1.
 //*********************** 
