@@ -1383,7 +1383,7 @@ void el_dofs_unknowns(const Solution*                sol,
             for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
 
               double dist_xyz = 0.;
-              for(unsigned d = 0; d < x_jqp_bdry.size(); d++) {
+              for(unsigned d = 0; d < x_iqp_bdry.size(); d++) {
                 dist_xyz += (x_iqp_bdry[d] - x_jqp_bdry[jqp_bdry][d]) * (x_iqp_bdry[d] - x_jqp_bdry[jqp_bdry][d]);
               }
 
@@ -1406,13 +1406,13 @@ void el_dofs_unknowns(const Solution*                sol,
                		    unsigned int m_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
                		    unsigned int m_vol_jel = msh->GetLocalFaceVertexIndex(jel, jface, m_bdry);
 
-                  KK_nonlocal_iel_iel[ l_vol_iel * nDof_jel + m_vol_iel ] += common_weight *          phi_ctrl_iel_bdry_iqp_bdry[m_bdry]            *    phi_ctrl_iel_bdry_iqp_bdry[l_bdry];
+             /*  u(x) v(x)*/     KK_nonlocal_iel_iel[ l_vol_iel * nDof_jel + m_vol_iel ] += common_weight *          phi_ctrl_iel_bdry_iqp_bdry[m_bdry]            *    phi_ctrl_iel_bdry_iqp_bdry[l_bdry];
 
-                  KK_nonlocal_iel_jel[ l_vol_iel * nDof_jel + m_vol_jel ] += common_weight * (- 1.) * phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][m_bdry]  *    phi_ctrl_iel_bdry_iqp_bdry[l_bdry];
+             /*- u(y) v(x)*/     KK_nonlocal_iel_jel[ l_vol_iel * nDof_jel + m_vol_jel ] += common_weight * (- 1.) * phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][m_bdry]  *    phi_ctrl_iel_bdry_iqp_bdry[l_bdry];
 
-                  KK_nonlocal_jel_iel[ l_vol_jel * nDof_jel + m_vol_iel ] += common_weight * (- 1.) * phi_ctrl_iel_bdry_iqp_bdry[m_bdry]            *   phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][l_bdry];
+             /*- u(x) v(y)*/     KK_nonlocal_jel_iel[ l_vol_jel * nDof_jel + m_vol_iel ] += common_weight * (- 1.) * phi_ctrl_iel_bdry_iqp_bdry[m_bdry]            *   phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][l_bdry];
 
-                  KK_nonlocal_jel_jel[ l_vol_jel * nDof_jel + m_vol_jel ] += common_weight *          phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][m_bdry]  *    phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][l_bdry];
+             /*  u(y) v(y)*/     KK_nonlocal_jel_jel[ l_vol_jel * nDof_jel + m_vol_jel ] += common_weight *          phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][m_bdry]  *    phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][l_bdry];
 
 
                   }
@@ -1474,8 +1474,8 @@ if( check_if_same_elem(iel, jel) ) {
         RES->add_vector_blocked(Res_local_iel_mixed_num, l2gMap_iel);
 
         KK->add_matrix_blocked(KK_nonlocal_iel_iel, l2gMap_iel, l2gMap_iel);
-        KK->add_matrix_blocked(KK_nonlocal_jel_iel, l2gMap_jel, l2gMap_iel);
         KK->add_matrix_blocked(KK_nonlocal_iel_jel, l2gMap_iel, l2gMap_jel);
+        KK->add_matrix_blocked(KK_nonlocal_jel_iel, l2gMap_jel, l2gMap_iel);
         KK->add_matrix_blocked(KK_nonlocal_jel_jel, l2gMap_jel, l2gMap_jel);
 // Since 1 is dense and 3 are sparse, and the dense dofs are 30, we should have at most 3x9 + 30 = 57, but in the sparsity print it shows 30. That's the problem
 
