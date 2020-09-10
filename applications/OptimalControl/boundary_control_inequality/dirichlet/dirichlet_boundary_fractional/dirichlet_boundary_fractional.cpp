@@ -9,7 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             3  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL             4  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 
 #include "../../param.hpp"
@@ -35,14 +35,17 @@
 #define OP_Hhalf    1
 #define RHS_ONE     0/*1*/
 
-#define UNBOUNDED   0/*1*/
+#define UNBOUNDED   /*0*/1
 
 #define USE_Cns     1
 
 #define EX_1        GAMMA_CONTROL_LOWER
 #define EX_2        GAMMA_CONTROL_UPPER
 #define EY_1        0.
-#define EY_2        1.
+#define EY_2        0.
+
+#define DOMAIN_EX_1 0
+#define DOMAIN_EX_2 1
 //*********************** 
 
 
@@ -614,6 +617,28 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   const double check_limits = 1.;//1./(1. - s_frac); // - s_frac;
 
   double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim_bdry + 2. * s_frac) / 2.) / (pow(M_PI, dim_bdry / 2.) * tgamma(1 -  s_frac)) ;
+  
+  unsigned n_max = pow(2,dim_bdry);
+  std::vector < double > extremes(n_max);
+  extremes[0] = EX_1;
+  extremes[1] = EX_2;
+  if(dim_bdry == 3){
+    extremes[2] = EY_1;
+    extremes[3] = EY_2;
+  }
+  
+  std::vector < std::vector < double > > ex_control(dim); // control zone extremes. Built as: 2D) ( x1 y1 ) ( x2 y2 )    3D) ( x1 y1 z1 ) ( x2 y2 z2 ) ( x3 y3 z3 ) 
+  for(unsigned d = 0; d < dim; d++) {
+      ex_control[d].reserve(n_max);
+  }
+  int control_xyz = (FACE_FOR_CONTROL - 1) / 2;
+  bool ctrl_min_max = (FACE_FOR_CONTROL - 1) % 2;
+  for(unsigned d = 0; d < dim; d++) {
+    for(unsigned n_e = 0; n_e < n_max; n_e++){
+      if(control_xyz == d) ex_control[d][n_e] =  (ctrl_min_max)? DOMAIN_EX_2:DOMAIN_EX_1;
+      else ex_control[d][n_e] = extremes[n_e];
+    }
+  }
 
   //--- quadrature rules -------------------
   constexpr unsigned qrule_i = QRULE_I;
@@ -692,8 +717,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     OP_L2,
                     RHS_ONE,
                     UNBOUNDED,
-                    EX_1,
-                    EX_2,
+                    ex_control,
                     qrule_i,
                     qrule_j
                     );

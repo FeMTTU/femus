@@ -557,8 +557,7 @@ void el_dofs_unknowns(const Solution*                sol,
   void mixed_integral(const unsigned UNBOUNDED,
                       const unsigned dim,
                       const unsigned dim_bdry,
-                      const double EX_1,
-                      const double EX_2,
+                      const std::vector < std::vector < double > > & ex_control,
                       const double weight_iqp_bdry,
                       const std::vector < double > & x_iqp_bdry,
                       const std::vector < double > & phi_ctrl_iel_bdry_iqp_bdry,
@@ -569,7 +568,10 @@ void el_dofs_unknowns(const Solution*                sol,
                       const unsigned int OP_Hhalf,
                       const unsigned int nDof_iel,
                       std::vector < double > & KK_local_iel,
-                      std::vector < double > & Res_local_iel
+                      std::vector < double > & Res_local_iel,
+                      const Mesh * msh,
+                      const int iel,
+                      const unsigned iface
                      ) {
       
   if(UNBOUNDED == 1) {
@@ -577,34 +579,49 @@ void el_dofs_unknowns(const Solution*                sol,
       //============ Mixed Integral 1D - Analytical ==================      
       if (dim_bdry == 1) {
       
-              double ex_1 = EX_1;
-              double ex_2 = EX_2;
-              std::vector < double > ex_1_vec(dim);
-              std::vector < double > ex_2_vec(dim);
-              ex_1_vec[0] = EX_1;
-              ex_1_vec[1] = 0.;
-              ex_2_vec[0] = EX_2;
-              ex_2_vec[1] = 0.;
-//               ex_1_vec[0] = 0.;
-//               ex_1_vec[1] = EX_1;
-//               ex_2_vec[0] = 0.;
-//               ex_2_vec[1] = EX_2;
+//               double ex_1 = EX_1;
+//               double ex_2 = EX_2;
+//               std::vector < double > ex_1_vec(dim);
+//               std::vector < double > ex_2_vec(dim);
+//               ex_1_vec[0] = EX_1;
+//               ex_1_vec[1] = 0.;
+//               ex_2_vec[0] = EX_2;
+//               ex_2_vec[1] = 0.;
+// //               ex_1_vec[0] = 1.;
+// //               ex_1_vec[1] = EX_1;
+// //               ex_2_vec[0] = 1.;
+// //               ex_2_vec[1] = EX_2;
               
+              double dist2_1 = 0.;
+              double dist2_2 = 0.;
               double dist_1 = 0.;  //distance from node to extreme 1
               double dist_2 = 0.;  //distance from node to extreme 2
               
+//               for(int d = 0; d < dim; d++) {
+//                 dist2_1 += (x_iqp_bdry[d] - ex_1_vec[d]) * (x_iqp_bdry[d] - ex_1_vec[d]);
+//                 dist2_2 += (x_iqp_bdry[d] - ex_2_vec[d]) * (x_iqp_bdry[d] - ex_2_vec[d]);
+//               }
+//               // ex_control Built as  ( x1 y1 ) ( x2 y2 ) 
+//               
               for(int d = 0; d < dim; d++) {
-                dist_1 += sqrt((x_iqp_bdry[d] - ex_1_vec[d]) * (x_iqp_bdry[d] - ex_1_vec[d]));
-                dist_2 += sqrt((x_iqp_bdry[d] - ex_2_vec[d]) * (x_iqp_bdry[d] - ex_2_vec[d]));
+                dist2_1 += (x_iqp_bdry[d] - ex_control[d][0]) * (x_iqp_bdry[d] - ex_control[d][0]);
+                dist2_2 += (x_iqp_bdry[d] - ex_control[d][1]) * (x_iqp_bdry[d] - ex_control[d][1]);
+//                 std::cout<< ex_control[d][0] << "  " << ex_control[d][1] << "\n";
               }
+              
+              
+              dist_1 = sqrt( dist2_1 );
+              dist_2 = sqrt( dist2_2 );
               
               double mixed_term = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
 
               for(unsigned i = 0; i < nDof_iel; i++) {
+                unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i);
                 for(unsigned j = 0; j < nDof_iel /* @todo is this correct? */; j++) {
-                  KK_local_iel[ i * nDof_iel + j ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term;
+                  unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j);
+                  KK_local_iel[ i_vol_iel * nDof_iel + j_vol_iel ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term;
                 }
-                Res_local_iel[ i ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_term;
+                Res_local_iel[ i_vol_iel ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_term;
               }
    
       }
@@ -753,8 +770,7 @@ void el_dofs_unknowns(const Solution*                sol,
                         const unsigned int OP_L2,
                         const unsigned int RHS_ONE,
                         const unsigned int UNBOUNDED,
-                        const double EX_1,
-                        const double EX_2,
+                        const std::vector < std::vector < double > > & ex_control,
                         const unsigned qrule_i,
                         const unsigned qrule_j
                        ) {
@@ -1362,8 +1378,7 @@ void el_dofs_unknowns(const Solution*                sol,
                mixed_integral(UNBOUNDED,
                               dim,
                               dim_bdry,
-                              EX_1,
-                              EX_2,
+                              ex_control,
                               weight_iqp_bdry,
                               x_iqp_bdry,
                               phi_ctrl_iel_bdry_iqp_bdry,
@@ -1374,7 +1389,10 @@ void el_dofs_unknowns(const Solution*                sol,
                               OP_Hhalf,
                               nDof_iel,
                               KK_local_iel,
-                              Res_local_iel
+                              Res_local_iel,
+                              msh,
+                              iel,
+                              iface
                              ); 
               
 // ********* UNBOUNDED PART - END ***************
