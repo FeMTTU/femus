@@ -6,7 +6,7 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 
-#define FACE_FOR_CONTROL   3
+#define FACE_FOR_CONTROL   4
 
 #include "../../param.hpp"
 
@@ -93,7 +93,8 @@ int main(int argc, char** args) {
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
    
-  std::string input_file = "square_parametric.med";
+  std::string input_file = "square_4x5.med";
+//   std::string input_file = "square_parametric.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
@@ -101,10 +102,11 @@ int main(int argc, char** args) {
 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 6;
+  unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
   unsigned numberOfSelectiveLevels = 0;
+  const unsigned erased_levels = N_ERASED_LEVELS;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-  ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  ml_mesh.EraseCoarseLevels(erased_levels/*numberOfUniformLevels - 1*/);
   ml_mesh.PrintInfo();
 
     // ======= Solution ========================

@@ -16,6 +16,12 @@
 #include <functional>
 
 
+//*********************** Sets Number of refinements *****************************************
+#define N_UNIFORM_LEVELS  3
+#define N_ERASED_LEVELS   2
+
+
+
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 

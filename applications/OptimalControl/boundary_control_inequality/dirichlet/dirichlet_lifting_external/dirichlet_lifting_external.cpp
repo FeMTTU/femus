@@ -160,10 +160,11 @@ int main(int argc, char** args) {
     ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule.c_str(), Lref);
 
     //ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
-    unsigned numberOfUniformLevels = 3;
+    unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
+    const unsigned erased_levels = N_ERASED_LEVELS;
     unsigned numberOfSelectiveLevels = 0;
     ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-    ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
+    ml_mesh.EraseCoarseLevels(erased_levels);
     ml_mesh.PrintInfo();
 
     // ======= Solution  ==================
