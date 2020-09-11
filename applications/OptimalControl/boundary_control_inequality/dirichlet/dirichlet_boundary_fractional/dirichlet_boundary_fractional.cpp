@@ -16,6 +16,7 @@
 
 #define QRULE_I   0
 #define QRULE_J   1
+#define QRULE_K   1
 
 #define IS_CTRL_FRACTIONAL_SOBOLEV   1
 
@@ -643,6 +644,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   //--- quadrature rules -------------------
   constexpr unsigned qrule_i = QRULE_I;
   constexpr unsigned qrule_j = QRULE_J;
+  constexpr unsigned qrule_k = QRULE_K;
   //----------------------
 
   
@@ -719,7 +721,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     UNBOUNDED,
                     ex_control,
                     qrule_i,
-                    qrule_j
+                    qrule_j,
+                    qrule_k
                     );
                     
   }
