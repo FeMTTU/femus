@@ -18,14 +18,14 @@
 #define QRULE_J   1
 #define QRULE_K   1
 
-#define IS_CTRL_FRACTIONAL_SOBOLEV   0
+#define IS_CTRL_FRACTIONAL_SOBOLEV   1
 
 #define IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY    0
 
 
 
 //*********************** 
-#define Nsplit 0
+#define Nsplit 1
 #define S_FRAC 0.5
 
 #define OP_L2       0  /* direi che ci vuole */

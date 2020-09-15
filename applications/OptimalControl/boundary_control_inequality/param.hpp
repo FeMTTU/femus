@@ -1177,7 +1177,7 @@ void el_dofs_unknowns(const Solution*                sol,
 //        Evaluating coarse FE functions on Quadrature Points of the "sub-elements"
        std::vector < std::vector < std::vector <double > > > aP(3);  //[NFE_FAMS][DIM==3][N_DOFS]
         if(Nsplit != 0) {
-          for(unsigned fe_type = 0; fe_type < solType + 1; fe_type++) { //loop up to the FE type + 1 of the unknown
+          for(unsigned fe_type = 0; fe_type < /*solType*/solType_coords + 1; fe_type++) { //loop up to the FE type + 1 of the unknown
             ProjectNodalToPolynomialCoefficients(aP[fe_type], geom_element_iel.get_coords_at_dofs_bdry_3d(), ielGeom_bdry, fe_type) ;         ///@todo check this!!!!!!!!!!!!
           }
         }                      
@@ -1301,19 +1301,19 @@ void el_dofs_unknowns(const Solution*                sol,
                   }
                 }
 //--- geom
-// // // // //     
-// // // // //                     std::vector<double> xi3(dim, 0.);
-// // // // // 
-// // // // //                     GetClosestPointInReferenceElement(geom_element_iel.get_coords_at_dofs_bdry_3d(), x_kqp_bdry, kelGeom_bdry, xi3);
-// // // // //                     GetInverseMapping(solType_coords, kelGeom_bdry, aP, x_kqp_bdry, xi3, 1000);  ///@todo generalize to rectangular Jacobian
-// // // // // 
-// // // // //                     msh->_finiteElement[kelGeom_bdry][solType]->GetPhi(phi_ctrl_kel_bdry_kqp_bdry, xi3);
-// // // // // 
-// // // // //                     double solY3 = 0.;
-// // // // //                     for(unsigned i_bdry = 0; i_bdry < phi_ctrl_kel_bdry_kqp_bdry.size()/*nDof_iel*/; i_bdry++) {
-// // // // // 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-// // // // //                       solY3 += sol_ctrl_iel[i_vol] * phi_ctrl_kel_bdry_kqp_bdry[i_bdry];
-// // // // //                     }
+    
+                std::vector<double> xi3(dim, 0.);
+
+                GetClosestPointInReferenceElement(geom_element_iel.get_coords_at_dofs_bdry_3d(), x_kqp_bdry, kelGeom_bdry, xi3);
+                GetInverseMapping(solType_coords, kelGeom_bdry, aP, x_kqp_bdry, xi3, 1000);  ///@todo generalize to rectangular Jacobian
+
+                msh->_finiteElement[kelGeom_bdry][solType]->GetPhi(phi_ctrl_kel_bdry_kqp_bdry, xi3); //TODO solType or solType_coords?
+
+                double solY3 = 0.;
+                for(unsigned i_bdry = 0; i_bdry < phi_ctrl_kel_bdry_kqp_bdry.size()/*nDof_iel*/; i_bdry++) {
+                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+                  solY3 += sol_ctrl_iel[i_vol] * phi_ctrl_kel_bdry_kqp_bdry[i_bdry];
+                }
     
 // // // 
 // // // 
@@ -1342,26 +1342,32 @@ void el_dofs_unknowns(const Solution*                sol,
 
 // ********* BOUNDED PART - BEGIN ***************
 // // // 
-// // //                     double dist_xyz3 = 0;
-// // //                     for(unsigned k = 0; k < dim; k++) {
-// // //                       dist_xyz3 += (x_iqp_bdry[k] - xg3[k]) * (x_iqp_bdry[k] - xg3[k]);
-// // //                     }
-// // // 
-// // //                     const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
-// // // 
-// // //                     for(unsigned i = 0; i < nDof_iel; i++) {
-// // // 
-// // //                       Res_local_iel_refined[ i ]    +=      - (0.5 * C_ns) * OP_Hhalf * check_limits *
-// // //                                                         ((sol_ctrl_iqp_bdry - solY3) * (phi_ctrl_iel_bdry_iqp_bdry[i] - phi3[i]) * weight_kqp_bdry / denom3
-// // //                                                         ) * weight_iqp_bdry ;
-// // // 
-// // //                       for(unsigned j = 0; j < nDof_jel; j++) {
-// // //                         KK_local_iel_refined[ i * nDof_jel + j ] += (0.5 * C_ns) * OP_Hhalf * check_limits *
-// // //                                                             ((phi_ctrl_iel_bdry_iqp_bdry[j] - phi3[j]) * (phi_ctrl_iel_bdry_iqp_bdry[i] - phi3[i]) * weight_kqp_bdry / denom3
-// // //                                                             ) * weight_iqp_bdry ;
-// // // 
-// // //                       }
-// // //                     }
+                double dist_xyz3 = 0;
+                for(unsigned k = 0; k < dim; k++) {
+                  dist_xyz3 += (x_iqp_bdry[k] - x_kqp_bdry[k]) * (x_iqp_bdry[k] - x_kqp_bdry[k]);
+                }
+
+                const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
+
+//                 for(unsigned i = 0; i < nDof_iel; i++) {
+                for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) { //dofs of test function
+                  unsigned int l_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
+
+                  Res_local_iel_refined[ l_vol_iel ]    +=      - (0.5 * C_ns) * OP_Hhalf * check_limits *
+                                                    ((sol_ctrl_iqp_bdry - solY3) * (phi_ctrl_iel_bdry_iqp_bdry[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry])
+                                                    * weight_kqp_bdry / denom3 ) * weight_iqp_bdry ;
+
+                for(unsigned m_bdry = 0; m_bdry < phi_ctrl_kel_bdry_kqp_bdry.size(); m_bdry++) { //dofs of unknown function
+                    unsigned int m_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
+                    
+                    KK_local_iel_refined[ l_vol_iel * nDof_jel + m_vol_iel ] += (0.5 * C_ns) * OP_Hhalf * check_limits *
+                                                        ((phi_ctrl_iel_bdry_iqp_bdry[m_bdry] - phi_ctrl_kel_bdry_kqp_bdry[m_bdry]) * 
+                                                        (phi_ctrl_iel_bdry_iqp_bdry[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry]) * weight_kqp_bdry / denom3) *
+                                                        weight_iqp_bdry ;
+
+
+                  }
+                }
 // ********* BOUNDED PART - END ***************
                       
 // ********* UNBOUNDED PART - BEGIN ***************
