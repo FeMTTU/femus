@@ -56,7 +56,13 @@ using namespace femus;
 
 #include "../fractional_functions.hpp"
 
+
+
+//***** Quadrature-related ****************** 
 #define Nsplit      0
+//**************************************
+
+
 
 double InitialValueU(const std::vector < double >& x)
 {
@@ -104,8 +110,8 @@ int main(int argc, char** argv)
 
   // ======= Files ========================
   Files files; 
-        files.CheckIODirectories(true);
-        files.RedirectCout(true);
+        files.CheckIODirectories(false);
+        files.RedirectCout(false);
 
   unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
 

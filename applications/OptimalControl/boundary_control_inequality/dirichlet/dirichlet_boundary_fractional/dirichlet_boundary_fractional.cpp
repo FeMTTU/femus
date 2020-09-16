@@ -32,7 +32,7 @@
 #define OP_L2       0  /* direi che ci vuole */
 #define OP_H1       0
 #define OP_Hhalf    1
-#define RHS_ONE             0
+#define RHS_ONE             1
 #define KEEP_ADJOINT_PUSH   1
 
 #define UNBOUNDED   0/*1*/
