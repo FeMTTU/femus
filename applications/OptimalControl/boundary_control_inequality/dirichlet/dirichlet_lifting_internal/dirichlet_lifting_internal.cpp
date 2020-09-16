@@ -6,7 +6,7 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 
-#define FACE_FOR_CONTROL   4
+#define FACE_FOR_CONTROL   3
 
 #include "../../param.hpp"
 

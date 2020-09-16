@@ -9,7 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             1
+#define FACE_FOR_CONTROL             3
 
 #include "../../param.hpp"
 

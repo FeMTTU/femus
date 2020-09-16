@@ -32,10 +32,10 @@
 #define OP_L2       0  /* direi che ci vuole */
 #define OP_H1       0
 #define OP_Hhalf    1
-#define RHS_ONE             1
-#define KEEP_ADJOINT_PUSH   1
+#define RHS_ONE             1.
+#define KEEP_ADJOINT_PUSH   0
 
-#define UNBOUNDED   0/*1*/
+#define UNBOUNDED   1
 
 #define USE_Cns     1
 //**************************************
@@ -987,7 +987,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 		 
 //============ Bdry Residuals ==================	
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_state,i_vol) ] +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_eldofs_Mat[pos_mat_state][i_vol] - sol_eldofs_Mat[pos_mat_ctrl][i_vol] )
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_state,i_vol) ] +=
+                    - control_node_flag[i_vol] * penalty_ctrl * KEEP_ADJOINT_PUSH * (   sol_eldofs_Mat[pos_mat_state][i_vol] - sol_eldofs_Mat[pos_mat_ctrl][i_vol] )
                     - control_node_flag[i_vol] *  weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_u_bdry[i_bdry];   // u = q
 
 
@@ -1011,8 +1012,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //============ u = q ===========================	    
                  
 if ( i_vol == j_vol )  {
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i_vol, j_vol) ] += penalty_ctrl * ( control_node_flag[i_vol]);
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_ctrl, i_vol, j_vol) ]  += penalty_ctrl * ( control_node_flag[i_vol]) * (-1.);
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i_vol, j_vol) ] += 
+		     penalty_ctrl * KEEP_ADJOINT_PUSH * ( control_node_flag[i_vol]);
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_ctrl, i_vol, j_vol) ]  += 
+		     penalty_ctrl * KEEP_ADJOINT_PUSH * ( control_node_flag[i_vol]) * (-1.);
 		}
 //============ u = q ===========================
 
@@ -1140,7 +1143,7 @@ if ( i_vol == j_vol )  {
               // BLOCK delta_state / state
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i, j) ]  += weight  * target_flag *  phi_u[i] * phi_u[j];   
               //BLOCK delta_state / adjoint
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i, j) ]  += weight * (-1) * laplace_mat_du_adj;
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i, j) ]  += weight * (-1.) * laplace_mat_du_adj;
 	      
 	      
               //=========== delta_control row ===========================
@@ -1150,7 +1153,7 @@ if ( i_vol == j_vol )  {
               
 	      //=========== delta_adjoint row ===========================
 	      // BLOCK delta_adjoint / state
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_adj, pos_mat_state, i, j) ]  += weight * (-1) * laplace_mat_dadj_u;
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_adj, pos_mat_state, i, j) ]  += weight * (-1.) * laplace_mat_dadj_u;
 
 	      
 	      //============= delta_mu row ===============================

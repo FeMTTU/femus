@@ -17,8 +17,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   2
+#define N_UNIFORM_LEVELS  6
+#define N_ERASED_LEVELS   5
 
 
 
@@ -774,7 +774,7 @@ void el_dofs_unknowns(const Solution*                sol,
                         const double C_ns,
                         const unsigned int OP_Hhalf,
                         const unsigned int OP_L2,
-                        const unsigned int RHS_ONE,
+                        const double RHS_ONE,
                         const unsigned int UNBOUNDED,
                         const std::vector < std::vector < double > > & ex_control,
                         const unsigned qrule_i,
