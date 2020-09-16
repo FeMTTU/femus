@@ -20,7 +20,6 @@
 #define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY    0
 
 
-
 //***** Quadrature-related ****************** 
 #define Nsplit 0
 
