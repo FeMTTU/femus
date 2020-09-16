@@ -14,18 +14,22 @@
 
 #include "../../param.hpp"
 
+
+#define IS_CTRL_FRACTIONAL_SOBOLEV   1
+
+#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY    0
+
+
+
+//***** Quadrature-related ****************** 
+#define Nsplit 0
+
 #define QRULE_I   0
 #define QRULE_J   1
 #define QRULE_K   1
+//**************************************
 
-#define IS_CTRL_FRACTIONAL_SOBOLEV   0
-
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY    0
-
-
-
-//*********************** 
-#define Nsplit 0
+//***** Operator-related ****************** 
 #define S_FRAC 0.5
 
 #define OP_L2       0  /* direi che ci vuole */
@@ -36,7 +40,10 @@
 #define UNBOUNDED   1/*1*/
 
 #define USE_Cns     1
+//**************************************
 
+
+//***** Domain-related ****************** 
 #define EX_1        GAMMA_CONTROL_LOWER
 #define EX_2        GAMMA_CONTROL_UPPER
 #define EY_1        0.
@@ -44,7 +51,7 @@
 
 #define DOMAIN_EX_1 0
 #define DOMAIN_EX_2 1
-//*********************** 
+//**************************************
 
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices
@@ -64,7 +71,7 @@
 ///@todo put assembleMatrix everywhere there is a filling of the matrix!
 ///@todo I tried the assembly alone and it seems fine (well, actually there are problems in parallel...). The problem seems to be in the Solve part... am I doing something weird there?
 ///@todo the compare function is probably responsible for parallel slowing down!
-
+///@todo Give the option to provide your own name to the run folder instead of the time instant. I think I did something like this when running with the external script already
 
 using namespace femus;
 
@@ -700,7 +707,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     //-----------
                     pos_mat_ctrl,
                     pos_sol_ctrl,
-                    IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY,
+                    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY,
                     //-----------
                     KK,
                     RES,
@@ -765,7 +772,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     //-----------
                     pos_mat_ctrl,
                     pos_sol_ctrl,
-                    IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY,
+                    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY,
                     //-----------
                     KK,
                     RES,
@@ -985,8 +992,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
-                                                                                (    IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY * alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
-							                           +  IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
+                                                                                (    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
+							                           +  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							                           - grad_adj_dot_n_res * phi_ctrl_bdry[i_bdry]
 // 							                           -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss // for Neumann control
 							                         );  //boundary optimality condition
@@ -1020,8 +1027,8 @@ if ( i_vol == j_vol )  {
 
           
               Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i_vol, j_vol) ] 
-			+=  control_node_flag[i_vol] *  weight_bdry * ( IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY * alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry] 
-			                                              +  IS_BLOCK_DCTRL_CTRL_INSIDE_BDRY * beta *  lap_mat_dctrl_ctrl_bdry_gss);   
+			+=  control_node_flag[i_vol] *  weight_bdry * ( IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry] 
+			                                              +  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta *  lap_mat_dctrl_ctrl_bdry_gss);   
     
 		   
 //============ End Bdry Jacobians ==================	

@@ -760,7 +760,7 @@ void el_dofs_unknowns(const Solution*                sol,
                         //-----------
                         const unsigned int pos_mat_ctrl,
                         const unsigned int pos_sol_ctrl,
-                        const unsigned int is_block_dctrl_ctrl_inside_bdry,
+                        const unsigned int is_block_dctrl_ctrl_inside_main_big_assembly,
                         //-----------
                         SparseMatrix*  KK,
                         NumericVector* RES,
@@ -1576,7 +1576,7 @@ if( check_if_same_elem(iel, jel) ) {
                         //-----------
                         const unsigned int pos_mat_ctrl,
                         const unsigned int pos_sol_ctrl,
-                        const unsigned int is_block_dctrl_ctrl_inside_bdry,
+                        const unsigned int is_block_dctrl_ctrl_inside_main_big_assembly,
                         //-----------
                         SparseMatrix*             KK,
                         NumericVector* RES,
@@ -1720,8 +1720,8 @@ if( check_if_same_elem(iel, jel) ) {
 		 
 //============ Bdry Residuals ==================	
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
-                                                                                (     ( 1 - is_block_dctrl_ctrl_inside_bdry ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry
-							                           +  ( 1 - is_block_dctrl_ctrl_inside_bdry ) * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
+                                                                                (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry
+							                           +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							                         );  //boundary optimality condition
 //============ Bdry Residuals ==================    
 		    
@@ -1742,8 +1742,8 @@ if( check_if_same_elem(iel, jel) ) {
 
           
               Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i_vol, j_vol) ] 
-			+=  control_node_flag[i_vol] *  weight_bdry * ( ( 1 - is_block_dctrl_ctrl_inside_bdry ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
-			                                              + ( 1 - is_block_dctrl_ctrl_inside_bdry ) * beta *  lap_mat_dctrl_ctrl_bdry_gss);   
+			+=  control_node_flag[i_vol] *  weight_bdry * ( ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
+			                                              + ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta *  lap_mat_dctrl_ctrl_bdry_gss);   
     
 		   
 //============ End Bdry Jacobians ==================	
