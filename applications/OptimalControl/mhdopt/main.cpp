@@ -56,9 +56,9 @@ int main(int argc, char** argv) {
 // ======= Files ========================
   Files files;
         files.ConfigureRestart();
-        files.CheckIODirectories();
+        files.CheckIODirectories(true);
         files.CopyInputFiles();
-        files.RedirectCout();
+        files.RedirectCout(true);
 
   // ======= Physics ========================
   FemusInputParser<double> physics_map("Physics",files.GetOutputPath());

@@ -165,9 +165,11 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
   // ======= Files ========================
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = false;
   Files files; 
-        files.CheckIODirectories();
-        files.RedirectCout();
+        files.CheckIODirectories(use_output_time_folder);
+        files.RedirectCout(redirect_cout_to_file);
 
   // ======= Quad Rule ========================
   //right now only one quadrature rule is used, so there is no possibility of quadrature point offset to try to avoid numerical cancellation

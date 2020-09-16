@@ -34,8 +34,8 @@ int main(int argc, char **args) {
   bool dimension2D = false;
 
   //Files files;
-  //files.CheckIODirectories();
-  //files.RedirectCout();
+  //files.CheckIODirectories(true);
+  //files.RedirectCout(true);
 
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 

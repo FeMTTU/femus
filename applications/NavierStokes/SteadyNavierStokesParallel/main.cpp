@@ -40,8 +40,8 @@ int main ( int argc, char **args ) {
   FemusInit mpinit ( argc, args, MPI_COMM_WORLD );
 
   Files files;
-  files.CheckIODirectories();
-  //files.RedirectCout();
+  files.CheckIODirectories(true);
+  //files.RedirectCout(true);
 
   bool Gmres = 0, Asm = 0;
   if ( argc >= 2 ) {

@@ -87,13 +87,13 @@ int main(int argc, char** args) {
 
     // ======= Files =========================
     Files files;
-    files.CheckIODirectories();
+    files.CheckIODirectories(true);
     
     const bool redirect_cout = false;
     std::string output_path;
     
     if (redirect_cout) {
-        files.RedirectCout();
+        files.RedirectCout(true);
         output_path = files.GetOutputPath();
     }
     else {

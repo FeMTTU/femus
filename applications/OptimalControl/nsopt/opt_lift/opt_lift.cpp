@@ -151,8 +151,8 @@ int main(int argc, char** args) {
 
        // ======= Files ========================
   Files files; 
-        files.CheckIODirectories();
-	    files.RedirectCout();
+        files.CheckIODirectories(true);
+	    files.RedirectCout(true);
  
     std::string mesh_folder_file = "input/";
 //   std::string input_file = "square_parametric.med";

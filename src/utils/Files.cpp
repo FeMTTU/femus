@@ -331,8 +331,9 @@ void Files::PrintRunForRestart(const std::string run_name_in) const {
 //then the string new_out can be filled with the char*
 // add a ne to the map
 
-void Files::ComposeOutdirName() {
-  
+void Files::ComposeOutdirName(const bool use_output_time_folder) {
+
+    
    struct tm* sys_time = NULL;
    std::string new_out;
    char* out_char;
@@ -391,19 +392,21 @@ MPI_Bcast(out_char,outchar_size,MPI_CHAR,0,MPI_COMM_WORLD);
 //i guess when they find a null... so let us add a null where it is supposed to be!
 
   // new_out.resize(outchar_size);
-  new_out = /*outname.str().c_str()*/out_char;  //uguagliare una stringa ad un char*
+  new_out = /*outname.str().c_str()*/out_char;  //assign a char* to a string
 
  delete [] out_char;
 
- _output_time = new_out;
  
- std::cout << "iproc = " << paral::get_rank() << " ***** The output dir of this run will be: " << DEFAULT_OUTPUTDIR << "/" << _output_time << std::endl;
-
+  if (use_output_time_folder) _output_time = new_out;
+  else  _output_time = "";
+  
  //************************
  //set the input and output_path variables
     std::string app_path = "./";
    _output_path = app_path + DEFAULT_OUTPUTDIR + "/" + _output_time + "/";
  
+ std::cout << "iproc = " << paral::get_rank() << " ***** The output dir of this run will be: " << _output_path << std::endl;
+
  
  
  
@@ -436,7 +439,7 @@ void Files::CopyFile(std::string  f_in,std::string  f_out) const {
 
  std::cout << "TODO: MUST FIND A WAY TO COPY A WHOLE DIRECTORY AND NOT THE SINGLE FILES" << std::endl;
     
-CheckDirOrMake(_output_path,DEFAULT_INPUTDIR);
+CheckDirOrMake(_output_path, DEFAULT_INPUTDIR);
 
 //copy configuration file
    std::string op_in  =   _input_path + "/" + DEFAULT_INPUTDIR + "/" + DEFAULT_RUNTIMECONF;
@@ -509,18 +512,19 @@ MPI_Barrier(MPI_COMM_WORLD);
 // or for the fastest process of my runs. That is why it is better to let this check be done only by processor zero.
 //If the dir is already there, it is because of a contemporary background run
  
-void Files::CheckIODirectories() {
+void Files::CheckIODirectories(const bool use_output_time_folder) {
  
 //INPUT
                     std::string abs_app = "./";
-/*all procs*/   CheckDirOrAbort(abs_app,DEFAULT_INPUTDIR); //it must be there only to be COPIED (and we don't even need the check in restart case)
+/*all procs*/   CheckDirOrAbort(abs_app, DEFAULT_INPUTDIR); //it must be there only to be COPIED (and we don't even need the check in restart case)
 
-/*all procs*/   CheckDir(abs_app,DEFAULT_OUTPUTDIR);
+/*all procs*/   CheckDir(abs_app, DEFAULT_OUTPUTDIR);
 
    std::string abs_outputdir = abs_app + "/" + DEFAULT_OUTPUTDIR;
-/*(iproc==0)*/  ComposeOutdirName();  //this adds an element to the Files map, so the SetupAll function cannot be constant
+   
+/*(iproc==0)*/  ComposeOutdirName(use_output_time_folder);  //this adds an element to the Files map, so the SetupAll function cannot be constant
 
-/*(iproc==0)*/  CheckDirOrMake(abs_outputdir,_output_time);
+/*(iproc==0)*/  if (use_output_time_folder) CheckDirOrMake(abs_outputdir, _output_time); //if you use a specific run folder, make sure that no other run has started at the exact same time
 
 // at this point we should copy the input files in the outtime directory
 
@@ -546,21 +550,20 @@ void Files::CheckIODirectories() {
 //A global variable is still an instantiation but not associated to any class
 //to be passed to the constructor
 
-  void Files::RedirectCout() const {
+  void Files::RedirectCout(const bool redirect_cout_to_file) const {
 //this redirects the standard output to file, only for processor 0
 //I dont like the fact that all these functions must be modified
 //whenever I change the absolute path,
 //I'd prefer passing the file name explicitly
+      
+      if (redirect_cout_to_file)  {
 
-    std::string app_path = "./";
-    std::string abs_runlog = app_path + DEFAULT_OUTPUTDIR 
-    + "/" + _output_time +  "/" + DEFAULT_RUN_LOG;
+    std::string abs_runlog = _output_path + DEFAULT_RUN_LOG;
 
 //  std::ofstream file;  //if a filestream dies, then also its stream-buffer dies ?!? 
 //                       //So I have to declare it outside? Yes. This seems to work.
 //    std::streambuf* sbuf = std::cout.rdbuf();  //get the current buffer for cout
 
-    
 
 //////// MULTIPRINT // // if (paral::get_rank() == 0) {  //only processor 0 has to open the file stream
  
@@ -584,9 +587,11 @@ void Files::CheckIODirectories() {
 // NULL for non-zero processors;
 // the file for processor 0
 
-std::cout << "The number of processors is " << paral::get_size() << std::endl;
+      }
+
+      
+      std::cout << "The number of processors is " << paral::get_size() << std::endl;
  
-     
     
    return; 
   }

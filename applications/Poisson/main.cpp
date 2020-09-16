@@ -86,8 +86,8 @@ int main(int argc, char** argv) {
   FemusInit mpinit(argc, argv, MPI_COMM_WORLD);
 
   //Files files;
-  //files.CheckIODirectories();
-  //files.RedirectCout();
+  //files.CheckIODirectories(true);
+  //files.RedirectCout(true);
 
   // input parser pointer
   std::unique_ptr<InputParser> inputparser = InputParser::build(path);

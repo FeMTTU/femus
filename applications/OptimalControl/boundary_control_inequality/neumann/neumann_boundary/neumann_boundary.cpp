@@ -87,8 +87,8 @@ int main(int argc, char** args) {
   
   // ======= Files ========================
   Files files; 
-  files.CheckIODirectories();
-  files.RedirectCout();
+  files.CheckIODirectories(true);
+  files.RedirectCout(true);
 
   // define multilevel mesh
   MultiLevelMesh mlMsh;

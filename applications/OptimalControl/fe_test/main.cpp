@@ -49,9 +49,9 @@
  // ======= Files ========================
   Files files; 
         files.ConfigureRestart();
-        files.CheckIODirectories();
+        files.CheckIODirectories(true);
         files.CopyInputFiles();   // at this point everything is in the folder of the current run!!!!
-        files.RedirectCout();
+        files.RedirectCout(true);
 
   // ======= MyPhysics (implemented as child of Physics) ========================
   FemusInputParser<double> physics_map("Physics",files.GetOutputPath());

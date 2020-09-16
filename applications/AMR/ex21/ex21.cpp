@@ -308,8 +308,8 @@ int main(int argc, char** argv) {
   FemusInit mpinit(argc, argv, MPI_COMM_WORLD);
 
   //Files files;
-  //files.CheckIODirectories();
-  //files.RedirectCout();
+  //files.CheckIODirectories(true);
+  //files.RedirectCout(true);
 
   /// INIT MESH =================================
 

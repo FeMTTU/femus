@@ -161,10 +161,9 @@ int main(int argc, char **args) {
   std::cout << std::endl << std::endl;
   
   Files files; 
-//         files.CheckIODirectories();
-//         files.RedirectCout();
+//         files.CheckIODirectories(true);
+//         files.RedirectCout(true);
 // std::string output_path = files.GetOutputPath();
-//   const std::string output_file_to_parse = files.GetOutputTime() + stdOutfile;
 // std::string output_path = DEFAULT_OUTPUTDIR;
 std::string output_path = output_time;
 output_path.append("/");

@@ -104,8 +104,8 @@ int main(int argc, char** argv)
 
   // ======= Files ========================
   Files files; 
-        files.CheckIODirectories();
-        files.RedirectCout();
+        files.CheckIODirectories(true);
+        files.RedirectCout(true);
 
   unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
 

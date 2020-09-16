@@ -49,9 +49,9 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
  // ======= Files ========================
   Files files;
         files.ConfigureRestart();
-        files.CheckIODirectories();
+        files.CheckIODirectories(true);
         files.CopyInputFiles();
-        files.RedirectCout();
+        files.RedirectCout(true);
 
   // ======= Physics Input Parser ========================
   FemusInputParser<double> physics_map("Physics",files.GetOutputPath());

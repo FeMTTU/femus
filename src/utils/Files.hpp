@@ -45,7 +45,7 @@ public:
   ~Files();
 
 // Directory management =========
-         void CheckIODirectories();
+         void CheckIODirectories(const bool use_output_time_folder);
   
 // Copy ========================= 
   void CopyInputFiles() const;
@@ -56,7 +56,7 @@ public:
   
 // LOG ==========================
 // Stream redirect to file ======
-         void RedirectCout() const;
+         void RedirectCout(const bool redirect_cout_to_file) const;
   static void RedirectCoutFinalize(std::streambuf* sbuf);
          void log_petsc() const;
 
@@ -90,7 +90,7 @@ private:
   
   
 // Directory management
-         void ComposeOutdirName();
+         void ComposeOutdirName(const bool use_output_time_folder);
   static void CheckDirOrMake(const std::string& dir_name_in, const std::string& my_name_in);
 //   static void CheckDir(const std::string& dir_name_in, const std::string& my_name_in);
   static void CheckDirOrAbort(const std::string& dir_name_in, const std::string& my_name_in);
