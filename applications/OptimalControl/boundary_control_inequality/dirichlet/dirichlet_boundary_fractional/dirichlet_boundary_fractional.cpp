@@ -9,26 +9,26 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL             4  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL        3  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 
 #include "../../param.hpp"
 
 
-#define IS_CTRL_FRACTIONAL_SOBOLEV   1
 
 #define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY    0
 
 
 //***** Quadrature-related ****************** 
-#define Nsplit 0
+#define Nsplit 4
 
 #define QRULE_I   0
 #define QRULE_J   1
-#define QRULE_K   1
+#define QRULE_K   QRULE_J
 //**************************************
 
 //***** Operator-related ****************** 
+#define IS_CTRL_FRACTIONAL_SOBOLEV   1
 #define S_FRAC 0.5
 
 #define OP_L2       0  /* direi che ci vuole */
@@ -1289,11 +1289,11 @@ if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
     
   if (print_algebra_global) {
     if (assembleMatrix) KK->close();
-    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
     KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
 
     RES->close();
-    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
     std::filebuf res_fb;
     res_fb.open (res_out.str().c_str(),std::ios::out);
     std::ostream  res_file_stream(&res_fb);

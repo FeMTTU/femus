@@ -25,9 +25,13 @@
 
 using namespace femus;
 
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
-#define S_FRAC 0.25
+//***** Mesh-related ****************** 
+#define N_UNIFORM_LEVELS  8
+#define N_ERASED_LEVELS   7
+//**************************************
+
+//***** Operator-related ****************** 
+#define S_FRAC 0.5
 
 #define OP_L2       0
 #define OP_H1       0
@@ -37,17 +41,22 @@ using namespace femus;
 #define UNBOUNDED   1
 
 #define USE_Cns     1
+//**************************************
 
 
+//***** Domain-related ****************** 
 #define EX_1       -1.
 #define EX_2        1.
 #define EY_1       -1.
 #define EY_2        1.
 
+#define DOMAIN_DIM  1
+//**************************************
+
 
 #include "../fractional_functions.hpp"
 
-#define Nsplit      10
+#define Nsplit      0
 
 double InitialValueU(const std::vector < double >& x)
 {
@@ -110,12 +119,16 @@ int main(int argc, char** argv)
 //   const std::string mesh_file = "./input/disk.neu";
 //   ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
 
-//   ml_mesh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
-//   ml_mesh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
+  if (DOMAIN_DIM == 1) {
+      ml_mesh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
+    }
+  else if (DOMAIN_DIM == 2)  { 
+      ml_mesh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+    }
 
-  ml_mesh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
   ml_mesh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
 
+  
   // erase all the coarse mesh levels
   const unsigned erased_levels = N_ERASED_LEVELS;
   ml_mesh.EraseCoarseLevels(erased_levels);

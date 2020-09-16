@@ -625,9 +625,9 @@ void el_dofs_unknowns(const Solution*                sol,
                 unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i);
                 for(unsigned j = 0; j < nDof_iel /* @todo is this correct? */; j++) {
                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j);
-                  KK_local_iel[ i_vol_iel * nDof_iel + j_vol_iel ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term;
+                  KK_local_iel[ i_vol_iel * nDof_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term;
                 }
-                Res_local_iel[ i_vol_iel ] += (0.5 * C_ns) * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_term;
+                Res_local_iel[ i_vol_iel ] += 0.5 * C_ns * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_term;
               }
    
       }
@@ -1343,27 +1343,25 @@ void el_dofs_unknowns(const Solution*                sol,
 // ********* BOUNDED PART - BEGIN ***************
 // // // 
                 double dist_xyz3 = 0;
-                for(unsigned k = 0; k < dim; k++) {
+                for(unsigned k = 0; k < x_iqp_bdry.size(); k++) {
                   dist_xyz3 += (x_iqp_bdry[k] - x_kqp_bdry[k]) * (x_iqp_bdry[k] - x_kqp_bdry[k]);
                 }
 
-                const double denom3 = pow(dist_xyz3, (double)((dim / 2.) + s_frac));
+                const double denom_ik = pow(dist_xyz3, (double)( 0.5 * dim_bdry/*dim*/ + s_frac));
+                
+                const double common_weight =  0.5 * C_ns * OP_Hhalf * check_limits * weight_iqp_bdry * weight_kqp_bdry  / denom_ik;
 
 //                 for(unsigned i = 0; i < nDof_iel; i++) {
                 for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) { //dofs of test function
                   unsigned int l_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
 
-                  Res_local_iel_refined[ l_vol_iel ]    +=      - (0.5 * C_ns) * OP_Hhalf * check_limits *
-                                                    ((sol_ctrl_iqp_bdry - solY3) * (phi_ctrl_iel_bdry_iqp_bdry[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry])
-                                                    * weight_kqp_bdry / denom3 ) * weight_iqp_bdry ;
+                  Res_local_iel_refined[ l_vol_iel ]    +=      - common_weight * (sol_ctrl_iqp_bdry - solY3) * (phi_ctrl_iel_bdry_iqp_bdry[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry]);
 
                 for(unsigned m_bdry = 0; m_bdry < phi_ctrl_kel_bdry_kqp_bdry.size(); m_bdry++) { //dofs of unknown function
                     unsigned int m_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
                     
-                    KK_local_iel_refined[ l_vol_iel * nDof_jel + m_vol_iel ] += (0.5 * C_ns) * OP_Hhalf * check_limits *
-                                                        ((phi_ctrl_iel_bdry_iqp_bdry[m_bdry] - phi_ctrl_kel_bdry_kqp_bdry[m_bdry]) * 
-                                                        (phi_ctrl_iel_bdry_iqp_bdry[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry]) * weight_kqp_bdry / denom3) *
-                                                        weight_iqp_bdry ;
+                    KK_local_iel_refined[ l_vol_iel * nDof_jel + m_vol_iel ] += common_weight * (phi_ctrl_iel_bdry_iqp_bdry[m_bdry] - phi_ctrl_kel_bdry_kqp_bdry[m_bdry]) * 
+                                                        (phi_ctrl_iel_bdry_iqp_bdry[l_bdry] - phi_ctrl_kel_bdry_kqp_bdry[l_bdry]);
 
 
                   }
@@ -1371,6 +1369,30 @@ void el_dofs_unknowns(const Solution*                sol,
 // ********* BOUNDED PART - END ***************
                       
 // ********* UNBOUNDED PART - BEGIN ***************
+                if(ig == 0) { ///@todo is there a way to put this outside of the ig loop?
+
+              mixed_integral(UNBOUNDED,
+                              dim,
+                              dim_bdry,
+                              ex_control,
+                              weight_kqp_bdry,
+                              x_kqp_bdry,
+                              phi_ctrl_kel_bdry_kqp_bdry,
+                              sol_ctrl_kqp_bdry,
+                              s_frac,
+                              check_limits,
+                              C_ns,
+                              OP_Hhalf,
+                              nDof_jel, ///@todo
+                              KK_local_iel_refined,
+                              Res_local_iel_refined,
+                              msh,
+                              iel,
+                              iface
+                             ); 
+                }
+
+
 // ********* UNBOUNDED PART - END ***************
                                          
                   } //end k_qp_bdry

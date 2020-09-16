@@ -104,7 +104,7 @@ namespace femus {
 
 
     std::ostringstream filename;
-    filename << output_path << "/" << dirnamePVTK << filename_prefix << level_name << "." << _iproc << "." << time_step << "." << order << suffix_pre_extension << ".vtu";
+    filename << output_path << "./" << dirnamePVTK << filename_prefix << level_name << "." << _iproc << "." << time_step << "." << order << suffix_pre_extension << ".vtu";
 
     fout.open( filename.str().c_str() );
     if( !fout.is_open() ) {
@@ -124,7 +124,7 @@ namespace femus {
     }
     else {
       std::ostringstream Pfilename;
-      Pfilename << output_path << "/" << filename_prefix << level_name << "." << time_step << "." << order <<  suffix_pre_extension << ".pvtu";
+      Pfilename << output_path << "./" << filename_prefix << level_name << "." << time_step << "." << order <<  suffix_pre_extension << ".pvtu";
       Pfout.open( Pfilename.str().c_str() );
       if( Pfout.is_open() ) {
         std::cout << std::endl << " The output is printed to file " << Pfilename.str() << " in parallel VTK-XML (64-based) format" << std::endl;

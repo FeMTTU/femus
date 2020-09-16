@@ -211,7 +211,7 @@ void Files::CheckDir(const std::string& dir_name_in, const std::string& my_name_
   
   // input directory ---------------------------------
   std::ostringstream dirname;
-  dirname <<  dir_name_in << "/" << my_name_in ;
+  dirname <<  dir_name_in << "./" << my_name_in ;
 
   std::ifstream in;  in.open(dirname.str().c_str()); 
 
