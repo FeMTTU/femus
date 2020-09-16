@@ -15,12 +15,10 @@
 #include "../../param.hpp"
 
 
-
 #define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY    0
 
-
 //***** Quadrature-related ****************** 
-#define Nsplit 4
+#define Nsplit 0
 
 #define QRULE_I   0
 #define QRULE_J   1
@@ -34,9 +32,10 @@
 #define OP_L2       0  /* direi che ci vuole */
 #define OP_H1       0
 #define OP_Hhalf    1
-#define RHS_ONE     0/*1*/
+#define RHS_ONE             0
+#define KEEP_ADJOINT_PUSH   1
 
-#define UNBOUNDED   1/*1*/
+#define UNBOUNDED   0/*1*/
 
 #define USE_Cns     1
 //**************************************
@@ -989,13 +988,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		 
 //============ Bdry Residuals ==================	
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_state,i_vol) ] +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_eldofs_Mat[pos_mat_state][i_vol] - sol_eldofs_Mat[pos_mat_ctrl][i_vol] )
-                    - control_node_flag[i_vol] *  weight_bdry * (grad_adj_dot_n_res * phi_u_bdry[i_bdry]);   // u = q
+                    - control_node_flag[i_vol] *  weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_u_bdry[i_bdry];   // u = q
 
 
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
                                                                                 (    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							                           +  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
-							                           - grad_adj_dot_n_res * phi_ctrl_bdry[i_bdry]
+							                           - KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_ctrl_bdry[i_bdry]
 // 							                           -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss // for Neumann control
 							                         );  //boundary optimality condition
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_adj,i_vol) ]  += 0.; 
@@ -1050,11 +1049,11 @@ if ( i_vol == j_vol )  {
 		      
 //==========block delta_control/adjoint ========
 		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_adj, i_vol, j) ]  += 
-		     control_node_flag[i_vol] * (-1.) * weight_bdry * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry];    		      
+		     control_node_flag[i_vol] * (-1.) * weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry];    		      
 
 //==========block delta_state/adjoint ========
 		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i_vol, j) ] += 
-		     control_node_flag[i_vol] * (1.) * weight_bdry * grad_adj_dot_n_mat * phi_u_bdry[i_bdry];  
+		     control_node_flag[i_vol] * (1.) * weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_u_bdry[i_bdry];  
 		      
 		    }   //end loop i_bdry // j_vol
 	      
@@ -1116,10 +1115,10 @@ if ( i_vol == j_vol )  {
 	      }
 	      
 //============ Volume residuals ==================	    
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_state,i) ] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)  - laplace_rhs_du_adj_i ); 
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i) ]  += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs_Mat[pos_mat_ctrl][i] - 0.)  );
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_adj,i) ]   += - weight * (-1.) * (laplace_rhs_dadj_u_i);
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_mu,i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs_Mat[pos_mat_mu][i] - 0.)  );  //MU
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_state, i) ] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)  - laplace_rhs_du_adj_i ); 
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_ctrl, i) ]  += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs_Mat[pos_mat_ctrl][i] - 0.)  );
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_adj, i) ]   += - weight * (-1.) * (laplace_rhs_dadj_u_i);
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_mu, i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs_Mat[pos_mat_mu][i] - 0.)  );  //MU
 //============  Volume Residuals ==================	    
 	      
 	      
