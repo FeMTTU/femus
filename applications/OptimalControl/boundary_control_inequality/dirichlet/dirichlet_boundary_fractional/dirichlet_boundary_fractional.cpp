@@ -15,7 +15,9 @@
 #include "../../param.hpp"
 
 
+//***** Implementation-related ****************** 
 #define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY    0
+//**************************************
 
 //***** Quadrature-related ****************** 
 #define Nsplit 0
@@ -26,18 +28,33 @@
 //**************************************
 
 //***** Operator-related ****************** 
+  #define RHS_ONE             0.
+  #define KEEP_ADJOINT_PUSH   1
 #define IS_CTRL_FRACTIONAL_SOBOLEV   1
 #define S_FRAC 0.5
 
-#define OP_L2       0  /* direi che ci vuole */
-#define OP_H1       0
-#define OP_Hhalf    1
-#define RHS_ONE             1.
-#define KEEP_ADJOINT_PUSH   0
+#define NORM_GIR_RAV  0
 
-#define UNBOUNDED   1
+#if NORM_GIR_RAV == 0
 
-#define USE_Cns     1
+  #define OP_L2       0
+  #define OP_H1       0
+  #define OP_Hhalf    1
+
+  #define UNBOUNDED   1
+
+  #define USE_Cns     1
+
+#elif NORM_GIR_RAV == 1 
+
+  #define OP_L2       1
+  #define OP_H1       0
+  #define OP_Hhalf    1
+
+  #define UNBOUNDED   0
+
+  #define USE_Cns     0
+#endif
 //**************************************
 
 
