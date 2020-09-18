@@ -32,7 +32,7 @@
 
 //*********************** Sets the regularization parameters *******************************************************
 #define ALPHA_CTRL_BDRY 1.e-2
-#define BETA_CTRL_BDRY 1.e-8
+#define BETA_CTRL_BDRY 1.e-2
 
 
 #define ALPHA_CTRL_VOL 1.e-3
@@ -572,6 +572,7 @@ void el_dofs_unknowns(const Solution*                sol,
                       const double check_limits,
                       const double C_ns,
                       const unsigned int OP_Hhalf,
+                      const double beta,
                       const unsigned int nDof_iel,
                       std::vector < double > & KK_local_iel,
                       std::vector < double > & Res_local_iel,
@@ -625,9 +626,9 @@ void el_dofs_unknowns(const Solution*                sol,
                 unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i);
                 for(unsigned j = 0; j < nDof_iel /* @todo is this correct? */; j++) {
                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j);
-                  KK_local_iel[ i_vol_iel * nDof_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term;
+                  KK_local_iel[ i_vol_iel * nDof_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * (1. / s_frac) * OP_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term;
                 }
-                Res_local_iel[ i_vol_iel ] += 0.5 * C_ns * check_limits * (1. / s_frac) * OP_Hhalf * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_term;
+                Res_local_iel[ i_vol_iel ] += 0.5 * C_ns * check_limits * (1. / s_frac) * OP_Hhalf  * beta * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_term;
               }
    
       }
@@ -690,9 +691,9 @@ void el_dofs_unknowns(const Solution*                sol,
 // // // 
 // // //             for(unsigned i = 0; i < nDof1; i++) {
 // // //               for(unsigned j = 0; j < nDof1; j++) {
-// // //                 KK_local_iel_mixed_num[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term1;
+// // //                 KK_local_iel_mixed_num[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * beta * phi1[i] * phi1[j] * weight1 * mixed_term1;
 // // //               }
-// // //               Res_local_iel_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
+// // //               Res_local_iel_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * beta * weight1 * phi1[i] * solX * mixed_term1;
 // // //             }
           
       }          
@@ -1235,10 +1236,10 @@ void el_dofs_unknowns(const Solution*                sol,
 
               for(unsigned m_bdry = 0; m_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); m_bdry++) {
                		    unsigned int m_vol = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
-                KK_local_iel[ l_vol * nDof_iel + m_vol ] += OP_L2 * phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * phi_ctrl_iel_bdry_iqp_bdry[m_bdry] * weight_iqp_bdry;
+                KK_local_iel[ l_vol * nDof_iel + m_vol ] += OP_L2 * alpha * phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * phi_ctrl_iel_bdry_iqp_bdry[m_bdry] * weight_iqp_bdry;
               }
               double mass_res_i = phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * sol_ctrl_iqp_bdry ;
-              Res_local_iel[ l_vol ] += OP_L2 * weight_iqp_bdry * mass_res_i ;
+              Res_local_iel[ l_vol ] += OP_L2 * alpha * weight_iqp_bdry * mass_res_i ;
               Res_local_iel[ l_vol ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[l_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
             }
         //============  Mass assembly - END ==================
@@ -1349,7 +1350,7 @@ void el_dofs_unknowns(const Solution*                sol,
 
                 const double denom_ik = pow(dist_xyz3, (double)( 0.5 * dim_bdry/*dim*/ + s_frac));
                 
-                const double common_weight =  0.5 * C_ns * OP_Hhalf * check_limits * weight_iqp_bdry * weight_kqp_bdry  / denom_ik;
+                const double common_weight =  0.5 * C_ns * OP_Hhalf * beta * check_limits * weight_iqp_bdry * weight_kqp_bdry  / denom_ik;
 
 //                 for(unsigned i = 0; i < nDof_iel; i++) {
                 for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) { //dofs of test function
@@ -1383,6 +1384,7 @@ void el_dofs_unknowns(const Solution*                sol,
                               check_limits,
                               C_ns,
                               OP_Hhalf,
+                              beta,
                               nDof_jel, ///@todo
                               KK_local_iel_refined,
                               Res_local_iel_refined,
@@ -1423,6 +1425,7 @@ void el_dofs_unknowns(const Solution*                sol,
                               check_limits,
                               C_ns,
                               OP_Hhalf,
+                              beta,
                               nDof_iel,
                               KK_local_iel,
                               Res_local_iel,
@@ -1443,7 +1446,7 @@ void el_dofs_unknowns(const Solution*                sol,
 
               const double denom = pow(dist_xyz, (double)(  0.5 * /*dim*/dim_bdry + s_frac));
               
-              const double common_weight = (0.5 * C_ns) * OP_Hhalf * check_limits * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
+              const double common_weight = (0.5 * C_ns) * OP_Hhalf * beta * check_limits * weight_iqp_bdry * weight_jqp_bdry[jqp_bdry]  / denom;
 
 //               for(unsigned i = 0; i < nDof_iel; i++) {
            for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) { //dofs of test function

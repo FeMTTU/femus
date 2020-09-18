@@ -33,7 +33,7 @@
 #define IS_CTRL_FRACTIONAL_SOBOLEV   1
 #define S_FRAC 0.5
 
-#define NORM_GIR_RAV  0
+#define NORM_GIR_RAV  1
 
 #if NORM_GIR_RAV == 0
 
