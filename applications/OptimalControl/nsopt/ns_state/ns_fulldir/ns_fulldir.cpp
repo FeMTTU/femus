@@ -28,7 +28,7 @@
 using namespace femus;
 
 
-bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool Solution_set_boundary_conditions(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
  
   bool dirichlet = true;
@@ -137,7 +137,7 @@ int main(int argc, char** args) {
             if (dim == 3) mlSol_all_levels->AddSolution("W", LAGRANGE, SECOND);
             mlSol_all_levels->AddSolution("P", LAGRANGE, FIRST);
             mlSol_all_levels->Initialize("All");
-            mlSol_all_levels->AttachSetBoundaryConditionFunction(SetBoundaryConditionBox);
+            mlSol_all_levels->AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
             mlSol_all_levels->GenerateBdc("All");
 
          for (int i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
@@ -167,7 +167,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBox);
+  mlSol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
   mlSol.GenerateBdc("All");
 
   // define the multilevel problem attach the mlSol object to it
@@ -880,14 +880,14 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
 
    
       // ********************** Gauss point loop *******************************
-      for(unsigned ig=0;ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+      for(unsigned iqp = 0;iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); iqp++) {
 	
  
       for(int fe=0; fe < NFE_FAMS; fe++) {
-	ml_prob._ml_msh->_finiteElement[ielGeom][fe]->Jacobian(coordX,ig,weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
+	ml_prob._ml_msh->_finiteElement[ielGeom][fe]->Jacobian(coordX,iqp,weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
       }
          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
-  	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+  	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,iqp,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
 
       vector < double > coordX_gss(dim, 0.);
  	for(unsigned k = 0; k <  dim; k++) {
@@ -1289,14 +1289,14 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
 
  
       // ********************** Gauss point loop *******************************
-      for(unsigned ig=0;ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+      for(unsigned iqp = 0;iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); iqp++) {
 	
  
       for(int fe=0; fe < NFE_FAMS; fe++) {
-	msh->_finiteElement[ielGeom][fe]->Jacobian(coordX,ig,weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
+	msh->_finiteElement[ielGeom][fe]->Jacobian(coordX,iqp,weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
       }
          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
-  	msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+  	msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,iqp,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
 
  //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk <  n_unknowns; unk++) {

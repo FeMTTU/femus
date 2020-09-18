@@ -21,7 +21,7 @@
 
 #include   "../manufactured_solutions.hpp"
 
-#define FACE_FOR_CONTROL          3        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL          1        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 #include   "../nsopt_params.hpp"
 
@@ -792,7 +792,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
   
   
-//========BoundaryLoop - BEGIN  =====================================================================
+//======== BoundaryLoop - BEGIN  =====================================================================
 
   // Perform face loop over elements that contain some control face
   if (control_el_flag == 1) {
@@ -834,19 +834,19 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		for(int k=0; k<n_unknowns; k++) {  gradSolVAR_bd_qp[k].resize(dim_offset_grad /*space_dim*/);  }
 
 //========= gauss_loop boundary===============================================================
-		  for(unsigned ig_bd=0; ig_bd < ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussPointsNumber(); ig_bd++) {
+		  for(unsigned iqp_bdry=0; iqp_bdry < ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussPointsNumber(); iqp_bdry++) {
     
-    elem_all[ielGeom_bd][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_bdry_3d(), ig_bd, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
+    elem_all[ielGeom_bd][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
 	elem_all[ielGeom_bd][solType_coords]->compute_normal(Jac_qp_bdry, normal);
     
-    weight_bd = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussWeightsPointer()[ig_bd];
+    weight_bd = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[ielGeom_bd][SolFEType[theta_index]] ->shape_funcs_current_elem(ig_bd, JacI_qp_bdry,phi_bd_gss_fe[SolFEType[theta_index]],phi_x_bd_gss_fe[SolFEType[theta_index]], phi_xx_bd_gss_fe_placeholder[SolFEType[theta_index]] , space_dim);
-    elem_all[ielGeom_bd][SolFEType[ctrl_pos_begin]] ->shape_funcs_current_elem(ig_bd, JacI_qp_bdry,phi_bd_gss_fe[SolFEType[ctrl_pos_begin]],phi_x_bd_gss_fe[SolFEType[ctrl_pos_begin]], phi_xx_bd_gss_fe_placeholder[SolFEType[ctrl_pos_begin]] , space_dim);
+    elem_all[ielGeom_bd][SolFEType[theta_index]] ->shape_funcs_current_elem(iqp_bdry, JacI_qp_bdry,phi_bd_gss_fe[SolFEType[theta_index]],phi_x_bd_gss_fe[SolFEType[theta_index]], phi_xx_bd_gss_fe_placeholder[SolFEType[theta_index]] , space_dim);
+    elem_all[ielGeom_bd][SolFEType[ctrl_pos_begin]] ->shape_funcs_current_elem(iqp_bdry, JacI_qp_bdry,phi_bd_gss_fe[SolFEType[ctrl_pos_begin]],phi_x_bd_gss_fe[SolFEType[ctrl_pos_begin]], phi_xx_bd_gss_fe_placeholder[SolFEType[ctrl_pos_begin]] , space_dim);
 
 
-    elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), ig_bd, jface, Jac_qp/*not_needed_here*/, JacI_qp, detJac_qp/*not_needed_here*/, space_dim);
-    elem_all[ielGeom][SolFEType[adj_pos_begin]]->shape_funcs_vol_at_bdry_current_elem(ig_bd, jface, JacI_qp, phi_vol_at_bdry_fe[SolFEType[adj_pos_begin]],phi_x_vol_at_bdry_fe[SolFEType[adj_pos_begin]], boost::none, space_dim);
+    elem_all[ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element.get_coords_at_dofs_3d(), iqp_bdry, jface, Jac_qp/*not_needed_here*/, JacI_qp, detJac_qp/*not_needed_here*/, space_dim);
+    elem_all[ielGeom][SolFEType[adj_pos_begin]]->shape_funcs_vol_at_bdry_current_elem(iqp_bdry, jface, JacI_qp, phi_vol_at_bdry_fe[SolFEType[adj_pos_begin]],phi_x_vol_at_bdry_fe[SolFEType[adj_pos_begin]], boost::none, space_dim);
      
 		  
 //========== compute gauss quantities on the boundary ===============================================
@@ -866,7 +866,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
  
 //=============== grad dot n for residual ========================================= 
 //     compute gauss quantities on the boundary through VOLUME interpolation
-		for(unsigned ldim=0; ldim<dim; ldim++) {   sol_adj_x_vol_at_bdry_gss[ldim].resize(dim_offset_grad /*space_dim*/); }
+		for(unsigned ldim = 0; ldim<dim; ldim++) {   sol_adj_x_vol_at_bdry_gss[ldim].resize(dim_offset_grad /*space_dim*/); }
 		grad_dot_n_adj_res.resize(dim);
 		grad_adj_dot_n.resize(dim);
 		for(unsigned ldim=0; ldim<dim; ldim++) {   std::fill(sol_adj_x_vol_at_bdry_gss[ldim].begin(), sol_adj_x_vol_at_bdry_gss[ldim].end(), 0.);  }
@@ -889,14 +889,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 //========== compute gauss quantities on the boundary ================================================
 
 		
-//============ Res _ Boundary Integral Constraint ============================================================================================
+//============ Res _ Boundary Integral Constraint - BEGIN ============================================================================================
 	  for (unsigned  kdim = 0; kdim < dim; kdim++) {
 // 		for(unsigned i=0; i < nDofsThetactrl; i ++) { avoid because it is an element dof
 /*delta_theta row */ 	/* Res[theta_index][i]*/ Res_outer[0] +=  /*fake_theta_flag[i] **/ weight_bd * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
 // 		}  
 	  }
 		  
-//============End of Res _ Boundary Integral Constraint ============================================================================================
+//============ Res _ Boundary Integral Constraint - END ============================================================================================
 		
   // *** phi_i loop ***
 		for(unsigned i_bdry=0; i_bdry < nve_bd; i_bdry++) {
@@ -920,7 +920,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 //Boundary Residuals  and Jacobians ==================	
 
 		  
-//============ Boundary Residuals============================================================================================
+//============ Boundary Residuals - BEGIN ============================================================================================
 		  
 		      for (unsigned  kdim = 0; kdim < dim; kdim++) {
 			
@@ -940,10 +940,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
                                                                                         );	    
 		      }//kdim  
 
-//============ Boundary Residuals  ==================================================================================================
+//============ Boundary Residuals - END ==================================================================================================
 
 
-//============ Jac _ Boundary Integral Constraint ============================================================================================
+//============ Jac _ Boundary Integral Constraint - BEGIN ============================================================================================
 		    for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 			  for(unsigned i =0; i < nDofsThetactrl; i ++) {
 			    if(i_vol < nDofsGctrl) {
@@ -955,7 +955,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 			    }//endif
 			  }// i 
 		    }//kdim
-//============ End of Jac _ Boundary Integral Constraint ============================================================================================
+//============ Jac _ Boundary Integral Constraint - END ============================================================================================
 
 
 
@@ -1013,7 +1013,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		  
 		    }//end i_bdry loop
 
-                }  //end ig_bdry loop
+                }  //end iqp_bdryry loop
 	  
              }    //end if control face
 	 }  //end if boundary faces
@@ -1043,15 +1043,15 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
  
 //======================= VolumeLoop with Integration (and fake boundary) - BEGIN =====================================================    
 
-for(unsigned ig=0;ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+for(unsigned iqp = 0;iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); iqp++) {
 	
 	// *** get Jacobian and test function and test function derivatives ***
        // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
-    weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
+    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), iqp, Jac_qp, JacI_qp, detJac_qp, space_dim);
+    weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[iqp];
    
      for(int fe=0; fe < NFE_FAMS; fe++) {
-    elem_all[ielGeom][fe]->shape_funcs_current_elem(ig, JacI_qp,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe] , space_dim);
+    elem_all[ielGeom][fe]->shape_funcs_current_elem(iqp, JacI_qp,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe] , space_dim);
       }
  
  
@@ -1690,13 +1690,13 @@ double integral_g_dot_n = 0.;
         }
 
 //========= gauss_loop boundary===============================================================
-	    for(unsigned ig_bd=0; ig_bd < ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussPointsNumber(); ig_bd++) {
-    elem_all[ielGeom_bd][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_bdry_3d(), ig_bd, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
+	    for(unsigned iqp_bdry=0; iqp_bdry < ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussPointsNumber(); iqp_bdry++) {
+    elem_all[ielGeom_bd][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
 	elem_all[ielGeom_bd][solType_coords]->compute_normal(Jac_qp_bdry, normal);
     
-    weight_bd = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussWeightsPointer()[ig_bd];
+    weight_bd = detJac_qp_bdry * ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[ielGeom_bd][solVctrlType] ->shape_funcs_current_elem(ig_bd, JacI_qp_bdry,phiVctrl_gss_bd,phiVctrl_x_gss_bd , phiVctrl_xx_gss_bd , space_dim);
+    elem_all[ielGeom_bd][solVctrlType] ->shape_funcs_current_elem(iqp_bdry, JacI_qp_bdry,phiVctrl_gss_bd,phiVctrl_x_gss_bd , phiVctrl_xx_gss_bd , space_dim);
 
      
 //========== compute gauss quantities on the boundary ===============================================
@@ -1728,7 +1728,7 @@ double integral_g_dot_n = 0.;
       }
 
 
-                }  //end ig_bdry loop
+                }  //end iqp_bdryry loop
 	  
              }    //end if control face
 	 }  //end if boundary faces
@@ -1736,14 +1736,14 @@ double integral_g_dot_n = 0.;
   } //end if control element flag
 
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+      for (unsigned iqp = 0; iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); iqp++) {
 //STATE######## VolumeLoop #####################################################################	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
-    weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[ig];
+    elem_all[ielGeom][solType_coords]->JacJacInv(geom_element.get_coords_at_dofs_3d(), iqp, Jac_qp, JacI_qp, detJac_qp, space_dim);
+    weight = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[iqp];
    
-    elem_all[ielGeom][solVType]->shape_funcs_current_elem(ig, JacI_qp, phiV_gss, phiV_x_gss, phiV_xx_gss , space_dim);
-    elem_all[ielGeom][solVType /*solVdes*/]->shape_funcs_current_elem(ig, JacI_qp, phiVdes_gss, phiVdes_x_gss, phiVdes_xx_gss , space_dim);
+    elem_all[ielGeom][solVType]->shape_funcs_current_elem(iqp, JacI_qp, phiV_gss, phiV_x_gss, phiV_xx_gss , space_dim);
+    elem_all[ielGeom][solVType /*solVdes*/]->shape_funcs_current_elem(iqp, JacI_qp, phiVdes_gss, phiVdes_x_gss, phiVdes_xx_gss , space_dim);
 
     
       for (unsigned  k = 0; k < dim; k++) {
@@ -1966,14 +1966,14 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_s
 
  
       // ********************** Gauss point loop *******************************
-      for(unsigned ig=0;ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+      for(unsigned i_qp = 0; i_qp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); i_qp++) {
 	
  
       for(int fe=0; fe < NFE_FAMS; fe++) {
-	msh->_finiteElement[ielGeom][fe]->Jacobian(coordX,ig,weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
+	msh->_finiteElement[ielGeom][fe]->Jacobian(coordX, i_qp, weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
       }
          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
-  	msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+  	msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,i_qp,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
 
  //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk < n_unknowns; unk++) {
