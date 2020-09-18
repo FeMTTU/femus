@@ -937,7 +937,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           if(iel != jel || Nsplit == 0) {
             
 // ********* UNBOUNDED PART - BEGIN ***************
-          if(UNBOUNDED == 1) {
+          if(UNBOUNDED == 1 && iel == jel) {
     //============  Mixed integral 1D - Analytical  ==================
             if(dim == 1) {
               double ex_1 = EX_1;
