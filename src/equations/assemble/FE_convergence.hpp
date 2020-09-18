@@ -76,13 +76,16 @@ static  void output_convergence_order(const std::vector < std::vector < std::vec
                                     const unsigned int i,
                                     const unsigned int n);
 
+
+
 static  void output_convergence_order_all(const std::vector< Unknown > &  unknowns,
                                         const std::vector < std::vector < std::vector < type > > > &  norms, 
                                         const unsigned norm_flag, 
                                         const unsigned max_number_of_meshes);
 
- 
- 
+
+static  void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes , int loop_i); 
+
 
 static  std::vector< type > compute_error_norms(const std::vector < std::vector < /*const*/ elem_type_templ_base<type, double> *  > > & elem_all,
                                                 const std::vector<Gauss> & quad_rules,
@@ -292,6 +295,17 @@ template < class type>
      
 
 
+template < class type>
+/*static */ void FE_convergence< type >::output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes , int loop_i) {
+
+    std::cout << loop_i + 1 << "\t\t" <<  std::setw(11) << std::setprecision(10) << norm_i << "\t\t\t\t" ;
+  
+    if (loop_i < maxNumberOfMeshes/*norm.size()*/ - 2) {
+      std::cout << std::setprecision(3) << log( norm_i/ norm_ip1 ) / log(2.) << std::endl;
+    }
+  
+} 
+ 
  
  
 

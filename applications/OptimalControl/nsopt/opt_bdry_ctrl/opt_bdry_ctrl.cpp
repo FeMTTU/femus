@@ -19,6 +19,7 @@
 #include "ElemType.hpp"
 
 
+#include   "../manufactured_solutions.hpp"
 
 #define FACE_FOR_CONTROL          3        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
@@ -166,8 +167,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob);
 double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_sol, Solution* sol_coarser_prolongated);
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
-
-void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes, int loop_i );
 
 
 
@@ -412,7 +411,7 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << "LEVEL\t\t" << norm_names_L2[j] << "\t\t\t\torder of convergence\n"; 
    for(int i = 0; i <  maxNumberOfMeshes - 1; i++){
-       output_convergence_rate(comp_conv[i][j], comp_conv[i + 1][j], norm_names_L2[j], maxNumberOfMeshes , i );
+       FE_convergence<double>::output_convergence_rate(comp_conv[i][j], comp_conv[i + 1][j], norm_names_L2[j], maxNumberOfMeshes , i );
     }
   }
   std::cout << std::endl;
@@ -425,7 +424,7 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << "LEVEL\t\t" << norm_names_H1[j] << "\t\t\t\torder of convergence\n"; 
    for(int i = 0; i <  maxNumberOfMeshes - 1; i++){
-       output_convergence_rate(comp_conv[i][NO_OF_L2_NORMS + j], comp_conv[i + 1][NO_OF_L2_NORMS + j], norm_names_H1[j], maxNumberOfMeshes , i );
+       FE_convergence<double>::output_convergence_rate(comp_conv[i][NO_OF_L2_NORMS + j], comp_conv[i + 1][NO_OF_L2_NORMS + j], norm_names_H1[j], maxNumberOfMeshes , i );
     }
   }
   std::cout << std::endl;
@@ -436,76 +435,8 @@ int main(int argc, char** args) {
 }
  
 
-void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes , int loop_i) {
-
-    std::cout << loop_i + 1 << "\t\t" <<  std::setw(11) << std::setprecision(10) << norm_i << "\t\t\t\t" ;
-  
-    if (loop_i < maxNumberOfMeshes/*norm.size()*/ - 2) {
-      std::cout << std::setprecision(3) << log( norm_i/ norm_ip1 ) / log(2.) << std::endl;
-    }
-  
-}
 
 
-
-//adj---------------------------------------------
-void value_adjVel(const std::vector < double >& x, vector < double >& val_adjVel) {
-  double pi = acos(-1.);
-  val_adjVel[0] =   0.5 * sin(pi* x[0]) * sin(pi* x[0]) *  sin(2. * pi * x[1]); //u
-  val_adjVel[1] = - 0.5 * sin(2. * pi * x[0]) * sin(pi* x[1]) * sin(pi* x[1]); //v
- };
- 
-double value_adjPress(const std::vector < double >& x) { 
-  double pi = acos(-1.);
-  return sin(2. * pi * x[0]) * sin(2. * pi * x[1]); //p
- };
- 
- 
-void gradient_adjVel(const std::vector < double >& x, vector < vector < double > >& grad_adjVel) {
-  double pi = acos(-1.);
-  grad_adjVel[0][0]  =   0.5 * pi * sin(2. * pi * x[0]) * sin(2. * pi * x[1]); 
-  grad_adjVel[0][1]  =   pi * sin(pi* x[0]) * sin(pi* x[0]) *  cos(2. * pi * x[1]);
-  grad_adjVel[1][0]  = - pi * cos(2. * pi * x[0]) * sin(pi * x[1]) * sin(pi * x[1]); 
-  grad_adjVel[1][1]  = - 0.5 * pi * sin(2. * pi * x[0]) * sin(2. * pi * x[1]);
- };
-
- void gradient_adjPress(const std::vector < double >& x, vector < double >& grad_adjPress) {
-  double pi = acos(-1.);
-  grad_adjPress[0]  =   2. * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]); 
-  grad_adjPress[1]  =   2. * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
- };
- 
- 
-void laplace_adjVel(const std::vector < double >& x, vector < double >& lap_adjVel) {
-  double pi = acos(-1.);
-  lap_adjVel[0] = pi * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]) - 2. * pi * pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(2. * pi * x[1]);
-  lap_adjVel[1] = 2. * pi * pi * sin(2. * pi * x[0]) * sin(pi* x[1]) * sin(pi* x[1]) - pi * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
-};
-//adj---------------------------------------------
-
-//state---------------------------------------------
-void value_stateVel(const std::vector < double >& x, vector < double >& val_stateVel) {
-  double pi = acos(-1.);
-  val_stateVel[0] =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);
-  val_stateVel[1] = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);
- };
- 
- 
-void gradient_stateVel(const std::vector < double >& x, vector < vector < double > >& grad_stateVel) {
-  double pi = acos(-1.);
-  grad_stateVel[0][0]  =   pi * sin(2. * pi * x[0]) * cos(pi* x[1]) - pi * sin(2. * pi * x[0]);
-  grad_stateVel[0][1]  = - pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(pi * x[1]); 
-  grad_stateVel[1][0]  = - 2. * pi * cos(2. * pi * x[0]) * sin(pi* x[1]) + 2. * pi * pi * x[1] * cos(2. * pi * x[0]);   
-  grad_stateVel[1][1]  = - pi * sin(2. * pi * x[0]) * cos(pi * x[1]) + pi * sin(2. * pi * x[0]); 
- };
-
-  
-void laplace_stateVel(const std::vector < double >& x, vector < double >& lap_stateVel) {
-  double pi = acos(-1.);
-  lap_stateVel[0] = - 2. * pi * pi * cos(2. * pi * x[0]) - 0.5 * pi * pi * cos(pi * x[1]) + 2.5 * pi * pi * cos(2. * pi* x[0]) * cos(pi* x[1]);
-  lap_stateVel[1] = - 4. * pi * pi * pi * x[1] * sin(2. * pi * x[0]) + 5. * pi * pi * sin(2. * pi * x[0]) * sin(pi * x[1]);
-};
-//state---------------------------------------------
 
 
 //************** how to retrieve theta from proc0 ************************************* 
@@ -1002,8 +933,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 /*delta_state row */	    if(i_vol<nDofsV)     Res[kdim]                 [i_vol]  += - control_node_flag[kdim][i_vol] * penalty_ctrl * (SolVAR_eldofs[SolPdeIndex[kdim + state_pos_begin]][i_vol] - SolVAR_eldofs[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
 /*delta_adjoint row */     if(i_vol<nDofsVadj)   Res[kdim + adj_pos_begin] [i_vol]  += 0.;	   
 /*delta_control row */     if(i_vol<nDofsGctrl)  Res[kdim + ctrl_pos_begin][i_vol]  += - control_node_flag[kdim][i_vol] * weight_bd * (
-                                                                                          beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
-                                                                                        + gamma_val* lap_res_dctrl_ctrl_bd
+                                                                                          alpha_value* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
+                                                                                        + beta_value* lap_res_dctrl_ctrl_bd
                                                                                         - IRe * grad_dot_n_adj_res[kdim]  * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
                                                                                         - /*(*sol->_Sol[SolIndex[theta_index]])(0)*/solTheta * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry] * normal[kdim]      //*sol->_Sol[SolIndex[theta_index]])(0) finds the global value from KKDof pos(72, 169,etc), SolVAReldof_theta gets the value in the boundary point which will be zero. Theta is just a const
                                                                                         );	    
@@ -1054,8 +985,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 			      for (unsigned kdim = 0; kdim < dim; kdim++) {
 				      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol] +=   control_node_flag[kdim][i_vol] * weight_bd *(
-                                                                                                       beta_val * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][i_bdry] * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][j_bdry]
-                                                                                                    + gamma_val * lap_jac_dctrl_ctrl_bd[kdim]
+                                                                                                       alpha_value * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][i_bdry] * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][j_bdry]
+                                                                                                    + beta_value * lap_jac_dctrl_ctrl_bd[kdim]
                                                                                                     );
 			      }//kdim
 			  }//endif
@@ -1094,7 +1025,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     
     
     
-//======================= Loop without Integration =====================================================    
+//======================= Loop without Integration - BEGIN =====================================================    
     
         //============ delta_theta - theta row ==================================================================================================
   for (unsigned i = 0; i < nDofsThetactrl; i++) {
@@ -1105,14 +1036,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
         }//i_theta loop
    
  //============ delta_theta row ==================================================================================================
- //======================= Loop without Integration =====================================================    
+ //======================= Loop without Integration - END =====================================================    
 
  
  
  
-//======================= VolumeLoop with Integration (and fake boundary) =====================================================    
-// ********************** Gauss point loop *******************************
- for(unsigned ig=0;ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
+//======================= VolumeLoop with Integration (and fake boundary) - BEGIN =====================================================    
+
+for(unsigned ig=0;ig < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumber(); ig++) {
 	
 	// *** get Jacobian and test function and test function derivatives ***
        // *** get gauss point weight, test function and test function partial derivatives ***
@@ -1150,29 +1081,29 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 //======= computation of RHS (force and desired velocity) using MMS - BEGIN =============================================== 
 //state values-------------------- //non-hom bdry
 vector <double>  exact_stateVel(dim);
-value_stateVel(coordX_gss, exact_stateVel);
+  mms_lid_driven::value_stateVel(coordX_gss, exact_stateVel);
 vector <double>  exact_lap_stateVel(dim);
-laplace_stateVel(coordX_gss, exact_lap_stateVel);
+  mms_lid_driven::laplace_stateVel(coordX_gss, exact_lap_stateVel);
 vector < vector < double > > exact_grad_stateVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_stateVel[k].resize(dim);
     std::fill(exact_grad_stateVel[k].begin(), exact_grad_stateVel[k].end(), 0.);
 }
-gradient_stateVel(coordX_gss,exact_grad_stateVel);
+  mms_lid_driven::gradient_stateVel(coordX_gss,exact_grad_stateVel);
 
 //adjoint values--------------------//hom bdry
 vector <double>  exact_adjVel(dim);
-value_adjVel(coordX_gss, exact_adjVel);
+  mms_lid_driven::value_adjVel(coordX_gss, exact_adjVel);
 vector <double>  exact_lap_adjVel(dim);
-laplace_adjVel(coordX_gss, exact_lap_adjVel);
+  mms_lid_driven::laplace_adjVel(coordX_gss, exact_lap_adjVel);
 vector < vector < double > > exact_grad_adjVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_adjVel[k].resize(dim);
     std::fill(exact_grad_adjVel[k].begin(), exact_grad_adjVel[k].end(), 0.);
 }
-gradient_adjVel(coordX_gss,exact_grad_adjVel);
+  mms_lid_driven::gradient_adjVel(coordX_gss,exact_grad_adjVel);
 vector <double> exact_grad_adjPress(dim);
-gradient_adjPress(coordX_gss, exact_grad_adjPress);
+  mms_lid_driven::gradient_adjPress(coordX_gss, exact_grad_adjPress);
 
 //convection terms from delta_state-------------------------------------
 vector <double>  exact_conv_u_nabla_u(dim,0.);
@@ -1199,8 +1130,8 @@ vector <double> exactForce(dim,0.);
 vector <double> exactVel_d(dim,0.);
 for (unsigned k = 0; k < dim; k++){
     exactForce[k] = - IRe * exact_lap_stateVel[k]  + advection_flag * exact_conv_u_nabla_u[k] + exact_grad_adjPress[k];
-    exactVel_d[k] =   exact_stateVel[k] + (1./alpha_val) * (IRe * exact_lap_adjVel[k] - exact_grad_adjPress[k]) 
-                    + (1./alpha_val) * advection_flag * (exact_conv_u_nabla_uadj[k] - exact_conv_nabla_uT_uadj[k]);
+    exactVel_d[k] =   exact_stateVel[k] + (1./cost_functional_coeff) * (IRe * exact_lap_adjVel[k] - exact_grad_adjPress[k]) 
+                    + (1./cost_functional_coeff) * advection_flag * (exact_conv_u_nabla_uadj[k] - exact_conv_nabla_uT_uadj[k]);
 }
 //======= computation of RHS (force and desired velocity) using MMS - END =============================================== 
  
@@ -1295,12 +1226,12 @@ for (unsigned k = 0; k < dim; k++){
 	   }
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - alpha_val * target_flag * DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
-                            - alpha_val * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
  #endif
-                                        + alpha_val * target_flag * SolVAR_qp[SolPdeIndex[kdim]] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+                                        + cost_functional_coeff * target_flag * SolVAR_qp[SolPdeIndex[kdim]] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
                                         - IRe*lap_res_dadj_adj
                                         - advection_flag * adv_res_phiadj_nablauold_uadjold
                                         - advection_flag * adv_res_uold_nablaphiadj_uadjold
@@ -1311,7 +1242,7 @@ for (unsigned k = 0; k < dim; k++){
 //BLOCK delta_adjoint - state------------------------------------------------------------------------------------------
      for (unsigned j = 0; j < nDofsV; j++) {
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + adj_pos_begin][kdim][i*nDofsV + j] += ( - alpha_val * target_flag * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] * phi_gss_fe[SolFEType[kdim]][j] 
+	      Jac[kdim + adj_pos_begin][kdim][i*nDofsV + j] += ( - cost_functional_coeff * target_flag * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] * phi_gss_fe[SolFEType[kdim]][j] 
                                                              + advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i]    * phi_x_gss_fe[ SolFEType[kdim] ][j*dim_offset_grad /*space_dim*/ + kdim] 		* SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]   //c(delta_u, u_new, lambda_old)  diagonal blocks  ......phiadj_nablaunew_uadjold 
                                                              + advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim] ][j] 			* phi_x_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_new, delta_u, lambda_old) diagonal blocks  ......unew_nablaphiadj_uadjold
                                                             ) * weight;
@@ -1393,6 +1324,7 @@ for (unsigned k = 0; k < dim; k++){
  
       }  // end gauss point loop
       
+//======================= VolumeLoop with Integration (and fake boundary) - END =====================================================    
 
     
     
@@ -1837,12 +1769,12 @@ double integral_g_dot_n = 0.;
   if (paral::get_rank() == 0 ) {
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
       intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys.GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
-      intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << alpha_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
-      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << beta_val  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
-      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << gamma_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
+      intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << cost_functional_coeff << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
+      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << alpha_value  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
+      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << beta_value << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
       intgr_fstream << "The value of the integral of g.n "<<    integral_g_dot_n << std::endl;
       intgr_fstream << "The value of the theta is                             " <<    std::setw(11) << std::setprecision(10) <<  solTheta << std::endl;
-      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * alpha_val*0.5  + integral_beta *beta_val*0.5 + integral_gamma *gamma_val*0.5 << std::endl;
+      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * cost_functional_coeff*0.5  + integral_beta *alpha_value*0.5 + integral_gamma *beta_value*0.5 << std::endl;
       intgr_fstream <<  std::endl;
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }  

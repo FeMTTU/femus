@@ -22,9 +22,9 @@
 
 //*********************** Sets the regularization parameters *******************************************************
 
- double alpha_val = 1.;
- double beta_val  = 1.e-3;
- double gamma_val = 1.e-3;
+ double cost_functional_coeff = 1.;
+ double alpha_value  = 1.e-3;
+ double beta_value = 1.e-3;
  
  
  

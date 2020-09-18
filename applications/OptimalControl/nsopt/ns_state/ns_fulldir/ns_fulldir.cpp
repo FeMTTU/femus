@@ -11,10 +11,14 @@
 #include "Parameter.hpp"
 #include "Files.hpp"
 
+
+#include   "../../manufactured_solutions.hpp"
+
 #define FACE_FOR_CONTROL  1
 
-
 #include   "../../nsopt_params.hpp"
+
+
 
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
@@ -64,7 +68,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
-void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes, int loop_i );
+
 
 
 int main(int argc, char** args) {
@@ -254,7 +258,7 @@ std::vector< std::string > norm_names = {"L2-NORM of U","L2-NORM of V", "L2-NORM
   std::cout << norm_names[j] << " ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout << "LEVEL\t\t" << norm_names[j] << "\t\t\t\torder of convergence\n"; 
    for(int i = 0; i <  maxNumberOfMeshes - 1; i++){
-       output_convergence_rate(comp_conv[i][j], comp_conv[i + 1][j], norm_names[j], maxNumberOfMeshes , i );
+       FE_convergence<double>::output_convergence_rate(comp_conv[i][j], comp_conv[i + 1][j], norm_names[j], maxNumberOfMeshes , i );
     }
   }
 #endif
@@ -263,53 +267,8 @@ std::vector< std::string > norm_names = {"L2-NORM of U","L2-NORM of V", "L2-NORM
 }
 
 
-void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes , int loop_i) {
-
-    std::cout << loop_i + 1 << "\t\t" <<  std::setw(11) << std::setprecision(10) << norm_i << "\t\t\t\t" ;
-  
-    if (loop_i < maxNumberOfMeshes/*norm.size()*/ - 2) {
-      std::cout << std::setprecision(3) << log( norm_i/ norm_ip1 ) / log(2.) << std::endl;
-    }
-  
-}
 
 
-
-//manufactured solution for lid-driven---------------------------------------------
-void value_Vel(const std::vector < double >& x, vector < double >& val_Vel) {
-  double pi = acos(-1.);
-  val_Vel[0] =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);
-  val_Vel[1] = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);
- };
- 
- 
-void gradient_Vel(const std::vector < double >& x, vector < vector < double > >& grad_Vel) {
-  double pi = acos(-1.);
-  grad_Vel[0][0]  =   pi * sin(2. * pi * x[0]) * cos(pi* x[1]) - pi * sin(2. * pi * x[0]);
-  grad_Vel[0][1]  = - pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(pi * x[1]); 
-  grad_Vel[1][0]  = - 2. * pi * cos(2. * pi * x[0]) * sin(pi* x[1]) + 2. * pi * pi * x[1] * cos(2. * pi * x[0]);   
-  grad_Vel[1][1]  = - pi * sin(2. * pi * x[0]) * cos(pi * x[1]) + pi * sin(2. * pi * x[0]); 
- };
-
-  
-void laplace_Vel(const std::vector < double >& x, vector < double >& lap_Vel) {
-  double pi = acos(-1.);
-  lap_Vel[0] = - 2. * pi * pi * cos(2. * pi * x[0]) - 0.5 * pi * pi * cos(pi * x[1]) + 2.5 * pi * pi * cos(2. * pi* x[0]) * cos(pi* x[1]);
-  lap_Vel[1] = - 4. * pi * pi * pi * x[1] * sin(2. * pi * x[0]) + 5. * pi * pi * sin(2. * pi * x[0]) * sin(pi * x[1]);
-};
-
-double value_Press(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return sin(2. * pi * x[0]) * sin(2. * pi * x[1]); //p
- };
-
- void gradient_Press(const std::vector < double >& x, vector < double >& grad_statePress) {
-  double pi = acos(-1.);
-  grad_statePress[0]  =   2. * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]); 
-  grad_statePress[1]  =   2. * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
- };
-
-//manufactured solution for lid-driven---------------------------------------------
 
 
 
@@ -569,20 +528,20 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
 
 
-//computation of RHS force using MMS=============================================== 
+//computation of RHS force using MMS - BEGIN =============================================== 
 vector <double>  exact_Vel(dim,0.);
-value_Vel(coordX_gss,exact_Vel);
+   mms_lid_driven::value_stateVel(coordX_gss,exact_Vel);
 vector < vector < double > > exact_grad_Vel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_Vel[k].resize(dim);
     std::fill(exact_grad_Vel[k].begin(), exact_grad_Vel[k].end(), 0.);
 }
-gradient_Vel(coordX_gss,exact_grad_Vel);
+   mms_lid_driven::gradient_stateVel(coordX_gss,exact_grad_Vel);
 vector <double>  exact_lap_Vel(dim,0.);
-laplace_Vel(coordX_gss, exact_lap_Vel);
+   mms_lid_driven::laplace_stateVel(coordX_gss, exact_lap_Vel);
 vector <double>  exact_conv_Vel(dim,0.);
 vector <double> exact_grad_Press(dim,0.);
-gradient_Press(coordX_gss, exact_grad_Press);
+   mms_lid_driven::gradient_statePress(coordX_gss, exact_grad_Press);
 
 for (unsigned k = 0; k < dim; k++){
     for (unsigned i = 0; i < dim; i++){
@@ -595,7 +554,7 @@ vector <double> exactForce(dim,0.);
 for (unsigned k = 0; k < dim; k++){
     exactForce[k] =  - IRe * exact_lap_Vel[k] + advection_flag * exact_conv_Vel[k] + exact_grad_Press[k] ;
 }
-//computation of RHS force using MMS=============================================== 
+//computation of RHS force using MMS - END =============================================== 
 
 
         // *** phiV_i loop ***
@@ -1023,20 +982,20 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
 
 
 
-//computation of RHS force using MMS=============================================== 
+//computation of RHS force using MMS - BEGIN =============================================== 
 vector <double>  exact_Vel(dim,0.);
-value_Vel(coordX_gss,exact_Vel);
+   mms_lid_driven::value_stateVel(coordX_gss,exact_Vel);
 vector < vector < double > > exact_grad_Vel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_Vel[k].resize(dim);
     std::fill(exact_grad_Vel[k].begin(), exact_grad_Vel[k].end(), 0.);
 }
-gradient_Vel(coordX_gss,exact_grad_Vel);
+   mms_lid_driven::gradient_stateVel(coordX_gss,exact_grad_Vel);
 vector <double>  exact_lap_Vel(dim,0.);
-laplace_Vel(coordX_gss, exact_lap_Vel);
+   mms_lid_driven::laplace_stateVel(coordX_gss, exact_lap_Vel);
 vector <double>  exact_conv_Vel(dim,0.);
 vector <double> exact_grad_Press(dim,0.);
-gradient_Press(coordX_gss, exact_grad_Press);
+   mms_lid_driven::gradient_statePress(coordX_gss, exact_grad_Press);
 
 for (unsigned k = 0; k < dim; k++){
     for (unsigned i = 0; i < dim; i++){
@@ -1049,11 +1008,11 @@ vector <double> exactForce(dim,0.);
 for (unsigned k = 0; k < dim; k++){
     exactForce[k] =  - IRe * exact_lap_Vel[k] + advection_flag * exact_conv_Vel[k] + exact_grad_Press[k] ;
 }
-//computation of RHS force using MMS=============================================== 
+//computation of RHS force using MMS - END =============================================== 
 
  
 //good old method for filling residuals and Jac  
-//============ delta_state row ============================================================================================
+//============ delta_state row - BEGIN  ============================================================================================
 
   for (unsigned i = 0; i < nDofsV; i++) {
 // FIRST ROW
@@ -1121,7 +1080,7 @@ for (unsigned k = 0; k < dim; k++){
 	  }
       } //j loop
    }//i_div_state
-    //============ delta_state row ============================================================================================
+    //============ delta_state row - END ============================================================================================
 
  
  

@@ -25,6 +25,8 @@
 #include "ElemType.hpp"
 
 
+#include   "../manufactured_solutions.hpp"
+
 #define FACE_FOR_CONTROL  1
 
 
@@ -140,7 +142,7 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* mlSo
 // ||u_h - u_(h/2)||/||u_(h/2)-u_(h/4)|| = 2^alpha, alpha is order of conv 
 //i.e. ||prol_(u_(i-1)) - u_(i)|| = err(i) => err(i-1)/err(i) = 2^alpha ,implemented as log(err(i)/err(i+1))/log2
 
-void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes, int loop_i );
+
 
 int main(int argc, char** args) {
 
@@ -392,7 +394,7 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << "LEVEL\t\t\t" << norm_names_L2[j] << "\t\t\t\torder of convergence\n"; 
    for(int i = 0; i <  maxNumberOfMeshes - 1; i++){
-       output_convergence_rate(comp_conv[i][j], comp_conv[i + 1][j], norm_names_L2[j], maxNumberOfMeshes , i );
+       FE_convergence<double>::output_convergence_rate(comp_conv[i][j], comp_conv[i + 1][j], norm_names_L2[j], maxNumberOfMeshes , i );
     }
   }
   std::cout << std::endl;
@@ -405,7 +407,7 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << "LEVEL\t\t\t" << norm_names_H1[j] << "\t\t\t\torder of convergence\n"; 
    for(int i = 0; i <  maxNumberOfMeshes - 1; i++){
-       output_convergence_rate(comp_conv[i][NO_OF_L2_NORMS + j], comp_conv[i + 1][NO_OF_L2_NORMS + j], norm_names_H1[j], maxNumberOfMeshes , i );
+       FE_convergence<double>::output_convergence_rate(comp_conv[i][NO_OF_L2_NORMS + j], comp_conv[i + 1][NO_OF_L2_NORMS + j], norm_names_H1[j], maxNumberOfMeshes , i );
     }
   }
   std::cout << std::endl;
@@ -415,77 +417,8 @@ int main(int argc, char** args) {
   return 0;
 }
 
-void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes , int loop_i) {
-
-    std::cout << loop_i + 1 << "\t\t\t" <<  std::setw(11) << std::setprecision(10) << norm_i << "\t\t\t\t" ;
-  
-    if (loop_i < maxNumberOfMeshes/*norm.size()*/ - 2) {
-      std::cout << std::setprecision(3) << log( norm_i/ norm_ip1 ) / log(2.) << std::endl;
-    }
-  
-}
 
 
-
-//state---------------------------------------------
-void value_stateVel(const std::vector < double >& x, vector < double >& val_stateVel) {
-  double pi = acos(-1.);
-  val_stateVel[0] =   0.5 * sin(pi* x[0]) * sin(pi* x[0]) *  sin(2. * pi * x[1]); //u
-  val_stateVel[1] = - 0.5 * sin(2. * pi * x[0]) * sin(pi* x[1]) * sin(pi* x[1]); //v
- };
- 
-double value_statePress(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return sin(2. * pi * x[0]) * sin(2. * pi * x[1]); //p
- };
- 
- 
-void gradient_stateVel(const std::vector < double >& x, vector < vector < double > >& grad_stateVel) {
-  double pi = acos(-1.);
-  grad_stateVel[0][0]  =   0.5 * pi * sin(2. * pi * x[0]) * sin(2. * pi * x[1]); 
-  grad_stateVel[0][1]  =   pi * sin(pi* x[0]) * sin(pi* x[0]) *  cos(2. * pi * x[1]);
-  grad_stateVel[1][0]  = - pi * cos(2. * pi * x[0]) * sin(pi * x[1]) * sin(pi * x[1]); 
-  grad_stateVel[1][1]  = - 0.5 * pi * sin(2. * pi * x[0]) * sin(2. * pi * x[1]);
- };
-
- void gradient_statePress(const std::vector < double >& x, vector < double >& grad_statePress) {
-  double pi = acos(-1.);
-  grad_statePress[0]  =   2. * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]); 
-  grad_statePress[1]  =   2. * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
- };
- 
- 
-void laplace_stateVel(const std::vector < double >& x, vector < double >& lap_stateVel) {
-  double pi = acos(-1.);
-  lap_stateVel[0] = pi * pi * cos(2. * pi * x[0]) * sin(2. * pi * x[1]) - 2. * pi * pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(2. * pi * x[1]);
-  lap_stateVel[1] = 2. * pi * pi * sin(2. * pi * x[0]) * sin(pi* x[1]) * sin(pi* x[1]) - pi * pi * sin(2. * pi * x[0]) * cos(2. * pi * x[1]);
-};
-//state---------------------------------------------
-
-
-//control---------------------------------------------
-void value_ctrlVel(const std::vector < double >& x, vector < double >& val_ctrlVel) {
-  double pi = acos(-1.);
-  val_ctrlVel[0] =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]);
-  val_ctrlVel[1] = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]);
- };
- 
- 
-void gradient_ctrlVel(const std::vector < double >& x, vector < vector < double > >& grad_ctrlVel) {
-  double pi = acos(-1.);
-  grad_ctrlVel[0][0]  =   pi * sin(2. * pi * x[0]) * cos(pi* x[1]) - pi * sin(2. * pi * x[0]);
-  grad_ctrlVel[0][1]  = - pi * sin(pi* x[0]) * sin(pi* x[0]) *  sin(pi * x[1]); 
-  grad_ctrlVel[1][0]  = - 2. * pi * cos(2. * pi * x[0]) * sin(pi* x[1]) + 2. * pi * pi * x[1] * cos(2. * pi * x[0]);   
-  grad_ctrlVel[1][1]  = - pi * sin(2. * pi * x[0]) * cos(pi * x[1]) + pi * sin(2. * pi * x[0]); 
- };
-
-  
-void laplace_ctrlVel(const std::vector < double >& x, vector < double >& lap_ctrlVel) {
-  double pi = acos(-1.);
-  lap_ctrlVel[0] = - 2. * pi * pi * cos(2. * pi * x[0]) - 0.5 * pi * pi * cos(pi * x[1]) + 2.5 * pi * pi * cos(2. * pi* x[0]) * cos(pi* x[1]);
-  lap_ctrlVel[1] = - 4. * pi * pi * pi * x[1] * sin(2. * pi * x[0]) + 5. * pi * pi * sin(2. * pi * x[0]) * sin(pi * x[1]);
-};
-//control---------------------------------------------
 
 
 
@@ -987,29 +920,29 @@ std::cout << " ********************************  AD SYSTEM *********************
 //computation of RHS (force and desired velocity) using MMS=============================================== 
 //state values--------------------
 vector <double>  exact_stateVel(dim, 0.);
-value_stateVel(coordX_gss, exact_stateVel);
+   mms_state_control::value_stateVel(coordX_gss, exact_stateVel);
 vector < vector < double > > exact_grad_stateVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_stateVel[k].resize(dim);
     std::fill(exact_grad_stateVel[k].begin(), exact_grad_stateVel[k].end(), 0.);
 }
-gradient_stateVel(coordX_gss,exact_grad_stateVel);
+   mms_state_control::gradient_stateVel(coordX_gss,exact_grad_stateVel);
 vector <double>  exact_lap_stateVel(dim, 0.);
-laplace_stateVel(coordX_gss, exact_lap_stateVel);
+   mms_state_control::laplace_stateVel(coordX_gss, exact_lap_stateVel);
 vector <double> exact_grad_statePress(dim, 0.);
-gradient_statePress(coordX_gss, exact_grad_statePress);
+   mms_state_control::gradient_statePress(coordX_gss, exact_grad_statePress);
 
 //control values-------------------------------
 vector <double>  exact_ctrlVel(dim);
-value_ctrlVel(coordX_gss, exact_ctrlVel);
+   mms_state_control::value_ctrlVel(coordX_gss, exact_ctrlVel);
 vector < vector < double > > exact_grad_ctrlVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_ctrlVel[k].resize(dim);
     std::fill(exact_grad_ctrlVel[k].begin(), exact_grad_ctrlVel[k].end(), 0.);
 }
-gradient_ctrlVel(coordX_gss,exact_grad_ctrlVel);
+   mms_state_control::gradient_ctrlVel(coordX_gss,exact_grad_ctrlVel);
 vector <double>  exact_lap_ctrlVel(dim);
-laplace_ctrlVel(coordX_gss, exact_lap_ctrlVel);
+   mms_state_control::laplace_ctrlVel(coordX_gss, exact_lap_ctrlVel);
 
 //convection terms from delta_state-------------------------------------
 vector <double>  exact_conv_u_nabla_u(dim,0.);
@@ -1049,8 +982,8 @@ for (unsigned k = 0; k < dim; k++){
                     + advection_flag * (exact_conv_u_nabla_u[k] + exact_conv_u_nabla_uctrl[k] + exact_conv_uctrl_nabla_u[k] + exact_conv_uctrl_nabla_uctrl[k]) 
                     + exact_grad_statePress[k];
     exactVel_d[k] =   exact_stateVel[k] + exact_ctrlVel[k] 
-                    + (1./alpha_val) * ( IRe * exact_lap_stateVel[k] - exact_grad_statePress[k]) 
-                    + (1./alpha_val) * advection_flag * (exact_conv_u_nabla_uadj[k] - exact_conv_nabla_uT_uadj[k] - exact_conv_nabla_uctrlT_uadj[k] + exact_conv_uctrl_nabla_uadj[k]);
+                    + (1./cost_functional_coeff) * ( IRe * exact_lap_stateVel[k] - exact_grad_statePress[k]) 
+                    + (1./cost_functional_coeff) * advection_flag * (exact_conv_u_nabla_uadj[k] - exact_conv_nabla_uT_uadj[k] - exact_conv_nabla_uctrlT_uadj[k] + exact_conv_uctrl_nabla_uadj[k]);
 }
 
 //computation of RHS (force and desired velocity) using MMS=============================================== 
@@ -1074,7 +1007,7 @@ for (unsigned k = 0; k < dim; k++){
 						    // (gradSolV_gss[kdim][jdim] + gradSolV_gss[jdim][kdim])*/;  //diffusion
 	      NSV_gss[kdim] 		+= IRe*phiV_x_gss[i * dim_offset_grad /*space_dim*/ + jdim]*gradSolVctrl_gss[kdim][jdim];	 //delta_state-control
 	      NSVadj_gss[kdim]   	+=  IRe*phiVadj_x_gss[i * dim_offset_grad /*space_dim*/ + jdim]*gradSolVadj_gss[kdim][jdim];  
-	      NSVctrl_gss[kdim]   	+=   gamma_val * phiVctrl_x_gss[i * dim_offset_grad /*space_dim*/ + jdim] * gradSolVctrl_gss[kdim][jdim];
+	      NSVctrl_gss[kdim]   	+=   beta_value * phiVctrl_x_gss[i * dim_offset_grad /*space_dim*/ + jdim] * gradSolVctrl_gss[kdim][jdim];
 	      NSVctrl_gss[kdim] 	+=   - IRe*phiVctrl_x_gss[i * dim_offset_grad /*space_dim*/ + jdim]*gradSolVadj_gss[kdim][jdim];  //nabla_delta_control-nabla_adjoint
 	  }  //jdim loop
 
@@ -1099,20 +1032,20 @@ for (unsigned k = 0; k < dim; k++){
 	  
  #if exact_sol_flag == 0
               NSV_gss[kdim]     += - force[kdim] * phiV_gss[i];
-	      NSVadj_gss[kdim] 		+=  + alpha_val* target_flag * DesiredTargetVel()[kdim] * phiVadj_gss[i];
-  	      NSVctrl_gss[kdim]   	+=  - alpha_val* target_flag * DesiredTargetVel()[kdim] * phiVctrl_gss[i];
+	      NSVadj_gss[kdim] 		+=  + cost_functional_coeff* target_flag * DesiredTargetVel()[kdim] * phiVadj_gss[i];
+  	      NSVctrl_gss[kdim]   	+=  - cost_functional_coeff* target_flag * DesiredTargetVel()[kdim] * phiVctrl_gss[i];
 #endif
  #if exact_sol_flag == 1
               NSV_gss[kdim]     += - exactForce[kdim] * phiV_gss[i];
-	      NSVadj_gss[kdim] 		+=  + alpha_val* target_flag * exactVel_d[kdim] * phiVadj_gss[i];
- 	      NSVctrl_gss[kdim]   	+=  - alpha_val* target_flag * exactVel_d[kdim] * phiVctrl_gss[i];
+	      NSVadj_gss[kdim] 		+=  + cost_functional_coeff* target_flag * exactVel_d[kdim] * phiVadj_gss[i];
+ 	      NSVctrl_gss[kdim]   	+=  - cost_functional_coeff* target_flag * exactVel_d[kdim] * phiVctrl_gss[i];
 #endif        
               
               
-          NSVadj_gss[kdim]		+=  - alpha_val * target_flag * solV_gss[kdim]*phiVadj_gss[i]; //delta_adjoint-state
-	      NSVadj_gss[kdim] 		+=  - alpha_val * target_flag * solVctrl_gss[kdim]*phiVadj_gss[i]; //delta_adjoint-control
-	      NSVctrl_gss[kdim] 	+=    alpha_val * target_flag             * solV_gss[kdim]*phiVctrl_gss[i]; //delta_control-state
-	      NSVctrl_gss[kdim]   	+=   (alpha_val * target_flag + beta_val) * solVctrl_gss[kdim] * phiVctrl_gss[i] ;
+          NSVadj_gss[kdim]		+=  - cost_functional_coeff * target_flag * solV_gss[kdim]*phiVadj_gss[i]; //delta_adjoint-state
+	      NSVadj_gss[kdim] 		+=  - cost_functional_coeff * target_flag * solVctrl_gss[kdim]*phiVadj_gss[i]; //delta_adjoint-control
+	      NSVctrl_gss[kdim] 	+=    cost_functional_coeff * target_flag             * solV_gss[kdim]*phiVctrl_gss[i]; //delta_control-state
+	      NSVctrl_gss[kdim]   	+=   (cost_functional_coeff * target_flag + alpha_value) * solVctrl_gss[kdim] * phiVctrl_gss[i] ;
            
             //velocity-pressure block
           NSV_gss[kdim] 	    += - solP_gss * phiV_x_gss[i * dim_offset_grad /*space_dim*/ + kdim];
@@ -1458,19 +1391,19 @@ double	integral_gamma  = 0.;
   if (paral::get_rank() == 0 ) {
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
       intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys.GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
-      intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << alpha_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
-      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << beta_val  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
-      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << gamma_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
-      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * alpha_val*0.5  + integral_beta *beta_val*0.5 + integral_gamma *gamma_val*0.5 << std::endl;
+      intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << cost_functional_coeff << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
+      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << alpha_value  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
+      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << beta_value << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
+      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * cost_functional_coeff*0.5  + integral_beta *alpha_value*0.5 + integral_gamma *beta_value*0.5 << std::endl;
       intgr_fstream <<  std::endl;
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }  
 
     
-//     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
-//     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<beta_val << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
-//     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<gamma_val<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
-//     std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha *(alpha_val*0.5)+ integral_beta *(beta_val*0.5) + integral_gamma*(gamma_val*0.5) << std::endl; 
+//     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  cost_functional_coeff<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
+//     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<alpha_value << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
+//     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<beta_value<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
+//     std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha *(cost_functional_coeff*0.5)+ integral_beta *(alpha_value*0.5) + integral_gamma*(beta_value*0.5) << std::endl; 
    
     
     return; 
@@ -1759,32 +1692,32 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
 //  // I x = 5 test ********************************
  
 
-//computation of RHS (force and desired velocity) using MMS=============================================== 
+//computation of RHS (force and desired velocity) using MMS - BEGIN =============================================== 
 //state values--------------------
 vector <double>  exact_stateVel(dim, 0.);
-value_stateVel(coordX_gss, exact_stateVel);
+   mms_state_control::value_stateVel(coordX_gss, exact_stateVel);
 vector < vector < double > > exact_grad_stateVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_stateVel[k].resize(dim);
     std::fill(exact_grad_stateVel[k].begin(), exact_grad_stateVel[k].end(), 0.);
 }
-gradient_stateVel(coordX_gss,exact_grad_stateVel);
+   mms_state_control::gradient_stateVel(coordX_gss,exact_grad_stateVel);
 vector <double>  exact_lap_stateVel(dim, 0.);
-laplace_stateVel(coordX_gss, exact_lap_stateVel);
+   mms_state_control::laplace_stateVel(coordX_gss, exact_lap_stateVel);
 vector <double> exact_grad_statePress(dim, 0.);
-gradient_statePress(coordX_gss, exact_grad_statePress);
+   mms_state_control::gradient_statePress(coordX_gss, exact_grad_statePress);
 
 //control values-------------------------------
 vector <double>  exact_ctrlVel(dim);
-value_ctrlVel(coordX_gss, exact_ctrlVel);
+   mms_state_control::value_ctrlVel(coordX_gss, exact_ctrlVel);
 vector < vector < double > > exact_grad_ctrlVel(dim);
 for (unsigned k = 0; k < dim; k++){ 
     exact_grad_ctrlVel[k].resize(dim);
     std::fill(exact_grad_ctrlVel[k].begin(), exact_grad_ctrlVel[k].end(), 0.);
 }
-gradient_ctrlVel(coordX_gss,exact_grad_ctrlVel);
+   mms_state_control::gradient_ctrlVel(coordX_gss,exact_grad_ctrlVel);
 vector <double>  exact_lap_ctrlVel(dim);
-laplace_ctrlVel(coordX_gss, exact_lap_ctrlVel);
+   mms_state_control::laplace_ctrlVel(coordX_gss, exact_lap_ctrlVel);
 
 //convection terms from delta_state-------------------------------------
 vector <double>  exact_conv_u_nabla_u(dim,0.);
@@ -1824,17 +1757,17 @@ for (unsigned k = 0; k < dim; k++){
                     + advection_flag * (exact_conv_u_nabla_u[k] + exact_conv_u_nabla_uctrl[k] + exact_conv_uctrl_nabla_u[k] + exact_conv_uctrl_nabla_uctrl[k]) 
                     + exact_grad_statePress[k];
     exactVel_d[k] =   exact_stateVel[k] + exact_ctrlVel[k] 
-                    + (1./alpha_val) * ( IRe * exact_lap_stateVel[k] - exact_grad_statePress[k]) 
-                    + (1./alpha_val) * advection_flag * (exact_conv_u_nabla_uadj[k] - exact_conv_nabla_uT_uadj[k] - exact_conv_nabla_uctrlT_uadj[k] + exact_conv_uctrl_nabla_uadj[k]);
+                    + (1./cost_functional_coeff) * ( IRe * exact_lap_stateVel[k] - exact_grad_statePress[k]) 
+                    + (1./cost_functional_coeff) * advection_flag * (exact_conv_u_nabla_uadj[k] - exact_conv_nabla_uT_uadj[k] - exact_conv_nabla_uctrlT_uadj[k] + exact_conv_uctrl_nabla_uadj[k]);
 }
 
-//computation of RHS (force and desired velocity) using MMS=============================================== 
+//computation of RHS (force and desired velocity) using MMS - END =============================================== 
 
 
  
  
  
-//============ delta_state row ============================================================================================
+//============ delta_state row - BEGIN  ============================================================================================
 
   for (unsigned i = 0; i < nDofsV; i++) {
 // FIRST ROW
@@ -1954,11 +1887,11 @@ for (unsigned k = 0; k < dim; k++){
 	  }
       } //j loop
    }//i_div_state
-    //============ delta_state row ============================================================================================
+    //============ delta_state row - END  ============================================================================================
 
 
     
-//============ delta_adjoint row =============================================================================================
+//============ delta_adjoint row - BEGIN  =============================================================================================
   
   for (unsigned i = 0; i < nDofsVadj; i++) {
 // SECOND ROW
@@ -1979,13 +1912,13 @@ for (unsigned k = 0; k < dim; k++){
 	   }
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - alpha_val * target_flag * DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
-                            - alpha_val * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+                            - cost_functional_coeff * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
  #endif
-					    + alpha_val * target_flag * SolVAR_qp[SolPdeIndex[kdim]] 		      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
-					    + alpha_val * target_flag * SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+					    + cost_functional_coeff * target_flag * SolVAR_qp[SolPdeIndex[kdim]] 		      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+					    + cost_functional_coeff * target_flag * SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
 					    - IRe * lap_res_dadj_adj
 					    - advection_flag * adv_res_phiadj_nablauold_uadjold
 					    - advection_flag * adv_res_uold_nablaphiadj_uadjold
@@ -1997,7 +1930,7 @@ for (unsigned k = 0; k < dim; k++){
 //BLOCK delta_adjoint - state------------------------------------------------------------------------------------------
      for (unsigned j = 0; j < nDofsV; j++) {
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + adj_pos_begin][kdim][i*nDofsV + j] += ( - alpha_val * target_flag * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] * phi_gss_fe[SolFEType[kdim]][j] 
+	      Jac[kdim + adj_pos_begin][kdim][i*nDofsV + j] += ( - cost_functional_coeff * target_flag * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] * phi_gss_fe[SolFEType[kdim]][j] 
 								 + advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i]    * phi_x_gss_fe[ SolFEType[kdim] ][j*dim_offset_grad /*space_dim*/ + kdim] 		* SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]   //c(delta_u, u_hat_new, lambda_old)  diagonal blocks  ......phiadj_nablaunew_uadjold 
 								 + advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim] ][j] 			* phi_x_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_hat_new, delta_u, lambda_old) diagonal blocks  ......unew_nablaphiadj_uadjold
 								     ) * weight;
@@ -2012,7 +1945,7 @@ for (unsigned k = 0; k < dim; k++){
 //BLOCK delta_adjoint - control-----------------------------------------------------------------------------------------
      for (unsigned j = 0; j < nDofsVctrl; j++) {
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	     Jac[kdim + adj_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += ( - alpha_val * target_flag * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j] 
+	     Jac[kdim + adj_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += ( - cost_functional_coeff * target_flag * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j] 
 										    + advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i]  * phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][j*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]   //c(delta_u, u_0_new, lambda_old)  diagonal blocks  ......phiadj_nablauctrlnew_uadjold 
 										    + advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][j] * phi_x_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i*dim_offset_grad /*space_dim*/ + kdim]  * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]   //c(u_0_new, delta_u, lambda_old) diagonal blocks  ......uctrlnew_nablaphiadj_uadjold
 										    ) * weight;
@@ -2078,10 +2011,10 @@ for (unsigned k = 0; k < dim; k++){
       }//j loop
   }//i_div_adj
 
-      //============ delta_adjoint row =============================================================================================
+      //============ delta_adjoint row - END  =============================================================================================
 
 
-//============ delta_control row ==================================================================================================
+//============ delta_control row - BEGIN ==================================================================================================
 // THIRD ROW
   for (unsigned i = 0; i < nDofsVctrl; i++) {
       for (unsigned kdim = 0; kdim < dim; kdim++) { 
@@ -2104,15 +2037,15 @@ for (unsigned k = 0; k < dim; k++){
       
       Res[kdim + ctrl_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                     + alpha_val * target_flag * DesiredTargetVel()[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+                     + cost_functional_coeff * target_flag * DesiredTargetVel()[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
-                     + alpha_val * target_flag * exactVel_d[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+                     + cost_functional_coeff * target_flag * exactVel_d[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
  #endif
-					 - alpha_val * target_flag * SolVAR_qp[SolPdeIndex[kdim]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-					 - alpha_val * target_flag * SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-					 - beta_val * SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-					 - gamma_val * lap_res_dctrl_ctrl
+					 - cost_functional_coeff * target_flag * SolVAR_qp[SolPdeIndex[kdim]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+					 - cost_functional_coeff * target_flag * SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+					 - alpha_value * SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+					 - beta_value * lap_res_dctrl_ctrl
 					 + IRe * lap_res_dctrl_adj
 					+ advection_flag * adv_res_uold_nablaphictrl_uadjold
 					+ advection_flag * adv_res_phictrl_nablauold_uadjold
@@ -2124,7 +2057,7 @@ for (unsigned k = 0; k < dim; k++){
 //BLOCK delta_control - state------------------------------------------------------------------------------------------------
       for (unsigned j = 0; j < nDofsV; j++) {
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + ctrl_pos_begin][kdim][i*nDofsV + j] += (+ alpha_val * target_flag * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * phi_gss_fe[SolFEType[kdim]][j] 
+	      Jac[kdim + ctrl_pos_begin][kdim][i*nDofsV + j] += (+ cost_functional_coeff * target_flag * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * phi_gss_fe[SolFEType[kdim]][j] 
 								 - advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim] ][j] 		       * phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_hat_new, delta_u0, lambda_old) diagonal blocks  ......unew_nablaphictrl_uadjold
 								 - advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i]  * phi_x_gss_fe[ SolFEType[kdim] ][j*dim_offset_grad /*space_dim*/ + kdim] 			* SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]   //c(delta_u0, u_hat_new, lambda_old)  diagonal blocks  ......phictrl_nablaunew_uadjold 
 								    ) * weight;
@@ -2176,8 +2109,8 @@ for (unsigned k = 0; k < dim; k++){
             }
           }
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += (  + (alpha_val * target_flag + beta_val) * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j]
-											+  gamma_val * lap_jac_dctrl_ctrl[kdim] 
+	      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += (  + (cost_functional_coeff * target_flag + alpha_value) * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j]
+											+  beta_value * lap_jac_dctrl_ctrl[kdim] 
 											- advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i]    * phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][j*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]   //c(delta_u0, u_0_new, lambda_old)  diagonal blocks  ......phictrl_nablauctrlnew_uadjold 
 											- advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][j] 	* phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_0_new, delta_u0, lambda_old) diagonal blocks  ......uctrlnew_nablaphictrl_uadjold
 											) * weight;
@@ -2211,7 +2144,7 @@ for (unsigned k = 0; k < dim; k++){
 	  }//j loop
   }//i_div_ctrl
  
-   //============ delta_control row ==================================================================================================
+   //============ delta_control row - END ==================================================================================================
  
  
  

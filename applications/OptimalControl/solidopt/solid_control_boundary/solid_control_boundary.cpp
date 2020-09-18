@@ -788,8 +788,8 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
 /*delta_state row */	    if(i_vol<Sol_n_el_dofs[state_pos_begin])   Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[kdim], i_vol) ]                += control_node_flag[kdim][i_vol] * penalty_ctrl * (SolVAR_eldofs[SolPdeIndex[kdim + state_pos_begin]][i_vol] - SolVAR_eldofs[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
 /*delta_adjoint row */     if(i_vol<Sol_n_el_dofs[adj_pos_begin])   Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[kdim + adj_pos_begin], i_vol) ] += 0.;	   
 /*delta_control row */     if(i_vol<Sol_n_el_dofs[ctrl_pos_begin])  Res_bd[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[kdim + ctrl_pos_begin], i_vol) ]  += control_node_flag[kdim][i_vol] * weight_hat_bd_qp * (
-                                                                                          beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry]
-                                                                                        + gamma_val* lap_res_dctrl_ctrl_bd
+                                                                                          alpha_value* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry]
+                                                                                        + beta_value* lap_res_dctrl_ctrl_bd
                                                                                         - nondim_number * mus * grad_dot_n_adj_res[kdim]  * phi_hat_bd_dof_qp[kdim +  ctrl_pos_begin][i_bdry]
                                                                                         );	    
 		      }//kdim  
@@ -916,7 +916,7 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
          for (unsigned i = 0; i < Sol_n_el_dofs[sol_index_adj]; i++) {
                for (int idim = 0; idim < dim; idim++) {
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + adj_pos_begin], i)] += 
-    - alpha_val * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] - TargetDisp[idim]) 
+    - cost_functional_coeff * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] - TargetDisp[idim]) 
      * phi_dof_qp[ idim + adj_pos_begin ][i] * weight_qp;
                }
           }
@@ -1687,12 +1687,12 @@ real_num   integral_g_dot_n = 0.;
   if (paral::get_rank() == 0 ) {
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
       intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys->GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
-      intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << alpha_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
-      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << beta_val  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
-      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << gamma_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
+      intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << cost_functional_coeff << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
+      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << alpha_value  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
+      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << beta_value << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
       intgr_fstream << "The value of the integral of g.n "<<    integral_g_dot_n << std::endl;
       intgr_fstream << "The value of the theta is                             " <<    std::setw(11) << std::setprecision(10) <<  SolVAR_eldofs[SolPdeIndex[theta_index]][0] << std::endl;
-      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * alpha_val*0.5  + integral_beta *beta_val*0.5 + integral_gamma *gamma_val*0.5 << std::endl;
+      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * cost_functional_coeff*0.5  + integral_beta *alpha_value*0.5 + integral_gamma *beta_value*0.5 << std::endl;
       intgr_fstream <<  std::endl;
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }  

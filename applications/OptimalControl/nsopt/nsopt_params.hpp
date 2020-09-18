@@ -25,9 +25,9 @@ namespace femus {
 
 //*********************** Sets the regularization parameters *******************************************************
 
- const double alpha_val = 1.;
- const double beta_val  = 1.e-3;
- const double gamma_val = 1.e-3;
+ const double cost_functional_coeff = 1.;
+ const double alpha_value  = 1.e-3;
+ const double beta_value = 1.e-3;
  
  
 //******************************** switch between stokes and navier stokes *********************************************
@@ -39,7 +39,7 @@ namespace femus {
 //  Picard: advection_flag = 1; advection_Picard = 1;
  
 
-
+// // // //    CYLINDER DOMAIN **********************
 // // // //*********************** Find volume elements that contain a  Target domain element ********************************
 // // // 
 // // // int ElementTargetFlag(const std::vector<double> & elem_center) {
