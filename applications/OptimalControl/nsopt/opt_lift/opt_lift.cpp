@@ -1099,8 +1099,8 @@ for (unsigned k = 0; k < dim; k++){
 	  
  #if exact_sol_flag == 0
               NSV_gss[kdim]     += - force[kdim] * phiV_gss[i];
-	      NSVadj_gss[kdim] 		+=  + alpha_val* target_flag * Vel_desired[kdim] * phiVadj_gss[i];
-  	      NSVctrl_gss[kdim]   	+=  - alpha_val* target_flag * Vel_desired[kdim] * phiVctrl_gss[i];
+	      NSVadj_gss[kdim] 		+=  + alpha_val* target_flag * DesiredTargetVel()[kdim] * phiVadj_gss[i];
+  	      NSVctrl_gss[kdim]   	+=  - alpha_val* target_flag * DesiredTargetVel()[kdim] * phiVctrl_gss[i];
 #endif
  #if exact_sol_flag == 1
               NSV_gss[kdim]     += - exactForce[kdim] * phiV_gss[i];
@@ -1388,7 +1388,7 @@ double	integral_gamma  = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = Vel_desired[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = DesiredTargetVel()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
       }
 //     }
  //DESIRED VEL###################################################################
@@ -1979,7 +1979,7 @@ for (unsigned k = 0; k < dim; k++){
 	   }
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - alpha_val * target_flag * Vel_desired[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+                            - alpha_val * target_flag * DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                             - alpha_val * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
@@ -2104,7 +2104,7 @@ for (unsigned k = 0; k < dim; k++){
       
       Res[kdim + ctrl_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                     + alpha_val * target_flag * Vel_desired[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+                     + alpha_val * target_flag * DesiredTargetVel()[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                      + alpha_val * target_flag * exactVel_d[kdim] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]

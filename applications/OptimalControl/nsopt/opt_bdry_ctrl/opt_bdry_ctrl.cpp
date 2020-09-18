@@ -19,9 +19,9 @@
 #include "ElemType.hpp"
 
 
-//*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define FACE_FOR_CONTROL  1
+#define FACE_FOR_CONTROL          3        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+
 #include   "../nsopt_params.hpp"
 
 
@@ -29,7 +29,7 @@
 
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
-#define no_of_ref 2     //mesh refinements
+#define no_of_ref 6     //mesh refinements
 
 #define NO_OF_L2_NORMS 9   //U,V,P,UADJ,VADJ,PADJ,GX,GY,THETA
 #define NO_OF_H1_NORMS 6    //U,V,UADJ,VADJ,GX, GY
@@ -41,36 +41,8 @@ using namespace femus;
  double penalty_ctrl = 1.e10;         //penalty for u=q
  double theta_value_outside_fake_element = 0.;
   
+
  
-bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  //1: bottom  //2: right  //3: top  //4: left
-  
-  bool dirichlet = true;
-   value = 0.;
- 
-
-                if (!strcmp(SolName, "GX"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
-                if (!strcmp(SolName, "GY"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
-                if (!strcmp(SolName, "GZ"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
-                if (!strcmp(SolName, "THETA"))    { dirichlet = false; }
-      
-#if exact_sol_flag == 0
-                if (!strcmp(SolName, "U"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
-                if (!strcmp(SolName, "V"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
-#endif
-                if (!strcmp(SolName, "W"))       { if (facename == FACE_FOR_CONTROL) dirichlet = false; }
-     
-#if exact_sol_flag == 1
-  //b.c. for manufactured lid driven cavity
-  double pi = acos(-1.);
-                if (!strcmp(SolName, "U"))       { if (facename == FACE_FOR_CONTROL) value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]); }
-                if (!strcmp(SolName, "V"))       { if (facename == FACE_FOR_CONTROL) value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]); }
- #endif
-               
-  return dirichlet;
-
-}
-
 double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
 
     double value = 0.;
@@ -83,7 +55,6 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     }
 
     return value;
-}
 // //============== initial conditions =========
 // double SetInitialCondition(const MultiLevelProblem * ml_prob, const std::vector <double> &x, const char SolName[]) {
 //   
@@ -97,6 +68,94 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 //   return value;
 // }
 // //============== initial conditions =========
+    
+}
+
+
+
+bool Solution_set_boundary_conditions(const std::vector < double >& x, const char SolName[], double& value, const int faceName, const double time) {
+  //1: bottom  //2: right  //3: top  //4: left
+  
+  bool dirichlet = true;
+   value = 0.;
+ 
+
+                if (!strcmp(SolName, "GX"))       {
+//                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
+  if (faceName == FACE_FOR_CONTROL) {
+     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+         dirichlet = false;
+    }
+     else { 
+         dirichlet = true;  
+    }
+  }
+  else { 
+      dirichlet = true;
+   }
+                }
+                if (!strcmp(SolName, "GY"))       { 
+//                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
+  if (faceName == FACE_FOR_CONTROL) {
+     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+         dirichlet = false;
+    }
+     else { 
+         dirichlet = true;  
+    }
+  }
+  else { 
+      dirichlet = true;
+   }
+                }
+                if (!strcmp(SolName, "GZ"))       { 
+//                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
+  if (faceName == FACE_FOR_CONTROL) {
+     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+         dirichlet = false;
+    }
+     else { 
+         dirichlet = true;  
+    }
+  }
+  else { 
+      dirichlet = true;
+   }
+                }
+                
+                if (!strcmp(SolName, "THETA"))    { dirichlet = false; }
+
+                
+                
+                if (!strcmp(SolName, "W"))       { 
+//                     if (facename == FACE_FOR_CONTROL) dirichlet = false; 
+   if (faceName == FACE_FOR_CONTROL) {
+     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+         dirichlet = false;
+    }
+     else { 
+         dirichlet = true;  
+    }
+  }                   
+                }
+     
+#if exact_sol_flag == 0
+                if (!strcmp(SolName, "U"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
+                if (!strcmp(SolName, "V"))       { if (faceName == FACE_FOR_CONTROL) dirichlet = false; }
+#endif
+     
+#if exact_sol_flag == 1
+  //b.c. for manufactured lid driven cavity
+  double pi = acos(-1.);
+                if (!strcmp(SolName, "U"))       { if (faceName == FACE_FOR_CONTROL) value =   sin(pi* x[0]) * sin(pi* x[0]) * cos(pi* x[1]) - sin(pi* x[0]) * sin(pi* x[0]); }
+                if (!strcmp(SolName, "V"))       { if (faceName == FACE_FOR_CONTROL) value = - sin(2. * pi * x[0]) * sin(pi* x[1]) + pi * x[1] * sin(2. * pi * x[0]); }
+ #endif
+               
+  return dirichlet;
+
+}
+
+
 
 
 
@@ -111,21 +170,24 @@ double*  GetErrorNorm(const MultiLevelProblem& ml_prob, MultiLevelSolution* ml_s
 void output_convergence_rate( double norm_i, double norm_ip1, std::string norm_name, unsigned maxNumberOfMeshes, int loop_i );
 
 
+
 int main(int argc, char** args) {
   
-  FemusInit mpinit(argc, args, MPI_COMM_WORLD); 	// init Petsc-MPI communicator
+  // ======= Init ========================
+  FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
     // ======= Files ========================
-  
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = false;
   Files files; 
-        files.CheckIODirectories(true);
-        files.RedirectCout(true);
+        files.CheckIODirectories(use_output_time_folder);
+        files.RedirectCout(redirect_cout_to_file);
   
     // ======= Quad Rule ========================
     std::string fe_quad_rule("seventh");
     
-  MultiLevelMesh mlMsh;			// define multilevel mesh
-  MultiLevelMesh mlMsh_all_levels;
+  MultiLevelMesh ml_mesh;			// define multilevel mesh
+  MultiLevelMesh ml_mesh_all_levels;
   double scalingFactor = 1.;		// read coarse level mesh and generate finers level meshes
 
    //Adimensional quantity (Lref,Uref)
@@ -133,32 +195,32 @@ int main(int argc, char** args) {
   double Uref = 1.;
  // *** apparently needed by non-AD assemble only **********************
   // add fluid material
-  Parameter parameter(Lref,Uref);
+  Parameter parameter(Lref, Uref);
   
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,1,FLUID_DENSITY,"Newtonian");
+  Fluid fluid(parameter, 1, FLUID_DENSITY, "Newtonian");
   std::cout << "Fluid properties: " << std::endl;
   std::cout << fluid << std::endl;
   
 // *************************
 	
-//   std::string input_file = "square_parametric.med";
+  std::string input_file = "square_parametric.med";
 //   std::string input_file = "square_4x5.med";
-  std::string input_file = "Mesh_3_groups.med";
+//   std::string input_file = "Mesh_3_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   
-  //   MultiLevelMesh mlMsh;
- mlMsh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
-// //  mlMsh.RefineMesh(2, 2, NULL);
-// //  mlMsh.EraseCoarseLevels(2-1);
+  //   MultiLevelMesh ml_mesh;
+ ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+// //  ml_mesh.RefineMesh(2, 2, NULL);
+// //  ml_mesh.EraseCoarseLevels(2-1);
 #if compute_conv_flag == 1
- mlMsh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+ ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
 #endif
-//     mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
-//     mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+//     ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+//     ml_mesh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
     
-  unsigned dim = mlMsh.GetDimension();
+  unsigned dim = ml_mesh.GetDimension();
   unsigned maxNumberOfMeshes;
 
   if (dim == 2) {
@@ -173,12 +235,12 @@ int main(int argc, char** args) {
  
   
         unsigned numberOfUniformLevels_finest = maxNumberOfMeshes;
-        mlMsh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
-//      mlMsh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
+        ml_mesh_all_levels.RefineMesh(numberOfUniformLevels_finest, numberOfUniformLevels_finest, NULL);
+//      ml_mesh_all_levels.EraseCoarseLevels(numberOfUniformLevels - 2);  // need to keep at least two levels to send u_(i-1) projected(prolongated) into next refinement
         
         //store the fine solution  ==================
             MultiLevelSolution * ml_sol_all_levels;
-            ml_sol_all_levels = new MultiLevelSolution (& mlMsh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
+            ml_sol_all_levels = new MultiLevelSolution (& ml_mesh_all_levels);  //with the declaration outside and a "new" inside it persists outside the loop scopes
          // add variables to ml_sol_all_levels
         // state =====================  
             ml_sol_all_levels->AddSolution("U", LAGRANGE, SECOND);
@@ -199,7 +261,7 @@ int main(int argc, char** args) {
             ml_sol_all_levels->AddSolution("ContReg",  DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
             
             ml_sol_all_levels->Initialize("All");
-            ml_sol_all_levels->AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
+            ml_sol_all_levels->AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
             ml_sol_all_levels->GenerateBdc("All");
 #endif
 
@@ -207,15 +269,15 @@ int main(int argc, char** args) {
 
   unsigned numberOfUniformLevels = i + 1; 
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  ml_mesh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
   // print mesh info
-  mlMsh.PrintInfo();
+  ml_mesh.PrintInfo();
 
-  MultiLevelSolution ml_sol(&mlMsh);
+  MultiLevelSolution ml_sol(&ml_mesh);
 
   // add variables to ml_sol
   // state =====================  
@@ -256,7 +318,7 @@ int main(int argc, char** args) {
   
   
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
+  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
   ml_sol.GenerateBdc("All");
   
 
@@ -799,7 +861,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
   
   
-//========BoundaryLoop=====================================================================
+//========BoundaryLoop - BEGIN  =====================================================================
 
   // Perform face loop over elements that contain some control face
   if (control_el_flag == 1) {
@@ -1027,7 +1089,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
       }  // loop over element faces //jface   
   } //end if control element flag
 
-//End Boundary Residuals  and Jacobians ==================	
+//BoundaryLoop - END ==== End Boundary Residuals  and Jacobians ==================	
     
     
     
@@ -1085,7 +1147,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	} //unk 
  //end unknowns eval at gauss points ********************************
 	
-//computation of RHS (force and desired velocity) using MMS=============================================== 
+//======= computation of RHS (force and desired velocity) using MMS - BEGIN =============================================== 
 //state values-------------------- //non-hom bdry
 vector <double>  exact_stateVel(dim);
 value_stateVel(coordX_gss, exact_stateVel);
@@ -1140,9 +1202,9 @@ for (unsigned k = 0; k < dim; k++){
     exactVel_d[k] =   exact_stateVel[k] + (1./alpha_val) * (IRe * exact_lap_adjVel[k] - exact_grad_adjPress[k]) 
                     + (1./alpha_val) * advection_flag * (exact_conv_u_nabla_uadj[k] - exact_conv_nabla_uT_uadj[k]);
 }
-//computation of RHS (force and desired velocity) using MMS=============================================== 
+//======= computation of RHS (force and desired velocity) using MMS - END =============================================== 
  
-//============ delta_state row ============================================================================================
+//============ delta_state row - BEGIN ============================================================================================
 
   for (unsigned i = 0; i < nDofsV; i++) {
 // FIRST ROW
@@ -1212,11 +1274,11 @@ for (unsigned k = 0; k < dim; k++){
 	  }
       } //j loop
    }//i_div_state
-    //============ delta_state row ============================================================================================
+    //============ delta_state row - END ============================================================================================
 
 
     
-//============ delta_adjoint row =============================================================================================
+//============ delta_adjoint row - BEGIN =============================================================================================
   
   for (unsigned i = 0; i < nDofsVadj; i++) {
 // SECOND ROW
@@ -1233,7 +1295,7 @@ for (unsigned k = 0; k < dim; k++){
 	   }
 	  Res[kdim + adj_pos_begin][i] += ( 
 #if exact_sol_flag == 0
-                            - alpha_val * target_flag * Vel_desired[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+                            - alpha_val * target_flag * DesiredTargetVel()[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
  #endif                                      
  #if exact_sol_flag == 1
                             - alpha_val * target_flag * exactVel_d[kdim] 			      * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
@@ -1308,9 +1370,9 @@ for (unsigned k = 0; k < dim; k++){
       }//j loop
   }//i_div_adj
 
-      //============ delta_adjoint row =============================================================================================
+      //============ delta_adjoint row - END =============================================================================================
 
-      //============ delta_control row ==================================================================================================
+      //============ delta_control row - BEGIN  ==================================================================================================
 // delta_control
     for (unsigned kdim = 0; kdim < dim; kdim++) { 
          for (unsigned i = 0; i < nDofsGctrl; i++) {
@@ -1326,7 +1388,7 @@ for (unsigned k = 0; k < dim; k++){
   }//i_ctrl loop
       }  //kdim
 
- //============ delta_control row ==================================================================================================
+ //============ delta_control row - END  ==================================================================================================
  
  
       }  // end gauss point loop
@@ -1541,7 +1603,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 //     solVdes[k].reserve(maxSize);
 //   }
 //   
-//   double* Vdes_gss [3] = Vel_desired/*= 0.*/;
 
 
 // Vel_desired##################################################################
@@ -1639,7 +1700,7 @@ double integral_g_dot_n = 0.;
 //       unsigned solVdesDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
-        solVdes[k]/*[i]*/ = Vel_desired[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
+        solVdes[k]/*[i]*/ = DesiredTargetVel()[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
      }
 //     }
  //DESIRED VEL###################################################################

@@ -133,11 +133,16 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
   if(!strcmp(name,"control")) {
       
   if (faceName == FACE_FOR_CONTROL) {
-     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)
-     { dirichlet = false; }
-     else { dirichlet = true;  }
+     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5)  { 
+         dirichlet = false;
+    }
+     else { 
+         dirichlet = true;  
+    }
   }
-  else { dirichlet = true;  }
+  else { 
+      dirichlet = true;
+   }
   
   }
 
@@ -145,11 +150,16 @@ bool Solution_set_boundary_conditions(const std::vector < double >& x, const cha
       
   if (faceName == FACE_FOR_CONTROL) {
       
-     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5) 
-     { dirichlet = false; }
-     else { dirichlet = true;  }
+     if (x[ axis_direction_Gamma_control(faceName) ] > GAMMA_CONTROL_LOWER - 1.e-5 && x[ axis_direction_Gamma_control(faceName) ] < GAMMA_CONTROL_UPPER + 1.e-5) { 
+         dirichlet = false; 
+    }
+     else { 
+         dirichlet = true;  
+      }
   }
-  else { dirichlet = true;  }
+  else { 
+      dirichlet = true;  
+   }
       
   }
 
