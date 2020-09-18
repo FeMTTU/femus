@@ -17,8 +17,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 
 
 
@@ -1367,10 +1367,8 @@ void el_dofs_unknowns(const Solution*                sol,
                   }
                 }
 // ********* BOUNDED PART - END ***************
-                      
 // ********* UNBOUNDED PART - BEGIN ***************
-                if(ig == 0) { ///@todo is there a way to put this outside of the ig loop?
-
+                if( iqp_bdry == 3 ) { ///@todo is there a way to put this outside of the ig loop?
               mixed_integral(UNBOUNDED,
                               dim,
                               dim_bdry,
@@ -1411,6 +1409,7 @@ void el_dofs_unknowns(const Solution*                sol,
         else {  //  if(iel != jel || Nsplit == 0) 
             
 // ********* UNBOUNDED PART - BEGIN ***************
+          if(check_if_same_elem_bdry(iel, jel, iface, jface)) {
                mixed_integral(UNBOUNDED,
                               dim,
                               dim_bdry,
@@ -1430,6 +1429,7 @@ void el_dofs_unknowns(const Solution*                sol,
                               iel,
                               iface
                              ); 
+          }
               
 // ********* UNBOUNDED PART - END ***************
             

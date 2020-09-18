@@ -20,7 +20,7 @@
 //**************************************
 
 //***** Quadrature-related ****************** 
-#define Nsplit 0
+#define Nsplit 2
 
 #define QRULE_I   0
 #define QRULE_J   1
