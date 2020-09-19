@@ -17,8 +17,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   2
+#define N_UNIFORM_LEVELS  5
+#define N_ERASED_LEVELS   4
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -807,13 +807,9 @@ void el_dofs_unknowns(const Solution*                sol,
                         vector < unsigned > & Sol_n_el_dofs_Mat, 
                         vector < vector < double > > & sol_eldofs_Mat,  
                         vector < vector < int > > & L2G_dofmap_Mat,
-                        std::vector< int >    &   L2G_dofmap_Mat_AllVars,
-                        const unsigned int maxSize,
+                        const unsigned int max_size,
                         //-----------
-                        std::vector < double > & Res,
-                        std::vector < double > & Jac,
-                        //-----------
-                        const unsigned int n_quantities,
+                         const unsigned int n_quantities,
                         vector < unsigned > SolFEType_quantities,
                         vector < unsigned > Sol_n_el_dofs_quantities,
                         //-----------
@@ -878,8 +874,8 @@ void el_dofs_unknowns(const Solution*                sol,
 //   vector < vector < double > > x1(dim);
   vector < vector < double > > x2(dim);
   for(unsigned k = 0; k < dim; k++) {
-//     x1[k].reserve(maxSize);
-    x2[k].reserve(maxSize);
+//     x1[k].reserve(max_size);
+    x2[k].reserve(max_size);
   }
  
   //------- geometry ---------------
@@ -887,30 +883,30 @@ void el_dofs_unknowns(const Solution*                sol,
  
  
   //-------- local to global mappings --------------
-  vector< int > l2gMap_iel;  l2gMap_iel.reserve(maxSize);
-  vector< int > l2gMap_jel;  l2gMap_jel.reserve(maxSize);
+  vector< int > l2gMap_iel;  l2gMap_iel.reserve(max_size);
+  vector< int > l2gMap_jel;  l2gMap_jel.reserve(max_size);
 
 
   //-------- Local matrices and rhs --------------
-  vector < double > Res_local_iel; Res_local_iel.reserve(maxSize);
-  vector < double > KK_local_iel;  KK_local_iel.reserve(maxSize * maxSize);
+  vector < double > Res_local_iel; Res_local_iel.reserve(max_size);
+  vector < double > KK_local_iel;  KK_local_iel.reserve(max_size * max_size);
 
 //   Local matrices and rhs for adaptive quadrature (iel == jel)
-  vector < double > Res_local_iel_refined; Res_local_iel_refined.reserve(maxSize);
-  vector < double > KK_local_iel_refined;   KK_local_iel_refined.reserve(maxSize * maxSize);
+  vector < double > Res_local_iel_refined; Res_local_iel_refined.reserve(max_size);
+  vector < double > KK_local_iel_refined;   KK_local_iel_refined.reserve(max_size * max_size);
 
 //   Local matrices and rhs for the mixed internal-external integral term (both adaptive and non-adaptive)
-  vector < double > Res_local_iel_mixed_num;  Res_local_iel_mixed_num.reserve(maxSize);
-  vector < double > KK_local_iel_mixed_num;   KK_local_iel_mixed_num.reserve(maxSize * maxSize);
+  vector < double > Res_local_iel_mixed_num;  Res_local_iel_mixed_num.reserve(max_size);
+  vector < double > KK_local_iel_mixed_num;   KK_local_iel_mixed_num.reserve(max_size * max_size);
 
 //   Non local matrices and vectors for H^s laplacian operator
-  vector< double >         Res_nonlocal_iel;  Res_nonlocal_iel.reserve(maxSize);
-  vector< double >         Res_nonlocal_jel;  Res_nonlocal_jel.reserve(maxSize);
+  vector< double >         Res_nonlocal_iel;  Res_nonlocal_iel.reserve(max_size);
+  vector< double >         Res_nonlocal_jel;  Res_nonlocal_jel.reserve(max_size);
 
-  vector < double > KK_nonlocal_iel_iel;  KK_nonlocal_iel_iel.reserve(maxSize * maxSize);
-  vector < double > KK_nonlocal_iel_jel;  KK_nonlocal_iel_jel.reserve(maxSize * maxSize);
-  vector < double > KK_nonlocal_jel_iel;  KK_nonlocal_jel_iel.reserve(maxSize * maxSize);
-  vector < double > KK_nonlocal_jel_jel;  KK_nonlocal_jel_jel.reserve(maxSize * maxSize); 
+  vector < double > KK_nonlocal_iel_iel;  KK_nonlocal_iel_iel.reserve(max_size * max_size);
+  vector < double > KK_nonlocal_iel_jel;  KK_nonlocal_iel_jel.reserve(max_size * max_size);
+  vector < double > KK_nonlocal_jel_iel;  KK_nonlocal_jel_iel.reserve(max_size * max_size);
+  vector < double > KK_nonlocal_jel_jel;  KK_nonlocal_jel_jel.reserve(max_size * max_size); 
  
  //----------------------
   KK->zero();
@@ -1625,11 +1621,11 @@ if( check_if_same_elem(iel, jel) ) {
                         const Solution*        sol,
                         const Mesh * msh,
                         const  LinearEquationSolver* pdeSys,
-                        //-----------
+                        //----- Geom Element ------
                         CurrentElem < double > & geom_element_iel,
                         const unsigned int solType_coords,
                         const unsigned int space_dim,
-                        //-----------
+                        //----- Mat ------
                         const unsigned int n_unknowns,
                         const    vector < std::string > & Solname_Mat,
                         const    vector < unsigned > & SolFEType_Mat,
@@ -1638,17 +1634,15 @@ if( check_if_same_elem(iel, jel) ) {
                         vector < unsigned > & Sol_n_el_dofs_Mat, 
                         vector < vector < double > > & sol_eldofs_Mat,  
                         vector < vector < int > > & L2G_dofmap_Mat,
-                        std::vector< int >    &   L2G_dofmap_Mat_AllVars,
-                        //-----------
-                        std::vector < double > & Res,
-                        std::vector < double > & Jac,
-                        //-----------
+                        //--- Equation, local --------
+                        const unsigned max_size,
+                        //----- Sol ------
                         const unsigned int n_quantities,
                         vector < unsigned > SolFEType_quantities,
                         vector < unsigned > Sol_n_el_dofs_quantities,
-                        //-----------
+                        //---- Quadrature - FE Evaluations -------
                         std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all,
-                        //-----------
+                        //---- Quadrature ------
                         std::vector < std::vector < double > >  Jac_iel_bdry_iqp_bdry,
                         std::vector < std::vector < double > >  JacI_iel_bdry_iqp_bdry,
                         double detJac_iel_bdry_iqp_bdry,
@@ -1658,6 +1652,7 @@ if( check_if_same_elem(iel, jel) ) {
                         //-----------
                         const unsigned int pos_mat_ctrl,
                         const unsigned int pos_sol_ctrl,
+                        //-----------
                         const unsigned int is_block_dctrl_ctrl_inside_main_big_assembly,
                         //-----------
                         SparseMatrix *  KK,
@@ -1669,6 +1664,13 @@ if( check_if_same_elem(iel, jel) ) {
                         //-----------
                         const unsigned qrule_i
                        ) {
+      
+      
+      
+      const unsigned elem_dof_size_max =  /*is_res_control_only ?*/ max_size;
+      
+   std::vector < double >  Res;      Res.reserve( elem_dof_size_max );                         //should have Mat order
+   std::vector < double >  Jac;      Jac.reserve( elem_dof_size_max * elem_dof_size_max);   //should have Mat order
 
  
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -1691,27 +1693,23 @@ if( check_if_same_elem(iel, jel) ) {
                         sol_eldofs_Mat,  
                         L2G_dofmap_Mat);
         
-    unsigned int nDof_max          = ElementJacRes<double>::compute_max_n_dofs(Sol_n_el_dofs_Mat);
     
-    unsigned int sum_Sol_n_el_dofs = ElementJacRes<double>::compute_sum_n_dofs(Sol_n_el_dofs_Mat);
+    const unsigned int res_length =  /*is_res_control_only ?*/ Sol_n_el_dofs_Mat[pos_mat_ctrl];
 
-    Res.resize(sum_Sol_n_el_dofs);                        std::fill(Res.begin(), Res.end(), 0.);
+    Res.resize(res_length);                 std::fill(Res.begin(), Res.end(), 0.);
 
-    Jac.resize(sum_Sol_n_el_dofs * sum_Sol_n_el_dofs);    std::fill(Jac.begin(), Jac.end(), 0.);
-    
-    L2G_dofmap_Mat_AllVars.resize(0);
-      for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_Mat_AllVars.insert(L2G_dofmap_Mat_AllVars.end(), L2G_dofmap_Mat[k].begin(), L2G_dofmap_Mat[k].end());
+    Jac.resize(res_length * res_length);    std::fill(Jac.begin(), Jac.end(), 0.);
  //***************************************************
 
-
-   //************ set control flag *********************
-  int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
-  std::vector<int> control_node_flag(Sol_n_el_dofs_Mat[pos_mat_ctrl],0);
- //*************************************************** 
+  
+ //************ set control flag *********************
+  std::vector< int >  control_node_flag = 
+       is_dof_associated_to_boundary_control_equation(msh, ml_sol, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl);
+  //*************************************************** 
       
-	// Perform face loop over elements that contain some control face
-	if (control_el_flag == 1) {
+
+    if ( volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center()) ) {
+        
 	  
 	  // loop on faces of the current element
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -1737,14 +1735,7 @@ if( check_if_same_elem(iel, jel) ) {
          
 	    if( face_is_a_boundary_control_face(msh->el, iel, iface) ) {
               
- //=================================================== 
-    	  double tau = 0.;
-		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl].c_str(), tau, FACE_FOR_CONTROL, 0.);
 
- //=================================================== 
-        
- 
 //========= initialize gauss quantities on the boundary ============================================
                 double sol_ctrl_iqp_bdry = 0.;
                 std::vector<double> sol_ctrl_x_iqp_bdry(space_dim);   std::fill(sol_ctrl_x_iqp_bdry.begin(), sol_ctrl_x_iqp_bdry.end(), 0.);
@@ -1787,21 +1778,10 @@ if( check_if_same_elem(iel, jel) ) {
                        if ( i_vol < Sol_n_el_dofs_Mat[pos_mat_ctrl] )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * sol_ctrl_x_iqp_bdry[d];
                  }
                  
-//=============== construct control node flag field on the go  =========================================    
-	      /* (control_node_flag[i])       picks nodes on \Gamma_c
-	         (1 - control_node_flag[i])   picks nodes on \Omega \setminus \Gamma_c
-	       */
-	      if (dir_bool == false) { 
-// 		std::cout << " found boundary control nodes ==== " << std::endl;
-			for(unsigned k = 0; k < control_node_flag.size(); k++) {
-				  control_node_flag[i_vol] = 1;
-			     }
-              }
-//=============== construct control node flag field on the go  =========================================    
-
 		 
 //============ Bdry Residuals - BEGIN ==================	
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_ctrl, i_vol) ]  +=  - control_node_flag[i_vol] *  weight_iqp_bdry *
+           const unsigned res_pos = /*is_res_control_only ?*/ (i_vol);
+                Res[ res_pos ]  +=  - control_node_flag[i_vol] *  weight_iqp_bdry *
                                                                                 (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry
 							                           +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							                         );  //boundary optimality condition
@@ -1817,7 +1797,8 @@ if( check_if_same_elem(iel, jel) ) {
 		      for (unsigned d = 0; d < space_dim; d++) {  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * phi_ctrl_x_iel_bdry_iqp_bdry[j_bdry * space_dim + d];    }
 
           
-              Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i_vol, j_vol) ] 
+           const unsigned jac_pos = /*is_res_control_only ?*/ (i_vol * Sol_n_el_dofs_Mat[pos_mat_ctrl] + j_vol ) ;
+              Jac[ jac_pos ] 
 			+=  control_node_flag[i_vol] *  weight_iqp_bdry * ( ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
 			                                              + ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta *  lap_mat_dctrl_ctrl_bdry_gss);   
     
@@ -1833,15 +1814,17 @@ if( check_if_same_elem(iel, jel) ) {
 	  }    //end loop over faces
 	  
 	} //end if control element flag
-	
-	
-       RES->add_vector_blocked(Res, L2G_dofmap_Mat_AllVars);
 
-    if (assembleMatrix) {
-      KK->add_matrix_blocked(Jac, L2G_dofmap_Mat_AllVars, L2G_dofmap_Mat_AllVars);
-    }   
+	
+  /*is_res_control_only*/
+                    RES->add_vector_blocked(Res, L2G_dofmap_Mat[pos_mat_ctrl]);
+              
+                  if (assembleMatrix) {
+                     KK->add_matrix_blocked(Jac, L2G_dofmap_Mat[pos_mat_ctrl], L2G_dofmap_Mat[pos_mat_ctrl]);
+                  }   
+               
       
-    }
+    }  //iel
 
     
 }

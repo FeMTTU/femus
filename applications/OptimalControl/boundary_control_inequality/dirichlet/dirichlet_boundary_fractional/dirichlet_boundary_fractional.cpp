@@ -9,7 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL        2  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL        1  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 
 
@@ -32,10 +32,10 @@
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
   #define KEEP_ADJOINT_PUSH   1
-#define IS_CTRL_FRACTIONAL_SOBOLEV   0
+#define IS_CTRL_FRACTIONAL_SOBOLEV   1
 #define S_FRAC 0.5
 
-#define NORM_GIR_RAV  1
+#define NORM_GIR_RAV  0
 
 #if NORM_GIR_RAV == 0
 
@@ -706,11 +706,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     Sol_n_el_dofs_Mat, 
                     sol_eldofs_Mat,  
                     L2G_dofmap_Mat,
-                    L2G_dofmap_Mat_AllVars,
                     max_size,
-                    //-----------
-                    Res,
-                    Jac,
                     //-----------
                     n_quantities,
                     SolFEType_quantities,
@@ -784,12 +780,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     Sol_n_el_dofs_Mat, 
                     sol_eldofs_Mat,  
                     L2G_dofmap_Mat,
-                    L2G_dofmap_Mat_AllVars,
+                    max_size,
                     //-----------
-                    Res,
-                    Jac,
-                    //-----------
-                    n_quantities,
+                     n_quantities,
                     SolFEType_quantities,
                     Sol_n_el_dofs_quantities,
                     //-----------
@@ -1216,8 +1209,9 @@ add_one_times_mu_res_ctrl_bdry(iproc,
 
 
 //   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
- // One very important thing to consider: we have some PENALTIES that were set before during the SUMMATION part.
+ // @todo One very important thing to consider: we have some PENALTIES that were set before during the SUMMATION part.
  // Now, if we do INSERT, we may end up OVERWRITING certain values, SUCH AS THOSE PENALTIES!!!
+ // So you have to be very careful here!
     
      //MU
 
