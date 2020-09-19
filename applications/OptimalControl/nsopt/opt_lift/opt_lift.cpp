@@ -1007,7 +1007,7 @@ for (unsigned k = 0; k < dim; k++){
 						    // (gradSolV_gss[kdim][jdim] + gradSolV_gss[jdim][kdim])*/;  //diffusion
 	      NSV_gss[kdim] 		+= IRe*phiV_x_gss[i * dim_offset_grad /*space_dim*/ + jdim]*gradSolVctrl_gss[kdim][jdim];	 //delta_state-control
 	      NSVadj_gss[kdim]   	+=  IRe*phiVadj_x_gss[i * dim_offset_grad /*space_dim*/ + jdim]*gradSolVadj_gss[kdim][jdim];  
-	      NSVctrl_gss[kdim]   	+=   beta_value * phiVctrl_x_gss[i * dim_offset_grad /*space_dim*/ + jdim] * gradSolVctrl_gss[kdim][jdim];
+	      NSVctrl_gss[kdim]   	+=   beta * phiVctrl_x_gss[i * dim_offset_grad /*space_dim*/ + jdim] * gradSolVctrl_gss[kdim][jdim];
 	      NSVctrl_gss[kdim] 	+=   - IRe*phiVctrl_x_gss[i * dim_offset_grad /*space_dim*/ + jdim]*gradSolVadj_gss[kdim][jdim];  //nabla_delta_control-nabla_adjoint
 	  }  //jdim loop
 
@@ -1045,7 +1045,7 @@ for (unsigned k = 0; k < dim; k++){
           NSVadj_gss[kdim]		+=  - cost_functional_coeff * target_flag * solV_gss[kdim]*phiVadj_gss[i]; //delta_adjoint-state
 	      NSVadj_gss[kdim] 		+=  - cost_functional_coeff * target_flag * solVctrl_gss[kdim]*phiVadj_gss[i]; //delta_adjoint-control
 	      NSVctrl_gss[kdim] 	+=    cost_functional_coeff * target_flag             * solV_gss[kdim]*phiVctrl_gss[i]; //delta_control-state
-	      NSVctrl_gss[kdim]   	+=   (cost_functional_coeff * target_flag + alpha_value) * solVctrl_gss[kdim] * phiVctrl_gss[i] ;
+	      NSVctrl_gss[kdim]   	+=   (cost_functional_coeff * target_flag + alpha) * solVctrl_gss[kdim] * phiVctrl_gss[i] ;
            
             //velocity-pressure block
           NSV_gss[kdim] 	    += - solP_gss * phiV_x_gss[i * dim_offset_grad /*space_dim*/ + kdim];
@@ -1392,18 +1392,18 @@ double	integral_gamma  = 0.;
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
       intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys.GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
       intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << cost_functional_coeff << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
-      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << alpha_value  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
-      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << beta_value << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
-      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * cost_functional_coeff*0.5  + integral_beta *alpha_value*0.5 + integral_gamma *beta_value*0.5 << std::endl;
+      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << alpha  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
+      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << beta << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
+      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * cost_functional_coeff*0.5  + integral_beta *alpha*0.5 + integral_gamma *beta*0.5 << std::endl;
       intgr_fstream <<  std::endl;
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }  
 
     
 //     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  cost_functional_coeff<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
-//     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<alpha_value << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
-//     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<beta_value<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
-//     std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha *(cost_functional_coeff*0.5)+ integral_beta *(alpha_value*0.5) + integral_gamma*(beta_value*0.5) << std::endl; 
+//     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<alpha << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
+//     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<beta<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
+//     std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha *(cost_functional_coeff*0.5)+ integral_beta *(alpha*0.5) + integral_gamma*(beta*0.5) << std::endl; 
    
     
     return; 
@@ -2044,8 +2044,8 @@ for (unsigned k = 0; k < dim; k++){
  #endif
 					 - cost_functional_coeff * target_flag * SolVAR_qp[SolPdeIndex[kdim]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
 					 - cost_functional_coeff * target_flag * SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-					 - alpha_value * SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-					 - beta_value * lap_res_dctrl_ctrl
+					 - alpha * SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+					 - beta * lap_res_dctrl_ctrl
 					 + IRe * lap_res_dctrl_adj
 					+ advection_flag * adv_res_uold_nablaphictrl_uadjold
 					+ advection_flag * adv_res_phictrl_nablauold_uadjold
@@ -2109,8 +2109,8 @@ for (unsigned k = 0; k < dim; k++){
             }
           }
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += (  + (cost_functional_coeff * target_flag + alpha_value) * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j]
-											+  beta_value * lap_jac_dctrl_ctrl[kdim] 
+	      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += (  + (cost_functional_coeff * target_flag + alpha) * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j]
+											+  beta * lap_jac_dctrl_ctrl[kdim] 
 											- advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i]    * phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][j*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]   //c(delta_u0, u_0_new, lambda_old)  diagonal blocks  ......phictrl_nablauctrlnew_uadjold 
 											- advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][j] 	* phi_x_gss_fe[ SolFEType[kdim + ctrl_pos_begin] ][i*dim_offset_grad /*space_dim*/ + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_0_new, delta_u0, lambda_old) diagonal blocks  ......uctrlnew_nablaphictrl_uadjold
 											) * weight;

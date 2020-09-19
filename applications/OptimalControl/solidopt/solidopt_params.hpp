@@ -23,8 +23,8 @@
 //*********************** Sets the regularization parameters *******************************************************
 
  double cost_functional_coeff = 1.;
- double alpha_value  = 1.e-3;
- double beta_value = 1.e-3;
+ double alpha  = 1.e-3;
+ double beta = 1.e-3;
  
  
  

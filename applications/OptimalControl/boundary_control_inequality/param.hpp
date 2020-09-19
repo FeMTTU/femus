@@ -17,10 +17,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
-
-
+#define N_UNIFORM_LEVELS  3
+#define N_ERASED_LEVELS   2
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -537,12 +535,90 @@ void el_dofs_unknowns(const Solution*                sol,
      }
      
   }
+  
 
-  bool check_if_boundary_control_face(const int bdry_index_i, const unsigned int face_in_rectangle_domain_i) {
+//=============== construct control node flag field  =========================================    
+  std::vector< int > is_dof_associated_to_boundary_control_equation(
+      const Mesh * msh,
+      /*const*/ MultiLevelSolution * ml_sol,
+      const unsigned iel,
+      CurrentElem < double > & geom_element_iel,
+      const unsigned solType_coords,
+      std::vector < std::string > Solname_Mat,      
+      std::vector < unsigned > SolFEType_Mat,    
+      std::vector < unsigned > Sol_n_el_dofs_Mat,    
+      const unsigned pos_mat_ctrl
+
+) {
+	      /* 
+           * (control_node_flag[i])       picks nodes on \Gamma_c
+           * (1 - control_node_flag[i])   picks nodes on \Omega \setminus \Gamma_c
+	       */
+          
+       std::vector<int> control_node_flag(Sol_n_el_dofs_Mat[pos_mat_ctrl], 0);   
+//        std::fill(control_node_flag.begin(), control_node_flag.end(), 0);   
+          
+	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
+          
+       geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
+ 
+       geom_element_iel.set_elem_center_bdry_3d();
+
+          
+	      const unsigned int face_in_rectangle_domain = - ( msh->el->GetFaceElementIndex(iel,iface) + 1);
+	     double tau = 0.;
+	      const bool  dir_bool = ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl].c_str(), tau, face_in_rectangle_domain, 0.);
+
+
+          const unsigned ndofs_ctrl_bdry = msh->GetElementFaceDofNumber(iel, iface, SolFEType_Mat[pos_mat_ctrl]);
+          
+		  for(unsigned i_bdry=0; i_bdry < ndofs_ctrl_bdry; i_bdry++) {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
+		
+	      if (dir_bool == false) { 
+// 		std::cout << " found boundary control nodes ==== " << std::endl;
+			for(unsigned k = 0; k < control_node_flag.size(); k++) {
+				  control_node_flag[i_vol] = 1;
+			    }
+              }
+        }
+          
+    }
+    
+    return   control_node_flag;
+    
+  }
+  
+  //=============== construct control node flag field  =========================================    
+  
+  
+  
+  
+
+  
+  bool volume_elem_contains_a_boundary_control_face( const std::vector<double> & elem_center ) {
+
+      int control_flag_jel = 0;
+        control_flag_jel = ControlDomainFlag_bdry(elem_center);
+        
+        return (control_flag_jel == 1);
+
       
+  }
+  
+  
+  
+  bool face_is_a_boundary_control_face(/*const*/ elem * el, const unsigned jel, const unsigned jface) {
+      
+  	    // look for boundary faces
+            const int bdry_index_j = el->GetFaceElementIndex(jel, jface);
+	    // look for face number equal to control face
+	      const unsigned int face_in_rectangle_domain_j = - ( el->GetFaceElementIndex(jel,jface) + 1);
+
 	    // look for boundary faces && look for control faces
 		
-   return ( bdry_index_i < 0 && face_in_rectangle_domain_i == FACE_FOR_CONTROL );
+   return ( bdry_index_j < 0 && face_in_rectangle_domain_j == FACE_FOR_CONTROL );
       
   }
   
@@ -706,7 +782,7 @@ void el_dofs_unknowns(const Solution*                sol,
   
   
   
-    //********** BEGIN FRAC CONTROL *****************************************
+    //********** FRAC CONTROL - BEGIN *****************************************
 
   void control_eqn_bdry_fractional(const unsigned iproc,
                                    const unsigned nprocs,
@@ -758,7 +834,7 @@ void el_dofs_unknowns(const Solution*                sol,
 //                         double weight_jqp_bdry,
 //                         vector <double> phi_ctrl_jel_bdry_jqp_bdry,    //it is a stored vector below
 //                         vector <double> phi_ctrl_x_jel_bdry_jqp_bdry,    //it is a stored vector below 
-                        //-----------
+                        //---- Control unknown -------
                         const unsigned int pos_mat_ctrl,
                         const unsigned int pos_sol_ctrl,
                         const unsigned int is_block_dctrl_ctrl_inside_main_big_assembly,
@@ -769,7 +845,7 @@ void el_dofs_unknowns(const Solution*                sol,
                         //-----------
                         const double alpha,
                         const double beta,
-                        const unsigned int Nsplit,
+                        //-----------
                         const double s_frac,
                         const double check_limits,
                         const double C_ns,
@@ -777,10 +853,14 @@ void el_dofs_unknowns(const Solution*                sol,
                         const unsigned int OP_L2,
                         const double RHS_ONE,
                         const unsigned int UNBOUNDED,
+                        //--- Control domain -------
                         const std::vector < std::vector < double > > & ex_control,
+                        //--- Quadrature --------
                         const unsigned qrule_i,
                         const unsigned qrule_j,
-                        const unsigned qrule_k
+                        const unsigned qrule_k,
+                        const unsigned int Nsplit,
+                        const unsigned int Quadrature_split_index
                        ) {
       
       
@@ -842,9 +922,6 @@ void el_dofs_unknowns(const Solution*                sol,
        
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
-// ***************************************
-// ******* only control volume elements *************
-// ***************************************
 // --- geometry        
         geom_element_jel.set_coords_at_dofs_and_geom_type(jel, solType_coords);
 
@@ -853,23 +930,13 @@ void el_dofs_unknowns(const Solution*                sol,
         geom_element_jel.set_elem_center(jel, solType_coords);
 // --- geometry        
         
-    //************ set control flag *********************
-  int control_flag_jel = 0;
-        control_flag_jel = ControlDomainFlag_bdry(geom_element_jel.get_elem_center());
-  std::vector<int> control_node_flag_j(Sol_n_el_dofs_Mat[pos_mat_ctrl], 0);
- //*************************************************** 
       
 	// Perform face loop over elements that contain some control face
-	if (control_flag_jel == 1) {
-// ***************************************
-// ******* only control volume elements *************
-// ***************************************
-         
-         
+	if ( volume_elem_contains_a_boundary_control_face(geom_element_jel.get_elem_center()) ) {
 
       
 // ***************************************
-// ******* jel-related stuff *************
+// ******* jel-related stuff - BEGIN *************
 // ***************************************
         
 // --- 1 - geometry -----------------
@@ -956,7 +1023,7 @@ void el_dofs_unknowns(const Solution*                sol,
 // --- 3 - l2GMap -----------------
 
 // ***************************************
-// ******* jel-related stuff - end *************
+// ******* jel-related stuff - END *************
 // ***************************************
 
 
@@ -967,19 +1034,15 @@ void el_dofs_unknowns(const Solution*                sol,
 	  // loop on faces of the current element
 	  for(unsigned jface = 0; jface < msh->GetElementFaceNumber(jel); jface++) {
           
+// --- geometry        
        const unsigned jelGeom_bdry = msh->GetElementFaceType(jel, jface);    
        
        geom_element_jel.set_coords_at_dofs_bdry_3d(jel, jface, solType_coords);
  
        geom_element_jel.set_elem_center_bdry_3d();
-
-	    // look for boundary faces
-            const int bdry_index_j = msh->el->GetFaceElementIndex(jel, jface);
-	    // look for control faces
-	      const unsigned int face_in_rectangle_domain_j = -( msh->el->GetFaceElementIndex(jel,jface) + 1);
-          
+// --- geometry        
          
-	    if( check_if_boundary_control_face(bdry_index_j, face_in_rectangle_domain_j) ) {
+	    if( face_is_a_boundary_control_face(msh->el, jel, jface) ) {
 //------------------------------------        
 //------------ jface opening ---------    
 //------------------------------------        
@@ -1061,9 +1124,6 @@ void el_dofs_unknowns(const Solution*                sol,
        for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
            
            
-// ***************************************
-// ******* only control volume elements *************
-// ***************************************
 // --- geometry        
         geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
 
@@ -1072,22 +1132,12 @@ void el_dofs_unknowns(const Solution*                sol,
         geom_element_iel.set_elem_center(iel, solType_coords);
 // --- geometry        
 
-   //************ set control flag *********************
-  int control_flag_iel = 0;
-        control_flag_iel = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
-  std::vector<int> control_node_flag_i(Sol_n_el_dofs_Mat[pos_mat_ctrl], 0);
- //*************************************************** 
       
 	// Perform face loop over elements that contain some control face
-	if (control_flag_iel == 1) {
-// ***************************************
-// ******* only control volume elements *************
-// ***************************************
-
-
+	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center() ) ) {
         
 // ***************************************
-// ******* iel-related stuff *************
+// ******* iel-related stuff - BEGIN *************
 // ***************************************
         
       
@@ -1135,7 +1185,7 @@ void el_dofs_unknowns(const Solution*                sol,
 // --- solution        
 
 // ***************************************
-// ******* iel-related stuff - end *************
+// ******* iel-related stuff - END *************
 // ***************************************
         
 
@@ -1144,18 +1194,16 @@ void el_dofs_unknowns(const Solution*                sol,
 //------------ iface opening ---------        
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
           
+// --- geom          
        const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
        
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
  
        geom_element_iel.set_elem_center_bdry_3d();
+// --- geom          
 
-	    // look for boundary faces
-            const int bdry_index_i = msh->el->GetFaceElementIndex(iel, iface);
-	    // look for control faces
-	      const unsigned int face_in_rectangle_domain_i = -( msh->el->GetFaceElementIndex(iel,iface)+1);
-          
-	    if( check_if_boundary_control_face( bdry_index_i, face_in_rectangle_domain_i) ) {
+   
+	    if( face_is_a_boundary_control_face(msh->el, iel, iface) ) {
 //------------ iface opening ---------        
 		
 
@@ -1369,7 +1417,7 @@ void el_dofs_unknowns(const Solution*                sol,
                 }
 // ********* BOUNDED PART - END ***************
 // ********* UNBOUNDED PART - BEGIN ***************
-                if( iqp_bdry == 3 ) { ///@todo is there a way to put this outside of the ig loop?
+                if( iqp_bdry == Quadrature_split_index ) { ///@todo is there a way to put this outside of the quadrature loop?
               mixed_integral(UNBOUNDED,
                               dim,
                               dim_bdry,
@@ -1412,6 +1460,7 @@ void el_dofs_unknowns(const Solution*                sol,
             
 // ********* UNBOUNDED PART - BEGIN ***************
           if(check_if_same_elem_bdry(iel, jel, iface, jface)) {
+              
                mixed_integral(UNBOUNDED,
                               dim,
                               dim_bdry,
@@ -1431,7 +1480,8 @@ void el_dofs_unknowns(const Solution*                sol,
                               msh,
                               iel,
                               iface
-                             ); 
+                             );
+               
           }
               
 // ********* UNBOUNDED PART - END ***************
@@ -1565,7 +1615,7 @@ if( check_if_same_elem(iel, jel) ) {
   
   }
     
-  //********** END FRAC CONTROL *****************************************
+  //**********FRAC CONTROL - END *****************************************
   
   
     
@@ -1598,10 +1648,11 @@ if( check_if_same_elem(iel, jel) ) {
                         vector < unsigned > Sol_n_el_dofs_quantities,
                         //-----------
                         std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all,
-                        std::vector < std::vector < double > >  Jac_qp_bdry,
-                        std::vector < std::vector < double > >  JacI_qp_bdry,
-                        double detJac_qp_bdry,
-                        double weight_bdry,
+                        //-----------
+                        std::vector < std::vector < double > >  Jac_iel_bdry_iqp_bdry,
+                        std::vector < std::vector < double > >  JacI_iel_bdry_iqp_bdry,
+                        double detJac_iel_bdry_iqp_bdry,
+                        double weight_iqp_bdry,
                         vector <double> phi_ctrl_iel_bdry_iqp_bdry,
                         vector <double> phi_ctrl_x_iel_bdry_iqp_bdry, 
                         //-----------
@@ -1609,22 +1660,29 @@ if( check_if_same_elem(iel, jel) ) {
                         const unsigned int pos_sol_ctrl,
                         const unsigned int is_block_dctrl_ctrl_inside_main_big_assembly,
                         //-----------
-                        SparseMatrix*             KK,
-                        NumericVector* RES,
+                        SparseMatrix *  KK,
+                        NumericVector * RES,
                         const bool assembleMatrix,
                         //-----------
                         const double alpha,
                         const double beta,
+                        //-----------
                         const unsigned qrule_i
                        ) {
 
  
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
         
+// --- geometry        
             geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
 
             const short unsigned ielGeom = geom_element_iel.geom_type();
 
+           geom_element_iel.set_elem_center(iel, solType_coords);
+// --- geometry        
+
+           
+ //***************************************************
    el_dofs_unknowns(sol, msh, pdeSys, iel,
                         SolFEType_Mat,
                         SolIndex_Mat,
@@ -1633,7 +1691,6 @@ if( check_if_same_elem(iel, jel) ) {
                         sol_eldofs_Mat,  
                         L2G_dofmap_Mat);
         
- //***************************************************
     unsigned int nDof_max          = ElementJacRes<double>::compute_max_n_dofs(Sol_n_el_dofs_Mat);
     
     unsigned int sum_Sol_n_el_dofs = ElementJacRes<double>::compute_sum_n_dofs(Sol_n_el_dofs_Mat);
@@ -1646,8 +1703,6 @@ if( check_if_same_elem(iel, jel) ) {
       for (unsigned  k = 0; k < n_unknowns; k++)     L2G_dofmap_Mat_AllVars.insert(L2G_dofmap_Mat_AllVars.end(), L2G_dofmap_Mat[k].begin(), L2G_dofmap_Mat[k].end());
  //***************************************************
 
-   geom_element_iel.set_elem_center(iel, solType_coords);
-
 
    //************ set control flag *********************
   int control_el_flag = 0;
@@ -1658,14 +1713,10 @@ if( check_if_same_elem(iel, jel) ) {
 	// Perform face loop over elements that contain some control face
 	if (control_el_flag == 1) {
 	  
-	  double tau = 0.;
-	       
 	  // loop on faces of the current element
-
-	  for(unsigned iface=0; iface < msh->GetElementFaceNumber(iel); iface++) {
+	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
           
-       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
-       
+// ---
        std::vector<unsigned int> Sol_el_n_dofs_current_face(n_quantities); ///@todo the active flag is not an unknown!
 
        for (unsigned  k = 0; k < Sol_el_n_dofs_current_face.size(); k++) {
@@ -1673,23 +1724,23 @@ if( check_if_same_elem(iel, jel) ) {
        }
        
        const unsigned nDof_max_bdry = ElementJacRes<double>::compute_max_n_dofs(Sol_el_n_dofs_current_face);
+// ---     
+       
+// --- geometry        
+       const unsigned ielGeom_bdry = msh->GetElementFaceType(iel, iface);    
        
        geom_element_iel.set_coords_at_dofs_bdry_3d(iel, iface, solType_coords);
  
        geom_element_iel.set_elem_center_bdry_3d();
 
-	    // look for boundary faces
-            const int bdry_index = msh->el->GetFaceElementIndex(iel, iface);
-            
-	    if( bdry_index < 0) {
-	      const unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,iface)+1);
-		
-// 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
-	      if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
+// --- geometry        
+         
+	    if( face_is_a_boundary_control_face(msh->el, iel, iface) ) {
               
  //=================================================== 
+    	  double tau = 0.;
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl].c_str(), tau, face_in_rectangle_domain, 0.);
+	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl].c_str(), tau, FACE_FOR_CONTROL, 0.);
 
  //=================================================== 
         
@@ -1705,12 +1756,12 @@ if( check_if_same_elem(iel, jel) ) {
     
 		for(unsigned iqp_bdry = 0; iqp_bdry < n_qp_bdry; iqp_bdry++) {
     
-    elem_all[qrule_i][ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
+    elem_all[qrule_i][ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), iqp_bdry, Jac_iel_bdry_iqp_bdry, JacI_iel_bdry_iqp_bdry, detJac_iel_bdry_iqp_bdry, space_dim);
 // 	elem_all[qrule_i][ielGeom_bdry][solType_coords]->compute_normal(Jac_qp_bdry, normal);
     
-    weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussWeightsPointer()[iqp_bdry];
+    weight_iqp_bdry = detJac_iel_bdry_iqp_bdry * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_qp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
+    elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
   
 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_iqp_bdry = 0.;
@@ -1728,7 +1779,7 @@ if( check_if_same_elem(iel, jel) ) {
 //========== compute gauss quantities on the boundary ================================================
 
 		  // *** phi_i loop ***
-		  for(unsigned i_bdry=0; i_bdry < nDof_max_bdry; i_bdry++) {
+		  for(unsigned i_bdry = 0; i_bdry < nDof_max_bdry; i_bdry++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 
                  double lap_rhs_dctrl_ctrl_bdry_gss_i = 0.;
@@ -1742,30 +1793,24 @@ if( check_if_same_elem(iel, jel) ) {
 	       */
 	      if (dir_bool == false) { 
 // 		std::cout << " found boundary control nodes ==== " << std::endl;
-			for(unsigned k=0; k<control_node_flag.size(); k++) {
+			for(unsigned k = 0; k < control_node_flag.size(); k++) {
 				  control_node_flag[i_vol] = 1;
-			}
+			     }
               }
 //=============== construct control node flag field on the go  =========================================    
 
 		 
-//============ Bdry Residuals ==================	
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
+//============ Bdry Residuals - BEGIN ==================	
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_ctrl, i_vol) ]  +=  - control_node_flag[i_vol] *  weight_iqp_bdry *
                                                                                 (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry
 							                           +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							                         );  //boundary optimality condition
-//============ Bdry Residuals ==================    
+//============ Bdry Residuals - END ==================    
 		    
+//============ Bdry Jacobians - BEGIN ==================	
 		    for(unsigned j_bdry=0; j_bdry < nDof_max_bdry; j_bdry ++) {
 		         unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
 
-//============ Bdry Jacobians ==================	
-//============ Bdry Jacobians ==================	
-
-
-
-// SECOND BLOCK ROW
-//=========== boundary control eqn =============	    
 
 //========block delta_control / control ========
               double  lap_mat_dctrl_ctrl_bdry_gss = 0.;
@@ -1773,20 +1818,18 @@ if( check_if_same_elem(iel, jel) ) {
 
           
               Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i_vol, j_vol) ] 
-			+=  control_node_flag[i_vol] *  weight_bdry * ( ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
+			+=  control_node_flag[i_vol] *  weight_iqp_bdry * ( ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
 			                                              + ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta *  lap_mat_dctrl_ctrl_bdry_gss);   
     
 		   
-//============ End Bdry Jacobians ==================	
-//============ End Bdry Jacobians ==================	
 				
 	      }  //end j loop
+//============ Bdry Jacobians - END ==================	
 	      
 		  }  //end i loop
 		}  //end iqp_bdry loop
 	  }    //end if control face
 	      
-	    }  //end if boundary faces
 	  }    //end loop over faces
 	  
 	} //end if control element flag

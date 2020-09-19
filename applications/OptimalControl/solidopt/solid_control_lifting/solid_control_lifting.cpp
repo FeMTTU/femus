@@ -721,12 +721,12 @@ void AssembleSolidMech(MultiLevelProblem& ml_prob,
                for (int idim = 0; idim < dim; idim++) {
                     for (unsigned jdim = 0; jdim < dim; jdim++) {
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
-                    beta_value * ( gradSolVAR_hat_qp[idim + ctrl_pos_begin][jdim] + gradSolVAR_hat_qp[jdim + ctrl_pos_begin][idim] )
+                    beta * ( gradSolVAR_hat_qp[idim + ctrl_pos_begin][jdim] + gradSolVAR_hat_qp[jdim + ctrl_pos_begin][idim] )
                     * phi_x_dof_qp[idim + ctrl_pos_begin][i * dim + jdim] * weight_qp;                   
                     }
    Res[assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs, SolPdeIndex[idim + ctrl_pos_begin], i)] += 
             (   ( cost_functional_coeff * target_flag * (SolVAR_hat_qp[SolPdeIndex[idim]] + SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] - TargetDisp[idim])  
-                + alpha_value * SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] )* phi_dof_qp[ idim + ctrl_pos_begin ][i] 
+                + alpha * SolVAR_hat_qp[SolPdeIndex[idim + ctrl_pos_begin]] )* phi_dof_qp[ idim + ctrl_pos_begin ][i] 
             ) * weight_qp;
                }
           }
@@ -1337,9 +1337,9 @@ real_num	integral_gamma  = 0.;
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
       intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys->GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
       intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << cost_functional_coeff << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
-      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << alpha_value  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
-      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << beta_value << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
-      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * cost_functional_coeff*0.5  + integral_beta *alpha_value*0.5 + integral_gamma *beta_value*0.5 << std::endl;
+      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << alpha  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
+      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << beta << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
+      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * cost_functional_coeff*0.5  + integral_beta *alpha*0.5 + integral_gamma *beta*0.5 << std::endl;
       intgr_fstream <<  std::endl;
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }  

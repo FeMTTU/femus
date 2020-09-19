@@ -26,8 +26,8 @@ namespace femus {
 //*********************** Sets the regularization parameters *******************************************************
 
  const double cost_functional_coeff = 1.;
- const double alpha_value  = 1.e-3;
- const double beta_value = 1.e-3;
+ const double alpha  = 1.e-3;
+ const double beta = 1.e-3;
  
  
 //******************************** switch between stokes and navier stokes *********************************************
