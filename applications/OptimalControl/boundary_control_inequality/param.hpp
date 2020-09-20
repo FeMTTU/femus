@@ -17,8 +17,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  5
-#define N_ERASED_LEVELS   4
+#define N_UNIFORM_LEVELS  3
+#define N_ERASED_LEVELS   2
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -538,7 +538,7 @@ void el_dofs_unknowns(const Solution*                sol,
   
 
 //=============== construct control node flag field  =========================================    
-  std::vector< int > is_dof_associated_to_boundary_control_equation(
+  std::vector< std::vector< int > > is_dof_associated_to_boundary_control_equation(
       const Mesh * msh,
       /*const*/ MultiLevelSolution * ml_sol,
       const unsigned iel,
@@ -547,16 +547,22 @@ void el_dofs_unknowns(const Solution*                sol,
       std::vector < std::string > Solname_Mat,      
       std::vector < unsigned > SolFEType_Mat,    
       std::vector < unsigned > Sol_n_el_dofs_Mat,    
-      const unsigned pos_mat_ctrl
+      const unsigned pos_mat_ctrl,
+      const unsigned n_components_ctrl
 
 ) {
-	      /* 
-           * (control_node_flag[i])       picks nodes on \Gamma_c
-           * (1 - control_node_flag[i])   picks nodes on \Omega \setminus \Gamma_c
+	      /* For every component:
+           * (control_node_flag[c][i])       picks nodes on \Gamma_c
+           * (1 - control_node_flag[c][i])   picks nodes on \Omega \setminus \Gamma_c
 	       */
           
-       std::vector<int> control_node_flag(Sol_n_el_dofs_Mat[pos_mat_ctrl], 0);   
-//        std::fill(control_node_flag.begin(), control_node_flag.end(), 0);   
+       std::vector< std::vector< int > > control_node_flag(n_components_ctrl);
+       
+	  for (unsigned c = 0; c < n_components_ctrl; c++) {
+              control_node_flag[c].resize(Sol_n_el_dofs_Mat[pos_mat_ctrl + c]);
+              std::fill(control_node_flag[c].begin(), control_node_flag[c].end(), 0);   
+         }
+       
           
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
           
@@ -567,22 +573,29 @@ void el_dofs_unknowns(const Solution*                sol,
           
 	      const unsigned int face_in_rectangle_domain = - ( msh->el->GetFaceElementIndex(iel,iface) + 1);
 	     double tau = 0.;
-	      const bool  dir_bool = ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl].c_str(), tau, face_in_rectangle_domain, 0.);
-
-
-          const unsigned ndofs_ctrl_bdry = msh->GetElementFaceDofNumber(iel, iface, SolFEType_Mat[pos_mat_ctrl]);
+         
+         
+         
+	  for (unsigned c = 0; c < n_components_ctrl; c++) {
           
-		  for(unsigned i_bdry=0; i_bdry < ndofs_ctrl_bdry; i_bdry++) {
+	      const bool  dir_bool = ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl + c].c_str(), tau, face_in_rectangle_domain, 0.);
+
+	      if (dir_bool == false) { 
+
+          const unsigned ndofs_ctrl_bdry = msh->GetElementFaceDofNumber(iel, iface, SolFEType_Mat[pos_mat_ctrl + c]);
+		  for(unsigned i_bdry = 0; i_bdry < ndofs_ctrl_bdry; i_bdry++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
 		
-	      if (dir_bool == false) { 
 // 		std::cout << " found boundary control nodes ==== " << std::endl;
-			for(unsigned k = 0; k < control_node_flag.size(); k++) {
-				  control_node_flag[i_vol] = 1;
+			for(unsigned k = 0; k < control_node_flag[c].size(); k++) {
+				  control_node_flag[c][i_vol] = 1;
 			    }
               }
         }
+      } 
+        
+        
           
     }
     
@@ -831,6 +844,7 @@ void el_dofs_unknowns(const Solution*                sol,
 //                         vector <double> phi_ctrl_jel_bdry_jqp_bdry,    //it is a stored vector below
 //                         vector <double> phi_ctrl_x_jel_bdry_jqp_bdry,    //it is a stored vector below 
                         //---- Control unknown -------
+                        const unsigned int n_components_ctrl,
                         const unsigned int pos_mat_ctrl,
                         const unsigned int pos_sol_ctrl,
                         const unsigned int is_block_dctrl_ctrl_inside_main_big_assembly,
@@ -1631,7 +1645,7 @@ if( check_if_same_elem(iel, jel) ) {
                         const    vector < unsigned > & SolFEType_Mat,
                         const vector < unsigned > & SolIndex_Mat,
                         const vector < unsigned > & SolPdeIndex,
-                        vector < unsigned > & Sol_n_el_dofs_Mat, 
+                        vector < unsigned > /*&*/ Sol_n_el_dofs_Mat, 
                         vector < vector < double > > & sol_eldofs_Mat,  
                         vector < vector < int > > & L2G_dofmap_Mat,
                         //--- Equation, local --------
@@ -1649,7 +1663,8 @@ if( check_if_same_elem(iel, jel) ) {
                         double weight_iqp_bdry,
                         vector <double> phi_ctrl_iel_bdry_iqp_bdry,
                         vector <double> phi_ctrl_x_iel_bdry_iqp_bdry, 
-                        //-----------
+                        //---- Control -------
+                        const unsigned int n_components_ctrl,
                         const unsigned int pos_mat_ctrl,
                         const unsigned int pos_sol_ctrl,
                         //-----------
@@ -1665,10 +1680,9 @@ if( check_if_same_elem(iel, jel) ) {
                         const unsigned qrule_i
                        ) {
       
-      
-      
-      const unsigned elem_dof_size_max =  /*is_res_control_only ?*/ max_size;
-      
+   
+   const unsigned  elem_dof_size_max = n_components_ctrl * max_size;
+   
    std::vector < double >  Res;      Res.reserve( elem_dof_size_max );                         //should have Mat order
    std::vector < double >  Jac;      Jac.reserve( elem_dof_size_max * elem_dof_size_max);   //should have Mat order
 
@@ -1691,10 +1705,21 @@ if( check_if_same_elem(iel, jel) ) {
                         SolPdeIndex,
                         Sol_n_el_dofs_Mat, 
                         sol_eldofs_Mat,  
-                        L2G_dofmap_Mat);
+                        L2G_dofmap_Mat);  //all unknowns here, perhaps we could restrict it to the ctrl components only
         
-    
-    const unsigned int res_length =  /*is_res_control_only ?*/ Sol_n_el_dofs_Mat[pos_mat_ctrl];
+ //***************************************************
+   
+ //***************************************************
+   //extract a subvector containing only the control components, starting from zero      
+      
+   std::vector< unsigned >::const_iterator first  = Sol_n_el_dofs_Mat.begin() + pos_mat_ctrl;
+   std::vector< unsigned >::const_iterator last   = Sol_n_el_dofs_Mat.begin() + pos_mat_ctrl + n_components_ctrl;
+   std::vector< unsigned > Sol_n_el_dofs_Mat_ctrl_only(first, last);
+   
+   unsigned int sum_Sol_n_el_dofs_ctrl_only = ElementJacRes< double >::compute_sum_n_dofs(Sol_n_el_dofs_Mat_ctrl_only);
+   
+ //***************************************************
+    const unsigned int res_length =  n_components_ctrl * Sol_n_el_dofs_Mat[pos_mat_ctrl];
 
     Res.resize(res_length);                 std::fill(Res.begin(), Res.end(), 0.);
 
@@ -1703,8 +1728,8 @@ if( check_if_same_elem(iel, jel) ) {
 
   
  //************ set control flag *********************
-  std::vector< int >  control_node_flag = 
-       is_dof_associated_to_boundary_control_equation(msh, ml_sol, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl);
+  std::vector< std::vector< int > > control_node_flag = 
+       is_dof_associated_to_boundary_control_equation(msh, ml_sol, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
   //*************************************************** 
       
 
@@ -1721,7 +1746,6 @@ if( check_if_same_elem(iel, jel) ) {
                  if (SolFEType_quantities[k] < 3) Sol_el_n_dofs_current_face[k] = msh->GetElementFaceDofNumber(iel, iface, SolFEType_quantities[k]);  ///@todo fix this absence
        }
        
-       const unsigned nDof_max_bdry = ElementJacRes<double>::compute_max_n_dofs(Sol_el_n_dofs_current_face);
 // ---     
        
 // --- geometry        
@@ -1737,9 +1761,13 @@ if( check_if_same_elem(iel, jel) ) {
               
 
 //========= initialize gauss quantities on the boundary ============================================
-                double sol_ctrl_iqp_bdry = 0.;
-                std::vector<double> sol_ctrl_x_iqp_bdry(space_dim);   std::fill(sol_ctrl_x_iqp_bdry.begin(), sol_ctrl_x_iqp_bdry.end(), 0.);
-
+                std::vector< double > sol_ctrl_iqp_bdry(n_components_ctrl);
+                std::vector< std::vector< double > > sol_ctrl_x_iqp_bdry(n_components_ctrl);
+                
+           for (unsigned c = 0; c < n_components_ctrl; c++) {
+               sol_ctrl_iqp_bdry[c] = 0.;                
+               sol_ctrl_x_iqp_bdry[c].assign(space_dim, 0.); 
+            }
 //========= initialize gauss quantities on the boundary ============================================
 		
         const unsigned n_qp_bdry = ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussPointsNumber();
@@ -1752,62 +1780,75 @@ if( check_if_same_elem(iel, jel) ) {
     
     weight_iqp_bdry = detJac_iel_bdry_iqp_bdry * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
-  
+    
+   for (unsigned c = 0; c < n_components_ctrl; c++) {
+    elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl + c]] ->shape_funcs_current_elem(iqp_bdry, JacI_iel_bdry_iqp_bdry, phi_ctrl_iel_bdry_iqp_bdry, phi_ctrl_x_iel_bdry_iqp_bdry, boost::none, space_dim);
+   }  
+   
 //========== compute gauss quantities on the boundary ===============================================
-		  sol_ctrl_iqp_bdry = 0.;
-                  std::fill(sol_ctrl_x_iqp_bdry.begin(), sol_ctrl_x_iqp_bdry.end(), 0.);
-		      for (int i_bdry = 0; i_bdry < Sol_n_el_dofs_quantities[pos_sol_ctrl]; i_bdry++)  {
+   for (unsigned c = 0; c < n_components_ctrl; c++) {
+          sol_ctrl_iqp_bdry[c] = 0.;
+                  std::fill(sol_ctrl_x_iqp_bdry[c].begin(), sol_ctrl_x_iqp_bdry[c].end(), 0.);
+		      for (int i_bdry = 0; i_bdry < Sol_n_el_dofs_quantities[pos_sol_ctrl + c]; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 			
-			sol_ctrl_iqp_bdry +=  sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_iel_bdry_iqp_bdry[i_bdry];
+			sol_ctrl_iqp_bdry[c] +=  sol_eldofs_Mat[pos_mat_ctrl + c][i_vol] * phi_ctrl_iel_bdry_iqp_bdry[i_bdry];
                             for (int d = 0; d < space_dim; d++) {
-			      sol_ctrl_x_iqp_bdry[d] += sol_eldofs_Mat[pos_mat_ctrl][i_vol] * phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d];
+			      sol_ctrl_x_iqp_bdry[c][d] += sol_eldofs_Mat[pos_mat_ctrl + c][i_vol] * phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d];
 			    }
 		      }
-		      
-	      
+   }
 //========== compute gauss quantities on the boundary ================================================
 
+//equation ************
+   for (unsigned c = 0; c < n_components_ctrl; c++) {
+
 		  // *** phi_i loop ***
-		  for(unsigned i_bdry = 0; i_bdry < nDof_max_bdry; i_bdry++) {
+		  for(unsigned i_bdry = 0; i_bdry < Sol_el_n_dofs_current_face[pos_sol_ctrl + c] ; i_bdry++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 
-                 double lap_rhs_dctrl_ctrl_bdry_gss_i = 0.;
+                 double lap_rhs_dctrl_ctrl_bdry_gss_i_c = 0.;
                  for (unsigned d = 0; d < space_dim; d++) {
-                       if ( i_vol < Sol_n_el_dofs_Mat[pos_mat_ctrl] )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * sol_ctrl_x_iqp_bdry[d];
+                       /*if ( i_vol < Sol_n_el_dofs_Mat[pos_mat_ctrl] )*/  lap_rhs_dctrl_ctrl_bdry_gss_i_c +=  phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * sol_ctrl_x_iqp_bdry[c][d];
                  }
                  
 		 
 //============ Bdry Residuals - BEGIN ==================	
-           const unsigned res_pos = /*is_res_control_only ?*/ (i_vol);
-                Res[ res_pos ]  +=  - control_node_flag[i_vol] *  weight_iqp_bdry *
-                                                                                (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry
-							                           +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
+           const unsigned res_pos = assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat_ctrl_only, /*pos_mat_ctrl +*/ c, i_vol);
+           
+                Res[ res_pos ]  +=  - control_node_flag[c][i_vol] *  weight_iqp_bdry *
+                                         (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c]
+							                +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_rhs_dctrl_ctrl_bdry_gss_i_c
 							                         );  //boundary optimality condition
 //============ Bdry Residuals - END ==================    
 		    
 //============ Bdry Jacobians - BEGIN ==================	
-		    for(unsigned j_bdry=0; j_bdry < nDof_max_bdry; j_bdry ++) {
+   for (unsigned e = 0; e < n_components_ctrl; e++) {
+        if (e == c) {
+		    for(unsigned j_bdry = 0; j_bdry < Sol_el_n_dofs_current_face[pos_sol_ctrl + e]; j_bdry++) {
 		         unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
-
 
 //========block delta_control / control ========
               double  lap_mat_dctrl_ctrl_bdry_gss = 0.;
-		      for (unsigned d = 0; d < space_dim; d++) {  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * phi_ctrl_x_iel_bdry_iqp_bdry[j_bdry * space_dim + d];    }
+		      for (unsigned d = 0; d < space_dim; d++) {  
+                  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_iel_bdry_iqp_bdry[i_bdry * space_dim + d] * phi_ctrl_x_iel_bdry_iqp_bdry[j_bdry * space_dim + d];    
+               }
 
           
-           const unsigned jac_pos = /*is_res_control_only ?*/ (i_vol * Sol_n_el_dofs_Mat[pos_mat_ctrl] + j_vol ) ;
-              Jac[ jac_pos ] 
-			+=  control_node_flag[i_vol] *  weight_iqp_bdry * ( ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
-			                                              + ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta *  lap_mat_dctrl_ctrl_bdry_gss);   
-    
-		   
+           const unsigned jac_pos = assemble_jacobian< double, double >::jac_row_col_index(Sol_n_el_dofs_Mat_ctrl_only, sum_Sol_n_el_dofs_ctrl_only, /*pos_mat_ctrl +*/ c, /*pos_mat_ctrl +*/ e, i_vol, j_vol);
+              Jac[ jac_pos ]   +=  control_node_flag[c][i_vol] *  weight_iqp_bdry * (
+                                    ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] 
+			                      + ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_mat_dctrl_ctrl_bdry_gss);   
 				
-	      }  //end j loop
+	        }   //end j loop
+	      }
+   }
 //============ Bdry Jacobians - END ==================	
 	      
 		  }  //end i loop
+		  
+   }  //end components ctrl	  
+		  
 		}  //end iqp_bdry loop
 	  }    //end if control face
 	      

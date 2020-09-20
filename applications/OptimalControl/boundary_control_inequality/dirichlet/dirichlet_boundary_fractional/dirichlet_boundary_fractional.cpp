@@ -9,7 +9,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL        1  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL        2  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 
 
@@ -32,7 +32,7 @@
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
   #define KEEP_ADJOINT_PUSH   1
-#define IS_CTRL_FRACTIONAL_SOBOLEV   1
+#define IS_CTRL_FRACTIONAL_SOBOLEV   0
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -680,7 +680,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   constexpr unsigned qrule_k = QRULE_K;
   //----------------------
 
-  
+    const unsigned int n_components_ctrl = 1;
+    const unsigned int first_loc_comp_ctrl = 0;
+    
   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
      control_eqn_bdry_fractional(iproc,
@@ -730,6 +732,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //                     phi_ctrl_bdry,
 //                     phi_ctrl_x_bdry, 
                     //-----------
+                    n_components_ctrl,
                     pos_mat_ctrl,
                     pos_sol_ctrl,
                     IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY,
@@ -795,6 +798,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     phi_ctrl_bdry,
                     phi_ctrl_x_bdry, 
                     //-----------
+                    n_components_ctrl,
                     pos_mat_ctrl,
                     pos_sol_ctrl,
                     IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY,
@@ -874,8 +878,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
    
 
  //************ set control flag *********************
-  std::vector< int >  control_node_flag = 
-       is_dof_associated_to_boundary_control_equation(msh, ml_sol, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl);
+   std::vector< std::vector< int > > control_node_flag = 
+       is_dof_associated_to_boundary_control_equation(msh, ml_sol, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
   //*************************************************** 
  
 
@@ -988,11 +992,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		 
 //============ Bdry Residuals - BEGIN  ==================	
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_state,i_vol) ] +=
-                    - control_node_flag[i_vol] * penalty_ctrl * KEEP_ADJOINT_PUSH * (   sol_eldofs_Mat[pos_mat_state][i_vol] - sol_eldofs_Mat[pos_mat_ctrl][i_vol] )
-                    - control_node_flag[i_vol] *  weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_u_bdry[i_bdry];   // u = q
+                    - control_node_flag[first_loc_comp_ctrl][i_vol] * penalty_ctrl * KEEP_ADJOINT_PUSH * (   sol_eldofs_Mat[pos_mat_state][i_vol] - sol_eldofs_Mat[pos_mat_ctrl][i_vol] )
+                    - control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_u_bdry[i_bdry];   // u = q
 
 
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_bdry *
                                                                                 (    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							                           +  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							                           - KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_ctrl_bdry[i_bdry]
@@ -1012,9 +1016,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                  
 if ( i_vol == j_vol )  {
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i_vol, j_vol) ] += 
-		     penalty_ctrl * KEEP_ADJOINT_PUSH * ( control_node_flag[i_vol]);
+		     penalty_ctrl * KEEP_ADJOINT_PUSH * ( control_node_flag[first_loc_comp_ctrl][i_vol]);
 		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_ctrl, i_vol, j_vol) ]  += 
-		     penalty_ctrl * KEEP_ADJOINT_PUSH * ( control_node_flag[i_vol]) * (-1.);
+		     penalty_ctrl * KEEP_ADJOINT_PUSH * ( control_node_flag[first_loc_comp_ctrl][i_vol]) * (-1.);
 		}
 //============ u = q ===========================
 
@@ -1029,7 +1033,7 @@ if ( i_vol == j_vol )  {
 
           
               Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i_vol, j_vol) ] 
-			+=  control_node_flag[i_vol] *  weight_bdry * ( IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry] 
+			+=  control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_bdry * ( IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry] 
 			                                              +  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta *  lap_mat_dctrl_ctrl_bdry_gss);   
     
 		   
@@ -1050,11 +1054,11 @@ if ( i_vol == j_vol )  {
 		      
 //==========block delta_control/adjoint ========
 		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_adj, i_vol, j) ]  += 
-		     control_node_flag[i_vol] * (-1.) * weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry];    		      
+		     control_node_flag[first_loc_comp_ctrl][i_vol] * (-1.) * weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry];    		      
 
 //==========block delta_state/adjoint ========
 		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i_vol, j) ] += 
-		     control_node_flag[i_vol] * (1.) * weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_u_bdry[i_bdry];  
+		     control_node_flag[first_loc_comp_ctrl][i_vol] * (1.) * weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_u_bdry[i_bdry];  
 		      
 		    }   //end loop i_bdry // j_vol
 	      
@@ -1117,9 +1121,9 @@ if ( i_vol == j_vol )  {
 	      
 //============ Volume residuals - BEGIN  ==================	    
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_state, i) ] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)  - laplace_rhs_du_adj_i ); 
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_ctrl, i) ]  += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs_Mat[pos_mat_ctrl][i] - 0.)  );
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_ctrl, i) ]  += - penalty_outside_control_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  sol_eldofs_Mat[pos_mat_ctrl][i] - 0.)  );
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_adj, i) ]   += - weight * (-1.) * (laplace_rhs_dadj_u_i);
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_mu, i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_eldofs_Mat[pos_mat_mu][i] - 0.)  );  //MU
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_mu, i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  sol_eldofs_Mat[pos_mat_mu][i] - 0.)  );  //MU
 //============  Volume Residuals - END ==================	    
 	      
 	      
@@ -1148,7 +1152,7 @@ if ( i_vol == j_vol )  {
               //=========== delta_control row ===========================
               //enforce control zero outside the control boundary
 	      if ( i==j )
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i, j) ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    /*weight * phi_adj[i]*phi_adj[j]*/
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i, j) ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]));    /*weight * phi_adj[i]*phi_adj[j]*/
               
 	      //=========== delta_adjoint row ===========================
 	      // BLOCK delta_adjoint / state
@@ -1157,7 +1161,7 @@ if ( i_vol == j_vol )  {
 	      
 	      //============= delta_mu row ===============================
 	        if ( i==j )   
-		  Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_mu, pos_mat_mu, i, j) ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    //MU
+		  Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_mu, pos_mat_mu, i, j) ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]));    //MU
           
 	         } // end phi_j loop
            } // endif assemble_matrix

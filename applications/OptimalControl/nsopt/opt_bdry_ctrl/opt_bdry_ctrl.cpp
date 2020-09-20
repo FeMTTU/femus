@@ -809,7 +809,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
       for(int jvar=0; jvar<n_unknowns; jvar++) {
 	    if(assembleMatrix){  //MISMATCH
                   Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ].resize(Sol_n_el_dofs[ivar]*Sol_n_el_dofs[jvar]);
-		  memset(&Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ][0],0., Sol_n_el_dofs[ivar]*Sol_n_el_dofs[jvar]*sizeof(double));
+		  memset(&Jac[ SolPdeIndex[ivar] ] [SolPdeIndex[jvar] ][0], 0., Sol_n_el_dofs[ivar]*Sol_n_el_dofs[jvar]*sizeof(double));
            }
         }
      }
@@ -959,9 +959,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 			      }//jdim
 
 			
-/*delta_state row */	    if(i_vol<nDofsV)     Res[kdim]                 [i_vol]  += - control_node_flag[kdim][i_vol] * penalty_ctrl * (SolVAR_eldofs[SolPdeIndex[kdim + state_pos_begin]][i_vol] - SolVAR_eldofs[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
-/*delta_adjoint row */     if(i_vol<nDofsVadj)   Res[kdim + adj_pos_begin] [i_vol]  += 0.;	   
-/*delta_control row */     if(i_vol<nDofsGctrl)  Res[kdim + ctrl_pos_begin][i_vol]  += - control_node_flag[kdim][i_vol] * weight_bd * (
+/*delta_state row */	   if (i_vol < nDofsV)     Res[kdim]                 [i_vol]  += - control_node_flag[kdim][i_vol] * penalty_ctrl * (SolVAR_eldofs[SolPdeIndex[kdim + state_pos_begin]][i_vol] - SolVAR_eldofs[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
+/*delta_adjoint row */     if (i_vol < nDofsVadj)   Res[kdim + adj_pos_begin] [i_vol]  += 0.;	   
+/*delta_control row */     if (i_vol < nDofsGctrl)  Res[kdim + ctrl_pos_begin][i_vol]  += - control_node_flag[kdim][i_vol] * weight_bd * (
                                                                                           IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
                                                                                         + IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta * lap_res_dctrl_ctrl_bd
                                                                                         - IRe * grad_dot_n_adj_res[kdim]  * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
@@ -1731,7 +1731,7 @@ double integral_g_dot_n = 0.;
 //========== compute gauss quantities on the boundary ===============================================
     for (unsigned  k = 0; k < dim; k++) {
 	  Vctrl_bd_qp[k] = 0.;
-	  for(unsigned ivar2=0; ivar2<dim_offset_grad /*space_dim*/; ivar2++) { gradVctrl_bd_qp[k][ivar2] = 0.; }
+	  for(unsigned ivar2 = 0; ivar2 < dim_offset_grad /*space_dim*/; ivar2++) { gradVctrl_bd_qp[k][ivar2] = 0.; }
 	  
 	  for (unsigned i = 0; i < nDofsVctrl; i++) {
 		   for(int i_bd = 0; i_bd < nve_bd; i_bd++) {
@@ -1786,7 +1786,7 @@ double integral_g_dot_n = 0.;
 	
 
       for (unsigned  k = 0; k < dim; k++) {
-	      integral_target_alpha+=(( target_flag ) *((V_gss[k]  - Vdes_gss[k]) * (V_gss[k]  - Vdes_gss[k]))*weight);
+	      integral_target_alpha += (( target_flag ) *((V_gss[k]  - Vdes_gss[k]) * (V_gss[k]  - Vdes_gss[k]))*weight);
       }
       
       }// end gauss point loop
