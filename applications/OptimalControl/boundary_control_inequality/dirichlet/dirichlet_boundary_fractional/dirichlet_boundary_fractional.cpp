@@ -403,10 +403,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   constexpr bool print_algebra_local = false;
   
   
-  //=============== Integration ========================================
-  double weight = 0.;
-  double weight_bdry = 0.;
-
 
   //=============== Geometry ========================================
    unsigned solType_coords = FE_DOMAIN;
@@ -494,11 +490,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //*************************************************** 
   vector <double> phi_ctrl_bdry;  
   vector <double> phi_ctrl_x_bdry; 
-  vector <double> phi_xx_bdry_placeholder;
 
   phi_ctrl_bdry.reserve(max_size);
   phi_ctrl_x_bdry.reserve(max_size * space_dim);
-  phi_xx_bdry_placeholder.reserve(max_size * dim2);
  //*************************************************** 
 
   //MU
@@ -549,11 +543,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         assert(pos_sol_actflag == solIndex_act_flag_sol);
 //***************************************************
     
+ //***************************************************
     vector < std::string > Solname_quantities(n_quantities);
     
         for(unsigned ivar=0; ivar < Solname_quantities.size(); ivar++) {
             Solname_quantities[ivar] = ml_sol->GetSolutionName(ivar);
         }
+ //***************************************************
         
     vector < unsigned > SolIndex_Mat(n_unknowns);      //should have Sol order
     vector < unsigned > SolFEType_Mat(n_unknowns);       //should have Mat order
@@ -635,6 +631,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     for (unsigned d = 0; d < JacI_jqp_bdry.size(); d++) { JacI_jqp_bdry[d].resize(dim-1); }
     
     double detJac_jqp_bdry;
+    
+  double weight_iqp = 0.;
+  double weight_iqp_bdry = 0.;
+
 // ---
 //*************************************************** 
 
@@ -712,14 +712,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     //-----------
                     n_quantities,
                     SolFEType_quantities,
-                    Sol_n_el_dofs_quantities,
+                    Sol_n_el_dofs_quantities, //filled inside
                     //-----------
                     elem_all,
                      //-----------
                     Jac_iqp_bdry,
                     JacI_iqp_bdry,
                     detJac_iqp_bdry,
-                    weight_bdry,
+                    weight_iqp_bdry,
                     phi_ctrl_bdry,
                     phi_ctrl_x_bdry, 
                     phi_coords_iqp_bdry,
@@ -794,7 +794,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     Jac_iqp_bdry,
                     JacI_iqp_bdry,
                     detJac_iqp_bdry,
-                    weight_bdry,
+                    weight_iqp_bdry,
                     phi_ctrl_bdry,
                     phi_ctrl_x_bdry, 
                     //-----------
@@ -855,6 +855,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                         sol_eldofs_Mat,  
                         L2G_dofmap_Mat);
   
+   el_dofs_quantities(sol, msh, iel, SolFEType_quantities, Sol_n_el_dofs_quantities); 
+  //***************************************************
+   
  
     unsigned int nDof_max          = ElementJacRes<double>::compute_max_n_dofs(Sol_n_el_dofs_Mat);
     
@@ -928,7 +931,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     elem_all[qrule_i][ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_iqp_bdry, JacI_iqp_bdry, detJac_iqp_bdry, space_dim);
 	elem_all[qrule_i][ielGeom_bdry][solType_coords]->compute_normal(Jac_iqp_bdry, normal);
     
-    weight_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
+    weight_iqp_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
 
     elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_ctrl]] ->shape_funcs_current_elem(ig_bdry, JacI_iqp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, boost::none, space_dim);
     elem_all[qrule_i][ielGeom_bdry][SolFEType_quantities[pos_sol_state]]->shape_funcs_current_elem(ig_bdry, JacI_iqp_bdry, phi_u_bdry, phi_u_x_bdry,  boost::none, space_dim);
@@ -993,10 +996,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //============ Bdry Residuals - BEGIN  ==================	
                 Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_state,i_vol) ] +=
                     - control_node_flag[first_loc_comp_ctrl][i_vol] * penalty_ctrl * KEEP_ADJOINT_PUSH * (   sol_eldofs_Mat[pos_mat_state][i_vol] - sol_eldofs_Mat[pos_mat_ctrl][i_vol] )
-                    - control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_u_bdry[i_bdry];   // u = q
+                    - control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_u_bdry[i_bdry];   // u = q
 
 
-                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_bdry *
+                Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat,pos_mat_ctrl,i_vol) ]  +=  - control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry *
                                                                                 (    IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							                           +  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							                           - KEEP_ADJOINT_PUSH * grad_adj_dot_n_res * phi_ctrl_bdry[i_bdry]
@@ -1033,7 +1036,7 @@ if ( i_vol == j_vol )  {
 
           
               Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_ctrl, i_vol, j_vol) ] 
-			+=  control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_bdry * ( IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry] 
+			+=  control_node_flag[first_loc_comp_ctrl][i_vol] *  weight_iqp_bdry * ( IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry] 
 			                                              +  IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta *  lap_mat_dctrl_ctrl_bdry_gss);   
     
 		   
@@ -1054,11 +1057,11 @@ if ( i_vol == j_vol )  {
 		      
 //==========block delta_control/adjoint ========
 		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_ctrl, pos_mat_adj, i_vol, j) ]  += 
-		     control_node_flag[first_loc_comp_ctrl][i_vol] * (-1.) * weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry];    		      
+		     control_node_flag[first_loc_comp_ctrl][i_vol] * (-1.) * weight_iqp_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_ctrl_bdry[i_bdry];    		      
 
 //==========block delta_state/adjoint ========
 		     Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i_vol, j) ] += 
-		     control_node_flag[first_loc_comp_ctrl][i_vol] * (1.) * weight_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_u_bdry[i_bdry];  
+		     control_node_flag[first_loc_comp_ctrl][i_vol] * (1.) * weight_iqp_bdry * KEEP_ADJOINT_PUSH * grad_adj_dot_n_mat * phi_u_bdry[i_bdry];  
 		      
 		    }   //end loop i_bdry // j_vol
 	      
@@ -1087,7 +1090,7 @@ if ( i_vol == j_vol )  {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
     elem_all[qrule_i][ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_iqp, JacI_iqp, detJac_iqp, space_dim);
-    weight = detJac_iqp * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom).GetGaussWeightsPointer()[ig];
+    weight_iqp = detJac_iqp * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom).GetGaussWeightsPointer()[ig];
 
     elem_all[qrule_i][ielGeom][SolFEType_quantities[pos_sol_state]]->shape_funcs_current_elem(ig, JacI_iqp, phi_u, phi_u_x, phi_u_xx, space_dim);
     elem_all[qrule_i][ielGeom][SolFEType_quantities[pos_sol_adj]]  ->shape_funcs_current_elem(ig, JacI_iqp, phi_adj, phi_adj_x, phi_adj_xx, space_dim);
@@ -1120,9 +1123,9 @@ if ( i_vol == j_vol )  {
 	      }
 	      
 //============ Volume residuals - BEGIN  ==================	    
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_state, i) ] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)  - laplace_rhs_du_adj_i ); 
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_state, i) ] += - weight_iqp * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)  - laplace_rhs_du_adj_i ); 
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_ctrl, i) ]  += - penalty_outside_control_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  sol_eldofs_Mat[pos_mat_ctrl][i] - 0.)  );
-          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_adj, i) ]   += - weight * (-1.) * (laplace_rhs_dadj_u_i);
+          Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_adj, i) ]   += - weight_iqp * (-1.) * (laplace_rhs_dadj_u_i);
           Res[ assemble_jacobian<double,double>::res_row_index(Sol_n_el_dofs_Mat, pos_mat_mu, i) ]    += - penalty_outside_control_boundary * ( (1 - control_node_flag[first_loc_comp_ctrl][i]) * (  sol_eldofs_Mat[pos_mat_mu][i] - 0.)  );  //MU
 //============  Volume Residuals - END ==================	    
 	      
@@ -1144,9 +1147,9 @@ if ( i_vol == j_vol )  {
 
               //============ delta_state row ============================
               // BLOCK delta_state / state
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i, j) ]  += weight  * target_flag *  phi_u[i] * phi_u[j];   
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_state, i, j) ]  += weight_iqp  * target_flag *  phi_u[i] * phi_u[j];   
               //BLOCK delta_state / adjoint
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i, j) ]  += weight * (-1.) * laplace_mat_du_adj;
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_state, pos_mat_adj, i, j) ]  += weight_iqp * (-1.) * laplace_mat_du_adj;
 	      
 	      
               //=========== delta_control row ===========================
@@ -1156,7 +1159,7 @@ if ( i_vol == j_vol )  {
               
 	      //=========== delta_adjoint row ===========================
 	      // BLOCK delta_adjoint / state
-		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_adj, pos_mat_state, i, j) ]  += weight * (-1.) * laplace_mat_dadj_u;
+		Jac[ assemble_jacobian<double,double>::jac_row_col_index(Sol_n_el_dofs_Mat, sum_Sol_n_el_dofs, pos_mat_adj, pos_mat_state, i, j) ]  += weight_iqp * (-1.) * laplace_mat_dadj_u;
 
 	      
 	      //============= delta_mu row ===============================
@@ -1229,6 +1232,8 @@ add_one_times_mu_res_ctrl_bdry(iproc,
     el_dofs_unknowns(sol, msh, pdeSys, iel,
                         SolFEType_Mat, SolIndex_Mat, SolPdeIndex,
                         Sol_n_el_dofs_Mat, sol_eldofs_Mat, L2G_dofmap_Mat);
+    
+   el_dofs_quantities(sol, msh, iel, SolFEType_quantities, Sol_n_el_dofs_quantities); ///@todo perhaps we don't need it here
 
 // -------
 
@@ -1341,10 +1346,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
  //***************************************************
 
   //=============== Integration ========================================
-  constexpr unsigned qrule_i = QRULE_I;
-  
-  double weight; // gauss point weight
-  double weight_bdry = 0.; // gauss point weight on the boundary
 
  //***************************************************
   double alpha = ALPHA_CTRL_BDRY;
@@ -1417,19 +1418,24 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
   
 
  //*************************************************** 
+  constexpr unsigned qrule_i = QRULE_I;
+  
      std::vector < std::vector < double > >  JacI_qp(space_dim);
      std::vector < std::vector < double > >  Jac_qp(dim);
     for (unsigned d = 0; d < Jac_qp.size(); d++) {   Jac_qp[d].resize(space_dim); }
     for (unsigned d = 0; d < JacI_qp.size(); d++) { JacI_qp[d].resize(dim); }
     
-    double detJac_qp;
+    double detJac_iqp;
 
      std::vector < std::vector < double > >  JacI_qp_bdry(space_dim);
      std::vector < std::vector < double > >  Jac_qp_bdry(dim-1);
     for (unsigned d = 0; d < Jac_qp_bdry.size(); d++) {   Jac_qp_bdry[d].resize(space_dim); }
     for (unsigned d = 0; d < JacI_qp_bdry.size(); d++) { JacI_qp_bdry[d].resize(dim-1); }
     
-    double detJac_qp_bdry;
+    double detJac_iqp_bdry;
+  
+  double weight_iqp; 
+  double weight_iqp_bdry = 0.;
     
       //prepare Abstract quantities for all fe fams for all geom elems: all quadrature evaluations are performed beforehand in the main function
   std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all;
@@ -1524,8 +1530,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
 		
 		for(unsigned ig_bdry = 0; ig_bdry < ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussPointsNumber(); ig_bdry++) {
 		  
-    elem_all[qrule_i][ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_qp_bdry, space_dim);
-    weight_bdry = detJac_qp_bdry * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
+    elem_all[qrule_i][ielGeom_bdry][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_bdry_3d(), ig_bdry, Jac_qp_bdry, JacI_qp_bdry, detJac_iqp_bdry, space_dim);
+    weight_iqp_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom_bdry).GetGaussWeightsPointer()[ig_bdry];
     elem_all[qrule_i][ielGeom_bdry][solType_ctrl] ->shape_funcs_current_elem(ig_bdry, JacI_qp_bdry, phi_ctrl_bdry, phi_ctrl_x_bdry, boost::none, space_dim);
 
 		  
@@ -1544,8 +1550,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
 		      double laplace_ctrl_surface = 0.;  for (int d = 0; d < space_dim; d++) { laplace_ctrl_surface += sol_ctrl_x_bdry_gss[d] * sol_ctrl_x_bdry_gss[d]; }
 
                  //========= compute gauss quantities on the boundary ================================================
-                  integral_alpha +=  weight_bdry * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
-                  integral_beta  +=  weight_bdry * laplace_ctrl_surface;
+                  integral_alpha +=  weight_iqp_bdry * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
+                  integral_beta  +=  weight_iqp_bdry * laplace_ctrl_surface;
                  
              }
 	      } //end face
@@ -1564,8 +1570,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
       for (unsigned ig = 0; ig < ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom).GetGaussPointsNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-    elem_all[qrule_i][ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_qp, space_dim);
-    weight = detJac_qp * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom).GetGaussWeightsPointer()[ig];
+    elem_all[qrule_i][ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), ig, Jac_qp, JacI_qp, detJac_iqp, space_dim);
+    weight_iqp = detJac_iqp * ml_prob.GetQuadratureRuleMultiple(qrule_i, ielGeom).GetGaussWeightsPointer()[ig];
 
     elem_all[qrule_i][ielGeom][solType_u]                 ->shape_funcs_current_elem(ig, JacI_qp, phi_u, phi_u_x, phi_u_xx, space_dim);
     elem_all[qrule_i][ielGeom][solType_u/*solTypeTdes*/]  ->shape_funcs_current_elem(ig, JacI_qp, phi_udes, phi_udes_x, phi_udes_xx, space_dim);
@@ -1573,7 +1579,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
 	u_gss     = 0.;  for (unsigned i = 0; i < nDof_u; i++)        u_gss += sol_u[i]     * phi_u[i];
 	udes_gss  = 0.;  for (unsigned i = 0; i < nDof_udes; i++)  udes_gss += sol_udes[i]  * phi_udes[i];  
 
-               integral_target += target_flag * weight * (u_gss  - udes_gss) * (u_gss - udes_gss);
+               integral_target += target_flag * weight_iqp * (u_gss  - udes_gss) * (u_gss - udes_gss);
 	  
       } // end gauss point loop
       

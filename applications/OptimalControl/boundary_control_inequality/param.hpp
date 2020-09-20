@@ -488,6 +488,20 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
  }
  
  
+void el_dofs_quantities(const Solution*                sol,
+                        const Mesh * msh,
+                        const unsigned int iel,
+                        const    vector < unsigned > & SolFEType,
+                        vector < unsigned > & Sol_n_el_dofs 
+     ) {
+    
+        for (unsigned  k = 0; k < Sol_n_el_dofs.size(); k++) {
+            unsigned  ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+            Sol_n_el_dofs[k] = ndofs_unk;
+        }   
+    
+}
+
 
  
 void el_dofs_unknowns(const Solution*                sol,
@@ -1645,7 +1659,7 @@ if( check_if_same_elem(iel, jel) ) {
                         const    vector < unsigned > & SolFEType_Mat,
                         const vector < unsigned > & SolIndex_Mat,
                         const vector < unsigned > & SolPdeIndex,
-                        vector < unsigned > /*&*/ Sol_n_el_dofs_Mat, 
+                        vector < unsigned > & Sol_n_el_dofs_Mat, 
                         vector < vector < double > > & sol_eldofs_Mat,  
                         vector < vector < int > > & L2G_dofmap_Mat,
                         //--- Equation, local --------
@@ -1707,8 +1721,10 @@ if( check_if_same_elem(iel, jel) ) {
                         sol_eldofs_Mat,  
                         L2G_dofmap_Mat);  //all unknowns here, perhaps we could restrict it to the ctrl components only
         
+   el_dofs_quantities(sol, msh, iel, SolFEType_quantities, Sol_n_el_dofs_quantities); 
  //***************************************************
-   
+      
+ //***************************************************
  //***************************************************
    //extract a subvector containing only the control components, starting from zero      
       
@@ -1717,6 +1733,15 @@ if( check_if_same_elem(iel, jel) ) {
    std::vector< unsigned > Sol_n_el_dofs_Mat_ctrl_only(first, last);
    
    unsigned int sum_Sol_n_el_dofs_ctrl_only = ElementJacRes< double >::compute_sum_n_dofs(Sol_n_el_dofs_Mat_ctrl_only);
+ //***************************************************
+ //***************************************************
+   //create a subvector containing only the control components, starting from zero  
+   std::vector< unsigned > L2G_dofmap_Mat_ctrl_only; 
+   L2G_dofmap_Mat_ctrl_only.resize(0);
+      for (unsigned  k = 0; k < n_components_ctrl; k++)     L2G_dofmap_Mat_ctrl_only.insert(L2G_dofmap_Mat_ctrl_only.end(), L2G_dofmap_Mat[pos_mat_ctrl + k].begin(), L2G_dofmap_Mat[pos_mat_ctrl + k].end());
+ //***************************************************
+ //***************************************************
+
    
  //***************************************************
     const unsigned int res_length =  n_components_ctrl * Sol_n_el_dofs_Mat[pos_mat_ctrl];
@@ -1858,10 +1883,10 @@ if( check_if_same_elem(iel, jel) ) {
 
 	
   /*is_res_control_only*/
-                    RES->add_vector_blocked(Res, L2G_dofmap_Mat[pos_mat_ctrl]);
+                    RES->add_vector_blocked(Res, L2G_dofmap_Mat_ctrl_only);
               
                   if (assembleMatrix) {
-                     KK->add_matrix_blocked(Jac, L2G_dofmap_Mat[pos_mat_ctrl], L2G_dofmap_Mat[pos_mat_ctrl]);
+                     KK->add_matrix_blocked(Jac, L2G_dofmap_Mat_ctrl_only, L2G_dofmap_Mat_ctrl_only);
                   }   
                
       

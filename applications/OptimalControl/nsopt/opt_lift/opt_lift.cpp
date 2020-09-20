@@ -823,7 +823,7 @@ std::cout << " ********************************  AD SYSTEM *********************
           std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0);
         }
 
-        for (unsigned i = 0; i < nDofsV; i++) {
+        for (unsigned i = 0; i < nDofsV; i++) {  ///@todo mistake here
           for (unsigned  k = 0; k < dim; k++) {
             solV_gss[k] += phiV_gss[i] * solV[k][i];
             coordX_gss[k] += coordX[k][i] * phiV_gss[i];
