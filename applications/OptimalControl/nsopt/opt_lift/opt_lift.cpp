@@ -32,6 +32,9 @@
 
 #include   "../nsopt_params.hpp"
 
+  const double alpha = ALPHA_CTRL_VOL;
+  const double beta  = BETA_CTRL_VOL;
+
 #define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
 #define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
 #define no_of_ref 2     //mesh refinements
@@ -165,8 +168,10 @@ int main(int argc, char** args) {
   const std::string infile = mystream.str();
 
     // ======= Quad Rule ========================
-    std::string fe_quad_rule("seventh" /*"fifth"*/);
-    
+  std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+
+  
 // define multilevel mesh
   MultiLevelMesh mlMsh;
   MultiLevelMesh mlMsh_all_levels;
@@ -190,11 +195,11 @@ int main(int argc, char** args) {
 
 //   MultiLevelMesh mlMsh;
 //  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
-//    mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,NSUB_Z,0.,1.,0.,1.,0.,1.,HEX27,fe_quad_rule.c_str());
-//     mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,NSUB_Z,0.,1.,0.,1.,0.,1.,HEX27,fe_quad_rule.c_str());
-   mlMsh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+//    mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,NSUB_Z,0.,1.,0.,1.,0.,1.,HEX27,fe_quad_rule_vec[0].c_str());
+//     mlMsh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,NSUB_Z,0.,1.,0.,1.,0.,1.,HEX27,fe_quad_rule_vec[0].c_str());
+   mlMsh.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
 #if compute_conv_flag == 1
-   mlMsh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+   mlMsh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
 #endif
     
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -279,29 +284,29 @@ int main(int argc, char** args) {
   
   
  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
+  MultiLevelProblem ml_prob(&mlSol);
   
-    mlProb.SetQuadratureRuleAllGeomElems(fe_quad_rule);
-    mlProb.SetFilesHandler(&files);
-    mlProb.set_all_abstract_fe_multiple();
+    ml_prob.SetFilesHandler(&files);
+    ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
+    ml_prob.set_all_abstract_fe_multiple();
 
     mlSol.Initialize("All");
-    mlSol.Initialize("TargReg",     Solution_set_initial_conditions, & mlProb);
-    mlSol.Initialize("ContReg",     Solution_set_initial_conditions, & mlProb);
+    mlSol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+    mlSol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
 
-//   mlSol.Initialize("UCTRL", SetInitialCondition,&mlProb);
-//   mlSol.Initialize("VCTRL", SetInitialCondition,&mlProb);
+//   mlSol.Initialize("UCTRL", SetInitialCondition,&ml_prob);
+//   mlSol.Initialize("VCTRL", SetInitialCondition,&ml_prob);
   
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
   mlSol.GenerateBdc("All");
   
  
-  mlProb.parameters.set<Fluid>("Fluid") = fluid;
-  mlProb.SetFilesHandler(&files);
+  ml_prob.parameters.set<Fluid>("Fluid") = fluid;
+  ml_prob.SetFilesHandler(&files);
 
-  // add system NSOptLifting in mlProb as a NonLinear Implicit System
-  NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOpt");
+  // add system NSOptLifting in ml_prob as a NonLinear Implicit System
+  NonLinearImplicitSystem& system_opt    = ml_prob.add_system < NonLinearImplicitSystem > ("NSOpt");
 
   // NS ===================
   system_opt.AddSolutionToSystemPDE("U");
@@ -353,7 +358,7 @@ int main(int argc, char** args) {
       mlSol_all_levels->RefineSolution(i);
       Solution* sol_coarser_prolongated = mlSol_all_levels->GetSolutionLevel(i);
   
-      double* norm = GetErrorNorm(mlProb,&mlSol,sol_coarser_prolongated);
+      double* norm = GetErrorNorm(ml_prob,&mlSol,sol_coarser_prolongated);
     
       for(int j = 0; j < NO_OF_L2_NORMS+NO_OF_H1_NORMS; j++)       comp_conv[i-1][j] = norm[j];
   
@@ -379,7 +384,7 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,  "biquadratic", variablesToBePrinted, i);
 
   //Destroy all the new systems
-//   mlProb.clear();
+//   ml_prob.clear();
  }
 
 //  delete mlSol_all_levels; 

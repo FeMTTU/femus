@@ -22,10 +22,12 @@ using namespace femus;
 
 #include   "../manufactured_solutions.hpp"
 
-#define FACE_FOR_CONTROL          2        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL          1        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 #include   "../nsopt_params.hpp"
 
+  const double alpha = ALPHA_CTRL_BDRY;
+  const double beta  = BETA_CTRL_BDRY;
 
 
 #define QRULE_I   0
@@ -232,7 +234,9 @@ int main(int argc, char** args) {
         files.RedirectCout(redirect_cout_to_file);
   
     // ======= Quad Rule ========================
-    std::string fe_quad_rule("seventh");
+  std::vector< std::string > fe_quad_rule_vec;
+  fe_quad_rule_vec.push_back("seventh");
+//   fe_quad_rule_vec.push_back("eighth");
     
   MultiLevelMesh ml_mesh;			// define multilevel mesh
   MultiLevelMesh ml_mesh_all_levels;
@@ -259,14 +263,14 @@ int main(int argc, char** args) {
   const std::string infile = mystream.str();
   
   //   MultiLevelMesh ml_mesh;
- ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+ ml_mesh.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
 // //  ml_mesh.RefineMesh(2, 2, NULL);
 // //  ml_mesh.EraseCoarseLevels(2-1);
 #if compute_conv_flag == 1
- ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
+ ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),fe_quad_rule_vec[0].c_str(),Lref);
 #endif
-//     ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
-//     ml_mesh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
+//     ml_mesh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule_vec[0].c_str());
+//     ml_mesh_all_levels.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule_vec[0].c_str());
     
   unsigned dim = ml_mesh.GetDimension();
   unsigned maxNumberOfMeshes;
@@ -351,7 +355,7 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob(&ml_sol); 
 
   ml_prob.SetFilesHandler(&files);
-  ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
+  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   ml_prob.set_all_abstract_fe_multiple();
     
@@ -770,8 +774,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
  double solTheta = get_theta_value(msh->n_processors(), sol, SolIndex_Mat[theta_index]);
 //*************************************************** 
 
-  double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
-
+  const double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
+  
+  
   // Set to zero all the global structures
     RES->zero();
     if(assembleMatrix) JAC->zero();
