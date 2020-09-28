@@ -22,10 +22,11 @@ using namespace femus;
 
 #include   "../manufactured_solutions.hpp"
 
-#define FACE_FOR_CONTROL          1        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL          3        /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 #include   "../nsopt_params.hpp"
 
+  const double cost_functional_coeff = 1.;
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
 
@@ -33,11 +34,7 @@ using namespace femus;
 #define QRULE_I   0
 
 //***** Implementation-related ****************** 
-#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY    0
-//**************************************
-
-//***** Operator-related ****************** 
-#define IS_CTRL_FRACTIONAL_SOBOLEV   0
+#define IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY    1  //for now: 1 internal routine; 0 external routine
 //**************************************
 
 //****** Mesh ********************************
@@ -46,8 +43,8 @@ using namespace femus;
 
 
 //****** Convergence ********************************
-#define exact_sol_flag 0 // 1 = if we want to use manufactured solution; 0 = if we use regular convention
-#define compute_conv_flag 0 // 1 = if we want to compute the convergence and error ; 0 =  no error computation
+#define exact_sol_flag      0  // 1 = if we want to use manufactured solution; 0 = if we use regular convention
+#define compute_conv_flag   0  // 1 = if we want to compute the convergence and error ; 0 =  no error computation
 
 #define NO_OF_L2_NORMS 9   //U,V,P,UADJ,VADJ,PADJ,GX,GY,THETA
 #define NO_OF_H1_NORMS 6    //U,V,UADJ,VADJ,GX, GY
@@ -65,6 +62,7 @@ using namespace femus;
  
 //************** how to retrieve theta from proc0 ************************************* 
 const double get_theta_value(const unsigned int nprocs, const Solution * sol, const unsigned int sol_theta_index) {
+    
 NumericVector* local_theta_vec;
 
           local_theta_vec = NumericVector::build().release();
@@ -96,19 +94,6 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
     }
 
     return value;
-// //============== initial conditions =========
-// double SetInitialCondition(const MultiLevelProblem * ml_prob, const std::vector <double> &x, const char SolName[]) {
-//   
-//   double value = 0.;
-//   
-//   if (x[1] < 1+ 1.e-5 && x[1] > 1 - 1.e-5 ) {
-//                 if (!strcmp(SolName, "GX"))       { value = 1.; }
-//                 if (!strcmp(SolName, "GY"))       { value = 1.; }
-//   }
-//   
-//   return value;
-// }
-// //============== initial conditions =========
     
 }
 
@@ -523,7 +508,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   //data
   const unsigned dim 	= msh->GetDimension();
   unsigned dim2     = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  unsigned nel		= msh->GetNumberOfElements();
   unsigned igrid	= msh->GetLevel();
   unsigned iproc 	= msh->processor_id();
 
@@ -583,13 +567,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   const int n_vars = dim + 1;
   const int n_unknowns = 3*n_vars; //(2.*dim)+1; //state , adjoint of velocity terms and one pressure term
   
-  const int vel_type_pos = 0;
-  const int press_type_pos = dim;
+  const int vel_type_pos     = 0;
+  const int press_type_pos   = dim;
   const int adj_vel_type_pos = vel_type_pos;
-  const int state_pos_begin = 0;
-  const int adj_pos_begin   = dim+1;
-  const int ctrl_pos_begin   = 2*(dim+1);
-  const int theta_index = press_type_pos + ctrl_pos_begin;
+  const int state_pos_begin  = 0;
+  const int adj_pos_begin    = dim + 1;
+  const int ctrl_pos_begin   = 2 * (dim + 1);
+  const int theta_index      = press_type_pos + ctrl_pos_begin;
   
   
   const int pos_mat_ctrl = ctrl_pos_begin;
@@ -653,19 +637,16 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   //-----------state------------------------------
   vector < vector < double > > phi_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_xx_gss_fe(NFE_FAMS);
   
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_gss_fe[fe].reserve(max_size);
       phi_x_gss_fe[fe].reserve(max_size*dim_offset_grad /*space_dim*/);
-     phi_xx_gss_fe[fe].reserve(max_size*dim2);
    }
    
    
   //boundary adjoint & ctrl shape functions  
   vector < vector < double > > phi_bd_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_x_bd_gss_fe(NFE_FAMS);
-  vector < vector < double > > phi_xx_bd_gss_fe_placeholder(NFE_FAMS);
 
   //bdry vol adj  evaluated at bdry points
    vector < vector < double > > phi_vol_at_bdry_fe(NFE_FAMS);
@@ -674,7 +655,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_bd_gss_fe[fe].reserve(max_size);
       phi_x_bd_gss_fe[fe].reserve(max_size*dim_offset_grad /*space_dim*/);
-    phi_xx_bd_gss_fe_placeholder[fe].reserve(max_size*dim2);
   //bdry vol adj  evaluated at bdry points
          phi_vol_at_bdry_fe[fe].reserve(max_size);
        phi_x_vol_at_bdry_fe[fe].reserve(max_size*dim_offset_grad /*space_dim*/);    
@@ -789,12 +769,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     const unsigned int n_components_ctrl = dim;
  
  
-   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
+   if ( !(IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY) ) {
                       
-  }
-  
-  else {
-  
    control_eqn_bdry(iproc,
                     ml_prob,
                     ml_sol,
@@ -878,18 +854,18 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     unsigned nDofsVP = dim * nDofsV + nDofsP; //same for state and adjoint
     unsigned nDofsVPctrl = dim * nDofsGctrl + nDofsThetactrl; //control
    
-    unsigned nDofsVP_tot = 2*nDofsVP + (nDofsVPctrl);
+    unsigned nDofsVP_tot = 2 * nDofsVP + (nDofsVPctrl);
   // equation end *****************************
   
   //***** set target domain flag ********************************** 
 
    int target_flag = 0;
-       target_flag = ElementTargetFlag(geom_element_iel.get_elem_center()/*elem_center*/);
+       target_flag = ElementTargetFlag(geom_element_iel.get_elem_center());
    //***************************************       
    
  //************ set control flag *********************
     int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center()/*elem_center*/);
+        control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
     std::vector< std::vector<int> > control_node_flag(dim);
 	    for(unsigned idim=0; idim < dim; idim++) {
 	          control_node_flag[idim].resize(nDofsGctrl);
@@ -981,7 +957,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		   //we use the dirichlet flag to say: if dirichlet == true, we set 1 on the diagonal. if dirichlet == false, we put the boundary equation
 		  std::vector<bool> dir_bool(dim);
 		  for(unsigned idim = 0; idim < dim; idim++) {
-		      dir_bool[idim] = false; //ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry(),ctrl_name[idim].c_str(),tau,face_in_rectangle_domain,0.);
+		      dir_bool[idim] = /*false; //*/ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry(),ctrl_name[idim].c_str(),tau,face_in_rectangle_domain,0.);
 		  }
 	  
 	
@@ -998,8 +974,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     
     weight_iqp_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[qrule_i][ielGeom_bd][SolFEType_Mat[theta_index]] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry,phi_bd_gss_fe[SolFEType_Mat[theta_index]],phi_x_bd_gss_fe[SolFEType_Mat[theta_index]], phi_xx_bd_gss_fe_placeholder[SolFEType_Mat[theta_index]] , space_dim);
-    elem_all[qrule_i][ielGeom_bd][SolFEType_Mat[ctrl_pos_begin]] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry,phi_bd_gss_fe[SolFEType_Mat[ctrl_pos_begin]],phi_x_bd_gss_fe[SolFEType_Mat[ctrl_pos_begin]], phi_xx_bd_gss_fe_placeholder[SolFEType_Mat[ctrl_pos_begin]] , space_dim);
+    elem_all[qrule_i][ielGeom_bd][SolFEType_Mat[theta_index]] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry,phi_bd_gss_fe[SolFEType_Mat[theta_index]],phi_x_bd_gss_fe[SolFEType_Mat[theta_index]], boost::none , space_dim);
+    elem_all[qrule_i][ielGeom_bd][SolFEType_Mat[ctrl_pos_begin]] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry,phi_bd_gss_fe[SolFEType_Mat[ctrl_pos_begin]],phi_x_bd_gss_fe[SolFEType_Mat[ctrl_pos_begin]], boost::none , space_dim);
 
 
     elem_all[qrule_i][ielGeom][solType_coords]->JacJacInv_vol_at_bdry_new(geom_element_iel.get_coords_at_dofs_3d(), iqp_bdry, jface, Jac_qp/*not_needed_here*/, JacI_qp, detJac_qp/*not_needed_here*/, space_dim);
@@ -1142,7 +1118,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
                  }
 
 			      for (unsigned kdim = 0; kdim < dim; kdim++) {
-				      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol] +=   control_node_flag[kdim][i_vol] * weight_iqp_bdry *(
+				      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol] +=   control_node_flag[kdim][i_vol] * weight_iqp_bdry * (
                                                                                                        IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * alpha * phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin] ][i_bdry] * phi_bd_gss_fe[SolFEType_Mat[kdim + ctrl_pos_begin] ][j_bdry]
                                                                                                     + IS_BLOCK_DCTRL_CTRL_INSIDE_MAIN_BIG_ASSEMBLY * beta * lap_jac_dctrl_ctrl_bd[kdim]
                                                                                                     );
@@ -1209,7 +1185,7 @@ for(unsigned iqp = 0;iqp < ml_prob.GetQuadratureRule(ielGeom).GetGaussPointsNumb
     weight_iqp = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[iqp];
    
      for(int fe=0; fe < NFE_FAMS; fe++) {
-    elem_all[qrule_i][ielGeom][fe]->shape_funcs_current_elem(iqp, JacI_qp,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe] , space_dim);
+    elem_all[qrule_i][ielGeom][fe]->shape_funcs_current_elem(iqp, JacI_qp,phi_gss_fe[fe],phi_x_gss_fe[fe], boost::none , space_dim);
       }
  
  
@@ -1628,11 +1604,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   
   vector <double> phiV_gss;  // local test function
   vector <double> phiV_x_gss; // local test function first order partial derivatives
-  vector <double> phiV_xx_gss; // local test function second order partial derivatives
 
   phiV_gss.reserve(max_size);
   phiV_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
-  phiV_xx_gss.reserve(max_size * dim2);
    
 //STATE######################################################################
   
@@ -1655,11 +1629,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
   
   vector <double> phiVctrl_gss_bd;  // local test function
   vector <double> phiVctrl_x_gss_bd; // local test function first order partial derivatives
-  vector <double> phiVctrl_xx_gss_bd; // local test function second order partial derivatives
 
   phiVctrl_gss_bd.reserve(max_size);
   phiVctrl_x_gss_bd.reserve(max_size * dim_offset_grad /*space_dim*/);
-  phiVctrl_xx_gss_bd.reserve(max_size * dim2);
   
 //CONTROL_@bdry######################################################################
   
@@ -1678,11 +1650,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 // Vel_desired##################################################################
   vector <double> phiVdes_gss;  // local test function
   vector <double> phiVdes_x_gss; // local test function first order partial derivatives
-  vector <double> phiVdes_xx_gss; // local test function second order partial derivatives
 
   phiVdes_gss.reserve(max_size);
   phiVdes_x_gss.reserve(max_size * dim_offset_grad /*space_dim*/);
-  phiVdes_xx_gss.reserve(max_size * dim2);
 
 //   vector< vector < double > >  solVdes(dim);    // local solution
   vector <double>  solVdes(dim,0.);
@@ -1814,7 +1784,7 @@ double integral_g_dot_n = 0.;
   // Perform face loop over elements that contain some control face
   if (control_el_flag == 1) {
 	  
-    double tau=0.;
+    double tau = 0.;
     vector<double> normal(dim_offset_grad /*space_dim*/,0);
 	  
     for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
@@ -1833,12 +1803,6 @@ double integral_g_dot_n = 0.;
 	   unsigned int face_in_rectangle_domain = -( msh->el->GetFaceElementIndex(iel,jface)+1);
 
 	   if(  face_in_rectangle_domain == FACE_FOR_CONTROL) { //control face
-// //=================================================== 
-// 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-// 	    std::vector<bool> dir_bool; dir_bool.resize(dim);
-// 	    for(unsigned idim=0; idim<dim; idim++) {
-// 		dir_bool[idim] = ml_sol->GetBdcFunction()(xyz_bdc,ctrl_name[idim].c_str(),tau,face,0.);
-// 	    }
 	  
 //=================================================== 
 		
@@ -1857,7 +1821,7 @@ double integral_g_dot_n = 0.;
     
     weight_iqp_bdry = detJac_iqp_bdry * ml_prob.GetQuadratureRule(ielGeom_bd).GetGaussWeightsPointer()[iqp_bdry];
 
-    elem_all[qrule_i][ielGeom_bd][solVctrlType] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry,phiVctrl_gss_bd,phiVctrl_x_gss_bd , phiVctrl_xx_gss_bd , space_dim);
+    elem_all[qrule_i][ielGeom_bd][solVctrlType] ->shape_funcs_current_elem(iqp_bdry, JacI_iqp_bdry,phiVctrl_gss_bd,phiVctrl_x_gss_bd , boost::none , space_dim);
 
      
 //========== compute gauss quantities on the boundary ===============================================
@@ -1903,8 +1867,8 @@ double integral_g_dot_n = 0.;
     elem_all[qrule_i][ielGeom][solType_coords]->JacJacInv(geom_element_iel.get_coords_at_dofs_3d(), iqp, Jac_qp, JacI_qp, detJac_qp, space_dim);
     weight_iqp = detJac_qp * ml_prob.GetQuadratureRule(ielGeom).GetGaussWeightsPointer()[iqp];
    
-    elem_all[qrule_i][ielGeom][solVType]->shape_funcs_current_elem(iqp, JacI_qp, phiV_gss, phiV_x_gss, phiV_xx_gss , space_dim);
-    elem_all[qrule_i][ielGeom][solVType /*solVdes*/]->shape_funcs_current_elem(iqp, JacI_qp, phiVdes_gss, phiVdes_x_gss, phiVdes_xx_gss , space_dim);
+    elem_all[qrule_i][ielGeom][solVType]->shape_funcs_current_elem(iqp, JacI_qp, phiV_gss, phiV_x_gss, boost::none , space_dim);
+    elem_all[qrule_i][ielGeom][solVType /*solVdes*/]->shape_funcs_current_elem(iqp, JacI_qp, phiVdes_gss, phiVdes_x_gss, boost::none , space_dim);
 
     
       for (unsigned  k = 0; k < dim; k++) {

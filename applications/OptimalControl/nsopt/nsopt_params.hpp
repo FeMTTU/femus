@@ -5,11 +5,11 @@
 #include   "../boundary_control_inequality/param.hpp"
 
 namespace femus {
+
 //*********************** Physics *******************************************************
 #define FLUID_DENSITY  1
 
-//******************************************* RHS function*******************************************************
- double force[3] = {0.,0.,0.};
+ double force[3] = {0., 0., 0.};
 
  //******************************************* Desired Target*******************************************************
  std::vector<double> DesiredTargetVel() {
@@ -23,16 +23,13 @@ namespace femus {
    return Vel_desired;
 }
 
-//*********************** Sets the regularization parameters *******************************************************
-
- const double cost_functional_coeff = 1.;
- 
  
 //******************************** switch between stokes and navier stokes *********************************************
  
- const int advection_flag = 1;
+ const int advection_flag = 0;
  const int advection_Picard = 0;
  
+//  Stokes: advection_flag = 0; advection_Picard = 0;
 //  Newton: advection_flag = 1; advection_Picard = 0;
 //  Picard: advection_flag = 1; advection_Picard = 1;
  

@@ -32,6 +32,7 @@
 
 #include   "../nsopt_params.hpp"
 
+  const double cost_functional_coeff = 1.;
   const double alpha = ALPHA_CTRL_VOL;
   const double beta  = BETA_CTRL_VOL;
 
