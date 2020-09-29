@@ -93,6 +93,11 @@ public:
         return _gridn;
     };
 
+    /** Get the number of grid */
+    const unsigned GetNumberOfLevels() const {
+        return _gridn;
+    };
+
     /** Erase levels_to_be_erased levels from the mesh array */
     void EraseCoarseLevels(unsigned levels_to_be_erased);
    

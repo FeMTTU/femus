@@ -5,11 +5,12 @@
 #include "NumericVector.hpp"
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
+#include "Assemble_unknown.hpp"
 
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL        2  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL        3  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 
 
@@ -32,7 +33,7 @@
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
   #define KEEP_ADJOINT_PUSH   1
-#define IS_CTRL_FRACTIONAL_SOBOLEV   0
+#define IS_CTRL_FRACTIONAL_SOBOLEV   1
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -91,6 +92,49 @@
 ///@todo Give the option to provide your own name to the run folder instead of the time instant. I think I did something like this when running with the external script already
 
 using namespace femus;
+
+
+
+ //Unknown definition  ==================
+ const std::vector< Unknown >  provide_list_of_unknowns(const unsigned int dimension) {
+     
+     
+  std::vector< FEFamily > feFamily;
+  std::vector< FEOrder >   feOrder;
+
+                        feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE);
+                        feFamily.push_back(LAGRANGE);
+ 
+                        feOrder.push_back(FIRST);
+                        feOrder.push_back(FIRST);
+                        feOrder.push_back(FIRST);
+                        feOrder.push_back(FIRST);
+ 
+
+  assert( feFamily.size() == feOrder.size() );
+ 
+ std::vector< Unknown >  unknowns(feFamily.size());
+
+   unknowns[0]._name      = "state";
+   unknowns[1]._name      = "control";
+   unknowns[2]._name      = "adjoint";
+   unknowns[3]._name      = "mu";
+
+     for (unsigned int u = 0; u < unknowns.size(); u++) {
+         
+              unknowns[u]._fe_family  = feFamily[u];
+              unknowns[u]._fe_order   = feOrder[u];
+              unknowns[u]._time_order = 0;
+              unknowns[u]._is_pde_unknown = true;
+              
+     }
+ 
+ 
+   return unknowns;
+     
+}
 
 
 
@@ -236,15 +280,36 @@ int main(int argc, char** args) {
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   ml_mesh.EraseCoarseLevels(erased_levels/*numberOfUniformLevels - 1*/);
   ml_mesh.PrintInfo();
-  unsigned dim = ml_mesh.GetDimension();
 
+  // ======= Unknowns ========================
+  const unsigned int dimension = ml_mesh.GetDimension();  
+  std::vector< Unknown > unknowns = provide_list_of_unknowns(dimension);
+  
+  
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
+  
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
 
-  ml_sol.AddSolution("state",   LAGRANGE, /*SECOND*/FIRST);
-  ml_sol.AddSolution("control", LAGRANGE, /*SECOND*/FIRST);
-  ml_sol.AddSolution("adjoint", LAGRANGE, /*SECOND*/FIRST);
-  ml_sol.AddSolution("mu",      LAGRANGE, /*SECOND*/FIRST);  //MU
+  // ======= Problem  ==================
+  MultiLevelProblem ml_prob(&ml_sol);
+  
+  ml_prob.SetFilesHandler(&files);
+  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
+  ml_prob.set_all_abstract_fe_multiple();
+
+  // ======= Solution, II ==================
+
+  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+  for (unsigned int u = 0; u < unknowns.size(); u++)  { 
+      ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
+      ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, &ml_prob);
+      ml_sol.GenerateBdc(unknowns[u]._name.c_str(), "Steady", & ml_prob);
+  }
+  
+
+  // ======= Solutions that are not Unknowns ==================
   ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   //MU
@@ -256,92 +321,53 @@ int main(int argc, char** args) {
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name.c_str())) abort();
-      
-  // ======= Problem  ==================
-  MultiLevelProblem ml_prob(&ml_sol);
   
-  ml_prob.SetFilesHandler(&files);
-  ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
-  ml_prob.set_all_abstract_fe_multiple();
-
-  // ======= Solution: Initial Conditions ==================
-  ml_sol.Initialize("All");    // initialize all varaibles to zero
-
-  ml_sol.Initialize("state",       Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize("control",     Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize("adjoint",     Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize("mu",          Solution_set_initial_conditions, & ml_prob);   //MU
+  
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);   //MU
 
-
-  // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
-  ml_sol.GenerateBdc("state");
-  ml_sol.GenerateBdc("control");
-  ml_sol.GenerateBdc("adjoint");
-  ml_sol.GenerateBdc("mu");   //MU
-
+  
   // ======= System ========================
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("BoundaryControl");
   
+       // ======= System Unknowns ========================
+  for (unsigned int u = 0; u < unknowns.size(); u++)  system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  
+  
+       // ======= Not an Unknown, but needed in the System with PDAS ========================
   system.SetActiveSetFlagName(act_set_flag_name);    //MU
 //   system.SetMaxNumberOfNonLinearIterations(50);
-
-  system.AddSolutionToSystemPDE("state");  
-  system.AddSolutionToSystemPDE("control");  
-  system.AddSolutionToSystemPDE("adjoint");  
-  system.AddSolutionToSystemPDE("mu");     //MU
-  
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleOptSys);
 
 // *****************
-  ml_sol.SetWriter(VTK);
-  ml_sol.GetWriter()->SetDebugOutput(true);
-
   system.SetDebugNonlinear(true);
   system.SetDebugFunction(ComputeIntegral);  //weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
 // *****************
    
-  system.init(); //I need to put this init before, later I will remove it 
-
-  unsigned n_levels = numberOfUniformLevels - erased_levels;
-  std::ostringstream sp_out_base; sp_out_base << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
-  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
-  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
-
+  std::vector< std::string >  dense_variables;
+  dense_variables.push_back("control");
   
-  std::string variable_string = "control";
-  unsigned variable_index = system.GetSolPdeIndex(variable_string.c_str());
-  Mesh* msh = ml_mesh.GetLevel(n_levels - 1);
-  unsigned nprocs = msh->n_processors();
-  unsigned iproc = msh->processor_id();
+  unsigned n_levels = ml_mesh.GetNumberOfLevels();
+//   unsigned n_levels = numberOfUniformLevels - erased_levels;
   
-  unsigned n_dofs_var_all_procs = 0;
-  for(int ip = 0; ip < nprocs; ip++) {
-     n_dofs_var_all_procs += system._LinSolver[n_levels - 1]->KKoffset[variable_index + 1][ip] - system._LinSolver[n_levels - 1]->KKoffset[variable_index][ip];
-  // how does this depend on the number of levels and the number of processors? 
-  // For the processors I summed over them and it seems to work fine
-  // For the levels... should I pick the coarsest level instead of the finest one, or is it the same?
-} 
+   system.init();  //I need to put this init before, later I will remove it   ///@todo it seems like you cannot do this init INSIDE A FUNCTION... understand WHY!
+ 
+  set_dense_pattern_for_unknowns(system, dense_variables);
 
-  unsigned n_vars = system.GetSolPdeIndex().size();   //assume all variables are dense: we should sum 3 sparse + 1 dense...
-  //check that the dofs are picked correctly, it doesn't seem so 
-  
-  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs * n_vars, variable_string);
-
-
-  //   // initialize and solve the system
+  //   initialize and solve the system
   system.init();
 
-  sp_out_base << "after_second_init_";
+  std::ostringstream sp_out_base2; sp_out_base2 << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
+  sp_out_base2 << "after_second_init_";
   
-  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
-  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
+  
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "on");
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "off");
 
+  
+  
     system.MGsolve();
 //   system.assemble_call(1);
   

@@ -38,7 +38,7 @@ using namespace femus;
 //**************************************
 
 //****** Mesh ********************************
-#define no_of_ref N_UNIFORM_LEVELS/*6*/     //mesh refinements
+#define no_of_ref /*N_UNIFORM_LEVELS*/3     //mesh refinements
 
 
 
@@ -501,7 +501,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   
   
    //***** @todo to avoid Petsc complaint *******************************
- MatSetOption(static_cast< PetscMatrix* >(JAC)->mat(),MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+//  MatSetOption(static_cast< PetscMatrix* >(JAC)->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
    //************************************
 
     

@@ -662,6 +662,56 @@ void el_dofs_unknowns(const Solution*                sol,
       
   }
 
+
+  
+  void  set_dense_pattern_for_unknowns(NonLinearImplicitSystemWithPrimalDualActiveSetMethod  & system, const std::vector < std::string > variable_string)  {
+  
+//     system.init();   ///@todo Understand why I cannot put this here but it has to be in the main(), there must be some objects that get destroyed, passing the reference is not enough
+
+  const MultiLevelProblem &  ml_prob = system.GetMLProb();
+  const MultiLevelMesh *  ml_mesh = ml_prob.GetMLMesh();
+  
+  unsigned n_levels = ml_mesh->GetNumberOfLevels();
+  std::ostringstream sp_out_base; sp_out_base << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "on");
+  system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base.str(), "off");
+
+  
+  const Mesh* msh = ml_mesh->GetLevel(n_levels - 1);
+  unsigned nprocs = msh->n_processors();
+  unsigned iproc = msh->processor_id();
+
+  
+    for(int ivar = 0; ivar < variable_string.size(); ivar++) {
+  
+  unsigned variable_index = system.GetSolPdeIndex(variable_string[ivar].c_str());
+  
+  unsigned n_dofs_var_all_procs = 0;
+  for (int ip = 0; ip < nprocs; ip++) {
+     n_dofs_var_all_procs += system._LinSolver[n_levels - 1]->KKoffset[variable_index + 1][ip] - system._LinSolver[n_levels - 1]->KKoffset[variable_index][ip];
+  // how does this depend on the number of levels and the number of processors? 
+  // For the processors I summed over them and it seems to work fine
+  // For the levels... should I pick the coarsest level instead of the finest one, or is it the same?
+   } 
+
+  unsigned n_vars = system.GetSolPdeIndex().size();   //assume all variables are dense: we should sum 3 sparse + 1 dense... or better n_components_ctrl * dense and the rest sparse
+  //check that the dofs are picked correctly, it doesn't seem so 
+  
+  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs * n_vars, variable_string[ivar]);
+
+    }
+    
+    
+    
+  return; 
+  
+  }
+  
+  
+  
+  
+  
+  
   
   void mixed_integral(const unsigned UNBOUNDED,
                       const unsigned dim,
