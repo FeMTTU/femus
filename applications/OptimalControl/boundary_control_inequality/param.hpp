@@ -1435,9 +1435,9 @@ void el_dofs_unknowns(const Solution*                sol,
                 std::vector<double> xi3(dim, 0.);
 
                 GetClosestPointInReferenceElement(geom_element_iel.get_coords_at_dofs_bdry_3d(), x_kqp_bdry, kelGeom_bdry, xi3);
-                GetInverseMapping(solType_coords, kelGeom_bdry, aP, x_kqp_bdry, xi3, 1000);  ///@todo generalize to rectangular Jacobian
+//                 GetInverseMapping(solType_coords, kelGeom_bdry, aP, x_kqp_bdry, xi3, 1000);  ///@todo generalize to rectangular Jacobian TODO is needed?
 
-                msh->_finiteElement[kelGeom_bdry][solType]->GetPhi(phi_ctrl_kel_bdry_kqp_bdry, xi3); //TODO solType or solType_coords?
+                msh->_finiteElement[kelGeom_bdry][/*solType*/ solType_coords]->GetPhi(phi_ctrl_kel_bdry_kqp_bdry, xi3); //TODO solType or solType_coords?
 
                 double solY3 = 0.;
                 for(unsigned i_bdry = 0; i_bdry < phi_ctrl_kel_bdry_kqp_bdry.size()/*nDof_iel*/; i_bdry++) {
@@ -1477,7 +1477,7 @@ void el_dofs_unknowns(const Solution*                sol,
                   dist_xyz3 += (x_iqp_bdry[k] - x_kqp_bdry[k]) * (x_iqp_bdry[k] - x_kqp_bdry[k]);
                 }
 
-                const double denom_ik = pow(dist_xyz3, (double)( 0.5 * dim_bdry/*dim*/ + s_frac));
+                const double denom_ik = pow(dist_xyz3, (double)( 0.5 * dim_bdry + s_frac));
                 
                 const double common_weight =  0.5 * C_ns * OP_Hhalf * beta * check_limits * weight_iqp_bdry * weight_kqp_bdry  / denom_ik;
 
