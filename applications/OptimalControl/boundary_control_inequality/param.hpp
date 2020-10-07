@@ -664,7 +664,7 @@ void el_dofs_unknowns(const Solution*                sol,
 
 
   
-  void  set_dense_pattern_for_unknowns(NonLinearImplicitSystemWithPrimalDualActiveSetMethod  & system, const std::vector < std::string > variable_string)  {
+  void  set_dense_pattern_for_unknowns(NonLinearImplicitSystemWithPrimalDualActiveSetMethod  & system, const std::vector < Unknown > unknowns)  {
   
 //     system.init();   ///@todo Understand why I cannot put this here but it has to be in the main(), there must be some objects that get destroyed, passing the reference is not enough
 
@@ -682,9 +682,13 @@ void el_dofs_unknowns(const Solution*                sol,
   unsigned iproc = msh->processor_id();
 
   
-    for(int ivar = 0; ivar < variable_string.size(); ivar++) {
+    for(int ivar = 0; ivar < unknowns.size(); ivar++) {
   
-  unsigned variable_index = system.GetSolPdeIndex(variable_string[ivar].c_str());
+        if (unknowns[ivar]._is_sparse == false ) { 
+        
+  unsigned variable_index = system.GetSolPdeIndex(unknowns[ivar]._name.c_str());
+  
+  
   
   unsigned n_dofs_var_all_procs = 0;
   for (int ip = 0; ip < nprocs; ip++) {
@@ -697,8 +701,8 @@ void el_dofs_unknowns(const Solution*                sol,
   unsigned n_vars = system.GetSolPdeIndex().size();   //assume all variables are dense: we should sum 3 sparse + 1 dense... or better n_components_ctrl * dense and the rest sparse
   //check that the dofs are picked correctly, it doesn't seem so 
   
-  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs * n_vars, variable_string[ivar]);
-
+  system.SetSparsityPatternMinimumSize (n_dofs_var_all_procs * n_vars, unknowns[ivar]._name);  ///@todo this is like AddSolution: it increases a vector
+        }
     }
     
     

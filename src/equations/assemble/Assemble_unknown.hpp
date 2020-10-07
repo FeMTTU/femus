@@ -70,6 +70,7 @@ template < class real_num_mov >
      FEOrder  _fe_order;
      int _time_order;
      bool _is_pde_unknown;
+     bool _is_sparse;
      
  };
  

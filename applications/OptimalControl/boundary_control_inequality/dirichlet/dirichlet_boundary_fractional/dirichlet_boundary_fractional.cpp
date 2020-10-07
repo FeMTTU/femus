@@ -10,7 +10,7 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL        3  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL        1  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 
 
@@ -122,6 +122,11 @@ using namespace femus;
    unknowns[2]._name      = "adjoint";
    unknowns[3]._name      = "mu";
 
+   unknowns[0]._is_sparse = true;
+   unknowns[1]._is_sparse = IS_CTRL_FRACTIONAL_SOBOLEV ? false: true;
+   unknowns[2]._is_sparse = true;
+   unknowns[3]._is_sparse = true;
+   
      for (unsigned int u = 0; u < unknowns.size(); u++) {
          
               unknowns[u]._fe_family  = feFamily[u];
@@ -309,7 +314,7 @@ int main(int argc, char** args) {
   }
   
 
-  // ======= Solutions that are not Unknowns ==================
+  // ======= Solutions that are not Unknowns - BEGIN  ==================
   ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   //MU
@@ -326,47 +331,43 @@ int main(int argc, char** args) {
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);   //MU
+  // ======= Solutions that are not Unknowns - END  ==================
 
   
-  // ======= System ========================
+  // ======= System - BEGIN ========================
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("BoundaryControl");
   
-       // ======= System Unknowns ========================
-  for (unsigned int u = 0; u < unknowns.size(); u++)  system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  
-  
-       // ======= Not an Unknown, but needed in the System with PDAS ========================
-  system.SetActiveSetFlagName(act_set_flag_name);    //MU
-//   system.SetMaxNumberOfNonLinearIterations(50);
-
-  // attach the assembling function to system
   system.SetAssembleFunction(AssembleOptSys);
 
 // *****************
   system.SetDebugNonlinear(true);
   system.SetDebugFunction(ComputeIntegral);  //weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
 // *****************
-   
-  std::vector< std::string >  dense_variables;
-  dense_variables.push_back("control");
   
-  unsigned n_levels = ml_mesh.GetNumberOfLevels();
-//   unsigned n_levels = numberOfUniformLevels - erased_levels;
+       // ======= System Unknowns ========================
+  for (unsigned int u = 0; u < unknowns.size(); u++)  system.AddSolutionToSystemPDE(unknowns[u]._name.c_str());  
   
+       // ======= Not an Unknown, but needed in the System with PDAS ========================
+  system.SetActiveSetFlagName(act_set_flag_name);    //MU
+       // ======= Not an Unknown, but needed in the System with PDAS ========================
+
+ 
    system.init();  //I need to put this init before, later I will remove it   ///@todo it seems like you cannot do this init INSIDE A FUNCTION... understand WHY!
  
-  set_dense_pattern_for_unknowns(system, dense_variables);
+  set_dense_pattern_for_unknowns(system, unknowns);
+  // ======= System  - END ========================
 
   //   initialize and solve the system
   system.init();
 
+  //----
   std::ostringstream sp_out_base2; sp_out_base2 << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "sp_";
   sp_out_base2 << "after_second_init_";
   
-  
+  unsigned n_levels = ml_mesh.GetNumberOfLevels();
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "on");
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "off");
-
-  
+  //----
   
     system.MGsolve();
 //   system.assemble_call(1);
