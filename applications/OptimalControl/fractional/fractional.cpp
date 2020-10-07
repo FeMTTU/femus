@@ -26,12 +26,12 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  8
-#define N_ERASED_LEVELS   7
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 //**************************************
 
 //***** Operator-related ****************** 
-#define S_FRAC 0.5
+#define S_FRAC 0.99
 
 #define OP_L2       0
 #define OP_H1       0
@@ -641,10 +641,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
      //**** Adaptive preparation - END ********  
 
         const unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
-        const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
-        
+//         const unsigned jgNumber = msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber();
 
-        for(unsigned ig = 0; ig < jgNumber/*@todo error*/; ig++) {
+        for(unsigned ig = 0; ig < igNumber/*@todo error*/; ig++) {
 
           msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
 
@@ -1035,7 +1034,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               }
 
               const double denom = pow(dist_xyz, (double)((dim / 2.) + s_frac));
-
+              
               for(unsigned i = 0; i < nDof1; i++) {
 
 //                Res_nonlocal[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg]  / denom;

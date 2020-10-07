@@ -10,7 +10,9 @@
 #include "ElemType.hpp"
 
 
-#define FACE_FOR_CONTROL        1  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+
+#define FACE_FOR_CONTROL        4  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+
 
 
 
@@ -23,11 +25,11 @@
 
 //***** Quadrature-related ****************** 
 #define Nsplit 0
-#define Quadrature_split_index  3
+#define Quadrature_split_index  0
 
 #define QRULE_I   0
 #define QRULE_J   1
-#define QRULE_K   QRULE_J
+#define QRULE_K   QRULE_I
 //**************************************
 
 //***** Operator-related ****************** 
