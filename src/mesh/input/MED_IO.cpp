@@ -348,12 +348,12 @@ namespace femus {
 
       for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
 
-        unsigned n_nodes = _geom_elems[iel_geom_type]->get_face(f).size();
+        unsigned n_nodes_face = _geom_elems[iel_geom_type]->get_face(f).size();
 
         // on one hand I construct the boundary face connectivity from the volume connectivity, with the order that was given in our code
-        std::vector<unsigned> face_nodes_from_vol_connectivity(n_nodes);
+        std::vector<unsigned> face_nodes_from_vol_connectivity(n_nodes_face);
 
-        for(unsigned nd = 0; nd < n_nodes; nd++) {
+        for(unsigned nd = 0; nd < n_nodes_face; nd++) {
           unsigned nd_of_face = _geom_elems[iel_geom_type]->get_face(f)[nd];
           face_nodes_from_vol_connectivity[nd] = mesh.el->GetElementDofIndex(iel, nd_of_face);
 
@@ -362,11 +362,11 @@ namespace femus {
         // on the other I read the boundary face connectivity from the list of boundary faces, which is the one that has the FAM information
         //loop over all the bdry group elements
 
-        std::vector<unsigned> face_nodes_from_bdry_group(n_nodes);
+        std::vector<unsigned> face_nodes_from_bdry_group(n_nodes_face);
 
         for(unsigned k = 0; k < fam_map.size(); k++) {
 
-          for(unsigned nd = 0; nd < n_nodes; nd++) {
+          for(unsigned nd = 0; nd < n_nodes_face; nd++) {
             face_nodes_from_bdry_group[nd] = conn_map[ k + nd * fam_map.size() ] - 1;
           }
 
@@ -735,6 +735,8 @@ namespace femus {
     H5Dclose(dtset_fam);
 
   }
+  
+  
 
   // Connectivities in MED files are stored on a per-node basis: first all 1st nodes, then all 2nd nodes, and so on.
   // Instead, in Gambit they are stored on a per-element basis

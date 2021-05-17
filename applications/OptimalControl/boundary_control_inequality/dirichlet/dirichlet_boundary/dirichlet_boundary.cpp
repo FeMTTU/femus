@@ -520,7 +520,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     const short unsigned ielGeom = geom_element.geom_type();
 
 
-   el_dofs_unknowns(sol, msh, pdeSys, iel,
+   el_dofs_unknowns_vol(sol, msh, pdeSys, iel,
                         SolFEType_Mat,
                         SolIndex_Mat,
                         SolPdeIndex,
@@ -922,7 +922,7 @@ if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
        
      geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
       
-    el_dofs_unknowns(sol, msh, pdeSys, iel,
+    el_dofs_unknowns_vol(sol, msh, pdeSys, iel,
                         SolFEType_Mat, SolIndex_Mat, SolPdeIndex,
                         Sol_n_el_dofs_Mat, sol_eldofs_Mat, L2G_dofmap_Mat);
 

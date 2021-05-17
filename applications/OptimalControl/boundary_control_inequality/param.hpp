@@ -270,8 +270,8 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
             std::vector<double> node_coords_i(dim,0.);
             for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i];
             
-            ctrl_lower[i] = InequalityConstraint(node_coords_i,false);
-            ctrl_upper[i] = InequalityConstraint(node_coords_i,true);
+            ctrl_lower[i] = InequalityConstraint(node_coords_i, false);
+            ctrl_upper[i] = InequalityConstraint(node_coords_i, true);
             
             const double lower_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_lower[i] );
             const double upper_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_upper[i] );
@@ -335,8 +335,8 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
         std::vector<double> node_coords_i(dim,0.);
         for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i_bdry];
         
-        ctrl_lower[i_bdry] = InequalityConstraint(node_coords_i,false);
-        ctrl_upper[i_bdry] = InequalityConstraint(node_coords_i,true);
+        ctrl_lower[i_bdry] = InequalityConstraint(node_coords_i, false);
+        ctrl_upper[i_bdry] = InequalityConstraint(node_coords_i, true);
 
         const double lower_test_value = sol_eldofs[pos_mu][i_vol] + c_compl * ( sol_eldofs[pos_ctrl][i_vol] - ctrl_lower[i_bdry] );
         const double upper_test_value = sol_eldofs[pos_mu][i_vol] + c_compl * ( sol_eldofs[pos_ctrl][i_vol] - ctrl_upper[i_bdry] );
@@ -349,7 +349,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
       for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
 	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
       unsigned solDof_actflag = msh->GetSolutionDof(i_vol, iel, solFEType_act_flag); 
-      (sol->_Sol[solIndex_act_flag])->set(solDof_actflag,sol_actflag[i_bdry]);     
+      (sol->_Sol[solIndex_act_flag])->set(solDof_actflag, sol_actflag[i_bdry]);     
     }
     
     
@@ -388,22 +388,22 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
       
  //============= delta_mu row ===============================
       std::vector<double> Res_mu_bdry (sol_actflag.size());     std::fill(Res_mu_bdry.begin(),Res_mu_bdry.end(), 0.);
-      std::vector<double> Res_mu (Sol_n_el_dofs[pos_mu]);       std::fill(Res_mu.begin(),Res_mu.end(), 0.);
+//       std::vector<double> Res_mu (Sol_n_el_dofs[pos_mu]);       std::fill(Res_mu.begin(),Res_mu.end(), 0.);
       
       for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
 	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
         
       if (sol_actflag[i_bdry] == 0) {  //inactive
-         Res_mu [i_vol]      = - ineq_flag * ( 1. * sol_eldofs[pos_mu][i_vol] - 0. ); 
+//          Res_mu [i_vol]      = - ineq_flag * ( 1. * sol_eldofs[pos_mu][i_vol] - 0. ); 
          Res_mu_bdry[i_bdry] = - ineq_flag * ( 1. * sol_eldofs[pos_mu][i_vol] - 0. ); 
       }
       else if (sol_actflag[i_bdry] == 1) {  //active_a 
-	 Res_mu [i_vol]      = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_lower[i_bdry]);
+// 	 Res_mu [i_vol]      = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_lower[i_bdry]);
      Res_mu_bdry[i_bdry] = - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_lower[i_bdry]);
           
     }
       else if (sol_actflag[i_bdry] == 2) {  //active_b 
-	Res_mu [i_vol]      =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_upper[i_bdry]);
+// 	Res_mu [i_vol]      =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_upper[i_bdry]);
     Res_mu_bdry[i_bdry] =  - ineq_flag * ( c_compl *  sol_eldofs[pos_ctrl][i_vol] - c_compl * ctrl_upper[i_bdry]);
       }
     }
@@ -488,7 +488,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
  }
  
  
-void el_dofs_quantities(const Solution*                sol,
+void el_dofs_quantities_vol(const Solution*                sol,
                         const Mesh * msh,
                         const unsigned int iel,
                         const    vector < unsigned > & SolFEType,
@@ -504,7 +504,7 @@ void el_dofs_quantities(const Solution*                sol,
 
 
  
-void el_dofs_unknowns(const Solution*                sol,
+void el_dofs_unknowns_vol(const Solution*                sol,
                       const Mesh * msh,
                       const  LinearEquationSolver* pdeSys,
                       const unsigned int iel,
@@ -892,7 +892,6 @@ void el_dofs_unknowns(const Solution*                sol,
                         //-----------
                          const unsigned int n_quantities,
                         vector < unsigned > SolFEType_quantities,
-                        vector < unsigned > Sol_n_el_dofs_quantities,
                         //-----------
                         std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all,
                         //-----------
@@ -1013,7 +1012,18 @@ void el_dofs_unknowns(const Solution*                sol,
         geom_element_jel.set_elem_center(jel, solType_coords);
 // --- geometry        
         
-      
+        
+ //***************************************************
+   el_dofs_unknowns_vol(sol, msh, pdeSys, jel,
+                        SolFEType_Mat,
+                        SolIndex_Mat,
+                        SolPdeIndex,
+                        Sol_n_el_dofs_Mat, 
+                        sol_eldofs_Mat,  
+                        L2G_dofmap_Mat);  //all unknowns here, perhaps we could restrict it to the ctrl components only
+  //***************************************************
+
+   
 	// Perform face loop over elements that contain some control face
 	if ( volume_elem_contains_a_boundary_control_face(geom_element_jel.get_elem_center()) ) {
 
@@ -1178,7 +1188,7 @@ void el_dofs_unknowns(const Solution*                sol,
     
 //--- solution
     sol_ctrl_jqp_bdry[jqp_bdry] = 0.;
-	      for (int j_bdry = 0; j_bdry < Sol_n_el_dofs_quantities[pos_sol_ctrl]; j_bdry++)  {
+	      for (int j_bdry = 0; j_bdry < phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry].size()/*Sol_n_el_dofs_quantities[pos_sol_ctrl]*/; j_bdry++)  {
 		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(jel, jface, j_bdry);
 			
 			sol_ctrl_jqp_bdry[jqp_bdry] +=  /*sol_eldofs_Mat[pos_mat_ctrl]*/sol_ctrl_jel[j_vol] * phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j_bdry];
@@ -1666,7 +1676,7 @@ if( check_if_same_elem(iel, jel) ) {
         RES->add_vector_blocked(Res_local_iel_mixed_num, l2gMap_iel);
 
         KK->add_matrix_blocked(KK_nonlocal_iel_iel, l2gMap_iel, l2gMap_iel);
-        KK->add_matrix_blocked(KK_nonlocal_iel_jel, l2gMap_iel, l2gMap_jel);
+        KK->add_matrix_blocked(KK_nonlocal_iel_jel, l2gMap_iel, l2gMap_jel);  // AAAAAAAAAAAAAAAAAAAAAAAAAAAAA
         KK->add_matrix_blocked(KK_nonlocal_jel_iel, l2gMap_jel, l2gMap_iel);
         KK->add_matrix_blocked(KK_nonlocal_jel_jel, l2gMap_jel, l2gMap_jel);
 // Since 1 is dense and 3 are sparse, and the dense dofs are 30, we should have at most 3x9 + 30 = 57, but in the sparsity print it shows 30. That's the problem
@@ -1675,7 +1685,11 @@ if( check_if_same_elem(iel, jel) ) {
         RES->add_vector_blocked(Res_nonlocal_iel, l2gMap_iel);
         RES->add_vector_blocked(Res_nonlocal_jel, l2gMap_jel);
 //============ add to global - END ==================
-        
+//     std::vector < unsigned >  Sol_n_el_dofs_ctrl(1, nDof_iel); //       if (/*print_algebra_local*/true) {
+//          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat, 10, 5);
+//          assemble_jacobian<double,double>::print_element_jacobian(iel, KK_nonlocal_iel_jel, Sol_n_el_dofs_ctrl, 10, 5);
+//      }
+            
         
 //----- iel ---        
     } //end control elem flag i (control_flag_iel == 1)
@@ -1728,7 +1742,6 @@ if( check_if_same_elem(iel, jel) ) {
                         //----- Sol ------
                         const unsigned int n_quantities,
                         vector < unsigned > SolFEType_quantities,
-                        vector < unsigned > Sol_n_el_dofs_quantities,
                         //---- Quadrature - FE Evaluations -------
                         std::vector < std::vector < std::vector < /*const*/ elem_type_templ_base<double, double> *  > > > elem_all,
                         //---- Quadrature ------
@@ -1774,16 +1787,14 @@ if( check_if_same_elem(iel, jel) ) {
 
            
  //***************************************************
-   el_dofs_unknowns(sol, msh, pdeSys, iel,
+   el_dofs_unknowns_vol(sol, msh, pdeSys, iel,
                         SolFEType_Mat,
                         SolIndex_Mat,
                         SolPdeIndex,
                         Sol_n_el_dofs_Mat, 
                         sol_eldofs_Mat,  
                         L2G_dofmap_Mat);  //all unknowns here, perhaps we could restrict it to the ctrl components only
-        
-   el_dofs_quantities(sol, msh, iel, SolFEType_quantities, Sol_n_el_dofs_quantities); 
- //***************************************************
+  //***************************************************
       
  //***************************************************
  //***************************************************
@@ -1875,7 +1886,7 @@ if( check_if_same_elem(iel, jel) ) {
    for (unsigned c = 0; c < n_components_ctrl; c++) {
           sol_ctrl_iqp_bdry[c] = 0.;
                   std::fill(sol_ctrl_x_iqp_bdry[c].begin(), sol_ctrl_x_iqp_bdry[c].end(), 0.);
-		      for (int i_bdry = 0; i_bdry < Sol_n_el_dofs_quantities[pos_sol_ctrl + c]; i_bdry++)  {
+		      for (int i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size()/*Sol_n_el_dofs_quantities[pos_sol_ctrl + c]*/; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
 			
 			sol_ctrl_iqp_bdry[c] +=  sol_eldofs_Mat[pos_mat_ctrl + c][i_vol] * phi_ctrl_iel_bdry_iqp_bdry[i_bdry];

@@ -794,7 +794,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
                     //-----------
                      n_quantities,
                     SolFEType_quantities,
-                    Sol_n_el_dofs_quantities,
                     //-----------
                     elem_all,
                      //-----------

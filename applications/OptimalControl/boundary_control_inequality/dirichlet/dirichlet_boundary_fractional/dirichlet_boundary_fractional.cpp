@@ -11,7 +11,7 @@
 
 
 
-#define FACE_FOR_CONTROL        4  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL        3  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
 
 
 
@@ -741,7 +741,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     //-----------
                     n_quantities,
                     SolFEType_quantities,
-                    Sol_n_el_dofs_quantities, //filled inside
+//                     Sol_n_el_dofs_quantities, //filled inside
                     //-----------
                     elem_all,
                      //-----------
@@ -816,7 +816,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     //-----------
                      n_quantities,
                     SolFEType_quantities,
-                    Sol_n_el_dofs_quantities,
                     //-----------
                     elem_all,
                      //-----------
@@ -876,7 +875,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     
 
  //***************************************************
-   el_dofs_unknowns(sol, msh, pdeSys, iel,
+   el_dofs_unknowns_vol(sol, msh, pdeSys, iel,
                         SolFEType_Mat,
                         SolIndex_Mat,
                         SolPdeIndex,
@@ -884,7 +883,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                         sol_eldofs_Mat,  
                         L2G_dofmap_Mat);
   
-   el_dofs_quantities(sol, msh, iel, SolFEType_quantities, Sol_n_el_dofs_quantities); 
+   el_dofs_quantities_vol(sol, msh, iel, SolFEType_quantities, Sol_n_el_dofs_quantities); 
   //***************************************************
    
  
@@ -1257,13 +1256,14 @@ add_one_times_mu_res_ctrl_bdry(iproc,
    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
       
    geom_element_iel.set_elem_center(iel, solType_coords);
+// -------
    
-    el_dofs_unknowns(sol, msh, pdeSys, iel,
+// -------
+    el_dofs_unknowns_vol(sol, msh, pdeSys, iel,
                         SolFEType_Mat, SolIndex_Mat, SolPdeIndex,
                         Sol_n_el_dofs_Mat, sol_eldofs_Mat, L2G_dofmap_Mat);
     
-   el_dofs_quantities(sol, msh, iel, SolFEType_quantities, Sol_n_el_dofs_quantities); ///@todo perhaps we don't need it here
-
+   el_dofs_quantities_vol(sol, msh, iel, SolFEType_quantities, Sol_n_el_dofs_quantities); ///@todo perhaps we don't need it here
 // -------
 
 	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center() ) ) {

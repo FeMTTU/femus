@@ -272,7 +272,7 @@ namespace femus {
       MyMatrix <unsigned> _childElem;
       MyMatrix <unsigned> _childElemDof;
 
-      MyMatrix <unsigned> _elementNearVertex;
+      MyMatrix <unsigned> _elementNearVertex;      // number of elements which have a given vertex
       MyMatrix <unsigned> _elementNearElement;
 
   };
