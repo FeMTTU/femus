@@ -157,7 +157,7 @@ namespace femus {
 
 
     cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
-         << std::setw(12) << order << " and time discretzation order " << tmorder << endl;
+         << std::setw(12) << order << " and time discretization order " << tmorder << endl;
 
     for(unsigned ig = 0; ig < _gridn; ig++) {
       _solution[ig]->AddSolution(_solName[n], _family[n], _order[n], _solTimeOrder[n], _pdeType[n]);

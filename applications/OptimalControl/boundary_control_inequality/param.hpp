@@ -730,7 +730,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                       const double C_ns,
                       const unsigned int OP_Hhalf,
                       const double beta,
-                      const unsigned int nDof_iel,
+                      const unsigned int nDof_vol_iel,
                       std::vector < double > & KK_local_iel,
                       std::vector < double > & Res_local_iel,
                       const Mesh * msh,
@@ -779,13 +779,13 @@ void el_dofs_unknowns_vol(const Solution*                sol,
               
               double mixed_term = pow(dist_1, -2. * s_frac) + pow(dist_2, - 2. * s_frac);
 
-              for(unsigned i = 0; i < nDof_iel; i++) {
-                unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i);
-                for(unsigned j = 0; j < nDof_iel /* @todo is this correct? */; j++) {
-                  unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j);
-                  KK_local_iel[ i_vol_iel * nDof_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * (1. / s_frac) * OP_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term;
+              for(unsigned i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); i_bdry++) {
+                unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+                for(unsigned j_bdry = 0; j_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); j_bdry++) {
+                  unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
+                  KK_local_iel[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * (1. / s_frac) * OP_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * weight_iqp_bdry * mixed_term;
                 }
-                Res_local_iel[ i_vol_iel ] += 0.5 * C_ns * check_limits * (1. / s_frac) * OP_Hhalf  * beta * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_term;
+                Res_local_iel[ i_vol_iel ] += 0.5 * C_ns * check_limits * (1. / s_frac) * OP_Hhalf  * beta * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry * weight_iqp_bdry * mixed_term;
               }
    
       }
@@ -1676,7 +1676,7 @@ if( check_if_same_elem(iel, jel) ) {
         RES->add_vector_blocked(Res_local_iel_mixed_num, l2gMap_iel);
 
         KK->add_matrix_blocked(KK_nonlocal_iel_iel, l2gMap_iel, l2gMap_iel);
-        KK->add_matrix_blocked(KK_nonlocal_iel_jel, l2gMap_iel, l2gMap_jel);  // AAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        KK->add_matrix_blocked(KK_nonlocal_iel_jel, l2gMap_iel, l2gMap_jel);
         KK->add_matrix_blocked(KK_nonlocal_jel_iel, l2gMap_jel, l2gMap_iel);
         KK->add_matrix_blocked(KK_nonlocal_jel_jel, l2gMap_jel, l2gMap_jel);
 // Since 1 is dense and 3 are sparse, and the dense dofs are 30, we should have at most 3x9 + 30 = 57, but in the sparsity print it shows 30. That's the problem
