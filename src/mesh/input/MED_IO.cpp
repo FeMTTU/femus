@@ -237,6 +237,26 @@ namespace femus {
 
 
 
+  void MED_IO::dataset_open_and_close_store_in_vector(hid_t file_id, std::vector< TYPE_FOR_FAM_FLAGS > & fam_map, const std::string fam_name_dir_i) const  {
+      
+       hid_t dtset_fam            = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
+      hid_t filespace_fam        = H5Dget_space(dtset_fam);
+      hsize_t dims_fam[2];
+      hid_t status_fam           = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
+      if(status_fam == 0) {
+        std::cerr << "MED_IO::read dims not found";
+        abort();
+      }
+
+      const unsigned n_elements = dims_fam[0];
+//       std::vector< TYPE_FOR_FAM_FLAGS > fam_map(n_elements);
+      fam_map.resize(n_elements);
+      hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data());
+      H5Dclose(dtset_fam);     
+      
+  }
+  
+  
   //here I need a routine to compute the group GeomElem and the group size
 
   //separate groups by dimension
@@ -259,23 +279,17 @@ namespace femus {
     unsigned j = 0;
     while(j < elem_types.size() && group_found == false) {
 
-      hsize_t dims_fam[2];
       elem_types[j] = new char[max_length];
       H5Gget_objname_by_idx(gid, j, elem_types[j], max_length); ///@deprecated see the HDF doc to replace this
       std::string elem_types_str(elem_types[j]);
 
       std::string fam_name_dir_i = my_mesh_name_dir + elem_types_str + "/" + group_fam;
-      hid_t dtset_fam            = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
-      hid_t filespace_fam        = H5Dget_space(dtset_fam);
-      hid_t status_fam           = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
-      if(status_fam == 0) {
-        std::cerr << "MED_IO::read dims not found";
-        abort();
-      }
+      
+      std::vector< TYPE_FOR_FAM_FLAGS > fam_map;
+      
+      dataset_open_and_close_store_in_vector(file_id, fam_map, fam_name_dir_i);
 
-      const unsigned n_elements = dims_fam[0];
-      std::vector< TYPE_FOR_FAM_FLAGS > fam_map(n_elements);
-      hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data());
+      
 
       int group_size = 0;
       for(unsigned k = 0; k < fam_map.size(); k++) {
@@ -292,7 +306,6 @@ namespace femus {
       }
       group_info._size = group_size;
 
-      H5Dclose(dtset_fam);
 
       j++;
     }
@@ -340,26 +353,20 @@ namespace femus {
     std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
 
     //open the NOD field of the boundary element list (for the connectivities)
-    hsize_t dims_conn[2];
     std::string   conn_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + connectivity; ///@todo these boundary connectivities were not stored, so we need to read them now
-    hid_t dtset_conn     = H5Dopen(file_id, conn_name_dir.c_str(), H5P_DEFAULT);
-    hid_t filespace_conn = H5Dget_space(dtset_conn);
-    hid_t status_conn    = H5Sget_simple_extent_dims(filespace_conn, dims_conn, NULL);
-
-    std::vector<int> conn_map(dims_conn[0]);
-    hid_t status2_conn = H5Dread(dtset_conn, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, conn_map.data());
-    H5Dclose(dtset_conn);
+    
+      std::vector< TYPE_FOR_FAM_FLAGS > conn_map;
+      
+      dataset_open_and_close_store_in_vector(file_id, conn_map, conn_name_dir);
+      
 
     //open the FAM field of the boundary element list (for the group flags)
-    hsize_t dims_fam[2];
     std::string fam_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + group_fam;
-    hid_t dtset_fam     = H5Dopen(file_id, fam_name_dir.c_str(), H5P_DEFAULT);
-    hid_t filespace_fam = H5Dget_space(dtset_fam);
-    hid_t status_fam    = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
-
-    std::vector< TYPE_FOR_FAM_FLAGS > fam_map(dims_fam[0]);
-    hid_t status2_fam = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data());
-    H5Dclose(dtset_fam);
+    
+      std::vector< TYPE_FOR_FAM_FLAGS > fam_map;
+      
+      dataset_open_and_close_store_in_vector(file_id, fam_map, fam_name_dir);
+    
 
     //check that all boundary faces were set in the mesh file
     for(unsigned i = 0; i < fam_map.size(); i++) {
@@ -464,15 +471,11 @@ namespace femus {
     std::string my_mesh_name_dir = get_node_info_H5Group(mesh_menu);  ///@todo here we have to loop
 
     //open the FAM field of NOE
-    hsize_t dims_fam[2];
     std::string fam_name_dir = my_mesh_name_dir /*+ geom_elem_per_dimension->get_name_med()*/ + "/" + group_fam;
-    hid_t dtset_fam     = H5Dopen(file_id, fam_name_dir.c_str(), H5P_DEFAULT);
-    hid_t filespace_fam = H5Dget_space(dtset_fam);
-    hid_t status_fam    = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
-
-    std::vector< TYPE_FOR_FAM_FLAGS > fam_map(dims_fam[0]);
-    hid_t status2_fam = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data());
-    H5Dclose(dtset_fam);
+    
+    std::vector< TYPE_FOR_FAM_FLAGS > fam_map;
+      
+    dataset_open_and_close_store_in_vector(file_id, fam_map, fam_name_dir);
 
 
     // I have to loop over elements to then find faces of the elements, get the dof of those faces, and then with that dof go get the position in NOE/FAM 
@@ -548,7 +551,7 @@ namespace femus {
         
         const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
 
-        std::string node_dataset = get_node_info_H5Group(mesh_menus[0]);
+        std::string node_fam = get_node_info_H5Group(mesh_menus[0]) ;
         
         
         close_mesh_file(file_id);
@@ -757,23 +760,16 @@ namespace femus {
     Mesh& mesh = GetMesh();
 
     //FAM ***************************
-    hsize_t dims_fam[2];
     
     std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
     
     std::string fam_name_dir_i = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + group_fam;
     
-    hid_t dtset_fam = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
-    hid_t filespace_fam = H5Dget_space(dtset_fam);
-    hid_t status_fam  = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
-    if(status_fam == 0) {
-      std::cerr << "MED_IO::read dims not found";
-      abort();
-    }
+    std::vector< TYPE_FOR_FAM_FLAGS > fam_map;
+      
+    dataset_open_and_close_store_in_vector(file_id, fam_map, fam_name_dir_i);
+    
 
-    const unsigned n_elements = dims_fam[0];
-    std::vector< TYPE_FOR_FAM_FLAGS > fam_map(n_elements);
-    hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data());
 
 
     // ****************** Volume *******************************************
@@ -838,7 +834,6 @@ namespace femus {
     } //end (volume pos - 1)
     // ****************** Boundary end *******************************************
 
-    H5Dclose(dtset_fam);
 
   }
   
@@ -850,37 +845,33 @@ namespace femus {
 
     Mesh& mesh = GetMesh();
 
-    const unsigned el_nodes_per_dimension = geom_elem_per_dimension->n_nodes();
-
+ 
+    if(i == mesh.GetDimension() - 1) { 
+        
+        
+        
     std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
-    hsize_t dims_i[2];
+
     // NOD ***************************
     std::string conn_name_dir_i = my_mesh_name_dir +  geom_elem_per_dimension->get_name_med() + "/" + connectivity;
-    hid_t dtset_conn = H5Dopen(file_id, conn_name_dir_i.c_str(), H5P_DEFAULT);
-    hid_t filespace = H5Dget_space(dtset_conn);
-    hid_t status_els_i  = H5Sget_simple_extent_dims(filespace, dims_i, NULL);
-    if(status_els_i == 0) {
-      std::cerr << "MED_IO::read dims not found";
-      abort();
-    }
+    
 
+       // READ CONNECTIVITY MAP
+    std::vector< TYPE_FOR_FAM_FLAGS > conn_map;
+      
+    dataset_open_and_close_store_in_vector(file_id, conn_map, conn_name_dir_i);
+      
+      
+      // SET NUMBER OF VOLUME ELEMENTS
+         const unsigned el_nodes_per_dimension = geom_elem_per_dimension->n_nodes();
 
-    const int dim_conn = dims_i[0];
-    const unsigned n_elems_per_dimension = dim_conn / el_nodes_per_dimension;
+    const unsigned n_elems_per_dimension = conn_map.size() / el_nodes_per_dimension;
     std::cout << " Number of elements of dimension " << (i + 1) << " in med file: " <<  n_elems_per_dimension <<  std::endl;
-
-    // SET NUMBER OF VOLUME ELEMENTS
-    if(i == mesh.GetDimension() - 1) {
+       
       mesh.SetNumberOfElements(n_elems_per_dimension);
       mesh.el = new elem(n_elems_per_dimension);    ///@todo check where this is going to be deleted. It is in the Destructor of Mesh
 
-      // READ CONNECTIVITY MAP
-      int* conn_map = new  int[dim_conn];
-      hid_t status_conn = H5Dread(dtset_conn, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, conn_map);
-      if(status_conn != 0) {
-        std::cout << "MED_IO::read: connectivity not found";
-        abort();
-      }
+
 
 
       for(unsigned iel = 0; iel < n_elems_per_dimension; iel++) {
@@ -927,12 +918,9 @@ namespace femus {
         }
       }
 
-      // clean
-      delete [] conn_map;
-
+    
     }
 
-    H5Dclose(dtset_conn);
 
   }
 
@@ -942,37 +930,33 @@ namespace femus {
   void MED_IO::set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> > & coords, const double Lref) {
 
     Mesh& mesh = GetMesh();
-    hsize_t dims[2];
 
     std::string coord_dataset = get_node_info_H5Group(mesh_menu) + coord_list + "/";  ///@todo here we have to loop
 
-    hid_t dtset = H5Dopen(file_id, coord_dataset.c_str(), H5P_DEFAULT);
+    
+    std::vector< TYPE_FOR_FAM_FLAGS > xyz_med;
+      
+    dataset_open_and_close_store_in_vector(file_id, xyz_med, coord_dataset);
 
+    
+    
     // SET NUMBER OF NODES
-    hid_t filespace = H5Dget_space(dtset);    /* Get filespace handle first. */
-    hid_t status_dims  = H5Sget_simple_extent_dims(filespace, dims, NULL);
-    if(status_dims == 0) std::cerr << "MED_IO::read dims not found";
+    unsigned int n_nodes = xyz_med.size() / 3; //mesh.GetDimension();
+     std::cout << " Number of nodes in med file " <<  n_nodes << " " <<  std::endl;
 
-    // reading xyz_med
-    unsigned int n_nodes = dims[0] / 3; //mesh.GetDimension();
-    double*   xyz_med = new double[dims[0]];
-    std::cout << " Number of nodes in med file " <<  n_nodes << " " <<  std::endl;
+     mesh.SetNumberOfNodes(n_nodes);
 
-    mesh.SetNumberOfNodes(n_nodes);
+    
 
-    for(unsigned d = 0; d < 3; d++)      coords[d].resize(n_nodes);
+    // SET COORDINATES
+     for(unsigned d = 0; d < 3; d++)      coords[d].resize(n_nodes);
 
-    H5Dread(dtset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, xyz_med);
-  
-    H5Dclose(dtset);
-
-    for(unsigned d = 0; d < 3; d++)  {
+   for(unsigned d = 0; d < 3; d++)  {
       for(unsigned j = 0; j < n_nodes; j++) {
         coords[d][j] = xyz_med[j + d * n_nodes] / Lref;
       }
     }
 
-    delete[] xyz_med;
 
   }
 

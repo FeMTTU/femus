@@ -89,6 +89,8 @@ class MED_IO : public MeshInput<Mesh>
    
   std::string get_group_info_all_geom_types_H5Group(const std::string mesh_menu, const unsigned dimension) const;
    
+  void dataset_open_and_close_store_in_vector(hid_t file_id, std::vector< TYPE_FOR_FAM_FLAGS > & fam_map, const std::string fam_name_dir_i) const;
+  
    unsigned int get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS med_flag_in ) const;
 
    void set_elem_group_ownership(const hid_t&  file_id,
