@@ -274,21 +274,21 @@ int main(int argc, char** args) {
   
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref);
  
-  const unsigned group_b_b = 7;
-  MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary_3d_via_nodes(infile, group_b_b);//.read(name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
-
-  // ======= Solution  ==================
-  MultiLevelSolution ml_sol2(&ml_mesh);
-  
-  ml_sol2.SetWriter(VTK);
-  ml_sol2.GetWriter()->SetDebugOutput(true);
-  
-  // ======= Print ========================
-  std::vector < std::string > variablesToBePrinted2;
-  variablesToBePrinted2.push_back("all");
-  ml_sol2.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted2);
-
-  exit(0);  
+// // //   const unsigned group_b_b = 7;
+// // //   MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary_3d_via_nodes(infile, group_b_b);//.read(name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
+// // // 
+// // //   // ======= Solution  ==================
+// // //   MultiLevelSolution ml_sol2(&ml_mesh);
+// // //   
+// // //   ml_sol2.SetWriter(VTK);
+// // //   ml_sol2.GetWriter()->SetDebugOutput(true);
+// // //   
+// // //   // ======= Print ========================
+// // //   std::vector < std::string > variablesToBePrinted2;
+// // //   variablesToBePrinted2.push_back("all");
+// // //   ml_sol2.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted2);
+// // // 
+// // //   exit(0);  
 
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, 0, 0., 1., 0., 1., 0., 0., QUAD9, fe_quad_rule.c_str());  
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, NSUB_Z, 0., 1., 0., 1., 0., 1., HEX27, fe_quad_rule.c_str());  

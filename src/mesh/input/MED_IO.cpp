@@ -592,7 +592,6 @@ namespace femus {
         Mesh& mesh = GetMesh();
        if (mesh.GetDimension() != 3 ) abort();
        
-  unsigned solType_coords = 2;
    
        
       // ======= FILE READ ==================
@@ -618,30 +617,32 @@ namespace femus {
         close_mesh_file(file_id);
       // ======= FILE READ ==================
        
+  unsigned solType_coords = 2;
        
-        for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
+        for (unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
             
       unsigned iel_geom_type = mesh.GetElementType(iel);
       unsigned iel_n_faces = mesh.GetElementFaceNumber(iel);
       
-      for(unsigned f = 0; f < iel_n_faces; f++) {
+      for (unsigned f = 0; f < iel_n_faces; f++) {
 
           
       unsigned iel_geom_type_face = mesh.GetElementFaceType(iel, f);
  
-      unsigned ElementFaceFaceNumber  =  mesh.el->GetNFC(iel_geom_type, iel_geom_type_face);
+      unsigned f_n_faces_faces  =  mesh.el->GetNFC(iel_geom_type, iel_geom_type_face); /* ElementFaceFaceNumber */
+//           unsigned n_nodes_face = _geom_elems[iel_geom_type]->get_face(f).size();
+ 
       
-      for(unsigned f_f = 0; f_f < ElementFaceFaceNumber; f_f++) {
+      for (unsigned f_f = 0; f_f < f_n_faces_faces; f_f++) {
           
           
                   unsigned n_nodes_face_face = _geom_elems[iel_geom_type_face]->get_face(f_f).size();
 
                   std::vector < int > nodes_face_face_flags(n_nodes_face_face, 0); 
           
-//           unsigned n_nodes_face = _geom_elems[iel_geom_type]->get_face(f).size();
                                                
           
-		  for(unsigned i_bdry_bdry = 0; i_bdry_bdry < n_nodes_face_face; i_bdry_bdry++) {
+		  for (unsigned i_bdry_bdry = 0; i_bdry_bdry < n_nodes_face_face; i_bdry_bdry++) {
                
     unsigned LocalFaceFaceVertexIndex = mesh.el->GetIG(iel_geom_type_face, f_f, i_bdry_bdry);    //from n-2 to n-1
     unsigned LocalFaceVertexIndex    = mesh.el->GetIG(iel_geom_type, f, LocalFaceFaceVertexIndex); //from n-1 to n

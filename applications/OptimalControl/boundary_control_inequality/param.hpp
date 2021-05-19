@@ -796,17 +796,20 @@ void el_dofs_unknowns_vol(const Solution*                sol,
       
     //============ Mixed Integral 2D - Numerical ==================      
       else if (dim_bdry == 2) {           
-//           std::cout << "check dim vs dim_bdry ";   abort();
+          
+            unsigned iel_geom_type = msh->GetElementType(iel);
+            unsigned iel_geom_type_face = msh->GetElementFaceType(iel, iface);
+
             double mixed_term1 = 0.;
-            // *** Face Gauss point loop (boundary Integral) ***
-            for(unsigned e_bdry_bdry = 0; e_bdry_bdry < bdry_bdry.size(); e_bdry_bdry++) {
+            // *** Face Gauss point loop (Integral over 2d object) ***
+            for(unsigned e_bdry_bdry = 0; e_bdry_bdry < bdry_bdry.size(); e_bdry_bdry++) {  ///@todo I think this has to be fixed
 
               // look for boundary faces
             
 
-              unsigned n_dofs_bdry_bdry = msh->el->GetNFC(LINE, solType); 
+//               unsigned n_dofs_bdry_bdry = msh->el->GetNFC(LINE, solType);
               
-//               unsigned n_dofs_bdry_bdry =  msh->el->GetNFACENODES(jelGeom_bdry, e_bdry_bdry, solType); //TODO
+              unsigned n_dofs_bdry_bdry =  msh->el->GetNFACENODES(iel_geom_type_face/*jelGeom_bdry*/, e_bdry_bdry, solType); //TODO ///@todo this is only taking linear nodes, do we want to do that for the coordinates too?
 
               vector  < vector  <  double> > delta_coordinates_bdry_bdry(dim);    // A matrix holding the face coordinates rowwise.
               for(int k = 0; k < dim; k++) {
@@ -814,8 +817,9 @@ void el_dofs_unknowns_vol(const Solution*                sol,
               }
               for(unsigned i_bdry_bdry = 0; i_bdry_bdry < n_dofs_bdry_bdry; i_bdry_bdry++) {
                 unsigned inode_bdry_bdry = msh->el->GetIG(jelGeom_bdry, bdry_bdry[e_bdry_bdry], i_bdry_bdry); // face-to-element local node mapping. TODO: verify jelGeom_bdry
+
                 for(unsigned k = 0; k < dim; k++) {
-                  delta_coordinates_bdry_bdry[k][i_bdry_bdry] = geom_element_jel.get_coords_at_dofs()[k][inode_bdry_bdry]- x_iqp_bdry[k]; // TODO We extract the local coordinates on the face from local coordinates on the element.
+                  delta_coordinates_bdry_bdry[k][i_bdry_bdry] = geom_element_jel.get_coords_at_dofs_bdry_3d()[k][inode_bdry_bdry]- x_iqp_bdry[k];  ///@todo// TODO We extract the local coordinates on the face from local coordinates on the element.
                 }
               }
               const unsigned div = 10;
