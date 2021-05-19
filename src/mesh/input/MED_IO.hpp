@@ -77,7 +77,7 @@ class MED_IO : public MeshInput<Mesh>
    */
   virtual void read (const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups, const bool read_boundary_groups);
   
-  void boundary_of_boundary_3d_via_nodes(const std::string& name);
+  void boundary_of_boundary_3d_via_nodes(const std::string& name, const unsigned group_user);
 
  private:
      

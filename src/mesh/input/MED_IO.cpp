@@ -179,7 +179,7 @@ namespace femus {
           compute_group_geom_elem_and_size(file_id, mesh_menus[j], group_info[i]);
         }
 
-        // Groups ===============
+        // Domain groups (dimension same as max mesh dimension) ===============
         if(read_domain_groups_flag == true) {
           if(i == (mesh_dim - 1)) {
 //           for(unsigned i = 0; i < mesh_dim; i++) {
@@ -242,7 +242,7 @@ namespace femus {
     unsigned int output_flag = 0;
 
     for(unsigned gv = 0; gv < group_info.size(); gv++) {
-      if(group_info[gv]._user_defined_flag == input_flag) output_flag = group_info[gv]._user_defined_flag;
+      if(group_info[gv]._user_defined_flag == input_flag) output_flag = group_info[gv]._med_flag;
     }
 
     return output_flag;
@@ -573,12 +573,13 @@ namespace femus {
 
    
   //this is for 3D domains
-   void MED_IO::boundary_of_boundary_3d_via_nodes(const std::string& name) {
+   void MED_IO::boundary_of_boundary_3d_via_nodes(const std::string& name, const unsigned group_user) {
        
-   unsigned solType_coords = 2;
-   
-       Mesh& mesh = GetMesh();
+        Mesh& mesh = GetMesh();
        if (mesh.GetDimension() != 3 ) abort();
+       
+  unsigned solType_coords = 2;
+   
        
       // ======= FILE READ ==================
        
@@ -593,10 +594,10 @@ namespace femus {
     dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, node_group_map, node_group_dataset);
  
       // ======= group that one wants to find (have to put the user flag and convert it) ==================
-        // Groups of the mesh ===============
+       // Groups of the mesh ===============
         std::vector< GroupInfo >     group_info = get_all_groups_per_mesh(file_id, mesh_menus[0]);
-          const unsigned group_user = 7;
-     const unsigned group_salome = get_med_flag_from_user_flag(group_info, group_user);
+        
+        const unsigned group_salome = get_med_flag_from_user_flag(group_info, group_user);
      // =========================
 
                
@@ -1072,6 +1073,10 @@ namespace femus {
 
     }
     
+    //======================= After filling all info, Geom elem and size of each group ========================
+        for(unsigned i = 0; i < group_info.size(); i++) {
+          compute_group_geom_elem_and_size(file_id, mesh_menu, group_info[i]);
+        }
     
     
     return group_info;

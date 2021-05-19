@@ -274,7 +274,8 @@ int main(int argc, char** args) {
   
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref);
  
-  MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary_3d_via_nodes(infile);//.read(name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
+  const unsigned group_b_b = 7;
+  MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary_3d_via_nodes(infile, group_b_b);//.read(name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
 
   // ======= Solution  ==================
   MultiLevelSolution ml_sol2(&ml_mesh);
