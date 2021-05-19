@@ -36,8 +36,9 @@ namespace femus
  #define TYPE_FOR_FAM_FLAGS  int  //do not use "unsigned": in fact, in MED 
                                   // these numbers are NEGATIVE for elements,
                                   //    while they are POSITIVE for nodes!
- 
-   
+ #define TYPE_FOR_REAL_DATASET  double
+
+    
 // Auxiliary struct to store group information
   struct GroupInfo {
       std::string        _user_defined_group_string;
@@ -88,10 +89,13 @@ class MED_IO : public MeshInput<Mesh>
   std::string get_node_info_H5Group(const std::string mesh_menu) const;
    
   std::string get_group_info_all_geom_types_H5Group(const std::string mesh_menu, const unsigned dimension) const;
-   
-  void dataset_open_and_close_store_in_vector(hid_t file_id, std::vector< TYPE_FOR_FAM_FLAGS > & fam_map, const std::string fam_name_dir_i) const;
+ 
+ template < class DATASET_TYPE >  
+  void dataset_open_and_close_store_in_vector(hid_t file_id, std::vector< DATASET_TYPE > & fam_map, const std::string fam_name_dir_i) const;
   
    unsigned int get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS med_flag_in ) const;
+   
+   unsigned int get_med_flag_from_user_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS input_flag) const;
 
    void set_elem_group_ownership(const hid_t&  file_id,
                                  const std::string mesh_menu,
@@ -192,6 +196,53 @@ MED_IO::MED_IO (Mesh& mesh) :
     
 }
 
+
+
+   
+//template specialization in h file, explicit instantiation in cpp file
+ template < >  
+  void MED_IO::dataset_open_and_close_store_in_vector<TYPE_FOR_FAM_FLAGS>(hid_t file_id, std::vector< TYPE_FOR_FAM_FLAGS > & fam_map, const std::string fam_name_dir_i) const  {
+      
+       hid_t dtset_fam            = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
+      hid_t filespace_fam        = H5Dget_space(dtset_fam);
+      hsize_t dims_fam[2];
+      hid_t status_fam           = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
+      if(status_fam == 0) {
+        std::cerr << "MED_IO::read dims not found";
+        abort();
+      }
+
+      const unsigned n_elements = dims_fam[0];
+//       std::vector< TYPE_FOR_FAM_FLAGS > fam_map(n_elements);
+      fam_map.resize(n_elements);
+      hid_t status_conn = H5Dread(dtset_fam,/*ONLY DIFFERENCE*/H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data());
+      H5Dclose(dtset_fam);     
+      
+  }
+
+
+  
+ template < >  
+  void MED_IO::dataset_open_and_close_store_in_vector<TYPE_FOR_REAL_DATASET>(hid_t file_id, std::vector< TYPE_FOR_REAL_DATASET > & fam_map, const std::string fam_name_dir_i) const  {
+      
+       hid_t dtset_fam            = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
+      hid_t filespace_fam        = H5Dget_space(dtset_fam);
+      hsize_t dims_fam[2];
+      hid_t status_fam           = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
+      if(status_fam == 0) {
+        std::cerr << "MED_IO::read dims not found";
+        abort();
+      }
+
+      const unsigned n_elements = dims_fam[0];
+//       std::vector< TYPE_FOR_FAM_FLAGS > fam_map(n_elements);
+      fam_map.resize(n_elements);
+      hid_t status_conn = H5Dread(dtset_fam,/*ONLY DIFFERENCE*/ H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data());
+      H5Dclose(dtset_fam);     
+      
+  }  
+   
+  
 
 // MED_IO::~MED_IO() {
 //     

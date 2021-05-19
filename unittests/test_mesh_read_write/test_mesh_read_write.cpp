@@ -67,12 +67,16 @@ int main(int argc,char **args) {
   
   ml_msh.PrintInfo();
   
+//====================================================
+///@todo Femus: do a print of the mesh that doesn't require the Solution instantiation
+
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution ml_sol(&ml_msh); //I think I cannot read the mesh alone, I need to attach at least one solution
 
   // add variables to ml_sol
   ml_sol.AddSolution("u", LAGRANGE, FIRST);
   ml_sol.Initialize("All"); 
+//====================================================
   
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
