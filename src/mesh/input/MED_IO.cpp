@@ -223,7 +223,7 @@ namespace femus {
 
 
 
-  unsigned int MED_IO::get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS med_flag_in) const {
+  unsigned int MED_IO::get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_INT_DATASET med_flag_in) const {
 
     unsigned int user_flag;
 
@@ -236,7 +236,7 @@ namespace femus {
   }
   
 
-  unsigned int MED_IO::get_med_flag_from_user_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS input_flag) const {
+  unsigned int MED_IO::get_med_flag_from_user_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_INT_DATASET input_flag) const {
 
     unsigned int output_flag;
 
@@ -280,9 +280,9 @@ namespace femus {
 
       std::string fam_name_dir_i = my_mesh_name_dir + elem_types_str + "/" + group_fam;
       
-      std::vector< TYPE_FOR_FAM_FLAGS > fam_map;
+      std::vector< TYPE_FOR_INT_DATASET > fam_map;
       
-      dataset_open_and_close_store_in_vector<TYPE_FOR_FAM_FLAGS>(file_id, fam_map, fam_name_dir_i);
+      dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, fam_map, fam_name_dir_i);
 
       
 
@@ -350,17 +350,17 @@ namespace femus {
     //open the NOD field of the boundary element list (for the connectivities)
     std::string   conn_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + connectivity; ///@todo these boundary connectivities were not stored, so we need to read them now
     
-      std::vector< TYPE_FOR_FAM_FLAGS > conn_map;
+      std::vector< TYPE_FOR_INT_DATASET > conn_map;
       
-      dataset_open_and_close_store_in_vector<TYPE_FOR_FAM_FLAGS>(file_id, conn_map, conn_name_dir);
+      dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, conn_map, conn_name_dir);
       
 
     //open the FAM field of the boundary element list (for the group flags)
     std::string fam_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + group_fam;
     
-      std::vector< TYPE_FOR_FAM_FLAGS > fam_map;
+      std::vector< TYPE_FOR_INT_DATASET > fam_map;
       
-      dataset_open_and_close_store_in_vector<TYPE_FOR_FAM_FLAGS>(file_id, fam_map, fam_name_dir);
+      dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, fam_map, fam_name_dir);
     
 
     //check that all boundary faces were set in the mesh file
@@ -409,7 +409,7 @@ namespace femus {
 
           bool are_faces_the_same = see_if_faces_from_different_lists_are_the_same(geom_elem_per_dimension, face_nodes_from_vol_connectivity, face_nodes_from_bdry_group);
 
-                 const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
+                 const TYPE_FOR_INT_DATASET med_flag = fam_map[k];
                  
   if (med_flag > 0) abort(); //MED puts its own NEGATIVE flags for elements in dim >=1 (edges, faces), and POSITIVE for nodes (dim=0)
 
@@ -468,9 +468,9 @@ namespace femus {
     //open the FAM field of NOE
     std::string fam_name_dir = my_mesh_name_dir /*+ geom_elem_per_dimension->get_name_med()*/ + "/" + group_fam;
     
-    std::vector< TYPE_FOR_FAM_FLAGS > fam_map;
+    std::vector< TYPE_FOR_INT_DATASET > fam_map;
       
-    dataset_open_and_close_store_in_vector<TYPE_FOR_FAM_FLAGS>(file_id, fam_map, fam_name_dir);
+    dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, fam_map, fam_name_dir);
 
 
     // I have to loop over elements to then find faces of the elements, get the dof of those faces, and then with that dof go get the position in NOE/FAM 
@@ -502,7 +502,7 @@ namespace femus {
             // If the group is different from zero 
                for(unsigned k = 0; k < fam_map.size(); k++) {
 
-                      const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
+                      const TYPE_FOR_INT_DATASET med_flag = fam_map[k];
                       
           if (med_flag < 0) abort(); //MED puts its own NEGATIVE flags for elements in dim >=1 (edges, faces), and POSITIVE for nodes (dim=0)
   
@@ -540,7 +540,7 @@ namespace femus {
        Mesh& mesh = GetMesh();
        if (mesh.GetDimension() != 3 ) abort();
        
-      // =========================
+      // ======= FILE READ ==================
        
         hid_t  file_id = open_mesh_file(name);
         
@@ -548,13 +548,10 @@ namespace femus {
 
         std::string node_group_dataset = get_node_info_H5Group(mesh_menus[0]) + group_fam + "/";
         
-    std::vector< TYPE_FOR_FAM_FLAGS > node_group_map;
+    std::vector< TYPE_FOR_INT_DATASET > node_group_map;
       
-    dataset_open_and_close_store_in_vector<TYPE_FOR_FAM_FLAGS>(file_id, node_group_map, node_group_dataset);
-                
-        close_mesh_file(file_id);
-      // =========================
-
+    dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, node_group_map, node_group_dataset);
+ 
       // ======= group that one wants to find (have to put the user flag and convert it) ==================
         // Groups of the mesh ===============
         std::vector< GroupInfo >     group_info = get_group_flags_per_mesh_vector(file_id, mesh_menus[0]);
@@ -562,6 +559,9 @@ namespace femus {
      const unsigned group_salome = get_med_flag_from_user_flag(group_info, group_user);
      // =========================
 
+               
+        close_mesh_file(file_id);
+      // ======= FILE READ ==================
        
        
         for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
@@ -680,7 +680,7 @@ namespace femus {
 //         // If the group is different from zero
 //         for(unsigned k = 0; k < fam_map.size(); k++) {
 // 
-//           const TYPE_FOR_FAM_FLAGS med_flag = fam_map[k];
+//           const TYPE_FOR_INT_DATASET med_flag = fam_map[k];
 // 
 //           if(med_flag != 0)  {
 // 
@@ -771,9 +771,9 @@ namespace femus {
     
     std::string fam_name_dir_i = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + group_fam;
     
-    std::vector< TYPE_FOR_FAM_FLAGS > fam_map;
+    std::vector< TYPE_FOR_INT_DATASET > fam_map;
       
-    dataset_open_and_close_store_in_vector<TYPE_FOR_FAM_FLAGS>(file_id, fam_map, fam_name_dir_i);
+    dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, fam_map, fam_name_dir_i);
     
 
 
@@ -863,9 +863,9 @@ namespace femus {
     
 
        // READ CONNECTIVITY MAP
-    std::vector< TYPE_FOR_FAM_FLAGS > conn_map;
+    std::vector< TYPE_FOR_INT_DATASET > conn_map;
       
-    dataset_open_and_close_store_in_vector<TYPE_FOR_FAM_FLAGS>(file_id, conn_map, conn_name_dir_i);
+    dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, conn_map, conn_name_dir_i);
       
       
       // SET NUMBER OF VOLUME ELEMENTS
@@ -1358,10 +1358,10 @@ namespace femus {
   
   
   
-//explicit instantiation
+//explicit instantiation==============
   
  template < >  
-  void MED_IO::dataset_open_and_close_store_in_vector<TYPE_FOR_FAM_FLAGS>(hid_t file_id, std::vector< TYPE_FOR_FAM_FLAGS > & fam_map, const std::string fam_name_dir_i) const;
+  void MED_IO::dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(hid_t file_id, std::vector< TYPE_FOR_INT_DATASET > & fam_map, const std::string fam_name_dir_i) const;
 
       template < >  
   void MED_IO::dataset_open_and_close_store_in_vector<TYPE_FOR_REAL_DATASET>(hid_t file_id, std::vector< TYPE_FOR_REAL_DATASET > & fam_map, const std::string fam_name_dir_i) const;
