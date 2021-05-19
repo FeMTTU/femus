@@ -41,10 +41,10 @@ namespace femus {
 
   const std::string MED_IO::mesh_ensemble                      = "ENS_MAA";
   const std::string MED_IO::aux_zeroone                        = "-0000000000000000001-0000000000000000001";
-  const std::string MED_IO::elem_list                          = "MAI";
-  const std::string MED_IO::connectivity                       = "NOD";
-  const std::string MED_IO::node_list                          = "NOE";
-  const std::string MED_IO::coord_list                         = "COO";
+  const std::string MED_IO::elem_types_folder                  = "MAI";
+  const std::string MED_IO::elems_connectivity                 = "NOD";
+  const std::string MED_IO::nodes_folder                       = "NOE";
+  const std::string MED_IO::nodes_coord_list                   = "COO";
   const std::string MED_IO::node_or_elem_salome_gui_global_num = "NUM";  //numeration in the Salome GUI, we don't need to read these fields
   const std::string MED_IO::group_fam                          = "FAM";  //both for Elements, and for Nodes
   const std::string MED_IO::group_ensemble                     = "FAS";
@@ -265,7 +265,7 @@ namespace femus {
     if (group_info._node_or_cell_group == group_nodes ) {
          
 // ========= group geom elem ==========
-        std::string  elem_types_str = node_list;
+        std::string  elem_types_str = nodes_folder;
         
        group_info._geom_el = get_geom_elem_from_med_name(elem_types_str);
 // ========= group geom elem ==========
@@ -356,14 +356,14 @@ namespace femus {
 
    std::string MED_IO::get_element_info_all_dims_H5Group(const std::string mesh_menu) const {
     
-     return  mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";
+     return  mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_types_folder + "/";
        
    }
    
 
    std::string MED_IO::get_node_info_H5Group(const std::string mesh_menu) const {
     
-     return mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + node_list + "/";
+     return mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + nodes_folder + "/";
        
    }
    
@@ -388,7 +388,7 @@ namespace femus {
     std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
 
     //open the NOD field of the boundary element list (for the connectivities)
-    std::string   conn_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + connectivity; ///@todo these boundary connectivities were not stored, so we need to read them now
+    std::string   conn_name_dir = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + elems_connectivity; ///@todo these boundary connectivities were not stored, so we need to read them now
     
       std::vector< TYPE_FOR_INT_DATASET > conn_map;
       
@@ -690,105 +690,6 @@ namespace femus {
                       
                       return bool_union;
                                         
-                  
-// =======
-//     // I have to loop over elements to then find faces of the elements, get the dof of those faces, and then with that dof go get the position in NOE/FAM
-// 
-// 
-//     // loop over elements to find faces
-//     Mesh& mesh = GetMesh();
-// 
-//     //loop over the volume connectivity and find the boundary faces
-//     //the boundary faces of each volume element have already been constructed after the mesh reading
-// 
-//     for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
-// 
-//       //             unsigned iel_geom_type = mesh.GetElementType(iel);
-// 
-//       for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
-// 
-//         unsigned n_nodes = 1 /*_geom_elems[iel_geom_type]->get_face(f).size()*/;  //here the faces are made of 1 node
-// 
-//         std::vector<unsigned> face_nodes(n_nodes);
-// 
-//         for(unsigned nd = 0; nd < n_nodes; nd++) {
-//           unsigned nd_of_face = 0 /*_geom_elems[iel_geom_type]->get_face(f)[nd]*/;
-//           face_nodes[nd] = mesh.el->GetElementDofIndex(iel, nd_of_face);
-// 
-//         }
-// 
-//         // now I take this dof and read from NOE/FAM
-//         // If the group is different from zero
-//         for(unsigned k = 0; k < fam_map.size(); k++) {
-// 
-//           const TYPE_FOR_INT_DATASET med_flag = fam_map[k];
-// 
-//           if(med_flag != 0)  {
-// 
-//             int user_flag =  get_user_flag_from_med_flag(group_info, med_flag);  //flag of the boundary portion
-//             user_flag = - (user_flag + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the user_flag in salome must be POSITIVE
-// 
-//             std::cout << "Found face " << k << " in element " << iel << " with MED flag " << med_flag << " and user flag " << user_flag << std::endl;
-// 
-//             //       unsigned iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];//index of the face in that volume element
-//             element_faces_array[iel][f] = user_flag;  //user_flag is (-1) for element faces that are not boundary faces, SO WE MUST BE CAREFUL HERE!
-//             //  mesh.el->SetFaceElementIndex(iel, f, user_flag);  //old version
-// 
-// >>>>>>> main/master_gcc_7
-//           }
-// 
-// 
-//         } //end k
-// 
-//       } //faces loop
-// 
-//     }
-// 
-// 
-//   }
-// 
-// 
-// 
-//   bool MED_IO::see_if_faces_from_different_lists_are_the_same(const GeomElemBase* geom_elem_per_dimension,
-//                                                               const std::vector< unsigned > & face_nodes_from_vol_connectivity,
-//                                                               const std::vector< unsigned > & face_nodes_from_bdry_group) {
-// 
-//     // check any possible order of faces
-// 
-//     //just look for the initial linear element (maybe even the 1st three only); if this is aligned, all the Quad9 will be aligned
-//     //The problem, is that we don't know if the order corresponds to the OUTWARD NORMAL or not.
-//     //How many ways are there? If the nodes are 0 1 2 3, it could only be 0123, or 1230, or 2301, or 3012, or the REVERSE of each of them
-//     std::vector<unsigned>  face_nodes_from_vol_connectivity_linear(face_nodes_from_vol_connectivity.begin(), face_nodes_from_vol_connectivity.begin() + geom_elem_per_dimension->n_nodes_linear());
-//     std::vector<unsigned>  face_nodes_from_bdry_group_linear(face_nodes_from_bdry_group.begin(), face_nodes_from_bdry_group.begin() + geom_elem_per_dimension->n_nodes_linear());
-// 
-//     unsigned n_alternatives = 2 * geom_elem_per_dimension->n_nodes_linear();
-//     std::vector< std::vector<unsigned> > face_alternatives(n_alternatives);
-// 
-//     for(unsigned alt = 0; alt < n_alternatives / 2; alt++) {
-//       unsigned face_length = geom_elem_per_dimension->n_nodes_linear();
-//       face_alternatives[alt].resize(face_length);
-//       for(unsigned i = 0; i < face_length; i++) {
-//         unsigned mod_index = (i + alt) % face_length;
-//         face_alternatives[alt][i] = face_nodes_from_bdry_group_linear[mod_index];
-//       }
-//     }
-// 
-//     for(unsigned alt = n_alternatives / 2; alt < n_alternatives; alt++) {
-//       face_alternatives[alt] = face_alternatives[alt - (n_alternatives / 2)];
-//       std::reverse(face_alternatives[alt].begin(), face_alternatives[alt].end());
-//     }
-// 
-// 
-//     std::vector<bool>  is_same_face(n_alternatives);
-//     bool bool_union = false;
-//     for(unsigned alt = 0; alt < n_alternatives; alt++) {
-//       is_same_face[alt] = (face_nodes_from_vol_connectivity_linear == face_alternatives[alt]);
-//       if(is_same_face[alt] == true) bool_union = true;
-//     }
-// 
-//     return bool_union;
-
-
   }
 
 
@@ -900,7 +801,7 @@ namespace femus {
     std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
 
     // NOD ***************************
-    std::string conn_name_dir_i = my_mesh_name_dir +  geom_elem_per_dimension->get_name_med() + "/" + connectivity;
+    std::string conn_name_dir_i = my_mesh_name_dir +  geom_elem_per_dimension->get_name_med() + "/" + elems_connectivity;
     
 
        // READ CONNECTIVITY MAP
@@ -978,7 +879,7 @@ namespace femus {
 
     Mesh& mesh = GetMesh();
 
-    std::string coord_dataset = get_node_info_H5Group(mesh_menu) + coord_list + "/";  ///@todo here we have to loop
+    std::string coord_dataset = get_node_info_H5Group(mesh_menu) + nodes_coord_list + "/";  ///@todo here we have to loop
 
     
     std::vector< TYPE_FOR_REAL_DATASET > xyz_med;
@@ -1395,7 +1296,7 @@ namespace femus {
     else if(el_type.compare("SE2") == 0) return new GeomElemEdge2();
     else if(el_type.compare("SE3") == 0) return new GeomElemEdge3();
 
-    else if(el_type.compare(node_list) == 0) return NULL;
+    else if(el_type.compare(nodes_folder) == 0) return NULL;
     else {
       std::cout << "MED_IO::read: element not supported";
       abort();

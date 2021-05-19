@@ -796,7 +796,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
       
     //============ Mixed Integral 2D - Numerical ==================      
       else if (dim_bdry == 2) {           
-          std::cout << "check dim vs dim_bdry ";   abort();
+//           std::cout << "check dim vs dim_bdry ";   abort();
             double mixed_term1 = 0.;
             // *** Face Gauss point loop (boundary Integral) ***
             for(unsigned e_bdry_bdry = 0; e_bdry_bdry < bdry_bdry.size(); e_bdry_bdry++) {
@@ -851,11 +851,11 @@ void el_dofs_unknowns_vol(const Solution*                sol,
               }
             }
 
-            for(unsigned i = 0; i < nDof_iel; i++) {
-              for(unsigned j = 0; j < nDof_iel; j++) {
-                KK_local_iel[ i * nDof_iel + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term1;
+            for(unsigned i = 0; i < phi_ctrl_iel_bdry_iqp_bdry.size(); i++) {
+              for(unsigned j = 0; j < phi_ctrl_iel_bdry_iqp_bdry.size(); j++) {
+                KK_local_iel[ i * nDof_vol_iel + j ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term1;
               }
-              Res_local_iel[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * mixed_term1;
+              Res_local_iel[ i ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * mixed_term1;
             }
           
       }          

@@ -162,14 +162,14 @@ class MED_IO : public MeshInput<Mesh>
 //    std::vector<char*> menu_names;
    static const std::string mesh_ensemble;             //ENS_MAA
    static const std::string aux_zeroone;               // -0000000000000000001-0000000000000000001
-   static const std::string elem_list;                 //MAI
+   static const std::string elem_types_folder;         //MAI
    static const std::string group_fam;                 //FAM
-   static const std::string connectivity;              //NOD    //These are written based on the NOE/NUM numbering !
+   static const std::string elems_connectivity;              //NOD    //These are written based on the NOE/NUM numbering !
    static const std::string node_or_elem_salome_gui_global_num;   //NUM    //this is the MED global numbering (as you see in Salome) both for nodes (in NOE) and for elements of all dimensions (in MAI). 
                                                        //Salome global Numbering of both Nodes and Elements starts at 1.
                                                        //For Elements, lower dimensional elements are numbered first
-   static const std::string node_list;                 //NOE
-   static const std::string coord_list;                //COO
+   static const std::string nodes_folder;                 //NOE
+   static const std::string nodes_coord_list;                //COO
    static const std::string group_ensemble;            //FAS
    static const std::string group_elements;            //ELEME
    static const std::string group_nodes;               //NOEUD  //if you ever use group of nodes, not used now
