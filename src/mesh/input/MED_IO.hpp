@@ -81,6 +81,8 @@ class MED_IO : public MeshInput<Mesh>
 
  private:
      
+  bool boundary_of_boundary_3d_check_face_of_face_via_nodes(const std::vector < int > nodes_face_face_flags, const unsigned group_salome) const;
+  
   hid_t open_mesh_file(const std::string& name);
   
   void close_mesh_file(hid_t file_id);

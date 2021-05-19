@@ -570,7 +570,21 @@ namespace femus {
    }
 
    
+  bool MED_IO::boundary_of_boundary_3d_check_face_of_face_via_nodes(const std::vector < int > nodes_face_face_flags, const unsigned group_salome) const {
 
+                   bool is_face_bdry_bdry = false;
+              unsigned int i_bdry_bdry = 0;
+              while ( i_bdry_bdry < nodes_face_face_flags.size() ) {
+                  if (nodes_face_face_flags[i_bdry_bdry] == group_salome) { i_bdry_bdry++;}
+                  else break;
+               }
+                if  (  i_bdry_bdry ==   nodes_face_face_flags.size() ) { is_face_bdry_bdry = true;   }
+
+           return  is_face_bdry_bdry;    
+                
+  }
+  
+  
    
   //this is for 3D domains
    void MED_IO::boundary_of_boundary_3d_via_nodes(const std::string& name, const unsigned group_user) {
@@ -608,11 +622,12 @@ namespace femus {
         for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
             
       unsigned iel_geom_type = mesh.GetElementType(iel);
-
-      for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
+      unsigned iel_n_faces = mesh.GetElementFaceNumber(iel);
+      
+      for(unsigned f = 0; f < iel_n_faces; f++) {
 
           
-          unsigned iel_geom_type_face = mesh.GetElementFaceType(iel, f);
+      unsigned iel_geom_type_face = mesh.GetElementFaceType(iel, f);
  
       unsigned ElementFaceFaceNumber  =  mesh.el->GetNFC(iel_geom_type, iel_geom_type_face);
       
@@ -621,31 +636,41 @@ namespace femus {
           
                   unsigned n_nodes_face_face = _geom_elems[iel_geom_type_face]->get_face(f_f).size();
 
+                  std::vector < int > nodes_face_face_flags(n_nodes_face_face, 0); 
           
 //           unsigned n_nodes_face = _geom_elems[iel_geom_type]->get_face(f).size();
                                                
           
 		  for(unsigned i_bdry_bdry = 0; i_bdry_bdry < n_nodes_face_face; i_bdry_bdry++) {
                
-    unsigned LocalFaceFaceVertexIndex = mesh.el->GetIG(iel_geom_type_face, f_f, i_bdry_bdry);
-  
-                unsigned int i_vol_iel = LocalFaceFaceVertexIndex; //mesh.GetLocalFaceVertexIndex(iel, f, i_bdry);
+    unsigned LocalFaceFaceVertexIndex = mesh.el->GetIG(iel_geom_type_face, f_f, i_bdry_bdry);    //from n-2 to n-1
+    unsigned LocalFaceVertexIndex    = mesh.el->GetIG(iel_geom_type, f, LocalFaceFaceVertexIndex); //from n-1 to n
+ 
+                unsigned int i_vol_iel = LocalFaceVertexIndex; //mesh.GetLocalFaceVertexIndex(iel, f, i_bdry);
                 
                 //here is where I want to go from LOCAL to GLOBAL mesh node
   unsigned node_global = mesh.el->GetElementDofIndex(iel, i_vol_iel);
   
    if (node_group_map[node_global] == group_salome) std::cout << node_global << std::endl;
-  
-     // now I want to go inside the node flag in the Salome field
-  
-  
+    
+       nodes_face_face_flags[i_bdry_bdry] = node_group_map[node_global];
+     
               }
+              
+                  bool is_face_bdry_bdry  =  boundary_of_boundary_3d_check_face_of_face_via_nodes( nodes_face_face_flags, group_salome);
+                  
+                 if  ( is_face_bdry_bdry ) { std::cout << " Face in iel ======= " << iel << " face " << f << " face_face " <<  f_f << std::endl;  }
+
+                
+              
             }
             
             
       }
       
     }
+    
+    
        
    }
   
