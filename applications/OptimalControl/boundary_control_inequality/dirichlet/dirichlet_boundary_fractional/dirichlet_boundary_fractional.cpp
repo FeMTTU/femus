@@ -9,6 +9,8 @@
 
 #include "ElemType.hpp"
 
+#include "MED_IO.hpp"
+
 
 
 #define FACE_FOR_CONTROL        4  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
@@ -261,16 +263,20 @@ int main(int argc, char** args) {
   MultiLevelMesh ml_mesh;
 
   
-  std::string input_file = "square_4x5.med";
+//   std::string input_file = "square_4x5.med";
 //   std::string input_file = "square_parametric.med";
-//   std::string input_file = "Mesh_3_groups.med";
+  std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
   
   
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref);
+ 
+  MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary(infile);//.read(name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
+
   
+   exit(0);  
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, 0, 0., 1., 0., 1., 0., 0., QUAD9, fe_quad_rule.c_str());  
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, NSUB_Z, 0., 1., 0., 1., 0., 1., HEX27, fe_quad_rule.c_str());  
      ///@todo seems like GenerateCoarseBoxMesh doesn't assign flags to faces correctly, 

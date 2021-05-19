@@ -119,10 +119,23 @@ namespace femus {
     {0, 1, 2, 3},       //QUAD9
     {0, 1, 2},          //TRI6
     {0, 1}              //EDGE3
-  };
+  }; 
+  
+  
+  hid_t MED_IO::open_mesh_file(const std::string& name) {
+      
+    hid_t  file_id = H5Fopen(name.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
+    return file_id;
+  }
+  
 
-
+  void MED_IO::close_mesh_file(hid_t file_id) {
+      
+        H5Fclose(file_id);
+  }
+  
+  
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
   void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups_flag, const bool read_boundary_groups_flag) {
@@ -133,14 +146,10 @@ namespace femus {
     Mesh& mesh = GetMesh();
     mesh.SetLevel(0);
 
-    hid_t  file_id = H5Fopen(name.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    hid_t  file_id = open_mesh_file(name);
 
     const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
 
-    if(mesh_menus.size() > 1) {
-      std::cout << "Review the code because there is only one MultilevelMesh object and most likely things don't work" << std::endl;
-      abort();
-    }
 
     // dimension and geom_el types ===============
 
@@ -188,7 +197,7 @@ namespace femus {
     }
 
 
-    H5Fclose(file_id);
+    close_mesh_file(file_id);
 
   }
 
@@ -232,9 +241,11 @@ namespace femus {
 
   //separate groups by dimension
   //as soon as an entry is equal to the group_med_flag, that means the dimension is that of the current element dataset
-  void MED_IO::compute_group_geom_elem_and_size(const hid_t&  file_id, const std::string mesh_menu, GroupInfo & group_info) const {
+  void MED_IO::compute_group_geom_elem_and_size(const hid_t&  file_id, 
+                                                const std::string mesh_menu,
+                                                GroupInfo & group_info) const {
 
-    std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+    std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
 
     hsize_t     n_geom_el_types;
     hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
@@ -293,7 +304,31 @@ namespace femus {
   }
 
 
+   std::string MED_IO::get_element_info_all_dims_H5Group(const std::string mesh_menu) const {
+    
+     return  mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";
+       
+   }
+   
+   
+   std::string MED_IO::get_group_info_all_geom_types_H5Group(const std::string mesh_menu, const unsigned dimension) const {
+       
+    std::string group_list;
+    if(dimension == 2 || dimension == 3) group_list = group_ensemble +  "/" + mesh_menu + "/" + group_elements;
+    else if(dimension == 1)              group_list = group_ensemble +  "/" + mesh_menu + "/" + group_nodes;
+    
+    return  group_list;
+    
+   }
 
+
+   std::string MED_IO::get_node_info_H5Group(const std::string mesh_menu) const {
+    
+     return mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + node_list/*elem_list*/ + "/";
+       
+   }
+   
+   
   void MED_IO::find_boundary_faces_and_set_face_flags(const hid_t&  file_id,
                                                       const std::string mesh_menu,
                                                       const std::vector< GroupInfo > & group_info,
@@ -302,7 +337,7 @@ namespace femus {
     //basically you have certain elements on the boundary, and you have to find them in the list of all elements
 
 
-    std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+    std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
 
     //open the NOD field of the boundary element list (for the connectivities)
     hsize_t dims_conn[2];
@@ -426,7 +461,7 @@ namespace femus {
                                                       const std::vector<GroupInfo> & group_info,
                                                       MyMatrix <int> & element_faces_array)  {
 
-    std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + node_list/*elem_list*/ + "/";  ///@todo here we have to loop
+    std::string my_mesh_name_dir = get_node_info_H5Group(mesh_menu);  ///@todo here we have to loop
 
     //open the FAM field of NOE
     hsize_t dims_fam[2];
@@ -498,6 +533,74 @@ namespace femus {
 
    
 
+   
+  //this is for 3D domains
+   void MED_IO::boundary_of_boundary(const std::string& name) {
+       
+   unsigned solType_coords = 2;
+   
+       Mesh& mesh = GetMesh();
+       if (mesh.GetDimension() != 3 ) abort();
+       
+      // =========================
+       
+        hid_t  file_id = open_mesh_file(name);
+        
+        const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
+
+        std::string node_dataset = get_node_info_H5Group(mesh_menus[0]);
+        
+        
+        close_mesh_file(file_id);
+      // =========================
+
+       
+       
+       
+        for(unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
+            
+      unsigned iel_geom_type = mesh.GetElementType(iel);
+
+      for(unsigned f = 0; f < mesh.GetElementFaceNumber(iel); f++) {
+
+          
+          unsigned iel_geom_type_face = mesh.GetElementFaceType(iel, f);
+ 
+      unsigned ElementFaceFaceNumber  =  mesh.el->GetNFC(iel_geom_type, iel_geom_type_face);
+      
+      for(unsigned f_f = 0; f_f < ElementFaceFaceNumber; f_f++) {
+          
+          
+                  unsigned n_nodes_face_face = _geom_elems[iel_geom_type_face]->get_face(f_f).size();
+
+          
+//           unsigned n_nodes_face = _geom_elems[iel_geom_type]->get_face(f).size();
+                                               
+          
+		  for(unsigned i_bdry_bdry = 0; i_bdry_bdry < n_nodes_face_face; i_bdry_bdry++) {
+               
+    unsigned LocalFaceFaceVertexIndex = mesh.el->GetIG(iel_geom_type_face, f_f, i_bdry_bdry);
+  
+                unsigned int i_vol_iel = LocalFaceFaceVertexIndex; //mesh.GetLocalFaceVertexIndex(iel, f, i_bdry);
+                
+                //here is where I want to go from LOCAL to GLOBAL mesh node
+  unsigned node_global = mesh.el->GetElementDofIndex(iel, i_vol_iel);
+  
+     // now I want to go inside the node flag in the Salome field
+  
+  
+              }
+            }
+            
+            
+      }
+      
+    }
+       
+   }
+  
+   
+   
   bool MED_IO::see_if_faces_from_different_lists_are_the_same( const GeomElemBase* geom_elem_per_dimension, 
                                                    const std::vector< unsigned > & face_nodes_from_vol_connectivity, 
                                                    const std::vector< unsigned > & face_nodes_from_bdry_group) {
@@ -655,8 +758,11 @@ namespace femus {
 
     //FAM ***************************
     hsize_t dims_fam[2];
-    std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+    
+    std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
+    
     std::string fam_name_dir_i = my_mesh_name_dir + geom_elem_per_dimension->get_name_med() + "/" + group_fam;
+    
     hid_t dtset_fam = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
     hid_t filespace_fam = H5Dget_space(dtset_fam);
     hid_t status_fam  = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
@@ -746,7 +852,7 @@ namespace femus {
 
     const unsigned el_nodes_per_dimension = geom_elem_per_dimension->n_nodes();
 
-    std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+    std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
     hsize_t dims_i[2];
     // NOD ***************************
     std::string conn_name_dir_i = my_mesh_name_dir +  geom_elem_per_dimension->get_name_med() + "/" + connectivity;
@@ -832,13 +938,13 @@ namespace femus {
 
 
 
-
+  //the node global ordering is given by the mesh file, as well as the element global ordering
   void MED_IO::set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> > & coords, const double Lref) {
 
     Mesh& mesh = GetMesh();
     hsize_t dims[2];
 
-    std::string coord_dataset = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + node_list + "/" + coord_list + "/";  ///@todo here we have to loop
+    std::string coord_dataset = get_node_info_H5Group(mesh_menu) + coord_list + "/";  ///@todo here we have to loop
 
     hid_t dtset = H5Dopen(file_id, coord_dataset.c_str(), H5P_DEFAULT);
 
@@ -846,6 +952,7 @@ namespace femus {
     hid_t filespace = H5Dget_space(dtset);    /* Get filespace handle first. */
     hid_t status_dims  = H5Sget_simple_extent_dims(filespace, dims, NULL);
     if(status_dims == 0) std::cerr << "MED_IO::read dims not found";
+
     // reading xyz_med
     unsigned int n_nodes = dims[0] / 3; //mesh.GetDimension();
     double*   xyz_med = new double[dims[0]];
@@ -856,6 +963,7 @@ namespace femus {
     for(unsigned d = 0; d < 3; d++)      coords[d].resize(n_nodes);
 
     H5Dread(dtset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, xyz_med);
+  
     H5Dclose(dtset);
 
     for(unsigned d = 0; d < 3; d++)  {
@@ -900,9 +1008,7 @@ namespace femus {
 
     const Mesh & mesh = GetMesh();
 
-    std::string group_list;
-    if(mesh.GetDimension() == 2 || mesh.GetDimension() == 3) group_list = group_ensemble +  "/" + mesh_menu + "/" + group_elements;
-    else if(mesh.GetDimension() == 1)                        group_list = group_ensemble +  "/" + mesh_menu + "/" + group_nodes;
+    std::string group_list = get_group_info_all_geom_types_H5Group(mesh_menu, mesh.GetDimension());
 
     hid_t  gid_groups      = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
 
@@ -969,9 +1075,17 @@ namespace femus {
     }
 
     H5Gclose(gid);
+    
+    
+    if(mesh_menus.size() > 1) {
+      std::cout << "Review the code because there is only one MultilevelMesh object and most likely things don't work" << std::endl;
+      abort();
+    }
+    
 
     return mesh_menus;
   }
+  
 
   ///@deprecated
   std::string  MED_IO::isolate_first_field_before_underscore(const std::string &  string_in, const int begin_pos_to_investigate) const {
@@ -1156,10 +1270,10 @@ namespace femus {
   // figures out the Mesh dimension by looping over element types
   /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
 
-  const std::vector< GeomElemBase* >  MED_IO::set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & mesh_menus)  {
+  const std::vector< GeomElemBase* >  MED_IO::set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & mesh_menu)  {
 
 
-    std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menus + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+    std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
 
     hsize_t     n_fem_type;
     hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);

@@ -74,9 +74,21 @@ class MED_IO : public MeshInput<Mesh>
    * Reads in a mesh in the  *.med format
    */
   virtual void read (const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups, const bool read_boundary_groups);
+  
+  void boundary_of_boundary(const std::string& name);
 
  private:
      
+  hid_t open_mesh_file(const std::string& name);
+  
+  void close_mesh_file(hid_t file_id);
+  
+  std::string get_element_info_all_dims_H5Group(const std::string mesh_menu) const;
+  
+  std::string get_node_info_H5Group(const std::string mesh_menu) const;
+   
+  std::string get_group_info_all_geom_types_H5Group(const std::string mesh_menu, const unsigned dimension) const;
+   
    unsigned int get_user_flag_from_med_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_FAM_FLAGS med_flag_in ) const;
 
    void set_elem_group_ownership(const hid_t&  file_id,

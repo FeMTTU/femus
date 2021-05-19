@@ -17,8 +17,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   2
+#define N_UNIFORM_LEVELS  1
+#define N_ERASED_LEVELS   0
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -1685,11 +1685,7 @@ if( check_if_same_elem(iel, jel) ) {
         RES->add_vector_blocked(Res_nonlocal_iel, l2gMap_iel);
         RES->add_vector_blocked(Res_nonlocal_jel, l2gMap_jel);
 //============ add to global - END ==================
-//     std::vector < unsigned >  Sol_n_el_dofs_ctrl(1, nDof_iel); //       if (/*print_algebra_local*/true) {
-//          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat, 10, 5);
-//          assemble_jacobian<double,double>::print_element_jacobian(iel, KK_nonlocal_iel_jel, Sol_n_el_dofs_ctrl, 10, 5);
-//      }
-            
+
         
 //----- iel ---        
     } //end control elem flag i (control_flag_iel == 1)
