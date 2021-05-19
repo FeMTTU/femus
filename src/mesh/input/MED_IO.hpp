@@ -42,6 +42,7 @@ namespace femus
 // Auxiliary struct to store group information
   struct GroupInfo {
       std::string        _user_defined_group_string;
+      std::string        _node_or_cell_group;
       TYPE_FOR_INT_DATASET _med_flag;
       int                _user_defined_flag;
       unsigned int       _user_defined_property;
@@ -76,7 +77,7 @@ class MED_IO : public MeshInput<Mesh>
    */
   virtual void read (const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag, const bool read_groups, const bool read_boundary_groups);
   
-  void boundary_of_boundary(const std::string& name);
+  void boundary_of_boundary_3d_via_nodes(const std::string& name);
 
  private:
      
@@ -88,7 +89,7 @@ class MED_IO : public MeshInput<Mesh>
   
   std::string get_node_info_H5Group(const std::string mesh_menu) const;
    
-  std::string get_group_info_all_geom_types_H5Group(const std::string mesh_menu, const unsigned dimension) const;
+  std::string get_group_info_H5Group(const std::string mesh_menu,  const std::string geom_elem_type) const;
  
  template < class DATASET_TYPE >  
   void dataset_open_and_close_store_in_vector(hid_t file_id, std::vector< DATASET_TYPE > & fam_map, const std::string fam_name_dir_i) const;
@@ -134,9 +135,9 @@ class MED_IO : public MeshInput<Mesh>
   
   void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
 
-   const GroupInfo                get_group_flags_per_mesh(const std::string & group_names) const;
+   const GroupInfo                get_group_flags_per_mesh(const std::string & group_names, const std::string  geom_elem_type) const;
    
-   const std::vector< GroupInfo > get_group_flags_per_mesh_vector(const hid_t &  file_id, const std::string & mesh_menu) const;
+   const std::vector< GroupInfo > get_all_groups_per_mesh(const hid_t &  file_id, const std::string & mesh_menu) const;
    
    const std::vector<std::string>  get_mesh_names(const hid_t & file_id) const;
      
@@ -164,7 +165,7 @@ class MED_IO : public MeshInput<Mesh>
    static const std::string elem_list;                 //MAI
    static const std::string group_fam;                 //FAM
    static const std::string connectivity;              //NOD    //These are written based on the NOE/NUM numbering !
-   static const std::string node_or_elem_global_num;   //NUM    //this is the MED global numbering (as you see in Salome) both for nodes (in NOE) and for elements of all dimensions (in MAI). 
+   static const std::string node_or_elem_salome_gui_global_num;   //NUM    //this is the MED global numbering (as you see in Salome) both for nodes (in NOE) and for elements of all dimensions (in MAI). 
                                                        //Salome global Numbering of both Nodes and Elements starts at 1.
                                                        //For Elements, lower dimensional elements are numbered first
    static const std::string node_list;                 //NOE

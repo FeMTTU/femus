@@ -39,17 +39,17 @@
 namespace femus {
 
 
-  const std::string MED_IO::mesh_ensemble           = "ENS_MAA";
-  const std::string MED_IO::aux_zeroone             = "-0000000000000000001-0000000000000000001";
-  const std::string MED_IO::elem_list               = "MAI";
-  const std::string MED_IO::group_fam               = "FAM";  //both for Elements, and for Nodes
-  const std::string MED_IO::connectivity            = "NOD";
-  const std::string MED_IO::node_or_elem_global_num = "NUM";  //numeration in the Salome GUI, we don't need to read these fields
-  const std::string MED_IO::node_list               = "NOE";
-  const std::string MED_IO::coord_list              = "COO";
-  const std::string MED_IO::group_ensemble          = "FAS";
-  const std::string MED_IO::group_elements          = "ELEME";
-  const std::string MED_IO::group_nodes             = "NOEUD";
+  const std::string MED_IO::mesh_ensemble                      = "ENS_MAA";
+  const std::string MED_IO::aux_zeroone                        = "-0000000000000000001-0000000000000000001";
+  const std::string MED_IO::elem_list                          = "MAI";
+  const std::string MED_IO::connectivity                       = "NOD";
+  const std::string MED_IO::node_list                          = "NOE";
+  const std::string MED_IO::coord_list                         = "COO";
+  const std::string MED_IO::node_or_elem_salome_gui_global_num = "NUM";  //numeration in the Salome GUI, we don't need to read these fields
+  const std::string MED_IO::group_fam                          = "FAM";  //both for Elements, and for Nodes
+  const std::string MED_IO::group_ensemble                     = "FAS";
+  const std::string MED_IO::group_elements                     = "ELEME";
+  const std::string MED_IO::group_nodes                        = "NOEUD";
   const uint MED_IO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
 
 
@@ -138,7 +138,7 @@ namespace femus {
   
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
-  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups_flag, const bool read_boundary_groups_flag) {
+  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_domain_groups_flag, const bool read_boundary_groups_flag) {
 
     _print_info = true;  
       
@@ -170,18 +170,19 @@ namespace femus {
 
 
 
-      if(read_groups_flag == true || read_boundary_groups_flag == true)  {
+      if(read_domain_groups_flag == true || read_boundary_groups_flag == true)  {
 
         // Groups of the mesh ===============
-        std::vector< GroupInfo >     group_info = get_group_flags_per_mesh_vector(file_id, mesh_menus[j]);
+        std::vector< GroupInfo >     group_info = get_all_groups_per_mesh(file_id, mesh_menus[j]);
 
         for(unsigned i = 0; i < group_info.size(); i++) {
           compute_group_geom_elem_and_size(file_id, mesh_menus[j], group_info[i]);
         }
 
         // Groups ===============
-        if(read_groups_flag == true) {
-          for(unsigned i = 0; i < mesh_dim; i++) {
+        if(read_domain_groups_flag == true) {
+          if(i == (mesh_dim - 1)) {
+//           for(unsigned i = 0; i < mesh_dim; i++) {
             set_elem_group_ownership(file_id, mesh_menus[j], group_info, geom_elem_per_dimension[i], i);
           }
         }
@@ -238,7 +239,7 @@ namespace femus {
 
   unsigned int MED_IO::get_med_flag_from_user_flag(const std::vector< GroupInfo > & group_info, const TYPE_FOR_INT_DATASET input_flag) const {
 
-    unsigned int output_flag;
+    unsigned int output_flag = 0;
 
     for(unsigned gv = 0; gv < group_info.size(); gv++) {
       if(group_info[gv]._user_defined_flag == input_flag) output_flag = group_info[gv]._user_defined_flag;
@@ -259,9 +260,46 @@ namespace femus {
   void MED_IO::compute_group_geom_elem_and_size(const hid_t&  file_id, 
                                                 const std::string mesh_menu,
                                                 GroupInfo & group_info) const {
+                                                    
 
-    std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
+    if (group_info._node_or_cell_group == group_nodes ) {
+         
+// ========= group geom elem ==========
+        std::string  elem_types_str = node_list;
+        
+       group_info._geom_el = get_geom_elem_from_med_name(elem_types_str);
+// ========= group geom elem ==========
+ 
+// ========= group size ==========
+     std::string my_mesh_name_dir = get_node_info_H5Group(mesh_menu);
+ 
+     std::string fam_name_dir = my_mesh_name_dir  + group_fam + "/";
+      
+     std::vector< TYPE_FOR_INT_DATASET > fam_map;
+      
+      dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, fam_map, fam_name_dir);
+      
+       int group_size = 0;
+      for(unsigned k = 0; k < fam_map.size(); k++) {
 
+        if(fam_map[k] == group_info._med_flag)   {
+                group_size++;
+          if(_print_info) {
+            std::cout << "Current flag " << fam_map[k] << " matches " << group_info._med_flag << " node" << std::endl;
+                }
+           }
+       }
+       
+       group_info._size = group_size;
+// ========= group size ==========
+         
+     }
+     
+     
+    else if (group_info._node_or_cell_group == group_elements)  {
+      
+      std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
+        
     hsize_t     n_geom_el_types;
     hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
     hid_t status = H5Gget_num_objs(gid, &n_geom_el_types);
@@ -307,6 +345,10 @@ namespace femus {
 
     H5Gclose(gid);
 
+    
+  }
+  
+  
     return;
 
   }
@@ -318,24 +360,22 @@ namespace femus {
        
    }
    
-   
-   std::string MED_IO::get_group_info_all_geom_types_H5Group(const std::string mesh_menu, const unsigned geom_elem_type) const {
+
+   std::string MED_IO::get_node_info_H5Group(const std::string mesh_menu) const {
+    
+     return mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + node_list + "/";
        
-    std::string group_list;
-    if /*(dimension == 2 || dimension == 3)*/(geom_elem_type == 0) group_list = group_ensemble +  "/" + mesh_menu + "/" + group_elements;
-    else if /*(dimension == 1)*/             (geom_elem_type == 1) group_list = group_ensemble +  "/" + mesh_menu + "/" + group_nodes;
+   }
+   
+   
+   std::string MED_IO::get_group_info_H5Group(const std::string mesh_menu, const std::string geom_elem_type) const {
+       
+    std::string group_list =  group_ensemble +  "/" + mesh_menu + "/" + geom_elem_type;
     
     return  group_list;
     
    }
 
-
-   std::string MED_IO::get_node_info_H5Group(const std::string mesh_menu) const {
-    
-     return mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + node_list/*elem_list*/ + "/";
-       
-   }
-   
    
   void MED_IO::find_boundary_faces_and_set_face_flags(const hid_t&  file_id,
                                                       const std::string mesh_menu,
@@ -533,7 +573,7 @@ namespace femus {
 
    
   //this is for 3D domains
-   void MED_IO::boundary_of_boundary(const std::string& name) {
+   void MED_IO::boundary_of_boundary_3d_via_nodes(const std::string& name) {
        
    unsigned solType_coords = 2;
    
@@ -554,7 +594,7 @@ namespace femus {
  
       // ======= group that one wants to find (have to put the user flag and convert it) ==================
         // Groups of the mesh ===============
-        std::vector< GroupInfo >     group_info = get_group_flags_per_mesh_vector(file_id, mesh_menus[0]);
+        std::vector< GroupInfo >     group_info = get_all_groups_per_mesh(file_id, mesh_menus[0]);
           const unsigned group_user = 7;
      const unsigned group_salome = get_med_flag_from_user_flag(group_info, group_user);
      // =========================
@@ -790,8 +830,8 @@ namespace femus {
 
       for(unsigned gv = 0; gv < group_info.size(); gv++) {
 
-        if(i > 0)  {
-          if(i == group_info[gv]._geom_el->get_dimension() - 1) {
+        if(i > 0 && group_info[gv]._node_or_cell_group == group_elements)  {
+          if(  i == group_info[gv]._geom_el->get_dimension() - 1) {
             for(/*unsigned*/ int g = 0; g < fam_map.size()/*group_info[gv]._size*//*number_of_group_elements*/; g++) {
               if(fam_map[g] == group_info[gv]._med_flag)   {
                 mesh.el->SetElementGroup(g,  group_info[gv]._user_defined_flag /*fam_map[g]*/ /*gr_integer_name*/);  //I think that 1 is set later as the default  group number
@@ -816,29 +856,29 @@ namespace femus {
     // ****************** Volume, end *******************************************
 
 
-    // ****************** Boundary *******************************************
-    else   if(i == (mesh.GetDimension() - 1 - 1)) {    //boundary
-
-      //loop over volume elements
-      //extract faces
-
-      //   // read boundary **************** D
-      for(unsigned k = 0; k < group_info.size()/*nbcd*//*@todo these should be the groups that are "boundary groups"*/; k++) {  //
-        int value = group_info[k]._user_defined_flag;       //flag of the boundary portion
-        unsigned nface = group_info[k]._size;  //number of elements in a portion of boundary
-        value = - (value + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the value in salome must be POSITIVE
-        for(unsigned f = 0; f < nface; f++) {
-          //       unsigned iel =,   //volume element to which the face belongs
-          //       iel--;
-          //       unsigned iface; //index of the face in that volume element
-          //       iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
-          //       mesh.el->SetFaceElementIndex(iel,iface,value);  //value is (-1) for element faces that are not boundary faces
-        }
-      }
-      //   // end read boundary **************** D
-
-    } //end (volume pos - 1)
-    // ****************** Boundary end *******************************************
+// // //     // ****************** Boundary *******************************************
+// // //     else   if(i == (mesh.GetDimension() - 1 - 1)) {    //boundary
+// // // 
+// // //       //loop over volume elements
+// // //       //extract faces
+// // // 
+// // //       //   // read boundary **************** D
+// // //       for(unsigned k = 0; k < group_info.size()/*nbcd*//*@todo these should be the groups that are "boundary groups"*/; k++) {  //
+// // //         int value = group_info[k]._user_defined_flag;       //flag of the boundary portion
+// // //         unsigned nface = group_info[k]._size;  //number of elements in a portion of boundary
+// // //         value = - (value + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the value in salome must be POSITIVE
+// // //         for(unsigned f = 0; f < nface; f++) {
+// // //           //       unsigned iel =,   //volume element to which the face belongs
+// // //           //       iel--;
+// // //           //       unsigned iface; //index of the face in that volume element
+// // //           //       iface = MED_IO::MEDToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
+// // //           //       mesh.el->SetFaceElementIndex(iel,iface,value);  //value is (-1) for element faces that are not boundary faces
+// // //         }
+// // //       }
+// // //       //   // end read boundary **************** D
+// // // 
+// // //     } //end (volume pos - 1)
+// // //     // ****************** Boundary end *******************************************
 
 
   }
@@ -970,7 +1010,7 @@ namespace femus {
 
   //salome family; our name; our property; group size
   /// @todo check the underscores according to our naming standard
-  const GroupInfo MED_IO::get_group_flags_per_mesh(const std::string & group_name) const {
+  const GroupInfo MED_IO::get_group_flags_per_mesh(const std::string & group_name, const std::string geom_elem_type) const {
 
     GroupInfo  group_info;
 
@@ -988,30 +1028,34 @@ namespace femus {
 
     group_info._user_defined_group_string = group_name.substr(pos_group_string_init, pos_group_string_length);
 
+    group_info._node_or_cell_group = geom_elem_type;
+    
+    if (group_info._node_or_cell_group == group_nodes && group_info._med_flag <= 0) { std::cout << "Node flags internal to Salome are positive" << std::endl; abort(); }
+
     return  group_info;
 
   }
 
 
   // ************** Groups of each Mesh *********************************
-  const std::vector< GroupInfo > MED_IO::get_group_flags_per_mesh_vector(const hid_t&  file_id, const std::string & mesh_menu) const {
+  const std::vector< GroupInfo > MED_IO::get_all_groups_per_mesh(const hid_t&  file_id, const std::string & mesh_menu) const {
 
     const Mesh & mesh = GetMesh();
 
     std::vector< std::string >             group_names;
     std::vector< GroupInfo >                group_info;
-
-    for(unsigned geom_elem_type = 0; geom_elem_type < 2; geom_elem_type++) {
     
-    std::string group_list = get_group_info_all_geom_types_H5Group(mesh_menu, geom_elem_type);
+    std::vector< std::string > geom_elem_types = {group_elements, group_nodes};
+
+    for(unsigned geom_elem_type = 0; geom_elem_type < geom_elem_types.size(); geom_elem_type++) {
+    
+    std::string group_list = get_group_info_H5Group(mesh_menu, geom_elem_types[geom_elem_type]);
 
     hid_t  gid_groups      = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
 
     hsize_t n_groups = 0;
     hid_t status_groups = H5Gget_num_objs(gid_groups, &n_groups);
 
-//     std::vector< std::string >             group_names(n_groups);
-//     std::vector< GroupInfo >                group_info(n_groups);
 
     for(unsigned j = 0; j < n_groups; j++) {
 
@@ -1020,7 +1064,7 @@ namespace femus {
       group_names.push_back(group_names_char);
       delete[] group_names_char;
 
-      group_info.push_back( get_group_flags_per_mesh(group_names[j]) );
+      group_info.push_back( get_group_flags_per_mesh(group_names.back(), geom_elem_types[geom_elem_type]) );
 
     }
 
@@ -1345,6 +1389,8 @@ namespace femus {
 
     else if(el_type.compare("SE2") == 0) return new GeomElemEdge2();
     else if(el_type.compare("SE3") == 0) return new GeomElemEdge3();
+
+    else if(el_type.compare(node_list) == 0) return NULL;
     else {
       std::cout << "MED_IO::read: element not supported";
       abort();
