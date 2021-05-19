@@ -735,7 +735,11 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                       std::vector < double > & Res_local_iel,
                       const Mesh * msh,
                       const int iel,
-                      const unsigned iface
+                      const unsigned iface,
+                      std::vector <int> bdry_bdry,
+                      CurrentElem < double > & geom_element_jel,
+                      const unsigned jelGeom_bdry,
+                      unsigned solType
                      ) {
       
   if(UNBOUNDED == 1) {
@@ -793,65 +797,66 @@ void el_dofs_unknowns_vol(const Solution*                sol,
     //============ Mixed Integral 2D - Numerical ==================      
       else if (dim_bdry == 2) {           
           std::cout << "check dim vs dim_bdry ";   abort();
-// // //             double mixed_term1 = 0.;
-// // // //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
-// // //             // *** Face Gauss point loop (boundary Integral) ***
-// // //             for(unsigned jj = 0; jj < bd_face.size(); jj++) {
-// // // 
-// // //               int jface = bd_face[jj];
-// // //               // look for boundary faces
-// // // 
-// // //               unsigned faceDofs = el->GetNFACENODES(ielGeom2, jface, solType);
-// // // 
-// // //               vector  < vector  <  double> > faceCoordinates(dim);    // A matrix holding the face coordinates rowwise.
-// // //               for(int k = 0; k < dim; k++) {
-// // //                 faceCoordinates[k].resize(faceDofs);
-// // //               }
-// // //               for(unsigned i = 0; i < faceDofs; i++) {
-// // //                 unsigned inode = el->GetIG(ielGeom2, jface, i);  // face-to-element local node mapping.
-// // //                 for(unsigned k = 0; k < dim; k++) {
-// // //                   faceCoordinates[k][i] =  x2[k][inode] - x_iqp_bdry[k]; // We extract the local coordinates on the face from local coordinates on the element.
-// // //                 }
-// // //               }
-// // //               const unsigned div = 10;
-// // //               vector  < vector  <  double> > interpCoordinates(dim);
-// // //               for(int k = 0; k < dim; k++) {
-// // //                 interpCoordinates[k].resize(div + 1); // set "4" as a parameter
-// // //               }
-// // //               for(unsigned n = 0; n <= div; n++) {
-// // //                 for(int k = 0; k < dim; k++) {
-// // //                   interpCoordinates[k][n] = faceCoordinates[k][0] + n * (faceCoordinates[k][1] - faceCoordinates[k][0]) /  div ;
-// // //                 }
-// // //               }
-// // //               for(unsigned n = 0; n < div; n++) {
-// // //                 double teta2 = atan2(interpCoordinates[1][n + 1], interpCoordinates[0][n + 1]);
-// // //                 double teta1 = atan2(interpCoordinates[1][n], interpCoordinates[0][n]);
-// // // 
-// // //                 if(teta2 < teta1) teta2 += 2. * M_PI;
-// // // 
-// // //                 double delta_teta = teta2 - teta1;
-// // // 
-// // // 
-// // //                 vector <double> mid_point;
-// // //                 mid_point.resize(dim);
-// // //                 for(unsigned k = 0; k < dim; k++) {
-// // //                   mid_point[k] = (interpCoordinates[k][n + 1] + interpCoordinates[k][n]) * 0.5;
-// // //                 }
-// // //                 double dist2 = 0;
-// // //                 for(int k = 0; k < dim; k++) {
-// // //                   dist2 += mid_point[k] * mid_point[k];
-// // //                 }
-// // //                 double dist = sqrt(dist2);
-// // //                 mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
-// // //               }
-// // //             }
-// // // 
-// // //             for(unsigned i = 0; i < nDof1; i++) {
-// // //               for(unsigned j = 0; j < nDof1; j++) {
-// // //                 KK_local_iel_mixed_num[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * beta * phi1[i] * phi1[j] * weight1 * mixed_term1;
-// // //               }
-// // //               Res_local_iel_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * beta * weight1 * phi1[i] * solX * mixed_term1;
-// // //             }
+            double mixed_term1 = 0.;
+            // *** Face Gauss point loop (boundary Integral) ***
+            for(unsigned e_bdry_bdry = 0; e_bdry_bdry < bdry_bdry.size(); e_bdry_bdry++) {
+
+              // look for boundary faces
+            
+
+              unsigned n_dofs_bdry_bdry = msh->el->GetNFC(LINE, solType); 
+              
+//               unsigned n_dofs_bdry_bdry =  msh->el->GetNFACENODES(jelGeom_bdry, e_bdry_bdry, solType); //TODO
+
+              vector  < vector  <  double> > delta_coordinates_bdry_bdry(dim);    // A matrix holding the face coordinates rowwise.
+              for(int k = 0; k < dim; k++) {
+                delta_coordinates_bdry_bdry[k].resize(n_dofs_bdry_bdry);
+              }
+              for(unsigned i_bdry_bdry = 0; i_bdry_bdry < n_dofs_bdry_bdry; i_bdry_bdry++) {
+                unsigned inode_bdry_bdry = msh->el->GetIG(jelGeom_bdry, bdry_bdry[e_bdry_bdry], i_bdry_bdry); // face-to-element local node mapping. TODO: verify jelGeom_bdry
+                for(unsigned k = 0; k < dim; k++) {
+                  delta_coordinates_bdry_bdry[k][i_bdry_bdry] = geom_element_jel.get_coords_at_dofs()[k][inode_bdry_bdry]- x_iqp_bdry[k]; // TODO We extract the local coordinates on the face from local coordinates on the element.
+                }
+              }
+              const unsigned div = 10;
+              vector  < vector  <  double> > delta_coordinates_bdry_bdry_refined(dim);
+              for(int k = 0; k < dim; k++) {
+                delta_coordinates_bdry_bdry_refined[k].resize(div + 1); // set "4" as a parameter
+              }
+              for(unsigned n = 0; n <= div; n++) {
+                for(int k = 0; k < dim; k++) {
+                  delta_coordinates_bdry_bdry_refined[k][n] = delta_coordinates_bdry_bdry[k][0] + n * (delta_coordinates_bdry_bdry[k][1] - delta_coordinates_bdry_bdry[k][0]) /  div ;
+                }
+              }
+              for(unsigned n = 0; n < div; n++) {
+                double teta2 = atan2(delta_coordinates_bdry_bdry_refined[1][n + 1], delta_coordinates_bdry_bdry_refined[0][n + 1]);
+                double teta1 = atan2(delta_coordinates_bdry_bdry_refined[1][n], delta_coordinates_bdry_bdry_refined[0][n]);
+
+                if(teta2 < teta1) teta2 += 2. * M_PI;
+
+                double delta_teta = teta2 - teta1;
+
+
+                vector <double> mid_point;
+                mid_point.resize(dim);
+                for(unsigned k = 0; k < dim; k++) {
+                  mid_point[k] = (delta_coordinates_bdry_bdry_refined[k][n + 1] + delta_coordinates_bdry_bdry_refined[k][n]) * 0.5;
+                }
+                double dist2 = 0;
+                for(int k = 0; k < dim; k++) {
+                  dist2 += mid_point[k] * mid_point[k];
+                }
+                double dist = sqrt(dist2);
+                mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
+              }
+            }
+
+            for(unsigned i = 0; i < nDof_iel; i++) {
+              for(unsigned j = 0; j < nDof_iel; j++) {
+                KK_local_iel[ i * nDof_iel + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term1;
+              }
+              Res_local_iel[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * mixed_term1;
+            }
           
       }          
       
@@ -1209,6 +1214,31 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // This is only needed for when the boundary is a 2D face. We'll look at it later on
 // look for what face of jface are on the boundary of the domain
 // I believe we have to see deeply how we can extend this to the boundary case
+// TODO: instead of faceIndex we want to have the new group condition that we impose 
+// on the boundary of the boundary.
+
+   
+      std::vector <int> bdry_bdry(0);
+      unsigned n_faces;
+
+      if(iproc == kproc) {
+        for(unsigned j_bd_face = 0; j_bd_face < msh->GetElementFaceNumber(jface); j_bd_face++) {
+          int faceIndex = msh->el->GetBoundaryIndex(jface, j_bd_face); // TODO find a new condition and correct msh->GetElementFaceNumber
+
+          // look for boundary faces of the boundary
+          if(faceIndex >= 1) {
+            unsigned i = bdry_bdry.size();
+            bdry_bdry.resize(i + 1);
+            bdry_bdry[i] = jface;
+          }
+        }
+        n_faces = bdry_bdry.size();
+      }
+
+      MPI_Bcast(& n_faces, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+
+      bdry_bdry.resize(n_faces);
+      MPI_Bcast(& bdry_bdry[0], n_faces, MPI_INT, kproc, MPI_COMM_WORLD);  
 
 // ---- boundary faces in jface: compute and broadcast - END ----    
 
@@ -1531,7 +1561,11 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               Res_local_iel_refined,
                               msh,
                               iel,
-                              iface
+                              iface,
+                              bdry_bdry,
+                              geom_element_jel,
+                              jelGeom_bdry,
+                              solType
                              ); 
                 }
 
@@ -1574,7 +1608,11 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               Res_local_iel,
                               msh,
                               iel,
-                              iface
+                              iface,
+                              bdry_bdry,
+                              geom_element_jel,
+                              jelGeom_bdry,
+                              solType
                              );
                
           }
