@@ -69,7 +69,7 @@
 #define EX_1        GAMMA_CONTROL_LOWER
 #define EX_2        GAMMA_CONTROL_UPPER
 #define EY_1        0.
-#define EY_2        0.
+#define EY_2        1.   ///@todo  see here
 
 #define DOMAIN_EX_1 0
 #define DOMAIN_EX_2 1
@@ -273,7 +273,8 @@ int main(int argc, char** args) {
   
   
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref);
- 
+
+  
 // // //   const unsigned group_b_b = 7;
 // // //   MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary_3d_via_nodes(infile, group_b_b);//.read(name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
 // // // 
@@ -289,6 +290,7 @@ int main(int argc, char** args) {
 // // //   ml_sol2.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted2);
 // // // 
 // // //   exit(0);  
+  
 
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, 0, 0., 1., 0., 1., 0., 0., QUAD9, fe_quad_rule.c_str());  
 //   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, NSUB_Z, 0., 1., 0., 1., 0., 1., HEX27, fe_quad_rule.c_str());  
@@ -700,11 +702,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim_bdry + 2. * s_frac) / 2.) / (pow(M_PI, dim_bdry / 2.) * tgamma(1 -  s_frac)) ;
   
+//*************************************************** 
   unsigned n_max = pow(2,dim_bdry);
   std::vector < double > extremes(n_max);
   extremes[0] = EX_1;
   extremes[1] = EX_2;
-  if(dim_bdry == 3){
+  if(dim_bdry == 2){
     extremes[2] = EY_1;
     extremes[3] = EY_2;
   }
@@ -721,6 +724,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       else ex_control[d][n_e] = extremes[n_e];
     }
   }
+//*************************************************** 
+
 
   //--- quadrature rules -------------------
   constexpr unsigned qrule_i = QRULE_I;

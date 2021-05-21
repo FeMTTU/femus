@@ -17,8 +17,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
+#define N_UNIFORM_LEVELS  1
+#define N_ERASED_LEVELS   0
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -739,7 +739,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                       std::vector <int> bdry_bdry,
                       CurrentElem < double > & geom_element_jel,
                       const unsigned jelGeom_bdry,
-                      unsigned solType
+                      unsigned solType_coords
                      ) {
       
   if(UNBOUNDED == 1) {
@@ -800,28 +800,48 @@ void el_dofs_unknowns_vol(const Solution*                sol,
             unsigned iel_geom_type = msh->GetElementType(iel);
             unsigned iel_geom_type_face = msh->GetElementFaceType(iel, iface);
 
-            double mixed_term1 = 0.;
+            unsigned f_n_faces_faces  =  msh->el->GetNFC(iel_geom_type, iel_geom_type_face); /* ElementFaceFaceNumber */
+
+         double mixed_term1 = 0.;
+         
             // *** Face Gauss point loop (Integral over 2d object) ***
-            for(unsigned e_bdry_bdry = 0; e_bdry_bdry < bdry_bdry.size(); e_bdry_bdry++) {  ///@todo I think this has to be fixed
+            for(unsigned e_bdry_bdry = 0; e_bdry_bdry < f_n_faces_faces/*bdry_bdry.size()*/; e_bdry_bdry++) {  ///@todo I think this has to be fixed
 
               // look for boundary faces
             
 
-//               unsigned n_dofs_bdry_bdry = msh->el->GetNFC(LINE, solType);
+//               unsigned n_dofs_bdry_bdry = msh->el->GetNFC(LINE, solType_coords);
               
-              unsigned n_dofs_bdry_bdry =  msh->el->GetNFACENODES(iel_geom_type_face/*jelGeom_bdry*/, e_bdry_bdry, solType); //TODO ///@todo this is only taking linear nodes, do we want to do that for the coordinates too?
+              unsigned n_dofs_bdry_bdry =  msh->el->GetNFACENODES(iel_geom_type_face/*jelGeom_bdry*/, e_bdry_bdry, solType_coords); //TODO ///@todo this is only taking linear nodes, do we want to do that for the coordinates too?
 
               vector  < vector  <  double> > delta_coordinates_bdry_bdry(dim);    // A matrix holding the face coordinates rowwise.
               for(int k = 0; k < dim; k++) {
                 delta_coordinates_bdry_bdry[k].resize(n_dofs_bdry_bdry);
               }
+              
+                  std::vector < int > nodes_face_face_flags(n_dofs_bdry_bdry, 0); 
+              
               for(unsigned i_bdry_bdry = 0; i_bdry_bdry < n_dofs_bdry_bdry; i_bdry_bdry++) {
-                unsigned inode_bdry_bdry = msh->el->GetIG(jelGeom_bdry, bdry_bdry[e_bdry_bdry], i_bdry_bdry); // face-to-element local node mapping. TODO: verify jelGeom_bdry
+                  
+                unsigned inode_bdry_bdry = msh->el->GetIG(jelGeom_bdry, e_bdry_bdry/*bdry_bdry[e_bdry_bdry]*/, i_bdry_bdry); // face-to-element local node mapping. TODO: verify jelGeom_bdry
+                unsigned inode_bdry    = msh->el->GetIG(iel_geom_type, iface, inode_bdry_bdry); //from n-1 to n
 
+                unsigned node_global = msh->el->GetElementDofIndex(iel, inode_bdry);
+                
+//                 nodes_face_face_flags[i_bdry_bdry] = node_group_map[node_global];
+                
+                
+              // delta coords  -----
                 for(unsigned k = 0; k < dim; k++) {
-                  delta_coordinates_bdry_bdry[k][i_bdry_bdry] = geom_element_jel.get_coords_at_dofs_bdry_3d()[k][inode_bdry_bdry]- x_iqp_bdry[k];  ///@todo// TODO We extract the local coordinates on the face from local coordinates on the element.
+                  delta_coordinates_bdry_bdry[k][i_bdry_bdry] = geom_element_jel.get_coords_at_dofs_bdry_3d()[k][inode_bdry_bdry] - x_iqp_bdry[k];  ///@todo// TODO We extract the local coordinates on the face from local coordinates on the element.
                 }
               }
+              
+//                 bool is_face_bdry_bdry  =  MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary_3d_check_face_of_face_via_nodes( nodes_face_face_flags, group_salome);
+
+              
+              
+              // delta coords - refinement -----
               const unsigned div = 10;
               vector  < vector  <  double> > delta_coordinates_bdry_bdry_refined(dim);
               for(int k = 0; k < dim; k++) {
@@ -853,6 +873,10 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 double dist = sqrt(dist2);
                 mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
               }
+              // delta coords - refinement -----
+              
+              
+              
             }
 
             for(unsigned i = 0; i < phi_ctrl_iel_bdry_iqp_bdry.size(); i++) {
@@ -1569,7 +1593,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               bdry_bdry,
                               geom_element_jel,
                               jelGeom_bdry,
-                              solType
+                              solType_coords
                              ); 
                 }
 
@@ -1616,7 +1640,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               bdry_bdry,
                               geom_element_jel,
                               jelGeom_bdry,
-                              solType
+                              solType_coords
                              );
                
           }
