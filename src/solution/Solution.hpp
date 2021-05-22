@@ -48,7 +48,7 @@ namespace femus {
 
     public:
 
-      /** Constructor */
+      /* Constructor */
       Solution(Mesh *other_msh);
 
       /** Destructor */
@@ -112,14 +112,20 @@ namespace femus {
 
       /** Init and set to zero The AMR Eps vector */
       void InitAMREps();
-      /** member data - one for each variable - */
+      /** Vector size: number of added Solutions. */
       vector <NumericVector*> _Sol;
+      /** Vector size: number of added Solutions. Used only if the Solution is time-dependent */
       vector <NumericVector*> _SolOld;
+      /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
       vector <NumericVector*> _Res;
+      /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
       vector <NumericVector*> _Eps;
+      /** Vector size: number of added Solutions. */
       vector <NumericVector*> _AMREps;
       bool _AMR_flag;
+      /** Vector size: number of added Solutions. Used only if the Solution is an unknown to some PDE */
       vector <NumericVector*> _Bdc;
+      /** Vector size: number of added Solutions. Tells if the Solution is an unknown to some PDE */
       vector <bool> _ResEpsBdcFlag;
 
       vector < vector <NumericVector*> > _GradVec;
@@ -158,14 +164,20 @@ namespace femus {
         
       //member data
         
-      /** This group of vectors has the size of the number of added solutions */
+      /** Vector size: number of added Solutions. Tells the FE index */
       vector <int>      _SolType;
+      /** Vector size: number of added Solutions. Solution name */
       vector <char*>    _SolName;
+      /** Vector size: number of added Solutions. Time type of Solution: 0 = steady, 2 = time dependent */
       vector <unsigned> _SolTmOrder;
+      /** Vector size: number of added Solutions. FE family */
       vector <FEFamily> _family;
+      /** Vector size: number of added Solutions. FE order within a family */
       vector <FEOrder>  _order;
+      /** Vector size: number of added Solutions. */
       vector <bool>     _removeNullSpace;
       
+      /** Pointer to underlying mesh object */
       Mesh *_msh;
       
       bool _FSI;

@@ -229,6 +229,7 @@ namespace femus {
     Initialize(name, NULL, func, ml_prob);
   }
 
+  
   void MultiLevelSolution::Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob) {
 
     unsigned i_start;

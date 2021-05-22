@@ -294,7 +294,7 @@ int main(int argc, char** args) {
   //Instead for Solutions you have MLSol that contains a vector of Sol
   //Instead for Meshes you have MLMesh that contains a vector of Mesh each of which contains the Sol of the topology
   
-  
+  //This additional field is steady, and it is not of pde type (just like the topology)
   
 // // //   const unsigned group_b_b = 7;
 // // //   MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary_3d_via_nodes(infile, group_b_b);//.read(name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);

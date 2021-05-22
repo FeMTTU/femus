@@ -90,6 +90,8 @@ public:
 
     void Initialize(const char * name, InitFuncMLProb func, const MultiLevelProblem * ml_prob);
     
+    /** At all levels, initialize Sol. By default, Sol is set to zero. Otherwise, a function is passed. 
+      * In that case, and if the Solution is time-dependent, then both Sol and SolOld are initialized. */
     void Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
 
     inline void Set(const char name[], InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
@@ -250,7 +252,7 @@ public:
     void SetWriter(const WriterEnum format) { _writer = Writer::build(format,this).release(); }
 
     // member data
-    MultiLevelMesh* _mlMesh; //< Multilevel mesh
+    MultiLevelMesh* _mlMesh;
 
     BoundaryFunc GetBdcFunction(){
       return _SetBoundaryConditionFunction;
@@ -296,11 +298,12 @@ public:
 private:
     
     /** boundary condition function pointer */
-
     BoundaryFunc _SetBoundaryConditionFunction;
+    /** boundary condition function pointer */
     BoundaryFuncMLProb _SetBoundaryConditionFunctionMLProb;
     /** Flag to tell whether the BC function has been set */
     bool _bdcFuncSet;
+    /** Flag to tell whether the BC function has been set */
     bool _bdcFuncSetMLProb;
 
     /** To be Added */
@@ -312,24 +315,38 @@ private:
     /** To be Added */
     FunctionBase* GetBdcFunction(const unsigned int var, const unsigned int facename) const;
 
-    /** Array of solution, dimension number of levels */
+    /** Vector size: number of levels */
     vector < Solution* >  _solution;
+    
+    /** Number of levels */
     unsigned short  _gridn;
     
 
-    /** This group of vectors has the size of the number of added solutions */
-    vector < vector <BDCType> >         _boundaryConditions;          /* Inner vector: size of number of faces of the domain boundary */
-    vector < vector <bool> >            _isHomogeneous;               /* Inner vector: size of number of faces of the domain boundary */
-    vector < vector <FunctionBase *> >  _nonHomogeneousBCFunction;    /* Inner vector: size of number of faces of the domain boundary */
-    vector < int >                      _solType;    /* Tells the FE index */
+    /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary */
+    vector < vector <BDCType> >         _boundaryConditions;
+    /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary */
+    vector < vector <bool> >            _isHomogeneous;
+    /** Vector size: number of added solutions. Inner vector size: number of faces of the domain boundary */
+    vector < vector <FunctionBase *> >  _nonHomogeneousBCFunction;
+    /** Vector size: number of added solutions. Tells the FE index */
+    vector < int >                      _solType;
+    /** Vector size: number of added solutions. */
     vector < FEFamily >                 _family;
+    /** Vector size: number of added solutions. */
     vector < FEOrder >                  _order;
+    /** Vector size: number of added solutions. */
     vector < char* >                    _solName;
+    /** Vector size: number of added solutions. */
     vector < char* >                    _bdcType;
-    vector < int >                      _solTimeOrder;  //0 = steady, 2 = time-dependent
-    vector < bool >                     _pdeType;    /*Tells whether the Solution is an unknown of a PDE or not*/
+    /** Vector size: number of added solutions. 0 = steady, 2 = time-dependent */
+    vector < int >                      _solTimeOrder;
+    /** Vector size: number of added solutions. Tells whether the Solution is an unknown of a PDE or not */
+    vector < bool >                     _pdeType;
+    /** Vector size: number of added solutions. */
     vector < bool >                     _testIfPressure;
+    /** Vector size: number of added solutions. */
     vector < bool >                     _addAMRPressureStability;
+    /** Vector size: number of added solutions. */
     vector < bool >                     _fixSolutionAtOnePoint;
 
     vector <unsigned>                   _solPairIndex;
@@ -339,6 +356,7 @@ private:
     Writer* _writer;
 
     const MultiLevelProblem* _mlBCProblem;
+    
     bool _FSI;
 
 };
