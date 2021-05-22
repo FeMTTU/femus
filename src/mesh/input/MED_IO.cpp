@@ -585,14 +585,22 @@ namespace femus {
   }
   
   
-   
+  //the node global ordering is given by the mesh file, as well as the element global ordering
+  void MED_IO::boundary_of_boundary_read_flag(const hid_t&  file_id, const std::string mesh_menu,  vector < TYPE_FOR_INT_DATASET >  & node_group_map) {
+
+    
+    std::string node_group_dataset = get_node_info_H5Group(mesh_menu) + group_fam + "/";
+              
+    dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, node_group_map, node_group_dataset);
+ 
+  }
+
+ 
+ 
+  
   //this is for 3D domains
    void MED_IO::boundary_of_boundary_3d_via_nodes(const std::string& name, const unsigned group_user) {
        
-        Mesh& mesh = GetMesh();
-       if (mesh.GetDimension() != 3 ) abort();
-       
-   
        
       // ======= FILE READ ==================
        
@@ -600,12 +608,11 @@ namespace femus {
         
         const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
 
-        std::string node_group_dataset = get_node_info_H5Group(mesh_menus[0]) + group_fam + "/";
+     std::vector< TYPE_FOR_INT_DATASET > node_group_map;
+
+        boundary_of_boundary_read_flag(file_id, mesh_menus[0],  node_group_map);
         
-    std::vector< TYPE_FOR_INT_DATASET > node_group_map;
-      
-    dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, node_group_map, node_group_dataset);
- 
+        
       // ======= group that one wants to find (have to put the user flag and convert it) ==================
        // Groups of the mesh ===============
         std::vector< GroupInfo >     group_info = get_all_groups_per_mesh(file_id, mesh_menus[0]);
@@ -616,8 +623,14 @@ namespace femus {
                
         close_mesh_file(file_id);
       // ======= FILE READ ==================
+
+        
+        
+         Mesh& mesh = GetMesh();
+       if (mesh.GetDimension() != 3 ) abort();
        
-  unsigned solType_coords = 2;
+   
+ unsigned solType_coords = 2;
        
         for (unsigned iel = 0; iel < mesh.GetNumberOfElements(); iel++) {
             

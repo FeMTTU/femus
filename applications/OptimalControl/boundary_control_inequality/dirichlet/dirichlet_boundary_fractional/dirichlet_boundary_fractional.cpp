@@ -274,6 +274,27 @@ int main(int argc, char** args) {
   
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref);
 
+//   Node_based_flag: it must be something that can be read from file and filled exactly like the Mesh Coordinates
+  // Also, it must be something that lives at all levels
+  // It must be something that can be refined to all levels, and still conserve its feature of being an INTEGER. so, it must behave like the boundary condition flag,
+  // which is a NumericVector in the code
+  // To be more specific, I should define a Node_based_boundary_flag: it is a flag that only lives on the boundary
+  
+  //BdC are only filled in MultilevelSolution objects
+  
+  
+  //Ok so first I will read exactly as in MED_IO (in serial mode)
+  // Then with that I will fill the topology vector as in Mesh.InitializeTopologyStructures  (It is a Solution)
+  //  in Mesh  Solution* _topology
+  // Once I have a Solution object, I think I am almost done. 
+  // A Writer belongs to a MultilevelSolution, which needs a MultilevelMesh
+  // So, all I need is to add this Solution to a MLSolution object
+  
+  //How can the topology be Multilevel? Because there is one them inside each Mesh, and MLMesh contains a vector of Meshes.
+  //Instead for Solutions you have MLSol that contains a vector of Sol
+  //Instead for Meshes you have MLMesh that contains a vector of Mesh each of which contains the Sol of the topology
+  
+  
   
 // // //   const unsigned group_b_b = 7;
 // // //   MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary_3d_via_nodes(infile, group_b_b);//.read(name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);

@@ -132,7 +132,7 @@ private:
     unsigned short _gridn0;
     unsigned short _gridn;
 
-    /** Array of mesh */
+    /** Array of meshes,  dimension: number of levels */
     std::vector <Mesh*> _level0;
     std::vector <Mesh*> _level;
 

@@ -239,6 +239,7 @@ namespace femus {
     _topology->ResizeSolutionVector("Y");
     _topology->ResizeSolutionVector("Z");
 
+    //compute max and min coords -----------
     std::vector < double > xMax(3, 0.);
     std::vector < double > xMin(3, 0.);
     for(unsigned i = 0; i < _coords[0].size(); i++) {
@@ -248,11 +249,14 @@ namespace femus {
       }
     }
     _cLenght = sqrt(pow(xMax[0] - xMin[0], 2) + pow(xMax[1] - xMin[1], 2) + pow(xMax[2] - xMin[2], 2));
+    //compute max and min coords - end -----------
 
 
+    //set coordinates -----------
     _topology->GetSolutionName("X") = _coords[0];
     _topology->GetSolutionName("Y") = _coords[1];
     _topology->GetSolutionName("Z") = _coords[2];
+    //set coordinates -----------
 
 
     _topology->AddSolution("AMR", DISCONTINUOUS_POLYNOMIAL, ZERO, 1, 0);

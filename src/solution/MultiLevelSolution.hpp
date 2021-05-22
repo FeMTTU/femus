@@ -318,9 +318,9 @@ private:
     
 
     /** This group of vectors has the size of the number of added solutions */
-    vector < vector <BDCType> >         _boundaryConditions;
-    vector < vector <bool> >            _isHomogeneous;
-    vector < vector <FunctionBase *> >  _nonHomogeneousBCFunction;
+    vector < vector <BDCType> >         _boundaryConditions;          /* Inner vector: size of number of faces of the domain boundary */
+    vector < vector <bool> >            _isHomogeneous;               /* Inner vector: size of number of faces of the domain boundary */
+    vector < vector <FunctionBase *> >  _nonHomogeneousBCFunction;    /* Inner vector: size of number of faces of the domain boundary */
     vector < int >                      _solType;    /* Tells the FE index */
     vector < FEFamily >                 _family;
     vector < FEOrder >                  _order;
