@@ -271,6 +271,7 @@ namespace femus {
 
   /**
    *  This function generates the coarse Box Mesh level using the built-in generator
+   *   ///@todo seems like GenerateCoarseBoxMesh doesn't assign flags to faces correctly, need to check that
    **/
   void Mesh::GenerateCoarseBoxMesh(
     const unsigned int nx, const unsigned int ny, const unsigned int nz,
