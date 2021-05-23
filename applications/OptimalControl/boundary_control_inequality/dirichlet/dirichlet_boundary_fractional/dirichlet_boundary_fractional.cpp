@@ -353,17 +353,17 @@ int main(int argc, char** args) {
   
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
-  ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  const unsigned  is_steady = 1;
+  const unsigned  is_an_unknown_of_a_pde = 0;
+  ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO, is_steady, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO, is_steady, is_an_unknown_of_a_pde);
   //MU
   const std::string act_set_flag_name = "act_flag";
   const unsigned int fake_time_dep_flag = 2;
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, fake_time_dep_flag, is_an_unknown_of_a_pde);
   //MU
   //----------
   const std::string node_based_bdry_flag_name = "node_based_bdry_flag";
-  const unsigned  is_steady = 1;
-  const unsigned  is_an_unknown_of_a_pde = 0;
   ml_sol.AddSolution(node_based_bdry_flag_name.c_str(), LAGRANGE, SECOND, is_steady, is_an_unknown_of_a_pde);
   //----------
 
