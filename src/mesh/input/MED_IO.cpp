@@ -597,19 +597,28 @@ namespace femus {
 
   
   /// @todo Pay attention that here it is all in double
-   std::vector< TYPE_FOR_REAL_DATASET > MED_IO::node_based_flag_read_from_file(const std::string& name) {
+   std::vector< TYPE_FOR_REAL_DATASET > MED_IO::node_based_flag_read_from_file(const std::string& name, const std::vector< unsigned > & mapping) {
        
         hid_t  file_id = open_mesh_file(name);
         
         const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
 
-        std::vector< TYPE_FOR_REAL_DATASET > node_group_map;
+        std::vector< TYPE_FOR_REAL_DATASET > node_group_map_with_med_ordering;
 
-        node_read_flag(file_id, mesh_menus[0],  node_group_map);
+        node_read_flag(file_id, mesh_menus[0],  node_group_map_with_med_ordering);
                
         close_mesh_file(file_id);
         
-        return node_group_map;
+        //reorder with femus mapping
+       std::vector < TYPE_FOR_REAL_DATASET > node_group_map_with_femus_ordering(GetMesh().GetNumberOfNodes());
+
+
+        for(unsigned j = 0; j < node_group_map_with_med_ordering.size(); j++) {
+          node_group_map_with_femus_ordering[mapping[j]] = node_group_map_with_med_ordering[j];
+        }
+       
+        
+        return node_group_map_with_femus_ordering;
     } 
  
   

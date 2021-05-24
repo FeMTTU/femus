@@ -9,7 +9,10 @@
 
 #include "ElemType.hpp"
 
+//for reading additional fields from MED file (based on MED ordering)
 #include "MED_IO.hpp"
+#include "MeshMetisPartitioning.hpp"
+//for reading additional fields from MED file (based on MED ordering)
 
 
 
@@ -315,7 +318,9 @@ int main(int argc, char** args) {
 // // //   exit(0);  
 // // // =================================================================  
 
-  
+    std::vector< unsigned >  mapping;
+   mapping = ml_mesh.GetLevel(0)->from_mesh_file_to_femus_node_partition_mapping();
+   //I think I have to make a MED_IO function to store the med_to_femus mapping
 
   const unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
   const unsigned erased_levels = N_ERASED_LEVELS;
@@ -380,7 +385,7 @@ int main(int argc, char** args) {
 
   // ======= Fill node_based_bdry_flag from MED file at the coarse level
       ml_sol.GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = 
-MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile);
+MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, mapping);
   /// @todo the problem is at this point the order of the nodes is no longer the MED one, but the FEMUS one, so we need the map that goes
 //  from the MED order back to the FEMUS order.The FEMUS order was decided with Metis and so on
   // ======= 

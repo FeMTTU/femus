@@ -79,7 +79,7 @@ class MED_IO : public MeshInput<Mesh>
   
   void boundary_of_boundary_3d_via_nodes(const std::string& name, const unsigned group_user);
 
-  std::vector< TYPE_FOR_REAL_DATASET >  node_based_flag_read_from_file(const std::string& name);
+  std::vector< TYPE_FOR_REAL_DATASET >  node_based_flag_read_from_file(const std::string& name, const std::vector< unsigned > & mapping);
 
  private:
      

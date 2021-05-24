@@ -186,9 +186,15 @@ public:
                                const double zmin, const double zmax,
                                const ElemType type, std::vector<bool> &type_elem_flag);
 
-    /** To be added */
+    /** Here is where the element and node global orderings are changed based on the partitioning */
     void FillISvector(vector < unsigned > &partition);
 
+    /**  */
+    void from_mesh_file_to_femus_node_partition_mapping_ownSize(std::vector <unsigned> & partition, std::vector< unsigned > & mapping);
+    
+    /** Mapping from mesh file to femus */
+    std::vector <unsigned>  from_mesh_file_to_femus_node_partition_mapping();
+    
     /** To be added */
     void Buildkel();
     
@@ -205,15 +211,24 @@ public:
     basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
     
     // member data
+    
+    /** Coordinates */
     Solution* _topology;
+    /** Finite Element families, for each Geometric Element */
     const elem_type *_finiteElement[6][5];
 
+    /** Number of elements per processor (incremental count) */
     vector < unsigned > _elementOffset;
+    /** Number of owned nodes per FE family and per processor (count, non-incremental) */
     vector < unsigned > _ownSize[5];
+    /** Number of nodes per FE family and per processor (incremental count) */
     vector < unsigned > _dofOffset[5];
+    /** Number of ghost nodes per FE family and per processor (count, non-incremental) */
     vector< vector < int > > _ghostDofs[5];
-
-    elem *el;  // topology object - list of all elements
+    
+    /** topology object - list of all elements */
+    elem *el;
+    
     static bool (* _SetRefinementFlag)(const std::vector < double >& x,
                                        const int &ElemGroupNumber,const int &level);
     static bool _IsUserRefinementFunctionDefined;

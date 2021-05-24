@@ -401,11 +401,89 @@ namespace femus {
         _finiteElement[i][j] = OtherFiniteElement[i][j];
   }
 
+  
+   std::vector <unsigned>  Mesh::from_mesh_file_to_femus_node_partition_mapping() {
+  
+     std::vector <unsigned> partition(GetNumberOfNodes(), _nprocs);
+  
+     std::vector <unsigned> mapping(GetNumberOfNodes(), 0.);
 
+
+    unsigned counter = 0;
+
+    for(int isdom = 0; isdom < _nprocs; isdom++) {
+      for(unsigned k = 0; k < 3; k++) {
+        for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
+          unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel, k - 1);
+          unsigned nodeEnd = el->GetElementDofNumber(iel, k);
+
+          for(unsigned inode = nodeStart; inode < nodeEnd; inode++) {
+            unsigned ii = el->GetElementDofIndex(iel, inode);
+
+            if(partition[ii] > isdom) {
+              partition[ii] = isdom;
+              mapping[ii] = counter;
+              counter++;
+
+            }
+          }
+        }
+      }
+    }
+  
+      partition.resize(0);
+      
+      return mapping;
+      
+  }
+  
+  
+
+  void Mesh::from_mesh_file_to_femus_node_partition_mapping_ownSize(std::vector <unsigned> & partition, std::vector <unsigned> & mapping) {
+  // at this point the elements have been reordered, but not the nodes. The new node numbering starting from the med node numbering is happening here
+      
+      
+     partition.assign(GetNumberOfNodes(), _nprocs);
+  
+        mapping.resize(GetNumberOfNodes()); ///@todo I think this is bad because it doesn't clear the previous content!!!
+
+    for(unsigned k = 0; k < 3; k++) {
+      _ownSize[k].assign(_nprocs, 0);
+    }
+
+    unsigned counter = 0;
+
+    for(int isdom = 0; isdom < _nprocs; isdom++) {
+      for(unsigned k = 0; k < 3; k++) {
+        for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
+          unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel, k - 1);
+          unsigned nodeEnd = el->GetElementDofNumber(iel, k);
+
+          for(unsigned inode = nodeStart; inode < nodeEnd; inode++) {
+            unsigned ii = el->GetElementDofIndex(iel, inode);
+
+            if(partition[ii] > isdom) {
+              partition[ii] = isdom;
+              mapping[ii] = counter;
+              counter++;
+
+              for(int j = k; j < 3; j++) {
+                _ownSize[j][isdom]++;
+              }
+            }
+          }
+        }
+      }
+    }
+  
+      partition.resize(0);
+      
+  }
 // *******************************************************
 
-//dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
-
+ /**
+  * dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
+  */
   void Mesh::FillISvector(vector < unsigned >& partition) {
 
     //BEGIN Initialization for k = 0,1,2,3,4
@@ -551,49 +629,52 @@ namespace femus {
     //BEGIN building for k = 0,1,2
 
     // Initialization for k = 0,1,2
-    partition.assign(GetNumberOfNodes(), _nprocs);
-    mapping.resize(GetNumberOfNodes());
+    
+  from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
 
-    for(unsigned k = 0; k < 3; k++) {
-      _ownSize[k].assign(_nprocs, 0);
-    }
+//    partition.assign(GetNumberOfNodes(), _nprocs);
+//    mapping.resize(GetNumberOfNodes());
+// 
+//     for(unsigned k = 0; k < 3; k++) {
+//       _ownSize[k].assign(_nprocs, 0);
+//     }
+// 
+//     counter = 0;
+// 
+//     for(int isdom = 0; isdom < _nprocs; isdom++) {
+//       for(unsigned k = 0; k < 3; k++) {
+//         for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
+//           unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel, k - 1);
+//           unsigned nodeEnd = el->GetElementDofNumber(iel, k);
+// 
+//           for(unsigned inode = nodeStart; inode < nodeEnd; inode++) {
+//             unsigned ii = el->GetElementDofIndex(iel, inode);
+// 
+//             if(partition[ii] > isdom) {
+//               partition[ii] = isdom;
+//               mapping[ii] = counter;
+//               counter++;
+// 
+//               for(int j = k; j < 3; j++) {
+//                 _ownSize[j][isdom]++;
+//               }
+//             }
+//           }
+//         }
+//       }
+//     }
+// 
+//     partition.resize(0);
 
-    counter = 0;
-
-    for(int isdom = 0; isdom < _nprocs; isdom++) {
-      for(unsigned k = 0; k < 3; k++) {
-        for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
-          unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel, k - 1);
-          unsigned nodeEnd = el->GetElementDofNumber(iel, k);
-
-          for(unsigned inode = nodeStart; inode < nodeEnd; inode++) {
-            unsigned ii = el->GetElementDofIndex(iel, inode);
-
-            if(partition[ii] > isdom) {
-              partition[ii] = isdom;
-              mapping[ii] = counter;
-              counter++;
-
-              for(int j = k; j < 3; j++) {
-                _ownSize[j][isdom]++;
-              }
-            }
-          }
-        }
-      }
-    }
-
-
-
-
-    partition.resize(0);
-
+    
+    
     for(int i = 1 ; i <= _nprocs; i++) {
       _dofOffset[2][i] = _dofOffset[2][i - 1] + _ownSize[2][i - 1];
     }
 
     el->ReorderMeshNodes(mapping);
 
+    //reorder coordinate vector at coarse level ----
     if(GetLevel() == 0) {
       vector <double> coords_temp;
 
@@ -605,6 +686,7 @@ namespace femus {
         }
       }
     }
+    //reorder coordinate vector ----
 
     mapping.resize(0);
     //END building for k = 2, but incomplete for k = 0, 1
