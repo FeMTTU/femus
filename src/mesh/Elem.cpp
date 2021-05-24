@@ -67,6 +67,8 @@ namespace femus
     _elementNearFace.shrinkToFit(rowSize);
 
   }
+  
+  
   /**
    * This constructor allocates the memory for the \textit{finer elem}
    * starting from the parameters of the \textit{coarser elem}

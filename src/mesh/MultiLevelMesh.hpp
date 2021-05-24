@@ -60,6 +60,8 @@ public:
 
     void ReadCoarseMeshBuildElemTypeAndAllocateAllLevels(const char GaussOrder[]);
     
+    void ReadCoarseMeshOnlyFileReadingBeforePartitioning(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups);
+
     void ReadCoarseMeshOnlyFileReading(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups);
     
     /** Built-in cube-structured mesh generator */
@@ -82,6 +84,11 @@ public:
     void AddAMRMeshLevel();
     
     
+    /** Get the mesh pointer to level i */
+    Mesh* GetLevelZero(const unsigned i) {
+        return _level0[i];
+    };
+
     /** Get the mesh pointer to level i */
     Mesh* GetLevel(const unsigned i) {
         return _level[i];

@@ -178,11 +178,10 @@ namespace femus {
     }
 
   }
+  
+  
 
-  /**
-   *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file
-   **/
-  void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
+  void Mesh::ReadCoarseMeshBeforePartitioning(const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
 
     SetIfHomogeneous(true);
 
@@ -201,10 +200,27 @@ namespace femus {
 
     //el->SetNodeNumber(_nnodes);
 
+  }  
+  
 
+  /**
+   *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file
+   **/
+  void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups) {
+      
+
+    ReadCoarseMeshBeforePartitioning(name, Lref, type_elem_flag, read_groups, read_boundary_groups);
+    
     Partition();
 
+    ReadCoarseMeshAfterPartitioning();
+    
+    
+  }
 
+
+  void Mesh::ReadCoarseMeshAfterPartitioning() {
+      
     el->BuildElementNearVertex();
 
 
@@ -223,8 +239,9 @@ namespace femus {
     _amrRestriction.resize(3);
 
     PrintInfo();
+    
   }
-
+  
 
 
   void Mesh::InitializeTopologyStructures() {
@@ -630,206 +647,10 @@ namespace femus {
 
     
 }
-  
-  
- /**
-  * dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
-  */
-  void Mesh::FillISvector(vector < unsigned >& partition) {
 
-    initialize_elem_dof_offsets();
-    
-//     //BEGIN Initialization for k = 0,1,2,3,4
-// 
-//     _elementOffset.resize(_nprocs + 1);
-//     _elementOffset[0] = 0;
-// 
-//     for(int k = 0; k < 5; k++) {
-//       _dofOffset[k].resize(_nprocs + 1);
-//       _dofOffset[k][0] = 0;
-//     }
-// 
-//     //END Initialization for k = 0,1,2,3,4
 
-    std::vector < unsigned > mapping;
-    mapping.reserve(GetNumberOfNodes());  /// @todo is this done in order to guarantee some contiguous memory when resizing? 
-                                          /// otherwise things are resized later
-
-    
-   build_elem_offsets_and_dofs_element_based(partition, mapping);
-   
-   
-
-//     //BEGIN building the  metis2Gambit_elem and  k = 3,4
-//     
-//     mapping.resize(GetNumberOfElements());
-// 
-//     unsigned counter = 0;
-// 
-//     for(int isdom = 0; isdom < _nprocs; isdom++) {  // isdom = iprocess
-//       for(unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
-//         if(partition[iel] == isdom) {
-//           //filling the Metis to Mesh element mapping
-//           mapping[ iel ] = counter;
-//           counter++;
-//           _elementOffset[isdom + 1] = counter;
-//         }
-//       }
-//     }
-// 
-//     el->ReorderMeshElements(mapping);
-// 
-// //     for(int isdom = 0; isdom < _nprocs; isdom++) {
-// //       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
-// //         std::cout << el->GetElementMaterial(iel) << " ";
-// //       }
-// //       std::cout << std::endl;
-// //     }
-// //     std::cout << std::endl;
-// //
-// //     std::cout << GetNumberOfElements()<<std::endl;
-// 
-//     std::vector < unsigned > imapping(GetNumberOfElements());
-// 
-//     for(unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
-//       imapping[iel] = iel;
-//     }
-//     // std::cout << "AAAAAAAAAAAAAAAAAAAA\n";
-//     for(int isdom = 0; isdom < _nprocs; isdom++) {
-// 
-// // Old, much slower (while below is better) **********
-// //       for (unsigned i = _elementOffset[isdom]; i < _elementOffset[isdom + 1] - 1; i++) {
-// //         unsigned iel = imapping[i];
-// //         unsigned ielMat = el->GetElementMaterial (iel);
-// //         unsigned ielGroup = el->GetElementGroup (iel);
-// //         for (unsigned j = i + 1; j < _elementOffset[isdom + 1]; j++) {
-// //           unsigned jel = imapping[j];
-// //           unsigned jelMat = el->GetElementMaterial (jel);
-// //           unsigned jelGroup = el->GetElementGroup (jel);
-// //           if (jelMat < ielMat || (jelMat == ielMat && jelGroup < ielGroup || (jelGroup == ielGroup && iel > jel))) {
-// //             imapping[i] = jel;
-// //             imapping[j] = iel;
-// //             iel = jel;
-// //             ielMat = jelMat;
-// //             ielGroup = jelGroup;
-// //           }
-// //         }
-// //       }
-// 
-//       unsigned jel, iel;
-//       short unsigned jelMat, jelGroup, ielMat, ielGroup;
-// 
-//       unsigned n = _elementOffset[isdom + 1u] - _elementOffset[isdom];
-//       while(n > 1) {
-//         unsigned newN = 0u;
-//         for(unsigned j = _elementOffset[isdom] + 1u; j < _elementOffset[isdom] + n ; j++) {
-//           jel = imapping[j];
-//           jelMat = el->GetElementMaterial(jel);
-//           jelGroup = el->GetElementGroup(jel);
-// 
-//           iel = imapping[j - 1];
-//           ielMat = el->GetElementMaterial(iel);
-//           ielGroup = el->GetElementGroup(iel);
-// 
-//           if(jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
-//             imapping[j - 1] = jel;
-//             imapping[j] = iel;
-//             newN = j - _elementOffset[isdom];
-//           }
-//         }
-//         n = newN;
-//       }
-// 
-//     }
-// 
-//     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
-//       mapping[imapping[i]] = i;
-//     }
-// 
-//     std::vector < unsigned > ().swap(imapping);
-// 
-// 
-// //     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
-// //       std::cout << mapping[i] << " ";
-// //     }
-// //     std::cout << std::endl;
-// 
-//     el->ReorderMeshElements(mapping);
-// //     for(int isdom = 0; isdom < _nprocs; isdom++) {
-// //       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
-// //         std::cout << "("<<el->GetElementMaterial(iel) << ", "<< el->GetElementGroup(iel)<<") ";
-// //       }
-// //       std::cout << std::endl;
-// //     }
-// //     std::cout << std::endl;
-// 
-// 
-// 
-//     // ghost vs owned nodes: 3 and 4 have no ghost nodes
-//     for(unsigned k = 3; k < 5; k++) {
-//       _ownSize[k].assign(_nprocs, 0);
-//     }
-// 
-//     for(int isdom = 0; isdom < _nprocs; isdom++) {
-//       _ownSize[3][isdom] = _elementOffset[isdom + 1] - _elementOffset[isdom];
-//       _ownSize[4][isdom] = (_elementOffset[isdom + 1] - _elementOffset[isdom]) * (_dimension + 1);
-//     }
-// 
-//     for(int k = 3; k < 5; k++) {
-//       _ghostDofs[k].resize(_nprocs);
-// 
-//       for(int isdom = 0; isdom < _nprocs; isdom++) {
-//         _dofOffset[k][isdom + 1] = _dofOffset[k][isdom] + _ownSize[k][isdom];
-//         _ghostDofs[k][isdom].resize(0);
-//       }
-//     }
-// 
-//     //END building the  metis2Gambit_elem and  k = 3,4
-
-   
-   
-    //BEGIN building for k = 0,1,2
-
-    // Initialization for k = 0,1,2
-    
-  from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
-
-//    partition.assign(GetNumberOfNodes(), _nprocs);
-//    mapping.resize(GetNumberOfNodes());
-// 
-//     for(unsigned k = 0; k < 3; k++) {
-//       _ownSize[k].assign(_nprocs, 0);
-//     }
-// 
-//     counter = 0;
-// 
-//     for(int isdom = 0; isdom < _nprocs; isdom++) {
-//       for(unsigned k = 0; k < 3; k++) {
-//         for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
-//           unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel, k - 1);
-//           unsigned nodeEnd = el->GetElementDofNumber(iel, k);
-// 
-//           for(unsigned inode = nodeStart; inode < nodeEnd; inode++) {
-//             unsigned ii = el->GetElementDofIndex(iel, inode);
-// 
-//             if(partition[ii] > isdom) {
-//               partition[ii] = isdom;
-//               mapping[ii] = counter;
-//               counter++;
-// 
-//               for(int j = k; j < 3; j++) {
-//                 _ownSize[j][isdom]++;
-//               }
-//             }
-//           }
-//         }
-//       }
-//     }
-// 
-//     partition.resize(0);
-
-    
-    
+   void Mesh::end_building_dof_offset_biquadratic_and_coord_reordering(std::vector <unsigned> & mapping)  {
+       
     for(int i = 1 ; i <= _nprocs; i++) {
       _dofOffset[2][i] = _dofOffset[2][i - 1] + _ownSize[2][i - 1];
     }
@@ -851,8 +672,12 @@ namespace femus {
     //reorder coordinate vector ----
 
     mapping.resize(0);
-    //END building for k = 2, but incomplete for k = 0, 1
 
+   }
+   
+
+    void Mesh::ghost_nodes_search() {
+ 
     //BEGIN ghost nodes search k = 0, 1, 2
     for(int k = 0; k < 3; k++) {
       _ghostDofs[k].resize(_nprocs);
@@ -882,6 +707,10 @@ namespace femus {
 
     //END ghost nodes search k = 0, 1, 2
 
+  }
+
+  
+    void Mesh::complete_dof_offsets() {
 
     //BEGIN completing k = 0, 1
 
@@ -949,6 +778,44 @@ namespace femus {
 
     el->SetElementOffsets(_elementOffset, _iproc, _nprocs);
 
+  }  
+  
+  
+  
+ /**
+  * dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
+  */
+  void Mesh::FillISvector(vector < unsigned >& partition) {
+
+    initialize_elem_dof_offsets();
+    
+
+    std::vector < unsigned > mapping;
+    mapping.reserve(GetNumberOfNodes());  /// @todo is this done in order to guarantee some contiguous memory when resizing? 
+                                          /// otherwise things are resized later
+
+    
+   build_elem_offsets_and_dofs_element_based(partition, mapping);
+   
+     
+   
+    //BEGIN building for k = 0,1,2
+
+    // Initialization for k = 0,1,2
+    
+   from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
+
+   end_building_dof_offset_biquadratic_and_coord_reordering(mapping);
+
+    //END building for k = 2, but incomplete for k = 0, 1
+
+   
+    ghost_nodes_search();
+
+
+    complete_dof_offsets();
+    
+    
   }
 
 

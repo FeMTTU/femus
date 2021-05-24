@@ -177,6 +177,10 @@ public:
     /** This function generates the coarse mesh level, $l_0$, from an input mesh file, with option to not read groups */
     void ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &_finiteElement_flag, const bool read_groups, const bool read_boundary_groups);
 
+    void ReadCoarseMeshBeforePartitioning(const std::string& name, const double Lref, std::vector<bool>& type_elem_flag, const bool read_groups, const bool read_boundary_groups);
+  
+    void ReadCoarseMeshAfterPartitioning();
+    
     /** This function generates a coarse box mesh */
     void GenerateCoarseBoxMesh(const unsigned int nx,
                                const unsigned int ny,
@@ -198,6 +202,12 @@ public:
     
     /** Mapping from mesh file to femus */
     std::vector <unsigned>  from_mesh_file_to_femus_node_partition_mapping();
+    
+    void end_building_dof_offset_biquadratic_and_coord_reordering(std::vector <unsigned> & mapping);
+    
+    void ghost_nodes_search();
+    
+    void complete_dof_offsets();
     
     /** To be added */
     void Buildkel();

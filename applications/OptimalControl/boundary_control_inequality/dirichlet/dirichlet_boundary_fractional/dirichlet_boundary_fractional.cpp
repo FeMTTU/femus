@@ -279,9 +279,15 @@ int main(int argc, char** args) {
   
 //   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
 
-  ml_mesh.ReadCoarseMeshOnlyFileReading(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
+//   ml_mesh.ReadCoarseMeshOnlyFileReading(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
+  
+    ml_mesh.ReadCoarseMeshOnlyFileReadingBeforePartitioning(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
+    ml_mesh.GetLevelZero(0)->Partition();
+    ml_mesh.GetLevelZero(0)->ReadCoarseMeshAfterPartitioning();
+
 
   ml_mesh.ReadCoarseMeshBuildElemTypeAndAllocateAllLevels(fe_quad_rule_vec[0].c_str());
+  
   
   
 //   Node_based_flag: it must be something that can be read from file and filled exactly like the Mesh Coordinates
