@@ -274,9 +274,16 @@ int main(int argc, char** args) {
   const std::string infile = mystream.str();
   const double Lref = 1.;
   
+  const bool read_groups = true;
+  const bool read_boundary_groups = true;
   
-  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref);
+//   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
 
+  ml_mesh.ReadCoarseMeshOnlyFileReading(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
+
+  ml_mesh.ReadCoarseMeshBuildElemTypeAndAllocateAllLevels(fe_quad_rule_vec[0].c_str());
+  
+  
 //   Node_based_flag: it must be something that can be read from file and filled exactly like the Mesh Coordinates
   // Also, it must be something that lives at all levels
   // It must be something that can be refined to all levels, and still conserve its feature of being an INTEGER. so, it must behave like the boundary condition flag,

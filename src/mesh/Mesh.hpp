@@ -189,6 +189,10 @@ public:
     /** Here is where the element and node global orderings are changed based on the partitioning */
     void FillISvector(vector < unsigned > &partition);
 
+    void initialize_elem_dof_offsets();
+    
+    void build_elem_offsets_and_dofs_element_based(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping);
+    
     /**  */
     void from_mesh_file_to_femus_node_partition_mapping_ownSize(std::vector <unsigned> & partition, std::vector< unsigned > & mapping);
     

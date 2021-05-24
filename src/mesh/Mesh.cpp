@@ -481,15 +481,10 @@ namespace femus {
   }
 // *******************************************************
 
- /**
-  * dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
-  */
-  void Mesh::FillISvector(vector < unsigned >& partition) {
 
+  void Mesh::initialize_elem_dof_offsets() {
+      
     //BEGIN Initialization for k = 0,1,2,3,4
-
-    std::vector < unsigned > mapping;
-    mapping.reserve(GetNumberOfNodes());
 
     _elementOffset.resize(_nprocs + 1);
     _elementOffset[0] = 0;
@@ -500,10 +495,17 @@ namespace femus {
     }
 
     //END Initialization for k = 0,1,2,3,4
+    
+  }
 
+  
+   void Mesh::build_elem_offsets_and_dofs_element_based(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping)  {
+ 
+       
+    //BEGIN building the  metis2Gambit_elem and  k = 3,4
+       
     mapping.resize(GetNumberOfElements());
 
-    //BEGIN building the  metis2Gambit_elem and  k = 3,4
     unsigned counter = 0;
 
     for(int isdom = 0; isdom < _nprocs; isdom++) {  // isdom = iprocess
@@ -626,6 +628,166 @@ namespace femus {
 
     //END building the  metis2Gambit_elem and  k = 3,4
 
+    
+}
+  
+  
+ /**
+  * dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
+  */
+  void Mesh::FillISvector(vector < unsigned >& partition) {
+
+    initialize_elem_dof_offsets();
+    
+//     //BEGIN Initialization for k = 0,1,2,3,4
+// 
+//     _elementOffset.resize(_nprocs + 1);
+//     _elementOffset[0] = 0;
+// 
+//     for(int k = 0; k < 5; k++) {
+//       _dofOffset[k].resize(_nprocs + 1);
+//       _dofOffset[k][0] = 0;
+//     }
+// 
+//     //END Initialization for k = 0,1,2,3,4
+
+    std::vector < unsigned > mapping;
+    mapping.reserve(GetNumberOfNodes());  /// @todo is this done in order to guarantee some contiguous memory when resizing? 
+                                          /// otherwise things are resized later
+
+    
+   build_elem_offsets_and_dofs_element_based(partition, mapping);
+   
+   
+
+//     //BEGIN building the  metis2Gambit_elem and  k = 3,4
+//     
+//     mapping.resize(GetNumberOfElements());
+// 
+//     unsigned counter = 0;
+// 
+//     for(int isdom = 0; isdom < _nprocs; isdom++) {  // isdom = iprocess
+//       for(unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
+//         if(partition[iel] == isdom) {
+//           //filling the Metis to Mesh element mapping
+//           mapping[ iel ] = counter;
+//           counter++;
+//           _elementOffset[isdom + 1] = counter;
+//         }
+//       }
+//     }
+// 
+//     el->ReorderMeshElements(mapping);
+// 
+// //     for(int isdom = 0; isdom < _nprocs; isdom++) {
+// //       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
+// //         std::cout << el->GetElementMaterial(iel) << " ";
+// //       }
+// //       std::cout << std::endl;
+// //     }
+// //     std::cout << std::endl;
+// //
+// //     std::cout << GetNumberOfElements()<<std::endl;
+// 
+//     std::vector < unsigned > imapping(GetNumberOfElements());
+// 
+//     for(unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
+//       imapping[iel] = iel;
+//     }
+//     // std::cout << "AAAAAAAAAAAAAAAAAAAA\n";
+//     for(int isdom = 0; isdom < _nprocs; isdom++) {
+// 
+// // Old, much slower (while below is better) **********
+// //       for (unsigned i = _elementOffset[isdom]; i < _elementOffset[isdom + 1] - 1; i++) {
+// //         unsigned iel = imapping[i];
+// //         unsigned ielMat = el->GetElementMaterial (iel);
+// //         unsigned ielGroup = el->GetElementGroup (iel);
+// //         for (unsigned j = i + 1; j < _elementOffset[isdom + 1]; j++) {
+// //           unsigned jel = imapping[j];
+// //           unsigned jelMat = el->GetElementMaterial (jel);
+// //           unsigned jelGroup = el->GetElementGroup (jel);
+// //           if (jelMat < ielMat || (jelMat == ielMat && jelGroup < ielGroup || (jelGroup == ielGroup && iel > jel))) {
+// //             imapping[i] = jel;
+// //             imapping[j] = iel;
+// //             iel = jel;
+// //             ielMat = jelMat;
+// //             ielGroup = jelGroup;
+// //           }
+// //         }
+// //       }
+// 
+//       unsigned jel, iel;
+//       short unsigned jelMat, jelGroup, ielMat, ielGroup;
+// 
+//       unsigned n = _elementOffset[isdom + 1u] - _elementOffset[isdom];
+//       while(n > 1) {
+//         unsigned newN = 0u;
+//         for(unsigned j = _elementOffset[isdom] + 1u; j < _elementOffset[isdom] + n ; j++) {
+//           jel = imapping[j];
+//           jelMat = el->GetElementMaterial(jel);
+//           jelGroup = el->GetElementGroup(jel);
+// 
+//           iel = imapping[j - 1];
+//           ielMat = el->GetElementMaterial(iel);
+//           ielGroup = el->GetElementGroup(iel);
+// 
+//           if(jelMat < ielMat || (jelMat == ielMat && (jelGroup < ielGroup || (jelGroup == ielGroup && jel < iel)))) {
+//             imapping[j - 1] = jel;
+//             imapping[j] = iel;
+//             newN = j - _elementOffset[isdom];
+//           }
+//         }
+//         n = newN;
+//       }
+// 
+//     }
+// 
+//     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
+//       mapping[imapping[i]] = i;
+//     }
+// 
+//     std::vector < unsigned > ().swap(imapping);
+// 
+// 
+// //     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
+// //       std::cout << mapping[i] << " ";
+// //     }
+// //     std::cout << std::endl;
+// 
+//     el->ReorderMeshElements(mapping);
+// //     for(int isdom = 0; isdom < _nprocs; isdom++) {
+// //       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
+// //         std::cout << "("<<el->GetElementMaterial(iel) << ", "<< el->GetElementGroup(iel)<<") ";
+// //       }
+// //       std::cout << std::endl;
+// //     }
+// //     std::cout << std::endl;
+// 
+// 
+// 
+//     // ghost vs owned nodes: 3 and 4 have no ghost nodes
+//     for(unsigned k = 3; k < 5; k++) {
+//       _ownSize[k].assign(_nprocs, 0);
+//     }
+// 
+//     for(int isdom = 0; isdom < _nprocs; isdom++) {
+//       _ownSize[3][isdom] = _elementOffset[isdom + 1] - _elementOffset[isdom];
+//       _ownSize[4][isdom] = (_elementOffset[isdom + 1] - _elementOffset[isdom]) * (_dimension + 1);
+//     }
+// 
+//     for(int k = 3; k < 5; k++) {
+//       _ghostDofs[k].resize(_nprocs);
+// 
+//       for(int isdom = 0; isdom < _nprocs; isdom++) {
+//         _dofOffset[k][isdom + 1] = _dofOffset[k][isdom] + _ownSize[k][isdom];
+//         _ghostDofs[k][isdom].resize(0);
+//       }
+//     }
+// 
+//     //END building the  metis2Gambit_elem and  k = 3,4
+
+   
+   
     //BEGIN building for k = 0,1,2
 
     // Initialization for k = 0,1,2
