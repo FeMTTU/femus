@@ -124,7 +124,7 @@ namespace femus {
 
         clock_t start_preparation_time = clock();
         clock_t start_assembly_time = clock();
-        _levelToAssemble = igridn; //Be carefull!!!! this is needed in the _assemble_function
+        _levelToAssemble = igridn; //Be careful!!!! this is needed in the _assemble_function
         _LinSolver[igridn]->SetResZero();
         _assembleMatrix = _buildSolver;
         _assemble_system_function (_equation_systems);

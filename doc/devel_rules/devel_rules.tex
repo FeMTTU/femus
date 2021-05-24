@@ -1150,5 +1150,47 @@ Per fare questo conviene USARE LE PETSC in DEBUG MODE
 e vedere quale output ti danno;
 cosi' vedi le chiamate all'interno della libreria petsc.
   
+
+  \chapter{Documentation}
+  
+  Add \verb|BUILD_DOCUMENTATION| in Cmake
+  
+  We have a configuration file \verb|DoxyfileFemuslib.in|
+  that is used by Cmake to generate \verb|DoxyfileFemuslib|
+  
+  This last file is going to be the input to \verb|doxygen|
+  
+  However, we don't need to know exactly where these files are.
+  
+  We just need to go in the build directory and type ``make Docs''
+  
+  For each member datum or member function, 
+   Doxygen takes the comments 
+   
+    in the form \verb| /** ...   */ |
     
+    or in the form \verb| /// ... |
+    
+    both from the .hpp and from the .cpp files
+  
+    Inside the comments that are processed by Doxygen, one can use 
+    \begin{itemize}
+     \item 
+        \verb|@todo ...|, to generate a Todo list page
+     \item 
+        \verb|@deprecated ...|, to generate a Deprecated list page
+     \item 
+        \verb|@test|, to generate a Test list page
+     \item 
+        \verb|@bug|, to generate a Bug list page
+    \end{itemize}
+  
+
+    
+    - Doxygen could even generate a Latex output if \verb|GENERATE_LATEX| is set to yes in the configuration file!
+
+  - Doxygen could even generate man pages if \verb|GENERATE_MAN| is set
+  
+  
+  
 \end{document}

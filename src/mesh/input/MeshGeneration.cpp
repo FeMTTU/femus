@@ -119,7 +119,9 @@ namespace femus
       }
 
 // ------------------------------------------------------------
-// MeshTools::Generation function for mesh generation
+/** MeshTools::Generation function for mesh generation
+   //1: bottom  //2: right  //3: top  //4: left (in 2d)  
+  */
       void BuildBox(Mesh& mesh,
                     vector < vector < double> >& vt,
                     const unsigned int nx,

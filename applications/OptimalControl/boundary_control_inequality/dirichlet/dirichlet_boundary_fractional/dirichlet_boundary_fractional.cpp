@@ -294,8 +294,10 @@ int main(int argc, char** args) {
   //Instead for Solutions you have MLSol that contains a vector of Sol
   //Instead for Meshes you have MLMesh that contains a vector of Mesh each of which contains the Sol of the topology
   
-  
-  
+  //This additional field is steady, and it is not of pde type (just like the topology)
+
+
+// // // =================================================================  
 // // //   const unsigned group_b_b = 7;
 // // //   MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary_3d_via_nodes(infile, group_b_b);//.read(name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
 // // // 
@@ -311,16 +313,8 @@ int main(int argc, char** args) {
 // // //   ml_sol2.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted2);
 // // // 
 // // //   exit(0);  
-  
+// // // =================================================================  
 
-//   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, 0, 0., 1., 0., 1., 0., 0., QUAD9, fe_quad_rule.c_str());  
-//   ml_mesh.GenerateCoarseBoxMesh(NSUB_X, NSUB_Y, NSUB_Z, 0., 1., 0., 1., 0., 1., HEX27, fe_quad_rule.c_str());  
-     ///@todo seems like GenerateCoarseBoxMesh doesn't assign flags to faces correctly, 
-     //so I created a .med file with the following flags:
-     //1: x = x_min  //2: x = x_max  //3: y = y_min  //4: y = y_max //5: z = z_min //6: z = z_max
-     //1: x = x_min  //2: x = x_max  //3: y = y_min  //4: y = y_max                                (in 2d) in the new .med file
-  
-   //1: bottom  //2: right  //3: top  //4: left (in 2d) GenerateCoarseBoxMesh 
   
 
   const unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
@@ -359,13 +353,19 @@ int main(int argc, char** args) {
   
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
-  ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  const unsigned  is_steady = 1;
+  const unsigned  is_an_unknown_of_a_pde = 0;
+  ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO, is_steady, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO, is_steady, is_an_unknown_of_a_pde);
   //MU
-  const unsigned int fake_time_dep_flag = 2;
   const std::string act_set_flag_name = "act_flag";
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, fake_time_dep_flag);               //this variable is not solution of any eqn, it's just a given field
+  const unsigned int fake_time_dep_flag = 2;
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, fake_time_dep_flag, is_an_unknown_of_a_pde);
   //MU
+  //----------
+  const std::string node_based_bdry_flag_name = "node_based_bdry_flag";
+  ml_sol.AddSolution(node_based_bdry_flag_name.c_str(), LAGRANGE, SECOND, is_steady, is_an_unknown_of_a_pde);
+  //----------
 
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
@@ -375,8 +375,16 @@ int main(int argc, char** args) {
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);   //MU
+  ml_sol.Initialize(node_based_bdry_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   // ======= Solutions that are not Unknowns - END  ==================
 
+  // ======= Fill node_based_bdry_flag from MED file at the coarse level
+      ml_sol.GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = 
+MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile);
+  /// @todo the problem is at this point the order of the nodes is no longer the MED one, but the FEMUS one, so we need the map that goes
+//  from the MED order back to the FEMUS order.The FEMUS order was decided with Metis and so on
+  // ======= 
+  
   
   // ======= System - BEGIN ========================
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("BoundaryControl");
@@ -396,7 +404,7 @@ int main(int argc, char** args) {
        // ======= Not an Unknown, but needed in the System with PDAS ========================
 
  
-   system.init();  //I need to put this init before, later I will remove it   ///@todo it seems like you cannot do this init INSIDE A FUNCTION... understand WHY!
+   system.init();  /// I need to put this init before, later I will remove it   /// @todo it seems like you cannot do this init INSIDE A FUNCTION... understand WHY!
  
   set_dense_pattern_for_unknowns(system, unknowns);
   // ======= System  - END ========================
@@ -976,7 +984,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // -------
        
 // -------
-       std::vector<unsigned int> Sol_el_n_dofs_current_face(n_quantities); ///@todo the active flag is not an unknown!
+       std::vector<unsigned int> Sol_el_n_dofs_current_face(n_unknowns); ///@todo the active flag is not an unknown! However, if I add to the quantities something that has higher order, then I will have error below when I take the max number of dofs on a face. Since the act_flag must have the same FE family as the control, then I can limit this array to n_unknowns instead of n_quantities
 
        for (unsigned  k = 0; k < Sol_el_n_dofs_current_face.size(); k++) {
                  if (SolFEType_quantities[k] < 3) Sol_el_n_dofs_current_face[k] = msh->GetElementFaceDofNumber(iel, iface, SolFEType_quantities[k]);  ///@todo fix this absence

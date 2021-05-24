@@ -276,10 +276,15 @@ private:
     static const unsigned _numberOfMissedBiquadraticNodes[6];
     
     //member-data
-    int _nelem;                                //< number of elements
-    unsigned _nnodes;                          //< number of nodes
-    unsigned _level;                           //< level of mesh in the multilevel hierarchy
-    static unsigned _dimension;                //< dimension of the problem
+    
+    /** number of elements */
+    int _nelem;
+    /** number of nodes */
+    unsigned _nnodes;
+    /** level of mesh in the multilevel hierarchy */
+    unsigned _level;                           
+    /** dimension of the problem */
+    static unsigned _dimension;                
     static unsigned _ref_index;
     static unsigned _face_index;
     
@@ -287,6 +292,7 @@ private:
     vector < unsigned > _originalOwnSize[2];
 
     static const unsigned _END_IND[5];
+    /** node coordinates for each space dimension */
     vector < vector < double > > _coords;
 
     bool _meshIsHomogeneous;
@@ -300,6 +306,7 @@ private:
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
     std::vector < std::map < unsigned, bool > > _amrSolidMark;
 
+    /** Mesh characteristic length */
     double _cLenght;
 };
 

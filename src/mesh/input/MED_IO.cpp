@@ -586,16 +586,31 @@ namespace femus {
   
   
   //the node global ordering is given by the mesh file, as well as the element global ordering
-  void MED_IO::boundary_of_boundary_read_flag(const hid_t&  file_id, const std::string mesh_menu,  vector < TYPE_FOR_INT_DATASET >  & node_group_map) {
+  void MED_IO::node_read_flag(const hid_t&  file_id, const std::string mesh_menu,  vector < TYPE_FOR_REAL_DATASET >  & node_group_map) {
 
     
     std::string node_group_dataset = get_node_info_H5Group(mesh_menu) + group_fam + "/";
               
-    dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, node_group_map, node_group_dataset);
+    dataset_open_and_close_store_in_vector<TYPE_FOR_REAL_DATASET>(file_id, node_group_map, node_group_dataset);
  
   }
 
- 
+  
+  /// @todo Pay attention that here it is all in double
+   std::vector< TYPE_FOR_REAL_DATASET > MED_IO::node_based_flag_read_from_file(const std::string& name) {
+       
+        hid_t  file_id = open_mesh_file(name);
+        
+        const std::vector< std::string > mesh_menus = get_mesh_names(file_id);
+
+        std::vector< TYPE_FOR_REAL_DATASET > node_group_map;
+
+        node_read_flag(file_id, mesh_menus[0],  node_group_map);
+               
+        close_mesh_file(file_id);
+        
+        return node_group_map;
+    } 
  
   
   //this is for 3D domains
@@ -610,7 +625,9 @@ namespace femus {
 
      std::vector< TYPE_FOR_INT_DATASET > node_group_map;
 
-        boundary_of_boundary_read_flag(file_id, mesh_menus[0],  node_group_map);
+    std::string node_group_dataset = get_node_info_H5Group(mesh_menus[0]) + group_fam + "/";
+              
+    dataset_open_and_close_store_in_vector<TYPE_FOR_INT_DATASET>(file_id, node_group_map, node_group_dataset);
         
         
       // ======= group that one wants to find (have to put the user flag and convert it) ==================

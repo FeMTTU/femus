@@ -32,7 +32,7 @@ namespace femus {
   using std::cout;
   using std::endl;
 
-  /**
+  /*
    *  Constructor
    **/
 // ------------------------------------------------------------------
