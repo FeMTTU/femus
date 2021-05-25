@@ -16,9 +16,11 @@ int main(int argc,char **args) {
   FemusInit init(argc,args,MPI_COMM_WORLD);
 
   // ======= Files ========================
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = false;
   Files files; 
-        files.CheckIODirectories(true);
-        files.RedirectCout(true);
+        files.CheckIODirectories(use_output_time_folder);
+        files.RedirectCout(redirect_cout_to_file);
         
 // fsi 3d - one layer
 // volumes: 66
@@ -63,7 +65,7 @@ int main(int argc,char **args) {
 //   ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
   const bool read_groups = true;
   const bool read_boundary_groups = true;
-  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref,read_groups, read_boundary_groups);
+  ml_msh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
   
   ml_msh.PrintInfo();
   
@@ -73,8 +75,10 @@ int main(int argc,char **args) {
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution ml_sol(&ml_msh); //I think I cannot read the mesh alone, I need to attach at least one solution
 
+  const unsigned  steady_flag = 0; //0: steady state, 2: time dependent
+  const bool      is_an_unknown_of_a_pde = false; //0: not associated to any System
   // add variables to ml_sol
-  ml_sol.AddSolution("u", LAGRANGE, FIRST);
+  ml_sol.AddSolution("u", LAGRANGE, FIRST, steady_flag, is_an_unknown_of_a_pde);
   ml_sol.Initialize("All"); 
 //====================================================
   
@@ -89,8 +93,6 @@ int main(int argc,char **args) {
 //     ml_sol.GetWriter()->SetSurfaceVariables(surfaceVariables);
   
   const std::string output_dir = files.GetOutputPath();
-//   const std::string output_dir = DEFAULT_OUTPUTDIR;
-  
   
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol

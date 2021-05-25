@@ -300,9 +300,11 @@ namespace femus {
       
       std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
         
-    hsize_t     n_geom_el_types;
     hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
-    hid_t status = H5Gget_num_objs(gid, &n_geom_el_types);
+    H5G_info_t  g_info; 
+    herr_t status_g = H5Gget_info( gid, & g_info);
+    
+    hsize_t    n_geom_el_types = g_info.nlinks;
 
     std::vector<char*> elem_types(n_geom_el_types);
 
@@ -1018,10 +1020,15 @@ namespace femus {
     
     std::string group_list = get_group_info_H5Group(mesh_menu, geom_elem_types[geom_elem_type]);
 
-    hid_t  gid_groups      = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
+    htri_t does_group_exist = H5Lexists(file_id, group_list.c_str(), H5P_DEFAULT);
 
-    hsize_t n_groups = 0;
-    hid_t status_groups = H5Gget_num_objs(gid_groups, &n_groups);
+    if (does_group_exist) {
+    
+    hid_t  gid_groups      = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
+    H5G_info_t  g_info; 
+    herr_t status_g = H5Gget_info( gid_groups, & g_info);
+    
+    hsize_t n_groups = g_info.nlinks;
 
 
     for(unsigned j = 0; j < n_groups; j++) {
@@ -1036,6 +1043,8 @@ namespace femus {
     }
 
     H5Gclose(gid_groups);
+    
+    }
 
     }
     
@@ -1054,10 +1063,12 @@ namespace femus {
   const std::vector<std::string> MED_IO::get_mesh_names(const hid_t&  file_id) const {
 
     hid_t  gid = H5Gopen(file_id, mesh_ensemble.c_str(), H5P_DEFAULT);
+    H5G_info_t  g_info; 
+    herr_t status_g = H5Gget_info( gid, & g_info);
+    
+    hsize_t    n_meshes_ens = g_info.nlinks;
 
-    hsize_t     n_meshes_ens;
-    hid_t status = H5Gget_num_objs(gid, &n_meshes_ens); // number of meshes
-    if(status != 0) {
+    if(status_g < 0) {
       std::cout << "Number of mesh menus not found";
       abort();
     }
@@ -1289,11 +1300,14 @@ namespace femus {
 
     std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
 
-    hsize_t     n_fem_type;
     hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
-    hid_t status = H5Gget_num_objs(gid, &n_fem_type);
-    if(status != 0) {
-      std::cout << "MED_IO::read_fem_type:   H5Gget_num_objs not found";
+    H5G_info_t  g_info; 
+    herr_t status_g = H5Gget_info( gid, & g_info);
+    
+    hsize_t    n_fem_type = g_info.nlinks;
+
+    if(status_g < 0) {
+      std::cout << "MED_IO::read_fem_type: error";
       abort();
     }
 

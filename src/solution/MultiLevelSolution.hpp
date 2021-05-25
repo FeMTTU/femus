@@ -90,12 +90,16 @@ public:
 
     void Initialize(const char * name, InitFuncMLProb func, const MultiLevelProblem * ml_prob);
     
-    /** At all levels, initialize Sol. By default, Sol is set to zero. Otherwise, a function is passed. 
+    /** @todo At all levels, initialize Sol. By default, Sol is set to zero. Otherwise, a function is passed. 
       * In that case, and if the Solution is time-dependent, then both Sol and SolOld are initialized. */
     void Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
 
+    void Initialize(const char name[], std::vector < unsigned > mapping);
+  
     inline void Set(const char name[], InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
     
+    std::vector< unsigned > solution_start_and_end(const std::string name);
+  
     /** To be Added */
     unsigned GetIndex(const char name[]) const;
 
@@ -152,7 +156,7 @@ public:
                        const unsigned int &grid0, const std::vector < double> & time,  const double &time0, 
                        const double &dt, const double* AI);
     
-    //for NONLOCAL problems, _Bdc must be 0 on all the volume constraint
+    /** for NONLOCAL problems, _Bdc must be 0 on all the volume constraint */
     void GenerateBdcOnVolumeConstraint(const std::vector<unsigned> &volumeConstraintFlags, const unsigned &solIndex, const unsigned &grid0);
 
     /** To be Added */

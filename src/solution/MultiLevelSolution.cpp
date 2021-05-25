@@ -228,27 +228,38 @@ namespace femus {
   void MultiLevelSolution::Initialize(const char name[], InitFuncMLProb func, const MultiLevelProblem* ml_prob) {
     Initialize(name, NULL, func, ml_prob);
   }
-
   
+
+  void MultiLevelSolution::Initialize(const char name[], std::vector < unsigned > mapping) {
+      
+      
+         std::vector< unsigned > sol_start_end =  solution_start_and_end(std::string (name));
+    for(unsigned i = sol_start_end[0]; i < sol_start_end[1]; i++) {
+        
+              for(unsigned ig = 0; ig < _gridn; ig++) {
+
+        _solution[ig]->ResizeSolutionVector(_solName[i]);
+        _solution[ig]->_Sol[i]->zero();
+        
+              }
+    }
+
+  }
+  
+  
+  /** A Solution is by default initialized to zero, or by a provided function     */
   void MultiLevelSolution::Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob) {
 
-    unsigned i_start;
-    unsigned i_end;
+    
 
-    if(!strcmp(name, "All") || !strcmp(name, "all") || !strcmp(name, "ALL")) {
-      i_start = 0;
-      i_end = _solType.size();
-    }
-    else {
-      i_start = GetIndex(name);
-      i_end = i_start + 1u;
-    }
-
-    for(unsigned i = i_start; i < i_end; i++) {
+   std::vector< unsigned > sol_start_end =  solution_start_and_end(std::string (name));
+      
+      
+    for(unsigned i = sol_start_end[0]; i < sol_start_end[1]; i++) {
       unsigned sol_type = _solType[i];
 
       for(unsigned ig = 0; ig < _gridn; ig++) {
-        unsigned num_el = _mlMesh->GetLevel(ig)->GetNumberOfElements();
+
         _solution[ig]->ResizeSolutionVector(_solName[i]);
         _solution[ig]->_Sol[i]->zero();
 
@@ -324,6 +335,24 @@ namespace femus {
   }
 
 
+  std::vector< unsigned >  MultiLevelSolution::solution_start_and_end(const std::string name) {
+
+      std::vector< unsigned > sol_start_end(2, 0);
+
+    if(!strcmp(name.c_str(), "All") || !strcmp(name.c_str(), "all") || !strcmp(name.c_str(), "ALL")) {
+      sol_start_end[0] = 0;
+      sol_start_end[1] = _solType.size();
+    }
+    else {
+      sol_start_end[0] = GetIndex(name.c_str());
+      sol_start_end[1] = sol_start_end[0] + 1u;
+    }
+    
+    return sol_start_end;
+    
+  }
+  
+  
 //---------------------------------------------------------------------------------------------------
   unsigned MultiLevelSolution::GetIndex(const char name[]) const {
     unsigned index = 0;
@@ -474,7 +503,8 @@ namespace femus {
 
 
 //---------------------------------------------------------------------------------------------------
-  void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, const MultiLevelProblem* ml_prob) {
+ /** bdc_type can be "Steady" or "Time_dependent" */
+void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, const MultiLevelProblem* ml_prob) {
 
     if(_useParsedBCFunction == false && _bdcFuncSet == false && _bdcFuncSetMLProb == false) {
       cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine"
@@ -503,7 +533,7 @@ namespace femus {
 
       for(unsigned k = i_start; k < i_end; k++) {
         if(_solution[0]->_ResEpsBdcFlag[k]) {
-          sprintf(_bdcType[k], "Steady");
+          sprintf(_bdcType[k], "Steady");        /// @todo since bdc_type is a single string, why do we assume that All variables must be steady? They could also be all Time dependent...
           cout << " Set " << std::setw(15) << _bdcType[k] << " Boundary_condition"
                << " for variable " << std::setw(3) << _solName[k] << endl;
         }
@@ -555,11 +585,12 @@ namespace femus {
 
 
 //---------------------------------------------------------------------------------------------------
+ /**  2 Default Neumann
+   *  1 AMR artificial Dirichlet = 0 BC
+   *  0 Dirichlet
+  */  
   void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int grid0, const double time) {
 
-    // 2 Default Neumann
-    // 1 AMR artificial Dirichlet = 0 BC
-    // 0 Dirichlet
     for(unsigned igridn = grid0; igridn < _gridn; igridn++) {
       if(_solution[igridn]->_ResEpsBdcFlag[k]) {
         Mesh* msh = _mlMesh->GetLevel(igridn);

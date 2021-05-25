@@ -11,7 +11,6 @@
 
 //for reading additional fields from MED file (based on MED ordering)
 #include "MED_IO.hpp"
-#include "MeshMetisPartitioning.hpp"
 //for reading additional fields from MED file (based on MED ordering)
 
 
@@ -278,7 +277,7 @@ int main(int argc, char** args) {
   const bool read_boundary_groups = true;
   
 // // // =================================================================  
-// // // ================= UNPACKING ================================================  
+// // // ================= Mesh: UNPACKING ReadCoarseMesh ================================================  
 // // // =================================================================  
 //   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
 
@@ -302,9 +301,9 @@ int main(int argc, char** args) {
     ml_mesh.GetLevelZero(0)->ReadCoarseMeshAfterPartitioning();
 
 
-  ml_mesh.ReadCoarseMeshBuildElemTypeAndAllocateAllLevels(fe_quad_rule_vec[0].c_str());
+  ml_mesh.ReadCoarseMeshAfterMeshGeneratingBuildElemTypeAndAllocateAllLevels(fe_quad_rule_vec[0].c_str());
 // // // =================================================================  
-// // // ================= UNPACKING ===============================================  
+// // // ================= Mesh: UNPACKING ReadCoarseMesh ===============================================  
 // // // =================================================================  
   
   
@@ -351,20 +350,22 @@ int main(int argc, char** args) {
 // // // =================================================================  
 
 
-// // //   std::vector< unsigned >  mapping;
-// // //    mapping = ml_mesh.GetLevel(0)->from_mesh_file_to_femus_node_partition_mapping();
-// // //    //I think I have to make a MED_IO function to store the med_to_femus mapping
 
+  // ======= Mesh: REFINING ========================
   const unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
   const unsigned erased_levels = N_ERASED_LEVELS;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+
+  // ======= Mesh: COARSE READING before ERASING ========================
+  //If I erase the coarse level, I will not be able to initialize at the coarse level...
+  
+  // ======= Mesh: COARSE ERASING ========================
   ml_mesh.EraseCoarseLevels(erased_levels/*numberOfUniformLevels - 1*/);
   ml_mesh.PrintInfo();
-
+  
   // ======= Unknowns ========================
-  const unsigned int dimension = ml_mesh.GetDimension();  
-  std::vector< Unknown > unknowns = provide_list_of_unknowns(dimension);
+  std::vector< Unknown > unknowns = provide_list_of_unknowns( ml_mesh.GetDimension() );
   
   
   // ======= Solution  ==================
@@ -385,24 +386,24 @@ int main(int argc, char** args) {
   ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
       ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
-      ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, &ml_prob);
-      ml_sol.GenerateBdc(unknowns[u]._name.c_str(), "Steady", & ml_prob);
+      ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, & ml_prob);
+      ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
   }
   
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
-  const unsigned  is_steady = 1;
-  const unsigned  is_an_unknown_of_a_pde = 0;
-  ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO, is_steady, is_an_unknown_of_a_pde);
-  ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO, is_steady, is_an_unknown_of_a_pde);
+  const unsigned  steady_flag = 0;
+  const bool      is_an_unknown_of_a_pde = false;
+  ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
   //MU
   const std::string act_set_flag_name = "act_flag";
-  const unsigned int fake_time_dep_flag = 2;
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, fake_time_dep_flag, is_an_unknown_of_a_pde);
+  const unsigned int act_set_fake_time_dep_flag = 2;
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
   //MU
   //----------
   const std::string node_based_bdry_flag_name = "node_based_bdry_flag";
-  ml_sol.AddSolution(node_based_bdry_flag_name.c_str(), LAGRANGE, SECOND, is_steady, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution(node_based_bdry_flag_name.c_str(), LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
   //----------
 
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
@@ -413,16 +414,11 @@ int main(int argc, char** args) {
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);   //MU
-  ml_sol.Initialize(node_based_bdry_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
+//   ml_sol.Initialize(node_based_bdry_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
+  ml_sol.Initialize(node_based_bdry_flag_name.c_str(), mapping);
+  ml_sol.GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, mapping);
   // ======= Solutions that are not Unknowns - END  ==================
 
-  // ======= Fill node_based_bdry_flag from MED file at the coarse level
-      ml_sol.GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = 
-MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, mapping);
-  /// @todo the problem is at this point the order of the nodes is no longer the MED one, but the FEMUS one, so we need the map that goes
-//  from the MED order back to the FEMUS order.The FEMUS order was decided with Metis and so on
-  // ======= 
-  
   
   // ======= System - BEGIN ========================
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod& system = ml_prob.add_system < NonLinearImplicitSystemWithPrimalDualActiveSetMethod > ("BoundaryControl");
@@ -465,7 +461,7 @@ MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, mapping);
   // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
-  ml_sol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
+  ml_sol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", variablesToBePrinted);
 
   return 0;
 }
