@@ -97,6 +97,8 @@ class MED_IO : public MeshInput<Mesh>
    
   std::string get_group_info_H5Group(const std::string mesh_menu,  const std::string geom_elem_type) const;
  
+  hsize_t  get_H5G_size(const hid_t&  gid) const;
+   
  template < class DATASET_TYPE >  
   void dataset_open_and_close_store_in_vector(hid_t file_id, std::vector< DATASET_TYPE > & fam_map, const std::string fam_name_dir_i) const;
   
@@ -151,13 +153,13 @@ class MED_IO : public MeshInput<Mesh>
       
    std::string  isolate_first_field_before_underscore(const std::string &  string_in, const int begin_pos_to_investigate) const;
 
-      /** Determine mesh dimension from mesh file */
-   const std::vector< GeomElemBase* >  set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name); //this cannot be const because it sets the dimension in the mesh
+   /** Determine mesh dimension from mesh file. It cannot be const because it sets the dimension in the mesh */
+   const std::vector< GeomElemBase* >  set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name);
 
    GeomElemBase * get_geom_elem_from_med_name(const  std::string el_type) const;
 
-   /** Read FE type */
-  const std::vector< GeomElemBase* > get_geom_elem_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir);   //@todo this should be const
+   /** Read FE type @todo this should be const */
+  const std::vector< GeomElemBase* > get_geom_elem_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir);
    
    /** Map from Salome vertex index to Femus vertex index */
    static const unsigned MEDToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 

@@ -301,10 +301,8 @@ namespace femus {
       std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
         
     hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
-    H5G_info_t  g_info; 
-    herr_t status_g = H5Gget_info( gid, & g_info);
     
-    hsize_t    n_geom_el_types = g_info.nlinks;
+    hsize_t    n_geom_el_types = get_H5G_size(gid);
 
     std::vector<char*> elem_types(n_geom_el_types);
 
@@ -1024,17 +1022,15 @@ namespace femus {
 
     if (does_group_exist) {
     
-    hid_t  gid_groups      = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
-    H5G_info_t  g_info; 
-    herr_t status_g = H5Gget_info( gid_groups, & g_info);
+    hid_t  gid      = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
     
-    hsize_t n_groups = g_info.nlinks;
+    hsize_t    n_groups = get_H5G_size(gid);
 
 
     for(unsigned j = 0; j < n_groups; j++) {
 
       char*   group_names_char = new char[max_length];
-      H5Gget_objname_by_idx(gid_groups, j, group_names_char, max_length); ///@deprecated see the HDF doc to replace this
+      H5Gget_objname_by_idx(gid, j, group_names_char, max_length); ///@deprecated see the HDF doc to replace this
       group_names.push_back(group_names_char);
       delete[] group_names_char;
 
@@ -1042,7 +1038,7 @@ namespace femus {
 
     }
 
-    H5Gclose(gid_groups);
+    H5Gclose(gid);
     
     }
 
@@ -1059,19 +1055,27 @@ namespace femus {
   }
 
 
+   hsize_t   MED_IO::get_H5G_size(const hid_t&  gid) const {
+
+    H5G_info_t  g_info; 
+    herr_t status_g = H5Gget_info( gid, & g_info);
+    
+    if(status_g < 0) {
+      std::cout << "Error";
+      abort();
+    }
+    
+   return g_info.nlinks;
+
+   }
+  
+  
   // compute number of Mesh fields in Salome file ==============
   const std::vector<std::string> MED_IO::get_mesh_names(const hid_t&  file_id) const {
 
     hid_t  gid = H5Gopen(file_id, mesh_ensemble.c_str(), H5P_DEFAULT);
-    H5G_info_t  g_info; 
-    herr_t status_g = H5Gget_info( gid, & g_info);
     
-    hsize_t    n_meshes_ens = g_info.nlinks;
-
-    if(status_g < 0) {
-      std::cout << "Number of mesh menus not found";
-      abort();
-    }
+    hsize_t    n_meshes_ens = get_H5G_size(gid);
 
     std::vector<std::string>  mesh_menus;
 
@@ -1301,15 +1305,7 @@ namespace femus {
     std::string my_mesh_name_dir = get_element_info_all_dims_H5Group(mesh_menu);  ///@todo here we have to loop
 
     hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
-    H5G_info_t  g_info; 
-    herr_t status_g = H5Gget_info( gid, & g_info);
-    
-    hsize_t    n_fem_type = g_info.nlinks;
-
-    if(status_g < 0) {
-      std::cout << "MED_IO::read_fem_type: error";
-      abort();
-    }
+    hsize_t    n_fem_type = get_H5G_size(gid);
 
     Mesh& mesh = GetMesh();
     uint mydim = 1;  //this is the initial value, then it will be updated below
