@@ -166,6 +166,8 @@ public:
 
     void Partition();
     
+    void PartitionForElements(std::vector < unsigned > & partition);
+    
     void InitializeTopologyStructures();
   
     /** Only file reading */

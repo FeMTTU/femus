@@ -122,17 +122,24 @@ namespace femus {
 
 
 
-
-  void Mesh::Partition() {
+  void Mesh::PartitionForElements(std::vector < unsigned > & partition) {
 
     const bool flag_for_ncommon_in_metis = false;
-
-    std::vector < unsigned > partition;
     partition.reserve(GetNumberOfNodes());
     partition.resize(GetNumberOfElements());
     MeshMetisPartitioning meshMetisPartitioning(*this);
     meshMetisPartitioning.DoPartition(partition, flag_for_ncommon_in_metis);
+
+  }
+  
+  void Mesh::Partition() {
+
+    std::vector < unsigned > partition;
+    
+    PartitionForElements(partition);
+    
     FillISvector(partition);
+    
     partition.resize(0);
 
   }
@@ -459,7 +466,10 @@ namespace femus {
   void Mesh::from_mesh_file_to_femus_node_partition_mapping_ownSize(std::vector <unsigned> & partition, std::vector <unsigned> & mapping) {
   // at this point the elements have been reordered, but not the nodes. The new node numbering starting from the med node numbering is happening here
       
+
       
+    // Initialization for k = 0,1,2
+    
      partition.assign(GetNumberOfNodes(), _nprocs);
   
         mapping.resize(GetNumberOfNodes()); ///@todo I think this is bad because it doesn't clear the previous content!!!
@@ -521,6 +531,8 @@ namespace femus {
        
     //BEGIN building the  metis2Gambit_elem and  k = 3,4
        
+    mapping.reserve(GetNumberOfNodes());  /// @todo is this done in order to guarantee some contiguous memory when resizing? 
+                                          /// otherwise things are resized later
     mapping.resize(GetNumberOfElements());
 
     unsigned counter = 0;
@@ -791,8 +803,6 @@ namespace femus {
     
 
     std::vector < unsigned > mapping;
-    mapping.reserve(GetNumberOfNodes());  /// @todo is this done in order to guarantee some contiguous memory when resizing? 
-                                          /// otherwise things are resized later
 
     
    build_elem_offsets_and_dofs_element_based(partition, mapping);
@@ -801,8 +811,6 @@ namespace femus {
    
     //BEGIN building for k = 0,1,2
 
-    // Initialization for k = 0,1,2
-    
    from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
 
    end_building_dof_offset_biquadratic_and_coord_reordering(mapping);

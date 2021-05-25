@@ -277,16 +277,35 @@ int main(int argc, char** args) {
   const bool read_groups = true;
   const bool read_boundary_groups = true;
   
+// // // =================================================================  
+// // // ================= UNPACKING ================================================  
+// // // =================================================================  
 //   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
 
 //   ml_mesh.ReadCoarseMeshOnlyFileReading(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
   
     ml_mesh.ReadCoarseMeshOnlyFileReadingBeforePartitioning(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
-    ml_mesh.GetLevelZero(0)->Partition();
+//     ml_mesh.GetLevelZero(0)->Partition();
+       std::vector < unsigned > partition;
+       ml_mesh.GetLevelZero(0)->PartitionForElements(partition);
+//        ml_mesh.GetLevelZero(0)->FillISvector(partition);
+       
+           ml_mesh.GetLevelZero(0)->initialize_elem_dof_offsets();
+           std::vector < unsigned > mapping;
+           ml_mesh.GetLevelZero(0)->build_elem_offsets_and_dofs_element_based(partition, mapping);
+           ml_mesh.GetLevelZero(0)->from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
+           ml_mesh.GetLevelZero(0)->end_building_dof_offset_biquadratic_and_coord_reordering(mapping);
+           ml_mesh.GetLevelZero(0)->ghost_nodes_search();
+           ml_mesh.GetLevelZero(0)->complete_dof_offsets();
+       
+       partition.resize(0);
     ml_mesh.GetLevelZero(0)->ReadCoarseMeshAfterPartitioning();
 
 
   ml_mesh.ReadCoarseMeshBuildElemTypeAndAllocateAllLevels(fe_quad_rule_vec[0].c_str());
+// // // =================================================================  
+// // // ================= UNPACKING ===============================================  
+// // // =================================================================  
   
   
   
@@ -331,9 +350,10 @@ int main(int argc, char** args) {
 // // //   exit(0);  
 // // // =================================================================  
 
-    std::vector< unsigned >  mapping;
-   mapping = ml_mesh.GetLevel(0)->from_mesh_file_to_femus_node_partition_mapping();
-   //I think I have to make a MED_IO function to store the med_to_femus mapping
+
+// // //   std::vector< unsigned >  mapping;
+// // //    mapping = ml_mesh.GetLevel(0)->from_mesh_file_to_femus_node_partition_mapping();
+// // //    //I think I have to make a MED_IO function to store the med_to_femus mapping
 
   const unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
   const unsigned erased_levels = N_ERASED_LEVELS;
