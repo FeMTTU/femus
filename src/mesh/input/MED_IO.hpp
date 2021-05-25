@@ -99,6 +99,8 @@ class MED_IO : public MeshInput<Mesh>
  
   hsize_t  get_H5G_size(const hid_t&  gid) const;
    
+  std::string  get_H5L_name_by_idx(const hid_t&  loc_id, const char *group_name, const unsigned j) const;
+   
  template < class DATASET_TYPE >  
   void dataset_open_and_close_store_in_vector(hid_t file_id, std::vector< DATASET_TYPE > & fam_map, const std::string fam_name_dir_i) const;
   

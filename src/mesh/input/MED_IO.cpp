@@ -304,7 +304,7 @@ namespace femus {
     
     hsize_t    n_geom_el_types = get_H5G_size(gid);
 
-    std::vector<char*> elem_types(n_geom_el_types);
+    std::vector< std::string > elem_types(n_geom_el_types);
 
     bool group_found = false;
 
@@ -312,9 +312,8 @@ namespace femus {
     unsigned j = 0;
     while(j < elem_types.size() && group_found == false) {
 
-      elem_types[j] = new char[max_length];
-      H5Gget_objname_by_idx(gid, j, elem_types[j], max_length); ///@deprecated see the HDF doc to replace this
-      std::string elem_types_str(elem_types[j]);
+      std::string elem_types_str =  get_H5L_name_by_idx(gid, ".", j);
+      elem_types[j] = elem_types_str;
 
       std::string fam_name_dir_i = my_mesh_name_dir + elem_types_str + "/" + group_fam;
       
@@ -1028,11 +1027,11 @@ namespace femus {
 
 
     for(unsigned j = 0; j < n_groups; j++) {
+        
 
-      char*   group_names_char = new char[max_length];
-      H5Gget_objname_by_idx(gid, j, group_names_char, max_length); ///@deprecated see the HDF doc to replace this
-      group_names.push_back(group_names_char);
-      delete[] group_names_char;
+      std::string group_names_string =  get_H5L_name_by_idx(gid, ".", j);
+
+      group_names.push_back(group_names_string);
 
       group_info.push_back( get_group_flags_per_mesh(group_names.back(), geom_elem_types[geom_elem_type]) );
 
@@ -1068,7 +1067,22 @@ namespace femus {
    return g_info.nlinks;
 
    }
-  
+
+   std::string   MED_IO::get_H5L_name_by_idx(const hid_t&  loc_id, const char *group_name, const unsigned j) const {
+       
+      char*   group_names_char = new char[max_length];
+      ssize_t str_size = H5Lget_name_by_idx(loc_id, group_name/*"."*/, H5_INDEX_NAME, H5_ITER_INC, j, group_names_char, max_length, H5P_DEFAULT);
+   
+      std::string link_name(group_names_char);
+            
+      delete[] group_names_char;
+
+      assert( str_size == link_name.size() );
+      
+      return link_name;
+      
+   }
+   
   
   // compute number of Mesh fields in Salome file ==============
   const std::vector<std::string> MED_IO::get_mesh_names(const hid_t&  file_id) const {
@@ -1083,9 +1097,7 @@ namespace femus {
 
     for(unsigned j = 0; j < n_meshes_ens; j++) {
 
-      char*   menu_names_j = new char[max_length];
-      H5Gget_objname_by_idx(gid, j, menu_names_j, max_length); ///@deprecated see the HDF doc to replace this
-      std::string tempj(menu_names_j);
+      std::string tempj =  get_H5L_name_by_idx(gid, ".", j);
 
 
       if(tempj.substr(0, 4).compare("Mesh") == 0) {
@@ -1235,18 +1247,15 @@ namespace femus {
     std::cout << "No hybrid mesh for now: only 1 FE type per dimension" << std::endl;
 
 
-    // Get the element name
-    char** el_fem_type = new char*[n_fem_types];
-
     const uint fe_name_nchars = 4;
 
     std::vector< GeomElemBase* >  geom_elem_per_dimension(mesh.GetDimension());
 
     for(int i = 0; i < (int) n_fem_types; i++) {
 
-      el_fem_type[i] = new char[fe_name_nchars];
-      H5Lget_name_by_idx(file_id, my_mesh_name_dir.c_str(), H5_INDEX_NAME, H5_ITER_INC, i, el_fem_type[i], fe_name_nchars, H5P_DEFAULT);
-      std::string temp_i(el_fem_type[i]);
+      std::string temp_i = get_H5L_name_by_idx(file_id, my_mesh_name_dir.c_str(), i);
+      
+
 
       if(mesh.GetDimension() == 3) {
 
@@ -1289,11 +1298,8 @@ namespace femus {
 
     }
 
-    // clean
-    for(int i = 0; i < (int)n_fem_types; i++) delete[] el_fem_type[i];
-    delete[] el_fem_type;
-
     return geom_elem_per_dimension;
+    
   }
 
   // figures out the Mesh dimension by looping over element types
@@ -1312,13 +1318,13 @@ namespace femus {
     mesh.SetDimension(mydim);  //this is basically the MANIFOLD DIMENSION of the domain
 
 
-    std::vector<char*> elem_types(n_fem_type);
+    std::vector< std::string > elem_types(n_fem_type);
 
 
     for(unsigned j = 0; j < elem_types.size(); j++) {
-      elem_types[j] = new char[max_length];
-      H5Gget_objname_by_idx(gid, j, elem_types[j], max_length); ///@deprecated see the HDF doc to replace this
-      std::string elem_types_str(elem_types[j]);
+        
+      std::string elem_types_str =  get_H5L_name_by_idx(gid, ".", j);
+      elem_types[j] = elem_types_str;
 
       if( /*elem_types_str.compare("HE8") == 0 ||*/
         /*elem_types_str.compare("H20") == 0 ||*/
