@@ -312,7 +312,7 @@ namespace femus {
     // point pointer to common mamory area buffer of void type;
     int* var_conn = static_cast <int*>( buffer_void );
     icount = 0;
-    for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
+    for(unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
       for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
         unsigned loc_vtk_conn = (mesh->GetElementType( iel ) == 0)? FemusToVTKorToXDMFConn[j] : j;
         unsigned jdof = mesh->GetSolutionDof( loc_vtk_conn, iel, index );
@@ -445,7 +445,7 @@ namespace femus {
 
     //-------------------------------------------MATERIAL---------------------------------------------------------
 
-    //material(fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc); //TODO
+//     material(fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc); //TODO
 
     //-------------------------------------------MATERIAL---------------------------------------------------------
 
@@ -484,7 +484,7 @@ namespace femus {
     fout  << "        <DataArray type=\"Float32\" Name=\"" << "Group" << "\" format=\"binary\">" << std::endl;
     Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Group" << "\" format=\"binary\"/>" << std::endl;
     // point pointer to common memory area buffer of void type;
-    var_el = static_cast< float*>( buffer_void );
+    /*float **/ var_el = static_cast< float*>( buffer_void );
     icount = 0;
     for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
       var_el[icount] = mesh->GetElementGroup(iel);
@@ -731,7 +731,7 @@ namespace femus {
     // point pointer to common memory area buffer of void type;
     float* var_el = static_cast< float*>( buffer_void );
     int icount = 0;
-    for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
+    for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
       var_el[icount] = mesh->GetElementMaterial(iel); 
       //std::cout<< var_el[icount] <<" ";
       icount++;

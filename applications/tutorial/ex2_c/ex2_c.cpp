@@ -183,8 +183,10 @@ int main(int argc, char** args) {
 
     // ======= Files =========================
     Files files;
-    files.CheckIODirectories(true);
-    files.RedirectCout(true);
+    const bool use_output_time_folder = true;
+    const bool redirect_cout_to_file = true;
+    files.CheckIODirectories(use_output_time_folder);
+    files.RedirectCout(redirect_cout_to_file);
 
     // ======= Quad Rule ========================
     std::string quad_rule_order("seventh");
@@ -200,9 +202,9 @@ int main(int argc, char** args) {
 
     // ======= Mesh ========================
     const ElemType geom_elem_type = QUAD9;
-    const std::vector< unsigned int > nsub = {2,2,0};
-    const std::vector< double >      xyz_min = {0.,0.,0.};
-    const std::vector< double >      xyz_max = {1.,1.,0.};
+    const std::vector< unsigned int > nsub = {2, 2, 0};
+    const std::vector< double >      xyz_min = {0., 0., 0.};
+    const std::vector< double >      xyz_max = {1., 1., 0.};
 
 
     MultiLevelMesh ml_mesh;
@@ -232,7 +234,7 @@ int main(int argc, char** args) {
 
     if (ml_mesh.GetDimension() == 3) max_number_of_meshes = 4;
 
-    //set coarse storage mesh (///@todo should write the copy constructor or "=" operator to copy the previous mesh) ==================
+    ///set coarse storage mesh (///@todo should write the copy constructor or "=" operator to copy the previous mesh) ==================
     MultiLevelMesh ml_mesh_all_levels;
     ml_mesh_all_levels.GenerateCoarseBoxMesh(nsub[0],nsub[1],nsub[2],xyz_min[0],xyz_max[0],xyz_min[1],xyz_max[1],xyz_min[2],xyz_max[2],geom_elem_type,quad_rule_order.c_str());
 //    ml_mesh_all_levels.ReadCoarseMesh(infile.c_str(),quad_rule_order.c_str(),1.);
@@ -303,7 +305,7 @@ const MultiLevelSolution  My_main_single_level< real_num >::run_on_single_level(
         ml_sol_single_level.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
         ml_sol_single_level.Initialize(unknowns[u]._name.c_str(), SetInitialCondition_in, & ml_prob);
         ml_sol_single_level.AttachSetBoundaryConditionFunction(SetBoundaryCondition_in);
-        ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str(), "Steady", & ml_prob);
+        ml_sol_single_level.GenerateBdc(unknowns[u]._name.c_str(),  (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
 
 // If you just want an interpolation study, without equation, just initialize every Solution with some function and comment out all the following System part        
         // ======= System ========================

@@ -70,7 +70,7 @@ class MED_IO : public MeshInput<Mesh>
   explicit
   MED_IO (Mesh& mesh);
   
-//   ~MED_IO();
+  ~MED_IO();
   
   /**
    * Reads in a mesh in the  *.med format
@@ -207,7 +207,19 @@ MED_IO::MED_IO (Mesh& mesh) :
     
 }
 
+inline
+MED_IO::~MED_IO () {
+  
+       delete _geom_elems[0];
+       delete _geom_elems[1];
+//     delete _geom_elems[2];
+       delete _geom_elems[3];
+       delete _geom_elems[4];
+       delete _geom_elems[5];
 
+    _geom_elems.resize(0);
+    
+}
 
    
 //template specialization in h file, explicit instantiation in cpp file

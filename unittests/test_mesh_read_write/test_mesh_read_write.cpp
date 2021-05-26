@@ -1,9 +1,10 @@
-#include <sstream>
 #include "FemusDefault.hpp"
 #include "FemusInit.hpp"
 #include "MultiLevelMesh.hpp"
 #include "WriterEnum.hpp"
 #include "MultiLevelSolution.hpp"
+#include <sstream>
+
 
 using namespace femus;
 
@@ -22,20 +23,12 @@ int main(int argc,char **args) {
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
         
-// fsi 3d - one layer
-// volumes: 66
-// faces:  66*2 + 42 = 132 + 42 = 174
-// edges: 42*2 + 4 = 88
-// 
-// Total mesh:
-// volumes: 264
-// faces:  66*2  + 42*4 =  132 + 168 = 300     
-
+  // ======= Loop over mesh files ========================
  std::vector< std::string >  input_files;
  input_files.push_back("turek_FSI1.neu");
  input_files.push_back("turek_FSI1.med");
- input_files.push_back("turek_FSI1_3d.med");
- input_files.push_back("turek_FSI1_coarsest_not_yet_expanded_at_inflow.med");
+//  input_files.push_back("turek_FSI1_3d.med");
+//  input_files.push_back("turek_FSI1_coarsest_not_yet_expanded_at_inflow.med");
 //  input_files.push_back("turek_FSI1_no_bc.neu");
 //    std::string input_file = "cyl.med";
 //    std::string input_file = "horse2.med";
@@ -48,9 +41,20 @@ int main(int argc,char **args) {
 //   std::string input_file = "Hex27_One_boundaries_groups.med";
 //   std::string input_file = "Tet10_Twelve_boundaries.med"; ///@todo there seems to be an error in the output computation of biquadratic nodes
 //   std::string input_file = "OneTet10.med";
+// 
+// fsi 3d - one layer
+// volumes: 66
+// faces:  66*2 + 42 = 132 + 42 = 174
+// edges: 42*2 + 4 = 88
+// 
+// Total mesh:
+// volumes: 264
+// faces:  66*2  + 42*4 =  132 + 168 = 300     
+
  
-        for(unsigned m = 0; m < input_files.size(); m++) {
+  for(unsigned m = 0; m < input_files.size(); m++) {
             
+  // ======= Mesh ========================
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_files[m];
   const std::string infile = mystream.str();
 
@@ -59,29 +63,37 @@ int main(int argc,char **args) {
   
   std::string fe_quad_rule("fifth");
 
-  MultiLevelMesh ml_msh;
+  MultiLevelMesh ml_mesh;
   
 //   const int n_sub = 1;
-//   ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
+//   ml_mesh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,TRI6,fe_quad_rule.c_str());
   const bool read_groups = true;
   const bool read_boundary_groups = true;
-  ml_msh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
+  ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
+  const unsigned numberOfUniformLevels = 2;
+  const unsigned erased_levels = numberOfUniformLevels - 1;
+  unsigned numberOfSelectiveLevels = 0;
+  ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+//   ml_mesh.EraseCoarseLevels(erased_levels);
   
-  ml_msh.PrintInfo();
+  ml_mesh.PrintInfo();
   
-//====================================================
-///@todo Femus: do a print of the mesh that doesn't require the Solution instantiation
+//============ Solution ==================
+///@todo Femus: do a print of the mesh that doesn't require the Solution instantiation. I think I cannot read the mesh alone, I need to attach at least one solution
+  
+  MultiLevelSolution ml_sol(&ml_mesh);
 
-  // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution ml_sol(&ml_msh); //I think I cannot read the mesh alone, I need to attach at least one solution
-
-  const unsigned  steady_flag = 0; //0: steady state, 2: time dependent
+  const unsigned  steady_flag = 0;                //0: steady state, 2: time dependent
   const bool      is_an_unknown_of_a_pde = false; //0: not associated to any System
-  // add variables to ml_sol
-  ml_sol.AddSolution("u", LAGRANGE, FIRST, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.Initialize("All"); 
+  ml_sol.AddSolution("u_lag_first", LAGRANGE, FIRST, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution("u_lag_serendip", LAGRANGE, SERENDIPITY, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution("u_lag_second", LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution("u_disc_zero", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution("u_disc_first", DISCONTINUOUS_POLYNOMIAL, FIRST, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.Initialize("all"); 
 //====================================================
   
+//============ Print ==================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
   
@@ -98,9 +110,12 @@ int main(int argc,char **args) {
   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
 
 
-  ml_sol.GetWriter()->Write(input_files[m], output_dir, "linear", variablesToBePrinted);
-  ml_sol.GetWriter()->Write(input_files[m], output_dir, "quadratic", variablesToBePrinted);
-  ml_sol.GetWriter()->Write(input_files[m], output_dir, "biquadratic", variablesToBePrinted);
+//============ Print: Loop over levels ==================
+  for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
+      
+  ml_sol.GetWriter()->Write(l+1, input_files[m], output_dir, "", "linear", variablesToBePrinted);
+  ml_sol.GetWriter()->Write(l+1, input_files[m], output_dir, "", "quadratic", variablesToBePrinted);
+  ml_sol.GetWriter()->Write(l+1, input_files[m], output_dir, "", "biquadratic", variablesToBePrinted);
   
 //   ml_sol.SetWriter(XDMF); 
 //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
@@ -112,7 +127,8 @@ int main(int argc,char **args) {
 //   ml_sol.SetWriter(GMV);  
 //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
 //   ml_sol.GetWriter()->Write(output_dir,"biquadratic",variablesToBePrinted);  
-            
+            }
+  
         }
         
 

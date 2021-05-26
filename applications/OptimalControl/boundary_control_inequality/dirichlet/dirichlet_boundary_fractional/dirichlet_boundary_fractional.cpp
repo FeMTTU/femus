@@ -359,6 +359,9 @@ int main(int argc, char** args) {
 
   // ======= Mesh: COARSE READING before ERASING ========================
   //If I erase the coarse level, I will not be able to initialize at the coarse level...
+  // I could create an auxiliary MlSol object based only on the coarse level, do the reading there, then refine and erase
+  // Question: WHEN can I erase mesh levels? Can I do it even AFTER AddSolution? I don't think so...
+  
   
   // ======= Mesh: COARSE ERASING ========================
   ml_mesh.EraseCoarseLevels(erased_levels/*numberOfUniformLevels - 1*/);
