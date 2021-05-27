@@ -445,13 +445,13 @@ namespace femus {
 
     //-------------------------------------------MATERIAL, GROUP, FE TYPE, LEVEL ---------------------------------------------------------
 
-    element_features_material_group_FEtype_level("Material", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    element_features_material_group_FEtype_level("Material", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
 
-    element_features_material_group_FEtype_level("Group", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    element_features_material_group_FEtype_level("Group", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
 
-    element_features_material_group_FEtype_level("TYPE", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    element_features_material_group_FEtype_level("TYPE", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
 
-    element_features_material_group_FEtype_level("Level", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    element_features_material_group_FEtype_level("Level", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
 
     
     //END SARA&GIACOMO
@@ -616,20 +616,20 @@ namespace femus {
   
   
   
-  void VTKWriter::element_features_material_group_FEtype_level(const std::string field_string,
-                           std::ofstream & fout, std::ofstream & Pfout,
-                           void* buffer_void, 
-                           const unsigned elemetOffset, const unsigned elemetOffsetp1, 
-                           const unsigned * dim_array_elvar, 
-                           const Mesh * mesh,
-                           std::vector <char> & enc) const {
+  void VTKWriter::element_features_material_group_FEtype_level(const std::string field_string, const std::string field_datatype,
+                                                               std::ofstream & fout, std::ofstream & Pfout,
+                                                               void* buffer_void,
+                                                               const unsigned elemetOffset, const unsigned elemetOffsetp1,
+                                                               const unsigned * dim_array_elvar,
+                                                               const Mesh * mesh,
+                                                               std::vector <char> & enc) const {
                                
       //-------------------------------------------MATERIAL---------------------------------------------------------
 
     //NumericVector& material =  mesh->_topology->GetSolutionName( "Material" );
 
-    fout  << "       <DataArray type=\"Float32\" Name=\"" << field_string << "\" format=\"binary\">" << std::endl;
-    Pfout << "      <PDataArray type=\"Float32\" Name=\"" << field_string << "\" format=\"binary\"/>" << std::endl;
+    fout  << "       <DataArray type=\"" << field_datatype << "\" Name=\"" << field_string << "\" format=\"binary\">" << std::endl;   ///@todo I think these should all be Integers
+    Pfout << "      <PDataArray type=\"" << field_datatype << "\" Name=\"" << field_string << "\" format=\"binary\"/>" << std::endl;
     // point pointer to common memory area buffer of void type;
     float* var_el = static_cast< float*>( buffer_void );
     
