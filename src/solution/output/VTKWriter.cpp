@@ -20,15 +20,8 @@
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
-#include <b64/b64.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cstring>
-#include <cstdio>
-#include <iomanip>
-#include <algorithm>
 #include "Files.hpp"
+
 
 namespace femus {
 
@@ -83,6 +76,9 @@ namespace femus {
    
   
   void VTKWriter::Write(const unsigned my_level, const std::string filename_prefix, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
+
+      
+    if (my_level < 1 || my_level > _gridn) { std::cout << "Level index in this routine is from 1 to num_levels" << std::endl; abort(); }  
       
     std::ostringstream level_name_stream;    
     level_name_stream << ".level" << my_level;
@@ -408,59 +404,24 @@ namespace femus {
     // /Print Cell Data ****************************************************************************
     fout  << "      <CellData Scalars=\"scalars\">" << std::endl;
     Pfout << "    <PCellData Scalars=\"scalars\">" << std::endl;
+    
 
-    unsigned short* var_reg = static_cast <unsigned short*>( buffer_void );
-
-    // Print Metis Partitioning
-    fout  << "        <DataArray type=\"UInt16\" Name=\"Metis partition\" format=\"binary\">" << std::endl;
-    Pfout << "      <PDataArray type=\"UInt16\" Name=\"Metis partition\" format=\"binary\"/>" << std::endl;
-
-    // point pointer to common mamory area buffer of void type;
-    unsigned short* var_proc = static_cast <unsigned short*>( buffer_void );
-
-    icount = 0;
-    for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      var_proc[icount] = _iproc;
-      icount++;
-    }
-
-    //print regions dimension
-    cch = b64::b64_encode( &dim_array_reg[0], sizeof( dim_array_reg ), NULL, 0 );
-    b64::b64_encode( &dim_array_reg[0], sizeof( dim_array_reg ), &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-
-    //print regions array
-    cch = b64::b64_encode( &var_proc[0], dim_array_reg[0] , NULL, 0 );
-    b64::b64_encode( &var_proc[0], dim_array_reg[0], &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-
-    fout  << std::endl;
-    fout  << "        </DataArray>" << std::endl;
-
-
-    //BEGIN SARA&GIACOMO
-
+    //------------------------------------------- PARALLEL PARTITION ---------------------------------------------------------
+    
+    print_element_based_fields< unsigned short >("Metis partition", "UInt16", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_reg, mesh, enc);
 
     //-------------------------------------------MATERIAL, GROUP, FE TYPE, LEVEL ---------------------------------------------------------
 
-    element_features_material_group_FEtype_level("Material", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    print_element_based_fields< float >("Material", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
 
-    element_features_material_group_FEtype_level("Group", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    print_element_based_fields< float >("Group", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
 
-    element_features_material_group_FEtype_level("TYPE", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    print_element_based_fields< float >("TYPE", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
 
-    element_features_material_group_FEtype_level("Level", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    print_element_based_fields< float >("Level", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
 
     
-    //END SARA&GIACOMO
-    
-    
 
-    if( _ml_sol == NULL ) {
-      delete [] var_proc;
-    }
 
     bool print_all = 0;
     for( unsigned ivar = 0; ivar < vars.size(); ivar++ ) {
@@ -616,52 +577,6 @@ namespace femus {
   
   
   
-  void VTKWriter::element_features_material_group_FEtype_level(const std::string field_string, const std::string field_datatype,
-                                                               std::ofstream & fout, std::ofstream & Pfout,
-                                                               void* buffer_void,
-                                                               const unsigned elemetOffset, const unsigned elemetOffsetp1,
-                                                               const unsigned * dim_array_elvar,
-                                                               const Mesh * mesh,
-                                                               std::vector <char> & enc) const {
-                               
-      //-------------------------------------------MATERIAL---------------------------------------------------------
-
-    //NumericVector& material =  mesh->_topology->GetSolutionName( "Material" );
-
-    fout  << "       <DataArray type=\"" << field_datatype << "\" Name=\"" << field_string << "\" format=\"binary\">" << std::endl;   ///@todo I think these should all be Integers
-    Pfout << "      <PDataArray type=\"" << field_datatype << "\" Name=\"" << field_string << "\" format=\"binary\"/>" << std::endl;
-    // point pointer to common memory area buffer of void type;
-    float* var_el = static_cast< float*>( buffer_void );
-    
-    int icount = 0;
-
-    if      (field_string == "Material") { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementMaterial(iel); icount++; }   }
-    else if (field_string == "Group")    { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementGroup(iel); icount++; }      }
-    else if (field_string == "TYPE")     { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementType(iel); icount++; }       }
-    else if (field_string == "Level")    { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->el->GetElementLevel(iel); icount++; }  }
-    else    { abort(); }
-
-
-    //print solution on element dimension
-    size_t cch = b64::b64_encode( &dim_array_elvar[0], sizeof( unsigned ) /*DO NOT USE THIS!!! sizeof( dim_array_elvar )*/, NULL, 0 );
-    b64::b64_encode( &dim_array_elvar[0],  sizeof( unsigned )/*DO NOT USE THIS!!! sizeof( dim_array_elvar )*/, &enc[0], cch );
-    char* pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) { 
-        fout << *pt_char;
-    }
-    
-    //print solution on element array
-    cch = b64::b64_encode( &var_el[0], dim_array_elvar[0] , NULL, 0 );
-    b64::b64_encode( &var_el[0], dim_array_elvar[0], &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) {
-        fout << *pt_char;
-    }
-    
-    fout << std::endl;
-    fout << "        </DataArray>" << std::endl;
-
-  }
 
 } //end namespace femus
 
