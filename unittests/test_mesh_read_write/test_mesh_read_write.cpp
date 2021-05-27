@@ -27,7 +27,7 @@ int main(int argc,char **args) {
  std::vector< std::string >  input_files;
 //  input_files.push_back("turek_FSI1.neu");
  input_files.push_back("turek_FSI1.med");
- input_files.push_back("turek_FSI1_3d.med");
+//  input_files.push_back("turek_FSI1_3d.med");
 //  input_files.push_back("turek_FSI1_coarsest_not_yet_expanded_at_inflow.med");
 //  input_files.push_back("turek_FSI1_no_bc.neu");
 //  input_files.push_back("cyl.med");
@@ -70,7 +70,7 @@ int main(int argc,char **args) {
   const bool read_groups = true;
   const bool read_boundary_groups = true;
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
-  const unsigned numberOfUniformLevels = 2;
+  const unsigned numberOfUniformLevels = 1;
   const unsigned erased_levels = numberOfUniformLevels - 1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);

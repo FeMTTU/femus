@@ -38,8 +38,116 @@ namespace femus {
   }
 
   VTKWriter::~VTKWriter(){}
-  
 
+  
+    unsigned VTKWriter::fe_index(const std::string & order_str) const {
+        
+        unsigned index = 0;
+        
+        if( !strcmp( order_str.c_str(), "linear" ) ) 	 index = 0; //linear
+        else if( !strcmp( order_str.c_str(), "quadratic" ) ) 	 index = 1; //quadratic
+        else if( !strcmp( order_str.c_str(), "biquadratic" ) ) index = 2; //biquadratic
+        
+        return index;
+    }
+    
+    
+    std::map < unsigned, unsigned > VTKWriter::ghost_map_proc(const Mesh * mesh, const unsigned index) const {
+
+    unsigned elementOffset = mesh->_elementOffset[_iproc];
+    unsigned elementOffsetp1 = mesh->_elementOffset[_iproc + 1];
+    
+    unsigned dofOffset = mesh->_dofOffset[index][_iproc];
+    
+    unsigned ghostMapCounter = 0;
+     
+    std::map < unsigned, unsigned > ghostMap;
+    
+    for( int iel = elementOffset; iel < elementOffsetp1; iel++ ) {
+
+        for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
+
+            unsigned jdof = mesh->GetSolutionDof( j, iel, index );
+        if( jdof < dofOffset ) { // check if jdof is a ghost node
+          if( ghostMap.find( jdof ) == ghostMap.end() ) {
+            ghostMap[jdof] = ghostMapCounter;
+            ghostMapCounter++;
+          }
+        }
+      }
+    }
+ 
+      return ghostMap;
+ 
+    }
+ 
+
+  void VTKWriter::fill_connectivity_proc(const Mesh * mesh, const unsigned index, const std::map<unsigned, unsigned>  &  ghostMap,  int * const var_conn) const {
+       
+    const unsigned elementOffset = mesh->_elementOffset[_iproc];
+    const unsigned elementOffsetp1 = mesh->_elementOffset[_iproc + 1];
+    
+    const unsigned dofOffset = mesh->_dofOffset[index][_iproc];
+    const unsigned nvtOwned = mesh->_ownSize[index][_iproc];
+    
+    // point pointer to common memory area buffer of void type;
+    unsigned icount = 0;
+    
+    for(unsigned iel = elementOffset; iel < elementOffsetp1; iel++ ) {
+      for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
+        unsigned loc_vtk_conn = (mesh->GetElementType( iel ) == 0)? FemusToVTKorToXDMFConn[j] : j;
+        unsigned jdof = mesh->GetSolutionDof( loc_vtk_conn, iel, index );
+        var_conn[icount] = ( jdof >= dofOffset ) ? jdof - dofOffset : nvtOwned + ghostMap.find(jdof)->second;
+        icount++;
+        }
+      }
+    
+  }
+ 
+
+ 
+   unsigned VTKWriter::size_connectivity_proc(const Mesh * mesh, const unsigned index) const {
+       
+      unsigned counter = 0;
+      
+      for(unsigned iel = mesh->_elementOffset[_iproc]; iel < mesh->_elementOffset[_iproc + 1]; iel++ ) {
+
+        for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
+            counter++;
+        }
+      }
+      
+        return counter;
+        
+   }
+   
+   
+   
+   std::string VTKWriter::print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const {
+       
+            std::string printName;
+
+            if( name == 0 ) printName = solName;
+            else if( name == 1 ) printName = "Bdc" + solName;
+            else if( name == 2 ) printName = "Res" + solName;
+            else printName = "Eps" + solName;
+            
+       return printName;     
+   }
+   
+   
+   bool VTKWriter::print_all_sols(const std::vector < std::string >& vars) const {
+       
+    bool print_all = 0;
+    for( unsigned ivar = 0; ivar < vars.size(); ivar++ ) {
+      print_all += !( vars[ivar].compare( "All" ) ) + !( vars[ivar].compare( "all" ) ) + !( vars[ivar].compare( "ALL" ) );
+    }
+    
+    return print_all;
+    
+   }
+   
+  
    void VTKWriter::Write(const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
        
     std::string filename_prefix;
@@ -92,11 +200,9 @@ namespace femus {
     files.CheckDir( output_path, "" );
     files.CheckDir( output_path, dirnamePVTK );
 
-    int icount;
-    unsigned index = 0;
-    if( !strcmp( order, "linear" ) ) 	 index = 0; //linear
-    else if( !strcmp( order, "quadratic" ) ) 	 index = 1; //quadratic
-    else if( !strcmp( order, "biquadratic" ) ) index = 2; //biquadratic
+    // *********** FE index ************
+    const std::string order_str(order);
+    unsigned index = fe_index(order_str);
 
 
     std::ostringstream filename;
@@ -144,37 +250,27 @@ namespace femus {
 
     Mesh* mesh = _ml_mesh->GetLevel( my_level - 1 );
     Solution* solution = _ml_sol->GetSolutionLevel( my_level - 1 );
+    
 
-    //count the own node dofs on all levels
-    unsigned nvt = mesh->_ownSize[index][_iproc];
+    // count the own element dofs on all levels -------------
+    const unsigned elemetOffset = mesh->_elementOffset[_iproc];
+    const unsigned elemetOffsetp1 = mesh->_elementOffset[_iproc + 1];
+    const unsigned nel = elemetOffsetp1 - elemetOffset;
+    
+    //count the own node dofs on all levels -------------
+    unsigned nvtOwned = mesh->_ownSize[index][_iproc];
+    
+    // count the ghost node dofs on all levels -------------
+    const std::map < unsigned, unsigned > ghostMap = ghost_map_proc(mesh, index);
 
-    // count the ghost node dofs and the own element dofs element on all levels
-    unsigned ghostMapCounter = 0;
-    map < unsigned, unsigned > ghostMap;
-    unsigned counter = 0;
-    unsigned elemetOffset = mesh->_elementOffset[_iproc];
-    unsigned elemetOffsetp1 = mesh->_elementOffset[_iproc + 1];
-    unsigned nel = elemetOffsetp1 - elemetOffset;
-    unsigned dofOffset = mesh->_dofOffset[index][_iproc];
-    for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      short unsigned ielt = mesh->GetElementType( iel );
-      for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
-        counter++;
-        unsigned jdof = mesh->GetSolutionDof( j, iel, index );
-        if( jdof < dofOffset ) { // check if jdof is a ghost node
-          if( ghostMap.find( jdof ) == ghostMap.end() ) {
-            ghostMap[jdof] = ghostMapCounter;
-            ghostMapCounter++;
-          }
-        }
-      }
-    }
+    // count the total node dofs (own + ghost) on all levels -------------
+    unsigned nvt = nvtOwned + ghostMap.size();
+    
 
-    unsigned nvtOwned = nvt;
-    nvt += ghostMap.size(); // total node dofs (own + ghost)
-
+    unsigned size_conn = size_connectivity_proc(mesh, index);
+    
     const unsigned dim_array_coord [] = { nvt * 3 * static_cast<unsigned>(sizeof( float )) };
-    const unsigned dim_array_conn[]   = { counter * static_cast<unsigned>(sizeof( int )) };
+    const unsigned dim_array_conn[]   = { size_conn * static_cast<unsigned>(sizeof( int )) };
     const unsigned dim_array_off []   = { nel * static_cast<unsigned>(sizeof( int )) };
     const unsigned dim_array_type []  = { nel * static_cast<unsigned>(sizeof( short unsigned )) };
     const unsigned dim_array_reg []   = { nel * static_cast<unsigned>(sizeof( short unsigned )) };
@@ -182,10 +278,11 @@ namespace femus {
     const unsigned dim_array_ndvar [] = { nvt * static_cast<unsigned>(sizeof( float )) };
 
     // initialize common buffer_void memory
-    unsigned buffer_size = ( dim_array_coord[0] > dim_array_conn[0] ) ? dim_array_coord[0] : dim_array_conn[0];
-    void* buffer_void = new char [buffer_size];
+    unsigned buffer_size = ( dim_array_coord[0] > dim_array_conn[0] ) ? dim_array_coord[0] : dim_array_conn[0];  // maximum size
+    void* buffer_void = new char [buffer_size];   /// @todo is this deleted? I don't think so
     char* buffer_char = static_cast <char*>( buffer_void );
 
+    // size of the base64-encoded data
     size_t cch;
     cch = b64::b64_encode( &buffer_char[0], buffer_size , NULL, 0 );
     std::vector <char> enc;
@@ -199,6 +296,7 @@ namespace femus {
     Pfout << "    <PPoints>" << std::endl;
     
     
+    //---- NumericVector used for node-based fields -------------------------------------------------------------------------------------------
     NumericVector* mysol;
     mysol = NumericVector::build().release();
 
@@ -211,11 +309,15 @@ namespace femus {
                    mesh->_ownSize[index][_iproc],
                    mesh->_ghostDofs[index][_iproc], false, GHOSTED );
     }
+    //---- NumericVector used for node-based fields -------------------------------------------------------------------------------------------
 
             //--------- fill coord ------------
     // point pointer to common memory area buffer of void type;
     float* var_coord = static_cast<float*>( buffer_void );
+    //print own nodes -------------------------
 
+    unsigned dofOffset = mesh->_dofOffset[index][_iproc];
+    
     for( int i = 0; i < 3; i++ ) {
       if( !_surface ) {
         mysol->matrix_mult( *mesh->_topology->_Sol[i],
@@ -243,9 +345,11 @@ namespace femus {
         }
       }
     }
+    
+    
+    //print ghost nodes -------------------------
     unsigned offset_ig = 3 * nvtOwned;
 
-    //print ghost nodes
     for( int i = 0; i < 3; i++ ) {
       if( !_surface ) {
         mysol->matrix_mult( *mesh-> _topology->_Sol[i],
@@ -261,7 +365,7 @@ namespace femus {
         mysol->matrix_mult( *solution->_Sol[indSurfVar],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
       }
-      for( std::map <unsigned, unsigned>::iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
+      for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
         var_coord[ offset_ig + 3 * it->second + i ] = ( *mysol )( it->first );
       }
     }
@@ -271,7 +375,7 @@ namespace femus {
         unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
         mysol->matrix_mult( *solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
-        for( std::map <unsigned, unsigned>::iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
+        for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
           var_coord[ offset_ig + 3 * it->second + i ] += ( *mysol )( it->first );
         }
       }
@@ -296,19 +400,12 @@ namespace femus {
     //-------------------------------------------------------------------------------------------------
     //print connectivity
     
-    // point pointer to common memory area buffer of void type;
-    int* var_conn = static_cast <int*>( buffer_void );
-    icount = 0;
-    for(unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
-        unsigned loc_vtk_conn = (mesh->GetElementType( iel ) == 0)? FemusToVTKorToXDMFConn[j] : j;
-        unsigned jdof = mesh->GetSolutionDof( loc_vtk_conn, iel, index );
-        var_conn[icount] = ( jdof >= dofOffset ) ? jdof - dofOffset : nvtOwned + ghostMap[jdof];
-        icount++;
-      }
-    }
+        //--------- fill conn ------------
+     int* var_conn = static_cast <int*>( buffer_void );
+    
+     fill_connectivity_proc(mesh, index, ghostMap, var_conn);
 
-    print_data_array< int >("connectivity", "Int32", fout, Pfout, dim_array_conn, var_conn, enc);
+     print_data_array< int >("connectivity", "Int32", fout, Pfout, dim_array_conn, var_conn, enc);
 
 
     //-------------------------------------------------------------------------------------------------
@@ -347,37 +444,30 @@ namespace femus {
 
 
     //------------------------------------------- SOLUTIONS ---------------------------------------------------------
-    bool print_all = 0;
-    for( unsigned ivar = 0; ivar < vars.size(); ivar++ ) {
-      print_all += !( vars[ivar].compare( "All" ) ) + !( vars[ivar].compare( "all" ) ) + !( vars[ivar].compare( "ALL" ) );
-    }
+   const bool print_all = print_all_sols(vars);
     
     
     
     if( _ml_sol != NULL ) {
+        
       //Print Solution (on element) ***************************************************************
       for( unsigned i = 0; i < ( !print_all )*vars.size() + print_all * _ml_sol->GetSolutionSize(); i++ ) {
+          
         unsigned solIndex = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
+        
         if( 3 <= _ml_sol->GetSolutionType( solIndex ) ) {
 
           std::string solName =  _ml_sol->GetSolutionName( solIndex );
 
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i]; name++ ) {
               
-            //--------- fill printName ------------
-            std::string printName;
-
-            if( name == 0 ) printName = solName;
-            else if( name == 1 ) printName = "Bdc" + solName;
-            else if( name == 2 ) printName = "Res" + solName;
-            else printName = "Eps" + solName;
-            //--------- fill printName ------------
+            std::string printName = print_sol_bdc_res_eps_name(solName, name);
             
 
             //--------- fill var ------------
             // point pointer to common memory area buffer of void type;
             float* var_el = static_cast< float*>( buffer_void );
-            icount = 0;
+            unsigned icount = 0;
             for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
               unsigned iel_Metis = mesh->GetSolutionDof( 0, iel, _ml_sol->GetSolutionType( i ) );
               if( name == 0 )
@@ -396,7 +486,7 @@ namespace femus {
     print_data_array< float >(printName, "Float32", fout, Pfout, dim_array_elvar, var_el, enc);
 
               
-        }
+          }
         }
       }
     } //end _ml_sol != NULL
@@ -406,7 +496,7 @@ namespace femus {
     //   //------------------------------------------------------------------------------------------------
 
     if( _ml_sol != NULL ) {
-      //   //------------------------------------------------------------------------------------------------
+        
       // / Print Solution (on nodes) ********************************************************************
       fout  << "      <PointData Scalars=\"scalars\"> " << std::endl;
       Pfout << "    <PPointData Scalars=\"scalars\"> " << std::endl;
@@ -423,17 +513,11 @@ namespace femus {
 
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i]; name++ ) {
               
-            //--------- fill printName ------------
-            std::string printName;
+            std::string printName = print_sol_bdc_res_eps_name(solName, name);
+           
 
-            if( name == 0 ) printName = solName;
-            else if( name == 1 ) printName = "Bdc" + solName;
-            else if( name == 2 ) printName = "Res" + solName;
-            else printName = "Eps" + solName;
-            //--------- fill printName ------------
-            
-
-            //--------- fill var_nd ------------
+         //--------- fill var_nd ------------
+            //print own dofs -------------------------
             unsigned offset_iprc = mesh->_dofOffset[index][_iproc];
             unsigned nvt_ig = mesh->_ownSize[index][_iproc];
 
@@ -453,9 +537,11 @@ namespace femus {
             for( unsigned ii = 0; ii < nvt_ig; ii++ ) {
               var_nd[ ii ] = ( *mysol )( ii + offset_iprc );
             }
+            
+            //print ghost dofs -------------------------
             unsigned offset_ig = nvtOwned;
 
-            for( std::map <unsigned, unsigned>::iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
+            for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
               var_nd[ offset_ig + it->second ] = ( *mysol )( it->first );
             }
             //--------- fill var_nd ------------

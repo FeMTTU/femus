@@ -72,7 +72,19 @@ public:
     void SetDebugOutput( bool value ){ _debugOutput = value;}
 
   private:
+      
+  unsigned fe_index(const std::string & order_str) const;
 
+  std::map < unsigned, unsigned > ghost_map_proc(const Mesh * mesh, const unsigned index) const;
+    
+  void fill_connectivity_proc(const Mesh * mesh, const unsigned index, const std::map<unsigned, unsigned> & ghostMap,  int * const var_conn) const;
+  
+  unsigned size_connectivity_proc(const Mesh * mesh, const unsigned index) const;
+   
+  bool print_all_sols(const std::vector < std::string >& vars) const;
+
+  std::string print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const;
+   
  template < class ARRAY_TYPE >     
     void print_element_based_fields(const std::string field_string,  const std::string field_datatype, std::ofstream & fout, std::ofstream & Pfout, void* buffer_void, const unsigned elemetOffset, const unsigned elemetOffsetp1, const unsigned * dim_array_elvar, const Mesh * mesh, const unsigned fe_index, std::vector <char> & enc ) const;
     
