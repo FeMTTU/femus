@@ -30,17 +30,17 @@ int main(int argc,char **args) {
  input_files.push_back("turek_FSI1_3d.med");
 //  input_files.push_back("turek_FSI1_coarsest_not_yet_expanded_at_inflow.med");
 //  input_files.push_back("turek_FSI1_no_bc.neu");
-//    std::string input_file = "cyl.med";
-//    std::string input_file = "horse2.med";
-//    std::string input_file = "knot.neu";
-//    std::string input_file = "dome_tri.med";
-//    std::string input_file = "dome_quad.med";
-//   std::string input_file = "Quad9_Four_boundaries_groups.med";
-//   std::string input_file = "Quad9_Nine_without_groups.med";
-//   std::string input_file = "Tri6_Two_boundaries.med"; 
-//   std::string input_file = "Hex27_One_boundaries_groups.med";
-//   std::string input_file = "Tet10_Twelve_boundaries.med"; ///@todo there seems to be an error in the output computation of biquadratic nodes
-//   std::string input_file = "OneTet10.med";
+//  input_files.push_back("cyl.med");
+//    input_files.push_back("horse3.med");
+//  input_files.push_back("knot.neu");
+//  input_files.push_back("dome_tri.med");
+//  input_files.push_back("dome_quad.med");
+//   input_files.push_back("./geom_elem_many_Quad9_Four_boundaries_groups.med");
+//   input_files.push_back("./geom_elem_many_Quad9_Nine_without_groups.med"); //Some boundary face was not set in the mesh MED file
+//   input_files.push_back("./geom_elem_many_Tri6_Two_boundaries.med"); //error
+//   input_files.push_back("./geom_elem_many_Hex27_One_boundaries_groups.med");
+//   input_files.push_back("./geom_elem_many_Tet10_Twelve_boundaries.med"); ///@todo there seems to be an error in the output computation of biquadratic nodes
+//   input_files.push_back("./geom_elem_one_OneTet10.med");//Some boundary face was not set in the mesh MED file
 // 
 // fsi 3d - one layer
 // volumes: 66
@@ -70,7 +70,7 @@ int main(int argc,char **args) {
   const bool read_groups = true;
   const bool read_boundary_groups = true;
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
-  const unsigned numberOfUniformLevels = 3;
+  const unsigned numberOfUniformLevels = 2;
   const unsigned erased_levels = numberOfUniformLevels - 1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);

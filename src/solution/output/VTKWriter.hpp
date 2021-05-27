@@ -74,8 +74,26 @@ public:
   private:
 
  template < class ARRAY_TYPE >     
-    void print_element_based_fields(const std::string field_string,  const std::string field_datatype, std::ofstream & fout, std::ofstream & Pfout, void* buffer_void, const unsigned elemetOffset, const unsigned elemetOffsetp1, const unsigned * dim_array_elvar, const Mesh * mesh, std::vector <char> & enc ) const;
+    void print_element_based_fields(const std::string field_string,  const std::string field_datatype, std::ofstream & fout, std::ofstream & Pfout, void* buffer_void, const unsigned elemetOffset, const unsigned elemetOffsetp1, const unsigned * dim_array_elvar, const Mesh * mesh, const unsigned fe_index, std::vector <char> & enc ) const;
     
+ template < class ARRAY_TYPE >     
+  void print_data_array(const std::string field_string, 
+                                   const std::string field_datatype,
+                                   std::ofstream & fout, std::ofstream & Pfout,
+                                   const unsigned * dim_array_elvar,
+                                   const ARRAY_TYPE * var_el,
+                                   std::vector <char> & enc) const;
+                                       
+ template < class ARRAY_TYPE >     
+  void print_data_array_vector(const std::string field_string,
+                               const std::string field_datatype,
+                               const unsigned n_components,
+                               std::ofstream & fout, std::ofstream & Pfout,
+                               const unsigned * dim_array_elvar,
+                               const ARRAY_TYPE * var_el,
+                               std::vector <char> & enc) const;
+
+
     bool _debugOutput;
 
     /** femus to vtk cell type map */
@@ -86,32 +104,17 @@ public:
 
 
  template < class ARRAY_TYPE >     
-  void VTKWriter::print_element_based_fields(const std::string field_string, const std::string field_datatype,
-                                                               std::ofstream & fout, std::ofstream & Pfout,
-                                                               void* buffer_void,
-                                                               const unsigned elemetOffset, const unsigned elemetOffsetp1,
-                                                               const unsigned * dim_array_elvar,
-                                                               const Mesh * mesh,
-                                                               std::vector <char> & enc) const {  ///@todo do we really need to pass this guy?
-                               
-
-    //NumericVector& material =  mesh->_topology->GetSolutionName( "Material" );
-
-    fout  << "       <DataArray type=\"" << field_datatype << "\" Name=\"" << field_string << "\" format=\"binary\">" << std::endl;   ///@todo I think these should all be Integers
+  void VTKWriter::print_data_array(const std::string field_string, 
+                                   const std::string field_datatype,
+                                   std::ofstream & fout, std::ofstream & Pfout,
+                                   const unsigned * dim_array_elvar,
+                                   const ARRAY_TYPE * var_el,
+                                   std::vector <char> & enc) const {  ///@todo do we really need to pass this guy?
+                                                                   
+                                                                   
+    fout  << "       <DataArray type=\"" << field_datatype << "\" Name=\"" << field_string << "\" format=\"binary\">" << std::endl;
     Pfout << "      <PDataArray type=\"" << field_datatype << "\" Name=\"" << field_string << "\" format=\"binary\"/>" << std::endl;
-    // point pointer to common memory area buffer of void type;
-    ARRAY_TYPE * var_el = static_cast< ARRAY_TYPE * >( buffer_void );
     
-    int icount = 0;
-
-    if      (field_string == "Material")           { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementMaterial(iel); icount++; }   }
-    else if (field_string == "Group")              { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementGroup(iel); icount++; }      }
-    else if (field_string == "TYPE")               { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementType(iel); icount++; }       }
-    else if (field_string == "Level")              { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->el->GetElementLevel(iel); icount++; }  }
-    else if (field_string == "Metis partition")    { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = _iproc; icount++; }  }
-    else    { abort(); }
-
-
     //print solution on element dimension
     size_t cch = b64::b64_encode( &dim_array_elvar[0], sizeof( unsigned ) /*DO NOT USE THIS!!! sizeof( dim_array_elvar )*/, NULL, 0 );
     b64::b64_encode( &dim_array_elvar[0],  sizeof( unsigned )/*DO NOT USE THIS!!! sizeof( dim_array_elvar )*/, &enc[0], cch );
@@ -130,7 +133,83 @@ public:
     
     fout << std::endl;
     fout << "        </DataArray>" << std::endl;
+    
+   }
+   
+   
+ template < class ARRAY_TYPE >     
+  void VTKWriter::print_data_array_vector(const std::string field_string, 
+                                   const std::string field_datatype,
+                                   const unsigned n_components,
+                                   std::ofstream & fout, std::ofstream & Pfout,
+                                   const unsigned * dim_array_elvar,
+                                   const ARRAY_TYPE * var_el,
+                                   std::vector <char> & enc) const {
 
+            
+    fout  << "       <DataArray type=\"" << field_datatype << "\" NumberOfComponents=\"" << n_components << "\" format=\"binary\">"  << std::endl;
+    Pfout << "      <PDataArray type=\"" << field_datatype << "\" NumberOfComponents=\"" << n_components << "\" format=\"binary\"/>" << std::endl;
+
+    //print solution on element dimension
+    size_t cch = b64::b64_encode( &dim_array_elvar[0], sizeof( unsigned ) /*DO NOT USE THIS!!! sizeof( dim_array_elvar )*/, NULL, 0 );
+    b64::b64_encode( &dim_array_elvar[0],  sizeof( unsigned )/*DO NOT USE THIS!!! sizeof( dim_array_elvar )*/, &enc[0], cch );
+    char* pt_char = &enc[0];
+    for( unsigned i = 0; i < cch; i++, pt_char++ ) {  ///@todo do we have the guarantee that the std::vector is CONTIGUOUS in memory??
+        fout << *pt_char;
+    }
+    
+    //print solution on element array
+    cch = b64::b64_encode( &var_el[0], dim_array_elvar[0] , NULL, 0 );
+    b64::b64_encode( &var_el[0], dim_array_elvar[0], &enc[0], cch );
+    pt_char = &enc[0];
+    for( unsigned i = 0; i < cch; i++, pt_char++ ) {
+        fout << *pt_char;
+    }
+    
+    fout << std::endl;
+
+    fout  << "        </DataArray>" << std::endl;
+   
+    
+   }
+   
+   
+
+ template < class ARRAY_TYPE >     
+  void VTKWriter::print_element_based_fields(const std::string field_string, const std::string field_datatype,
+                                                               std::ofstream & fout, std::ofstream & Pfout,
+                                                               void* buffer_void,
+                                                               const unsigned elemetOffset, const unsigned elemetOffsetp1,
+                                                               const unsigned * dim_array_elvar,
+                                                               const Mesh * mesh,
+                                                               const unsigned fe_index,
+                                                               std::vector <char> & enc) const {
+                               
+
+    //NumericVector& material =  mesh->_topology->GetSolutionName( "Material" );
+
+    // point pointer to common memory area buffer of void type;
+    ARRAY_TYPE * var_el = static_cast< ARRAY_TYPE * >( buffer_void );
+    
+    int icount = 0;
+
+    if      (field_string == "Material")           { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementMaterial(iel); icount++; }   }
+    else if (field_string == "Group")              { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementGroup(iel); icount++; }      }
+    else if (field_string == "TYPE")               { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->GetElementType(iel); icount++; }       }
+    else if (field_string == "Level")              { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = mesh->el->GetElementLevel(iel); icount++; }  }
+    else if (field_string == "Metis partition")    { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  var_el[icount] = _iproc; icount++; }  }
+    else if (field_string == "types")              { for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {  short unsigned ielt = mesh->GetElementType( iel );
+                                                                                                                        var_el[icount] = femusToVtkCellType[fe_index][ielt];
+                                                                                                                        icount++; 
+                                                                                                                     }  
+                                                   }
+    else if (field_string == "offsets")            { int offset_el = 0;
+                                                     for( unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {   offset_el += mesh->GetElementDofNumber( iel, fe_index );  var_el[icount] = offset_el;  icount++; } }
+    else    { abort(); }
+
+
+      print_data_array< ARRAY_TYPE >(field_string, field_datatype, fout, Pfout, dim_array_elvar, var_el, enc);
+  
   }
 
 

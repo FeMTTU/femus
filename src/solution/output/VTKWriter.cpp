@@ -190,18 +190,15 @@ namespace femus {
     cch = b64::b64_encode( &buffer_char[0], buffer_size , NULL, 0 );
     std::vector <char> enc;
     enc.resize( cch );
-    char* pt_char;
 
     fout  << "    <Piece NumberOfPoints= \"" << nvt << "\" NumberOfCells= \"" << nel << "\" >" << std::endl;
 
     //-----------------------------------------------------------------------------------------------
     // print coordinates *********************************************Solu*******************************************
-    fout  << "      <Points>" << std::endl;
-    fout  << "        <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << std::endl;
-
+    fout  << "     <Points>" << std::endl;
     Pfout << "    <PPoints>" << std::endl;
-    Pfout << "      <PDataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\"/>" << std::endl;
-
+    
+    
     NumericVector* mysol;
     mysol = NumericVector::build().release();
 
@@ -215,7 +212,8 @@ namespace femus {
                    mesh->_ghostDofs[index][_iproc], false, GHOSTED );
     }
 
-    // point pointer to common mamory area buffer of void type;
+            //--------- fill coord ------------
+    // point pointer to common memory area buffer of void type;
     float* var_coord = static_cast<float*>( buffer_void );
 
     for( int i = 0; i < 3; i++ ) {
@@ -278,20 +276,12 @@ namespace femus {
         }
       }
     }
+            //--------- fill coord ------------
 
-    cch = b64::b64_encode( &dim_array_coord[0], sizeof( dim_array_coord ), NULL, 0 );
-    b64::b64_encode( &dim_array_coord[0], sizeof( dim_array_coord ), &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
 
-    //print coordinates array
-    cch = b64::b64_encode( &var_coord[0], dim_array_coord[0] , NULL, 0 );
-    b64::b64_encode( &var_coord[0], dim_array_coord[0], &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-    fout << std::endl;
-
-    fout  << "        </DataArray>" << std::endl;
+    print_data_array_vector< float >("connectivity", "Float32", 3, fout, Pfout, dim_array_coord, var_coord, enc);
+    
+    
     fout  << "      </Points>" << std::endl;
     Pfout << "    </PPoints>" << std::endl;
     //-----------------------------------------------------------------------------------------------
@@ -301,11 +291,12 @@ namespace femus {
     fout  << "      <Cells>" << std::endl;
     Pfout << "    <PCells>" << std::endl;
     //-----------------------------------------------------------------------------------------------
-    //print connectivity
-    fout  << "        <DataArray type=\"Int32\" Name=\"connectivity\" format=\"binary\">" << std::endl;
-    Pfout << "      <PDataArray type=\"Int32\" Name=\"connectivity\" format=\"binary\"/>" << std::endl;
 
-    // point pointer to common mamory area buffer of void type;
+    
+    //-------------------------------------------------------------------------------------------------
+    //print connectivity
+    
+    // point pointer to common memory area buffer of void type;
     int* var_conn = static_cast <int*>( buffer_void );
     icount = 0;
     for(unsigned iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
@@ -317,86 +308,18 @@ namespace femus {
       }
     }
 
-    //print connectivity dimension
-    cch = b64::b64_encode( &dim_array_conn[0], sizeof( dim_array_conn ), NULL, 0 );
-    b64::b64_encode( &dim_array_conn[0], sizeof( dim_array_conn ), &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
+    print_data_array< int >("connectivity", "Int32", fout, Pfout, dim_array_conn, var_conn, enc);
 
-    //print connectivity array
-    cch = b64::b64_encode( &var_conn[0], dim_array_conn[0] , NULL, 0 );
-    b64::b64_encode( &var_conn[0], dim_array_conn[0], &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-    fout << std::endl;
-    fout << "        </DataArray>" << std::endl;
-    //------------------------------------------------------------------------------------------------
 
     //-------------------------------------------------------------------------------------------------
     //printing offset
-    fout  << "        <DataArray type=\"Int32\" Name=\"offsets\" format=\"binary\">" << std::endl;
-    Pfout << "      <PDataArray type=\"Int32\" Name=\"offsets\" format=\"binary\"/>" << std::endl;
-
-    // point pointer to common memory area buffer of void type;
-    int* var_off = static_cast <int*>( buffer_void );
-    icount = 0;
-    int offset_el = 0;
-    // print offset array
-    for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      offset_el += mesh->GetElementDofNumber( iel, index );
-      var_off[icount] = offset_el;
-      icount++;
-    }
-
-    //print offset dimension
-    cch = b64::b64_encode( &dim_array_off[0], sizeof( dim_array_off ), NULL, 0 );
-    b64::b64_encode( &dim_array_off[0], sizeof( dim_array_off ), &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-
-    //print offset array
-    cch = b64::b64_encode( &var_off[0], dim_array_off[0] , NULL, 0 );
-    b64::b64_encode( &var_off[0], dim_array_off[0], &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-
-    fout  << std::endl;
-
-    fout  << "        </DataArray>" << std::endl;
+    print_element_based_fields< int >("offsets", "Int32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_off, mesh, index, enc);
 
     //--------------------------------------------------------------------------------------------------
-
-    //--------------------------------------------------------------------------------------------------
-
     //Element format type : 23:Serendipity(8-nodes)  28:Quad9-Biquadratic
-    fout  << "        <DataArray type=\"UInt16\" Name=\"types\" format=\"binary\">" << std::endl;
-    Pfout << "      <PDataArray type=\"UInt16\" Name=\"types\" format=\"binary\"/>" << std::endl;
+    print_element_based_fields< unsigned short >("types", "UInt16", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_type, mesh, index, enc);
+    
 
-    // point pointer to common mamory area buffer of void type;
-    unsigned short* var_type = static_cast <unsigned short*>( buffer_void );
-    icount = 0;
-    for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      short unsigned ielt = mesh->GetElementType( iel );
-      var_type[icount] = femusToVtkCellType[index][ielt];
-      icount++;
-    }
-
-    //print element format dimension
-    cch = b64::b64_encode( &dim_array_type[0], sizeof( dim_array_type ), NULL, 0 );
-    b64::b64_encode( &dim_array_type[0], sizeof( dim_array_type ), &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-
-    //print element format array
-    cch = b64::b64_encode( &var_type[0], dim_array_type[0] , NULL, 0 );
-    b64::b64_encode( &var_type[0], dim_array_type[0], &enc[0], cch );
-    pt_char = &enc[0];
-    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-
-    fout  << std::endl;
-    fout  << "        </DataArray>" << std::endl;
-    //----------------------------------------------------------------------------------------------------
-//
     fout  << "      </Cells>" << std::endl;
     Pfout << "    </PCells>" << std::endl;
     //--------------------------------------------------------------------------------------------------
@@ -408,25 +331,29 @@ namespace femus {
 
     //------------------------------------------- PARALLEL PARTITION ---------------------------------------------------------
     
-    print_element_based_fields< unsigned short >("Metis partition", "UInt16", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_reg, mesh, enc);
+    print_element_based_fields< unsigned short >("Metis partition", "UInt16", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_reg, mesh, index, enc);
 
     //-------------------------------------------MATERIAL, GROUP, FE TYPE, LEVEL ---------------------------------------------------------
 
-    print_element_based_fields< float >("Material", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    print_element_based_fields< float >("Material", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
 
-    print_element_based_fields< float >("Group", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    print_element_based_fields< float >("Group", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
 
-    print_element_based_fields< float >("TYPE", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    print_element_based_fields< float >("TYPE", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
 
-    print_element_based_fields< float >("Level", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, enc);
+    print_element_based_fields< float >("Level", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
 
     
 
 
+    //------------------------------------------- SOLUTIONS ---------------------------------------------------------
     bool print_all = 0;
     for( unsigned ivar = 0; ivar < vars.size(); ivar++ ) {
       print_all += !( vars[ivar].compare( "All" ) ) + !( vars[ivar].compare( "all" ) ) + !( vars[ivar].compare( "ALL" ) );
     }
+    
+    
+    
     if( _ml_sol != NULL ) {
       //Print Solution (on element) ***************************************************************
       for( unsigned i = 0; i < ( !print_all )*vars.size() + print_all * _ml_sol->GetSolutionSize(); i++ ) {
@@ -436,15 +363,18 @@ namespace femus {
           std::string solName =  _ml_sol->GetSolutionName( solIndex );
 
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i]; name++ ) {
+              
+            //--------- fill printName ------------
             std::string printName;
 
             if( name == 0 ) printName = solName;
             else if( name == 1 ) printName = "Bdc" + solName;
             else if( name == 2 ) printName = "Res" + solName;
             else printName = "Eps" + solName;
+            //--------- fill printName ------------
+            
 
-            fout  << "        <DataArray type=\"Float32\" Name=\"" << printName << "\" format=\"binary\">" << std::endl;
-            Pfout << "      <PDataArray type=\"Float32\" Name=\"" << printName << "\" format=\"binary\"/>" << std::endl;
+            //--------- fill var ------------
             // point pointer to common memory area buffer of void type;
             float* var_el = static_cast< float*>( buffer_void );
             icount = 0;
@@ -460,24 +390,16 @@ namespace femus {
                 var_el[icount] = ( *solution->_Eps[i] )( iel_Metis );
               icount++;
             }
+            //--------- fill var ------------
+            
 
-            //print solution on element dimension
-            cch = b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), NULL, 0 );
-            b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), &enc[0], cch );
-            pt_char = &enc[0];
-            for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
+    print_data_array< float >(printName, "Float32", fout, Pfout, dim_array_elvar, var_el, enc);
 
-            //print solution on element array
-            cch = b64::b64_encode( &var_el[0], dim_array_elvar[0] , NULL, 0 );
-            b64::b64_encode( &var_el[0], dim_array_elvar[0], &enc[0], cch );
-            pt_char = &enc[0];
-            for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-            fout << std::endl;
-            fout << "        </DataArray>" << std::endl;
-          }
+              
         }
-      } //end _ml_sol != NULL
-    }
+        }
+      }
+    } //end _ml_sol != NULL
 
     fout  << "      </CellData>" << std::endl;
     Pfout << "    </PCellData>" << std::endl;
@@ -492,6 +414,7 @@ namespace femus {
 
       // point pointer to common memory area buffer of void type;
       float* var_nd = static_cast<float*>( buffer_void );
+      
       for( unsigned i = 0; i < ( !print_all )*vars.size() + print_all * _ml_sol->GetSolutionSize(); i++ ) {
         unsigned solIndex = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
         if( _ml_sol->GetSolutionType( solIndex ) < 3 ) {
@@ -499,22 +422,18 @@ namespace femus {
           std::string solName =  _ml_sol->GetSolutionName( solIndex );
 
           for( int name = 0; name < 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i]; name++ ) {
+              
+            //--------- fill printName ------------
             std::string printName;
 
             if( name == 0 ) printName = solName;
             else if( name == 1 ) printName = "Bdc" + solName;
             else if( name == 2 ) printName = "Res" + solName;
             else printName = "Eps" + solName;
+            //--------- fill printName ------------
+            
 
-            fout  << "        <DataArray type=\"Float32\" Name=\"" << printName << "\" format=\"binary\">" << std::endl;
-            Pfout << "      <PDataArray type=\"Float32\" Name=\"" << printName << "\" format=\"binary\"/>" << std::endl;
-
-            //print solutions on nodes dimension
-            cch = b64::b64_encode( &dim_array_ndvar[0], sizeof( dim_array_ndvar ), NULL, 0 );
-            b64::b64_encode( &dim_array_ndvar[0], sizeof( dim_array_ndvar ), &enc[0], cch );
-            pt_char = &enc[0];
-            for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-
+            //--------- fill var_nd ------------
             unsigned offset_iprc = mesh->_dofOffset[index][_iproc];
             unsigned nvt_ig = mesh->_ownSize[index][_iproc];
 
@@ -539,14 +458,11 @@ namespace femus {
             for( std::map <unsigned, unsigned>::iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
               var_nd[ offset_ig + it->second ] = ( *mysol )( it->first );
             }
+            //--------- fill var_nd ------------
+            
 
-            cch = b64::b64_encode( &var_nd[0], dim_array_ndvar [0], NULL, 0 );
-            b64::b64_encode( &var_nd[0], dim_array_ndvar [0], &enc[0], cch );
-            pt_char = &enc[0];
-            for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
-            fout << std::endl;
-
-            fout  << "        </DataArray>" << std::endl;
+            print_data_array< float >(printName, "Float32", fout, Pfout, dim_array_ndvar, var_nd, enc);
+            
           }
         } //endif
       } // end for sol
