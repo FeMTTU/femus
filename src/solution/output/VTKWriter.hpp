@@ -63,7 +63,7 @@ public:
 
   private:
 
-    void material(const std::string material_string, std::ofstream & fout, std::ofstream & Pfout, void* buffer_void, const unsigned elemetOffset, const unsigned elemetOffsetp1, const unsigned * dim_array_elvar, const Mesh * mesh, std::vector <char> & enc ) const;
+    void element_features_material_group_FEtype_level(const std::string material_string, std::ofstream & fout, std::ofstream & Pfout, void* buffer_void, const unsigned elemetOffset, const unsigned elemetOffsetp1, const unsigned * dim_array_elvar, const Mesh * mesh, std::vector <char> & enc ) const;
     
     bool _debugOutput;
 
