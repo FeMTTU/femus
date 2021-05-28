@@ -208,10 +208,12 @@ To overcome this, do
    - an input file
    
    
+    \section{File handling}
+
+  \chapter{Init: Example}
+
  
- 
- 
- \chapter{ Mesh }
+ \chapter{ Mesh}
 
     
  If you choose LINEAR for the MESH DISCRETIZATION, it only works in SERIAL! It could actually work if the MESH was LINEAR...
@@ -395,7 +397,18 @@ To overcome this, do
    
     This object is used in the MultilevelMesh class, to construct the various levels
   
+ \chapter{Mesh: Example}
+ 
+   \section{From file or from function}
+   
+   \section{Refine or not, erase coarse levels or not}
   
+   \section{Partitioning, Serial vs. parallel}
+   
+   \section{Printing}
+   
+   
+   
   \chapter{Solution (Quantities, Equations, Operators)}
 
   \section{Solution}
@@ -463,6 +476,9 @@ To overcome this, do
   \section{Output: Writer}
 
   
+ \chapter{Solution: Example}
+  
+  
   \chapter{Problem}
 
   
@@ -490,6 +506,7 @@ you pick for the quadrature the ones that guarantees exactness for the highest-d
 \section{FE Abstract Families (with precomputed Quadrature evaluations)}
   
   
+ \chapter{Problem: Example}
   
   \chapter{System(s) (of a Problem)}
 
@@ -546,11 +563,11 @@ you pick for the quadrature the ones that guarantees exactness for the highest-d
      
       
       
-\chapter{Solvers and preconditioners}
+\section{Solvers and preconditioners}
 
 
 
- \section{Linear Equation Solver (child of Linear Equation)}
+ \subsection{Linear Equation Solver (child of Linear Equation)}
  
  This is to handle $ A e = - r $
  
@@ -558,7 +575,7 @@ you pick for the quadrature the ones that guarantees exactness for the highest-d
  
  Every LinearEquationSolver has a Solver (which somehow tends to be called Smoother often times) and a Preconditioner
  
- \section{Sparsity pattern}
+ \subsection{Sparsity pattern}
  
   When you have a matrix to store, you need to define a sparsity pattern
   
@@ -571,11 +588,12 @@ you pick for the quadrature the ones that guarantees exactness for the highest-d
   
  
   
- \section{ML vs. MG solver}
+ \subsection{ML vs. MG solver}
 
  In MG you pass the Smoother, while in ML you don't.
  
- 
+   \chapter{System(s) (of a Problem): Example}
+
  
 \part{Mesh Generation: Salome}
 

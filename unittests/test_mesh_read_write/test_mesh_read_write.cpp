@@ -19,7 +19,7 @@ int main(int argc,char **args) {
 
   // ======= Files ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
+  const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -27,7 +27,7 @@ int main(int argc,char **args) {
   // ======= Loop over mesh files ========================
  std::vector< std::string >  input_files;
 //  input_files.push_back("turek_FSI1.neu");
- input_files.push_back("turek_FSI1.med");
+//  input_files.push_back("turek_FSI1.med");
  input_files.push_back("turek_FSI1_3d.med");
 //  input_files.push_back("turek_FSI1_coarsest_not_yet_expanded_at_inflow.med");
 //  input_files.push_back("turek_FSI1_no_bc.neu");
@@ -111,15 +111,15 @@ int main(int argc,char **args) {
   
   const std::string output_dir = files.GetOutputPath();
   
-  VTKWriter my_vtk(&ml_mesh);
+  VTKWriter vtk_writer(&ml_mesh);
 
 //============ Print: Loop over levels ==================
   for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
       
 //   ml_sol.GetWriter()->Write(l+1, input_files[m], output_dir, "", "linear", variablesToBePrinted);
-     my_vtk.Write(l+1, input_files[m], output_dir, "", "quadratic", variablesToBePrinted);
-     my_vtk.Write(l+1, input_files[m], output_dir, "", "biquadratic", variablesToBePrinted);
-     my_vtk.Write(l+1, input_files[m], output_dir, "", "biquadratic", variablesToBePrinted);
+     vtk_writer.Write(l+1, input_files[m], output_dir, "", "linear", variablesToBePrinted);
+     vtk_writer.Write(l+1, input_files[m], output_dir, "", "quadratic", variablesToBePrinted);
+     vtk_writer.Write(l+1, input_files[m], output_dir, "", "biquadratic", variablesToBePrinted);
   
 //   ml_sol.SetWriter(XDMF); 
 //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol

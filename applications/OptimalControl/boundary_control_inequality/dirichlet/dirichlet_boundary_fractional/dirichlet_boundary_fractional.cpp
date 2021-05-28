@@ -362,6 +362,29 @@ int main(int argc, char** args) {
   // I could create an auxiliary MlSol object based only on the coarse level, do the reading there, then refine and erase
   // Question: WHEN can I erase mesh levels? Can I do it even AFTER AddSolution? I don't think so...
   
+  // ======= Solution  ==================
+  const unsigned  steady_flag = 0;
+  const bool      is_an_unknown_of_a_pde = false;
+  MultiLevelSolution * ml_sol_aux = new MultiLevelSolution(&ml_mesh);
+  
+  ml_sol_aux->SetWriter(VTK);
+  ml_sol_aux->GetWriter()->SetDebugOutput(true);
+  
+  const std::string node_based_bdry_flag_name = "node_based_bdry_flag";
+  ml_sol_aux->AddSolution(node_based_bdry_flag_name.c_str(), LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol_aux->Initialize(node_based_bdry_flag_name.c_str());
+  ml_sol_aux->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, mapping);
+  for(unsigned l = 1; l < ml_mesh.GetNumberOfLevels(); l++) {
+     ml_sol_aux->RefineSolution(l);
+  }
+  
+  std::vector < std::string > variablesToBePrinted_aux;
+  variablesToBePrinted_aux.push_back("all");
+  for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
+  ml_sol_aux->GetWriter()->Write(l+1, "aux", files.GetOutputPath(), "", "biquadratic", variablesToBePrinted_aux);
+   }
+
+  delete ml_sol_aux;
   
   // ======= Mesh: COARSE ERASING ========================
   ml_mesh.EraseCoarseLevels(erased_levels/*numberOfUniformLevels - 1*/);
@@ -395,8 +418,6 @@ int main(int argc, char** args) {
   
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
-  const unsigned  steady_flag = 0;
-  const bool      is_an_unknown_of_a_pde = false;
   ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
   ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
   //MU
@@ -405,7 +426,6 @@ int main(int argc, char** args) {
   ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
   //MU
   //----------
-  const std::string node_based_bdry_flag_name = "node_based_bdry_flag";
   ml_sol.AddSolution(node_based_bdry_flag_name.c_str(), LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
   //----------
 
@@ -418,8 +438,8 @@ int main(int argc, char** args) {
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);   //MU
 //   ml_sol.Initialize(node_based_bdry_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize(node_based_bdry_flag_name.c_str(), mapping);
-  ml_sol.GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, mapping);
+  ml_sol.Initialize(node_based_bdry_flag_name.c_str(), mapping);   ///@todo
+  // copy ml_sol_aux at the non-removed levels into ml_sol
   // ======= Solutions that are not Unknowns - END  ==================
 
   

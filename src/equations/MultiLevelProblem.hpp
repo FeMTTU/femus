@@ -305,7 +305,7 @@ private:
     const Files                           * _files;
     unsigned int _current_system_number;
 
-    // attempt to handle templated classes from non-templated class
+    /**  attempt to handle templated classes from non-templated class */
     std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< double, double > * > > >                    _elem_all_dd;  //[QRULES][Geom Elems][FE]
     std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, double > * > > >            _elem_all_ad;  //[QRULES][Geom Elems][FE]
     std::vector< std::vector< std::vector< /*const*/ elem_type_templ_base< adept::adouble, adept::adouble > * > > >    _elem_all_aa;  //[QRULES][Geom Elems][FE]

@@ -970,7 +970,7 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
 
 
 
-
+  /** Refine the solution at (gridf) level from (gridf - 1) */
   void MultiLevelSolution::RefineSolution(const unsigned &gridf) {
 
     Mesh *msh = _mlMesh->GetLevel(gridf);

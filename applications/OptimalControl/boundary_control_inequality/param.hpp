@@ -17,8 +17,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  1
-#define N_ERASED_LEVELS   0
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -734,6 +734,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                       std::vector < double > & KK_local_iel,
                       std::vector < double > & Res_local_iel,
                       const Mesh * msh,
+                      const Solution *    sol,
+                      const MultiLevelSolution *    ml_sol,
                       const int iel,
                       const unsigned iface,
                       std::vector <int> bdry_bdry,
@@ -741,6 +743,10 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                       const unsigned jelGeom_bdry,
                       unsigned solType_coords
                      ) {
+      
+     
+  const unsigned  sol_node_flag_index =  ml_sol->GetIndex("node_based_bdry_flag");
+      
       
   if(UNBOUNDED == 1) {
       
@@ -828,8 +834,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
                 unsigned node_global = msh->el->GetElementDofIndex(iel, inode_bdry);
                 
-//                 nodes_face_face_flags[i_bdry_bdry] = node_group_map[node_global];
-                
+                nodes_face_face_flags[i_bdry_bdry] = (*sol->_Sol[sol_node_flag_index])(node_global);
+                if (nodes_face_face_flags[i_bdry_bdry] == 2 ) std::cout << "^^^^^^^^^^^^^^^ " << std::endl;
                 
               // delta coords  -----
                 for(unsigned k = 0; k < dim; k++) {
@@ -1588,6 +1594,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               KK_local_iel_refined,
                               Res_local_iel_refined,
                               msh,
+                              sol,
+                              ml_sol,
                               iel,
                               iface,
                               bdry_bdry,
@@ -1635,6 +1643,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               KK_local_iel,
                               Res_local_iel,
                               msh,
+                              sol,
+                              ml_sol,
                               iel,
                               iface,
                               bdry_bdry,
