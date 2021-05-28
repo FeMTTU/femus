@@ -4,6 +4,7 @@
 #include "WriterEnum.hpp"
 #include "MultiLevelSolution.hpp"
 #include <sstream>
+#include "VTKWriter.hpp"
 
 
 using namespace femus;
@@ -27,7 +28,7 @@ int main(int argc,char **args) {
  std::vector< std::string >  input_files;
 //  input_files.push_back("turek_FSI1.neu");
  input_files.push_back("turek_FSI1.med");
-//  input_files.push_back("turek_FSI1_3d.med");
+ input_files.push_back("turek_FSI1_3d.med");
 //  input_files.push_back("turek_FSI1_coarsest_not_yet_expanded_at_inflow.med");
 //  input_files.push_back("turek_FSI1_no_bc.neu");
 //  input_files.push_back("cyl.med");
@@ -70,7 +71,7 @@ int main(int argc,char **args) {
   const bool read_groups = true;
   const bool read_boundary_groups = true;
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
-  const unsigned numberOfUniformLevels = 1;
+  const unsigned numberOfUniformLevels = 3;
   const unsigned erased_levels = numberOfUniformLevels - 1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
@@ -78,22 +79,26 @@ int main(int argc,char **args) {
   
   ml_mesh.PrintInfo();
   
-//============ Solution ==================
-///@todo Femus: do a print of the mesh that doesn't require the Solution instantiation. I think I cannot read the mesh alone, I need to attach at least one solution
+// // // //============ Solution ==================
+// // // /// The print doesn't need a solution object anymore 
+// // //   
+// // //   MultiLevelSolution ml_sol(&ml_mesh);
+// // // 
+// // //   const unsigned  steady_flag = 0;                //0: steady state, 2: time dependent
+// // //   const bool      is_an_unknown_of_a_pde = false; //0: not associated to any System
+// // //   ml_sol.AddSolution("u_lag_first", LAGRANGE, FIRST, steady_flag, is_an_unknown_of_a_pde);
+// // //   ml_sol.AddSolution("u_lag_serendip", LAGRANGE, SERENDIPITY, steady_flag, is_an_unknown_of_a_pde);
+// // //   ml_sol.AddSolution("u_lag_second", LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
+// // //   ml_sol.AddSolution("u_disc_zero", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
+// // //   ml_sol.AddSolution("u_disc_first", DISCONTINUOUS_POLYNOMIAL, FIRST, steady_flag, is_an_unknown_of_a_pde);
+// // //   ml_sol.Initialize("all"); 
+// // // //====================================================
+// // //   
+// // // //====================================================
+// // //   ml_sol.SetWriter(VTK);
+// // //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
   
-  MultiLevelSolution ml_sol(&ml_mesh);
-
-  const unsigned  steady_flag = 0;                //0: steady state, 2: time dependent
-  const bool      is_an_unknown_of_a_pde = false; //0: not associated to any System
-  ml_sol.AddSolution("u_lag_first", LAGRANGE, FIRST, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.AddSolution("u_lag_serendip", LAGRANGE, SERENDIPITY, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.AddSolution("u_lag_second", LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.AddSolution("u_disc_zero", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.AddSolution("u_disc_first", DISCONTINUOUS_POLYNOMIAL, FIRST, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.Initialize("all"); 
-//====================================================
-  
-//============ Print ==================
+// // // //============ Print ==================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
   
@@ -106,16 +111,15 @@ int main(int argc,char **args) {
   
   const std::string output_dir = files.GetOutputPath();
   
-  ml_sol.SetWriter(VTK);
-  ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
-
+  VTKWriter my_vtk(&ml_mesh);
 
 //============ Print: Loop over levels ==================
   for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
       
-  ml_sol.GetWriter()->Write(l+1, input_files[m], output_dir, "", "linear", variablesToBePrinted);
-  ml_sol.GetWriter()->Write(l+1, input_files[m], output_dir, "", "quadratic", variablesToBePrinted);
-  ml_sol.GetWriter()->Write(l+1, input_files[m], output_dir, "", "biquadratic", variablesToBePrinted);
+//   ml_sol.GetWriter()->Write(l+1, input_files[m], output_dir, "", "linear", variablesToBePrinted);
+     my_vtk.Write(l+1, input_files[m], output_dir, "", "quadratic", variablesToBePrinted);
+     my_vtk.Write(l+1, input_files[m], output_dir, "", "biquadratic", variablesToBePrinted);
+     my_vtk.Write(l+1, input_files[m], output_dir, "", "biquadratic", variablesToBePrinted);
   
 //   ml_sol.SetWriter(XDMF); 
 //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol

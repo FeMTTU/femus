@@ -73,6 +73,18 @@ public:
 
   private:
       
+    void vtk_unstructured_header_parallel_wrapper(std::ofstream & Pfout) const;
+    
+    void vtk_unstructured_footer_parallel_wrapper(std::ofstream & Pfout) const;
+    
+    void vtk_unstructured_header_iproc(std::ofstream & fout) const;
+      
+    void vtk_unstructured_footer_iproc(std::ofstream & fout) const;
+    
+  void piece_iproc_begin(std::ofstream & fout, const unsigned n_nodes, const unsigned n_elements) const;
+  
+  void piece_iproc_end(std::ofstream & fout) const;
+
   unsigned fe_index(const std::string & order_str) const;
 
   std::map < unsigned, unsigned > ghost_map_proc(const Mesh * mesh, const unsigned index) const;
@@ -247,13 +259,13 @@ public:
  * VTK_HEXAGONAL_PRISM                    = 16,
  * VTK_QUADRATIC_EDGE                     = 21,
  * VTK_QUADRATIC_TRIANGLE                 = 22,
- * VTK_QUADRATIC_QUAD                     = 23,
+ * VTK_QUADRATIC_QUAD                     = 23,  // 23:Serendipity(8-nodes)
  * VTK_QUADRATIC_POLYGON                  = 36,
  * VTK_QUADRATIC_TETRA                    = 24,
  * VTK_QUADRATIC_HEXAHEDRON               = 25,
  * VTK_QUADRATIC_WEDGE                    = 26,
  * VTK_QUADRATIC_PYRAMID                  = 27,
- * VTK_BIQUADRATIC_QUAD                   = 28,
+ * VTK_BIQUADRATIC_QUAD                   = 28,  // 28:Quad9-Biquadratic
  * VTK_TRIQUADRATIC_HEXAHEDRON            = 29,
  * VTK_QUADRATIC_LINEAR_QUAD              = 30,
  * VTK_QUADRATIC_LINEAR_WEDGE             = 31,

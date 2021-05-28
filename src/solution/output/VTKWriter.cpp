@@ -40,6 +40,53 @@ namespace femus {
   VTKWriter::~VTKWriter(){}
 
   
+    void VTKWriter::vtk_unstructured_header_parallel_wrapper(std::ofstream & Pfout) const {
+        
+    Pfout << "<?xml version=\"1.0\"?>" << std::endl;
+    Pfout << "<VTKFile type = \"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
+    Pfout << "  <PUnstructuredGrid GhostLevel=\"0\">" << std::endl;
+    
+    }
+
+    void VTKWriter::vtk_unstructured_footer_parallel_wrapper(std::ofstream & Pfout) const {
+    
+    Pfout << "  </PUnstructuredGrid>" << std::endl;
+    Pfout << "</VTKFile>" << std::endl;
+        
+    }
+    
+
+    void VTKWriter::vtk_unstructured_header_iproc(std::ofstream & fout) const {
+        
+    // *********** write vtu header ************
+    fout << "<?xml version=\"1.0\"?>" << std::endl;
+    fout << "<VTKFile type = \"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
+    fout << "  <UnstructuredGrid>" << std::endl;
+    
+    }
+
+    void VTKWriter::vtk_unstructured_footer_iproc(std::ofstream & fout) const {
+    
+    fout << "  </UnstructuredGrid>" << std::endl;
+    fout << "</VTKFile>" << std::endl;
+        
+    }
+    
+    
+    void VTKWriter::piece_iproc_begin(std::ofstream & fout, const unsigned n_nodes, const unsigned n_elements) const {
+         
+        fout  << "    <Piece NumberOfPoints= \"" << n_nodes << "\" NumberOfCells= \"" << n_elements << "\" >" << std::endl;
+  
+     }
+     
+     
+   void VTKWriter::piece_iproc_end(std::ofstream & fout) const {
+         
+    fout << "    </Piece>" << std::endl;
+
+   }
+     
+ 
     unsigned VTKWriter::fe_index(const std::string & order_str) const {
         
         unsigned index = 0;
@@ -186,24 +233,25 @@ namespace femus {
   void VTKWriter::Write(const unsigned my_level, const std::string filename_prefix, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
 
       
+    // *********** level ************
     if (my_level < 1 || my_level > _gridn) { std::cout << "Level index in this routine is from 1 to num_levels" << std::endl; abort(); }  
       
     std::ostringstream level_name_stream;    
     level_name_stream << ".level" << my_level;
     std::string level_name(level_name_stream.str());   
        
-    // *********** open vtu files *************
-    std::ofstream fout;
+    // *********** FE index ************
+    const std::string order_str(order);
+    unsigned index = fe_index(order_str);
 
+
+    // *********** open vtu streams *************
     std::string dirnamePVTK = "VTKParallelFiles/";
     Files files;
     files.CheckDir( output_path, "" );
     files.CheckDir( output_path, dirnamePVTK );
 
-    // *********** FE index ************
-    const std::string order_str(order);
-    unsigned index = fe_index(order_str);
-
+    std::ofstream fout;
 
     std::ostringstream filename;
     filename << output_path << "./" << dirnamePVTK << filename_prefix << level_name << "." << _iproc << "." << time_step << "." << order << suffix_pre_extension << ".vtu";
@@ -214,12 +262,8 @@ namespace femus {
       abort();
     }
 
-    // *********** write vtu header ************
-    fout << "<?xml version=\"1.0\"?>" << std::endl;
-    fout << "<VTKFile type = \"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
-    fout << "  <UnstructuredGrid>" << std::endl;
 
-    // *********** open pvtu file *************
+    // *********** open pvtu stream *************
     std::ofstream Pfout;
     if( _iproc != 0 ) {
       Pfout.rdbuf();   //redirect to dev_null
@@ -236,11 +280,14 @@ namespace femus {
         abort();
       }
     }
+    
 
+    // *********** write vtu header ************
+    vtk_unstructured_header_iproc(fout);
+    
     // *********** write pvtu header ***********
-    Pfout << "<?xml version=\"1.0\"?>" << std::endl;
-    Pfout << "<VTKFile type = \"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
-    Pfout << "  <PUnstructuredGrid GhostLevel=\"0\">" << std::endl;
+    vtk_unstructured_header_parallel_wrapper(Pfout);
+    
     for( int jproc = 0; jproc < _nprocs; jproc++ ) {
       Pfout << "    <Piece Source=\"" << dirnamePVTK
             << filename_prefix << level_name << "." << jproc << "." << time_step << "." << order <<  suffix_pre_extension << ".vtu"
@@ -248,8 +295,10 @@ namespace femus {
     }
     // ****************************************
 
+    
+    //------------- NODE and ELEMENT INFO ----------------------------------------------------------------------------------
     Mesh* mesh = _ml_mesh->GetLevel( my_level - 1 );
-    Solution* solution = _ml_sol->GetSolutionLevel( my_level - 1 );
+    Solution* solution;     if( _ml_sol != NULL ) { solution = _ml_sol->GetSolutionLevel( my_level - 1 ); }
     
 
     // count the own element dofs on all levels -------------
@@ -287,61 +336,65 @@ namespace femus {
     cch = b64::b64_encode( &buffer_char[0], buffer_size , NULL, 0 );
     std::vector <char> enc;
     enc.resize( cch );
-
-    fout  << "    <Piece NumberOfPoints= \"" << nvt << "\" NumberOfCells= \"" << nel << "\" >" << std::endl;
-
     //-----------------------------------------------------------------------------------------------
-    // print coordinates *********************************************Solu*******************************************
-    fout  << "     <Points>" << std::endl;
-    Pfout << "    <PPoints>" << std::endl;
+    
     
     
     //---- NumericVector used for node-based fields -------------------------------------------------------------------------------------------
-    NumericVector* mysol;
-    mysol = NumericVector::build().release();
+    NumericVector* num_vec_aux;
+    num_vec_aux = NumericVector::build().release();
 
     if( n_processors() == 1 ) { // IF SERIAL
-      mysol->init( mesh->_dofOffset[index][_nprocs],
+      num_vec_aux->init( mesh->_dofOffset[index][_nprocs],
                    mesh->_dofOffset[index][_nprocs], false, SERIAL );
     }
     else { // IF PARALLEL
-      mysol->init( mesh->_dofOffset[index][_nprocs],
+      num_vec_aux->init( mesh->_dofOffset[index][_nprocs],
                    mesh->_ownSize[index][_iproc],
                    mesh->_ghostDofs[index][_iproc], false, GHOSTED );
     }
     //---- NumericVector used for node-based fields -------------------------------------------------------------------------------------------
 
+    
+    //-----------------------------------------------------------------------------------------------
+    piece_iproc_begin(fout, nvt, nel);
+
+    // print coordinates *********************************************Solu*******************************************
+    fout  << "     <Points>" << std::endl;
+    Pfout << "    <PPoints>" << std::endl;
+    
             //--------- fill coord ------------
     // point pointer to common memory area buffer of void type;
     float* var_coord = static_cast<float*>( buffer_void );
+    
     //print own nodes -------------------------
 
     unsigned dofOffset = mesh->_dofOffset[index][_iproc];
     
     for( int i = 0; i < 3; i++ ) {
       if( !_surface ) {
-        mysol->matrix_mult( *mesh->_topology->_Sol[i],
+        num_vec_aux->matrix_mult( *mesh->_topology->_Sol[i],
                             *mesh->GetQitoQjProjection( index, 2 ) );
         if( _graph && i == 2 ) {
           unsigned indGraph = _ml_sol->GetIndex( _graphVariable.c_str() );
-          mysol->matrix_mult( *solution->_Sol[indGraph],
+          num_vec_aux->matrix_mult( *solution->_Sol[indGraph],
                               *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraph ) ) );
         }
       }
       else {
         unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        mysol->matrix_mult( *solution->_Sol[indSurfVar],
+        num_vec_aux->matrix_mult( *solution->_Sol[indSurfVar],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
       }
       for( unsigned ii = 0; ii < nvtOwned; ii++ ) {
-        var_coord[ ii * 3 + i] = ( *mysol )( ii +  dofOffset );
+        var_coord[ ii * 3 + i] = ( *num_vec_aux )( ii +  dofOffset );
       }
       if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i){//_ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
         unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
-        mysol->matrix_mult( *solution->_Sol[indDXDYDZ],
+        num_vec_aux->matrix_mult( *solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
         for( unsigned ii = 0; ii < nvtOwned; ii++ ) {
-          var_coord[ii * 3 + i] += ( *mysol )( ii +  dofOffset );
+          var_coord[ii * 3 + i] += ( *num_vec_aux )( ii +  dofOffset );
         }
       }
     }
@@ -352,31 +405,31 @@ namespace femus {
 
     for( int i = 0; i < 3; i++ ) {
       if( !_surface ) {
-        mysol->matrix_mult( *mesh-> _topology->_Sol[i],
+        num_vec_aux->matrix_mult( *mesh-> _topology->_Sol[i],
                             *mesh-> GetQitoQjProjection( index, 2 ) );
         if( _graph && i == 2 ) {
           unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
-          mysol->matrix_mult( *solution->_Sol[indGraphVar],
+          num_vec_aux->matrix_mult( *solution->_Sol[indGraphVar],
                               *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ) ) );
         }
       }
       else {
         unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        mysol->matrix_mult( *solution->_Sol[indSurfVar],
+        num_vec_aux->matrix_mult( *solution->_Sol[indSurfVar],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
       }
       for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
-        var_coord[ offset_ig + 3 * it->second + i ] = ( *mysol )( it->first );
+        var_coord[ offset_ig + 3 * it->second + i ] = ( *num_vec_aux )( it->first );
       }
     }
 
     for( int i = 0; i < 3; i++ ) { // if moving mesh
       if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i ){ //&& mesh->GetDimension() > i )  {
         unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
-        mysol->matrix_mult( *solution->_Sol[indDXDYDZ],
+        num_vec_aux->matrix_mult( *solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
         for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
-          var_coord[ offset_ig + 3 * it->second + i ] += ( *mysol )( it->first );
+          var_coord[ offset_ig + 3 * it->second + i ] += ( *num_vec_aux )( it->first );
         }
       }
     }
@@ -394,14 +447,10 @@ namespace femus {
     // Printing of element connectivity - offset - format type  *
     fout  << "      <Cells>" << std::endl;
     Pfout << "    <PCells>" << std::endl;
+    
     //-----------------------------------------------------------------------------------------------
-
-    
-    //-------------------------------------------------------------------------------------------------
     //print connectivity
-    
-        //--------- fill conn ------------
-     int* var_conn = static_cast <int*>( buffer_void );
+    int * var_conn = static_cast <int*>( buffer_void );
     
      fill_connectivity_proc(mesh, index, ghostMap, var_conn);
 
@@ -413,7 +462,7 @@ namespace femus {
     print_element_based_fields< int >("offsets", "Int32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_off, mesh, index, enc);
 
     //--------------------------------------------------------------------------------------------------
-    //Element format type : 23:Serendipity(8-nodes)  28:Quad9-Biquadratic
+    //Element format type
     print_element_based_fields< unsigned short >("types", "UInt16", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_type, mesh, index, enc);
     
 
@@ -426,11 +475,9 @@ namespace femus {
     Pfout << "    <PCellData Scalars=\"scalars\">" << std::endl;
     
 
-    //------------------------------------------- PARALLEL PARTITION ---------------------------------------------------------
+    //------------------------------------------- PARALLEL PARTITION, MATERIAL, GROUP, FE TYPE, LEVEL ---------------------------------------------------------
     
     print_element_based_fields< unsigned short >("Metis partition", "UInt16", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_reg, mesh, index, enc);
-
-    //-------------------------------------------MATERIAL, GROUP, FE TYPE, LEVEL ---------------------------------------------------------
 
     print_element_based_fields< float >("Material", "Float32", fout, Pfout, buffer_void, elemetOffset, elemetOffsetp1, dim_array_elvar, mesh, index, enc);
 
@@ -522,27 +569,27 @@ namespace femus {
             unsigned nvt_ig = mesh->_ownSize[index][_iproc];
 
             if( name == 0 )
-              mysol->matrix_mult( *solution->_Sol[solIndex],
+              num_vec_aux->matrix_mult( *solution->_Sol[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
             else if( name == 1 )
-              mysol->matrix_mult( *solution->_Bdc[solIndex],
+              num_vec_aux->matrix_mult( *solution->_Bdc[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
             else if( name == 2 )
-              mysol->matrix_mult( *solution->_Res[solIndex],
+              num_vec_aux->matrix_mult( *solution->_Res[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
             else
-              mysol->matrix_mult( *solution->_Eps[solIndex],
+              num_vec_aux->matrix_mult( *solution->_Eps[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
 
             for( unsigned ii = 0; ii < nvt_ig; ii++ ) {
-              var_nd[ ii ] = ( *mysol )( ii + offset_iprc );
+              var_nd[ ii ] = ( *num_vec_aux )( ii + offset_iprc );
             }
             
             //print ghost dofs -------------------------
             unsigned offset_ig = nvtOwned;
 
             for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
-              var_nd[ offset_ig + it->second ] = ( *mysol )( it->first );
+              var_nd[ offset_ig + it->second ] = ( *num_vec_aux )( it->first );
             }
             //--------- fill var_nd ------------
             
@@ -559,19 +606,18 @@ namespace femus {
 
     //------------------------------------------------------------------------------------------------
 
-    fout << "    </Piece>" << std::endl;
-    fout << "  </UnstructuredGrid>" << std::endl;
-    fout << "</VTKFile>" << std::endl;
+    piece_iproc_end(fout);
+
+    vtk_unstructured_footer_iproc(fout);
     fout.close();
 
-    Pfout << "  </PUnstructuredGrid>" << std::endl;
-    Pfout << "</VTKFile>" << std::endl;
+    vtk_unstructured_footer_parallel_wrapper(Pfout);
     Pfout.close();
 
 
     //-----------------------------------------------------------------------------------------------------
     //free memory
-    delete mysol;
+    delete num_vec_aux;
 
     //--------------------------------------------------------------------------------------------------------
     return;
