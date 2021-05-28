@@ -93,8 +93,6 @@ public:
     /** @todo At all levels, initialize Sol. By default, Sol is set to zero. Otherwise, a function is passed. 
       * In that case, and if the Solution is time-dependent, then both Sol and SolOld are initialized. */
     void Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
-
-    void Initialize(const char name[], std::vector < unsigned > mapping);
   
     inline void Set(const char name[], InitFuncMLProb funcMLProb, const MultiLevelProblem *ml_prob);
     

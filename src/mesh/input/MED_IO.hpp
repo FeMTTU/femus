@@ -81,11 +81,11 @@ class MED_IO : public MeshInput<Mesh>
 
   std::vector< TYPE_FOR_REAL_DATASET >  node_based_flag_read_from_file(const std::string& name, const std::vector< unsigned > & mapping);
 
+  static bool boundary_of_boundary_3d_check_face_of_face_via_nodes(const std::vector < int > nodes_face_face_flags, const unsigned group_salome);
+  
  private:
      
   void node_read_flag(const hid_t&  file_id, const std::string mesh_menu,  vector < TYPE_FOR_REAL_DATASET >  & node_group_map);
-  
-  bool boundary_of_boundary_3d_check_face_of_face_via_nodes(const std::vector < int > nodes_face_face_flags, const unsigned group_salome) const;
   
   hid_t open_mesh_file(const std::string& name);
   

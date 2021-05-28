@@ -229,22 +229,6 @@ namespace femus {
     Initialize(name, NULL, func, ml_prob);
   }
   
-
-  void MultiLevelSolution::Initialize(const char name[], std::vector < unsigned > mapping) {
-      
-      
-         std::vector< unsigned > sol_start_end =  solution_start_and_end(std::string (name));
-    for(unsigned i = sol_start_end[0]; i < sol_start_end[1]; i++) {
-        
-              for(unsigned ig = 0; ig < _gridn; ig++) {
-
-        _solution[ig]->ResizeSolutionVector(_solName[i]);
-        _solution[ig]->_Sol[i]->zero();
-        
-              }
-    }
-
-  }
   
   
   /** A Solution is by default initialized to zero, or by a provided function     */
@@ -1016,10 +1000,10 @@ void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, con
   }
 
   /** Copies from another MLSol object from a given level to some other level.
-      One should also check that they belong to the same underlying mesh structure */
+      One should also check that they belong to the same underlying mesh structure, have the same list of variables, and in the same order */
   void MultiLevelSolution::fill_at_level_from_level(const unsigned lev_out, const unsigned lev_in, const MultiLevelSolution & ml_sol_in)  {
 
-    assert(_solType.size() == ml_sol_in.GetSolutionSize());
+    if (_solType.size() != ml_sol_in.GetSolutionSize()) { std::cout << "Different Solutions" << std::endl; abort(); }
 
     for(unsigned k = 0; k < _solType.size(); k++) {
       *(_solution[lev_out]->_Sol[k]) = *(ml_sol_in.GetSolutionLevel(lev_in)->_Sol[k]);

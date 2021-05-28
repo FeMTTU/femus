@@ -746,6 +746,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
       
      
   const unsigned  sol_node_flag_index =  ml_sol->GetIndex("node_based_bdry_flag");
+  const unsigned  group_salome = 2;
       
       
   if(UNBOUNDED == 1) {
@@ -835,7 +836,6 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 unsigned node_global = msh->el->GetElementDofIndex(iel, inode_bdry);
                 
                 nodes_face_face_flags[i_bdry_bdry] = (*sol->_Sol[sol_node_flag_index])(node_global);
-                if (nodes_face_face_flags[i_bdry_bdry] == 2 ) std::cout << "^^^^^^^^^^^^^^^ " << std::endl;
                 
               // delta coords  -----
                 for(unsigned k = 0; k < dim; k++) {
@@ -843,10 +843,12 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 }
               }
               
-//                 bool is_face_bdry_bdry  =  MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary_3d_check_face_of_face_via_nodes( nodes_face_face_flags, group_salome);
+                bool is_face_bdry_bdry  =  MED_IO::boundary_of_boundary_3d_check_face_of_face_via_nodes( nodes_face_face_flags, group_salome);
 
-              
-              
+              if(is_face_bdry_bdry) {
+                  
+              std::cout << "^^^^^^^^^^^^^^^ " << std::endl;
+                  
               // delta coords - refinement -----
               const unsigned div = 10;
               vector  < vector  <  double> > delta_coordinates_bdry_bdry_refined(dim);
@@ -881,7 +883,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
               }
               // delta coords - refinement -----
               
-              
+              }
               
             }
 

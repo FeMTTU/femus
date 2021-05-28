@@ -362,7 +362,7 @@ int main(int argc, char** args) {
   // I could create an auxiliary MlSol object based only on the coarse level, do the reading there, then refine and erase
   // Question: WHEN can I erase mesh levels? Can I do it even AFTER AddSolution? I don't think so...
   
-  // ======= Solution  ==================
+  // ======= Solution, auxiliary  ==================
   const unsigned  steady_flag = 0;
   const bool      is_an_unknown_of_a_pde = false;
   MultiLevelSolution * ml_sol_aux = new MultiLevelSolution(&ml_mesh);
@@ -384,7 +384,6 @@ int main(int argc, char** args) {
   ml_sol_aux->GetWriter()->Write(l+1, "aux", files.GetOutputPath(), "", "biquadratic", variablesToBePrinted_aux);
    }
 
-  delete ml_sol_aux;
   
   // ======= Mesh: COARSE ERASING ========================
   ml_mesh.EraseCoarseLevels(erased_levels/*numberOfUniformLevels - 1*/);
@@ -437,9 +436,14 @@ int main(int argc, char** args) {
   ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);   //MU
-//   ml_sol.Initialize(node_based_bdry_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize(node_based_bdry_flag_name.c_str(), mapping);   ///@todo
+  ml_sol.Initialize(node_based_bdry_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
+
   // copy ml_sol_aux at the non-removed levels into ml_sol
+  for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
+      *(ml_sol.GetSolutionLevel(l)->_Sol[ml_sol.GetIndex(node_based_bdry_flag_name.c_str())]) =
+      *(ml_sol_aux->GetSolutionLevel(l + erased_levels)->_Sol[ml_sol_aux->GetIndex(node_based_bdry_flag_name.c_str())]);
+  }
+  delete ml_sol_aux;
   // ======= Solutions that are not Unknowns - END  ==================
 
   

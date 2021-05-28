@@ -569,7 +569,7 @@ namespace femus {
    }
 
    
-  bool MED_IO::boundary_of_boundary_3d_check_face_of_face_via_nodes(const std::vector < int > nodes_face_face_flags, const unsigned group_salome) const {
+   bool MED_IO::boundary_of_boundary_3d_check_face_of_face_via_nodes(const std::vector < int > nodes_face_face_flags, const unsigned group_salome)  {
 
                    bool is_face_bdry_bdry = false;
               unsigned int i_bdry_bdry = 0;
@@ -577,7 +577,7 @@ namespace femus {
                   if (nodes_face_face_flags[i_bdry_bdry] == group_salome) { i_bdry_bdry++;}
                   else break;
                }
-                if  (  i_bdry_bdry ==   nodes_face_face_flags.size() ) { is_face_bdry_bdry = true;   }
+                if  (  i_bdry_bdry ==   nodes_face_face_flags.size() ) { is_face_bdry_bdry = true; }
 
            return  is_face_bdry_bdry;    
                 
