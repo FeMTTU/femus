@@ -22,8 +22,8 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   2
+#define N_UNIFORM_LEVELS  1
+#define N_ERASED_LEVELS   0
 //**************************************
 
 //***** Operator-related ****************** 
