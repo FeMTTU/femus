@@ -8,7 +8,7 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
-
+#include "MED_IO.hpp"
 
 #include "../fractional_functions.hpp"
 
@@ -17,7 +17,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  2
+#define N_UNIFORM_LEVELS  3
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
@@ -29,8 +29,8 @@
 
 
 //*********************** Sets the regularization parameters *******************************************************
-#define ALPHA_CTRL_BDRY 1.e-2
-#define BETA_CTRL_BDRY 1.e-2
+#define ALPHA_CTRL_BDRY 0//1.e-2
+#define BETA_CTRL_BDRY 1//1.e-2
 
 
 #define ALPHA_CTRL_VOL 1.e-3
@@ -54,7 +54,7 @@ namespace femus {
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper =  .03;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper =  1000.;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower = -1000.; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      
@@ -746,7 +746,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
       
      
   const unsigned  sol_node_flag_index =  ml_sol->GetIndex("node_based_bdry_flag");
-  const unsigned  group_salome = 2;
+  const unsigned  group_salome = 2;   ///@todo fix here, maybe pass it in the args
       
       
   if(UNBOUNDED == 1) {
@@ -847,7 +847,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
               if(is_face_bdry_bdry) {
                   
-              std::cout << "^^^^^^^^^^^^^^^ " << std::endl;
+//               std::cout << "^^^^^^^^^^^^^^^ " << std::endl;
                   
               // delta coords - refinement -----
               const unsigned div = 10;

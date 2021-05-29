@@ -16,22 +16,18 @@
 #include "petscmat.h"
 #include "PetscMatrix.hpp"
 
-#include "slepceps.h"
-
-#include "PetscMatrix.hpp"
-
 #include "Assemble_jacobian.hpp"
 
 
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
+#define N_UNIFORM_LEVELS  3
+#define N_ERASED_LEVELS   2
 //**************************************
 
 //***** Operator-related ****************** 
-#define S_FRAC 0.99
+#define S_FRAC 0.5
 
 #define OP_L2       0
 #define OP_H1       0
@@ -45,12 +41,12 @@ using namespace femus;
 
 
 //***** Domain-related ****************** 
-#define EX_1       -1.
-#define EX_2        1.
-#define EY_1       -1.
-#define EY_2        1.
+#define EX_1       -0.25
+#define EX_2        0.25
+#define EY_1       -0.5
+#define EY_2        0.5
 
-#define DOMAIN_DIM  1
+#define DOMAIN_DIM  2
 //**************************************
 
 
@@ -109,9 +105,11 @@ int main(int argc, char** argv)
   FemusInit mpinit(argc, argv, MPI_COMM_WORLD);
 
   // ======= Files ========================
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = false;
   Files files; 
-        files.CheckIODirectories(false);
-        files.RedirectCout(false);
+        files.CheckIODirectories(use_output_time_folder);
+        files.RedirectCout(redirect_cout_to_file);
 
   unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
 
@@ -129,7 +127,7 @@ int main(int argc, char** argv)
       ml_mesh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
     }
   else if (DOMAIN_DIM == 2)  { 
-      ml_mesh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+      ml_mesh.GenerateCoarseBoxMesh(2, 4, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
     }
 
   ml_mesh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
@@ -144,7 +142,7 @@ int main(int argc, char** argv)
   MultiLevelSolution mlSol(&ml_mesh);
 
   // add variables to mlSol
-  mlSol.AddSolution("u", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution("u", LAGRANGE, FIRST/*SECOND*/, 2);
 
 
   mlSol.Initialize("All");

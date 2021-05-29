@@ -37,8 +37,8 @@
 //**************************************
 
 //***** Operator-related ****************** 
-  #define RHS_ONE             0.
-  #define KEEP_ADJOINT_PUSH   1
+  #define RHS_ONE             1.
+  #define KEEP_ADJOINT_PUSH   0
 #define IS_CTRL_FRACTIONAL_SOBOLEV   1
 #define S_FRAC 0.5
 
