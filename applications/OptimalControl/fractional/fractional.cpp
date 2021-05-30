@@ -22,8 +22,8 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  1
-#define N_ERASED_LEVELS   0
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
 //**************************************
 
 //***** Operator-related ****************** 
@@ -41,10 +41,10 @@ using namespace femus;
 
 
 //***** Domain-related ****************** 
-#define EX_1       -0.25
-#define EX_2        0.25
-#define EY_1       -0.5
-#define EY_2        0.5
+#define EX_1       0
+#define EX_2        0.5
+#define EY_1       0.
+#define EY_2        1
 
 #define DOMAIN_DIM  2
 //**************************************
@@ -117,17 +117,17 @@ int main(int argc, char** argv)
   MultiLevelMesh ml_mesh;
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
+
+  if (DOMAIN_DIM == 1) {
   //const std::string mesh_file = "./input/Mesh_1_x.med";
 //   const std::string mesh_file = "./input/Mesh_1_x_dir_neu_200_elem.med";
 //const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
-//   const std::string mesh_file = "./input/disk.neu";
-//   ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
-
-  if (DOMAIN_DIM == 1) {
       ml_mesh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
     }
   else if (DOMAIN_DIM == 2)  { 
-      ml_mesh.GenerateCoarseBoxMesh(2, 4, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+  const std::string mesh_file = "./input/parametric_rectangle.med";
+//   ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
+      ml_mesh.GenerateCoarseBoxMesh(1, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
     }
 
   ml_mesh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
