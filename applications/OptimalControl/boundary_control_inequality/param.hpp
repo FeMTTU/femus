@@ -830,16 +830,16 @@ void el_dofs_unknowns_vol(const Solution*                sol,
               
               for(unsigned i_bdry_bdry = 0; i_bdry_bdry < n_dofs_bdry_bdry; i_bdry_bdry++) {
                   
-                unsigned inode_bdry_bdry = msh->el->GetIG(jelGeom_bdry, e_bdry_bdry/*bdry_bdry[e_bdry_bdry]*/, i_bdry_bdry); // face-to-element local node mapping. TODO: verify jelGeom_bdry
-                unsigned inode_bdry    = msh->el->GetIG(iel_geom_type, iface, inode_bdry_bdry); //from n-1 to n
+                unsigned inode_bdry = msh->el->GetIG(jelGeom_bdry, e_bdry_bdry/*bdry_bdry[e_bdry_bdry]*/, i_bdry_bdry); // face-to-element local node mapping. TODO: verify jelGeom_bdry
+                unsigned inode_vol    = msh->el->GetIG(iel_geom_type, iface, inode_bdry); //from n-1 to n
 
-                unsigned node_global = msh->el->GetElementDofIndex(iel, inode_bdry);
+                unsigned node_global = msh->el->GetElementDofIndex(iel, inode_vol);
                 
                 nodes_face_face_flags[i_bdry_bdry] = (*sol->_Sol[sol_node_flag_index])(node_global);
                 
               // delta coords  -----
                 for(unsigned k = 0; k < dim; k++) {
-                  delta_coordinates_bdry_bdry[k][i_bdry_bdry] = geom_element_jel.get_coords_at_dofs_bdry_3d()[k][inode_bdry_bdry] - x_iqp_bdry[k];  ///@todo// TODO We extract the local coordinates on the face from local coordinates on the element.
+                  delta_coordinates_bdry_bdry[k][i_bdry_bdry] = geom_element_jel.get_coords_at_dofs_3d()[k][inode_vol] - x_iqp_bdry[k];  ///@todo// TODO We extract the local coordinates on the face from local coordinates on the element.
                 }
               }
               
@@ -861,11 +861,16 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 }
               }
               for(unsigned n = 0; n < div; n++) {
-                double teta2 = atan2(delta_coordinates_bdry_bdry_refined[1][n + 1], delta_coordinates_bdry_bdry_refined[0][n + 1]);
-                double teta1 = atan2(delta_coordinates_bdry_bdry_refined[1][n], delta_coordinates_bdry_bdry_refined[0][n]);
+                  
+                const unsigned dir_x_for_atan = 0;  ///@todo I think needs to be changed
+                const unsigned dir_y_for_atan = 1;  ///@todo I think needs to be changed
+                double teta2 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n + 1], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n + 1]);
+                double teta1 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n]);
 
-                if(teta2 < teta1) teta2 += 2. * M_PI;
-
+                if(teta2 < teta1) {
+                    teta2 += 2. * M_PI;
+                }
+                
                 double delta_teta = teta2 - teta1;
 
 
@@ -889,7 +894,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
             for(unsigned i = 0; i < phi_ctrl_iel_bdry_iqp_bdry.size(); i++) {
               for(unsigned j = 0; j < phi_ctrl_iel_bdry_iqp_bdry.size(); j++) {
-                KK_local_iel[ i * nDof_vol_iel + j ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * weight_iqp_bdry * mixed_term1;
+                KK_local_iel[ i * nDof_vol_iel + j ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * mixed_term1;
               }
               Res_local_iel[ i ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * mixed_term1;
             }

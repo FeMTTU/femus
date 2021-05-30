@@ -22,8 +22,8 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 //**************************************
 
 //***** Operator-related ****************** 
@@ -126,8 +126,8 @@ int main(int argc, char** argv)
     }
   else if (DOMAIN_DIM == 2)  { 
   const std::string mesh_file = "./input/parametric_rectangle.med";
-//   ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
-      ml_mesh.GenerateCoarseBoxMesh(1, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+  ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
+//       ml_mesh.GenerateCoarseBoxMesh(1, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
     }
 
   ml_mesh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
