@@ -17,7 +17,7 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  1
+#define N_UNIFORM_LEVELS  3
 #define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
 
 
@@ -846,11 +846,9 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 bool is_face_bdry_bdry  =  MED_IO::boundary_of_boundary_3d_check_face_of_face_via_nodes( nodes_face_face_flags, group_salome);
 
               if(is_face_bdry_bdry) {
-                  
-//               std::cout << "^^^^^^^^^^^^^^^ " << std::endl;
-                  
+                
               // delta coords - refinement -----
-              const unsigned div = 10;
+              const unsigned div = 1;
               vector  < vector  <  double> > delta_coordinates_bdry_bdry_refined(dim);
               for(int k = 0; k < dim; k++) {
                 delta_coordinates_bdry_bdry_refined[k].resize(div + 1); // set "4" as a parameter
@@ -862,17 +860,19 @@ void el_dofs_unknowns_vol(const Solution*                sol,
               }
               for(unsigned n = 0; n < div; n++) {
                   
-                const unsigned dir_x_for_atan = 0;  ///@todo I think needs to be changed
-                const unsigned dir_y_for_atan = 1;  ///@todo I think needs to be changed
+                const unsigned dir_x_for_atan = ( ( (FACE_FOR_CONTROL - 1) / 2 ) + 1 ) % 3;  ///@todo I think needs to be changed
+                const unsigned dir_y_for_atan = ( dir_x_for_atan + 1 ) % 3 ;  ///@todo I think needs to be changed
                 double teta2 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n + 1], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n + 1]);
                 double teta1 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n]);
 
-                if(teta2 < teta1) {
-                    teta2 += 2. * M_PI;
-                }
-                
-                double delta_teta = teta2 - teta1;
-
+                double delta_teta = 0.;
+                if(teta2 < teta1) delta_teta = std::min(teta1 - teta2, 2. * M_PI + teta2 - teta1);
+                else delta_teta = std::min(teta2 - teta1, 2. * M_PI + teta1 - teta2);
+//                 if(teta2 < teta1) {
+//                     teta2 += 2. * M_PI;
+//                 }
+//                 
+//                 double delta_teta = teta2 - teta1;
 
                 vector <double> mid_point;
                 mid_point.resize(dim);
@@ -892,12 +892,23 @@ void el_dofs_unknowns_vol(const Solution*                sol,
               
             }
 
-            for(unsigned i = 0; i < phi_ctrl_iel_bdry_iqp_bdry.size(); i++) {
-              for(unsigned j = 0; j < phi_ctrl_iel_bdry_iqp_bdry.size(); j++) {
-                KK_local_iel[ i * nDof_vol_iel + j ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * mixed_term1;
+//             for(unsigned i = 0; i < phi_ctrl_iel_bdry_iqp_bdry.size(); i++) {
+//               for(unsigned j = 0; j < phi_ctrl_iel_bdry_iqp_bdry.size(); j++) {
+//                 KK_local_iel[ i * nDof_vol_iel + j ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * mixed_term1;
+//               }
+//               Res_local_iel[ i ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * mixed_term1;
+//             }
+             for(unsigned i_bdry = 0; i_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); i_bdry++) {
+                unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
+                for(unsigned j_bdry = 0; j_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); j_bdry++) {
+                  unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
+                  KK_local_iel[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * mixed_term1;
+                }
+                Res_local_iel[ i_vol_iel ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry * mixed_term1;
               }
-              Res_local_iel[ i ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i] * sol_ctrl_iqp_bdry * mixed_term1;
-            }
+            
+            
+            
           
       }          
       
@@ -1631,7 +1642,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
         else {  //  if(iel != jel || Nsplit == 0) 
             
 // ********* UNBOUNDED PART - BEGIN ***************
-          if(check_if_same_elem_bdry(iel, jel, iface, jface)) {
+//           if(check_if_same_elem_bdry(iel, jel, iface, jface)) { //TODO I removed this since we don't want iel==jel here
               
                mixed_integral(UNBOUNDED,
                               dim,
@@ -1660,7 +1671,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               solType_coords
                              );
                
-          }
+//           }
               
 // ********* UNBOUNDED PART - END ***************
             
