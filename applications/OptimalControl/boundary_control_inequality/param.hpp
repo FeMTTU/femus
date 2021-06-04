@@ -848,22 +848,27 @@ void el_dofs_unknowns_vol(const Solution*                sol,
               if(is_face_bdry_bdry) {
                 
               // delta coords - refinement -----
-              const unsigned div = 1;
-              vector  < vector  <  double> > delta_coordinates_bdry_bdry_refined(dim);
-              for(int k = 0; k < dim; k++) {
-                delta_coordinates_bdry_bdry_refined[k].resize(div + 1); // set "4" as a parameter
-              }
+              const unsigned div = 10;
+              
+              std::vector  <  double > delta_coordinates_bdry_bdry_refined( (div + 1) * dim);
+              
+//               vector  < vector  <  double > > delta_coordinates_bdry_bdry_refined(dim);
+//               for(int k = 0; k < dim; k++) {
+// //                 delta_coordinates_bdry_bdry_refined[k].resize(div + 1); // set "4" as a parameter
+//               }
               for(unsigned n = 0; n <= div; n++) {
                 for(int k = 0; k < dim; k++) {
-                  delta_coordinates_bdry_bdry_refined[k][n] = delta_coordinates_bdry_bdry[k][0] + n * (delta_coordinates_bdry_bdry[k][1] - delta_coordinates_bdry_bdry[k][0]) /  div ;
+                  delta_coordinates_bdry_bdry_refined[n + k * div] = delta_coordinates_bdry_bdry[k][0] + n * (delta_coordinates_bdry_bdry[k][1] - delta_coordinates_bdry_bdry[k][0]) /  div ;
                 }
               }
               for(unsigned n = 0; n < div; n++) {
                   
                 const unsigned dir_x_for_atan = ( ( (FACE_FOR_CONTROL - 1) / 2 ) + 1 ) % 3;  ///@todo I think needs to be changed
                 const unsigned dir_y_for_atan = ( dir_x_for_atan + 1 ) % 3 ;  ///@todo I think needs to be changed
-                double teta2 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n + 1], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n + 1]);
-                double teta1 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n]);
+                double teta2 = atan2(delta_coordinates_bdry_bdry_refined[(n+1) + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[(n+1) + dir_x_for_atan * div]);
+                double teta1 = atan2(delta_coordinates_bdry_bdry_refined[n + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[n + dir_x_for_atan * div]);
+//                 double teta2 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n + 1], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n + 1]);
+//                 double teta1 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n]);
 
                 double delta_teta = 0.;
                 if(teta2 < teta1) delta_teta = std::min(teta1 - teta2, 2. * M_PI + teta2 - teta1);
@@ -877,7 +882,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 vector <double> mid_point;
                 mid_point.resize(dim);
                 for(unsigned k = 0; k < dim; k++) {
-                  mid_point[k] = (delta_coordinates_bdry_bdry_refined[k][n + 1] + delta_coordinates_bdry_bdry_refined[k][n]) * 0.5;
+                  mid_point[k] = (delta_coordinates_bdry_bdry_refined[(n+1) + k * div] + delta_coordinates_bdry_bdry_refined[n + k * div]) * 0.5;
+//                   mid_point[k] = (delta_coordinates_bdry_bdry_refined[k][n + 1] + delta_coordinates_bdry_bdry_refined[k][n]) * 0.5;
                 }
                 double dist2 = 0;
                 for(int k = 0; k < dim; k++) {
@@ -886,12 +892,13 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 double dist = sqrt(dist2);
                 mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
               }
-              // delta coords - refinement -----
-              
+//               delta coords - refinement -----
+
+          
               }
               
             }
-
+            
 //             for(unsigned i = 0; i < phi_ctrl_iel_bdry_iqp_bdry.size(); i++) {
 //               for(unsigned j = 0; j < phi_ctrl_iel_bdry_iqp_bdry.size(); j++) {
 //                 KK_local_iel[ i * nDof_vol_iel + j ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i] * phi_ctrl_iel_bdry_iqp_bdry[j] * mixed_term1;
