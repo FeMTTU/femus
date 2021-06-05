@@ -31,6 +31,8 @@
 #define Nsplit 0
 #define Quadrature_split_index  0
 
+#define N_DIV_UNBOUNDED  10
+
 #define QRULE_I   0
 #define QRULE_J   1
 #define QRULE_K   QRULE_I
@@ -50,7 +52,7 @@
   #define OP_H1       0
   #define OP_Hhalf    1
 
-  #define UNBOUNDED   1
+  #define UNBOUNDED   0
 
   #define USE_Cns     1
 
@@ -900,7 +902,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     qrule_j,
                     qrule_k,
                     Nsplit,
-                    Quadrature_split_index
+                    Quadrature_split_index,
+                    N_DIV_UNBOUNDED
                     );
                     
   }

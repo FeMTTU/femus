@@ -18,7 +18,7 @@
 
 //*********************** Sets Number of refinements *****************************************
 #define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   N_UNIFORM_LEVELS - 1
+#define N_ERASED_LEVELS   2
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -721,6 +721,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                       const unsigned dim,
                       const unsigned dim_bdry,
                       const std::vector < std::vector < double > > & ex_control,
+                      const unsigned div, 
                       const double weight_iqp_bdry,
                       const std::vector < double > & x_iqp_bdry,
                       const std::vector < double > & phi_ctrl_iel_bdry_iqp_bdry,
@@ -848,7 +849,6 @@ void el_dofs_unknowns_vol(const Solution*                sol,
               if(is_face_bdry_bdry) {
                 
               // delta coords - refinement -----
-              const unsigned div = 10;
               
               std::vector  <  double > delta_coordinates_bdry_bdry_refined( (div + 1) * dim);
               
@@ -1001,7 +1001,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                         const unsigned qrule_j,
                         const unsigned qrule_k,
                         const unsigned int Nsplit,
-                        const unsigned int Quadrature_split_index
+                        const unsigned int Quadrature_split_index,
+                        const unsigned int N_div_unbounded
                        ) {
       
       
@@ -1606,6 +1607,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               dim,
                               dim_bdry,
                               ex_control,
+                              N_div_unbounded,
                               weight_kqp_bdry,
                               x_kqp_bdry,
                               phi_ctrl_kel_bdry_kqp_bdry,
@@ -1655,6 +1657,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               dim,
                               dim_bdry,
                               ex_control,
+                              N_div_unbounded,
                               weight_iqp_bdry,
                               x_iqp_bdry,
                               phi_ctrl_iel_bdry_iqp_bdry,

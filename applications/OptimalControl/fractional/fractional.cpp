@@ -22,8 +22,8 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
+#define N_UNIFORM_LEVELS  3
+#define N_ERASED_LEVELS   2
 //**************************************
 
 //***** Operator-related ****************** 
@@ -34,7 +34,7 @@ using namespace femus;
 #define OP_Hhalf    1
 #define RHS_ONE     1
 
-#define UNBOUNDED   1
+#define UNBOUNDED   0
 
 #define USE_Cns     1
 //**************************************
@@ -56,6 +56,9 @@ using namespace femus;
 
 //***** Quadrature-related ****************** 
 #define Nsplit      0
+
+#define N_DIV_UNBOUNDED  10
+
 //**************************************
 
 
@@ -875,7 +878,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                         faceCoordinates[k][i] =  x2[k][inode] - xg3[k]; // We extract the local coordinates on the face from local coordinates on the element.
                       }
                     }
-                    const unsigned div = 10;
+                    const unsigned div = N_DIV_UNBOUNDED;
                     vector  < vector  <  double> > interpCoordinates(dim);
                     for(int k = 0; k < dim; k++) {
                       interpCoordinates[k].resize(div + 1); // set "4" as a parameter
@@ -978,7 +981,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                   faceCoordinates[k][i] =  x2[k][inode] - xg1[k]; // We extract the local coordinates on the face from local coordinates on the element.
                 }
               }
-              const unsigned div = 10;
+              const unsigned div = N_DIV_UNBOUNDED;
               vector  < vector  <  double> > interpCoordinates(dim);
               for(int k = 0; k < dim; k++) {
                 interpCoordinates[k].resize(div + 1); // set "4" as a parameter
