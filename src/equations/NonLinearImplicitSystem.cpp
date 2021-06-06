@@ -357,6 +357,16 @@ restart:
   }
   
 
+  void NonLinearImplicitSystem::assemble_call(const unsigned int n_times)  {
+     
+    _nonliniteration = 0;
+    
+    System::assemble_call(n_times);
+      
+   
+ } 
+  
+  
 
 } //end namespace femus
 

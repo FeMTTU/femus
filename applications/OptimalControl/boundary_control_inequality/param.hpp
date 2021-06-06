@@ -17,8 +17,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   2
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -276,12 +276,12 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
             const double lower_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_lower[i] );
             const double upper_test_value = sol_eldofs[pos_mu][i] + c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_upper[i] );
 
-            if      ( lower_test_value < 0 )  {
+            if      ( lower_test_value < 0. )  {
                 std::cout << "Found active node below" << std::endl;
                 std::cout << "The current value of mu is " <<  sol_eldofs[pos_mu][i] << std::endl;
                    sol_actflag[i] = 1;
             }
-            else if ( upper_test_value > 0 )  {
+            else if ( upper_test_value > 0. )  {
                 std::cout << "Found active node above" << std::endl;
                 std::cout << "The current value of mu is " <<  sol_eldofs[pos_mu][i] << std::endl;
                 sol_actflag[i] = 2;
@@ -330,9 +330,9 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
            std::fill(ctrl_lower.begin(), ctrl_lower.end(), 0.);
            std::fill(ctrl_upper.begin(), ctrl_upper.end(), 0.);
 
-      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+      for (unsigned int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
-        std::vector<double> node_coords_i(dim,0.);
+        std::vector<double> node_coords_i(dim, 0.);
         for (unsigned d = 0; d < dim; d++) node_coords_i[d] = coords_at_dofs[d][i_bdry];
         
         ctrl_lower[i_bdry] = InequalityConstraint(node_coords_i, false);
@@ -341,12 +341,12 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
         const double lower_test_value = sol_eldofs[pos_mu][i_vol] + c_compl * ( sol_eldofs[pos_ctrl][i_vol] - ctrl_lower[i_bdry] );
         const double upper_test_value = sol_eldofs[pos_mu][i_vol] + c_compl * ( sol_eldofs[pos_ctrl][i_vol] - ctrl_upper[i_bdry] );
         
-        if      ( lower_test_value < 0 )  sol_actflag[i_bdry] = 1;
-        else if ( upper_test_value > 0 )  sol_actflag[i_bdry] = 2;
+        if      ( lower_test_value < 0. )  sol_actflag[i_bdry] = 1;
+        else if ( upper_test_value > 0. )  sol_actflag[i_bdry] = 2;
             }
             
         //************** act flag **************************** 
-      for (int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
+      for (unsigned int i_bdry = 0; i_bdry < sol_actflag.size(); i_bdry++)  {
 	    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
       unsigned solDof_actflag = msh->GetSolutionDof(i_vol, iel, solFEType_act_flag); 
       (sol->_Sol[solIndex_act_flag])->set(solDof_actflag, sol_actflag[i_bdry]);     

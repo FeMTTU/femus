@@ -420,8 +420,13 @@ inline void NumericVector::print(std::ostream& os) const {
   os << "Size\tglobal =  " << this->size()
      << "\t\tlocal =  " << this->local_size() << std::endl;
   os << "#\tValue" << std::endl;
-  for ( int i=this->first_local_index(); i<this->last_local_index(); i++)
-    os << i << "\t" << (*this)(i) << std::endl;
+  for ( int i = this->first_local_index(); i < this->last_local_index(); i++) {
+//     std::cerr << "&&&&&&&&&&&&&&& " << i; /// @todo way to locate valgrind errors 
+    os << i;
+    os << "\t";
+    os << (*this)(i);
+    os << std::endl;
+  }
 }
 
 

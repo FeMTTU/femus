@@ -66,10 +66,12 @@ namespace femus {
     unsigned AMRCounter = 0;
 
     for (unsigned igridn = grid0; igridn < _gridn; igridn++) {    //_igridn
+        
       std::cout << std::endl << "   ****** Start Level Max " << igridn + 1 << " ******" << std::endl;
       clock_t start_nl_time = clock();
 
       bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn - 1u) ? 1 : 0;
+
     restart:
       if (ThisIsAMR) _solution[igridn]->InitAMREps();
 
@@ -104,6 +106,7 @@ namespace femus {
 
     _totalAssemblyTime += totalAssemblyTime;
     _totalSolverTime += totalSolverTime - totalAssemblyTime;
+    
   }
 
   
@@ -124,7 +127,7 @@ namespace femus {
 
         clock_t start_preparation_time = clock();
         clock_t start_assembly_time = clock();
-        _levelToAssemble = igridn; //Be careful!!!! this is needed in the _assemble_function
+        _levelToAssemble = igridn; /// @todo Be careful!!!! this is needed in the _assemble_function
         _LinSolver[igridn]->SetResZero();
         _assembleMatrix = _buildSolver;
         _assemble_system_function (_equation_systems);

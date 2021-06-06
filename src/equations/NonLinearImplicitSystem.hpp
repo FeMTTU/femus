@@ -102,6 +102,9 @@ public:
     /** Solves the system. */
     virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
     
+    /** Only call assemble function */
+    virtual void assemble_call(const unsigned int n_times);
+    
 protected:
 
     /** The final residual for the nonlinear system R(x) */
