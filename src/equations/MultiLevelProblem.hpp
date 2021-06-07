@@ -292,8 +292,7 @@ private:
     /** Data structure holding the systems. */
     std::map<std::string, System*> _systems;
 
-    // member data
-    vector < map <unsigned,bool> > index;
+
     unsigned short _gridn;
 
     std::vector< std::vector<const elem_type*> >  _elem_type;  ///@deprecated 

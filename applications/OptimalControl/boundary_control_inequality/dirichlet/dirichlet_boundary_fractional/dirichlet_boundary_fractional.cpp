@@ -282,9 +282,9 @@ int main(int argc, char** args) {
 // // // =================================================================  
 //   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
 
-//   ml_mesh.ReadCoarseMeshOnlyFileReading(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
+//   ml_mesh.ReadCoarseMeshOnlyFileReading(infile.c_str(), Lref, read_groups, read_boundary_groups);
   
-    ml_mesh.ReadCoarseMeshOnlyFileReadingBeforePartitioning(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
+    ml_mesh.ReadCoarseMeshOnlyFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
 //     ml_mesh.GetLevelZero(0)->Partition();
        std::vector < unsigned > partition;
        ml_mesh.GetLevelZero(0)->PartitionForElements(partition);

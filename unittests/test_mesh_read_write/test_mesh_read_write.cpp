@@ -1,11 +1,12 @@
 #include "FemusDefault.hpp"
 #include "FemusInit.hpp"
 #include "MultiLevelMesh.hpp"
-#include "WriterEnum.hpp"
 #include "MultiLevelSolution.hpp"
-#include <sstream>
+#include "MultiLevelProblem.hpp"
+#include "WriterEnum.hpp"
 #include "VTKWriter.hpp"
 
+#include <sstream>
 
 using namespace femus;
 
@@ -19,18 +20,20 @@ using namespace femus;
 #define FEMUS_TEST_MESH  1
 
 #if FEMUS_TEST_MESH != 0
-   #define FEMUS_TEST_MESH_PRINT 0
-#endif
+  #define FEMUS_TEST_MESH_PRINT 0
 
+  #define FEMUS_TEST_SOLUTION  1
 
-#define FEMUS_TEST_SOLUTION  1
 
 #if FEMUS_TEST_SOLUTION != 0
    #define FEMUS_TEST_SOLUTION_PRINT 1
+
+   #define FEMUS_TEST_PROBLEM  1
 #endif
 
 
-// Test for mesh file reading
+#endif
+
 
 
 int main(int argc,char **args) {
@@ -122,6 +125,13 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("u_disc_first", DISCONTINUOUS_POLYNOMIAL, FIRST, steady_flag, is_an_unknown_of_a_pde);
   ml_sol.Initialize("all"); 
 //====================================================
+
+
+#if FEMUS_TEST_PROBLEM != 0
+   MultiLevelProblem   ml_prob(&ml_sol);
+#endif
+
+
   
 #endif
 

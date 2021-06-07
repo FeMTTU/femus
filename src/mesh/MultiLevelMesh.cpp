@@ -190,7 +190,7 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
    
 }
 
-void MultiLevelMesh::ReadCoarseMeshOnlyFileReadingBeforePartitioning(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups)
+void MultiLevelMesh::ReadCoarseMeshOnlyFileReadingBeforePartitioning(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups)
 {
     _gridn0 = 1;
 
@@ -205,7 +205,7 @@ void MultiLevelMesh::ReadCoarseMeshOnlyFileReadingBeforePartitioning(const char 
 
 }
 
-void MultiLevelMesh::ReadCoarseMeshOnlyFileReading(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups)
+void MultiLevelMesh::ReadCoarseMeshOnlyFileReading(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups)
 {
     _gridn0 = 1;
 
@@ -224,7 +224,7 @@ void MultiLevelMesh::ReadCoarseMeshOnlyFileReading(const char mesh_file[], const
 void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups)
 {
     
-   ReadCoarseMeshOnlyFileReading(mesh_file, GaussOrder, Lref, read_groups, read_boundary_groups);
+   ReadCoarseMeshOnlyFileReading(mesh_file, Lref, read_groups, read_boundary_groups);
 
    ReadCoarseMeshAfterMeshGeneratingBuildElemTypeAndAllocateAllLevels(GaussOrder);
 

@@ -60,9 +60,9 @@ public:
 
     void ReadCoarseMeshAfterMeshGeneratingBuildElemTypeAndAllocateAllLevels(const char GaussOrder[]);
     
-    void ReadCoarseMeshOnlyFileReadingBeforePartitioning(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups);
+    void ReadCoarseMeshOnlyFileReadingBeforePartitioning(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups);
 
-    void ReadCoarseMeshOnlyFileReading(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups);
+    void ReadCoarseMeshOnlyFileReading(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups);
     
     /** Built-in cube-structured mesh generator */
     void GenerateCoarseBoxMesh( const unsigned int nx,
