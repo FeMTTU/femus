@@ -5,6 +5,7 @@
 #include "VTKWriter.hpp"
 #include "TransientSystem.hpp"
 #include "LinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystem.hpp"
 
 #include "NumericVector.hpp"
 #include "adept.h"
@@ -22,8 +23,8 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   2
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
 //**************************************
 
 //***** Operator-related ****************** 
@@ -34,7 +35,7 @@ using namespace femus;
 #define OP_Hhalf    1
 #define RHS_ONE     1
 
-#define UNBOUNDED   0
+#define UNBOUNDED   1
 
 #define USE_Cns     1
 //**************************************
@@ -117,6 +118,7 @@ int main(int argc, char** argv)
   unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
 
 
+  // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
@@ -142,25 +144,29 @@ int main(int argc, char** argv)
 
   unsigned dim = ml_mesh.GetDimension();
 
-  MultiLevelSolution mlSol(&ml_mesh);
+  // ======= Solution  ==================
+  MultiLevelSolution ml_sol(&ml_mesh);
+  
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
 
-  // add variables to mlSol
-  mlSol.AddSolution("u", LAGRANGE, FIRST/*SECOND*/, 2);
+  // add variables to ml_sol
+  ml_sol.AddSolution("u", LAGRANGE, FIRST/*SECOND*/, 2);
 
 
-  mlSol.Initialize("All");
-  mlSol.Initialize("u", InitialValueU);
+  ml_sol.Initialize("All");
+  ml_sol.Initialize("u", InitialValueU);
 
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
 
   // ******* Set boundary conditions *******
-  mlSol.GenerateBdc("All");
+  ml_sol.GenerateBdc("All");
 
   
   
 
   // ========= Problem ==========================
-  MultiLevelProblem ml_prob(&mlSol);
+  MultiLevelProblem ml_prob(&ml_sol);
 
   ml_prob.SetFilesHandler(&files);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule_2);
@@ -168,8 +174,10 @@ int main(int argc, char** argv)
 
 
   // ========= System ==========================
-  LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("FracProblem");
+  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("FracProblem");
   
+  system.SetDebugNonlinear(true);
+
   system.AddSolutionToSystemPDE("u");
 
   // ******* System FEM Assembly *******
@@ -235,7 +243,7 @@ int main(int argc, char** argv)
   
   
   
-//  const unsigned solType = mlSol.GetSolutionType("u");
+//  const unsigned solType = ml_sol.GetSolutionType("u");
 //   for(int level = 0; level < ml_mesh.GetNumberOfLevels(); level++) {
 // 
 //     Mesh* msh = ml_mesh.GetLevel(level);
@@ -270,11 +278,11 @@ int main(int argc, char** argv)
 
 
   // ******* Print solution *******
-  mlSol.SetWriter(VTK);
+  ml_sol.SetWriter(VTK);
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
-  mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+  ml_sol.GetWriter()->SetDebugOutput(true);
+  ml_sol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", print_vars, 0);
 
   //ierr = SlepcFinalize();
   //CHKERRQ(ierr);
@@ -290,7 +298,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 {
 //void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("FracProblem");
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system< NonLinearImplicitSystem > ("FracProblem");
 
   const unsigned level = N_UNIFORM_LEVELS - N_ERASED_LEVELS - 1;
 
@@ -298,7 +306,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*                     el = msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
@@ -334,8 +342,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 //***************************************************
 
   //solution variable
-  unsigned soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned solType   = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
+  unsigned soluIndex = ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
+  unsigned solType   = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
   std::vector < double > solu1;
   std::vector < double > solu2;
@@ -849,9 +857,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
                   for(unsigned i = 0; i < nDof1; i++) {
                     for(unsigned j = 0; j < nDof1; j++) {
-                      KK_local[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term;
+                      KK_local[ i * nDof1 + j ] +=   (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * phi3[j] * mixed_term;
                     }
-                    Res_local[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solY3 * mixed_term;
+                                 Res_local[ i ] += - (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solY3 * mixed_term;
                   }
                 }
 //============ Mixed integral 1D - Analytical ==================
@@ -913,9 +921,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
                   for(unsigned i = 0; i < nDof1; i++) {
                     for(unsigned j = 0; j < nDof1; j++) {
-                      KK_local_mixed_num[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi3[i] * phi3[j] * weight3 * mixed_term1;
+                      KK_local_mixed_num[ i * nDof1 + j ] +=   (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * phi3[j] * mixed_term1;
                     }
-                    Res_local_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solX * mixed_term1;
+                                 Res_local_mixed_num[ i ] += - (C_ns / 2.) * check_limits * OP_Hhalf * weight3 * phi3[i] * solX * mixed_term1;
                   }
                 }
 //============ Mixed Integral 2D - Numerical ==================
@@ -952,9 +960,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
               for(unsigned i = 0; i < nDof1; i++) {
                 for(unsigned j = 0; j < nDof1; j++) {
-                  KK_local[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term;
+                  KK_local[ i * nDof1 + j ] +=   (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * phi1[j] * mixed_term;
                 }
-                Res_local[ i ] += (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
+                             Res_local[ i ] += - (C_ns / 2.) * check_limits * (1. / s_frac) * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term;
               }
             }
     //============  Mixed integral 1D - Analytical ==================        
@@ -1016,9 +1024,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
             for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned j = 0; j < nDof1; j++) {
-                KK_local_mixed_num[ i * nDof1 + j ] += (C_ns / 2.) * check_limits * OP_Hhalf * phi1[i] * phi1[j] * weight1 * mixed_term1;
+                KK_local_mixed_num[ i * nDof1 + j ] +=   (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * phi1[j] * mixed_term1;
               }
-              Res_local_mixed_num[ i ] += (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
+                           Res_local_mixed_num[ i ] += - (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
             }
            }
 //============ Mixed Integral - Numerical ==================
@@ -1145,7 +1153,7 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*                     el = msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
 
@@ -1191,8 +1199,8 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
   //solution variable
   unsigned soluIndex;
-  soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned solType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
+  soluIndex = ml_sol->GetIndex("u");    // get the position of "u" in the ml_sol object
+  unsigned solType = ml_sol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
   std::vector < double > solu1;
   std::vector < double > solu2;
