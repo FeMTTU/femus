@@ -29,8 +29,8 @@
 
 
 //*********************** Sets the regularization parameters *******************************************************
-#define ALPHA_CTRL_BDRY 0//1.e-2
-#define BETA_CTRL_BDRY 1//1.e-2
+#define ALPHA_CTRL_BDRY 0.//1.e-2
+#define BETA_CTRL_BDRY  1.//1.e-2
 
 
 #define ALPHA_CTRL_VOL 1.e-3
@@ -1864,6 +1864,7 @@ if( check_if_same_elem(iel, jel) ) {
                         //-----------
                         const double alpha,
                         const double beta,
+                        const double RHS_ONE,
                         //-----------
                         const unsigned qrule_i
                        ) {
@@ -2017,6 +2018,8 @@ if( check_if_same_elem(iel, jel) ) {
                                          (     ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * alpha * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry[c]
 							                +  ( 1 - is_block_dctrl_ctrl_inside_main_big_assembly ) * beta  * lap_rhs_dctrl_ctrl_bdry_gss_i_c
 							                         );  //boundary optimality condition
+                Res[ res_pos ] += - RHS_ONE * weight_iqp_bdry * (phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * (-1.) /** ( sin(2 * acos(0.0) * x1[0][l_bdry])) * ( sin(2 * acos(0.0) * x1[1][l_bdry]))*/);
+                          
 //============ Bdry Residuals - END ==================    
 		    
 //============ Bdry Jacobians - BEGIN ==================	

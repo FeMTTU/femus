@@ -52,7 +52,7 @@
   #define OP_H1       0
   #define OP_Hhalf    1
 
-  #define UNBOUNDED   0
+  #define UNBOUNDED   1
 
   #define USE_Cns     1
 
@@ -954,6 +954,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                     //-----------
                     alpha,
                     beta,
+                    RHS_ONE,
                     qrule_i
                     ) ;
   
