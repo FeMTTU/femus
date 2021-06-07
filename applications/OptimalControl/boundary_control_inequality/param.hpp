@@ -17,8 +17,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  5
-#define N_ERASED_LEVELS   4
+#define N_UNIFORM_LEVELS  3
+#define N_ERASED_LEVELS   2
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -850,40 +850,42 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 
               // delta coords - refinement -----
               
-              std::vector  <  double > delta_coordinates_bdry_bdry_refined( (div + 1) * dim);
+// // //               std::vector  <  double > delta_coordinates_bdry_bdry_refined( (div + 1) * dim);
               
-//               vector  < vector  <  double > > delta_coordinates_bdry_bdry_refined(dim);
-//               for(int k = 0; k < dim; k++) {
-// //                 delta_coordinates_bdry_bdry_refined[k].resize(div + 1); // set "4" as a parameter
-//               }
+              vector  < vector  <  double > > delta_coordinates_bdry_bdry_refined(dim);
+              for(int k = 0; k < dim; k++) {
+                delta_coordinates_bdry_bdry_refined[k].resize(div + 1); // set "4" as a parameter
+              }
+              
               for(unsigned n = 0; n <= div; n++) {
                 for(int k = 0; k < dim; k++) {
-                  delta_coordinates_bdry_bdry_refined[n + k * div] = delta_coordinates_bdry_bdry[k][0] + n * (delta_coordinates_bdry_bdry[k][1] - delta_coordinates_bdry_bdry[k][0]) /  div ;
+// // //                   delta_coordinates_bdry_bdry_refined[n + k * div] = delta_coordinates_bdry_bdry[k][0] + n * (delta_coordinates_bdry_bdry[k][1] - delta_coordinates_bdry_bdry[k][0]) /  div ;
+                  delta_coordinates_bdry_bdry_refined[k][n] = delta_coordinates_bdry_bdry[k][0] + n * (delta_coordinates_bdry_bdry[k][1] - delta_coordinates_bdry_bdry[k][0]) /  div ;
                 }
               }
               for(unsigned n = 0; n < div; n++) {
                   
                 const unsigned dir_x_for_atan = ( ( (FACE_FOR_CONTROL - 1) / 2 ) + 1 ) % 3;  ///@todo I think needs to be changed
                 const unsigned dir_y_for_atan = ( dir_x_for_atan + 1 ) % 3 ;  ///@todo I think needs to be changed
-                double teta2 = atan2(delta_coordinates_bdry_bdry_refined[(n+1) + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[(n+1) + dir_x_for_atan * div]);
-                double teta1 = atan2(delta_coordinates_bdry_bdry_refined[n + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[n + dir_x_for_atan * div]);
-//                 double teta2 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n + 1], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n + 1]);
-//                 double teta1 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n]);
+// // //                 double teta2 = atan2(delta_coordinates_bdry_bdry_refined[(n+1) + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[(n+1) + dir_x_for_atan * div]);
+// // //                 double teta1 = atan2(delta_coordinates_bdry_bdry_refined[n + dir_y_for_atan * div], delta_coordinates_bdry_bdry_refined[n + dir_x_for_atan * div]);
+                double teta2 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n + 1], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n + 1]);
+                double teta1 = atan2(delta_coordinates_bdry_bdry_refined[dir_y_for_atan][n], delta_coordinates_bdry_bdry_refined[dir_x_for_atan][n]);
 
-                double delta_teta = 0.;
-                if(teta2 < teta1) delta_teta = std::min(teta1 - teta2, 2. * M_PI + teta2 - teta1);
-                else delta_teta = std::min(teta2 - teta1, 2. * M_PI + teta1 - teta2);
-//                 if(teta2 < teta1) {
-//                     teta2 += 2. * M_PI;
-//                 }
-//                 
-//                 double delta_teta = teta2 - teta1;
+// // //                 double delta_teta = 0.;
+// // //                 if(teta2 < teta1) delta_teta = std::min(teta1 - teta2, 2. * M_PI + teta2 - teta1);
+// // //                 else delta_teta = std::min(teta2 - teta1, 2. * M_PI + teta1 - teta2);
+                if(teta2 < teta1) {
+                    teta2 += 2. * M_PI;
+                }
+                
+                double delta_teta = teta2 - teta1;
 
                 vector <double> mid_point;
                 mid_point.resize(dim);
                 for(unsigned k = 0; k < dim; k++) {
-                  mid_point[k] = (delta_coordinates_bdry_bdry_refined[(n+1) + k * div] + delta_coordinates_bdry_bdry_refined[n + k * div]) * 0.5;
-//                   mid_point[k] = (delta_coordinates_bdry_bdry_refined[k][n + 1] + delta_coordinates_bdry_bdry_refined[k][n]) * 0.5;
+// // //                   mid_point[k] = (delta_coordinates_bdry_bdry_refined[(n+1) + k * div] + delta_coordinates_bdry_bdry_refined[n + k * div]) * 0.5;
+                  mid_point[k] = (delta_coordinates_bdry_bdry_refined[k][n + 1] + delta_coordinates_bdry_bdry_refined[k][n]) * 0.5;
                 }
                 double dist2 = 0;
                 for(int k = 0; k < dim; k++) {

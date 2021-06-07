@@ -23,8 +23,8 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   2
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
 //**************************************
 
 //***** Operator-related ****************** 
