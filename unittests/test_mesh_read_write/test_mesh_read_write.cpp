@@ -9,20 +9,47 @@
 
 using namespace femus;
 
+
+
+#define FEMUS_TEST_INIT  1
+
+#define FEMUS_TEST_FILES  1
+
+
+#define FEMUS_TEST_MESH  1
+
+#if FEMUS_TEST_MESH != 0
+   #define FEMUS_TEST_MESH_PRINT 0
+#endif
+
+
+#define FEMUS_TEST_SOLUTION  1
+
+#if FEMUS_TEST_SOLUTION != 0
+   #define FEMUS_TEST_SOLUTION_PRINT 1
+#endif
+
+
 // Test for mesh file reading
 
 
 int main(int argc,char **args) {
 
+#if FEMUS_TEST_INIT != 0
   // ======= Init ========================
-  FemusInit init(argc,args,MPI_COMM_WORLD);
+  FemusInit init(argc, args, MPI_COMM_WORLD);
+#endif
 
+
+#if FEMUS_TEST_FILES != 0
   // ======= Files ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = true;
+  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
+#endif
+        
         
   // ======= Loop over mesh files ========================
  std::vector< std::string >  input_files;
@@ -54,7 +81,9 @@ int main(int argc,char **args) {
 
  
   for(unsigned m = 0; m < input_files.size(); m++) {
+
             
+#if FEMUS_TEST_MESH != 0
   // ======= Mesh ========================
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_files[m];
   const std::string infile = mystream.str();
@@ -79,26 +108,38 @@ int main(int argc,char **args) {
   
   ml_mesh.PrintInfo();
   
-// // // //============ Solution ==================
-// // // /// The print doesn't need a solution object anymore 
-// // //   
-// // //   MultiLevelSolution ml_sol(&ml_mesh);
-// // // 
-// // //   const unsigned  steady_flag = 0;                //0: steady state, 2: time dependent
-// // //   const bool      is_an_unknown_of_a_pde = false; //0: not associated to any System
-// // //   ml_sol.AddSolution("u_lag_first", LAGRANGE, FIRST, steady_flag, is_an_unknown_of_a_pde);
-// // //   ml_sol.AddSolution("u_lag_serendip", LAGRANGE, SERENDIPITY, steady_flag, is_an_unknown_of_a_pde);
-// // //   ml_sol.AddSolution("u_lag_second", LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
-// // //   ml_sol.AddSolution("u_disc_zero", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
-// // //   ml_sol.AddSolution("u_disc_first", DISCONTINUOUS_POLYNOMIAL, FIRST, steady_flag, is_an_unknown_of_a_pde);
-// // //   ml_sol.Initialize("all"); 
-// // // //====================================================
-// // //   
-// // // //====================================================
-// // //   ml_sol.SetWriter(VTK);
-// // //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
+#if FEMUS_TEST_SOLUTION != 0
+//============ Solution ==================
   
-// // // //============ Print ==================
+  MultiLevelSolution ml_sol(&ml_mesh);
+
+  const unsigned  steady_flag = 0;                //0: steady state, 2: time dependent
+  const bool      is_an_unknown_of_a_pde = false; //0: not associated to any System
+  ml_sol.AddSolution("u_lag_first", LAGRANGE, FIRST, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution("u_lag_serendip", LAGRANGE, SERENDIPITY, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution("u_lag_second", LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution("u_disc_zero", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution("u_disc_first", DISCONTINUOUS_POLYNOMIAL, FIRST, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.Initialize("all"); 
+//====================================================
+  
+#endif
+
+
+#endif
+  
+
+  
+  //============ Print ==================
+  
+  const std::string output_dir = files.GetOutputPath();
+
+  std::vector < std::string > print_fe_order;
+  print_fe_order.push_back("linear");
+  print_fe_order.push_back("quadratic");
+  print_fe_order.push_back("biquadratic");
+
+
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
   
@@ -108,33 +149,56 @@ int main(int argc,char **args) {
 //       surfaceVariables.push_back("Z");
 // 
 //     ml_sol.GetWriter()->SetSurfaceVariables(surfaceVariables);
-  
-  const std::string output_dir = files.GetOutputPath();
-  
-  VTKWriter vtk_writer(&ml_mesh);
 
+#if FEMUS_TEST_MESH_PRINT != 0
+/// The print doesn't need a solution object anymore 
+
+  VTKWriter vtk_writer(&ml_mesh); /* cannot instantiate the father because it has pure virtual */
+  vtk_writer.SetDebugOutput(true);
+  VTKWriter * writer_mesh_ptr = &vtk_writer;
+  
 //============ Print: Loop over levels ==================
   for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
-      
-//   ml_sol.GetWriter()->Write(l+1, input_files[m], output_dir, "", "linear", variablesToBePrinted);
-     vtk_writer.Write(l+1, input_files[m], output_dir, "", "linear", variablesToBePrinted);
-     vtk_writer.Write(l+1, input_files[m], output_dir, "", "quadratic", variablesToBePrinted);
-     vtk_writer.Write(l+1, input_files[m], output_dir, "", "biquadratic", variablesToBePrinted);
+     for(std::vector< std::string >::iterator print_fe_it = std::begin(print_fe_order); print_fe_it != std::end(print_fe_order); ++ print_fe_it) {
+
+        writer_mesh_ptr->Write(l+1, input_files[m], output_dir, "_only_mesh", (*print_fe_it).c_str(), variablesToBePrinted);
+
+         }
+   }
+#endif
+
+
+#if FEMUS_TEST_SOLUTION_PRINT != 0
+
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
+  Writer * writer_sol_ptr = ml_sol.GetWriter();
+  
+//============ Print: Loop over levels ==================
+  for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
+     for(std::vector< std::string >::iterator print_fe_it = std::begin(print_fe_order); print_fe_it != std::end(print_fe_order); ++ print_fe_it) {
+
+        writer_sol_ptr->Write(l+1, input_files[m], output_dir, "", (*print_fe_it).c_str(), variablesToBePrinted);
   
 //   ml_sol.SetWriter(XDMF); 
 //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
-//   ml_sol.GetWriter()->Write(output_dir, "linear", variablesToBePrinted);
-//   ml_sol.GetWriter()->Write(output_dir, "quadratic", variablesToBePrinted);
-//   ml_sol.GetWriter()->Write(output_dir, "biquadratic", variablesToBePrinted);
+//   ml_sol.GetWriter()->Write(output_dir, *it, variablesToBePrinted);
 
 // recent versions of Paraview do not read the GMV format
 //   ml_sol.SetWriter(GMV);  
 //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
 //   ml_sol.GetWriter()->Write(output_dir,"biquadratic",variablesToBePrinted);  
-            }
-  
-        }
-        
+         }
+   }
+
+#endif
+
+
+
+    }
+
+
+    
 
 
   
