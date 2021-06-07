@@ -53,7 +53,11 @@ int main(int argc,char **args) {
         files.RedirectCout(redirect_cout_to_file);
 #endif
         
-        
+  // it works, just pay attention that integers do not turn into unsigned
+  //   files.CopyInputFiles();   // at this point everything is in the folder of the current run!!!!
+  FemusInputParser< unsigned > mesh_map("Mesh", "./"/*files.GetOutputPath()*/);
+  const unsigned numberOfUniformLevels =  mesh_map.get("n_levels");
+  
   // ======= Loop over mesh files ========================
  std::vector< std::string >  input_files;
 //  input_files.push_back("turek_FSI1.neu");
@@ -103,7 +107,7 @@ int main(int argc,char **args) {
   const bool read_groups = true;
   const bool read_boundary_groups = true;
   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule.c_str(), Lref, read_groups, read_boundary_groups);
-  const unsigned numberOfUniformLevels = 3;
+//   const unsigned numberOfUniformLevels = 3;
   const unsigned erased_levels = numberOfUniformLevels - 1;
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
