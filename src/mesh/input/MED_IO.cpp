@@ -613,7 +613,7 @@ namespace femus {
 
 
         for(unsigned j = 0; j < node_group_map_with_med_ordering.size(); j++) {
-          node_group_map_with_femus_ordering[mapping[j]] = node_group_map_with_med_ordering[j];
+          node_group_map_with_femus_ordering[ mapping[j] ] = node_group_map_with_med_ordering[j];
         }
        
         

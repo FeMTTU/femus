@@ -57,8 +57,11 @@ public:
 
     /** Read the coarse-mesh from an input file (call the right reader from the extension) */
     void ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref, const bool read_groups, const bool read_boundary_groups);
-
-    void ReadCoarseMeshAfterMeshGeneratingBuildElemTypeAndAllocateAllLevels(const char GaussOrder[]);
+    
+    /** For every Geometric Element type appearing in the mesh, initialize evaluations at quadrature points, for all FE families  */
+    void BuildElemType(const char GaussOrder[]);
+    
+    void AllocateAllLevels();
     
     void ReadCoarseMeshOnlyFileReadingBeforePartitioning(const char mesh_file[], const double Lref, const bool read_groups, const bool read_boundary_groups);
 
@@ -136,8 +139,6 @@ public:
 protected:
 
 private:
-    
-    void BuildElemType(const char GaussOrder[]);
     
     /**  */
     unsigned short _gridn0;

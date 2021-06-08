@@ -11,11 +11,14 @@
 using namespace femus;
 
 
+// Here various layers of an applications are investigated
+
 
 #define FEMUS_TEST_INIT  1
 
 #define FEMUS_TEST_FILES  1
 
+#define FEMUS_TEST_INPUT_PARSER  1
 
 #define FEMUS_TEST_MESH  1
 
@@ -25,11 +28,11 @@ using namespace femus;
   #define FEMUS_TEST_SOLUTION  1
 
 
-#if FEMUS_TEST_SOLUTION != 0
-   #define FEMUS_TEST_SOLUTION_PRINT 1
+  #if FEMUS_TEST_SOLUTION != 0
+     #define FEMUS_TEST_SOLUTION_PRINT 1
 
-   #define FEMUS_TEST_PROBLEM  1
-#endif
+     #define FEMUS_TEST_PROBLEM  1
+  #endif
 
 
 #endif
@@ -53,10 +56,12 @@ int main(int argc,char **args) {
         files.RedirectCout(redirect_cout_to_file);
 #endif
         
+#if FEMUS_TEST_INPUT_PARSER != 0
   // it works, just pay attention that integers do not turn into unsigned
   //   files.CopyInputFiles();   // at this point everything is in the folder of the current run!!!!
   FemusInputParser< unsigned > mesh_map("Mesh", "./"/*files.GetOutputPath()*/);
   const unsigned numberOfUniformLevels =  mesh_map.get("n_levels");
+#endif
   
   // ======= Loop over mesh files ========================
  std::vector< std::string >  input_files;
@@ -146,7 +151,9 @@ int main(int argc,char **args) {
   
   //============ Print ==================
   
+#if FEMUS_TEST_FILES != 0
   const std::string output_dir = files.GetOutputPath();
+#endif
 
   std::vector < std::string > print_fe_order;
   print_fe_order.push_back("linear");

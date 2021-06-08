@@ -278,7 +278,7 @@ int main(int argc, char** args) {
   const bool read_boundary_groups = true;
   
 // // // =================================================================  
-// // // ================= Mesh: UNPACKING ReadCoarseMesh ================================================  
+// // // ================= Mesh: UNPACKING ReadCoarseMesh - BEGIN ================================================  
 // // // =================================================================  
 //   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
 
@@ -301,55 +301,12 @@ int main(int argc, char** args) {
        partition.resize(0);
     ml_mesh.GetLevelZero(0)->ReadCoarseMeshAfterPartitioning();
 
-
-  ml_mesh.ReadCoarseMeshAfterMeshGeneratingBuildElemTypeAndAllocateAllLevels(fe_quad_rule_vec[0].c_str());
+  ml_mesh.BuildElemType(fe_quad_rule_vec[0].c_str());
+  ml_mesh.AllocateAllLevels();
 // // // =================================================================  
-// // // ================= Mesh: UNPACKING ReadCoarseMesh ===============================================  
-// // // =================================================================  
+// // // ================= Mesh: UNPACKING ReadCoarseMesh - END ===============================================  
+// // // =================================================================
   
-  
-  
-//   Node_based_flag: it must be something that can be read from file and filled exactly like the Mesh Coordinates
-  // Also, it must be something that lives at all levels
-  // It must be something that can be refined to all levels, and still conserve its feature of being an INTEGER. so, it must behave like the boundary condition flag,
-  // which is a NumericVector in the code
-  // To be more specific, I should define a Node_based_boundary_flag: it is a flag that only lives on the boundary
-  
-  //BdC are only filled in MultilevelSolution objects
-  
-  
-  //Ok so first I will read exactly as in MED_IO (in serial mode)
-  // Then with that I will fill the topology vector as in Mesh.InitializeTopologyStructures  (It is a Solution)
-  //  in Mesh  Solution* _topology
-  // Once I have a Solution object, I think I am almost done. 
-  // A Writer belongs to a MultilevelSolution, which needs a MultilevelMesh
-  // So, all I need is to add this Solution to a MLSolution object
-  
-  //How can the topology be Multilevel? Because there is one them inside each Mesh, and MLMesh contains a vector of Meshes.
-  //Instead for Solutions you have MLSol that contains a vector of Sol
-  //Instead for Meshes you have MLMesh that contains a vector of Mesh each of which contains the Sol of the topology
-  
-  //This additional field is steady, and it is not of pde type (just like the topology)
-
-
-// // // =================================================================  
-// // //   const unsigned group_b_b = 7;
-// // //   MED_IO(*ml_mesh.GetLevel(0)).boundary_of_boundary_3d_via_nodes(infile, group_b_b);//.read(name, _coords, Lref, type_elem_flag, read_groups, read_boundary_groups);
-// // // 
-// // //   // ======= Solution  ==================
-// // //   MultiLevelSolution ml_sol2(&ml_mesh);
-// // //   
-// // //   ml_sol2.SetWriter(VTK);
-// // //   ml_sol2.GetWriter()->SetDebugOutput(true);
-// // //   
-// // //   // ======= Print ========================
-// // //   std::vector < std::string > variablesToBePrinted2;
-// // //   variablesToBePrinted2.push_back("all");
-// // //   ml_sol2.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted2);
-// // // 
-// // //   exit(0);  
-// // // =================================================================  
-
 
 
   // ======= Mesh: REFINING ========================
@@ -358,12 +315,7 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 0;
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  // ======= Mesh: COARSE READING before ERASING ========================
-  //If I erase the coarse level, I will not be able to initialize at the coarse level...
-  // I could create an auxiliary MlSol object based only on the coarse level, do the reading there, then refine and erase
-  // Question: WHEN can I erase mesh levels? Can I do it even AFTER AddSolution? I don't think so...
-  
-  // ======= Solution, auxiliary  ==================
+  // ======= Solution, auxiliary - BEFORE COARSE ERASING  ==================
   const unsigned  steady_flag = 0;
   const bool      is_an_unknown_of_a_pde = false;
   MultiLevelSolution * ml_sol_aux = new MultiLevelSolution(&ml_mesh);
@@ -372,8 +324,11 @@ int main(int argc, char** args) {
   ml_sol_aux->GetWriter()->SetDebugOutput(true);
   
   const std::string node_based_bdry_flag_name = "node_based_bdry_flag";
-  ml_sol_aux->AddSolution(node_based_bdry_flag_name.c_str(), LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
+  const FEFamily node_flag_fe_fam = LAGRANGE;
+  const FEOrder node_flag_fe_ord = SECOND;
+  ml_sol_aux->AddSolution(node_based_bdry_flag_name.c_str(), node_flag_fe_fam, node_flag_fe_ord, steady_flag, is_an_unknown_of_a_pde);
   ml_sol_aux->Initialize(node_based_bdry_flag_name.c_str());
+      // ======= COARSE READING and REFINEMENT ========================
   ml_sol_aux->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, mapping);
   for(unsigned l = 1; l < ml_mesh.GetNumberOfLevels(); l++) {
      ml_sol_aux->RefineSolution(l);
@@ -387,11 +342,8 @@ int main(int argc, char** args) {
 
   
   // ======= Mesh: COARSE ERASING ========================
-  ml_mesh.EraseCoarseLevels(erased_levels/*numberOfUniformLevels - 1*/);
+  ml_mesh.EraseCoarseLevels(erased_levels);
   ml_mesh.PrintInfo();
-  
-  // ======= Unknowns ========================
-  std::vector< Unknown > unknowns = provide_list_of_unknowns( ml_mesh.GetDimension() );
   
   
   // ======= Solution  ==================
@@ -407,44 +359,53 @@ int main(int argc, char** args) {
   ml_prob.SetQuadratureRuleAllGeomElemsMultiple(fe_quad_rule_vec);
   ml_prob.set_all_abstract_fe_multiple();
 
-  // ======= Solution, II ==================
+  // ======= Solutions that are Unknowns - BEGIN ==================
+  std::vector< Unknown > unknowns = provide_list_of_unknowns( ml_mesh.GetDimension() );
 
   ml_sol.AttachSetBoundaryConditionFunction(Solution_set_boundary_conditions);
+  
   for (unsigned int u = 0; u < unknowns.size(); u++)  { 
       ml_sol.AddSolution(unknowns[u]._name.c_str(), unknowns[u]._fe_family, unknowns[u]._fe_order, unknowns[u]._time_order, unknowns[u]._is_pde_unknown);
       ml_sol.Initialize(unknowns[u]._name.c_str(), Solution_set_initial_conditions, & ml_prob);
       ml_sol.GenerateBdc(unknowns[u]._name.c_str(), (unknowns[u]._time_order == 0) ? "Steady" : "Time_dependent", & ml_prob);
   }
+  // ======= Solutions that are Unknowns - END ==================
   
 
   // ======= Solutions that are not Unknowns - BEGIN  ==================
   ml_sol.AddSolution("TargReg", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
+  
+  
   ml_sol.AddSolution("ContReg", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
+  
   //MU
   const std::string act_set_flag_name = "act_flag";
   const unsigned int act_set_fake_time_dep_flag = 2;
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*SECOND*/FIRST, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   //MU
-  //----------
-  ml_sol.AddSolution(node_based_bdry_flag_name.c_str(), LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
-  //----------
+  
+  //---- node_based_bdry_flag ------
+  ml_sol.AddSolution(node_based_bdry_flag_name.c_str(), node_flag_fe_fam, node_flag_fe_ord, steady_flag, is_an_unknown_of_a_pde);
+  ml_sol.Initialize(node_based_bdry_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
+  // copy ml_sol_aux at the non-removed levels into ml_sol
+  for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
+      *(ml_sol.GetSolutionLevel(l)->_Sol[ ml_sol.GetIndex(node_based_bdry_flag_name.c_str()) ]) =
+      *(ml_sol_aux->GetSolutionLevel(l + erased_levels)->_Sol[ ml_sol_aux->GetIndex(node_based_bdry_flag_name.c_str()) ]);
+  }
+  delete ml_sol_aux;
+  //---- node_based_bdry_flag ------
 
+  //-- CHECK SOLUTION FE TYPES --------
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("state")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType("mu")) abort();
   if ( ml_sol.GetSolutionType("control") != ml_sol.GetSolutionType(act_set_flag_name.c_str())) abort();
+  //-- CHECK SOLUTION FE TYPES --------
   
   
-  ml_sol.Initialize("TargReg",     Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize("ContReg",     Solution_set_initial_conditions, & ml_prob);
-  ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);   //MU
-  ml_sol.Initialize(node_based_bdry_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
 
-  // copy ml_sol_aux at the non-removed levels into ml_sol
-  for(unsigned l = 0; l < ml_mesh.GetNumberOfLevels(); l++) {
-      *(ml_sol.GetSolutionLevel(l)->_Sol[ml_sol.GetIndex(node_based_bdry_flag_name.c_str())]) =
-      *(ml_sol_aux->GetSolutionLevel(l + erased_levels)->_Sol[ml_sol_aux->GetIndex(node_based_bdry_flag_name.c_str())]);
-  }
-  delete ml_sol_aux;
   // ======= Solutions that are not Unknowns - END  ==================
 
   

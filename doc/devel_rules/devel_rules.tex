@@ -224,6 +224,12 @@ To overcome this, do
    
      \section{MultilevelMesh}
    
+   
+
+     MLMesh  contains a vector of Mesh, each of which contains the Sol of the topology
+
+
+   
   EraseCoarseLevels: it shifts the level vector, 
    so if you start with 5 levels and you want to remove the first 3,
    it shifts 4 and 5 to the 1st and 2nd position 
@@ -431,6 +437,8 @@ To overcome this, do
   
   
   \section{MultilevelSolution}
+  
+     MLSol contains a vector of Sol
    
    Only MultilevelSolution has a Writer object. This writer will write from the FINEST level available.
    
@@ -443,6 +451,8 @@ To overcome this, do
 
    - The values of variables are taken from the MultilevelSolution object..
      That's where the absolute values are stored, otherwise it is only about delta x in the nonlinear loops
+
+     
 
      
   \section{MultilevelSolution: Boundary conditions}

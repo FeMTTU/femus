@@ -1,3 +1,18 @@
+/*=========================================================================
+
+Program: FEMUS
+Module: InputParser
+Authors: Giorgio Bornia
+
+Copyright (c) FEMUS
+All rights reserved.
+
+This software is distributed WITHOUT ANY WARRANTY; without even
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.  See the above copyright notice for more information.
+
+=========================================================================*/
+
 #ifndef __femus_utils_FemusInputParser_hpp__
 #define __femus_utils_FemusInputParser_hpp__
 
