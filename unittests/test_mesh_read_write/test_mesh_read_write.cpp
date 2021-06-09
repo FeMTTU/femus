@@ -11,7 +11,8 @@
 using namespace femus;
 
 
-// Here various layers of an applications are investigated
+//====================================================
+// Here various layers of an application can be activated
 
 
 #define FEMUS_TEST_INIT  1
@@ -36,6 +37,40 @@ using namespace femus;
 
 
 #endif
+//====================================================
+
+
+
+
+  #if FEMUS_TEST_SOLUTION != 0
+double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+
+    double value = 0.;
+
+    if(!strcmp(name, "u_lag_first")) {
+        value = 1.;
+    }
+    else if(!strcmp(name, "u_lag_serendip")) {
+        value = 2.;
+    }
+    else if(!strcmp(name, "u_lag_second")) {
+        value = 3.;
+    }
+    else if(!strcmp(name, "u_disc_zero")) {
+        value = 4.;
+    }
+    else if(!strcmp(name, "u_disc_first")) {
+        value = 5.;
+    }
+
+   value = x[0] * x[0];
+
+    return value;
+}
+#endif
+
+
+
 
 
 
@@ -75,6 +110,7 @@ int main(int argc,char **args) {
 //  input_files.push_back("knot.neu");
 //  input_files.push_back("dome_tri.med");
 //  input_files.push_back("dome_quad.med");
+//   input_files.push_back("square_quad.neu");
 //   input_files.push_back("./geom_elem_many_Quad9_Four_boundaries_groups.med");
 //   input_files.push_back("./geom_elem_many_Quad9_Nine_without_groups.med"); //Some boundary face was not set in the mesh MED file
 //   input_files.push_back("./geom_elem_many_Tri6_Two_boundaries.med"); //error
@@ -121,10 +157,15 @@ int main(int argc,char **args) {
   ml_mesh.PrintInfo();
   
 #if FEMUS_TEST_SOLUTION != 0
+  
 //============ Solution ==================
   
   MultiLevelSolution ml_sol(&ml_mesh);
 
+  #if FEMUS_TEST_PROBLEM != 0
+      MultiLevelProblem   ml_prob(&ml_sol);
+  #endif 
+   
   const unsigned  steady_flag = 0;                //0: steady state, 2: time dependent
   const bool      is_an_unknown_of_a_pde = false; //0: not associated to any System
   ml_sol.AddSolution("u_lag_first", LAGRANGE, FIRST, steady_flag, is_an_unknown_of_a_pde);
@@ -132,16 +173,15 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("u_lag_second", LAGRANGE, SECOND, steady_flag, is_an_unknown_of_a_pde);
   ml_sol.AddSolution("u_disc_zero", DISCONTINUOUS_POLYNOMIAL, ZERO, steady_flag, is_an_unknown_of_a_pde);
   ml_sol.AddSolution("u_disc_first", DISCONTINUOUS_POLYNOMIAL, FIRST, steady_flag, is_an_unknown_of_a_pde);
-  ml_sol.Initialize("all"); 
+
+    for(unsigned sol = 0; sol <  ml_sol.GetSolutionSize(); sol++) {
+     const std::string sol_name(ml_sol.GetSolutionName(sol));
+  ml_sol.Initialize(sol_name.c_str(), Solution_set_initial_conditions, & ml_prob);
+  //   ml_sol.Initialize("all"); 
+    }
 //====================================================
 
-
-#if FEMUS_TEST_PROBLEM != 0
-   MultiLevelProblem   ml_prob(&ml_sol);
-#endif
-
-
-  
+ 
 #endif
 
 
@@ -219,10 +259,9 @@ int main(int argc,char **args) {
     }
 
 
-    
-
-
   
   return 0;
 }
 
+
+/// @todo the print for disc_first is wrong

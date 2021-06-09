@@ -39,9 +39,9 @@
 //**************************************
 
 //***** Operator-related ****************** 
-  #define RHS_ONE             1.
-  #define KEEP_ADJOINT_PUSH   0
-#define IS_CTRL_FRACTIONAL_SOBOLEV   1
+  #define RHS_ONE             0.
+  #define KEEP_ADJOINT_PUSH   1
+#define IS_CTRL_FRACTIONAL_SOBOLEV   0
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -156,25 +156,25 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 
     double value = 0.;
 
-    if(!strcmp(name,"state")) {
+    if(!strcmp(name, "state")) {
         value = 0.;
     }
-    else if(!strcmp(name,"control")) {
+    else if(!strcmp(name, "control")) {
         value = 0.;
     }
-    else if(!strcmp(name,"adjoint")) {
+    else if(!strcmp(name, "adjoint")) {
         value = 0.;
     }
-    else if(!strcmp(name,"mu")) {
+    else if(!strcmp(name, "mu")) {
         value = 0.;
     }
-    else if(!strcmp(name,"TargReg")) {
+    else if(!strcmp(name, "TargReg")) {
         value = ElementTargetFlag(x);
     }
-    else if(!strcmp(name,"ContReg")) {
+    else if(!strcmp(name, "ContReg")) {
         value = ControlDomainFlag_bdry(x);
     }
-    else if(!strcmp(name,"act_flag")) {
+    else if(!strcmp(name, "act_flag")) {
         value = 0.;
     }
 
@@ -185,7 +185,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
 
 
 ///@todo notice that even if you set Dirichlet from the mesh file, here you can override it
-bool Solution_set_boundary_conditions(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
+bool Solution_set_boundary_conditions(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
   bool dirichlet; // = true; //dirichlet
   value = 0.;
@@ -269,7 +269,8 @@ int main(int argc, char** args) {
 
   
 //   std::string input_file = "parametric_square_1x1.med";
-  std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
+  std::string input_file = "parametric_square_4x5.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
@@ -444,7 +445,7 @@ int main(int argc, char** args) {
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "off");
   //----
   
-    system.MGsolve();
+  system.MGsolve();
 //   system.assemble_call(1);
   
   // ======= Print ========================
@@ -988,7 +989,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
  //************ set control flag *********************
    std::vector< std::vector< int > > control_node_flag = 
-       is_dof_associated_to_boundary_control_equation(msh, ml_sol, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
+       is_dof_associated_to_boundary_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat_vol, pos_mat_ctrl, n_components_ctrl);
   //*************************************************** 
  
 

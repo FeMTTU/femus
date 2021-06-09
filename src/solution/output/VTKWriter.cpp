@@ -150,8 +150,31 @@ namespace femus {
       }
     
   }
+  
+  
  
-
+   void VTKWriter::fill_sol_on_elements(const Mesh * mesh, 
+                                        const unsigned elementOffset, const unsigned elementOffsetp1, 
+                                        const Solution * solution, const unsigned name, const unsigned i,  float * const var_el) const {
+       
+            unsigned icount = 0;
+            
+            for( int iel = elementOffset; iel < elementOffsetp1; iel++ ) {
+                
+              unsigned iel_Metis = mesh->GetSolutionDof( 0, iel, _ml_sol->GetSolutionType( i ) );
+              
+              if( name == 0 )                 var_el[icount] = ( *solution->_Sol[i] )( iel_Metis );
+              else if( name == 1 )            var_el[icount] = ( *solution->_Bdc[i] )( iel_Metis );
+              else if( name == 2 )            var_el[icount] = ( *solution->_Res[i] )( iel_Metis );
+              else                            var_el[icount] = ( *solution->_Eps[i] )( iel_Metis );
+              icount++;
+              
+            }
+            
+            
+   }
+   
+   
  
    unsigned VTKWriter::size_connectivity_proc(const Mesh * mesh, const unsigned index) const {
        
@@ -183,6 +206,14 @@ namespace femus {
    }
    
    
+   unsigned VTKWriter::compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const {
+       
+       const unsigned print_sol_size = 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i];
+       return  print_sol_size;
+       
+   }
+   
+   
    bool VTKWriter::print_all_sols(const std::vector < std::string >& vars) const {
        
     bool print_all = 0;
@@ -194,7 +225,14 @@ namespace femus {
     
    }
    
-  
+   
+   unsigned VTKWriter::compute_print_sol_size(const bool print_all, const std::vector < std::string >& vars) const {
+       
+      return ( !print_all ) * vars.size() + print_all * _ml_sol->GetSolutionSize();
+
+   }
+   
+   
    void VTKWriter::Write(const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
        
     std::string filename_prefix;
@@ -341,15 +379,15 @@ namespace femus {
     
     
     //---- NumericVector used for node-based fields -------------------------------------------------------------------------------------------
-    NumericVector* num_vec_aux;
-    num_vec_aux = NumericVector::build().release();
+    NumericVector* num_vec_aux_for_node_fields;
+    num_vec_aux_for_node_fields = NumericVector::build().release();
 
     if( n_processors() == 1 ) { // IF SERIAL
-      num_vec_aux->init( mesh->_dofOffset[index][_nprocs],
+      num_vec_aux_for_node_fields->init( mesh->_dofOffset[index][_nprocs],
                    mesh->_dofOffset[index][_nprocs], false, SERIAL );
     }
     else { // IF PARALLEL
-      num_vec_aux->init( mesh->_dofOffset[index][_nprocs],
+      num_vec_aux_for_node_fields->init( mesh->_dofOffset[index][_nprocs],
                    mesh->_ownSize[index][_iproc],
                    mesh->_ghostDofs[index][_iproc], false, GHOSTED );
     }
@@ -373,28 +411,28 @@ namespace femus {
     
     for( int i = 0; i < 3; i++ ) {
       if( !_surface ) {
-        num_vec_aux->matrix_mult( *mesh->_topology->_Sol[i],
+        num_vec_aux_for_node_fields->matrix_mult( *mesh->_topology->_Sol[i],
                             *mesh->GetQitoQjProjection( index, 2 ) );
         if( _graph && i == 2 ) {
           unsigned indGraph = _ml_sol->GetIndex( _graphVariable.c_str() );
-          num_vec_aux->matrix_mult( *solution->_Sol[indGraph],
+          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraph],
                               *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraph ) ) );
         }
       }
       else {
         unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        num_vec_aux->matrix_mult( *solution->_Sol[indSurfVar],
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
       }
       for( unsigned ii = 0; ii < nvtOwned; ii++ ) {
-        var_coord[ ii * 3 + i] = ( *num_vec_aux )( ii +  dofOffset );
+        var_coord[ ii * 3 + i] = ( *num_vec_aux_for_node_fields )( ii +  dofOffset );
       }
       if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i){//_ml_mesh->GetLevel( 0 )->GetDimension() > i )  { // if moving mesh
         unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
-        num_vec_aux->matrix_mult( *solution->_Sol[indDXDYDZ],
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
         for( unsigned ii = 0; ii < nvtOwned; ii++ ) {
-          var_coord[ii * 3 + i] += ( *num_vec_aux )( ii +  dofOffset );
+          var_coord[ii * 3 + i] += ( *num_vec_aux_for_node_fields )( ii +  dofOffset );
         }
       }
     }
@@ -405,38 +443,38 @@ namespace femus {
 
     for( int i = 0; i < 3; i++ ) {
       if( !_surface ) {
-        num_vec_aux->matrix_mult( *mesh-> _topology->_Sol[i],
+        num_vec_aux_for_node_fields->matrix_mult( *mesh-> _topology->_Sol[i],
                             *mesh-> GetQitoQjProjection( index, 2 ) );
         if( _graph && i == 2 ) {
           unsigned indGraphVar = _ml_sol->GetIndex( _graphVariable.c_str() );
-          num_vec_aux->matrix_mult( *solution->_Sol[indGraphVar],
+          num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indGraphVar],
                               *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indGraphVar ) ) );
         }
       }
       else {
         unsigned indSurfVar = _ml_sol->GetIndex( _surfaceVariables[i].c_str() );
-        num_vec_aux->matrix_mult( *solution->_Sol[indSurfVar],
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indSurfVar],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indSurfVar ) ) );
       }
       for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
-        var_coord[ offset_ig + 3 * it->second + i ] = ( *num_vec_aux )( it->first );
+        var_coord[ offset_ig + 3 * it->second + i ] = ( *num_vec_aux_for_node_fields )( it->first );
       }
     }
 
     for( int i = 0; i < 3; i++ ) { // if moving mesh
       if( _ml_sol != NULL && _moving_mesh  && _moving_vars.size() > i ){ //&& mesh->GetDimension() > i )  {
         unsigned indDXDYDZ = _ml_sol->GetIndex( _moving_vars[i].c_str() );
-        num_vec_aux->matrix_mult( *solution->_Sol[indDXDYDZ],
+        num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( indDXDYDZ ) ) );
         for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
-          var_coord[ offset_ig + 3 * it->second + i ] += ( *num_vec_aux )( it->first );
+          var_coord[ offset_ig + 3 * it->second + i ] += ( *num_vec_aux_for_node_fields )( it->first );
         }
       }
     }
             //--------- fill coord ------------
 
 
-    print_data_array_vector< float >("connectivity", "Float32", 3, fout, Pfout, dim_array_coord, var_coord, enc);
+    print_data_array_vector< float >("coordinates", "Float32", 3, fout, Pfout, dim_array_coord, var_coord, enc);
     
     
     fout  << "      </Points>" << std::endl;
@@ -497,37 +535,26 @@ namespace femus {
     
     if( _ml_sol != NULL ) {
         
-      //Print Solution (on element) ***************************************************************
-      for( unsigned i = 0; i < ( !print_all )*vars.size() + print_all * _ml_sol->GetSolutionSize(); i++ ) {
+      //Print Solution (on elements) ***************************************************************
+      for( unsigned i = 0; i < compute_print_sol_size(print_all, vars); i++ ) {
           
-        unsigned solIndex = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
+        const unsigned solIndex = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
+        const unsigned sol_fe_type = _ml_sol->GetSolutionType( solIndex );
         
-        if( 3 <= _ml_sol->GetSolutionType( solIndex ) ) {
+        if( 3 <= sol_fe_type ) {
 
           std::string solName =  _ml_sol->GetSolutionName( solIndex );
 
-          for( int name = 0; name < 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i]; name++ ) {
+          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
               
             std::string printName = print_sol_bdc_res_eps_name(solName, name);
             
 
-            //--------- fill var ------------
-            // point pointer to common memory area buffer of void type;
+            //--------- fill var_el ------------
             float* var_el = static_cast< float*>( buffer_void );
-            unsigned icount = 0;
-            for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-              unsigned iel_Metis = mesh->GetSolutionDof( 0, iel, _ml_sol->GetSolutionType( i ) );
-              if( name == 0 )
-                var_el[icount] = ( *solution->_Sol[i] )( iel_Metis );
-              else if( name == 1 )
-                var_el[icount] = ( *solution->_Bdc[i] )( iel_Metis );
-              else if( name == 2 )
-                var_el[icount] = ( *solution->_Res[i] )( iel_Metis );
-              else
-                var_el[icount] = ( *solution->_Eps[i] )( iel_Metis );
-              icount++;
-            }
-            //--------- fill var ------------
+            
+            fill_sol_on_elements(mesh, elemetOffset, elemetOffsetp1, solution, name, i,  var_el);
+            //--------- fill var_el ------------
             
 
     print_data_array< float >(printName, "Float32", fout, Pfout, dim_array_elvar, var_el, enc);
@@ -536,6 +563,7 @@ namespace femus {
           }
         }
       }
+      
     } //end _ml_sol != NULL
 
     fout  << "      </CellData>" << std::endl;
@@ -544,21 +572,27 @@ namespace femus {
 
     if( _ml_sol != NULL ) {
         
-      // / Print Solution (on nodes) ********************************************************************
       fout  << "      <PointData Scalars=\"scalars\"> " << std::endl;
       Pfout << "    <PPointData Scalars=\"scalars\"> " << std::endl;
+      
+      
+      // / Print Solution (on nodes) ********************************************************************
       //Loop on variables
 
       // point pointer to common memory area buffer of void type;
       float* var_nd = static_cast<float*>( buffer_void );
       
-      for( unsigned i = 0; i < ( !print_all )*vars.size() + print_all * _ml_sol->GetSolutionSize(); i++ ) {
-        unsigned solIndex = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
-        if( _ml_sol->GetSolutionType( solIndex ) < 3 ) {
+      for( unsigned i = 0; i < compute_print_sol_size(print_all, vars); i++ ) {
+          
+        const unsigned solIndex = ( print_all == 0 ) ? _ml_sol->GetIndex( vars[i].c_str() ) : i;
+        const unsigned sol_fe_type = _ml_sol->GetSolutionType( solIndex );
+        
+        if( sol_fe_type < 3 ) {
+            
           //BEGIN LAGRANGIAN Fem SOLUTION
           std::string solName =  _ml_sol->GetSolutionName( solIndex );
 
-          for( int name = 0; name < 1 + 3 * _debugOutput * solution->_ResEpsBdcFlag[i]; name++ ) {
+          for( int name = 0; name < compute_sol_bdc_res_eps_size(solution, i); name++ ) {
               
             std::string printName = print_sol_bdc_res_eps_name(solName, name);
            
@@ -569,27 +603,27 @@ namespace femus {
             unsigned nvt_ig = mesh->_ownSize[index][_iproc];
 
             if( name == 0 )
-              num_vec_aux->matrix_mult( *solution->_Sol[solIndex],
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Sol[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
             else if( name == 1 )
-              num_vec_aux->matrix_mult( *solution->_Bdc[solIndex],
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Bdc[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
             else if( name == 2 )
-              num_vec_aux->matrix_mult( *solution->_Res[solIndex],
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Res[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
             else
-              num_vec_aux->matrix_mult( *solution->_Eps[solIndex],
+              num_vec_aux_for_node_fields->matrix_mult( *solution->_Eps[solIndex],
                                   *mesh->GetQitoQjProjection( index, _ml_sol->GetSolutionType( solIndex ) ) );
 
             for( unsigned ii = 0; ii < nvt_ig; ii++ ) {
-              var_nd[ ii ] = ( *num_vec_aux )( ii + offset_iprc );
+              var_nd[ ii ] = ( *num_vec_aux_for_node_fields )( ii + offset_iprc );
             }
             
             //print ghost dofs -------------------------
             unsigned offset_ig = nvtOwned;
 
             for( std::map <unsigned, unsigned>::const_iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
-              var_nd[ offset_ig + it->second ] = ( *num_vec_aux )( it->first );
+              var_nd[ offset_ig + it->second ] = ( *num_vec_aux_for_node_fields )( it->first );
             }
             //--------- fill var_nd ------------
             
@@ -599,9 +633,12 @@ namespace femus {
           }
         } //endif
       } // end for sol
+      
+      delete [] var_nd;
+      
       fout  << "      </PointData>" << std::endl;
       Pfout << "    </PPointData>" << std::endl;
-      delete [] var_nd;
+      
     }  //end _ml_sol != NULL
 
     //------------------------------------------------------------------------------------------------
@@ -617,7 +654,7 @@ namespace femus {
 
     //-----------------------------------------------------------------------------------------------------
     //free memory
-    delete num_vec_aux;
+    delete num_vec_aux_for_node_fields;
 
     //--------------------------------------------------------------------------------------------------------
     return;

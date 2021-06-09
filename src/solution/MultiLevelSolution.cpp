@@ -312,6 +312,7 @@ namespace femus {
             _solution[ig]->_SolOld[i]->close();
           }
         }
+        
       }
     }
 

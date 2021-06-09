@@ -94,9 +94,17 @@ public:
   unsigned size_connectivity_proc(const Mesh * mesh, const unsigned index) const;
    
   bool print_all_sols(const std::vector < std::string >& vars) const;
+  
+  unsigned compute_print_sol_size(const bool print_all, const std::vector < std::string >& vars) const;
 
   std::string print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const;
+  
+  unsigned compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const;
    
+   void fill_sol_on_elements(const Mesh * mesh, 
+                             const unsigned elementOffset, const unsigned elementOffsetp1, 
+                             const Solution * solution, const unsigned name, const unsigned i,  float * const var_el) const;
+                             
  template < class ARRAY_TYPE >     
     void print_element_based_fields(const std::string field_string,  const std::string field_datatype, std::ofstream & fout, std::ofstream & Pfout, void* buffer_void, const unsigned elemetOffset, const unsigned elemetOffsetp1, const unsigned * dim_array_elvar, const Mesh * mesh, const unsigned fe_index, std::vector <char> & enc ) const;
     
@@ -171,8 +179,8 @@ public:
                                    std::vector <char> & enc) const {
 
             
-    fout  << "       <DataArray type=\"" << field_datatype << "\" NumberOfComponents=\"" << n_components << "\" format=\"binary\">"  << std::endl;
-    Pfout << "      <PDataArray type=\"" << field_datatype << "\" NumberOfComponents=\"" << n_components << "\" format=\"binary\"/>" << std::endl;
+    fout  << "       <DataArray type=\"" << field_datatype << "\" Name=\"" << field_string  << "\" NumberOfComponents=\"" << n_components << "\" format=\"binary\">"  << std::endl;
+    Pfout << "      <PDataArray type=\"" << field_datatype << "\" Name=\"" << field_string  << "\" NumberOfComponents=\"" << n_components << "\" format=\"binary\"/>" << std::endl;
 
     //print solution on element dimension
     size_t cch = b64::b64_encode( &dim_array_elvar[0], sizeof( unsigned ) /*DO NOT USE THIS!!! sizeof( dim_array_elvar )*/, NULL, 0 );

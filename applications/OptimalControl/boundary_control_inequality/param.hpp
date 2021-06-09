@@ -17,8 +17,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   2
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -555,6 +555,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
   std::vector< std::vector< int > > is_dof_associated_to_boundary_control_equation(
       const Mesh * msh,
       /*const*/ MultiLevelSolution * ml_sol,
+         const MultiLevelProblem *    ml_prob,
       const unsigned iel,
       CurrentElem < double > & geom_element_iel,
       const unsigned solType_coords,
@@ -592,7 +593,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
          
 	  for (unsigned c = 0; c < n_components_ctrl; c++) {
           
-	      const bool  dir_bool = ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl + c].c_str(), tau, face_in_rectangle_domain, 0.);
+	      const bool  dir_bool = ml_sol->GetBdcFunctionMLProb()(ml_prob, geom_element_iel.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl + c].c_str(), tau, face_in_rectangle_domain, 0.);
 
 	      if (dir_bool == false) { 
 
@@ -1929,7 +1930,7 @@ if( check_if_same_elem(iel, jel) ) {
   
  //************ set control flag *********************
   std::vector< std::vector< int > > control_node_flag = 
-       is_dof_associated_to_boundary_control_equation(msh, ml_sol, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
+       is_dof_associated_to_boundary_control_equation(msh, ml_sol, & ml_prob, iel, geom_element_iel, solType_coords, Solname_Mat, SolFEType_Mat, Sol_n_el_dofs_Mat, pos_mat_ctrl, n_components_ctrl);
   //*************************************************** 
       
 
