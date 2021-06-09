@@ -161,7 +161,8 @@ namespace femus {
             
             for( int iel = elementOffset; iel < elementOffsetp1; iel++ ) {
                 
-              unsigned iel_Metis = mesh->GetSolutionDof( 0, iel, _ml_sol->GetSolutionType( i ) );
+              unsigned placeholder_index = 0;
+              unsigned iel_Metis = mesh->GetSolutionDof(placeholder_index, iel, _ml_sol->GetSolutionType( i ) );
               
               if( name == 0 )                 var_el[icount] = ( *solution->_Sol[i] )( iel_Metis );
               else if( name == 1 )            var_el[icount] = ( *solution->_Bdc[i] )( iel_Metis );

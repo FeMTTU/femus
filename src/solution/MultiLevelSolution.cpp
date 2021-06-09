@@ -279,7 +279,10 @@ namespace femus {
             for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
               for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
                   iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
+                  
                 unsigned nloc_dof = _mlMesh->GetLevel(ig)->GetElementDofNumber(iel, 0);
+              
+              // evaluate at average of biquadratic nodes (element center) -----
                 std::vector < double > xx(3, 0.);
 
                 for(int j = 0; j < nloc_dof; j++) {
@@ -292,10 +295,13 @@ namespace femus {
                 xx[0] /= nloc_dof;
                 xx[1] /= nloc_dof;
                 xx[2] /= nloc_dof;
+              // evaluate at average of biquadratic nodes (element center) -----
 
                 value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
+                
+                unsigned placeholder_index = 0/*2*/;
 
-                unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(2, iel, sol_type);
+                unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(placeholder_index, iel, sol_type);
 
                 _solution[ig]->_Sol[i]->set(solDof, value);
 

@@ -63,7 +63,7 @@ double Solution_set_initial_conditions(const MultiLevelProblem * ml_prob, const 
         value = 5.;
     }
 
-   value = x[0] * x[0];
+   value = x[0] ;
 
     return value;
 }
@@ -102,7 +102,7 @@ int main(int argc,char **args) {
  std::vector< std::string >  input_files;
 //  input_files.push_back("turek_FSI1.neu");
 //  input_files.push_back("turek_FSI1.med");
- input_files.push_back("turek_FSI1_3d.med");
+//  input_files.push_back("turek_FSI1_3d.med");
 //  input_files.push_back("turek_FSI1_coarsest_not_yet_expanded_at_inflow.med");
 //  input_files.push_back("turek_FSI1_no_bc.neu");
 //  input_files.push_back("cyl.med");
@@ -111,6 +111,7 @@ int main(int argc,char **args) {
 //  input_files.push_back("dome_tri.med");
 //  input_files.push_back("dome_quad.med");
 //   input_files.push_back("square_quad.neu");
+  input_files.push_back("parametric_square_4x5.med");
 //   input_files.push_back("./geom_elem_many_Quad9_Four_boundaries_groups.med");
 //   input_files.push_back("./geom_elem_many_Quad9_Nine_without_groups.med"); //Some boundary face was not set in the mesh MED file
 //   input_files.push_back("./geom_elem_many_Tri6_Two_boundaries.med"); //error
