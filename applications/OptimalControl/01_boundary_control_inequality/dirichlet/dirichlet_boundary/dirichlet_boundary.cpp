@@ -11,7 +11,7 @@
 
 #define FACE_FOR_CONTROL             3
 
-#include "../../param.hpp"
+#include "../../../param.hpp"
 
 
 #define FE_DOMAIN  2 //with 0 it only works in serial, you must put 2 to make it work in parallel...: that's because when you fetch the dofs from _topology you get the wrong indices

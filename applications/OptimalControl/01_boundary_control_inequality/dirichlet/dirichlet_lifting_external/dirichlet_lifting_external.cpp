@@ -8,7 +8,7 @@
 
 #define FACE_FOR_CONTROL 2  //we do control on the right (=2) face
 
-#include "../../param.hpp"
+#include "../../../param.hpp"
 
 #define GROUP_INTERNAL  12
 #define GROUP_EXTERNAL  13

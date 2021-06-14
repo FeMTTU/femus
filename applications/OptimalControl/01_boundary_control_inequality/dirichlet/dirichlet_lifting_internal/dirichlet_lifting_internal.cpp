@@ -8,7 +8,7 @@
 
 #define FACE_FOR_CONTROL   3
 
-#include "../../param.hpp"
+#include "../../../param.hpp"
 
 #define FE_DOMAIN  2
 
@@ -83,9 +83,11 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
   // ======= Files ========================
+  const bool use_output_time_folder = false;
+  const bool redirect_cout_to_file = false;
   Files files; 
-        files.CheckIODirectories(true);
-        files.RedirectCout(true);
+        files.CheckIODirectories(use_output_time_folder);
+        files.RedirectCout(redirect_cout_to_file);
 
   // ======= Quad Rule ========================
   std::string fe_quad_rule("seventh");

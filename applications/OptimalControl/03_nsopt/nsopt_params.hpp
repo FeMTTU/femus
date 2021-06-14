@@ -2,7 +2,7 @@
 #define NSOPT_PARAMETERS
 
 
-#include   "../boundary_control_inequality/param.hpp"
+#include   "../param.hpp"
 
 namespace femus {
 

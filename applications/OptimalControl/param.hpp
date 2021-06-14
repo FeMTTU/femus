@@ -10,7 +10,7 @@
 #include "NonLinearImplicitSystemWithPrimalDualActiveSetMethod.hpp"
 #include "MED_IO.hpp"
 
-#include "../fractional_functions.hpp"
+#include "fractional_functions.hpp"
 
 
 #include <functional>
