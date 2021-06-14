@@ -8,7 +8,7 @@
 #include "MultiLevelSolution.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "LinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
 #include "CurrentElem.hpp"
@@ -20,7 +20,7 @@
 using namespace femus;
  
 
-
+/// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
 double InitialValueDS(const std::vector < double >& x) {
@@ -151,13 +151,8 @@ int main(int argc, char** args) {
   // ======= Solution  ==================
   MultiLevelSolution ml_sol(&ml_mesh);
 
-    // ******* Print mesh *******
-//   ml_sol.SetWriter(VTK);  //   ml_sol.GetWriter()->SetDebugOutput(true);
-//   ml_sol.GetWriter()->Write(files.GetOutputPath(), "biquadratic");
-//   exit(0);
-//   ml_mesh.SetWriter(VTK);  ///@todo this doesn't work and should be removed, no application uses it
-//   ml_mesh.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic", meshToBePrinted);  
-    // ******* End print mesh *******
+  ml_sol.SetWriter(VTK);
+  ml_sol.GetWriter()->SetDebugOutput(true);
   
   // add variables to ml_sol
   ml_sol.AddSolution("d_s", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
@@ -184,7 +179,9 @@ int main(int argc, char** args) {
   
     // ======= System ========================
  // add system  in ml_prob as a Linear Implicit System
-  LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("Laplace");
+  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("Laplace");
+  
+  system.SetDebugNonlinear(true);
  
   system.AddSolutionToSystemPDE("d_s");
  
@@ -193,11 +190,12 @@ int main(int argc, char** args) {
 
 //   system.SetMaxNumberOfLinearIterations(2);
   // initialize and solve the system
-  system.SetMgType(F_CYCLE/*F_CYCLE*//*M_CYCLE*/); //it doesn't matter if I use only 1 level
+  system.SetMgType(V_CYCLE/*F_CYCLE*//*M_CYCLE*/); //it doesn't matter if I use only 1 level
+
+
   system.SetOuterSolver(GMRES);
-  
+ 
   system.init();
-  
   
   system.MGsolve();
   
@@ -206,8 +204,7 @@ int main(int argc, char** args) {
   const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
-  ml_sol.SetWriter(VTK);
-  ml_sol.GetWriter()->SetDebugOutput(true);
+ 
   ml_sol.GetWriter()->Write(mesh_files[m], files.GetOutputPath(), print_order.c_str(), variablesToBePrinted);
   
   }
@@ -223,7 +220,7 @@ int main(int argc, char** args) {
 template < class real_num, class real_num_mov >
 void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("Laplace");  
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Laplace");  
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -289,7 +286,7 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
   std::vector < double >        Jac;            Jac.reserve(n_vars*maxSize * n_vars*maxSize);
  //***************************************************  
 
-
+  RES->zero();
   if (assembleMatrix)  JAC->zero();
 
   
@@ -440,8 +437,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-//           if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
-          if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
+          if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+//           if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -479,8 +476,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
-// 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += jacXweight_qp * laplace_mat_du_u_i_j;
-		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += jacXweight_qp * laplace_beltrami_mat_du_u_i_j; ///@todo On a flat domain, this must coincide with the standard Laplacian, so we can do a double check with this
+		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += jacXweight_qp * laplace_mat_du_u_i_j;
+// 		  if ( i < nDof_u && j < nDof_u )       Jac[ (0 + i) * nDof_AllVars   + 	(0 + j) ]  += jacXweight_qp * laplace_beltrami_mat_du_u_i_j; ///@todo On a flat domain, this must coincide with the standard Laplacian, so we can do a double check with this
             } // end phi_j loop
           } // endif assemble_matrix
 
