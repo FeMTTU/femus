@@ -183,8 +183,8 @@ int main(int argc, char** argv)
   // ******* System FEM Assembly *******
   
   system.SetAssembleFunction(AssembleFracProblem);
-  system.SetMaxNumberOfLinearIterations(1);
-  //system.SetAssembleFunction(AssembleFEM);
+//   system.SetMaxNumberOfLinearIterations(1);
+
   // ******* set MG-Solver *******
   system.SetMgType(V_CYCLE);
 

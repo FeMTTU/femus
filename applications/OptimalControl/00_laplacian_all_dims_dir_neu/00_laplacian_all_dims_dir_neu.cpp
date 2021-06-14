@@ -50,7 +50,7 @@ bool SetBoundaryCondition2D(const std::vector < double >& x, const char name[], 
   }
   else if (face_name == 4) {
       dirichlet = false;
-        value = 0.2*(1.-x[0]); //Neumann value
+        value = 0.2 * (1. - x[0]); //Neumann function
   }
   
   return dirichlet;
@@ -440,8 +440,8 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 	      
 //======================Residuals=======================
           // FIRST ROW
-//           if (i < nDof_u)                      Res[0      + i] += - jacXweight_qp * ( phi_u[i] * (  -1. ) - laplace_res_du_u_i);
-          if (i < nDof_u)                      Res[0      + i] += - jacXweight_qp * ( phi_u[i] * (  -1. ) - laplace_beltrami_res_du_u_i);
+//           if (i < nDof_u)                      Res[0      + i] +=  jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_res_du_u_i);
+          if (i < nDof_u)                      Res[0      + i] += jacXweight_qp * ( phi_u[i] * (  1. ) - laplace_beltrami_res_du_u_i);
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
