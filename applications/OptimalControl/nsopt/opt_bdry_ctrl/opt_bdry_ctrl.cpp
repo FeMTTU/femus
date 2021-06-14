@@ -30,7 +30,9 @@ using namespace femus;
   const double alpha = ALPHA_CTRL_BDRY;
   const double beta  = BETA_CTRL_BDRY;
 
+  #define RHS_ONE             0.
 
+  
 #define QRULE_I   0
 
 //***** Implementation-related ****************** 
@@ -815,6 +817,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
                     //-----------
                     alpha,
                     beta,
+                    RHS_ONE,
                     qrule_i
                     ) ;
   
