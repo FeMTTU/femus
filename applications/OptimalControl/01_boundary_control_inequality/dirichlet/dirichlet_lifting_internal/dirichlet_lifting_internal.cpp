@@ -847,6 +847,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
   
   // ***************** END ASSEMBLY *******************
+  
   unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
   unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
 
@@ -862,7 +863,18 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[solIndex_mu])(i/*position_mu_i*/) ;
   }
     RES->add_vector_blocked(one_times_mu, positions);
-    RES->print();
+    
+//   //MU
+// add_one_times_mu_res_ctrl_bdry(iproc,
+//                                ineq_flag,
+//                                pos_mat_ctrl,
+//                                pos_mat_mu,
+//                                SolIndex_Mat,
+//                                sol,
+//                                mlPdeSys,
+//                                pdeSys,
+//                                RES);
+    
     
 
   return;

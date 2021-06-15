@@ -23,20 +23,40 @@ using namespace femus;
 /// @todo Laplace beltrami on a flat domain does not give the same numbers, need to check that
 
 
-double InitialValueDS(const std::vector < double >& x) {
+double InitialValueDS(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+    
   return 0.;
+  
 }
 
 
-
-bool SetBoundaryCondition2D(const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+ 
+ 
+bool SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
 
   bool dirichlet = false;
   value = 0.;
   
   const double tolerance = 1.e-5;
   
+ if (ml_prob->GetMLMesh()->GetDimension() == 1 )  {
+  
   if (face_name == 1) {
+      dirichlet = true;
+        value = 0.; //Dirichlet value
+    }
+  else if (face_name == 2) {
+      dirichlet = false;
+        value = 1.; //Neumann value
+    }
+
+    
+ }
+ 
+ if (ml_prob->GetMLMesh()->GetDimension() == 2 )  {
+     
+     
+    if (face_name == 1) {
       dirichlet = true;
         value = 0.;
   }
@@ -52,32 +72,69 @@ bool SetBoundaryCondition2D(const std::vector < double >& x, const char name[], 
       dirichlet = false;
         value = 0.2 * (1. - x[0]); //Neumann function
   }
-  
+   
+ 
+ }
+ 
+ 
+ 
   return dirichlet;
+  
  }
 
  
  
-bool SetBoundaryCondition1D(const std::vector < double >& x, const char name[], double& value, const int face_name, const double time) {
+ //====== NEUMANN LOOP 1D =============================================   
+void neumann_loop_1d(const MultiLevelProblem *    ml_prob, 
+                     const Mesh *                    msh,
+                     const MultiLevelSolution *    ml_sol, 
+                    const unsigned iel,
+                    CurrentElem < double > & geom_element,
+                    const unsigned xType,
+                    const std::string solname_u,
+                    const unsigned solFEType_u,
+                      std::vector< double > & Res
+                    ) {
+    
+     double tau;
+    
+    for (unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+        
+       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, xType);
+       
+       geom_element.set_elem_center_bdry_3d();
+       
+       std::vector  <  double > xx_face_elem_center(3, 0.); 
+          xx_face_elem_center = geom_element.get_elem_center_bdry();
+        
+       const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
+       
+       if ( boundary_index < 0) { //I am on the boundary
+                  
+         unsigned int face = - (boundary_index + 1);
+    
+         bool is_dirichlet =  ml_sol->GetBdcFunctionMLProb()(ml_prob, xx_face_elem_center, solname_u.c_str(), tau, face, 0.);                     
+         //we have to be careful here, because in GenerateBdc those coordinates are passed as NODE coordinates, 
+         //while here we pass the FACE ELEMENT CENTER coordinates. 
+         // So, if we use this for enforcing space-dependent Dirichlet or Neumann values, we need to be careful!
+         
+             if ( !(is_dirichlet)  &&  (tau != 0.) ) {  //dirichlet == false and nonhomogeneous Neumann
+                   unsigned n_dofs_face = msh->GetElementFaceDofNumber(iel, jface, solFEType_u);
 
-  bool dirichlet = false;
-  value = 0.;
-  
-  const double tolerance = 1.e-5;
-  
+                  for (unsigned i = 0; i < n_dofs_face; i++) {
+                      
+                 unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
 
-  
-  if (face_name == 1) {
-      dirichlet = true;
-        value = 0.; //Dirichlet value
-  }
-  else if (face_name == 2) {
-      dirichlet = false;
-        value = -1.; //Neumann value
-  }
-  
-  return dirichlet;
- }
+                 Res[i_vol] +=  tau;
+                 
+                         }
+        
+                    }
+                  
+              }
+    }
+    
+}
 
  
  
@@ -105,8 +162,8 @@ int main(int argc, char** args) {
     // ======= Mesh  ==================
    std::vector<std::string> mesh_files;
    
-//    mesh_files.push_back("Mesh_1_x_dir_neu.med");
-   mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
+   mesh_files.push_back("Mesh_1_x_dir_neu.med");
+//    mesh_files.push_back("Mesh_2_xy_boundaries_groups_4x4.med");
 //    mesh_files.push_back("Mesh_1_x_all_dir.med");
 //    mesh_files.push_back("Mesh_1_y_all_dir.med");
 //    mesh_files.push_back("Mesh_1_z_all_dir.med");
@@ -154,23 +211,24 @@ int main(int argc, char** args) {
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);
   
+  // ======= Problem ========================
+  // define the multilevel problem attach the ml_sol object to it
+  MultiLevelProblem ml_prob(&ml_sol);
+  
   // add variables to ml_sol
   ml_sol.AddSolution("d_s", LAGRANGE, FIRST/*DISCONTINUOUS_POLYNOMIAL, ZERO*/);
   
   // ======= Solution: Initial Conditions ==================
   ml_sol.Initialize("All");    // initialize all variables to zero
-  ml_sol.Initialize("d_s", InitialValueDS);
+  ml_sol.Initialize("d_s", InitialValueDS, & ml_prob);
 
   // ======= Solution: Boundary Conditions ==================
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition2D);
-  ml_sol.GenerateBdc("d_s");
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.GenerateBdc("d_s", "Steady",  & ml_prob);
 
   
-  // ======= Problem ========================
-  // define the multilevel problem attach the ml_sol object to it
-  MultiLevelProblem ml_prob(&ml_sol);
-  
 
+  // ======= Problem, II ========================
   ml_prob.SetFilesHandler(&files);
   ml_prob.SetQuadratureRuleAllGeomElems(fe_quad_rule);
   ml_prob.set_all_abstract_fe_multiple();
@@ -214,9 +272,9 @@ int main(int argc, char** args) {
 }
 
 
-// template < class real_num, class real_num_mov >
-// AssembleProblem_interface(MultiLevelProblem& ml_prob)
-// 
+
+
+
 template < class real_num, class real_num_mov >
 void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
 
@@ -264,13 +322,13 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
   phi_u_x.reserve(maxSize * space_dim);
   phi_u_xx.reserve(maxSize * dim2);
   
- 
+  const std::string solname_u = "d_s";
   unsigned solIndex_u;
-  solIndex_u = ml_sol->GetIndex("d_s"); 
+  solIndex_u = ml_sol->GetIndex(solname_u.c_str()); 
   unsigned solFEType_u = ml_sol->GetSolutionType(solIndex_u); 
 
   unsigned solPdeIndex_u;
-  solPdeIndex_u = mlPdeSys->GetSolPdeIndex("d_s");
+  solPdeIndex_u = mlPdeSys->GetSolPdeIndex(solname_u.c_str());
 
   std::vector < double >  sol_u;     sol_u.reserve(maxSize);
   std::vector< int > l2GMap_u;    l2GMap_u.reserve(maxSize);
@@ -339,51 +397,20 @@ void AssembleProblemDirNeu(MultiLevelProblem& ml_prob) {
     l2GMap_AllVars.resize(0);                  l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_u.begin(),l2GMap_u.end());
  //*************************************************** 
     
+
+ //========= BOUNDARY ==================   
+    if (dim == 1)   neumann_loop_1d(& ml_prob, msh, ml_sol,
+                      iel, geom_element, xType,
+                      solname_u, solFEType_u,
+                      Res
+                     );
+
+ 
+ //========= VOLUME ==================   
+   
  //========= gauss value quantities ==================   
-// 	double sol_u_gss = 0.;
 	std::vector<double> sol_u_x_gss(space_dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
  //===================================================   
-
-    
- //====== NEUMANN LOOP - BEGIN =============================================   
-     double tau;
-    
-    for (unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
-        
-       geom_element.set_coords_at_dofs_bdry_3d(iel, jface, xType);
-       
-       geom_element.set_elem_center_bdry_3d();
-       
-       std::vector  <  double > xx_face_elem_center(3, 0.); 
-          xx_face_elem_center = geom_element.get_elem_center_bdry();
-        
-       const int boundary_index = el->GetFaceElementIndex(iel, jface);
-       
-       if ( boundary_index < 0) { //I am on the boundary
-                  
-         unsigned int face = - (boundary_index + 1);
-    
-         bool is_dirichlet =  ml_sol->GetBdcFunction()(xx_face_elem_center, "d_s", tau, face, 0.);                     
-         //we have to be careful here, because in GenerateBdc those coordinates are passed as NODE coordinates, 
-         //while here we pass the FACE ELEMENT CENTER coordinates. 
-         // So, if we use this for enforcing space-dependent Dirichlet or Neumann values, we need to be careful!
-         
-             if ( !(is_dirichlet)  &&  (tau != 0.) ) {  //dirichlet == false and nonhomogeneous Neumann
-                   unsigned n_dofs_face = msh->GetElementFaceDofNumber(iel, jface, solFEType_u);
-
-                  for (unsigned i = 0; i < n_dofs_face; i++) {
-                      
-                 unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
-
-                 Res[i_vol] +=  tau;
-                 
-                         }
-        
-                    }
-                  
-              }
-    }
- //====== NEUMANN LOOP - END =============================================   
     
     
       // *** Quadrature point loop ***

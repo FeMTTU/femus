@@ -140,7 +140,7 @@ public:
     
 
     /** To be Added */
-    void GenerateBdc(const char name[], const char bdc_type[]="Steady", const MultiLevelProblem * ml_prob = NULL);
+    void GenerateBdc(const char name[], const char bdc_type[] = "Steady", const MultiLevelProblem * ml_prob = NULL);
 
     /** To be Added */
     void InitializeBdc();
@@ -256,11 +256,19 @@ public:
     // member data
     MultiLevelMesh* _mlMesh;
 
-    BoundaryFunc GetBdcFunction(){
+    BoundaryFunc GetBdcFunction() {
       return _SetBoundaryConditionFunction;
     }
 
-    BoundaryFuncMLProb GetBdcFunctionMLProb(){
+    BoundaryFunc GetBdcFunction() const {
+      return _SetBoundaryConditionFunction;
+    }
+
+    BoundaryFuncMLProb GetBdcFunctionMLProb() {
+      return _SetBoundaryConditionFunctionMLProb;
+    }
+
+    BoundaryFuncMLProb GetBdcFunctionMLProb() const {
       return _SetBoundaryConditionFunctionMLProb;
     }
 
