@@ -82,9 +82,9 @@ namespace femus {
   
   class line_gauss {
   public:
-    static const unsigned GaussPoints[6];
-    static const double *Gauss[6];  
-    static const double Gauss0[2][1];
+    static const unsigned GaussPoints[6];  /// @todo why is this 6 instead of 5?
+    static const double *Gauss[6];   
+    static const double Gauss0[2][1];      /// @todo the first index is function evaluation plus number of space derivatives; the second index is the number of Quadrature Points
     static const double Gauss1[2][2];
     static const double Gauss2[2][3];
     static const double Gauss3[2][4];

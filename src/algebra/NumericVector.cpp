@@ -22,7 +22,7 @@
 #include "Parallel.hpp"
 #include <cmath>
 #include <memory>
-
+#include <limits>
 
 namespace femus
 {
@@ -63,18 +63,35 @@ namespace femus
     assert(this->first_local_index() == other_vector.first_local_index());
     assert(this->last_local_index()  == other_vector.last_local_index());
 
-    int rvalue     = -1;
+    const int initialization_val = std::numeric_limits<int>::max();/*-1; this is not working in parallel*/
+
+   std::cout << "---------------- " << initialization_val;
+    int first_different_i     = initialization_val;
     int i = first_local_index();
 
     do {
-      if(std::abs((*this)(i) - other_vector(i)) > threshold)
-        rvalue = i;
+      if( std::abs((*this)(i) - other_vector(i) ) > threshold)
+        first_different_i = i;
       else
         i++;
     }
-    while(rvalue == -1 && i < last_local_index());
+    while(first_different_i == initialization_val && i < last_local_index());
 
-    return rvalue;
+  // Find the correct first differing index in parallel
+    Parallel::min(first_different_i);
+
+//     if (n_procs > 1)
+//     {
+//       MPI_Allreduce (MPI_IN_PLACE, & first_different_i, 1,  MPI_INT, MPI_MIN,  MPI_COMM_WORLD);
+//     }
+
+  
+  
+  
+  
+  if (first_different_i == std::numeric_limits<int>::max())  { return -1; }
+
+  return first_different_i;
   }
 
 // ---------------------------------------------------------
