@@ -453,7 +453,8 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
 
 
 ///@todo This is being added to a weak form?
- void add_one_times_mu_res_ctrl_bdry(const unsigned iproc,
+///this is the same for volume or boundary
+ void add_one_times_mu_res_ctrl(const unsigned iproc,
                          const double ineq_flag,
                          const unsigned int pos_ctrl,
                          const unsigned int pos_mu,

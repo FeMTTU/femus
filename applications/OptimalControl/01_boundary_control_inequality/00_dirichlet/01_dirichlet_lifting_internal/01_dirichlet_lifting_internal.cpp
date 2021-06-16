@@ -172,7 +172,9 @@ int main(int argc, char** args) {
 
   // initialize and solve the system
   system.init();
+  
   system.MGsolve();
+//   system.assemble_call(1);
   
   // ======= Print ==================
   std::vector < std::string > variablesToBePrinted;
@@ -850,30 +852,30 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
   unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
   unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
-
-  unsigned int global_ctrl_size = pdeSys->KKoffset[ctrl_index+1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
-  
-  std::vector<double>  one_times_mu(global_ctrl_size, 0.);
-  std::vector<int>    positions(global_ctrl_size);
-//  double position_mu_i;
-  for (unsigned i = 0; i < positions.size(); i++) {
-    positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
-//     position_mu_i = pdeSys->KKoffset[mu_index][iproc] + i;
-//     std::cout << position_mu_i << std::endl;
-    one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[solIndex_mu])(i/*position_mu_i*/) ;
-  }
-    RES->add_vector_blocked(one_times_mu, positions);
+// // // 
+// // //   unsigned int global_ctrl_size = pdeSys->KKoffset[ctrl_index+1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
+// // //   
+// // //   std::vector<double>  one_times_mu(global_ctrl_size, 0.);
+// // //   std::vector<int>    positions(global_ctrl_size);
+// // // //  double position_mu_i;
+// // //   for (unsigned i = 0; i < positions.size(); i++) {
+// // //     positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
+// // // //     position_mu_i = pdeSys->KKoffset[mu_index][iproc] + i;
+// // // //     std::cout << position_mu_i << std::endl;
+// // //     one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[solIndex_mu])(i/*position_mu_i*/) ;
+// // //   }
+// // //     RES->add_vector_blocked(one_times_mu, positions);
     
-//   //MU
-// add_one_times_mu_res_ctrl_bdry(iproc,
-//                                ineq_flag,
-//                                pos_mat_ctrl,
-//                                pos_mat_mu,
-//                                SolIndex_Mat,
-//                                sol,
-//                                mlPdeSys,
-//                                pdeSys,
-//                                RES);
+  //MU
+add_one_times_mu_res_ctrl(iproc,
+                               ineq_flag,
+                               ctrl_index,
+                               mu_index,
+                               SolIndex,
+                               sol,
+                               mlPdeSys,
+                               pdeSys,
+                               RES);
     
     
 

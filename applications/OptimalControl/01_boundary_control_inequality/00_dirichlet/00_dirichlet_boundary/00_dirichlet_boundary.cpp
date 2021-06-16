@@ -895,7 +895,7 @@ if ( i_vol == j_vol )  {
   
 
   //MU
-add_one_times_mu_res_ctrl_bdry(iproc,
+add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                pos_mat_ctrl,
                                pos_mat_mu,

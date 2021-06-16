@@ -39,8 +39,8 @@
 //**************************************
 
 //***** Operator-related ****************** 
-  #define RHS_ONE             0.
-  #define KEEP_ADJOINT_PUSH   1
+  #define RHS_ONE             1.
+  #define KEEP_ADJOINT_PUSH   0
 #define IS_CTRL_FRACTIONAL_SOBOLEV   0
 #define S_FRAC 0.5
 
@@ -654,7 +654,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         }
  //***************************************************
         
-    vector < unsigned > SolIndex_Mat(n_unknowns);      //should have Sol order
+    vector < unsigned > SolIndex_Mat(n_unknowns);      //should have Mat order
     vector < unsigned > SolFEType_Mat(n_unknowns);       //should have Mat order
     vector < unsigned > SolPdeIndex(n_unknowns);     //should have Mat order, of course
 
@@ -1307,7 +1307,7 @@ if ( i_vol == j_vol )  {
   
 
   //MU
-add_one_times_mu_res_ctrl_bdry(iproc,
+add_one_times_mu_res_ctrl(iproc,
                                ineq_flag,
                                pos_mat_ctrl,
                                pos_mat_mu,
