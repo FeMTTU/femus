@@ -195,24 +195,24 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
-  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);
 
-  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution*    ml_sol = ml_prob._ml_sol;
+  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
-  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix*             KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
-  NumericVector*           RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];
+  SparseMatrix*             KK = pdeSys->_KK;
+  NumericVector*           RES = pdeSys->_RES;
 
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  const unsigned  dim = msh->GetDimension();
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));
 
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  unsigned    iproc = msh->processor_id();
 
   
   //=============== Geometry ========================================
-  unsigned solType_coords = FE_DOMAIN; //we do linear FE this time
+  unsigned solType_coords = FE_DOMAIN;
  
   CurrentElem < double > geom_element(dim, msh);            // must be adept if the domain is moving, otherwise double
     
@@ -225,9 +225,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
  //********************* state *********************** 
  //***************************************************  
-  vector <double> phi_u;  // local test function
-  vector <double> phi_u_x; // local test function first order partial derivatives
-  vector <double> phi_u_xx; // local test function second order partial derivatives
+  vector <double> phi_u; 
+  vector <double> phi_u_x;
+  vector <double> phi_u_xx;
 
   phi_u.reserve(maxSize);
   phi_u_x.reserve(maxSize * dim);
@@ -235,13 +235,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
  
   unsigned solIndex_u;
-  solIndex_u = ml_sol->GetIndex("state");    // get the position of "state" in the ml_sol object
-  unsigned solType_u = ml_sol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
+  solIndex_u = ml_sol->GetIndex("state");
+  unsigned solType_u = ml_sol->GetSolutionType(solIndex_u);
 
   unsigned solPdeIndex_u;
-  solPdeIndex_u = mlPdeSys->GetSolPdeIndex("state");    // get the position of "state" in the pdeSys object
+  solPdeIndex_u = mlPdeSys->GetSolPdeIndex("state");
 
-  vector < double >  sol_u; // local solution
+  vector < double >  sol_u;
   sol_u.reserve(maxSize);
   vector< int > l2GMap_u;
   l2GMap_u.reserve(maxSize);
@@ -251,9 +251,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
  //******************** control ********************** 
  //***************************************************   
-  vector <double> phi_ctrl;  // local test function
-  vector <double> phi_ctrl_x; // local test function first order partial derivatives
-  vector <double> phi_ctrl_xx; // local test function second order partial derivatives
+  vector <double> phi_ctrl;
+  vector <double> phi_ctrl_x;
+  vector <double> phi_ctrl_xx;
 
   phi_ctrl.reserve(maxSize);
   phi_ctrl_x.reserve(maxSize * dim);
@@ -266,7 +266,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   unsigned solPdeIndex_ctrl;
   solPdeIndex_ctrl = mlPdeSys->GetSolPdeIndex("control");
 
-  vector < double >  sol_ctrl; // local solution
+  vector < double >  sol_ctrl;
   sol_ctrl.reserve(maxSize);
   vector< int > l2GMap_ctrl;
   l2GMap_ctrl.reserve(maxSize);
@@ -276,9 +276,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
  //********************* adjoint ********************* 
  //***************************************************  
-  vector <double> phi_adj;  // local test function
-  vector <double> phi_adj_x; // local test function first order partial derivatives
-  vector <double> phi_adj_xx; // local test function second order partial derivatives
+  vector <double> phi_adj;
+  vector <double> phi_adj_x;
+  vector <double> phi_adj_xx;
 
   phi_adj.reserve(maxSize);
   phi_adj_x.reserve(maxSize * dim);
@@ -286,13 +286,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  
   
   unsigned solIndex_adj;
-  solIndex_adj = ml_sol->GetIndex("adjoint");    // get the position of "adjoint" in the ml_sol object
-  unsigned solType_adj = ml_sol->GetSolutionType(solIndex_adj);    // get the finite element type for "adjoint"
+  solIndex_adj = ml_sol->GetIndex("adjoint");
+  unsigned solType_adj = ml_sol->GetSolutionType(solIndex_adj);
 
   unsigned solPdeIndex_adj;
-  solPdeIndex_adj = mlPdeSys->GetSolPdeIndex("adjoint");    // get the position of "adjoint" in the pdeSys object
+  solPdeIndex_adj = mlPdeSys->GetSolPdeIndex("adjoint");
 
-  vector < double >  sol_adj; // local solution
+  vector < double >  sol_adj;
     sol_adj.reserve(maxSize);
   vector< int > l2GMap_adj;
     l2GMap_adj.reserve(maxSize);
@@ -301,21 +301,21 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
  //****************** mu ******************************  
  //***************************************************  
-  vector <double> phi_mu;  // local test function
-  vector <double> phi_mu_x; // local test function first order partial derivatives
-  vector <double> phi_mu_xx; // local test function second order partial derivatives
+  vector <double> phi_mu;
+  vector <double> phi_mu_x;
+  vector <double> phi_mu_xx;
 
   phi_mu.reserve(maxSize);
   phi_mu_x.reserve(maxSize * dim);
   phi_mu_xx.reserve(maxSize * dim2);
     
   unsigned solIndex_mu;
-  solIndex_mu = ml_sol->GetIndex("mu");    // get the position of "mu" in the ml_sol object
+  solIndex_mu = ml_sol->GetIndex("mu");
    
   unsigned solPdeIndex_mu;
   solPdeIndex_mu = mlPdeSys->GetSolPdeIndex("mu");
   
-  unsigned solType_mu = ml_sol->GetSolutionType(solIndex_mu);    // get the finite element type for "mu"
+  unsigned solType_mu = ml_sol->GetSolutionType(solIndex_mu);
   vector < double >  sol_mu;   sol_mu.reserve(maxSize);
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
@@ -333,7 +333,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   //********* variables for ineq constraints *****************
   const int ineq_flag = INEQ_FLAG;
   const double c_compl = C_COMPL;
-  vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
+  vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize);
   vector < double >  ctrl_lower;   ctrl_lower.reserve(maxSize);
   vector < double >  ctrl_upper;   ctrl_upper.reserve(maxSize);
   //***************************************************  
@@ -346,7 +346,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector< int > l2GMap_AllVars; // local to global mapping
   l2GMap_AllVars.reserve(n_unknowns*maxSize);
   
-  vector< double > Res; // local redidual vector
+  vector< double > Res;
   Res.reserve(n_unknowns*maxSize);
 
   vector < double > Jac;
@@ -385,7 +385,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   if (assembleMatrix)  KK->zero();
 
     
-  // element loop: each process loops only on the elements that owns
+
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     geom_element.set_coords_at_dofs_and_geom_type(iel, solType_coords);
@@ -413,37 +413,38 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
  
  //***************** control ************************* 
-    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);    // number of solution element dofs
+    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);
     sol_ctrl    .resize(nDof_ctrl);
     l2GMap_ctrl.resize(nDof_ctrl);
     for (unsigned i = 0; i < sol_ctrl.size(); i++) {
-      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);    // global to global mapping between solution node and solution dof
-      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);      // global extraction and local storage for the solution
-      l2GMap_ctrl[i] = pdeSys->GetSystemDof(solIndex_ctrl, solPdeIndex_ctrl, i, iel);    // global to global mapping between solution node and pdeSys dof
+      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);
+      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);
+      l2GMap_ctrl[i] = pdeSys->GetSystemDof(solIndex_ctrl, solPdeIndex_ctrl, i, iel);
     } 
  //*************************************************** 
  
 
  //************** adjoint **************************** 
-    unsigned nDof_adj  = msh->GetElementDofNumber(iel, solType_adj);    // number of solution element dofs
+    unsigned nDof_adj  = msh->GetElementDofNumber(iel, solType_adj);
         sol_adj    .resize(nDof_adj);
         l2GMap_adj.resize(nDof_adj);
     for (unsigned i = 0; i < sol_adj.size(); i++) {
-      unsigned solDof_adj = msh->GetSolutionDof(i, iel, solType_adj);   // global to global mapping between solution node and solution dof
-      sol_adj[i] = (*sol->_Sol[solIndex_adj])(solDof_adj);      // global extraction and local storage for the solution
-      l2GMap_adj[i] = pdeSys->GetSystemDof(solIndex_adj, solPdeIndex_adj, i, iel);   // global to global mapping between solution node and pdeSys dof
+      unsigned solDof_adj = msh->GetSolutionDof(i, iel, solType_adj);
+      sol_adj[i] = (*sol->_Sol[solIndex_adj])(solDof_adj);
+      l2GMap_adj[i] = pdeSys->GetSystemDof(solIndex_adj, solPdeIndex_adj, i, iel);
     } 
  //***************************************************  
  
  //************** mu **************************** 
-    unsigned nDof_mu  = msh->GetElementDofNumber(iel, solType_mu);    // number of solution element dofs
+    unsigned nDof_mu  = msh->GetElementDofNumber(iel, solType_mu);
     sol_mu   .resize(nDof_mu);
     l2GMap_mu.resize(nDof_mu);
     for (unsigned i = 0; i < sol_mu.size(); i++) {
-      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solType_mu);   // global to global mapping between solution node and solution dof
-      sol_mu[i] = (*sol->_Sol[solIndex_mu])(solDof_mu);      // global extraction and local storage for the solution 
-      l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solType_mu);
+      sol_mu[i] = (*sol->_Sol[solIndex_mu])(solDof_mu);
+      l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);
     }
+ //***************************************************  
     
     
 //   update_active_set_flag_for_current_nonlinear_iteration

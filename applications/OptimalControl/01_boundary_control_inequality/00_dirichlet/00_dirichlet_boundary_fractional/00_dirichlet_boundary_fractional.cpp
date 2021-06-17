@@ -39,8 +39,8 @@
 //**************************************
 
 //***** Operator-related ****************** 
-  #define RHS_ONE             1.
-  #define KEEP_ADJOINT_PUSH   0
+  #define RHS_ONE             0.
+  #define KEEP_ADJOINT_PUSH   1
 #define IS_CTRL_FRACTIONAL_SOBOLEV   0
 #define S_FRAC 0.5
 
@@ -269,6 +269,8 @@ int main(int argc, char** args) {
 
   
 //   std::string input_file = "parametric_square_1x1.med";
+//   std::string input_file = "parametric_square_1x2.med";
+//   std::string input_file = "parametric_square_2x2.med";
   std::string input_file = "parametric_square_4x5.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
@@ -502,7 +504,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors(); // get the process_id (for parallel computation)
 
-  constexpr bool print_algebra_global = true;
+  constexpr bool print_algebra_global = false;
   constexpr bool print_algebra_local = false;
   
   
@@ -1320,12 +1322,12 @@ add_one_times_mu_res_ctrl(iproc,
     
   // ***************** END ASSEMBLY - ADD PART *******************
 
-// RES->close();
-// if (assembleMatrix) KK->close();  ///@todo is it needed? It seems like it is not needed!!!
+RES->close();
+if (assembleMatrix) KK->close();  /// This is needed for the parallel, when splitting the add part from the insert part!!!
 
 
 //   ***************** INSERT PART - BEGIN (must go AFTER the sum, clearly) *******************
- // @todo One very important thing to consider: we have some PENALTIES that were set before during the SUMMATION part.
+ /// @todo One very important thing to consider: we have some PENALTIES that were set before during the SUMMATION part.
  // Now, if we do INSERT, we may end up OVERWRITING certain values, SUCH AS THOSE PENALTIES!!!
  // So you have to be very careful here!
     

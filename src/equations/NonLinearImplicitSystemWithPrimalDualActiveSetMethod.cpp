@@ -175,7 +175,10 @@ namespace femus {
 
         std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
+//***************
         clock_t start_preparation_time = clock();
+        
+   //---------------------
         clock_t start_assembly_time = clock();
         _levelToAssemble = igridn; /// @todo Be careful!!!! this is needed in the _assemble_function
         _LinSolver[igridn]->SetResZero();
@@ -183,6 +186,7 @@ namespace femus {
         _assemble_system_function (_equation_systems);
         std::cout << "   ********* Level Max " << igridn + 1 << " ASSEMBLY TIME:\t" << \
                   static_cast<double> ( (clock() - start_assembly_time)) / CLOCKS_PER_SEC << std::endl;
+   //---------------------
 
         if (!_ml_msh->GetLevel (igridn)->GetIfHomogeneous()) {
           if (!_RRamr[igridn]) {
@@ -251,10 +255,16 @@ namespace femus {
           std::cout << "   ********* Level Max " << igridn + 1 << " MGINIT TIME:\t" \
                     << static_cast<double> ( (clock() - mg_init_time)) / CLOCKS_PER_SEC << std::endl;
         }
+        
+        
         totalAssemblyTime += static_cast<double> ( (clock() - start_assembly_time)) / CLOCKS_PER_SEC;
         std::cout << "   ********* Level Max " << igridn + 1 << " PREPARATION TIME:\t" << \
                   static_cast<double> ( (clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
+//***************
+                  
+                  
         clock_t startUpdateResidualTime = clock();
+        
 
         for (unsigned updateResidualIterator = 0; updateResidualIterator < _maxNumberOfResidualUpdateIterations; updateResidualIterator++) {
 
@@ -269,6 +279,8 @@ namespace femus {
           _LinSolver[igridn]->SetResZero();
           _assembleMatrix = false;
           _assemble_system_function (_equation_systems);
+          
+          
           if (!_ml_msh->GetLevel (igridn)->GetIfHomogeneous()) {
             if (!_RRamr[igridn]) {
               (_LinSolver[igridn]->_RESC)->matrix_mult_transpose (*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
@@ -280,6 +292,8 @@ namespace femus {
           }
           if (_bitFlipOccurred) break;
         }
+        
+        
 
         if (_buildSolver) {
           if (!_ml_msh->GetLevel (igridn)->GetIfHomogeneous()) {
