@@ -54,7 +54,7 @@ namespace femus {
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper =  0.3;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper =  1000.;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower = -1000.; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      

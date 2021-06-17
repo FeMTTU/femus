@@ -65,7 +65,16 @@ public:
 
 protected:
 
+   clock_t total_mg_time_begin() const;
+   
+   double total_mg_time_end(const clock_t start_mg_time) const;
+  
+   clock_t nonlinear_time_begin() const;
+   
+   void nonlinear_time_end(const clock_t start_nl_time) const;
         
+   void compute_assembly_vs_net_solver_times(const double totalSolverTime, const double totalAssemblyTime);
+  
     std::string _active_flag_name;
 
 };

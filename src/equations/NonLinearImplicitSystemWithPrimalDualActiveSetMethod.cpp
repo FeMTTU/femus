@@ -28,7 +28,6 @@ namespace femus {
 
 
 // ------------------------------------------------------------
-// NonLinearImplicitSystemWithPrimalDualActiveSetMethod implementation
   NonLinearImplicitSystemWithPrimalDualActiveSetMethod::NonLinearImplicitSystemWithPrimalDualActiveSetMethod (MultiLevelProblem& ml_probl,
       const std::string& name_in,
       const unsigned int number_in,
@@ -36,18 +35,66 @@ namespace femus {
     NonLinearImplicitSystem (ml_probl, name_in, number_in, smoother_type)   {
 
   }
+  
 
+  clock_t NonLinearImplicitSystemWithPrimalDualActiveSetMethod::total_mg_time_begin() const {
+  
+      clock_t start_mg_time = clock();
+      
+      return start_mg_time;
 
-  // ********************************************
+  }
+  
+  
+  double NonLinearImplicitSystemWithPrimalDualActiveSetMethod::total_mg_time_end(const clock_t start_mg_time) const {
+      
+      double totalSolverTime = static_cast<double> ( (clock() - start_mg_time)) / CLOCKS_PER_SEC;
+         
+      return totalSolverTime; 
+  }
+  
+  
+  clock_t NonLinearImplicitSystemWithPrimalDualActiveSetMethod::nonlinear_time_begin() const {
+  
+      clock_t start_nl_time = clock();
+      
+      return start_nl_time;
 
+  }
+  
+  void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::nonlinear_time_end(const clock_t start_nl_time) const {
+      
+      std::cout << std::endl << "   ****** Nonlinear-Cycle TIME: " << std::setw (11) << std::setprecision (6) << std::fixed
+                << static_cast<double> ( (clock() - start_nl_time)) / CLOCKS_PER_SEC << std::endl;
+                
+  }
+
+  
+  
+  void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::compute_assembly_vs_net_solver_times(const double totalSolverTime, const double totalAssemblyTime) {
+      
+    std::cout << std::endl << "   *** Nonlinear Solver TIME: " << std::setw (11) << std::setprecision (6) << std::fixed
+              << totalSolverTime <<  " = assembly TIME( " << totalAssemblyTime << " ) + "
+              << " solver TIME( " << totalSolverTime - totalAssemblyTime << " ) " << std::endl;
+
+    _totalAssemblyTime += totalAssemblyTime;
+    _totalSolverTime += totalSolverTime - totalAssemblyTime;
+  
+   }
+   
+   
+// ********************************************
   void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::MGsolve (const MgSmootherType& mgSmootherType) {
 
     _bitFlipCounter = 0;
 
-    clock_t start_mg_time = clock();
+    unsigned AMRCounter = 0;
+
+    clock_t start_mg_time = total_mg_time_begin();
 
     double totalAssemblyTime = 0.;
 
+   //---------------------
     unsigned grid0;
 
     if (_mg_type == F_CYCLE) {
@@ -62,50 +109,53 @@ namespace femus {
       std::cout << "wrong CYCLE type for this solver " << std::endl;
       abort();
     }
-
-    unsigned AMRCounter = 0;
+   //---------------------
+   
 
     for (unsigned igridn = grid0; igridn < _gridn; igridn++) {    //_igridn
         
       std::cout << std::endl << "   ****** Start Level Max " << igridn + 1 << " ******" << std::endl;
-      clock_t start_nl_time = clock();
+      
+            
+//***************
+      clock_t start_nl_time = nonlinear_time_begin();
+      
 
       bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn - 1u) ? 1 : 0;
 
-    restart:
+   //---------------------
+      restart:
       if (ThisIsAMR) _solution[igridn]->InitAMREps();
 
-
-      
-      
-     nonlinear_solve_single_level(mgSmootherType, totalAssemblyTime, grid0, igridn);
  
-     
-     
-     
+        nonlinear_solve_single_level(mgSmootherType, totalAssemblyTime, grid0, igridn);
+ 
 
       if (_bitFlipOccurred && _bitFlipCounter == 1) {
         goto restart;
       }
+   //---------------------
 
       if (igridn + 1 < _gridn) ProlongatorSol (igridn + 1);
 
       if (ThisIsAMR) AddAMRLevel (AMRCounter);
 
+  
+      nonlinear_time_end(start_nl_time);
+//***************
 
-      std::cout << std::endl << "   ****** Nonlinear-Cycle TIME: " << std::setw (11) << std::setprecision (6) << std::fixed
-                << static_cast<double> ( (clock() - start_nl_time)) / CLOCKS_PER_SEC << std::endl;
 
       std::cout << std::endl << "   ****** End Level Max " << igridn + 1 << " ******" << std::endl;
+      
+      
     }
+    
 
-    double totalSolverTime = static_cast<double> ( (clock() - start_mg_time)) / CLOCKS_PER_SEC;
-    std::cout << std::endl << "   *** Nonlinear Solver TIME: " << std::setw (11) << std::setprecision (6) << std::fixed
-              << totalSolverTime <<  " = assembly TIME( " << totalAssemblyTime << " ) + "
-              << " solver TIME( " << totalSolverTime - totalAssemblyTime << " ) " << std::endl;
-
-    _totalAssemblyTime += totalAssemblyTime;
-    _totalSolverTime += totalSolverTime - totalAssemblyTime;
+    double totalSolverTime = total_mg_time_end(start_mg_time);
+    
+    
+    compute_assembly_vs_net_solver_times(totalSolverTime, totalAssemblyTime);
+  
     
   }
 

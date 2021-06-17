@@ -65,8 +65,8 @@ namespace femus
 
     const int initialization_val = std::numeric_limits<int>::max();/*-1; this is not working in parallel*/
 
-   std::cout << "---------------- " << initialization_val;
     int first_different_i     = initialization_val;
+    
     int i = first_local_index();
 
     do {

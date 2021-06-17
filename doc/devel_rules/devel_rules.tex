@@ -552,6 +552,16 @@ you pick for the quadrature the ones that guarantees exactness for the highest-d
       
    \section{Assemble function of each System}
    
+    The purpose of the assemble function is to fill Jacobian and Residual.
+    
+    Then, one solves for the Error of the Unknowns, and that error
+    goes to update the Unknowns in the MLSolution container.
+    
+     In fact, ultimately the Print function acts on the MLSolution components,
+     so the difference between having a System or not 
+     is that the System solves for the Errors and then uses those errors to update the MLSolution.
+   
+   
      The systems are practically always BLOCK-type. 
      They in fact may involve multiple scalar unknowns and therefore you have a block structure.
      
