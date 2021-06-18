@@ -373,16 +373,16 @@ void Files::ComposeOutdirName(const bool use_output_time_folder) {
 
 //****** Proc0 broadcasts the string size and the string content to every proc    
 #ifdef HAVE_MPI
-  MPI_Bcast(&outchar_size,1,MPI_INT,0,MPI_COMM_WORLD);
+  MPI_Bcast(&outchar_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
 
 out_char = new char[outchar_size +1]; //for the null
 
-  if (paral::get_rank() == 0)   std::strcpy(out_char,new_out.c_str());
+  if (paral::get_rank() == 0)   std::strcpy(out_char, new_out.c_str());
 
 
 #ifdef HAVE_MPI
-MPI_Bcast(out_char,outchar_size,MPI_CHAR,0,MPI_COMM_WORLD);
+MPI_Bcast(out_char, outchar_size, MPI_CHAR, 0, MPI_COMM_WORLD);
 #endif
 
  out_char[outchar_size] = NULL; //HEY MAYBE NOT 100% ORTHODOX BUT OTHERWISE IT DOESN'T WORK!!!

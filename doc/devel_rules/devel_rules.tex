@@ -44,23 +44,36 @@
  
  \section{Externally installed}
  
+ \subsection{MPI}
+    
+     There are direct MPI calls
+ 
  \subsection{Petsc}
 
  \subsection{Slepc}
 
- \subsection{MPI}
- 
  \subsection{HDF5}
+ 
+ \subsection{Boost}
+    
+      For certain little tasks
+ 
  
  \section{Internally shipped}
  
+ \subsection{b64}
+    
+     For encoding in output VTK files
+ 
  \subsection{Adept}
  
- \subsection{b64}
+    For automatic differentiation
  
  \subsection{json}
  
+    For input info
 
+    
 \part{Compiling environment: CMake}
 
 
@@ -1209,7 +1222,17 @@ che causa il segmentation fault.
 Per fare questo conviene USARE LE PETSC in DEBUG MODE 
 e vedere quale output ti danno;
 cosi' vedi le chiamate all'interno della libreria petsc.
+
+
+  \subsubsection{Parallel numbers different from serial numbers}
   
+  
+  That means that the matrices and rhs are filled differently in serial and parallel
+  
+  We then must print either the Element Matrix and Rhs or the Global Matrix and Rhs 
+  and see
+
+
 
   \chapter{Documentation}
   

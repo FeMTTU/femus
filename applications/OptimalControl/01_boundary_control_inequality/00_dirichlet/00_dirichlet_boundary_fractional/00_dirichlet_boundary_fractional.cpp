@@ -41,7 +41,7 @@
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
   #define KEEP_ADJOINT_PUSH   1
-#define IS_CTRL_FRACTIONAL_SOBOLEV   0
+#define IS_CTRL_FRACTIONAL_SOBOLEV   1
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -252,7 +252,7 @@ int main(int argc, char** args) {
   
   // ======= Files ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
+  const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -447,8 +447,8 @@ int main(int argc, char** args) {
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "off");
   //----
   
-  system.MGsolve();
-//   system.assemble_call(1);
+//   system.MGsolve();
+  system.assemble_call(1);
   
   // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;

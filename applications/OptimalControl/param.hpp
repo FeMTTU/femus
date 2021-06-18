@@ -15,10 +15,13 @@
 
 #include <functional>
 
+#include <boost/mpi.hpp>
+
+
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  3
-#define N_ERASED_LEVELS   2
+#define N_UNIFORM_LEVELS  1
+#define N_ERASED_LEVELS   0
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -54,7 +57,7 @@ namespace femus {
  double InequalityConstraint(const std::vector<double> & dof_obj_coord, const bool upper) {
 
      double constr_value = 0.;
-     double constr_value_upper =  0.001;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
+     double constr_value_upper =  0.03;// dof_obj_coord[1]*(1. - dof_obj_coord[1]);
      double constr_value_lower = -1000.; //-3.e-13;
      assert(constr_value_lower < constr_value_upper); 
      
@@ -1068,29 +1071,72 @@ void el_dofs_unknowns_vol(const Solution*                sol,
   vector < double > phi_x;
   phi_x.reserve(maxSize * dim);
   
+ 
+///   boost::mpi::communicator world(MPI_COMM_WORLD, boost::mpi::comm_attach);  /// @todo future solution: broadcast whole class instances
+  
   
    for(int kproc = 0; kproc < nprocs; kproc++) {
        
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
-// --- geometry        
-        geom_element_jel.set_coords_at_dofs_and_geom_type(jel, solType_coords);
+// --- geometry
+   // all these little vectors are filled in one proc and broadcast to all       
 
-        short unsigned jelGeom = geom_element_jel.geom_type();
-              
+        // --- 
+//         short unsigned jelGeom = geom_element_jel.geom_type();
+         // --- 
+
+        // --- 
+        unsigned nDof_jel_coords;
+      if(kproc == iproc) {
+        nDof_jel_coords = msh->GetElementDofNumber(jel, solType_coords);
+    }
+        std::cout << iproc << " " << kproc << " (888) "  << nDof_jel_coords << std::endl;
+     MPI_Bcast(& nDof_jel_coords, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+        // ---       
+      
+        std::cout << iproc << " " << kproc << " (999) "  << nDof_jel_coords << std::endl;
+        
+        
+        // --- coords - other way
+      if(kproc == iproc) {
+        geom_element_jel.set_coords_at_dofs_and_geom_type(jel, solType_coords);
+      }
+      for(unsigned k = 0; k < dim; k++) {
+        MPI_Bcast(& geom_element_jel.get_coords_at_dofs()[k][0], nDof_jel_coords, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      }
+      for(unsigned k = 0; k < space_dim; k++) {
+        MPI_Bcast(& geom_element_jel.get_coords_at_dofs_3d()[k][0], nDof_jel_coords, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      }
+// --- coords - other way
+
+      if(kproc == iproc) {
         geom_element_jel.set_elem_center(jel, solType_coords);
+      }
+        MPI_Bcast(& geom_element_jel.get_elem_center()[0], space_dim, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+
 // --- geometry        
+
+
+
+
         
-        
- //***************************************************
-   el_dofs_unknowns_vol(sol, msh, pdeSys, jel,
-                        SolFEType_Mat,
-                        SolIndex_Mat,
-                        SolPdeIndex,
-                        Sol_n_el_dofs_Mat, 
-                        sol_eldofs_Mat,  
-                        L2G_dofmap_Mat);  //all unknowns here, perhaps we could restrict it to the ctrl components only
-  //***************************************************
+// // // all of this is not used right now in this routine        
+// // //       if(kproc == iproc) {
+// // //  //***************************************************
+// // //    el_dofs_unknowns_vol(sol, msh, pdeSys, jel,
+// // //                         SolFEType_Mat,
+// // //                         SolIndex_Mat,
+// // //                         SolPdeIndex,
+// // //                         Sol_n_el_dofs_Mat, 
+// // //                         sol_eldofs_Mat,  
+// // //                         L2G_dofmap_Mat);  //all unknowns here, perhaps we could restrict it to the ctrl components only
+// // //       }
+// // //         MPI_Bcast(& SolFEType_Mat[0], , MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+// // //         MPI_Bcast(& SolIndex_Mat[0], , MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+// // //         MPI_Bcast(& SolPdeIndex[0], , MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+// // //         MPI_Bcast(& Sol_n_el_dofs_Mat[0], , MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+// // //   //***************************************************
 
    
 	// Perform face loop over elements that contain some control face
@@ -1105,13 +1151,10 @@ void el_dofs_unknowns_vol(const Solution*                sol,
       
 // --- geom_el type
       short unsigned jelGeom;
-      unsigned nDof_jel_coords;
       if(kproc == iproc) {
           jelGeom = msh->GetElementType(jel); 
-        nDof_jel_coords = msh->GetElementDofNumber(jel, solType_coords);    // number of coordinate element dofs
     }
       MPI_Bcast(&jelGeom, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
-      MPI_Bcast(&nDof_jel_coords, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
 // --- geom_el type
       
 // --- coords - one way
@@ -1133,17 +1176,6 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // --- coords - one way
       
 
-// --- coords - other way
-      if(kproc == iproc) {
-        geom_element_jel.set_coords_at_dofs_and_geom_type(jel, solType_coords);
-      }
-      for(unsigned k = 0; k < dim; k++) {
-        MPI_Bcast(& geom_element_jel.get_coords_at_dofs()[k][0], nDof_jel_coords, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
-      }
-      for(unsigned k = 0; k < space_dim; k++) {
-        MPI_Bcast(& geom_element_jel.get_coords_at_dofs_3d()[k][0], nDof_jel_coords, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
-      }
-// --- coords - other way
 
 // --- 1 - geometry -----------------
 
