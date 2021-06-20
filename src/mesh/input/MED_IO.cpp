@@ -140,8 +140,6 @@ namespace femus {
   /// @todo why pass coords other than get it through the Mesh class pointer?
   void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag, const bool read_domain_groups_flag, const bool read_boundary_groups_flag) {
 
-    _print_info = true;  
-      
 
     Mesh& mesh = GetMesh();
     mesh.SetLevel(0);

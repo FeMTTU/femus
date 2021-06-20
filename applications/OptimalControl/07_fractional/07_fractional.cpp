@@ -23,8 +23,8 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
+#define N_UNIFORM_LEVELS  3
+#define N_ERASED_LEVELS   2
 //**************************************
 
 //***** Operator-related ****************** 
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 
   // ======= Files ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
+  const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -415,6 +415,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim + 2. * s_frac) / 2.) / (pow(M_PI, dim / 2.) * tgamma(1 -  s_frac)) ;
 
+    std::cout <<   msh->el->GetElementTypeArray().size() << std::endl;
+
+  
+  
   for(int kproc = 0; kproc < nprocs; kproc++) {
       
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
@@ -432,7 +436,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
       }
 
+        std::cout << jel << " " << iproc << " " << kproc << " (before bcast) "  << ielGeom2 << std::endl;
       MPI_Bcast(&ielGeom2, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
+        std::cout << jel << " " << iproc << " " << kproc << " (after  bcast) "  << ielGeom2 << std::endl;
       MPI_Bcast(&nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast(&nDofx2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       //MPI_Bcast(&n_face, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);

@@ -205,6 +205,8 @@ MED_IO::MED_IO (Mesh& mesh) :
        _geom_elems[4] = new GeomElemTri6();
        _geom_elems[5] = new GeomElemEdge3();
     
+    _print_info = false;
+      
 }
 
 inline

@@ -123,6 +123,13 @@ class CurrentElem {
     
    inline short unsigned int geom_type() const { return geom_elem_type; }
   
+  void   allocate_coords_at_dofs_3d(const unsigned int iel, 
+                                    const unsigned nDofx,
+                            const unsigned int xType);
+  
+  void   fill_coords_at_dofs_3d(const unsigned int iel, 
+                            const unsigned int xType);
+
    void set_coords_at_dofs_and_geom_type(const unsigned int dim,  const unsigned int xType);
    
    vector < vector < real_num_mov > > & get_coords_at_dofs() {  return _coords_at_dofs; }
@@ -136,6 +143,8 @@ class CurrentElem {
  
   
   void   set_coords_at_dofs_bdry_3d(const unsigned int iel, const unsigned int jface, const unsigned int solType_coords);
+
+  void   set_geom_type(const unsigned int iel) {    geom_elem_type = _mesh_new->GetElementType(iel); }
 
   private:
 
@@ -154,9 +163,13 @@ class CurrentElem {
   static constexpr unsigned int _space_dim = 3;
   
 // private functions
-  void   set_geom_type(const unsigned int iel) {    geom_elem_type = _mesh_new->GetElementType(iel); }
-
   void   set_coords_at_dofs(const unsigned int iel, 
+                            const unsigned int xType,
+                            std::vector < std::vector < real_num_mov > > & coords_at_dofs_in, 
+                            const unsigned int space_dim);
+  
+  void   allocate_coords_at_dofs(const unsigned int iel, 
+                            const unsigned nDofx,
                             const unsigned int xType,
                             std::vector < std::vector < real_num_mov > > & coords_at_dofs_in, 
                             const unsigned int space_dim);
@@ -225,6 +238,25 @@ template < typename real_num_mov >
     
     
 template < typename real_num_mov >
+ void    CurrentElem<real_num_mov>::fill_coords_at_dofs_3d(const unsigned int iel, const unsigned int xType) {
+     
+    // local storage of coordinates
+
+     const unsigned space_dim = 3;
+     
+   for (unsigned jdim = 0; jdim < space_dim; jdim++) {
+    for (unsigned i = 0; i < _coords_at_dofs_3d[jdim].size(); i++) {
+      unsigned xDof  = _mesh_new->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+          
+
+        _coords_at_dofs_3d[jdim][i] = (*_mesh_new->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+      }
+    }
+    
+ }
+ 
+ 
+template < typename real_num_mov >
  void    CurrentElem<real_num_mov>::set_coords_at_dofs_and_geom_type(const unsigned int iel, const unsigned int xType) {
      
      
@@ -236,7 +268,33 @@ template < typename real_num_mov >
     
     
   }
+  
+  
     
+template < typename real_num_mov >
+ void    CurrentElem<real_num_mov>::allocate_coords_at_dofs(const unsigned int iel, 
+                                                            const unsigned nDofx,
+                                                                     const unsigned int xType,
+                                                                     std::vector < std::vector < real_num_mov > > & coords_at_dofs_in, 
+                                                                     const unsigned int space_dim) {
+         
+//   unsigned nDofx = _mesh_new->GetElementDofNumber(iel, xType);
+      
+   for (int idim = 0; idim < space_dim; idim++)    coords_at_dofs_in[idim].resize(nDofx);
+
+    
+  }
+  
+
+template < typename real_num_mov >
+ void    CurrentElem<real_num_mov>::allocate_coords_at_dofs_3d(const unsigned int iel,
+                                                               const unsigned nDofx,
+                                                               const unsigned int xType) {
+         
+     allocate_coords_at_dofs(iel, nDofx, xType, _coords_at_dofs_3d, 3);
+    
+  }
+  
 
 template < typename real_num_mov >
  void    CurrentElem<real_num_mov>::set_coords_at_dofs(const unsigned int iel, 
@@ -248,11 +306,13 @@ template < typename real_num_mov >
       
    for (int idim = 0; idim < space_dim; idim++)    coords_at_dofs_in[idim].resize(nDofx);
    
+     
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
+      for (unsigned jdim = 0; jdim < space_dim; jdim++) {
+          
+    for (unsigned i = 0; i < coords_at_dofs_in[jdim].size(); i++) {
       unsigned xDof  = _mesh_new->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-      for (unsigned jdim = 0; jdim < space_dim; jdim++) {
         coords_at_dofs_in[jdim][i] = (*_mesh_new->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }

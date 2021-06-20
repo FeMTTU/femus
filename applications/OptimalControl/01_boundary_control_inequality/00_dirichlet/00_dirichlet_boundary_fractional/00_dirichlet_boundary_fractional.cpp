@@ -252,7 +252,7 @@ int main(int argc, char** args) {
   
   // ======= Files ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = true;
+  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -269,9 +269,9 @@ int main(int argc, char** args) {
 
   
 //   std::string input_file = "parametric_square_1x1.med";
-//   std::string input_file = "parametric_square_1x2.med";
+  std::string input_file = "parametric_square_1x2.med"; //parallel works here, with 1 lev
 //   std::string input_file = "parametric_square_2x2.med";
-  std::string input_file = "parametric_square_4x5.med";
+//   std::string input_file = "parametric_square_4x5.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
@@ -502,7 +502,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
-  unsigned    nprocs = msh->n_processors(); // get the process_id (for parallel computation)
+  unsigned    nprocs = msh->n_processors();
 
   constexpr bool print_algebra_global = false;
   constexpr bool print_algebra_local = false;
@@ -790,6 +790,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
     const unsigned int n_components_ctrl = 1;
     const unsigned int first_loc_comp_ctrl = 0;
+
+  std::cout <<   msh->el->GetElementTypeArray().size() << std::endl;
+//   std::cout <<   msh->el->GetElementTypeArray().begin() << std::endl;
+//   std::cout <<   msh->el->GetElementTypeArray().end() << std::endl;
+  std::cout <<   msh->el->GetElementTypeArray() << std::endl;
+
+
     
   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   

@@ -1073,9 +1073,19 @@ void el_dofs_unknowns_vol(const Solution*                sol,
   
  
 ///   boost::mpi::communicator world(MPI_COMM_WORLD, boost::mpi::comm_attach);  /// @todo future solution: broadcast whole class instances
+
+
+  std::cout <<   msh->el->GetElementTypeArray().size() << std::endl;
+//   std::cout <<   msh->el->GetElementTypeArray().begin() << std::endl;
+//   std::cout <<   msh->el->GetElementTypeArray().end() << std::endl;
+  std::cout <<   msh->el->GetElementTypeArray() << std::endl;
+  std::cout <<   nprocs << std::endl;
+  
   
   
    for(int kproc = 0; kproc < nprocs; kproc++) {
+       
+//        msh->el->LocalizeElementQuantities(kproc);
        
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
@@ -1083,24 +1093,34 @@ void el_dofs_unknowns_vol(const Solution*                sol,
    // all these little vectors are filled in one proc and broadcast to all       
 
         // --- 
-//         short unsigned jelGeom = geom_element_jel.geom_type();
-         // --- 
-
-        // --- 
         unsigned nDof_jel_coords;
-      if(kproc == iproc) {
+      if (iproc == kproc) {
         nDof_jel_coords = msh->GetElementDofNumber(jel, solType_coords);
-    }
-        std::cout << iproc << " " << kproc << " (888) "  << nDof_jel_coords << std::endl;
+      }
+//         std::cout << jel << " " << iproc << " " << kproc << " (before bcast) "  << nDof_jel_coords << std::endl;
      MPI_Bcast(& nDof_jel_coords, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
-        // ---       
-      
-        std::cout << iproc << " " << kproc << " (999) "  << nDof_jel_coords << std::endl;
+//         std::cout << jel << iproc << " " << kproc << " (after  bcast) "  << nDof_jel_coords << std::endl;
+    // ---       
         
+        // --- 
+        short unsigned jel_geom;
+  std::cout << iproc << " iiiiiiii " <<  kproc << std::endl;
         
+      if (iproc == kproc) {
+//         geom_element_jel.set_geom_type(jel);
+//         jel_geom = geom_element_jel.geom_type();
+       jel_geom = msh->GetElementType(jel);
+        std::cout << jel << " " << iproc << " " << kproc << " (before bcast) "  << jel_geom << std::endl;
+     }
+      MPI_Bcast(& jel_geom, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
+        std::cout << jel << " " << iproc << " " << kproc << " (after  bcast) "  << jel_geom << std::endl;
+        // --- 
+
         // --- coords - other way
+        geom_element_jel.allocate_coords_at_dofs_3d(jel, nDof_jel_coords, solType_coords);
+        
       if(kproc == iproc) {
-        geom_element_jel.set_coords_at_dofs_and_geom_type(jel, solType_coords);
+        geom_element_jel.fill_coords_at_dofs_3d(jel, solType_coords);
       }
       for(unsigned k = 0; k < dim; k++) {
         MPI_Bcast(& geom_element_jel.get_coords_at_dofs()[k][0], nDof_jel_coords, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
