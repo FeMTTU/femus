@@ -1191,11 +1191,21 @@ To be added
  Fine, it works.
  
   \subsubsection{Use valgrind!!!}
+  
+  You could run valgrind in parallel
+  
+ mpiexec -n 2 valgrind myapp
+  
+  
 
  \subsubsection{Command}
 
- mpiexec -n 2 femus-dbg -start\_in\_debugger
+ mpiexec -n 2 myapp -start\_in\_debugger
+ 
+ \subsubsection{Command, better with kdbg!}
 
+ mpiexec -n 2 kdbg myapp
+ 
  \subsubsection{Segfaults}
 
 If you use -info it tells you a lot of things about PETSC calls.

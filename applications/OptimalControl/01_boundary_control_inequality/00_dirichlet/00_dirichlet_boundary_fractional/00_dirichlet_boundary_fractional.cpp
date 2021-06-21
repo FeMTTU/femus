@@ -252,7 +252,7 @@ int main(int argc, char** args) {
   
   // ======= Files ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
+  const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -269,7 +269,7 @@ int main(int argc, char** args) {
 
   
 //   std::string input_file = "parametric_square_1x1.med";
-  std::string input_file = "parametric_square_1x2.med"; //parallel works here, with 1 lev
+  std::string input_file = "parametric_square_1x2.med"; //parallel works here, only with 1 lev
 //   std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "parametric_square_4x5.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
@@ -796,7 +796,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //   std::cout <<   msh->el->GetElementTypeArray().end() << std::endl;
   std::cout <<   msh->el->GetElementTypeArray() << std::endl;
 
-
+  std::cout << "lev " <<  level << std::endl;
     
   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   

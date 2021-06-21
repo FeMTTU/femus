@@ -20,8 +20,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  1
-#define N_ERASED_LEVELS   0
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -1079,12 +1079,11 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 //   std::cout <<   msh->el->GetElementTypeArray().begin() << std::endl;
 //   std::cout <<   msh->el->GetElementTypeArray().end() << std::endl;
   std::cout <<   msh->el->GetElementTypeArray() << std::endl;
-  std::cout <<   nprocs << std::endl;
-  
-  
   
    for(int kproc = 0; kproc < nprocs; kproc++) {
        
+  const int proc_to_bcast_from = kproc;
+  
 //        msh->el->LocalizeElementQuantities(kproc);
        
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
@@ -1094,26 +1093,23 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
         // --- 
         unsigned nDof_jel_coords;
+         
       if (iproc == kproc) {
         nDof_jel_coords = msh->GetElementDofNumber(jel, solType_coords);
       }
-//         std::cout << jel << " " << iproc << " " << kproc << " (before bcast) "  << nDof_jel_coords << std::endl;
-     MPI_Bcast(& nDof_jel_coords, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
-//         std::cout << jel << iproc << " " << kproc << " (after  bcast) "  << nDof_jel_coords << std::endl;
+     MPI_Bcast(& nDof_jel_coords, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
     // ---       
         
-        // --- 
-        short unsigned jel_geom;
-  std::cout << iproc << " iiiiiiii " <<  kproc << std::endl;
-        
+    // --- 
+         unsigned short  jel_geommm;
       if (iproc == kproc) {
+       jel_geommm = msh->el->GetElementType(jel);
+//         std::cout  << " current_proc " << iproc << " from external_proc " << kproc << " elem " << jel << " (before bcast) "  << jel_geommm << std::endl;
 //         geom_element_jel.set_geom_type(jel);
 //         jel_geom = geom_element_jel.geom_type();
-       jel_geom = msh->GetElementType(jel);
-        std::cout << jel << " " << iproc << " " << kproc << " (before bcast) "  << jel_geom << std::endl;
      }
-      MPI_Bcast(& jel_geom, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
-        std::cout << jel << " " << iproc << " " << kproc << " (after  bcast) "  << jel_geom << std::endl;
+      MPI_Bcast(& jel_geommm, 1, MPI_UNSIGNED_SHORT, proc_to_bcast_from, MPI_COMM_WORLD);
+//         std::cout << " current_proc " << iproc << " from external_proc " << kproc << " elem " << jel << " (after  bcast) "  << jel_geommm << std::endl;
         // --- 
 
         // --- coords - other way
@@ -1123,22 +1119,19 @@ void el_dofs_unknowns_vol(const Solution*                sol,
         geom_element_jel.fill_coords_at_dofs_3d(jel, solType_coords);
       }
       for(unsigned k = 0; k < dim; k++) {
-        MPI_Bcast(& geom_element_jel.get_coords_at_dofs()[k][0], nDof_jel_coords, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+        MPI_Bcast(& geom_element_jel.get_coords_at_dofs()[k][0], nDof_jel_coords, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
       }
       for(unsigned k = 0; k < space_dim; k++) {
-        MPI_Bcast(& geom_element_jel.get_coords_at_dofs_3d()[k][0], nDof_jel_coords, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+        MPI_Bcast(& geom_element_jel.get_coords_at_dofs_3d()[k][0], nDof_jel_coords, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
       }
 // --- coords - other way
 
       if(kproc == iproc) {
         geom_element_jel.set_elem_center(jel, solType_coords);
       }
-        MPI_Bcast(& geom_element_jel.get_elem_center()[0], space_dim, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+        MPI_Bcast(& geom_element_jel.get_elem_center()[0], space_dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
 
 // --- geometry        
-
-
-
 
         
 // // // all of this is not used right now in this routine        
@@ -1152,35 +1145,38 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // // //                         sol_eldofs_Mat,  
 // // //                         L2G_dofmap_Mat);  //all unknowns here, perhaps we could restrict it to the ctrl components only
 // // //       }
-// // //         MPI_Bcast(& SolFEType_Mat[0], , MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
-// // //         MPI_Bcast(& SolIndex_Mat[0], , MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
-// // //         MPI_Bcast(& SolPdeIndex[0], , MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
-// // //         MPI_Bcast(& Sol_n_el_dofs_Mat[0], , MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+// // //         MPI_Bcast(& SolFEType_Mat[0], , MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
+// // //         MPI_Bcast(& SolIndex_Mat[0], , MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
+// // //         MPI_Bcast(& SolPdeIndex[0], , MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
+// // //         MPI_Bcast(& Sol_n_el_dofs_Mat[0], , MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
 // // //   //***************************************************
 
    
 	// Perform face loop over elements that contain some control face
+        
+        
 	if ( volume_elem_contains_a_boundary_control_face(geom_element_jel.get_elem_center()) ) {
 
       
 // ***************************************
 // ******* jel-related stuff - BEGIN *************
 // ***************************************
-        
 // --- 1 - geometry -----------------
       
 // --- geom_el type
       short unsigned jelGeom;
       if(kproc == iproc) {
-          jelGeom = msh->GetElementType(jel); 
+          jelGeom = msh->el->GetElementType(jel); 
     }
-      MPI_Bcast(&jelGeom, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
+      MPI_Bcast(&jelGeom, 1, MPI_UNSIGNED_SHORT, proc_to_bcast_from, MPI_COMM_WORLD);
 // --- geom_el type
+
+        
       
 // --- coords - one way
       for(int k = 0; k < dim; k++) {  x2[k].resize(nDof_jel_coords);  }
 
-      
+    
       if(kproc == iproc) {
         for(unsigned j = 0; j < nDof_jel_coords; j++) {
           unsigned xDof  = msh->GetSolutionDof(j, jel, solType_coords);  // global to global mapping between coordinates node and coordinate dof
@@ -1191,11 +1187,11 @@ void el_dofs_unknowns_vol(const Solution*                sol,
        }
        
       for(unsigned k = 0; k < dim; k++) {
-        MPI_Bcast(& x2[k][0], nDof_jel_coords, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+        MPI_Bcast(& x2[k][0], nDof_jel_coords, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
       }
 // --- coords - one way
       
-
+ 
 
 // --- 1 - geometry -----------------
 
@@ -1207,7 +1203,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
         nDof_jel  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
       }
 
-      MPI_Bcast(&nDof_jel, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast(&nDof_jel, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
       
       
       sol_ctrl_jel.resize(nDof_jel);
@@ -1219,7 +1215,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
         }
       }
       
-      MPI_Bcast(& sol_ctrl_jel[0], nDof_jel, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      MPI_Bcast(& sol_ctrl_jel[0], nDof_jel, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
 // --- 2 - solution -----------------
 
       
@@ -1232,7 +1228,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
           l2gMap_jel[j] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, j, jel);  // global to global mapping between solution node and pdeSys dof
         }
       }
-      MPI_Bcast(&l2gMap_jel[0], nDof_jel, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast(&l2gMap_jel[0], nDof_jel, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
       // ******************************************************************
 // --- 3 - l2GMap -----------------
 
@@ -1245,8 +1241,20 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 //------------------------------------        
 //------------ jface opening ---------        
 //------------------------------------        
+      
+// --- 
+      unsigned n_faces;
+      if(kproc == iproc) {
+          n_faces = msh->GetElementFaceNumber(jel); 
+    }
+      MPI_Bcast(& n_faces, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
+// ---
+      
 	  // loop on faces of the current element
-	  for(unsigned jface = 0; jface < msh->GetElementFaceNumber(jel); jface++) {
+	  for(unsigned jface = 0; jface < n_faces; jface++) {
+          
+          
+       #ifdef removesomecodetosee
           
 // --- geometry        
        const unsigned jelGeom_bdry = msh->GetElementFaceType(jel, jface);    
@@ -1255,7 +1263,9 @@ void el_dofs_unknowns_vol(const Solution*                sol,
  
        geom_element_jel.set_elem_center_bdry_3d();
 // --- geometry        
-         
+
+       
+       
 	    if( face_is_a_boundary_control_face(msh->el, jel, jface) ) {
 //------------------------------------        
 //------------ jface opening ---------    
@@ -1351,10 +1361,10 @@ void el_dofs_unknowns_vol(const Solution*                sol,
         n_faces = bdry_bdry.size();
       }
 
-      MPI_Bcast(& n_faces, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+      MPI_Bcast(& n_faces, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
 
       bdry_bdry.resize(n_faces);
-      MPI_Bcast(& bdry_bdry[0], n_faces, MPI_INT, kproc, MPI_COMM_WORLD);  
+      MPI_Bcast(& bdry_bdry[0], n_faces, MPI_INT, proc_to_bcast_from, MPI_COMM_WORLD);  
 
 // ---- boundary faces in jface: compute and broadcast - END ----    
 
@@ -1855,12 +1865,20 @@ if( check_if_same_elem(iel, jel) ) {
 
 //----- jface ---        
         } //end if(bdry_index_j < 0)//end if(face_in_rectangle_domain_j == FACE_FOR_CONTROL)
+
+
+#endif
       } //end jface
+
  //----- jface ---   
  
      
 //----- jel ---        
     }  //end control elem flag j (control_flag_iel == 1
+    
+
+
+
    } //end jel
 //----- jel ---        
    

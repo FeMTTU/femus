@@ -116,7 +116,7 @@ class CurrentElem {
   // ========= NEW ===============================================================================
    inline const std::vector< real_num_mov > & get_elem_center_bdry() const {    return _elem_center_bdry_3d;  }
    inline const std::vector< real_num_mov > & get_elem_center()      const {    return _elem_center_3d;  }
-   inline  std::vector< real_num_mov >  get_elem_center()       {    return _elem_center_3d;  }
+   inline  std::vector< real_num_mov > & get_elem_center()       {    return _elem_center_3d;  }
     
    void  set_elem_center(const unsigned int iel, const unsigned int xType);
    void  set_elem_center_bdry_3d();
