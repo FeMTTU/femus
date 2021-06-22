@@ -840,7 +840,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
         
       const short unsigned ielGeom = geom_element_iel.geom_type();
       
-      geom_element_iel.set_elem_center(iel, solType_coords);
+      geom_element_iel.set_elem_center_3d(iel, solType_coords);
   // geometry end *****************************
   
   // equation *****************************
@@ -862,12 +862,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   //***** set target domain flag ********************************** 
 
    int target_flag = 0;
-       target_flag = ElementTargetFlag(geom_element_iel.get_elem_center());
+       target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d());
    //***************************************       
    
  //************ set control flag *********************
     int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
+        control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
     std::vector< std::vector<int> > control_node_flag(dim);
 	    for(unsigned idim=0; idim < dim; idim++) {
 	          control_node_flag[idim].resize(nDofsGctrl);
@@ -959,7 +959,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		   //we use the dirichlet flag to say: if dirichlet == true, we set 1 on the diagonal. if dirichlet == false, we put the boundary equation
 		  std::vector<bool> dir_bool(dim);
 		  for(unsigned idim = 0; idim < dim; idim++) {
-		      dir_bool[idim] = /*false; //*/ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry(),ctrl_name[idim].c_str(),tau,face_in_rectangle_domain,0.);
+		      dir_bool[idim] = /*false; //*/ml_sol->GetBdcFunction()(geom_element_iel.get_elem_center_bdry_3d(),ctrl_name[idim].c_str(),tau,face_in_rectangle_domain,0.);
 		  }
 	  
 	
@@ -1727,10 +1727,10 @@ double integral_g_dot_n = 0.;
   //*************************************** 
   
   //***** set target domain flag ********************************** 
-  geom_element_iel.set_elem_center(iel, solType_coords);
+  geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center());
+   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d());
 //***************************************       
     
     
@@ -1773,7 +1773,7 @@ double integral_g_dot_n = 0.;
  
  //************ set control flag *********************
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center());
+        control_el_flag = ControlDomainFlag_bdry(geom_element_iel.get_elem_center_3d());
   std::vector< std::vector<int> > control_node_flag(dim);
 	    for(unsigned idim=0; idim<dim; idim++) {
 	      control_node_flag[idim].resize(nDofsVctrl);

@@ -548,16 +548,16 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       
       
   //************* set target domain flag **************
-   geom_element.set_elem_center(iel, solType_coords);
+   geom_element.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element.get_elem_center());
+   target_flag = ElementTargetFlag(geom_element.get_elem_center_3d());
  //*************************************************** 
    
 
  //************ set control flag *********************
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
+        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center_3d());
   std::vector<int> control_node_flag(Sol_n_el_dofs_Mat[pos_mat_ctrl],0);
  //*************************************************** 
  
@@ -600,7 +600,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               
  //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl].c_str(), tau, face_in_rectangle_domain, 0.);
+	      bool  dir_bool = ml_sol->GetBdcFunction()(geom_element.get_elem_center_bdry_3d(), Solname_Mat[pos_mat_ctrl].c_str(), tau, face_in_rectangle_domain, 0.);
 
  //=================================================== 
         
@@ -926,11 +926,11 @@ if (assembleMatrix) KK->close();  ///@todo is it needed? I think so
                         SolFEType_Mat, SolIndex_Mat, SolPdeIndex,
                         Sol_n_el_dofs_Mat, sol_eldofs_Mat, L2G_dofmap_Mat);
 
-   geom_element.set_elem_center(iel, solType_coords);
+   geom_element.set_elem_center_3d(iel, solType_coords);
 
  //************ set control flag *********************
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
+        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center_3d());
 //  *************************************************** 
 
 // Perform face loop over elements that contain some control face
@@ -1149,10 +1149,10 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
     const short unsigned ielGeom = geom_element.geom_type();
 
   //************* set target domain flag **************
-   geom_element.set_elem_center(iel, solType_coords);
+   geom_element.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element.get_elem_center());
+   target_flag = ElementTargetFlag(geom_element.get_elem_center_3d());
  //***************************************************
 
    
@@ -1205,7 +1205,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  // ==================================================
  //****** set control flag ***************************
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center());
+        control_el_flag = ControlDomainFlag_bdry(geom_element.get_elem_center_3d());
  //***************************************************
 
   

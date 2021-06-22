@@ -105,7 +105,7 @@ void neumann_loop_1d(const MultiLevelProblem *    ml_prob,
        geom_element.set_elem_center_bdry_3d();
        
        std::vector  <  double > xx_face_elem_center(3, 0.); 
-          xx_face_elem_center = geom_element.get_elem_center_bdry();
+          xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
         
        const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
        
@@ -195,7 +195,7 @@ void neumann_loop_2d3d(const MultiLevelProblem *    ml_prob,
        
        
        std::vector  <  double > xx_face_elem_center(3, 0.); 
-          xx_face_elem_center = geom_element.get_elem_center_bdry();
+          xx_face_elem_center = geom_element.get_elem_center_bdry_3d();
         
        const int boundary_index = msh->el->GetFaceElementIndex(iel, jface);
        

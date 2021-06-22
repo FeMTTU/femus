@@ -395,11 +395,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
         
     const short unsigned ielGeom = geom_element.geom_type();
     
-   geom_element.set_elem_center(iel, solType_coords);
+   geom_element.set_elem_center_3d(iel, solType_coords);
 
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element.get_elem_center());
+   target_flag = ElementTargetFlag(geom_element.get_elem_center_3d());
  //*************************************************** 
    
     
@@ -520,7 +520,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag_internal_restriction(geom_element.get_elem_center());
+  control_el_flag = ControlDomainFlag_internal_restriction(geom_element.get_elem_center_3d());
   std::vector<int> control_node_flag(nDof_ctrl,0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 
@@ -1004,15 +1004,15 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
     const short unsigned ielGeom = geom_element.geom_type();
 
   //************* set target domain flag **************
-   geom_element.set_elem_center(iel, solType_coords);
+   geom_element.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element.get_elem_center());
+   target_flag = ElementTargetFlag(geom_element.get_elem_center_3d());
  //*************************************************** 
 
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag_internal_restriction(geom_element.get_elem_center());
+  control_el_flag = ControlDomainFlag_internal_restriction(geom_element.get_elem_center_3d());
  //*************************************************** 
    
  //**************** state **************************** 

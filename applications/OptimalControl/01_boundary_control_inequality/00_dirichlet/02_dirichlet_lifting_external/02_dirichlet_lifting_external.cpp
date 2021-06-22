@@ -523,7 +523,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
             }
          //************** later try to avoid repeating this - end
                     
-           interface_elem_flag[jface] = find_control_boundary_nodes(interface_node_flag, geom_element.get_elem_center_bdry(), nDofu_bdry, iel, jface, msh);
+           interface_elem_flag[jface] = find_control_boundary_nodes(interface_node_flag, geom_element.get_elem_center_bdry_3d(), nDofu_bdry, iel, jface, msh);
     
         }
          //setting up control boundary region - end ***************************

@@ -269,9 +269,9 @@ int main(int argc, char** args) {
 
   
 //   std::string input_file = "parametric_square_1x1.med";
-  std::string input_file = "parametric_square_1x2.med"; //parallel works here, only with 1 lev
+//   std::string input_file = "parametric_square_1x2.med"; //parallel works here, only with 1 lev
 //   std::string input_file = "parametric_square_2x2.med";
-//   std::string input_file = "parametric_square_4x5.med";
+  std::string input_file = "parametric_square_4x5.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
@@ -791,12 +791,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     const unsigned int n_components_ctrl = 1;
     const unsigned int first_loc_comp_ctrl = 0;
 
-  std::cout <<   msh->el->GetElementTypeArray().size() << std::endl;
-//   std::cout <<   msh->el->GetElementTypeArray().begin() << std::endl;
-//   std::cout <<   msh->el->GetElementTypeArray().end() << std::endl;
-  std::cout <<   msh->el->GetElementTypeArray() << std::endl;
 
-  std::cout << "lev " <<  level << std::endl;
     
   if ( IS_CTRL_FRACTIONAL_SOBOLEV ) {
   
@@ -958,7 +953,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         
     const short unsigned ielGeom = geom_element_iel.geom_type();
 
-    geom_element_iel.set_elem_center(iel, solType_coords);
+    geom_element_iel.set_elem_center_3d(iel, solType_coords);
 // -------
     
 
@@ -992,7 +987,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       
   //************* set target domain flag **************
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center());
+   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //*************************************************** 
    
 
@@ -1002,7 +997,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   //*************************************************** 
  
 
-	if ( volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center()) ) {
+	if ( volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center_3d()) ) {
 	  
 	  std::vector<double> normal(space_dim, 0.);
 	       
@@ -1345,7 +1340,7 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
 // -------
    geom_element_iel.set_coords_at_dofs_and_geom_type(iel, solType_coords);
       
-   geom_element_iel.set_elem_center(iel, solType_coords);
+   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 // -------
    
 // -------
@@ -1354,7 +1349,7 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
                         Sol_n_el_dofs_Mat_vol, sol_eldofs_Mat, L2G_dofmap_Mat);
 // -------
 
-	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center() ) ) {
+	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 
 
     	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {
@@ -1568,10 +1563,10 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
     const short unsigned ielGeom = geom_element_iel.geom_type();
 
   //************* set target domain flag **************
-   geom_element_iel.set_elem_center(iel, solType_coords);
+   geom_element_iel.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center());
+   target_flag = ElementTargetFlag(geom_element_iel.get_elem_center_3d());
  //***************************************************
 
    
@@ -1622,7 +1617,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
  //***************************************************
 
   
-	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center() ) ) {
+	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
 	  
 	       
 	  for(unsigned iface = 0; iface < msh->GetElementFaceNumber(iel); iface++) {

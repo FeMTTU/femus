@@ -736,10 +736,10 @@ std::cout << " ********************************  AD SYSTEM *********************
   //*************************************** 
   
   //***** set target domain flag ********************************** 
-  geom_element.set_elem_center(iel, solType_coords);
+  geom_element.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element.get_elem_center()/*elem_center*/);
+   target_flag = ElementTargetFlag(geom_element.get_elem_center_3d()/*elem_center*/);
 //***************************************   
     
     
@@ -1289,10 +1289,10 @@ double	integral_gamma  = 0.;
   //*************************************** 
   
   //***** set target domain flag ********************************** 
-   geom_element.set_elem_center(iel, solType_coords);
+   geom_element.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element.get_elem_center());
+   target_flag = ElementTargetFlag(geom_element.get_elem_center_3d());
 //***************************************       
     
     
@@ -1602,10 +1602,10 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
   // equation end *****************************
   
   //***** set target domain flag ********************************** 
-   geom_element.set_elem_center(iel, solType_coords);
+   geom_element.set_elem_center_3d(iel, solType_coords);
 
    int target_flag = 0;
-   target_flag = ElementTargetFlag(geom_element.get_elem_center()/*elem_center*/);
+   target_flag = ElementTargetFlag(geom_element.get_elem_center_3d()/*elem_center*/);
    //***************************************       
   
    //STATE###################################################################  

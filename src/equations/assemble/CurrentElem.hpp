@@ -114,11 +114,12 @@ class CurrentElem {
 
   
   // ========= NEW ===============================================================================
-   inline const std::vector< real_num_mov > & get_elem_center_bdry() const {    return _elem_center_bdry_3d;  }
-   inline const std::vector< real_num_mov > & get_elem_center()      const {    return _elem_center_3d;  }
-   inline  std::vector< real_num_mov > & get_elem_center()       {    return _elem_center_3d;  }
+   inline const std::vector< real_num_mov > & get_elem_center_bdry_3d() const {    return _elem_center_bdry_3d;  }
+   inline std::vector< real_num_mov > & get_elem_center_bdry_3d() {    return _elem_center_bdry_3d;  }
+   inline const std::vector< real_num_mov > & get_elem_center_3d()      const {    return _elem_center_3d;  }
+   inline  std::vector< real_num_mov > & get_elem_center_3d()       {    return _elem_center_3d;  }
     
-   void  set_elem_center(const unsigned int iel, const unsigned int xType);
+   void  set_elem_center_3d(const unsigned int iel, const unsigned int xType);
    void  set_elem_center_bdry_3d();
     
    inline short unsigned int geom_type() const { return geom_elem_type; }
@@ -137,6 +138,7 @@ class CurrentElem {
    const vector < vector < real_num_mov > > & get_coords_at_dofs() const {  return _coords_at_dofs; }
    const vector < vector < real_num_mov > > & get_coords_at_dofs_3d() const {  return _coords_at_dofs_3d; }
    const vector < vector < real_num_mov > > & get_coords_at_dofs_bdry_3d() const {  return _coords_at_dofs_bdry_3d; }
+   vector < vector < real_num_mov > > & get_coords_at_dofs_bdry_3d() {  return _coords_at_dofs_bdry_3d; }
    
    const real_num_mov & get_coords_at_dofs(const unsigned int idim,  const unsigned int idof) const {  return _coords_at_dofs[idim][idof]; }
    const real_num_mov & get_coords_at_dofs_3d(const unsigned int idim,  const unsigned int idof) const {  return _coords_at_dofs_3d[idim][idof]; }
@@ -347,7 +349,7 @@ template < typename real_num_mov >
 ///Compute the element center
 
 template < typename real_num_mov >
-  void CurrentElem<real_num_mov>::set_elem_center(const unsigned int iel, const unsigned int solType_coords) {
+  void CurrentElem<real_num_mov>::set_elem_center_3d(const unsigned int iel, const unsigned int solType_coords) {
 
   unsigned nDofx = _mesh_new->GetElementDofNumber(iel, solType_coords);
 

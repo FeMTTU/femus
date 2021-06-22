@@ -1548,7 +1548,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
                   
        std::vector< double > face_center(3, 0.); 
        
-//        face_center = geom_element.get_elem_center_bdry(); //old method
+//        face_center = geom_element.get_elem_center_bdry_3d(); //old method
        
         for (unsigned d = 0; d < face_center.size(); d++) {
                         face_center[d] = (*ml_msh.GetLevel(lev)->_topology->_Sol[d])(idof);
@@ -1779,7 +1779,7 @@ bool or_vector(const int current_face, const std::vector< int > all_face_flags) 
        
 //          //========= check face center ================================================
 //        std::vector< double > face_center(3, 0.); 
-//        face_center = geom_element.get_elem_center_bdry(); //old method
+//        face_center = geom_element.get_elem_center_bdry_3d(); //old method
 //        
 //        std::cout << "Face center ====" << std::endl;
 //        

@@ -20,8 +20,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -597,7 +597,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
          
 	  for (unsigned c = 0; c < n_components_ctrl; c++) {
           
-	      const bool  dir_bool = ml_sol->GetBdcFunctionMLProb()(ml_prob, geom_element_iel.get_elem_center_bdry(), Solname_Mat[pos_mat_ctrl + c].c_str(), tau, face_in_rectangle_domain, 0.);
+	      const bool  dir_bool = ml_sol->GetBdcFunctionMLProb()(ml_prob, geom_element_iel.get_elem_center_bdry_3d(), Solname_Mat[pos_mat_ctrl + c].c_str(), tau, face_in_rectangle_domain, 0.);
 
 	      if (dir_bool == false) { 
 
@@ -1075,16 +1075,12 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 ///   boost::mpi::communicator world(MPI_COMM_WORLD, boost::mpi::comm_attach);  /// @todo future solution: broadcast whole class instances
 
 
-  std::cout <<   msh->el->GetElementTypeArray().size() << std::endl;
-//   std::cout <<   msh->el->GetElementTypeArray().begin() << std::endl;
-//   std::cout <<   msh->el->GetElementTypeArray().end() << std::endl;
-  std::cout <<   msh->el->GetElementTypeArray() << std::endl;
+
   
    for(int kproc = 0; kproc < nprocs; kproc++) {
        
   const int proc_to_bcast_from = kproc;
   
-//        msh->el->LocalizeElementQuantities(kproc);
        
     for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
@@ -1127,9 +1123,9 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // --- coords - other way
 
       if(kproc == iproc) {
-        geom_element_jel.set_elem_center(jel, solType_coords);
+        geom_element_jel.set_elem_center_3d(jel, solType_coords);
       }
-        MPI_Bcast(& geom_element_jel.get_elem_center()[0], space_dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
+        MPI_Bcast(& geom_element_jel.get_elem_center_3d()[0], space_dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
 
 // --- geometry        
 
@@ -1155,7 +1151,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 	// Perform face loop over elements that contain some control face
         
         
-	if ( volume_elem_contains_a_boundary_control_face(geom_element_jel.get_elem_center()) ) {
+	if ( volume_elem_contains_a_boundary_control_face(geom_element_jel.get_elem_center_3d()) ) {
 
       
 // ***************************************
@@ -1254,23 +1250,45 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 	  for(unsigned jface = 0; jface < n_faces; jface++) {
           
           
-       #ifdef removesomecodetosee
-          
 // --- geometry        
-       const unsigned jelGeom_bdry = msh->GetElementFaceType(jel, jface);    
-       
+       unsigned jelGeom_bdry;
+       if(kproc == iproc) {
+           jelGeom_bdry = msh->GetElementFaceType(jel, jface);
+        }  
+      MPI_Bcast(& jelGeom_bdry, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
+
+      
+      unsigned coords_at_dofs_bdry_3d_size = 0;
+       if(kproc == iproc) {
        geom_element_jel.set_coords_at_dofs_bdry_3d(jel, jface, solType_coords);
- 
+       coords_at_dofs_bdry_3d_size = geom_element_jel.get_coords_at_dofs_bdry_3d()[0].size();  ///@todo all coords have the same ndofs
+        }  
+      MPI_Bcast(& coords_at_dofs_bdry_3d_size, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
+      for(unsigned k = 0; k < space_dim; k++) {
+         MPI_Bcast(& geom_element_jel.get_coords_at_dofs_bdry_3d()[k][0], coords_at_dofs_bdry_3d_size, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
+      }
+      
+
+       if(kproc == iproc) {
        geom_element_jel.set_elem_center_bdry_3d();
+        }  
+      for(unsigned k = 0; k < space_dim; k++) {
+        MPI_Bcast(& geom_element_jel.get_elem_center_bdry_3d()[0], space_dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
+      }
 // --- geometry        
 
-       
-       
-	    if( face_is_a_boundary_control_face(msh->el, jel, jface) ) {
+     /*bool*/int jface_is_a_boundary_control;
+       if(kproc == iproc) {
+           jface_is_a_boundary_control = face_is_a_boundary_control_face(msh->el, jel, jface);
+       }
+      MPI_Bcast(& jface_is_a_boundary_control, 1, MPI_INTEGER, proc_to_bcast_from, MPI_COMM_WORLD);
+
+      
+	    if( jface_is_a_boundary_control ) {
 //------------------------------------        
 //------------ jface opening ---------    
 //------------------------------------        
-            
+
             
 
 // // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
@@ -1283,17 +1301,20 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // Now, it has to be jel jface  - iel iface - iqp_bdry jqp_bdry
 // The two quadrature loops must be the innermost. In this way you exclude all non-needed volume elements and all non-needed faces, so that you minimize the number of inner ifs. You keep them outside as much as possible
 // There will be a storage of jqp_bdry
+
             
       const unsigned n_jqp_bdry = ml_prob.GetQuadratureRuleMultiple(qrule_j, jelGeom_bdry).GetGaussPointsNumber();
 
-      vector < vector < double > > x_jqp_bdry(n_jqp_bdry);
-      vector < double > weight_jqp_bdry(n_jqp_bdry);
-      vector < vector < double > > phi_ctrl_jel_bdry_jqp_bdry(n_jqp_bdry);
-      vector < vector < double > > phi_ctrl_x_jel_bdry_jqp_bdry(n_jqp_bdry);
-      vector < vector < double > > phi_coords_jel_bdry_jqp_bdry(n_jqp_bdry);
-      vector < vector < double > > phi_coords_x_jel_bdry_jqp_bdry(n_jqp_bdry);
+      std::vector < std::vector < double > > x_jqp_bdry(n_jqp_bdry);
+      std::vector < double > weight_jqp_bdry(n_jqp_bdry);
+      std::vector < std::vector < double > > phi_ctrl_jel_bdry_jqp_bdry(n_jqp_bdry);
+      std::vector < std::vector < double > > phi_ctrl_x_jel_bdry_jqp_bdry(n_jqp_bdry);
+      std::vector < std::vector < double > > phi_coords_jel_bdry_jqp_bdry(n_jqp_bdry);
+      std::vector < std::vector < double > > phi_coords_x_jel_bdry_jqp_bdry(n_jqp_bdry);
       std::vector< double > sol_ctrl_jqp_bdry(n_jqp_bdry, 0.);
 
+
+      
          for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
 
     elem_all[qrule_j][jelGeom_bdry][solType_coords]->JacJacInv(geom_element_jel.get_coords_at_dofs_bdry_3d(), jqp_bdry, Jac_jel_bdry_jqp_bdry, JacI_jel_bdry_jqp_bdry, detJac_jel_bdry_jqp_bdry, space_dim);
@@ -1320,7 +1341,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 //--- solution
     sol_ctrl_jqp_bdry[jqp_bdry] = 0.;
 	      for (int j_bdry = 0; j_bdry < phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry].size()/*Sol_n_el_dofs_quantities[pos_sol_ctrl]*/; j_bdry++)  {
-		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(jel, jface, j_bdry);
+		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(jel, jface, j_bdry);  ///@todo this needs a version with broadcast
 			
 			sol_ctrl_jqp_bdry[jqp_bdry] +=  /*sol_eldofs_Mat[pos_mat_ctrl]*/sol_ctrl_jel[j_vol] * phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j_bdry];
 
@@ -1334,8 +1355,9 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
 // // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
 // // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
+   #ifdef removesomecodetosee
 
-            
+    
 // ---- boundary faces in jface: compute and broadcast - BEGIN ----
 // This is only needed for when the boundary is a 2D face. We'll look at it later on
 // look for what face of jface are on the boundary of the domain
@@ -1343,7 +1365,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // TODO: instead of faceIndex we want to have the new group condition that we impose 
 // on the boundary of the boundary.
 
-   
+
       std::vector <int> bdry_bdry(0);
       unsigned n_faces;
 
@@ -1378,12 +1400,12 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
         short unsigned ielGeom = geom_element_iel.geom_type();
               
-        geom_element_iel.set_elem_center(iel, solType_coords);
+        geom_element_iel.set_elem_center_3d(iel, solType_coords);
 // --- geometry        
 
       
 	// Perform face loop over elements that contain some control face
-	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center() ) ) {
+	if ( volume_elem_contains_a_boundary_control_face( geom_element_iel.get_elem_center_3d() ) ) {
         
 // ***************************************
 // ******* iel-related stuff - BEGIN *************
@@ -1862,12 +1884,13 @@ if( check_if_same_elem(iel, jel) ) {
   } //end iel
 //----- iel ---        
 
+           #endif
 
 //----- jface ---        
-        } //end if(bdry_index_j < 0)//end if(face_in_rectangle_domain_j == FACE_FOR_CONTROL)
+     
+} //end if(bdry_index_j < 0)//end if(face_in_rectangle_domain_j == FACE_FOR_CONTROL)
 
 
-#endif
       } //end jface
 
  //----- jface ---   
@@ -1957,7 +1980,7 @@ if( check_if_same_elem(iel, jel) ) {
 
             const short unsigned ielGeom = geom_element_iel.geom_type();
 
-           geom_element_iel.set_elem_center(iel, solType_coords);
+           geom_element_iel.set_elem_center_3d(iel, solType_coords);
 // --- geometry        
 
            
@@ -2005,7 +2028,7 @@ if( check_if_same_elem(iel, jel) ) {
   //*************************************************** 
       
 
-    if ( volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center()) ) {
+    if ( volume_elem_contains_a_boundary_control_face(geom_element_iel.get_elem_center_3d()) ) {
         
 	  
 	  // loop on faces of the current element
