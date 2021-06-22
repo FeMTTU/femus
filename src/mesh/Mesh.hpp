@@ -109,13 +109,17 @@ public:
     /** Only for parallel */
     unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const;
 
+    /**  */
+    unsigned GetLocalFaceVertexIndex_PassElemType(const short unsigned & el_type, const unsigned& iface, const unsigned& jnode) const;
 
     /** Only for parallel */
     unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
 
     /** Only for parallel */
-    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const;
+    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type = 1) const;  ///@todo why is the default like this
 
+    unsigned GetElementFaceNumber_PassElemType(const short unsigned & el_type, const unsigned& type = 1) const;
+    
     void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType = 2);
 
     /** Set the grid number */

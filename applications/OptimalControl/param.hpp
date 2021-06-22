@@ -20,8 +20,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
+#define N_UNIFORM_LEVELS  3
+#define N_ERASED_LEVELS   2
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -32,8 +32,8 @@
 
 
 //*********************** Sets the regularization parameters *******************************************************
-#define ALPHA_CTRL_BDRY 0.//1.e-2
-#define BETA_CTRL_BDRY  1.//1.e-2
+#define ALPHA_CTRL_BDRY 1.e-2
+#define BETA_CTRL_BDRY  1.e-2
 
 
 #define ALPHA_CTRL_VOL 1.e-3
@@ -1341,7 +1341,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 //--- solution
     sol_ctrl_jqp_bdry[jqp_bdry] = 0.;
 	      for (int j_bdry = 0; j_bdry < phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry].size()/*Sol_n_el_dofs_quantities[pos_sol_ctrl]*/; j_bdry++)  {
-		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(jel, jface, j_bdry);  ///@todo this needs a version with broadcast
+		    unsigned int j_vol = msh->GetLocalFaceVertexIndex_PassElemType(jel_geommm, jface, j_bdry);
 			
 			sol_ctrl_jqp_bdry[jqp_bdry] +=  /*sol_eldofs_Mat[pos_mat_ctrl]*/sol_ctrl_jel[j_vol] * phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j_bdry];
 
@@ -1355,7 +1355,6 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
 // // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
 // // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
-   #ifdef removesomecodetosee
 
     
 // ---- boundary faces in jface: compute and broadcast - BEGIN ----
@@ -1366,30 +1365,31 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // on the boundary of the boundary.
 
 
-      std::vector <int> bdry_bdry(0);
+       std::vector< int > bdry_bdry(0);
       unsigned n_faces;
-
-      if(iproc == kproc) {
-        for(unsigned j_bd_face = 0; j_bd_face < msh->GetElementFaceNumber(jface); j_bd_face++) {
-          int faceIndex = msh->el->GetBoundaryIndex(jface, j_bd_face); // TODO find a new condition and correct msh->GetElementFaceNumber
-
-          // look for boundary faces of the boundary
-          if(faceIndex >= 1) {
-            unsigned i = bdry_bdry.size();
-            bdry_bdry.resize(i + 1);
-            bdry_bdry[i] = jface;
-          }
-        }
-        n_faces = bdry_bdry.size();
-      }
-
-      MPI_Bcast(& n_faces, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
-
-      bdry_bdry.resize(n_faces);
-      MPI_Bcast(& bdry_bdry[0], n_faces, MPI_INT, proc_to_bcast_from, MPI_COMM_WORLD);  
+/// 
+///       if(iproc == kproc) {
+///         for(unsigned j_bd_face = 0; j_bd_face < msh->GetElementFaceNumber_PassElemType(jelGeom_bdry); j_bd_face++) {
+///           int faceIndex = msh->el->GetBoundaryIndex(jface, j_bd_face); /// TODO find a new condition and correct msh->GetElementFaceNumber ///@todo this is wrong
+/// 
+///           // look for boundary faces of the boundary
+///           if(faceIndex >= 1) {
+///             unsigned i = bdry_bdry.size();
+///             bdry_bdry.resize(i + 1);
+///             bdry_bdry[i] = jface;
+///           }
+///         }
+///         n_faces = bdry_bdry.size();
+///       }
+/// 
+///       MPI_Bcast(& n_faces, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
+/// 
+///       bdry_bdry.resize(n_faces);
+///       MPI_Bcast(& bdry_bdry[0], n_faces, MPI_INT, proc_to_bcast_from, MPI_COMM_WORLD);  
 
 // ---- boundary faces in jface: compute and broadcast - END ----    
 
+//    #ifdef removesomecodetosee
 
               
        for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -1788,7 +1788,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 //               for(unsigned i = 0; i < nDof_iel; i++) {
            for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) { //dofs of test function
                		    unsigned int l_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
-               		    unsigned int l_vol_jel = msh->GetLocalFaceVertexIndex(jel, jface, l_bdry);
+               		    unsigned int l_vol_jel = msh->el->GetIG(jel_geommm, jface, l_bdry)/*msh->GetLocalFaceVertexIndex(jel, jface, l_bdry)*/;
 
                 Res_nonlocal_iel[ l_vol_iel ]      +=      - common_weight * (sol_ctrl_iqp_bdry - sol_ctrl_jqp_bdry[jqp_bdry]) * (phi_ctrl_iel_bdry_iqp_bdry[l_bdry]);
 
@@ -1798,7 +1798,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 //                 for(unsigned j = 0; j < nDof_jel; j++) {
            for(unsigned m_bdry = 0; m_bdry < phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry].size(); m_bdry++) { //dofs of unknown function
                		    unsigned int m_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, m_bdry);
-               		    unsigned int m_vol_jel = msh->GetLocalFaceVertexIndex(jel, jface, m_bdry);
+               		    unsigned int m_vol_jel = msh->el->GetIG(jel_geommm, jface, m_bdry)/*msh->GetLocalFaceVertexIndex(jel, jface, m_bdry)*/;
 
              /*  u(x) v(x)*/     KK_nonlocal_iel_iel[ l_vol_iel * nDof_jel + m_vol_iel ] += common_weight *          phi_ctrl_iel_bdry_iqp_bdry[m_bdry]            *    phi_ctrl_iel_bdry_iqp_bdry[l_bdry];
 
@@ -1884,7 +1884,7 @@ if( check_if_same_elem(iel, jel) ) {
   } //end iel
 //----- iel ---        
 
-           #endif
+//            #endif
 
 //----- jface ---        
      

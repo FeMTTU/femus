@@ -1179,6 +1179,11 @@ namespace femus {
     return el->GetIG(GetElementType(iel), iface, jnode);
   }
 
+  /** this needs the abstract elem type */
+  unsigned Mesh::GetLocalFaceVertexIndex_PassElemType(const short unsigned & el_type, const unsigned& iface, const unsigned& jnode) const {
+    return el->GetIG(el_type, iface, jnode);
+  }
+
 
   /** Only for parallel */
   unsigned Mesh::GetElementFaceDofNumber(const unsigned& iel, const unsigned jface, const unsigned& type) const {
@@ -1189,6 +1194,11 @@ namespace femus {
   /** Only for parallel */
   unsigned Mesh::GetElementFaceNumber(const unsigned& iel, const unsigned& type) const {
     return el->GetNFC(GetElementType(iel), type);
+  }
+  
+  /** this needs the abstract elem type */
+  unsigned Mesh::GetElementFaceNumber_PassElemType(const short unsigned & el_type, const unsigned& type) const {
+    return el->GetNFC(el_type, type);
   }
 
 // *******************************************************
