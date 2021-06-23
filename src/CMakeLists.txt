@@ -7,6 +7,62 @@ PROJECT(femus)
 #############################################################################################
 
 SET(femus_src 
+00_utils/FemusInit.cpp
+00_utils/Files.cpp
+00_utils/input_parser/InputParser.cpp
+00_utils/input_parser/JsonInputParser.cpp
+01_mesh/gencase/Box.cpp
+01_mesh/gencase/Domain.cpp
+01_mesh/gencase/ElemSto.cpp
+01_mesh/gencase/MultiLevelMeshTwo.cpp
+01_mesh/gencase/GenCase.cpp
+01_mesh/00_geom_elements/GeomElemBase.cpp
+01_mesh/00_geom_elements/GeomElemHex8.cpp
+01_mesh/00_geom_elements/GeomElemHex27.cpp
+01_mesh/00_geom_elements/GeomElemQuad4.cpp
+01_mesh/00_geom_elements/GeomElemQuad9.cpp
+01_mesh/00_geom_elements/GeomElemTet4.cpp
+01_mesh/00_geom_elements/GeomElemTet10.cpp
+01_mesh/00_geom_elements/GeomElemTri3.cpp
+01_mesh/00_geom_elements/GeomElemTri6.cpp
+01_mesh/00_geom_elements/GeomElemTri7.cpp
+01_mesh/00_geom_elements/GeomElemEdge2.cpp
+01_mesh/00_geom_elements/GeomElemEdge3.cpp
+01_mesh/01_input/MeshGeneration.cpp
+01_mesh/01_input/GambitIO.cpp
+01_mesh/01_input/MED_IO.cpp
+01_mesh/02_partitioning/MeshPartitioning.cpp
+01_mesh/02_partitioning/MeshMetisPartitioning.cpp
+01_mesh/02_partitioning/MeshASMPartitioning.cpp
+01_mesh/03_refinement/MeshRefinement.cpp
+01_mesh/Elem.cpp
+01_mesh/Mesh.cpp
+01_mesh/MultiLevelMesh.cpp
+01_mesh/obj_io.cpp
+02_solution/MultiLevelSolution.cpp
+02_solution/Solution.cpp
+02_solution/01_output/Writer.cpp
+02_solution/01_output/VTKWriter.cpp
+02_solution/01_output/GMVWriter.cpp
+02_solution/01_output/XDMFWriter.cpp
+03_equations/assemble/Quantity.cpp
+03_equations/assemble/DofMap.cpp
+03_equations/assemble/Assemble_jacobian.cpp
+03_equations/assemble/Assemble_unknown.cpp
+03_equations/assemble/BoundaryConditions.cpp
+03_equations/assemble/CurrentElem.cpp
+03_equations/assemble/CurrentQuantity.cpp
+03_equations/assemble/SystemTwo.cpp
+03_equations/ExplicitSystem.cpp
+03_equations/ImplicitSystem.cpp
+03_equations/LinearImplicitSystem.cpp
+03_equations/MonolithicFSINonLinearImplicitSystem.cpp
+03_equations/NonLinearImplicitSystem.cpp
+03_equations/NonLinearImplicitSystemWithPrimalDualActiveSetMethod.cpp
+03_equations/MultiLevelProblem.cpp
+03_equations/System.cpp
+03_equations/TimeLoop.cpp
+03_equations/TransientSystem.cpp
 algebra/DenseMatrixBase.cpp
 algebra/DenseMatrix.cpp
 algebra/DenseSubmatrix.cpp
@@ -27,24 +83,6 @@ algebra/SparseMatrix.cpp
 algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
 algebra/SlepcSVD.cpp
-equations/assemble/Quantity.cpp
-equations/assemble/DofMap.cpp
-equations/assemble/Assemble_jacobian.cpp
-equations/assemble/Assemble_unknown.cpp
-equations/assemble/BoundaryConditions.cpp
-equations/assemble/CurrentElem.cpp
-equations/assemble/CurrentQuantity.cpp
-equations/assemble/SystemTwo.cpp
-equations/ExplicitSystem.cpp
-equations/ImplicitSystem.cpp
-equations/LinearImplicitSystem.cpp
-equations/MonolithicFSINonLinearImplicitSystem.cpp
-equations/NonLinearImplicitSystem.cpp
-equations/NonLinearImplicitSystemWithPrimalDualActiveSetMethod.cpp
-equations/MultiLevelProblem.cpp
-equations/System.cpp
-equations/TimeLoop.cpp
-equations/TransientSystem.cpp
 fe/ElemType.cpp
 fe/ElemType_template.cpp
 fe/ElemType_template_base.cpp
@@ -57,34 +95,6 @@ fe/Wedge.cpp
 ism/Marker.cpp
 ism/PolynomialBases.cpp
 ism/Line.cpp
-mesh/gencase/Box.cpp
-mesh/gencase/Domain.cpp
-mesh/gencase/ElemSto.cpp
-mesh/gencase/MultiLevelMeshTwo.cpp
-mesh/gencase/GenCase.cpp
-mesh/geom_elements/GeomElemBase.cpp
-mesh/geom_elements/GeomElemHex8.cpp
-mesh/geom_elements/GeomElemHex27.cpp
-mesh/geom_elements/GeomElemQuad4.cpp
-mesh/geom_elements/GeomElemQuad9.cpp
-mesh/geom_elements/GeomElemTet4.cpp
-mesh/geom_elements/GeomElemTet10.cpp
-mesh/geom_elements/GeomElemTri3.cpp
-mesh/geom_elements/GeomElemTri6.cpp
-mesh/geom_elements/GeomElemTri7.cpp
-mesh/geom_elements/GeomElemEdge2.cpp
-mesh/geom_elements/GeomElemEdge3.cpp
-mesh/Elem.cpp
-mesh/Mesh.cpp
-mesh/MultiLevelMesh.cpp
-mesh/obj_io.cpp
-mesh/input/MeshGeneration.cpp
-mesh/input/GambitIO.cpp
-mesh/input/MED_IO.cpp
-mesh/refinement/MeshRefinement.cpp
-mesh/partitioning/MeshPartitioning.cpp
-mesh/partitioning/MeshMetisPartitioning.cpp
-mesh/partitioning/MeshASMPartitioning.cpp
 parallel/MyMatrix.cpp
 parallel/MyVector.cpp
 physics/Fluid.cpp
@@ -92,26 +102,16 @@ physics/Material.cpp
 physics/Parameter.cpp
 physics/Solid.cpp
 quadrature/GaussPoints.cpp
-solution/MultiLevelSolution.cpp
-solution/Solution.cpp
-solution/output/Writer.cpp
-solution/output/VTKWriter.cpp
-solution/output/GMVWriter.cpp
-solution/output/XDMFWriter.cpp
-utils/FemusInit.cpp
-utils/Files.cpp
-utils/input_parser/InputParser.cpp
-utils/input_parser/JsonInputParser.cpp
 uq/uq.cpp
 uq/sparseGrid.cpp
 )
 
 # IF(HAVE_HDF5)
 #   SET(femus_src ${femus_src} 
-#   mesh/input/MED_IO.cpp
-#   solution/output/XDMFWriter.cpp
-#   mesh/gencase/GenCase.cpp
-#   equations/TimeLoop.cpp
+#   01_mesh/input/MED_IO.cpp
+#   02_solution/01_output/XDMFWriter.cpp
+#   01_mesh/gencase/GenCase.cpp
+#   03_equations/TimeLoop.cpp
 #   )
 # ENDIF(HAVE_HDF5) 
 
