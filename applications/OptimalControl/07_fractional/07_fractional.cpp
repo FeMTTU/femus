@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 
   // ======= Files ========================
   const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = true;
+  const bool redirect_cout_to_file = false;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -415,8 +415,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
   double C_ns = 2 * (1 - USE_Cns) + USE_Cns * s_frac * pow(2, (2. * s_frac)) * tgamma((dim + 2. * s_frac) / 2.) / (pow(M_PI, dim / 2.) * tgamma(1 -  s_frac)) ;
 
-    std::cout <<   msh->el->GetElementTypeArray().size() << std::endl;
-
   
   
   for(int kproc = 0; kproc < nprocs; kproc++) {
@@ -436,9 +434,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
       }
 
-        std::cout << jel << " " << iproc << " " << kproc << " (before bcast) "  << ielGeom2 << std::endl;
       MPI_Bcast(&ielGeom2, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
-        std::cout << jel << " " << iproc << " " << kproc << " (after  bcast) "  << ielGeom2 << std::endl;
       MPI_Bcast(&nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       MPI_Bcast(&nDofx2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
       //MPI_Bcast(&n_face, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
@@ -1288,15 +1284,15 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
   }
 
 
-  printf("L2 integral on processor %d = %f \n", iproc, integral_iproc_L2);
+  std::cout << "L2 integral on processor " << iproc << std::setprecision(40) << ": " << integral_iproc_L2 << std::endl;
 
   double J_L2 = 0.;
   MPI_Allreduce(&integral_iproc_L2, &J_L2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
 
   std::cout << "L2 integral after Allreduce: " << sqrt(J_L2) << std::endl;
 
+  std::cout << "H1 integral on processor " << iproc << std::setprecision(40) << ": " << integral_iproc_H1 << std::endl;
 
-  printf("H1 integral on processor %d = %f \n", iproc, integral_iproc_H1);
 
   double J_H1 = 0.;
   MPI_Allreduce(&integral_iproc_H1, &J_H1, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
@@ -1473,10 +1469,10 @@ void GetHsNorm(const unsigned level,  MultiLevelProblem& ml_prob)
 
   ////////////////////////////////////////
 
-  printf("H-1/2 integral on processor %d = %.40f \n", iproc, integral_iproc_Hhalf);
+  std::cout << "H-1/2 integral on processor " << iproc  << std::setprecision(40) << ": " << integral_iproc_Hhalf << std::endl;
 
   double J = 0.;
-  MPI_Allreduce(&integral_iproc_Hhalf, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     //THIS IS THE RIGHT ONE!!
+  MPI_Allreduce(&integral_iproc_Hhalf, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
   std::cout << "H-1/2 integral after Allreduce squared: " << J << std::endl;
   std::cout << "H-1/2 integral after Allreduce: " << sqrt(J) << std::endl;

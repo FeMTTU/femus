@@ -39,8 +39,8 @@
 //**************************************
 
 //***** Operator-related ****************** 
-  #define RHS_ONE             0.
-  #define KEEP_ADJOINT_PUSH   1
+  #define RHS_ONE             1.
+  #define KEEP_ADJOINT_PUSH   0
 #define IS_CTRL_FRACTIONAL_SOBOLEV   1
 #define S_FRAC 0.5
 
@@ -1701,10 +1701,10 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
   
   
   ////////////////////////////////////////
-       std::cout << "integral on processor: " << total_integral << std::endl;
+       std::cout << "integral on processor " << iproc << ": " << total_integral << std::endl;
 
    double J = 0.;
-      MPI_Allreduce( &total_integral, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );  //THIS IS THE RIGHT ONE!!
+      MPI_Allreduce( &total_integral, &J, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
 
     std::cout << "@@@@@@@@@@@@@@@@ functional value: " << J << std::endl;
