@@ -87,10 +87,6 @@ codeblocks/
 *_dbg
 *_pro
 # gencase also the subfolder are ignored!
-gencase_opt
-gencase_dbg
-gencase_pro
-navier
 
 #log files
 *.log

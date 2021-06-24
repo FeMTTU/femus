@@ -1021,18 +1021,6 @@ void el_dofs_unknowns_vol(const Solution*                sol,
   std::vector < double > sol_ctrl_iel;
   std::vector < double > sol_ctrl_jel;
     
-  //------- geometry ---------------
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-
-//   vector < vector < double > > x1(dim);
-  vector < vector < double > > x2(dim);
-  for(unsigned k = 0; k < dim; k++) {
-//     x1[k].reserve(max_size);
-    x2[k].reserve(max_size);
-  }
- 
-  //------- geometry ---------------
- 
  
  
   //-------- local to global mappings --------------
@@ -1157,40 +1145,6 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // ***************************************
 // ******* jel-related stuff - BEGIN *************
 // ***************************************
-// --- 1 - geometry -----------------
-      
-// --- geom_el type
-      short unsigned jelGeom;
-      if(kproc == iproc) {
-          jelGeom = msh->el->GetElementType(jel); 
-    }
-      MPI_Bcast(&jelGeom, 1, MPI_UNSIGNED_SHORT, proc_to_bcast_from, MPI_COMM_WORLD);
-// --- geom_el type
-
-        
-      
-// --- coords - one way
-      for(int k = 0; k < dim; k++) {  x2[k].resize(nDof_jel_coords);  }
-
-    
-      if(kproc == iproc) {
-        for(unsigned j = 0; j < nDof_jel_coords; j++) {
-          unsigned xDof  = msh->GetSolutionDof(j, jel, solType_coords);  // global to global mapping between coordinates node and coordinate dof
-          for(unsigned k = 0; k < dim; k++) {
-            x2[k][j] = (*msh->_topology->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
-          }
-        }
-       }
-       
-      for(unsigned k = 0; k < dim; k++) {
-        MPI_Bcast(& x2[k][0], nDof_jel_coords, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
-      }
-// --- coords - one way
-      
- 
-
-// --- 1 - geometry -----------------
-
 
 // --- 2 - solution -----------------
       unsigned nDof_jel;
