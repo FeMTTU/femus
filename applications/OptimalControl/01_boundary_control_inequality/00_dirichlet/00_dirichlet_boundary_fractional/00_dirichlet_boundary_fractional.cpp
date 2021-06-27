@@ -88,19 +88,20 @@
 ///@todo Review the ordering for phi_ctrl_x_bdry
 ///@todo check computation of 2nd derivatives in elem_type_template
 ///@todo Implement rather fast way to add inequality constraint to a problem
-///@todo If I have a mesh that has 1 element only at the coarse level, can I run it in parallel? I need to factorize the ReadCoarseMesh function
 ///@todo merge elliptic_nonlin in here
 ///@todo What if I did a Point domain, could I solve ODEs in time like this? :)
 ///@todo Re-double check that things are fine in elem_type_template, probably remove _gauss_bdry!
 ///@todo See if with Petsc you can enforce Dirichlet conditions using NEGATIVE indices
-///@todo Do Parallel ComputeIntegral
 ///@todo Remove the prints, possible cause of slowing down (maybe do assert)
 ///@todo The \mu/actflag pieces are now basically separated, except for setting to zero on Omega minus Gamma_c (such as is done for control)
 ///@todo put assembleMatrix everywhere there is a filling of the matrix!
-///@todo I tried the assembly alone and it seems fine (well, actually there are problems in parallel...). The problem seems to be in the Solve part... am I doing something weird there?
-///@todo the compare function is probably responsible for parallel slowing down!
 ///@todo Give the option to provide your own name to the run folder instead of the time instant. I think I did something like this when running with the external script already
-
+///@todo June '21: in parallel there are some additions. 
+// Either in 2d or 3d.
+// Either with or without inequality
+// Either with or without unbounded
+// It seems like the assembly is fine, and there is an error in the update of the control variable in the PDAS algorithm...
+// res0 e' corretto, perche' e' prima della risoluzione. Poi con res1 sembra che add_vector vada a finire nel punto sbagliato
 
 using namespace femus;
 
@@ -271,10 +272,10 @@ int main(int argc, char** args) {
 
   
 //   std::string input_file = "parametric_square_1x1.med";
-//   std::string input_file = "parametric_square_1x2.med"; //parallel works here, only with 1 lev
-//   std::string input_file = "parametric_square_2x2.med";
+//   std::string input_file = "parametric_square_1x2.med";
+  std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "parametric_square_4x5.med";
-  std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
