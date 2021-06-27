@@ -395,7 +395,10 @@ To overcome this, do
 
  Elements only belong to one process
  
- Nodes belong to one process but then they are also Ghosted (for the other processes that ``own'' them)
+ Nodes belong to one process only, but then they are also Ghosted in the other processes that ``own'' them
+ 
+ 
+ 
  
     \subsection{MeshMetisPartitioning}
 
@@ -1242,7 +1245,28 @@ cosi' vedi le chiamate all'interno della libreria petsc.
   We then must print either the Element Matrix and Rhs or the Global Matrix and Rhs 
   and see
 
-
+  \subsubsection{How to visualize residuals, errors, matrices}
+  
+ 1)  Either you print them to file as NumericVector
+  
+ 2)  or you print them in Paraview as Solution objects
+  
+  1) If you print as NumericVectors you don't really see the subdivision between levels, processors, variables,
+     so one should do some print\_solution for that
+     
+     
+     Does a Solution have the same dofmap structure of the underlying NumericVector?
+     
+     Not exactly.
+     
+     In a Solution there is a vector of NumericVectors, one for each scalar unknown
+     
+     In the LINEAR EQUATION, there is a single NumericVector with all pieces attached.
+     
+     The dofmap structure in the Linear Equation is constructed based on the list of Solutions that are Unknowns
+     
+  
+  
 
   \chapter{Documentation}
   

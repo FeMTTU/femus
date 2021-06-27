@@ -226,7 +226,7 @@ _removeNullSpace[old_size + s] = false;
                         _msh->_ghostDofs[_SolType[i]][processor_id()], false, GHOSTED);
         }
         else {
-          std::vector <int> fake_ghost(1, _msh->_ownSize[_SolType[i]][processor_id()]);
+          std::vector <int> fake_ghost(1, _msh->_ownSize[_SolType[i]][processor_id()]);  ///@todo why do we need this fake ghost?
           _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()], _msh->_ownSize[_SolType[i]][processor_id()],
                         fake_ghost, false, GHOSTED);
         }
@@ -379,7 +379,7 @@ _removeNullSpace[old_size + s] = false;
 //   }
 
   /**
-   * Update _Sol
+   * Update _Sol: the solution is updated by adding to itself the Eps
    **/
 
   void Solution::UpdateSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* _EPS, const vector <vector <unsigned> > &KKoffset) {
@@ -431,7 +431,7 @@ _removeNullSpace[old_size + s] = false;
 
 
   /**
-   * Update _Res
+   * Update _Res: the residual is updated
    **/
 //--------------------------------------------------------------------------------
   void Solution::UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const vector <vector <unsigned> > &KKoffset) {

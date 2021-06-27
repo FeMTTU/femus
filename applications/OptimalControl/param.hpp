@@ -20,8 +20,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
+#define N_UNIFORM_LEVELS  1
+#define N_ERASED_LEVELS   0
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -662,7 +662,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
   }
   
   bool check_if_same_elem_bdry(const unsigned iel, const unsigned jel, const unsigned iface, const unsigned jface) {
-      
+
    return (iel == jel && iface == jface);
       
   }
@@ -671,7 +671,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
   
   void  set_dense_pattern_for_unknowns(NonLinearImplicitSystemWithPrimalDualActiveSetMethod  & system, const std::vector < Unknown > unknowns)  {
   
-//     system.init();   ///@todo Understand why I cannot put this here but it has to be in the main(), there must be some objects that get destroyed, passing the reference is not enough
+///     system.init();   ///@todo Understand why I cannot put this here but it has to be in the main(), there must be some objects that get destroyed, passing the reference is not enough
 
   const MultiLevelProblem &  ml_prob = system.GetMLProb();
   const MultiLevelMesh *  ml_mesh = ml_prob.GetMLMesh();
@@ -1055,15 +1055,14 @@ void el_dofs_unknowns_vol(const Solution*                sol,
  //----------------------
 
 //   phi_x as unused input of certain functions
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
   vector < double > phi_x;
-  phi_x.reserve(maxSize * dim);
+  phi_x.reserve(max_size * dim);
   
  
 ///   boost::mpi::communicator world(MPI_COMM_WORLD, boost::mpi::comm_attach);  /// @todo future solution: broadcast whole class instances
 
 
-
+  unsigned count_visits = 0;
   
    for(int kproc = 0; kproc < nprocs; kproc++) {
        
@@ -1193,15 +1192,15 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 //------------------------------------        
       
 // --- 
-      unsigned n_faces;
+      unsigned n_faces_jel;
       if(kproc == iproc) {
-          n_faces = msh->GetElementFaceNumber(jel); 
+          n_faces_jel = msh->GetElementFaceNumber(jel); 
     }
-      MPI_Bcast(& n_faces, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
+      MPI_Bcast(& n_faces_jel, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
 // ---
       
 	  // loop on faces of the current element
-	  for(unsigned jface = 0; jface < n_faces; jface++) {
+	  for(unsigned jface = 0; jface < n_faces_jel; jface++) {
           
           
 // --- geometry        
@@ -1320,7 +1319,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
 
        std::vector< int > bdry_bdry(0);
-      unsigned n_faces;
+///       unsigned n_faces;
 /// 
 ///       if(iproc == kproc) {
 ///         for(unsigned j_bd_face = 0; j_bd_face < msh->GetElementFaceNumber_PassElemType(jelGeom_bdry); j_bd_face++) {
@@ -1380,7 +1379,6 @@ void el_dofs_unknowns_vol(const Solution*                sol,
         KK_nonlocal_iel_jel.assign(nDof_iel * nDof_jel, 0.);   //resize
         KK_nonlocal_jel_iel.assign(nDof_jel * nDof_iel, 0.);   //resize
         KK_nonlocal_jel_jel.assign(nDof_jel * nDof_jel, 0.);   //resize
-//         Res_nonlocal.assign(nDof_iel, 0);    //resize
         Res_nonlocal_iel.assign(nDof_iel, 0.);    //resize
         Res_nonlocal_jel.assign(nDof_jel, 0.);    //resize
 
@@ -1475,7 +1473,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
 //========== compute gauss quantities on the boundary ===============================================
 //--- geom
-          vector < double > x_iqp_bdry(dim, 0.);  ///@todo is this dim or dim_bdry?
+          std::vector < double > x_iqp_bdry(dim, 0.);  ///@todo is this dim or dim_bdry?
 
             for(unsigned d = 0; d < x_iqp_bdry.size(); d++) {
 	      for (int i_bdry = 0; i_bdry < geom_element_iel.get_coords_at_dofs_bdry_3d()[d].size(); i_bdry++)  {
@@ -1503,6 +1501,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
           
             if( check_if_same_elem_bdry(iel, jel, iface, jface) ) {
               
+                count_visits++;
+                
        //============  Mass assembly - BEGIN ==================
            for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) {
                		    unsigned int l_vol = msh->GetLocalFaceVertexIndex(iel, iface, l_bdry);
@@ -1645,6 +1645,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // ********* BOUNDED PART - END ***************
 // ********* UNBOUNDED PART - BEGIN ***************
                 if( iqp_bdry == Quadrature_split_index ) { ///@todo is there a way to put this outside of the quadrature loop?
+                    
               mixed_integral(UNBOUNDED,
                               dim,
                               dim_bdry,
@@ -1850,8 +1851,7 @@ if( check_if_same_elem(iel, jel) ) {
  //----- jface ---   
  
      
-//----- jel ---        
-    }  //end control elem flag j (control_flag_iel == 1
+    }  //end control elem flag jel
     
 
 
@@ -1861,6 +1861,8 @@ if( check_if_same_elem(iel, jel) ) {
    
  } //end kproc
     
+    
+    std::cout << "iiiiiiiiii " << count_visits << std::endl;
     
   
   }

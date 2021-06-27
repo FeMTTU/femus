@@ -76,6 +76,9 @@ public:
   /** Sparsity pattern: print number of nonzeros per row */
   void sparsity_pattern_print_nonzeros(const std::string filename_base, const std::string on_or_off);
 
+  /** Print numeric vector with structure */
+  void print_with_structure(const unsigned iproc, const std::string filename_base, NumericVector * num_vec_in) const;
+
   /** To be Added */
   void SetResZero();
 
@@ -101,21 +104,43 @@ public:
     _numberOfGlobalVariables = numberOfGlobalVariables;
   }
   
-  // member data
+  
+  /** Pointer to underlying mesh */
   Mesh *_msh;
+  
+  /** To be Added */
   Solution *_solution;
+  
+  /** Vectors for error and residual */
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
+  
+  /** Matrix */
   SparseMatrix *_KK;
+  
+  /** AMR Matrix */
   SparseMatrix *_KKamr;
   
   
-  vector < vector <unsigned> > KKoffset;     // size [_SolPdeIndex.size() + 1][_nprocs]
-  vector < unsigned > KKghostsize;           // size [_nprocs]
-  vector < vector < int> > KKghost_nd;       // size [_nprocs][KKghostsize[i]]
-  vector <int> KKIndex;                      // size [_SolPdeIndex.size() + 1]
-  unsigned _gridn;                           // number of levels
-  vector < int > d_nnz;                      //number of non-zeros per row, on-diagonal
-  vector < int > o_nnz;                      //number of non-zeros per row, off-diagonal
+  /** size [_SolPdeIndex.size() + 1][_nprocs] */
+  std::vector < std::vector <unsigned> > KKoffset;
+  
+  /** size [_nprocs] */
+  std::vector < unsigned > KKghostsize;
+  
+  /** size [_nprocs][KKghostsize[i]] */
+  std::vector < std::vector < int> > KKghost_nd;
+  
+  /** size [_SolPdeIndex.size() + 1] : number of dofs for each variable, summed over all processors (expressed in offset mode) */
+  std::vector < int > KKIndex;
+  
+  /** number of levels */
+  unsigned _gridn;
+  
+  /** number of non-zeros per row, on-diagonal */
+  std::vector < int > d_nnz;
+  
+  /** number of non-zeros per row, off-diagonal */
+  std::vector < int > o_nnz;
   
   void SetSparsityPatternMinimumSize (const std::vector < unsigned> &minimumSize, const std::vector < unsigned > &variableIndex);
 
@@ -125,13 +150,21 @@ protected:
   unsigned GetIndex(const char name[]);
 
   // member data
-  vector <unsigned> _SolPdeIndex;
-  vector <int> _SolType;
-  vector <char*> _SolName;
-  const vector <NumericVector*> *_Bdc;
-  vector <bool> _SparsityPattern;
+  /** size: number of unknowns */
+  std::vector <unsigned> _SolPdeIndex;
+  /** size: number of unknowns */
+  std::vector <int> _SolType;
+  /** size: number of unknowns */
+  std::vector <char*> _SolName;
+  /** size: number of unknowns */
+  const std::vector <NumericVector*> *_Bdc;
+  /** size: number of unknowns */
+  std::vector <bool> _SparsityPattern;
+  /** size: number of unknowns */
   std::vector < unsigned > _sparsityPatternMinimumSize; 
+  /** size: number of unknowns */
   std::vector <unsigned> _sparsityPatternVariableIndex;
+  
   unsigned _numberOfGlobalVariables;
 
 };

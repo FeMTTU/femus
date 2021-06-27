@@ -235,6 +235,7 @@ namespace femus {
      
       /** Solves the system. */
       virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
+      
     protected:
 
       vector < SparseMatrix* > _PP, _RR;

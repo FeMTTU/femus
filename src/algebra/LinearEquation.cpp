@@ -76,6 +76,7 @@ namespace femus {
 
     unsigned isubdom = _msh->IsdomBisectionSearch(idof, soltype);
     return KKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
+    
   }
 
   unsigned LinearEquation::GetSystemDof(const unsigned &soltype, const unsigned &kkindex_sol,
@@ -86,18 +87,74 @@ namespace femus {
 
     unsigned isubdom = _msh->IsdomBisectionSearch(idof, soltype);
     return otherKKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
+    
   }
 
 
   unsigned LinearEquation::GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
                                         const unsigned &ielc, const unsigned &i0, const unsigned &i1,
                                         const Mesh* mshc) const {
+                                            
     unsigned soltype =  _SolType[index_sol];
     unsigned idof = _msh->GetSolutionDof(ielc, i0, i1, soltype, mshc);
 
     unsigned isubdom = _msh->IsdomBisectionSearch(idof, soltype);
     return KKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
+    
   }
+  
+
+  /** Print numeric vector with structure */
+  void LinearEquation::print_with_structure(const unsigned iproc, const std::string filename, NumericVector * num_vec_in) const {
+      
+//       if (iproc == 0) {
+      
+      std::ofstream file_pr;
+      file_pr.open (filename);
+      
+      const unsigned global_size_for_all_vars = KKIndex[KKIndex.size() - 1];
+      
+      file_pr << "global size for all vars " << global_size_for_all_vars << std::endl;
+      
+    for(int ip = 0; ip < _nprocs; ip++) {
+                 const unsigned local_size_for_all_vars = KKoffset[KKIndex.size() - 1][ip] - KKoffset[0][ip];
+                  file_pr << "in proc " << ip << " local size for all vars "  << local_size_for_all_vars << std::endl;
+         }
+         
+      std::vector< double > v_global(global_size_for_all_vars);   
+         
+      num_vec_in->localize(v_global);
+//       Since I want to print the NumericVectors, I need to read from them.
+// The problem is that they don't have the structure of each var
+// Since these vectors are filled by looping over elements for each proc, that's what we should do
+// The problem is that we would repeat the visits of nodes, so we don't want to do that
+      unsigned running_index = 0;
+     for(int ip = 0; ip < _nprocs; ip++) {
+          file_pr << "--------- processor " << ip << std::endl;
+      for(int ivar = 0; ivar < _SolPdeIndex.size(); ivar++) {
+                  file_pr << ivar << " " << _SolName[ivar];
+                  file_pr << " FE type " << _SolType[ivar];
+
+                      const unsigned local_size_for_var = KKoffset[ivar + 1][ip] - KKoffset[ivar][ip];
+                  file_pr << " local size for var " << ivar << " "  << local_size_for_var << std::endl;
+                  
+      for(int loc_ind = 0; loc_ind < local_size_for_var; loc_ind++) {
+                  file_pr << running_index << " " << v_global[running_index] << std::endl;
+                 running_index ++;
+            }
+         }
+      }
+      
+      file_pr << std::endl;
+      
+
+      file_pr.close();          
+      
+//       }
+      
+  }
+
+  
 
   void LinearEquation::sparsity_pattern_print_nonzeros(const std::string filename_base, const std::string on_or_off) {
 
@@ -154,12 +211,14 @@ namespace femus {
       KKoffset[i].resize(_nprocs);
     }
 
+    //KKoffset for each var, at processor 0
     KKoffset[0][0] = 0;
     for(int j = 1; j < KKoffset.size(); j++) {
       unsigned indexSol = _SolPdeIndex[j - 1];
       KKoffset[j][0] = KKoffset[j - 1][0] + (_msh->_dofOffset[_SolType[indexSol]][1] - _msh->_dofOffset[_SolType[indexSol]][0]);
     }
 
+    //KKoffset for each var, for all other processors
     for(int i = 1; i < _nprocs; i++) {
       KKoffset[0][i] = KKoffset[_SolPdeIndex.size()][i - 1];
       for(int j = 1; j < KKoffset.size(); j++) {
@@ -189,7 +248,7 @@ namespace femus {
       for(int j = 0; j < _SolPdeIndex.size(); j++) {
         unsigned indexSol = _SolPdeIndex[j];
         for(int k = 0; k < _msh->_ghostDofs[_SolType[indexSol]][i].size(); k++) {
-          //gambit ghost node
+          // ghost node
           unsigned idof_metis = _msh->_ghostDofs[_SolType[indexSol]][i][k];
           unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, _SolType[indexSol]);
           KKghost_nd[i][counter] = KKoffset[j][isubdom] + idof_metis - _msh->_dofOffset[_SolType[indexSol]][isubdom];

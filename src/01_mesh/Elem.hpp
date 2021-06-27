@@ -260,14 +260,14 @@ namespace femus {
       std::vector < unsigned > _elementOffset;
       unsigned _elementOwned;
 
-      MyVector< short unsigned> _elementLevel; //element
+      MyVector< short unsigned> _elementLevel;
       MyVector< short unsigned> _elementType;
       MyVector< short unsigned> _elementGroup;
       MyVector< short unsigned> _elementMaterial;
       std::vector<unsigned> _materialElementCounter;
 
       MyMatrix <unsigned> _elementDof;
-      MyMatrix <int> _elementNearFace;  //@todo this is about the elements attached to each face, but it is used for BCs as well
+      MyMatrix <int> _elementNearFace;  ///@todo this is about the elements attached to each face, but it is used for BCs as well
 
       MyMatrix <unsigned> _childElem;
       MyMatrix <unsigned> _childElemDof;

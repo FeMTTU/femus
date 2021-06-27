@@ -28,9 +28,11 @@
 //**************************************
 
 //***** Quadrature-related ****************** 
+// for integrations in the same element
 #define Nsplit 0
 #define Quadrature_split_index  0
 
+//for semi-analytical integration in the unbounded domain
 #define N_DIV_UNBOUNDED  10
 
 #define QRULE_I   0
@@ -52,7 +54,7 @@
   #define OP_H1       0
   #define OP_Hhalf    1
 
-  #define UNBOUNDED   1
+  #define UNBOUNDED   0
 
   #define USE_Cns     1
 
@@ -504,7 +506,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   unsigned    nprocs = msh->n_processors();
 
-  constexpr bool print_algebra_global = false;
+  constexpr bool print_algebra_global = true;
   constexpr bool print_algebra_local = false;
   
   
@@ -1415,10 +1417,12 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
 
     RES->close();
     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-    std::filebuf res_fb;
-    res_fb.open (res_out.str().c_str(), std::ios::out);
-    std::ostream  res_file_stream(& res_fb);
-    RES->print(res_file_stream);
+//     std::filebuf res_fb;
+//     res_fb.open (res_out.str().c_str(), std::ios::out);
+//     std::ostream  res_file_stream(& res_fb);
+//     RES->print_global(res_file_stream);
+    pdeSys->print_with_structure(iproc, res_out.str().c_str(), RES);
+
   }
      
      

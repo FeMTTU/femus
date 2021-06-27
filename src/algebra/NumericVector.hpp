@@ -86,7 +86,7 @@ public:
     clear ();
   }
   
-  /** @returns the \p NumericalVectorM to a pristine state. */
+  /** @returns the \p NumericVector to a pristine state. */
   virtual void clear () {
     _is_closed= false;
     _is_initialized = false;
