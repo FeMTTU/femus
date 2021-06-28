@@ -28,14 +28,15 @@ using namespace femus;
 //**************************************
 
 //***** Operator-related ****************** 
+#define RHS_ONE     1
+
 #define S_FRAC 0.5
 
 #define OP_L2       0
 #define OP_H1       0
 #define OP_Hhalf    1
-#define RHS_ONE     1
 
-#define UNBOUNDED   1
+#define UNBOUNDED   0
 
 #define USE_Cns     1
 //**************************************
@@ -47,7 +48,7 @@ using namespace femus;
 #define EY_1       0.
 #define EY_2        1
 
-#define DOMAIN_DIM  2
+#define DOMAIN_DIM  1
 //**************************************
 
 
@@ -124,10 +125,11 @@ int main(int argc, char** argv)
   unsigned numberOfSelectiveLevels = 0;
 
   if (DOMAIN_DIM == 1) {
-  //const std::string mesh_file = "./input/Mesh_1_x.med";
+  const std::string mesh_file = "./input/Mesh_1_x.med";
+  ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
 //   const std::string mesh_file = "./input/Mesh_1_x_dir_neu_200_elem.med";
 //const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
-      ml_mesh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
+//       ml_mesh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
     }
   else if (DOMAIN_DIM == 2)  { 
   const std::string mesh_file = "./input/parametric_rectangle.med";
@@ -1112,6 +1114,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 const unsigned nonlin_iter = 0/*mlPdeSys->GetNonlinearIt()*/;
     assemble_jacobian< double, double >::print_global_jacobian(/*assemble_matrix*/true, ml_prob, KK, nonlin_iter);
 //     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    pdeSys->print_with_structure(iproc, res_out.str().c_str(), RES);
 //--- print matrix on file
 
 

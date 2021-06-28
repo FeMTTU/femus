@@ -20,8 +20,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  1
-#define N_ERASED_LEVELS   0
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
