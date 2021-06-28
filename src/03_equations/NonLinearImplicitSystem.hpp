@@ -105,7 +105,19 @@ public:
     /** Only call assemble function */
     virtual void assemble_call(const unsigned int n_times);
     
+    void print_iteration_and_do_additional_computations(const unsigned nonLinearIterator) const;
+    
 protected:
+
+   clock_t total_mg_time_begin() const;
+   
+   double total_mg_time_end(const clock_t start_mg_time) const;
+  
+   clock_t nonlinear_time_begin() const;
+   
+   void nonlinear_time_end(const clock_t start_nl_time) const;
+        
+   void compute_assembly_vs_net_solver_times(const double totalSolverTime, const double totalAssemblyTime);
 
     /** The final residual for the nonlinear system R(x) */
     double _final_nonlinear_residual;
@@ -135,11 +147,6 @@ protected:
     
     /** Current nonlinear iteration index */
     unsigned _nonliniteration;
-
-private:
-
-    /** To be Added */
-    void CreateSystemPDEStructure();
 
 };
 

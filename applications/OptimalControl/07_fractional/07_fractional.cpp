@@ -125,11 +125,11 @@ int main(int argc, char** argv)
   unsigned numberOfSelectiveLevels = 0;
 
   if (DOMAIN_DIM == 1) {
-  const std::string mesh_file = "./input/Mesh_1_x.med";
-  ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
+//   const std::string mesh_file = "./input/Mesh_1_x.med";
+//   ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
 //   const std::string mesh_file = "./input/Mesh_1_x_dir_neu_200_elem.med";
 //const std::string mesh_file = "./input/Mesh_1_x_dir_neu.med";
-//       ml_mesh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
+      ml_mesh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
     }
   else if (DOMAIN_DIM == 2)  { 
   const std::string mesh_file = "./input/parametric_rectangle.med";

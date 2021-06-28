@@ -37,50 +37,6 @@ namespace femus {
   }
   
 
-  clock_t NonLinearImplicitSystemWithPrimalDualActiveSetMethod::total_mg_time_begin() const {
-  
-      clock_t start_mg_time = clock();
-      
-      return start_mg_time;
-
-  }
-  
-  
-  double NonLinearImplicitSystemWithPrimalDualActiveSetMethod::total_mg_time_end(const clock_t start_mg_time) const {
-      
-      double totalSolverTime = static_cast<double> ( (clock() - start_mg_time)) / CLOCKS_PER_SEC;
-         
-      return totalSolverTime; 
-  }
-  
-  
-  clock_t NonLinearImplicitSystemWithPrimalDualActiveSetMethod::nonlinear_time_begin() const {
-  
-      clock_t start_nl_time = clock();
-      
-      return start_nl_time;
-
-  }
-  
-  void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::nonlinear_time_end(const clock_t start_nl_time) const {
-      
-      std::cout << std::endl << "   ****** Nonlinear-Cycle TIME: " << std::setw (11) << std::setprecision (6) << std::fixed
-                << static_cast<double> ( (clock() - start_nl_time)) / CLOCKS_PER_SEC << std::endl;
-                
-  }
-
-  
-  
-  void NonLinearImplicitSystemWithPrimalDualActiveSetMethod::compute_assembly_vs_net_solver_times(const double totalSolverTime, const double totalAssemblyTime) {
-      
-    std::cout << std::endl << "   *** Nonlinear Solver TIME: " << std::setw (11) << std::setprecision (6) << std::fixed
-              << totalSolverTime <<  " = assembly TIME( " << totalAssemblyTime << " ) + "
-              << " solver TIME( " << totalSolverTime - totalAssemblyTime << " ) " << std::endl;
-
-    _totalAssemblyTime += totalAssemblyTime;
-    _totalSolverTime += totalSolverTime - totalAssemblyTime;
-  
-   }
    
    
 // ********************************************
@@ -310,26 +266,8 @@ namespace femus {
                   << static_cast<double> ( (clock() - startUpdateResidualTime)) / CLOCKS_PER_SEC << std::endl;
 
 
-        if (_debug_nonlinear)  {
-            
-          const std::string print_order = "biquadratic"; //"linear", "quadratic", "biquadratic"
- 
-          std::vector < std::string > variablesToBePrinted;
-          variablesToBePrinted.push_back ("All");
-          std::ostringstream output_file_name_stream;
-          output_file_name_stream <<   "." << std::setfill ('0') << std::setw (2)   << nonLinearIterator; // the "." after biquadratic is needed to see the sequence of files in Paraview as "time steps"
-
-          std::string out_path;
-          if (this->GetMLProb().GetFilesHandler() != NULL)  out_path = this->GetMLProb().GetFilesHandler()->GetOutputPath();
-          else                                              out_path = DEFAULT_OUTPUTDIR;
-
-          //print all variables to file
-          this->GetMLProb()._ml_sol->GetWriter()->Write (_gridn, "sol", out_path, output_file_name_stream.str().c_str(), print_order.c_str(), variablesToBePrinted );
-
-          //do desired additional computations at the end of each nonlinear iteration
-          if (_debug_function_is_initialized) _debug_function (this->GetMLProb());
-
-        }
+        // ***************** 
+        print_iteration_and_do_additional_computations(nonLinearIterator);
 
 
         // ***************** check active flag sets *******************

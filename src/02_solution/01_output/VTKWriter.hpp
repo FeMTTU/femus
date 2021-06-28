@@ -60,16 +60,16 @@ public:
     void Write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) ;
     
     /** write output function with arbitrary level */
-  void Write(const unsigned my_level, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
+    void Write(const unsigned my_level, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
   
     /** write output function with fixed level and arbitrary initial string */
-  void Write(const std::string init_string, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
+    void Write(const std::string init_string, const std::string output_path, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
   
     /** write output function with arbitrary level (starting at 1) and arbitrary initial string and arbitrary suffix before the extension */
-  void Write(const unsigned my_level, const std::string init_string, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
+    void Write(const unsigned my_level, const std::string init_string, const std::string output_path, const std::string suffix_pre_extension, const char order[], const std::vector < std::string >& vars = std::vector < std::string > (), const unsigned time_step = 0);
   
     /** Set if to print or not to prind the debugging variables */
-    void SetDebugOutput( bool value ){ _debugOutput = value;}
+    void SetDebugOutput( bool value ){ _debugOutput = value; }
 
   private:
       
@@ -81,43 +81,43 @@ public:
       
     void vtk_unstructured_footer_iproc(std::ofstream & fout) const;
     
-  void piece_iproc_begin(std::ofstream & fout, const unsigned n_nodes, const unsigned n_elements) const;
+    void piece_iproc_begin(std::ofstream & fout, const unsigned n_nodes, const unsigned n_elements) const;
   
-  void piece_iproc_end(std::ofstream & fout) const;
+    void piece_iproc_end(std::ofstream & fout) const;
 
-  unsigned fe_index(const std::string & order_str) const;
+    unsigned fe_index(const std::string & order_str) const;
 
-  std::map < unsigned, unsigned > ghost_map_proc(const Mesh * mesh, const unsigned index) const;
+    std::map < unsigned, unsigned > ghost_map_proc(const Mesh * mesh, const unsigned index) const;
     
-  void fill_connectivity_proc(const Mesh * mesh, const unsigned index, const std::map<unsigned, unsigned> & ghostMap,  int * const var_conn) const;
+    void fill_connectivity_proc(const Mesh * mesh, const unsigned index, const std::map<unsigned, unsigned> & ghostMap,  int * const var_conn) const;
   
-  unsigned size_connectivity_proc(const Mesh * mesh, const unsigned index) const;
+    unsigned size_connectivity_proc(const Mesh * mesh, const unsigned index) const;
    
-  bool print_all_sols(const std::vector < std::string >& vars) const;
+    bool print_all_sols(const std::vector < std::string >& vars) const;
   
-  unsigned compute_print_sol_size(const bool print_all, const std::vector < std::string >& vars) const;
+    unsigned compute_print_sol_size(const bool print_all, const std::vector < std::string >& vars) const;
 
-  std::string print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const;
+    std::string print_sol_bdc_res_eps_name(const std::string solName, const unsigned name) const;
   
-  unsigned compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const;
+    unsigned compute_sol_bdc_res_eps_size(const Solution * solution, const unsigned i) const;
    
-   void fill_sol_on_elements(const Mesh * mesh, 
+    void fill_sol_on_elements(const Mesh * mesh, 
                              const unsigned elementOffset, const unsigned elementOffsetp1, 
                              const Solution * solution, const unsigned name, const unsigned i,  float * const var_el) const;
                              
- template < class ARRAY_TYPE >     
+    template < class ARRAY_TYPE >     
     void print_element_based_fields(const std::string field_string,  const std::string field_datatype, std::ofstream & fout, std::ofstream & Pfout, void* buffer_void, const unsigned elemetOffset, const unsigned elemetOffsetp1, const unsigned * dim_array_elvar, const Mesh * mesh, const unsigned fe_index, std::vector <char> & enc ) const;
     
- template < class ARRAY_TYPE >     
-  void print_data_array(const std::string field_string, 
+    template < class ARRAY_TYPE >     
+    void print_data_array(const std::string field_string, 
                                    const std::string field_datatype,
                                    std::ofstream & fout, std::ofstream & Pfout,
                                    const unsigned * dim_array_elvar,
                                    const ARRAY_TYPE * var_el,
                                    std::vector <char> & enc) const;
                                        
- template < class ARRAY_TYPE >     
-  void print_data_array_vector(const std::string field_string,
+    template < class ARRAY_TYPE >     
+    void print_data_array_vector(const std::string field_string,
                                const std::string field_datatype,
                                const unsigned n_components,
                                std::ofstream & fout, std::ofstream & Pfout,
@@ -128,9 +128,10 @@ public:
 
     bool _debugOutput;
 
-    /** femus to vtk cell type map */
+    /** [Lagrange linear/quadratic/biquadratic][geom_elem_type]  */
     static short unsigned int femusToVtkCellType[3][6];
-    static short unsigned int elementDofNumber[3][6];
+
+    
 };
 
 
