@@ -102,6 +102,8 @@
 // Either with or without unbounded
 // It seems like the assembly is fine, and there is an error in the update of the control variable in the PDAS algorithm...
 // res0 e' corretto, perche' e' prima della risoluzione. Poi con res1 sembra che add_vector vada a finire nel punto sbagliato
+// What is the difference with the standalone fractional?!
+
 
 using namespace femus;
 
@@ -451,7 +453,7 @@ int main(int argc, char** args) {
   //----
   
   system.MGsolve();
-//   system.assemble_call(1);
+//   system.assemble_call(2);
   
   // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;

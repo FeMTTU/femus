@@ -361,7 +361,17 @@ restart:
      
     _nonliniteration = 0;
     
-    System::assemble_call(n_times);
+//     System::assemble_call(n_times);
+     
+     _levelToAssemble = 0;  //because of this, this function cannot be const
+     
+   for (unsigned it = 0; it < n_times; it++) {
+
+            _assemble_system_function (_equation_systems);
+            
+            _nonliniteration++;
+
+   }
       
    
  } 
