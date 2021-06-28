@@ -739,6 +739,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                       const unsigned int nDof_vol_iel,
                       std::vector < double > & KK_local_iel,
                       std::vector < double > & Res_local_iel,
+                      std::vector < double > & KK_local_iel_mixed_num,
+                      std::vector < double > & Res_local_iel_mixed_num,
                       const Mesh * msh,
                       const Solution *    sol,
                       const MultiLevelSolution *    ml_sol,
@@ -916,9 +918,9 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
                 for(unsigned j_bdry = 0; j_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); j_bdry++) {
                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
-                  KK_local_iel[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * mixed_term1;
+                  KK_local_iel_mixed_num[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * mixed_term1;
                 }
-                Res_local_iel[ i_vol_iel ] += - 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry * mixed_term1;
+                Res_local_iel_mixed_num[ i_vol_iel ] += - 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry * mixed_term1;
               }
             
             
@@ -1661,8 +1663,12 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               OP_Hhalf,
                               beta,
                               nDof_jel, ///@todo
-                              KK_local_iel_refined,
-                              Res_local_iel_refined,
+//                               KK_local_iel_refined,
+//                               Res_local_iel_refined,
+                              KK_local_iel,
+                              Res_local_iel,
+                              KK_local_iel_mixed_num,
+                              Res_local_iel_mixed_num,
                               msh,
                               sol,
                               ml_sol,
@@ -1713,6 +1719,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               nDof_iel,
                               KK_local_iel,
                               Res_local_iel,
+                              KK_local_iel_mixed_num,
+                              Res_local_iel_mixed_num,
                               msh,
                               sol,
                               ml_sol,

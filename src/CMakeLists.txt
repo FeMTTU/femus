@@ -92,6 +92,7 @@ fe/Quadrilateral.cpp
 fe/Tetrahedral.cpp
 fe/Triangle.cpp
 fe/Wedge.cpp
+fe_quadrature/GaussPoints.cpp
 ism/Marker.cpp
 ism/PolynomialBases.cpp
 ism/Line.cpp
@@ -101,7 +102,6 @@ physics/Fluid.cpp
 physics/Material.cpp
 physics/Parameter.cpp
 physics/Solid.cpp
-quadrature/GaussPoints.cpp
 uq/uq.cpp
 uq/sparseGrid.cpp
 )

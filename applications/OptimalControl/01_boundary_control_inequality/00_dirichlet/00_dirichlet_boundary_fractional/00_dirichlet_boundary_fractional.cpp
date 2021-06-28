@@ -453,6 +453,8 @@ int main(int argc, char** args) {
   //----
   
   system.MGsolve();
+//   double totalAssemblyTime = 0.;
+//   system.nonlinear_solve_single_level(MULTIPLICATIVE, totalAssemblyTime, 0, 0);
 //   system.assemble_call(2);
   
   // ======= Print ========================

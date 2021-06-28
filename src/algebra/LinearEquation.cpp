@@ -130,13 +130,13 @@ namespace femus {
 // The problem is that we would repeat the visits of nodes, so we don't want to do that
       unsigned running_index = 0;
      for(int ip = 0; ip < _nprocs; ip++) {
-          file_pr << "--------- processor " << ip << std::endl;
+          file_pr << "--------- processor " << ip << " ---------" << std::endl;
       for(int ivar = 0; ivar < _SolPdeIndex.size(); ivar++) {
-                  file_pr << ivar << " " << _SolName[ivar];
-                  file_pr << " FE type " << _SolType[ivar];
+                  file_pr << "++++++ " << ivar << " " << _SolName[ivar] << ", ";
+                  file_pr << " FE type " << _SolType[ivar] << ", ";
 
                       const unsigned local_size_for_var = KKoffset[ivar + 1][ip] - KKoffset[ivar][ip];
-                  file_pr << " local size for var " << ivar << " "  << local_size_for_var << std::endl;
+                  file_pr << " local size "  << local_size_for_var << std::endl;
                   
       for(int loc_ind = 0; loc_ind < local_size_for_var; loc_ind++) {
                   file_pr << running_index << " " << v_global[running_index] << std::endl;
