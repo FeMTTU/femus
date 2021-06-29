@@ -1064,7 +1064,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 ///   boost::mpi::communicator world(MPI_COMM_WORLD, boost::mpi::comm_attach);  /// @todo future solution: broadcast whole class instances
 
 
-  unsigned count_visits = 0;
+  unsigned count_visits_of_boundary_faces = 0;
   
    for(int kproc = 0; kproc < nprocs; kproc++) {
        
@@ -1431,6 +1431,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 	    if( face_is_a_boundary_control_face(msh->el, iel, iface) ) {
 //------------ iface opening ---------        
 		
+                count_visits_of_boundary_faces++;
 
 
              
@@ -1503,7 +1504,6 @@ void el_dofs_unknowns_vol(const Solution*                sol,
           
             if( check_if_same_elem_bdry(iel, jel, iface, jface) ) {
               
-                count_visits++;
                 
        //============  Mass assembly - BEGIN ==================
            for(unsigned l_bdry = 0; l_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); l_bdry++) {
@@ -1787,6 +1787,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
       //============  Fractional assembly - END ==================
             
       }   //end iqp_bdry
+      
+      
               
 //----- iface ---        
         } //end if(bdry_index_i < 0) //end if(face_in_rectangle_domain_i == FACE_FOR_CONTROL)
@@ -1817,7 +1819,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 // std::transform(Res_nonlocal_jel.begin(), Res_nonlocal_jel.end(), Res_nonlocal_jel.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, -1.));
 // // multiply everything by -1.
 
-if( check_if_same_elem(iel, jel) ) {
+
+ if( check_if_same_elem(iel, jel)/*check_if_same_elem_bdry(iel, jel, iface, jface) if you put it inside the face loops */ ) {
           KK->add_matrix_blocked(KK_local_iel, l2gMap_iel, l2gMap_iel);
           RES->add_vector_blocked(Res_local_iel, l2gMap_iel);
 
@@ -1825,7 +1828,8 @@ if( check_if_same_elem(iel, jel) ) {
             KK->add_matrix_blocked(KK_local_iel_refined, l2gMap_iel, l2gMap_iel);
             RES->add_vector_blocked(Res_local_iel_refined, l2gMap_iel);
           }
-        }
+          
+       }
 
         KK->add_matrix_blocked(KK_local_iel_mixed_num, l2gMap_iel, l2gMap_iel);
         RES->add_vector_blocked(Res_local_iel_mixed_num, l2gMap_iel);
@@ -1841,6 +1845,17 @@ if( check_if_same_elem(iel, jel) ) {
         RES->add_vector_blocked(Res_nonlocal_jel, l2gMap_jel);
 //============ add to global - END ==================
 
+        
+          
+         std::vector<unsigned> Sol_n_el_dofs_Mat_vol2(1, nDof_jel);
+//              if (print_algebra_local) {
+//          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, KK_nonlocal_iel_iel, Sol_n_el_dofs_Mat_vol2, 10, 5);
+//      }
+         
+         
+        
+        
         
 //----- iel ---        
     } //end control elem flag i (control_flag_iel == 1)
@@ -1870,7 +1885,7 @@ if( check_if_same_elem(iel, jel) ) {
  } //end kproc
     
     
-    std::cout << "iiiiiiiiii " << count_visits << std::endl;
+    std::cout << "iiiiiiiiii " << count_visits_of_boundary_faces << std::endl;
     
   
   }
