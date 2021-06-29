@@ -23,8 +23,8 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
+#define N_UNIFORM_LEVELS  1
+#define N_ERASED_LEVELS   0
 //**************************************
 
 //***** Operator-related ****************** 
@@ -272,6 +272,7 @@ int main(int argc, char** argv)
 
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
 
+  system.SetMaxNumberOfNonLinearIterations(1);
   system.MGsolve();
 //   system.assemble_call(1);  //to only call the assemble function
 
@@ -1115,7 +1116,7 @@ const unsigned nonlin_iter = 0/*mlPdeSys->GetNonlinearIt()*/;
     assemble_jacobian< double, double >::print_global_jacobian(/*assemble_matrix*/true, ml_prob, KK, nonlin_iter);
 //     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES, nonlin_iter);
     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-    pdeSys->print_with_structure(iproc, res_out.str().c_str(), RES);
+    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
 //--- print matrix on file
 
 

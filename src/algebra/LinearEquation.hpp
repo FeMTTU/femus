@@ -77,7 +77,7 @@ public:
   void sparsity_pattern_print_nonzeros(const std::string filename_base, const std::string on_or_off);
 
   /** Print numeric vector with structure */
-  void print_with_structure(const unsigned iproc, const std::string filename_base, NumericVector * num_vec_in) const;
+  void print_with_structure_matlab_friendly(const unsigned iproc, const std::string filename_base, NumericVector * num_vec_in) const;
 
   /** To be Added */
   void SetResZero();

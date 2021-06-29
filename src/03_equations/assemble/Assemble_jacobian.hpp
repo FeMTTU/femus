@@ -325,12 +325,12 @@ template < class real_num, class real_num_mov >
                                   NumericVector* RES,
                                   const unsigned int nonlin_iteration) {
     
-    RES->close();  /** @todo why does this close need to be non-const?*/ 
+    RES->close();  /** @todo why does this close need to be non-const? */ 
     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << nonlin_iteration  << ".txt";
     std::filebuf res_fb;
     res_fb.open (res_out.str().c_str(),std::ios::out);
     std::ostream  res_file_stream(&res_fb);
-    RES->print(res_file_stream);
+    RES->print_global(res_file_stream);
 
   }  
     

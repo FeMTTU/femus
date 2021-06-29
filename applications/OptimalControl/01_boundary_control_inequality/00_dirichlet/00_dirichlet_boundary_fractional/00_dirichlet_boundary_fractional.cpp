@@ -104,6 +104,8 @@
 // res0 e' corretto, perche' e' prima della risoluzione. Poi con res1 sembra che add_vector vada a finire nel punto sbagliato
 // What is the difference with the standalone fractional?!
 
+// Let us just focus on the first nonlinear iteration. The RHS seems to be the exact same. Therefore, it must be the MATRICES that are DIFFERENT from the serial and the parallel!
+// Perhaps, the problem is with the PENALTIES...? No, it still is a problem about sending certain contributions to the wrong columns.
 
 using namespace femus;
 
@@ -451,7 +453,8 @@ int main(int argc, char** args) {
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "on");
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "off");
   //----
-  
+
+  system.SetMaxNumberOfNonLinearIterations(1);
   system.MGsolve();
 //   double totalAssemblyTime = 0.;
 //   system.nonlinear_solve_single_level(MULTIPLICATIVE, totalAssemblyTime, 0, 0);
@@ -1416,17 +1419,12 @@ if (assembleMatrix) KK->close();  /// This is needed for the parallel, when spli
     
     
   if (print_algebra_global) {
-    if (assembleMatrix) KK->close();
-    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-    KK->print_matlab(mat_out.str(), "ascii"); //  KK->print();
+    assemble_jacobian< double, double >::print_global_jacobian(assembleMatrix, ml_prob, KK, mlPdeSys->GetNonlinearIt());
+//     assemble_jacobian< double, double >::print_global_residual(ml_prob, RES,  mlPdeSys->GetNonlinearIt());
 
     RES->close();
     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "./" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-//     std::filebuf res_fb;
-//     res_fb.open (res_out.str().c_str(), std::ios::out);
-//     std::ostream  res_file_stream(& res_fb);
-//     RES->print_global(res_file_stream);
-    pdeSys->print_with_structure(iproc, res_out.str().c_str(), RES);
+    pdeSys->print_with_structure_matlab_friendly(iproc, res_out.str().c_str(), RES);
 
   }
      

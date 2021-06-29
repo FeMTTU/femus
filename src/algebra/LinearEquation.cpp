@@ -105,7 +105,7 @@ namespace femus {
   
 
   /** Print numeric vector with structure */
-  void LinearEquation::print_with_structure(const unsigned iproc, const std::string filename, NumericVector * num_vec_in) const {
+  void LinearEquation::print_with_structure_matlab_friendly(const unsigned iproc, const std::string filename, NumericVector * num_vec_in) const {
       
 //       if (iproc == 0) {
       
@@ -114,11 +114,11 @@ namespace femus {
       
       const unsigned global_size_for_all_vars = KKIndex[KKIndex.size() - 1];
       
-      file_pr << "global size for all vars " << global_size_for_all_vars << std::endl;
+      file_pr << "% " << "global size for all vars " << global_size_for_all_vars << std::endl;
       
     for(int ip = 0; ip < _nprocs; ip++) {
                  const unsigned local_size_for_all_vars = KKoffset[KKIndex.size() - 1][ip] - KKoffset[0][ip];
-                  file_pr << "in proc " << ip << " local size for all vars "  << local_size_for_all_vars << std::endl;
+                  file_pr << "% " << "in proc " << ip << " local size for all vars "  << local_size_for_all_vars << std::endl;
          }
          
       std::vector< double > v_global(global_size_for_all_vars);   
@@ -128,18 +128,19 @@ namespace femus {
 // The problem is that they don't have the structure of each var
 // Since these vectors are filled by looping over elements for each proc, that's what we should do
 // The problem is that we would repeat the visits of nodes, so we don't want to do that
-      unsigned running_index = 0;
+      
+      unsigned running_index = 1;  //to be consistent with potential future Matlab reading
      for(int ip = 0; ip < _nprocs; ip++) {
-          file_pr << "--------- processor " << ip << " ---------" << std::endl;
+          file_pr << "% " << "--------- processor " << ip << " ---------" << std::endl;
       for(int ivar = 0; ivar < _SolPdeIndex.size(); ivar++) {
-                  file_pr << "++++++ " << ivar << " " << _SolName[ivar] << ", ";
+                  file_pr  << "% " << "++++++ " << ivar << " " << _SolName[ivar] << ", ";
                   file_pr << " FE type " << _SolType[ivar] << ", ";
 
                       const unsigned local_size_for_var = KKoffset[ivar + 1][ip] - KKoffset[ivar][ip];
                   file_pr << " local size "  << local_size_for_var << std::endl;
                   
       for(int loc_ind = 0; loc_ind < local_size_for_var; loc_ind++) {
-                  file_pr << running_index << " " << v_global[running_index] << std::endl;
+                  file_pr << running_index << " " << v_global[running_index-1] << std::endl;
                  running_index ++;
             }
          }
