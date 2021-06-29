@@ -1246,9 +1246,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
             
 
-// // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
-// // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
-// // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
+// // // //---- Quadrature in jqp_bdry, preparation right before iel - BEGIN ------- 
 
 // Wait a second... If I want to prepare the jqp_bdry loop, I must be inside jface as well...
 // So now it seems to me that I have to do jel jface iel iface instead...
@@ -1284,6 +1282,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 //--- geom
            x_jqp_bdry[jqp_bdry].assign(dim, 0.);
           
+       if(kproc == iproc) {
             for(unsigned d = 0; d < dim; d++) {
 	      for (int j_bdry = 0; j_bdry < geom_element_jel.get_coords_at_dofs_bdry_3d()[d].size(); j_bdry++)  {
 			
@@ -1291,25 +1290,35 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
 		      }
             }
+       }
+//       MPI_Bcast(& x_jqp_bdry[jqp_bdry][0], dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
 //--- geom
     
 //--- solution
     sol_ctrl_jqp_bdry[jqp_bdry] = 0.;
+       if(kproc == iproc) {
 	      for (int j_bdry = 0; j_bdry < phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry].size()/*Sol_n_el_dofs_quantities[pos_sol_ctrl]*/; j_bdry++)  {
 		    unsigned int j_vol = msh->GetLocalFaceVertexIndex_PassElemType(jel_geommm, jface, j_bdry);
 			
 			sol_ctrl_jqp_bdry[jqp_bdry] +=  /*sol_eldofs_Mat[pos_mat_ctrl]*/sol_ctrl_jel[j_vol] * phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j_bdry];
 
 		      }
+       }
+//       MPI_Bcast(& sol_ctrl_jqp_bdry[dim], 1, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
 //--- solution
 //========== compute gauss quantities on the boundary ================================================
 
 
         }  //jqp_bdry
 
-// // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
-// // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
-// // // //---- Quadrature in jqp_bdry, preparation right before iel ------- 
+        //we can do the broadcast after the loop, faster
+        for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
+            MPI_Bcast(& x_jqp_bdry[jqp_bdry][0], dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
+        }
+            MPI_Bcast(& sol_ctrl_jqp_bdry[0], n_jqp_bdry, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
+  
+        
+// // // //---- Quadrature in jqp_bdry, preparation right before iel - END ------- 
 
     
 // ---- boundary faces in jface: compute and broadcast - BEGIN ----
