@@ -131,6 +131,12 @@ class CurrentElem {
   void   fill_coords_at_dofs_3d(const unsigned int iel, 
                             const unsigned int xType);
 
+  void   allocate_coords_at_dofs_bdry_3d(const unsigned int iel, 
+                                    const unsigned nDofx,
+                            const unsigned int xType);
+  
+  void fill_coords_at_dofs_bdry_3d(const unsigned int iel, const unsigned int jface, const unsigned int solType_coords);
+  
    void set_coords_at_dofs_and_geom_type(const unsigned int dim,  const unsigned int xType);
    
    vector < vector < real_num_mov > > & get_coords_at_dofs() {  return _coords_at_dofs; }
@@ -321,6 +327,18 @@ template < typename real_num_mov >
     
     
   }
+
+
+template < typename real_num_mov >
+ void    CurrentElem<real_num_mov>::allocate_coords_at_dofs_bdry_3d(const unsigned int iel, 
+                                                                    const unsigned int jface,
+                                                                    unsigned nve_bdry) {
+         
+      constexpr unsigned int space_dim = 3;
+      
+          for (unsigned idim = 0; idim < space_dim; idim++) {  _coords_at_dofs_bdry_3d[idim].resize(nve_bdry); }      
+    
+  }
   
   
    
@@ -344,6 +362,24 @@ template < typename real_num_mov >
       
   }   
   
+
+  template < typename real_num_mov >
+  void CurrentElem<real_num_mov>::fill_coords_at_dofs_bdry_3d(const unsigned int iel, const unsigned int jface, const unsigned int solType_coords) {
+      
+      constexpr unsigned int space_dim = 3;
+            
+		const unsigned felt_bdry = _mesh_new->GetElementFaceType(iel, jface);    
+		  for(unsigned idim=0; idim < space_dim; idim++) {
+		for(unsigned i_bdry = 0; i_bdry < _coords_at_dofs_bdry_3d[idim].size(); i_bdry++) {
+		  unsigned int i_vol = _mesh_new->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+                  unsigned iDof = _mesh_new->GetSolutionDof(i_vol, iel, solType_coords);
+		      _coords_at_dofs_bdry_3d[idim][i_bdry] = (*_mesh_new->_topology->_Sol[idim])(iDof);
+		  }
+		}  
+      
+      
+  }   
+
   
 // ========================================================
 ///Compute the element center

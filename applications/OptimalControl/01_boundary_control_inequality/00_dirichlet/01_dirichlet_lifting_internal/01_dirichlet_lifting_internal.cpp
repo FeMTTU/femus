@@ -177,7 +177,7 @@ int main(int argc, char** args) {
   system.init();
   
   system.MGsolve();
-//   system.assemble_call(1);
+//   system.assemble_call_before_boundary_conditions(1);
   
   // ======= Print ==================
   std::vector < std::string > variablesToBePrinted;

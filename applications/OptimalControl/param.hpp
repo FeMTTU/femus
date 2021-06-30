@@ -20,8 +20,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
+#define N_UNIFORM_LEVELS  5
+#define N_ERASED_LEVELS   4
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -320,7 +320,7 @@ int ControlDomainFlag_external_restriction(const std::vector<double> & elem_cent
                                                              const unsigned int solFEType_act_flag,
                                                              const unsigned int solIndex_act_flag) {
      
-		const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,iface, solFEType_act_flag);
+		const unsigned nve_bdry = msh->GetElementFaceDofNumber(iel, iface, solFEType_act_flag);
         
         const unsigned dim = coords_at_dofs.size();
         
@@ -1212,10 +1212,18 @@ void el_dofs_unknowns_vol(const Solution*                sol,
         }  
       MPI_Bcast(& jelGeom_bdry, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
 
-      
-      unsigned coords_at_dofs_bdry_3d_size = 0;
+        unsigned nve_bdry;
        if(kproc == iproc) {
-       geom_element_jel.set_coords_at_dofs_bdry_3d(jel, jface, solType_coords);
+          nve_bdry  = msh->GetElementFaceDofNumber(jel, jface, solType_coords);
+        }  
+      MPI_Bcast(& nve_bdry, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
+
+      
+       geom_element_jel.allocate_coords_at_dofs_bdry_3d(jel, jface, nve_bdry);
+      unsigned coords_at_dofs_bdry_3d_size = 0;
+      
+       if(kproc == iproc) {
+       geom_element_jel.fill_coords_at_dofs_bdry_3d(jel, jface, solType_coords);
        coords_at_dofs_bdry_3d_size = geom_element_jel.get_coords_at_dofs_bdry_3d()[0].size();  ///@todo all coords have the same ndofs
         }  
       MPI_Bcast(& coords_at_dofs_bdry_3d_size, 1, MPI_UNSIGNED, proc_to_bcast_from, MPI_COMM_WORLD);
@@ -1282,7 +1290,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 //--- geom
            x_jqp_bdry[jqp_bdry].assign(dim, 0.);
           
-       if(kproc == iproc) {
+//        if(kproc == iproc) {
             for(unsigned d = 0; d < dim; d++) {
 	      for (int j_bdry = 0; j_bdry < geom_element_jel.get_coords_at_dofs_bdry_3d()[d].size(); j_bdry++)  {
 			
@@ -1290,20 +1298,20 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
 		      }
             }
-       }
+//        }
 //       MPI_Bcast(& x_jqp_bdry[jqp_bdry][0], dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
 //--- geom
     
 //--- solution
     sol_ctrl_jqp_bdry[jqp_bdry] = 0.;
-       if(kproc == iproc) {
+//        if(kproc == iproc) {
 	      for (int j_bdry = 0; j_bdry < phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry].size()/*Sol_n_el_dofs_quantities[pos_sol_ctrl]*/; j_bdry++)  {
 		    unsigned int j_vol = msh->GetLocalFaceVertexIndex_PassElemType(jel_geommm, jface, j_bdry);
 			
 			sol_ctrl_jqp_bdry[jqp_bdry] +=  /*sol_eldofs_Mat[pos_mat_ctrl]*/sol_ctrl_jel[j_vol] * phi_ctrl_jel_bdry_jqp_bdry[jqp_bdry][j_bdry];
 
 		      }
-       }
+//        }
 //       MPI_Bcast(& sol_ctrl_jqp_bdry[dim], 1, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
 //--- solution
 //========== compute gauss quantities on the boundary ================================================
@@ -1311,11 +1319,11 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
         }  //jqp_bdry
 
-        //we can do the broadcast after the loop, faster
-        for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
-            MPI_Bcast(& x_jqp_bdry[jqp_bdry][0], dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
-        }
-            MPI_Bcast(& sol_ctrl_jqp_bdry[0], n_jqp_bdry, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
+// // //         //we can do the broadcast after the loop, faster
+// // //         for(unsigned jqp_bdry = 0; jqp_bdry < n_jqp_bdry; jqp_bdry++) {
+// // //             MPI_Bcast(& x_jqp_bdry[jqp_bdry][0], dim, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
+// // //         }
+// // //             MPI_Bcast(& sol_ctrl_jqp_bdry[0], n_jqp_bdry, MPI_DOUBLE, proc_to_bcast_from, MPI_COMM_WORLD);
   
         
 // // // //---- Quadrature in jqp_bdry, preparation right before iel - END ------- 
@@ -1353,7 +1361,6 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
 // ---- boundary faces in jface: compute and broadcast - END ----    
 
-//    #ifdef removesomecodetosee
 
               
        for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -1856,22 +1863,19 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
         
           
-         std::vector<unsigned> Sol_n_el_dofs_Mat_vol2(1, nDof_jel);
 //              if (print_algebra_local) {
+         std::vector<unsigned> Sol_n_el_dofs_Mat_vol2(1, nDof_jel);
 //          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
          assemble_jacobian<double,double>::print_element_jacobian(iel, KK_nonlocal_iel_iel, Sol_n_el_dofs_Mat_vol2, 10, 5);
 //      }
          
-         
-        
-        
+
         
 //----- iel ---        
     } //end control elem flag i (control_flag_iel == 1)
   } //end iel
 //----- iel ---        
 
-//            #endif
 
 //----- jface ---        
      

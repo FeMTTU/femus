@@ -417,11 +417,11 @@ restart:
   }
   
 
-  void NonLinearImplicitSystem::assemble_call(const unsigned int n_times)  {
+  void NonLinearImplicitSystem::assemble_call_before_boundary_conditions(const unsigned int n_times)  {
      
     _nonliniteration = 0;
     
-//     System::assemble_call(n_times);
+//     System::assemble_call_before_boundary_conditions(n_times);
      
      _levelToAssemble = 0;  //because of this, this function cannot be const
      

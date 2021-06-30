@@ -103,7 +103,7 @@ public:
     virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
     
     /** Only call assemble function */
-    virtual void assemble_call(const unsigned int n_times);
+    virtual void assemble_call_before_boundary_conditions(const unsigned int n_times);
     
     void print_iteration_and_do_additional_computations(const unsigned nonLinearIterator) const;
     

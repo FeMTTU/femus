@@ -23,8 +23,8 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  1
-#define N_ERASED_LEVELS   0
+#define N_UNIFORM_LEVELS  4
+#define N_ERASED_LEVELS   3
 //**************************************
 
 //***** Operator-related ****************** 
@@ -36,7 +36,7 @@ using namespace femus;
 #define OP_H1       0
 #define OP_Hhalf    1
 
-#define UNBOUNDED   0
+#define UNBOUNDED   1
 
 #define USE_Cns     1
 //**************************************
@@ -272,9 +272,8 @@ int main(int argc, char** argv)
 
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
 
-  system.SetMaxNumberOfNonLinearIterations(1);
   system.MGsolve();
-//   system.assemble_call(1);  //to only call the assemble function
+//   system.assemble_call_before_boundary_conditions(1);  //to only call the assemble function
 
   //solve the generalized eigenvalue problem and compute the eigenpairs
   GetHsNorm(numberOfUniformLevels  - erased_levels - 1, ml_prob);

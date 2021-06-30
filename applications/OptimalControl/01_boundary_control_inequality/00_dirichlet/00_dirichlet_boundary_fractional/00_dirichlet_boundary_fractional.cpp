@@ -54,7 +54,7 @@
   #define OP_H1       0
   #define OP_Hhalf    1
 
-  #define UNBOUNDED   0
+  #define UNBOUNDED   1
 
   #define USE_Cns     1
 
@@ -96,16 +96,6 @@
 ///@todo The \mu/actflag pieces are now basically separated, except for setting to zero on Omega minus Gamma_c (such as is done for control)
 ///@todo put assembleMatrix everywhere there is a filling of the matrix!
 ///@todo Give the option to provide your own name to the run folder instead of the time instant. I think I did something like this when running with the external script already
-///@todo June '21: in parallel there are some additions. 
-// Either in 2d or 3d.
-// Either with or without inequality
-// Either with or without unbounded
-// It seems like the assembly is fine, and there is an error in the update of the control variable in the PDAS algorithm...
-// res0 e' corretto, perche' e' prima della risoluzione. Poi con res1 sembra che add_vector vada a finire nel punto sbagliato
-// What is the difference with the standalone fractional?!
-
-// Let us just focus on the first nonlinear iteration. The RHS seems to be the exact same. Therefore, it must be the MATRICES that are DIFFERENT from the serial and the parallel!
-// Perhaps, the problem is with the PENALTIES...? No, it still is a problem about sending certain contributions to the wrong columns.
 
 using namespace femus;
 
@@ -454,11 +444,10 @@ int main(int argc, char** args) {
   system._LinSolver[n_levels - 1]->sparsity_pattern_print_nonzeros(sp_out_base2.str(), "off");
   //----
 
-  system.SetMaxNumberOfNonLinearIterations(1);
   system.MGsolve();
 //   double totalAssemblyTime = 0.;
 //   system.nonlinear_solve_single_level(MULTIPLICATIVE, totalAssemblyTime, 0, 0);
-//   system.assemble_call(2);
+//   system.assemble_call_before_boundary_conditions(2);
   
   // ======= Print ========================
   std::vector < std::string > variablesToBePrinted;

@@ -232,7 +232,7 @@ int main(int argc, char** args) {
 
     // initialize and solve the system
     system.init();
-//     system.assemble_call(2);
+//     system.assemble_call_before_boundary_conditions(2);
     system.MGsolve();
 
     // ======= Print ========================

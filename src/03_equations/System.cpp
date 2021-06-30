@@ -120,7 +120,7 @@ const unsigned System::GetSolPdeIndex(const char solname[]) const {
         return  _unknown_list_for_assembly; 
     }
     
- void System::assemble_call(const unsigned int n_times)  {
+ void System::assemble_call_before_boundary_conditions(const unsigned int n_times)  {
      
      _levelToAssemble = 0;  //because of this, this function cannot be const
      
