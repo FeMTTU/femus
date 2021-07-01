@@ -23,8 +23,8 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 //**************************************
 
 //***** Operator-related ****************** 
@@ -48,7 +48,7 @@ using namespace femus;
 #define EY_1       0.
 #define EY_2        1
 
-#define DOMAIN_DIM  1
+#define DOMAIN_DIM  2
 //**************************************
 
 

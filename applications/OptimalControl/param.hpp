@@ -20,8 +20,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  5
-#define N_ERASED_LEVELS   4
+#define N_UNIFORM_LEVELS  1
+#define N_ERASED_LEVELS   0
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -1161,8 +1161,8 @@ void el_dofs_unknowns_vol(const Solution*                sol,
       
       if(kproc == iproc) {
         for(unsigned j = 0; j < nDof_jel; j++) {
-          unsigned jDof  = msh->GetSolutionDof(j, jel, solType);  // global to global mapping between coordinates node and coordinate dof
-          sol_ctrl_jel[j] = (*sol->_Sol[soluIndex])(jDof);  // global extraction and local storage for the element coordinates
+          unsigned jDof  = msh->GetSolutionDof(j, jel, solType);
+          sol_ctrl_jel[j] = (*sol->_Sol[soluIndex])(jDof);
         }
       }
       
@@ -1231,6 +1231,9 @@ void el_dofs_unknowns_vol(const Solution*                sol,
          MPI_Bcast(& geom_element_jel.get_coords_at_dofs_bdry_3d()[k][0], coords_at_dofs_bdry_3d_size, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
       }
       
+      
+      
+           std::fill(geom_element_jel.get_elem_center_bdry_3d().begin(), geom_element_jel.get_elem_center_bdry_3d().end(), 0.);
 
        if(kproc == iproc) {
        geom_element_jel.set_elem_center_bdry_3d();
