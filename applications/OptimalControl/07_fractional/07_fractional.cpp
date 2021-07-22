@@ -23,8 +23,8 @@
 using namespace femus;
 
 //***** Mesh-related ****************** 
-#define N_UNIFORM_LEVELS  2
-#define N_ERASED_LEVELS   1
+#define N_UNIFORM_LEVELS  1
+#define N_ERASED_LEVELS   0
 //**************************************
 
 //***** Operator-related ****************** 
@@ -36,7 +36,7 @@ using namespace femus;
 #define OP_H1       0
 #define OP_Hhalf    1
 
-#define UNBOUNDED   1
+#define UNBOUNDED   0
 
 #define USE_Cns     1
 //**************************************
@@ -132,7 +132,8 @@ int main(int argc, char** argv)
       ml_mesh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
     }
   else if (DOMAIN_DIM == 2)  { 
-  const std::string mesh_file = "./input/parametric_rectangle.med";
+//   const std::string mesh_file = "./input/parametric_rectangle.med";
+  const std::string mesh_file = "./input/parametric_rectangle_par_la_longa.med";
   ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
 //       ml_mesh.GenerateCoarseBoxMesh(1, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
     }
@@ -153,7 +154,7 @@ int main(int argc, char** argv)
   ml_sol.GetWriter()->SetDebugOutput(true);
 
   // add variables to ml_sol
-  ml_sol.AddSolution("u", LAGRANGE, FIRST/*SECOND*/, 2);
+  ml_sol.AddSolution("u", LAGRANGE, /*FIRST*/SECOND, 2);
 
 
   ml_sol.Initialize("All");

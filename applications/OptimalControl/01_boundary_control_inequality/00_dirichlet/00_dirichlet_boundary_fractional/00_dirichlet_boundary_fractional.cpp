@@ -54,7 +54,7 @@
   #define OP_H1       0
   #define OP_Hhalf    1
 
-  #define UNBOUNDED   1
+  #define UNBOUNDED   0
 
   #define USE_Cns     1
 
@@ -113,10 +113,10 @@ using namespace femus;
                         feFamily.push_back(LAGRANGE);
                         feFamily.push_back(LAGRANGE);
  
-                        feOrder.push_back(FIRST);
-                        feOrder.push_back(FIRST);
-                        feOrder.push_back(FIRST);
-                        feOrder.push_back(FIRST);
+                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);
+                        feOrder.push_back(/*FIRST*/SECOND);
  
 
   assert( feFamily.size() == feOrder.size() );
@@ -269,7 +269,8 @@ int main(int argc, char** args) {
 //   std::string input_file = "parametric_square_1x2.med";
 //   std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "parametric_square_4x5.med";
-  std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
+  std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
@@ -383,7 +384,7 @@ int main(int argc, char** args) {
   //MU
   const std::string act_set_flag_name = "act_flag";
   const unsigned int act_set_fake_time_dep_flag = 2;
-  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, FIRST, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
+  ml_sol.AddSolution(act_set_flag_name.c_str(), LAGRANGE, /*FIRST*/SECOND, act_set_fake_time_dep_flag, is_an_unknown_of_a_pde);
   ml_sol.Initialize(act_set_flag_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   //MU
   
