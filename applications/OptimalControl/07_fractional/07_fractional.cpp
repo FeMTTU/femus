@@ -36,7 +36,7 @@ using namespace femus;
 #define OP_H1       0
 #define OP_Hhalf    1
 
-#define UNBOUNDED   0
+#define UNBOUNDED   1
 
 #define USE_Cns     1
 //**************************************
@@ -974,6 +974,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
     
     //============ Mixed Integral 2D - Numerical ==================      
             else if( dim == 2 ) {
+
             double mixed_term1 = 0;
 //     for(int kel = msh->_elementOffset[iproc]; kel < msh->_elementOffset[iproc + 1]; kel++) {
             // *** Face Gauss point loop (boundary Integral) ***
@@ -1029,9 +1030,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
             for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned j = 0; j < nDof1; j++) {
-                KK_local_mixed_num[ i * nDof1 + j ] +=   (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * phi1[j] * mixed_term1;
+                KK_local_mixed_num[ i * nDof1 + j ] +=   (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * phi1[j] /** mixed_term1*/;
               }
-                           Res_local_mixed_num[ i ] += - (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
+                           Res_local_mixed_num[ i ] += - (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX /** mixed_term1*/;
             }
            }
 //============ Mixed Integral - Numerical ==================

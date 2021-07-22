@@ -899,7 +899,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                   dist2 += mid_point[k] * mid_point[k];
                 }
                 double dist = sqrt(dist2);
-                mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac)) * delta_teta;
+                mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac))  * delta_teta;
               }
 //               delta coords - refinement -----
 
@@ -918,9 +918,9 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
                 for(unsigned j_bdry = 0; j_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); j_bdry++) {
                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
-                  KK_local_iel_mixed_num[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * mixed_term1;
+                  KK_local_iel_mixed_num[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] /** mixed_term1*/;
                 }
-                Res_local_iel_mixed_num[ i_vol_iel ] += - 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry * mixed_term1;
+                Res_local_iel_mixed_num[ i_vol_iel ] += - 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry /** mixed_term1*/;
               }
             
             
@@ -1869,7 +1869,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 //              if (print_algebra_local) {
          std::vector<unsigned> Sol_n_el_dofs_Mat_vol2(1, nDof_jel);
 //          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
-         assemble_jacobian<double,double>::print_element_jacobian(iel, KK_nonlocal_iel_iel, Sol_n_el_dofs_Mat_vol2, 10, 5);
+         assemble_jacobian<double,double>::print_element_jacobian(iel, KK_local_iel_mixed_num, Sol_n_el_dofs_Mat_vol2, 10, 5);
 //      }
          
 
