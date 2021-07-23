@@ -59,7 +59,7 @@ using namespace femus;
 //***** Quadrature-related ****************** 
 #define Nsplit      0
 
-#define N_DIV_UNBOUNDED  1
+#define N_DIV_UNBOUNDED  10
 
 //**************************************
 
@@ -992,7 +992,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               for(unsigned i = 0; i < faceDofs; i++) {
                 unsigned inode = el->GetIG(ielGeom2, jface, i);  // face-to-element local node mapping.
                 for(unsigned k = 0; k < dim; k++) {
-                  faceCoordinates[k][i] =  x2[k][inode] - xg1[k]; // We extract the local coordinates on the face from local coordinates on the element.
+                  faceCoordinates[k][i] =  x2[k][inode] - xg1[k];  // We extract the local coordinates on the face from local coordinates on the element.
                 }
               }
               
@@ -1014,7 +1014,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
                 double delta_teta = teta2 - teta1;
 
-
                 vector <double> mid_point;
                 mid_point.resize(dim);
                 for(unsigned k = 0; k < dim; k++) {
@@ -1033,7 +1032,8 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               for(unsigned j = 0; j < nDof1; j++) {
                 KK_local_mixed_num[ i * nDof1 + j ] +=  (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * phi1[j] * mixed_term1;
               }
-                           Res_local_mixed_num[ i ] += - (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
+              
+              Res_local_mixed_num[ i ] += - (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
             }
            }
 //============ Mixed Integral - Numerical ==================
@@ -1053,14 +1053,11 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               
               for(unsigned i = 0; i < nDof1; i++) {
 
-//                Res_nonlocal[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg]  / denom;
-
                 Res_nonlocalI[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (phi1[i]) * weight1 * weight2[jg]  / denom;
 
                 Res_nonlocalJ[ i ]         +=      - (C_ns / 2.) * OP_Hhalf *  check_limits * (solX - solY[jg]) * (- phi2[jg][i]) * weight1 * weight2[jg]  / denom;
 
                 for(unsigned j = 0; j < nDof2; j++) {
-//                 CClocal[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j] - phi2[jg][j]) * (phi1[i] - phi2[jg][i]) * weight1 * weight2[jg] / denom;
 
                   CC_nonlocal_II[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * phi1[j]  * phi1[i] * weight1 * weight2[jg] / denom;
 
@@ -1069,7 +1066,6 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                   CC_nonlocal_JI[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (phi1[j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
 
                   CC_nonlocal_JJ[ i * nDof2 + j ] += (C_ns / 2.) * OP_Hhalf * check_limits * (- phi2[jg][j]) * (- phi2[jg][i]) * weight1 * weight2[jg] / denom;
-
 
                   }
                 }

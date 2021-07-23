@@ -33,7 +33,7 @@
 #define Quadrature_split_index  0
 
 //for semi-analytical integration in the unbounded domain
-#define N_DIV_UNBOUNDED  1
+#define N_DIV_UNBOUNDED  10
 
 #define QRULE_I   0
 #define QRULE_J   1
