@@ -745,6 +745,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                       const Solution *    sol,
                       const MultiLevelSolution *    ml_sol,
                       const int iel,
+                      const int jel,
                       const unsigned iface,
                       std::vector <int> bdry_bdry,
                       CurrentElem < double > & geom_element_jel,
@@ -841,7 +842,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 unsigned inode_bdry = msh->el->GetIG(jelGeom_bdry, e_bdry_bdry/*bdry_bdry[e_bdry_bdry]*/, i_bdry_bdry); // face-to-element local node mapping. TODO: verify jelGeom_bdry
                 unsigned inode_vol    = msh->el->GetIG(iel_geom_type, iface, inode_bdry); //from n-1 to n
 
-                unsigned node_global = msh->el->GetElementDofIndex(iel, inode_vol);
+                unsigned node_global = msh->el->GetElementDofIndex(jel, inode_vol);
                 
                 nodes_face_face_flags[i_bdry_bdry] = (*sol->_Sol[sol_node_flag_index])(node_global);
                 
@@ -850,6 +851,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                   delta_coordinates_bdry_bdry[k][i_bdry_bdry] = geom_element_jel.get_coords_at_dofs_3d()[k][inode_vol] - x_iqp_bdry[k];  ///@todo// TODO We extract the local coordinates on the face from local coordinates on the element.
                 }
               }
+              
               
                 bool is_face_bdry_bdry  =  MED_IO::boundary_of_boundary_3d_check_face_of_face_via_nodes( nodes_face_face_flags, group_salome);
 
@@ -899,6 +901,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                   dist2 += mid_point[k] * mid_point[k];
                 }
                 double dist = sqrt(dist2);
+                
                 mixed_term1 += 2. * pow(dist, -  2. * s_frac) * (1. / (2. * s_frac))  * delta_teta;
               }
 //               delta coords - refinement -----
@@ -918,9 +921,9 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                 unsigned int i_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, i_bdry);
                 for(unsigned j_bdry = 0; j_bdry < phi_ctrl_iel_bdry_iqp_bdry.size(); j_bdry++) {
                   unsigned int j_vol_iel = msh->GetLocalFaceVertexIndex(iel, iface, j_bdry);
-                  KK_local_iel_mixed_num[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] /** mixed_term1*/;
+                  KK_local_iel_mixed_num[ i_vol_iel * nDof_vol_iel + j_vol_iel ] += 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * phi_ctrl_iel_bdry_iqp_bdry[j_bdry] * mixed_term1;
                 }
-                Res_local_iel_mixed_num[ i_vol_iel ] += - 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry /** mixed_term1*/;
+                Res_local_iel_mixed_num[ i_vol_iel ] += - 0.5 * C_ns * check_limits * OP_Hhalf * beta * weight_iqp_bdry * phi_ctrl_iel_bdry_iqp_bdry[i_bdry] * sol_ctrl_iqp_bdry * mixed_term1;
               }
             
             
@@ -1450,7 +1453,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 	    if( face_is_a_boundary_control_face(msh->el, iel, iface) ) {
 //------------ iface opening ---------        
 		
-                count_visits_of_boundary_faces++;
+//                 count_visits_of_boundary_faces++;
 
 
              
@@ -1692,6 +1695,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               sol,
                               ml_sol,
                               iel,
+                             jel,
                               iface,
                               bdry_bdry,
                               geom_element_jel,
@@ -1744,6 +1748,7 @@ void el_dofs_unknowns_vol(const Solution*                sol,
                               sol,
                               ml_sol,
                               iel,
+                              jel,
                               iface,
                               bdry_bdry,
                               geom_element_jel,
@@ -1807,10 +1812,15 @@ void el_dofs_unknowns_vol(const Solution*                sol,
             
       }   //end iqp_bdry
       
+               std::vector<unsigned> Sol_n_el_dofs_Mat_vol2(1, nDof_jel);
+//          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
+//          assemble_jacobian<double,double>::print_element_jacobian(iel, KK_local_iel_mixed_num, Sol_n_el_dofs_Mat_vol2, 10, 5);
+      
       
               
 //----- iface ---        
         } //end if(bdry_index_i < 0) //end if(face_in_rectangle_domain_i == FACE_FOR_CONTROL)
+        
       } //end iface
 //----- iface ---        
 
@@ -1866,11 +1876,11 @@ void el_dofs_unknowns_vol(const Solution*                sol,
 
         
           
-//              if (print_algebra_local) {
-         std::vector<unsigned> Sol_n_el_dofs_Mat_vol2(1, nDof_jel);
-//          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
-         assemble_jacobian<double,double>::print_element_jacobian(iel, KK_local_iel_mixed_num, Sol_n_el_dofs_Mat_vol2, 10, 5);
-//      }
+// //              if (print_algebra_local) {
+//          std::vector<unsigned> Sol_n_el_dofs_Mat_vol2(1, nDof_jel);
+// //          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
+//          assemble_jacobian<double,double>::print_element_jacobian(iel, KK_local_iel_mixed_num, Sol_n_el_dofs_Mat_vol2, 10, 5);
+// //      }
          
 
         

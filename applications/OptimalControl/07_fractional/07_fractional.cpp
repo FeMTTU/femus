@@ -43,9 +43,9 @@ using namespace femus;
 
 
 //***** Domain-related ****************** 
-#define EX_1       0
-#define EX_2        0.5
-#define EY_1       0.
+#define EX_1       -1
+#define EX_2        1
+#define EY_1       -1
 #define EY_2        1
 
 #define DOMAIN_DIM  2
@@ -59,7 +59,7 @@ using namespace femus;
 //***** Quadrature-related ****************** 
 #define Nsplit      0
 
-#define N_DIV_UNBOUNDED  10
+#define N_DIV_UNBOUNDED  1
 
 //**************************************
 
@@ -132,10 +132,10 @@ int main(int argc, char** argv)
       ml_mesh.GenerateCoarseBoxMesh(2, 0, 0, EX_1, EX_2, 0., 0., 0., 0., EDGE3, fe_quad_rule_1.c_str());
     }
   else if (DOMAIN_DIM == 2)  { 
-//   const std::string mesh_file = "./input/parametric_rectangle.med";
+// //   const std::string mesh_file = "./input/parametric_rectangle.med";
   const std::string mesh_file = "./input/parametric_rectangle_par_la_longa.med";
   ml_mesh.ReadCoarseMesh(mesh_file.c_str(), fe_quad_rule_1.c_str(), scalingFactor);
-//       ml_mesh.GenerateCoarseBoxMesh(1, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
+//       ml_mesh.GenerateCoarseBoxMesh(2, 2, 0, EX_1, EX_2, EY_1, EY_2, 0., 0., QUAD9, fe_quad_rule_1.c_str());
     }
 
   ml_mesh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
@@ -950,9 +950,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           if(iel != jel || Nsplit == 0) {
             
 // ********* UNBOUNDED PART - BEGIN ***************
-          if(UNBOUNDED == 1 && iel == jel) {
+          if(UNBOUNDED == 1 /*&& iel == jel*/) {
     //============  Mixed integral 1D - Analytical  ==================
-            if(dim == 1) {
+            if(dim == 1 && iel == jel) {
               double ex_1 = EX_1;
               double ex_2 = EX_2;
               double dist_1 = 0.;
@@ -995,6 +995,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
                   faceCoordinates[k][i] =  x2[k][inode] - xg1[k]; // We extract the local coordinates on the face from local coordinates on the element.
                 }
               }
+              
               const unsigned div = N_DIV_UNBOUNDED;
               vector  < vector  <  double> > interpCoordinates(dim);
               for(int k = 0; k < dim; k++) {
@@ -1008,7 +1009,7 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
               for(unsigned n = 0; n < div; n++) {
                 double teta2 = atan2(interpCoordinates[1][n + 1], interpCoordinates[0][n + 1]);
                 double teta1 = atan2(interpCoordinates[1][n], interpCoordinates[0][n]);
-
+                
                 if(teta2 < teta1) teta2 += 2. * M_PI;
 
                 double delta_teta = teta2 - teta1;
@@ -1030,9 +1031,9 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
 
             for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned j = 0; j < nDof1; j++) {
-                KK_local_mixed_num[ i * nDof1 + j ] +=   (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * phi1[j] /** mixed_term1*/;
+                KK_local_mixed_num[ i * nDof1 + j ] +=  (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * phi1[j] * mixed_term1;
               }
-                           Res_local_mixed_num[ i ] += - (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX /** mixed_term1*/;
+                           Res_local_mixed_num[ i ] += - (C_ns / 2.) * check_limits * OP_Hhalf * weight1 * phi1[i] * solX * mixed_term1;
             }
            }
 //============ Mixed Integral - Numerical ==================
@@ -1079,6 +1080,10 @@ void AssembleFracProblem(MultiLevelProblem& ml_prob)
           } 
           
         } //endl ig loop
+        
+//         std::vector<unsigned> Sol_n_el_dofs_Mat_vol2(1, 9);
+//          assemble_jacobian<double,double>::print_element_residual(iel, Res, Sol_n_el_dofs_Mat_vol, 10, 5);
+//          assemble_jacobian<double,double>::print_element_jacobian(iel, KK_local_mixed_num, Sol_n_el_dofs_Mat_vol2, 10, 10);
 
         if(iel == jel) {
           KK->add_matrix_blocked(KK_local, l2GMap1, l2GMap1);
