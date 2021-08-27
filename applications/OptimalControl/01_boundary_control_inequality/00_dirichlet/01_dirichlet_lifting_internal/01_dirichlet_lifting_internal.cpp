@@ -6,7 +6,7 @@
 #include "Assemble_jacobian.hpp"
 #include "Assemble_unknown_jacres.hpp"
 
-#define FACE_FOR_CONTROL   3
+#define FACE_FOR_CONTROL   2
 
 #include "../../../param.hpp"
 
@@ -86,8 +86,8 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
   // ======= Files ========================
-  const bool use_output_time_folder = false;
-  const bool redirect_cout_to_file = false;
+  const bool use_output_time_folder = true;
+  const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
         files.RedirectCout(redirect_cout_to_file);
@@ -98,7 +98,8 @@ int main(int argc, char** args) {
   // ======= Mesh  ==================
   MultiLevelMesh ml_mesh;
    
-  std::string input_file = "square_4x5.med";
+//   std::string input_file = "square_4x5.med";
+  std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "square_parametric.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
