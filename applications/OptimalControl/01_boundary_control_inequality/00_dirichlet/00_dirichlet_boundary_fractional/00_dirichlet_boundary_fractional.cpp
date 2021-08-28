@@ -16,6 +16,7 @@
 
 
 #define FACE_FOR_CONTROL        2  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_TARGET         2
 
 
 

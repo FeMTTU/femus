@@ -141,9 +141,9 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
   
   const double offset_to_include_line = 1.e-5;
    
-  const int  target_line_sign = target_line_sign_func(FACE_FOR_CONTROL);
+  const int  target_line_sign = target_line_sign_func(/*FACE_FOR_CONTROL*/FACE_FOR_TARGET);
   
-  const unsigned int axis_dir = axis_direction_target_reg(FACE_FOR_CONTROL);
+  const unsigned int axis_dir = axis_direction_target_reg(/*FACE_FOR_CONTROL*/FACE_FOR_TARGET);
    
    const double target_line = 0.5 + target_line_sign * offset_to_include_line; 
    
