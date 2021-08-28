@@ -36,7 +36,7 @@
 #define BETA_CTRL_BDRY  1.//1.e-2
 
 
-#define ALPHA_CTRL_VOL 1.e-8
+#define ALPHA_CTRL_VOL 0.00000001 
 #define BETA_CTRL_VOL ALPHA_CTRL_VOL
 
 
