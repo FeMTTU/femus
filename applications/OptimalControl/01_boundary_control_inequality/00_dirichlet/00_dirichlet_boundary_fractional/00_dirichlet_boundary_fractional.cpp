@@ -30,7 +30,7 @@
 
 //***** Quadrature-related ****************** 
 // for integrations in the same element
-#define Nsplit 0
+#define Nsplit 10
 #define Quadrature_split_index  0
 
 //for semi-analytical integration in the unbounded domain
@@ -42,9 +42,9 @@
 //**************************************
 
 //***** Operator-related ****************** 
-  #define RHS_ONE             1.
-  #define KEEP_ADJOINT_PUSH   0
-#define IS_CTRL_FRACTIONAL_SOBOLEV   1
+  #define RHS_ONE             0.
+  #define KEEP_ADJOINT_PUSH   1
+#define IS_CTRL_FRACTIONAL_SOBOLEV   0
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -249,7 +249,7 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
   // ======= Files ========================
-  const bool use_output_time_folder = false;
+  const bool use_output_time_folder = true;
   const bool redirect_cout_to_file = true;
   Files files; 
         files.CheckIODirectories(use_output_time_folder);
@@ -1707,10 +1707,10 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)  {
 
     std::cout << "@@@@@@@@@@@@@@@@ functional value: " << J << std::endl;
   
-//   std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
-//   std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
-//   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-//   std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
+  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
+  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
+  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
  
 return;
   

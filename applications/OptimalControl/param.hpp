@@ -20,8 +20,8 @@
 
 
 //*********************** Sets Number of refinements *****************************************
-#define N_UNIFORM_LEVELS  4
-#define N_ERASED_LEVELS   3
+#define N_UNIFORM_LEVELS  2
+#define N_ERASED_LEVELS   1
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -32,8 +32,8 @@
 
 
 //*********************** Sets the regularization parameters *******************************************************
-#define ALPHA_CTRL_BDRY 0.//1.e-2
-#define BETA_CTRL_BDRY  1.//1.e-2
+#define ALPHA_CTRL_BDRY 0.00000001 
+#define BETA_CTRL_BDRY   ALPHA_CTRL_BDRY
 
 
 #define ALPHA_CTRL_VOL 0.00000001 
