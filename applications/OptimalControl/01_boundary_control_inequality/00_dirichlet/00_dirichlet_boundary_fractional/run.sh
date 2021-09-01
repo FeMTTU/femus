@@ -3,9 +3,16 @@
 
 EXECUTABLE_NAME="./00_dirichlet_boundary_fractional"
 CONF_FILE="../../../../../../femus/applications/OptimalControl/param.hpp"
+MAIN_FILE="../../../../../../femus/applications/OptimalControl/01_boundary_control_inequality/00_dirichlet/00_dirichlet_boundary_fractional/00_dirichlet_boundary_fractional.cpp"
 
 
-for level in 2 3 4 5
+
+for bdry_norm_flag in 0  1
+do
+
+     sed '/#define IS_CTRL_FRACTIONAL_SOBOLEV/ c #define IS_CTRL_FRACTIONAL_SOBOLEV '${bdry_norm_flag}' ' -i  ${MAIN_FILE}
+
+for level in 1 2 3 4 5
 do
      sed '/#define N_UNIFORM_LEVELS/ c #define N_UNIFORM_LEVELS '${level}' ' -i  ${CONF_FILE}
 
@@ -17,5 +24,8 @@ do
      $EXECUTABLE_NAME
      sleep 1
 done
+
+done
+
 
 done

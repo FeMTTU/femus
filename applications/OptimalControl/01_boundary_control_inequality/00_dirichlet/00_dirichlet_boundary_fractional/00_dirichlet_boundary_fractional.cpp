@@ -14,9 +14,9 @@
 //for reading additional fields from MED file (based on MED ordering)
 
 
-
-#define FACE_FOR_CONTROL        2  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
-#define FACE_FOR_TARGET         2
+  /* 1-2 x coords, 3-4 y coords, 5-6 z coords */
+#define FACE_FOR_CONTROL        2
+#define FACE_FOR_TARGET         1
 
 
 
@@ -44,7 +44,7 @@
 //***** Operator-related ****************** 
   #define RHS_ONE             0.
   #define KEEP_ADJOINT_PUSH   1
-#define IS_CTRL_FRACTIONAL_SOBOLEV   1
+#define IS_CTRL_FRACTIONAL_SOBOLEV 1 
 #define S_FRAC 0.5
 
 #define NORM_GIR_RAV  0
@@ -268,10 +268,10 @@ int main(int argc, char** args) {
   
 //   std::string input_file = "parametric_square_1x1.med";
 //   std::string input_file = "parametric_square_1x2.med";
-//   std::string input_file = "parametric_square_2x2.med";
+  std::string input_file = "parametric_square_2x2.med";
 //   std::string input_file = "parametric_square_4x5.med";
 //   std::string input_file = "Mesh_3_groups_with_bdry_nodes.med";
-  std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
+//   std::string input_file = "Mesh_3_groups_with_bdry_nodes_coarser.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
   const double Lref = 1.;
