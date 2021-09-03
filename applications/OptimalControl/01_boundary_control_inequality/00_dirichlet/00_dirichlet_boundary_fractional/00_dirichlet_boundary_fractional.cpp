@@ -30,7 +30,7 @@
 
 //***** Quadrature-related ****************** 
 // for integrations in the same element
-#define Nsplit 10
+#define Nsplit 0
 #define Quadrature_split_index  0
 
 //for semi-analytical integration in the unbounded domain
