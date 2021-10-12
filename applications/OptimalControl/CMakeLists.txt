@@ -28,4 +28,5 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   ADD_SUBDIRECTORY(./07_fractional/)
   ADD_SUBDIRECTORY(./08_bonito/)
   ADD_SUBDIRECTORY(./08_bonito2/)
+  ADD_SUBDIRECTORY(./10_wg/)
   
