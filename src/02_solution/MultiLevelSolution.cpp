@@ -164,6 +164,84 @@ namespace femus {
     }
   }
 
+ 
+ 
+ ///  Weak Galerkin Add Solution -------------------------------------------------------------------------------------
+  void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily, const FEOrder order_v, const FEOrder order_b,
+                                       unsigned tmorder, const bool& PdeType) {
+
+
+    unsigned n = _solType.size();
+    
+// ---------------------
+//------ first resize -----------
+// ---------------------
+    
+
+// ID related
+    _solName.resize(n + 1u);
+    
+// is_an_unknown_of_a_pde
+    _pdeType.resize(n + 1u);
+    
+//   FE related
+    _solType.resize(n + 1u);
+    _family.resize(n + 1u);
+    _order.resize(n + 1u);
+
+//     Time discretization
+    _solTimeOrder.resize(n + 1u);
+//     Time discretization: Boundary Conditions
+    _bdcType.resize(n + 1u);
+    
+//     For pressure variables
+    _testIfPressure.resize(n + 1u);
+    _addAMRPressureStability.resize(n + 1u);
+    
+    _fixSolutionAtOnePoint.resize(n + 1u);
+    
+    _solPairIndex.resize(n + 1u);
+    _solPairInverseIndex.resize(n + 1u);
+
+// ---------------------
+//------ now fill -----------
+// ---------------------
+    
+    _testIfPressure[n] = 0;
+    _addAMRPressureStability[n] = false;
+    _fixSolutionAtOnePoint[n] = false;
+    
+    
+    _family[n] = fefamily;
+    _order[n] = order_v;
+    _solType[n] = order_v - ((fefamily == LAGRANGE) ? 1 : 0) + fefamily * 3;
+    
+    _solName[n]  = new char [DEFAULT_SOL_NCHARS];
+    
+    _bdcType[n]  = new char [20];
+    sprintf(_bdcType[n], "undefined");
+    
+    strcpy(_solName[n], name);
+    
+    _solTimeOrder[n] = tmorder;
+    
+    _pdeType[n] = PdeType;
+    
+    _solPairIndex[n] = n;
+    _solPairInverseIndex[n] = n;
+
+
+    cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
+         << std::setw(12) << order_v << " and time discretization order " << tmorder << endl;
+
+    for(unsigned ig = 0; ig < _gridn; ig++) {
+      _solution[ig]->AddSolution(_solName[n], _family[n], _order[n], _solTimeOrder[n], _pdeType[n]);
+    }
+  }
+
+  
+  
+  
   void MultiLevelSolution::AddSolutionVector(const unsigned n_components, const std::string name, const FEFamily fefamily, const FEOrder order, unsigned tmorder, const bool& Pde_type) {
 
     for(unsigned i = 0; i < n_components; i++) {

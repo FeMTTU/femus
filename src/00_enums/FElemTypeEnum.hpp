@@ -3,8 +3,12 @@
 
 enum  FEFamily {
     LAGRANGE = 0,
-    DISCONTINUOUS_POLYNOMIAL
+    DISCONTINUOUS_POLYNOMIAL,
+    WEAK_GALERKIN
 };
+
+const int FEFamily_count = WEAK_GALERKIN - LAGRANGE;
+
 
 enum FEOrder {
     ZERO = 0,
