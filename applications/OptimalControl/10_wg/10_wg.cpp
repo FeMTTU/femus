@@ -30,9 +30,9 @@ using namespace femus;
 
 
   #if FEMUS_TEST_SOLUTION != 0
-     #define FEMUS_TEST_SOLUTION_PRINT 1
-
      #define FEMUS_TEST_PROBLEM  1
+
+     #define FEMUS_TEST_SOLUTION_PRINT 0
   #endif
 
 
@@ -100,7 +100,7 @@ int main(int argc,char **args) {
   
   // ======= Loop over mesh files ========================
  std::vector< std::string >  input_files;
-  input_files.push_back("parametric_square_4x5.med");
+  input_files.push_back("parametric_square_1x2.med");
 //   input_files.push_back("./geom_elem_many_Quad9_Four_boundaries_groups.med");
 //   input_files.push_back("./geom_elem_many_Quad9_Nine_without_groups.med"); //Some boundary face was not set in the mesh MED file
 //   input_files.push_back("./geom_elem_many_Tri6_Two_boundaries.med"); //error
@@ -164,6 +164,11 @@ int main(int argc,char **args) {
   ml_sol.Initialize(sol_name.c_str(), Solution_set_initial_conditions, & ml_prob);
   //   ml_sol.Initialize("all"); 
     }
+    
+    //I have to construct the dof offset for one scalar Weak Galerkin variable over the given mesh
+    // I would like to avoid using _msh->_dofOffset etc
+    //I would prefer to do a single DofClass to
+    
 //====================================================
 
  

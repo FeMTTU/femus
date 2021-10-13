@@ -7,7 +7,7 @@ enum  FEFamily {
     WEAK_GALERKIN
 };
 
-const int FEFamily_count = WEAK_GALERKIN - LAGRANGE;
+const int FEFamily_count = WEAK_GALERKIN - LAGRANGE + 1;
 
 
 enum FEOrder {

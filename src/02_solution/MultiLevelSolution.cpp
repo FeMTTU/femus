@@ -176,66 +176,81 @@ namespace femus {
 // ---------------------
 //------ first resize -----------
 // ---------------------
-    
+  
 
-// ID related
+// ID related---
     _solName.resize(n + 1u);
     
-// is_an_unknown_of_a_pde
+// is_an_unknown_of_a_pde---
     _pdeType.resize(n + 1u);
     
-//   FE related
-    _solType.resize(n + 1u);
-    _family.resize(n + 1u);
-    _order.resize(n + 1u);
-
-//     Time discretization
-    _solTimeOrder.resize(n + 1u);
-//     Time discretization: Boundary Conditions
-    _bdcType.resize(n + 1u);
-    
-//     For pressure variables
+//     For pressure variables---
     _testIfPressure.resize(n + 1u);
     _addAMRPressureStability.resize(n + 1u);
-    
+//     For pressure variables, fix it at one point for PCFieldSplit, in Boundary Conditions ---
     _fixSolutionAtOnePoint.resize(n + 1u);
     
+//     For FSI, pairing velocities and displacements ---
     _solPairIndex.resize(n + 1u);
     _solPairInverseIndex.resize(n + 1u);
 
+//     Time discretization---
+    _solTimeOrder.resize(n + 1u);
+    
+// These are the things that should change for different FE...------    
+//   FE related---  
+    _family.resize(n + 1u);
+    _order.resize(n + 1u);
+    _solType.resize(n + 1u);
+    
+//     FE related and Time related: Boundary Conditions--- 
+    _bdcType.resize(n + 1u);
+// These are the things that should change for different FE... - end------    
+    
+
 // ---------------------
-//------ now fill -----------
+//------ then fill -----------
 // ---------------------
     
-    _testIfPressure[n] = 0;
-    _addAMRPressureStability[n] = false;
-    _fixSolutionAtOnePoint[n] = false;
-    
-    
-    _family[n] = fefamily;
-    _order[n] = order_v;
-    _solType[n] = order_v - ((fefamily == LAGRANGE) ? 1 : 0) + fefamily * 3;
-    
+// ID related---
     _solName[n]  = new char [DEFAULT_SOL_NCHARS];
-    
-    _bdcType[n]  = new char [20];
-    sprintf(_bdcType[n], "undefined");
-    
     strcpy(_solName[n], name);
     
-    _solTimeOrder[n] = tmorder;
-    
+// is_an_unknown_of_a_pde---
     _pdeType[n] = PdeType;
     
+//   For pressure variables---
+    _testIfPressure[n] = 0;
+    _addAMRPressureStability[n] = false;
+//   For pressure variables, if solution is fixed at one point (then null space must be removed) ---
+    _fixSolutionAtOnePoint[n] = false;
+        
+//   For FSI, pairing velocities and displacements ---
     _solPairIndex[n] = n;
     _solPairInverseIndex[n] = n;
+    
+//     Time discretization---
+    _solTimeOrder[n] = tmorder;
+    
+// These are the things that should change for different FE...------    
+//   FE related---  
+    _family[n] = fefamily;
+    _order[n] = order_v;
+//     _order_b[n] = order_b;
+    _solType[n] = Solution::compute_fe_sol_type(fefamily, order_v, order_b); ///@todo: this normally goes from 0 to 4 for now, I have to understand how to use it
+    
+//     FE related and Time related: Boundary Conditions
+    _bdcType[n]  = new char [20];
+    sprintf(_bdcType[n], "undefined");
+// These are the things that should change for different FE... - end------    
 
 
+// ---------------------
     cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
          << std::setw(12) << order_v << " and time discretization order " << tmorder << endl;
 
     for(unsigned ig = 0; ig < _gridn; ig++) {
-      _solution[ig]->AddSolution(_solName[n], _family[n], _order[n], _solTimeOrder[n], _pdeType[n]);
+      _solution[ig]->AddSolution(_solName[n], _family[n], _order[n],  order_b, _solTimeOrder[n], _pdeType[n]);
     }
   }
 

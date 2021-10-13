@@ -105,7 +105,83 @@ namespace femus {
     strcpy(_SolName[n], name);
 
   }
+  
+  
 
+  /**
+   * Weak galerkin
+   */
+  void Solution::AddSolution(const char name[], const FEFamily fefamily, const FEOrder order_v, const FEOrder order_b,
+                             const unsigned& tmorder, const bool &Pde_type) {
+
+    unsigned n = _Sol.size();
+
+// ---------------------
+//------ first resize -----------
+// ---------------------
+  
+// ID related---
+    _SolName.resize(n + 1u);
+    
+    
+//   FE related---  
+    _family.resize(n + 1u);
+    _order.resize(n + 1u);
+    _SolType.resize(n + 1u);
+
+//   FE related - Global vectors ---  
+    _Sol.resize(n + 1u);
+    _Sol[n] = NULL;
+
+    _Res.resize(n + 1u);
+    _Res[n] = NULL;
+
+    _Eps.resize(n + 1u);
+    _Eps[n] = NULL;
+
+    _GradVec.resize(n + 1u);
+    _GradVec[n].resize(_msh->GetDimension());
+
+    for(int i = 0; i < _msh->GetDimension(); i++) {
+      _GradVec[n][i] = NULL;
+    }
+
+    _Bdc.resize(n + 1u);
+    _Bdc[n] = NULL;
+    _ResEpsBdcFlag.resize(n + 1u);
+    _ResEpsBdcFlag[n] = Pde_type;
+    
+    
+//   Time discretization ---  
+    _SolTmOrder.resize(n + 1u);
+    _SolOld.resize(n + 1u);
+    _SolOld[n] = NULL;
+    
+//   FE related - Global vectors - end ---  
+
+// ---------------------
+//------ then fill -----------
+// ---------------------
+    
+// ID related---
+    _SolName[n] = new char [DEFAULT_SOL_NCHARS];
+    strcpy(_SolName[n], name);
+
+//   FE related---  
+    _family[n] = fefamily;
+    _order[n] = order_v;
+    _SolType[n] =  Solution::compute_fe_sol_type(fefamily, order_v, order_b);
+
+//   Time discretization ---  
+    _SolTmOrder[n] = tmorder;
+
+//   For pressure variables, if solution is fixed at one point (then null space must be removed) ---
+    _removeNullSpace.resize(n + 1u);
+    _removeNullSpace[n] = false;
+
+
+  }
+  
 
   
   void Solution::AddSolution_par(const int n_sols, const char name[], const FEFamily fefamily, const FEOrder order,
