@@ -529,7 +529,7 @@ namespace femus {
   }
 
   
-   void Mesh::build_elem_offsets_and_dofs_element_based(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping)  {
+   void Mesh::build_elem_offsets(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping)  {
  
        
     //BEGIN building the  metis2Gambit_elem 
@@ -638,9 +638,15 @@ namespace femus {
 //     std::cout << std::endl;
 
     //END building the  metis2Gambit_elem
-    
 
-    //BEGIN building element based dofs 
+    
+}
+
+
+
+   void Mesh::build_element_based_dofs()  {
+       
+    //BEGIN building element based dofs -  k = 3,4 
 
     // ghost vs owned nodes: 3 and 4 have no ghost nodes
     for(unsigned k = 3; k < 5; k++) {
@@ -663,8 +669,8 @@ namespace femus {
 
     //END building element based dofs -  k = 3,4
 
-    
-}
+   }
+
 
 
    void Mesh::end_building_dof_offset_biquadratic_and_coord_reordering(std::vector <unsigned> & mapping)  {
@@ -817,9 +823,9 @@ namespace femus {
     std::vector < unsigned > mapping;
 
     
-   build_elem_offsets_and_dofs_element_based(partition, mapping);
+   build_elem_offsets(partition, mapping);
    
-     
+   build_element_based_dofs();  
    
     //BEGIN building for k = 0,1,2
 

@@ -203,8 +203,9 @@ public:
     
     void initialize_dof_offsets();
     
-    void build_elem_offsets_and_dofs_element_based(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping);
+    void build_elem_offsets(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping);
     
+    void build_element_based_dofs();
     /**  */
     void from_mesh_file_to_femus_node_partition_mapping_ownSize(std::vector <unsigned> & partition, std::vector< unsigned > & mapping);
     
