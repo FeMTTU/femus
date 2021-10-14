@@ -287,7 +287,7 @@ int main(int argc, char** args) {
     ml_mesh.ReadCoarseMeshOnlyFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
 //     ml_mesh.GetLevelZero(0)->Partition();
        std::vector < unsigned > partition;
-       ml_mesh.GetLevelZero(0)->PartitionForElements(partition);
+           ml_mesh.GetLevelZero(0)->PartitionForElements(partition);
 //        ml_mesh.GetLevelZero(0)->FillISvector(partition);
        
            ml_mesh.GetLevelZero(0)->initialize_elem_offsets();
@@ -296,12 +296,15 @@ int main(int argc, char** args) {
            ml_mesh.GetLevelZero(0)->build_elem_offsets(partition, mapping);
            ml_mesh.GetLevelZero(0)->build_element_based_dofs();
            ml_mesh.GetLevelZero(0)->from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
+           
+           std::vector<unsigned> ().swap(partition);
+   
            ml_mesh.GetLevelZero(0)->end_building_dof_offset_biquadratic_and_coord_reordering(mapping);
            ml_mesh.GetLevelZero(0)->ghost_nodes_search();
            ml_mesh.GetLevelZero(0)->complete_dof_offsets();
            ml_mesh.GetLevelZero(0)->set_node_and_elem_counts();
        
-       partition.resize(0);
+   
     ml_mesh.GetLevelZero(0)->ReadCoarseMeshAfterPartitioning();
 
   ml_mesh.BuildElemType(fe_quad_rule_vec[0].c_str());
@@ -316,6 +319,7 @@ int main(int argc, char** args) {
   const unsigned numberOfUniformLevels = N_UNIFORM_LEVELS;
   const unsigned erased_levels = N_ERASED_LEVELS;
   unsigned numberOfSelectiveLevels = 0;
+  
   ml_mesh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // ======= Solution, auxiliary - BEFORE COARSE ERASING  ==================
@@ -333,6 +337,9 @@ int main(int argc, char** args) {
   ml_sol_aux->Initialize(node_based_bdry_flag_name.c_str());
       // ======= COARSE READING and REFINEMENT ========================
   ml_sol_aux->GetSolutionLevel(0)->GetSolutionName(node_based_bdry_flag_name.c_str()) = MED_IO(*ml_mesh.GetLevel(0)).node_based_flag_read_from_file(infile, mapping);
+
+  std::vector<unsigned> ().swap(mapping);
+
   for(unsigned l = 1; l < ml_mesh.GetNumberOfLevels(); l++) {
      ml_sol_aux->RefineSolution(l);
   }

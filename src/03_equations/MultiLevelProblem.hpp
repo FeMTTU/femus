@@ -46,7 +46,7 @@ class QuantityMap;
 
 
 /**
-* This class is a black box container to handle multilevel problems.
+* This class is a container to handle multilevel problems.
 */
 
 class MultiLevelProblem {

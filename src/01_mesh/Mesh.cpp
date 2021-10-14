@@ -132,6 +132,7 @@ namespace femus {
 
   }
   
+  
   void Mesh::Partition() {
 
     std::vector < unsigned > partition;
@@ -140,7 +141,7 @@ namespace femus {
     
     FillISvector(partition);
     
-    partition.resize(0);
+    std::vector<unsigned> ().swap(partition);
 
   }
 
@@ -272,7 +273,7 @@ namespace femus {
         if(xMin[k] > _coords[k][i]) xMin[k] = _coords[k][i];
       }
     }
-    _cLenght = sqrt(pow(xMax[0] - xMin[0], 2) + pow(xMax[1] - xMin[1], 2) + pow(xMax[2] - xMin[2], 2));
+    _cLength = sqrt(pow(xMax[0] - xMin[0], 2) + pow(xMax[1] - xMin[1], 2) + pow(xMax[2] - xMin[2], 2));
     //compute max and min coords - end -----------
 
 
@@ -455,7 +456,7 @@ namespace femus {
       }
     }
   
-      partition.resize(0);
+    std::vector<unsigned> ().swap(partition);
       
       return mapping;
       
@@ -503,8 +504,7 @@ namespace femus {
       }
     }
   
-      partition.resize(0);
-      
+  
   }
 // *******************************************************
 
@@ -553,22 +553,14 @@ namespace femus {
 
     el->ReorderMeshElements(mapping);
 
-//     for(int isdom = 0; isdom < _nprocs; isdom++) {
-//       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
-//         std::cout << el->GetElementMaterial(iel) << " ";
-//       }
-//       std::cout << std::endl;
-//     }
-//     std::cout << std::endl;
-//
-//     std::cout << GetNumberOfElements()<<std::endl;
+
 
     std::vector < unsigned > imapping(GetNumberOfElements());
 
     for(unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
       imapping[iel] = iel;
     }
-    // std::cout << "AAAAAAAAAAAAAAAAAAAA\n";
+
     for(int isdom = 0; isdom < _nprocs; isdom++) {
 
 // Old, much slower (while below is better) **********
@@ -594,6 +586,7 @@ namespace femus {
       short unsigned jelMat, jelGroup, ielMat, ielGroup;
 
       unsigned n = _elementOffset[isdom + 1u] - _elementOffset[isdom];
+      
       while(n > 1) {
         unsigned newN = 0u;
         for(unsigned j = _elementOffset[isdom] + 1u; j < _elementOffset[isdom] + n ; j++) {
@@ -623,12 +616,8 @@ namespace femus {
     std::vector < unsigned > ().swap(imapping);
 
 
-//     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
-//       std::cout << mapping[i] << " ";
-//     }
-//     std::cout << std::endl;
-
     el->ReorderMeshElements(mapping);
+    
 //     for(int isdom = 0; isdom < _nprocs; isdom++) {
 //       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
 //         std::cout << "("<<el->GetElementMaterial(iel) << ", "<< el->GetElementGroup(iel)<<") ";
@@ -695,7 +684,6 @@ namespace femus {
     }
     //reorder coordinate vector ----
 
-    mapping.resize(0);
 
    }
    
@@ -831,7 +819,12 @@ namespace femus {
 
    from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
 
-   end_building_dof_offset_biquadratic_and_coord_reordering(mapping);
+    std::vector<unsigned> ().swap(partition);
+    
+    end_building_dof_offset_biquadratic_and_coord_reordering(mapping);
+   
+    std::vector<unsigned> ().swap(mapping);    //     mapping.resize(0);  //this DOES NOT FREE memory!!!
+
 
     //END building for k = 2, but incomplete for k = 0, 1
 
@@ -841,7 +834,10 @@ namespace femus {
     //END ghost nodes search k = 0, 1, 2
 
 
+    //BEGIN completing for k = 0,1
     complete_dof_offsets();
+    //END completing for k = 0,1
+    
     
     set_node_and_elem_counts();
     

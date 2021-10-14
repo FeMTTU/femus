@@ -124,7 +124,7 @@ public:
 
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
-        _level=i;
+        _level = i;
     };
 
     /** Get the grid number */
@@ -234,26 +234,29 @@ public:
     }
 
     basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
-    
-    // member data
-    
-    /** Coordinates */
-    Solution* _topology;
-    /** FE: Finite Element families, for each Geometric Element */
-    const elem_type *_finiteElement[6][5];
 
+    
+    // member data -----------
+
+    
+    /** MESH: Coordinates */
+    Solution* _topology;
+    
+    /** MESH: topology object - list of all elements */
+    elem *el;
+    
     /** MESH: Number of elements per processor (incremental count) */
     vector < unsigned > _elementOffset;
     
+    /** FE: Finite Element families, for each Geometric Element */
+    const elem_type *_finiteElement[6][5];
+
     /** FE: DofMap: Number of owned nodes per FE family and per processor (count, non-incremental) */
     vector < unsigned > _ownSize[5];
     /** FE: DofMap: Number of nodes per FE family and per processor (incremental count) */
     vector < unsigned > _dofOffset[5];
     /** FE: DofMap: Number of ghost nodes per FE family and per processor (count, non-incremental) */
     vector< vector < int > > _ghostDofs[5];
-    
-    /** MESH: topology object - list of all elements */
-    elem *el;
     
     /** AMR */
     static bool (* _SetRefinementFlag)(const std::vector < double >& x,
@@ -277,20 +280,22 @@ public:
       _coarseMsh = otherCoarseMsh;
     };
 
+    /** AMR */
     bool GetIfHomogeneous(){
       return _meshIsHomogeneous;
     }
 
+    /** AMR */
     void SetIfHomogeneous(const bool &value){
       _meshIsHomogeneous = value ;
     }
 
     void SetCharacteristicLength(const double & cLength){
-      _cLenght = cLength;
+      _cLength = cLength;
     }
     
     double GetCharacteristicLength(){
-      return _cLenght;
+      return _cLength;
     };
     
     const unsigned GetXIndex()          const { return _xIndex; };
@@ -351,7 +356,7 @@ private:
     std::vector < std::map < unsigned, bool > > _amrSolidMark;
 
     /** Mesh characteristic length */
-    double _cLenght;
+    double _cLength;
 };
 
 } //end namespace femus
