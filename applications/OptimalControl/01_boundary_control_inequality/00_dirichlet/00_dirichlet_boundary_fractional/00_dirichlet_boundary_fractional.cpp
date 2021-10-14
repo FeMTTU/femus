@@ -283,8 +283,6 @@ int main(int argc, char** args) {
 // // // ================= Mesh: UNPACKING ReadCoarseMesh - BEGIN ================================================  
 // // // =================================================================  
 //   ml_mesh.ReadCoarseMesh(infile.c_str(), fe_quad_rule_vec[0].c_str(), Lref, read_groups, read_boundary_groups);
-
-//   ml_mesh.ReadCoarseMeshOnlyFileReading(infile.c_str(), Lref, read_groups, read_boundary_groups);
   
     ml_mesh.ReadCoarseMeshOnlyFileReadingBeforePartitioning(infile.c_str(), Lref, read_groups, read_boundary_groups);
 //     ml_mesh.GetLevelZero(0)->Partition();
@@ -292,13 +290,15 @@ int main(int argc, char** args) {
        ml_mesh.GetLevelZero(0)->PartitionForElements(partition);
 //        ml_mesh.GetLevelZero(0)->FillISvector(partition);
        
-           ml_mesh.GetLevelZero(0)->initialize_elem_dof_offsets();
+           ml_mesh.GetLevelZero(0)->initialize_elem_offsets();
+           ml_mesh.GetLevelZero(0)->initialize_dof_offsets();
            std::vector < unsigned > mapping;
            ml_mesh.GetLevelZero(0)->build_elem_offsets_and_dofs_element_based(partition, mapping);
            ml_mesh.GetLevelZero(0)->from_mesh_file_to_femus_node_partition_mapping_ownSize(partition, mapping);
            ml_mesh.GetLevelZero(0)->end_building_dof_offset_biquadratic_and_coord_reordering(mapping);
            ml_mesh.GetLevelZero(0)->ghost_nodes_search();
            ml_mesh.GetLevelZero(0)->complete_dof_offsets();
+           ml_mesh.GetLevelZero(0)->set_node_and_elem_counts();
        
        partition.resize(0);
     ml_mesh.GetLevelZero(0)->ReadCoarseMeshAfterPartitioning();

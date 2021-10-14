@@ -251,8 +251,12 @@ namespace femus {
       unsigned _iproc;
       unsigned _nprocs;
 
+      /* Number of nodes of the Mesh */
       unsigned _nvt;
-      unsigned _nel, _nelt[6];
+      /* Number of elements of the Mesh */
+      unsigned _nel;
+      /* Number of elements of the Mesh for each Geometric type */
+      unsigned _nelt[6];
       unsigned _nelr;
       unsigned _ngroup;
       unsigned _level;

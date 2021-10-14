@@ -509,18 +509,21 @@ namespace femus {
 // *******************************************************
 
 
-  void Mesh::initialize_elem_dof_offsets() {
+  void Mesh::initialize_elem_offsets() {
       
-    //BEGIN Initialization for k = 0,1,2,3,4
-
     _elementOffset.resize(_nprocs + 1);
     _elementOffset[0] = 0;
+    
+  }
+  
 
+  void Mesh::initialize_dof_offsets() {
+      
+    //BEGIN Initialization for k = 0,1,2,3,4
     for(int k = 0; k < 5; k++) {
       _dofOffset[k].resize(_nprocs + 1);
       _dofOffset[k][0] = 0;
     }
-
     //END Initialization for k = 0,1,2,3,4
     
   }
@@ -529,7 +532,7 @@ namespace femus {
    void Mesh::build_elem_offsets_and_dofs_element_based(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping)  {
  
        
-    //BEGIN building the  metis2Gambit_elem and  k = 3,4
+    //BEGIN building the  metis2Gambit_elem 
        
     mapping.reserve(GetNumberOfNodes());  /// @todo is this done in order to guarantee some contiguous memory when resizing? 
                                           /// otherwise things are resized later
@@ -634,7 +637,10 @@ namespace femus {
 //     }
 //     std::cout << std::endl;
 
+    //END building the  metis2Gambit_elem
+    
 
+    //BEGIN building element based dofs 
 
     // ghost vs owned nodes: 3 and 4 have no ghost nodes
     for(unsigned k = 3; k < 5; k++) {
@@ -655,7 +661,7 @@ namespace femus {
       }
     }
 
-    //END building the  metis2Gambit_elem and  k = 3,4
+    //END building element based dofs -  k = 3,4
 
     
 }
@@ -690,7 +696,6 @@ namespace femus {
 
     void Mesh::ghost_nodes_search() {
  
-    //BEGIN ghost nodes search k = 0, 1, 2
     for(int k = 0; k < 3; k++) {
       _ghostDofs[k].resize(_nprocs);
 
@@ -716,8 +721,6 @@ namespace femus {
         }
       }
     }
-
-    //END ghost nodes search k = 0, 1, 2
 
   }
 
@@ -776,9 +779,6 @@ namespace femus {
     //END completing for k = 0, 1
 
 
-    SetNumberOfNodes(_dofOffset[2][_nprocs]);
-    el->SetNodeNumber(_dofOffset[2][_nprocs]);
-
 
     //delete ghost dof list all but _iproc
     for(int isdom = 0; isdom < _nprocs; isdom++) {
@@ -787,11 +787,21 @@ namespace femus {
           _ghostDofs[k][isdom].resize(0);
         }
     }
+    
+
+  }
+  
+  
+  
+  void Mesh::set_node_and_elem_counts() {
+      
+    SetNumberOfNodes(_dofOffset[2][_nprocs]);
+    el->SetNodeNumber(_dofOffset[2][_nprocs]);
 
     el->SetElementOffsets(_elementOffset, _iproc, _nprocs);
 
   }  
-  
+
   
   
  /**
@@ -799,7 +809,9 @@ namespace femus {
   */
   void Mesh::FillISvector(vector < unsigned >& partition) {
 
-    initialize_elem_dof_offsets();
+    initialize_elem_offsets();
+    
+    initialize_dof_offsets();
     
 
     std::vector < unsigned > mapping;
@@ -818,11 +830,14 @@ namespace femus {
     //END building for k = 2, but incomplete for k = 0, 1
 
    
+    //BEGIN ghost nodes search k = 0, 1, 2
     ghost_nodes_search();
+    //END ghost nodes search k = 0, 1, 2
 
 
     complete_dof_offsets();
     
+    set_node_and_elem_counts();
     
   }
 

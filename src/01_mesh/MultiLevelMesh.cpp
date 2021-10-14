@@ -41,9 +41,9 @@ MultiLevelMesh::~MultiLevelMesh() {
         delete _level0[i];
     }
 
-    for(unsigned i=0;i<6;i++){
+    for(unsigned i = 0; i < N_GEOM_ELS; i++){
       if( _finiteElementGeometryFlag[i])
-      for(unsigned j=0;j<5;j++){
+      for(unsigned j = 0;j < 5; j++){
 	delete _finiteElement[i][j];
       }
     }
@@ -56,10 +56,10 @@ MultiLevelMesh::~MultiLevelMesh() {
 MultiLevelMesh::MultiLevelMesh(): _gridn0(0)
   {
 
-  _finiteElementGeometryFlag.resize(6,false);
+  _finiteElementGeometryFlag.resize(N_GEOM_ELS, false);
 
-  for(int i=0; i<6; i++) {
-    for(int j=0; j<5; j++) {
+  for(int i = 0; i < N_GEOM_ELS; i++) {
+    for(int j = 0; j < 5; j++) {
       _finiteElement[i][j] = NULL;
     }
   }
@@ -127,7 +127,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
 
 
     _level0.resize(_gridn0);
-    _finiteElementGeometryFlag.resize(5,false);
+    _finiteElementGeometryFlag.resize(N_GEOM_ELS, false);
 
     //coarse mesh
     _level0[0] = new Mesh();
@@ -197,7 +197,7 @@ void MultiLevelMesh::ReadCoarseMeshOnlyFileReadingBeforePartitioning(const char 
 
     _level0.resize(_gridn0);
     
-    _finiteElementGeometryFlag.resize(5,false);
+    _finiteElementGeometryFlag.resize(N_GEOM_ELS, false);
 
     //coarse mesh
     _level0[0] = new Mesh();
@@ -212,7 +212,7 @@ void MultiLevelMesh::ReadCoarseMeshOnlyFileReading(const char mesh_file[], const
 
     _level0.resize(_gridn0);
     
-    _finiteElementGeometryFlag.resize(5,false);
+    _finiteElementGeometryFlag.resize(N_GEOM_ELS, false);
 
     //coarse mesh
     _level0[0] = new Mesh();
@@ -254,7 +254,7 @@ void MultiLevelMesh::GenerateCoarseBoxMesh(
     _gridn0 = 1;
 
     _level0.resize(_gridn0);
-    _finiteElementGeometryFlag.resize(5,false);
+    _finiteElementGeometryFlag.resize(N_GEOM_ELS, false);
 
     //coarse mesh
     _level0[0] = new Mesh();

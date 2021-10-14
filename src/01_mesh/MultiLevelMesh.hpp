@@ -148,6 +148,7 @@ private:
     std::vector <Mesh*> _level0;
     std::vector <Mesh*> _level;
 
+    /** Flag to denote what Geometric Elements are in the given Mesh */
     std::vector <bool> _finiteElementGeometryFlag;
     
     /** MultilevelMesh  writer */

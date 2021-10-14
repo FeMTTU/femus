@@ -199,7 +199,9 @@ public:
     /** Here is where the element and node global orderings are changed based on the partitioning */
     void FillISvector(vector < unsigned > &partition);
 
-    void initialize_elem_dof_offsets();
+    void initialize_elem_offsets();
+    
+    void initialize_dof_offsets();
     
     void build_elem_offsets_and_dofs_element_based(const std::vector <unsigned> & partition, std::vector <unsigned> & mapping);
     
@@ -215,6 +217,8 @@ public:
     
     void complete_dof_offsets();
     
+    void set_node_and_elem_counts();
+  
     /** To be added */
     void Buildkel();
     
@@ -234,24 +238,28 @@ public:
     
     /** Coordinates */
     Solution* _topology;
-    /** Finite Element families, for each Geometric Element */
+    /** FE: Finite Element families, for each Geometric Element */
     const elem_type *_finiteElement[6][5];
 
-    /** Number of elements per processor (incremental count) */
+    /** MESH: Number of elements per processor (incremental count) */
     vector < unsigned > _elementOffset;
-    /** Number of owned nodes per FE family and per processor (count, non-incremental) */
+    
+    /** FE: DofMap: Number of owned nodes per FE family and per processor (count, non-incremental) */
     vector < unsigned > _ownSize[5];
-    /** Number of nodes per FE family and per processor (incremental count) */
+    /** FE: DofMap: Number of nodes per FE family and per processor (incremental count) */
     vector < unsigned > _dofOffset[5];
-    /** Number of ghost nodes per FE family and per processor (count, non-incremental) */
+    /** FE: DofMap: Number of ghost nodes per FE family and per processor (count, non-incremental) */
     vector< vector < int > > _ghostDofs[5];
     
-    /** topology object - list of all elements */
+    /** MESH: topology object - list of all elements */
     elem *el;
     
+    /** AMR */
     static bool (* _SetRefinementFlag)(const std::vector < double >& x,
                                        const int &ElemGroupNumber,const int &level);
     static bool _IsUserRefinementFunctionDefined;
+    
+    /** Boundary conditions */
     std::map<unsigned int, std::string> _boundaryinfo;
 
     /** Get the projection matrix between Lagrange FEM at the same level mesh*/
@@ -291,13 +299,14 @@ public:
     const unsigned GetSolidMarkIndex()  const { return _solidMarkIndex; };
 
 private:
+    
     /** Coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
     Mesh* _coarseMsh;
 
     /** The projection matrix between Lagrange FEM at the same level mesh */
     SparseMatrix* _ProjQitoQj[3][3];
 
-    /** The coarse to the fine projection matrix */
+    /** FE: The coarse to the fine projection matrix */
     SparseMatrix* _ProjCoarseToFine[5];
 
     /** Build the projection matrix between Lagrange FEM at the same level mesh*/
@@ -324,9 +333,8 @@ private:
     static unsigned _face_index;
     
     std::map < unsigned, unsigned > _ownedGhostMap[2];
-    vector < unsigned > _originalOwnSize[2];
+    std::vector < unsigned > _originalOwnSize[2];
 
-    static const unsigned _END_IND[5];
     /** node coordinates for each space dimension */
     vector < vector < double > > _coords;
 
